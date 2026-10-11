@@ -51,7 +51,7 @@ POST /v1/write {"op": "put", "key": "objects/rec/ingest/clock/SN-A.json", "cas":
 → 200 {"index": 2031}
 
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 20529609682, "ranges": {}, "asks": {}, "uncovered": false}
+→ 200 {"push": true, "version": 44166231417, "ranges": {}, "asks": {}, "uncovered": false}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -98,11 +98,11 @@ POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": 2033, "items": {
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500262.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500262.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -155,11 +155,11 @@ POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": 2036, "items": {
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500263.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500263.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -272,7 +272,7 @@ POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": 2039, "items": {
 ##    "id": "1-sd",
 ##    "phase": "standby",
 ##    "hold": true,
-##    "why": "the primary recording is being written; the last 61 s are held in memory"
+##    "why": "the camera says its primary takes the stream; the last 61 s are held in memory"
 ##   }
 ##  ],
 ##  "stream": {

@@ -69,7 +69,7 @@ POST /api/login {"user": "boris", "password": "boris-test-password"}
 → …
 
 # signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/boris
+GET /v1/get?key=domain/users/boris
 → 200 {
   "items": {
     "id": "boris",
@@ -79,7 +79,7 @@ GET /v1/get?key=identity/users/boris
     "idp_subject": "",
     "created": "1757500120.0"
   },
-  "index": 1029
+  "index": 1025
 }
 
 # domain console on srv ← srv:8071: ответ на POST /api/login
@@ -181,7 +181,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -206,7 +206,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -289,7 +289,7 @@ GET /v1/get?key=domain/vms/upstream
   "index": 2026
 }
 
-# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-a → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
@@ -391,7 +391,7 @@ GET /v1/get?key=domain/backup-taken
 GET /api/held
 → 0 "no answer: the road relay-a — srv is cut"
 
-# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-a → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/holder
 → 200 {
   "items": {
@@ -400,7 +400,7 @@ GET /v1/get?key=domain/holder
   "index": 2010
 }
 
-# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-a → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/holder
 → 200 {
   "items": {
@@ -456,9 +456,9 @@ GET /api/carry/cam-a
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 5}"
     },
-    "domain/backup/cam-a": {
+    "domain/keepers/cam-a": {
       "object": "backup/rev-4",
       "rev": "4",
       "term": "1",
@@ -473,7 +473,7 @@ GET /api/carry/cam-a
   },
   "objects": {
     "shared/rev-1": "«base64 1, 344 байт»",
-    "backup/rev-4": "«base64 2, 3188 байт»"
+    "backup/rev-4": "«base64 2, 3184 байт»"
   },
   "key": "«ключ 5»",
   "seen": {
@@ -525,17 +525,13 @@ GET /v1/get?key=domain/topology
 GET /v1/get?key=domain/member-list
 → 200 {
   "items": {
-    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 5}"
   },
   "index": 4005
 }
 
 # domainagent on cam-a → the flash of cam-a
 GET /v1/get?key=domain/ldevid
-→ 200 {"items": null, "index": ""}
-
-# domainagent on cam-a → the flash of cam-a
-GET /v1/get?key=domain/break_glass
 → 200 {"items": null, "index": ""}
 
 # domainagent on cam-a → the flash of cam-a
@@ -565,6 +561,10 @@ GET /v1/get?key=domain/vms/stream-accounts
 
 # domainagent on cam-a → the flash of cam-a
 GET /v1/get?key=domain/vms/upstream
+→ 200 {"items": null, "index": ""}
+
+# domainagent on cam-a → the flash of cam-a
+GET /v1/get?key=domain/break-glass/cam-a
 → 200 {"items": null, "index": ""}
 
 # domainagent on cam-a → the flash of cam-a
@@ -821,7 +821,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500364.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500364.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -846,7 +846,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -949,7 +949,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 805532822886, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 683426874811, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -989,7 +989,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 683426874809, "ranges": {}, "asks": {}}
 
 ## Борис снова получает: 30 кадров.
 

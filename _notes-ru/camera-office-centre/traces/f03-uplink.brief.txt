@@ -22,11 +22,11 @@ RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -135,9 +135,9 @@ GET /api/carry/cam-a
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 5}"
     },
-    "domain/backup/cam-a": {
+    "domain/keepers/cam-a": {
       "object": "backup/rev-4",
       "rev": "4",
       "term": "1",
@@ -152,7 +152,7 @@ GET /api/carry/cam-a
   },
   "objects": {
     "shared/rev-1": "«base64 1, 344 байт»",
-    "backup/rev-4": "«base64 2, 3188 байт»"
+    "backup/rev-4": "«base64 2, 3184 байт»"
   },
   "key": "«ключ 5»",
   "seen": {
@@ -232,11 +232,11 @@ PUT /domain/members/cam-a/reported
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500364.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500364.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -259,7 +259,7 @@ POST /ingest/SN-A/live
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
 GET /ingest/SN-A/poll {"wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 805532822886, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 683426874811, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -271,7 +271,7 @@ POST /ingest/SN-A/live {"frames": "300 кадров, t 1757500334.1…1757500364
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
 GET /ingest/SN-A2/poll {"wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
-→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 683426874809, "ranges": {}, "asks": {}}
 
 ## Борис снова получает: 30 кадров.
 

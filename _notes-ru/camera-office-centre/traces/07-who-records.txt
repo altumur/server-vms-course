@@ -67,7 +67,7 @@ GET /v1/get?key=domain/vms/crossings
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 POST /v1/write {"op": "put", "key": "domain/vms/crossings", "cas": "", "items": {"SN-A": "relay-a"}}
-→ 200 {"index": 1046}
+→ 200 {"index": 1042}
 
 ## → {"camera": "SN-A", "recorded_by": "relay-a", "from": "cam-a"}
 
@@ -76,22 +76,22 @@ POST /v1/write {"op": "put", "key": "domain/vms/crossings", "cas": "", "items": 
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/worker
-→ 200 {"items": {"instance": "srv:1201:0004b1", "at": "1757500195.0"}, "index": 1041}
+→ 200 {"items": {"instance": "srv:1201:0004b1", "at": "1757500195.0"}, "index": 1037}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
-POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1041, "items": {
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1037, "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500245.0"
 }}
-→ 200 {"index": 1048}
+→ 200 {"index": 1044}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/members
 → 200 {
   "items": {
-    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 1»\", \"seal\": \"«ключ 2»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 1»\", \"seal\": \"«ключ 2»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 5}"
   },
-  "index": 1024
+  "index": 1020
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -100,7 +100,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -109,7 +109,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -118,7 +118,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -127,7 +127,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -136,7 +136,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -145,28 +145,28 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/list?prefix=domain/vms/sources/
@@ -180,7 +180,7 @@ GET /v1/get?key=domain/vms/sources/relay-a
 POST /v1/write {"op": "put", "key": "domain/vms/sources/relay-a", "cas": "", "items": {
   "SN-A": "{\"as_of\": 1757500181.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
 }}
-→ 200 {"index": 1049}
+→ 200 {"index": 1045}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/sources/relay-b
@@ -190,11 +190,11 @@ GET /v1/get?key=domain/vms/sources/relay-b
 POST /v1/write {"op": "put", "key": "domain/vms/sources/relay-b", "cas": "", "items": {
   "SN-B": "{\"as_of\": 1757500185.0, \"cluster\": \"cam-b\", \"live_url\": \"ingest://relay-b/SN-B\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-B\"}"
 }}
-→ 200 {"index": 1050}
+→ 200 {"index": 1046}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/primaries/cam-a
@@ -206,7 +206,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
@@ -215,7 +215,7 @@ POST /tokens/stream {"sub": "cam-a", "claims": {"aud": "ingest:relay-a", "ref": 
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/primaries/cam-b
@@ -227,7 +227,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
@@ -236,7 +236,7 @@ POST /tokens/stream {"sub": "cam-b", "claims": {"aud": "ingest:relay-b", "ref": 
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/list?prefix=domain/vms/primaries/
@@ -250,7 +250,7 @@ GET /v1/get?key=domain/vms/primaries/cam-a
 POST /v1/write {"op": "put", "key": "domain/vms/primaries/cam-a", "cas": "", "items": {
   "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 1»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
 }}
-→ 200 {"index": 1051}
+→ 200 {"index": 1047}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/primaries/cam-b
@@ -260,11 +260,11 @@ GET /v1/get?key=domain/vms/primaries/cam-b
 POST /v1/write {"op": "put", "key": "domain/vms/primaries/cam-b", "cas": "", "items": {
   "SN-B": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-b:8091/ingest\"]}, \"recorded_by\": \"relay-b\", \"recording\": \"SN-B\", \"running\": false}"
 }}
-→ 200 {"index": 1052}
+→ 200 {"index": 1048}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/topology
@@ -272,7 +272,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -285,7 +285,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
@@ -294,7 +294,7 @@ POST /tokens/stream {"sub": "cam-a2", "claims": {"aud": "ingest:relay-a", "ref":
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/polls/cam-a2
@@ -304,7 +304,7 @@ GET /v1/get?key=domain/vms/polls/cam-a2
 POST /v1/write {"op": "put", "key": "domain/vms/polls/cam-a2", "cas": "", "items": {
   "SN-A2": "{\"cluster\": \"relay-a\", \"token_secret\": \"«запечатано кольцом 3»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}"
 }}
-→ 200 {"index": 1053}
+→ 200 {"index": 1049}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/topology
@@ -312,7 +312,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -321,7 +321,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -330,25 +330,25 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
-}
-
-# vmsdomain on srv → /run/configstore/vmsdomain.sock
-GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
-
-# vmsdomain on srv → /run/configstore/vmsdomain.sock
-GET /v1/get?key=domain/topology
-→ 200 {
-  "items": {
-    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
-  },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/crossings
-→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1047}
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 1021
+}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+GET /v1/get?key=domain/vms/crossings
+→ 200 {"items": {"SN-A": "relay-a", "SN-B": "relay-b"}, "index": 1043}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/upstream/relay-a
@@ -383,7 +383,7 @@ POST /v1/write {"op": "put", "key": "domain/vms/upstream/relay-a", "cas": "", "i
   "SN-A": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 4»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}",
   "SN-A2": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 5»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}"
 }}
-→ 200 {"index": 1054}
+→ 200 {"index": 1050}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/upstream/relay-b
@@ -393,7 +393,7 @@ GET /v1/get?key=domain/vms/upstream/relay-b
 POST /v1/write {"op": "put", "key": "domain/vms/upstream/relay-b", "cas": "", "items": {
   "SN-B": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 6»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}"
 }}
-→ 200 {"index": 1055}
+→ 200 {"index": 1051}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/shared
@@ -405,7 +405,7 @@ GET /v1/get?key=domain/topology
   "items": {
     "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
   },
-  "index": 1025
+  "index": 1021
 }
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
@@ -431,7 +431,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/cam-a
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 7»"}, "index": 1033}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 7»"}, "index": 1029}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/cam-a2
@@ -443,7 +443,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/cam-a2
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1034}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1030}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/cam-b
@@ -455,11 +455,11 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/cam-b
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 9»"}, "index": 1035}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 9»"}, "index": 1031}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/relay-a
-→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1027}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1023}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/list?prefix=domain/vms/stream-clients/
@@ -467,11 +467,11 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/relay-a
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 10»"}, "index": 1010}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 10»"}, "index": 1009}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/relay-b
-→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1028}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1024}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/list?prefix=domain/vms/stream-clients/
@@ -479,11 +479,11 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/relay-b
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 11»"}, "index": 1011}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 11»"}, "index": 1010}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/srv
-→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1026}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 1022}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/list?prefix=domain/vms/stream-clients/
@@ -491,4 +491,4 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/srv
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 12»"}, "index": 1012}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 12»"}, "index": 1011}

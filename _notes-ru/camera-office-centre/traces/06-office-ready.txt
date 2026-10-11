@@ -43,7 +43,7 @@ POST /api/login {"user": "anna", "password": "anna-test-password"}
 → …
 
 # signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
+GET /v1/get?key=domain/users/anna
 → 200 {
   "items": {
     "id": "anna",
@@ -53,7 +53,7 @@ GET /v1/get?key=identity/users/anna
     "idp_subject": "",
     "created": "1757500000.0"
   },
-  "index": 1006
+  "index": 1005
 }
 
 # domain console on srv ← srv:8071: ответ на POST /api/login
@@ -717,6 +717,10 @@ GET /v1/get?key=rec/recordings/SN-A
   },
   "index": 2015
 }
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/epoch_floor
+→ 200 {"items": null, "index": ""}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/epoch/SN-A

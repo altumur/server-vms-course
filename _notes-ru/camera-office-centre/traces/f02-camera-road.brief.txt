@@ -21,11 +21,11 @@ POST /api/login {"user": "anna", "password": "anna-test-password"}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500383.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500383.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -56,11 +56,11 @@ POST /ingest/SN-A/live
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757502204.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757502204.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,

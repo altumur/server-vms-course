@@ -132,12 +132,6 @@ GET /v1/get?key=domain/holder
 }
 
 # signer on srv → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "domain/holder", "cas": 1004, "items": {
-  "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
-}}
-→ 200 {"index": 1005}
-
-# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/member-key
 → 200 {"items": null, "index": ""}
 
@@ -171,11 +165,11 @@ GET /v1/get?key=domain/signer
 }
 
 # operator on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
+GET /v1/get?key=domain/users/anna
 → 200 {"items": null, "index": ""}
 
 # operator on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
+GET /v1/get?key=domain/users/anna
 → 200 {"items": null, "index": ""}
 
 # operator on srv → /run/configstore/domain.sock
@@ -183,7 +177,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/anna
 → 200 {"keys": {}}
 
 # operator on srv → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
+POST /v1/write {"op": "put", "key": "domain/users/anna", "cas": "", "items": {
   "id": "anna",
   "kind": "local",
   "roles": "",
@@ -191,7 +185,7 @@ POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
   "idp_subject": "",
   "created": "1757500000.0"
 }}
-→ 200 {"index": 1006}
+→ 200 {"index": 1005}
 
 # operator on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/grants/domain
@@ -203,7 +197,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/anna
 
 # operator on srv → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/grants/domain", "cas": "", "items": {"anna|admin|": "0.0"}}
-→ 200 {"index": 1007}
+→ 200 {"index": 1006}
 
 ## Консоль домена (console.main) и воркер VMS на домене (vms.domainpart) стартуют; агент держателя тоже.
 
@@ -243,7 +237,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "pub": "«ключ 3»",
   "seal_pub": "«ключ 4»"
 }}
-→ 200 {"index": 1008}
+→ 200 {"index": 1007}
 
 # console on srv → /run/configstore/console.sock
 GET /v1/get?key=platform/schema
@@ -270,7 +264,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1005
+  "index": 1004
 }
 
 # signer on srv → the resource on srv, http://srv:8090
@@ -393,15 +387,15 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1005
+  "index": 1004
 }
 
 # signer on srv → /run/configstore/domain.sock
-GET /v1/list?prefix=domain/backup/
+GET /v1/list?prefix=domain/keepers/
 → 200 {"keys": {}}
 
 # signer on srv → /run/configstore/domain.sock
-GET /v1/list?prefix=domain/backup/
+GET /v1/list?prefix=domain/keepers/
 → 200 {"keys": {}}
 
 # signer on srv → /run/configstore/domain.sock
@@ -434,7 +428,7 @@ POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": "", "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500000.0"
 }}
-→ 200 {"index": 1009}
+→ 200 {"index": 1008}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/members
@@ -509,7 +503,7 @@ GET /v1/get?key=domain/vms/stream-accounts/relay-a
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-a", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 6»"
 }}
-→ 200 {"index": 1010}
+→ 200 {"index": 1009}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/relay-b
@@ -527,7 +521,7 @@ GET /v1/get?key=domain/vms/stream-accounts/relay-b
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-b", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 7»"
 }}
-→ 200 {"index": 1011}
+→ 200 {"index": 1010}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/srv
@@ -545,7 +539,7 @@ GET /v1/get?key=domain/vms/stream-accounts/srv
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/srv", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 8»"
 }}
-→ 200 {"index": 1012}
+→ 200 {"index": 1011}
 
 ## Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL), отчёта не пишет.
 
@@ -568,7 +562,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1005
+  "index": 1004
 }
 
 # domainagent on srv → /run/configstore/domainagent.sock
@@ -592,15 +586,15 @@ GET /v1/get?key=domain/pending/srv
 → 200 {"items": null, "index": ""}
 
 # domainagent on srv → /run/configstore/domainagent.sock
-GET /v1/get?key=domain/backup/srv
+GET /v1/get?key=domain/keepers/srv
+→ 200 {"items": null, "index": ""}
+
+# domainagent on srv → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/break-glass/srv
 → 200 {"items": null, "index": ""}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/ldevid/srv
-→ 200 {"items": null, "index": ""}
-
-# domainagent on srv → /run/configstore/domainagent.sock
-GET /v1/get?key=domain/break_glass/srv
 → 200 {"items": null, "index": ""}
 
 # domainagent on srv → /run/configstore/domainagent.sock
@@ -621,7 +615,7 @@ GET /v1/get?key=domain/vms/sources/srv
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/stream-accounts/srv
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1012}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1011}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/upstream/srv
@@ -642,7 +636,7 @@ GET /v1/get?key=domain/keys
 
 # domainagent on srv → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/root", "cas": null, "items": {"pub": "«ключ 2»"}}
-→ 200 {"index": 1013}
+→ 200 {"index": 1012}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/keys
@@ -674,10 +668,6 @@ GET /v1/get?key=domain/ldevid
 → 200 {"items": null, "index": ""}
 
 # domainagent on srv → /run/configstore/domainagent.sock
-GET /v1/get?key=domain/break_glass
-→ 200 {"items": null, "index": ""}
-
-# domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/asks
 → 200 {"items": null, "index": ""}
 
@@ -701,10 +691,14 @@ GET /v1/get?key=domain/vms/stream-accounts
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 8»"
 }}
-→ 200 {"index": 1014}
+→ 200 {"index": 1013}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/upstream
+→ 200 {"items": null, "index": ""}
+
+# domainagent on srv → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/break-glass/srv
 → 200 {"items": null, "index": ""}
 
 # domainagent on srv → /run/configstore/domainagent.sock
@@ -726,7 +720,7 @@ GET /v1/get?key=domain/member
 
 # domainagent on srv → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/member", "cas": "", "items": {"cluster": "srv"}}
-→ 200 {"index": 1015}
+→ 200 {"index": 1014}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/holder
@@ -734,5 +728,5 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1005
+  "index": 1004
 }

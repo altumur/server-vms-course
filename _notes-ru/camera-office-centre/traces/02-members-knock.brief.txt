@@ -1,11 +1,8 @@
 ## Сцена 2. Члены стучатся.
 ## Офисы поднимают свои юниты: консоль кластера и агента с дверью ретранслятора (RELAY=1, REPORT=1,
 ## DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.
-## FINDINGS.md, N3: отчёт агента читает эпохи подсистем (rec/epoch/*, vms/epoch/*), а роли domainagent это
-## чтение не дано — проход агента офиса падает, как только регистратор взял эпоху. В сценарии ручка агента
-## офиса — роль domainagent с этим чтением сверх файла прав; каждая её строка помечена «(+N3)».
 
-# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-a → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 1»",
   "pub": "«ключ 1»",
@@ -13,10 +10,10 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 2002}
 
-## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint a95869e68f9fa70a,
+## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint aed1094b512882d3,
 ## sealing key «ключ 2»
 
-# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-b → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 2»",
   "pub": "«ключ 3»",
@@ -24,7 +21,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 3002}
 
-## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint 0eb12920a019e2b3,
+## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint dfa7249860ac38de,
 ## sealing key «ключ 4»
 
 ## Первый проход агента relay-a: он ищет держателя по консолям CLUSTERS (GET /api/held) и просит своё
@@ -50,7 +47,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 4001}
 
-## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 7e7aef413e417ecf,
+## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint ded5c4163c5ea70b,
 ## sealing key «ключ 6»
 
 # domainagent on cam-a2 → the flash of cam-a2
@@ -61,7 +58,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 5001}
 
-## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 8c035ee6da394460,
+## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint f1e06c0a38bde236,
 ## sealing key «ключ 8»
 
 # domainagent on cam-b → the flash of cam-b
@@ -72,7 +69,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 6001}
 
-## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint a16431367f2dd70b,
+## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint 2538c5332af11dfd,
 ## sealing key «ключ 10»
 
 ## Первый проход агента cam-a: дверь ретранслятора его не знает.
@@ -82,14 +79,28 @@ GET /api/carry/cam-a
   X-W2C-Time: 1757500060.000
   X-W2C-Seal: «ключ 6»
   X-W2C-Signature: «подпись 2»
-→ 404 {"detail": "relay-a relays no member cam-a, or has not reached the domain for it yet"}
+→ …
+
+# relay door on relay-a → srv:8071
+GET /api/carry/cam-a
+  X-W2C-Time: 1757500060.000
+  X-W2C-Seal: «ключ 6»
+  X-W2C-Signature: «подпись 2»
+→ 403 {
+  "detail": "cam-a is no member with a key: admit it with its key, or register one (`python3 -m w2cplatform.domain.members key cam-a <pub> <seal_pub>`)"
+}
+
+# domainagent on cam-a ← relay-a:8446: ответ на GET /api/carry/cam-a
+→ 403 {
+  "detail": "cam-a is no member with a key: admit it with its key, or register one (`python3 -m w2cplatform.domain.members key cam-a <pub> <seal_pub>`)"
+}
 
 ## Проход держателя: список членов не записан никем; стучащихся нет — агент, которому дверь отказала,
 ## отчёта не пишет (DomainAgent._sync выходит до отчёта).
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
-POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1009, "items": {
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1008, "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500060.0"
 }}
-→ 200 {"index": 1016}
+→ 200 {"index": 1015}

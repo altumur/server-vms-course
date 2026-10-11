@@ -39,10 +39,7 @@ def s02_members_knock(site) -> None:
     site.wall.advance(60)
     log.note("Сцена 2. Члены стучатся.\n"
              "Офисы поднимают свои юниты: консоль кластера и агента с дверью ретранслятора (RELAY=1, REPORT=1,\n"
-             "DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.\n"
-             "FINDINGS.md, N3: отчёт агента читает эпохи подсистем (rec/epoch/*, vms/epoch/*), а роли domainagent это\n"
-             "чтение не дано — проход агента офиса падает, как только регистратор взял эпоху. В сценарии ручка агента\n"
-             "офиса — роль domainagent с этим чтением сверх файла прав; каждая её строка помечена «(+N3)».")
+             "DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.")
     for office in ("relay-a", "relay-b"):
         site.cluster_console(office)
     for office in ("relay-a", "relay-b"):
@@ -74,7 +71,8 @@ def s03_admitted(site) -> None:
     for m in ("relay-a", "relay-b"):
         site.operator_key(m)
     site.login("anna")
-    log.note("Кто стучит: дверь домена запомнила отказанные запросы (domain/knocks/<кластер>) — с ключом и отпечатком.")
+    log.note("Кто стучит: дверь домена запомнила отказанные запросы (domain/knocks/<кластер>) — с ключом и отпечатком;\n"
+             "камера за офисом стучит через дверь офиса, офис передаёт стук своей дорогой.")
     _, members = site.ask("anna", "GET", "domain console", "/domain/members")
     knocking = {k["name"]: k for k in (members.get("knocking") or [])} if isinstance(members, dict) else {}
     for cam in ("cam-a", "cam-a2", "cam-b"):
@@ -83,10 +81,7 @@ def s03_admitted(site) -> None:
             log.note(f"Анна сверяет отпечаток {cam} с тем, что показывает камера, и принимает её по нему.")
             site.ask("anna", "POST", "domain console", "/domain/members", {"name": cam, "fingerprint": fp})
         else:
-            log.note(f"{cam} не стучит: её запрос дошёл только до двери офиса (FINDINGS.md, N1). Анна принимает её по\n"
-                     f"имени, без отпечатка; ключ регистрирует оператор.")
-            site.ask("anna", "POST", "domain console", "/domain/members", {"name": cam})
-            site.operator_key(cam)
+            raise RuntimeError(f"{cam} is not knocking: {members}")
     site.console_pass()
     log.note("Топология: центр srv, звёзд нет, камеры через свои офисы.")
     _, topo = site.ask("anna", "GET", "domain console", "/domain/topology")
@@ -694,8 +689,8 @@ def _holder_moves(site) -> None:
         st, said = move(site.doors["domain console relay-a"], site.recovery)
     log.note(f"w2cctl: {st} {said.get('sentence') or said.get('detail')}")
     log.note("Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS и берёт запись срока 2.\n"
-             "Дверь, через которую нести дальше, называет поле url записи; FINDINGS.md, N4: запись после переноса по\n"
-             "файлу подписана корнем и url не несёт — агент остаётся у двери srv.")
+             "Дверь, через которую нести дальше, называет поле url записи — дверь подписывающего relay-a. Отчёт агент\n"
+             "кладёт по-прежнему в объекты srv (DOMAIN_OBJECTS_URL не следует за держателем) — FINDINGS.md, N5.")
     site.wall.advance(5)
     site.sync("relay-b")
     site.sync("relay-a")

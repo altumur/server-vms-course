@@ -4,6 +4,10 @@
 ## регистратор карты r-1 над кольцом камеры, толкатель, связанный с ним (ingest.camera_process).
 
 # camera cam-a (its console) → the flash of cam-a
+GET /v1/get?key=platform/epoch_floor
+→ 200 {"items": null, "index": ""}
+
+# camera cam-a (its console) → the flash of cam-a
 GET /v1/get?key=vms/epoch/1
 → 200 {"items": null, "index": ""}
 
@@ -395,6 +399,10 @@ GET /v1/get?key=rec/recordings/1-sd
   },
   "index": 4012
 }
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=platform/epoch_floor
+→ 200 {"items": null, "index": ""}
 
 # recworker r-1 on cam-a → the flash of cam-a
 GET /v1/get?key=rec/epoch/1-sd
@@ -931,7 +939,7 @@ GET /v1/get?key=rec/volumes/card
 ##    "samples_written": 0,
 ##    "samples_dropped": 0,
 ##    "prebuffer_s": 60.0,
-##    "why": "the primary recording is being written; the last 1 s are held in memory"
+##    "why": "no primary recording of this camera is known — not in this cluster, not in the book of primaries: nothing to stand in for; the last 1 s are held in memory"
 ##   }
 ##  ],
 ##  "server": "cam-a",

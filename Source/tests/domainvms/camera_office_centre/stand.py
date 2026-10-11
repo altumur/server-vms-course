@@ -63,9 +63,23 @@ class Remote:
     objects (`DOMAIN_OBJECTS_URL`), a camera's into its office's (`RELAY_OBJECTS_URL`): the store's own calls, made in
     this process, each recorded (kind `objects`) and marked with the product's request for the same thing."""
 
-    def __init__(self, log: Log, inner, who: str, door: str, product: str, writes_only: bool = True):
+    def __init__(self, log: Log, inner, who: str, door: str, product: str, writes_only: bool = True, site=None,
+                 box: str = ""):
         self.log, self.inner, self.who, self.door, self.product = log, inner, who, door, product
-        self.writes_only = writes_only
+        self.writes_only, self.site, self.box = writes_only, site, box
+
+    def _reach(self, method: str, key: str) -> None:
+        """A box that is off, or a road that is cut, takes no call — as its wire, in the product, would not."""
+        from w2cplatform.domain.federation import Unreachable
+        here = Site.box_of(self.who)
+        if self.site is None:
+            return
+        why = (f"{self.box} is off" if self.box in self.site.down else f"{here} is off" if here in self.site.down else
+               f"the road {here} — {self.box} is cut" if (here, self.box) in self.site.cut else None)
+        if why:
+            self.log.add(XCall(self.who, self.door, method, f"/{key}", None, 0, f"no answer: {why}", kind="objects",
+                               note=f"в курсе — запись в чужое хранилище объектов в процессе, провода нет; {self.product}"))
+            raise Unreachable(f"{self.door}: {why}")
 
     def _rec(self, method, key, status, answer=None):
         if self.writes_only and method in ("GET", "LIST"):
@@ -74,20 +88,24 @@ class Remote:
                            note=f"в курсе — запись в чужое хранилище объектов в процессе, провода нет; {self.product}"))
 
     def put(self, key, data):
+        self._reach("PUT", key)
         self.inner.put(key, data)
         self._rec("PUT", key, 200, _object_shown(data))
 
     def get(self, key):
+        self._reach("GET", key)
         got = self.inner.get(key)
         self._rec("GET", key, 200 if got is not None else 404)
         return got
 
     def list(self, prefix):
+        self._reach("LIST", prefix)
         got = self.inner.list(prefix)
         self._rec("LIST", prefix, 200, got)
         return got
 
     def delete(self, key):
+        self._reach("DELETE", key)
         got = self.inner.delete(key)
         self._rec("DELETE", key, 200)
         return got
@@ -493,7 +511,8 @@ class Site:
     def holder_objects(self, who: str, product: str):
         """The holder's objects as a member's agent reaches them to report (`DOMAIN_OBJECTS_URL`): no wire in the course."""
         srv = self.cluster("srv")
-        return Remote(self.log, srv.objects_on("srv", srv.vars), who, f"the holder's objects on srv:{8090}", product)
+        return Remote(self.log, srv.objects_on("srv", srv.vars), who, f"the holder's objects on srv:{8090}", product,
+                      site=self, box="srv")
 
     def office_agent(self, name: str):
         """`agent.main` on an office: `DOMAIN_URL` (the signer's door), `RELAY=1` (it relays the members the topology puts
@@ -503,11 +522,9 @@ class Site:
         from w2cplatform.domain.members import fingerprint
         from w2cplatform.domain.relay import RelayDoor, door_handler
         from w2cplatform.trust.memberkey import MemberKey
-        from w2cplatform import catalog
         c = self.cluster(name)
         who = f"domainagent on {name}"
-        # N3 (FINDINGS.md): the report reads every subsystem's epochs (`<sub>/epoch/*`), which the role may not read
-        own = self.overlay(name, "domainagent", who, [f"{sp.name}/epoch/*" for sp in catalog.specs()], "N3")
+        own = c.door("domainagent", who)
         sealer = self.ring(name)
         key = MemberKey.load_or_make(own, sealer)
         self.log.note(f"агент {name} печатает при первом старте: member key {key.pub}, fingerprint {fingerprint(key.pub)},\n"
@@ -561,7 +578,8 @@ class Site:
                       f"sealing key {key.seal_pub}")
         o = self.cluster(office)
         relay_objects = Remote(self.log, o.objects_on(office, o.vars), who, f"the objects of {office}",
-                               f"у продукта POST /api/member/{name} в дверь ретранслятора ({office}:{PORTS['relay door']})")
+                               f"у продукта POST /api/member/{name} в дверь ретранслятора ({office}:{PORTS['relay door']})",
+                               site=self, box=office)
         agent = DomainAgent(name, CarryClient(self.doors[f"relay door {office}"], name, key, wall=self.wall), own,
                             now=self.wall, console=cam.local_console(), current=cam.current,
                             domain_objects=relay_objects, published=cam.local_objects(), seen_store=cam.local_objects(),
@@ -661,21 +679,6 @@ class Site:
             placement_pass(ctl)
 
     # -- a recorder with the ingest (and, on an office, the forwarder) -----------------------------------------------------
-    def overlay(self, name: str, role: str, who: str, reads: list[str], tag: str):
-        """`role`'s handle on `name`'s store with `reads` added — the scenario's overlay over a finding, never the rights
-        file — every line it makes said on its door (`(+<tag>)`)."""
-        from tests.cluster.conftest import RIGHTS
-        from w2cplatform.configstorevars import ConfigstoreVariables
-        from w2cplatform.storemachine import Rights, local_transport
-        with open(RIGHTS) as f:
-            doc = json.load(f)
-        r = doc["roles"][role]
-        r["read"] = list(r["read"]) + [k for k in reads if k not in r["read"]]
-        c = self.cluster(name)
-        door = f"/run/configstore/{role}.sock (+{tag})"
-        transport = self.log.transport(who, door, local_transport(c.store.submit, Rights.parse(doc), role))
-        return ConfigstoreVariables(f"/run/configstore/{role}.sock", transport=transport)
-
     def ingest_url(self, name: str) -> str:
         """Where a cluster's recorder takes the streams cameras push: its door and `/ingest`, as the product's."""
         return f"http://{name}:{PORTS['recorder']}/ingest"

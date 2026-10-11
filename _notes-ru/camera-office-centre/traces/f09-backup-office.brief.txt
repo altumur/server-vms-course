@@ -29,7 +29,7 @@ GET /api/carry/relay-b2
 GET /domain/members
   Authorization: Bearer «токен 1: person sub=anna на 900 с»
 → 200 {
-  "rev": 8,
+  "rev": 5,
   "members": {
     "cam-a": {
       "by": "anna",
@@ -100,7 +100,7 @@ GET /domain/members
       "last": 1757500322.0,
       "times": 1,
       "key": "«ключ 14»",
-      "fingerprint": "4ed00866ef386d19",
+      "fingerprint": "2b075357ba2ff716",
       "root": null,
       "keys_rev": null
     }
@@ -108,7 +108,7 @@ GET /domain/members
 }
 
 # anna → srv:8070
-POST /domain/members {"name": "relay-b2", "fingerprint": "4ed00866ef386d19"}
+POST /domain/members {"name": "relay-b2", "fingerprint": "2b075357ba2ff716"}
   Authorization: Bearer «токен 1: person sub=anna на 900 с»
 → …
 
@@ -127,14 +127,14 @@ GET /api/holder
 }
 
 # domain console on srv → /run/configstore/domainconsole.sock
-POST /v1/write {"op": "put", "key": "domain/members", "cas": 1024, "items": {
-  "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+POST /v1/write {"op": "put", "key": "domain/members", "cas": 1020, "items": {
+  "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
 }}
-→ 200 {"index": 1066}
+→ 200 {"index": 1062}
 
 # anna ← srv:8070: ответ на POST /domain/members
 → 200 {
-  "rev": 9,
+  "rev": 6,
   "members": {
     "cam-a": {
       "by": "anna",
@@ -210,7 +210,7 @@ GET /api/holder
 POST /v1/write {"op": "put", "key": "domain/grants/relay-b2", "cas": "", "items": {
   "anna|admin|": "1757586722.0"
 }}
-→ 200 {"index": 1067}
+→ 200 {"index": 1063}
 
 # anna ← srv:8070: ответ на PUT /domain/grants/relay-b2
 → 200 {"cluster": "relay-b2", "lines": 1}
@@ -338,11 +338,11 @@ POST /v1/write {"op": "put", "key": "rec/idem/relay-b2-SN-A", "cas": 7015, "item
 ## Проход книг: у SN-A теперь резерв — в книге основных cam-a второй путь (backup) к приёмнику relay-b2.
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
-POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1125, "items": {
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1121, "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500382.0"
 }}
-→ 200 {"index": 1126}
+→ 200 {"index": 1122}
 
 # vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
 GET /kid
@@ -461,7 +461,7 @@ GET /api/carry/relay-a
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
     },
     "domain/grants/relay-a": {
       "anna|admin|": "1757586520.0"
@@ -485,7 +485,7 @@ GET /api/carry/relay-a
   }
 }
 
-# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+# domainagent on relay-a → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/vms/sources", "cas": 2083, "items": {
   "SN-A": "{\"as_of\": 1757500372.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
 }}
@@ -677,9 +677,9 @@ GET /api/carry/relay-a?for=cam-a
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
     },
-    "domain/backup/cam-a": {
+    "domain/keepers/cam-a": {
       "object": "backup/rev-4",
       "rev": "4",
       "term": "1",
@@ -694,7 +694,7 @@ GET /api/carry/relay-a?for=cam-a
   },
   "objects": {
     "shared/rev-1": "«base64 1, 344 байт»",
-    "backup/rev-4": "«base64 2, 3188 байт»"
+    "backup/rev-4": "«base64 2, 3184 байт»"
   },
   "key": "«ключ 2»"
 }
@@ -723,7 +723,7 @@ GET /api/carry/relay-a?for=cam-a2
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
     },
     "domain/vms/asks/cam-a2": {
       "SN-B": "{\"roads\": [{\"acts\": [{\"action\": \"preset\", \"arg\": 3}], \"cluster\": \"relay-a\", \"token_secret\": \"«запечатано ключу члена 8»\", \"until\": 1757586727.0, \"up\": \"srv\", \"urls\": [\"http://relay-a:8091/ingest\"]}]}"
@@ -765,9 +765,9 @@ GET /api/carry/cam-a
       "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
     },
     "domain/members": {
-      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 2»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 4»\", \"seal\": \"«ключ 5»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 11»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 14»\", \"seal\": \"«ключ 1»\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
     },
-    "domain/backup/cam-a": {
+    "domain/keepers/cam-a": {
       "object": "backup/rev-4",
       "rev": "4",
       "term": "1",
@@ -782,7 +782,7 @@ GET /api/carry/cam-a
   },
   "objects": {
     "shared/rev-1": "«base64 1, 344 байт»",
-    "backup/rev-4": "«base64 2, 3188 байт»"
+    "backup/rev-4": "«base64 2, 3184 байт»"
   },
   "key": "«ключ 2»",
   "seen": {
@@ -819,7 +819,7 @@ PUT /domain/members/cam-a/o/rec/heartbeats/r-1
       "samples_written": 0,
       "samples_dropped": 0,
       "prebuffer_s": 60.0,
-      "why": "the primary recording is being written; the last 61 s are held in memory"
+      "why": "the camera says its primary takes the stream; the last 61 s are held in memory"
     }
   ],
   "server": "cam-a",
@@ -960,7 +960,7 @@ POST /v1/write {"op": "put", "key": "objects/rec/ingest/clock/SN-A.json", "cas":
 → 200 {"index": 7071}
 
 # pusher on cam-a (SN-A) ← relay-b2:8091 (the ingest of r-relay-b2-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 50132381557, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 1008433759008, "ranges": {}, "asks": {}}
 
 # pusher on cam-a (SN-A) → relay-b2:8091 (the ingest of r-relay-b2-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -1011,11 +1011,11 @@ POST /ingest/SN-A/live
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500414.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500414.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,

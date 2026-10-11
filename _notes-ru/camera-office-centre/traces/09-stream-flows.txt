@@ -232,6 +232,10 @@ GET /v1/get?key=rec/recordings/SN-A
 }
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/epoch_floor
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/epoch/SN-A
 → 200 {"items": {"epoch": "1"}, "index": 2024}
 
@@ -415,7 +419,7 @@ GET /v1/get?key=domain/vms/sources
 }
 
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 20529609682, "ranges": {}, "asks": {}, "uncovered": false}
+→ 200 {"push": true, "version": 44166231417, "ranges": {}, "asks": {}, "uncovered": false}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -794,7 +798,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500262.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500262.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -819,7 +823,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -1183,7 +1187,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500263.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500263.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -1208,7 +1212,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -1625,7 +1629,7 @@ GET /v1/get?key=rec/volumes/card
 ##    "id": "1-sd",
 ##    "phase": "standby",
 ##    "hold": true,
-##    "why": "the primary recording is being written; the last 61 s are held in memory"
+##    "why": "the camera says its primary takes the stream; the last 61 s are held in memory"
 ##   }
 ##  ],
 ##  "stream": {

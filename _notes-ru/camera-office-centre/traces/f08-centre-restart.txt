@@ -68,7 +68,7 @@ POST /api/login {"user": "boris", "password": "boris-test-password"}
 → …
 
 # signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/boris
+GET /v1/get?key=domain/users/boris
 → 200 {
   "items": {
     "id": "boris",
@@ -78,7 +78,7 @@ GET /v1/get?key=identity/users/boris
     "idp_subject": "",
     "created": "1757500120.0"
   },
-  "index": 1029
+  "index": 1025
 }
 
 # domain console on srv ← srv:8071: ответ на POST /api/login
@@ -117,7 +117,7 @@ GET /v1/get?key=platform/decommission/srv
 
 # recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-srv-1": 1074}}
+→ 200 {"keys": {"rec/slots/r-srv-1": 1070}}
 
 # recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=rec/slots/r-srv-1
@@ -129,7 +129,7 @@ GET /v1/get?key=rec/slots/r-srv-1
     "gen": "1",
     "server": "srv"
   },
-  "index": 1074
+  "index": 1070
 }
 
 # recworker r-srv-1 on srv → /run/configstore/recworker.sock
@@ -142,18 +142,18 @@ GET /v1/get?key=rec/slots/r-srv-1
     "gen": "1",
     "server": "srv"
   },
-  "index": 1074
+  "index": 1070
 }
 
 # recworker r-srv-1 on srv → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/slots/r-srv-1", "cas": 1074, "items": {
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-1", "cas": 1070, "items": {
   "holder": "srv:1102:00044e",
   "until": "1757500377.0",
   "released": "false",
   "gen": "2",
   "server": "srv"
 }}
-→ 200 {"index": 1076}
+→ 200 {"index": 1072}
 
 # recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
@@ -254,7 +254,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -279,7 +279,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -382,7 +382,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 71199459671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 61818027410, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -422,7 +422,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 71199459671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 61818027410, "ranges": {}, "asks": {}}
 
 # vmscontroller on relay-a → /run/configstore/vmscontroller.sock
 GET /v1/list?prefix=vms/slots/
@@ -493,7 +493,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500334.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500334.0, "rtt": 0.0, "version": 44166231417, "wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -518,7 +518,7 @@ GET /v1/get?key=domain/vms/sources
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
 → 200 {
   "push": true,
-  "version": 20529609682,
+  "version": 44166231417,
   "ranges": {},
   "asks": {},
   "uncovered": false,
@@ -621,7 +621,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 71199459671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 61818027410, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -661,7 +661,7 @@ GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 71199459671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 61818027410, "ranges": {}, "asks": {}}
 
 ## Борис снова получает: 20 кадров.
 

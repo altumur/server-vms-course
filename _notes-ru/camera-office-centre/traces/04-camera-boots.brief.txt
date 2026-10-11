@@ -123,7 +123,7 @@ POST /v1/write {"op": "put", "key": "rec/epoch/1-sd", "cas": 0, "items": {"epoch
 ##    "samples_written": 0,
 ##    "samples_dropped": 0,
 ##    "prebuffer_s": 60.0,
-##    "why": "the primary recording is being written; the last 1 s are held in memory"
+##    "why": "no primary recording of this camera is known — not in this cluster, not in the book of primaries: nothing to stand in for; the last 1 s are held in memory"
 ##   }
 ##  ],
 ##  "server": "cam-a",
