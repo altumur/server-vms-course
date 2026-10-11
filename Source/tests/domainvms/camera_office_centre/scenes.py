@@ -718,7 +718,7 @@ def f06_old_holder_back(site) -> None:
                                                           ensure_ascii=False))
     log.note("Агент relay-a отчитывается в дверь держателя срока 2 — relay-a:8071 (N5 исправлена), не в объекты srv:\n"
              "из отчётов членов srv о сроке 2 не узнает. Свой агент srv за /api/held не следует (у курса следует только\n"
-             "агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N6.")
+             "агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N12.")
     site.sync("relay-a")
     site.holder.run_pass()
     with log.acting("operator on srv"):

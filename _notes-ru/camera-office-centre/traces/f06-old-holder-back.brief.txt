@@ -18,7 +18,7 @@ GET /api/holder
 
 ## Агент relay-a отчитывается в дверь держателя срока 2 — relay-a:8071 (N5 исправлена), не в объекты srv:
 ## из отчётов членов srv о сроке 2 не узнает. Свой агент srv за /api/held не следует (у курса следует только
-## агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N6.
+## агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N12.
 
 # domainagent on relay-a → relay-a:8080
 GET /api/held
