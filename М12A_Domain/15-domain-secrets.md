@@ -45,8 +45,8 @@
 | Строка | Поле | Что это | Кто открывает |
 |---|---|---|---|
 | `domain/signer` (у держателя) | `issuing_key_secret`, `token_key_secret`, `backup_key_secret` | выпускающий ключ держателя (у домена уроков 4–7 — его корень), ключ токенов, ключ резервной копии | только подписывающий, `w2c-domain` |
-| `identity/users/<id>` (у держателя) | `pwhash_secret` | хеш scrypt пароля человека; у федеративного пользователя поле пусто | подписывающий, когда человек входит |
-| `domain/break_glass/<кластер>` (у держателя) → `domain/break_glass` (у члена) | `pwhash_secret` | хеш аварийного пароля кластера | консоль кластера, в ту минуту, когда проверяет пароль (`ClusterAccess.glass`) |
+| `domain/users/<id>` (у держателя) | `pwhash_secret` | хеш scrypt пароля человека; у федеративного пользователя поле пусто | подписывающий, когда человек входит |
+| `domain/break-glass/<кластер>` (у держателя) → `domain/break-glass` (у члена) | `pwhash_secret` | хеш аварийного пароля кластера | консоль кластера, в ту минуту, когда проверяет пароль (`ClusterAccess.glass`) |
 | книги подсистемы, `domain/<sub>/<книга>/<член>` → `domain/<sub>/<книга>` | `token_secret` внутри значения-JSON | токен, который книга несёт члену; у `testsub` — книга `tallies` с токенами вида `tally`, у VMS — книги [М12B](../М12B_DomainVMS/README.md) | воркер подсистемы на члене, в последний момент |
 | `domain/member-key` (у самого члена) | `seed_secret` | затравка ключа члена | агент домена этого члена |
 
@@ -80,7 +80,7 @@ def _walk(items: dict, fn, ctx: str) -> dict:
         self.vars.put(SIGNER_ROW, seal_items(self.sealer, row, SIGNER_ROW), cas=idx)
 ```
 
-Хеш человека — так же (`IdentityStore._put`, `seal_items` со строкой `identity/users/<id>`). Аварийный хеш — `breakglass.set_password`, и у него впервые есть писатель вне тестов:
+Хеш человека — так же (`IdentityStore._put`, `seal_items` со строкой `domain/users/<id>`). Аварийный хеш — `breakglass.set_password`, и у него впервые есть писатель вне тестов:
 
 ```python
     path = f"{BREAK_GLASS_PATH}/{cluster}"
@@ -183,7 +183,7 @@ def backup_key(seed: bytes, rev: int) -> bytes:
 
 ## Шаг 5 — Член не читает ничего у держателя: дверь `GET /api/carry/<кластер>`
 
-До этого урока агент члена читал хранилище держателя, а права, которые давали ему его строки, давали и чужие. Сужать такие права по префиксам бесполезно: строки члена лежат в тех же префиксах, что строки его соседей (`domain/grants/<кластер>`, `domain/break_glass/<кластер>`, книги). Поэтому **член не читает у держателя ничего** — роли `member` больше нет, — а спрашивает дверь домена, и дверь отвечает только его.
+До этого урока агент члена читал хранилище держателя, а права, которые давали ему его строки, давали и чужие. Сужать такие права по префиксам бесполезно: строки члена лежат в тех же префиксах, что строки его соседей (`domain/grants/<кластер>`, `domain/break-glass/<кластер>`, книги). Поэтому **член не читает у держателя ничего** — роли `member` больше нет, — а спрашивает дверь домена, и дверь отвечает только его.
 
 **Ключ члена.** Одна затравка на члене, и нигде больше, даёт два ключа (`w2cplatform/trust/memberkey.py`): Ed25519 — член подписывает им свой запрос; X25519, выведенный из той же затравки, — держатель запечатывает ему секреты. Затравка лежит в собственном хранилище члена, в `domain/member-key`, полем `seed_secret`, запечатанным кольцом члена: копия его хранилища — не копия его личности. Агент заводит ключ при первом старте (`MemberKey.load_or_make`) и пишет в лог открытые ключи и отпечаток. Домен принимает члена **с этими ключами** — `Members.add(name, how, …, key=…, seal=…)` при вступлении или вручную на держателе: `python3 -m w2cplatform.domain.members key <член> <pub> <seal_pub>`.
 
@@ -203,7 +203,7 @@ def seal_to(seal_pub_hex: str, field: str, value: str, ctx: str) -> str:
     return f"{SEALED_TO}{_raw(eph.public_key()).hex()}:{nonce.hex()}:{base64.b64encode(ct).decode()}"
 ```
 
-Значение — `x25519:v1:<эфемерный открытый ключ>:<nonce>:<шифртекст>`: эфемерный ключ, ECDH, HKDF, AES-GCM. Связанные данные — поле и строка **так, как она ляжет у члена**: `domain/break_glass/south` у держателя становится `domain/break_glass` у south. Открыть может только south (`MemberKey.open`); ключ east не открывает, кольцо держателя — тоже.
+Значение — `x25519:v1:<эфемерный открытый ключ>:<nonce>:<шифртекст>`: эфемерный ключ, ECDH, HKDF, AES-GCM. Связанные данные — поле и строка **так, как она ляжет у члена**: `domain/break-glass/south` у держателя становится `domain/break-glass` у south. Открыть может только south (`MemberKey.open`); ключ east не открывает, кольцо держателя — тоже.
 
 **Дома.** Клиент члена (`CarryClient.carry`) открывает ответ своим ключом, а агент тут же запечатывает каждый секрет кольцом члена и пишет строку, только если то, что она *говорит*, изменилось: секрет запечатывается каждый раз с новым nonce, и сравнивать запечатанное значило бы писать флеш камеры на каждом проходе. Писать в хранилище держателя член не может и через дверь: `CarriedVars.put` — `PermissionError`.
 
@@ -234,17 +234,19 @@ def seal_to(seal_pub_hex: str, field: str, value: str, ctx: str) -> str:
 | Роль | Пишет | Читает |
 |---|---|---|
 | `domain` — подписывающий | `domain/*`, `identity/*` | то же, и единицы каждой подсистемы |
-| `domainconsole` — консоль домена | `domain/members`, `domain/topology`, `domain/grants/*`, `domain/pending/*` | `domain/*` **кроме `domain/signer*`**; людей не читает |
-| `domainagent` — агент, в каждом кластере | `domain/*` минус всё, что пишет только держатель | `domain/*` кроме `domain/signer*` |
-| `<sub>domain` — воркер подсистемы на домене | `domain/<sub>/*` | то, из чего сделаны его книги |
+| `domainconsole` — консоль домена | `domain/members`, `domain/topology`, `domain/grants/*`, `domain/pending/*` | `domain/*` **кроме `domain/signer*`** и всех секретных строк общей таблицы: людей (`domain/users/*`), аварийных хешей (`domain/break-glass*`), затравки члена (`domain/member-key`), копии резервной (`domain/backup*`) |
+| `domainagent` — агент, в каждом кластере | `domain/*` минус всё, что пишет только держатель | `*` кроме секретных строк, которых он не читает: `domain/signer*`, людей (`domain/users/*`), секретов спек, ведомостей людей `<sub>/asked/*` (отчёт члена несёт и эпохи подсистем, находка N3) |
+| `<sub>domain` — воркер подсистемы на домене | `domain/<sub>/*` | то, из чего сделаны его книги; людей не читает, а перечисляет их ключи (`declared._person`) |
+
+Секретные строки в этих чтениях никто не пишет руками. Кто их читает, говорит общая таблица паритета (`tests/testdata/platform_lists.tsv`, список `secret_readers`, байт в байт как у продукта; в курсе `secrets.PLATFORM_SECRET_READERS`) и раздел `secrets:` спек. Генератор (`domain/rights.secret_reads`) даёт строку роли-читателю и запрещает её по имени остальным, если их гранты до неё достают (ADR-0019, ADR-0010, решение «Архитектора» 2026-10-11). Имена строк те же, что у продукта: `domain/users/<имя>`, `domain/break-glass/<кластер>` (ADR-0003, без псевдонимов).
 
 Агенту можно `domain/*`, потому что на члене он пишет туда свои копии: набор ключей, права, книги, свой `member-key`. Но то, что пишет только держатель, ему запрещено **по имени**:
 
 ```python
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
-    out = [SIGNER_KEYS, "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
-           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break_glass/*", "!domain/ldevid/*"]
+    out = [SIGNER_KEYS, "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
+           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break-glass/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
         # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
