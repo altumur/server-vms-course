@@ -8,16 +8,17 @@ import json
 def s01_founding(site) -> None:
     log = site.log
     log.note("Сцена 1. Домен основан на srv.\n"
-             "Установщик на srv до первого старта (в курсе — функция term.install установщика; у продукта\n"
-             "`domain install --holder srv --recovery …`, stand.sh start): корень домена вне держателя, файл\n"
-             "восстановления отдан оператору; первый набор ключей и запись держателя срока 1 подписаны корнем.")
+             "Установщик на srv до первого старта делает корень домена вне держателя и отдаёт оператору файл\n"
+             "восстановления (в курсе — DomainRoot(...).recovery(); у продукта `domain install --recovery …`).")
     site.install()
-    log.note("Первый человек домена — тоже установщика (в курсе — вызовы IdentityStore.create_local и\n"
-             "grants.set_domain_grants; у продукта `domain user add`, `domain grant --cluster domain`): дверь людей —\n"
-             "подписывающего, и она спрашивает админа.")
-    site.first_admin("anna")
-    log.note(f"Подписывающий стартует (signer_service.main): CLUSTERS={site.clusters_line()}")
+    log.note(f"Подписывающий стартует первый раз с RECOVERY_FILE (signer_service.main → first_signer): корень подписывает\n"
+             f"выдающий сертификат держателя и первый набор ключей и основывает домен — запись держателя срока 1.\n"
+             f"CLUSTERS={site.clusters_line()}")
     site.start_signer()
+    log.note("Первый человек домена — оператора на srv: дверь людей — подписывающего, и она спрашивает админа\n"
+             "(в курсе — вызовы IdentityStore.create_local и grants.set_domain_grants через роль domain; у продукта\n"
+             "`domain user add`, `domain grant --cluster domain`, stand.sh setup).")
+    site.first_admin("anna")
     log.note("Консоль домена (console.main) и воркер VMS на домене (vms.domainpart) стартуют; агент держателя тоже.")
     site.start_domain_console()
     site.start_domainpart()
@@ -38,7 +39,10 @@ def s02_members_knock(site) -> None:
     site.wall.advance(60)
     log.note("Сцена 2. Члены стучатся.\n"
              "Офисы поднимают свои юниты: консоль кластера и агента с дверью ретранслятора (RELAY=1, REPORT=1,\n"
-             "DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.")
+             "DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.\n"
+             "FINDINGS.md, N3: отчёт агента читает эпохи подсистем (rec/epoch/*, vms/epoch/*), а роли domainagent это\n"
+             "чтение не дано — проход агента офиса падает, как только регистратор взял эпоху. В сценарии ручка агента\n"
+             "офиса — роль domainagent с этим чтением сверх файла прав; каждая её строка помечена «(+N3)».")
     for office in ("relay-a", "relay-b"):
         site.cluster_console(office)
     for office in ("relay-a", "relay-b"):
@@ -52,6 +56,9 @@ def s02_members_knock(site) -> None:
         site.camera(cam)
     log.note("Первый проход агента cam-a: дверь ретранслятора его не знает.")
     site.sync("cam-a")
+    with log.muted():
+        for n in ("relay-b", "cam-a2", "cam-b"):
+            site.sync(n)
     log.note("Проход держателя: список членов не записан никем; стучащихся нет — агент, которому дверь отказала,\n"
              "отчёта не пишет (DomainAgent._sync выходит до отчёта).")
     site.domain_pass()
@@ -60,38 +67,42 @@ def s02_members_knock(site) -> None:
 def s03_admitted(site) -> None:
     log = site.log
     site.wall.advance(60)
-    log.note("Сцена 3. Анна входит, принимает членов, пишет топологию; ключи членов регистрирует оператор на srv.")
+    log.note("Сцена 3. Ключи офисов регистрирует оператор на srv; Анна входит, принимает камеры по стуку, пишет\n"
+             "топологию, раздаёт права.")
+    log.note("Офисы названы в CLUSTERS: они члены с первой записи списка, без ключа (how: configuration), и дверь их не\n"
+             "запоминает стучащими — ключ регистрирует оператор, как его напечатал агент (у продукта `domain member key`).")
+    for m in ("relay-a", "relay-b"):
+        site.operator_key(m)
     site.login("anna")
-    site.ask("anna", "GET", "domain console", "/domain/members")
-    log.note("Ключ relay-a — сразу, как его напечатал агент: список членов ещё никем не записан, и команда его не пишет.")
-    site.operator_key("relay-a")
-    log.note("Анна принимает камеры: первая запись списка несёт членов из CLUSTERS (how: configuration) и камеру.")
+    log.note("Кто стучит: дверь домена запомнила отказанные запросы (domain/knocks/<кластер>) — с ключом и отпечатком.")
+    _, members = site.ask("anna", "GET", "domain console", "/domain/members")
+    knocking = {k["name"]: k for k in (members.get("knocking") or [])} if isinstance(members, dict) else {}
     for cam in ("cam-a", "cam-a2", "cam-b"):
-        site.ask("anna", "POST", "domain console", "/domain/members", {"name": cam})
+        fp = (knocking.get(cam) or {}).get("fingerprint")
+        if fp:
+            log.note(f"Анна сверяет отпечаток {cam} с тем, что показывает камера, и принимает её по нему.")
+            site.ask("anna", "POST", "domain console", "/domain/members", {"name": cam, "fingerprint": fp})
+        else:
+            log.note(f"{cam} не стучит: её запрос дошёл только до двери офиса (FINDINGS.md, N1). Анна принимает её по\n"
+                     f"имени, без отпечатка; ключ регистрирует оператор.")
+            site.ask("anna", "POST", "domain console", "/domain/members", {"name": cam})
+            site.operator_key(cam)
     site.console_pass()
     log.note("Топология: центр srv, звёзд нет, камеры через свои офисы.")
     _, topo = site.ask("anna", "GET", "domain console", "/domain/topology")
     site.ask("anna", "PUT", "domain console", "/domain/topology",
              {"base_rev": topo.get("rev", 0), "centre": "srv", "star": [],
               "via": {"cam-a": "relay-a", "cam-a2": "relay-a", "cam-b": "relay-b"}})
-    log.note("Ключи членов — оператор на srv, как их напечатали агенты.")
-    for m in ("relay-a", "relay-b", "cam-a", "cam-a2", "cam-b"):
-        site.operator_key(m)
-    log.note("Права Анны на кластере офиса: консоль офиса проверит её токен по ключам и правам, что принесёт агент.\n"
-             "Дверь — PUT /domain/grants/<кластер> консоли домена. FINDINGS.md, F1: дверь падает без ответа — проверка\n"
-             "declared.guarded читает domain/vms/stream-clients/anna, а роли domainconsole это чтение запрещено.")
-    site.ask("anna", "PUT", "domain console", "/domain/grants/relay-a",
-             {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}]})
-    log.note("Обход для сценария (не дверь): права пишет оператор на srv, как это делает команда продукта.")
+    log.note("Права Анны на кластерах: консоль офиса проверит её токен по ключам и правам, что принесёт агент.")
     for c in ("srv", "relay-a", "relay-b"):
-        site.operator_grants(c, [{"subject": "anna", "cap": "admin"}])
-    log.note("Борис — зритель домена: человек — у подписывающего (POST /domain/users → /api/people/users).")
+        site.ask("anna", "PUT", "domain console", f"/domain/grants/{c}",
+                 {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}]})
+    log.note("Борис — зритель домена: человек — у подписывающего (POST /domain/users → /api/people/users), право view —\n"
+             "у консоли домена (PUT /domain/grants/domain).")
     site.passwords["boris"] = "boris-test-password"
     site.ask("anna", "POST", "domain console", "/domain/users", {"name": "boris", "password": "boris-test-password"})
-    log.note("Его право view на домене — та же дверь PUT /domain/grants/domain и та же находка F1; обход — оператор.")
     site.ask("anna", "PUT", "domain console", "/domain/grants/domain",
              {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}, {"subject": "boris", "cap": "view", "scope": "*"}]})
-    site.operator_grants("domain", [{"subject": "anna", "cap": "admin"}, {"subject": "boris", "cap": "view"}])
     log.note("Проход держателя: подписывающий следует за списком членов и топологией.")
     site.domain_pass()
     log.note("Проход агента relay-a: первый /api/carry → 200; затем он просит за своих членов (?for=cam-a, ?for=cam-a2),\n"
@@ -157,10 +168,8 @@ def s06_office_ready(site) -> None:
     site.ask("anna", "POST", "console relay-a", "/rec/volumes",
              {"name": "disk", "kind": "local", "url": site.cluster("relay-a").server.volume, "quota_bytes": 1 << 30,
               "server": "relay-a"}, headers={"Idempotency-Key": "relay-a-disk"})
-    log.note("Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).\n"
-             "FINDINGS.md, F3: роли recworker не дано чтение книг, которые читают приёмник и передатчик\n"
-             "(domain/vms/sources, upstream, asks) — на configstore передатчик не строится вовсе. В сценарии их ручка —\n"
-             "роль recworker с этими чтениями сверх файла прав; каждая её строка помечена «(+F3)».")
+    log.note("Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest) и читают\n"
+             "свои книги правом роли recworker (worker.reads спеки записи).")
     site.recorder("relay-a")
     site.ask("anna", "POST", "console relay-a", "/rec/recordings", {"name": "SN-A", "cam": "ref:SN-A"},
              headers={"Idempotency-Key": "relay-a-SN-A"})
@@ -229,20 +238,16 @@ def s08_books_home(site) -> None:
 def s09_stream_flows(site) -> None:
     log = site.log
     site.wall.advance(5)
-    log.note("Сцена 9. Поток пошёл. Регистратор офиса хочет поток SN-A — в курсе этого шва нет: RecWorker.source ищет\n"
-             "камеру в heartbeat'ах VMS своего кластера и пишет «camera held by nobody» (сцена 6); приёмник он не\n"
-             "спрашивает. Здесь подписку делает сценарий, как тесты урока 16 (ingest.want + subscribe от имени регистратора).")
-    ing = site.ingests["relay-a"]
-    with log.acting("recworker r-relay-a-1 on relay-a"):
-        ing.want("SN-A", "recorder:r-relay-a-1")
-        site.taken = ing.subscribe("SN-A", "recorder:r-relay-a-1", maxsize=100000)
-    log.note("Камера: опрос → «толкай» → толчок кадров из кольца; карта держится, пока поток берут.")
+    log.note("Сцена 9. Поток пошёл. Регистратор офиса находит SN-A в копии книги источников (ingest://relay-a/SN-A) и\n"
+             "подписывается на свой приёмник — это и есть желание потока (vms/ingestrec.py).")
+    site.rec_pass("relay-a")
+    log.note("Камера: опрос → «толкай» → толчок кадров из кольца; регистратор пишет пришедшее, written_through — это\n"
+             "have камеры в следующем ответе на опрос; карта держится, пока поток берут.")
     for _ in range(3):
         site.wall.advance(1)
         out = site.camera_step("cam-a")
         log.note(f"толкатель cam-a: {json.dumps(out, ensure_ascii=False)}")
-    got = site.taken.drain()
-    log.note(f"подписчик в приёмнике relay-a получил {len(got)} кадров")
+        site.rec_pass("relay-a")
     rec = site.recorders["relay-a"]
     with log.acting("recworker r-relay-a-1 on relay-a"):
         rec.heartbeat_once()
@@ -495,8 +500,8 @@ def f03_uplink(site) -> None:
         site.tick(30, cams=("cam-a",))
     with log.acting("gateway gw-centre on srv"):
         gw.pump()
-    log.note(f"Борис за 30 с обрыва получил {len(view.drain())} кадров. Офис пишет: подписчик в приёмнике relay-a "
-             f"получил {len(site.taken.drain())} кадров.")
+    log.note(f"Борис за 30 с обрыва получил {len(view.drain())} кадров. Офис пишет:")
+    site.say_heartbeat("relay-a", fields=())
     site.sync("cam-a")
     raw = site.cams["cam-a"].ram.get("domain/seen")
     log.note("cam-a знает, сколько лет его книгам (domain/seen в RAM): " + (raw.decode() if raw else "нет"))
@@ -618,10 +623,15 @@ def f09_backup_office(site) -> None:
         site.cluster("relay-b2")
         site.cluster_console("relay-b2")
         site.office_agent("relay-b2")
-    log.note("Анна принимает relay-b2, оператор регистрирует его ключ и права Анны на нём (F1: через дверь нельзя).")
-    site.ask("anna", "POST", "domain console", "/domain/members", {"name": "relay-b2"})
-    site.operator_key("relay-b2")
-    site.operator_grants("relay-b2", [{"subject": "anna", "cap": "admin"}])
+    log.note("relay-b2 не назван в CLUSTERS: его агент стучит в дверь домена, Анна сверяет отпечаток и принимает его по\n"
+             "нему; права Анны на нём — PUT /domain/grants/relay-b2.")
+    site.sync("relay-b2")
+    _, members = site.ask("anna", "GET", "domain console", "/domain/members")
+    fp = next((k.get("fingerprint") for k in (members.get("knocking") or []) if k.get("name") == "relay-b2"), None) \
+        if isinstance(members, dict) else None
+    site.ask("anna", "POST", "domain console", "/domain/members", {"name": "relay-b2", **({"fingerprint": fp} if fp else {})})
+    site.ask("anna", "PUT", "domain console", "/domain/grants/relay-b2",
+             {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}]})
     with log.muted():
         site.domain_pass()
         site.sync("relay-b2")
@@ -683,7 +693,9 @@ def _holder_moves(site) -> None:
     with log.acting("operator on relay-a"):
         st, said = move(site.doors["domain console relay-a"], site.recovery)
     log.note(f"w2cctl: {st} {said.get('sentence') or said.get('detail')}")
-    log.note("Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS (F2: не отвечает).")
+    log.note("Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS и берёт запись срока 2.\n"
+             "Дверь, через которую нести дальше, называет поле url записи; FINDINGS.md, N4: запись после переноса по\n"
+             "файлу подписана корнем и url не несёт — агент остаётся у двери srv.")
     site.wall.advance(5)
     site.sync("relay-b")
     site.sync("relay-a")

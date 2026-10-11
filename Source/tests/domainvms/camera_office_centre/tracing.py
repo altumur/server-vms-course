@@ -48,7 +48,7 @@ class Wall:
     the module (the signer's tokens, a member's report mark). It moves only when the scenario says."""
 
     def __init__(self, t: float = BASE):
-        self.t, self.watchers = t, []
+        self.t, self.watchers, self.followers = t, [], []      # followers: the stand's monotonic clocks, moved with it
 
     def __call__(self) -> float:
         return self.t
@@ -60,6 +60,8 @@ class Wall:
             except Exception:                 # noqa: BLE001 — a store a scene took away: that controller saw nothing
                 pass
         self.t += s
+        for c in self.followers:
+            c.t += s
 
 
 def deterministic(seed: int = 7, wall: Wall | None = None) -> Wall:

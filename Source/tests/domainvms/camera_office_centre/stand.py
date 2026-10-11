@@ -109,6 +109,7 @@ class Site:
         self.wall = deterministic(seed)
         from tests.cluster.conftest import Clock
         self.clock = Clock(1000.0)
+        self.wall.followers.append(self.clock)              # the processes' monotonic clock moves with the wall
         self.tmp = tempfile.mkdtemp(prefix="coc-")
         self.log = Log(roots={self.tmp: "/data"})
         trace_http(self.log)
@@ -209,12 +210,11 @@ class Site:
                     self.camera_step(c)
             for o in offices:
                 if o in self.recorders and o not in self.down:
-                    with self.log.acting(f"recworker r-{o}-1 on {o}"):
-                        self.recorders[o].heartbeat_once()
+                    self.rec_pass(o)
                     if self.recorders[o].forwarder is not None and "srv" in self.recorders:
                         self.forward(o)
             if "srv" in self.recorders and "srv" not in self.down:
-                self.recorders["srv"].heartbeat_once()
+                self.rec_pass("srv")
             if now - getattr(self, "_agents_at", -1e18) >= agents_every:
                 self._agents_at = now
                 for n in [a for a in self.agents if a not in self.down]:
@@ -258,19 +258,16 @@ class Site:
         return fed
 
     def install(self) -> None:
-        """The installer on srv before the first start (Lesson 15, step 9): the root off the holder, its recovery file
-        handed to the operator; the first key set and the record of term 1 signed by the root (`term.install`)."""
-        from w2cplatform.domain.term import install
+        """The installer on srv before the first start (Lesson 15, step 9): the domain's root made OFF the holder, its
+        recovery file handed to the operator — the course has no command for it: `DomainRoot(...).recovery()`, as the
+        product's `domain install --recovery` writes it. The signer's first start with `RECOVERY_FILE` founds the domain
+        (`signer_service.first_signer`: the key set and the record of term 1, signed by the root)."""
         from w2cplatform.trust.signer import DomainRoot
-        srv = self.cluster("srv")
         root = DomainRoot(DOMAIN, now=self.wall)
         self.recovery = os.path.join(self.tmp, "recovery", f"{DOMAIN}.recovery")
         os.makedirs(os.path.dirname(self.recovery), exist_ok=True)
         with open(self.recovery, "wb") as f:
             f.write(root.recovery())
-        v = srv.door("domain", "installer on srv")
-        fed = self.federation(v, srv.objects_on("srv", v))
-        self.term1 = install(fed, "srv", DOMAIN, root, wall=self.wall, objects=srv.objects_on("srv", v, "installer on srv"))
 
     def first_admin(self, who: str = "anna", password: str = "anna-test-password") -> None:
         """The installer's first person and her grant on the domain: the people's door is the signer's and asks for an
@@ -279,11 +276,11 @@ class Site:
         from w2cplatform.domain.identity import IdentityStore
         from w2cplatform.trust.signer import Signer
         srv = self.cluster("srv")
-        v = srv.door("domain", "installer on srv")
+        v = srv.door("domain", "operator on srv")
         signer = Signer(DOMAIN, v, sealer=self.ring("srv"))
         IdentityStore(signer, v, srv.objects_on("srv", v), sealer=self.ring("srv"), now=self.wall).create_local(
-            who, password, [], by="installer")
-        set_domain_grants(v, [Grant(who, "admin", None, 0.0)], self.wall(), by="installer")
+            who, password, [], by="operator")
+        set_domain_grants(v, [Grant(who, "admin", None, 0.0)], self.wall(), by="operator")
         self.passwords = {who: password}
 
     def start_signer(self, box: str = "srv") -> None:
@@ -294,7 +291,7 @@ class Site:
         from w2cplatform.domain.agent import DomainPublisher
         from w2cplatform.domain.carry import HolderDoor
         from w2cplatform.domain.identity import IdentityStore
-        from w2cplatform.domain.signer_service import Holder, holder_pass, revocations
+        from w2cplatform.domain.signer_service import Holder, first_signer, holder_pass, revocations
         from w2cplatform.journal import Journal
         from w2cplatform.trust.signer import Signer
         from w2cplatform.trust.tokens import DeclaredIssuer
@@ -307,7 +304,9 @@ class Site:
         seal_stored(vars_, sealer, DOMAIN_PREFIXES)
         objects = srv.objects_on(box, vars_, who)
         pub = DomainPublisher(vars_)
-        signer = Signer(DOMAIN, vars_, sealer=sealer)
+        env = {"CLUSTERS": self.clusters_line(), "CLUSTER": box,
+               **({"RECOVERY_FILE": self.recovery, "DOMAIN_HOLDER": "srv"} if box == "srv" else {})}
+        signer = first_signer(vars_, DOMAIN, sealer, pub, env)
         journal = Journal(srv.server.resource, "domain", self.wall)
         ids = IdentityStore(signer, vars_, objects, publish_floor=60.0, sealer=sealer, journal=journal, now=self.wall)
         # the door first: the holder's record says where the signer answers, and the agents carry through it
@@ -336,7 +335,7 @@ class Site:
 
     def _holder_pass(self, holder, signer, vars_, objects, box: str = "srv") -> None:
         """`signer_service.holder_pass`, with the stand's federation instead of `federation_from_env`."""
-        from w2cplatform.domain.alarms import AlarmHistory, DomainAlarms, ReportedDoor
+        from w2cplatform.domain.alarms import AlarmHistory, DomainAlarms, reported_doors
         from w2cplatform.domain.members import Members
         from w2cplatform.domain.pending import PendingEdits
         from w2cplatform.domain.readview import ReadView
@@ -351,7 +350,7 @@ class Site:
         holder.fed, holder.view = fed, ReadView(fed, lost_after=45.0, wall=self.wall)
         holder.members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box)
         holder.topology, holder.pending = Topology(hv), PendingEdits(hv, self.wall)
-        holder.alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, 45.0), lost_after=45.0, history=AlarmHistory(ho))
+        holder.alarms = DomainAlarms(fed, reported_doors(fed, ho, 45.0), lost_after=45.0, history=AlarmHistory(ho))
         holder.term = term_of(fed, signer, ho, holder.signer_url)
         if holder.term is not None and not signer.chain:
             holder.hand_to = lambda to: move_by_handover(holder, to, DOMAIN, signer)
@@ -360,7 +359,7 @@ class Site:
         """`console.main` on srv: the people's door, no key; its store by the role `domainconsole`. Its read pass is not a
         thread here (`Console.serve` starts one): the scenario runs it (`console_pass`)."""
         from w2cplatform.domain.agent import ClusterTrust, Untrusted
-        from w2cplatform.domain.alarms import AlarmHistory, DomainAlarms, ReportedDoor
+        from w2cplatform.domain.alarms import AlarmHistory, DomainAlarms, reported_doors
         from w2cplatform.domain.api import ApiError, ConsoleAPI
         from w2cplatform.domain.console import Console
         from w2cplatform.domain.federation import DomainDirectory, Unreachable
@@ -398,7 +397,7 @@ class Site:
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         journal = Journal(srv.server.resource, "domainconsole", self.wall)
         members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box, journal=journal)
-        alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, 45.0, wall=self.wall), lost_after=45.0,
+        alarms = DomainAlarms(fed, reported_doors(fed, ho, 45.0, wall=self.wall), lost_after=45.0,
                               history=AlarmHistory(ho, wall=self.wall), wall=self.wall)
         console = Console(directory, view, api, refresh_interval=5.0, holder_objects=ho, holder_vars=hv,
                                pending=pending, topology=Topology(hv), members=members,
@@ -504,9 +503,11 @@ class Site:
         from w2cplatform.domain.members import fingerprint
         from w2cplatform.domain.relay import RelayDoor, door_handler
         from w2cplatform.trust.memberkey import MemberKey
+        from w2cplatform import catalog
         c = self.cluster(name)
         who = f"domainagent on {name}"
-        own = c.door("domainagent", who)
+        # N3 (FINDINGS.md): the report reads every subsystem's epochs (`<sub>/epoch/*`), which the role may not read
+        own = self.overlay(name, "domainagent", who, [f"{sp.name}/epoch/*" for sp in catalog.specs()], "N3")
         sealer = self.ring(name)
         key = MemberKey.load_or_make(own, sealer)
         self.log.note(f"агент {name} печатает при первом старте: member key {key.pub}, fingerprint {fingerprint(key.pub)},\n"
@@ -517,7 +518,7 @@ class Site:
         agent = DomainAgent(name, CarryClient(self.signer_url, name, key, wall=self.wall), own, now=self.wall,
                             domain_objects=self.holder_objects(who, f"у продукта POST /api/member/{name} подписывающему "
                                                                     f"(srv:{PORTS['signer']})"),
-                            published=own_objects, bundle_store=own_objects,
+                            published=own_objects, bundle_store=own_objects, cluster_objects=own_objects,
                             relay_members=lambda: agent.relays(), bundle_members=lambda: agent.relays(),
                             reaches=lambda: CLUSTERS[name][0].split(","), own_objects=own_objects, sealer=sealer, key=key,
                             follow=follow,
@@ -616,31 +617,17 @@ class Site:
         self.tokens = {**getattr(self, "tokens", {}), who: got["token"]}
         return got["token"]
 
-    def operator_grants(self, cluster: str, lines: list[dict]) -> None:
-        """What the product's `domain grant --cluster <c>` does on the holder, as the course would do it with no door: the
-        grants written by the holder's operator through the role `domain` (`DomainPublisher.publish_grants`, or
-        `grants.set_domain_grants` for the domain's own). FINDINGS.md, F1: the console's door for this fails."""
-        from w2cplatform.domain.agent import DomainPublisher
-        from w2cplatform.domain.grants import Grant, set_domain_grants
-        v = self.cluster("srv").door("domain", "operator on srv")
-        grants = [Grant(l["subject"], l["cap"], None, 0.0 if cluster == "domain" else self.wall() + 30 * 86400)
-                  for l in lines]
-        self.log.note(f"оператор на srv (в курсе — вызов {'grants.set_domain_grants' if cluster == 'domain' else 'DomainPublisher.publish_grants'}"
-                      f" через роль domain; у продукта `domain grant --cluster {cluster}`): "
-                      + ", ".join(f"{l['subject']} {l['cap']}" for l in lines))
-        if cluster == "domain":
-            set_domain_grants(v, grants, self.wall(), by="the holder's operator")
-        else:
-            DomainPublisher(v).publish_grants(cluster, grants)
-
     def operator_key(self, member: str) -> str:
         """The operator on srv registers a member's key as its agent printed it: `python3 -m w2cplatform.domain.members key
         <member> <pub> <seal_pub>` — its store by the holder's socket of the role `domain`."""
         from w2cplatform.domain.members import Members
+        from w2cplatform.domain.runtime import names_from_env
         key = self.agents[member].key
-        self.log.note(f"оператор на srv: PLATFORM_STORE=configstore:///run/configstore/domain.sock "
+        self.log.note(f"оператор на srv: CLUSTERS=… PLATFORM_STORE=configstore:///run/configstore/domain.sock "
                       f"python3 -m w2cplatform.domain.members key {member} {key.pub} {key.seal_pub}")
-        done = Members(self.cluster("srv").door("domain", "operator on srv")).set_key(
+        holder, reporting = names_from_env(env={"CLUSTERS": self.clusters_line(), "DOMAIN_HOLDER": "srv"})
+        done = Members(self.cluster("srv").door("domain", "operator on srv"), configured=lambda: reporting,
+                       domain=holder).set_key(
             member, key.pub, key.seal_pub, by="the holder's operator")
         said = f"{member}: {'key registered' if done else 'not registered — no such member, or it has a key'}"
         self.log.note(f"→ {said}")
@@ -674,21 +661,20 @@ class Site:
             placement_pass(ctl)
 
     # -- a recorder with the ingest (and, on an office, the forwarder) -----------------------------------------------------
-    F3_READS = ["domain/vms/sources", "domain/vms/upstream", "domain/vms/asks"]
-
-    def f3_handle(self, name: str, who: str):
-        """The role `recworker`'s handle with the reads F3 names added — the scenario's overlay, not the rights file."""
+    def overlay(self, name: str, role: str, who: str, reads: list[str], tag: str):
+        """`role`'s handle on `name`'s store with `reads` added — the scenario's overlay over a finding, never the rights
+        file — every line it makes said on its door (`(+<tag>)`)."""
         from tests.cluster.conftest import RIGHTS
         from w2cplatform.configstorevars import ConfigstoreVariables
         from w2cplatform.storemachine import Rights, local_transport
         with open(RIGHTS) as f:
             doc = json.load(f)
-        role = doc["roles"]["recworker"]
-        role["read"] = list(role["read"]) + [k for k in self.F3_READS if k not in role["read"]]
+        r = doc["roles"][role]
+        r["read"] = list(r["read"]) + [k for k in reads if k not in r["read"]]
         c = self.cluster(name)
-        door = "/run/configstore/recworker.sock (+F3)"
-        transport = self.log.transport(who, door, local_transport(c.store.submit, Rights.parse(doc), "recworker"))
-        return ConfigstoreVariables("/run/configstore/recworker.sock", transport=transport)
+        door = f"/run/configstore/{role}.sock (+{tag})"
+        transport = self.log.transport(who, door, local_transport(c.store.submit, Rights.parse(doc), role))
+        return ConfigstoreVariables(f"/run/configstore/{role}.sock", transport=transport)
 
     def ingest_url(self, name: str) -> str:
         """Where a cluster's recorder takes the streams cameras push: its door and `/ingest`, as the product's."""
@@ -712,19 +698,21 @@ class Site:
                         raise Unreachable(f"{url} did not answer {name}")
                     return TracedIngest(self.log, ing, who, f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
-        # F3 (FINDINGS.md): the role `recworker` may not read the books the ingest and the forwarder it hosts read. Their
-        # handle here is the recorder's own role WITH those reads added, said on every line it makes (`+F3`); the rights
-        # file is not changed, and the recorder's own handle stays as the file says.
-        was = rec.vars
-        rec.vars = self.f3_handle(name, f"recworker r-{name}-1 on {name}")
-        try:
-            rec.host_ingest(name, self.ingest_url(name), dial=dial)
-        finally:
-            rec.vars = was
+        rec.host_ingest(name, self.ingest_url(name), dial=dial)
         if rec.forwarder is not None:
             rec.forwarder.sealer = self.ring(name)             # the books its agent carried, opened with this box's ring
         self.recorders[name], self.ingests[name] = rec, rec.ingest
         return rec
+
+    def rec_pass(self, name: str) -> None:
+        """One pass of a recorder (`RecWorker.run`): its slot, its volume, the reconcile — which takes what cameras
+        pushed into its ingest and writes it (`take_pushed`, `vms.ingestrec`) — and its heartbeat."""
+        rec = self.recorders[name]
+        with self.log.acting(f"recworker {rec.name} on {name}"):
+            rec.lease_pass()
+            rec.volume_pass()
+            rec.reconcile_once()
+            rec.heartbeat_once()
 
     def say_heartbeat(self, name: str, fields=("ingest", "ingest_streams", "upstream", "volume")) -> None:
         """What a recorder says of itself in its heartbeat (an object on its server), as a line of the scenario's: the
@@ -733,7 +721,8 @@ class Site:
         raw = rec.objects.get(f"rec/heartbeats/{rec.name}")
         hb = json.loads(raw) if raw else {}
         shown = {k: hb.get(k) for k in fields if k in hb}
-        shown["status"] = [{k: st.get(k) for k in ("id", "cam", "phase", "why", "source", "written_through") if k in st}
+        shown["status"] = [{k: st.get(k) for k in ("id", "cam", "phase", "why", "source", "via", "written_through")
+                            if k in st}
                            for st in hb.get("status", [])]
         self.log.note(f"heartbeat {rec.name} (rec/heartbeats/{rec.name}, объект на {name}):\n"
                       + json.dumps(shown, ensure_ascii=False, indent=1))

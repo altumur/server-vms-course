@@ -27,31 +27,39 @@ RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
 GET /ingest/SN-A/poll {"wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "objects/rec/ingest/up/SN-A.json", "cas": null, "items": {
   "data": "{\"v\": 1, \"heard\": 1757500268000}"
 }}
-→ 200 {"index": 2028}
+→ 200 {"index": 2041}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
 GET /ingest/SN-A2/poll {"wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "delete", "key": "objects/rec/ingest/up/SN-A2.json", "cas": null}
-→ 200 {"index": 2029}
+→ 200 {"index": 2042}
 
 ## Камера толкает как толкала — один поток в офис; передатчик несёт его вверх.
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500269.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500269.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -68,7 +76,7 @@ POST /ingest/SN-A/live
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
 GET /ingest/SN-A/poll {"wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -80,13 +88,21 @@ POST /ingest/SN-A/live {"frames": "60 кадров, t 1757500263.1…1757500269.
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
 GET /ingest/SN-A2/poll {"wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500270.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500270.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -103,7 +119,7 @@ POST /ingest/SN-A/live
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
 GET /ingest/SN-A/poll {"wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -115,7 +131,7 @@ POST /ingest/SN-A/live {"frames": "10 кадров, t 1757500269.1…1757500270.
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
 GET /ingest/SN-A2/poll {"wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 ## Борис получил 30 кадров — живой край, не кольцо.
 
@@ -123,9 +139,17 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500281.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500281.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -142,17 +166,17 @@ POST /ingest/SN-A/live
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
 GET /ingest/SN-A/poll {"wait": 0.0}
   Authorization: Bearer «токен 2: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
-→ 200 {"push": false, "version": 649632508672, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822885, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "delete", "key": "objects/rec/ingest/up/SN-A.json", "cas": null}
-→ 200 {"index": 2030}
+→ 200 {"index": 2043}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
 GET /ingest/SN-A2/poll {"wait": 0.0}
   Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 ## heartbeat r-relay-a-1 (rec/heartbeats/r-relay-a-1, объект на relay-a):
 ## {
@@ -160,14 +184,8 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 ##   "SN-A": {
 ##    "mode": "push",
 ##    "state": "the centre does not want it",
-##    "up_sent": 0,
+##    "errors": 0,
 ##    "up_dropped": 0,
-##    "up_gaps": 0,
-##    "up_resumed": 0,
-##    "up_have_every": 0.0,
-##    "up_unconfirmed_s": 0.0,
-##    "up_polls": 0,
-##    "up_cuts": 0,
 ##    "up_kept": false,
 ##    "up_expired": 0,
 ##    "up_kept_writes": 1
@@ -175,14 +193,8 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 ##   "SN-A2": {
 ##    "mode": "push",
 ##    "state": "the centre does not want it",
-##    "up_sent": 0,
+##    "errors": 0,
 ##    "up_dropped": 0,
-##    "up_gaps": 0,
-##    "up_resumed": 0,
-##    "up_have_every": 0.0,
-##    "up_unconfirmed_s": 0.0,
-##    "up_polls": 0,
-##    "up_cuts": 0,
 ##    "up_kept": false,
 ##    "up_expired": 0,
 ##    "up_kept_writes": 0
@@ -192,9 +204,10 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 ##   {
 ##    "id": "SN-A",
 ##    "cam": "ref:SN-A",
-##    "phase": "waiting",
-##    "why": "camera held by nobody",
-##    "source": null
+##    "phase": "running",
+##    "source": "ingest://relay-a/SN-A",
+##    "via": "ingest",
+##    "written_through": 1757500281.0
 ##   }
 ##  ]
 ## }

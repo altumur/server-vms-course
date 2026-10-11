@@ -53,7 +53,7 @@ GET /v1/get?key=identity/users/anna
     "idp_subject": "",
     "created": "1757500000.0"
   },
-  "index": 1005
+  "index": 1006
 }
 
 # domain console on srv ← srv:8071: ответ на POST /api/login
@@ -79,7 +79,7 @@ POST /rec/volumes
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -88,7 +88,7 @@ GET /v1/get?key=domain/keys
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -101,7 +101,7 @@ GET /v1/get?key=domain/revoked
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -110,7 +110,7 @@ GET /v1/get?key=domain/keys
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -121,7 +121,7 @@ GET /v1/get?key=domain/revoked
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=domain/grants
-→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 2005}
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=rec/volumes/disk
@@ -158,10 +158,8 @@ POST /v1/write {"op": "put", "key": "rec/volumes/disk", "cas": "", "items": {
   }
 }
 
-## Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).
-## FINDINGS.md, F3: роли recworker не дано чтение книг, которые читают приёмник и передатчик
-## (domain/vms/sources, upstream, asks) — на configstore передатчик не строится вовсе. В сценарии их ручка —
-## роль recworker с этими чтениями сверх файла прав; каждая её строка помечена «(+F3)».
+## Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest) и читают
+## свои книги правом роли recworker (worker.reads спеки записи).
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=platform/schema
@@ -189,7 +187,11 @@ POST /v1/write {"op": "put", "key": "rec/slots/r-relay-a-1", "cas": "", "items":
 }}
 → 200 {"index": 2012}
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# resource on relay-a → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-a": 2001}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {"items": null, "index": ""}
 
@@ -203,7 +205,7 @@ POST /rec/recordings {"name": "SN-A", "cam": "ref:SN-A"}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -212,7 +214,7 @@ GET /v1/get?key=domain/keys
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -225,7 +227,7 @@ GET /v1/get?key=domain/revoked
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -234,7 +236,7 @@ GET /v1/get?key=domain/keys
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -245,7 +247,7 @@ GET /v1/get?key=domain/revoked
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=domain/grants
-→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 2005}
 
 # console on relay-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "rec/idem/relay-a-SN-A", "cas": "", "items": {
@@ -513,7 +515,7 @@ GET /v1/get?key=rec/volumes/disk
   "index": 2011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {"items": null, "index": ""}
 
@@ -744,6 +746,14 @@ GET /v1/get?key=rec/recordings/SN-A
 }
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/vms/sources
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/vms/sources
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/list?prefix=rec/volumes/
 → 200 {"keys": {"rec/volumes/disk": 2011}}
 
@@ -763,7 +773,7 @@ GET /v1/get?key=rec/volumes/disk
   "index": 2011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {"items": null, "index": ""}
 
@@ -777,8 +787,9 @@ GET /v1/get?key=domain/vms/upstream
 ##    "id": "SN-A",
 ##    "cam": "ref:SN-A",
 ##    "phase": "waiting",
-##    "why": "camera held by nobody",
-##    "source": null
+##    "why": "SN-A is not in this cluster's source book: the domain has not asked this cluster to record it, or has never seen it publish a door",
+##    "source": null,
+##    "via": null
 ##   }
 ##  ]
 ## }

@@ -1,8 +1,11 @@
 ## Сцена 2. Члены стучатся.
 ## Офисы поднимают свои юниты: консоль кластера и агента с дверью ретранслятора (RELAY=1, REPORT=1,
 ## DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.
+## FINDINGS.md, N3: отчёт агента читает эпохи подсистем (rec/epoch/*, vms/epoch/*), а роли domainagent это
+## чтение не дано — проход агента офиса падает, как только регистратор взял эпоху. В сценарии ручка агента
+## офиса — роль domainagent с этим чтением сверх файла прав; каждая её строка помечена «(+N3)».
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 1»",
   "pub": "«ключ 1»",
@@ -10,10 +13,10 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 2002}
 
-## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint f2a47a68b9e3621f,
+## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint a95869e68f9fa70a,
 ## sealing key «ключ 2»
 
-# domainagent on relay-b → /run/configstore/domainagent.sock
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 2»",
   "pub": "«ключ 3»",
@@ -21,7 +24,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 3002}
 
-## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint 59839a0b14ddfeb2,
+## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint 0eb12920a019e2b3,
 ## sealing key «ключ 4»
 
 ## Первый проход агента relay-a: он ищет держателя по консолям CLUSTERS (GET /api/held) и просит своё
@@ -47,7 +50,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 4001}
 
-## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 3db59a1a7850f459,
+## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 7e7aef413e417ecf,
 ## sealing key «ключ 6»
 
 # domainagent on cam-a2 → the flash of cam-a2
@@ -58,7 +61,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 5001}
 
-## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 0348b7626fa8f30c,
+## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 8c035ee6da394460,
 ## sealing key «ключ 8»
 
 # domainagent on cam-b → the flash of cam-b
@@ -69,7 +72,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 6001}
 
-## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint 8c35ca39522b674b,
+## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint a16431367f2dd70b,
 ## sealing key «ключ 10»
 
 ## Первый проход агента cam-a: дверь ретранслятора его не знает.
@@ -85,8 +88,8 @@ GET /api/carry/cam-a
 ## отчёта не пишет (DomainAgent._sync выходит до отчёта).
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
-POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1010, "items": {
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1009, "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500060.0"
 }}
-→ 200 {"index": 1017}
+→ 200 {"index": 1016}

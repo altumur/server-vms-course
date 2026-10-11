@@ -1,6 +1,9 @@
 ## Сцена 2. Члены стучатся.
 ## Офисы поднимают свои юниты: консоль кластера и агента с дверью ретранслятора (RELAY=1, REPORT=1,
 ## DOMAIN_URL — дверь подписывающего). Агент делает ключ члена при первом старте и печатает его.
+## FINDINGS.md, N3: отчёт агента читает эпохи подсистем (rec/epoch/*, vms/epoch/*), а роли domainagent это
+## чтение не дано — проход агента офиса падает, как только регистратор взял эпоху. В сценарии ручка агента
+## офиса — роль domainagent с этим чтением сверх файла прав; каждая её строка помечена «(+N3)».
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=platform/schema
@@ -18,15 +21,15 @@ GET /v1/get?key=platform/schema
 GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/member-key
 → 200 {"items": null, "index": ""}
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/member-key
 → 200 {"items": null, "index": ""}
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 1»",
   "pub": "«ключ 1»",
@@ -34,18 +37,18 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 2002}
 
-## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint f2a47a68b9e3621f,
+## агент relay-a печатает при первом старте: member key «ключ 1», fingerprint a95869e68f9fa70a,
 ## sealing key «ключ 2»
 
-# domainagent on relay-b → /run/configstore/domainagent.sock
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/member-key
 → 200 {"items": null, "index": ""}
 
-# domainagent on relay-b → /run/configstore/domainagent.sock
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/member-key
 → 200 {"items": null, "index": ""}
 
-# domainagent on relay-b → /run/configstore/domainagent.sock
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
 POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "seed_secret": "«запечатано кольцом 2»",
   "pub": "«ключ 3»",
@@ -53,7 +56,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 }}
 → 200 {"index": 3002}
 
-## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint 59839a0b14ddfeb2,
+## агент relay-b печатает при первом старте: member key «ключ 3», fingerprint 0eb12920a019e2b3,
 ## sealing key «ключ 4»
 
 ## Первый проход агента relay-a: он ищет держателя по консолям CLUSTERS (GET /api/held) и просит своё
@@ -63,7 +66,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
 GET /v1/list?prefix=platform/doors/
 → 200 {"keys": {"platform/doors/relay-a": 2001}}
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/keys
 → 200 {"items": null, "index": ""}
 
@@ -77,6 +80,10 @@ GET /api/carry/relay-a
 # signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/members
 → 200 {"items": null, "index": ""}
+
+# resource on srv → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/srv": 1001}}
 
 # domainagent on relay-a ← srv:8071: ответ на GET /api/carry/relay-a
 → 403 {
@@ -102,7 +109,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 4001}
 
-## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 3db59a1a7850f459,
+## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 7e7aef413e417ecf,
 ## sealing key «ключ 6»
 
 # domainagent on cam-a2 → the flash of cam-a2
@@ -121,7 +128,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 5001}
 
-## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 0348b7626fa8f30c,
+## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 8c035ee6da394460,
 ## sealing key «ключ 8»
 
 # domainagent on cam-b → the flash of cam-b
@@ -140,7 +147,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
 }}
 → 200 {"index": 6001}
 
-## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint 8c35ca39522b674b,
+## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint a16431367f2dd70b,
 ## sealing key «ключ 10»
 
 ## Первый проход агента cam-a: дверь ретранслятора его не знает.
@@ -159,7 +166,7 @@ GET /api/carry/cam-a
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
   },
   "index": 1003
 }
@@ -170,7 +177,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }
 
 # signer on srv → /run/configstore/domain.sock
@@ -210,6 +217,15 @@ GET /v1/get?key=domain/members
 → 200 {"items": null, "index": ""}
 
 # signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
+  },
+  "index": 1003
+}
+
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/pending/relay-a
 → 200 {"items": null, "index": ""}
 
@@ -221,7 +237,7 @@ GET /v1/get?key=domain/pending/relay-b
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
   },
   "index": 1003
 }
@@ -232,7 +248,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }
 
 # signer on srv → /run/configstore/domain.sock
@@ -249,14 +265,14 @@ GET /v1/get?key=domain/members
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/worker
-→ 200 {"items": {"instance": "srv:1201:0004b1", "at": "1757500000.0"}, "index": 1010}
+→ 200 {"items": {"instance": "srv:1201:0004b1", "at": "1757500000.0"}, "index": 1009}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
-POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1010, "items": {
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1009, "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500060.0"
 }}
-→ 200 {"index": 1017}
+→ 200 {"index": 1016}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/members
@@ -310,7 +326,7 @@ GET /v1/list?prefix=domain/vms/asks/
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 11»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 12»\", \"sig\": \"«подпись 3»\"}"
   },
   "index": 1003
 }
@@ -325,7 +341,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/relay-a
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 6»"}, "index": 1011}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 6»"}, "index": 1010}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/relay-b
@@ -337,7 +353,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/relay-b
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 7»"}, "index": 1012}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 7»"}, "index": 1011}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/srv
@@ -349,7 +365,7 @@ GET /v1/list?prefix=domain/vms/stream-clients/
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/vms/stream-accounts/srv
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1013}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1012}
 
 # domain console on srv → /run/configstore/domainconsole.sock
 GET /v1/get?key=domain/members

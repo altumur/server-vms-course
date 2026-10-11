@@ -1,199 +1,64 @@
 ## Сцена 1. Домен основан на srv.
-## Установщик на srv до первого старта (в курсе — функция term.install установщика; у продукта
-## `domain install --holder srv --recovery …`, stand.sh start): корень домена вне держателя, файл
-## восстановления отдан оператору; первый набор ключей и запись держателя срока 1 подписаны корнем.
+## Установщик на srv до первого старта делает корень домена вне держателя и отдаёт оператору файл
+## восстановления (в курсе — DomainRoot(...).recovery(); у продукта `domain install --recovery …`).
 
-# installer on srv → /run/configstore/domain.sock
+## Подписывающий стартует первый раз с RECOVERY_FILE (signer_service.main → first_signer): корень подписывает
+## выдающий сертификат держателя и первый набор ключей и основывает домен — запись держателя срока 1.
+## CLUSTERS=srv,relay-a=http://relay-a:8080,relay-b=http://relay-b:8080
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/
+→ 200 {"keys": {}}
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/list?prefix=identity/
+→ 200 {"keys": {}}
+
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/signer
 → 200 {"items": null, "index": ""}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/signer
 → 200 {"items": null, "index": ""}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {"items": null, "index": ""}
+
+# signer on srv → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
-  "issuing_key_secret": "«секрет 1»",
+  "issuing_key_secret": "«запечатано кольцом 1»",
   "issuing_cert": "«сертификат 1»",
-  "token_key_secret": "«секрет 2»",
-  "kid": "8c47b46a",
+  "token_key_secret": "«запечатано кольцом 2»",
+  "kid": "fc357029",
   "gen": "1",
   "previous": "[]",
-  "backup_key_secret": "«секрет 3»",
+  "backup_key_secret": "«запечатано кольцом 3»",
   "backup_key_rev": "1",
   "issued": "true"
 }}
 → 200 {"index": 1002}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/keys
 → 200 {"items": null, "index": ""}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/keys", "cas": "", "items": {
-  "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
 }}
 → 200 {"index": 1003}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/holder
 → 200 {"items": null, "index": ""}
 
-# installer on srv → /run/configstore/domain.sock
+# signer on srv → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/holder", "cas": "", "items": {
   "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
 }}
 → 200 {"index": 1004}
-
-## Первый человек домена — тоже установщика (в курсе — вызовы IdentityStore.create_local и
-## grants.set_domain_grants; у продукта `domain user add`, `domain grant --cluster domain`): дверь людей —
-## подписывающего, и она спрашивает админа.
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/signer
-→ 200 {
-  "items": {
-    "issuing_key_secret": "«секрет 1»",
-    "issuing_cert": "«сертификат 1»",
-    "token_key_secret": "«секрет 2»",
-    "kid": "8c47b46a",
-    "gen": "1",
-    "previous": "[]",
-    "backup_key_secret": "«секрет 3»",
-    "backup_key_rev": "1",
-    "issued": "true"
-  },
-  "index": 1002
-}
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
-→ 200 {"items": null, "index": ""}
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
-→ 200 {"items": null, "index": ""}
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/vms/stream-clients/anna
-→ 200 {"items": null, "index": ""}
-
-# installer on srv → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
-  "id": "anna",
-  "kind": "local",
-  "roles": "",
-  "pwhash_secret": "«запечатано кольцом 1»",
-  "idp_subject": "",
-  "created": "1757500000.0"
-}}
-→ 200 {"index": 1005}
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/grants/domain
-→ 200 {"items": null, "index": ""}
-
-# installer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/vms/stream-clients/anna
-→ 200 {"items": null, "index": ""}
-
-# installer on srv → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "domain/grants/domain", "cas": "", "items": {"anna|admin|": "0.0"}}
-→ 200 {"index": 1006}
-
-## Подписывающий стартует (signer_service.main): CLUSTERS=srv,relay-a=http://relay-a:8080,relay-b=http://relay-b:8080
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/list?prefix=domain/
-→ 200 {"keys": {"domain/grants/domain": 1006, "domain/holder": 1004, "domain/keys": 1003, "domain/signer": 1002}}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/grants/domain
-→ 200 {"items": {"anna|admin|": "0.0"}, "index": 1006}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/holder
-→ 200 {
-  "items": {
-    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
-  },
-  "index": 1004
-}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/keys
-→ 200 {
-  "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
-  },
-  "index": 1003
-}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/signer
-→ 200 {
-  "items": {
-    "issuing_key_secret": "«секрет 1»",
-    "issuing_cert": "«сертификат 1»",
-    "token_key_secret": "«секрет 2»",
-    "kid": "8c47b46a",
-    "gen": "1",
-    "previous": "[]",
-    "backup_key_secret": "«секрет 3»",
-    "backup_key_rev": "1",
-    "issued": "true"
-  },
-  "index": 1002
-}
-
-# signer on srv → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "domain/signer", "cas": 1002, "items": {
-  "issuing_key_secret": "«запечатано кольцом 2»",
-  "issuing_cert": "«сертификат 1»",
-  "token_key_secret": "«запечатано кольцом 3»",
-  "kid": "8c47b46a",
-  "gen": "1",
-  "previous": "[]",
-  "backup_key_secret": "«запечатано кольцом 4»",
-  "backup_key_rev": "1",
-  "issued": "true"
-}}
-→ 200 {"index": 1007}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/list?prefix=identity/
-→ 200 {"keys": {"identity/users/anna": 1005}}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=identity/users/anna
-→ 200 {
-  "items": {
-    "id": "anna",
-    "kind": "local",
-    "roles": "",
-    "pwhash_secret": "«запечатано кольцом 1»",
-    "idp_subject": "",
-    "created": "1757500000.0"
-  },
-  "index": 1005
-}
-
-# signer on srv → /run/configstore/domain.sock
-GET /v1/get?key=domain/signer
-→ 200 {
-  "items": {
-    "issuing_key_secret": "«запечатано кольцом 2»",
-    "issuing_cert": "«сертификат 1»",
-    "token_key_secret": "«запечатано кольцом 3»",
-    "kid": "8c47b46a",
-    "gen": "1",
-    "previous": "[]",
-    "backup_key_secret": "«запечатано кольцом 4»",
-    "backup_key_rev": "1",
-    "issued": "true"
-  },
-  "index": 1007
-}
 
 # signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/revoked
@@ -212,7 +77,7 @@ GET /v1/get?key=domain/holder
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -239,7 +104,7 @@ GET /v1/get?key=domain/holder
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -270,7 +135,75 @@ GET /v1/get?key=domain/holder
 POST /v1/write {"op": "put", "key": "domain/holder", "cas": 1004, "items": {
   "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
 }}
-→ 200 {"index": 1008}
+→ 200 {"index": 1005}
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/member-key
+→ 200 {"items": null, "index": ""}
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {"items": null, "index": ""}
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {"items": null, "index": ""}
+
+## Первый человек домена — оператора на srv: дверь людей — подписывающего, и она спрашивает админа
+## (в курсе — вызовы IdentityStore.create_local и grants.set_domain_grants через роль domain; у продукта
+## `domain user add`, `domain grant --cluster domain`, stand.sh setup).
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {
+  "items": {
+    "issuing_key_secret": "«запечатано кольцом 1»",
+    "issuing_cert": "«сертификат 1»",
+    "token_key_secret": "«запечатано кольцом 2»",
+    "kid": "fc357029",
+    "gen": "1",
+    "previous": "[]",
+    "backup_key_secret": "«запечатано кольцом 3»",
+    "backup_key_rev": "1",
+    "issued": "true"
+  },
+  "index": 1002
+}
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/anna
+→ 200 {"items": null, "index": ""}
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/anna
+→ 200 {"items": null, "index": ""}
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# operator on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
+  "id": "anna",
+  "kind": "local",
+  "roles": "",
+  "pwhash_secret": "«запечатано кольцом 4»",
+  "idp_subject": "",
+  "created": "1757500000.0"
+}}
+→ 200 {"index": 1006}
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/domain
+→ 200 {"items": null, "index": ""}
+
+# operator on srv → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# operator on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/domain", "cas": "", "items": {"anna|admin|": "0.0"}}
+→ 200 {"index": 1007}
 
 ## Консоль домена (console.main) и воркер VMS на домене (vms.domainpart) стартуют; агент держателя тоже.
 
@@ -310,7 +243,7 @@ POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
   "pub": "«ключ 3»",
   "seal_pub": "«ключ 4»"
 }}
-→ 200 {"index": 1009}
+→ 200 {"index": 1008}
 
 # console on srv → /run/configstore/console.sock
 GET /v1/get?key=platform/schema
@@ -326,7 +259,7 @@ GET /v1/get?key=platform/schema
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -337,7 +270,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }
 
 # signer on srv → the resource on srv, http://srv:8090
@@ -421,6 +354,23 @@ GET /v1/get?key=domain/members
 → 200 {"items": null, "index": ""}
 
 # signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 1003
+}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=domain/members/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=domain/knocks/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → /run/configstore/domain.sock
 GET /v1/get?key=domain/pending/relay-a
 → 200 {"items": null, "index": ""}
 
@@ -432,7 +382,7 @@ GET /v1/get?key=domain/pending/relay-b
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -443,7 +393,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }
 
 # signer on srv → /run/configstore/domain.sock
@@ -484,7 +434,7 @@ POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": "", "items": {
   "instance": "srv:1201:0004b1",
   "at": "1757500000.0"
 }}
-→ 200 {"index": 1010}
+→ 200 {"index": 1009}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/members
@@ -538,7 +488,7 @@ GET /v1/list?prefix=domain/vms/asks/
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -559,7 +509,7 @@ GET /v1/get?key=domain/vms/stream-accounts/relay-a
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-a", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 6»"
 }}
-→ 200 {"index": 1011}
+→ 200 {"index": 1010}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/relay-b
@@ -577,7 +527,7 @@ GET /v1/get?key=domain/vms/stream-accounts/relay-b
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-b", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 7»"
 }}
-→ 200 {"index": 1012}
+→ 200 {"index": 1011}
 
 # vmsdomain on srv → /run/configstore/vmsdomain.sock
 GET /v1/get?key=domain/grants/srv
@@ -595,7 +545,7 @@ GET /v1/get?key=domain/vms/stream-accounts/srv
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/srv", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 8»"
 }}
-→ 200 {"index": 1013}
+→ 200 {"index": 1012}
 
 ## Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL), отчёта не пишет.
 
@@ -603,7 +553,7 @@ POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/srv", "cas": "",
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -618,7 +568,7 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }
 
 # domainagent on srv → /run/configstore/domainagent.sock
@@ -671,7 +621,7 @@ GET /v1/get?key=domain/vms/sources/srv
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/stream-accounts/srv
-→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1013}
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 8»"}, "index": 1012}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/upstream/srv
@@ -685,20 +635,20 @@ GET /v1/get?key=domain/root
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
 # domainagent on srv → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/root", "cas": null, "items": {"pub": "«ключ 2»"}}
-→ 200 {"index": 1014}
+→ 200 {"index": 1013}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -751,7 +701,7 @@ GET /v1/get?key=domain/vms/stream-accounts
 POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts", "cas": "", "items": {
   "accounts_secret": "«запечатано кольцом 8»"
 }}
-→ 200 {"index": 1015}
+→ 200 {"index": 1014}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/vms/upstream
@@ -765,7 +715,7 @@ GET /v1/get?key=domain/pending
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -776,7 +726,7 @@ GET /v1/get?key=domain/member
 
 # domainagent on srv → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/member", "cas": "", "items": {"cluster": "srv"}}
-→ 200 {"index": 1016}
+→ 200 {"index": 1015}
 
 # domainagent on srv → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/holder
@@ -784,5 +734,5 @@ GET /v1/get?key=domain/holder
   "items": {
     "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
   },
-  "index": 1008
+  "index": 1005
 }

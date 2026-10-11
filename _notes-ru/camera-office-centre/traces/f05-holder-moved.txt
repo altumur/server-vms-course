@@ -8,19 +8,19 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
@@ -71,8 +71,9 @@ GET /v1/list?prefix=domain/
     "domain/member-key": 2002,
     "domain/member-list": 2007,
     "domain/root": 2003,
+    "domain/shared": 2045,
     "domain/topology": 2006,
-    "domain/vms/asks": 2031,
+    "domain/vms/asks": 2044,
     "domain/vms/sources": 2025,
     "domain/vms/stream-accounts": 2008,
     "domain/vms/upstream": 2026
@@ -81,7 +82,7 @@ GET /v1/list?prefix=domain/
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/grants
-→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 2005}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/holder
@@ -96,7 +97,7 @@ GET /v1/get?key=domain/holder
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 2004
 }
@@ -123,6 +124,10 @@ GET /v1/get?key=domain/root
 → 200 {"items": {"pub": "«ключ 2»"}, "index": 2003}
 
 # signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"rev": "1", "term": "1", "sha256": "«sha256 1»"}, "index": 2045}
+
+# signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/topology
 → 200 {
   "items": {
@@ -137,7 +142,7 @@ GET /v1/get?key=domain/vms/asks
   "items": {
     "SN-B|SN-A2": "{\"roads\": [{\"acts\": [{\"action\": \"preset\", \"arg\": 3}], \"cluster\": \"srv\", \"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586686.0, \"urls\": [\"http://srv:8091/ingest\"]}]}"
   },
-  "index": 2031
+  "index": 2044
 }
 
 # signer on relay-a → /run/configstore/domain.sock
@@ -176,17 +181,30 @@ GET /v1/get?key=domain/signer
 → 200 {"items": null, "index": ""}
 
 # signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
   "issuing_key_secret": "«запечатано кольцом 6»",
   "issuing_cert": "«сертификат 1»",
   "token_key_secret": "«запечатано кольцом 7»",
-  "kid": "066b8cfa",
+  "kid": "c3237246",
   "gen": "1",
   "previous": "[]",
   "backup_key_secret": "«запечатано кольцом 8»",
   "backup_key_rev": "1"
 }}
-→ 200 {"index": 2033}
+→ 200 {"index": 2047}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/revoked
@@ -205,7 +223,7 @@ GET /v1/get?key=domain/holder
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 2004
 }
@@ -248,7 +266,7 @@ GET /v1/get?key=domain/member-key
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 2004
 }
@@ -265,23 +283,49 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 3004
 }
 
 # console on relay-b → /run/configstore/console.sock
 GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 3010
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": {"rev": "3", "term": "1", "sha256": "«sha256 2»"}, "index": 3030}
 
 # signer on relay-a ← relay-b:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+→ 200 {
+  "cluster": "relay-b",
+  "holder": {
+    "at": 1757500000.0,
+    "holder": "srv",
+    "kid": "root",
+    "sig": "«подпись 1»",
+    "term": 1
+  },
+  "term": 1,
+  "keys": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "backup": {
+    "term": 1,
+    "rev": 3
+  }
+}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 2004
 }
@@ -289,26 +333,6 @@ GET /v1/get?key=domain/keys
 # signer on relay-a → srv:8080
 GET /api/held
 → 0 "no answer: srv is off"
-
-# signer on relay-a → relay-b:8080
-GET /api/held
-→ …
-
-# console on relay-b → /run/configstore/console.sock
-GET /v1/get?key=domain/keys
-→ 200 {
-  "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
-  },
-  "index": 3004
-}
-
-# console on relay-b → /run/configstore/console.sock
-GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
-
-# signer on relay-a ← relay-b:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/signer
@@ -317,28 +341,28 @@ GET /v1/get?key=domain/signer
     "issuing_key_secret": "«запечатано кольцом 6»",
     "issuing_cert": "«сертификат 1»",
     "token_key_secret": "«запечатано кольцом 7»",
-    "kid": "066b8cfa",
+    "kid": "c3237246",
     "gen": "1",
     "previous": "[]",
     "backup_key_secret": "«запечатано кольцом 8»",
     "backup_key_rev": "1"
   },
-  "index": 2033
+  "index": 2047
 }
 
 # signer on relay-a → /run/configstore/domain.sock
-POST /v1/write {"op": "put", "key": "domain/signer", "cas": 2033, "items": {
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": 2047, "items": {
   "issuing_key_secret": "«запечатано кольцом 9»",
   "issuing_cert": "«сертификат 3»",
   "token_key_secret": "«запечатано кольцом 10»",
-  "kid": "69d5ceb6",
+  "kid": "a189438e",
   "gen": "1",
   "previous": "[]",
   "backup_key_secret": "«запечатано кольцом 11»",
   "backup_key_rev": "1",
   "issued": "true"
 }}
-→ 200 {"index": 2034}
+→ 200 {"index": 2048}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/holder
@@ -358,51 +382,250 @@ GET /api/held
 → 0 "no answer: srv is off"
 
 # signer on relay-a → relay-b:8080
-GET /api/held
+GET /api/backup
+  X-W2C-Time: 1757500322.000
+  X-W2C-Signature: «подпись 3»
 → …
 
 # console on relay-b → /run/configstore/console.sock
-GET /v1/get?key=domain/keys
+GET /v1/get?key=domain/member-list
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
   },
-  "index": 3004
+  "index": 3007
 }
 
 # console on relay-b → /run/configstore/console.sock
-GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": {"rev": "3", "term": "1", "sha256": "«sha256 2»"}, "index": 3030}
 
-# signer on relay-a ← relay-b:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+# resource on relay-b → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-b": 3001}}
+
+# signer on relay-a ← relay-b:8080: ответ на GET /api/backup
+→ 200 {
+  "cluster": "relay-b",
+  "pointer": {
+    "rev": "3",
+    "term": "1",
+    "sha256": "«sha256 2»"
+  },
+  "backup": "{\"at\": 1757500286.0, \"backup_key_rev\": 1, \"holder\": \"srv\", \"kid\": \"fc357029\", \"objects\": {}, \"rev\": 3, \"sig\": \"«подпись 4»\", \"state\": {\"domain/grants/domain\": {\"anna|admin|\": \"0.0\", \"boris|view|\": \"0.0\"}, \"domain/grants/relay-a\": {\"anna|admin|\": \"1757586520.0\"}, \"domain/grants/relay-b\": {\"anna|admin|\": \"1757586520.0\"}, \"domain/grants/srv\": {\"anna|admin|\": \"1757586520.0\"}, \"domain/members\": {\"doc\": \"{\\\"members\\\": {\\\"cam-a\\\": {\\\"by\\\": \\\"anna\\\", \\\"how\\\": \\\"accepted by anna\\\", \\\"key\\\": \\\"«ключ 5»\\\", \\\"seal\\\": \\\"«ключ 6»\\\", \\\"serial\\\": null, \\\"since\\\": 1757500120.0}, \\\"cam-a2\\\": {\\\"by\\\": \\\"anna\\\", \\\"how\\\": \\\"accepted by anna\\\", \\\"key\\\": \\\"«ключ 7»\\\", \\\"seal\\\": \\\"«ключ 8»\\\", \\\"serial\\\": null, \\\"since\\\": 1757500120.0}, \\\"cam-b\\\": {\\\"by\\\": \\\"anna\\\", \\\"how\\\": \\\"accepted by anna\\\", \\\"key\\\": \\\"«ключ 9»\\\", \\\"seal\\\": \\\"«ключ 10»\\\", \\\"serial\\\": null, \\\"since\\\": 1757500120.0}, \\\"relay-a\\\": {\\\"by\\\": null, \\\"how\\\": \\\"configuration\\\", \\\"key\\\": \\\"«ключ 3»\\\", \\\"seal\\\": \\\"«ключ 4»\\\", \\\"serial\\\": null, \\\"since\\\": 1757500120.0}, \\\"relay-b\\\": {\\\"by\\\": null, \\\"how\\\": \\\"configuration\\\", \\\"key\\\": \\\"«ключ 11»\\\", \\\"seal\\\": \\\"«ключ 12»\\\", \\\"serial\\\": null, \\\"since\\\": 1757500120.0}}, \\\"rev\\\": 8}\"}, \"domain/shared\": {\"object\": \"shared/rev-1\", \"rev\": \"1\", \"sha256\": \"«sha256 1»\", \"term\": \"1\"}, \"domain/topology\": {\"doc\": \"{\\\"by\\\": \\\"anna\\\", \\\"centre\\\": \\\"srv\\\", \\\"rev\\\": 1, \\\"star\\\": [], \\\"via\\\": {\\\"cam-a\\\": \\\"relay-a\\\", \\\"cam-a2\\\": \\\"relay-a\\\", \\\"cam-b\\\": \\\"relay-b\\\"}}\"}, \"domain/vms/crossings\": {\"SN-A\": \"relay-a\", \"SN-B\": \"relay-b\"}, \"identity/users/anna\": {\"created\": \"1757500000.0\", \"id\": \"anna\", \"idp_subject\": \"\", \"kind\": \"local\", \"pwhash_secret\": \"«запечатано кольцом 12»\", \"roles\": \"\"}, \"identity/users/boris\": {\"created\": \"1757500120.0\", \"id\": \"boris\", \"idp_subject\": \"\", \"kind\": \"local\", \"pwhash_secret\": \"«запечатано кольцом 13»\", \"roles\": \"\"}}, \"term\": 1}",
+  "shared": "{\"at\": 1757500286.0, \"by\": \"anna\", \"kid\": \"fc357029\", \"rev\": 1, \"settings\": {\"shared\": {\"auto\": {\"scenarios\": [{\"then\": {\"action\": \"preset\", \"arg\": 3, \"camera\": \"SN-B\", \"within\": 10}, \"when\": {\"camera\": \"SN-A2\", \"kind\": \"vehicle\"}}]}}}, \"sig\": \"«подпись 5»\", \"term\": 1}"
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/domain
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/domain", "cas": "", "items": {
+  "anna|admin|": "0.0",
+  "boris|view|": "0.0"
+}}
+→ 200 {"index": 2049}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/relay-a", "cas": "", "items": {
+  "anna|admin|": "1757586520.0"
+}}
+→ 200 {"index": 2050}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/relay-b", "cas": "", "items": {
+  "anna|admin|": "1757586520.0"
+}}
+→ 200 {"index": 2051}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/srv
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/srv", "cas": "", "items": {"anna|admin|": "1757586520.0"}}
+→ 200 {"index": 2052}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/members", "cas": "", "items": {
+  "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+}}
+→ 200 {"index": 2053}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"rev": "1", "term": "1", "sha256": "«sha256 1»"}, "index": 2045}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/shared", "cas": 2045, "items": {
+  "object": "shared/rev-1",
+  "rev": "1",
+  "sha256": "«sha256 1»",
+  "term": "1"
+}}
+→ 200 {"index": 2054}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2006
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/topology", "cas": 2006, "items": {
+  "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+}}
+→ 200 {"index": 2055}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/crossings
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/crossings", "cas": "", "items": {
+  "SN-A": "relay-a",
+  "SN-B": "relay-b"
+}}
+→ 200 {"index": 2056}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/anna
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/anna
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
+  "created": "1757500000.0",
+  "id": "anna",
+  "idp_subject": "",
+  "kind": "local",
+  "pwhash_secret": "«запечатано кольцом 14»",
+  "roles": ""
+}}
+→ 200 {"index": 2057}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/boris
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/vms/stream-clients/boris
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "identity/users/boris", "cas": "", "items": {
+  "created": "1757500120.0",
+  "id": "boris",
+  "idp_subject": "",
+  "kind": "local",
+  "pwhash_secret": "«запечатано кольцом 15»",
+  "roles": ""
+}}
+→ 200 {"index": 2058}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+  },
+  "index": 2053
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+  },
+  "index": 2053
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/members", "cas": 2053, "items": {
+  "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+}}
+→ 200 {"index": 2059}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 2004
 }
 
 # signer on relay-a → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/keys", "cas": 2004, "items": {
-  "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+  "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
 }}
-→ 200 {"index": 2035}
+→ 200 {"index": 2060}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/shared
-→ 200 {"items": null, "index": ""}
+→ 200 {"items": {"object": "shared/rev-1", "rev": "1", "sha256": "«sha256 1»", "term": "1"}, "index": 2054}
+
+# resource on relay-a → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-a": 2001}}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/shared
-→ 200 {"items": null, "index": ""}
+→ 200 {"items": {"object": "shared/rev-1", "rev": "1", "sha256": "«sha256 1»", "term": "1"}, "index": 2054}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/shared", "cas": 2054, "items": {
+  "object": "shared/rev-1-term-2",
+  "rev": "1",
+  "term": "2",
+  "sha256": "«sha256 3»"
+}}
+→ 200 {"index": 2061}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/members
-→ 200 {"items": null, "index": ""}
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+  },
+  "index": 2059
+}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/holder
@@ -415,26 +638,48 @@ GET /v1/get?key=domain/holder
 
 # signer on relay-a → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/holder", "cas": 2010, "items": {
-  "doc": "{\"at\": 1757500322.0, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 2}"
+  "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
 }}
-→ 200 {"index": 2036}
+→ 200 {"index": 2062}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/member-key
+→ 200 {"items": {"seed_secret": "«запечатано кольцом 1»", "pub": "«ключ 3»", "seal_pub": "«ключ 4»"}, "index": 2002}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 9}"
+  },
+  "index": 2059
+}
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
-  "index": 2035
+  "index": 2060
 }
 
 # signer on relay-a → /run/configstore/domain.sock
 GET /v1/get?key=domain/holder
 → 200 {
   "items": {
-    "doc": "{\"at\": 1757500322.0, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 2}"
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
   },
-  "index": 2036
+  "index": 2062
 }
 
 # signer on relay-a → /run/configstore/domain.sock
@@ -443,35 +688,37 @@ GET /v1/get?key=domain/revoked
 
 # signer on relay-a → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/revoked", "cas": "", "items": {"jtis": ""}}
-→ 200 {"index": 2037}
+→ 200 {"index": 2063}
 
 # domain console on relay-a ← relay-a:8071: ответ на POST /api/move
 → 200 {
   "term": 2,
-  "rev": 0,
-  "restored_from": null,
+  "rev": 3,
+  "restored_from": "relay-b",
   "keys_rev": 1757500322,
   "stolen": false,
   "reissued": [],
-  "shared_from": null,
-  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+  "shared_from": "relay-a",
+  "sentence": "term 2 on relay-a: the domain's state from backup rev 3, held by relay-b; anything the old holder changed after rev 3 is not here"
 }
 
 # operator on relay-a ← relay-a:8070: ответ на POST /domain/move
 → 200 {
   "term": 2,
-  "rev": 0,
-  "restored_from": null,
+  "rev": 3,
+  "restored_from": "relay-b",
   "keys_rev": 1757500322,
   "stolen": false,
   "reissued": [],
-  "shared_from": null,
-  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+  "shared_from": "relay-a",
+  "sentence": "term 2 on relay-a: the domain's state from backup rev 3, held by relay-b; anything the old holder changed after rev 3 is not here"
 }
 
-## w2cctl: 200 term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys
+## w2cctl: 200 term 2 on relay-a: the domain's state from backup rev 3, held by relay-b; anything the old holder changed after rev 3 is not here
 
-## Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS (F2: не отвечает).
+## Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS и берёт запись срока 2.
+## Дверь, через которую нести дальше, называет поле url записи; FINDINGS.md, N4: запись после переноса по
+## файлу подписана корнем и url не несёт — агент остаётся у двери srv.
 
 # vmscontroller on relay-a → /run/configstore/vmscontroller.sock
 GET /v1/list?prefix=vms/slots/
@@ -483,19 +730,19 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
@@ -531,11 +778,11 @@ GET /v1/get?key=rec/slots/r-relay-b-1
 GET /v1/get?key=platform/doors/relay-b
 → 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
 
-# domainagent on relay-b → /run/configstore/domainagent.sock
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 3004
 }
@@ -548,17 +795,44 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
-  "index": 2035
+  "index": 2060
 }
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 2062
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": null, "index": ""}
 
 # domainagent on relay-b ← relay-a:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+→ 200 {
+  "cluster": "relay-a",
+  "holder": {
+    "at": 1757500322.0,
+    "from": {
+      "rev": 3,
+      "term": 1
+    },
+    "holder": "relay-a",
+    "kid": "root",
+    "sig": "«подпись 7»",
+    "term": 2
+  },
+  "term": 2,
+  "keys": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "backup": null
+}
 
 # domainagent on relay-b → relay-b:8080
 GET /api/held
@@ -568,36 +842,95 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 3004
 }
 
 # console on relay-b → /run/configstore/console.sock
 GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 3010
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": {"rev": "3", "term": "1", "sha256": "«sha256 2»"}, "index": 3030}
 
 # domainagent on relay-b ← relay-b:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+→ 200 {
+  "cluster": "relay-b",
+  "holder": {
+    "at": 1757500000.0,
+    "holder": "srv",
+    "kid": "root",
+    "sig": "«подпись 1»",
+    "term": 1
+  },
+  "term": 1,
+  "keys": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "backup": {
+    "term": 1,
+    "rev": 3
+  }
+}
 
 # domainagent on relay-b → srv:8080
 GET /api/held
 → 0 "no answer: srv is off"
 
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 3010
+}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 3010
+}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": 3010, "items": {
+  "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+}}
+→ 200 {"index": 3033}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock (+N3)
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 3033
+}
+
 # domainagent on relay-b → srv:8071
 GET /api/carry/relay-b
   X-W2C-Time: 1757500327.000
   X-W2C-Seal: «ключ 12»
-  X-W2C-Signature: «подпись 5»
+  X-W2C-Signature: «подпись 8»
 → 0 "no answer: srv is off"
 
-# domainagent on relay-a → /run/configstore/domainagent.sock
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
-  "index": 2035
+  "index": 2060
 }
 
 # domainagent on relay-a → relay-a:8080
@@ -608,17 +941,44 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
-  "index": 2035
+  "index": 2060
 }
 
 # console on relay-a → /run/configstore/console.sock
 GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 2062
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": null, "index": ""}
 
 # domainagent on relay-a ← relay-a:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+→ 200 {
+  "cluster": "relay-a",
+  "holder": {
+    "at": 1757500322.0,
+    "from": {
+      "rev": 3,
+      "term": 1
+    },
+    "holder": "relay-a",
+    "kid": "root",
+    "sig": "«подпись 7»",
+    "term": 2
+  },
+  "term": 2,
+  "keys": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"a189438e\", \"key:a189438e\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "backup": null
+}
 
 # domainagent on relay-a → relay-b:8080
 GET /api/held
@@ -628,25 +988,73 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
   },
   "index": 3004
 }
 
 # console on relay-b → /run/configstore/console.sock
 GET /v1/get?key=domain/holder
-→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 3033
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": {"rev": "3", "term": "1", "sha256": "«sha256 2»"}, "index": 3030}
 
 # domainagent on relay-a ← relay-b:8080: ответ на GET /api/held
-→ 0 "no answer: RemoteDisconnected"
+→ 200 {
+  "cluster": "relay-b",
+  "holder": {
+    "at": 1757500322.0,
+    "from": {
+      "rev": 3,
+      "term": 1
+    },
+    "holder": "relay-a",
+    "kid": "root",
+    "sig": "«подпись 7»",
+    "term": 2
+  },
+  "term": 2,
+  "keys": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "backup": {
+    "term": 1,
+    "rev": 3
+  }
+}
 
 # domainagent on relay-a → srv:8080
 GET /api/held
 → 0 "no answer: srv is off"
 
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 2062
+}
+
+# domainagent on relay-a → /run/configstore/domainagent.sock (+N3)
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2}"
+  },
+  "index": 2062
+}
+
 # domainagent on relay-a → srv:8071
 GET /api/carry/relay-a
   X-W2C-Time: 1757500327.000
   X-W2C-Seal: «ключ 4»
-  X-W2C-Signature: «подпись 6»
+  X-W2C-Signature: «подпись 9»
 → 0 "no answer: srv is off"

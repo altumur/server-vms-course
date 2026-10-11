@@ -8,19 +8,19 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
@@ -80,7 +80,7 @@ GET /v1/get?key=identity/users/boris
     "idp_subject": "",
     "created": "1757500120.0"
   },
-  "index": 1030
+  "index": 1029
 }
 
 # domain console on srv ← srv:8071: ответ на POST /api/login
@@ -93,7 +93,7 @@ GET /v1/get?key=identity/users/boris
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -105,13 +105,20 @@ GET /v1/get?key=domain/revoked
 # gateway gw-centre on srv → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.want в процессе; у продукта RTSP rtsp://…/ingest/SN-A (recproc/ingest.go)
 RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
+→ …
+
+# resource on srv → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/srv": 1001}}
+
+# gateway gw-centre on srv ← srv:8091 (the ingest of r-srv-1): ответ на RTSP rtsp://…/ingest/SN-A
 → 200
 
 ## Передатчик relay-a держит опрос у приёмника центра: центр хочет SN-A — значит, и офис хочет его от камеры.
 
 ## в курсе передатчик ходит в приёмник центра вызовом (dial), у продукта — тот же опрос и толчок по HTTP
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {
   "items": {
@@ -139,23 +146,27 @@ GET /ingest/SN-A/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "objects/rec/ingest/up/SN-A.json", "cas": null, "items": {
   "data": "{\"v\": 1, \"heard\": 1757500268000}"
 }}
-→ 200 {"index": 2028}
+→ 200 {"index": 2041}
+
+# resource on relay-a → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-a": 2001}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
@@ -167,21 +178,21 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "delete", "key": "objects/rec/ingest/up/SN-A2.json", "cas": null}
-→ 200 {"index": 2029}
+→ 200 {"index": 2042}
 
 ## Камера толкает как толкала — один поток в офис; передатчик несёт его вверх.
 
@@ -195,24 +206,28 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=platform/doors/relay-a
 → 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# resource on relay-b → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-b": 3001}}
 
 # vmscontroller on relay-b → /run/configstore/vmscontroller.sock
 GET /v1/list?prefix=vms/slots/
@@ -258,7 +273,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500269.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500269.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -266,12 +281,12 @@ GET /ingest/SN-A/poll {"camera_now": 1757500269.0, "rtt": 0.0, "version": 473846
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {
   "items": {
@@ -281,7 +296,15 @@ GET /v1/get?key=domain/vms/sources
 }
 
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -298,7 +321,7 @@ POST /ingest/SN-A/live
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -348,7 +371,7 @@ GET /v1/get?key=rec/volumes/card
   "index": 4011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {
   "items": {
@@ -368,17 +391,17 @@ GET /ingest/SN-A/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -390,7 +413,7 @@ POST /ingest/SN-A/live {"frames": "60 кадров, t 1757500263.1…1757500269.
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -408,17 +431,17 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # vmscontroller on relay-a → /run/configstore/vmscontroller.sock
 GET /v1/list?prefix=vms/slots/
@@ -430,19 +453,19 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
@@ -489,7 +512,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500270.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500270.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -497,12 +520,12 @@ GET /ingest/SN-A/poll {"camera_now": 1757500270.0, "rtt": 0.0, "version": 473846
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {
   "items": {
@@ -512,7 +535,15 @@ GET /v1/get?key=domain/vms/sources
 }
 
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -529,7 +560,7 @@ POST /ingest/SN-A/live
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -579,7 +610,7 @@ GET /v1/get?key=rec/volumes/card
   "index": 4011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {
   "items": {
@@ -599,17 +630,17 @@ GET /ingest/SN-A/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": true, "version": 805532822884, "ranges": {}, "asks": {}}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -621,7 +652,7 @@ POST /ingest/SN-A/live {"frames": "10 кадров, t 1757500269.1…1757500270.
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
@@ -639,17 +670,17 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
 
 ## Борис получил 30 кадров — живой край, не кольцо.
 
@@ -665,19 +696,19 @@ GET /v1/get?key=platform/doors/relay-a
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/list?prefix=rec/slots/
-→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2038}}
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
 GET /v1/get?key=rec/slots/r-relay-a-1
 → 200 {
   "items": {
     "holder": "relay-a:2101:000835",
-    "until": "1757500270.0",
+    "until": "1757500308.0",
     "released": "false",
     "gen": "1",
     "server": "relay-a"
   },
-  "index": 2017
+  "index": 2038
 }
 
 # reccontroller on relay-a → /run/configstore/reccontroller.sock
@@ -728,7 +759,7 @@ GET /v1/get?key=domain/vms/primaries
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
-GET /ingest/SN-A/poll {"camera_now": 1757500281.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+GET /ingest/SN-A/poll {"camera_now": 1757500281.0, "rtt": 0.0, "version": 20529609682, "wait": 0.0}
   Authorization: Bearer «токен 4: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
 → …
 
@@ -736,12 +767,16 @@ GET /ingest/SN-A/poll {"camera_now": 1757500281.0, "rtt": 0.0, "version": 473846
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# resource on relay-a → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/relay-a": 2001}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {
   "items": {
@@ -751,7 +786,15 @@ GET /v1/get?key=domain/vms/sources
 }
 
 # pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+→ 200 {
+  "push": true,
+  "version": 20529609682,
+  "ranges": {},
+  "asks": {},
+  "uncovered": false,
+  "have": 1757500263.0,
+  "held": true
+}
 
 # pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
 #   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
@@ -768,7 +811,7 @@ POST /ingest/SN-A/live
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 2004
 }
@@ -839,7 +882,7 @@ GET /v1/get?key=rec/volumes/card
   "index": 4011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {
   "items": {
@@ -859,21 +902,25 @@ GET /ingest/SN-A/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# resource on srv → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/srv": 1001}}
+
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A/poll
-→ 200 {"push": false, "version": 649632508672, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822885, "ranges": {}, "asks": {}}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "delete", "key": "objects/rec/ingest/up/SN-A.json", "cas": null}
-→ 200 {"index": 2030}
+→ 200 {"index": 2043}
 
 # forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
 #   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
@@ -885,17 +932,26 @@ GET /ingest/SN-A2/poll {"wait": 0.0}
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
   },
   "index": 1003
 }
 
-# recworker r-srv-1 on srv → /run/configstore/recworker.sock (+F3)
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/sources
 → 200 {"items": null, "index": ""}
 
 # forwarder in r-relay-a-1 on relay-a ← srv:8091 (the ingest of r-srv-1): ответ на GET /ingest/SN-A2/poll
-→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+→ 200 {"push": false, "version": 805532822884, "ranges": {}, "asks": {}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/vms/sources
+→ 200 {
+  "items": {
+    "SN-A": "{\"as_of\": 1757500181.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
+  },
+  "index": 2025
+}
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/list?prefix=rec/volumes/
@@ -917,7 +973,7 @@ GET /v1/get?key=rec/volumes/disk
   "index": 2011
 }
 
-# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/vms/upstream
 → 200 {
   "items": {
@@ -933,14 +989,8 @@ GET /v1/get?key=domain/vms/upstream
 ##   "SN-A": {
 ##    "mode": "push",
 ##    "state": "the centre does not want it",
-##    "up_sent": 0,
+##    "errors": 0,
 ##    "up_dropped": 0,
-##    "up_gaps": 0,
-##    "up_resumed": 0,
-##    "up_have_every": 0.0,
-##    "up_unconfirmed_s": 0.0,
-##    "up_polls": 0,
-##    "up_cuts": 0,
 ##    "up_kept": false,
 ##    "up_expired": 0,
 ##    "up_kept_writes": 1
@@ -948,14 +998,8 @@ GET /v1/get?key=domain/vms/upstream
 ##   "SN-A2": {
 ##    "mode": "push",
 ##    "state": "the centre does not want it",
-##    "up_sent": 0,
+##    "errors": 0,
 ##    "up_dropped": 0,
-##    "up_gaps": 0,
-##    "up_resumed": 0,
-##    "up_have_every": 0.0,
-##    "up_unconfirmed_s": 0.0,
-##    "up_polls": 0,
-##    "up_cuts": 0,
 ##    "up_kept": false,
 ##    "up_expired": 0,
 ##    "up_kept_writes": 0
@@ -965,9 +1009,10 @@ GET /v1/get?key=domain/vms/upstream
 ##   {
 ##    "id": "SN-A",
 ##    "cam": "ref:SN-A",
-##    "phase": "waiting",
-##    "why": "camera held by nobody",
-##    "source": null
+##    "phase": "running",
+##    "source": "ingest://relay-a/SN-A",
+##    "via": "ingest",
+##    "written_through": 1757500281.0
 ##   }
 ##  ]
 ## }

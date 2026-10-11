@@ -53,10 +53,8 @@ POST /v1/write {"op": "put", "key": "rec/volumes/disk", "cas": "", "items": {
   }
 }
 
-## Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).
-## FINDINGS.md, F3: роли recworker не дано чтение книг, которые читают приёмник и передатчик
-## (domain/vms/sources, upstream, asks) — на configstore передатчик не строится вовсе. В сценарии их ручка —
-## роль recworker с этими чтениями сверх файла прав; каждая её строка помечена «(+F3)».
+## Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest) и читают
+## свои книги правом роли recworker (worker.reads спеки записи).
 
 # recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/slots/r-relay-a-1", "cas": "", "items": {
@@ -215,8 +213,9 @@ POST /v1/write {"op": "put", "key": "rec/epoch/SN-A", "cas": "", "items": {"epoc
 ##    "id": "SN-A",
 ##    "cam": "ref:SN-A",
 ##    "phase": "waiting",
-##    "why": "camera held by nobody",
-##    "source": null
+##    "why": "SN-A is not in this cluster's source book: the domain has not asked this cluster to record it, or has never seen it publish a door",
+##    "source": null,
+##    "via": null
 ##   }
 ##  ]
 ## }
