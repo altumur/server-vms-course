@@ -1297,7 +1297,7 @@ def recover(node_id: str, data: str, peers: dict[str, str], hours: int | None = 
     prev = log[-2] if len(log) > 1 and log[-2][1] == last[1] - 1 else (bytes([1]), last[1] - 1, last[2])   # NO_OP
     # THE FLOOR: over the highest of the old floor and every epoch this member holds (`epoch.py`, The floor).
     floor, at = raised_floor(((key, items) for key, (items, _) in machine.rows.items()), hours, force)
-    machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor), EPOCH_FLOOR_AT: at}, machine.version(last[1]))
+    machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor), EPOCH_FLOOR_AT: str(at)}, machine.version(last[1]))
     machine.wrote = True
     # The members as the group is to be: the others' rows go, so they may join again; ours say where we are.
     for gone in [k for k in machine.members if k not in peers]:
@@ -1342,7 +1342,7 @@ def recover(node_id: str, data: str, peers: dict[str, str], hours: int | None = 
 
 
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
-def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floor: int = 0, at: str = "") -> dict:
+def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floor: int = 0, at: int | None = None) -> dict:
     """Write `rows` into the group behind `dst` (an admin handle), each created with `cas=0`, values untouched.
     Refused whole, before the first write, when a row is heavier than the store takes, when the group's base is below
     `highest`, or when the group holds a row this load did not write — a row that is one of `rows`, the same, is one
@@ -1367,7 +1367,7 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floo
     if floor:
         # the floor under every epoch raised, once the rows are found fit and before the first of them (ADR-0070)
         try:
-            dst._call("POST", "/v1/write", {"op": "floor", "floor": floor, **({"generation_at": at} if at else {})})
+            dst._call("POST", "/v1/write", {"op": "floor", "floor": floor, **({"generation_at": at} if at is not None else {})})
         except OSError as e:
             raise ValueError(f"the floor under every epoch was not raised, and nothing was written: {e}") from None
     for key, items in rows:
@@ -1424,7 +1424,7 @@ def backup_rows(src) -> dict:
 # machine's (`epoch.generation_hours`) unless a caller says them. A state whose floor says a generation set at an hour
 # later than this machine's clock says now — the clock went back — is refused without `force`: a generation from a
 # clock that runs behind is one a later input may already have used. `(floor, generation_at)`.
-def raised_floor(rows, hours: int | None = None, force: bool = False) -> tuple[int, str]:
+def raised_floor(rows, hours: int | None = None, force: bool = False) -> tuple[int, int]:
     from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, generation_hours, hour_stamp, hours_of, next_epoch_floor
     hours = generation_hours() if hours is None else int(hours)
     floor, at = 0, None
@@ -1432,12 +1432,14 @@ def raised_floor(rows, hours: int | None = None, force: bool = False) -> tuple[i
         said = items.get(EPOCH_FLOOR_FIELD) if key == EPOCH_FLOOR_KEY else items.get("epoch") if "/epoch/" in key else None
         if said is not None and str(said).isascii() and str(said).isdigit():
             floor = max(floor, int(said))
-        if key == EPOCH_FLOOR_KEY and items.get(EPOCH_FLOOR_AT):
+        if key == EPOCH_FLOOR_KEY and items.get(EPOCH_FLOOR_AT) is not None:
             at = hours_of(items[EPOCH_FLOOR_AT])
     if at is not None and hours < at and not force:
-        raise ValueError(f"this machine's clock says {hour_stamp(hours)}, before the hour of the generation in the state "
-                         f"put in ({hour_stamp(at)}): its clock went back — set it right, or say -force (ADR-0070)")
-    return next_epoch_floor(floor, hours), hour_stamp(hours)
+        # the product's `ErrClockBehind`, in its words
+        raise ValueError(f"the clock reads before the hour the state's floor was raised at: it reads hour {hours} since "
+                         f"2026-01-01 UTC ({hour_stamp(hours)}), the floor was raised at hour {at} ({hour_stamp(at)}) — set "
+                         f"the clock right, or say -force (ADR-0070)")
+    return next_epoch_floor(floor, hours), hours
 
 
 def restore_rows(backup: dict, dst, hours: int | None = None, force: bool = False) -> dict:

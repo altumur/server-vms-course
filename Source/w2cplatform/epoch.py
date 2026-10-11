@@ -86,17 +86,15 @@ def generation_hours(now: float | None = None) -> int:
 
 
 def hour_stamp(hours: int) -> str:
-    """`hours` since 2026-01-01 as the hour it is, `2026-10-11T15:00:00Z` — what `generation_at` says."""
-    return time.strftime("%Y-%m-%dT%H:00:00Z", time.gmtime(GENERATION_FROM + int(hours) * 3600))
+    """`hours` since 2026-01-01 as the hour it is, `2026-10-11T15:00Z` — for a person reading a refusal."""
+    return time.strftime("%Y-%m-%dT%H:00Z", time.gmtime(GENERATION_FROM + int(hours) * 3600))
 
 
-def hours_of(stamp) -> int | None:
-    """The hours since 2026-01-01 a `generation_at` says, or None when it says none that reads."""
-    import calendar
-    try:
-        return (calendar.timegm(time.strptime(str(stamp), "%Y-%m-%dT%H:%M:%SZ")) - GENERATION_FROM) // 3600
-    except (ValueError, OverflowError):
-        return None
+def hours_of(said) -> int | None:
+    """The hour a `generation_at` says — whole hours since 2026-01-01 UTC, in decimal, as the product writes it
+    (`EpochGenerationField`) — or None when it says none that reads."""
+    s = str(said)
+    return int(s) if s.isascii() and s.isdigit() else None
 
 
 class EpochUnreadable(ValueError):

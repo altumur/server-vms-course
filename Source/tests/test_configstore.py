@@ -851,14 +851,14 @@ def test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before():
         assert next_epoch(open_vars(c.url()), key)[0] == (2 << 32) + 1
         c.stop()
         said = configstore.recover(c.name, c.data, {c.name: c.raft}, hours=10)          # the clock is ahead of the content
-        assert said["epoch_floor"] == 10 << 32 and said["generation_at"] == "2026-01-01T10:00:00Z", said
-        with _says(ValueError, "its clock went back"):
+        assert said["epoch_floor"] == 10 << 32 and said["generation_at"] == 10, said
+        with _says(ValueError, "the clock reads before the hour the state's floor was raised at"):
             configstore.recover(c.name, c.data, {c.name: c.raft}, hours=9)
         assert configstore.recover(c.name, c.data, {c.name: c.raft}, hours=9, force=True)["epoch_floor"] == 11 << 32
         c.start()
         _ready(c)
         v = open_vars(c.url())
-        assert v.get(EPOCH_FLOOR_KEY)[0] == {"floor": str(11 << 32), "generation_at": "2026-01-01T09:00:00Z"}
+        assert v.get(EPOCH_FLOOR_KEY)[0] == {"floor": str(11 << 32), "generation_at": "9"}
         assert next_epoch(v, key)[0] == (11 << 32) + 1
     finally:
         g.stop()

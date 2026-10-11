@@ -110,7 +110,7 @@ def _walk(seed: int, steps: int, clock_of=lambda hours: hours) -> list[str]:
                     configstore.recover(cur.name, cur.data, {cur.name: cur.raft}, hours=clock_of(back))
                     refused = False
                 except ValueError as e:
-                    refused = "its clock went back" in str(e)
+                    refused = "the clock reads before the hour the state's floor was raised at" in str(e)
                     assert refused, e
                 # refused exactly when the clock is before the hour of the state's generation
                 assert refused == (at is not None and clock_of(back) < at), (seed, back, at, refused)

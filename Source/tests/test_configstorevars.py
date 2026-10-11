@@ -1212,7 +1212,7 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
         assert restore(path, url(b.dir))["epoch_floor"] >= f1                           # asked again: it goes on
         h = open_vars(url(b.dir))
         f1 = epoch_floor(h)
-        assert h.get("testsub/epoch/7")[0] == {"epoch": "3"} and h.get(EPOCH_FLOOR_KEY)[0]["generation_at"].endswith(":00:00Z")
+        assert h.get("testsub/epoch/7")[0] == {"epoch": "3"} and int(h.get(EPOCH_FLOOR_KEY)[0]["generation_at"]) >= hour
         assert next_epoch(h, "testsub/epoch/7")[0] == f1 + 1                             # not 4
         assert next_epoch(h, "testsub/epoch/new")[0] == f1 + 1
         # the floor: raised by the operator's `floor` alone, never lowered, never put or deleted through a door
