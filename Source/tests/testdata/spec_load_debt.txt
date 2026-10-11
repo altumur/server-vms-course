@@ -2,3 +2,11 @@
 # `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
+auto:placement.capacity.base_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+auto:placement.capacity.unit_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+live:placement.capacity.base_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+live:placement.capacity.unit_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+rec:placement.capacity.base_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+rec:placement.capacity.unit_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+vms:placement.capacity.base_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
+vms:placement.capacity.unit_mb   # ADR-0070: the product lays the memory prices first (0484892), the course's loader takes them with step 4 — «Лекции»
