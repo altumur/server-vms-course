@@ -19,7 +19,10 @@ unit:
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
     grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
 placement:
-  capacity:   {from: capacity, default: 100}   # viewers a gateway can carry — its own number, from its heartbeat
+  # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
+  # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
+  # (a viewer on its own stream: webrtcbin, DTLS, a queue — the worst case; ten viewers of one stream cost less)
+  capacity:   {from: capacity, default: 100, unit_mb: 2, base_mb: 48}   # viewers a gateway can carry — its own number, from its heartbeat
   headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
   tie_break:  most-free-capacity

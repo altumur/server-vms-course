@@ -923,3 +923,17 @@ def test_the_vms_processes_open_their_stores_through_the_platforms_one_function(
     entry = open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read()
     assert "host.stores(os.environ" in entry and "CONFIG_URL" not in entry
 
+
+
+def test_every_roles_example_fits_the_prices_its_spec_says():
+    """ADR-0070, step 3 (the product's `roles_test.go`, 0484892): the VMS's specs say what a unit and a worker cost
+    (`placement.capacity.unit_mb`, `base_mb`, the product's measurement of 2026-10-11, the same bytes), and a worker started
+    on its role's example declaration (`deploy/roles/<role>.env.example`) fits them — the base worker would not start
+    otherwise (`memorybudget.memory_budget`); each example's ceiling is a whole number of workers above 0."""
+    from vms.config import AUTO_SPEC, LIVE_SPEC, REC_SPEC, SPEC
+    from w2cplatform.memorybudget import memory_budget
+    for role, spec in (("vmsworker", SPEC), ("recworker", REC_SPEC), ("liveworker", LIVE_SPEC), ("autoworker", AUTO_SPEC)):
+        assert spec.capacity_unit_mb > 0 and spec.capacity_base_mb > 0, role
+        env = dict(re.findall(r"^([A-Z_]+)=(\S+)$", open(os.path.join(DEPLOY, "roles", f"{role}.env.example")).read(), re.M))
+        assert memory_budget(spec, env) == float(env["WORKER_MEMORY_MB"]), role
+        assert int(env["HOST_MEMORY_MB"]) // int(env["WORKER_MEMORY_MB"]) >= 1, role
