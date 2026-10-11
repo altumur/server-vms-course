@@ -47,7 +47,7 @@ from __future__ import annotations
 import threading
 
 from .limits import NO_CEILING, check
-from .variables import Conflict, Forbidden, items_bytes, refuse_delete, register_scheme, safe_path
+from .variables import guard_check, guard_match, Conflict, Forbidden, items_bytes, refuse_delete, register_scheme, safe_path
 
 # One store per name, per process. Module-level because that is what "per process" means; the lock is
 # around the registry, not around a store — each store has its own.
@@ -98,11 +98,13 @@ class MemVariables:
             e = self._s.items.get(path)
             return (dict(e[0]), e[1]) if e else (None, 0)
 
-    def put(self, path: str, items: dict, cas: int | None = None) -> int:
+    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None) -> int:
         safe_path(path)
         self._refuse(path)
         check(path, items_bytes(items), self.max_bytes)
+        guard_check(guard, self.writer, self.acl)
         with self._s.lock:
+            guard_match(guard, lambda k: self._s.items.get(k, (None, 0))[1])
             current = self._s.items.get(path, (None, 0))[1]
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
@@ -112,10 +114,12 @@ class MemVariables:
 
     # A delete is a write: the same ACL as `put`, and never an epoch — the rule is the file backend's
     # (`variables.refuse_delete`), so the two cannot disagree. Then the same CAS check as `put`.
-    def delete(self, path: str, cas: int | None = None) -> None:
+    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None) -> None:
         safe_path(path)
         refuse_delete(path, self.writer, self.acl)
+        guard_check(guard, self.writer, self.acl)
         with self._s.lock:
+            guard_match(guard, lambda k: self._s.items.get(k, (None, 0))[1])
             current = self._s.items.get(path, (None, 0))[1]
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
