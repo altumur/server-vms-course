@@ -231,6 +231,14 @@ class CarryClient:
         """What the agent's pass asks of its `domain_vars` (`DomainAgent._answer`): this client's own answer."""
         return self.carry()
 
+    def pass_on(self, cluster: str, at: float, seal: str, signature: str, key: str | None) -> dict:
+        """Another cluster's ask, passed on to the holder's door as it came — its time, its sealing key, ITS signature and
+        the key it names — by the road this client carries on (`relay.RelayDoor`, a knock behind a relay). Nothing of
+        this client's own is added: the door checks the cluster's signature, as it checks one at its own door."""
+        if isinstance(self.door, str):
+            return _http_ask(self.door, cluster, at, seal, signature, None, self.timeout, key)
+        return self.door.carry(cluster, at, seal, signature, None, key=key)
+
 
 def open_for(key, answer_: dict, cluster: str) -> dict:
     """An answer a relay kept for `cluster`, opened by `cluster`'s own key."""

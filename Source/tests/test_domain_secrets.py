@@ -371,6 +371,78 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
         srv.shutdown()
 
 
+def test_a_cluster_behind_a_relay_knocks_through_it_and_only_the_holder_remembers_the_knock():
+    """The scenario «камера — офис — центр», N1 (ADR-0066's addition of 2026-10-11, «Архитектор»): the knock is remembered
+    by the holder's door alone, and a camera behind an office reaches no door but the office's — which answered 404
+    «relays no member», passed nothing on, and no camera behind an office was ever in `knocking`. The relay passes the ask
+    of a cluster it does not relay on to the holder by its own road there, as it came — the cluster's signature, the key
+    it names — keeps nothing of it, and answers with the holder's words; the holder remembers the knock, a person admits
+    the camera by its fingerprint, and once the topology puts it behind the relay it is answered through it. Over HTTP,
+    both doors; a knock signed by another key than it names is passed on and not remembered; a domain the relay cannot
+    reach is the relay's 503, said."""
+    from w2cplatform.console import open_doors
+    from w2cplatform.domain.agent import DomainAgent
+    from w2cplatform.domain.carry import CarryClient, HolderDoor, Refused, request_message
+    from w2cplatform.domain.federation import Unreachable
+    from w2cplatform.domain.members import KNOCKS, Members, fingerprint
+    from w2cplatform.domain.relay import Relay, RelayDoor, door_handler
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.trust.memberkey import MemberKey
+    from tests.test_domain_platform import cluster
+    fed, wall, signer, holder_ring, keys = holder_with_members()
+    north = fed.clusters["north"]
+    east = fed.clusters.get("east") or cluster("east", wall)
+    Topology(north.vars).edit(lambda d: d["via"].update({"south": "east"}), 0, known={"north", "south", "east"})
+    door = HolderDoor(north.vars, north.objects, holder_ring, wall)
+    holder_srv = open_doors("127.0.0.1", 0, Holder(north.vars, north.objects, signer, carry_door=door, wall=wall).handler(),
+                            unix_env="RK_NO_SUCH_SOCKET", say=False)
+    holder_url = f"http://127.0.0.1:{holder_srv.server_address[1]}"
+    relay = DomainAgent("east", CarryClient(holder_url, "east", keys["east"], wall), east.vars, now=wall, key=keys["east"],
+                        bundle_store=east.objects, sealer=ring())
+    relay.relay_members = lambda: relay.relays()          # whom it relays: the topology, as carried (`agent.main`)
+    relay_srv = open_doors("127.0.0.1", 0, door_handler(RelayDoor(relay)), unix_env="RK_NO_SUCH_SOCKET", say=False)
+    relay_url = f"http://127.0.0.1:{relay_srv.server_address[1]}"
+    members = Members(north.vars, wall, domain="north")
+    cam, liar = MemberKey.new(), MemberKey.new()
+    try:
+        assert relay.sync() and set(relay.relayed) == {"south"}
+        try:                                             # names cam's key and is signed by another: passed on, not remembered
+            Relay(relay).door.carry("cam-x", wall(), cam.seal_pub, liar.sign(request_message("cam-x", wall(), cam.seal_pub)),
+                                    key=cam.pub)
+            raise AssertionError("the relay answered a stranger")
+        except Refused as e:
+            assert e.status == 403 and "no member with a key" in e.detail, e.detail          # the holder's words
+        assert north.objects.list(KNOCKS + "/") == []
+        try:                                             # the camera's own agent, behind the office: RELAY_URL
+            CarryClient(relay_url, "cam-x", cam, wall).carry()
+            raise AssertionError("the relay answered a stranger over HTTP")
+        except Refused as e:
+            assert e.status == 403 and "no member with a key" in e.detail, (e.status, e.detail)
+        knocking = members.knocking(north.objects)
+        assert [k["name"] for k in knocking] == ["cam-x"] and knocking[0]["fingerprint"] == fingerprint(cam.pub)
+        assert "cam-x" not in relay.relayed and "cam-x" not in relay.__dict__.get("relay_refused", {})
+        assert not [k for k in east.objects.list("") if "cam-x" in k] and not [p for p in east.vars.list("") if "cam-x" in p]
+        assert members.accept("cam-x", "anna", north.objects, fingerprint=fingerprint(cam.pub))
+        Topology(north.vars).edit(lambda d: d["via"].update({"cam-x": "east"}), Topology(north.vars).read()["rev"],
+                                  known={"north", "south", "east", "cam-x"})
+        assert relay.sync() and set(relay.relayed) == {"south", "cam-x"}
+        got = CarryClient(relay_url, "cam-x", cam, wall).carry()
+        assert got["cluster"] == "cam-x" and "domain/keys" in got["rows"]                  # admitted: answered through east
+        wall.advance(30)
+        relay.domain_vars = CarryClient("http://127.0.0.1:9", "east", keys["east"], wall, timeout=1)   # the centre away
+        stranger = MemberKey.new()
+        try:
+            CarryClient(relay_url, "cam-y", stranger, wall).carry()
+            raise AssertionError("the relay answered with the domain away")
+        except Refused as e:
+            assert e.status == 503 and "could not pass" in e.detail, (e.status, e.detail)
+    finally:
+        relay_srv.shutdown()
+        holder_srv.shutdown()
+    assert [k["name"] for k in members.knocking(north.objects)] == []                     # cam-y's knock reached nobody
+
+
 def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_to_one_that_left():
     """The three-site run, O9: the holder's door asked only the topology before answering a relay for a
     member — `DELETE /domain/members/<member>` and the relay still got 200 for it (public rows, no secret, `key: null`),

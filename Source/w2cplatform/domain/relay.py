@@ -196,7 +196,16 @@ def say_seen(relay_objects, last_contact: float | None, now: float) -> dict:
 class RelayDoor:
     """What a relay answers its members: each one's kept answer, to that member only — checked by the member's key (the
     domain's answer carried it), its clock within `carry.SKEW` of the relay's. A member admitted without a key is
-    answered only in the same process (`plain`: the tests' members), never over the network."""
+    answered only in the same process (`plain`: the tests' members), never over the network.
+
+    A CLUSTER THE RELAY DOES NOT RELAY KNOCKS THROUGH IT (the scenario «камера — офис — центр», N1; ADR-0066's addition of
+    2026-10-11, «Архитектор»). The knock is remembered by the holder's door alone (`carry.HolderDoor`, `note_knock`), and
+    a camera behind an office reaches no door but the office's: it was answered 404 «relays no member», nothing was passed
+    on, and no camera behind an office was ever in `knocking` — none could be admitted by its fingerprint. Now an ask the
+    relay has nothing for and no refusal of goes on to the holder by the relay's own road to it — the one its relaying
+    down takes (`CarryClient.pass_on`) — as it came: the cluster's time, sealing key, signature and the key it names. The
+    relay keeps nothing of it and vouches for nothing; the holder checks the signature as at its own door, remembers the
+    knock, and refuses — and the relay answers with the holder's words and status, not with a 404 of its own."""
 
     def __init__(self, agent, relay_objects=None):
         self.agent = agent
@@ -216,12 +225,14 @@ class RelayDoor:
     def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None,
               key: str | None = None) -> dict:
         """`key`: the key the ask says it is signed with — the holder's door remembers a cluster it does not know by it
-        (a knock); the relay checks the member by the key the domain answered with, and no other."""
+        (a knock: passed on, `_pass_on`); the relay checks the member by the key the domain answered with, and no other."""
         from w2cplatform.trust.memberkey import verify
         from .carry import SKEW, Refused, request_message
-        kept = self._kept(cluster)
         if for_member not in (None, cluster):
             raise Refused(403, f"a member asks a relay for its own rows only, not {for_member}'s")
+        if self._stranger(cluster):
+            self._pass_on(cluster, at, seal, signature, key)
+        kept = self._kept(cluster)
         if not kept.get("key"):
             raise Refused(403, f"{cluster} was admitted without a key: it cannot be told from anybody on the site")
         if not verify(kept["key"], request_message(cluster, at, seal), signature):
@@ -230,12 +241,51 @@ class RelayDoor:
             raise Refused(401, f"the ask is {self.agent.now() - at:+.0f} s from the relay's clock")
         return kept
 
+    def _stranger(self, cluster: str) -> bool:
+        """Nothing kept for `cluster`, no refusal of it, and not a member this relay relays (its topology as carried, or
+        `RELAY_MEMBERS`): a cluster the domain did not name behind this relay — one asking to join, as far as the relay
+        can tell. A member it relays and has not reached the domain for yet is not one: it waits for the relay's pass."""
+        a = self.agent
+        if a is None or cluster in a.relayed or cluster in getattr(a, "relay_refused", {}):
+            return False
+        relays = getattr(a, "relay_members", None)
+        return cluster not in (relays() if callable(relays) else (relays or []))
+
+    def _pass_on(self, cluster: str, at: float, seal: str, signature: str, key: str | None) -> None:
+        """The ask of a cluster this relay does not relay, to the holder's door by the relay's road to the domain, as it
+        came; the holder's refusal is raised as it said it. An answer the holder GAVE is not handed on: the domain's
+        topology does not put that member behind this relay, and the relay gives a member nothing it did not keep."""
+        from .carry import HolderDoor, Refused
+        a = self.agent
+        road = a.domain_vars                             # a door (`CarryClient`), a relay above (`RelayLink`) — or, in
+        if not hasattr(road, "pass_on"):                 # the tests, the holder's stores: its door over them
+            road = _HolderRoad(HolderDoor(road, a.domain_objects, wall=a.now))
+        try:
+            road.pass_on(cluster, at, seal, signature, key)
+        except Refused:
+            raise                                        # the holder's words, and its status
+        except Unreachable as e:
+            raise Refused(503, f"{getattr(a, 'cluster', 'the relay')} relays no member {cluster}, and could not pass "
+                               f"its ask on to the domain: {e}") from None
+        raise Refused(404, f"{getattr(a, 'cluster', 'the relay')} relays no member {cluster}: the domain's topology "
+                           f"does not place it here, or the relay has not reached the domain for it yet")
+
     def plain(self, cluster: str) -> dict:
         from .carry import Refused
         kept = self._kept(cluster)
         if kept.get("key"):
             raise Refused(401, f"{cluster} has a key: it asks signed")
         return kept
+
+
+class _HolderRoad:
+    """The holder's door over its stores, as a relay that holds them (the tests) passes an ask on."""
+
+    def __init__(self, door):
+        self.door = door
+
+    def pass_on(self, cluster: str, at: float, seal: str, signature: str, key: str | None) -> dict:
+        return self.door.carry(cluster, at, seal, signature, None, key=key)
 
 
 class RelayLink:
@@ -253,6 +303,10 @@ class RelayLink:
 
     def seen(self) -> dict | None:
         return seen_mark(self.door.objects)
+
+    def pass_on(self, cluster: str, at: float, seal: str, signature: str, key: str | None) -> dict:
+        """A relay behind this one passes a knock on: to this relay's door, which passes it on in turn — up to the holder."""
+        return self.door.carry(cluster, at, seal, signature, key=key)
 
 
 class Relay:
@@ -299,7 +353,7 @@ def door_handler(door: RelayDoor):
             try:
                 at = float(self.headers.get("X-W2C-Time", "nan"))
                 got = door.carry(path[len("/api/carry/"):], at, self.headers.get("X-W2C-Seal", ""),
-                                 self.headers.get("X-W2C-Signature", ""))
+                                 self.headers.get("X-W2C-Signature", ""), key=self.headers.get("X-W2C-Key") or None)
             except ValueError:
                 return self._send(400, {"detail": "an ask names its time"})
             except Refused as e:
