@@ -7,8 +7,10 @@ what that member's agent left there; what it wants of a member is a row the agen
 12–15 — that half was always the agent's). The agent already opens one connection to the domain on every
 pass; this module is the other half of that same pass.
 
-    up      the member's agent writes a REPORT into the domain holder's object store, under a prefix of
-            its own — `domain/members/<member>/` — one writer per prefix, as everywhere: copies of the
+    up      the member's agent sends a REPORT to the domain holder's door — `POST /api/member/<member>`, the same
+            door it carries through, so the report follows the holder as the rows do (the three-site
+            scenario, N5; ADR-0066) — and the door keeps it in the holder's object store under a prefix of the
+            member's own — `domain/members/<member>/` — one writer per prefix, as everywhere: copies of the
             objects the domain reads (every subsystem's heartbeats and snapshot shards, and what a spec adds),
             copies of the rows the domain reads (the outcomes of kept edits, its copy of the shared
             settings' pointer, the holder record it follows, its backup pointer, its epochs), the pages it
@@ -55,6 +57,9 @@ from .federation import MEMBER_OBJECTS, REACHES, Cluster, Unreachable
 
 UPLINK = "domain/members"
 REPORTED = "reported"
+# The largest publication a door takes (the product's `maxPublication`): a member's report this large is the sign to
+# publish changes instead of all.
+MAX_PUBLICATION = 16 << 20
 # What the domain reads of a member, and nothing more. Objects: what a cluster publishes (М10–М11) — every loaded
 # subsystem's heartbeats and snapshot, and the objects a spec adds (`declared.reported_objects`) — and what the member
 # says it can see.
@@ -82,35 +87,132 @@ class NotPublished(Exception):
     """The member has published nothing yet — a report now would say "I hold no units", completely."""
 
 
-# One report. `member_vars` and `member_objects` are the member's OWN stores, read locally by its agent;
-# `domain_objects` is the domain holder's object store, the one connection. `pages` is what the member is
-# asked to show beyond its rows and objects — Lesson 14's alarm pages — as {name: bytes}.
+# One report, in the product's words (`Publication`; ADR-0066's addition of 2026-10-11, night): what a member's agent
+# sends its holder's door, `POST /api/member/<member>` (`carry.HolderDoor.member`), or — on the holder's own box and in
+# the tests, with no door between — hands `take` itself (`report`). `member_vars` and `member_objects` are the member's
+# OWN stores, read locally by its agent; `pages` is what the member is asked to show beyond its rows and objects —
+# Lesson 14's alarm pages — as {name: bytes}.
+#
+#     sent_at    the member's clock when it sent this
+#     objects    {key: JSON} — what it publishes (`objects()`), each object as the JSON it is: one that is not JSON is
+#                not sent (the product's `Collect`)
+#     outcomes   {edit: outcome} — what came of the kept edits it applied (`pending`, Lesson 9)
+#     key        the member key it presents (hex)
+#     rows       {path: {items, idx}} — the rows the domain reads of it (`_rows()`)          ┐ the course's alone: lines
+#     pages      {name: text} — the pages it is asked for                                   │ of `ПАРИТЕТ-КУРС-ПРОДУКТ.md`
+#     seal       its sealing key (hex), which the door seals the answer to                  ┘ `# ADR-0066 «курс»`
 #
 # Lesson 10's ordering rule, on the report: a member that has not published yet does not report. Its report
 # would be a COMPLETE answer with no units in it, which the domain must believe; silence is the truthful
 # thing until the first publish.
-def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None,
-           key=None) -> int:
+def publication(member: str, member_vars, member_objects, now: float, pages: dict | None = None, key=None) -> dict:
+    from .pending import OUTCOMES_PATH
+    objs: dict = {}
+    for prefix in objects():
+        for k in member_objects.list(prefix):
+            raw = member_objects.get(k)
+            if not raw:
+                continue
+            try:
+                objs[k] = json.loads(raw)
+            except PARSE_ERRORS:
+                continue                                           # not JSON: not published (the product's `Collect`)
+    if not any(k.startswith(f"{s.name}/snapshot/") for s in declared.directory() for k in objs):
+        raise NotPublished(f"{member} has not published yet; it reports after its first publish")
+    rows: dict = {}
+    outcomes = None
+    for row in _rows():
+        for path in (member_vars.list(row) if row.endswith("/") else [row]):
+            items, idx = member_vars.get(path)
+            if items is None:
+                continue
+            if path == OUTCOMES_PATH:
+                outcomes = {k: _json_or_text(v) for k, v in items.items()}
+            else:
+                rows[path] = {"items": items, "idx": idx}
+    pub = {"sent_at": now, "objects": objs, "rows": rows,
+           "pages": {n: raw.decode("utf-8", "surrogateescape") for n, raw in (pages or {}).items()}}
+    if outcomes is not None:
+        pub["outcomes"] = outcomes
     # The keys it presents ride on the mark (ADR-0032): a member nobody admitted yet is KNOCKING, and the person who
     # admits it on the domain's console admits it by this key — after comparing its fingerprint with the one the box
     # shows (`Members.accept`). The mark proves nothing by itself; the person's comparison does.
-    presented = {"key": key.pub, "seal": key.seal_pub} if key is not None else {}
+    if key is not None:
+        pub["key"], pub["seal"] = key.pub, key.seal_pub
+    return pub
+
+
+def _json_or_text(v):
+    """An outcome as the agent keeps it — a JSON text — sent as the JSON it is; one that is not JSON, as its text."""
+    try:
+        return json.loads(v) if isinstance(v, str) else v
+    except PARSE_ERRORS:
+        return v
+
+
+def entries(pub: dict, prev_mark: bytes | None = None, keep_seq: bool = False) -> tuple[dict[str, bytes], bytes]:
+    """A publication as the holder keeps it under `base(member)`: `({sub: bytes}, mark)` — `o/<key>`, `v/<path>`,
+    `p/<name>`, and the mark `reported`, written last. The mark counts on from `prev_mark`; with `keep_seq` (a relay's
+    summary, which carries a silent member's last publication again) it counts only when the member's `sent_at` moved.
+    Raises ValueError for a publication that is not one."""
+    from .pending import OUTCOMES_PATH
+    if not isinstance(pub, dict):
+        raise ValueError("a publication is an object {sent_at, objects}")
+    try:
+        sent_at = finite(pub.get("sent_at"))
+    except PARSE_ERRORS:
+        raise ValueError("a publication names when it was sent: `sent_at`, a number") from None
     want: dict[str, bytes] = {}
-    for prefix in objects():
-        for key in member_objects.list(prefix):
-            raw = member_objects.get(key)
-            if raw:
-                want["o/" + key] = raw
-    if not any(k.startswith(f"o/{s.name}/snapshot/") for s in declared.directory() for k in want):
-        raise NotPublished(f"{member} has not published yet; it reports after its first publish")
-    for row in _rows():
-        for key in (member_vars.list(row) if row.endswith("/") else [row]):
-            items, idx = member_vars.get(key)
-            if items is not None:
-                want["v/" + key] = json.dumps({"items": items, "idx": idx}, sort_keys=True).encode()
-    for name, raw in (pages or {}).items():
-        want["p/" + name] = raw
+    # What the domain reads of a member, and nothing more: an object or a row it does not read is dropped at the door
+    # (the product's `Collect`: "anything else in a member's store is nobody else's business").
+    kept_objects, kept_rows = objects(), _rows()
+    for part, fam in (("objects", "o/"), ("rows", "v/"), ("pages", "p/")):
+        got = pub.get(part) or {}
+        if not isinstance(got, dict):
+            raise ValueError(f"`{part}` of a publication is an object")
+        for k, v in got.items():
+            if not isinstance(k, str) or ".." in k.split("/") or (
+                    fam == "o/" and not k.startswith(kept_objects)) or (
+                    fam == "v/" and not any(k == r or (r.endswith("/") and k.startswith(r)) for r in kept_rows)):
+                continue
+            if fam == "o/":
+                want[fam + k] = json.dumps(v).encode()
+            elif fam == "v/":
+                if not isinstance(v, dict) or not isinstance(v.get("items"), dict):
+                    raise ValueError(f"the row {k} of a publication is {{items, idx}}")
+                want[fam + k] = json.dumps({"items": v["items"], "idx": v.get("idx", 0)}, sort_keys=True).encode()
+            else:
+                if not isinstance(v, str):
+                    raise ValueError(f"the page {k} of a publication is a text")
+                want[fam + k] = v.encode("utf-8", "surrogateescape")
+    outcomes = pub.get("outcomes")
+    if outcomes is not None:
+        if not isinstance(outcomes, dict):
+            raise ValueError("`outcomes` of a publication is an object")
+        items = {k: v if isinstance(v, str) else json.dumps(v, ensure_ascii=False, sort_keys=True) for k, v in outcomes.items()}
+        want["v/" + OUTCOMES_PATH] = json.dumps({"items": items, "idx": 0}, sort_keys=True).encode()
+    presented = {f: pub[f] for f in ("key", "seal") if isinstance(pub.get(f), str) and pub[f]}
+    # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
+    # before the new one was written, so it was never written again: the member stopped reporting for good, by one
+    # object (М10's seventh review, part 2). It starts again from the clock's milliseconds — a number the domain has
+    # not seen, which is all `_Fresh` asks of a sequence — and is written whole.
+    try:
+        prev = json.loads(prev_mark) if prev_mark else {}
+        seq = int(prev.get("seq", 0)) if isinstance(prev, dict) else 0
+        same = isinstance(prev, dict) and prev.get("ts") == sent_at
+    except PARSE_ERRORS:
+        seq, same = int(sent_at * 1000) - 1, False
+    if not (keep_seq and same and prev_mark):
+        seq += 1
+    mark = json.dumps({"ts": sent_at, "seq": seq, "items": len(want), **presented}).encode()
+    return want, mark
+
+
+def take(member: str, pub: dict, domain_objects) -> int:
+    """The holder's half: one member's publication into its own object store, under `base(member)` — only what changed
+    is rewritten, what the member no longer has is swept, and the mark goes last: the report is whole."""
     b = base(member)
+    want, mark = entries(pub, domain_objects.get(b + REPORTED))
     written = 0
     for k, raw in want.items():
         if domain_objects.get(b + k) != raw:                       # only what changed is rewritten
@@ -124,17 +226,15 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
     for full in domain_objects.list(b):
         if full[len(b):].startswith(("o/", "v/", "p/")) and full not in keep:
             domain_objects.delete(full)                            # gone from the member: gone from its report
-    # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
-    # before the new one was written, so it was never written again: the member stopped reporting for good, by one
-    # object (М10's seventh review, part 2). It starts again from the clock's milliseconds — a number the domain has
-    # not seen, which is all `_Fresh` asks of a sequence — and is written whole.
-    prev = domain_objects.get(b + REPORTED)
-    try:
-        seq = (int(json.loads(prev).get("seq", 0)) if prev else 0) + 1
-    except PARSE_ERRORS:
-        seq = int(now * 1000)
-    domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want), **presented}).encode())   # last: the report is whole
+    domain_objects.put(b + REPORTED, mark)                         # last: the report is whole
     return written + 1
+
+
+def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None,
+           key=None) -> int:
+    """One report with no door between: the member's publication taken into `domain_objects` itself — the holder's own
+    agent on its own box, a member behind a relay into its relay's objects, the tests."""
+    return take(member, publication(member, member_vars, member_objects, now, pages, key), domain_objects)
 
 
 def reported_at(member: str, domain_objects) -> float | None:
