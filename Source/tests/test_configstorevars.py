@@ -1230,6 +1230,57 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
         assert next_epoch(h, "testsub/epoch/7")[0] == (2 << 32) + 1
 
 
+def test_backup_restore_and_issue_in_any_order_never_issue_a_generation_twice():
+    """ADR-0070's addition of 2026-10-11 (recovery is one protocol, «Архитектор»): a model of sequences — epochs issued,
+    a backup taken, epochs issued on after it, the group lost and its backup restored into a fresh one, again and again,
+    in orders a seeded random walk picks — held to the invariants: no epoch of a unit is issued twice across every group
+    of the lineage, and the floor under every epoch never goes down. (`recover`, the raft group's, is held to the same in
+    `test_configstore.py` and the drills of `tests/cluster/test_drills.py`.) What the protocol covers, the model walks: a
+    restored group is backed up before it issues — its floor is then in every later backup. Without that, a backup
+    restored a second time after the group it made issued and was lost raises the same floor again (seed 1 of the walk
+    below without the backup after a restore): reported to «Архитектор» 2026-10-11, the form of its mending is theirs."""
+    import random
+    from w2cplatform.epoch import epoch_floor, next_epoch
+    units = ("testsub/epoch/1", "testsub/epoch/2")
+    for seed in range(4):
+        rnd = random.Random(seed)
+        issued = {u: [] for u in units}
+        floors = [0]
+        backup = None
+        base = 1000
+        for _generation in range(4):
+            with Daemon(LocalBackend("srv", base)) as d:
+                h = open_vars(url(d.dir))
+                if backup is not None:
+                    path = os.path.join(tempfile.mkdtemp(), "rows.json")
+                    with open(path, "w") as f:
+                        json.dump(backup, f)
+                    with redirect_stdout(io.StringIO()):
+                        configstore.main(["restore", "--from", path, "--socket", url(d.dir)])
+                    floors.append(epoch_floor(h))
+                    assert floors[-1] >= floors[-2], (seed, floors)
+                    out = io.StringIO()
+                    with redirect_stdout(out):
+                        configstore.main(["backup", "--socket", url(d.dir)])
+                    backup = json.loads(out.getvalue())
+                for _ in range(rnd.randint(1, 6)):
+                    if rnd.random() < 0.3:
+                        out = io.StringIO()
+                        with redirect_stdout(out):
+                            configstore.main(["backup", "--socket", url(d.dir)])
+                        backup = json.loads(out.getvalue())
+                    u = rnd.choice(units)
+                    e = next_epoch(h, u)[0]
+                    assert all(e > x for x in issued[u]), (seed, u, e, issued[u])
+                    issued[u].append(e)
+                if backup is None:
+                    out = io.StringIO()
+                    with redirect_stdout(out):
+                        configstore.main(["backup", "--socket", url(d.dir)])
+                    backup = json.loads(out.getvalue())
+                base = max(base, int(backup["highest"])) + 1000
+
+
 def test_the_operator_commands_speak_to_the_admin_socket():
     """`python3 -m w2cplatform.configstore status | rights [file]` — the product's own `configstore …` command."""
     with Daemon() as dm:
