@@ -27,6 +27,8 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from w2cplatform.rows import PARSE_ERRORS, Table
 
+from .jcs import jcs
+
 # The rows of trust a cluster holds — the key set, the root it pinned, the revocation list — as the domain's agent
 # carried them (the review's seventh pass left "the trust readers" open). One that does not parse is counted here once
 # (`trust_row`) and logged once; what not reading it means is the reader's (`agent.ClusterTrust`): a door that cannot
@@ -176,7 +178,7 @@ class TokenIssuer:
         header = {"alg": "EdDSA", "kid": self.kid}
         payload = {"iss": self.domain, "sub": subject, "iat": now, "exp": now + lifetime,
                    "jti": secrets.token_hex(8), **claims}
-        signing = _b64(json.dumps(header, sort_keys=True).encode()) + "." + _b64(json.dumps(payload, sort_keys=True).encode())
+        signing = _b64(jcs(header)) + "." + _b64(jcs(payload))     # what is signed is RFC 8785's (ADR-0072)
         return signing + "." + _b64(self.key.sign(signing.encode()))
 
     def rotate(self, overlap: float, now: float | None = None) -> str:

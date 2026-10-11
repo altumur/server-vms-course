@@ -1,0 +1,23 @@
+# The canonical form of a signed document — RFC 8785 (JCS), whole (ADR-0072): one table for the course
+# (Source/tests/testdata/canonical_json.tsv) and the product (testdata/canonical_json.tsv at its root), byte for byte.
+# A row is: a JSON text as it may come; its RFC 8785 form; the sha256 of that form's UTF-8, hex. Both sides read every
+# input, canonicalize it and compare both columns. Required (the ADR): <>& unescaped, 1.0 → 1, 1e21 → 1e+21, -0 → 0,
+# nesting, a name outside the BMP (sorted by UTF-16 code units: U+1F600 before U+FB33), the control characters,
+# the empty object and list. The product lays the table first (it signs in the field); the course follows.
+{"b":2,"a":1}	{"a":1,"b":2}	43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777
+{"label":"A&B <gate>"}	{"label":"A&B <gate>"}	9bf7df596389c91cbd93e84379fb58b08fa8305b21e2acc71a65fc300a51c557
+{"at":1.0,"rev":1}	{"at":1,"rev":1}	32ac2c8aabe7d4b1866197fd72bb4534ac7a90c77ddff0f94239b4cb610a17ca
+{"n":1e21,"m":1e20,"l":123456789012345680000}	{"l":123456789012345680000,"m":100000000000000000000,"n":1e+21}	52e31d1d770848f25724ab9f8754f267910169c5ce1641238da5164c0dcd25d7
+{"n":-0,"m":-0.0,"l":0.0}	{"l":0,"m":0,"n":0}	0cfad3f3ade588e6a8a41c5890812fb814f6ee4ceead147031f1c0c01d2297c8
+{"small":0.000001,"smaller":1e-7,"neg":-1.5e-10}	{"neg":-1.5e-10,"small":0.000001,"smaller":1e-7}	ac5b554941ab4638f31af1ff904b9a3afd22d53d22373b3ff572194662066506
+{"half":1.5,"third":0.3333333333333333,"big":9007199254740991,"e":1E3,"f":1.50}	{"big":9007199254740991,"e":1000,"f":1.5,"half":1.5,"third":0.3333333333333333}	ede41b0557ba278965230969647c43b4232629cc9a784843929ec8e5d97660b2
+{"z":{"b":[3,{"d":true,"c":null}],"a":"x"},"y":[]}	{"y":[],"z":{"a":"x","b":[3,{"c":null,"d":true}]}}	07f2c0c014f60f4d7df143d1e2b0b8f246626944ff92f09990bd3b93e517da38
+{"דּ":2,"😀":1,"a":0}	{"a":0,"😀":1,"דּ":2}	8ec642349d8952d87b48036c8c90479971bc01ea41cb598847c3c6107d206377
+{"s":"a\u0001b\nc\"d\\e\u001ff\t\r\b\f/"}	{"s":"a\u0001b\nc\"d\\e\u001ff\t\r\b\f/"}	4358caaea00c9b4cf2f4a788d65e0544fa9340aba05340dbf356469cc4c7818d
+{}	{}	44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+[]	[]	4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+{"a":{},"b":[],"c":[{}]}	{"a":{},"b":[],"c":[{}]}	6bcb8f419955b7bfbceaf421fa8b479f85a0ca351ace0d486c1ca4de932b551c
+{"s":"é€  x","€":"euro"}	{"s":"é€  x","€":"euro"}	4939e1caf20259ac57170b40bcd6fb7cc5b4e47a7dd03098ffb7e5011ebbf138
+{"neg":-7,"list":[1,2.25,-3e-5,1e300]}	{"list":[1,2.25,-0.00003,1e+300],"neg":-7}	3e4c9cb6d4aef173ed943c6684bc478622c16a3a69b423d0c9a6f0be10114dca
+"a top-level string <&>"	"a top-level string <&>"	87bca9aaac08630b8c7877532879309cf35ed9c3e4021614ab059f66cdef39ca
+[1e21,1e-6,1e-7,0.1,100,1000000]	[1e+21,0.000001,1e-7,0.1,100,1000000]	9a192c0a0d97eb6e1ca59c29602363c662e327efd9a56b1956abf7fde1094aab

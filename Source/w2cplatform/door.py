@@ -46,6 +46,8 @@ import threading
 import time
 from urllib.parse import parse_qs, urlsplit
 
+from w2cplatform.trust.jcs import jcs
+
 log = logging.getLogger("w2cplatform.door")
 
 TTL = 120.0                     # seconds a token opens a door for: the page asks again before it ends
@@ -174,8 +176,7 @@ class Signer:
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
         kid, seed = self.current()
         exp = now + ttl
-        body = json.dumps({"sub": user, "unit": unit, "holder": holder, "routes": list(routes), "exp": exp},
-                          separators=(",", ":"), sort_keys=True).encode()
+        body = jcs({"sub": user, "unit": unit, "holder": holder, "routes": list(routes), "exp": exp})   # RFC 8785 (ADR-0072)
         head = f"{VERSION}.{kid}.{_b64(body)}"
         return f"{head}.{_b64(Ed25519PrivateKey.from_private_bytes(seed).sign(head.encode()))}", exp
 

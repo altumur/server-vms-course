@@ -32,6 +32,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives import serialization
 
+from .jcs import jcs
 from .signer import Signer, TrustBundle, VerifyError, _name, _utc, DAY, YEAR
 
 
@@ -75,8 +76,7 @@ class Manufacturer:
         cryptographic thing a customer ever needs from the vendor."""
         if self.sold.get(serial) != registrar_id.split("/")[0]:
             raise EnrollError(f"MASA: {serial} was not sold to the domain behind {registrar_id}")
-        body = json.dumps({"serial": serial, "registrar": registrar_id, "nonce": nonce,
-                           "exp": self.now() + DAY}, sort_keys=True).encode()
+        body = jcs({"serial": serial, "registrar": registrar_id, "nonce": nonce, "exp": self.now() + DAY})   # ADR-0072
         return body + b"." + self.masa_key.sign(body).hex().encode()   # hex, so the separator never appears inside the signature
 
 
@@ -101,8 +101,7 @@ class Pledge:
         key = self.ldevid_key = self.member_key.signing
         pub = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
         seal = self.member_key.seal_pub
-        signed = json.dumps({"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(), "seal_pub": seal},
-                            sort_keys=True).encode()
+        signed = jcs({"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(), "seal_pub": seal})   # ADR-0072
         return {"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(), "seal_pub": seal,
                 "idevid": self.idevid.public_bytes(serialization.Encoding.PEM).decode(),
                 "proof": self.idevid_key.sign(signed).hex()}
@@ -136,8 +135,8 @@ class Registrar:
     def _check_hello(self, hello: dict) -> x509.Certificate:
         cert = x509.load_pem_x509_certificate(hello["idevid"].encode())
         self.vendor.verify(cert, now=self.now())            # a real IDevID from a manufacturer we trust
-        signed = json.dumps({"serial": hello["serial"], "nonce": hello["nonce"], "csr_pub": hello["csr_pub"],
-                             **({"seal_pub": hello["seal_pub"]} if "seal_pub" in hello else {})}, sort_keys=True).encode()
+        signed = jcs({"serial": hello["serial"], "nonce": hello["nonce"], "csr_pub": hello["csr_pub"],
+                      **({"seal_pub": hello["seal_pub"]} if "seal_pub" in hello else {})})      # what the pledge signed
         try:
             cert.public_key().verify(bytes.fromhex(hello["proof"]), signed)
         except InvalidSignature:
