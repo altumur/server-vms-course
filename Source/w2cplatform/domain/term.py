@@ -455,8 +455,13 @@ class DomainHolder:
         doc = self.record or sign({"term": self.term, "holder": self.name, "at": self.wall(),
                                    **({"from": self.restored_from} if self.restored_from else {}),
                                    **({"url": self.url} if self.url else {})}, self.signer.tokens)
-        _, idx = self.vars.get(HOLDER)
-        self.vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
+        # The record the store already holds is not written again (the scenario «камера — офис — центр», N2): the root's
+        # record of term 1 was written by `found` and then once more, the same document, by every start of the signer
+        # (`term_of` → `start` → here) — a write that changed nothing, on every start.
+        have, idx = self.vars.get(HOLDER)
+        raw = json.dumps(doc, sort_keys=True)
+        if (have or {}).get("doc") != raw:
+            self.vars.put(HOLDER, {"doc": raw}, cas=idx)
         self._list_self()
 
     # On the list of members with the key its agent made (`Members.list_holder`, ADR-0066's addition of 2026-10-11): what
@@ -682,7 +687,8 @@ OLD_KEYS_OVERLAP = 3600.0
 
 
 def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall=time.time,
-                stolen: bool = False, sealer=None, copy: dict | None = None) -> tuple[DomainHolder, dict]:
+                stolen: bool = False, sealer=None, copy: dict | None = None,
+                url: str | None = None) -> tuple[DomainHolder, dict]:
     """Move the domain on `new` from the signer's backup and the newest verified state any reachable
     member holds. `objects_of(member)` is that member's durable store.
 
@@ -694,7 +700,10 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
 
     `copy`: `{term, rev}` — the operator's word (with why, at the door): restore exactly that copy, from any neighbour
     that holds it; none gave it — refused. It, or `stolen`, is the explicit word that lets a move restore a copy older
-    than one a reachable neighbour declared and did not give (ADR-0066's addition of 2026-10-11)."""
+    than one a reachable neighbour declared and did not give (ADR-0066's addition of 2026-10-11).
+
+    `url`: where the new holder's signer answers — the door the record of the new term names (`signer_service.Holder`
+    passes its `SIGNER_URL`)."""
     now = wall()
     new_vars = fed.clusters[new].vars
     root = DomainRoot.restore(domain_id, signer_backup, now=wall) if is_recovery_file(signer_backup) else None
@@ -807,9 +816,16 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     for name, c in fed.clusters.items():
         c.is_domain_holder = name == new
     restored_from = {"term": int(best[1]["term"]), "rev": int(best[1]["rev"])} if best else None
+    # THE RECORD OF THE NEW TERM NAMES ITS DOOR (the scenario «камера — офис — центр», N4; ADR-0066's addition of
+    # 2026-10-11). The root signs the record here, with the recovery file in hand, and nobody can sign it again later:
+    # it carried no `url` — the signer's own claim adds one only to a record it signs itself (`Holder._took`) — so the
+    # agents took term 2 by `/api/held` and went on carrying through the dead holder's door («the record names no
+    # door»). The product's record always says its door (`HolderRecord.URL`, `Term.Claim`); so does the root's here.
     record = None if root is None else sign({"term": term, "holder": new, "at": now,
-                                              **({"from": restored_from} if restored_from else {})}, root)
+                                              **({"from": restored_from} if restored_from else {}),
+                                              **({"url": url} if url else {})}, root)
     holder = DomainHolder(fed, new, signer, term, wall, objects=objects_of(new), record=record)
+    holder.url = url
     from .members import Members
     holder.member_key = (Members(new_vars, wall).read()["members"].get(new) or {}).get("key")   # its own, for its backups
     holder.backup_rev = int(best[1]["rev"]) if best else 0

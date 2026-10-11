@@ -33,6 +33,18 @@ def _follower(fed, devices, name, wall, holder="cam-SN0"):
                        follow=HolderFollower(ask), open_door=open_door)
 
 
+def _by_url(fed, devices, name, wall, holder="cam-SN0"):
+    """A follower whose door is the record's `url` and nothing else, as the agent's process opens it (`agent.main`:
+    no `url`, no door): `http://<cluster>:8445` is that cluster's door here."""
+    a = _follower(fed, devices, name, wall, holder)
+
+    def open_door(rec):
+        n = (rec.get("url") or "").removeprefix("http://").removesuffix(":8445")
+        return (fed.clusters[n].vars, devices[n].disk_door()) if n in fed.clusters else None
+    a.open_door = open_door
+    return a
+
+
 def _writes(devices):
     """What has been written into each camera's stores so far: `{name: (flash puts, card puts)}`."""
     counts = {n: 0 for n in devices}
@@ -112,6 +124,36 @@ def test_after_a_theft_the_move_writes_only_the_new_holder_and_the_members_follo
         assert _follows(agents, name, "cam-SN1"), (name, agents[name].followed)
         keys = ClusterTrust(devices[name].flash).keyset()
         assert keys.rev == report["keys_rev"] and read_holder(devices[name].flash, keys, wall())["term"] == 2
+
+
+def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_the_agents_go_there():
+    """The scenario «камера — офис — центр», N4: a move by the recovery file wrote the record of term 2, signed by the
+    root, with no `url` — the signer adds one only to a record it signs itself — so the agents took term 2 by
+    `/api/held` and found no door in it: «the record names no door», and they carried on through the dead holder's.
+    The root's record names the new holder's door now (the product's record always does, `HolderRecord.URL`); an agent
+    whose only door is the record's `url` follows. Without a `url` given, the record names none, as before."""
+    wall = Clock()
+    fed, devices, root, holder, _, _ = rooted._site(wall)
+    agents = {n: _by_url(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
+    for a in agents.values():
+        a.sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
+    devices["cam-SN0"].power_off()
+    new, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall,
+                              url="http://cam-SN1:8445")
+    assert report["record"]["kid"] == "root" and report["record"]["url"] == "http://cam-SN1:8445", report["record"]
+    for name in agents:
+        assert _follows(agents, name, "cam-SN1"), (name, agents[name].followed)
+        assert "following cam-SN1" in agents[name].followed, agents[name].followed
+
+    wall = Clock()
+    fed, devices, root, holder, _, _ = rooted._site(wall)
+    lost = _by_url(fed, devices, "cam-SN2", wall)
+    lost.sync()
+    devices["cam-SN0"].power_off()
+    _, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall)
+    assert "url" not in report["record"]
+    assert not _follows({"cam-SN2": lost}, "cam-SN2", "cam-SN1") and "names no door" in lost.followed, lost.followed
 
 
 def test_a_planned_handover_is_taken_by_the_target_and_the_outgoing_holder_writes_no_store_but_its_own():

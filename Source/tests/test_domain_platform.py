@@ -1344,6 +1344,11 @@ def test_after_a_theft_the_move_through_the_door_drops_the_old_keys_and_a_wrong_
         assert st == 403 and "not this domain's recovery file" in out["detail"], out
         st, out = _call(base, "POST", "/domain/move", {"recovery": root.recovery().decode(), "stolen": True})
         assert st == 200 and out["term"] == 2 and out["stolen"] and out["keys_rev"] > 1, out
+        # N4 (the scenario «камера — офис — центр»): the record of term 2 the root signed names south's door — the agents
+        # that take it by `/api/held` carry through it from then on, not through the door of the holder that is gone
+        said = _call(signer_url, "GET", "/api/holder")[1]
+        assert said["term"] == 2 and said["record"]["url"] == "http://south.site:8445", said
+        assert json.loads(south.vars.get("domain/holder")[0]["doc"])["kid"] == "root"     # …in the record the root signed
         keys = ClusterTrust(south.vars).keyset()
         assert keys.rev == out["keys_rev"] and old_kid not in keys.keys
         try:

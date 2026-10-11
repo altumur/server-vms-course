@@ -352,6 +352,9 @@ def test_the_signers_start_with_the_recovery_file_founds_the_domain_at_term_one_
     fed.add(Cluster("srv", vars_, objects, is_domain_holder=True))
     term = term_of(fed, signer, objects)
     assert term is not None and term.term == 1 and term.record is not None    # the root's record, not the signer's
+    assert vars_.get(HOLDER) == was                     # N2: the start claims the record it finds — and writes it once
+    term_of(fed, signer, objects)
+    assert vars_.get(HOLDER) == was                     # …and no later start writes it again
     again = first_signer(vars_, DOMAIN, None, DomainPublisher(vars_), env)
     assert again.chain and vars_.get(HOLDER)[0] == was[0]                   # a later start: the record as it was
 

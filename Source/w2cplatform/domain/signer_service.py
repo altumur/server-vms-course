@@ -376,7 +376,7 @@ class Holder:
             from .term import move_domain
             try:
                 new, report = move_domain(fed, me, blob, self.signer.domain, lambda n: fed.clusters[n].objects,
-                                          self.wall, stolen=stolen, sealer=self.sealer, copy=copy)
+                                          self.wall, stolen=stolen, sealer=self.sealer, copy=copy, url=self.signer_url)
             except (ValueError, RuntimeError, Unreachable) as e:
                 return 409, {"detail": f"the domain was not moved: {e}"}
             self._took(new)
@@ -567,7 +567,7 @@ class Holder:
             fed = self.neighbours()
             try:
                 new, report = move_domain(fed, me, blob, self.signer.domain, lambda n: fed.clusters[n].objects,
-                                          self.wall, sealer=self.sealer)
+                                          self.wall, sealer=self.sealer, url=self.signer_url)
             except (ValueError, RuntimeError, Unreachable) as e:
                 return 409, {"detail": f"the domain was not taken: {e}"}
             self._took(new)
