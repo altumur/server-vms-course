@@ -43,7 +43,7 @@ on its own server (`configstore.py`). Standard library only; a process that open
 # ONE ID PER OPERATION, NOT PER CALL (the review's twelfth pass, minor). A caller that got `StoreAmbiguous` and asked
 # for the same write again — the lease loop does — made a new id, so a first copy that had landed meanwhile was not
 # recognised: the CAS conflicted with it. A write whose outcome this handle does not know keeps its id
-# (`_unknown`, by the write's whole content: op, key, items, cas); the same write asked again is sent with it, and is
+# (`_unknown`, by the write's whole content: op, key, items, cas, guard); the same write asked again is sent with it, and is
 # answered once. A definite answer — the index, `Conflict`, `Forbidden`, a bad key — forgets it. A different write
 # to the same key is another operation, with an id of its own.
 #
@@ -77,7 +77,7 @@ import uuid
 
 from .limits import TooLarge, check
 from .storemachine import MAX_VALUE                 # the machine and the API, no raft and no socket
-from .variables import (KEY_BYTES, STORE_SCHEME, Conflict, Forbidden, KeyTooLong, items_bytes, refuse_delete,
+from .variables import (GuardFailed, guard_check, KEY_BYTES, STORE_SCHEME, Conflict, Forbidden, KeyTooLong, items_bytes, refuse_delete,
                         register_scheme, safe_path)
 
 REFUSED_WAIT = 5.0         # D: how long a refused connection to this server's daemon is tried again
@@ -231,6 +231,11 @@ class ConfigstoreVariables:
         if code == 200:
             return said
         error = str(said.get("error", ""))
+        if code == 412 and said.get("error") == "guard":
+            if not isinstance(said.get("key"), str) or isinstance(said.get("index"), bool) or not isinstance(
+                    said.get("index"), (str, int)):
+                raise StoreUnavailable("the guard refusal did not name its row and index")
+            raise GuardFailed(said["key"], said["index"])
         if code == 409:
             raise Conflict(error or "conflict")
         if code == 403:
@@ -254,7 +259,7 @@ class ConfigstoreVariables:
         index = got.get("index")
         return got.get("items"), (0 if index in ("", None) else index)
 
-    def put(self, path: str, items: dict, cas=None):
+    def put(self, path: str, items: dict, cas=None, *, guard=None):
         safe_path(path)
         self._refuse(path)
         check(path, items_bytes(items), self.max_bytes)
@@ -263,14 +268,21 @@ class ConfigstoreVariables:
             raise KeyTooLong(path, n)
         body = {"op": "put", "key": path, "items": {str(k): str(v) for k, v in items.items()},
                 "cas": "" if cas == 0 and not isinstance(cas, bool) else cas}
+        guard_check(guard, self.writer, self.acl)
+        if guard is not None:
+            body["guard"] = dict(guard)
         return self._write(body)["index"]
 
-    def delete(self, path: str, cas=None) -> None:
+    def delete(self, path: str, cas=None, *, guard=None) -> None:
         safe_path(path)
         refuse_delete(path, self.writer, self.acl)
         if self._too_long(path):
             return
-        self._write({"op": "delete", "key": path, "cas": "" if cas == 0 and not isinstance(cas, bool) else cas})
+        guard_check(guard, self.writer, self.acl)
+        body = {"op": "delete", "key": path, "cas": "" if cas == 0 and not isinstance(cas, bool) else cas}
+        if guard is not None:
+            body["guard"] = dict(guard)
+        self._write(body)
 
     def list(self, prefix: str) -> list[str]:
         return sorted(self._call("GET", "/v1/list?" + urllib.parse.urlencode({"prefix": prefix}))["keys"])
