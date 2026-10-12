@@ -258,6 +258,8 @@ class Console:
             raise ApiError(409, str(e)) from None
         except (BadName, declared.GrantTooWide) as e:
             raise ApiError(400, str(e)) from None
+        except declared.NamesUnavailable as e:
+            raise ApiError(503, str(e)) from None
         except declared.Refused as e:
             raise ApiError(409, str(e)) from None
         return {"cluster": cluster, "lines": len(grants)}
