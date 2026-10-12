@@ -1,7 +1,7 @@
 """ADR-0074 observation readers inside ordinary workers.
 
 No placement choice, remote stores, publication or token issuance here. The caller
-supplies the primary's identity from placement. Former flat books are refused.
+supplies the primary's member from placement. Former flat books are refused.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -89,20 +89,22 @@ def source(items, ref: str) -> Observation:
     return facts.entries[0]
 
 
-def primary(items, ref: str, member: str, recording: str) -> Observation | None:
+def primary(items, ref: str, member: str) -> Observation | None:
     """The placed recording, never the first all entry; None applies standby grace."""
-    return _primary(read(items, ref), member, recording)
+    return _primary(read(items, ref), member)
 
 
-def _primary(facts, member, recording):
-    if not isinstance(member, str) or not member or not isinstance(recording, str) or not recording:
-        raise Unconfirmed("primary placement has no recording identity")
-    matches = [e for e in facts.entries if e.member == member and e.value.get("recording") == recording]
+def _primary(facts, member):
+    if not isinstance(member, str) or not member:
+        raise Unconfirmed("primary placement has no member identity")
+    matches = [e for e in facts.entries if e.member == member]
     if member in facts.missing or not matches:
         return None
     if len(matches) != 1:
         raise Unconfirmed("placed recording has conflicting observations")
     value = matches[0].value
+    if not isinstance(value.get("recording"), str) or not value["recording"]:
+        raise Unconfirmed("recording has no identity")
     if any(type(value.get(field)) is not bool for field in ("enabled", "running")) \
             or "starting" in value and type(value["starting"]) is not bool:
         raise Unconfirmed("recording state is invalid")
@@ -112,5 +114,5 @@ def _primary(facts, member, recording):
 def copies(items, ref: str, assigned) -> tuple[Observation, ...]:
     """Only explicitly assigned reserve recordings, each with its own origin."""
     facts = read(items, ref)
-    return tuple(fact for member, recording in sorted(set(assigned))
-                 if (fact := _primary(facts, member, recording)) is not None)
+    return tuple(fact for member in sorted(set(assigned))
+                 if (fact := _primary(facts, member)) is not None)
