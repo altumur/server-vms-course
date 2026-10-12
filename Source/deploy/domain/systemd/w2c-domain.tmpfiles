@@ -3,4 +3,4 @@
 # socket the signer (w2c) makes there is 0660 and takes that group, whose one member is `vms-domainpart` — so it opens it
 # and nothing else of the box does, whatever joins the store's role groups (configstore is in every one of them). The
 # signer's other door and the console's are their units' own `RuntimeDirectory=` (0700).
-d /run/w2c-signer 2750 w2c vms-vmsdomaintokens -
+d /run/w2c-signer 2750 w2c vms-camdomaintokens -
