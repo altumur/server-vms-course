@@ -14,3 +14,9 @@ ADR-0074 дополнение 4: `assign(vars, sub, ref, body, wall, cas)` пи�
 эту форму; прежний одноуровневый путь не читается. Оператор меняет через admin-дверь
 `PUT /domain/placement/<sub>/<ref>`. Каждому члену агент несёт все строки через существующий carry.
 Автоматическое размещение по достижимости не меняет уже записанное назначение или его ссылки.
+
+The holder writes `domain/placement/<sub>/<ref>`. Members read only the agent copy with
+`placed(vars, sub, ref)` under `domain/placed/<sub>/<ref>`, including on the holder
+cluster. There is no fallback between the two families; the agent role cannot write
+or delete holder assignments. Carry still transports the holder names and the agent
+renames them when storing its copy (ADR-0074, supplement 4 correction).
