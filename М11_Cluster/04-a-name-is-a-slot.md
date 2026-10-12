@@ -8,7 +8,7 @@
 
 На каждом сервере кластера юнит даёт воркеру имя — `w-%l-1`, `w-srv-a-1` на `srv-a` (урок 3). Имя выглядит в точности как имя воркера. Соблазн — на этом и закончить. Этот урок объясняет, почему так нельзя, и что делает имя воркера надёжным.
 
-Ставка высокая. Единицы назначены **воркеру по имени**: строка назначения `<sub>/workers/<имя>` — на стенде `vms/workers/w-srv-a-1` — говорит «у `w-srv-a-1` единицы 1, 5 и 9» (у VMS это камеры). Если перезапущенный воркер придёт с другим именем, эти единицы останутся в строке, которую никто не читает. А если придут двое с одним именем — у единиц будет два писателя, и у VMS это запомнит архив.
+Ставка высокая. Единицы назначены **воркеру по имени**: строка назначения `<sub>/workers/<имя>` — на стенде `cam/workers/w-srv-a-1` — говорит «у `w-srv-a-1` единицы 1, 5 и 9» (у VMS это камеры). Если перезапущенный воркер придёт с другим именем, эти единицы останутся в строке, которую никто не читает. А если придут двое с одним именем — у единиц будет два писателя, и у VMS это запомнит архив.
 
 Второй вопрос коробка оставила открытым: **кто решает, сколько воркеров нужно.** Не контроллер — у него нет права запускать процессы, и это намеренно. Оркестратора, который держал бы число процессов, здесь нет (урок 1). Поэтому обязанности разведены так: контроллер **считает**, скольких воркеров не хватает, и пишет для них **предложения слотов**; скрипт на хосте, `w2c-spares.sh`, читает это число и **запускает** запасные; запасной берёт предложение по CAS; `systemd` перезапускает упавшее. Этот урок показывает все четыре движения по трассам.
 
@@ -36,7 +36,7 @@
 Имя воркера — это строка в хранилище, `<sub>/slots/<имя>`:
 
 ```
-vms/slots/w-srv-a-1   {"holder": "srv-a:4101:001005", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}
+cam/slots/w-srv-a-1   {"holder": "srv-a:4101:001005", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}
 ```
 
 | Поле | Что значит |
@@ -105,13 +105,13 @@ vms/slots/w-srv-a-1   {"holder": "srv-a:4101:001005", "until": "1757500045.0", "
 
 Это случается не только по ошибке. Юнит перезапустили, а старый процесс ещё жив: завис так, что не дослушал `SIGTERM`, или заморожен, или до него не дошла остановка. Или оператор запустил вторую копию руками, с тем же окружением. Для слота все случаи одинаковы.
 
-Трасса — [`Source/traces/04-two-processes-one-name.txt`](../Source/traces/04-two-processes-one-name.txt). На стенде `w-srv-a-1` держит процесс `srv-a:4101:001005`, у него единицы (камеры стенда) 1 и 2, эпохи 1. Приходит второй процесс, `srv-a:4102:001006`, с тем же именем — и строка `#` у них одна и та же, `vmsworker w-srv-a-1 on srv-a`: отличить их можно только по `holder`.
+Трасса — [`Source/traces/04-two-processes-one-name.txt`](../Source/traces/04-two-processes-one-name.txt). На стенде `w-srv-a-1` держит процесс `srv-a:4101:001005`, у него единицы (камеры стенда) 1 и 2, эпохи 1. Приходит второй процесс, `srv-a:4102:001006`, с тем же именем — и строка `#` у них одна и та же, `camworker w-srv-a-1 on srv-a`: отличить их можно только по `holder`.
 
 Второй читает слот — его держит первый — и берёт его всё равно, по CAS с версией, которую прочитал:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-a-1
 → 200 {
   "items": {
     "holder": "srv-a:4101:001005",
@@ -123,8 +123,8 @@ GET /v1/get?key=vms/slots/w-srv-a-1
   "index": 1008
 }
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items": {
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1008, "items": {
   "holder": "srv-a:4102:001006",
   "until": "1757500045.0",
   "released": "false",
@@ -137,8 +137,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items":
 `gen: 2` — новое поколение имени. Первый в это время продолжает работать и на следующем шаге аренд читает свой слот:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-a-1
 → 200 {
   "items": {
     "holder": "srv-a:4102:001006",
@@ -156,20 +156,20 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 Второй читает назначение `w-srv-a-1` и берёт эпохи своих единиц:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/workers/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/workers/w-srv-a-1
 → 200 {"items": {"units": "1,2", "rev": "1"}, "index": 1009}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/epoch_floor
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/epoch/1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/epoch/1
 → 200 {"items": {"epoch": "1"}, "index": 1010}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
 → 200 {"index": 1013}
 ```
 
@@ -216,7 +216,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 <экземпляр>: its name vms/w-srv-a-1 is held by <держатель> (box <коробка>) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
 ```
 
-И оставляет метку `<sub>/contenders/<имя>/<коробка>` — здесь `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. **И истёкшее имя он берёт только тогда, когда контроллер перенёс бы его единицы** (`Worker._held`; двенадцатое ревью, блокер 2): 45 секунд после конца слота (`SLOT_LOST_AFTER`) контроллер считает слот живым — то, что начал прежний процесс, может ещё писать, — и процесс без имени, взявший имя в этом окне, забрал бы вместе с ним единицы зависшего: проба ревьюера дала двух писателей на +46…+89 с. Поэтому имя держится, пока `slot_fate` говорит `alive`, `hung`, `unsure` или `wait` (последние три — до предела `HUNG_MOVE_AFTER`: после него у `hung` и `unsure` единицы уезжают, и имя с ними; `wait` держит имя до предела — тринадцатое ревью, блокер 2), а вопрос, на который хранилище не ответило, — «не знаю», и имя тоже держится. **Судит контроллер, который смотрел** (тринадцатое ревью, блокер 4): он пишет в отчёт прохода, какие имена отданы и при какой ревизии строки слота (`names_given`), и `_held` читает этот вердикт — процесс, только что стартовавший, ничего не видел меняющимся и судил бы по `until` чужих часов (М10A, урок 7, шаг 7). Тесты: `Source/tests/test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin`, `::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone`. Захват имени у живого держателя — **только при старте**: это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается под свободным номером. Тесты: `Source/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
+И оставляет метку `<sub>/contenders/<имя>/<коробка>` — здесь `cam/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. **И истёкшее имя он берёт только тогда, когда контроллер перенёс бы его единицы** (`Worker._held`; двенадцатое ревью, блокер 2): 45 секунд после конца слота (`SLOT_LOST_AFTER`) контроллер считает слот живым — то, что начал прежний процесс, может ещё писать, — и процесс без имени, взявший имя в этом окне, забрал бы вместе с ним единицы зависшего: проба ревьюера дала двух писателей на +46…+89 с. Поэтому имя держится, пока `slot_fate` говорит `alive`, `hung`, `unsure` или `wait` (последние три — до предела `HUNG_MOVE_AFTER`: после него у `hung` и `unsure` единицы уезжают, и имя с ними; `wait` держит имя до предела — тринадцатое ревью, блокер 2), а вопрос, на который хранилище не ответило, — «не знаю», и имя тоже держится. **Судит контроллер, который смотрел** (тринадцатое ревью, блокер 4): он пишет в отчёт прохода, какие имена отданы и при какой ревизии строки слота (`names_given`), и `_held` читает этот вердикт — процесс, только что стартовавший, ничего не видел меняющимся и судил бы по `until` чужих часов (М10A, урок 7, шаг 7). Тесты: `Source/tests/test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin`, `::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone`. Захват имени у живого держателя — **только при старте**: это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается под свободным номером. Тесты: `Source/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
 
 ### Свежая коробка: одно имя на двух машинах
 
@@ -245,7 +245,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 w-localhost-1 is held on another machine (box <коробка>, instance <держатель>), which is live. Two machines given one name usually share the hostname 'localhost' (the units name their processes from it, w-%l-1): give this machine another hostname, or set WORKER_NAME in its unit to a name no other machine uses. This machine (box <своя>) leaves the name alone: taking it would make two processes of one name
 ```
 
-Каждый отказ переписывает метку `<sub>/contenders/<имя>/<коробка>` (у стенда — `vms/contenders/…`) с `state: "refused"`; начало эпизода (`since`) берётся из прежней свежей метки, так что перезапуски юнита эпизод не множат. Метка, не обновлявшаяся `CONTENDER_FRESH` (300 с), не читается. Кто её видит:
+Каждый отказ переписывает метку `<sub>/contenders/<имя>/<коробка>` (у стенда — `cam/contenders/…`) с `state: "refused"`; начало эпизода (`since`) берётся из прежней свежей метки, так что перезапуски юнита эпизод не множат. Метка, не обновлявшаяся `CONTENDER_FRESH` (300 с), не читается. Кто её видит:
 
 - `/servers` — у строки держателя поле `name_conflict`: `{holder, holder_box, contenders: [{state, box, hostname, server, instance, holder_seen, since, for_s, at}]}`, `null`, пока никто не просит;
 - контроллер — раз за эпизод тревога `worker.name_conflict` (`Controller.say_name_conflicts`, шаг прохода `name_conflicts`): кто держит, какая коробка просит, с какого момента;
@@ -283,24 +283,24 @@ w-localhost-1 is held on another machine (box <коробка>, instance <дер
 
 ```
 GET /metrics
-# TYPE vms_workers_live gauge
-vms_workers_live 2
-# TYPE vms_worker_load gauge
-vms_worker_load{worker="w-srv-a-1"} 1.000
-vms_worker_load{worker="w-srv-b-1"} 1.000
-# TYPE vms_workers_needed gauge
-vms_workers_needed{labels=""} 0
-vms_workers_needed{labels="vlan:cctv-b"} 1
-# TYPE vms_units_short gauge
-vms_units_short{labels=""} 0
-vms_units_short{labels="vlan:cctv-b"} 1
-# TYPE vms_spare_offers gauge
-vms_spare_offers{labels=""} 0
-vms_spare_offers{labels="vlan:cctv-b"} 1
-# TYPE vms_server_labels gauge
-vms_server_labels{server="srv-a",labels="vlan:cctv-a",source="node"} 1
-vms_server_labels{server="srv-b",labels="vlan:cctv-a,vlan:cctv-b",source="node"} 1
-vms_server_labels{server="srv-c",labels="",source="node"} 1
+# TYPE cam_workers_live gauge
+cam_workers_live 2
+# TYPE cam_worker_load gauge
+cam_worker_load{worker="w-srv-a-1"} 1.000
+cam_worker_load{worker="w-srv-b-1"} 1.000
+# TYPE cam_workers_needed gauge
+cam_workers_needed{labels=""} 0
+cam_workers_needed{labels="vlan:cctv-b"} 1
+# TYPE cam_units_short gauge
+cam_units_short{labels=""} 0
+cam_units_short{labels="vlan:cctv-b"} 1
+# TYPE cam_spare_offers gauge
+cam_spare_offers{labels=""} 0
+cam_spare_offers{labels="vlan:cctv-b"} 1
+# TYPE cam_server_labels gauge
+cam_server_labels{server="srv-a",labels="vlan:cctv-a",source="node"} 1
+cam_server_labels{server="srv-b",labels="vlan:cctv-a,vlan:cctv-b",source="node"} 1
+cam_server_labels{server="srv-c",labels="",source="node"} 1
 ```
 
 Четыре ряда — те, что читает скрипт запасных. `<sub>_workers_needed` — сколько воркеров нужно, по набору меток (пустой набор есть всегда). `<sub>_units_short` — сколько единиц не поместилось. `<sub>_spare_offers` — сколько предложений слотов ждёт. `<sub>_server_labels` — что видит каждый сервер: `source="node"` — метки из его окружения (`LABELS` в `w2c.env`, через heartbeat), `source="console"` — метки, которые администратор записал в консоли (М10A, урок 11); второе важнее первого. `source="unknown"` — консоль их не знает: строка сервера не читается или строк она ни разу не прочла (ADR 0026, добавление), и размещение не ставит туда ничего, чему нужна метка; скрипт тогда считает, что сервер не видит ни одной метки. У каждой спеки с `offers` — свои ряды на её `/metrics` (у VMS ещё `live_*` на `/live/metrics` и `auto_*` на `/auto/metrics`). Подсистема с местами (`placement.places`) получает тот же ряд другим счётом: `<sub>_workers_needed{labels=""}` — места, которые подходят под `where` и которых не держит ни один живой холд, минус живые воркеры без места (`SpecConsole.places_needed`); предложений там нет, свободное место запасной берёт сам. У VMS это регистраторы, `rec_workers_needed{labels=""}` на `/rec/metrics`: незанятый том требует ещё одного регистратора, даже если все существующие загружены.
@@ -337,7 +337,7 @@ vms_server_labels{server="srv-c",labels="",source="node"} 1
 
 Пятое правило шапки — о том, как стартует запасной. Роль, спека которой предлагает слоты (`offers`), стартует запасным (`SPARE_FOR=<набор>`): берёт только предложение своего набора (`<sub>/slots/<w-N>` с `offer`), по CAS, а без него ждёт, ничего не держа, — два скрипта на двух серверах на одну недостачу поднимут двух запасных, и слот возьмёт ровно один. Роль с местами предложения не ждёт: воркер без свободного места уже и есть запасной. Шапка говорит это словами VMS — воркер камер, шлюз, вычислитель, регистратор, — и роли скрипт знает по списку: это его долг перед платформой, которая знает подсистемы только по спекам.
 
-Роли — в `SPARES_ROLES` или аргументами, у каждой свой потолок; у VMS это `recworker`, `vmsworker`, `liveworker`, `autoworker`.
+Роли — в `SPARES_ROLES` или аргументами, у каждой свой потолок; у VMS это `recworker`, `camworker`, `liveworker`, `autoworker`.
 
 **Потолок выводится из памяти, а не пишется руками** ([ADR-0070](../decisions/0070-консенсусный-долг-метрики-raft-состав-группы-учения-потолок-лидера.md), шаг 3). Раньше потолок роли был отдельным числом (`MAX_WORKERS` и его соседи), а ёмкость воркера (`CAPACITY`) — другим, и их ничто не сверяло: сервер, посчитанный под пятьдесят камер, с четырьмя воркерами по пятьдесят объявлял двести. Теперь у каждой роли на хосте есть объявление — `/etc/vms/roles/<роль>.env` (на коробке macOS `<коробка>/roles/`), образцы в [`deploy/roles/`](../Source/deploy/roles/), установщик кладёт их, если там пусто: `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB`. Скрипт берёт из него две строки — разбором, не через `.`, файл не исполняется — и считает потолок как `HOST_MEMORY_MB / WORKER_MEMORY_MB` с округлением вниз: столько воркеров роли с их бюджетом помещается в память, отданную роли. Нет файла, нет строки, ноль, дробь, слово — эта роль не поднимается, строка в журнал называет файл, остальные роли идут. `MAX_*` ушли без совместимости (ADR-0003): строка в окружении ничего не значит. Воркер роли читает то же объявление (юнит называет роль, `W2C_ROLE`, и `w2c-run.sh` читает файл первым; контейнер коробки — `EnvironmentFile=` последним), а базовый воркер платформы не стартует, если его единицы по цене из спеки (`placement.capacity.unit_mb`, `base_mb`, урок 9 М10A) не помещаются в `WORKER_MEMORY_MB`. Тесты — `test_deploy_units.py::test_the_spares_ceiling_is_derived_from_the_roles_declaration_and_nothing_else`, `test_units.py::test_a_unit_that_names_its_role_gets_its_declaration_first_and_the_spares_pass_reads_the_same_file`, `tests/test_memory_budget.py`. Тесты скрипта — `test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing`, `test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console` и `test_the_spares_script_starts_only_for_the_empty_set_where_the_console_does_not_know_what_its_server_reaches`.
 
@@ -354,7 +354,7 @@ polkit.addRule(function (action, subject) {
     }
     if (action.id === "org.freedesktop.systemd1.manage-units" &&
         action.lookup("verb") === "start" &&
-        /^vms-(vmsworker|recworker)-spare@[1-9][0-9]?\.service$/.test(action.lookup("unit") || "")) {
+        /^vms-(camworker|recworker)-spare@[1-9][0-9]?\.service$/.test(action.lookup("unit") || "")) {
         return polkit.Result.YES;
     }
     return polkit.Result.NO;
@@ -396,8 +396,8 @@ fi
 Трасса — [`Source/traces/04-a-spare-takes-an-offer.txt`](../Source/traces/04-a-spare-takes-an-offer.txt). В ней только записи: контроллер на каждом проходе перечитывает строки размещения и единиц, и чтений там больше ста. Два воркера ёмкостью 4 несут восемь камер стенда; оператор создаёт девятую, и места ей нет. Проход контроллера пишет предложение:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": "", "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": "", "items": {
   "holder": "",
   "until": "0",
   "released": "false",
@@ -408,11 +408,11 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": "", "items": {
 → 200 {"index": 1048}
 ```
 
-`"offer": ""` — пустой набор меток: единица ни о чём не просит. Скрипт на `srv-c` видит `vms_workers_needed{labels=""} 1` и поднимает `vms-vmsworker-spare@1` с `SPARE_FOR=` в его файле. Запасной берёт предложение — по CAS на ту версию, что прочитал:
+`"offer": ""` — пустой набор меток: единица ни о чём не просит. Скрипт на `srv-c` видит `cam_workers_needed{labels=""} 1` и поднимает `vms-camworker-spare@1` с `SPARE_FOR=` в его файле. Запасной берёт предложение — по CAS на ту версию, что прочитал:
 
 ```
-# vmsworker spare on srv-c → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1048, "items": {
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1048, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500045.0",
   "released": "false",
@@ -428,8 +428,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1048, "items": {
 `offer` и `offered_at` остались — по ним контроллер ещё 90 секунд считает этот слот «воркером в пути» и не просит второго; `taken_at` — когда взяли. На следующем проходе контроллер видит нового воркера по его heartbeat и ставит на него единицу 9 — две записи, размещение с причиной и назначение:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": "", "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
   "worker": "w-2",
   "reason": "most free capacity (4) among 3 worker(s); on srv-c, whose resource is live",
   "at": "1757500000.0",
@@ -437,26 +437,26 @@ POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": "", "items": {
 }}
 → 200 {"index": 1050}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-2", "cas": "", "items": {"units": "9", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": "", "items": {"units": "9", "rev": "1"}}
 → 200 {"index": 1051}
 ```
 
 Причина написана для человека и говорит всё, что контроллер знал: выбран воркер с наибольшей свободной ёмкостью из трёх, он на `srv-c`, и ресурс этого сервера жив. Воркер читает своё назначение и берёт эпоху единицы:
 
 ```
-# vmsworker spare on srv-c → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/9", "cas": "", "items": {"epoch": "1"}}
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/9", "cas": "", "items": {"epoch": "1"}}
 → 200 {"index": 1052}
 ```
 
 Контроллер **разместил** девятую единицу, когда появился воркер. Он посчитал недостачу и оставил предложение, но процесса не запускал и не знал, кто и где его запустит, — он прочитал heartbeat.
 
-Теперь запасного останавливают: `systemctl stop vms-vmsworker-spare-1`. Он получает `SIGTERM` и отпускает слот:
+Теперь запасного останавливают: `systemctl stop vms-camworker-spare-1`. Он получает `SIGTERM` и отпускает слот:
 
 ```
-# vmsworker spare on srv-c → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1049, "items": {
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1049, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500000.0",
   "released": "true",
@@ -468,8 +468,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1049, "items": {
 `released: true` и `until` — сейчас. Это и есть сданный бейдж. Контроллер на следующем проходе видит отпущенный слот и переносит его единицы туда, где есть место (оператор перед этим удалил единицы 1 и 2, освободив место на `w-srv-a-1`):
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": 1050, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": 1050, "items": {
   "worker": "w-srv-a-1",
   "reason": "slot w-2 released; most free capacity (1); on srv-a",
   "at": "1757500000.0",
@@ -477,8 +477,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": 1050, "items": {
 }}
 → 200 {"index": 1060}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-2", "cas": 1051, "items": {"units": "", "rev": "2"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1051, "items": {"units": "", "rev": "2"}}
 → 200 {"index": 1061}
 ```
 
@@ -489,8 +489,8 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-2", "cas": 1051, "items": {"u
 **Предложение, которое больше не нужно.** Трасса — [`Source/traces/04-an-offer-withdrawn.txt`](../Source/traces/04-an-offer-withdrawn.txt): предложение ждёт запасного, а недостача уходит раньше — оператор удалил единицу, и девятая поместилась на `w-srv-a-1`. Следующий проход снимает предложение — удалением по CAS на ту версию, которую он прочитал:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1048}
 → 200 {"index": 1055}
 ```
 
@@ -501,8 +501,8 @@ POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
 Трасса — [`Source/traces/04-a-crash-releases-nothing.txt`](../Source/traces/04-a-crash-releases-nothing.txt). `w-srv-c-1` держит единицу 1 и умирает, ничего не сказав. Через две секунды `systemd` поднимает его юнит снова (`Restart=always`, `RestartSec=2`). Между этим контроллер делает свой проход и читает слот:
 
 ```
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/get?key=vms/slots/w-srv-c-1
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/get?key=cam/slots/w-srv-c-1
 → 200 {
   "items": {
     "holder": "srv-c:4101:001005",
@@ -520,8 +520,8 @@ GET /v1/get?key=vms/slots/w-srv-c-1
 Новый процесс того же юнита берёт `w-srv-c-1` — с пожеланием, по CAS, — и находит назначение на месте:
 
 ```
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1006, "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "false",
@@ -530,8 +530,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items":
 }}
 → 200 {"index": 1010}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/workers/w-srv-c-1
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/get?key=cam/workers/w-srv-c-1
 → 200 {"items": {"units": "1", "rev": "1"}, "index": 1008}
 ```
 
@@ -560,7 +560,7 @@ def make_worker(vars_, objects, actuator=None, env: dict | None = None, **kw) ->
 
 ## Шаг 8 — Списание сервера
 
-Для оператора, который знает то, чего не знает система, — сервер не вернётся, его вывезли, — есть **списание сервера**. Слово человека здесь о машине, а не о процессе (ADR 0004). Двери «снять воркер» нет нарочно: оператор снимал бы молчащий воркер, а молчащий может быть зависшим, который ещё пишет, — и у его единиц оказалось бы два писателя. В блоке сервера на странице есть ссылка *decommission*, и она шлёт `POST /servers/srv-c/decommission {"why": "…"}`. Пока srv-c отвечает — слышен его ресурс, слышен его воркер или воркер продлевает слот, — консоль отвечает 409, называет признак словами и ничего не пишет. Когда сервер молчит, консоль пишет одну строку, `platform/decommission/srv-c {by, at, why}`, и строку в журнал (`server.decommission_requested`). Слоты она не трогает: сокету консоли запрещено писать `<sub>/slots/*` (урок 5). Контроллер каждой подсистемы на следующем проходе (`pass_once`, первый шаг — `apply_decommissions`) освобождает слоты этого сервера через CAS и пишет отметку `<sub>/decommissioned/<сервер>` — здесь `vms/decommissioned/srv-c {asked_at, at, slots, units, holds}`. Трасса [`Source/traces/04-decommission-a-server.txt`](../Source/traces/04-decommission-a-server.txt) (сгорел srv-c под `w-srv-c-1`) — первые две записи, от двух процессов:
+Для оператора, который знает то, чего не знает система, — сервер не вернётся, его вывезли, — есть **списание сервера**. Слово человека здесь о машине, а не о процессе (ADR 0004). Двери «снять воркер» нет нарочно: оператор снимал бы молчащий воркер, а молчащий может быть зависшим, который ещё пишет, — и у его единиц оказалось бы два писателя. В блоке сервера на странице есть ссылка *decommission*, и она шлёт `POST /servers/srv-c/decommission {"why": "…"}`. Пока srv-c отвечает — слышен его ресурс, слышен его воркер или воркер продлевает слот, — консоль отвечает 409, называет признак словами и ничего не пишет. Когда сервер молчит, консоль пишет одну строку, `platform/decommission/srv-c {by, at, why}`, и строку в журнал (`server.decommission_requested`). Слоты она не трогает: сокету консоли запрещено писать `<sub>/slots/*` (урок 5). Контроллер каждой подсистемы на следующем проходе (`pass_once`, первый шаг — `apply_decommissions`) освобождает слоты этого сервера через CAS и пишет отметку `<sub>/decommissioned/<сервер>` — здесь `cam/decommissioned/srv-c {asked_at, at, slots, units, holds}`. Трасса [`Source/traces/04-decommission-a-server.txt`](../Source/traces/04-decommission-a-server.txt) (сгорел srv-c под `w-srv-c-1`) — первые две записи, от двух процессов:
 
 ```
 # console on srv-a → /run/configstore/console.sock
@@ -571,8 +571,8 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
 }}
 → 200 {"index": 1016}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1009, "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500045.0",
   "released": "true",
@@ -615,11 +615,11 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
 ## Упражнения
 
 1. Поставьте `TimeoutStopSec=1` и остановите воркер. Прочитайте строку слота и скажите, что сделает контроллер и сколько будут ждать единицы.
-2. Камеры заказчика VMS ночью простаивают на детекторе движения. Что покажет `vms_worker_load` ночью и почему скрипт запасных не должен ничего гасить?
-3. Дайте контроллеру право запускать процессы (`systemctl start vms-vmsworker-spare@<n>` из прохода, когда `headroom()` равен нулю). Перечислите, что ему теперь нужно знать о серверах, и прогоните тест двух контроллеров.
+2. Камеры заказчика VMS ночью простаивают на детекторе движения. Что покажет `cam_worker_load` ночью и почему скрипт запасных не должен ничего гасить?
+3. Дайте контроллеру право запускать процессы (`systemctl start vms-camworker-spare@<n>` из прохода, когда `headroom()` равен нулю). Перечислите, что ему теперь нужно знать о серверах, и прогоните тест двух контроллеров.
 4. В сцене `two_processes_one_name` уберите у старого процесса продление слота, оставив продление аренд эпох. Когда он остановит единицы и что из записанного им окажется под старой эпохой?
 5. Контроллер «помогает»: переносит единицы истёкшего слота сразу. Перепишите сцену `a_crash_releases_nothing` и найдите момент, когда у единицы два писателя.
-6. Два скрипта на `srv-b` и `srv-c` одновременно видят `vms_workers_needed{labels=""} 1`. Пройдите по шагам, что делает каждый запасной, и найдите запись, на которой второй узнаёт, что опоздал.
+6. Два скрипта на `srv-b` и `srv-c` одновременно видят `cam_workers_needed{labels=""} 1`. Пройдите по шагам, что делает каждый запасной, и найдите запись, на которой второй узнаёт, что опоздал.
 
 ## Что дальше
 
