@@ -9,6 +9,8 @@ Variables beside the grants. The cluster's own agent carries it home when the cl
 cluster's own console applies it — as the operator, with that operator's grant checked then, and only where
 the field still holds the value the edit was based on. The owner never changes; one writer per key stands.
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.domain.agent import DomainAgent
@@ -95,7 +97,7 @@ def test_the_camera_that_comes_back_takes_the_edit_from_its_own_agent():
 
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "priority": 30}})
     links["cam-4471"].up = True
-    assert _agent(fed, member, wall).sync()
+    assert report_sync(_agent(fed, member, wall))
     assert member.rows[CAM]["priority"] == 7
     assert member.edits == [(1, {"priority": 7}, "anna")]         # applied AS anna
 
@@ -114,7 +116,7 @@ def test_a_field_changed_on_the_camera_meanwhile_is_a_conflict_not_an_overwrite(
 
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate-B", "priority": 30}})   # renamed on site
     links["cam-4471"].up = True
-    _agent(fed, member, wall).sync()
+    report_sync(_agent(fed, member, wall))
     assert member.rows[CAM] == {"id": 1, "ref": CAM, "name": "gate-B", "priority": 7}
 
     pending.collect(fed)
@@ -129,14 +131,14 @@ def test_a_person_resolving_a_conflict_edits_against_what_the_camera_now_holds()
     api.update_unit(CAM, {"name": "main-gate"}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate-B", "priority": 30}})
     links["cam-4471"].up = True
-    _agent(fed, member, wall).sync()
+    report_sync(_agent(fed, member, wall))
     pending.collect(fed)
 
     links["cam-4471"].up = False
     api.update_unit(CAM, {"name": "main-gate"}, idempotency_key="k2", token="anna")   # "apply again"
     assert pending.of("cam-4471")[CAM]["fields"]["name"] == {"old": "gate-B", "new": "main-gate"}
     links["cam-4471"].up = True
-    _agent(fed, member, wall).sync()
+    report_sync(_agent(fed, member, wall))
     assert member.rows[CAM]["name"] == "main-gate"
 
 
@@ -162,7 +164,7 @@ def test_the_grant_is_checked_when_it_is_applied_not_when_it_was_accepted():
     api.update_unit(CAM, {"priority": 7}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "priority": 30}}, allowed={"boris"})
     links["cam-4471"].up = True
-    _agent(fed, member, wall).sync()
+    report_sync(_agent(fed, member, wall))
     assert member.rows[CAM]["priority"] == 30 and member.edits == []
 
     pending.collect(fed)
@@ -179,7 +181,7 @@ def test_carrying_it_home_twice_applies_it_once():
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "priority": 30}})
     links["cam-4471"].up = True
     agent = _agent(fed, member, wall)
-    agent.sync(); agent.sync()
+    report_sync(agent); report_sync(agent)
     assert len(member.edits) == 1
 
 
@@ -209,7 +211,7 @@ def test_an_edit_made_before_the_last_one_was_confirmed_is_not_a_conflict():
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "priority": 30}})
     agent = _agent(fed, member, wall)
     links["cam-4471"].up = True
-    agent.sync()                                                   # the camera took 7, and said so in its own Variables
+    report_sync(agent)                                                   # the camera took 7, and said so in its own Variables
     links["cam-4471"].up = False                                   # …and went off before the domain read it
 
     api.update_unit(CAM, {"priority": 14}, idempotency_key="k2", token="anna")
@@ -217,7 +219,7 @@ def test_an_edit_made_before_the_last_one_was_confirmed_is_not_a_conflict():
     pending.collect(fed)                                           # the report is about the FIRST edit
     assert "priority" in pending.of("cam-4471")[CAM]["fields"], "a report about an older edit cleared a newer one"
 
-    agent.sync()
+    report_sync(agent)
     assert member.rows[CAM]["priority"] == 14, "the camera's own earlier value was read as somebody else's change"
     pending.collect(fed)
     assert pending.of("cam-4471") == {}
@@ -277,7 +279,7 @@ def test_an_address_with_a_password_is_refused_and_never_kept_carried_or_reporte
     links["cam-4471"].up = True
     agent = DomainAgent("cam-4471", fed.domain_holder.vars, fed.clusters["cam-4471"].vars, now=wall,
                         console=cam.local_console(), current=cam.current)
-    assert agent.sync()
+    assert report_sync(agent)
     assert "Hunter2" not in json.dumps(cam.row())                                # not on the flash
     outcomes = fed.clusters["cam-4471"].vars.get("domain/outcomes")[0]
     assert outcomes and "refused" in outcomes[CAM] and "Hunter2" not in json.dumps(outcomes)

@@ -32,9 +32,9 @@ raft would: one of them wins the CAS.
 # - `Forbidden` — exception: this writer identity is not allowed to write that path. Raised by `put` when an
 #   ACL is set; it is how "one writer per prefix" is enforced mechanically rather than by convention. The
 #   console test proves a console token cannot write placement by expecting exactly this.
-# - `Variables` — `typing.Protocol` with `get`, `put`, `list`: the interface every consumer types against.
-#   `FileVariables` implements it here; М11's daemon client (`ConfigstoreVariables`) does too. (Note `delete` is not in the Protocol
-#   even though `FileVariables` has it; `IdempotencyKeys.prune` uses it.)
+# - `Variables` — `typing.Protocol` with get, put, delete and list. A guarded write compares another row
+#   in the same atomic operation; GuardFailed is separate from the target CAS Conflict (ADR-0074).
+#   FileVariables implements it here; the cluster daemon client ConfigstoreVariables does too.
 #
 # ## Notes
 # - Atomicity model: rename is atomic on one filesystem; the lock serialises read-check-write; therefore
@@ -64,6 +64,14 @@ class Conflict(Exception):
     """The cas index did not match the current ModifyIndex."""
 
 
+class GuardFailed(Exception):
+    """The guarding row changed; distinct from a target-row CAS conflict (ADR-0074)."""
+
+    def __init__(self, key, index):
+        self.key, self.index = key, index
+        super().__init__(f"guard: {key} changed")
+
+
 class Forbidden(Exception):
     """This writer may not write that path — one writer per prefix."""
 
@@ -89,7 +97,8 @@ class Variables(Protocol):
     max_bytes: int
 
     def get(self, path: str) -> tuple[dict | None, Index]: ...
-    def put(self, path: str, items: dict, cas: Index | None = None) -> Index: ...
+    def put(self, path: str, items: dict, cas: Index | None = None, *, guard: dict | None = None) -> Index: ...
+    def delete(self, path: str, cas: Index | None = None, *, guard: dict | None = None) -> None: ...
     def list(self, prefix: str) -> list[str]: ...
 
 
@@ -111,6 +120,32 @@ def safe_path(path: str) -> str:
     if not path or path.startswith("/") or ".." in path.split("/"):
         raise ValueError(f"not a key: {path!r}")
     return path
+
+
+def guard_check(guard, writer=None, acl=None):
+    """Validate the closed guard form and read permission before touching the store."""
+    if guard is None:
+        return
+    if not isinstance(guard, dict) or set(guard) != {"key", "index"}:
+        raise ValueError("guard is {key, index}")
+    if not isinstance(guard["key"], str):
+        raise ValueError("guard.key is a row name")
+    safe_path(guard["key"])
+    index = guard["index"]
+    if isinstance(index, bool) or not isinstance(index, (str, int)):
+        raise ValueError("guard.index is a row version")
+    from .rights import refusal
+    why = refusal(writer, acl, guard["key"], "read")
+    if why:
+        raise Forbidden(why)
+
+
+def guard_match(guard, current):
+    """Called only inside the same atomic operation as the target write."""
+    if guard is not None:
+        index = current(guard["key"])
+        if guard["index"] != index:
+            raise GuardFailed(guard["key"], index)
 
 
 # The store. Holds only paths (`root`, `dir`, `index_file`, `lock_file`) plus an optional writer identity
@@ -456,7 +491,7 @@ class FileVariables:
     # `SpecController.create` and `IdempotencyKeys.claim` rely on it); and every value is stringified on the
     # way in, which is why callers such as `Assignment.from_items` and `Slot.from_items` parse ints, floats
     # and `"true"`/`"false"` back out.
-    def put(self, path: str, items: dict, cas: int | None = None) -> int:
+    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None) -> int:
         from .rights import refusal                     # the platform's one evaluator: `!` denials first
         why = refusal(self.writer, self.acl, path)
         if why:
@@ -465,7 +500,9 @@ class FileVariables:
         # that is already there is still the value that is there.
         check(path, items_bytes(items), self.max_bytes)
         self._file(path)                                # a key too long for a file's name: refused before the lock
+        guard_check(guard, self.writer, self.acl)
         with self._locked():
+            guard_match(guard, self._current)
             current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
@@ -480,13 +517,15 @@ class FileVariables:
 
     # A delete is a write: the same ACL as `put`, and never an epoch (`refuse_delete`). Then, under the lock:
     # the same CAS check as `put`, remove the file (a missing file is not an error) and burn an index.
-    def delete(self, path: str, cas: int | None = None) -> None:
+    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None) -> None:
         refuse_delete(path, self.writer, self.acl)
         try:
             self._file(path)
         except KeyTooLong:
             return                                      # nothing could have been written under it
+        guard_check(guard, self.writer, self.acl)
         with self._locked():
+            guard_match(guard, self._current)
             current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")

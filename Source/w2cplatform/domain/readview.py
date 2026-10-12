@@ -23,6 +23,8 @@ silent together and the console shows ONE cause, not thirty greyed units.
 """
 from __future__ import annotations
 
+from .steps import one_pass
+
 import json
 import logging
 import time
@@ -148,6 +150,7 @@ class ReadView:
     def _read(c) -> tuple[dict, dict]:
         return c.heartbeats(), (c.snapshot() or {})
 
+    @one_pass()
     def refresh(self) -> None:
         now = self.wall()
         self._forget_gone()
@@ -202,6 +205,7 @@ class ReadView:
             for name in [n for n in kept if n not in here]:
                 del kept[name]
 
+    @one_pass()
     def _try(self, c):
         try:
             got = self._read(c)

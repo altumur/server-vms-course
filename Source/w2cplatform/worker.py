@@ -36,7 +36,7 @@ from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
 from .requests import complete_mark, holder_still_there, mark_error, mark_kept_until, mark_request, mark_text, request_digest
 from .rows import PARSE_ERRORS, garbled_counts
-from .variables import Conflict, Variables, cas_pause
+from .variables import GuardFailed, Conflict, Variables, cas_pause
 
 log = logging.getLogger(__name__)
 
@@ -599,6 +599,22 @@ class Worker:
             return False
         self.slot = new
         return True
+
+    def put_under_slot(self, path: str, items: dict, cas=None):
+        """Publish control state only under a presently confirmed slot (ADR-0074).
+
+        A guard refusal propagates; a caller may try again only by entering this method again and
+        rereading ownership. No lease grace or unconfirmed_max permits publishing control state.
+        """
+        with self._slot_lock:
+            if not self.writing_allowed or self.slot is None or self.seeking is not None:
+                raise GuardFailed(self.sub.slot_key(self.name), 0)
+            key = self.sub.slot_key(self.name)
+            stored_items, index = self.vars.get(key)
+            cur = read_slot(key, self.name, stored_items)
+            if cur is None or cur.holder != self.instance or cur.released or cur.until <= self.wall():
+                raise GuardFailed(key, index)
+            return self.vars.put(path, items, cas=cas, guard={"key": key, "index": index})
 
     # An orderly stop (SIGTERM from the scheduler: scale-in, or a drain). Writes the row with
     # `released=True` and `until=now`, if this instance still holds it; a `Conflict` is ignored. This flag

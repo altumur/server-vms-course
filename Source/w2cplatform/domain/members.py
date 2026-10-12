@@ -28,6 +28,8 @@ Three rules the product found (feedback AN):
 """
 from __future__ import annotations
 
+from .steps import one_pass
+
 import json
 import time
 
@@ -231,16 +233,16 @@ class Members:
     def pinned(self, name: str, domain_objects, own: str | None = None) -> dict:
         """{"root": "this" | "another" | None, "keys_rev": n | None}, from the member's last report."""
         from .agent import KEYS_PATH, ROOT_PATH
-        from .uplink import base
         own = self.own_root() if own is None else own
 
+        from .reports import pinned as read
+        from .federation import Unreachable
+        try:
+            rows = read(name, domain_objects).document()['rows']
+        except Unreachable:
+            rows = {}
         def row(path):
-            raw = domain_objects.get(base(name) + "v/" + path)
-            try:
-                got = (json.loads(raw).get("items") or {}) if raw else {}
-            except PARSE_ERRORS:
-                got = {}                                 # that report's row does not parse: it says nothing (the seventh review)
-            return got if isinstance(got, dict) else {}
+            return rows.get(path, {}).get('items', {})
         pub, keys = row(ROOT_PATH).get("pub"), row(KEYS_PATH)
         try:
             rev = json.loads(keys["doc"]).get("rev") if keys.get("doc") else None
@@ -248,12 +250,13 @@ class Members:
             rev = None
         return {"root": None if not (own and pub) else ("this" if pub == own else "another"), "keys_rev": rev}
 
-    # ADMITTED BY THE KEY IT PRESENTS (ADR-0032). A knocking member's report mark carries the keys its agent presents
+    # ADMITTED BY THE KEY IT PRESENTS (ADR-0032). A knocking member's report body carries the keys its agent presents
     # (`uplink.report`); the person who accepts it has compared the key's fingerprint with the one the box itself
     # shows, and the page sends what it showed (`fingerprint`). Accepted, the member is listed WITH that key — its door
     # opens to it from the next ask (`carry.HolderDoor`) — and a fingerprint that is not the key the mark holds now is
     # refused: somebody else is knocking under that name. A mark with no key admits the member without one, as the
     # configuration's members are listed, and its key is registered on the holder later (`set_key`).
+    @one_pass()
     def accept(self, name: str, by: str | None, domain_objects=None, fingerprint: str | None = None) -> bool:
         """A person accepts a cluster that is knocking. Refused (409) when its report says it pinned another root:
         accepting it would list a member that takes nothing this domain signs."""
@@ -269,11 +272,14 @@ class Members:
 
     @staticmethod
     def presented(name: str, domain_objects) -> dict:
-        """The keys `name` presents on its last report mark — or, with no report, on its last knock at the domain's door
+        """The keys `name` presents in its last report — or, with no report, on its last knock at the domain's door
         (`note_knock`): {key, seal, fingerprint}; {} when it presents none."""
-        from .federation import published
-        from .uplink import REPORTED, base
-        mark = published(name, base(name) + REPORTED, domain_objects.get(base(name) + REPORTED)) or {}
+        from .reports import pinned as read
+        from .federation import Unreachable
+        try:
+            mark = read(name, domain_objects).document()
+        except Unreachable:
+            mark = {}
         if not mark.get("key"):
             mark = _knock(domain_objects, name)
         key, seal = mark.get("key"), mark.get("seal")
@@ -284,6 +290,7 @@ class Members:
         except ValueError:
             return {}                                    # a key that is no hex is no key to admit by
 
+    @one_pass()
     def knocking(self, domain_objects) -> list[dict]:
         """Clusters that report into the domain's store, or that the domain's door refused (`note_knock`), and are not on
         the list — the list as written, or, before anybody wrote it, the members the configuration names (as its first
@@ -301,11 +308,14 @@ class Members:
             name, _, sub = key[len(UPLINK) + 1:].partition("/")
             if sub != REPORTED or name in listed or name == self.domain:
                 continue
-            raw = domain_objects.get(key)
-            from .federation import published
-            mark = published(name, key, raw) or {}        # a mark nobody can read: knocking, with no time (the seventh review)
+            from .reports import pinned as read
+            from .federation import Unreachable
+            try:
+                mark = read(name, domain_objects).mark
+            except Unreachable:
+                mark = {}                              # no complete generation: no report time or count
             shown = {k: v for k, v in self.presented(name, domain_objects).items() if k != "seal"}
-            out.append({"name": name, "last": mark.get("ts"), "times": mark.get("seq"), **shown,
+            out.append({"name": name, "last": mark.get("sent_at"), "times": mark.get("rev"), **shown,
                         **self.pinned(name, domain_objects, own)})
             seen.add(name)
         for key in domain_objects.list(f"{KNOCKS}/"):

@@ -249,6 +249,7 @@ class HolderDoor:
         (`uplink.take`); the answer is what it carries home, as `GET /api/carry` answers it — sealed to the key the
         publication names (`seal`), which the signature covers."""
         from .uplink import MAX_PUBLICATION, take
+        from .reports import StaleReport
         if len(body) > MAX_PUBLICATION:
             raise Refused(413, f"the publication of {cluster} is over {MAX_PUBLICATION >> 20} MiB — a publication this "
                                f"large is the sign to publish changes instead of all")
@@ -262,12 +263,14 @@ class HolderDoor:
                               pub.get("key") if isinstance(pub.get("key"), str) else None,
                               pub.get("seal") if isinstance(pub.get("seal"), str) else None)
         seal = pub.get("seal")
-        if not isinstance(seal, str) or not seal or seal != me.get("seal", seal):
+        if pub.get("key") != me.get("key") or not isinstance(seal, str) or not seal or seal != me.get("seal", seal):
             raise Refused(401, f"the publication names a sealing key that is not {cluster}'s")
         if self.objects is None:
             raise Refused(503, "this door keeps no reports: the holder's objects are not open here")
         try:
-            take(cluster, pub, self.objects)
+            take(cluster, body, self.objects, received_at=self.wall(), signature=signature)
+        except StaleReport as e:
+            raise Refused(409, f"{cluster}: {e}") from None
         except ValueError as e:
             raise Refused(400, f"{cluster}: {e}") from None
         return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
@@ -282,17 +285,68 @@ class HolderDoor:
                                f"members in batches under this bound")
         self._member_key(relay, f"/api/relay/{relay}", body, signature)
         try:
-            env = json.loads(body)
+            got = raw_fields(raw_fields(body)['relayed'])
         except PARSE_ERRORS:
-            env = None
-        got = env.get("relayed") if isinstance(env, dict) else None
-        if not isinstance(got, dict):
-            raise Refused(400, f"relay {relay}: this relay's build sends what this domain cannot read — it reads "
-                               f"{{relayed: {{member: publication}}}}")
+            raise Refused(400, 'a relay batch is {relayed: {member: publication}}') from None
         if self.objects is None:
-            raise Refused(503, "this door keeps no reports: the holder's objects are not open here")
-        _, refused = take_bundle(relay, got, self.objects)
+            raise Refused(503, 'this door keeps no reports')
+        from .members import Members
+        from .topology import Topology
+        admitted = Members(self.vars).read()['members']
+        topology = Topology(self.vars)
+        refused = {m: 'not an admitted member behind this relay' for m in got
+                   if m not in admitted or topology.via(m) != relay}
+        for member, raw in got.items():
+            if member in refused:
+                continue
+            try:
+                pub = json.loads(raw)
+                if pub.get('key') != admitted[member].get('key') or pub.get('seal') != admitted[member].get('seal'):
+                    refused[member] = 'publication identity does not match the admitted member'
+            except PARSE_ERRORS:
+                refused[member] = 'publication is not an object'
+        _, bad = take_bundle(relay, {m: raw for m, raw in got.items() if m not in refused}, self.objects,
+                             received_at=self.wall())
+        refused.update(bad)
         return {"refused": refused}
+
+
+def publication_bytes(doc) -> bytes:
+    """One serializer shared by the local and HTTP member publication paths."""
+    from w2cplatform.trust.jcs import jcs
+    return jcs(doc)
+
+
+def raw_fields(body: bytes) -> dict[str, bytes]:
+    """Extract JSON object values without reserializing them; reject duplicate keys and trailing input."""
+    text = body.decode('utf-8')
+    decoder = json.JSONDecoder()
+    def space(at):
+        while at < len(text) and text[at] in ' \r\n\t':
+            at += 1
+        return at
+    at = space(0)
+    if text[at:at+1] != '{':
+        raise ValueError('expected an object')
+    at, out = space(at+1), {}
+    if text[at:at+1] != '}':
+        while True:
+            key, at = decoder.raw_decode(text, at)
+            if not isinstance(key, str) or key in out:
+                raise ValueError('duplicate or non-string member')
+            at = space(at)
+            if text[at:at+1] != ':':
+                raise ValueError('expected colon')
+            start = space(at+1)
+            _, end = decoder.raw_decode(text, start)
+            out[key] = text[start:end].encode('utf-8')
+            at = space(end)
+            if text[at:at+1] != ',':
+                break
+            at = space(at+1)
+    if text[at:at+1] != '}' or space(at+1) != len(text):
+        raise ValueError('invalid object end')
+    return out
 
 
 # -- the member's side -------------------------------------------------------------------------------------------------
@@ -331,11 +385,13 @@ class CarryClient:
 
     def relay_up(self, publications: dict) -> dict:
         """A relay's summary report to the door it carries through (`POST /api/relay/<cluster>`, `HolderDoor.relay`)."""
-        return self._post(f"/api/relay/{self.cluster}", {"relayed": publications}, "relay")
+        body = b'{"relayed":{' + b','.join(
+            publication_bytes(m) + b':' + raw for m, raw in sorted(publications.items())) + b'}}'
+        return self._post(f"/api/relay/{self.cluster}", body, "relay")
 
     def _post(self, path: str, doc: dict, what: str) -> dict:
         from w2cplatform.trust.memberkey import sign_request
-        body = json.dumps(doc, sort_keys=True).encode()
+        body = doc if isinstance(doc, bytes) else publication_bytes(doc)
         sig = sign_request(self.key, "POST", path, body, self.wall())
         if isinstance(self.door, str):
             return _http_post(self.door, path, body, sig, self.timeout)

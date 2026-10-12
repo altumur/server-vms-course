@@ -6,6 +6,8 @@ tenth of them off. These tests are the measurement — calls counted, link time 
 — and the three changes it forced: one read of the snapshot per member, "where" from memory, and a pass
 that neither waits for silent members in turn nor keeps asking them every five seconds.
 """
+
+from tests.reporting import sync as report_sync
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.api import ConsoleAPI
@@ -210,7 +212,7 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
         agents.append(DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=store, published=d.local_objects()))
         devices.append(d)
     for a in agents:
-        a.sync()
+        report_sync(a)
     meter = Meter(latency=0.001, timeout=0.001)          # the domain's own store: a local call, and no timeout to wait
     view = ReadView(meter.wrap_all(fed), wall=wall)
     view.refresh()                                       # the domain has seen every report once, by its clock
@@ -219,8 +221,8 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
         d.publish()                                      # a minute later: new heartbeats, new shards
     store.puts = store.bytes = 0
     for a in agents[OFF:]:                               # a tenth of them are off and do not report
-        a.sync()
-    assert store.puts == 3 * (N - OFF)                   # heartbeat, shard, `reported` — per member, per report
+        report_sync(a)
+    assert store.puts == 2 * (N - OFF)                   # heartbeat, shard, `reported` — per member, per report
     assert store.bytes < 400_000
 
     meter.reset()

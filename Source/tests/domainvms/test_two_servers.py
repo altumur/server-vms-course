@@ -11,6 +11,8 @@ write is not a scheduler but two STANDBY recordings, both `when: offline` (М10B
 Both start from the same book of primaries; when A is back it takes everything home — from the backup first,
 on the LAN, and from the card for the rest. A viewer opens the camera where its stream is going.
 """
+
+from tests.reporting import sync as report_sync
 import json
 from types import SimpleNamespace
 
@@ -50,7 +52,7 @@ def _office(wall):
     agents = {"srv-a": DomainAgent("srv-a", b.vars, a.vars, now=wall),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects)}
     for x in agents.values():
-        x.sync()
+        report_sync(x)
 
     rec_a = SpecController(REC_SPEC, a.vars, a.objects, wall=wall)
     rec_a.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})           # the primary, on A
@@ -65,7 +67,7 @@ def _office(wall):
     fed.add(member_copy(cam.name, b.objects, wall=wall))
     cam_agent = DomainAgent(cam.name, b.vars, cam.flash, now=wall, domain_objects=b.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
-    cam_agent.sync()
+    report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(b.vars, view, wall, issuer=signer.tokens)
     crossings.record(SERIAL, on="srv-a")
@@ -84,14 +86,14 @@ def _office(wall):
         for n, r in hosts.items():
             if a_up or n != "srv-a":
                 r.heartbeat_once()                                     # where each server's ingest is, said again
-        cam.publish(); cam_agent.sync()
+        cam.publish(); report_sync(cam_agent)
         if a_up:
             recorders(backup_coverage=backup_coverage)
-            agents["srv-a"].sync()
+            report_sync(agents["srv-a"])
         view.refresh(); crossings.publish(); crossings.publish_primaries()
-        agents["srv-b"].sync(); cam_agent.sync()
+        report_sync(agents["srv-b"]); report_sync(cam_agent)
         if a_up:
-            agents["srv-a"].sync()
+            report_sync(agents["srv-a"])
 
     down = set()
 
@@ -160,7 +162,7 @@ def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_t
     rec_c.create({"name": f"{SERIAL}-off", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline", "enabled": False})
     rec_c.publish_snapshot()                                          # …and one switched off: no backup (the product's)
     c_agent = DomainAgent("srv-c", o.b.vars, c.vars, now=wall, seen_store=c.objects)
-    o.domain_pass(); c_agent.sync()
+    o.domain_pass(); report_sync(c_agent)
     both = [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}, {"cluster": "srv-c", "recording": f"{SERIAL}-c"}]
     e = o.pusher.entry()
     assert e["backups"] == both and e["backup"]["urls"] == B_URLS                  # one second road: to the first
@@ -173,7 +175,7 @@ def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_t
     assert not _covers(c.vars, c.objects, row_c, wall()) and not _covers(o.b.vars, o.b.objects, BACKUP, wall())
     o.down.add("srv-a"); o.a_link.up = False
     wall.advance(5)
-    o.domain_pass(a_up=False); c_agent.sync()
+    o.domain_pass(a_up=False); report_sync(c_agent)
     assert _covers(c.vars, c.objects, row_c, wall()) and _covers(o.b.vars, o.b.objects, BACKUP, wall())
 
 
@@ -241,8 +243,8 @@ def test_when_as_ingest_cannot_say_the_book_decides_that_a_whose_recorder_stoppe
     o.recorders(a_running=False)                                      # named, and not running: a stop
     o.crossings.publish_primaries()
     o.cam.publish()                                                    # the book reaches the camera on its agent's pass
-    DomainAgent(o.cam.name, o.b.vars, o.cam.flash, now=wall, domain_objects=o.b.objects,
-                published=o.cam.local_objects(), seen_store=o.cam.local_objects()).sync()
+    report_sync(DomainAgent(o.cam.name, o.b.vars, o.cam.flash, now=wall, domain_objects=o.b.objects,
+                published=o.cam.local_objects(), seen_store=o.cam.local_objects()))
     assert o.pusher.pass_once(_frames(wall, 3, start=3))["road"] == "backup"
     assert [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
 
@@ -423,7 +425,7 @@ def _written_office(wall):
     agents = {"srv-a": DomainAgent("srv-a", b.vars, a.vars, now=wall),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects)}
     for x in agents.values():
-        x.sync()                                                       # each server's key set: what its ingest checks with
+        report_sync(x)                                                       # each server's key set: what its ingest checks with
     ctl = {"srv-a": SpecController(REC_SPEC, a.vars, a.objects, wall=wall, cluster="srv-a"),
            "srv-b": SpecController(REC_SPEC, b.vars, b.objects, wall=wall, cluster="srv-b")}
     ctl["srv-a"].create({"name": SERIAL, "cam": f"ref:{SERIAL}"})     # the primary, on A
@@ -439,7 +441,7 @@ def _written_office(wall):
     fed.add(member_copy(cam.name, b.objects, wall=wall))
     cam_agent = DomainAgent(cam.name, b.vars, cam.flash, now=wall, domain_objects=b.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
-    cam_agent.sync()
+    report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(b.vars, view, wall, issuer=signer.tokens)
     crossings.record(SERIAL, on="srv-a")
@@ -453,13 +455,13 @@ def _written_office(wall):
             r.lease_pass(); r.reconcile_once(); r.heartbeat_once()
 
     def books():
-        cam.publish(); cam_agent.sync()
+        cam.publish(); report_sync(cam_agent)
         if "srv-a" not in down:
-            agents["srv-a"].sync()
+            report_sync(agents["srv-a"])
         view.refresh(); crossings.publish(); crossings.publish_primaries()
-        agents["srv-b"].sync(); cam_agent.sync()
+        report_sync(agents["srv-b"]); report_sync(cam_agent)
         if "srv-a" not in down:
-            agents["srv-a"].sync()                                     # A's source book, carried home
+            report_sync(agents["srv-a"])                                     # A's source book, carried home
 
     def domain_pass():
         servers(); books()

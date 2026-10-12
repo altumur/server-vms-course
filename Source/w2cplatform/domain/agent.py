@@ -470,6 +470,7 @@ class DomainAgent:
         if self.published is not None and (self.domain_objects is not None or door):
             from .carry import Refused
             from .uplink import NotPublished, publication, report
+            from .reports import StaleReport
             try:
                 paged_at = self.now()
                 pages = self.pages() if self.pages else None
@@ -485,6 +486,9 @@ class DomainAgent:
                 self._say_refused("the report", "")
             except NotPublished as e:
                 self.reported = str(e)
+            except StaleReport as e:
+                self.reported = f"refused by the report receiver: {e}"
+                self._say_refused("the report", self.reported)
             except Refused as e:                           # the door said no: said once, the pass goes on
                 self.reported = f"refused by the domain's door: {e.detail}"
                 self._say_refused("the report", self.reported)
@@ -508,7 +512,7 @@ class DomainAgent:
                     self.bundled = (said.get("refused") or {}) if isinstance(said, dict) else {}
                     self._say_refused("the bundle", "")
                 else:
-                    self._step("the bundle", lambda: bundle(self.cluster, members, self.bundle_store, self.domain_objects))
+                    self._step("the bundle", lambda: bundle(self.cluster, members, self.bundle_store, self.domain_objects, received_at=self.now()))
             except Refused as e:
                 self._say_refused("the bundle", f"refused by the domain's door: {e.detail}")
             except Unreachable:

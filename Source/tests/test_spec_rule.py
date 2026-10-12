@@ -74,7 +74,8 @@ IMPLEMENTED = {
     "display.form.title", "display.form.state", "display.form.placement", "display.form.fields",
     "display.form.status.field", "display.form.status.since", "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
-    "domain.books", "domain.books.*.show", "domain.kept", "domain.tables",
+    "domain.books", "domain.books.*.show", "domain.books.*.from", "domain.books.*.key",
+    "domain.books.*.pick", "domain.books.*.to", "domain.kept", "domain.tables",
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",
@@ -87,7 +88,11 @@ IMPLEMENTED = {
 # A key a decision brought to the loader before a spec says it — the spec bytes are «Паритет»'s since the lessons'
 # signal —, each with what goes in and where. The debt only shrinks: a key here that a spec now uses fails as a key
 # unused does, and the line goes.
-WAITING: dict[str, str] = {}
+WAITING: dict[str, str] = {
+    f"domain.books.*.{key}": "ADR-0074 «курс»: testsub book declarations follow guarded publication and report snapshots; "
+                           "test_book_merge exercises the accepted form in memory first"
+    for key in ("from", "key", "pick", "to")
+}
 
 
 def _paths(d, at: str = "") -> set[str]:

@@ -7,6 +7,8 @@ the people with their passwords, the backup sealed by the pass, a move of the do
 console (`console.Console`) reads: the members and their publications from the store, what only the signer knows from
 the view the signer publishes; it writes what a person decides with no key, and hands the rest to the signer as it
 came."""
+
+from tests.reporting import sync as report_sync
 import ast
 import json
 import os
@@ -206,7 +208,7 @@ def test_a_handover_is_the_signers_and_the_console_only_hands_it_on():
     lines = Lines()
     h = Holder(holder.vars, devices["cam-SN0"].disk, signer, ids=IdentityStore(signer, holder.vars, devices["cam-SN0"].disk,
                publish_floor=0, now=wall), revoked=RevocationList(), fed=fed, term=holder, journal=lines,
-               hand_to=lambda to: handover(holder, to, _objects(devices), lambda: agents[to].sync(),
+               hand_to=lambda to: handover(holder, to, _objects(devices), lambda: report_sync(agents[to]),
                                            _take(fed, devices, to, offline, wall), wall),
                wall=wall)
     srv, signer_url = _serve(h)
@@ -310,8 +312,8 @@ def test_a_knocking_member_is_admitted_by_the_key_its_report_presents():
     members.add("cam-SN0", "voucher")                                     # the list is written: strangers knock
     cam, key = DeviceCluster("SN7", FakeVariables(), wall=wall), MemberKey.new()
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects(),
-                key=key).sync()
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects(),
+                key=key))
     knock = {k["name"]: k for k in members.knocking(north.objects)}["cam-SN7"]
     assert knock["key"] == key.pub and knock["fingerprint"] == fingerprint(key.pub) and "seal" not in knock
     try:

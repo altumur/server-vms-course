@@ -842,6 +842,37 @@ def _v(x) -> str:
 EXCLUSIVE_WITH = ("domain/users",)
 
 
+@dataclass(frozen=True)
+class BookMerge:
+    """Closed collection rule for member contributions (ADR-0074). No subsystem callbacks."""
+    source: str
+    key: str
+    pick: str
+    to: str
+
+    @classmethod
+    def read(cls, sub: str, raw: dict, where: str) -> "BookMerge | None":
+        required = {"from", "key", "pick", "to"}
+        if not required.intersection(raw):
+            return None
+        if not required.issubset(raw):
+            raise ValueError(f"{where}: from, key, pick and to are required together")
+        source = raw["from"]
+        if not isinstance(source, str) or not source.startswith(sub + "/"):
+            raise ValueError(f"{where}.from: expected a local row or family under {sub}/")
+        rest = source[len(sub) + 1:]
+        parts = (rest[:-1] if rest.endswith("/") else rest).split("/")
+        if any(not _BOOK_NAME.fullmatch(p) for p in parts):
+            raise ValueError(f"{where}.from: expected named path segments, optionally ending in /")
+        for field in ("key", "to"):
+            name = raw[field]
+            if not isinstance(name, str) or not _BOOK_NAME.fullmatch(name) or is_secret_field(name):
+                raise ValueError(f"{where}.{field}: expected a direct non-secret field name")
+        if raw["pick"] not in ("unique", "all"):
+            raise ValueError(f"{where}.pick: expected unique or all")
+        return cls(source, raw["key"], raw["pick"], raw["to"])
+
+
 # THE SUBSYSTEM ON THE DOMAIN, DECLARED (the boundary's «no hooks», DOMAIN-PLATFORM.md: the domain is the platform's,
 # and what a subsystem brings to it is a declaration the platform reads, never code it calls). Every name below is a
 # row family under the subsystem's own prefix of the domain, `domain/<sub>/…` (`SubsystemSpec.domain_prefix`).
@@ -865,6 +896,8 @@ EXCLUSIVE_WITH = ("domain/users",)
 #             another member's, an item to whoever may view the unit whose `domain.ref` is its key (`console.py`,
 #             `SpecConsole.book_route`); a book without it is carried and not shown (ADR-0010, the addition of
 #             2026-10-06; the product's `domainBooks`, word for word)
+#             ADR-0074 additionally declares collected books with from/key/pick/to. The input is a local row
+#             or writer family of this subsystem; the domain merges contributions and addresses their delivery.
 #   kept      rows the subsystem keeps at the holder for the domain as a whole, `domain/<sub>/<name>`, which leave the
 #             holder in its backup with what the domain decided; a name ending in `/` is a FAMILY of rows,
 #             `domain/<sub>/<name>/<row>` — one row per thing, kept, backed up and denied to the agent alike
@@ -901,6 +934,7 @@ class DomainSection:
     member_field: str = ""        # `witness.member_field`: the unit's fixed field that carries the member's name
     books: tuple = ()             # the names: a list's in its order, a map's sorted
     show: dict = field(default_factory=dict)        # {<book>: (<field>…)} — the books shown, each its fields (`_books`)
+    merged: dict = field(default_factory=dict)     # {book: BookMerge}, only books collected from members
     kept: tuple = ()
     tables: tuple = ()
     tokens: dict = field(default_factory=dict)
@@ -938,7 +972,7 @@ class DomainSection:
             return tuple(v)
         sec = cls(ref=str(d.get("ref") or ""), view=names("view"), reports=names("reports", tail=True),
                   kept=names("kept", tail=True), tables=names("tables"))
-        sec.books, sec.show = cls._books(d.get("books"), where)
+        sec.books, sec.show, sec.merged = cls._books(d.get("books"), where, spec.name)
         sec.witness, sec.member_field = cls._witness(spec, d.get("witness"), where)
         for f in ([sec.ref] if sec.ref else []) + list(sec.view):
             if f not in spec.snapshot and f != "id":
@@ -996,14 +1030,15 @@ class DomainSection:
         return sec
 
     @staticmethod
-    def _books(v, where: str) -> tuple[tuple, dict]:
+    def _books(v, where: str, sub: str) -> tuple[tuple, dict, dict]:
         """`domain.books`: a list of names — carried, none shown — or a map, each book `{}` or `{show: [<field>…]}`.
-        `(names, {<book>: (<field>…)})`. Nothing is guessed: a book with no value, an empty `show`, a secret named or a
-        key beside `show` is refused, with its path — the product's `domainBooks`, its words, so a spec of either side
-        loads, or is refused, alike on both (ADR-0012)."""
+        `(names, shown fields, collection rules)`. ADR-0074 adds from/key/pick/to. Nothing is guessed:
+        a book with no value, an empty `show`, a secret named or an unknown key is refused, with its path. Carried-book refusals keep the product's words; collected
+        books use ADR-0074's closed rules (course first, then the product)."""
         where += ".books"
         out: list = []
         show: dict = {}
+        merged: dict = {}
 
         def name(n) -> None:
             n = n if isinstance(n, str) else ""
@@ -1013,11 +1048,11 @@ class DomainSection:
                 raise ValueError(f"{where} names {_q(n)} twice")
             out.append(n)
         if v is None:
-            return (), show
+            return (), show, merged
         if isinstance(v, list):
             for x in v:
                 name(x)
-            return tuple(out), show
+            return tuple(out), show, merged
         if isinstance(v, dict):
             for b in sorted(v, key=str):
                 name(b)
@@ -1026,8 +1061,11 @@ class DomainSection:
                 if not isinstance(book, dict):
                     raise ValueError(f"{at} takes {{}} (carried, not shown) or {{show: [<field>…]}} — not {_v(book)}")
                 for k in book:
-                    if k != "show":
+                    if k not in ("show", "from", "key", "pick", "to"):
                         raise ValueError(f"{at}.{k}: unknown key")
+                rule = BookMerge.read(sub, book, at)
+                if rule is not None:
+                    merged[b] = rule
                 if "show" not in book:
                     continue
                 raw = book["show"]
@@ -1045,7 +1083,7 @@ class DomainSection:
                         raise ValueError(f"{at}.show names {_q(f)} twice")
                     fields.append(f)
                 show[b] = tuple(fields)
-            return tuple(out), show
+            return tuple(out), show, merged
         raise ValueError(f"{where} is a list of names or a map {{<book>: {{}} | {{show: [<field>…]}}}}, not {_v(v)}")
 
     @staticmethod

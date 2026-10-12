@@ -6,6 +6,8 @@ A domain of three: srv-b holds it, srv-a and srv-c are members, each with its ow
 agent carrying through the holder's door. The domain's console is the real one (the people's routes handed to a signer
 that answers the list of people from the holder's identity store); the worker's door is the real one, with tokens that
 name their person. The declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
+
+from tests.reporting import sync as report_sync
 import json
 import os
 import tempfile
@@ -122,7 +124,7 @@ class Site:
     def carry(self):
         self.books.pass_once()
         for x in self.agents.values():
-            x.sync()
+            report_sync(x)
 
     def close(self):
         self.console.stop(self.console_srv)

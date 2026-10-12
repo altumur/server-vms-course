@@ -81,7 +81,8 @@ KEYS = {
     "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
     "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
-    "domain.books", "domain.books.*.show", "domain.kept", "domain.tables",   # books: a list of names, or {<book>: {show}}
+    "domain.books", "domain.books.*.show", "domain.books.*.from", "domain.books.*.key",
+    "domain.books.*.pick", "domain.books.*.to", "domain.kept", "domain.tables",   # carried or collected books (ADR-0074)
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",
