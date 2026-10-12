@@ -327,6 +327,18 @@ def test_role_socket_bootstrap_and_installation_follow_loaded_grants():
         assert not (role / "tokens.sock").exists()
 
 
+def test_role_groups_match_controller_and_worker_configstore_groups():
+    with issuing() as e:
+        loaded = catalog._loaded["testsub"].domain.tokens["tally"]
+        loaded["grant"] = ("testsubcontroller", "testsubworker")
+        files, groups = tokenrequest.installation("/run/w2c-token-requests", "tenant")
+        assert "root w2c-testsubcontroller -" in files
+        assert "root tenant-testsubworker -" in files
+        assert "w2c-testsubcontroller" in groups and "tenant-testsubworker" in groups
+        loaded["grant"] = ("unknownworker",)
+        raises(KeyError, lambda: tokenrequest.installation("/run/w2c-token-requests", "tenant"))
+
+
 def test_revoked_member_and_frozen_holder_do_not_issue_tokens():
     with issuing() as e:
         placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north", "origin": "south"}, e.wall)
