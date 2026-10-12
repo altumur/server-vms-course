@@ -2,7 +2,7 @@
 # console, nothing in front of it. The platform's process over the specs (ADR 0014), so its names and its user are the
 # platform's (ADR 0023).
 # Stateless: every instance reads the same store and the same objects, and a retried POST is answered the same by
-# whichever gets it (the Idempotency-Key is a row, vms/idem/*).
+# whichever gets it (the Idempotency-Key is a row, cam/idem/*).
 [Unit]
 Description=w2c console — the page and the API
 After=network-online.target configstore.service w2c-resource.service
@@ -19,7 +19,7 @@ SupplementaryGroups=w2c-console w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
 Environment=CONSOLE_PORT=8080
 # What is at `/`: the deployment's word (`host.build_console`); every other spec of `SPEC_DIR` is mounted under its name.
-Environment=CONSOLE_ROOT=vms
+Environment=CONSOLE_ROOT=cam
 # Who is "on the box" is whoever came through this socket (`w2cplatform/access.py`, `is_local`).
 Environment=CONSOLE_UNIX=/run/w2c-console/console.sock
 RuntimeDirectory=w2c-console
