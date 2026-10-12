@@ -29,7 +29,7 @@ OFFER = "v=0\r\no=- 1 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=video 9 UDP/TLS/RT
 def _box():
     """One box: a VMS worker recording camera 1, the two controllers, a console with both tokens."""
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     live_ctl = SpecController(LIVE_SPEC, box.vars.as_writer("livecontroller", LIVE_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -137,12 +137,12 @@ def test_fifty_viewers_one_subscription_and_the_worker_unchanged():
     try:
         g = _gateway(box, "g-1", capacity=60)
         _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
-        before = box.objects.get("vms/heartbeats/w-1")
+        before = box.objects.get("cam/heartbeats/w-1")
         sessions = [_whep(base, 1)[2] for _ in range(50)]
         assert all(s.startswith(g.url + "/whep/session/") for s in sessions) and len(g.sessions) == 50
         assert g.subscriptions == 1 and len(g.upstreams) == 1                            # fifty browsers, one tee subscription
         assert g.headroom() == 10                                                        # capacity is viewers: what the autoscaler moves N on
-        assert box.objects.get("vms/heartbeats/w-1") == before                            # the worker never learned a viewer exists
+        assert box.objects.get("cam/heartbeats/w-1") == before                            # the worker never learned a viewer exists
         # full: the sixty-first viewer is refused by the gateway, at its door
         for _ in range(10):
             _whep(base, 1)
@@ -325,10 +325,10 @@ def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
     try:
         g = _gateway(box, "g-1")
         _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once(); _whep(base, 1)
-        assert sorted(p.split("/")[0] for p in box.vars.list("")) and all(p.startswith(("vms/", "live/")) for p in box.vars.list(""))
+        assert sorted(p.split("/")[0] for p in box.vars.list("")) and all(p.startswith(("cam/", "live/")) for p in box.vars.list(""))
         assert [p for p in box.vars.list("live/") if "/idem/" not in p] == [
             "live/epoch/1", "live/placement/1", "live/slots/g-1", "live/streams/1", "live/workers/g-1"]
-        assert not any("live" in p for p in box.vars.list("vms/"))                        # the VMS's rows carry nothing about viewers
+        assert not any("live" in p for p in box.vars.list("cam/"))                        # the VMS's rows carry nothing about viewers
         live_ctl.publish_snapshot()                                                      # the live controller publishes its own snapshot
         snap = published_snapshot(box.objects, "live", rows="streams")
         assert snap["streams"][0]["cam"] == "1" and snap["streams"][0]["worker"] == "g-1"
@@ -556,7 +556,7 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
         m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.resource_root, box.wall,
                          live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
         for con in (m.root, *m.mounts.values()):
-            con.gate.impl = Tokens({"anna": [("view", "vms/1", ())]})
+            con.gate.impl = Tokens({"anna": [("view", "cam/1", ())]})
         srv = m.serve("127.0.0.1", 0)
         base = f"http://127.0.0.1:{srv.server_address[1]}"
         anna = {"Authorization": "Bearer anna"}
@@ -591,7 +591,7 @@ def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses()
         con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
         m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
                          live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
-        access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())], "carl": [("view", "vms/2", ())]})
+        access = Tokens({"anna": [("view", "cam/1", ())], "boris": [("view", "cam/1", ())], "carl": [("view", "cam/2", ())]})
         for con in (m.root, *m.mounts.values()):
             con.gate.impl = access
         srv = m.serve("127.0.0.1", 0)
