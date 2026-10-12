@@ -165,22 +165,40 @@ def prune(member, store):
         return len(discard)
 
 
-def export(store):
+@dataclass(frozen=True)
+class ExportResult:
+    """In-process copy result; omitted observations are named without exposing their contents."""
+    objects: dict[str, str]
+    skipped: tuple[str, ...] = ()
+
+    @property
+    def skipped_count(self):
+        return len(self.skipped)
+
+
+def export(store) -> ExportResult:
     """Copy accepted reports under their member mutex, never an orphan or mixed pointer/body pair."""
     from .uplink import UPLINK
-    out = {}
-    for path in store.list(UPLINK+'/'):
+    out, skipped = {}, []
+    for path in sorted(store.list(UPLINK+'/')):
         if not path.endswith('/'+REPORTED):
             continue
         member = path[len(UPLINK)+1:-len('/'+REPORTED)]
         if not member or '/' in member:
             continue
         with lock(member):
-            snap = read(member, store)  # fail closed: do not sign an incomplete backup
-            prefix = base(member)+'reports/'
-            for rev in range(max(1, snap.mark['rev']-1), snap.mark['rev']+1):
-                raw = store.get(prefix+str(rev))
-                if raw is not None:
-                    out[prefix+str(rev)] = raw.decode('utf-8')
-            out[path] = canonical_json(snap.mark)
-    return out
+            try:
+                snap = read(member, store)
+                prefix = base(member)+'reports/'
+                copied = {}
+                for rev in range(max(1, snap.mark['rev']-1), snap.mark['rev']+1):
+                    raw = snap.raw if rev == snap.mark['rev'] else store.get(prefix+str(rev))
+                    if raw is not None:
+                        _body(raw)
+                        copied[prefix+str(rev)] = raw.decode('utf-8')
+                copied[path] = canonical_json(snap.mark)
+            except (Unreachable, *PARSE_ERRORS):
+                skipped.append(member)
+                continue                            # observations never veto the domain's state backup
+            out.update(copied)                       # all of this member, or none of it
+    return ExportResult(out, tuple(skipped))
