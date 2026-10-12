@@ -4,23 +4,7 @@ course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are
 course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-product-only rec.subsystem.yaml secrets   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
-product-only rec.subsystem.yaml secrets.reads   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
-product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only vms.subsystem.yaml metrics[driver_budget_exits_total]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
 product-only vms.subsystem.yaml metrics[driver_budget_small]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
-product-only vms.subsystem.yaml domain.shared[events_retention_days]   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml snapshot[events_retention_days]   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived.items   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived.items.days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived.on_delete   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived.on_delete.days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.derived.row   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.alarms_retention_days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.alarms_retention_days.inherit   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.alarms_retention_days.type   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.events_retention_days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.events_retention_days.inherit   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only vms.subsystem.yaml unit.fields.events_retention_days.type   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: Н5, puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
+product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
+product-only rec.subsystem.yaml heartbeat.strings[peer_url]   # ADR-0075 «продукт»: дверь рекордера между процессами (окно 2) — курс её не держит — «Сборка»
