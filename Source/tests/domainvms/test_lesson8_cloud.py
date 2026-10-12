@@ -15,7 +15,7 @@ def test_fifty_cameras_at_four_megabit():
 
 
 def test_a_worker_deployed_three_ways_is_the_same_artifact():
-    jobs = render_three_ways("vmsworker")
+    jobs = render_three_ways("camworker")
     assert jobs["local"] != jobs["rented"]                            # the datacenter and the object store differ...
     assert worker_stanza(jobs["local"]) == worker_stanza(jobs["rented"]) == worker_stanza(jobs["split"])   # ...and nothing about the worker does
     assert 'lost_after           = "45s"' in jobs["rented"] and "EPOCH" not in jobs["rented"]
