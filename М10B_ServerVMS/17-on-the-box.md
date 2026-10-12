@@ -52,9 +52,9 @@
 ```python
 """python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs|domainpart —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
-(`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; …), and so are the
+(`python3 -m w2cplatform controller cam|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; …), and so are the
 resource (`python3 -m w2cplatform resource`: what a keep holds is the spec's `holds:`) and the console (`python3 -m
-w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and doors). What is left of the VMS's own
+w2cplatform console`, `CONSOLE_ROOT=cam`: the specs' rows, tables, requests and doors). What is left of the VMS's own
 beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.
 ```
 
@@ -62,14 +62,14 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 
 | Чьи | Точка входа | Юнит |
 |---|---|---|
-| платформы | `python3 -m w2cplatform controller <sub>`, `resource`, `console` | `w2c-controller@vms`, `@rec`, `@live`, `@det` (и `@detjob`, `@survey`, `@auto` уроков 21–25), `w2c-resource`, `console` — [урок 21 М10A](../М10A_Platform/21-Platform-on-the-Box.md) |
-| VMS | `python3 -m vms worker`, `recorder`, `gateway`, `detworker` (уроки 4, 10, 13, 14) | `vmsworker@`, `recworker@`, `liveworker@`, `detworker@` |
+| платформы | `python3 -m w2cplatform controller <sub>`, `resource`, `console` | `w2c-controller@cam`, `@rec`, `@live`, `@det` (и `@detjob`, `@survey`, `@auto` уроков 21–25), `w2c-resource`, `console` — [урок 21 М10A](../М10A_Platform/21-Platform-on-the-Box.md) |
+| VMS | `python3 -m vms worker`, `recorder`, `gateway`, `detworker` (уроки 4, 10, 13, 14) | `camworker@`, `recworker@`, `liveworker@`, `detworker@` |
 | VMS | `python3 -m vms detjobworker`, `surveyworker`, `autoworker` (уроки 21, 23, 25) | `detjobworker@`, `surveyworker@`, `autoworker@` |
 | VMS | `python3 -m vms jobs` — хозяйство VMS: заявки, ставшие работой, и закрытая законченная работа | `vmsjobs.container` |
 
 `domainpart` — тоже глагол VMS, но держателя домена, а не коробки: его юнит — `deploy/domain/systemd/vms-domainpart.service` (М12B).
 
-**Контроллеры, ресурс и консоль коробки — процессы платформы по спекам VMS.** Своих у VMS нет: она кладёт в образ семь спек (`SPEC_DIR=/app/vms`), и платформа работает по ним. Контроллер каждой подсистемы — экземпляр шаблона `w2c-controller@.container`, и имя экземпляра — имя спеки: восьмая спека получит контроллер ещё одним экземпляром того же шаблона. Ресурс держит то, что велят `holds:` спек (М10A, урок 14). Консоль ставит VMS в корень (`CONSOLE_ROOT=vms`), остальные спеки — под своими именами, `/rec/…`, `/live/…` (`test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name`). Как устроены их юниты, — урок 21 М10A, шаги 1 и 3. У VMS остаются её воркеры и `jobs`.
+**Контроллеры, ресурс и консоль коробки — процессы платформы по спекам VMS.** Своих у VMS нет: она кладёт в образ семь спек (`SPEC_DIR=/app/vms`), и платформа работает по ним. Контроллер каждой подсистемы — экземпляр шаблона `w2c-controller@.container`, и имя экземпляра — имя спеки: восьмая спека получит контроллер ещё одним экземпляром того же шаблона. Ресурс держит то, что велят `holds:` спек (М10A, урок 14). Консоль ставит VMS в корень (`CONSOLE_ROOT=cam`), остальные спеки — под своими именами, `/rec/…`, `/live/…` (`test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name`). Как устроены их юниты, — урок 21 М10A, шаги 1 и 3. У VMS остаются её воркеры и `jobs`.
 
 Докстрока `vms/__main__.py` — **справочник по окружению**, и стоит заметить одну строку:
 
@@ -98,21 +98,21 @@ DET_NAME=d-1                     a detector worker's slot; CAPACITY here is stre
 ## Шаг 2 — Токен уже, чем префикс
 
 ```python
-# - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
-#   (the operator's rows). Together they partition `vms/*`; none of them can do another's job.
+# - Three tokens, three processes: `camworker` (epochs, slots), `camcontroller` (placement), `console`
+#   (the operator's rows). Together they partition `cam/*`; none of them can do another's job.
 ```
 
-Три токена **разбивают** `vms/*` на три непересекающиеся части:
+Три токена **разбивают** `cam/*` на три непересекающиеся части:
 
 | Роль (процесс) | Что пишет |
 |---|---|
-| `vmscontroller` (`w2c-controller@vms`) | `vms/workers/*`, `vms/placement/*`, `vms/slots/*`, `vms/decommissioned/*` |
-| `console` (`console`) | `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/retention/*`, `vms/requests/*`, … и `platform/drain`, `platform/schema` |
-| `vmsworker` (`vmsworker@`) | `vms/epoch/*`, `vms/slots/*`, `vms/holds/*`, `vms/devices/*` (`worker: {writes: [devices]}`; `config.WORKER_ACL`) |
+| `camcontroller` (`w2c-controller@cam`) | `cam/workers/*`, `cam/placement/*`, `cam/slots/*`, `cam/decommissioned/*` |
+| `console` (`console`) | `cam/cameras/*`, `cam/next_id`, `cam/idem/*`, `cam/retention/*`, `cam/requests/*`, … и `platform/drain`, `platform/schema` |
+| `camworker` (`camworker@`) | `cam/epoch/*`, `cam/slots/*`, `cam/holds/*`, `cam/devices/*` (`worker: {writes: [devices]}`; `config.WORKER_ACL`) |
 
 **Ни один не может делать работу другого.** Консоль, у которой завёлся бы код размещения, получила бы `Forbidden` (урок 3 М10A). Воркер, попытавшийся поправить строку камеры, — тоже.
 
-**И читает каждый не шире, чем ему нужно.** Дверь воспроизведения держателя спрашивает только, в домене ли кластер, — токенов она не проверяет (`Gate.gated`). А читала она все строки, которыми домен метит своего члена, и политика держателя в М11 разрешала ему читать `domain/break-glass/*` — хеш аварийного пароля — и гранты (девятое ревью, minor). Теперь `gated` читает набор ключей `domain/keys` и, пока его нет, одну строку членства `domain/member` (`MEMBER_MARK`): её агент домена пишет на каждом проходе, и у кластера, потерявшего ключи, она остаётся. Остальные метки читает консоль, которой они нужны для проверки токена. В списке чтения роли `vmsworker` файла прав кластера (`configstore-rights.json`) из `domain/*` остались эти две строки. Тест М11: `test_policies.py::test_the_holder_reads_no_more_of_the_domain_than_its_door_asks` — из `domain/*` роль держателя читает ровно эти две, и дверь в открытом кластере и у члена без ключей прочла ровно их.
+**И читает каждый не шире, чем ему нужно.** Дверь воспроизведения держателя спрашивает только, в домене ли кластер, — токенов она не проверяет (`Gate.gated`). А читала она все строки, которыми домен метит своего члена, и политика держателя в М11 разрешала ему читать `domain/break-glass/*` — хеш аварийного пароля — и гранты (девятое ревью, minor). Теперь `gated` читает набор ключей `domain/keys` и, пока его нет, одну строку членства `domain/member` (`MEMBER_MARK`): её агент домена пишет на каждом проходе, и у кластера, потерявшего ключи, она остаётся. Остальные метки читает консоль, которой они нужны для проверки токена. В списке чтения роли `camworker` файла прав кластера (`configstore-rights.json`) из `domain/*` остались эти две строки. Тест М11: `test_policies.py::test_the_holder_reads_no_more_of_the_domain_than_its_door_asks` — из `domain/*` роль держателя читает ровно эти две, и дверь в открытом кластере и у члена без ключей прочла ровно их.
 
 Обе ACL вырезаны из **одной спецификации** (`SPEC.acl_console()`, `SPEC.acl_controller()`, урок 10 М10A). Добавили поле — обе обновились; нового места для рассинхронизации не появилось.
 
@@ -141,11 +141,11 @@ def test_who_may_write_where_is_in_the_mounts_too():
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
             # the two stores, never /data/platform whole: its etc/secrets holds the key ring
             assert "/data/platform" not in vols(n) and not any(v.startswith("/data/platform/etc") for v in vols(n)), n
-    assert vols("vmsworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, vms/<cam>/, on this box's resource
-    assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
+    assert vols("camworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, cam/<cam>/, on this box's resource
+    assert vols("camworker@.container")["/data/media"].endswith(":ro,z")
     assert vols("recworker@.container")[EVENTS] == f"{EVENTS}:z"                      # its events; its volume is the daemon's
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
+    assert vols("camworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
     # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
@@ -164,11 +164,11 @@ def test_who_may_write_where_is_in_the_mounts_too():
 
 Каждая строка — утверждение из модуля, выраженное монтированием.
 
-**У контроллера — только его журнал.** Контроллер пишет свой журнал — какой слот он освободил и почему (`host.controller_loop`, `journal.py`) — в `audit/<sub>controller/` архива событий (`audit/vmscontroller/`, `audit/reccontroller/`: роль — идентичность контроллера, ADR-0030; под общим `controller` журналы двух контроллеров одного сервера смешивались), который назвал `RESOURCE_ROOT`, и шаблон платформы монтирует ему этот архив клиентом (`w2c-events`, `GroupAdd=2102`; урок 21 М10A, шаг 3). Видео не смонтировано ему ни в одной копии шаблона, контроллеру записей тоже: ошибка в размещении записей не может испортить запись — не потому, что код правильный, а потому что видео у контроллера нет.
+**У контроллера — только его журнал.** Контроллер пишет свой журнал — какой слот он освободил и почему (`host.controller_loop`, `journal.py`) — в `audit/<sub>controller/` архива событий (`audit/camcontroller/`, `audit/reccontroller/`: роль — идентичность контроллера, ADR-0030; под общим `controller` журналы двух контроллеров одного сервера смешивались), который назвал `RESOURCE_ROOT`, и шаблон платформы монтирует ему этот архив клиентом (`w2c-events`, `GroupAdd=2102`; урок 21 М10A, шаг 3). Видео не смонтировано ему ни в одной копии шаблона, контроллеру записей тоже: ошибка в размещении записей не может испортить запись — не потому, что код правильный, а потому что видео у контроллера нет.
 
 **Спула нет ни у кого.** Это не строка про один юнит, а цикл по всем `.container` каталога. Видео не пишется в файлы, которые можно смонтировать: регистратор отдаёт кадры демону `obsd` через сокет, а демон пишет в том (урок 10). Цикл сторожит, чтобы локальная очередь не вернулась «на время» ни в одном юните.
 
-**Воркеру архив на запись — только ради событий.** `vms/<cam>/`, бакеты событий камеры. В `rec/` он не пишет никогда, и это уже не монтирование, а дисциплина кода. Видео он не пишет вовсе (урок 4): стока в том в его конвейере нет (урок 9).
+**Воркеру архив на запись — только ради событий.** `cam/<cam>/`, бакеты событий камеры. В `rec/` он не пишет никогда, и это уже не монтирование, а дисциплина кода. Видео он не пишет вовсе (урок 4): стока в том в его конвейере нет (урок 9).
 
 **Медиа воркеру только на чтение**, регистратору — **не смонтированы вовсе**, и комментарий объясняет: *он никогда не читает камеру, он подписывается на раздачу.* Регистратор, у которого нет доступа к файлам камер, физически не может открыть второе соединение.
 
@@ -217,7 +217,7 @@ Restart=always
 RestartSec=2
 ```
 
-`vmsworker@.container` — **шаблон**. `systemctl start vmsworker@w-1`, и `%i` подставляется как `w-1`.
+`camworker@.container` — **шаблон**. `systemctl start camworker@w-1`, и `%i` подставляется как `w-1`.
 
 ```ini
 Environment=WORKER_NAME=%i
@@ -321,7 +321,7 @@ WantedBy=multi-user.target
 
 **`--socket /run/vms-obsd/obsd.sock`** (до третьего ревью — `/run/vms/obsd.sock`, см. шаг 3). Сокет был в том же tmpfs, что разделяемая память воркеров, и потому был виден и воркеру с драйвером; теперь у него свой каталог, `/run/vms-obsd`, который монтирует только `recworker@`. `OBSD_SOCKET=/run/vms-obsd/obsd.sock` задан в юните регистратора, и умолчание клиента на Linux (`vms.obsd.default_socket`) совпадает; на macOS умолчание — собственное демона, `/tmp/vms-obsd-<uid>.sock`.
 
-**Имена — продукта: `vms-obsd`.** Курс звал каталог `/run/obsd`, пользователя `obsd`, группу клиентов `vms-rec`. Продукт развёл имена так: платформа — `w2c` (хранилище, ресурс, запасные, установщик, общий CA), а движок архива — часть VMS-приложения и остаётся `vms`: служба `vms-obsd.service`, пользователь и группа `vms-obsd`, сокет `/run/vms-obsd/obsd.sock`. Курс взял те же имена, кроме имени юнита (`obsd.service`): одна группа — и демона, и его клиентов, номер прежний, 2101. Сессия, которую вызывающий не назвал, говорит в `HELLO` имя процесса (`process_name`: `python3 -m vms` — `vms`, `tests/run.py` — `run`), а не `"vms"` за любой процесс. Тест: `test_deploy_units.py::test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems`.
+**Имена — продукта: `vms-obsd`.** Курс звал каталог `/run/obsd`, пользователя `obsd`, группу клиентов `vms-rec`. Продукт развёл имена так: платформа — `w2c` (хранилище, ресурс, запасные, установщик, общий CA), а движок архива — часть VMS-приложения и остаётся `vms`: служба `vms-obsd.service`, пользователь и группа `vms-obsd`, сокет `/run/vms-obsd/obsd.sock`. Курс взял те же имена, кроме имени юнита (`obsd.service`): одна группа — и демона, и его клиентов, номер прежний, 2101. Сессия, которую вызывающий не назвал, говорит в `HELLO` имя процесса (`process_name`: `python3 -m vms` — `vms`, `tests/run.py` — `run`), а не `"cam"` за любой процесс. Тест: `test_deploy_units.py::test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems`.
 
 **`User=vms-obsd`, `Group=vms-obsd`, `OBSD_CLIENT_GROUP=vms-obsd`.** Демон работает своим пользователем и пускает, кроме себя, только группу клиентов — регистраторы входят в неё по номеру (`GroupAdd=2101` в `recworker@.container`: у контейнера нет `/etc/group` хоста). Пир без группы демон отвергает сам, пир не из группы не пройдёт и права на сокет. На Linux группа учитывается любая, и дополнительная тоже; на macOS — только основная (так ответила сессия, которая ведёт движок). Нужна сборка `obsd`, которая этот параметр знает: изменение исходников от 2 октября 2026, не патч.
 
@@ -329,7 +329,7 @@ WantedBy=multi-user.target
 
 ### Подготовка коробки: пользователь, группа, каталоги
 
-Юнит, который называет несуществующего пользователя, не стартует (217/USER), а без демона не пишет никто. И `/run/vms` создавал только он — без демона не стартовали ни `vmsworker@`, ни `recworker@`, которые его монтируют (четвёртое ревью, блокер 2: после третьего ревью коробку под нового пользователя не готовил никто). Поэтому у коробки пять файлов установки, и два из них — платформы:
+Юнит, который называет несуществующего пользователя, не стартует (217/USER), а без демона не пишет никто. И `/run/vms` создавал только он — без демона не стартовали ни `camworker@`, ни `recworker@`, которые его монтируют (четвёртое ревью, блокер 2: после третьего ревью коробку под нового пользователя не готовил никто). Поэтому у коробки пять файлов установки, и два из них — платформы:
 
 - `deploy/obsd.sysusers` → `/etc/sysusers.d/obsd.conf`: группа `vms-obsd` с **фиксированным** номером 2101 (по нему её находят контейнеры) и пользователь `vms-obsd`, для которого она основная (`u vms-obsd -:vms-obsd`).
 - `deploy/w2c.sysusers` и `deploy/w2c.tmpfiles` — пользователь платформы `w2c` и группы её клиентов, её каталоги под `/data/platform` и сокет консоли; их разбирает урок 21 М10A, шаги 4 и 5. У продукта та же пара — `w2c.conf` и `vms.conf`, только пути в `/var/lib` и `/run`.
@@ -477,7 +477,7 @@ CMD ["python3", "-m", "vms", "worker"]
 
 **Файлов два: платформы и VMS** (правило продукта о платформенных именах, 3 октября). `/etc/w2c/w2c.env` — половина платформы: её каталог, архив событий, хранилище, имя сервера, метки, номер коробки (урок 21 М10A, шаг 7). `/etc/vms/vms.env` — настройки подсистем VMS. Каждый юнит называет оба, платформы — первым: `EnvironmentFile=/etc/w2c/w2c.env`, затем `EnvironmentFile=/etc/vms/vms.env`; имя, заданное в обоих, берётся из второго.
 
-**Пути — продукта, а файлы — на разделе данных** (ADR 0023). Конфигурация VMS — в `/data/vms/etc/` (`vms.env`), и `/etc/vms` — **ссылка** туда, так же как `/etc/w2c` — ссылка в `/data/platform/etc` (урок 21 М10A, шаг 5). Юниты и код называют `/etc/vms/…`, а не то, куда ведёт ссылка. Ссылку на обычном сервере кладёт `install-obsd.sh` (`link_etc "$R/etc/vms" "$R/data/vms/etc"`; на A/B-коробке продукта — образ) и ничего не удаляет: настоящий каталог сначала **переносится** в `/data`, `/data/config/vms.env` — в `/etc/vms/vms.env`. Файл, который уже лежит на месте, остаётся, а перенесённый ложится рядом как `<имя>.from-config`. Кольцо на `/data/volume` под демоном не переносится: скрипт пишет в `vms.env` `ARCHIVE_VOLUME=file:///data/volume`, и коробка пишет туда, где её записи. Тест: `test_deploy_units.py::test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing` — запускает скрипт в песочнице (`INSTALL_ROOT`), проверяет ссылки и каждый файл и запускает второй раз: ничего не движется и не повторяется.
+**Пути — продукта, а файлы — на разделе данных** (ADR 0023). Конфигурация VMS — в `/data/vms/etc/` (`vms.env`), и `/etc/vms` — **ссылка** туда, так же как `/etc/w2c` — ссылка в `/data/platform/etc` (урок 21 М10A, шаг 5). Юниты и код называют `/etc/cam/…`, а не то, куда ведёт ссылка. Ссылку на обычном сервере кладёт `install-obsd.sh` (`link_etc "$R/etc/vms" "$R/data/vms/etc"`; на A/B-коробке продукта — образ) и ничего не удаляет: настоящий каталог сначала **переносится** в `/data`, `/data/config/vms.env` — в `/etc/vms/vms.env`. Файл, который уже лежит на месте, остаётся, а перенесённый ложится рядом как `<имя>.from-config`. Кольцо на `/data/volume` под демоном не переносится: скрипт пишет в `vms.env` `ARCHIVE_VOLUME=file:///data/volume`, и коробка пишет туда, где её записи. Тест: `test_deploy_units.py::test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing` — запускает скрипт в песочнице (`INSTALL_ROOT`), проверяет ссылки и каждый файл и запускает второй раз: ничего не движется и не повторяется.
 
 **На macOS `/data` нет, и коробка там — каталог** (тринадцатое ревью, major 15). Установщик М11 требует `--box <каталог>` и кладёт под него код, оба файла окружения, ключ и состояние; plist'ы называют каталог и работают от пользователя. Подробно — урок 3 М11, шаг 6.
 
@@ -546,10 +546,10 @@ def test_the_units_run_the_entrypoints_the_package_has():
     # every subsystem's controller is an instance of the platform's one template (ADR 0023): `w2c-controller@<sub>`
     platform = {"w2c-controller@.container": "%i"}
     assert {f[:-len(".subsystem.yaml")] for f in os.listdir(os.path.join(HERE, "vms")) if f.endswith(".subsystem.yaml")} \
-        == {"vms", "rec", "live", "det", "detjob", "survey", "auto"}                    # the instances the image has specs for
+        == {"cam", "rec", "live", "det", "detjob", "survey", "auto"}                    # the instances the image has specs for
     assert not [n for n in os.listdir(DEPLOY) if n.endswith("controller.container")]   # no controller of a subsystem's name
     …
-    for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
+    for name, entry in [("camworker@.container", "worker"), ("w2c-resource.container", "resource"),
                         ("w2c-console.container", "console"), ("vmsjobs.container", "jobs"), …, *platform.items()]:
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
@@ -599,8 +599,8 @@ console:
 
 ```bash
 deploy/install-obsd.sh                       # vms-obsd (2101), w2c (2100) и группы клиентов, /etc/w2c и /etc/vms — ссылки в /data, каталоги, кольца — vms-obsd, юнит
-systemctl start w2c-resource w2c-console w2c-controller@vms w2c-controller@rec vmsjobs
-systemctl start vmsworker@w-1 recworker@r-1
+systemctl start w2c-resource w2c-console w2c-controller@cam w2c-controller@rec vmsjobs
+systemctl start camworker@w-1 recworker@r-1
 systemctl start w2c-controller@live liveworker@g-1
 systemctl start w2c-controller@det detworker@d-1
 ```
@@ -617,8 +617,8 @@ curl -X POST localhost:8080/cameras -H 'Idempotency-Key: a1' \
 За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. И одна строка, которую стоит знать после установки: сетевой том регистратор берёт только на `obsd` с патчем 07 (`WRITER_ABANDON`: движок, который умеет отдать том, когда его взяла другая коробка). На коробке со старым демоном регистратор говорит это в своём heartbeat'е под `refused`, словами, по которым можно действовать, — `obsd on <сервер> is too old to write <том> safely …`; собственные диски коробки это не трогает. Нажали «Запись» — регистратор форматирует том сервера `/data/vms/obsd/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
 
 ```bash
-systemctl stop w2c-controller@vms      # ничего работающее не останавливается
-systemctl kill -s KILL vmsworker@w-1    # регистратор переподписывается под новой эпохой
+systemctl stop w2c-controller@cam      # ничего работающее не останавливается
+systemctl kill -s KILL camworker@w-1    # регистратор переподписывается под новой эпохой
 systemctl kill -s KILL recworker@r-1    # писатель ждёт в демоне; поднятый регистратор подбирает его целиком
 systemctl restart obsd                  # регистраторы держат тома как away и открывают их заново
 ```
@@ -653,7 +653,7 @@ systemctl restart obsd                  # регистраторы держат 
 ## Итог
 
 - У процессов коробки два хозяина: контроллеры всех подсистем, ресурс и консоль — платформы, от `w2c`, по спекам (урок 21 М10A); у VMS — её воркеры и `jobs` и её спеки в образе. Контроллер подсистемы — экземпляр одного шаблона платформы, `w2c-controller@<sub>`.
-- Три токена разбивают `vms/*` на непересекающиеся части, и обе ACL вырезаны из одной YAML.
+- Три токена разбивают `cam/*` на непересекающиеся части, и обе ACL вырезаны из одной YAML.
 - Монтирования повторяют ACL в байтах: у контроллера только архив событий для его журнала, у регистратора нет медиа, спула нет ни у кого — видео за демоном.
 - Имя экземпляра systemd — это слот, и супервизор является авторитетом по вопросу, кто сейчас `w-1`.
 - Движок архива — демон хоста, один на коробку: правило «один писатель на том» значит что-то, только если все регистраторы спрашивают один демон.
