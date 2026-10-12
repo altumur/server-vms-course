@@ -92,7 +92,7 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         # another detector instance takes the unit's epoch: the first one's events are fenced, nobody else's
         box.vars.put("det/epoch/1-linecross", {"epoch": "2"})
         assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?unit=cam/1")[1]["events"]] == [
-            ("det", True), ("console", False), ("cam", False), ("det", True)]
+            ("det", True), ("cam", False), ("console", False), ("det", True)]
         # the resource process stops: the console says so by name, and answers with what it has — nothing
         rsrv.shutdown(); rsrv.server_close()
         st, out = call(base, "GET", "/events?unit=cam/1")
