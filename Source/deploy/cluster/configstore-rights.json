@@ -609,12 +609,14 @@
    "write": [
     "domain/members",
     "domain/topology",
+    "domain/placement*",
     "domain/grants/*",
     "domain/pending/*"
    ],
    "delete": [
     "domain/members",
     "domain/topology",
+    "domain/placement*",
     "domain/grants/*",
     "domain/pending/*"
    ]
@@ -637,7 +639,6 @@
     "!domain/names/*",
     "!domain/users/*",
     "!domain/members",
-    "!domain/placement*",
     "!domain/licence",
     "!domain/stranded",
     "!domain/grants/*",
@@ -663,7 +664,6 @@
     "!domain/names/*",
     "!domain/users/*",
     "!domain/members",
-    "!domain/placement*",
     "!domain/licence",
     "!domain/stranded",
     "!domain/grants/*",
