@@ -475,11 +475,11 @@ POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": 1050, "items": {
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1062}
+→ 200 {"index": 1060}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/workers/w-2", "cas": 1051, "items": {"units": "", "rev": "2"}}
-→ 200 {"index": 1063}
+→ 200 {"index": 1061}
 ```
 
 Единица 9 получает новое размещение с причиной «слот w-2 отпущен», назначение `w-2` пустеет, и единица появляется в назначении `w-srv-a-1`. Каждая запись — по CAS: второй контроллер, если он есть, не сделает ту же перестановку дважды (урок 10).

@@ -162,8 +162,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
                            + [s.sub.config(s.holds["table"], "*") for s in specs if s.holds]
                            + [s.sub.config(s.rows, "*") for s in specs if s.about_sub]
                            + [s.sub.request_key("free-*") for s in specs if s.requests_free]
-                           + [f"{t}/{family}{tail}" for t in trees for family in ("retention", "alarms_retention")
-                              for tail in ("", "/*")])
+                           + [f"{t}/{family}" for t in trees for family in ("retention", "alarms_retention")])
     # The domain's roles — its own processes on the holder, its agent in every cluster with `!` denials on what only the
     # holder writes, a subsystem's worker on the domain — are the platform domain's to say, from the specs
     # (`w2cplatform/domain/rights.py`). A member reads nothing of the holder's store: there is no member role.

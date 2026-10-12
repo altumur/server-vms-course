@@ -73,7 +73,7 @@ def test_the_resource_policy_needs_neither_worker_nor_controller_and_touches_no_
     srv = c.servers["srv-a"]; t = c.wall()
     event_log(srv.archive, 1, 1).append(t - 3 * 86400, "motion")                    # three days old…
     event_log(srv.archive, 1, 1).append(t - 60, "motion")
-    c.vars.put("vms/retention/1", {"days": "1"})                                     # …past camera 1's one day
+    c.vars.put("vms/retention", {"days": "1"})                                     # …past camera 1's one day
     r = _recorder_with_footage(c, "srv-a", "1", 1, ((t - 3 * 86400, t - 3 * 86400 + 600),))
     rep = srv.res.pass_()
     assert rep["removed"] == 1 and rep["space"] == "off"

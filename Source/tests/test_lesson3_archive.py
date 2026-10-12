@@ -97,7 +97,7 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     assert [(x["epoch"], x["fenced"]) for x in st.timeline("7", t0, t0 + 1200, current_epoch=4)] == [(4, False)]
     assert subsystems_under(box.resource_root) == {"vms": ["7"]}         # the resource's tree holds no footage at all
     # bucket retention is the platform's, and footage is not on its tree for it to touch
-    box.vars.put("vms/retention/7", {"days": 30})                  # what the VMS controller writes for a camera's events
+    box.vars.put("vms/retention", {"days": 30})                  # what the VMS controller writes for a camera's events
     platform = Resource(box.resource_root, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
     platform.index = db
     assert platform.retain() == 2 and not os.path.exists(p) and not os.path.exists(p2)

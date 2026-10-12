@@ -119,7 +119,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     wall = Clock()
     fed, devices, root, holder, agents, ldevids = _site(wall)
     shared = SharedSettings(holder.vars, devices["cam-SN0"].disk_door(), holder.signer.tokens, wall, term=lambda: 1)
-    shared.edit(lambda s: s.update(shared={"vms": {"events_retention_days": 30}}), base_rev=0, by="anna")
+    shared.edit(lambda s: s.update(shared={"vms": {"alarms": ["tamper"]}}), base_rev=0, by="anna")
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     for a in agents.values():
         report_sync(a)
@@ -142,7 +142,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     assert verify(new.signer.tokens.issue("anna", 900, now=wall(), kind="person"), keys, now=wall())["sub"] == "anna"
     assert read_holder(devices["cam-SN2"].flash, keys, wall())["holder"] == "cam-SN1"
     assert SharedView(devices["cam-SN2"].flash, devices["cam-SN2"].disk, wall).settings() == \
-        {"shared": {"vms": {"events_retention_days": 30}}}
+        {"shared": {"vms": {"alarms": ["tamper"]}}}
 
     bundle = TrustBundle([root.cert])
     try:

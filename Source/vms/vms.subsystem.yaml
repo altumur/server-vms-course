@@ -2,7 +2,7 @@
 # subsystem is here; the worker (vmsworker) is the part that knows what a camera is.
 # the prefix. `SubsystemSpec.sub` becomes `Subsystem("vms")`, so every key is `vms/…`: rows under
 # `vms/cameras/`, `vms/next_id`, `vms/workers/<w>`, `vms/placement/<id>`, `vms/slots/<w>`, `vms/epoch/<id>`,
-# `vms/idem/<key>`, `vms/retention/<id>`, `vms/devices/<host>` (what a held device raises and can do — its
+# `vms/idem/<key>`, `vms/devices/<host>` (what a held device raises and can do — its
 # holder's, Lesson 25), and the object-store keys `vms/<w>/heartbeat` and `vms/snapshot`.
 # It also prefixes every `/metrics` line (`vms_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/vms/<cam>/…`). The grants are cut from it (`SubsystemSpec.acl_console`, `acl_controller`,
@@ -144,19 +144,6 @@ unit:
     enabled:               {type: bool,   default: true}
     # media retention is the RECORDING's (`retention_days` in rec.subsystem.yaml), not the camera's: a camera
     # may be written to several volumes with several ceilings.
-    # bucket retention: the platform's, via the derived row below. Events are small and kept a year where
-    # footage is kept a month.
-    #
-    # `inherit`, not `default` (М12 Lesson 12, feedback AT). A default is written into the row when the row is
-    # created, and then a domain's shared default of 14 days can never apply: "set to 365" and "not set" are
-    # the same row. Left unset, the row carries nothing, the derived row below says nothing, and the value is
-    # resolved where it is used: the camera's own, else the domain's default, else 365 — the resource's own
-    # year, the same number said twice on purpose, since the resource does not read this file.
-    events_retention_days: {type: int,    inherit: 365}       # buckets: the platform's, via the derived row below
-    # …and the ALARMS' own days: they lie in a tree of their own (`vms.alarms/<cam>/…`, `w2cplatform/events.py`)
-    # and are kept three years unless the row says otherwise. Observations can then be kept a month without
-    # an alarm going with them — which, in one bucket, was the choice.
-    alarms_retention_days: {type: int,    inherit: 1095}
     # stored and carried in the snapshot; nothing in М10 reads it (no placement rule uses it).
     priority:              {type: int,    default: 100}
     # where the camera is reachable from (`"vlan:cctv-a"`); the placement constraint below compares it
@@ -253,19 +240,6 @@ unit:
     # 25, where automation checks a scenario against it. The row is what the operator declared; the device
     # row is what the process found.
     kind:                  {type: string, default: "video"}   # video | io — a device without a picture is still a device
-  # rows the platform keeps beside the unit (`SpecController._derived`).
-  derived:
-    - row: retention/{id}            # vms/retention/<id> {days}: what the platform's resource job retains buckets by
-      # the row is `{days: "<events_retention_days>"}`.
-      items: {days: events_retention_days}
-      # on `delete_camera` the row becomes `{days: 0}`, so a deleted camera's buckets go at the resource's
-      # next pass without anyone deleting files by hand.
-      on_delete: {days: 0}           # a deleted camera's buckets go at the next pass
-    # The alarms' days. No `on_delete`, and that is the answer to "should deleting a camera erase its events at
-    # once": it ends the camera's observations, and not the record of what happened at it. The row stays, and
-    # the alarms live out their days.
-    - row: alarms_retention/{id}     # vms/alarms_retention/<id> {days}
-      items: {days: alarms_retention_days}
 # What a holder says of each DEVICE it has open, as the device said it (`config.device_row`): the kinds of event its units
 # raise, its contacts and relays, whether it turns, its presets — what automation may point at (`Catalog`) — and the
 # device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
@@ -390,7 +364,7 @@ rights:
     requests: [output, preset]
 # No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
-snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
+snapshot: [name, source, enabled, priority, labels, ref, live]
 # The VMS on the domain (the boundary's «no hooks»; DOMAIN-PLATFORM.md): what the platform's domain reads and moves for
 # it, under `domain/vms/…`, without knowing what any of it means. A camera is found across clusters by its `ref`, and the
 # shared view shows its name. The books the VMS's domain worker writes at the holder for each member (`vms/domainpart`):
@@ -423,8 +397,8 @@ domain:
   # the shared settings (`auto.subsystem.yaml`).
   # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
   # them at GET /domain/shared/vms): the folders the page offers, and two that inherit — the site's alarm kinds
-  # (added to the camera's own) and the events' retention.
-  shared: [folders, alarms, events_retention_days]
+  # (added to the camera's own).
+  shared: [folders, alarms]
   keys:
     - {id: roads, keys: [domain/vms/roads]}
     - {id: crossings, keys: [domain/vms/crossings]}
@@ -502,7 +476,6 @@ display:
     live: Живой поток
     priority: Приоритет
     labels: Метки достижимости
-    events_retention_days: Срок хранения событий, дн
   options:
     live:
       always: Держать всегда
@@ -516,7 +489,7 @@ display:
       note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
     - title: Размещение
       placement: true
-      fields: [live, priority, labels, events_retention_days]
+      fields: [live, priority, labels]
       note: "Метки решают, где может работать камера: её возьмёт воркер, чей сервер несёт все её метки. Пусто — любой сервер. Папки лежат только в дереве и на размещение не влияют."
   field_help:
     source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
@@ -629,15 +602,11 @@ events:
 # says how a camera records. `live.subsystem.yaml` and `det.subsystem.yaml` prove the same classes run two more subsystems from a
 # different dict.
 #
-# - `row: retention/{id}` — `vms/retention/<id>`, written on create and refreshed on update only when a
-#   source field changed. This is the row the platform's resource job reads for bucket retention
-#   (`w2cplatform.resource.retention_days`: the unit's row, else the subsystem's `vms/retention`, else a
-#   year). Its first path segment, `vms/retention/*`, is in the console's ACL because the console's token
-#   creates cameras.
+# Event and alarm retention are subsystem-wide resource settings (ADR-0076), independent of camera rows.
 #
 # ## Notes
 # - Key layout summary from `config.py`'s docstring: `vms/cameras/<id>` (row), `vms/workers/<w>`
-#   (assignment), `vms/placement/<id>`, `vms/retention/<id>`, `vms/epoch/<id>` (a worker takes by CAS),
+#   (assignment), `vms/placement/<id>`, `vms/retention`, `vms/alarms_retention`, `vms/epoch/<id>` (a worker takes by CAS),
 #   `vms/next_id`.
 # - Fields the operator may never send, whatever the YAML says: `worker, placement, epoch, revision,
 #   observed_revision, phase, id` (`PLATFORM_FIELDS`). Those are the controller's (placement, with a reason)

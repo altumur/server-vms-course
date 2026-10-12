@@ -357,7 +357,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
         assert st.st_gid == group and st.st_mode & 0o060 == 0o060, (f, oct(st.st_mode))
         assert _may_unlink(f, *resource) and _may(f, *resource, 4), f
     res = platform_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
-    box.vars.put("vms/retention/7", {"days": "1"})
+    box.vars.put("vms/retention", {"days": "1"})
     assert res.retain() == 1                                                 # the resource deletes the client's old bucket
     assert sum(1 for f in files if os.path.exists(f)) == 2
     _, _, old = tree(0o022)                                                  # the box's units before: every process root

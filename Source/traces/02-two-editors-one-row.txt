@@ -47,8 +47,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
   "name": "north-gate",
   "source": "driverpack://acme/10.2.0.11",
   "enabled": "true",
-  "events_retention_days": "30",
-  "priority": "100",
+  "priority": "30",
   "labels": "",
   "folders": "",
   "ref": "",
@@ -58,18 +57,6 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
   "kind": "video"
 }}
 → 200 {"index": 1006}
-
-# console on srv-b → /run/configstore/console.sock
-GET /v1/get?key=vms/retention/1
-→ 200 {"items": null, "index": ""}
-
-# console on srv-b → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/retention/1", "cas": "", "items": {"days": "30"}}
-→ 200 {"index": 1007}
-
-# console on srv-b → /run/configstore/console.sock
-GET /v1/get?key=vms/alarms_retention/1
-→ 200 {"items": null, "index": ""}
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
@@ -102,8 +89,7 @@ GET /v1/get?key=vms/cameras/1
     "name": "north-gate",
     "source": "driverpack://acme/10.2.0.11",
     "enabled": "true",
-    "events_retention_days": "30",
-    "priority": "100",
+    "priority": "30",
     "labels": "",
     "folders": "",
     "ref": "",
@@ -122,8 +108,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1006, "items": {
   "name": "north-gate-2",
   "source": "driverpack://acme/10.2.0.11",
   "enabled": "true",
-  "events_retention_days": "30",
-  "priority": "100",
+  "priority": "30",
   "labels": "",
   "folders": "",
   "ref": "",
@@ -132,4 +117,4 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1006, "items": {
   "live": "always",
   "kind": "video"
 }}
-→ 200 {"index": 1009}
+→ 200 {"index": 1008}

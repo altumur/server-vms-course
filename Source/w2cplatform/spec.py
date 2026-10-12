@@ -3,8 +3,7 @@ file — and the platform runs the controller from it:
 
     name          the prefix: <name>/*
     unit          the rows: where they live (<name>/<rows>/<id>), how an id is made (numeric | <field>),
-                  the operator's fields with types and defaults, and derived rows (a second row the
-                  platform keeps beside the unit — testsub2's <name>/retention/<id> that the resource reads)
+                  the operator's fields with types and defaults
     placement     capacity and headroom as heartbeat fields; a constraint and a tie-break BY NAME from
                   the catalogue below — never an expression; `requires: resource` when a worker must
                   run where a resource answers (not placed on, moved off, while it is silent); the
@@ -32,8 +31,7 @@ and the worker is the subsystem.
 # **Role in the module.** Lesson 6. A subsystem gives the platform one YAML file and the platform runs its
 # controller from it. The spec says: `name` (the prefix `<name>/*`); `unit` (where rows live —
 # `<name>/<rows>/<id>` — how an id is made — `numeric` or a field name — the operator's fields with types
-# and defaults, and derived rows kept beside the unit, such as testsub2's `testsub2/retention/<id>` that the
-# resource reads); `placement` (which heartbeat fields carry capacity and headroom, a constraint and a
+# and defaults); `placement` (which heartbeat fields carry capacity and headroom, a constraint and a
 # tie-break chosen *by name* from a short catalogue — never an expression — `requires: resource` when the
 # worker's server must have a resource that answers, and the rebalance dead band);
 # `snapshot` (the fields that leave the cluster); `console` (the name of the running gauge). What is not in
@@ -521,18 +519,6 @@ def _bound_to(where: str, name: str, v) -> tuple:
     return tuple(names)
 
 
-# A second row the platform keeps beside the unit: `row` (a path template under the prefix with `{id}`, e.g.
-# `retention/{id}`), `items` (`{item name: field name}` — which unit field feeds each item), `on_delete`
-# (what the row becomes when the unit is deleted; `None` leaves it alone). testsub2's derived row makes
-# `keep_days` visible to the resource as `testsub2/retention/<id> {days}` and sets `{days: 0}` on
-# delete so the buckets go at the next pass.
-@dataclass
-class Derived:
-    row: str                      # under the subsystem's prefix, with {id}
-    items: dict                   # item -> field
-    on_delete: dict | None = None # what the row becomes when the unit is deleted (None: left alone)
-
-
 # `events.suppress` parsed into `{kind: Suppress}`. `by` left out means every field of the line, which is
 # the reading that cannot lose an observation — see `Suppressor` in `events.py`. Read leniently HERE and
 # refused in `from_dict`: parsing says what was written, the checks say whether it may be used, and keeping
@@ -822,7 +808,7 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
 
 
 # The parsed YAML. Fields: `name`; `rows` (`"units"`; testsub says `counters`); `id` (`"numeric"` or a field
-# name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
+# name); `fields`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`console.running`: the name
 # of one of its own `metrics`, the gauge of units running; empty when the spec says none).
@@ -1211,7 +1197,6 @@ class SubsystemSpec:
     rows: str = "units"
     id: str = "numeric"           # numeric, or the field whose value is the id
     fields: dict[str, Field] = field(default_factory=dict)
-    derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
     capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
     capacity_unit_mb: float = 0.0  # `placement.capacity.unit_mb`: what one unit costs a worker, MB (0: not said; ADR-0070)
@@ -1481,7 +1466,6 @@ class SubsystemSpec:
                              f"{', '.join(sorted(RESERVED_NAMES))}), not a subsystem's")
         unit, pl = d.get("unit", {}), d.get("placement", {})
         fields = read_fields(f"spec {d.get('name')}", unit.get("fields") or {})
-        derived = [Derived(x["row"], dict(x.get("items", {})), x.get("on_delete")) for x in unit.get("derived", [])]
         # `snapshot:` LEFT OUT means "every field that may go" — a convenience, not a decision.
         # `snapshot: []` means "no field of the row leaves the cluster", which is a decision. The two were
         # one thing here for as long as this read `list(d.get("snapshot", [])) or [every field]`: an empty
@@ -1502,7 +1486,6 @@ class SubsystemSpec:
         slot = _slot(d.get("name"), d.get("slot"))
         worker = _worker(d.get("name"), d.get("worker"))
         spec = cls(name=d["name"], rows=unit.get("rows", "units"), id=str(unit.get("id", "numeric")), fields=fields,
-                   derived=derived,
                    headroom_from=(pl.get("headroom", {}) or {}).get("from", "headroom"),
                    constraint=pl.get("constraint", "none"), requires=str(pl.get("requires", "none")), servers=str(pl.get("servers", "shared")), tie_break=pl.get("tie_break", "most-free-capacity"),
                    near=str((pl.get("near") or {}).get("sub", "none") if isinstance(pl.get("near"), dict) else pl.get("near", "none")),
@@ -1623,11 +1606,6 @@ class SubsystemSpec:
         # …a key nobody above read: refused, named where it stands (`speckeys.py`).
         from .speckeys import refuse_unknown
         refuse_unknown(spec.name, d)
-        # …and, the last thing asked, the key beside rows the console derives: it writes and cleans those, and the
-        # controller writes no row but its own (ADR-0067, the refinement of window 17)
-        if spec.unplaced_delete_after and spec.derived:
-            raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with unit.derived — the controller "
-                             f"deletes a unit and cannot clean its derived rows, which are the console's")
         # …and only where a name holds nothing to keep (ADR-0067, the addendum of 2026-10-10; the fifteenth review, minor 1):
         # the console deletes a unit by a tombstone that keeps its `fixed` fields, and a create under the name with another
         # `about` is refused; the controller deletes the row outright, and never writes one, so it can leave no tombstone.
@@ -1852,8 +1830,8 @@ class SubsystemSpec:
     # EVERY KEY THAT NAMES A FIELD NAMES ONE (ADR-0012, ADR-0056; the fifteenth review, major 1): a field of the unit's row,
     # or of the rows of the table the key declares — its `fields:` and what the console stamps on it (`stamp:`). It was
     # checked of `display.tree.columns` and of nine keys not: `holds: {unit: itm}` loaded and the resource held nothing,
-    # `rights.unit_of: {pins: itemm}` made every row nobody's (any viewer saw it), `derived.items: {days: keep_dayz}`
-    # wrote no row (365 days where the operator said 7), `affinity.strict: {kinnd: …}` bound nothing, a metric's `where`
+    # `rights.unit_of: {pins: itemm}` made every row nobody's (any viewer saw it),
+    # `affinity.strict: {kinnd: …}` bound nothing, a metric's `where`
     # counted 0 for ever. Refused at load, the key's path named; the neighbour's fields of `near.prefer` are asked where
     # the catalogue is whole (`catalog.near_known`). A table only named declares no fields, and its names are not asked.
     def row_fields(self, table: str | None) -> tuple:
@@ -1872,9 +1850,6 @@ class SubsystemSpec:
                              f"not {_q(name) if isinstance(name, str) else _v(name)}{of}")
 
     def _fields_named(self) -> None:
-        for d in self.derived:
-            for item, fld in d.items.items():
-                self._names_field(f"unit.derived.items.{item}", fld)
         for table, fld in self.unit_of.items():
             self._names_field(f"rights.unit_of.{table}", fld, table)
         for e in self.servers_show:
@@ -2191,8 +2166,7 @@ class SubsystemSpec:
 
     # -- who writes what: two tokens, one prefix each ------------------------------------
     # The operator's rows: `<name>/<rows>/*`, `<name>/next_id`, `<name>/idem/*` (a retried POST answered the
-    # same by any instance), `<name>/policy` (the administrator's knobs) and the first segment of every
-    # derived row (`<name>/retention/*`). Never placement. This is the console process's token.
+    # same by any instance), `<name>/policy` (the administrator's knobs) and the tables declared by the spec. Never placement. This is the console process's token.
     def acl_console(self) -> list[str]:
         """The operator's rows: what a console (one per server, any of them) may write — never placement."""
         out = [f"{self.name}/{self.rows}/*", f"{self.name}/next_id", f"{self.name}/idem/*",   # idem: a retried POST answered the same by ANY instance
@@ -2204,8 +2178,6 @@ class SubsystemSpec:
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
                DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
                SCHEMA_KEY]                                                                    # `PUT /schema`: the operator raises the layout once every machine is new
-        for d in self.derived:
-            out.append(f"{self.name}/{d.row.split('/')[0]}/*")
         out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `testsub2/shelves/*`
         return out
 
@@ -3156,26 +3128,8 @@ class SpecController(Controller):
         ids = [k[len(prefix):] for k in self.vars.list(prefix)]
         return max([n for i in ids if (n := numeric(i)) is not None] + [0])     # `doors.numeric`: not `isdigit` + `int`
 
-    # Keep every derived row in step: on create/update write `{item: to_item(row[field])}` only if it
-    # differs; on delete write `on_delete` if set and the row exists.
-    def _derived(self, row: dict | None, uid, deleted: bool = False) -> None:
-        for d in self.spec.derived:
-            path = self.sub.config(*d.row.replace("{id}", str(uid)).split("/"))
-            if deleted:
-                if d.on_delete is not None:
-                    # Written whether or not the row was there. "If the row exists" was the rule, and it stopped
-                    # being right the day a field could be left to INHERIT (М12 Lesson 12): such a unit has no
-                    # derived row at all, so deleting it wrote nothing, and what the row governs lived on by the
-                    # subsystem's default — a deleted unit's events, for a year (found with feedback BO).
-                    self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()})
-                continue
-            # A field left to inherit gives no item: the derived row then says nothing, and its reader goes on
-            # down its own chain — the resource's retention falls back to the subsystem's, then to a year.
-            want = {k: self.spec.fields[f].to_item(row[f]) for k, f in d.items.items() if row.get(f) is not None}
-            self.write(path, lambda it, want=want: None if it == want else want)
-
     # `refuse`, choose the id (numeric: `_next_id`; else the field's value, which must be present and not
-    # already exist), build the row with `new_row`, write it with `cas=0` (create-only), write derived rows,
+    # already exist), build the row with `new_row`, write it with `cas=0` (create-only),
     # return the row. Placement is not done here — the controller's pass does it; the console reports
     # `worker: None`.
     #
@@ -3235,12 +3189,10 @@ class SpecController(Controller):
                 r["revision"] = int(old.get("revision", 0)) + 1
                 self.vars.put(self.row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
                 wrote(self.spec.name, uid)                          # for this process's readers that remember (`take_written`)
-                self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
         self.vars.put(self.row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
         wrote(self.spec.name, uid)
-        self._derived(r, uid)
         return r
 
     # WHAT A ROW MAY POINT AT, AND WHAT IS ONE PER CLUSTER (the boundary's step 6; the review's sixth pass, two majors of
@@ -3292,8 +3244,7 @@ class SpecController(Controller):
 
     # `refuse`, then read-modify-write the row: `KeyError` if missing or marked deleted; parse each field
     # into the row; bump `revision` (the trigger from М9 Lesson 5, now in the controller — the worker
-    # restarts what it runs on a new revision); write. Derived rows are refreshed only if one of their
-    # source fields changed.
+    # restarts what it runs on a new revision); write.
     #
     # A `fixed` FIELD IS SET AT CREATION (the review's fourth pass, major). A unit that is ABOUT another (`about`) is
     # judged by the gate on the unit its row names NOW; a PUT that changed the field passed on the old unit and moved
@@ -3330,12 +3281,9 @@ class SpecController(Controller):
             return self._sealed(self.spec.items(r), uid)
         r = self.spec.row(self.write(self.row_key(uid), mutate))
         wrote(self.spec.name, uid)                       # for this process's readers that remember (`take_written`)
-        if any(f in fields for d in self.spec.derived for f in d.items.values()):
-            self._derived(r, uid)
         return r
 
-    # The operator's half: the row is marked `deleted: "true"` (not removed) and derived rows get their
-    # `on_delete`. Its placement is the controller's half, taken back on the next pass by `unplace_deleted`
+    # The operator's half: the row is marked `deleted: "true"` (not removed) and its placement is the controller's half, taken back on the next pass by `unplace_deleted`
     # — the console writes as `console` (`acl_console`, its rights in the store), which cannot touch an
     # assignment, and does not need to.
     def delete(self, uid) -> None:
@@ -3343,7 +3291,6 @@ class SpecController(Controller):
         half, taken back on the next pass (`unplace_deleted`) — the console's writer
         (`acl_console`) cannot touch an assignment, and does not need to."""
         self.write(self.row_key(uid), lambda it: {**it, "deleted": "true"} if it else None)
-        self._derived(None, uid, deleted=True)
 
     # The controller's half of a delete: for every `placement/<id>` row with a worker whose unit no longer
     # exists, remove the unit from that worker's assignment and rewrite the placement as `{worker: "",

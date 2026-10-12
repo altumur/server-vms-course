@@ -650,7 +650,7 @@ class Subsystem:
     name: str
 
     # `<name>/<part>/<part>…` — the generic path builder used by `SpecController` for rows, `next_id`,
-    # `placement/<id>`, derived rows and the snapshot key.
+    # `placement/<id>` and the snapshot key.
     def config(self, *parts: str) -> str:
         return "/".join((self.name,) + parts)
 

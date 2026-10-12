@@ -71,15 +71,15 @@ def test_the_retention_pass_says_whose_buckets_it_removed_and_the_journal_outliv
     box = Box()
     t = box.wall() - 3 * DAY
     EventLog(box.resource_root, "testsub", "c7", 1).append(t, "tick"); EventLog(box.resource_root, "testsub", "c7", 1).append(t + 700, "tick")
-    EventLog(box.resource_root, "testsub", "c8", 1).append(t, "tick")
-    box.vars.put("testsub/retention/c7", {"days": 1})
+    EventLog(box.resource_root, "testsub2", "c8", 1).append(t, "tick")
+    box.vars.put("testsub/retention", {"days": 1})
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 2
     [line] = _audit(box, "resource")
     assert (line["kind"], line["buckets"], line["days"]) == ("events.removed", 2, 1.0) and line["since"] <= t < line["until"]
     assert retention_days(box.vars, "audit", "resource") == 1095.0       # kept as long as alarms are
     box.wall.advance(400 * DAY)
-    res.retain()                                                         # counter c8's year is over; the journal's is not
+    res.retain()                                                         # the other subsystem's year is over; the journal's is not
     assert [e["buckets"] for e in _audit(box, "resource")] == [2, 1]
 
 

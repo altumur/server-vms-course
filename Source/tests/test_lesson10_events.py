@@ -116,7 +116,7 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     assert again.query(0, 1e12)["events"] == res.index.query(0, 1e12)["events"]          # nothing of its own: two indexes, one tree
     m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), unit=p.get("unit")), wall=box.wall)
     assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [t + 10, box.wall() - 100]
-    box.vars.put("vms/retention/7", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
+    box.vars.put("vms/retention", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
     assert res.retain() == 1                                                              # the file went — and its events with it
     assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [box.wall() - 100]
     assert box.vars.list("vms/events") == [] and box.objects.list("vms/events") == []     # nothing about events in any store
@@ -665,13 +665,13 @@ def test_the_consoles_records_outlive_what_they_refer_to():
     event_log(box.resource_root, 7, 1).append(old, "motion")             # a camera that keeps two years…
     marks = EventLog(box.resource_root, "console", "c-1", 1)
     mark = marks.append(old, "mark", user="anna", note="checked")  # …and the record written the same day
-    box.vars.put("vms/retention/7", {"days": "730"})
+    box.vars.put("vms/retention", {"days": "730"})
 
     res = platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0                                       # neither is old enough yet
     assert os.path.exists(mark)
 
-    box.vars.put("vms/retention/7", {"days": "500"})               # still longer than the console's year
+    box.vars.put("vms/retention", {"days": "500"})               # still longer than the console's year
     assert res.retain() == 0 and os.path.exists(mark), "the record was swept while the events it names stayed"
 
     assert console_floor({("vms", "7"): 500.0, ("console", "c-1"): 365.0}) == 500.0

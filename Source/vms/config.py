@@ -5,7 +5,7 @@ Python view of the same thing, for the worker and the tests:
     vms/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
     vms/workers/<worker>  units, rev                                      (the controller writes)
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
-    vms/retention/<id>    days — derived from events_retention_days       (the console writes, with the row; the resource reads)
+    vms/retention        days — subsystem-wide event retention (the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
     vms/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
                           (its holder, on a change: the declared table `devices`, through its field rules)
@@ -28,8 +28,7 @@ here is controller-derived status — that is in the worker's heartbeat.
 #   token may too).
 # - `vms/workers/<worker>` — `units, rev` (the controller writes; the worker reads).
 # - `vms/placement/<id>` — `worker, reason, at, rev` (the controller writes).
-# - `vms/retention/<id>` — `days`, derived from `events_retention_days` (the console writes it with the camera's
-#   row, by its own token — `SpecController.create`/`update`/`delete`; the platform's resource reads it).
+# - `vms/retention`, `vms/alarms_retention` — subsystem-wide days, read by the resource.
 # - `vms/epoch/<id>` — `epoch` (a worker takes, by CAS).
 # - `vms/next_id` — `n` (the controller).
 #

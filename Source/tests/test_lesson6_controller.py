@@ -15,7 +15,7 @@ def test_crud_by_cas_and_what_it_refuses():
     box = Box(); ctl = VmsController(box.vars, box.objects, wall=box.wall)
     r = ctl.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"})
     assert r["id"] == 1 and r["revision"] == 1 and ctl.camera(1)["name"] == "gate"
-    assert ctl.update_camera(1, {"events_retention_days": 14})["revision"] == 2
+    assert ctl.update_camera(1, {"priority": 14})["revision"] == 2
     for bad in ({"worker": "w-1"}, {"revision": 9}, {"phase": "running"}, {"epoch": 3}, {"placement": {}}):
         try:
             ctl.update_camera(1, bad); raise AssertionError("must refuse")
@@ -27,6 +27,32 @@ def test_crud_by_cas_and_what_it_refuses():
         assert "needs a source" in str(e)
     ctl.delete_camera(1)
     assert ctl.camera(1) is None and ctl.cameras() == []
+
+
+def test_camera_lifecycle_has_no_individual_event_or_alarm_retention():
+    from vms.config import SPEC
+    from w2cplatform.resource import retention_days
+    box = Box()
+    ctl = VmsController(box.vars, box.objects, wall=box.wall)
+    box.vars.put("vms/retention", {"days": "30"})
+    box.vars.put("vms/alarms_retention", {"days": "400"})
+    before = {k: box.vars.get(k) for k in ("vms/retention", "vms/alarms_retention")}
+    row = ctl.create_camera({"source": "driverpack://file/gate.mp4"})
+    for field in ("events_retention_days", "alarms_retention_days"):
+        assert field not in row and field not in SPEC.fields and field not in SPEC.snapshot
+        for write in (lambda: ctl.update_camera(row["id"], {field: 7}),
+                      lambda: ctl.create_camera({"source": "driverpack://file/new.mp4", field: 7})):
+            try:
+                write()
+                raise AssertionError("removed camera field accepted")
+            except Refused as e:
+                assert "unknown" in str(e)
+    ctl.delete_camera(row["id"])
+    ctl.delete_camera(row["id"])  # a repeated delete cannot shorten either retention
+    assert {k: box.vars.get(k) for k in before} == before
+    assert box.vars.list("vms/retention/") == box.vars.list("vms/alarms_retention/") == []
+    assert retention_days(box.vars, "vms", str(row["id"])) == 30
+    assert retention_days(box.vars, "vms.alarms", str(row["id"])) == 400
 
 
 def test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing():

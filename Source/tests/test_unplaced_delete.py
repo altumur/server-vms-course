@@ -23,7 +23,7 @@ def _raw() -> dict:
 def test_the_key_is_whole_seconds_one_or_more_and_nothing_else_under_unplaced():
     """`placement.unplaced: {delete_after: <whole seconds ≥ 1>}` (the form «Платформа»'s): testsub says an hour, a
     spec without it deletes nothing; `0`, a fraction, a word, `true`, a negative, another key under `unplaced`, a bare
-    number does not load — and nor does the key beside `unit.derived`: those rows are the console's to clean."""
+    number does not load."""
     assert SubsystemSpec.load(TESTSUB).unplaced_delete_after == 3600
     d = _raw()
     del d["placement"]["unplaced"]
@@ -41,13 +41,6 @@ def test_the_key_is_whole_seconds_one_or_more_and_nothing_else_under_unplaced():
             raise AssertionError(f"placement.unplaced {bad!r} loaded")
         except ValueError as e:
             assert "placement.unplaced is {delete_after: <whole seconds, 1 or more>}" in str(e), e
-    d = _raw()
-    d["unit"]["derived"] = [{"row": "tallies/{id}", "items": {"of": "name"}}]   # a field of the row (review 15, major 1)
-    try:
-        SubsystemSpec.from_dict(d)
-        raise AssertionError("delete_after beside unit.derived loaded")
-    except ValueError as e:
-        assert "placement.unplaced.delete_after with unit.derived" in str(e), e
 
 
 def test_the_controller_may_delete_a_unit_row_with_the_key_and_never_write_one():

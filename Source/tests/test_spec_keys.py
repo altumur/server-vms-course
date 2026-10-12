@@ -301,7 +301,7 @@ def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_wher
                        ("events.suppress.tick.windw", {"events": {"suppress": {"tick": {"window": 5, "windw": 6}}}}),
                        ("unit.fields.name.requird", {"unit": {**plain["unit"], "fields": {
                            **plain["unit"]["fields"], "name": {**plain["unit"]["fields"]["name"], "requird": True}}}}),
-                       ("unit.derived.rows", {"unit": {**plain["unit"], "derived": [{"row": "r/{id}", "items": {},
+                       ("unit.derived", {"unit": {**plain["unit"], "derived": [{"row": "r/{id}", "items": {},
                                                                                        "rows": 1}]}})):
         _refused(lambda add=add: SubsystemSpec.from_dict({**plain, **add}), f"`{where}`")
     from w2cplatform.speckeys import unknown
@@ -516,10 +516,7 @@ def _named(**over) -> dict:
 
 
 def test_every_key_that_names_a_field_names_one_of_the_row_or_of_its_table():
-    derived = lambda f: [{"row": "retention/{id}", "items": {"days": f}, "on_delete": {"days": 0}}]   # noqa: E731
     cases = [
-        (dict(unit__derived=derived("keep_dayz")), dict(unit__derived=derived("keep_days")),
-         "unit.derived.items.days names a field of the unit's row (home, keep_days, name), not \"keep_dayz\""),
         (dict(rights={"unit_of": {"pins": "itemm"}}), dict(rights={"unit_of": {"pins": "item"}}),
          "rights.unit_of.pins names a field of the rows of pins (a, b, item, made_at, name), not \"itemm\""),
         (dict(servers={"show": [{"table": "disks", "by": "servre", "title": "D"}]}),

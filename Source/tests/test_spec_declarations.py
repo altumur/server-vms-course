@@ -443,7 +443,7 @@ def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_ab
     for sub, unit in (("shelf", "1"), ("shelf", "2"), ("label", "t1"), ("label", "t2"), ("label", "torn")):
         EventLog(root, sub, unit, 1).append(old + 10, "seen")
         EventLog(root, sub, unit, 1).append(old + 7200, "seen")                   # past `longest` from the pin's start
-        vars_.put(f"{sub}/retention/{unit}", {"days": "30"})
+        vars_.put(f"{sub}/retention", {"days": "30"})
     vars_.put("label/tags/t1", {"name": "t1", "item": "1"})
     vars_.put("label/tags/t2", {"name": "t2", "item": "2"})
     vars_.put("shelf/pins/p", {"item": "1", "a": str(old), "b": str(old + 86400)})

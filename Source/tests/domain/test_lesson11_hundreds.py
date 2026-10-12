@@ -149,11 +149,11 @@ def test_a_bulk_edit_answered_from_memory_keeps_what_went_silent_since_the_pass(
     api = ConsoleAPI(view, lambda name: by_name[name], pending=pending, last_known=view.last_known)
 
     devices[3].power_off()                               # after the pass, before the edit
-    results = [api.update_unit(d.serial, {"events_retention_days": 14}, idempotency_key=f"k{i}")
+    results = [api.update_unit(d.serial, {"priority": 14}, idempotency_key=f"k{i}")
                for i, d in enumerate(devices)]
     kept = [r for r in results if r.get("pending")]
     assert [r["cluster"] for r in kept] == [devices[3].name]
-    assert all(d.row().get("events_retention_days") == 14 for d in devices if d is not devices[3])
+    assert all(d.row().get("priority") == 14 for d in devices if d is not devices[3])
 
 
 def test_lanes_are_real_threads_not_only_arithmetic():

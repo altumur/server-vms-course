@@ -30,7 +30,7 @@ NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
-          "metrics.where", "metrics.unless.where", "metrics.labels", "unit.derived.items", "unit.derived.on_delete",
+          "metrics.where", "metrics.unless.where", "metrics.labels",
           "unit.fields.*.must_match", "tables.*.fields.*.must_match", "domain.shared.schema"}
 # …and under these only where the field is `type: json`: its `default` and `inherit` are a JSON value, any — a map or a
 # list included (`{type: json, default: {a: 1}}`; the fourteenth review, minor 25: the closed set refused a legal
@@ -53,7 +53,6 @@ KEYS = {
     "lease.unconfirmed_max", "snapshot",
     "door.routes", "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *(f"unit.fields.*.{k}" for k in FIELD_KEYS),
-    "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",
     *(f"tables.*.{k}" for k in TABLE_KEYS if k not in ("fields", "journal")), "tables.*.journal.written",
     "tables.*.journal.deleted", *(f"tables.*.fields.*.{k}" for k in TABLE_FIELD_KEYS),
     "placement.capacity.from", "placement.capacity.default", "placement.capacity.unit_mb", "placement.capacity.base_mb",

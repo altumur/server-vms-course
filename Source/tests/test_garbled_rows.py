@@ -200,7 +200,7 @@ def test_a_garbled_sweep_list_stops_no_upload_and_deletes_nothing_on_its_word():
 
 # -- the retention row ---------------------------------------------------------------------------------------
 
-def test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_are_swept():
+def test_one_subsystems_garbled_retention_keeps_its_buckets_and_the_rest_are_swept():
     """The resource reads a unit's days before it sweeps (`retention_days`), every unit's in one loop: one row with
     `days` a word raised out of `retain`, and nothing of anybody's was swept, every pass. Not knowing a unit's days
     is not "zero days": THAT unit is left alone this pass, named in `retention_garbled` and in the log, and the
@@ -210,15 +210,15 @@ def test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_a
     box = Box()
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     old = box.wall() - 40 * 86400
-    for unit in ("7", "8"):
-        EventLog(box.resource_root, "vms", unit, 1).append(old, "stats", "observation")
-    box.vars.put("vms/retention", {"days": "30"})
-    box.vars.put("vms/retention/7", {"days": "a month"})
+    for sub, unit in (("vms", "7"), ("testsub", "8")):
+        EventLog(box.resource_root, sub, unit, 1).append(old, "stats", "observation")
+    box.vars.put("testsub/retention", {"days": "30"})
+    box.vars.put("vms/retention", {"days": "a month"})
     assert res.retain() == 1
     from w2cplatform.events import bucket_names_under
-    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1 and bucket_names_under(box.resource_root, "vms", "8", 600) == []
+    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1 and bucket_names_under(box.resource_root, "testsub", "8", 600) == []
     assert res.retention_garbled == ["vms/7"]
-    box.vars.put("vms/retention/7", {"days": "30"})                                          # mended: swept by its days
+    box.vars.put("vms/retention", {"days": "30"})                                          # mended: swept by its days
     assert res.retain() == 1 and res.retention_garbled == []
 
 
@@ -395,33 +395,26 @@ def test_the_detector_passes_a_garbled_row_by_and_keeps_what_it_runs():
         srv.shutdown(); srv.server_close()
 
 
-def test_days_that_are_no_number_of_days_keep_the_units_buckets_and_nought_still_sweeps():
-    """The product team's sibling of the review's ninth pass: `days: "nan"` passed `float`, and `nan` days passed no
-    comparison — nothing swept and nothing said; `-1` swept every bucket of the unit, the current one too; `inf` is no
-    number any controller writes. Each is a row that does not read: the unit's buckets are kept, the row counted once
-    (`retentions_garbled`) and named in the heartbeat (`retention_garbled`). `days: 0` — a deleted unit's — still
-    sweeps."""
+def test_bad_subsystem_days_keep_all_its_units_and_do_not_stop_other_subsystems():
     from w2cplatform.events import EventLog, bucket_names_under
     from w2cplatform.resource import RETENTION, Resource
     box = Box()
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     t = box.wall()
-    days = {"1": "ten", "2": "nan", "3": "inf", "4": "-1", "5": "0", "6": "-inf"}
-    for unit, d in days.items():
-        EventLog(box.resource_root, "vms", unit, 1).append(t - 3 * 86400, "stats", "observation")
-        box.vars.put(f"vms/retention/{unit}", {"days": d})
-    assert res.retain() == 1                                           # the `0`: nothing of the rest
-    assert res.retain() == 0                                           # and the next pass sweeps none of them either
-    for unit in ("1", "2", "3", "4", "6"):
-        assert len(bucket_names_under(box.resource_root, "vms", unit, 600)) == 1, unit
-    assert bucket_names_under(box.resource_root, "vms", "5", 600) == []
-    named = ["vms/1", "vms/2", "vms/3", "vms/4", "vms/6"]
-    assert res.retention_garbled == named
-    hb = res.heartbeat()
-    assert hb["retention_garbled"] == named and hb["rows_garbled"]["retention"] == 5, hb.get("rows_garbled")
-    assert RETENTION.counts == {"vms": 5}                              # twice read, once counted
-    box.vars.put("vms/retention/2", {"days": "1"})                     # mended: swept by its days, and no longer named
-    assert res.retain() == 1 and "vms/2" not in res.retention_garbled and RETENTION.counts == {"vms": 5}
+    for sub in ("testsub", "testsub2"):
+        for unit in ("1", "2"):
+            EventLog(box.resource_root, sub, unit, 1).append(t - 3 * 86400, "stats", "observation")
+    box.vars.put("testsub2/retention", {"days": "1"})
+    for i, value in enumerate(("ten", "nan", "inf", "-1", "-inf", "0")):
+        box.vars.put("testsub/retention", {"days": value})
+        assert res.retain() == (2 if i == 0 else 0)
+        assert res.retention_garbled == ["testsub/1", "testsub/2"]
+        for unit in ("1", "2"):
+            assert len(bucket_names_under(box.resource_root, "testsub", unit, 600)) == 1
+    assert RETENTION.counts == {"testsub": 1}  # one invalid policy, however many affected units or passes
+    assert res.heartbeat()["rows_garbled"]["retention"] == 1
+    box.vars.put("testsub/retention", {"days": "1"})
+    assert res.retain() == 2 and res.retention_garbled == []
     _forget_garbled()
 
 

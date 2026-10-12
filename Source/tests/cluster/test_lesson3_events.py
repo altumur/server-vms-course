@@ -91,7 +91,7 @@ def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
     assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7"] and m.state == "live; srv-b unreachable"
     c.servers["srv-b"].down = False
     # retention on srv-b removed a bucket: ITS index lets it go, by (server, path) — the console is not told, it asks
-    c.vars.put("vms/retention/8", {"days": "0.01"})
+    c.vars.put("vms/retention", {"days": "0.01"})
     assert rs["srv-b"].retain() == 1 and [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7"]
     assert c.vars.list("vms/events") == [] and c.objects.list("vms/events") == []   # no controller, no index store, wrote an event
 
@@ -99,8 +99,9 @@ def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
 def test_the_resource_policy_retains_each_subsystems_buckets_by_its_own_row():
     from vms.controller import VmsController
     c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall); srv = c.servers["srv-a"]
-    ctl.create_camera({"source": "driverpack://file/7.mp4", "events_retention_days": 30})       # the camera's events: the VMS row's knob
-    assert c.vars.get("vms/retention/1")[0] == {"days": "30"}                     # the VMS's policy for its unit, as a row the platform reads
+    ctl.create_camera({"source": "driverpack://file/7.mp4"})
+    c.vars.put("vms/retention", {"days": "30"})
+    assert c.vars.get("vms/retention")[0] == {"days": "30"}                     # the VMS's policy for its unit, as a row the platform reads
     assert c.vars.get("rec/recordings/1")[0] is None                              # no recording: the camera is watched, its footage nobody's
     now = c.wall()
     p1 = _observe(c, "srv-a", "vms", "1", 1, now - 40 * 86400, "motion")       # older than the VMS's policy

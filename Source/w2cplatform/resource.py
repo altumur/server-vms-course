@@ -9,7 +9,7 @@ a server's disks and nothing about what it means:
     platform/resources/<server>/heartbeat   {server, ts, url, usage, space: {total, free}, units: {sub: [unit]}, mirrors: {server: n}}
     platform/mirror                         the knob: {enabled, copies}
     platform/space                          the knob: {enabled, high, low} — the disk's watermark
-    <sub>/retention, <sub>/retention/<unit> {days}: each subsystem's policy for its buckets, written by the console (the operator's edit of a unit, through the spec's `derived`)
+    <sub>/retention, <sub>/alarms_retention {days}: subsystem-wide policies, independent of unit lifecycle
 
     GET  <url>/buckets/<sub>/<unit>    closed buckets, from the files
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)
@@ -54,7 +54,7 @@ home. No controller is involved in any of it.
 # own beside its buckets (a scan's progress) and the resource neither reads nor names them. What a subsystem keeps
 # in storage of its own (volumes it holds through its own daemon) is not here at all. It writes its own heartbeat
 # object (`platform/resources/<server>/heartbeat`), serves buckets over HTTP, and runs a policy pass on a
-# timer: bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row — less what a spec's `holds` keeps
+# timer: bucket retention by each subsystem's own `<sub>/retention` row — less what a spec's `holds` keeps
 # (`holds.py`) — then the watermark, which asks the subsystems whose spec says `requests: {free: true}` to free bytes by
 # a request row, then the mirror. No subsystem's code is called here (the boundary's step 6: it was `register`, a hook
 # with a pass of its own and a `free`, and `kept`, set by a subsystem's builder of the resource; `kept` is a method now,
@@ -323,44 +323,36 @@ def mirror_settings(vars_) -> dict:
             "copies": MIRROR.read(MIRROR_KEY, lambda: int(finite((items or {}).get("copies", 1))), 1)}
 
 
-# The unit's days if its subsystem set `<sub>/retention/<unit>`, else the subsystem's `<sub>/retention`,
-# else a year. A per-unit row is typically a spec's derived row (`derived:` → `<sub>/retention/<id>`, written by
-# `SpecController._derived` from a field of the unit); on delete it becomes `{days: 0}` so the buckets go on the next
-# pass. Each subsystem's controller owns its row; the resource only reads.
-#
-# THE ALARMS' TREE HAS DAYS OF ITS OWN (feedback BO). `<sub>.alarms/<unit>` is kept by
-# `<sub>/alarms_retention/<unit>`, else `<sub>/alarms_retention`, else THREE YEARS — and three years is what
-# a subsystem that says nothing gets, which is every one that raises an alarm and has no row for it. That row has
-# no `on_delete`: deleting a unit ends its observations at the next pass, and not the record of what happened at it.
+# Every unit of a subsystem uses the same days; alarm trees have a separate subsystem-wide policy.
+# Unit deletion does not change either policy. ADR-0076.
 ALARM_DAYS = 1095.0
 
 # A row of days that does not read as days (the product team's sibling of the review's ninth pass): `float("nan")` is
 # a number, and `nan` days passed no comparison — nothing swept, nothing said; `-1` swept every bucket of the unit, the
-# current one too; `inf` is no number of days any controller writes. Only a finite number, not below nought, is days;
+# current one too; `inf` is no number of days any controller writes. Only a finite positive number is days;
 # anything else raises, and `Resource._days` keeps that unit's buckets — counted here, once until it is mended, and
-# named in the heartbeat (`retention_garbled`). `0` stays what it is: the days of a deleted unit.
+# named in the heartbeat (`retention_garbled`). `0` is invalid too: a common setting must not silently erase all history (ADR-0076).
 RETENTION = Table("retention", "its buckets are kept, not swept, until it is mended", "row of days")
 
 
 def _days_of(raw) -> float:
     days = finite(raw)
-    if days < 0:
+    if days <= 0:
         raise ValueError(f"{raw!r} is not a number of days")
     return days
 
 
 def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> float:
-    """The unit's days if its subsystem set them, else the subsystem's, else a year. A row that says nothing —
-    a unit whose field is left to inherit (М12 Lesson 12) — is not zero days: it is the next link. A row whose
-    days are not a finite number not below nought RAISES: not knowing a unit's days is not any number of them."""
+    """Subsystem-wide days; unit is only the caller's context, never a policy key.
+    Missing days use the default; malformed days raise so the resource keeps the affected buckets.
+    """
     subsystem, alarms = tree_owner(subsystem)
     if subsystem == "audit":                         # who deleted it and who read it: kept as long as alarms are (`journal.py`)
         default = ALARM_DAYS
     family, default = ("alarms_retention", ALARM_DAYS) if alarms else ("retention", default)
-    for path in (f"{subsystem}/{family}/{unit}", f"{subsystem}/{family}"):
-        items, _ = vars_.get(path)
-        if items and str(items.get("days", "")).strip() not in ("", "None"):
-            return _days_of(items["days"])
+    items, _ = vars_.get(f"{subsystem}/{family}")
+    if items and str(items.get("days", "")).strip() not in ("", "None"):
+        return _days_of(items["days"])
     return default
 
 
@@ -1543,8 +1535,7 @@ class Resource:
         floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: the specs say which rows
         # HOLD a unit for a stretch (`holds:`), and `kept` — called once a pass — reads them and returns
-        # `(subsystem, unit, start, end) -> bool`. It matters most for `{days: 0}`, which is what a deleted unit's
-        # retention becomes: without this, deleting the unit erased the very events somebody had marked. If it raises,
+        # `(subsystem, unit, start, end) -> bool`. Reducing the common days must not erase marked events. If it raises,
         # the pass fails and nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by
         # row, so it is handed `progressed` (the review's sixth pass).
         kept = self.kept(self._progressed)
@@ -1630,7 +1621,9 @@ class Resource:
     # does not answer is not the row's trouble and raises out of the pass. Counted and logged once until it parses again
     # (`RETENTION`; it was a warning every pass, and a count nowhere).
     def _days(self, sub: str, unit: str, garbled: list) -> float:
-        key = f"{sub}/retention/{unit}"
+        owner, alarms = tree_owner(sub)
+        family = "alarms_retention" if alarms else "retention"
+        key = f"{owner}/{family}"
         try:
             days = retention_days(self.vars, sub, unit)
         except PARSE_ERRORS as e:

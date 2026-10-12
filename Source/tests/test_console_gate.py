@@ -1210,7 +1210,7 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
         ("auto", "then"): (CLUSTER,),          # the units it acts on, and the card a `record` writes to
     }
     plain = {
-        "vms": {"name", "enabled", "events_retention_days", "alarms_retention_days", "priority", "labels", "folders",
+        "vms": {"name", "enabled", "priority", "labels", "folders",
                 "alarms", "cred_username", "cred_secret", "live", "kind"},
         "rec": {"name", "retention_days", "enabled", "labels", "until", "min_depth_days", "when"},
         "det": {"name", "kind", "params", "mask", "enabled", "labels", "alarms", "until"},

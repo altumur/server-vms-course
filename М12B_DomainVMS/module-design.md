@@ -46,7 +46,7 @@
 | `tables` | `[crossings]` | `GET /domain/vms/crossings`, `domain/view` → `tables["vms/crossings"]` | — |
 | `tokens` | `stream`, `ask` | подписывающий (`DeclaredIssuer`, сокет токенов `tokendoor.py`) | `TokenDoor` из воркера |
 | `keys` | восемь семей `domain/vms/…` | `/spec` → `domain.keys`; `GET /domain/keys` | слова — `display.keys` |
-| `shared` | `vms`: `[folders, alarms, events_retention_days]`; `auto`: документ `{name: scenarios, type: json, schema}` | `shared.resolve`, `GET /domain/shared/vms`; правка с необъявленным полем или значением, которое отвергает схема, — 400 (`shared.refusals`) | сценарии проверяет по описаниям камер проход книг (`scenario.refusals` → `refused`) |
+| `shared` | `vms`: `[folders, alarms, общий срок событий]`; `auto`: документ `{name: scenarios, type: json, schema}` | `shared.resolve`, `GET /domain/shared/vms`; правка с необъявленным полем или значением, которое отвергает схема, — 400 (`shared.refusals`) | сценарии проверяет по описаниям камер проход книг (`scenario.refusals` → `refused`) |
 | `reports`, `witness` | `rec`: `[polled/]`, `{report: polled, member_field: cam}` | отчёт члена (`declared.reported_objects`), свидетель тревог (`declared.witnesses`) | heartbeat регистратора с приёмником пишет `rec/polled/<приёмник>`; где приёмник — поле `ingest` того же heartbeat (ADR-0065) |
 | `names` | нет (учёток RTSP в курсе нет; форма продукта по ADR 0031 — `stream-clients/`) | `declared.guarded` на каждой записи хранилища держателя | — |
 

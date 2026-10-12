@@ -41,8 +41,8 @@ def _site(wall, n=3):
     return fed, north, north_link, signer, shared, devices, agents
 
 
-def _retention(days):
-    return lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(events_retention_days=days)
+def _alarm_kinds(kind):
+    return lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(alarms=[kind])
 
 
 def test_published_once_carried_by_every_agent_and_the_console_says_where():
@@ -51,7 +51,7 @@ def test_published_once_carried_by_every_agent_and_the_console_says_where():
     member that is not answering instead of rounding it into the total."""
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall)
-    rev = shared.edit(_retention(14), base_rev=0, by="anna")
+    rev = shared.edit(_alarm_kinds("io.input"), base_rev=0, by="anna")
     devices[2].power_off()
     for a in agents[:2]:
         report_sync(a)
@@ -62,7 +62,7 @@ def test_published_once_carried_by_every_agent_and_the_console_says_where():
     devices[2].boot()
     report_sync(agents[2])
     assert shared.delivery(fed)["holding"] == ["cam-SN0", "cam-SN1", "cam-SN2"]
-    assert SharedView(devices[2].flash, devices[2].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 14 and rev == 1
+    assert SharedView(devices[2].flash, devices[2].disk, wall).settings()["shared"]["vms"]["alarms"] == ["io.input"] and rev == 1
 
 
 def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
@@ -72,11 +72,11 @@ def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
     refusal is reported, with its reason, where the domain reads it."""
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall)
-    shared.edit(_retention(14), base_rev=0)
+    shared.edit(_alarm_kinds("io.input"), base_rev=0)
     for a in agents:
         report_sync(a)
 
-    forged = sign({"rev": 2, "term": 1, "settings": {"shared": {"vms": {"events_retention_days": 1}}}}, TokenIssuer("acme"))
+    forged = sign({"rev": 2, "term": 1, "settings": {"shared": {"vms": {"alarms": ["tamper"]}}}}, TokenIssuer("acme"))
     raw = json.dumps(forged, sort_keys=True).encode()
     north.objects.put("shared/rev-2", raw)
     import hashlib
@@ -84,7 +84,7 @@ def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
     north.vars.put(POINTER, {"object": "shared/rev-2", "rev": 2, "term": 1, "sha256": hashlib.sha256(raw).hexdigest()}, cas=idx)
     report_sync(agents[0])
     assert agents[0].shared.startswith("refused") and "does not trust" in agents[0].shared
-    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 14
+    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["alarms"] == ["io.input"]
     assert "cam-SN0" in shared.delivery(fed)["refused"]
 
 
@@ -94,62 +94,47 @@ def test_an_older_document_never_replaces_a_newer_one():
     whatever the domain says today. Lesson 15 is what makes the domain's own number grow again."""
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall, n=1)
-    shared.edit(_retention(14), base_rev=0)
+    shared.edit(_alarm_kinds("io.input"), base_rev=0)
     ptr_rev1, _ = north.vars.get(POINTER)
-    shared.edit(_retention(30), base_rev=1)
+    shared.edit(_alarm_kinds("motion"), base_rev=1)
     report_sync(agents[0])
     _, idx = north.vars.get(POINTER)
     north.vars.put(POINTER, ptr_rev1, cas=idx)           # the domain, restored from before rev 2
     report_sync(agents[0])
     assert agents[0].shared == "holding newer"
-    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 30
+    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["alarms"] == ["motion"]
 
 
 def test_a_default_is_resolved_when_read_and_never_written_into_a_row():
-    """Changing the default retention must not be five hundred writes to five hundred rows — some of them
-    on cameras that are off, all of them by a writer that is not the row's. The row keeps what the camera
-    set; the console resolves the rest against the document and says where each value came from."""
+    """Shared alarm kinds are combined when read, without rewriting camera rows."""
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall, n=2)
-    devices[1].update_unit(1, {"events_retention_days": 30}, None)          # set on the camera's own page
+    devices[1].update_unit(1, {"alarms": ["tamper"]}, None)
     before = [d.row()["revision"] for d in devices]
-    shared.edit(_retention(14), base_rev=0)
+    shared.edit(_alarm_kinds("io.input"), base_rev=0)
     for a in agents:
         report_sync(a)
-    assert [d.row()["revision"] for d in devices] == before                    # no row was touched
-    eff = [SharedView(d.flash, d.disk, wall).effective(d.row(), SPEC)["events_retention_days"] for d in devices]
-    assert eff == [(14, "domain rev 1"), (30, "unit")]
+    assert [d.row()["revision"] for d in devices] == before
+    eff = [SharedView(d.flash, d.disk, wall).effective(d.row(), SPEC)["alarms"] for d in devices]
+    assert eff == [(["io.input"], "domain rev 1"), (["io.input", "tamper"], "unit + domain rev 1")]
 
 
 def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_unset():
-    """What the product found (feedback AT). A server cluster's camera row is made by the spec, and a field with
-    a `default` is filled in when the row is created and supplied again when it is read: "set to 365" and "not
-    set" are one row, and the domain's 14 days never apply. `events_retention_days` inherits instead: the new row
-    does not carry it, and the chain is resolved at the moment of use — the camera's, else the domain's, else
-    the spec's 365. The alarm kinds inherit by UNION: the site's and the camera's own."""
-    from vms.config import SPEC
-    from w2cplatform.spec import SubsystemSpec
-    wall = Clock()
-    fed, north, _, signer, shared, devices, agents = _site(wall, n=1)
-    view = SharedView(devices[0].flash, devices[0].disk, wall)
-    row = SPEC.row(SPEC.items(SPEC.new_row(7, {"source": "driverpack://file/a.mp4", "alarms": "tamper"})))
-    assert row["events_retention_days"] is None and "events_retention_days" not in SPEC.items(row)
-    assert view.effective(row, SPEC)["events_retention_days"] == (365, "spec")               # nobody above said anything
-
-    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(events_retention_days=14, alarms=["io.input"]), base_rev=0)
-    report_sync(agents[0])
-    eff = view.effective(row, SPEC)
-    assert eff["events_retention_days"] == (14, "domain rev 1")
-    assert eff["alarms"] == (["io.input", "tamper"], "unit + domain rev 1")
-
-    old = SubsystemSpec.from_dict({"name": "vms", "unit": {"rows": "cameras", "id": "numeric", "fields": {
-        "source": {"type": "url"}, "events_retention_days": {"type": "int", "default": 365}}},
-        "placement": {"capacity": {"from": "capacity", "default": 50}}})
-    was = old.row(old.items(old.new_row(7, {"source": "driverpack://file/a.mp4"})))
-    assert view.effective(was, old)["events_retention_days"] == (365, "unit")        # the defect: 14 never applies
+    """Scalar inheritance is a field contract; a pure example needs no camera setting."""
+    from types import SimpleNamespace
+    from w2cplatform.spec import Field, SubsystemSpec
+    from w2cplatform.domain.shared import resolve
+    field = Field("step", type="int", inherit=1, inherits=True)
+    spec = SimpleNamespace(name="counter", fields={"step": field}, domain=SimpleNamespace(shared=["step"], documents={}))
+    settings = {"shared": {"counter": {"step": 14}}}
+    assert resolve(spec, {}, None, {})["step"] == (1, "spec")
+    assert resolve(spec, settings, "domain rev 1", {})["step"] == (14, "domain rev 1")
+    assert resolve(spec, settings, "domain rev 1", {"step": 30})["step"] == (30, "unit")
+    field.default, field.inherits = 1, False
+    assert resolve(spec, settings, "domain rev 1", {"step": 1})["step"] == (1, "unit")
     try:
         SubsystemSpec.from_dict({"name": "x", "unit": {"rows": "r", "id": "numeric", "fields": {
-            "days": {"type": "int", "default": 365, "inherit": 365}}}})
+            "step": {"type": "int", "default": 1, "inherit": 1}}}})
         raise AssertionError("default and inherit on one field")
     except ValueError as e:
         assert "not both" in str(e)
@@ -158,13 +143,13 @@ def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_
 def test_two_editors_of_the_shared_settings_are_told_not_overwritten():
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall, n=1)
-    shared.edit(_retention(14), base_rev=0, by="anna")
+    shared.edit(_alarm_kinds("io.input"), base_rev=0, by="anna")
     try:
-        shared.edit(_retention(7), base_rev=0, by="boris")                     # boris was looking at rev 0
+        shared.edit(_alarm_kinds("tamper"), base_rev=0, by="boris")                     # boris was looking at rev 0
         raise AssertionError("boris must be told")
     except Conflict:
         pass
-    assert shared.current()[0]["settings"]["shared"]["vms"]["events_retention_days"] == 14
+    assert shared.current()[0]["settings"]["shared"]["vms"]["alarms"] == ["io.input"]
 
 
 def test_a_five_hundred_camera_tree_does_not_fit_a_variable_and_does_not_need_to():
@@ -191,12 +176,12 @@ def test_with_the_domain_gone_a_camera_that_reboots_still_has_its_defaults():
     in the camera's durable store, checked again on the way in, and a reboot changes nothing."""
     wall = Clock()
     fed, north, north_link, signer, shared, devices, agents = _site(wall, n=1)
-    shared.edit(_retention(14), base_rev=0)
+    shared.edit(_alarm_kinds("io.input"), base_rev=0)
     report_sync(agents[0])
     north_link.up = False
     assert report_sync(agents[0]) is False
     devices[0].power_off(); devices[0].boot()
-    assert SharedView(devices[0].flash, devices[0].disk, wall).effective(devices[0].row(), SPEC)["events_retention_days"] == (14, "domain rev 1")
+    assert SharedView(devices[0].flash, devices[0].disk, wall).effective(devices[0].row(), SPEC)["alarms"] == (["io.input"], "domain rev 1")
     assert devices[0].disk.get(OBJECT) is not None
 
 
