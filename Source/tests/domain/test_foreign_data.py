@@ -150,8 +150,8 @@ def test_json_nested_too_deep_is_a_garbled_object_and_not_a_frozen_view():
     assert RecursionError in PARSE_ERRORS and Table("deep", "test").read("k", lambda: json.loads(deep), "none") == "none"
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
-    east.objects.put("vms/heartbeats/w-9", deep)
-    east.objects.put("vms/snapshot/w-9", deep)
+    east.objects.put("cam/heartbeats/w-9", deep)
+    east.objects.put("cam/snapshot/w-9", deep)
     view = ReadView(fed, wall=wall); view.refresh()
     assert view.list()["clusters"]["east"] == "ok" and view.passes == 1
     assert DomainDirectory(fed, wall=wall).where("201").cluster == "east"
@@ -215,8 +215,8 @@ def test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no
     assert sorted(north.vars.get(DOMAIN_GRANTS)[0]) == ["anna|view|", "root|admin|"]
     south, _ = make_cluster("south")
     # a scope that is no `unit:<sub>/<id>` — a bare camera number — is not a grant either: no migration reads it as one
-    south.vars.put(GRANTS_PATH, {"anna|edit|unit:vms/7": str(wall() + 60), "x|y|z|w": "1", "bob|edit|7": str(wall() + 60)})
-    assert [(g.subject, g.unit) for g in ClusterTrust(south.vars).grants()] == [("anna", "vms/7")]
+    south.vars.put(GRANTS_PATH, {"anna|edit|unit:cam/7": str(wall() + 60), "x|y|z|w": "1", "bob|edit|7": str(wall() + 60)})
+    assert [(g.subject, g.unit) for g in ClusterTrust(south.vars).grants()] == [("anna", "cam/7")]
 
 
 def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_the_ceiling_holds():
@@ -320,7 +320,7 @@ def test_a_name_that_is_not_a_string_stops_no_search_and_a_camera_claimed_twice_
     from tests.domain.conftest import heartbeat
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
-    east.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-2",
+    east.objects.put("cam/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-2",
                                                          "status": [{"id": 2, "name": 42, "ref": "201"}]}).encode())
     heartbeat(north, "w-0", [101], ts=wall())
     view = ReadView(fed, wall=wall); view.refresh()
@@ -460,13 +460,13 @@ def test_a_camera_id_of_1e400_in_a_members_copy_freezes_no_list_and_no_view_of_t
     and the rest of the domain is listed and published."""
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
-    east.objects.put("vms/snapshot/w-9", json.dumps({"cluster": "east", "worker": "w-9", "ts": wall(),
+    east.objects.put("cam/snapshot/w-9", json.dumps({"cluster": "east", "worker": "w-9", "ts": wall(),
                                                      "cameras": [{"id": 1e400, "ref": "299"}]}).encode())
     view = ReadView(fed, wall=wall); view.refresh()
     listed = {r["ref"] for r in view.list()["rows"]}
     assert {"101", "201"} <= listed and "299" not in listed
-    assert {"101", "201"} <= {u["ref"] for u in view.publish(north.objects)["units"]["vms"]}
-    assert "east/vms/snapshot#inf" in MEMBER_OBJECTS.bad
+    assert {"101", "201"} <= {u["ref"] for u in view.publish(north.objects)["units"]["cam"]}
+    assert "east/cam/snapshot#inf" in MEMBER_OBJECTS.bad
 
 
 def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_whole_member_unreachable():
@@ -477,10 +477,10 @@ def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_who
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
     heartbeat(east, "w-0", [201], ts=wall(), server="srv-2")
-    east.objects.put("vms/heartbeats/w-1", json.dumps({"worker": ["w-1"], "ts": wall(), "status": []}).encode())
+    east.objects.put("cam/heartbeats/w-1", json.dumps({"worker": ["w-1"], "ts": wall(), "status": []}).encode())
     view = ReadView(fed, wall=wall); view.refresh()
     assert "east" not in view.cluster_down_since and ("east", "w-0") in view.snapshots
-    assert "east/vms/heartbeats/w-1" in MEMBER_OBJECTS.bad
+    assert "east/cam/heartbeats/w-1" in MEMBER_OBJECTS.bad
 
 
 def test_a_recorders_url_or_ingest_that_is_a_list_stops_no_book_and_takes_no_road_away():
@@ -552,9 +552,9 @@ def test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_sti
         set_domain_grants(north.vars, grants_from_items(north.vars.get(DOMAIN_GRANTS)[0]), wall()); raise AssertionError
     except LastAdmin:
         pass
-    north.vars.put("domain/grants/south", {'say"hi|view|unit:vms/7': "1.0"})     # a cluster's row, published again
-    DomainPublisher(north.vars).publish_grants("south", [Grant('say"hi', "view", "vms/7", 1.0), Grant("anna", "view", "vms/7", 2.0)])
-    assert north.vars.get("domain/grants/south")[0] == {"anna|view|unit:vms/7": "2.0"}
+    north.vars.put("domain/grants/south", {'say"hi|view|unit:cam/7': "1.0"})     # a cluster's row, published again
+    DomainPublisher(north.vars).publish_grants("south", [Grant('say"hi', "view", "cam/7", 1.0), Grant("anna", "view", "cam/7", 2.0)])
+    assert north.vars.get("domain/grants/south")[0] == {"anna|view|unit:cam/7": "2.0"}
 
 
 def test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and_not_a_500():
@@ -583,11 +583,11 @@ def test_one_status_entry_that_is_not_numbers_stops_no_shadow_report():
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
     heartbeat(north, "w-0", [101], ts=wall())
-    east.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-2", "status": [
+    east.objects.put("cam/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-2", "status": [
         {"id": "seven", "phase": "running"}, {"id": 201, "phase": "running", "ref": "201", "epoch": 1}]}).encode())
     reports, _, _ = reports_from(fed)
     by = {(r.cluster, r.worker): r for r in reports}
-    assert [c[0] for c in by[("east", "w-0")].units] == ["201"] and "east/vms/heartbeats/w-0#seven" in MEMBER_OBJECTS.bad
+    assert [c[0] for c in by[("east", "w-0")].units] == ["201"] and "east/cam/heartbeats/w-0#seven" in MEMBER_OBJECTS.bad
 
 
 def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are_bounded_without_crowding_out_another():
