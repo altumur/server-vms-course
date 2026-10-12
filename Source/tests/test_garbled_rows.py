@@ -44,16 +44,16 @@ def test_a_garbled_assignment_row_is_that_workers_trouble_and_the_pass_goes_on()
     on1 = ctl.assignment("w-1").units
     assert on1 and ctl.assignment("w-2").units
     garbled = _counter(ctl, "ASSIGNMENTS_GARBLED")
-    before = garbled.get("vms", 0)
-    box.vars.put("vms/workers/w-1", {"units": ",".join(on1), "rev": "seven"})
+    before = garbled.get("cam", 0)
+    box.vars.put("cam/workers/w-1", {"units": ",".join(on1), "rev": "seven"})
     new = ctl.create_camera({"name": "cam5", "source": "driverpack://file/cam5.mp4"})["id"]
     rep = ctl.pass_once()
     assert rep["ok"] and rep["unplaced"] == 0 and ctl.where(new), rep                       # the pass placed what was new
-    assert ctl.assignments()["w-1"].units and garbled.get("vms", 0) > before and rep["assignments_garbled"] > before
+    assert ctl.assignments()["w-1"].units and garbled.get("cam", 0) > before and rep["assignments_garbled"] > before
     assert set(on1) <= set(ctl.assignment("w-1").units)                                     # what it decided stands
     where = ctl.where(int(on1[0]))
     ctl.move(int(on1[0]), "w-2" if where == "w-1" else "w-1", "operator")                    # the next change to the row…
-    assert Assignment.from_items("w-1", box.vars.get("vms/workers/w-1")[0]).rev >= 1         # …wrote it whole
+    assert Assignment.from_items("w-1", box.vars.get("cam/workers/w-1")[0]).rev >= 1         # …wrote it whole
     _forget_garbled()
 
 
@@ -65,14 +65,14 @@ def test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names(
     act = FakeActuator()
     w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1")
     assert w.reconcile_once() == [("start", 1), ("start", 2)]
-    box.vars.put("vms/workers/w-1", {"units": "1,2,3", "rev": "seven"})
+    box.vars.put("cam/workers/w-1", {"units": "1,2,3", "rev": "seven"})
     assert w.reconcile_once() == [("start", 3)] and act.running == {1, 2, 3}                # the units it names are read
-    box.vars.put("vms/workers/w-1", {"units": "2,3", "rev": "eight"})
+    box.vars.put("cam/workers/w-1", {"units": "2,3", "rev": "eight"})
     assert w.reconcile_once() == [("stop", 1)]                                              # …and what it takes away is stopped
     w.heartbeat_once()
     # One row, garbled across two passes and two hand edits: ONE row that does not parse, not one per read (the
     # review's seventh pass, a minor — the count grew on every pass).
-    assert Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1")).extra["assignments_garbled"] == 1
+    assert Heartbeat.from_bytes(box.objects.get("cam/heartbeats/w-1")).extra["assignments_garbled"] == 1
     _forget_garbled()
 
 
@@ -85,7 +85,7 @@ def test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone():
     box, ctl = _box_with_cameras(2)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
     w.take_epoch("1"); w.take_epoch("2")
-    box.vars.put("vms/epoch/1", {"epoch": "one"})
+    box.vars.put("cam/epoch/1", {"epoch": "one"})
     box.clock.advance(10)
     assert w.renew_leases() == ["1"] and w.conflicts() == 1
     assert w.may_act("2") and w.leases["2"].last_renewal == box.clock() and not w.may_act("1")
@@ -99,11 +99,11 @@ def test_freeing_a_slot_whose_row_is_garbled_writes_it_released():
     `retire`, a door since removed). The row is written over, whole: released, held by nobody; freeing it again does
     nothing."""
     box, ctl = _placed(2)
-    box.vars.put("vms/slots/w-9", {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"})
+    box.vars.put("cam/slots/w-9", {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"})
     assert ctl.free_slot("w-9")
-    row = Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0])
+    row = Slot.from_items("w-9", box.vars.get("cam/slots/w-9")[0])
     assert row.released and row.holder == "" and row.claimable(box.wall()) and "w-9" in ctl.slots()
-    assert not ctl.free_slot("w-9") and Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0]).released   # and again: nothing to do
+    assert not ctl.free_slot("w-9") and Slot.from_items("w-9", box.vars.get("cam/slots/w-9")[0]).released   # and again: nothing to do
     _forget_garbled()
 
 
@@ -117,8 +117,8 @@ def test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass(
     one to, or on a row there whose name is no unit's id."""
     box, ctl = _placed(3)
     w = ctl.where(1)
-    box.vars.put("vms/placement/1", {"worker": w, "reason": "by hand", "at": "yesterday", "rev": "two"})
-    box.vars.put("vms/placement/not-a-camera", {"worker": w, "reason": "?", "at": "1", "rev": "1"})
+    box.vars.put("cam/placement/1", {"worker": w, "reason": "by hand", "at": "yesterday", "rev": "two"})
+    box.vars.put("cam/placement/not-a-camera", {"worker": w, "reason": "?", "at": "1", "rev": "1"})
     new = ctl.create_camera({"name": "cam4", "source": "driverpack://file/cam4.mp4"})["id"]
     rep = ctl.pass_once()
     assert rep["ok"] and rep["unplaced"] == 0 and ctl.where(new), rep
@@ -126,7 +126,7 @@ def test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass(
     assert (pl.worker, pl.reason, pl.at, pl.rev) == (w, "by hand", 0.0, 0)
     ctl.delete_camera(1)                                                                    # …and the row is still the controller's to change
     assert ctl.unplace_deleted() == [1] and ctl.placement(1) is None
-    assert str(box.vars.get("vms/placement/1")[0]["rev"]) == "1" and "1" not in ctl.assignment(w).units
+    assert str(box.vars.get("cam/placement/1")[0]["rev"]) == "1" and "1" not in ctl.assignment(w).units
 
 
 # -- the controller's own report -------------------------------------------------------------------------------
@@ -137,11 +137,11 @@ def test_a_garbled_pass_report_does_not_stop_the_controllers_loop():
     the pass before its first step and out of the loop: the controller process ended, was started again, and ended
     again on the same object — which only a pass that finishes writes over."""
     box, ctl = _placed(2)
-    box.objects.put("vms/controller/pass", b'{"ts": 17575, "fail')
+    box.objects.put("cam/controller/pass", b'{"ts": 17575, "fail')
     assert ctl.pass_report() is None
     rep = ctl.pass_once()
     assert rep["ok"] and rep["failures"] == 0 and ctl.pass_report()["ok"]                   # written whole again
-    box.objects.put("vms/controller/pass", json.dumps({"ts": 1, "failures": "many"}).encode())
+    box.objects.put("cam/controller/pass", json.dumps({"ts": 1, "failures": "many"}).encode())
     assert ctl.pass_once()["failures"] == 0
 
 
@@ -154,7 +154,7 @@ def test_a_heartbeat_whose_numbers_are_words_is_that_workers_trouble():
     placement. It is read as "has not said": the fallback capacity, no headroom, no failover time."""
     box, ctl = _box_with_cameras(2)
     _worker(box, "w-1", "srv-a")
-    box.objects.put("vms/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
+    box.objects.put("cam/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
         "server": "srv-b", "capacity": "many", "headroom": "some", "started": "then", "previous_hb": "before"}).to_bytes())
     assert ctl.capacity_of("w-2") == ctl.capacity and ctl.capacity_of("w-1") == 50
     assert ctl.headroom() == 50 and ctl.failover_seconds() == {}
@@ -169,12 +169,12 @@ def test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh()
     box, ctl = _placed(2)
     ctl.publish_snapshot()
     assert ctl.snapshot_age() == 0
-    box.objects.put("vms/snapshot/w-1", b'{"cameras": [')
+    box.objects.put("cam/snapshot/w-1", b'{"cameras": [')
     assert ctl.snapshot_age() == box.wall()
     ctl.publish_snapshot()
     assert ctl.snapshot_age() == 0                                                          # the next publish mends it
     for ts in ("nan", "inf", "-inf"):                                                     # a number that is no time is no age either
-        box.objects.put("vms/snapshot/w-1", json.dumps({"ts": ts, "cameras": []}).encode())
+        box.objects.put("cam/snapshot/w-1", json.dumps({"ts": ts, "cameras": []}).encode())
         assert ctl.snapshot_age() == box.wall(), ts
 
 
@@ -210,15 +210,15 @@ def test_one_subsystems_garbled_retention_keeps_its_buckets_and_the_rest_are_swe
     box = Box()
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     old = box.wall() - 40 * 86400
-    for sub, unit in (("vms", "7"), ("testsub", "8")):
+    for sub, unit in (("cam", "7"), ("testsub", "8")):
         EventLog(box.resource_root, sub, unit, 1).append(old, "stats", "observation")
     box.vars.put("testsub/retention", {"days": "30"})
-    box.vars.put("vms/retention", {"days": "a month"})
+    box.vars.put("cam/retention", {"days": "a month"})
     assert res.retain() == 1
     from w2cplatform.events import bucket_names_under
-    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1 and bucket_names_under(box.resource_root, "testsub", "8", 600) == []
-    assert res.retention_garbled == ["vms/7"]
-    box.vars.put("vms/retention", {"days": "30"})                                          # mended: swept by its days
+    assert len(bucket_names_under(box.resource_root, "cam", "7", 600)) == 1 and bucket_names_under(box.resource_root, "testsub", "8", 600) == []
+    assert res.retention_garbled == ["cam/7"]
+    box.vars.put("cam/retention", {"days": "30"})                                          # mended: swept by its days
     assert res.retain() == 1 and res.retention_garbled == []
 
 
@@ -236,23 +236,23 @@ def test_one_bucket_the_resource_cannot_remove_stops_no_other_and_is_counted():
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     old = box.wall() - 40 * 86400
     for unit in ("7", "8"):
-        EventLog(box.resource_root, "vms", unit, 1).append(old, "stats", "observation")
-    box.vars.put("vms/retention", {"days": "30"})
-    [b7] = bucket_names_under(box.resource_root, "vms", "7", 600)
+        EventLog(box.resource_root, "cam", unit, 1).append(old, "stats", "observation")
+    box.vars.put("cam/retention", {"days": "30"})
+    [b7] = bucket_names_under(box.resource_root, "cam", "7", 600)
     locked = os.path.dirname(os.path.join(box.resource_root, b7.path))
     os.chmod(locked, 0o555)                                                  # its directory: no unlink in it
     try:
         if os.access(locked, os.W_OK):
             return                                                           # run as root: nothing is refused to it
         assert res.retain() == 1                                             # 8's swept, 7's left
-        assert bucket_names_under(box.resource_root, "vms", "8", 600) == [] and res.retain_failed == 1
+        assert bucket_names_under(box.resource_root, "cam", "8", 600) == [] and res.retain_failed == 1
         hb = res.heartbeat()
         assert hb["retain_failed"] == 1
         text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall), wall=box.wall).metrics_text()
         assert 'w2c_resource_retain_failures_total{server="srv-1"} 1' in text
     finally:
         os.chmod(locked, 0o755)
-    assert res.retain() == 1 and bucket_names_under(box.resource_root, "vms", "7", 600) == []
+    assert res.retain() == 1 and bucket_names_under(box.resource_root, "cam", "7", 600) == []
 
 
 # -- a unit's own row, as each worker reads it ------------------------------------------------------------------
@@ -277,7 +277,7 @@ def test_the_holder_goes_on_with_the_row_it_read_last_and_runs_the_rest():
     act = FakeActuator()
     w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1")
     assert w.reconcile_once() == [("start", 1), ("start", 2)]
-    _garble(box, "vms/cameras/2")
+    _garble(box, "cam/cameras/2")
     ctl.assign("w-1", ["1", "2", "3"])
     for _ in range(2):                                                 # every pass, not once
         acts = w.reconcile_once()
@@ -330,7 +330,7 @@ def test_the_detector_the_scan_the_survey_the_evaluator_and_the_gateway_each_pas
     from tests.test_autoworker import DOOR, _Log, _assigned, _scenario, _worker as _auto, ev
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="a-door")
     _scenario(box)                                                     # `door-on-badge`, after `a-door` in the pass
     actl = _assigned(box, "a-door")
@@ -446,10 +446,10 @@ def test_a_heartbeat_with_a_number_past_any_number_or_nested_ten_thousand_deep_s
     "not said", the heartbeat is skipped, both counted; the pass places."""
     box, ctl = _box_with_cameras(3)
     _worker(box, "w-1", "srv-a")
-    box.objects.put("vms/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
+    box.objects.put("cam/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
         "server": "srv-b", "capacity": 1e400, "headroom": float("inf"), "started": 10**400}).to_bytes())
-    box.objects.put("vms/heartbeats/w-3", b"[" * 10000)
-    box.objects.put("vms/heartbeats/w-4", json.dumps({"worker": "w-4", "ts": 10**400, "status": []}).encode())
+    box.objects.put("cam/heartbeats/w-3", b"[" * 10000)
+    box.objects.put("cam/heartbeats/w-4", json.dumps({"worker": "w-4", "ts": 10**400, "status": []}).encode())
     assert ctl.capacity_of("w-2") == ctl.capacity and ctl.headroom() == 50
     assert set(ctl.workers_seen()) == {"w-1", "w-2"}
     rep = ctl.pass_once()
@@ -467,19 +467,19 @@ def test_a_snapshot_written_by_a_clock_running_ahead_is_not_fresh_and_its_lead_i
     box, ctl = _placed(2)
     ctl.publish_snapshot()
     assert ctl.snapshot_age() == 0
-    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 3600, "cameras": []}).encode())
-    assert ctl.snapshot_age() == 0 and SKEW_MAX.get("vms", 0) >= 3600          # a change, seen now: its lead measured
+    box.objects.put("cam/snapshot/w-1", json.dumps({"ts": box.wall() + 3600, "cameras": []}).encode())
+    assert ctl.snapshot_age() == 0 and SKEW_MAX.get("cam", 0) >= 3600          # a change, seen now: its lead measured
     box.wall.advance(60)                                                          # …and then nothing more
     assert ctl.snapshot_age() == 60
     for _ in range(3):                                                            # a controller 100 s behind, every pass
         ctl.publish_snapshot()
-        for key in box.objects.list("vms/snapshot/"):
+        for key in box.objects.list("cam/snapshot/"):
             shard = json.loads(box.objects.get(key))
             box.objects.put(key, json.dumps({**shard, "ts": box.wall() - 100}).encode())
         assert ctl.snapshot_age() == 0                                            # a shard just written, 100 s "old"
         box.wall.advance(5)
         assert ctl.snapshot_age() == 5
-    SKEW_MAX.pop("vms", None)
+    SKEW_MAX.pop("cam", None)
     _forget_garbled()
 
 
@@ -490,7 +490,7 @@ def test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fa
     once per spell now, "works again" when it does."""
     import logging
     box, ctl = _placed(2)
-    box.objects.put("vms/controller/pass", json.dumps({"failures": 1e400}).encode())
+    box.objects.put("cam/controller/pass", json.dumps({"failures": 1e400}).encode())
     assert ctl.pass_once()["ok"]
     records = []
 
@@ -542,7 +542,7 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     try:
-        c2 = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        c2 = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
                       resource_root=box.resource_root)
         w.heartbeat_once()
@@ -562,7 +562,7 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
                 return type(e).__name__
         routes = ("/servers", "/unplaceable", "/drain", "/where/1", "/cameras", "/metrics", "/rec/volumes")
         assert {r: get(r) for r in routes} == {r: 200 for r in routes}
-        for key in ("platform/drain", "vms/slots/w-1", "vms/placement/1", "vms/workers/w-1", "rec/holds/v1",
+        for key in ("platform/drain", "cam/slots/w-1", "cam/placement/1", "cam/workers/w-1", "rec/holds/v1",
                     "platform/decommission/srv-9"):
             f = box.vars._file(key)
             with open(f) as fh:
@@ -576,7 +576,7 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
                 except Garbled as e:
                     assert isinstance(e, ValueError) and key in str(e) and e.index == TORN
                 answers = {r: get(r) for r in routes}
-                want = {r: 404 if (r, key) == ("/where/1", "vms/placement/1") else 200 for r in routes}   # placed nowhere
+                want = {r: 404 if (r, key) == ("/where/1", "cam/placement/1") else 200 for r in routes}   # placed nowhere
                 assert answers == want, (key, how, answers)
             # Values that are not strings: each its JSON text, as Nomad would hold it — the field's parse error, not the row's.
             with open(f, "w") as fh:
@@ -589,20 +589,20 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
                 fh.write(raw)
         _forget_garbled()
         # A write replaces it whole; a create-only one conflicts; the controller's pass places again what nobody can read.
-        f = box.vars._file("vms/placement/1")
+        f = box.vars._file("cam/placement/1")
         with open(f) as fh:
             raw = fh.read()
         with open(f, "w") as fh:
             fh.write(raw[:20])
         try:
-            box.vars.put("vms/placement/1", {"worker": "w-1"}, cas=0)
+            box.vars.put("cam/placement/1", {"worker": "w-1"}, cas=0)
             raise AssertionError("a create-only write over a row that is there")
         except Conflict:
             pass
         assert c2.placement(1) is None                                    # read as placed nowhere…
         c2.ensure_placed()
         assert c2.placement(1).worker == "w-1"                            # …placed again, the row written whole
-        assert "garbled" not in c2.vars.get("vms/placement/1")[0]
+        assert "garbled" not in c2.vars.get("cam/placement/1")[0]
     finally:
         srv.shutdown()
         _forget_garbled()
@@ -630,7 +630,7 @@ def test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_word
         assert isinstance(e, TooLarge) and e.limit == KEY_BYTES == 246 and "a shorter name" in str(e) and len(str(e)) < 400
     assert box.vars.get("rec/recordings/" + long) == (None, 0)
     box.vars.delete("rec/recordings/" + long)
-    edge = "vms/cameras/" + "y" * (KEY_BYTES - len("vms%2Fcameras%2F"))
+    edge = "cam/cameras/" + "y" * (KEY_BYTES - len("vms%2Fcameras%2F"))
     box.vars.put(edge, {"id": "1"})                                       # at the limit: a row
     assert box.vars.get(edge)[0] == {"id": "1"}
     ctl, rec, m, srv, base = _console(box)
@@ -679,7 +679,7 @@ def test_one_torn_camera_row_does_not_freeze_its_holders_reconcile():
         ctl.assign("w-1", ["1", "2", "3"])
         w.reconcile_once()
         assert w.actuator.running == {1, 2, 3}
-        _tear(box, "vms/cameras/2")
+        _tear(box, "cam/cameras/2")
         con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
         con.delete("3")
         con.create_camera({"source": "driverpack://file/4.mp4"})
@@ -691,7 +691,7 @@ def test_one_torn_camera_row_does_not_freeze_its_holders_reconcile():
 
 
 def test_one_torn_slot_row_does_not_stop_a_process_of_the_subsystem_from_starting():
-    """Major 19 (`probe_claim_torn_slot`): `_claim_slot` read every slot row bare — one torn `vms/slots/w-1` file and no
+    """Major 19 (`probe_claim_torn_slot`): `_claim_slot` read every slot row bare — one torn `cam/slots/w-1` file and no
     process of the subsystem started, by name or without, 6 of 6. Now each row goes through `stored`: a process named
     by its unit takes its name, a nameless one makes its own, and the torn row waits as a garbled row does — and the
     holder of a torn row renews it whole."""
@@ -699,12 +699,12 @@ def test_one_torn_slot_row_does_not_stop_a_process_of_the_subsystem_from_startin
         box, ctl = _box_with_cameras(2)
         owner = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
         VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
-        _tear(box, "vms/slots/w-1")
+        _tear(box, "cam/slots/w-1")
         again = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
         assert again.name == "w-2"
         spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
         assert spare.name == "w-3"
         assert owner.renew_slot()                                             # its own torn row: written whole again
-        assert Slot.from_items("w-1", box.vars.get("vms/slots/w-1")[0]).holder == owner.instance
+        assert Slot.from_items("w-1", box.vars.get("cam/slots/w-1")[0]).holder == owner.instance
     finally:
         _forget_garbled()
