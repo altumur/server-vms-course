@@ -467,9 +467,8 @@ def test_not_being_able_to_read_the_keeps_is_not_there_are_none():
     assert k.store.units() == [] and k.keep_state == {}
 
 
-def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
-    """`{days: 0}` is what a deleted unit's retention becomes: its buckets go on the next pass. The ones
-    under a keep do not."""
+def test_shortening_common_days_does_not_erase_the_events_somebody_marked():
+    """A shorter subsystem policy sweeps old buckets except those under a keep."""
     from w2cplatform.events import buckets_under
     from w2cplatform.resource import platform_resource
     box = Box()
@@ -479,7 +478,7 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
     event_log(box.resource_root, 8, 1).append(t0 + 10, "motion")
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
-    box.vars.put("vms/retention", {"days": 0})
+    box.vars.put("vms/retention", {"days": 1})
 
     assert res.retain() == 2                                           # camera 8's, and camera 7's outside the keep
     left = buckets_under(box.resource_root, "vms", "7", 600)
@@ -499,7 +498,7 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     box = Box()
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
-    box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deleted: {days: 0}
+    box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deletion does not alter the common policy
     box.vars.put("det/units/8-motion", {"name": "8-motion", "cam": "8", "kind": "motion"})
     box.vars.put("detjob/jobs/7-lpr-1", {"name": "7-lpr-1", "cam": "7", "rec": "7", "kind": "lpr", "from": t0, "to": t0 + 60})
     box.vars.put("survey/watches/7-lpr", {"name": "7-lpr", "cam": "7", "kind": "lpr"})
@@ -515,7 +514,7 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     for sub, unit in units:
         EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "seen", ALARM)            # the alarms' tree…
         EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "stats")                  # …and the observations'
-        box.vars.put(f"{sub}/retention", {"days": 0}); box.vars.put(f"{sub}/alarms_retention", {"days": 0})
+        box.vars.put(f"{sub}/retention", {"days": 1}); box.vars.put(f"{sub}/alarms_retention", {"days": 1})
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
 
     res.retain()

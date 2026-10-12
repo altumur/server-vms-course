@@ -102,3 +102,29 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     with in_catalogue(testsub2()):                                     # the resource reads the holds testsub2 declares
         assert res.retain() == 1
     assert len(buckets_under(box.resource_root, "testsub.alarms", "c7", 600)) == 1 and buckets_under(box.resource_root, "testsub.alarms", "c8", 600) == []
+
+
+def test_zero_common_days_preserve_events_and_alarms_until_the_policy_is_fixed():
+    from tests.test_slot_fence import _forget_garbled
+    from w2cplatform.resource import RETENTION
+    _forget_garbled()
+    box = Box()
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects,
+                   wall=box.wall, clock=box.clock)
+    log = EventLog(box.resource_root, "testsub", "c7", 1)
+    log.append(box.wall() - 3 * DAY, "stats", "observation")
+    log.append(box.wall() - 3 * DAY, "lane.jam", ALARM)
+    for family in ("retention", "alarms_retention"):
+        box.vars.put(f"testsub/{family}", {"days": 0})
+    try:
+        for _ in range(2):
+            assert res.retain() == 0
+            assert res.heartbeat()["retention_garbled"] == ["testsub.alarms/c7", "testsub/c7"]
+            assert subsystems_under(box.resource_root) == {"testsub": ["c7"], "testsub.alarms": ["c7"]}
+        assert RETENTION.counts == {"testsub": 2}
+        for family in ("retention", "alarms_retention"):
+            box.vars.put(f"testsub/{family}", {"days": 1})
+        assert res.retain() == 2
+        assert res.retention_garbled == []
+    finally:
+        _forget_garbled()

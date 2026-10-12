@@ -404,8 +404,8 @@ def test_bad_subsystem_days_keep_all_its_units_and_do_not_stop_other_subsystems(
     for sub in ("testsub", "testsub2"):
         for unit in ("1", "2"):
             EventLog(box.resource_root, sub, unit, 1).append(t - 3 * 86400, "stats", "observation")
-    box.vars.put("testsub2/retention", {"days": "0"})
-    for i, value in enumerate(("ten", "nan", "inf", "-1", "-inf")):
+    box.vars.put("testsub2/retention", {"days": "1"})
+    for i, value in enumerate(("ten", "nan", "inf", "-1", "-inf", "0")):
         box.vars.put("testsub/retention", {"days": value})
         assert res.retain() == (2 if i == 0 else 0)
         assert res.retention_garbled == ["testsub/1", "testsub/2"]

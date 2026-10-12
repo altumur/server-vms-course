@@ -329,15 +329,15 @@ ALARM_DAYS = 1095.0
 
 # A row of days that does not read as days (the product team's sibling of the review's ninth pass): `float("nan")` is
 # a number, and `nan` days passed no comparison — nothing swept, nothing said; `-1` swept every bucket of the unit, the
-# current one too; `inf` is no number of days any controller writes. Only a finite number, not below nought, is days;
+# current one too; `inf` is no number of days any controller writes. Only a finite positive number is days;
 # anything else raises, and `Resource._days` keeps that unit's buckets — counted here, once until it is mended, and
-# named in the heartbeat (`retention_garbled`). `0` explicitly keeps zero days for the whole subsystem.
+# named in the heartbeat (`retention_garbled`). `0` is invalid too: a common setting must not silently erase all history (ADR-0076).
 RETENTION = Table("retention", "its buckets are kept, not swept, until it is mended", "row of days")
 
 
 def _days_of(raw) -> float:
     days = finite(raw)
-    if days < 0:
+    if days <= 0:
         raise ValueError(f"{raw!r} is not a number of days")
     return days
 
@@ -1535,8 +1535,7 @@ class Resource:
         floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: the specs say which rows
         # HOLD a unit for a stretch (`holds:`), and `kept` — called once a pass — reads them and returns
-        # `(subsystem, unit, start, end) -> bool`. It matters most for `{days: 0}`, which is what a deleted unit's
-        # retention becomes: reducing the common days must not erase marked events. If it raises,
+        # `(subsystem, unit, start, end) -> bool`. Reducing the common days must not erase marked events. If it raises,
         # the pass fails and nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by
         # row, so it is handed `progressed` (the review's sixth pass).
         kept = self.kept(self._progressed)
