@@ -46,6 +46,7 @@ def site(two=False):
             rings[name], memberkeys[name] = ring(name), MemberKey.new()
             c.vars.put("domain/keys", keys)
             c.vars.put("domain/root", {"pub": root.public_bytes.hex()})
+        north.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {"key": memberkeys[n].pub, "seal": memberkeys[n].seal_pub} for n in fed.clusters}})})
         holder = Holder(north.vars, north.objects, signer, fed=fed,
                         view=ReadView(fed, wall=wall), wall=wall, sealer=holder_ring)
         yield SimpleNamespace(fed=fed, wall=wall, north=north, holder=holder, root=root, signer=signer,
@@ -448,3 +449,23 @@ def test_book_show_projects_value_fields_preserves_origin_and_never_shows_hidden
         assert "hidden-nonsecret-value" not in json.dumps(shown) and "enc:v1:" not in json.dumps(shown)
         south.vars.put("domain/testsub/counts", {"bad": '{"entries":[{"value":{"token_secret":"hidden"}}],"missing":[]}'})
         assert console.book_route(None, "GET", spec(show=("n",)), "counts") == (200, {})
+
+
+def test_knocking_member_report_is_not_a_contribution_or_missing():
+    with site() as e:
+        input_row(e, secret=False)
+        input_row(e, member="south", secret=False, name="unadmitted", to="north")
+        publish_all(e)
+        e.north.vars.put("domain/members", {"doc": json.dumps({"rev": 2, "members": {"north": {}}})})
+        got = bookruntime.collect(e.holder, e.specs[0], "counts")
+        assert got.subjects == {"badge": ("north",)}
+        assert got.missing == () and set(got.rows) == {"north"}
+        e.wall.advance(1)
+        e.north.vars.put("testsub/counts/w1", {})
+        report("north", e.north.vars, e.north.objects, e.north.objects, e.wall(), key=e.memberkeys["north"],
+               sealer=e.rings["north"])
+        got = bookruntime.collect(e.holder, e.specs[0], "counts")
+        assert not got.subjects and got.missing == ()
+        e.north.vars.put("domain/members", {"doc": "damaged"})
+        got = bookruntime.collect(e.holder, e.specs[0], "counts")
+        assert not got.subjects and not got.rows and got.missing == ()
