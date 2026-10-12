@@ -6,6 +6,8 @@ as part of the answer. The camera that goes dark is the one whose last alarm mat
 agent and leaves at once; a silent member is answered from its last report; its silence is itself an alarm,
 and the ingest it polls says whether it is alive; and the domain keeps what it read, a week of it.
 """
+
+from tests.reporting import sync as report_sync
 import json
 import tempfile
 
@@ -40,7 +42,7 @@ def _site(wall, nets=("vlan:a", "vlan:a", "vlan:b")):
     def report(skip=()):                                               # every camera that is on: one pass of its agent
         for name, a in agents.items():
             if devices[name].door_open and name not in skip:
-                a.sync()
+                report_sync(a)
 
     report()
     reported = lambda name: ReportedDoor(name, north.objects, wall=wall)
@@ -69,6 +71,7 @@ def test_an_alarm_wakes_the_agent_and_leaves_at_once_and_a_storm_is_one_report_a
     fed, north, devices, cards, agents, report, reported = _site(wall)
     agent = agents["cam-SN0"]
     assert not agent.due()
+    wall.advance(0.01)  # the urgent report is a later publication than the initial report
     cards["cam-SN0"].observe(1, NOW, "door_forced", alarm=True)
     assert agent.due() and agent.report_now()                             # now, not in half a minute
     assert [e["kind"] for e in DomainAlarms(fed, reported, wall).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
@@ -109,7 +112,7 @@ def test_an_agent_the_card_cannot_wake_asks_it_once_a_second():
     card, d = Card("vms", tempfile.mkdtemp(prefix="card-")), devices["cam-SN0"]  # no `on_alarm`: another process
     agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
                         published=d.local_objects(), pages=lambda: pages(card, wall()), alarm_waiting=card.waiting)
-    agent.sync()
+    report_sync(agent)
     assert not agent.due()
     wall.advance(0.5)
     card.observe(1, wall(), "door_forced", alarm=True)
@@ -152,7 +155,7 @@ def test_a_member_that_goes_dark_is_answered_from_its_last_report_and_its_silenc
     wall.advance(60)
     report()
     out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)
-    mine = [(e["kind"], e["t"]) for e in out["events"] if e["member"] == "cam-SN0"]
+    mine = [(e["kind"], round(e["t"], 5)) for e in out["events"] if e["member"] == "cam-SN0"]
     assert mine == [("silent", NOW + 45), ("door_forced", NOW - 90), ("door_forced", NOW - 1500)]
     assert [e for e in out["events"] if e["kind"] == "silent"][0]["class"] == "alarm"
     m = out["members"]["cam-SN0"]
@@ -290,7 +293,7 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), pages=lambda: pages(card, wall()))
     card.observe(1, wall() - 30, "card.prebuffer.short", alarm=True)
-    relay.sync(); cam_agent.sync(); relay.sync()
+    report_sync(relay); report_sync(cam_agent); report_sync(relay)
     alarms = DomainAlarms(fed, reported_doors(fed, north.objects, wall=wall), wall)
     got = alarms.list(wall() - 3600)
     assert [(e["member"], e["kind"]) for e in got["events"]] == [(cam.name, "card.prebuffer.short")], got
@@ -314,7 +317,7 @@ def test_an_office_with_no_page_that_reported_and_went_quiet_is_silent_by_its_la
     office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
     agent = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
                         published=office.objects)                       # no `pages`: the office says no alarms
-    agent.sync()
+    report_sync(agent)
     reported = lambda name: ReportedDoor(name, north.objects, wall=wall)
     out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)        # the domain's pass: it has seen the report
     assert out["members"]["office"] == {"state": "ok", "truncated": False}, out["members"]
@@ -333,7 +336,7 @@ def test_a_pass_reads_an_offices_bundle_once_however_many_cameras_are_behind_it(
     forty times per camera behind it — every read of a camera's copy (its mark, its heartbeats, its snapshot, its page,
     and each road's mark again) fetched the whole bundle from the store and parsed it. A pass (`steps.Steps.run`) reads
     each bundle once; outside a pass — a door answering a request — every read is fresh, as before."""
-    from w2cplatform.domain.relay import BUNDLE, Relay
+    from w2cplatform.domain.relay import Relay
     from w2cplatform.domain.steps import Steps
     from w2cplatform.domain.topology import Topology
     from w2cplatform.domain.uplink import base
@@ -360,11 +363,11 @@ def test_a_pass_reads_an_offices_bundle_once_however_many_cameras_are_behind_it(
         card = Card("vms", tempfile.mkdtemp(prefix="card-"))
         agents.append(DomainAgent(c.name, through.vars, c.flash, now=wall, domain_objects=through.objects,
                                   published=c.local_objects(), pages=lambda card=card: pages(card, wall())))
-    relay.sync()
+    report_sync(relay)
     for a in agents:
-        a.sync()
-    relay.sync()
-    key = base("office") + BUNDLE
+        report_sync(a)
+    report_sync(relay)
+    key = base(cams[0].name) + "reported"
     reads = []
     real_get = north.objects.get
     north.objects.get = lambda k: (reads.append(k), real_get(k))[1]

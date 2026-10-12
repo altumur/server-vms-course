@@ -9,6 +9,8 @@ ordinary operation — from the signer's key, kept beyond the holder since Lesso
 of the domain's state that other members keep — and it needs a term, so that a holder which comes back after
 being replaced steps down instead of splitting the site in two.
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -49,7 +51,7 @@ def _site(wall, n=4):
     holder.claim()
     agents = {name: _agent(fed, devices, name, "cam-SN0", wall) for name in devices if name != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     return fed, devices, signer, offline, holder, agents
 
 
@@ -109,7 +111,7 @@ def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     fed, devices, signer, offline, holder, agents = _site(wall)
     assert _keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["pending"]
     assert holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door()) == 1
-    agents["cam-SN1"].sync(); agents["cam-SN2"].sync()
+    report_sync(agents["cam-SN1"]); report_sync(agents["cam-SN2"])
     devices["cam-SN0"].power_off()                       # for good: flash worn out
 
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
@@ -121,7 +123,7 @@ def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     d3.boot()
     keys = signer.tokens.keyset()
     assert find_holder(fed, d3.flash, keys, wall()) == "cam-SN1"
-    _agent(fed, devices, "cam-SN3", "cam-SN1", wall).sync()
+    report_sync(_agent(fed, devices, "cam-SN3", "cam-SN1", wall))
     assert d3.row()["name"] == "SN3-renamed"
 
 
@@ -135,7 +137,7 @@ def test_the_week_of_alarms_leaves_the_holder_with_its_backup():
     fed, devices, signer, offline, holder, agents = _site(wall)
     history = AlarmHistory(devices["cam-SN0"].disk, wall=wall)
     history.keep("cam-SN2", [{"t": wall() - 3600, "kind": "door_forced", "class": "alarm"}])
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     devices["cam-SN0"].power_off()                                     # the card goes with the camera
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     kept = AlarmHistory(devices["cam-SN1"].disk, wall=wall).read("cam-SN2", wall() - 86400, wall())
@@ -148,11 +150,11 @@ def test_a_holder_record_is_never_carried_backwards():
     like the keys, with one more rule: never to a smaller term."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     devices["cam-SN0"].power_off()
     move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     d2 = devices["cam-SN2"]
-    _agent(fed, devices, "cam-SN2", "cam-SN1", wall).sync()
+    report_sync(_agent(fed, devices, "cam-SN2", "cam-SN1", wall))
     keys = signer.tokens.keyset()
     assert read_holder(d2.flash, keys, wall())["term"] == 2
 
@@ -169,14 +171,14 @@ def test_an_old_holder_that_comes_back_steps_down_and_lists_what_it_alone_holds(
     not re-applied by itself."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     _keep_an_edit_for(fed, devices, "SN2", holder.vars, wall)          # after the backup
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
-    _agent(fed, devices, "cam-SN3", "cam-SN1", wall).sync()          # a member now carries term 2
+    report_sync(_agent(fed, devices, "cam-SN3", "cam-SN1", wall))          # a member now carries term 2
 
     devices["cam-SN0"].boot()
-    holder_agent(fed, devices, "cam-SN0", wall).sync()                  # its own agent: term 2, carried home
+    report_sync(holder_agent(fed, devices, "cam-SN0", wall))                  # its own agent: term 2, carried home
     assert holder.check() is False
     try:
         holder.backup(["cam-SN3"], devices["cam-SN0"].disk_door())
@@ -197,16 +199,16 @@ def test_a_holder_that_comes_back_yields_on_its_own_agents_first_pass_by_the_sig
     home. The next look yields to it, and the agent carries through the new holder's door from then on."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     devices["cam-SN0"].power_off()
     move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     for name in ("cam-SN2", "cam-SN3"):
-        _agent(fed, devices, name, "cam-SN1", wall).sync()               # the members are on term 2
+        report_sync(_agent(fed, devices, name, "cam-SN1", wall))               # the members are on term 2
 
     devices["cam-SN0"].boot()
     assert holder.check() is True and holder.deposed_by is None          # its own store still says term 1
     own = holder_agent(fed, devices, "cam-SN0", wall)
-    own.sync()                                                           # the agent's first pass
+    report_sync(own)                                                           # the agent's first pass
     keys = signer.tokens.keyset()
     assert read_holder(devices["cam-SN0"].flash, keys, wall())["term"] == 2 and "following cam-SN1" in own.followed
     assert holder.check() is False and (holder.deposed_by["holder"], holder.deposed_by["term"]) == ("cam-SN1", 2)
@@ -224,7 +226,7 @@ def test_a_forged_or_unsigned_record_of_a_larger_term_deposes_no_holder():
     devices["cam-SN2"].flash.put("domain/holder", {"doc": json.dumps(forged, sort_keys=True)})
     devices["cam-SN3"].flash.put("domain/holder", {"doc": json.dumps({"term": 7, "holder": "cam-SN3", "at": wall()})})
     own = holder_agent(fed, devices, "cam-SN0", wall)
-    own.sync()
+    report_sync(own)
     keys = signer.tokens.keyset()
     assert read_holder(devices["cam-SN0"].flash, keys, wall())["term"] == 1
     assert "refused from cam-SN2, cam-SN3" in own.followed, own.followed
@@ -237,7 +239,7 @@ def test_a_forged_or_unsigned_record_of_a_larger_term_deposes_no_holder():
 def test_a_backup_not_signed_by_the_domain_is_ignored_however_new_it_claims_to_be():
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     forged = sign({"term": 9, "rev": 99, "holder": "cam-SN2", "state": {"domain/grants/cam-SN3": {"mallory": "admin"}}},
                   TokenIssuer(DOMAIN))
     devices["cam-SN2"].disk.put(BACKUP_TAKEN, json.dumps(forged).encode())
@@ -254,7 +256,7 @@ def test_a_holder_restored_without_the_signers_key_is_followed_by_nobody():
     was. Losing that key does not lose the site — it loses the ability to move the domain."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     devices["cam-SN0"].power_off()
     wrong = Signer(DOMAIN, FakeVariables(), now=wall).backup()
     impostor, report = move_domain(fed, "cam-SN2", wrong, DOMAIN, _objects(devices), wall)
@@ -270,17 +272,17 @@ def test_every_move_takes_a_larger_term_than_any_member_has_seen():
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
-    agents["cam-SN1"].sync(); agents["cam-SN2"].sync()
+    report_sync(agents["cam-SN1"]); report_sync(agents["cam-SN2"])
     devices["cam-SN0"].power_off()
     second, _ = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     for name in ("cam-SN2", "cam-SN3"):
-        _agent(fed, devices, name, "cam-SN1", wall).sync()
+        report_sync(_agent(fed, devices, name, "cam-SN1", wall))
     devices["cam-SN1"].power_off()
     third, report = move_domain(fed, "cam-SN2", offline, DOMAIN, _objects(devices), wall)
     assert report["term"] == 3
-    _agent(fed, devices, "cam-SN3", "cam-SN2", wall).sync()
+    report_sync(_agent(fed, devices, "cam-SN3", "cam-SN2", wall))
     devices["cam-SN1"].boot()
-    holder_agent(fed, devices, "cam-SN1", wall).sync()
+    report_sync(holder_agent(fed, devices, "cam-SN1", wall))
     assert second.check() is False and find_holder(fed, devices["cam-SN3"].flash, signer.tokens.keyset(), wall()) == "cam-SN2"
 
 
@@ -308,7 +310,7 @@ def test_a_planned_handover_strands_nothing():
             raise AssertionError("a frozen holder must refuse the edit")
         except ApiError as e:
             assert e.status == 503 and "handing the domain over to cam-SN1" in e.detail
-        agents["cam-SN1"].sync()
+        report_sync(agents["cam-SN1"])
 
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["planned"] and report["stranded"] == [] and report["term"] == 2
@@ -348,7 +350,7 @@ def test_a_write_that_slips_past_the_freeze_is_reported_not_trusted_away():
 
     def carry_to():
         PendingEdits(holder.vars, wall).add("cam-SN2", "SN2", {"name": "sneaked"}, {"name": "SN2"}, "anna")   # no guard
-        agents["cam-SN1"].sync()
+        report_sync(agents["cam-SN1"])
 
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert [(p, k) for p, k, _ in report["stranded"]] == [("domain/pending/cam-SN2", "SN2")]
@@ -369,7 +371,7 @@ def test_a_move_keeps_the_topology_the_members_and_the_roads():
     holder.vars.put("domain/topology", topology)
     holder.vars.put("domain/vms/roads", roads)
     assert holder.vars.get("domain/members")[0] is None                   # never written: configuration only
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     assert Members(holder.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the backup wrote it first
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
@@ -389,7 +391,7 @@ def test_a_report_that_closes_an_edit_during_a_handover_is_not_stranded():
 
     def carry_to():
         PendingEdits(holder.vars, wall).reconcile("cam-SN3", {"SN3": {"rev": rev, "conflicts": {"name": {"current": "x"}}}})
-        agents["cam-SN1"].sync()
+        report_sync(agents["cam-SN1"])
 
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["stranded"] == [] and report["sentence"].endswith("nothing stranded")
@@ -404,20 +406,20 @@ def test_an_old_holder_that_learns_of_two_moves_from_its_own_agent_starts_depose
     somebody else's — and keeps that list (feedback AS)."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     _keep_an_edit_for(fed, devices, "SN2", holder.vars, wall)             # after the last backup
     devices["cam-SN0"].power_off()
     second, _ = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     devices["cam-SN2"].boot()
-    _agent(fed, devices, "cam-SN2", "cam-SN1", wall).sync()
+    report_sync(_agent(fed, devices, "cam-SN2", "cam-SN1", wall))
     second.backup(["cam-SN2"], devices["cam-SN1"].disk_door())
-    _agent(fed, devices, "cam-SN2", "cam-SN1", wall).sync()
+    report_sync(_agent(fed, devices, "cam-SN2", "cam-SN1", wall))
     devices["cam-SN1"].power_off()
     third, report = move_domain(fed, "cam-SN2", offline, DOMAIN, _objects(devices), wall)
     assert report["term"] == 3
 
     devices["cam-SN0"].boot()
-    _agent(fed, devices, "cam-SN0", "cam-SN2", wall).sync()             # its own agent: term 3, carried home
+    report_sync(_agent(fed, devices, "cam-SN0", "cam-SN2", wall))             # its own agent: term 3, carried home
     for name in ("cam-SN2", "cam-SN3"):
         devices[name].door_open = False                                  # and no neighbour's door to look through
     old = DomainHolder(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)   # a fresh process
@@ -445,27 +447,28 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall, n=5)
     holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
-    agents["cam-SN1"].sync()
+    report_sync(agents["cam-SN1"])
     for i in range(4):                                   # a revision is a change (N10): four edits, four revisions
         _grant(holder.vars, f"p{i}", wall)
         holder.backup(["cam-SN2"], devices["cam-SN0"].disk_door())
-    agents["cam-SN2"].sync()
+    report_sync(agents["cam-SN2"])
     devices["cam-SN2"].power_off()
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     assert (new.term, new.backup_rev) == (2, 1), (new.term, new.backup_rev)
     devices["cam-SN0"].boot()
-    holder_agent(fed, devices, "cam-SN0", wall).sync()
+    report_sync(holder_agent(fed, devices, "cam-SN0", wall))
     assert holder.check() is False                                        # the former holder, a member now
     devices["cam-SN2"].boot()
+    wall.advance(1)  # restarted agents send later publications than the transferred reports
     following = {n: _agent(fed, devices, n, "cam-SN1", wall) for n in ("cam-SN0", "cam-SN2", "cam-SN3", "cam-SN4")}
     assert new.backup(["cam-SN0", "cam-SN3"], devices["cam-SN1"].disk_door()) == 2
-    following["cam-SN0"].sync(); following["cam-SN3"].sync()
+    report_sync(following["cam-SN0"]); report_sync(following["cam-SN3"])
     _grant(new.vars, "q", wall)
     assert new.backup(["cam-SN3"], devices["cam-SN1"].disk_door()) == 3
-    following["cam-SN3"].sync()
+    report_sync(following["cam-SN3"])
     devices["cam-SN4"].flash.put(BACKUP_TAKEN, {"rev": "seven", "term": 2, "sha256": "x"})   # a row nobody can read as a pair
-    following["cam-SN2"].sync(); following["cam-SN4"].sync()
+    report_sync(following["cam-SN2"]); report_sync(following["cam-SN4"])
 
     t = Holder(new.vars, devices["cam-SN1"].disk, new.signer, fed=fed, term=new, wall=wall).term_view()
     assert t["backup"] == {"term": 2, "rev": 3} and t["backup_holders"] == ["cam-SN0", "cam-SN3"], t
@@ -490,19 +493,19 @@ def test_a_quiet_domain_writes_no_new_backup_and_touches_no_keepers_flash():
     fed, devices, signer, offline, holder, agents = _site(wall)
     disk, flash = devices["cam-SN0"].disk, devices["cam-SN1"].flash
     assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 1
-    agents["cam-SN1"].sync()
+    report_sync(agents["cam-SN1"])
     taken, idx = flash.get(BACKUP_TAKEN)
     pointer = holder.vars.get("domain/keepers/cam-SN1")
     assert int(taken["rev"]) == 1
-    for _ in range(10):                                  # ten quiet passes, 30 s apart
+    # The keeper's accepted report changed the backup content too. Take it once, then keep the input quiet.
+    assert holder.backup(['cam-SN1'], devices['cam-SN0'].disk_door()) == 2
+    pointer = holder.vars.get('domain/keepers/cam-SN1')
+    for _ in range(10):
         wall.advance(30)
-        assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 1
-        agents["cam-SN1"].sync()
-    assert disk.list("backup/rev-") == ["backup/rev-1"], disk.list("backup/rev-")
-    assert holder.vars.get("domain/keepers/cam-SN1") == pointer          # the pointer not written again
-    assert flash.get(BACKUP_TAKEN)[1] == idx                             # the keeper's flash not touched
-    _grant(holder.vars, "boris", wall)
-    wall.advance(30)
-    assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 2
-    agents["cam-SN1"].sync()
-    assert int(flash.get(BACKUP_TAKEN)[0]["rev"]) == 2
+        assert holder.backup(['cam-SN1'], devices['cam-SN0'].disk_door()) == 2
+    assert holder.vars.get('domain/keepers/cam-SN1') == pointer
+    assert flash.get(BACKUP_TAKEN)[1] == idx
+    _grant(holder.vars,'boris',wall)
+    assert holder.backup(['cam-SN1'], devices['cam-SN0'].disk_door()) == 3
+    report_sync(agents['cam-SN1'])
+    assert int(flash.get(BACKUP_TAKEN)[0]['rev']) == 3

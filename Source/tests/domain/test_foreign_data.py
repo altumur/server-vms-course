@@ -3,6 +3,8 @@ or «refused», counted and named, and never an exception that stops more than i
 pass, part 4: the relay's bundle, `RecursionError`, kept edits, grants, asks, the signer's loop, the relay's age mark,
 a name that is a number; and the open rest of the seventh: the trust readers, the agent's pass, the books' steps,
 `identity.users`, the signer's start)."""
+
+from tests.reporting import sync as report_sync
 import json
 import logging
 import threading
@@ -12,7 +14,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
 from vms.domainpart.books import Books
-from w2cplatform.domain.relay import BUNDLE, MEMBER_SHARE, BundleView, Relay, bundle, say_seen, RELAY_SEEN
+from w2cplatform.domain.relay import MEMBER_SHARE, Relay, bundle, say_seen, RELAY_SEEN
 from vms.domainpart.crossing import Crossings
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
@@ -50,7 +52,7 @@ def _relay_domain(wall):
     through = Relay(relay_agent, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects())
-    relay_agent.sync(); cam_agent.sync(); relay_agent.sync()
+    report_sync(relay_agent); report_sync(cam_agent); report_sync(relay_agent)
     return fed, north, east, cam, signer, cam_agent
 
 
@@ -74,8 +76,8 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     fed, north, east, cam, signer, _ = _relay_domain(wall)
     view = ReadView(fed, wall=wall); view.refresh()
     assert view.list()["complete"]
-    north.objects.put(base("east") + BUNDLE, b'{"cam-SN7001": {"reported": "{\\"ts\\": ')     # half a write
-    before = MEMBER_OBJECTS.counts.get("east", 0)
+    north.objects.put(base(cam.name) + 'reported', b'{')
+    before = MEMBER_OBJECTS.counts.get(cam.name, 0)
 
     d = DomainDirectory(fed, wall=wall)
     a = d.where("101")                                                  # a camera of north: raised before
@@ -89,50 +91,39 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
         wall.advance(5); out = books.pass_once()
     assert out["failing"] == [] and {"sources", "primaries", "polls", "asks"} <= set(out)
     page_ = view.list()
-    assert page_["clusters"][cam.name] == "unreachable" and "bundle cannot be read" in page_["why"][cam.name]
-    assert MEMBER_OBJECTS.counts.get("east", 0) == before + 1           # once, not once per read or per pass
+    assert page_["clusters"][cam.name] == "unreachable" and "complete report" in page_["why"][cam.name]
+    assert MEMBER_OBJECTS.counts.get(cam.name, 0) == before + 1           # once, not once per read or per pass
 
 
-def test_a_relay_of_an_older_build_whose_bundle_is_a_list_is_refused_by_name_and_shown():
-    """The coordinator's decision on the review's question: a bundle that is a list — what an older relay wrote — is
-    not parsed as a list; it is refused with a plain reason ("runs an older build; update it"), counted, and shown with
-    each member behind that relay."""
+def test_a_report_whose_body_is_not_an_object_is_unknown():
+    from w2cplatform.domain.reports import read
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
-    north.objects.put(base("east") + BUNDLE, json.dumps([["cam-SN7001", {}]]).encode())
-    view = ReadView(fed, wall=wall); view.refresh()
-    why = view.list()["why"][cam.name]
-    assert "relay east runs an older build" in why and "update it" in why
-    assert "east/bundle" in MEMBER_OBJECTS.bad
+    snap = read(cam.name, north.objects)
+    north.objects.put(base(cam.name)+'reports/'+str(snap.mark['rev']), b'[]')
     try:
-        BundleView("east", north.objects).get(base(cam.name) + "reported"); raise AssertionError("must refuse")
-    except Unreachable as e:
-        assert "older build" in str(e)
+        read(cam.name, north.objects)
+        raise AssertionError('must refuse')
+    except Unreachable:
+        pass
 
 
-def test_one_record_of_a_bundle_is_that_records_and_one_member_over_its_share_is_left_out_with_why():
-    """Two siblings the product found: one record that does not parse rejected its relay's whole bundle; and a bundle
-    bounded only as a whole let one large member crowd out the others. A record that is not a string is left out,
-    counted, the member's other records read; a member whose report is over `MEMBER_SHARE` is not carried, and the
-    bundle says why — the domain names it with that member, and the other member is carried whole."""
-    relay = make_cluster("relay")[0].objects
-    store = make_cluster("centre")[0].objects
-    relay.put(base("cam-A") + "reported", b'{"ts": 1, "seq": 1}')
-    relay.put(base("cam-A") + "o/vms/snapshot/w", json.dumps({"pad": "x" * (MEMBER_SHARE + 1)}).encode())
-    relay.put(base("cam-B") + "reported", b'{"ts": 1, "seq": 1}')
-    bundle("relay", ["cam-A", "cam-B"], relay, store)
-    view = BundleView("relay", store)
-    mark = json.loads(view.get(base("cam-B") + "reported"))             # the door's mark: the member's time, counted there
-    assert (mark["ts"], mark["seq"]) == (1, 1), mark
+def test_a_member_over_its_relay_share_is_refused_without_discarding_other_members():
+    from w2cplatform.domain.relay import take_bundle
+    from w2cplatform.domain.reports import read
+    store = make_cluster('centre')[0].objects
+    def body(objects):
+        return json.dumps(dict(sent_at=1, objects=objects, rows={}, pages={})).encode()
+    changed, refused = take_bundle('relay', {
+        'testsub-a':body({'testsub/snapshot/w':{'pad':'x'*(MEMBER_SHARE+1)}}),
+        'testsub-b':body({})}, store, received_at=10)
+    assert changed and 'testsub-a' in refused and 'testsub-b' not in refused
+    assert read('testsub-b',store).mark['via']=='relay'
     try:
-        view.get(base("cam-A") + "reported"); raise AssertionError("must say why")
-    except Unreachable as e:
-        assert "over the" in str(e) and "carried the others" in str(e)
-    doc = json.loads(store.get(base("relay") + BUNDLE))
-    doc["cam-B"]["o/vms/heartbeats/w"] = 42                             # one record that is not a string
-    store.put(base("relay") + BUNDLE, json.dumps(doc).encode())
-    assert json.loads(view.get(base("cam-B") + "reported")) == mark
-    assert view.list(base("cam-B") + "o/") == [] and "relay/bundle#cam-B/o/vms/heartbeats/w" in MEMBER_OBJECTS.bad
+        read('testsub-a',store)
+        raise AssertionError('must be missing')
+    except Unreachable:
+        pass
 
 
 def test_a_member_behind_a_relay_whose_bundle_is_torn_is_read_by_its_own_report_when_it_has_one():
@@ -142,7 +133,7 @@ def test_a_member_behind_a_relay_whose_bundle_is_torn_is_read_by_its_own_report_
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
     report(cam.name, cam.flash, cam.local_objects(), north.objects, wall())        # the camera reached the centre itself
-    north.objects.put(base("east") + BUNDLE, b"{")
+    east.objects.put(base(cam.name) + 'reported', b'{')
     view = ReadView(fed, wall=wall); view.refresh()
     assert view.list()["clusters"][cam.name] == "ok"
     assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == [SERIAL]
@@ -360,13 +351,13 @@ def test_a_cluster_whose_trust_rows_do_not_parse_answers_503_with_why_and_its_ag
     except Denied as e:
         assert e.status == 503 and "domain/keys" in e.why
     agent = DomainAgent("east", north.vars, east.vars, now=wall)
-    assert agent.sync() and access.who(token)["sub"] == "anna"          # mended by the next pass
+    assert report_sync(agent) and access.who(token)["sub"] == "anna"          # mended by the next pass
     rl = RevocationList.from_items({"jtis": "aaa:2000.5,bbb:then,ccc"})
     assert rl.entries["aaa"] == 2000.5 and rl.entries["bbb"] == float("inf") and rl.jtis == {"aaa", "bbb", "ccc"}
     _, idx = north.vars.get(KEYS_PATH)
     north.vars.put(KEYS_PATH, {"current": "k", "key:k": "zz"}, cas=idx)   # the domain's own key set, torn
     wall.advance(10)
-    assert agent.sync() and agent.keys.startswith("refused: the domain's key set does not parse")   # …and the pass went on
+    assert report_sync(agent) and agent.keys.startswith("refused: the domain's key set does not parse")   # …and the pass went on
     assert access.who(token)["sub"] == "anna"                          # the one carried before is held
 
 
@@ -385,15 +376,15 @@ def test_the_agents_pass_goes_on_past_a_row_of_the_domain_that_does_not_parse_an
     cam.boot()
     agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
                         domain_objects=north.objects, cluster_objects=cam.local_objects(), published=cam.local_objects())
-    assert agent.sync()
+    assert report_sync(agent)
     north.vars.put(f"domain/pending/{cam.name}", {SERIAL: "{torn", "other": json.dumps({"rev": 1, "fields": 3})})
     north.vars.put(HOLDER, {"doc": "{torn"})
     north.vars.put(POINTER, {"object": "shared/rev-1", "term": "one", "rev": "1", "sha256": "x"})
-    before = json.loads(north.objects.get(base(cam.name) + "reported"))["seq"]
+    before = json.loads(north.objects.get(base(cam.name) + "reported"))["rev"]
     wall.advance(10)
-    assert agent.sync()
+    assert report_sync(agent)
     assert agent.holder.startswith("refused") and agent.shared.startswith("refused")
-    assert json.loads(north.objects.get(base(cam.name) + "reported"))["seq"] == before + 1
+    assert json.loads(north.objects.get(base(cam.name) + "reported"))["rev"] == before + 1
 
 
 def test_one_users_record_that_does_not_parse_stops_neither_the_publication_nor_a_federated_login():
@@ -437,15 +428,18 @@ def test_a_member_page_with_a_bad_line_or_a_report_mark_past_any_number_stops_no
     wall = Clock(10_000.0)
     north, _ = make_cluster("north", domain=True)
     b = base("cam-X")
-    north.objects.put(b + "reported", json.dumps({"ts": wall(), "seq": 1}).encode())
-    north.objects.put(b + "p/alarms", json.dumps({"from": 0, "to": wall(), "events": [
-        {"t": "x", "kind": "door"}, 5, {"t": wall() - 1, "kind": "motion"}]}).encode())
-    p = page("cam-X", "alarms", north.objects, wall=wall)
-    assert [e["kind"] for e in p["events"]] == ["motion"] and "cam-X/p/alarms#line" in MEMBER_OBJECTS.bad
-    cam = DeviceCluster("SNX", FakeVariables(), wall=wall); cam.boot(); cam.publish()
-    north.objects.put(base(cam.name) + "reported", b'{"ts": 1, "seq": 1e999}')
-    report(cam.name, cam.flash, cam.local_objects(), north.objects, wall())
-    assert json.loads(north.objects.get(base(cam.name) + "reported"))["seq"] == int(wall() * 1000)
+    from w2cplatform.domain.reports import accept
+    raw = json.dumps(dict(sent_at=wall(),objects={},rows={},pages={'alarms':json.dumps({
+        'from':0,'to':wall(),'events':[{'t':'x','kind':'door'},5,{'t':wall()-1,'kind':'motion'}]})})).encode()
+    accept('cam-X',raw,north.objects,received_at=wall())
+    p = page('cam-X','alarms',north.objects,wall=wall)
+    assert [e['kind'] for e in p['events']]==['motion']
+    north.objects.put(b+'reported',b'{"rev":1e999}')
+    try:
+        page('cam-X','alarms',north.objects,wall=wall)
+        raise AssertionError('a corrupt pointer is unknown')
+    except Unreachable:
+        pass
 
 
 def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said():

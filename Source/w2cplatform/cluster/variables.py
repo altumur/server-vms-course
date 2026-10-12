@@ -19,14 +19,14 @@ import threading
 from typing import Protocol
 
 from w2cplatform.variables import Conflict, Forbidden   # noqa: F401  the platform's exceptions: one class, so a CAS retry catches ours too
-from w2cplatform.variables import refuse_delete, safe_path
+from w2cplatform.variables import refuse_delete, safe_path, guard_check, guard_match
 
 
 class Variables(Protocol):
     def get(self, path: str) -> tuple[dict | None, int]: ...
-    def put(self, path: str, items: dict, cas: int | None = None) -> int: ...
+    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None) -> int: ...
     def list(self, prefix: str) -> list[str]: ...
-    def delete(self, path: str, cas: int | None = None) -> None: ...
+    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None) -> None: ...
 
 
 class FakeVariables:
@@ -65,10 +65,12 @@ class FakeVariables:
             items, idx = self._items[path]
             return dict(items), idx
 
-    def put(self, path, items, cas=None):
+    def put(self, path, items, cas=None, *, guard=None):
         safe_path(path)          # the same key rule as the real store: the fake may not be laxer
         self._acl(path)
+        guard_check(guard, self.writer, self.acl)
         with self._lock:
+            guard_match(guard, lambda k: self._items.get(k, (None, 0))[1])
             _, current = self._items.get(path, (None, 0))
             if cas is not None and cas != current:
                 raise Conflict(f"cas={cas} but the version is {current}")
@@ -80,11 +82,13 @@ class FakeVariables:
         with self._lock:
             return sorted(p for p in self._items if p.startswith(prefix))
 
-    def delete(self, path, cas=None):
+    def delete(self, path, cas=None, *, guard=None):
         safe_path(path)
         refuse_delete(path, getattr(self, "writer", None), {})   # the platform's rule: an epoch nobody deletes, `domain/*` its roles
         self._acl(path)
+        guard_check(guard, self.writer, self.acl)
         with self._lock:
+            guard_match(guard, lambda k: self._items.get(k, (None, 0))[1])
             _, current = self._items.get(path, (None, 0))
             if cas is not None and cas != current:
                 raise Conflict(f"cas={cas} but the version is {current}")

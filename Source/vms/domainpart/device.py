@@ -106,6 +106,9 @@ class _Door:
     def list(self, *a):
         return self._open().list(*a)
 
+    def delete(self, *a):
+        return self._open().delete(*a)
+
 
 class _Local:
     """The camera's RAM, as the camera's own processes read it: always the current one (a reboot replaces it)."""

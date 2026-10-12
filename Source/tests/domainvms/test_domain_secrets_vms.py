@@ -3,6 +3,8 @@ any store of three clusters; a member gets only its own; the relay gives a camer
 reads nor writes the signer's key. Two servers and a camera, as in `test_two_servers.py`, each with its own key ring:
 the holder seals the books' stream tokens at rest, its door seals them to each member's key, each member keeps them
 sealed with its own ring — and the camera still pushes, its token opened at the last moment."""
+
+from tests.reporting import sync as report_sync
 import json
 import os
 import re
@@ -73,14 +75,14 @@ def _site(wall):
     def domain_pass():
         for r in hosts.values():
             r.heartbeat_once()
-        cam.publish(); cam_agent.sync()
+        cam.publish(); report_sync(cam_agent)
         for x in agents.values():
-            x.sync()
+            report_sync(x)
         view.refresh(); crossings.record(SERIAL, on="srv-a") if not crossings.all() else None
         crossings.publish(); crossings.publish_primaries()
         for x in agents.values():
-            x.sync()
-        cam_agent.sync()
+            report_sync(x)
+        report_sync(cam_agent)
 
     def dial(url):
         for i in ing.values():
@@ -148,7 +150,7 @@ def test_the_relay_gives_a_camera_only_its_own():
                           domain="srv-b")
     relay = DomainAgent("srv-a", CarryClient(door, "srv-a", keys["srv-a"], wall), a.vars, now=wall, sealer=rings["srv-a"],
                         key=keys["srv-a"], relay_members=[cam.name], bundle_store=a.objects)
-    assert relay.sync() and set(relay.relayed) == {cam.name}
+    assert report_sync(relay) and set(relay.relayed) == {cam.name}
     assert not a.vars.list("relay/")
     got = Relay(relay).vars.answer_for(cam.name, keys[cam.name])
     assert json.loads(got["rows"][f"{PRIMARIES_PATH}/{cam.name}"][SERIAL])["ingest"]["token_secret"].count(".") == 2

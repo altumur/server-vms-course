@@ -9,6 +9,8 @@ The ingest lives in a RECORDER of the room (`RecWorker.host_ingest`; ADR-0065, i
 each saying where its ingest takes streams in its heartbeat (`ingest`), and the domain writes the camera's book from what
 they say. Nothing here raises an ingest by hand.
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -42,7 +44,7 @@ def _site(wall, down=(), writes=False):
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     room_agent = DomainAgent("south", north.vars, south.vars, now=wall)
-    room_agent.sync()                                                  # the room's key set: what the ingest checks with
+    report_sync(room_agent)                                                  # the room's key set: what the ingest checks with
     inside: dict = {}
 
     def network(url):                                                  # the room's own network: its ingests reach each other
@@ -63,7 +65,7 @@ def _site(wall, down=(), writes=False):
     cam.door_open = False                                              # nobody can open a connection to it, ever
     fed.add(member_copy(cam.name, north.objects, wall=wall))
     cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
-    cam_agent.sync()
+    report_sync(cam_agent)
 
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(north.vars, view, wall, issuer=signer.tokens)
@@ -79,7 +81,7 @@ def _site(wall, down=(), writes=False):
     def domain_pass():
         for r in recs:
             r.heartbeat_once()                                         # the recorders say their ingests again
-        view.refresh(); crossings.publish(); crossings.publish_primaries(); cam_agent.sync(); room_agent.sync()
+        view.refresh(); crossings.publish(); crossings.publish_primaries(); report_sync(cam_agent); report_sync(room_agent)
 
     def place():                                                       # the room's controller places the recording
         room.ensure_placed()
@@ -312,7 +314,7 @@ def _two(wall):
     fed.add(member_copy(gate.name, north.objects, wall=wall))
     gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                              published=gate.local_objects())
-    gate_agent.sync()
+    report_sync(gate_agent)
     done = []
 
     def perform(action):
@@ -325,7 +327,7 @@ def _two(wall):
     scenarios = [{"trigger": GATE, "target": SERIAL, "actions": [{"preset": 3}, {"preset": 9}]}]
 
     def asks_pass():
-        domain_pass(); publish_asks(crossings, scenarios); gate_agent.sync()
+        domain_pass(); publish_asks(crossings, scenarios); report_sync(gate_agent)
 
     asks_pass()
     asker = Asker(GATE, gate.flash, lambda url: ingest if url in URLS else (_ for _ in ()).throw(Unreachable(url)),
@@ -421,10 +423,10 @@ def _scenario_site(wall, scenarios, open_doors=()):
         for d in (cam, gate, ptz, *(d for d, _ in extra.values())):
             d.publish()
         for a in agents:
-            a.sync()                                                   # reports up
+            report_sync(a)                                                   # reports up
         books.pass_once()                                              # the signer's pass: every book
         for a in agents:
-            a.sync()                                                   # books down
+            report_sync(a)                                                   # books down
 
     domain_pass()
     domain_pass.devices = {n: d for n, (d, _) in extra.items()}
@@ -610,10 +612,10 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
             devices[n].publish()
         recs[holder_name].heartbeat_once()                               # its ingest, said in its recorder's heartbeat
         for a in agents:
-            a.sync()
+            report_sync(a)
         books.pass_once()
         for a in agents:
-            a.sync()
+            report_sync(a)
 
     light_ingest("cam-SN0", home)
     settle("cam-SN0", signer.tokens)
@@ -628,7 +630,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
 
     holder.backup(["cam-SN1", "cam-SN3"], devices["cam-SN0"].disk_door())
     for n in ("cam-SN1", "cam-SN3"):
-        _agent(fed, devices, n, "cam-SN0", wall).sync()               # the backup, carried
+        report_sync(_agent(fed, devices, n, "cam-SN0", wall))               # the backup, carried
     devices["cam-SN0"].power_off()                                     # the domain camera is gone
     wall.advance(15)
     [x] = gate.on_event("vehicle")
@@ -860,22 +862,29 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
 
 
 
-def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wakes_nobody():
-    """Feedback AP. A recorder that lets go of the camera — or dies — changes nothing the ingest is told of, and a
-    held poll woken only by changes would answer at the end of its wait. With a word to say about coverage, it
-    looks again at least every `recheck` (the product's 5 s; here 0.3 s on real clocks)."""
-    import time as _t
-    wall = _t.time
+def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wakes_nobody(monkeypatch):
+    """Coverage is rechecked without a notification, at recheck rather than the poll deadline.
+    Controlled waiting tests the actual deadline instead of the host's scheduling latency."""
+    from types import SimpleNamespace
+    from vms.domainpart import ingest as module
+    wall=Clock(1000.)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     token = pusher.entry()["ingest"]["token_secret"]
     ingest.should, ingest.recheck = (lambda ref: True), 0.3
     ingest.want(SERIAL, "recorder:r-0"); ingest.subscribe(SERIAL, "recorder:r-0")
     first = ingest.poll(token, SERIAL, version=-1)
     assert first["uncovered"] is False
-    ingest.tees[(SERIAL, "live")].unsubscribe("recorder:r-0")          # the recorder is gone, silently
-    t0 = _t.monotonic()
+    now,waits=[0.],[]
+    monkeypatch.setattr(module,'time',SimpleNamespace(monotonic=lambda:now[0]))
+    def wait(gen,until):
+        waits.append(until)
+        assert waits==[ingest.recheck], 'the silent loss must be found at the first coverage recheck'
+        ingest.tees[(SERIAL, "live")].unsubscribe("recorder:r-0")
+        assert ingest._gen==gen, 'losing the recorder sends no notification'
+        wall.advance(until-now[0]);now[0]=until
+    ingest._wait=wait
     out = ingest.poll(token, SERIAL, version=first["version"], wait=5.0)
-    assert out["uncovered"] is True and _t.monotonic() - t0 < 1.5
+    assert out["uncovered"] is True and waits==[0.3]
 
 
 def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as_alive():

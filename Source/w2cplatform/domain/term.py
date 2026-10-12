@@ -53,6 +53,7 @@ it no backup verifies and no member follows the new holder, which is the point.
 from __future__ import annotations
 
 import json
+import logging
 import time
 
 from .agent import DomainPublisher
@@ -447,6 +448,7 @@ class DomainHolder:
         self.fed, self.name, self.signer, self.term, self.wall = fed, name, signer, term, wall
         self.objects, self.record = objects, record
         self.backup_rev = 0
+        self.backup_reports = None                 # result of the last successful copy, in process only
         self.backups = objects                           # where its own backups are written — read again on deposition
         self._backup_content: str | None = None          # the digest of what the last backup said (`backup`), in memory
         self._backup_pointer: dict | None = None         # and the pointer to it
@@ -538,14 +540,17 @@ class DomainHolder:
         if self.vars.get(MEMBERS)[0] is None:
             Members(self.vars, self.wall, configured=lambda: sorted(self.fed.clusters)).settle()
 
-    def export_objects(self) -> dict[str, str]:
+    def export_objects(self):
+        from .reports import ExportResult, export
+        reports = export(self.objects) if self.objects is not None else ExportResult({})
         out = {}
         for prefix in EXPORTED_OBJECTS if self.objects is not None else ():
             for key in self.objects.list(prefix):
                 raw = self.objects.get(key)
                 if raw is not None:
                     out[key] = raw.decode()
-        return out
+        out.update(reports.objects)
+        return ExportResult(out, reports.skipped)
 
     # A REVISION IS THE DOMAIN'S CONTENT (the three-site run, N10, «Архитектор» 2026-10-11): the
     # signer's pass backs up every `backup_every`, and a pass that found nothing changed sealed a new revision all the
@@ -566,7 +571,8 @@ class DomainHolder:
         if not self.member_key:
             from w2cplatform.trust.memberkey import ROW
             self.member_key = (self.vars.get(ROW)[0] or {}).get("pub") or None
-        plain, objs = self._plain(), self.export_objects()
+        plain, exported = self._plain(), self.export_objects()
+        objs = exported.objects
         content = hashlib.sha256(json.dumps({"state": plain, "objects": objs, "backup_key_rev": self.signer.backup_rev,
                                              "holder_key": self.member_key}, sort_keys=True, ensure_ascii=False,
                                             default=str).encode()).hexdigest()
@@ -587,6 +593,11 @@ class DomainHolder:
             have, idx = self.vars.get(path)
             if {k: str(v) for k, v in (have or {}).items()} != want:
                 self.vars.put(path, dict(self._backup_pointer), cas=idx)
+        self.backup_reports = exported
+        if exported.skipped_count:
+            logging.getLogger(__name__).warning(
+                "backup revision %s omitted %s incomplete member reports: %s",
+                self.backup_rev, exported.skipped_count, ', '.join(exported.skipped))
         return self.backup_rev
 
     # Is this holder still the holder? Its OWN store says (the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066,

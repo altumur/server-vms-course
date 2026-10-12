@@ -2057,3 +2057,37 @@ def test_the_pieces_of_a_clock_not_set_go_when_it_is_set_as_its_line_relabels_th
         assert abs(told["from"] - stretch[0]) < 0.002, (case, told, stretch)
         kept = json.loads(rows.get(f"{CLOCK_KEPT}/{SERIAL}.json"))
         assert [p["off_ms"] for p in kept["pieces"]] == [0] and not any("_rise" in p for p in kept["pieces"]), (case, kept)
+
+
+def test_final_range_piece_between_reads_does_not_restore_the_initial_deadline(monkeypatch):
+    from types import SimpleNamespace
+    from vms.domainpart import ingest as module
+    now=[0.0]
+    monkeypatch.setattr(module,'time',SimpleNamespace(monotonic=lambda:now[0]))
+    receiver=module.Ingest('south',[],lambda:None,wall=lambda:1000.)
+    original=receiver.result
+    calls=[0]
+    def result(ref,rid):
+        got=original(ref,rid)
+        calls[0]+=1
+        if calls[0]==2:
+            # Completion races with the reader after it found no answer. The elapsed total
+            # time exceeds one piece's budget, but a piece has just arrived.
+            cam=receiver._cam(ref)
+            cam.answers[rid]=(['whole'],1000.)
+            cam.parts.pop(rid)
+            receiver._changed()
+        return got
+    def wait(gen,until):
+        if now[0]==0:
+            now[0]=2.0
+            cam=receiver._cam('a')
+            rid=next(iter(cam.ranges))
+            cam.parts[rid]=(1,['whole'],now[0])
+            receiver._changed()
+        else:
+            assert receiver._gen!=gen, 'completion must wake the waiting reader'
+    receiver.result=result
+    receiver._wait=wait
+    assert receiver.fetch_range('a',0,10,wait=1)==['whole']
+    assert receiver._cam('a').ranges=={} and receiver._cam('a').answers=={}

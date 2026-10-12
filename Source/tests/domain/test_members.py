@@ -5,6 +5,8 @@ its reports — nobody edits the environment of the domain's processes, nothing 
 removed, and the next pass drops it, whatever report it left behind. Where nobody has written the list yet, the
 configuration stands.
 """
+
+from tests.reporting import sync as report_sync
 import json
 import urllib.error
 import urllib.request
@@ -56,8 +58,8 @@ def test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads():
 
     cam = DeviceCluster("SN9001", FakeVariables(), wall=wall)
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                published=cam.local_objects()).sync()
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                published=cam.local_objects()))
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall), north.objects, members=members)
     out = books.pass_once()
     assert out["members"] == {"joined": ["cam-SN9001"], "left": []}
@@ -74,13 +76,13 @@ def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():
     _enroll(reg, vendor, "SN9002")
     cam = DeviceCluster("SN9002", FakeVariables(), wall=wall)
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                published=cam.local_objects()).sync()
-    apply(fed, members, north.objects)
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                published=cam.local_objects()))
+    apply(fed, members, north.objects, wall=wall)
     assert "cam-SN9002" in fed.clusters
 
     assert reg.leave("SN9002", by="anna") and reg.audit[-1]["how"] == "left"
-    assert apply(fed, members, north.objects) == {"joined": [], "left": ["cam-SN9002"]}
+    assert apply(fed, members, north.objects, wall=wall) == {"joined": [], "left": ["cam-SN9002"]}
     view = ReadView(fed, wall=wall); view.refresh()
     assert view.list()["rows"] == []                                   # its last report is still there; it is not read
 
@@ -98,14 +100,14 @@ def test_a_member_that_leaves_leaves_the_running_views_list_in_the_same_pass():
     _enroll(reg, vendor, "SN9012")
     cam = DeviceCluster("SN9012", FakeVariables(), wall=wall)
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                published=cam.local_objects()).sync()
-    apply(fed, members, north.objects)
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                published=cam.local_objects()))
+    apply(fed, members, north.objects, wall=wall)
     view = ReadView(fed, wall=wall); view.refresh()                    # the console's view, alive across the leave
     assert [r["cluster"] for r in view.list()["rows"]] == ["cam-SN9012"]
 
     assert reg.leave("SN9012", by="anna")
-    apply(fed, members, north.objects)
+    apply(fed, members, north.objects, wall=wall)
     view.refresh()                                                     # the same pass
     got = view.list()
     assert got["rows"] == [] and "cam-SN9012" not in got["clusters"] and "cam-SN9012" not in got["rpo"], got
@@ -116,7 +118,7 @@ def test_with_no_list_written_the_configuration_stands():
     wall = Clock(1000.0)
     fed, north, signer, members = _domain(wall)
     fed.add(member_copy("cam-SN9003", north.objects, wall=wall))        # `cam-SN9003=report` in CLUSTERS
-    assert apply(fed, members, north.objects) == {"joined": [], "left": []} and "cam-SN9003" in fed.clusters
+    assert apply(fed, members, north.objects, wall=wall) == {"joined": [], "left": []} and "cam-SN9003" in fed.clusters
 
 
 def test_a_leave_from_the_domain_console_admins_only():
@@ -159,7 +161,7 @@ def test_the_first_write_carries_the_configuration_so_no_configured_member_becom
     _enroll(reg, vendor, "SN9006")
     doc = members.read()["members"]
     assert sorted(doc) == ["cam-SN9005", "cam-SN9006"] and doc["cam-SN9005"]["how"] == "configuration"
-    assert apply(fed, members, north.objects) == {"joined": ["cam-SN9006"], "left": []}
+    assert apply(fed, members, north.objects, wall=wall) == {"joined": ["cam-SN9006"], "left": []}
 
 
 def test_the_domains_own_cluster_is_neither_admitted_nor_removed():
@@ -185,8 +187,8 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
     members.add("cam-SN9001", "voucher", serial="SN9001")
     cam = DeviceCluster("SN9007", FakeVariables(), wall=wall)
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()).sync()
-    assert apply(fed, members, north.objects)["joined"] == ["cam-SN9001"] and "cam-SN9007" not in fed.clusters
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()))
+    assert apply(fed, members, north.objects, wall=wall)["joined"] == ["cam-SN9001"] and "cam-SN9007" not in fed.clusters
 
     view = ReadView(fed, wall=lambda: 1000.0)
     con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
@@ -209,7 +211,7 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
         assert json.load(urllib.request.urlopen(base))["knocking"] == []
     finally:
         con.stop(srv)
-    assert apply(fed, members, north.objects)["joined"] == ["cam-SN9007"]
+    assert apply(fed, members, north.objects, wall=wall)["joined"] == ["cam-SN9007"]
 
 
 def test_a_members_key_is_registered_on_a_fresh_domain_whose_list_nobody_wrote():

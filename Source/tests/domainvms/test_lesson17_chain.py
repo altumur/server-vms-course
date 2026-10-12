@@ -11,6 +11,8 @@ Every ingest here lives in a RECORDER of its cluster, and the relay's forwarder 
 (`RecWorker.host_ingest`; ADR-0065, its addition of 2026-10-08): the domain finds the centre's ingest in its recorder's
 heartbeat (`ingest`), and what the forwarder carried and lost is in the relay's (`upstream`, the product's words).
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -44,7 +46,7 @@ def _chain(wall, star=frozenset()):
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall)
-    relay_agent.sync()
+    report_sync(relay_agent)
     SpecController(REC_SPEC, east.vars, east.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
     at: dict = {}                                                      # the ingests, by who answers which address
 
@@ -52,7 +54,7 @@ def _chain(wall, star=frozenset()):
     cam.boot(); cam.door_open = False                                  # nobody dials the camera
     fed.add(member_copy(cam.name, north.objects, wall=wall))
     cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
-    cam_agent.sync()
+    report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(north.vars, view, wall, issuer=signer.tokens, centre="north", star=star)
     crossings.record(SERIAL, on="east")
@@ -83,7 +85,7 @@ def _chain(wall, star=frozenset()):
             r.heartbeat_once()                                         # where each recorder's ingest is, said again
         view.refresh(); crossings.publish(); crossings.publish_primaries()
         publish_upstream(crossings, "north", star=star)
-        cam_agent.sync(); relay_agent.sync()
+        report_sync(cam_agent); report_sync(relay_agent)
 
     domain_pass.crossings, domain_pass.recorders = crossings, recs
     domain_pass()
@@ -372,28 +374,26 @@ class _Counting:
     def delete(self, k): return self.inner.delete(k)
 
 
-def test_the_summary_report_one_object_per_relay_and_the_price_of_it():
-    """Cameras that can reach only their relay report to it, and the relay folds their reports into one
-    object in the centre. The price: when a relay goes quiet, its cameras go quiet with it — they have no
-    other road, and the centre cannot tell the relay from its sites. The side effect: three hundred cameras
-    in ten relays are ten writes per round instead of eight hundred."""
+def test_relay_reports_are_two_atomic_writes_per_member_and_age_independently():
+    """ADR-0074: each member has its own immutable generation and atomic marker at the holder.
+    A relay that stops forwarding leaves its thirty members silent; other relays keep reporting."""
     wall = Clock()
     north, store, relays, fed = _site_of(10, 30, wall)
 
     def round_(skip=()):
         for name, (relay_store, cams) in relays.items():
             for d, a in cams:
-                d.publish(); a.sync()
+                d.publish(); report_sync(a)
             if name not in skip:
-                bundle(name, [d.name for d, _ in cams], relay_store, store)
+                bundle(name, [d.name for d, _ in cams], relay_store, store, received_at=wall())
 
     round_()
     view = ReadView(fed, wall=wall); view.refresh()
     assert view.list(size=400)["total"] == 300 and view.list()["complete"]
     wall.advance(10); store.puts = 0
     round_()
-    assert store.puts == 10                                             # one per relay per round
-    assert store.largest < 64 * 1024                                    # a bundle fits a Variable: ~30 cameras a relay
+    assert store.puts == 600                                            # body and marker for each of 300 members
+    assert store.largest < 64 * 1024                                    # each member body remains below this bound
     view.refresh()                                                      # the domain sees this round's reports
 
     wall.advance(60); round_(skip=("relay-3",))
@@ -439,7 +439,7 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
 
     def passes():
         host.heartbeat_once()
-        relay_agent.sync(); cam_agent.sync(); relay_agent.sync()
+        report_sync(relay_agent); report_sync(cam_agent); report_sync(relay_agent)
 
     passes()
     view = ReadView(fed, wall=wall); view.refresh()
@@ -471,8 +471,8 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     last = wall()
     north_link.up = False                                              # the relay loses the centre
     for _ in range(4):
-        wall.advance(20); relay_agent.sync(); cam_agent.sync()        # the camera still reaches its relay
-    assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == last          # …and knows its books are as old as the relay's
+        wall.advance(20); report_sync(relay_agent); report_sync(cam_agent)        # the camera still reaches its relay
+    assert abs(json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] - last) < 1e-6          # …and knows its books are as old as the relay's
 
 
 def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_carries_it_down():
@@ -492,10 +492,10 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_c
     crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
     gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                              published=gate.local_objects())
-    gate_agent.sync()
+    report_sync(gate_agent)
     crossings.view.refresh()
     publish_asks(crossings, [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}])
-    gate_agent.sync()
+    report_sync(gate_agent)
 
     def gate_dial(url):
         if url in CENTRE_URLS:
@@ -546,7 +546,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                                bundle_store=east.objects, bundle_members=members, relay_members=members)
     through.door.agent = relay_agent                                   # what the cameras ask: what east keeps
-    relay_agent.sync()
+    report_sync(relay_agent)
     hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects))
     relay = hosts[-1].ingest
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
@@ -559,12 +559,12 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
         for d in cams.values():
             d.publish()
         for a in agents:
-            a.sync()                                                   # reports into the relay
-        relay_agent.sync()                                            # up in the bundle, and down the relay
+            report_sync(a)                                                   # reports into the relay
+        report_sync(relay_agent)                                            # up in the bundle, and down the relay
         books.pass_once()
-        relay_agent.sync()                                            # the new books relayed down
+        report_sync(relay_agent)                                            # the new books relayed down
         for a in agents:
-            a.sync()
+            report_sync(a)
 
     domain_pass(); domain_pass()
 
@@ -641,7 +641,7 @@ def _two_relays(wall):
                                    bundle_store=store.objects, bundle_members=members, relay_members=members))
         through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
-        o.sync()
+        report_sync(o)
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
         {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
@@ -653,14 +653,14 @@ def _two_relays(wall):
         for d in cams.values():
             d.publish()
         for a in agents:
-            a.sync()
+            report_sync(a)
         for o in relays:
-            o.sync()
+            report_sync(o)
         books.pass_once()
         for o in relays:
-            o.sync()
+            report_sync(o)
         for a in agents:
-            a.sync()
+            report_sync(a)
 
     domain_pass(); domain_pass()
     fwd = {"east": hosts["east"].forwarder, "west": hosts["west"].forwarder}
@@ -835,8 +835,8 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     gate.boot()
     crossings = domain_pass.crossings
     crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
-    DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
-                published=gate.local_objects()).sync()
+    report_sync(DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
+                published=gate.local_objects()))
     crossings.view.refresh()
     scenarios = [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}]
     home = crossings.view.last_known("SN7002")[0]

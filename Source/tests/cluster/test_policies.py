@@ -220,6 +220,7 @@ def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_e
     from vms.controller import VmsController
     from w2cplatform.domain import declared
     from w2cplatform.domain.uplink import report
+    from w2cplatform.trust.memberkey import MemberKey
     from w2cplatform.variables import Forbidden
     from tests.domain.conftest import Clock, make_cluster
     r = rights()
@@ -246,7 +247,7 @@ def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_e
     office.vars.put("rec/epoch/r-srv-a-1", {"epoch": "3", "holder": "srv-a:1"})     # the recorder took its slot's epoch
     office.vars.put("domain/users/anna", {"pwhash_secret": "x"})                   # a secret beside it: never asked
     member = AsAgent(office.vars)
-    report("office", member, office.objects, north.objects, wall())
+    report("office", member, office.objects, north.objects, wall(), key=MemberKey.new())
     assert "rec/epoch/r-srv-a-1" in member.read and "domain/users/anna" not in member.read
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------

@@ -7,6 +7,8 @@ which member reaches the domain only through a relay, which relays are a star, w
 operator sets in ONE record of the domain (`domain/topology`), edited by CAS and checked when written, and
 every pass reads it from there.
 """
+
+from tests.reporting import sync as report_sync
 import json
 import urllib.error
 import urllib.request
@@ -45,7 +47,7 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
     agents = [DomainAgent(c.name, north.vars, c.vars, now=wall, reaches=lambda n=c.name: seen[n], own_objects=c.objects)
               for c in (north, south)]
     for a in agents:
-        a.sync()
+        report_sync(a)
     placer = ClusterPlacer(fed, clock=wall)
     assert placer.place(UnitSite(1, "vlan:b")).cluster == "south"
     seen["south"] = ["vlan:b", "vlan:c"]
@@ -55,8 +57,8 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
     cam = DeviceCluster("SN8001", FakeVariables(), wall=wall)
     cam.boot()
     fed.add(member_copy(cam.name, north.objects, wall=wall))
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                published=cam.local_objects(), reaches=lambda: ["vlan:cctv-a"]).sync()
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                published=cam.local_objects(), reaches=lambda: ["vlan:cctv-a"]))
     assert fed.clusters[cam.name].networks() == frozenset({"vlan:cctv-a"})   # from its report
 
 
@@ -112,13 +114,13 @@ def test_the_passes_follow_the_topology_without_a_restart():
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
 
     topo.edit(lambda d: d.update(centre="north", via={cam.name: "east"}), base_rev=0, known=set(fed.clusters))
-    relay.sync()                                                      # east relays for the camera: the topology says so
-    cam_agent.sync(); relay.sync()                                    # the camera reports into east; east bundles it up
+    report_sync(relay)                                                      # east relays for the camera: the topology says so
+    report_sync(cam_agent); report_sync(relay)                                    # the camera reports into east; east bundles it up
     out = books.pass_once()
     assert out["moved"] == [cam.name] and fed.clusters[cam.name].via == "east"
     assert books.crossings.centre == "north"                           # from the topology, not from an argument
     assert [r["ref"] for r in books.crossings.view.list()["rows"] if r["cluster"] == cam.name] == ["SN8002"]
-    relay.sync(); cam_agent.sync()                                    # the books, relayed down
+    report_sync(relay); report_sync(cam_agent)                                    # the books, relayed down
     pusher = CameraPusher("SN8002", cam.flash, lambda url: None, clock=wall)
     assert pusher.entry()["cluster"] == "east" and pusher.entry()["ingest"]["urls"] == RELAY_URLS
     assert books.pass_once()["moved"] == []                            # followed once, not every pass
@@ -185,7 +187,7 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     cam = DeviceCluster("SN8003", FakeVariables(), wall=wall)
     cam.boot()
     direct = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
-    direct.sync()                                                      # it reaches the domain after all
+    report_sync(direct)                                                      # it reaches the domain after all
     fed = Federation(); fed.add(north)
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     view = ReadView(fed, wall=wall); view.refresh()
@@ -194,12 +196,12 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     wall.advance(30)
     relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
                         relay_members=[cam.name])
-    relay.sync()                                                       # east keeps what the domain answers for it
+    report_sync(relay)                                                       # east keeps what the domain answers for it
     through = Relay(relay, east.objects)                               # now it reports through east, and renames itself
     cam.local_console().update_unit(1, {"name": "through-east"}, None)
-    DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
-                published=cam.local_objects()).sync()
-    bundle("east", [cam.name], east.objects, north.objects)
+    report_sync(DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
+                published=cam.local_objects()))
+    bundle("east", [cam.name], east.objects, north.objects, received_at=wall())
     view.refresh()
     assert [r["name"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["through-east"]
 
@@ -247,18 +249,15 @@ def test_the_sites_names_are_the_source_and_interfaces_only_a_fallback_without_t
             os.environ["REACHES"] = env
 
 
-def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
-    """AM, found by the product. A camera reported straight to the domain; then it moves behind east and its
-    clock steps back a thousand seconds. Compared by the camera's clock alone, the stale direct report would stay
-    "newer" for ever and the camera would freeze on it until silent. A road that has gone silent on the DOMAIN's
-    clock gives way to the one that is alive, whatever the camera's clock says."""
+def test_a_lower_member_timestamp_is_refused_even_after_a_change_of_road():
+    """ADR-0074: a relay cannot replace an accepted report with a lower sent_at."""
     from w2cplatform.domain.relay import bundle
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     east, _ = make_cluster("east")
     cam = DeviceCluster("SN8005", FakeVariables(), wall=wall)
     cam.boot()
-    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()).sync()
+    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()))
     fed = Federation(); fed.add(north)
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     view = ReadView(fed, wall=wall); view.refresh()                    # the domain has seen the direct report
@@ -266,17 +265,17 @@ def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
     cam.local_console().update_unit(1, {"name": "clock-stepped-back"}, None)
     relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
                         relay_members=[cam.name])
-    relay.sync()
+    report_sync(relay)
     through = Relay(relay, east.objects)
     relay_agent = DomainAgent(cam.name, through.vars, cam.flash, now=behind, domain_objects=through.objects,
                               published=cam.local_objects())
     for _ in range(4):                                                 # a minute of passes through east
         wall.advance(15)
-        relay_agent.sync(); bundle("east", [cam.name], east.objects, north.objects)
+        report_sync(relay_agent); bundle("east", [cam.name], east.objects, north.objects, received_at=wall())
         view.refresh()
     rows = [r for r in view.list()["rows"] if r["cluster"] == cam.name]
-    assert [r["name"] for r in rows] == ["clock-stepped-back"]         # the live road, not the frozen one
-    assert view.list()["complete"]                                     # and it is not silent
+    assert [r["name"] for r in rows] != ["clock-stepped-back"]         # the live road, not the frozen one
+    assert not view.list()["complete"]                                     # and it is not silent
 
 
 def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
@@ -298,11 +297,11 @@ def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
     room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
     view = ReadView(fed, wall=wall)
     crossings = Crossings(north.vars, view, wall)
-    cam_agent.sync(); view.refresh()
+    report_sync(cam_agent); view.refresh()
     crossings.record("SN8010", on="south")
 
     def book():
-        cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
+        cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
         return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8010"])
 
     e = book()
@@ -336,7 +335,7 @@ def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remember
     room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
     view = ReadView(fed, wall=wall)
     crossings = Crossings(north.vars, view, wall)
-    cam_agent.sync(); view.refresh()
+    report_sync(cam_agent); view.refresh()
     crossings.record("SN8011", on="south")
 
     def recorder(unreachable: bool):
@@ -345,7 +344,7 @@ def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remember
         south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
 
     def book():
-        cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
+        cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
         return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8011"])
 
     assert book()["push"] is False                                     # the networks say: pull
@@ -375,7 +374,7 @@ def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
     snapshot(west, {"DOOR8": ("w-0", "srv-9")}, ts=wall())
     west.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-9",
         "status": [{"id": 1, "ref": "DOOR8", "phase": "running"}], "live_url": "rtsp://10.9.0.8/live"}).encode())
-    DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: ["vlan:south"], own_objects=south.objects).sync()
+    report_sync(DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: ["vlan:south"], own_objects=south.objects))
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(north.vars, view, wall)
     crossings.record("DOOR8", on="south")

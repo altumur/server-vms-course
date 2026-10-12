@@ -833,7 +833,8 @@ def _door(daemon: "StoreDaemon", role_of):
             pass
 
         def _send(self, code: int, body: dict) -> None:
-            if code >= 400 and "kind" not in body:   # `read_body`'s refusals say `error` and `detail`; the API, `kind`
+            if code >= 400 and "kind" not in body and not (code == 412 and body.get("error") == "guard"):
+                # read_body's errors use detail; ADR-0074's guard refusal has its own exact wire body.
                 body = {"kind": {408: "timeout", 413: "toolarge"}.get(code, "badrequest"),
                         "error": str(body.get("detail") or body.get("error") or "")}
             raw = json.dumps(body).encode()

@@ -35,6 +35,8 @@ silence alarm now say at once (the note on alarm mirrors, 28 September).
 """
 from __future__ import annotations
 
+from .steps import one_pass
+
 import json
 import os
 import threading
@@ -198,6 +200,7 @@ class AlarmHistory:
         self.store.put(self._key(member), json.dumps({"events": sorted(events, key=lambda e: float(e["t"])),
                                                       "cut_before": cut_before}).encode())
 
+    @one_pass()
     def keep(self, member: str, events: list[dict]) -> int:
         """Add what is not kept yet, and let go what is older than the week or past the ceiling; returns how many
         were new."""
@@ -271,6 +274,7 @@ class DomainAlarms:
     # wrote the domain's week: the console a person asked, and the signer's pass beside it. Now the signer's pass
     # keeps (`keep`: each member's whole page, not a window), and the list only reads; a page asked between two passes
     # answers from the member's fresh page and the week as the last pass left it, the same lines either way.
+    @one_pass()
     def keep(self) -> int:
         """The pass's step: what every reporting member's page says, kept in the week. Returns how many were new."""
         if self.history is None:
@@ -286,6 +290,7 @@ class DomainAlarms:
             new += self.history.keep(name, page["events"])
         return new
 
+    @one_pass()
     def list(self, since: float, until: float | None = None) -> dict:
         """The one list, read: it writes nothing — the week is the pass's (`keep`)."""
         until = self.wall() if until is None else until

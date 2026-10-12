@@ -538,8 +538,8 @@ def test_a_report_comes_in_at_the_door_signed_in_the_products_agent_form_by_the_
     import hashlib
     from w2cplatform.domain.carry import HolderDoor, Refused
     from w2cplatform.domain.members import KNOCKS
-    from w2cplatform.domain.relay import BUNDLE
-    from w2cplatform.domain.uplink import REPORTED, base
+    from w2cplatform.domain.uplink import REPORTED, base, member_copy
+    from w2cplatform.domain.reports import read
     from w2cplatform.trust.memberkey import MemberKey, agent_signing, sign_request
     fed, wall, signer, holder_ring, keys = holder_with_members()
     north = fed.clusters["north"]
@@ -548,7 +548,7 @@ def test_a_report_comes_in_at_the_door_signed_in_the_products_agent_form_by_the_
 
     def publication(key):
         return json.dumps({"sent_at": wall(), "objects": {"testsub/heartbeats/w": {"ts": wall()}, "elsewhere/x": {}},
-                           "key": key.pub, "seal": key.seal_pub}).encode()
+                           "key": key.pub, "seal": key.seal_pub, "rows": {}, "pages": {}}).encode()
     body = publication(south)
     head = sign_request(south, "POST", "/api/member/south", body, wall())
     ms, sig = head.split(".")
@@ -558,8 +558,8 @@ def test_a_report_comes_in_at_the_door_signed_in_the_products_agent_form_by_the_
 
     got = door.member("south", body, head)
     assert f"{TALLIES}/south" in got["rows"] and not [p for p in got["rows"] if p.endswith("/east")]   # its carry
-    assert json.loads(north.objects.get(base("south") + REPORTED))["key"] == south.pub
-    assert json.loads(north.objects.get(base("south") + "o/testsub/heartbeats/w")) == {"ts": wall()}
+    assert read("south", north.objects).document()["key"] == south.pub
+    assert json.loads(member_copy("south", north.objects, wall=wall).objects.get("testsub/heartbeats/w")) == {"ts": wall()}
     assert north.objects.get(base("south") + "o/elsewhere/x") is None                # what the domain does not read: dropped
 
     stranger = MemberKey.new()
@@ -578,10 +578,12 @@ def test_a_report_comes_in_at_the_door_signed_in_the_products_agent_form_by_the_
             assert e.status == status, (name, e.status, e.detail)
     assert json.loads(north.objects.get(f"{KNOCKS}/west"))["key"] == stranger.pub     # knocking, by the key it signed with
 
-    batch = json.dumps({"relayed": {"west": json.loads(body)}}).encode()
-    assert door.relay("south", batch, sign_request(south, "POST", "/api/relay/south", batch, wall())) == {"refused": {}}
-    bundle = json.loads(north.objects.get(base("south") + BUNDLE))
-    assert json.loads(bundle["west"][REPORTED])["key"] == south.pub and "o/testsub/heartbeats/w" in bundle["west"]
+    from w2cplatform.domain.topology import Topology
+    Topology(north.vars).edit(lambda d:d.update(via={'east':'south'}),base_rev=0)
+    batch = json.dumps({'relayed':{'east':json.loads(publication(keys['east']))}}).encode()
+    assert door.relay('south',batch,sign_request(south,'POST','/api/relay/south',batch,wall())) == {'refused':{}}
+    assert read('east',north.objects).document()['key']==keys['east'].pub
+    assert read('east',north.objects).mark['via']=='south'
     try:
         door.relay("south", batch, sign_request(stranger, "POST", "/api/relay/south", batch, wall()))
         raise AssertionError("a summary signed by another key was taken")

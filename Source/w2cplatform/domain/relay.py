@@ -25,183 +25,45 @@ import logging
 from w2cplatform.rows import PARSE_ERRORS
 
 from .federation import Unreachable
-from .uplink import UPLINK, base
 
 log = logging.getLogger("relay")
 
 
-# -- the summary report ------------------------------------------------------------------------------------
-# The relay carries its members' reports as ONE object in the domain holder. Members report to the RELAY's
-# object store (the relay is reachable from its sites — that is the whole premise of this layout); the
-# relay's agent sends what is there to the holder's door, each member's report as a publication (`uplink.publication`'s
-# words): `POST /api/relay/<relay>` with `{relayed: {member: publication}}` — the product's door and words (ADR-0066's
-# addition of 2026-10-11, night), the same door its relaying down asks, so the summary follows the holder as the rows
-# do. The door folds them into `domain/members/<relay>/bundle` (`take_bundle`), only when it changed.
-BUNDLE = "bundle"
-# What one member's report may weigh in its relay's bundle (feedback from the product, checking the eighth review: a
-# bundle bounded only as a whole let one large member crowd out the others behind the relay). Thirty members' reports
-# are some 60 KiB together (Lesson 17's test); a member past this share is NOT carried, and the bundle says why under
-# `REFUSED_KEY` — the domain names the reason with the member (`BundleView`), and the others are carried whole.
+# A relay forwards original publication bodies. The holder keeps each accepted member generation
+# under domain/members/<member>/reports/<rev>, independently of the route that delivered it.
 MEMBER_SHARE = 256 << 10
-REFUSED_KEY = "!refused"                 # not a member's name: `!` is in no cluster's name
-# The largest batch a relay sends up at once (the product's `maxRelayBatch`): several members' worth.
 MAX_RELAY_BATCH = 4 * (16 << 20)
 
 
-def relayed(members: list[str], relay_objects) -> dict[str, dict]:
-    """What the relay's agent sends up: each member's report in its store, as the publication it was — `{member:
-    publication}`; a member that has not reported to the relay is not in it."""
-    from .uplink import REPORTED
-    out: dict[str, dict] = {}
-    for m in members:
-        b = base(m)
-        keys = relay_objects.list(b)
-        if not keys:
+def relayed(members: list[str], relay_objects) -> dict[str, bytes]:
+    """Original accepted publication bodies; never reconstruct pieces or change their bytes."""
+    from .reports import read
+    out = {}
+    for member in members:
+        try:
+            out[member] = read(member, relay_objects).raw
+        except Unreachable:
             continue
-        pub: dict = {"objects": {}, "rows": {}, "pages": {}}
-        for k in keys:
-            sub, raw = k[len(b):], relay_objects.get(k) or b""
-            try:
-                if sub == REPORTED:
-                    mark = json.loads(raw)
-                    pub["sent_at"] = mark.get("ts")
-                    pub.update({f: mark[f] for f in ("key", "seal") if isinstance(mark.get(f), str)})
-                elif sub.startswith("o/"):
-                    pub["objects"][sub[2:]] = json.loads(raw)
-                elif sub.startswith("v/"):
-                    pub["rows"][sub[2:]] = json.loads(raw)
-                elif sub.startswith("p/"):
-                    pub["pages"][sub[2:]] = raw.decode("utf-8", "surrogateescape")
-            except PARSE_ERRORS:
-                continue                                 # one record the relay cannot read is left out, not the member
-        out[m] = pub
     return out
 
 
-def take_bundle(relay: str, publications: dict, domain_objects) -> tuple[bool, dict[str, str]]:
-    """The holder's half of `POST /api/relay/<relay>`: the members' publications folded into the relay's bundle — each
-    member's records as the holder keeps a report (`uplink.entries`), a member over `MEMBER_SHARE` or whose publication
-    does not read refused by name, under `REFUSED_KEY`, and the others carried. `(written, refused)`."""
-    from .uplink import REPORTED, entries
-    key = base(relay) + BUNDLE
-    try:
-        before = json.loads(domain_objects.get(key) or b"{}")
-        before = before if isinstance(before, dict) else {}
-    except PARSE_ERRORS:
-        before = {}
-    out: dict[str, dict[str, str]] = {}
-    refused: dict[str, str] = {}
-    for m, pub in sorted(publications.items()):
-        was = before.get(m) if isinstance(before.get(m), dict) else {}
-        prev = was.get(REPORTED)
-        try:
-            want, mark = entries(pub, prev.encode("utf-8", "surrogateescape") if isinstance(prev, str) else None,
-                                 keep_seq=True)
-        except ValueError as e:
-            refused[m] = f"its report does not read: {e}"
+def take_bundle(relay: str, publications: dict, domain_objects, *, received_at: float) -> tuple[bool, dict[str, str]]:
+    """Each authenticated, topology-checked member enters the holder's single report sequence."""
+    from .uplink import take
+    changed, refused = False, {}
+    for member, raw in sorted(publications.items()):
+        if not isinstance(raw, bytes) or len(raw) > MEMBER_SHARE:
+            refused[member] = f'report exceeds the {MEMBER_SHARE} byte member share'
             continue
-        entry = {**{k: v.decode("utf-8", "surrogateescape") for k, v in want.items()},
-                 REPORTED: mark.decode("utf-8", "surrogateescape")}
-        size = sum(len(k) + len(v) for k, v in entry.items())
-        if size > MEMBER_SHARE:
-            refused[m] = (f"its report is {size} bytes, over the {MEMBER_SHARE} its relay carries for one member — "
-                          f"the relay carried the others")
-            continue
-        out[m] = entry
-    if refused:
-        out[REFUSED_KEY] = refused
-    raw = json.dumps(out, sort_keys=True).encode()
-    if domain_objects.get(key) == raw:
-        return False, refused
-    domain_objects.put(key, raw)
-    return True, refused
-
-
-def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> bool:
-    """The summary report with no door between — the tests, and a relay whose road up is a store: `take_bundle` over
-    what `relayed` sends."""
-    return take_bundle(relay, relayed(members, relay_objects), domain_objects)[0]
-
-
-class BundleView:
-    """The domain holder's store as a member reporting through `relay` sees it: its report, out of the
-    relay's bundle. Read only; what `member_copy(..., via=relay)` reads through."""
-
-    def __init__(self, relay: str, domain_objects):
-        self.relay, self.store = relay, domain_objects
-
-    # A BUNDLE THAT DOES NOT PARSE IS ITS RELAY'S MEMBERS NOT ANSWERING (the review's eighth pass, blocker). It was read
-    # with a bare `json.loads(raw).get(member)`: a torn bundle — or a list, the shape an older build of the relay wrote —
-    # raised `JSONDecodeError`/`AttributeError` out of every read of every member behind it, and the readers above take
-    # only `Unreachable` for "did not answer". `DomainDirectory.where` scans every cluster, so `/domain/where` and every
-    # edit through the domain failed for every unit of the domain; the pass over the books raised, and the signer's
-    # loop swallowed it — the tokens in the books stopped being re-issued. Now the bundle is read through the
-    # members' one reader (`MEMBER_OBJECTS`): what does not parse is counted once under `<relay>/bundle`, logged once,
-    # and is `Unreachable` for the members behind that relay — each reader's own "not reached" decides, and the rest
-    # of the domain is read. A list is REFUSED by name, not parsed: an older relay is updated, not guessed at (the
-    # coordinator's decision). One member's entry that is not an object is that member's alone, and one record of an
-    # entry that is not a string is that record's (feedback from the product: one record rejected its relay's bundle).
-    #
-    # READ ONCE A PASS (the three-site run, N11): every look at a member behind the relay — its mark,
-    # each road's mark, its heartbeats, its snapshot, its page — read the whole bundle from the store and parsed it, some
-    # forty times a member a pass. Inside a pass (`steps.once`) the bundle is read and parsed once; outside one, every time.
-    def _doc(self):
-        """The bundle as parsed: a dict, None when there is none, or what is wrong with it (an exception, not raised)."""
-        from w2cplatform.rows import PARSE_ERRORS
-        raw = self.store.get(base(self.relay) + BUNDLE)
-        if not raw:
-            return None
         try:
-            doc = json.loads(raw)
-            if isinstance(doc, list):
-                raise TypeError(f"relay {self.relay} runs an older build (its bundle is a list); update it")
-            if not isinstance(doc, dict):
-                raise TypeError(f"relay {self.relay}'s bundle is not an object: {type(doc).__name__}")
-        except PARSE_ERRORS as e:
-            return e
-        return doc
+            changed |= bool(take(member, raw, domain_objects, received_at=received_at, via=relay))
+        except (ValueError, Unreachable) as e:
+            refused[member] = str(e)
+    return changed, refused
 
-    def _entries(self, member: str) -> dict[str, str]:
-        from .federation import MEMBER_OBJECTS
-        from .steps import once
-        doc = once(("relay bundle", id(self.store), self.relay), self._doc)
-        if doc is None:
-            return {}
-        if isinstance(doc, Exception):
-            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}", doc)
-            raise Unreachable(f"{member} reports through relay {self.relay}, whose bundle cannot be read: {doc}") from None
-        MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}")
-        why = doc.get(REFUSED_KEY, {}).get(member) if isinstance(doc.get(REFUSED_KEY), dict) else None
-        if why is not None:
-            raise Unreachable(f"relay {self.relay} did not carry {member}'s report: {why}")
-        entry = doc.get(member, {})
-        if not isinstance(entry, dict):
-            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}#{member}", TypeError(f"not an object: {type(entry).__name__}"))
-            raise Unreachable(f"{member}'s entry in relay {self.relay}'s bundle cannot be read")
-        MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}#{member}")
-        out = {}
-        for sub, v in entry.items():                     # …and one record of it, that record's: left out, counted, named
-            if isinstance(v, str):
-                out[sub] = v
-                MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}#{member}/{sub}")
-            else:
-                MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}#{member}/{sub}", TypeError(f"not a string: {type(v).__name__}"))
-        return out
 
-    @staticmethod
-    def _split(key: str) -> tuple[str, str]:
-        rest = key[len(UPLINK) + 1:]
-        member, _, sub = rest.partition("/")
-        return member, sub
-
-    def get(self, key: str) -> bytes | None:
-        member, sub = self._split(key)
-        v = self._entries(member).get(sub)
-        return v.encode("utf-8", "surrogateescape") if v is not None else None
-
-    def list(self, prefix: str) -> list[str]:
-        member, sub = self._split(prefix)
-        return [base(member) + k for k in self._entries(member) if k.startswith(sub)]
+def bundle(relay: str, members: list[str], relay_objects, domain_objects, *, received_at: float) -> bool:
+    return take_bundle(relay, relayed(members, relay_objects), domain_objects, received_at=received_at)[0]
 
 
 # -- the relay: a cluster as its members' road to the domain ---------------------------------------------
@@ -312,6 +174,29 @@ class RelayDoor:
             raise Refused(401, f"the ask is {self.agent.now() - at:+.0f} s from the relay's clock")
         return kept
 
+    def member(self, cluster: str, body: bytes, signature: str) -> dict:
+        from .carry import SKEW, Refused
+        from .uplink import MAX_PUBLICATION
+        from .uplink import take
+        from .reports import StaleReport
+        from w2cplatform.trust.memberkey import verify_request
+        if len(body) > MAX_PUBLICATION:
+            raise Refused(413, 'publication exceeds body limit')
+        kept = self._kept(cluster)
+        if self.objects is None:
+            raise Refused(503, 'the relay has no report store')
+        why = verify_request(kept.get('key', ''), signature, 'POST', f'/api/member/{cluster}',
+                             body, self.agent.now(), SKEW)
+        if why:
+            raise Refused(401, why)
+        try:
+            take(cluster, body, self.objects, received_at=self.agent.now(), signature=signature)
+        except StaleReport as e:
+            raise Refused(409, str(e)) from None
+        except ValueError as e:
+            raise Refused(400, str(e)) from None
+        return kept
+
     def _stranger(self, cluster: str) -> bool:
         """Nothing kept for `cluster`, no refusal of it, and not a member this relay relays (its topology as carried, or
         `RELAY_MEMBERS`): a cluster the domain did not name behind this relay — one asking to join, as far as the relay
@@ -416,6 +301,25 @@ def door_handler(door: RelayDoor):
             self.send_header("Content-Length", str(len(raw)))
             self.end_headers()
             self.wfile.write(raw)
+
+        def do_POST(self):
+            from .uplink import MAX_PUBLICATION
+            path = self.path.split('?', 1)[0]
+            if not path.startswith('/api/member/'):
+                return self._send(404, {'detail': 'no such route'})
+            try:
+                size = int(self.headers.get('Content-Length', '-1'))
+                if not 0 <= size <= MAX_PUBLICATION:
+                    return self._send(413, {'detail': 'publication exceeds body limit'})
+                body = self.rfile.read(size)
+                if len(body) != size:
+                    return self._send(400, {'detail': 'incomplete publication'})
+                got = door.member(path[len('/api/member/'):], body, self.headers.get('X-Agent-Signature', ''))
+            except ValueError:
+                return self._send(400, {'detail': 'invalid publication length'})
+            except Refused as e:
+                return self._send(e.status, {'detail': e.detail})
+            self._send(200, got)
 
         def do_GET(self):
             path = self.path.split("?", 1)[0]
