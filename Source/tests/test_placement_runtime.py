@@ -60,17 +60,20 @@ def test_agent_carries_all_assignment_rows_and_rejects_older_or_unverified_carry
         south = e.fed.clusters["south"]
         agent = DomainAgent("south", e.north.vars, south.vars, now=e.wall)
         assert agent._sync()
+        assert not south.vars.list(placement.PREFIX)
+        assert south.vars.get("domain/placement")[0] is None
+        assert south.vars.get("domain/placed")[0]
         for sub in ("testsub", "testsub2"):
-            assert placement.read(south.vars, sub, "badge") == placement.read(e.north.vars, sub, "badge")
+            assert placement.placed(south.vars, sub, "badge") == placement.read(e.north.vars, sub, "badge")
         key = placement.path("testsub", "badge")
         old = e.north.vars.get(key)[0]
         placement.assign(e.north.vars, "testsub", "badge", {"cluster": "south"}, e.wall)
-        assert agent._sync() and placement.read(south.vars, "testsub", "badge")["cluster"] == "south"
+        assert agent._sync() and placement.placed(south.vars, "testsub", "badge")["cluster"] == "south"
         e.north.vars.put(key, old)
-        assert agent._sync() and placement.read(south.vars, "testsub", "badge")["cluster"] == "south"
+        assert agent._sync() and placement.placed(south.vars, "testsub", "badge")["cluster"] == "south"
         e.north.vars.put(key, {**old, "rev": "999", "cluster": "north"})
         e.north.vars.put("domain/keys", e.signer.tokens.keyset().to_items())
-        assert agent._sync() and placement.read(south.vars, "testsub", "badge")["cluster"] == "south"
+        assert agent._sync() and placement.placed(south.vars, "testsub", "badge")["cluster"] == "south"
 
 
 def test_placement_door_requires_admin_and_refuses_unknown_members_without_changing_state():
@@ -103,8 +106,12 @@ def test_placement_door_requires_admin_and_refuses_unknown_members_without_chang
 def test_actual_agent_and_console_rights_allow_assignment_writes_only_where_required():
     from w2cplatform.rights import allowed
     with site() as e:
-        for name in ("domainagent", "domainconsole"):
-            assert allowed(roles(specs=e.specs)[name]["write"], placement.path("testsub", "badge"))
+        rights = roles(specs=e.specs)
+        for op in ("write", "delete"):
+            assert not allowed(rights["domainagent"][op], placement.path("testsub", "badge"))
+            assert not allowed(rights["domainagent"][op], "domain/placement")
+            assert allowed(rights["domainagent"][op], "domain/placed/testsub/badge")
+        assert allowed(rights["domainconsole"]["write"], placement.path("testsub", "badge"))
         assert "domain/placement" in roles(specs=e.specs)["domainconsole"]["write"] or \
                "domain/placement*" in roles(specs=e.specs)["domainconsole"]["write"]
 
@@ -135,3 +142,15 @@ def test_unadmitted_configured_candidate_cannot_win_reachability_placement():
         for c in e.fed.clusters.values():
             c.networks = lambda: {"net"}
         assert p.place(placement.UnitSite("badge", "net")).cluster == "north"
+
+
+def test_holder_agent_carries_to_own_family_without_overwriting_holder_assignment():
+    with site() as e:
+        expected = placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north"}, e.wall)
+        key = placement.path("testsub", "badge")
+        before = e.north.vars.get(key)
+        agent = DomainAgent("north", e.north.vars, e.north.vars, now=e.wall)
+        assert agent._sync()
+        assert placement.placed(e.north.vars, "testsub", "badge") == expected
+        assert e.north.vars.get(key) == before
+        assert placement.placed(e.north.vars, "testsub", "absent") is None
