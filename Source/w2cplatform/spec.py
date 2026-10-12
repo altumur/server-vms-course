@@ -909,6 +909,7 @@ class BookMerge:
 #   tables    the kept rows the domain's door serves read-only at `/domain/<sub>/<table>`
 #   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
 #             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`).
+#             An ordinary member worker additionally needs grant and the closed placement binding (ADR-0074).
 #             A token carries no rights: what its subject may do is the grants'
 #   edit      the fields of a unit the domain's door lets into an edit of a member's row: any other is refused there by
 #             the spec, before the member is asked. Not said: the member's console decides
@@ -992,7 +993,7 @@ class DomainSection:
             if not isinstance(kind, str) or not _DOMAIN_NAME.match(kind) or kind == "person":
                 raise ValueError(f"{where}.tokens: {kind!r} is not a kind a subsystem may declare ('person' is the "
                                  f"platform's)")
-            if not isinstance(t, dict) or set(t) - {"lifetime", "claims"}:
+            if not isinstance(t, dict) or set(t) - {"lifetime", "claims", "grant", "placement"}:
                 raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...]}} — a token "
                                  f"carries no rights")
             life = t.get("lifetime")
@@ -1003,6 +1004,26 @@ class DomainSection:
                                                        for c in claims):
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
+            if "grant" in t or "placement" in t:
+                grant, binding = t.get("grant"), t.get("placement")
+                fields = {"sub", "caller", "ref_claim", "target_fields", "audience_claim"}
+                links = {"cluster", "origin", "copies"}
+                if not isinstance(grant, list) or not grant or any(
+                        not isinstance(r, str) or not re.fullmatch(r"[a-z][a-z0-9_-]*", r) for r in grant) \
+                        or len(set(grant)) != len(grant):
+                    raise ValueError(f"{where}.tokens.{kind}.grant is a nonempty list of distinct roles")
+                if not isinstance(binding, dict) or set(binding) != fields \
+                        or not isinstance(binding["sub"], str) or not _DOMAIN_NAME.fullmatch(binding["sub"]) \
+                        or not isinstance(binding["caller"], str) or binding["caller"] not in links \
+                        or not isinstance(binding["ref_claim"], str) or binding["ref_claim"] not in claims \
+                        or not isinstance(binding["audience_claim"], str) or binding["audience_claim"] not in claims \
+                        or binding["ref_claim"] == binding["audience_claim"]:
+                    raise ValueError(f"{where}.tokens.{kind}.placement is a closed assignment binding")
+                targets = binding["target_fields"]
+                if not isinstance(targets, list) or not targets or any(
+                        not isinstance(f, str) or f not in links for f in targets) or len(set(targets)) != len(targets):
+                    raise ValueError(f"{where}.tokens.{kind}.placement.target_fields names distinct assignment fields")
+                sec.tokens[kind].update(grant=tuple(grant), placement={**binding, "target_fields": tuple(targets)})
         sec.keys = cls._families(spec, d.get("keys"), where)
         sec.shared, sec.documents = cls._shared(d.get("shared"), where)
         sec.edit = names("edit")
