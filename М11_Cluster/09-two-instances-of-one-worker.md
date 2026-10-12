@@ -4,7 +4,7 @@
 **Вы напишете:** возвращение старого экземпляра, который сохраняет своё имя и теряет каждую эпоху; сторону меньшинства, где хранилище отвечает `unavailable`, а воркеры перестают действовать сами, в пределах аренды; переназначение единицы, которое теряет ту же аренду и при этом не зомби; и плановый отказ через вывод сервера, который отличается от падения одним словом в строке слота.
 **Время:** ~120 минут.
 
-> **Число, которое экспортирует этот урок.** `<sub>_epoch_conflicts{worker}` (у VMS — `vms_epoch_conflicts`) — сколько раз экземпляр, у которого отняли имя, был отсечён на эпохах. На здоровом кластере — ноль всегда, и на него всё равно ставят тревогу.
+> **Число, которое экспортирует этот урок.** `<sub>_epoch_conflicts{worker}` (у VMS — `cam_epoch_conflicts`) — сколько раз экземпляр, у которого отняли имя, был отсечён на эпохах. На здоровом кластере — ноль всегда, и на него всё равно ставят тревогу.
 
 ## Зачем этот урок
 
@@ -39,8 +39,8 @@
 Первое — схема и слот:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-a-1
 → 200 {
   "items": {
     "holder": "srv-a:4101:001005",
@@ -56,8 +56,8 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 Держатель — он сам. Имя `w-srv-a-1` никто не брал: на другом сервере нет юнита с этим именем, а контроллер переносит единицы, а не имена. Слот истёк, но остался его, и экземпляр продлевает его как обычно:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items": {
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1010, "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500138.0",
   "released": "false",
@@ -70,24 +70,24 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items":
 Второе — эпохи. Экземпляр продлевает аренду каждой своей единицы и на каждой находит, что эпоха уже не его:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/epoch/1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/epoch/1
 → 200 {"items": {"epoch": "2"}, "index": 1039}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/epoch/2
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/epoch/2
 → 200 {"items": {"epoch": "2"}, "index": 1040}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/epoch/3
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/epoch/3
 → 200 {"items": {"epoch": "2"}, "index": 1041}
 ```
 
 Эпохи 1039–1041 — те самые, что `w-srv-b-1` взял в уроке 8. Каждая аренда потеряна, и каждая единица останавливается (`Worker.lease_pass`): `w-srv-a-1: camera 1 stopped: a newer epoch was issued for it`. Третье — назначение:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/workers/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/workers/w-srv-a-1
 → 200 {"items": {"units": "", "rev": "6"}, "index": 1037}
 ```
 
@@ -107,7 +107,7 @@ GET /v1/get?key=vms/workers/w-srv-a-1
 
 **Слот** — одно чтение, и оно отсекает весь экземпляр, прежде чем тот коснётся хоть одной единицы, — когда имя взял другой процесс. С юнитами так бывает в двух случаях: systemd запустил юнит снова, пока старый процесс ещё жил (завис дольше `TimeoutStopSec`, остановлен сигналом), или человек запустил вторую копию руками. Новый берёт имя сразу, старый узнаёт об этом на следующем продлении и останавливается: `w-srv-a-1: FENCED (slot w-srv-a-1 is held by another instance now)`. Тест: `test_two_processes_with_one_name_the_old_one_is_nobody` (урок 4).
 
-**Отсечённый по слоту — никто, и под чужим именем он молчит** (ADR 0043). Имя теперь у нового процесса, и heartbeat под этим именем — его. Старый не пишет под ним heartbeat, не читает назначение (`reconcile_once()` возвращает `[]`) и не берёт эпох. «Честный» heartbeat — `fenced: true` — поверх heartbeat'а нового живой экземпляр переписывал бы обратно каждые десять секунд, и это продолжалось бы сколько угодно (шестое ревью, воспроизведено запуском; М10A, урок 8). О зомби говорят его лог, его журнал и его метка. Имя ему дал юнит, и другого он не берёт (урок 4, шаг 3): пока имя держит живой новый процесс, старый — никто, говорит тревогу `worker.name_taken` (кто держит, на какой коробке) и пишет метку `<sub>/contenders/<имя>/<коробка>` (здесь `vms/contenders/w-srv-a-1/<коробка>`), которую `/servers` показывает у строки держателя как `name_conflict`. Свободный слот `w-2` он не берёт: это был бы второй воркер на сервере, о котором юнит не знает. Своё имя старый берёт назад, только когда оно свободно или истекло (`rejoin` через `_seek_slot`, М10A, урок 8), — и тогда в первом же heartbeat'е под ним стоят `was_fenced` — почему — и `conflicts: 3`: счёт конфликтов уходит с экземпляром. Процесс без имени из юнита возвращается под свободным номером, со своим счётом. Отсюда и число урока: `<sub>_epoch_conflicts{worker="<имя>"}`. На здоровом кластере это ноль всегда. Не ноль — значит, был момент, когда два процесса одного имени думали, что единицы их. Это не авария — механизм сработал, — но это событие, о котором оператор хочет знать.
+**Отсечённый по слоту — никто, и под чужим именем он молчит** (ADR 0043). Имя теперь у нового процесса, и heartbeat под этим именем — его. Старый не пишет под ним heartbeat, не читает назначение (`reconcile_once()` возвращает `[]`) и не берёт эпох. «Честный» heartbeat — `fenced: true` — поверх heartbeat'а нового живой экземпляр переписывал бы обратно каждые десять секунд, и это продолжалось бы сколько угодно (шестое ревью, воспроизведено запуском; М10A, урок 8). О зомби говорят его лог, его журнал и его метка. Имя ему дал юнит, и другого он не берёт (урок 4, шаг 3): пока имя держит живой новый процесс, старый — никто, говорит тревогу `worker.name_taken` (кто держит, на какой коробке) и пишет метку `<sub>/contenders/<имя>/<коробка>` (здесь `cam/contenders/w-srv-a-1/<коробка>`), которую `/servers` показывает у строки держателя как `name_conflict`. Свободный слот `w-2` он не берёт: это был бы второй воркер на сервере, о котором юнит не знает. Своё имя старый берёт назад, только когда оно свободно или истекло (`rejoin` через `_seek_slot`, М10A, урок 8), — и тогда в первом же heartbeat'е под ним стоят `was_fenced` — почему — и `conflicts: 3`: счёт конфликтов уходит с экземпляром. Процесс без имени из юнита возвращается под свободным номером, со своим счётом. Отсюда и число урока: `<sub>_epoch_conflicts{worker="<имя>"}`. На здоровом кластере это ноль всегда. Не ноль — значит, был момент, когда два процесса одного имени думали, что единицы их. Это не авария — механизм сработал, — но это событие, о котором оператор хочет знать.
 
 **Эпоха** — по единице, и её соблюдает тот, кто хранит работу: у VMS — архив. Даже экземпляр, который сохранил слот — как в шаге 1, — не может писать в поток `e2`, потому что не может его назвать: его конвейеры пишут в `e1`. Эпоха держит там, где слот бессилен: при переносе и при переназначении между **разными** воркерами (шаг 4).
 
@@ -149,8 +149,8 @@ GET /v1/get?key=vms/workers/w-srv-a-1
 Та же потеря аренды, тот же вердикт, что в шаге 1, — только без отказа. Трасса — [`Source/traces/09-a-reassignment-is-not-a-zombie.txt`](../Source/traces/09-a-reassignment-is-not-a-zombie.txt). Оператор переносит единицу 2 с `w-srv-a-1` на `w-srv-b-1`: `srv-b` видит её сеть. Контроллер делает это тремя записями — сначала меняет размещение с причиной, потом убирает единицу из назначения источника, потом добавляет в назначение цели:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1013, "items": {
   "worker": "w-srv-b-1",
   "reason": "operator: srv-b sees that VLAN",
   "at": "1757500000.0",
@@ -158,15 +158,15 @@ POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
 }}
 → 200 {"index": 1021}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1016, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1016, "items": {
   "units": "1,3",
   "rev": "4"
 }}
 → 200 {"index": 1022}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items": {"units": "2", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "2", "rev": "1"}}
 → 200 {"index": 1023}
 ```
 
@@ -175,16 +175,16 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items":
 `w-srv-b-1` читает своё назначение и берёт следующую эпоху единицы 2:
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
 → 200 {"index": 1024}
 ```
 
 `w-srv-a-1` на своём проходе аренд продлевает слот — он всё ещё его — и проверяет эпохи. Эпоха единицы 2 теперь 2:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/epoch/2
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/epoch/2
 → 200 {"items": {"epoch": "2"}, "index": 1024}
 ```
 
@@ -197,8 +197,8 @@ GET /v1/get?key=vms/epoch/2
 Засчитать ли потерю неудачей, решает назначение, и читает его шаг аренд один раз — на первой потерянной аренде:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/workers/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/workers/w-srv-a-1
 → 200 {"items": {"units": "1,3", "rev": "4"}, "index": 1022}
 ```
 
