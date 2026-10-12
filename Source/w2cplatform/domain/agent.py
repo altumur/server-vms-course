@@ -784,7 +784,14 @@ def main() -> None:
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
-    run(agent, interval, stop)
+    from .tokenrequest import open_role_doors
+    token_doors = open_role_doors(agent)
+    try:
+        run(agent, interval, stop)
+    finally:
+        for door in token_doors:
+            door.shutdown()
+            door.server_close()
 
 
 # The agent's loop. The next pass is set BEFORE the pass (the review's eighth pass, major): a pass that raised left
