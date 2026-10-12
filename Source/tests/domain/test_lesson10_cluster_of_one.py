@@ -7,6 +7,8 @@ the report its agent leaves in the domain holder (step 7). What IS special is sm
 wears, and a box that is rebooted whole, which makes the order of its boot a correctness question — for the
 site that reads its door, and for the domain that reads its report.
 """
+
+from tests.reporting import sync as report_sync
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
@@ -38,7 +40,7 @@ def _domain(wall, *serials):
         fed.add(member_copy(d.name, north.objects, wall=wall))
         agents[s] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d.local_console(), current=d.current,
                                 domain_objects=north.objects, published=d.local_objects())
-        agents[s].sync()
+        report_sync(agents[s])
         devices[s] = d
     return fed, room, devices, agents
 
@@ -79,7 +81,7 @@ def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_addre
            "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2"}
     d.ram.put(f"vms/snapshot/{SERIAL}", json.dumps({"cluster": d.name, "worker": SERIAL, "ts": wall(),
                                                     "cameras": [row]}).encode())     # as an older build wrote it
-    agents[SERIAL].sync()
+    report_sync(agents[SERIAL])
     view = ReadView(fed, wall=wall)
     view.refresh()
     shown = json.dumps(view.configured[f"cam-{SERIAL}"])
@@ -112,8 +114,8 @@ def test_a_day_of_heartbeats_costs_the_flash_nothing():
         wall.advance(10)
         d.publish()
         if i % 3 == 0:
-            agent.sync()                                 # and the agent every 30 s
-    assert after_boot == 2                               # the epoch and the row
+            report_sync(agent)                                 # and the agent every 30 s
+    assert after_boot == 3                               # epoch, unit row and member identity
     assert d.flash.writes - after_boot == 1              # the grants, once, when they arrived — and nothing else
 
 
@@ -125,8 +127,8 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     fed, room, devices, agents = _domain(wall, SERIAL)
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
-    DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall).sync()
-    assert d.flash.list("") == ["domain/grants", "vms/cameras/1", "vms/epoch/1"]
+    report_sync(DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall))
+    assert d.flash.list("") == ["domain/grants", "domain/member-key", "vms/cameras/1", "vms/epoch/1"]
 
 
 def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
@@ -138,7 +140,7 @@ def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
     fed, room, devices, agents = _domain(wall, SERIAL)
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
-    agents[SERIAL].sync()
+    report_sync(agents[SERIAL])
     view = ReadView(fed, wall=wall)
     view.refresh()
     pending = PendingEdits(fed.domain_holder.vars, wall)
@@ -146,14 +148,14 @@ def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
                      last_known=view.last_known)
 
     assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
-    agents[SERIAL].sync()
+    report_sync(agents[SERIAL])
     assert d.row()["name"] == "main-gate" and d.row()["revision"] == 2
     pending.collect(fed)
     assert pending.of(d.name) == {}
 
     view.refresh()                                                   # the domain's next pass: the row as it now is
     api.update_unit(SERIAL, {"name": "x"}, idempotency_key="k2", token="boris")
-    agents[SERIAL].sync()
+    report_sync(agents[SERIAL])
     assert d.row()["name"] == "main-gate"                            # boris has no grant on this camera
     pending.collect(fed)
     assert "grant" in pending.of(d.name)[SERIAL]["refused"]
@@ -205,7 +207,7 @@ def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
     agent = agents[SERIAL]
-    agent.sync()
+    report_sync(agent)
     view = ReadView(fed, wall=wall)
     view.refresh()
     pending = PendingEdits(fed.domain_holder.vars, wall)
@@ -218,7 +220,7 @@ def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
     wall.advance(3600)
     _grant(fed, d.name, "anna", wall)                    # grants are renewed while it is off; they expire otherwise
     d.boot()
-    agent.sync()
+    report_sync(agent)
     assert d.row()["name"] == "main-gate"
     pending.collect(fed)
     assert pending.of(d.name) == {}
