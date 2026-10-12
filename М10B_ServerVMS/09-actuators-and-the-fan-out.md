@@ -567,7 +567,7 @@ REC_RANGE_DESC = ("souphttpsrc location={source} ! qtdemux ! h264parse config-in
 ```
 driverpacksrc name=src ! h264parse ! watchdog timeout=8000 ! tee name=t
   t. ! queue leaky=downstream max-size-buffers=30 ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=20007 sync=false
-  t. ! queue leaky=downstream max-size-buffers=30 ! shmsink socket-path=/run/cam/7.shm shm-size=20000000 wait-for-connection=false sync=false
+  t. ! queue leaky=downstream max-size-buffers=30 ! shmsink socket-path=/run/vms/7.shm shm-size=20000000 wait-for-connection=false sync=false
 ```
 
 Раздача: `rtsp://box-a:8554/7`, одна общая фабрика над портом 20007. Адреса камеры в этой строке нет — он уже стоит свойством `uri` у элемента `src`; чтобы прогнать её руками, `uri` дописывают в `gst-launch-1.0` (урок 5 так и делает).
@@ -575,7 +575,7 @@ driverpacksrc name=src ! h264parse ! watchdog timeout=8000 ! tee name=t
 Регистратор **на том же сервере**:
 
 ```
-shmsrc socket-path=/run/cam/7.shm is-live=true do-timestamp=true name=src ! video/x-h264,stream-format=byte-stream
+shmsrc socket-path=/run/vms/7.shm is-live=true do-timestamp=true name=src ! video/x-h264,stream-format=byte-stream
   ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,alignment=au
   ! watchdog timeout=8000 ! appsink name=sink emit-signals=true sync=false max-buffers=200
 ```
