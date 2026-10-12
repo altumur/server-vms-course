@@ -62,13 +62,13 @@ def own_rows(cluster: str) -> list[str]:
 
 
 # -- the secrets in a row, wherever the platform can see them without reading what the row means ------------------------
-def _walk(items: dict, fn, ctx: str) -> dict:
+def _walk(items: dict, fn, ctx: str, *, include_empty=False) -> dict:
     """`items` with `fn(field, value, ctx)` applied to every `*_secret` value: at the top of the row, and anywhere inside
     a value that is a JSON object (`ctx#<key>` — the item it lies in). The structure is walked; what it means is not
     read: a subsystem's book is moved and sealed without the platform knowing what a field of it is for."""
     out = {}
     for k, v in (items or {}).items():
-        if is_secret_field(k) and isinstance(v, str) and v:
+        if is_secret_field(k) and isinstance(v, str) and (v or include_empty):
             out[k] = fn(k, v, ctx)
             continue
         if isinstance(v, str) and v.startswith("{") and "_secret" in v:
@@ -83,7 +83,7 @@ def _walk(items: dict, fn, ctx: str) -> dict:
                     if isinstance(x, dict):
                         out_ = {}
                         for f, y in x.items():
-                            if is_secret_field(f) and isinstance(y, str) and y:
+                            if is_secret_field(f) and isinstance(y, str) and (y or include_empty):
                                 out_[f] = fn(f, y, where)
                                 touched.append(f)
                             else:
@@ -100,11 +100,11 @@ def _walk(items: dict, fn, ctx: str) -> dict:
     return out
 
 
-def seal_row(sealer, items: dict, ctx: str) -> dict:
+def seal_row(sealer, items: dict, ctx: str, *, force=False) -> dict:
     """Every secret of the row sealed with `sealer` (the platform's ring); as it is with no ring."""
     if sealer is None:
         return dict(items or {})
-    return _walk(items, lambda f, v, c: sealer.seal(f, v, c), ctx)
+    return _walk(items, lambda f, v, c: sealer.seal(f, v, c, force=force), ctx, include_empty=force)
 
 
 def open_row(sealer, items: dict, ctx: str) -> dict:
@@ -145,7 +145,7 @@ def answer(holder_vars, holder_objects, cluster: str, seal_to: str | None = None
         if seal_to:
             dest = _member_ctx(path, cluster)
             items = _walk(open_row(sealer, items, path), lambda f, v, c, d=dest: seal_for(seal_to, f, v, d + c[len(path):]),
-                          path)
+                          path, include_empty=True)
         rows[path] = dict(items)
         obj = items.get("object") if isinstance(items, dict) else None
         if obj and holder_objects is not None and obj not in objects:
