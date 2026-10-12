@@ -185,7 +185,7 @@ def test_an_old_holder_that_comes_back_steps_down_and_lists_what_it_alone_holds(
         raise AssertionError("a deposed holder must not publish")
     except Deposed as e:
         assert "cam-SN1" in str(e) and "term 2" in str(e)
-    left = stranded(fed.clusters["cam-SN0"].vars, report["state"])
+    left = stranded(fed.clusters["cam-SN0"].vars, report["state"], signer=signer)
     assert [(p, k) for p, k, _ in left] == [("domain/pending/cam-SN2", "SN2")]
     assert json.loads(left[0][2])["fields"]["name"]["new"] == "SN2-renamed"
 
