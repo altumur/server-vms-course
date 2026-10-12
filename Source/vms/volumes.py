@@ -97,7 +97,7 @@ class Volume:
     # only when this says the same number — the operator's second word (`RecWorker._apply_quota`; the review's third
     # pass). Absent, the ring keeps its size and the heartbeat says why.
     shrink_confirmed: int = 0
-    # An edge volume is the card IN a camera, and says which: the camera's id in this cluster's `vms/cameras`. A
+    # An edge volume is the card IN a camera, and says which: the camera's id in this cluster's `cam/cameras`. A
     # recording is homed on a card only if it is that camera's (`must_match` on `home`): the card's recorder writes the
     # frames of its own camera's ring, whatever the recording's row says (the review's sixth pass, major).
     cam: str = ""
@@ -396,7 +396,7 @@ def is_backup(row: dict, vars_=None, names: set[str] | None = None) -> bool:
 #     incidents take nobody     a place for what somebody kept, never one to record into: its row says `admits: false`
 #                               (`Volume.to_items`), and the platform reads that word, not the kind
 #     beside the standby        a camera with two recordings has its worker beside the BACKUP one, which must survive the
-#                               primary's server: `near.prefer` in vms.subsystem.yaml (`home.kind`, through `ref`)
+#                               primary's server: `near.prefer` in cam.subsystem.yaml (`home.kind`, through `ref`)
 #     a card is its camera's    `home: {ref: rec/volumes, must_match: {cam: cam}}`: the platform refuses a recording of
 #                               another camera homed on a card (the review's sixth pass, major — through a scenario's
 #                               `record` with `archive: card2` as much as an operator's PUT); and a row that does not
