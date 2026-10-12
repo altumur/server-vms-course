@@ -8,15 +8,15 @@ its flash, and one writer.
 
 So this is what a device has to be for the domain to treat it like any other member, and it is little:
 
-    its row         `vms/cameras/1`, made at its first boot by its own console, `ref` = its serial — the name
+    its row         `cam/cameras/1`, made at its first boot by its own console, `ref` = its serial — the name
                     the domain knows it by. The cluster-local id stays an integer, as in every cluster
     its unit        pinned: the camera IS the unit. Nothing places it, so there is no controller, no slot, no
                     assignment — the keys a placer would write are simply not there
     its epoch       taken by the camera itself, once per boot, from its flash by CAS. It fences nothing — there
                     is no second instance to fence — but the archive path and the event buckets carry it, so
                     it must grow on every boot, a crash included
-    what it shows   ONE heartbeat and ONE snapshot shard, in the shapes a cluster publishes (`vms/heartbeats/`,
-                    `vms/snapshot/`), so the domain's directory and read view read it unchanged. In RAM: they
+    what it shows   ONE heartbeat and ONE snapshot shard, in the shapes a cluster publishes (`cam/heartbeats/`,
+                    `cam/snapshot/`), so the domain's directory and read view read it unchanged. In RAM: they
                     change every few seconds, and flash does not survive being written every few seconds
     its link up     the domain agent, as in every cluster, writing `domain/*` and nothing else
 
@@ -38,7 +38,7 @@ from w2cplatform.domain.agent import ClusterTrust
 from w2cplatform.domain.api import ApiError, refuse_addresses
 from w2cplatform.domain.federation import Cluster, Unreachable
 
-ROW, EPOCH = "vms/cameras/1", "vms/epoch/1"
+ROW, EPOCH = "cam/cameras/1", "cam/epoch/1"
 
 
 class Flash:
@@ -212,8 +212,8 @@ class DeviceCluster:
         shown = {k: v for k, v in mask_secrets([row])[0].items() if not is_secret_field(k)}
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
                 "cameras": [{**shown, "worker": self.serial, "server": self.serial}]}
-        self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())
-        self.ram.put(f"vms/snapshot/{self.serial}", json.dumps(snap).encode())
+        self.ram.put(f"cam/heartbeats/{self.serial}", json.dumps(hb).encode())
+        self.ram.put(f"cam/snapshot/{self.serial}", json.dumps(snap).encode())
 
     def cluster(self, domain: bool = False) -> Cluster:
         """The domain's handle on this camera: its stores, through its door. `domain=True` is a camera that
