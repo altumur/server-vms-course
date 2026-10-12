@@ -3,19 +3,19 @@ GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/next_id
+GET /v1/get?key=cam/next_id
 → 200 {"items": null, "index": ""}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/next_id", "cas": "", "items": {"n": "1"}}
+POST /v1/write {"op": "put", "key": "cam/next_id", "cas": "", "items": {"n": "1"}}
 → 200 {"index": 1004}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/list?prefix=vms/cameras/
+GET /v1/list?prefix=cam/cameras/
 → 200 {"keys": {}}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "", "items": {
   "id": "1",
   "revision": "1",
   "name": "north-gate",
