@@ -94,7 +94,7 @@ BACKUP_TAKEN, BACKUP_REFUSED = "domain/backup-taken", "domain/backup-refused"
 # product's r23-seal), not under the holder's ring, which no other holder has, and never in the clear: a member chosen to
 # keep a copy reads no hash of it. The signer's own keys are not in the backup, ever.
 PLATFORM_EXPORTED = ("domain/pending/", "domain/grants/", "domain/shared", "domain/topology", "domain/members",
-                     "domain/placement", "domain/licence", "domain/break-glass/", "domain/users/")
+                     "domain/placement", "domain/licence", "domain/break-glass/", "domain/users/", "domain/names/")
 
 
 def exported() -> tuple[str, ...]:
