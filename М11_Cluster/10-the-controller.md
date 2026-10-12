@@ -40,8 +40,8 @@
 На стенде `srv-a` видит `vlan:cctv-a`, `srv-b` — обе сети, `srv-c` — `vlan:cctv-b`, у каждого по воркеру ёмкостью 10. Оператор создаёт четыре камеры. Трасса — [`Source/traces/10-placement-under-labels.txt`](../Source/traces/10-placement-under-labels.txt), в ней только записи контроллера; вот три строки размещения:
 
 ```
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "worker": "w-srv-a-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
   "at": "1757500000.0",
@@ -49,8 +49,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 }}
 → 200 {"index": 1015}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": "", "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "", "items": {
   "worker": "w-srv-b-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-b; on srv-b, whose resource is live",
   "at": "1757500000.0",
@@ -58,8 +58,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": "", "items": {
 }}
 → 200 {"index": 1017}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": "", "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
   "worker": "w-srv-b-1",
   "reason": "most free capacity (9) among 1 worker(s) reaching vlan:cctv-a,vlan:cctv-b; on srv-b, whose resource is live",
   "at": "1757500000.0",
@@ -68,7 +68,7 @@ POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": "", "items": {
 → 200 {"index": 1019}
 ```
 
-Между ними — записи назначений (`vms/workers/w-srv-a-1`, `vms/workers/w-srv-b-1`), по одной на единицу. И про четвёртую:
+Между ними — записи назначений (`cam/workers/w-srv-a-1`, `cam/workers/w-srv-b-1`), по одной на единицу. И про четвёртую:
 
 ```
 # unplaceable() = [{'id': 4, 'labels': ['vlan:cctv-x'], 'workers_live': 3}]
@@ -90,23 +90,23 @@ POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": "", "items": {
 
 ## Шаг 3 — Где единица 7, за один проход
 
-`<sub>/workers/*` — это назначение (на стенде `vms/workers/*`): контроллер пишет его в хранилище кластера, каждый воркер читает оттуда же. Прочитать его целиком — это и есть каталог кластера. Трасса — [`Source/traces/10-where-is-camera-7.txt`](../Source/traces/10-where-is-camera-7.txt):
+`<sub>/workers/*` — это назначение (на стенде `cam/workers/*`): контроллер пишет его в хранилище кластера, каждый воркер читает оттуда же. Прочитать его целиком — это и есть каталог кластера. Трасса — [`Source/traces/10-where-is-camera-7.txt`](../Source/traces/10-where-is-camera-7.txt):
 
 ```
 # console on srv-a → /run/configstore/console.sock
-GET /v1/list?prefix=vms/workers/
-→ 200 {"keys": {"vms/workers/w-srv-a-1": 1038, "vms/workers/w-srv-b-1": 1040, "vms/workers/w-srv-c-1": 1042}}
+GET /v1/list?prefix=cam/workers/
+→ 200 {"keys": {"cam/workers/w-srv-a-1": 1038, "cam/workers/w-srv-b-1": 1040, "cam/workers/w-srv-c-1": 1042}}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-a-1
+GET /v1/get?key=cam/workers/w-srv-a-1
 → 200 {"items": {"units": "1,4,7", "rev": "3"}, "index": 1038}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-b-1
+GET /v1/get?key=cam/workers/w-srv-b-1
 → 200 {"items": {"units": "2,5,8", "rev": "3"}, "index": 1040}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-c-1
+GET /v1/get?key=cam/workers/w-srv-c-1
 → 200 {"items": {"units": "3,6,9", "rev": "3"}, "index": 1042}
 
 # where(1..9) = {1: 'w-srv-a-1', 2: 'w-srv-b-1', 3: 'w-srv-c-1', 4: 'w-srv-a-1', 5: 'w-srv-b-1', 6: 'w-srv-c-1', 7: 'w-srv-a-1', 8: 'w-srv-b-1', 9: 'w-srv-c-1'}; scans = 1
@@ -120,11 +120,11 @@ GET /v1/get?key=vms/workers/w-srv-c-1
 
 ## Шаг 4 — Два контроллера, одна единица
 
-Контроллер — процесс платформы, экземпляр шаблона `w2c-controller@.service` на каждую спеку (у VMS — `w2c-controller@vms` и `@rec`), от пользователя `w2c`, и он стоит на **каждом** сервере (урок 3). Два и три контроллера одной спеки, размещающие одновременно, — не авария переноса, а обычный режим работы кластера. Трасса — [`Source/traces/10-two-controllers-one-camera.txt`](../Source/traces/10-two-controllers-one-camera.txt). Контроллер на `srv-b` размещает единицу 1 ровно между чтением и записью контроллера на `srv-a`:
+Контроллер — процесс платформы, экземпляр шаблона `w2c-controller@.service` на каждую спеку (у VMS — `w2c-controller@cam` и `@rec`), от пользователя `w2c`, и он стоит на **каждом** сервере (урок 3). Два и три контроллера одной спеки, размещающие одновременно, — не авария переноса, а обычный режим работы кластера. Трасса — [`Source/traces/10-two-controllers-one-camera.txt`](../Source/traces/10-two-controllers-one-camera.txt). Контроллер на `srv-b` размещает единицу 1 ровно между чтением и записью контроллера на `srv-a`:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "worker": "w-srv-a-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
   "at": "1757500000.0",
@@ -132,12 +132,12 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 }}
 → 200 {"index": 1009}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
 → 200 {"index": 1010}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "worker": "w-srv-a-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
   "at": "1757500000.0",
@@ -145,7 +145,7 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 }}
 → 409 {
   "kind": "conflict",
-  "error": "vms/placement/1: the version is 1009, not the one the write named",
+  "error": "cam/placement/1: the version is 1009, not the one the write named",
   "index": 1009
 }
 ```
@@ -170,8 +170,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 - **пишет по предложению на каждый недостающий воркер** — пустую строку слота с полем `offer`:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": "", "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": "", "items": {
   "holder": "",
   "until": "0",
   "released": "false",
@@ -186,26 +186,26 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": "", "items": {
 - **снимает ненужное предложение** удалением по CAS — по той версии, которую прочитал, так что предложение, которое запасной взял мгновением раньше, остаётся у запасного:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1048}
 → 200 {"index": 1055}
 ```
 
 - **публикует числа** на `/metrics` консоли без токена, пока проход свежий (не старше 60 с), — то, что читает скрипт ([`04-what-the-spares-script-reads`](../Source/traces/04-what-the-spares-script-reads.txt)):
 
 ```
-# TYPE vms_workers_needed gauge
-vms_workers_needed{labels=""} 0
-vms_workers_needed{labels="vlan:cctv-b"} 1
-# TYPE vms_units_short gauge
-vms_units_short{labels=""} 0
-vms_units_short{labels="vlan:cctv-b"} 1
-# TYPE vms_spare_offers gauge
-vms_spare_offers{labels=""} 0
-vms_spare_offers{labels="vlan:cctv-b"} 1
+# TYPE cam_workers_needed gauge
+cam_workers_needed{labels=""} 0
+cam_workers_needed{labels="vlan:cctv-b"} 1
+# TYPE cam_units_short gauge
+cam_units_short{labels=""} 0
+cam_units_short{labels="vlan:cctv-b"} 1
+# TYPE cam_spare_offers gauge
+cam_spare_offers{labels=""} 0
+cam_spare_offers{labels="vlan:cctv-b"} 1
 ```
 
-Скрипт на каждом сервере читает эти числа и метки своего сервера (`<sub>_server_labels`), поднимает запасного только для набора, который его сервер покрывает, в пределах своего потолка роли (у воркера камер — `HOST_MEMORY_MB / WORKER_MEMORY_MB` объявления `roles/vmsworker.env`, ADR-0070), и никого не гасит. Два скрипта с двух серверов, поднявшие по запасному на одно предложение, безопасны: ровно один берёт слот по CAS, второй ждёт, ничего не держа (`Source/tests/test_spares.py::test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_waits_holding_nothing`). Молчащая консоль — скрипт ничего не запускает.
+Скрипт на каждом сервере читает эти числа и метки своего сервера (`<sub>_server_labels`), поднимает запасного только для набора, который его сервер покрывает, в пределах своего потолка роли (у воркера камер — `HOST_MEMORY_MB / WORKER_MEMORY_MB` объявления `roles/camworker.env`, ADR-0070), и никого не гасит. Два скрипта с двух серверов, поднявшие по запасному на одно предложение, безопасны: ровно один берёт слот по CAS, второй ждёт, ничего не держа (`Source/tests/test_spares.py::test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_waits_holding_nothing`). Молчащая консоль — скрипт ничего не запускает.
 
 Посмотрите, чего в этой цепочке нет: ни одна сторона не просит другую запустить процесс. Контроллер пишет строки, консоль показывает числа, хост решает сам, что он может обслужить. Каждое звено можно перезапустить, и ни одно не на пути восстановления: единицы умершего сервера уезжают к живым воркерам назначением (урок 8) задолго до того, как скрипт посмотрит на числа.
 
@@ -214,16 +214,16 @@ vms_spare_offers{labels="vlan:cctv-b"} 1
 Трасса — [`Source/traces/10-the-snapshot.txt`](../Source/traces/10-the-snapshot.txt). Контроллер публикует снимок — по объекту на воркер. Объекты — файлы на сервере писателя (урок 6), поэтому снимок ложится на сервер контроллера:
 
 ```
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-a-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-a-1
 
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-b-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-b-1
 
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-c-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-c-1
 
-# on srv-a, /data/platform/objects: {'vms/snapshot/w-srv-a-1': 277, 'vms/snapshot/w-srv-b-1': 277, 'vms/snapshot/w-srv-c-1': 277}
+# on srv-a, /data/platform/objects: {'cam/snapshot/w-srv-a-1': 277, 'cam/snapshot/w-srv-b-1': 277, 'cam/snapshot/w-srv-c-1': 277}
 ```
 
 В каждом шарде — кластер, воркер, `ts` прохода и единицы этого воркера с сервером (поля — из `snapshot:` спеки). Строки, которые никто не держит, идут в шард `<sub>/snapshot/unplaced`; в этой сцене таких нет, и этого шарда здесь нет. **Но `unplaced` — не только для неразмещённых** (двенадцатое ревью, «Вопросы»). Кластер без единой единицы опубликовал бы ничего, и «опубликовал, что камер нет» читалось бы как «не публиковал никогда» — член домена, который не публиковал, не отчитывается (М12A, урок 10). Поэтому, когда шардов нет вовсе, проход пишет пустой `unplaced`; а шард, однажды записанный, — `unplaced` или воркера, которого больше нет, — каждый следующий проход пишет пустым, а не оставляет старым (`SpecController._publish_snapshot`):
@@ -289,30 +289,30 @@ def step(owner, what: str, name: str, fn, failed: str | None = None) -> bool:
 
 **Проход и снимок — один проход чтений** (заход по масштабу после восьмого ревью). Здесь каждое чтение — запрос к хранилищу, который идёт через журнал лидера, и проход на тысяче камер без этого делал их 64 159 раз в пять секунд: каждый шаг заново читал строки и размещения, а снимок и `ensure_home` перечитывали все heartbeat'ы на каждую единицу. Поэтому `placement_pass` открывает `ctl.one_pass()` вокруг обоих шагов (`w2cplatform/contract.py`): каждый ключ и листинг читаются один раз за проход, запись забывает то, чего коснулась, а проигранный CAS читает хранилище заново. Снимок в том же проходе не читает ничего. Посчитано на хранилище в памяти: 2 079 чтений за проход, около двух на единицу. Как это меняет пределы кластера, разобрано в записках, «Чего эта схема стоит и сколько выдержит», раздел 10.2. Тест: `Source/tests/test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once`.
 
-**Контроллер на каждом сервере — это столько проходов, сколько серверов** (двенадцатое ревью, «Вопросы»: урок этого не считал). Каждый контроллер делает свой проход раз в пять секунд, и каждое его чтение — команда в журнале лидера. На тысяче камер и трёх серверах это 3 × 2 079 ≈ 6 200 чтений за пять секунд, около 1 250 в секунду, — от одних контроллеров камер; контроллеры записей добавляют столько же порядка на тысячу записей. На десяти серверах — вдесятеро против одного контроллера. Записи от этого не множатся: два контроллера сходятся по CAS, и второй, найдя размещение готовым, ничего не пишет (шаг 4). Множатся чтения. Отсюда правило: контроллер на каждом сервере хорош для небольшого кластера — ни одного не надо переносить, когда сервер умер, — а в большом его юнит включают на двух-трёх серверах, и `systemctl disable --now w2c-controller@vms w2c-controller@rec` на остальных ничего не ломает: один контроллер справляется, два безопасны (урок 3).
+**Контроллер на каждом сервере — это столько проходов, сколько серверов** (двенадцатое ревью, «Вопросы»: урок этого не считал). Каждый контроллер делает свой проход раз в пять секунд, и каждое его чтение — команда в журнале лидера. На тысяче камер и трёх серверах это 3 × 2 079 ≈ 6 200 чтений за пять секунд, около 1 250 в секунду, — от одних контроллеров камер; контроллеры записей добавляют столько же порядка на тысячу записей. На десяти серверах — вдесятеро против одного контроллера. Записи от этого не множатся: два контроллера сходятся по CAS, и второй, найдя размещение готовым, ничего не пишет (шаг 4). Множатся чтения. Отсюда правило: контроллер на каждом сервере хорош для небольшого кластера — ни одного не надо переносить, когда сервер умер, — а в большом его юнит включают на двух-трёх серверах, и `systemctl disable --now w2c-controller@cam w2c-controller@rec` на остальных ничего не ломает: один контроллер справляется, два безопасны (урок 3).
 
-**Отчёт прохода — это запись, и права должны её разрешать** (девятое ревью ServerVMS, major). Отчёт `objects/vms/controller/pass`, который `pass_once` писал строкой в хранилище, а политика контроллера не разрешала, — это `Forbidden` каждые пять секунд и `vms_units_unplaced` 0 при неразмещённой камере. Никакая проверка этого не видела: тест сверял политику со списками `acl_objects_*` — а их тоже пишет человек, и отчёта там не было. Отчёт поэтому — объект, то есть файл на сервере контроллера (урок 6), и прав в хранилище ему не нужно вовсе. А урок проверки остался: права сверяются с тем, что процессы **записали на самом деле**. Стенд прогоняет все сцены, двери и проходы обоих контроллеров, трасса пишет каждую запись и удаление под ролью процесса, и каждая такая запись должна быть разрешена файлом прав `deploy/cluster/configstore-rights.json`; отказ 403 в самом стенде — тоже провал, кроме сцен, где отказ — и есть урок. Тесты: `tests/cluster/test_policies.py::test_every_write_the_code_makes_is_granted` и `test_every_row_the_code_reads_is_granted`. Обратное направление — «в файле прав нет записи, о которой код не просил» — сверяется со списками спеки (`test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there`): из конечной трассы шаблон пути не выведешь.
+**Отчёт прохода — это запись, и права должны её разрешать** (девятое ревью ServerVMS, major). Отчёт `objects/cam/controller/pass`, который `pass_once` писал строкой в хранилище, а политика контроллера не разрешала, — это `Forbidden` каждые пять секунд и `cam_units_unplaced` 0 при неразмещённой камере. Никакая проверка этого не видела: тест сверял политику со списками `acl_objects_*` — а их тоже пишет человек, и отчёта там не было. Отчёт поэтому — объект, то есть файл на сервере контроллера (урок 6), и прав в хранилище ему не нужно вовсе. А урок проверки остался: права сверяются с тем, что процессы **записали на самом деле**. Стенд прогоняет все сцены, двери и проходы обоих контроллеров, трасса пишет каждую запись и удаление под ролью процесса, и каждая такая запись должна быть разрешена файлом прав `deploy/cluster/configstore-rights.json`; отказ 403 в самом стенде — тоже провал, кроме сцен, где отказ — и есть урок. Тесты: `tests/cluster/test_policies.py::test_every_write_the_code_makes_is_granted` и `test_every_row_the_code_reads_is_granted`. Обратное направление — «в файле прав нет записи, о которой код не просил» — сверяется со списками спеки (`test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there`): из конечной трассы шаблон пути не выведешь.
 
 ## Шаг 7 — Консоль
 
-Консоль — процесс платформы (`python3 -m w2cplatform.cluster console`, юнит `w2c-console.service`, урок 3; ADR 0014): по одному на каждом сервере, ничего перед ней, сокет хранилища только на строки оператора (урок 5). Это `SpecConsole` платформы над каждой спекой каталога (`host.console`): подсистема, которую юнит называет в `CONSOLE_ROOT` (`vms`), — на `/`, остальные — под своими именами (`/rec/…`), один процесс, один журнал. Своих маршрутов у подсистемы в консоли нет, и байтов через консоль не идёт (ADR 0002, ADR 0015): страница корня (`<sub>.shell.html`, у VMS `vms/vms.shell.html`; ADR 0005) спрашивает `/where/<id>`, получает дверь держателя и токен на маршруты, которые объявила спека (`door: {routes}`; ADR 0009), и за байтами идёт к двери сама. Как так ходит таймлайн VMS по дверям регистраторов — урок [«VMS на кластере»](../М10B_ServerVMS/28-vms-on-the-cluster.md) М10B.
+Консоль — процесс платформы (`python3 -m w2cplatform.cluster console`, юнит `w2c-console.service`, урок 3; ADR 0014): по одному на каждом сервере, ничего перед ней, сокет хранилища только на строки оператора (урок 5). Это `SpecConsole` платформы над каждой спекой каталога (`host.console`): подсистема, которую юнит называет в `CONSOLE_ROOT` (`vms`), — на `/`, остальные — под своими именами (`/rec/…`), один процесс, один журнал. Своих маршрутов у подсистемы в консоли нет, и байтов через консоль не идёт (ADR 0002, ADR 0015): страница корня (`<sub>.shell.html`, у VMS `vms/cam.shell.html`; ADR 0005) спрашивает `/where/<id>`, получает дверь держателя и токен на маршруты, которые объявила спека (`door: {routes}`; ADR 0009), и за байтами идёт к двери сама. Как так ходит таймлайн VMS по дверям регистраторов — урок [«VMS на кластере»](../М10B_ServerVMS/28-vms-on-the-cluster.md) М10B.
 
 ```
 GET /spec               что страница читает первым: строки, поля, дверь, имена метрик
 GET /cameras            строки из всех heartbeat'ов: фаза, сервер, возраст, состояние воркера (/<rows> спеки корня)
 GET /where/1            {worker: w-srv-b-1, reason: "…; on srv-b", directory: w-srv-b-1, scans: 1, door: {url, token, …}}
-GET /events?unit=vms/7  по индексам ресурсов, недоступный назван (урок 7)
+GET /events?unit=cam/7  по индексам ресурсов, недоступный назван (урок 7)
 GET /servers            сервер, его метки, resource (факт), воркеры, placeable и почему нет
 GET /unplaceable        [{id, labels, workers_live}]
-GET /metrics            vms_workers_live · vms_worker_headroom · vms_worker_load · vms_epoch_conflicts ·
-                        vms_failover_seconds{kind="worst"} · vms_cameras_running · vms_workers_needed ·
-                        vms_units_short · vms_spare_offers · vms_server_labels; платформенные — один раз
+GET /metrics            cam_workers_live · cam_worker_headroom · cam_worker_load · cam_epoch_conflicts ·
+                        cam_failover_seconds{kind="worst"} · cam_cameras_running · cam_workers_needed ·
+                        cam_units_short · cam_spare_offers · cam_server_labels; платформенные — один раз
                         на процесс консоли: w2c_resources_live · w2c_resource_* · w2c_requests_*_total
 GET/PUT /policy         servers: shared | distinct (урок 8)
 POST/GET/DELETE /drain  вывод сервера (урок 9);  POST/DELETE /servers/<server>/decommission — списание (урок 4)
 GET/PUT/DELETE /servers/<server>/labels   метки сервера (шаг 1): would_move/will_move — <sub>/<id> всех спек
 POST /cameras           с Idempotency-Key;  PUT /cameras/1 {"worker": …} → 400
-GET /mounts             корень и смонтированные спеки: {"root": "vms", "mounts": {"rec": …}}
+GET /mounts             корень и смонтированные спеки: {"root": "cam", "mounts": {"rec": …}}
 ```
 
 Имена рядов `/metrics` — по имени спеки (`<sub>_…`, здесь `vms_…`). Метрики ресурсов и просьб — платформенные, а не подсистемы: `w2c_resources_live`, `w2c_resource_*`, `w2c_requests_*_total`, один раз на процесс консоли, а не под префиксом каждой подсистемы (ADR 0023).
@@ -344,7 +344,7 @@ GET /mounts             корень и смонтированные спеки:
 - «Где единица 7» — из хранилища кластера за один проход на стенде.
 - Тесты размещения зелёные, включая случаи с метками.
 - Единица с меткой, которой нет ни у одного сервера, — в `/unplaceable` с её метками; добавьте метку серверу на консоли, и она размещена на нём, с сервером в причине.
-- Девятая камера на полном кластере: в `/metrics` `vms_workers_needed` 1 и предложение в `vms/slots/`; запасной, поднятый скриптом, берёт его, и камера размещена — а контроллер не запустил ничего.
+- Девятая камера на полном кластере: в `/metrics` `cam_workers_needed` 1 и предложение в `cam/slots/`; запасной, поднятый скриптом, берёт его, и камера размещена — а контроллер не запустил ничего.
 - Ваша копия таблицы шага 8 для своего продукта, с одной добавленной строкой — про то, что ваша команда последней предлагала поручить контроллеру.
 
 ## Что может пойти не так
@@ -377,7 +377,7 @@ GET /mounts             корень и смонтированные спеки:
 2. Дайте консоли `POST /move` и защитите его: кто может звать, что он записывает, и почему он идёт через `move()`, а не через `assign()`.
 3. Кешируйте `workers_seen()` в контроллере на минуту и прогоните тест двух контроллеров и тест запасного (`test_a_spare_takes_an_offer_then_stops`). Скажите, какое свойство сломалось и какой тест это нашёл.
 4. Напишите юнит воркера `testsub` и запустите на стенде `w2c-controller@testsub` с её спекой в `SPEC_DIR`. Сравните с VMS построчно: что поменялось в юнитах, что — в сгенерированном файле прав, и сколько строк кода платформы пришлось написать?
-5. Сделайте так, чтобы контроллер сам запускал запасного (`systemctl start vms-vmsworker-spare@<n>`). Перечислите, какие права для этого нужны процессу контроллера на каждом сервере, и что случится с предложениями, когда два контроллера на двух серверах сделают это одновременно.
+5. Сделайте так, чтобы контроллер сам запускал запасного (`systemctl start vms-camworker-spare@<n>`). Перечислите, какие права для этого нужны процессу контроллера на каждом сервере, и что случится с предложениями, когда два контроллера на двух серверах сделают это одновременно.
 6. Добавьте в таблицу шага 8 строку «какому кластеру принадлежит единица», а потом прочитайте урок 1 М12A и проверьте, согласился ли с вами домен.
 
 ## Что дальше
