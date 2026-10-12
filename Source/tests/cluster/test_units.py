@@ -23,15 +23,15 @@ DEPLOY = os.path.join(HERE, "deploy", "cluster")
 # (`w2c-controller@<sub>`, ADR 0023); its role keeps the spec's name.
 UNITS = {"w2c-resource": ("resource", "resource"), "w2c-console": ("console", "console"),
          "vms-jobs": ("console", "vms jobs"),
-         "w2c-controller@vms": ("vmscontroller", "controller vms"), "w2c-controller@rec": ("reccontroller", "controller rec"),
-         "vms-vmsworker": ("vmsworker", "vms worker"), "vms-recworker": ("recworker", "vms recorder")}
+         "w2c-controller@cam": ("camcontroller", "controller cam"), "w2c-controller@rec": ("reccontroller", "controller rec"),
+         "vms-camworker": ("camworker", "vms worker"), "vms-recworker": ("recworker", "vms recorder")}
 PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.console": "w2c-console", "com.w2c.vms.jobs": "vms-jobs",
-          "com.w2c.controller.vms": "w2c-controller@vms", "com.w2c.controller.rec": "w2c-controller@rec",
-          "com.w2c.vms.vmsworker": "vms-vmsworker", "com.w2c.vms.recworker": "vms-recworker"}
+          "com.w2c.controller.cam": "w2c-controller@cam", "com.w2c.controller.rec": "w2c-controller@rec",
+          "com.w2c.vms.camworker": "vms-camworker", "com.w2c.vms.recworker": "vms-recworker"}
 
 
 def service(name: str) -> dict:
-    """A systemd unit by name; an instance (`w2c-controller@vms`) is its template's file with `%i` put in, as systemd
+    """A systemd unit by name; an instance (`w2c-controller@cam`) is its template's file with `%i` put in, as systemd
     reads it."""
     base, _, instance = name.partition("@")
     if not instance:
@@ -61,7 +61,7 @@ def test_every_unit_opens_its_roles_socket_and_joins_its_group():
 def test_a_worker_is_named_by_its_unit_one_per_server():
     """The product's P4: `Environment=WORKER_NAME=w-%l-1` — one name per server and role, `w-srv-a-1` on srv-a; a
     restarted process claims the same name, and the store's CAS decides between two that both do."""
-    assert unit(os.path.join(DEPLOY, "systemd", "vms-vmsworker.service"))["env"]["WORKER_NAME"] == "w-%l-1"
+    assert unit(os.path.join(DEPLOY, "systemd", "vms-camworker.service"))["env"]["WORKER_NAME"] == "w-%l-1"
     assert unit(os.path.join(DEPLOY, "systemd", "vms-recworker.service"))["env"]["WORKER_NAME"] == "r-%l-1"
 
 
@@ -88,7 +88,7 @@ def test_every_plist_is_its_units_twin():
         p = plistlib.load(f)
     assert p["ProgramArguments"][1] == "configstore"
     assert p["EnvironmentVariables"]["CONFIGSTORE_SOCKETS"] == "__BOX__/state/run/configstore"
-    with open(os.path.join(DEPLOY, "launchd", "com.w2c.vms.vmsworker.plist"), "rb") as f:
+    with open(os.path.join(DEPLOY, "launchd", "com.w2c.vms.camworker.plist"), "rb") as f:
         assert plistlib.load(f)["EnvironmentVariables"]["WORKER_NAME"] == "w-@HOST@-1"
 
 
@@ -108,12 +108,12 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
         f.write("#!/bin/sh\necho \"$@\"\nenv\n")
     os.chmod(py, 0o755)
     env = {"PATH": os.environ["PATH"], "W2C_ENV": w2c, "VMS_ENV": vms_, "PYTHON": py, "W2C_HOME": d,
-           "PLATFORM_STORE": "configstore:///run/configstore/vmsworker.sock"}
+           "PLATFORM_STORE": "configstore:///run/configstore/camworker.sock"}
     out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env=env, capture_output=True, text=True,
                          check=True).stdout.splitlines()
     got = dict(l.split("=", 1) for l in out[1:] if "=" in l)
     assert out[0] == "-m w2cplatform.cluster console"
-    assert got["PLATFORM_STORE"] == "configstore:///run/configstore/vmsworker.sock"      # the unit's
+    assert got["PLATFORM_STORE"] == "configstore:///run/configstore/camworker.sock"      # the unit's
     assert got["SERVER_NAME"] == "srv-b" and got["CAPACITY"] == "7" and got["RESOURCE_ROOT"] == "/data/archive"
     assert got["EVIL"] == "$(touch " + d + "/ran)" and not os.path.exists(os.path.join(d, "ran"))   # a value, never run
     assert got["PYTHONPATH"].startswith(f"{d}/Source")
@@ -135,7 +135,7 @@ def test_a_unit_that_names_its_role_gets_its_declaration_first_and_the_spares_pa
     `HOST_MEMORY_MB` win over any a shared file still says, and what the unit says wins over all. A role that is no
     role's name is refused; no file is no failure. The plists name it too, and `install.sh` lays the examples."""
     import subprocess
-    for role in ("vmsworker", "recworker"):
+    for role in ("camworker", "recworker"):
         for name in (f"vms-{role}", f"vms-{role}-spare@"):
             assert unit(os.path.join(SYSTEMD, f"{name}.service"))["env"]["W2C_ROLE"] == role, name
         with open(os.path.join(DEPLOY, "launchd", f"com.w2c.vms.{role}.plist"), "rb") as f:
@@ -146,12 +146,12 @@ def test_a_unit_that_names_its_role_gets_its_declaration_first_and_the_spares_pa
         f.write("#!/bin/sh\nenv\n")
     os.chmod(py, 0o755)
     os.makedirs(os.path.join(d, "roles"))
-    with open(os.path.join(d, "roles", "vmsworker.env"), "w") as f:
+    with open(os.path.join(d, "roles", "camworker.env"), "w") as f:
         f.write("CAPACITY=40\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n")
     with open(os.path.join(d, "vms.env"), "w") as f:
         f.write("CAPACITY=9\nSHM_DIR=/run/vms\n")
     open(os.path.join(d, "w2c.env"), "w").close()
-    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d, "W2C_ROLE": "vmsworker"}
+    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d, "W2C_ROLE": "camworker"}
 
     def run(**more):
         out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env={**env, **more},
@@ -171,7 +171,7 @@ def test_a_unit_that_names_its_role_gets_its_declaration_first_and_the_spares_pa
 
 def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_by_its_directory():
     """The thirteenth review, major 13: a unit says `UMask=0007`, but Nomad's `raw_exec` hands on the agent's 0022 —
-    the events archive's buckets came out 2755 `vms:w2c-events`, the resource (`w2c`) could not delete them, and its
+    the events archive's buckets came out 2755 `cam:w2c-events`, the resource (`w2c`) could not delete them, and its
     retention stopped. The runner sets 0007 itself: started under 0022, what it execs has 0007. And major 15: a box on
     macOS (`install.sh --box <dir>`) has no /etc/w2c and no /data — a plist says `W2C_BOX`, and the runner reads that
     box's two files, runs its code, and gives the store's member the box's journal, sockets, rights and TLS."""
@@ -313,7 +313,7 @@ def test_the_spares_script_runs_as_the_platforms_user_whom_polkit_lets_start_a_s
     no group in its unit — no store socket, no key — and the polkit rule `install.sh --spares` installs lets that user
     do one thing through systemd: `start`, of an instance of a spare
     template, the templates being exactly `install.sh`'s SPARE_UNITS. Run by node where there is one: start of
-    `vms-vmsworker-spare@2.service` yes; stop, restart, reset-failed of it no; start of the regular worker, of a
+    `vms-camworker-spare@2.service` yes; stop, restart, reset-failed of it no; start of the regular worker, of a
     template that is not a spare's, of a spare with no number, or a unit file written: no; another user: not this
     rule's business."""
     import re
@@ -332,24 +332,24 @@ def test_the_spares_script_runs_as_the_platforms_user_whom_polkit_lets_start_a_s
             assert u["User"] == ["w2c"] and u["Group"] == ["w2c"] and "SupplementaryGroups" not in u, f
             assert u["RuntimeDirectory"] == ["w2c-spares"] and u["RuntimeDirectoryMode"] == ["0755"], f
     manage = "org.freedesktop.systemd1.manage-units"
-    cases = [("w2c", manage, "start", "vms-vmsworker-spare@2.service", "yes"),
+    cases = [("w2c", manage, "start", "vms-camworker-spare@2.service", "yes"),
              ("w2c", manage, "start", "vms-recworker-spare@1.service", "yes"),
-             ("w2c", manage, "stop", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c", manage, "restart", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c", manage, "reset-failed", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c", manage, "start", "vms-vmsworker.service", "no"),
+             ("w2c", manage, "stop", "vms-camworker-spare@2.service", "no"),
+             ("w2c", manage, "restart", "vms-camworker-spare@2.service", "no"),
+             ("w2c", manage, "reset-failed", "vms-camworker-spare@2.service", "no"),
+             ("w2c", manage, "start", "vms-camworker.service", "no"),
              ("w2c", manage, "start", "vms-liveworker-spare@1.service", "no"),
-             ("w2c", manage, "start", "vms-vmsworker-spare@.service", "no"),
-             ("w2c", manage, "start", "vms-vmsworker-spare@1.service.d", "no"),
+             ("w2c", manage, "start", "vms-camworker-spare@.service", "no"),
+             ("w2c", manage, "start", "vms-camworker-spare@1.service.d", "no"),
              ("w2c", manage, "start", "vms-recworker-spare@99.service", "yes"),          # the number: 1 to 99
              ("w2c", manage, "start", "vms-recworker-spare@100.service", "no"),          # (the thirteenth review)
-             ("w2c", manage, "start", "vms-vmsworker-spare@99999999999999999999.service", "no"),
-             ("w2c", manage, "start", "vms-vmsworker-spare@01.service", "no"),
+             ("w2c", manage, "start", "vms-camworker-spare@99999999999999999999.service", "no"),
+             ("w2c", manage, "start", "vms-camworker-spare@01.service", "no"),
              ("w2c", manage, "start", "sshd.service", "no"),
              ("w2c", manage, None, None, "no"),
              ("w2c", "org.freedesktop.systemd1.manage-unit-files", None, None, "no"),
              ("w2c", "org.freedesktop.systemd1.reload-daemon", None, None, "no"),
-             ("vms", manage, "start", "vms-vmsworker-spare@2.service", "not_handled")]
+             ("cam", manage, "start", "vms-camworker-spare@2.service", "not_handled")]
     for user, action, verb, unit_, want in cases:
         got = _polkit(rule, user, action, verb, unit_)
         if got is None:
@@ -365,7 +365,7 @@ def test_install_installs_the_units_there_are():
     listed = src.split('\nUNITS="', 1)[1].split('"', 1)[0].split()
     spares = src.split('SPARE_UNITS="', 1)[1].split('"', 1)[0].split()
     assert sorted(listed) == sorted(["configstore", *UNITS])
-    assert spares == ["vms-vmsworker-spare@", "vms-recworker-spare@"]
+    assert spares == ["vms-camworker-spare@", "vms-recworker-spare@"]
     files = {n.split("@", 1)[0] + "@" if "@" in n else n for n in listed}                 # an instance: its template's file
     assert sorted(f[:-len(".service")] for f in os.listdir(os.path.join(DEPLOY, "systemd")) if f.endswith(".service")) == sorted(files | set(spares))
     assert "rights --check" in src and "--spares" in src and "@BOXID@" in src
@@ -507,9 +507,9 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
     resource, the console, every controller) joins no subsystem's group (ADR 0023); the console writes its marks into
     the events archive as its owner, `w2c`, and joins no `w2c-events` — that group is the resource's and the
     subsystems' writers'."""
-    events = {"w2c-resource", "vms-vmsworker", "vms-recworker"}
+    events = {"w2c-resource", "vms-camworker", "vms-recworker"}
     writes_events = events | {"w2c-console"}
-    secrets = {"w2c-console", "vms-vmsworker", "vms-recworker"}
+    secrets = {"w2c-console", "vms-camworker", "vms-recworker"}
     for f in sorted(os.listdir(SYSTEMD)):
         if not f.endswith(".service"):
             continue
@@ -541,7 +541,7 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     # …and what a spare depends on (the thirteenth review, major 12): what its role's unit is ordered after, a spare
     # `Requisite=`s, up already or the spare does not start; and a worker spare whose set is refused (exit 2) is not
     # restarted (the same review, minor).
-    allowed = {"vms-vmsworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("env", "SPARE_FILE"), ("Description",),
+    allowed = {"vms-camworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("env", "SPARE_FILE"), ("Description",),
                                  ("WantedBy",), ("Requisite",), ("RestartPreventExitStatus",)},
                "vms-recworker": {("env", "WORKER_NAME"), ("env", "ARCHIVE_PORT"), ("Description",), ("WantedBy",),
                                  ("Requisite",)}}
@@ -550,10 +550,10 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
         diff = {(k,) for k in set(a) | set(b) if k not in ("env", "Environment") and a.get(k) != b.get(k)}
         diff |= {("env", k) for k in set(a["env"]) | set(b["env"]) if a["env"].get(k) != b["env"].get(k)}
         assert diff <= ok, (role, diff - ok)
-    w = unit(os.path.join(SYSTEMD, "vms-vmsworker-spare@.service"))
+    w = unit(os.path.join(SYSTEMD, "vms-camworker-spare@.service"))
     assert w["env"]["SPARE_FILE"] == "/run/w2c-spares/%n.env" and w["env"]["RTSP_PORT"] == "auto"
     assert "WORKER_NAME" not in w["env"]
-    for name in ("vms-vmsworker-spare@", "vms-recworker-spare@"):
+    for name in ("vms-camworker-spare@", "vms-recworker-spare@"):
         assert "EnvironmentFile" not in unit(os.path.join(SYSTEMD, f"{name}.service")), name
     assert unit(os.path.join(SYSTEMD, "vms-recworker-spare@.service"))["env"]["ARCHIVE_PORT"] == "0"
 
@@ -586,7 +586,7 @@ def test_no_unit_starts_what_it_depends_on_and_a_refused_set_is_not_restarted():
         assert requisite == ((["configstore.service", "vms-obsd.service"] if f.startswith("vms-recworker") else
                               ["configstore.service"]) if "-spare@" in f else []), f
         assert set(requisite) <= set(after), f
-    assert unit(os.path.join(SYSTEMD, "vms-vmsworker-spare@.service"))["RestartPreventExitStatus"] == ["2"]
+    assert unit(os.path.join(SYSTEMD, "vms-camworker-spare@.service"))["RestartPreventExitStatus"] == ["2"]
 
 
 def test_the_stores_journal_is_its_members_alone_however_it_was_started():
@@ -645,7 +645,7 @@ def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turn
     from w2cplatform.contract import HUNG_MOVE_AFTER
     from w2cplatform.worker import Worker
     from tests.cluster.conftest import Cluster
-    for name in ("vms-vmsworker", "vms-recworker", "vms-vmsworker-spare@", "vms-recworker-spare@"):
+    for name in ("vms-camworker", "vms-recworker", "vms-camworker-spare@", "vms-recworker-spare@"):
         u = unit(os.path.join(SYSTEMD, f"{name}.service"))
         sec = float(u["WatchdogSec"][0])
         assert Worker.STAND_IN_FOR < sec < HUNG_MOVE_AFTER, name
@@ -687,7 +687,7 @@ def test_a_nomad_task_can_read_the_key_and_open_its_socket():
     lines = _sysusers(os.path.join(DEPLOY, "nomad", "vms-nomad.sysusers"))
     member = {u: {l[2] for l in lines if l[:2] == ["m", u]} for u in ("vms", "w2c")}
     rights = json.load(open(RIGHTS, encoding="utf-8"))["roles"]
-    for job, user in (("console", "w2c"), ("vmsworker", "vms"), ("recworker", "vms")):
+    for job, user in (("console", "w2c"), ("camworker", "vms"), ("recworker", "vms")):
         src = open(os.path.join(DEPLOY, "nomad", f"{job}.nomad.hcl"), encoding="utf-8").read()
         assert re.search(r'\buser\s*=\s*"' + user + '"', src), job
         role = re.search(r'configstore:///run/configstore/(\w+)\.sock', src).group(1)
