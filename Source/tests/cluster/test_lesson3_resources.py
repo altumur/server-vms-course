@@ -37,7 +37,7 @@ def test_an_edit_during_the_failover_is_simply_there():
     ctl.update_camera(1, {"name": "edited during the failover"})          # acknowledged after the CAS commit: it is in raft
     b = c.worker("srv-a")                                                  # the new process, the same name
     assert b.reconcile_once() == [("start", 1)] and b.rows[0]["name"] == "edited during the failover"
-    assert c.objects.get("vms/config") is None                             # nothing was published for this to work
+    assert c.objects.get("cam/config") is None                             # nothing was published for this to work
 
 
 def test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves():
@@ -73,7 +73,7 @@ def test_the_resource_policy_needs_neither_worker_nor_controller_and_touches_no_
     srv = c.servers["srv-a"]; t = c.wall()
     event_log(srv.archive, 1, 1).append(t - 3 * 86400, "motion")                    # three days old…
     event_log(srv.archive, 1, 1).append(t - 60, "motion")
-    c.vars.put("vms/retention", {"days": "1"})                                     # …past camera 1's one day
+    c.vars.put("cam/retention", {"days": "1"})                                     # …past camera 1's one day
     r = _recorder_with_footage(c, "srv-a", "1", 1, ((t - 3 * 86400, t - 3 * 86400 + 600),))
     rep = srv.res.pass_()
     assert rep["removed"] == 1 and rep["space"] == "off"
@@ -85,7 +85,7 @@ def test_a_worker_with_no_assignment_invents_nothing():
     c = Cluster(); w = c.worker("srv-c")
     assert w.reconcile_once() == [] and w.name == "w-srv-c-1"
     w.heartbeat_once()
-    hb = json.loads(c.objects.get("vms/heartbeats/w-srv-c-1"))
+    hb = json.loads(c.objects.get("cam/heartbeats/w-srv-c-1"))
     assert hb["status"] == [] and hb["headroom"] == 50
 
 
