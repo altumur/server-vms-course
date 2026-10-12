@@ -142,7 +142,7 @@ def test_at_most_ten_units_move_in_one_pass():
     try:
         import urllib.request
         with urllib.request.urlopen(base + "/metrics") as r:
-            assert f"vms_units_moved_for_reach {REACH_BUDGET}" in r.read().decode()     # the pass report, on /metrics
+            assert f"cam_units_moved_for_reach {REACH_BUDGET}" in r.read().decode()     # the pass report, on /metrics
     finally:
         srv.shutdown()
     assert [ctl.pass_once()["reach_moves"] for _ in range(3)] == [REACH_BUDGET, 5, 0]
@@ -209,7 +209,7 @@ def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
     box = Box()
     _site(box, srv_a="vlan:a")
     _resource(box, "srv-a")                                                        # known to the recorders too
-    access = Tokens({"admin": [("admin", None, ())], "cam-admin": [("admin", "vms/1", ())],
+    access = Tokens({"admin": [("admin", None, ())], "cam-admin": [("admin", "cam/1", ())],
                      "guard": [("admin", None, ("vlan:a",))], "viewer": [("view", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
     try:
@@ -224,7 +224,7 @@ def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
         for method in ("GET", "PUT", "DELETE"):
             assert _call(base, method, "/rec/servers/srv-a/labels", {"labels": []} if method == "PUT" else None,
                          token="admin")[0] == 404, method
-        assert box.vars.get("rec/servers/srv-a")[0] is None and box.vars.get("vms/servers/srv-a")[0] is None
+        assert box.vars.get("rec/servers/srv-a")[0] is None and box.vars.get("cam/servers/srv-a")[0] is None
     finally:
         srv.shutdown()
 
@@ -241,11 +241,11 @@ def test_the_page_is_told_which_cameras_an_edit_will_move():
     con_ctl, rec, m, srv, base = _console(box)
     try:
         st, out = _call(base, "GET", "/servers/srv-a/labels?labels=vlan:b")
-        assert st == 200 and out["would_move"] == [f"vms/{a}"] and out["labels_source"] == "node"
-        assert _call(base, "GET", "/servers/srv-a/labels?labels=")[1]["would_move"] == [f"vms/{a}", f"vms/{b}"]
+        assert st == 200 and out["would_move"] == [f"cam/{a}"] and out["labels_source"] == "node"
+        assert _call(base, "GET", "/servers/srv-a/labels?labels=")[1]["would_move"] == [f"cam/{a}", f"cam/{b}"]
         assert _call(base, "GET", "/servers/srv-a/labels?labels=vlan%20b")[0] == 400
         st, out = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:a"]})
-        assert out["will_move"] == [f"vms/{b}"]
+        assert out["will_move"] == [f"cam/{b}"]
         assert ctl.where(a) == "w-1" and ctl.where(b) == "w-1"                    # nothing moved yet: the pass does
     finally:
         srv.shutdown()
@@ -347,7 +347,7 @@ def test_one_row_that_cannot_be_read_is_that_servers_alone():
     try:
         with urllib.request.urlopen(base + "/metrics") as r:
             page = r.read().decode()
-        assert "vms_servers_labels_unread 1" in page and "vms_units_waiting_for_reach 0" in page
+        assert "cam_servers_labels_unread 1" in page and "cam_units_waiting_for_reach 0" in page
     finally:
         srv.shutdown()
 
@@ -450,13 +450,13 @@ def test_one_alphabet_for_labels_and_a_stored_label_outside_it_does_not_move_its
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/9.mp4", "labels": ["склад"]})[0] == 400
     finally:
         srv.shutdown()
-    box.vars.put("vms/cameras/7", {"id": "7", "name": "old", "source": "driverpack://file/7.mp4", "labels": "склад",
+    box.vars.put("cam/cameras/7", {"id": "7", "name": "old", "source": "driverpack://file/7.mp4", "labels": "склад",
                                    "revision": "1"})                    # as an older build let it in
     ctl.ensure_placed()
     assert ctl.where(7) == "w-1"
     ctl.set_server_labels("srv-a", ["vlan:a"])
     assert ctl.pass_once()["reach_moves"] == 0 and ctl.where(7) == "w-1"
-    assert "vms/cameras/7#labels" in UNIT_LABELS.bad
+    assert "cam/cameras/7#labels" in UNIT_LABELS.bad
     assert ctl.update(7, {"name": "renamed", "labels": "склад"})["name"] == "renamed"   # its own label: an edit stands
     try:
         ctl.update(7, {"labels": "склад,zone 1"})
@@ -535,7 +535,7 @@ def test_moves_for_reach_are_counted_since_the_store_was_new_and_said_in_the_log
     con_ctl, rec, m, srv, base = _console(box)
     try:
         with urllib.request.urlopen(base + "/metrics") as r:
-            assert "vms_units_moved_for_reach_total 12" in r.read().decode()
+            assert "cam_units_moved_for_reach_total 12" in r.read().decode()
     finally:
         srv.shutdown()
 
@@ -577,7 +577,7 @@ def test_a_leaving_worker_hands_a_channel_group_on_whole_or_keeps_it_whole_and_s
     try:
         import urllib.request
         with urllib.request.urlopen(base + "/metrics") as r:
-            assert "vms_units_left_on_leaving 4\n" in r.read().decode()
+            assert "cam_units_left_on_leaving 4\n" in r.read().decode()
     finally:
         srv.shutdown()
     _beat(box, "w-4", "srv-d", "vlan:a", capacity=10)                       # one that takes them all arrives
@@ -660,7 +660,7 @@ def _recorder(box, name: str, server: str, labels: str) -> None:
 
 
 def test_one_row_a_server_for_every_subsystem_and_the_edit_names_the_units_of_each():
-    """The row was each subsystem's (`vms/servers/srv-a`, `rec/servers/srv-a`): the same machine reached `vlan:a` for the
+    """The row was each subsystem's (`cam/servers/srv-a`, `rec/servers/srv-a`): the same machine reached `vlan:a` for the
     cameras and nothing for the recorders. It is the platform's now, one a server: one `PUT` at the console's root, and
     the camera controller and the recorder controller both read it. What it would move is one list across every spec,
     each unit `<sub>/<id>`, cut to what the caller may look at — a guard of `vlan:b` is not told the ids on `vlan:a`."""
@@ -679,12 +679,12 @@ def test_one_row_a_server_for_every_subsystem_and_the_edit_names_the_units_of_ea
     con_ctl, rec, m, srv, base = _console(box, access)
     try:
         st, out = _call(base, "GET", "/servers/srv-a/labels?labels=", token="admin")
-        assert st == 200 and out["would_move"] == [f"vms/{cam}", f"vms/{cam_b}", "rec/1"], out
-        assert _call(base, "GET", "/servers/srv-a/labels?labels=", token="guard-b")[1]["would_move"] == [f"vms/{cam_b}"]
+        assert st == 200 and out["would_move"] == [f"cam/{cam}", f"cam/{cam_b}", "rec/1"], out
+        assert _call(base, "GET", "/servers/srv-a/labels?labels=", token="guard-b")[1]["would_move"] == [f"cam/{cam_b}"]
         st, out = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:b"]}, token="admin")
-        assert st == 200 and out["will_move"] == [f"vms/{cam}", "rec/1"], out
+        assert st == 200 and out["will_move"] == [f"cam/{cam}", "rec/1"], out
         assert box.vars.get("platform/servers/srv-a")[0] == {"labels": "vlan:b"}
-        assert [k for k in box.vars.list("vms/servers/")] == [] and [k for k in box.vars.list("rec/servers/")] == []
+        assert [k for k in box.vars.list("cam/servers/")] == [] and [k for k in box.vars.list("rec/servers/")] == []
         assert ctl.labels_of("w-1") == rc.labels_of("r-1") == {"vlan:b"}      # one row, read by both
         st, out = _call(base, "DELETE", "/servers/srv-a/labels", token="admin")
         assert st == 200 and out["will_move"] == [] and box.vars.get("platform/servers/srv-a")[0] is None
