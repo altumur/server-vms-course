@@ -43,6 +43,7 @@ domain in steady state never opens a connection to anyone.
 from __future__ import annotations
 
 import json
+import logging
 import time
 
 from w2cplatform.rows import PARSE_ERRORS, finite
@@ -60,6 +61,23 @@ REPORTED = "reported"
 # The largest publication a door takes (the product's `maxPublication`): a member's report this large is the sign to
 # publish changes instead of all.
 MAX_PUBLICATION = 16 << 20
+log = logging.getLogger(__name__)
+_inactive_inputs = set()
+
+
+def _input_slot(vars_, path, now):
+    """Confirm the local owner; slot rows themselves never cross the domain door."""
+    from w2cplatform.contract import read_slot
+    sub, name = path.split("/", 1)[0], path.rsplit("/", 1)[-1]
+    key = f"{sub}/slots/{name}"
+    items, index = vars_.get(key)
+    slot = read_slot(key, name, items)
+    if slot is None or not slot.holder or slot.released or slot.until <= now:
+        if path not in _inactive_inputs:
+            log.warning("book input %s omitted: no live local slot", path)
+            _inactive_inputs.add(path)
+        return None
+    return key, index
 # What the domain reads of a member, and nothing more. Objects: what a cluster publishes (М10–М11) — every loaded
 # subsystem's heartbeats and snapshot, and the objects a spec adds (`declared.reported_objects`) — and what the member
 # says it can see.
@@ -127,13 +145,23 @@ def publication(member: str, member_vars, member_objects, now: float, pages: dic
     inputs = {rule.source for s in declared.specs() for rule in s.domain.merged.values()}
     for row in _rows():
         for path in (member_vars.list(row) if row.endswith("/") else [row]):
+            is_input = any(path == source or source.endswith("/") and path.startswith(source) for source in inputs)
+            slot = _input_slot(member_vars, path, now) if is_input else None
+            if is_input and slot is None:
+                continue
             items, idx = member_vars.get(path)
             if items is None:
                 continue
+            if is_input:
+                # A release, takeover or renewal during the read gives no new control fact.
+                after = _input_slot(member_vars, path, now)
+                if after != slot:
+                    continue
+                _inactive_inputs.discard(path)
             if path == OUTCOMES_PATH:
                 outcomes = {k: _json_or_text(v) for k, v in items.items()}
             else:
-                if any(path == source or source.endswith("/") and path.startswith(source) for source in inputs):
+                if is_input:
                     from .booksecrets import outgoing
                     items = outgoing(member, path, items, member_vars, sealer, now)
                 rows[path] = {"items": items, "idx": idx}
