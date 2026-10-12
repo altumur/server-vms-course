@@ -993,11 +993,13 @@ def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load
 
 def test_the_spec_reads_a_kept_family_of_subjects_their_grant_and_the_fields_an_edit_carries():
     """ADR-0031's declarations, as testsub writes them: `kept: [ledger, badges/]` (a family by its `/`), `names:
-    {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]` — and a token kind says no grant."""
+    {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]`; ADR-0074 adds a role grant for requesting a token, not bearer rights."""
     d = spec().domain
     assert d.kept == ("ledger", "badges/") and d.tables == ("ledger",)
     assert d.names == {"badges/": {"exclusive_with": "domain/users", "grant": "view"}}
-    assert d.tokens["tally"] == {"lifetime": 600.0, "claims": ("counter",)}
+    assert d.tokens["tally"] == {"lifetime": 600.0, "claims": ("counter", "aud"), "grant": ("testsubworker",),
+        "placement": {"sub": "testsub", "caller": "origin", "ref_claim": "counter",
+                      "target_fields": ("cluster", "copies"), "audience_claim": "aud"}}
     assert d.edit == ("start", "labels")
 
 
@@ -1072,7 +1074,7 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     """`names.badges/.grant: view` — the grants of a cluster or of the domain may give a badge `view` and nothing wider:
     `edit` or `admin` to it is refused (`GrantTooWide`) and nothing is written, whoever writes the grants; a person of
     the same rows is granted anything. A badge made under a name already granted wider is refused too. A token kind
-    declares no grant, and a tally token carries none: what its subject may do is the grants'."""
+    may grant a role permission to request it, but a tally token carries no rights: subjects use the domain grants."""
     from w2cplatform.domain.agent import DomainPublisher
     from w2cplatform.domain.declared import GrantTooWide, guarded
     from w2cplatform.domain.declared import token_kinds
@@ -1099,7 +1101,8 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     t = TokenIssuer("acme")
     p = verify(DeclaredIssuer(t, token_kinds()).issue("tally", "south", now=1000.0, counter="s1"), t.keyset(),
                now=1000.0, kind="tally")
-    assert "grant" not in p and "tally" in token_kinds() and "grant" not in token_kinds()["tally"]
+    assert "grant" not in p and "role" not in p and "placement" not in p
+    assert token_kinds()["tally"]["grant"] == ("testsubworker",)
 
 def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_through():
     """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /domain/testsub/counters/
