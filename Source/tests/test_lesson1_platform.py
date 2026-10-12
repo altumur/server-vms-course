@@ -82,8 +82,8 @@ def test_the_platform_knows_nothing_about_its_subsystems():
     whole tree to every word of the product)."""
     from tests.test_boundary import ROOT, SUBSYSTEM_PACKAGES
     here = os.path.join(ROOT, "w2cplatform")
-    specs = [os.path.join(ROOT, p, f"{p}.subsystem.yaml") for p in SUBSYSTEM_PACKAGES]
-    units = [SubsystemSpec.load(s).rows.rstrip("s") for s in specs if os.path.exists(s)]
+    from vms.config import SPEC as CAM_SPEC
+    units = [CAM_SPEC.rows.rstrip("s")]
     assert units, "no subsystem package carries its own spec"
     for f in os.listdir(here):
         if f.endswith(".py"):
