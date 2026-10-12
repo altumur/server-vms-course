@@ -860,7 +860,7 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
 
 def test_a_torn_entry_of_the_book_a_camera_carried_home_stops_no_ask_to_another_target():
     """vmsserver's eleventh review, the camera's half of the `publish_asks` major: `Asker.book` read the book whole with
-    bare `json.loads`, and one torn `domain/vms/asks` entry raised out of it — no ask to any target. Each entry is read
+    bare `json.loads`, and one torn `domain/cam/asks` entry raised out of it — no ask to any target. Each entry is read
     through `BOOKS`: a torn one is the entry read last of it (or none), counted once; the other targets are asked."""
     from vms.domainpart.keys import ASKS_PATH
     from vms.domainpart.ingest import BOOKS, Asker
@@ -891,11 +891,11 @@ def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address(
         raise AssertionError("the camera's own console took a password in an address")
     except ApiError as e:
         assert e.status == 400 and "Hunter2" not in e.detail
-    items, idx = cam.flash.get("vms/cameras/1")
+    items, idx = cam.flash.get("cam/cameras/1")
     cam._put_row({**json.loads(items["row"]), "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2",
                   "cred_secret": "Hunter2"}, cas=idx)                          # as an older build stored it
     cam.publish()
-    snap = cam.ram.get(f"vms/snapshot/{SERIAL}")
+    snap = cam.ram.get(f"cam/snapshot/{SERIAL}")
     assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=admin&pwd=***")
 
 
