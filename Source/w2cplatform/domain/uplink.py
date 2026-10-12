@@ -76,7 +76,9 @@ def _rows() -> tuple[str, ...]:
     from .term import BACKUP_TAKEN, HOLDER
     # The root this member pinned and the key set it holds (Lesson 15): what the domain compares with its own
     # before anybody accepts the member (`Members.pinned`, feedback BX).
-    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP_TAKEN, ROOT_PATH, KEYS_PATH, *declared.epoch_prefixes())
+    inputs = (rule.source for s in declared.specs() for rule in s.domain.merged.values())
+    return tuple(dict.fromkeys((OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP_TAKEN, ROOT_PATH, KEYS_PATH,
+                               *declared.epoch_prefixes(), *inputs)))
 
 
 def base(member: str) -> str:
@@ -105,7 +107,8 @@ class NotPublished(Exception):
 # Lesson 10's ordering rule, on the report: a member that has not published yet does not report. Its report
 # would be a COMPLETE answer with no units in it, which the domain must believe; silence is the truthful
 # thing until the first publish.
-def publication(member: str, member_vars, member_objects, now: float, pages: dict | None = None, key=None) -> dict:
+def publication(member: str, member_vars, member_objects, now: float, pages: dict | None = None, key=None,
+                *, sealer=None) -> dict:
     from .pending import OUTCOMES_PATH
     objs: dict = {}
     for prefix in objects():
@@ -121,6 +124,7 @@ def publication(member: str, member_vars, member_objects, now: float, pages: dic
         raise NotPublished(f"{member} has not published yet; it reports after its first publish")
     rows: dict = {}
     outcomes = None
+    inputs = {rule.source for s in declared.specs() for rule in s.domain.merged.values()}
     for row in _rows():
         for path in (member_vars.list(row) if row.endswith("/") else [row]):
             items, idx = member_vars.get(path)
@@ -129,6 +133,9 @@ def publication(member: str, member_vars, member_objects, now: float, pages: dic
             if path == OUTCOMES_PATH:
                 outcomes = {k: _json_or_text(v) for k, v in items.items()}
             else:
+                if any(path == source or source.endswith("/") and path.startswith(source) for source in inputs):
+                    from .booksecrets import outgoing
+                    items = outgoing(member, path, items, member_vars, sealer, now)
                 rows[path] = {"items": items, "idx": idx}
     pub = {"sent_at": now, "objects": objs, "rows": rows,
            "pages": {n: raw.decode("utf-8", "surrogateescape") for n, raw in (pages or {}).items()}}
@@ -201,13 +208,13 @@ def take(member: str, body: bytes, domain_objects, *, received_at: float, signat
 
 
 def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None,
-           key=None) -> int:
+           key=None, *, sealer=None) -> int:
     """Local reports use exactly the serialization and signature of the HTTP client."""
     from w2cplatform.trust.memberkey import MemberKey, sign_request, verify_request
     from .carry import SKEW, publication_bytes
     if key is None:
-        key = MemberKey.load_or_make(member_vars)
-    body = publication_bytes(publication(member, member_vars, member_objects, now, pages, key))
+        key = MemberKey.load_or_make(member_vars, sealer)
+    body = publication_bytes(publication(member, member_vars, member_objects, now, pages, key, sealer=sealer))
     signature = sign_request(key, 'POST', f'/api/member/{member}', body, now)
     why = verify_request(key.pub, signature, 'POST', f'/api/member/{member}', body, now, SKEW)
     if why:
