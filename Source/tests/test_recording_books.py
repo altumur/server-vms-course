@@ -29,20 +29,18 @@ def test_primary_is_the_placed_recording_in_every_entry_order_with_two_reserves(
     entries = [fact("a-reserve", "b1"), fact("z-main", "main", running=False), fact("b-reserve", "b2")]
     for order in itertools.permutations(entries):
         items = row(list(order))
-        chosen = books.primary(items, "cam", "z-main", "main")
+        chosen = books.primary(items, "cam", "z-main")
         assert chosen.member == "z-main" and chosen.value["running"] is False
-        assert [(e.member, e.value["recording"]) for e in books.copies(items, "cam", [("b-reserve", "b2"),
-                            ("a-reserve", "b1")])] == [("a-reserve", "b1"), ("b-reserve", "b2")]
-        assert books.primary(items, "cam", "z-main", "not-started") is None
+        assert [(e.member, e.value["recording"]) for e in books.copies(items, "cam", ["b-reserve", "a-reserve"])] == [("a-reserve", "b1"), ("b-reserve", "b2")]
+        assert books.primary(items, "cam", "absent-main") is None
 
 
 def test_missing_primary_does_not_choose_a_running_reserve_and_absent_key_is_not_running():
     items = row([fact("main", "r"), fact("reserve", "b")], missing=["main"])
-    assert books.primary(items, "cam", "main", "r") is None
-    assert books.primary(items, "cam", "reserve", "b").value["running"] is True
-    assert books.primary({"": items[""]}, "cam", "main", "r") is None
-    refused(lambda: books.primary(items, "cam", "", "r"))
-    refused(lambda: books.primary(items, "cam", "main", ""))
+    assert books.primary(items, "cam", "main") is None
+    assert books.primary(items, "cam", "reserve").value["running"] is True
+    assert books.primary({"": items[""]}, "cam", "main") is None
+    refused(lambda: books.primary(items, "cam", ""))
 
 
 def test_source_requires_one_complete_observation_and_keeps_authenticated_origin():
@@ -76,10 +74,10 @@ def test_old_flat_books_torn_markers_and_malformed_values_are_refused_without_pa
 def test_recorder_state_is_boolean_and_duplicate_recording_origins_do_not_pick_a_winner():
     for field in ("running", "enabled", "starting"):
         for bad in (None, 1, "true", [], {}):
-            refused(lambda: books.primary(row([fact("main", "r", **{field: bad})]), "cam", "main", "r"))
+            refused(lambda: books.primary(row([fact("main", "r", **{field: bad})]), "cam", "main"))
     a, b = fact("main", "r"), fact("main", "r")
     b["item"] = "another-writer/r"
-    refused(lambda: books.primary(row([a, b]), "cam", "main", "r"))
+    refused(lambda: books.primary(row([a, b]), "cam", "main"))
 
 
 def test_collector_delivers_facts_before_a_stream_runs_and_a_stranger_gets_no_addresses():
@@ -92,9 +90,9 @@ def test_collector_delivers_facts_before_a_stream_runs_and_a_stranger_gets_no_ad
     rule = BookMerge(source="rec/primaries/", key="ref", pick="all", to="to")
     collected = collect(rule, reports, members)
     for member in members[:-1]:
-        chosen = books.primary(collected.rows[member], "cam", "main", "r")
+        chosen = books.primary(collected.rows[member], "cam", "main")
         assert chosen.value["starting"] and not chosen.value["running"]
         assert "token_secret" not in json.dumps(collected.rows[member])
     assert set(collected.rows["stranger"]) == {""}
     reports["main"] = {}
-    assert books.primary(collect(rule, reports, members).rows["camera"], "cam", "main", "r") is None
+    assert books.primary(collect(rule, reports, members).rows["camera"], "cam", "main") is None
