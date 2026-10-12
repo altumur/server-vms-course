@@ -133,7 +133,7 @@ Quadlet делает из каждого файла `/etc/containers/systemd/<и
 
 | Юнит | `Exec=` | Слушает | Пишет |
 |---|---|---|---|
-| `w2c-controller@.container` → `w2c-controller@vms`, `@rec`, … | `python3 -m w2cplatform controller %i` | ничего | размещение своей подсистемы и снимок; свой журнал в архиве событий |
+| `w2c-controller@.container` → `w2c-controller@cam`, `@rec`, … | `python3 -m w2cplatform controller %i` | ничего | размещение своей подсистемы и снимок; свой журнал в архиве событий |
 | `w2c-resource.container` | `python3 -m w2cplatform resource` | `127.0.0.1:8090` | heartbeat, `platform/doors/<сервер>`, архив событий |
 | `w2c-console.container` | `python3 -m w2cplatform console` | `0.0.0.0:8080` и `/run/w2c-console/console.sock` | строки оператора, отметки в архиве событий |
 
@@ -167,7 +167,7 @@ RestartSec=2
 WantedBy=multi-user.target
 ```
 
-**Имя экземпляра — имя спеки.** `systemctl start w2c-controller@vms` запускает контроллер спеки `vms.subsystem.yaml` из `SPEC_DIR` образа. Подсистема, которая добавит спеку, получит контроллер ещё одним экземпляром того же шаблона, и ни одного нового файла в `deploy/` для этого не понадобится. Контроллера с именем подсистемы среди юнитов нет ни одного, и тест это держит:
+**Имя экземпляра — имя спеки.** `systemctl start w2c-controller@cam` запускает контроллер спеки `cam.subsystem.yaml` из `SPEC_DIR` образа. Подсистема, которая добавит спеку, получит контроллер ещё одним экземпляром того же шаблона, и ни одного нового файла в `deploy/` для этого не понадобится. Контроллера с именем подсистемы среди юнитов нет ни одного, и тест это держит:
 
 ```python
     platform = {"w2c-controller@.container": "%i"}
@@ -186,11 +186,11 @@ WantedBy=multi-user.target
 
 **Ресурс — процесс, а не таймер.** Шапка его юнита называет, что он заменил: *the policy pass now runs every 600 s from the process's loop, and a oneshot could not hold a heartbeat.* Разовая задача раз в десять минут давала тот же проход, но у неё не было трёх вещей: heartbeat'а (между запусками её не видно), порта (к ней нельзя обратиться) и индекса событий с его кэшем (ему негде жить). Тест держит `Restart=always` с комментарием *a process, not a timer*. Индекс при этом ничего своего не хранит (урок 13), и перезапуск теряет только кэш. `RESOURCE_HOST=127.0.0.1`: на одной коробке к ресурсу обращается только консоль. В кластере он слушает адрес сервера, потому что соседи присылают туда зеркала.
 
-**Консоль — на порту и на сокете.** `CONSOLE_HOST=0.0.0.0`, `CONSOLE_PORT=8080`: страницу открывают с машины оператора, обычным HTTP, и консоль говорит об этом в журнале при каждом старте. С прокси перед ней сюда ставят `127.0.0.1`. Второй вход — сокет `CONSOLE_UNIX=/run/w2c-console/console.sock`, дверь самой коробки: через него идут аварийный вход и собственные соединения на случай, когда порт залит. Кто «на коробке», определяет режим каталога, а не адрес: `0700 w2c` (шаг 5), то есть root и процессы платформы. Корень консоли — `Environment=CONSOLE_ROOT=vms`. Тест `test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name` собирает консоль по этому окружению и спекам образа и проверяет, что остальные спеки встали под своими именами. Ничего своего консоль не держит: ключи идемпотентности лежат в хранилище, и повтор, попавший в перезапущенный экземпляр, получает тот же ответ.
+**Консоль — на порту и на сокете.** `CONSOLE_HOST=0.0.0.0`, `CONSOLE_PORT=8080`: страницу открывают с машины оператора, обычным HTTP, и консоль говорит об этом в журнале при каждом старте. С прокси перед ней сюда ставят `127.0.0.1`. Второй вход — сокет `CONSOLE_UNIX=/run/w2c-console/console.sock`, дверь самой коробки: через него идут аварийный вход и собственные соединения на случай, когда порт залит. Кто «на коробке», определяет режим каталога, а не адрес: `0700 w2c` (шаг 5), то есть root и процессы платформы. Корень консоли — `Environment=CONSOLE_ROOT=cam`. Тест `test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name` собирает консоль по этому окружению и спекам образа и проверяет, что остальные спеки встали под своими именами. Ничего своего консоль не держит: ключи идемпотентности лежат в хранилище, и повтор, попавший в перезапущенный экземпляр, получает тот же ответ.
 
 Имя файла консоли на коробке — `w2c-console.container`, служба — `w2c-console.service`: то же имя, что у этого процесса в кластере (ADR 0023).
 
-**Что в этих трёх файлах называет VMS.** Три слова, и все три — развёртывания, а не кода. `Image=localhost/vmsserver:latest`: коробка ставит один образ, и в нём спеки VMS (`SPEC_DIR=/app/vms`). `CONSOLE_ROOT=vms`: что стоит на `/`, решает развёртывание. `EnvironmentFile=/etc/vms/vms.env`: каждый юнит коробки читает обе половины окружения (шаг 7). Положите в образ спеку `counter` из урока 9 — и те же три файла поднимут её: поменяются имя экземпляра и `CONSOLE_ROOT`, и ничего больше.
+**Что в этих трёх файлах называет VMS.** Три слова, и все три — развёртывания, а не кода. `Image=localhost/vmsserver:latest`: коробка ставит один образ, и в нём спеки VMS (`SPEC_DIR=/app/vms`). `CONSOLE_ROOT=cam`: что стоит на `/`, решает развёртывание. `EnvironmentFile=/etc/vms/vms.env`: каждый юнит коробки читает обе половины окружения (шаг 7). Положите в образ спеку `counter` из урока 9 — и те же три файла поднимут её: поменяются имя экземпляра и `CONSOLE_ROOT`, и ничего больше.
 
 ## Шаг 4 — Пользователь `w2c` и группы его клиентов
 
@@ -316,7 +316,7 @@ Environment=SECRETS_KEY=/run/secrets/platform.key
 ```python
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
-    assert keyed == {"w2c-console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    assert keyed == {"w2c-console.container", "camworker@.container", "recworker@.container"}, keyed
     for n in keyed:
         assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
         assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
@@ -421,7 +421,7 @@ Polkit разрешает `w2c` ровно одно действие — `system
 
 Тесты запускают скрипт с подменёнными `curl` и `systemctl`: `test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing`, `test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried`, `test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console`, `test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one`. Строки юнитов держит `test_every_spares_unit_runs_the_script_for_its_role`: каждая служба — `oneshot` от `w2c` без `SupplementaryGroups`, каждый таймер — раз в минуту.
 
-**Долг границы, и он открыт.** Таблица ролей в самом скрипте называет роли VMS и страницы их метрик (`recworker` → `/rec/metrics`, `vmsworker` → `/metrics`, …) и префикс `NAME=vms`. Это скрипт платформы, который знает подсистему по имени, а не по спеке. Правильная форма — роли из спек каталога: страница и префикс у каждой спеки свои, `<sub>_workers_needed`. Сегодня этого нет, и тест границы долга не видит: он читает `w2cplatform/`, а скрипт лежит в `deploy/`.
+**Долг границы, и он открыт.** Таблица ролей в самом скрипте называет роли VMS и страницы их метрик (`recworker` → `/rec/metrics`, `camworker` → `/metrics`, …) и префикс `NAME=vms`. Это скрипт платформы, который знает подсистему по имени, а не по спеке. Правильная форма — роли из спек каталога: страница и префикс у каждой спеки свои, `<sub>_workers_needed`. Сегодня этого нет, и тест границы долга не видит: он читает `w2cplatform/`, а скрипт лежит в `deploy/`.
 
 ## Шаг 9 — Осушение и обновление на одной коробке
 
@@ -447,7 +447,7 @@ Polkit разрешает `w2c` ровно одно действие — `system
 ```bash
 podman build -f deploy/Containerfile -t localhost/vmsserver:latest .    # из Source/: один образ на всю коробку
 systemctl daemon-reload                                                  # если поменялись файлы юнитов
-systemctl restart w2c-controller@vms w2c-controller@rec w2c-console w2c-resource
+systemctl restart w2c-controller@cam w2c-controller@rec w2c-console w2c-resource
 systemctl restart <юниты подсистем>                                      # урок 17 М10B
 curl localhost:8080/schema                                               # can_raise_to: что понимает каждый живой процесс
 curl -X PUT 'localhost:8080/schema?version=2'                            # только если новая сборка подняла SCHEMA
@@ -469,10 +469,10 @@ python3 -m w2cplatform.sealing new /etc/w2c/secrets/platform.key   # из Source
 podman build -f deploy/Containerfile -t localhost/vmsserver:latest .
 cp deploy/w2c-controller@.container deploy/w2c-resource.container deploy/w2c-console.container /etc/containers/systemd/
 systemctl daemon-reload
-systemctl start w2c-resource w2c-console w2c-controller@vms w2c-controller@rec
+systemctl start w2c-resource w2c-console w2c-controller@cam w2c-controller@rec
 ```
 
-Юниты Quadlet не включают через `systemctl enable`: их `[Install]` читает генератор Quadlet при `daemon-reload`. Экземпляр шаблона на загрузку ставят ссылкой рядом с шаблоном, `w2c-controller@vms.container` → `w2c-controller@.container` (podman-systemd.unit(5)).
+Юниты Quadlet не включают через `systemctl enable`: их `[Install]` читает генератор Quadlet при `daemon-reload`. Экземпляр шаблона на загрузку ставят ссылкой рядом с шаблоном, `w2c-controller@cam.container` → `w2c-controller@.container` (podman-systemd.unit(5)).
 
 ```bash
 systemctl status w2c-resource w2c-console 'w2c-controller@*'    # три процесса платформы, все от w2c

@@ -43,13 +43,13 @@ B = 600
 
 
 def build_tree(root: str, cams: list[int], days: float, per_bucket: int, now: float) -> int:
-    """`vms/<cam>` and `det/<cam>-motion` for each camera, a bucket every 10 minutes for `days`, `per_bucket`
+    """`cam/<cam>` and `det/<cam>-motion` for each camera, a bucket every 10 minutes for `days`, `per_bucket`
     lines in each; one line in fifty an alarm. Written as files, the way a worker leaves them."""
     files = 0
     first = int((now - days * 86400) // B) * B
     last = int(now // B) * B
     for cam in cams:
-        for sub, unit, kind in (("vms", str(cam), "motion"), ("det", f"{cam}-motion", "motion")):
+        for sub, unit, kind in (("cam", str(cam), "motion"), ("det", f"{cam}-motion", "motion")):
             start = first
             while start <= last:
                 p = bucket_path(root, sub, unit, 1, start)
@@ -60,7 +60,7 @@ def build_tree(root: str, cams: list[int], days: float, per_bucket: int, now: fl
                         t = start + i * step
                         if t > now:
                             break
-                        line = {"t": t, "kind": "io.input" if (sub == "vms" and i % 7 == 0) else kind, "n": i}
+                        line = {"t": t, "kind": "io.input" if (sub == "cam" and i % 7 == 0) else kind, "n": i}
                         if sub == "det":
                             line["cam"] = cam
                         if i % 50 == 0:
@@ -101,12 +101,12 @@ def part1(root: str, now: float, files: int) -> dict:
     print(f"\n1. One resource's tree: {files} bucket files")
     res = {}
     idx = EventIndex(root, "srv-1")
-    res["auto_first"], r = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="vms", limit=500))
-    res["auto_cached"], _ = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="vms", limit=500), 20)
-    res["timeline_first"], _ = timed(lambda: EventIndex(root, "srv-1").query(now - 3600, now, unit="vms/7", limit=1000))
-    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="vms/7", limit=1000), 5)
-    idx.query(now - 3600, now, unit="vms/7", limit=1000)
-    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="vms/7", limit=1000), 10)
+    res["auto_first"], r = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="cam", limit=500))
+    res["auto_cached"], _ = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="cam", limit=500), 20)
+    res["timeline_first"], _ = timed(lambda: EventIndex(root, "srv-1").query(now - 3600, now, unit="cam/7", limit=1000))
+    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="cam/7", limit=1000), 5)
+    idx.query(now - 3600, now, unit="cam/7", limit=1000)
+    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="cam/7", limit=1000), 10)
     print(f"   index, automation's window (5 min, one kind, all units): first {ms(res['auto_first'])}, "
           f"cached {ms(res['auto_cached'])}  ({len(r['events'])} events)")
     print(f"   index, a timeline (1 h, camera 7):                        first {ms(res['timeline_first'])}, "
@@ -115,7 +115,7 @@ def part1(root: str, now: float, files: int) -> dict:
     db = old.EventDatabase(root, "srv-1")
     res["old_rebuild"], rep = timed(db.rebuild)
     res["old_tail"], _ = timed(db.tail)
-    res["old_query_auto"], _ = timed(lambda: db.query(now - 300, now, kind="io.input", subsystem="vms", limit=500), 20)
+    res["old_query_auto"], _ = timed(lambda: db.query(now - 300, now, kind="io.input", subsystem="cam", limit=500), 20)
     print(f"   old SQLite: rebuild {ms(res['old_rebuild'])} ({rep['added']} rows), one tail pass {ms(res['old_tail'])} "
           f"— every 3 s, whatever was asked; a query then {ms(res['old_query_auto'])}")
     return res
@@ -144,7 +144,7 @@ def part2(rs: dict, now: float) -> dict:
     print("\n2. A resource's /events over HTTP")
     res = {}
     r = next(iter(rs.values()))
-    url = f"{r.url}/events?from={now - 300}&to={now}&subsystem=vms&kind=io.input&limit=500"
+    url = f"{r.url}/events?from={now - 300}&to={now}&subsystem=cam&kind=io.input&limit=500"
     urllib.request.urlopen(url).read()
     res["http_auto"], _ = timed(lambda: urllib.request.urlopen(url).read(), 30)
     print(f"   one query, automation's window: {ms(res['http_auto'])} (median of 30)")
@@ -177,24 +177,24 @@ def part3(box, rs: dict, now: float, scenarios: int) -> dict:
     from vms.config import AUTO_SPEC
     from w2cplatform.spec import SpecController
     for cam in range(1, 21):
-        box.vars.put(f"vms/cameras/{cam}", {"id": str(cam), "name": f"cam{cam}", "source": f"driverpack://file/{cam}"})
+        box.vars.put(f"cam/cameras/{cam}", {"id": str(cam), "name": f"cam{cam}", "source": f"driverpack://file/{cam}"})
         box.vars.put(f"det/units/{cam}-motion", {"name": f"{cam}-motion", "cam": str(cam), "kind": "motion"})
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=time.time)
     names = []
     for i in range(scenarios):
         cam = i % 20 + 1
-        when = [{"sub": "vms", "kind": "io.input", "unit": str(cam)}]
+        when = [{"sub": "cam", "kind": "io.input", "unit": str(cam)}]
         if i % 3 == 0:
             when.append({"sub": "det", "kind": "motion", "unit": f"{cam}-motion"})
         if i % 5 == 0:
-            when.append({"sub": "vms", "kind": "motion", "unit": str(cam)})
+            when.append({"sub": "cam", "kind": "motion", "unit": str(cam)})
         con.create({"name": f"s{i}", "when": when, "within": 30 if len(when) > 1 else 0,
-                    "then": [{"sub": "vms", "action": "output", "unit": str(cam), "port": 1}], "rate_per_minute": 600})
+                    "then": [{"sub": "cam", "action": "output", "unit": str(cam), "port": 1}], "rate_per_minute": 600})
         names.append(f"s{i}")
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
                    wall=time.time).assign("a-1", names)
     res = {}
-    w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
+    w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
                    box.objects, index=MergedIndex(box.objects), wall=time.time, server="srv-a",
                    resource_root=os.path.join(box.root, "auto"), env={})
     res["pass_first"], _ = timed(w.reconcile_once)

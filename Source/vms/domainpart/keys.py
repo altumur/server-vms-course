@@ -1,4 +1,4 @@
-"""Where the VMS's rows of the domain lie: under the prefix the platform gives the `vms` subsystem (`domain/vms/…`,
+"""Where the VMS's rows of the domain lie: under the prefix the platform gives the `vms` subsystem (`domain/cam/…`,
 `SubsystemSpec.domain_prefix`), by the names its spec declares (`domain.books`, `domain.kept`). Nothing here names a
 row the spec does not: a book renamed in the spec and not here fails at import, not in a member's store.
 
@@ -21,13 +21,13 @@ from vms.config import SPEC
 
 def _book(name: str) -> str:
     if name not in SPEC.domain.books:
-        raise ValueError(f"vms.subsystem.yaml declares no book {name!r} (domain.books: {list(SPEC.domain.books)})")
+        raise ValueError(f"cam.subsystem.yaml declares no book {name!r} (domain.books: {list(SPEC.domain.books)})")
     return SPEC.domain_prefix + name
 
 
 def _kept(name: str) -> str:
     if name not in SPEC.domain.kept:
-        raise ValueError(f"vms.subsystem.yaml keeps no row {name!r} (domain.kept: {list(SPEC.domain.kept)})")
+        raise ValueError(f"cam.subsystem.yaml keeps no row {name!r} (domain.kept: {list(SPEC.domain.kept)})")
     return SPEC.domain_prefix + name
 
 

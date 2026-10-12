@@ -1,8 +1,8 @@
 """The VMS — the first subsystem the platform hosts.
 
     archive.py      the archive: volumes of ObjectStorage through the host's obsd — streams, the index, the ring
-    worker.py       vmsworker — DriverPack as the worker: N pipelines against an assignment
-    controller.py   the VMS's words over the platform's controller (the process is `w2c-controller@vms`)
+    worker.py       camworker — DriverPack as the worker: N pipelines against an assignment
+    controller.py   the VMS's words over the platform's controller (the process is `w2c-controller@cam`)
     console.py      the one-box console of the tests and lessons: the platform's Mount over the VMS's specs, nothing of its own
     gateway.py      the live gateway — the second subsystem's worker: a camera's fan-out as the unit, viewers as the capacity
     detworker.py    the detector worker — the second subsystem's worker: a model on a camera as the unit, streams as the capacity
@@ -20,8 +20,8 @@ and nothing in platform/ imports from here.
 # **Role in the module.** No code, only the docstring. It names the VMS as the *first subsystem* — the thing
 # the platform (`w2cplatform/`) was built to host without knowing what it is — and gives a one-line map of
 # the package: `archive.py` (the archive: volumes of ObjectStorage through the host's `obsd` — streams, the index, the ring), `worker.py`
-# (vmsworker — DriverPack as the worker, N pipelines against an assignment, over the platform's reconcile helper),
-# `controller.py` (the VMS's words over the platform's controller, whose process is `w2c-controller@vms`) and `console.py` (the one-box console: the
+# (camworker — DriverPack as the worker, N pipelines against an assignment, over the platform's reconcile helper),
+# `controller.py` (the VMS's words over the platform's controller, whose process is `w2c-controller@cam`) and `console.py` (the one-box console: the
 # platform's `Mount` over the VMS's specs, for the tests and the lessons — the deployed console is the platform's).
 #
 # The last sentence fixes the dependency direction that
@@ -36,6 +36,6 @@ and nothing in platform/ imports from here.
 # ## Notes
 # - The docstring still says `platform/` where the directory is `w2cplatform/` (renamed because Python's
 #   standard library owns `platform`; see `w2cplatform/__init__.py`).
-# - `config.py` and `vms.subsystem.yaml` are not listed in the docstring's map; they are the schema the
-#   controller and console run from (see `config.py`, `vms.subsystem.yaml`).
+# - `config.py` and `cam.subsystem.yaml` are not listed in the docstring's map; they are the schema the
+#   controller and console run from (see `config.py`, `cam.subsystem.yaml`).
 # ================================================================================================

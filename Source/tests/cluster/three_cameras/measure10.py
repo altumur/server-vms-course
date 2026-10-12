@@ -111,7 +111,7 @@ def main():
                           f"in store {stat['t']/3*1000:.0f} ms, slowest {stat['max']*1000:.0f} ms")
                 # чистим для следующего N
                 for k in admin.list(""):
-                    if not k.startswith("vms/epoch/"):
+                    if not k.startswith("cam/epoch/"):
                         try:
                             admin.delete(k)
                         except Exception:

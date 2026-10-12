@@ -152,7 +152,7 @@ class Crossings:
                     can = st["can"]
                     if not isinstance(can, dict) or not isinstance(can.get("events", []), list) \
                             or not all(isinstance(k, str) for k in can.get("events", [])):
-                        MEMBER_OBJECTS.garbled(f"{cluster}/vms/heartbeats/{worker}#{ref}/can", TypeError("not a description"))
+                        MEMBER_OBJECTS.garbled(f"{cluster}/cam/heartbeats/{worker}#{ref}/can", TypeError("not a description"))
                         continue
                     best = (s.ts, can)
         return best[1] if best else None
@@ -659,12 +659,12 @@ def camera_taken(door_objects, serial: str, me: str) -> bool | None:
     """Whether anyone but `me` takes the camera's stream, as the camera says through its door. None: the camera
     does not answer — then there is nothing to pull either."""
     try:
-        raw = door_objects.get(f"vms/heartbeats/{serial}")
+        raw = door_objects.get(f"cam/heartbeats/{serial}")
     except Unreachable:
         return None
     # a list of names, checked as one (`_names`, the ninth review's sibling of `_urls`): `list("srv-b")` passed a string
     # as its letters, and every letter is "someone but me" — the standby read the camera as taken and never pulled
-    hb = published("camera", f"vms/heartbeats/{serial}", raw, lambda v: _names(v.get("taken_by", [])), None)
+    hb = published("camera", f"cam/heartbeats/{serial}", raw, lambda v: _names(v.get("taken_by", [])), None)
     if raw and hb is None:
         return None                                      # what the camera said cannot be read: nothing known, change nothing
     return any(t != me for t in (hb or {}).get("taken_by", []))

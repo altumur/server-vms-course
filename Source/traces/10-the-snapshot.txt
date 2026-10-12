@@ -1,10 +1,10 @@
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-a-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-a-1
 
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-b-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-b-1
 
-# vmscontroller on srv-a → its own files on srv-a
-PUT vms/snapshot/w-srv-c-1
+# camcontroller on srv-a → its own files on srv-a
+PUT cam/snapshot/w-srv-c-1
 
-# on srv-a, /data/platform/objects: {'vms/snapshot/w-srv-a-1': 277, 'vms/snapshot/w-srv-b-1': 277, 'vms/snapshot/w-srv-c-1': 277}
+# on srv-a, /data/platform/objects: {'cam/snapshot/w-srv-a-1': 277, 'cam/snapshot/w-srv-b-1': 277, 'cam/snapshot/w-srv-c-1': 277}

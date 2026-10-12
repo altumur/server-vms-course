@@ -28,7 +28,7 @@ def s01_founding(site) -> None:
     log.objects = True
     site.holder.run_pass()
     log.objects = False
-    log.note("Первый проход воркера VMS на домене: слот domain/vms/worker, книги — пусто.")
+    log.note("Первый проход воркера VMS на домене: слот domain/cam/worker, книги — пусто.")
     site.domainpart.pass_once()
     log.note("Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL), отчёта не пишет.")
     site.sync("srv")
@@ -114,7 +114,7 @@ def s04_camera_boots(site) -> None:
     log = site.log
     site.wall.advance(60)
     log.note("Сцена 4. Камера cam-a (SN-A) загружается: кластер из одного (DeviceCluster.boot) — эпоха по CAS на флеше,\n"
-             "строка vms/cameras/1 с ref=SN-A при первой загрузке, heartbeat и срез снапшота в RAM, дверь после публикации.\n"
+             "строка cam/cameras/1 с ref=SN-A при первой загрузке, heartbeat и срез снапшота в RAM, дверь после публикации.\n"
              "Потом процесс камеры: карта — том card (kind: edge, cam: 1), запись 1-sd (home: card, when: offline),\n"
              "регистратор карты r-1 над кольцом камеры, толкатель, связанный с ним (ingest.camera_process).")
     site.boot("cam-a")
@@ -150,7 +150,7 @@ def s05_domain_learns(site) -> None:
     site.domain_pass()
     log.note("Анна смотрит камеры домена: откуда известно и сколько лет.")
     site.login("anna")
-    site.ask("anna", "GET", "domain console", "/domain/vms/cameras")
+    site.ask("anna", "GET", "domain console", "/domain/cam/cameras")
     site.ask("anna", "GET", "domain console", "/domain/where/SN-A")
 
 
@@ -199,8 +199,8 @@ def s07_who_records(site) -> None:
     log = site.log
     site.wall.advance(20)
     log.note("Сцена 7. Кто пишет SN-A. Решение «камеру SN-A пишет кластер relay-a» — одно на камеру, у держателя\n"
-             "(domain/vms/crossings). Двери у него в курсе нет: это вызов Crossings.record в процессе воркера VMS на домене\n"
-             "(module-design.md М12B, открытый пункт 2); у продукта — POST /domain/vms/crossings {ref, on, move: true}\n"
+             "(domain/cam/crossings). Двери у него в курсе нет: это вызов Crossings.record в процессе воркера VMS на домене\n"
+             "(module-design.md М12B, открытый пункт 2); у продукта — POST /domain/cam/crossings {ref, on, move: true}\n"
              "консоли srv (stand.sh setup).")
     with log.muted():                                      # the offices' and the centre's recorders say where they take streams
         for name in ("relay-a", "relay-b", "srv"):
@@ -208,7 +208,7 @@ def s07_who_records(site) -> None:
         site.agents_pass()
         site.holder.run_pass()
         site.console_pass()
-    with log.acting("vmsdomain on srv"):
+    with log.acting("camdomain on srv"):
         got = site.crossings.record("SN-A", on="relay-a", move=True)
     log.note(f"→ {json.dumps(got, ensure_ascii=False)}")
     with log.muted():
@@ -399,7 +399,7 @@ def _card_said(site, name: str) -> str:
 
 
 def _cameras_seen(site, who: str = "anna") -> None:
-    st, got = site.ask(who, "GET", "domain console", "/domain/vms/cameras")
+    st, got = site.ask(who, "GET", "domain console", "/domain/cam/cameras")
     if isinstance(got, dict):
         site.log.note("консоль домена: " + json.dumps({"clusters": got.get("clusters"), "complete": got.get("complete"),
                                                        "why": got.get("why")}, ensure_ascii=False))
@@ -535,7 +535,7 @@ def f04_centre_off(site) -> None:
     log.note(f"Токен потока cam-a действует до {until:.0f} — ещё {until - site.wall():.0f} с от выключения.")
     site.off("srv")
     log.note("srv выключен. Анна стучится в консоль домена; агент relay-a — в дверь подписывающего:")
-    site.ask("anna", "GET", "domain console", "/domain/vms/cameras")
+    site.ask("anna", "GET", "domain console", "/domain/cam/cameras")
     site.sync("relay-a")
     log.note("Шесть часов (свёрнуто: камеры толкают, офисы пишут, агенты не доходят до домена).")
     with log.muted():
@@ -570,7 +570,7 @@ def f07_camera_reboot(site) -> None:
     site.sync("relay-a")
     site.domain_pass()
     site.login("anna")
-    _, got = site.ask("anna", "GET", "domain console", "/domain/vms/cameras")
+    _, got = site.ask("anna", "GET", "domain console", "/domain/cam/cameras")
 
 
 def f08_centre_restart(site) -> None:

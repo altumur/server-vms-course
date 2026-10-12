@@ -36,8 +36,8 @@ from tests import stand  # noqa: E402
 from tests.conftest import Cluster, StandPeers, host as stand_host  # noqa: E402
 from tests.trace import Call, TraceLog  # noqa: E402
 
-# МАШИНА СЕРВЕРА. Воркер, которому имя занято, смотрит отметку претендента `vms/contenders/<имя>/<машина>`; машина —
-# BOX_ID из юнита, иначе /etc/machine-id, иначе имя хоста (`runtime.box`). У юнита vms-vmsworker BOX_ID нет (он есть у
+# МАШИНА СЕРВЕРА. Воркер, которому имя занято, смотрит отметку претендента `cam/contenders/<имя>/<машина>`; машина —
+# BOX_ID из юнита, иначе /etc/machine-id, иначе имя хоста (`runtime.box`). У юнита vms-camworker BOX_ID нет (он есть у
 # регистратора, `BOX_ID=%m`), значит на сервере это /etc/machine-id. Стенд — один процесс на одной машине, и там в
 # трассу попадало имя хоста того, кто снимает. Здесь машина каждого сервера — постоянная строка `machine-id-<сервер>`,
 # как если бы у srv-a, srv-b, srv-c были свои /etc/machine-id.
@@ -88,8 +88,8 @@ class S(stand.Stand):
         env = self.env(server, name, **({"SPARE_FOR": spare_for} if spare_for is not None else {}))
         if instance:
             env["INSTANCE_ID"] = instance
-        who = f"vmsworker {name or 'spare'} on {server} {tag}"
-        v = self.door("vmsworker", who)
+        who = f"camworker {name or 'spare'} on {server} {tag}"
+        v = self.door("camworker", who)
         return make_worker(v, self.objects_on(server, v, who), actuator or FakeActuator(), env=env,
                            clock=self.clock, wall=self.wall, capacity=capacity, **kw)
 
@@ -130,7 +130,7 @@ def writes_only(c) -> bool:
 
 
 def controller_pass(ctl) -> dict:
-    """Один проход юнита w2c-controller@vms: размещение и снапшот в одном one_pass. В возвращённом отчёте нет
+    """Один проход юнита w2c-controller@cam: размещение и снапшот в одном one_pass. В возвращённом отчёте нет
     `seconds` (время прохода по часам машины — в трассе оно менялось бы от прогона к прогону)."""
     with ctl.one_pass():
         rep = ctl.pass_once(1)
@@ -262,13 +262,13 @@ def beat_all(s: S, ws, skip=(), resources_skip=()):
 
 def s02_1_start() -> str:
     s = S()
-    out = ["# 02-1. Старт кластера до первой камеры (часть 02-before-first-camera): юниты vms-vmsworker на srv-a/b/c",
-           "# берут имена (слоты vms/slots/w-srv-X-1), пишут первый heartbeat — ФАЙЛ на своём сервере, не строку;",
+    out = ["# 02-1. Старт кластера до первой камеры (часть 02-before-first-camera): юниты vms-camworker на srv-a/b/c",
+           "# берут имена (слоты cam/slots/w-srv-X-1), пишут первый heartbeat — ФАЙЛ на своём сервере, не строку;",
            "# ресурс каждого сервера пишет свой heartbeat (тоже файл); контроллер на srv-a делает проход по пустому",
            "# кластеру и публикует снапшот. objects=True: видны файлы и запросы к ресурсу (/v1/objects).",
            "# Стенд: wall = 1757500000.0; ёмкость воркеров 50; LABELS=vlan:cctv на всех трёх серверах. Каждый воркер",
            "# строится make_worker, как в юните, и регистрируется у ресурса своего сервера (Worker.present). Машина",
-           "# сервера в ключе vms/contenders/<имя>/<машина> — machine-id-<сервер> (на сервере — /etc/machine-id).",
+           "# сервера в ключе cam/contenders/<имя>/<машина> — machine-id-<сервер> (на сервере — /etc/machine-id).",
            "# Heartbeat воркера несёт archive — путь дерева ресурса; на стенде это временный каталог, и размеры heartbeat'а",
            "# в ответах ресурса (bytes, size) на ~60 байт больше, чем в юните (ARCHIVE=/data/platform/events).", ""]
     mark = s.log.mark()
@@ -278,7 +278,7 @@ def s02_1_start() -> str:
     for w in ws.values():
         w.heartbeat_once()
     out += ["# ---- 2. первый heartbeat каждого воркера: файл на своём сервере ----", s.view(mark).render()]
-    out.append(pretty_obj(ws["srv-a"].objects, "vms/heartbeats/w-srv-a-1"))
+    out.append(pretty_obj(ws["srv-a"].objects, "cam/heartbeats/w-srv-a-1"))
     mark = s.log.mark()
     s.resources_up()
     out += ["# ---- 3. ресурс каждого сервера отчитывается (platform/resources/<server>/heartbeat — файл) ----",
@@ -291,7 +291,7 @@ def s02_1_start() -> str:
     out += ["# ---- 4. проход контроллера на srv-a по пустому кластеру (pass_once + publish_snapshot) ----",
             s.view(mark).render(),
             f"# за проход: {s.counts(mark)}",
-            f"# отчёт прохода (vms/controller/pass, файл на srv-a): {json.dumps(rep, ensure_ascii=False)}"]
+            f"# отчёт прохода (cam/controller/pass, файл на srv-a): {json.dumps(rep, ensure_ascii=False)}"]
     return "\n".join(out) + "\n"
 
 
@@ -361,13 +361,13 @@ def s04_place() -> str:
     out = ["# 04. Проход контроллера на srv-a, который размещает три камеры (часть 04-placement):",
            "# pass_once(1) + publish_snapshot() в одном one_pass — как юнит. Всё, что он читает (слоты, heartbeat'ы —",
            "# объекты через ресурс srv-a, ресурсы, политика, drain, метки серверов platform/servers/*), записи размещения",
-           "# (vms/placement/<id>) и назначения (vms/workers/<w>), файлы снапшота (vms/snapshot/<w>) и отчёта прохода.", "",
+           "# (cam/placement/<id>) и назначения (cam/workers/<w>), файлы снапшота (cam/snapshot/<w>) и отчёта прохода.", "",
            s.view(mark).render(),
            f"# за проход: {c}; из чтений хранилища list={lists}, get={gets}",
            f"# отчёт прохода: {json.dumps(rep, ensure_ascii=False)}",
            f"# where(1..3) = {[ctl.where(i) for i in (1, 2, 3)]}"]
     for w in ("w-srv-a-1", "w-srv-b-1", "w-srv-c-1"):
-        out.append(pretty_obj(ctl.objects, f"vms/snapshot/{w}").rstrip("\n"))
+        out.append(pretty_obj(ctl.objects, f"cam/snapshot/{w}").rstrip("\n"))
     return "\n".join(out) + "\n"
 
 
@@ -390,7 +390,7 @@ def s05_workers() -> str:
     ws["srv-a"].heartbeat_once()
     out += ["# ---- w-srv-a-1: весь проход ----", s.view(mark).render(), f"# итого: {s.counts(mark)}",
             f"# работает: {sorted(ws['srv-a'].actuator.running)} под эпохами {dict(ws['srv-a'].actuator.epochs)}",
-            pretty_obj(ws["srv-a"].objects, "vms/heartbeats/w-srv-a-1")]
+            pretty_obj(ws["srv-a"].objects, "cam/heartbeats/w-srv-a-1")]
     for n in ("srv-b", "srv-c"):
         mark = s.log.mark()
         ws[n].reconcile_once()
@@ -424,9 +424,9 @@ def s06_confirm() -> str:
         mark = s.log.mark()
         _, text = con.call("GET", "/metrics")
         out += ["# ---- GET /metrics ----", s.view(mark).render(), f"# итого: {s.counts(mark)}",
-                "# тело ответа /metrics (text/plain), строки vms_* и platform_* целиком:"]
-        out += ["#   " + (l if not l.startswith("vms_reconcile_pass_seconds ") else
-                             "vms_reconcile_pass_seconds <время прохода по часам машины: меняется от прогона к прогону>")
+                "# тело ответа /metrics (text/plain), строки cam_* и platform_* целиком:"]
+        out += ["#   " + (l if not l.startswith("cam_reconcile_pass_seconds ") else
+                             "cam_reconcile_pass_seconds <время прохода по часам машины: меняется от прогона к прогону>")
                 for l in text.splitlines()]
         return "\n".join(out) + "\n"
     finally:
@@ -479,7 +479,7 @@ def s08_1_double_save() -> str:
     con = Console(s, "srv-a")
     try:
         out = ["# 08-1. Двойное «Сохранить» (часть 08-failures, 8.1): тот же POST /cameras с тем же",
-               "# Idempotency-Key и тем же телом дважды. Второй ответ берётся из vms/idem/<ключ>; камера одна.", ""]
+               "# Idempotency-Key и тем же телом дважды. Второй ответ берётся из cam/idem/<ключ>; камера одна.", ""]
         mark = s.log.mark()
         con.call("POST", "/cameras", cam(1), key="k-anna-0001")
         out += ["# ---- первое нажатие ----", s.view(mark).render(), ""]
@@ -504,14 +504,14 @@ def s08_2_two_operators() -> str:
         first = {"done": False}
 
         def racing_put(path, items, cas=None, **kw):
-            if path == "vms/next_id" and not first["done"]:
+            if path == "cam/next_id" and not first["done"]:
                 first["done"] = True               # между чтением next_id консолью A и её записью — B создаёт свою
                 b.call("POST", "/cameras", cam(2), key="k-boris-0001", user="boris")
             return put(path, items, cas, **kw)
         a.ctl.vars.put = racing_put
         out = ["# 08-2. Два оператора создают камеру одновременно на разных консолях (часть 08-failures, 8.2):",
                "# anna на консоли srv-a создаёт «Ворота», boris на консоли srv-b — «Парковку». Консоль B успевает между",
-               "# чтением vms/next_id консолью A и её записью (стенд вклинивает запрос B ровно туда). CAS A получает",
+               "# чтением cam/next_id консолью A и её записью (стенд вклинивает запрос B ровно туда). CAS A получает",
                "# 409, A читает снова и берёт следующий номер. HTTP-обмен B вложен внутрь запроса A.", ""]
         mark = s.log.mark()
         a.call("POST", "/cameras", cam(1), key="k-anna-0001")
@@ -583,7 +583,7 @@ def s08_4_resource_silent() -> str:
 
 def s08_5_one_worker() -> str:
     s = S()
-    out = ["# 08-5. Воркер один, а не три (часть 08-failures, 8.5): юнит vms-vmsworker запущен только на srv-a",
+    out = ["# 08-5. Воркер один, а не три (часть 08-failures, 8.5): юнит vms-camworker запущен только на srv-a",
            "# (на srv-b и srv-c — только ресурс). Три камеры, ёмкость 50: все три на w-srv-a-1. Только записи.", ""]
     mark = s.log.mark()
     ws = boot(s, servers=("srv-a",))
@@ -633,8 +633,8 @@ def _fate_lines(s: S, ctl, mark: int, worker: str = "w-srv-b-1") -> list[str]:
 
 
 def _slot_row(s: S, worker: str = "w-srv-b-1") -> str:
-    items, idx = s.vars.get(f"vms/slots/{worker}")
-    return f"# в хранилище vms/slots/{worker} (index {idx}) = {json.dumps(items, ensure_ascii=False)}"
+    items, idx = s.vars.get(f"cam/slots/{worker}")
+    return f"# в хранилище cam/slots/{worker} (index {idx}) = {json.dumps(items, ensure_ascii=False)}"
 
 
 def _door_row(s: S, server: str = "srv-b") -> str:
@@ -680,7 +680,7 @@ def s08_6a_process_dies() -> str:
     mark = s.log.mark()
     s.wall.advance(15)
     beat_all(s, ws)
-    out += ["# ---- t+15 с: живые воркеры продлевают имя (lease_pass: vms/slots/<w> и эпохи), пишут heartbeat; ресурсы ----",
+    out += ["# ---- t+15 с: живые воркеры продлевают имя (lease_pass: cam/slots/<w> и эпохи), пишут heartbeat; ресурсы ----",
             s.view(mark, writes_only).render(), ""]
     for t, step in ((40, 25), (50, 10), (95, 45)):
         s.wall.advance(step)
@@ -735,7 +735,7 @@ def s08_6c_fresh_controller() -> str:
     s = S()
     ws, ctl = running(s)
     out = ["# 08-6c. Сервер srv-b обесточен, а контроллер запущен ПОСЛЕ этого (часть 08-failures, 8.6): например, юниты",
-           "# w2c-controller@vms на srv-a и srv-c перезапущены обновлением. Свежий процесс не читал ничего с srv-b: файлов",
+           "# w2c-controller@cam на srv-a и srv-c перезапущены обновлением. Свежий процесс не читал ничего с srv-b: файлов",
            "# heartbeat'ов w-srv-b-1 и ресурса srv-b ему не прочесть (их сервер не отвечает). Он судит по тому, что лежит в",
            "# хранилище: в слоте держатель пишет свой сервер (Slot.server, в каждом продлении), а ресурс каждые 15 с",
            "# (ALIVE_EVERY) обновляет `at` своей строки двери platform/doors/<server>. Слот истёк, `at` двери srv-b",
@@ -791,7 +791,7 @@ def s08_6d_unsure() -> str:
         s.servers[n].res.peers = CutPeers(s, cut=("srv-b",))
     b = ws.pop("srv-b")
     b.absent()
-    until = s.vars.get("vms/slots/w-srv-b-1")[0]["until"]
+    until = s.vars.get("cam/slots/w-srv-b-1")[0]["until"]
     t0 = s.wall()
     out += [f"# until слота w-srv-b-1 = t+{float(until) - t0:g} с", ""]
     t = 0
@@ -831,7 +831,7 @@ def s08_6e_hung() -> str:
            "# (WatchdogSec=360, процесс шлёт WATCHDOG=1 из цикла): зависший цикл systemd убил бы на 6-й минуте, замок",
            "# отпустился бы, и это был бы 08-6a. В стенде сторожа нет — так выглядит зависание, которое сторож не снял.", ""]
     b = ws.pop("srv-b")                                   # завис: объект жив (замок держится), но его никто не крутит
-    until = s.vars.get("vms/slots/w-srv-b-1")[0]["until"]
+    until = s.vars.get("cam/slots/w-srv-b-1")[0]["until"]
     t0 = s.wall()
     out += [f"# until слота w-srv-b-1 = t+{float(until) - t0:g} с", ""]
     t = 0
@@ -866,7 +866,7 @@ def s08_7_two_copies() -> str:
     s = S()
     ws, ctl = running(s)
     a = ws["srv-a"]
-    out = ["# 08-7. Две копии одного воркера (часть 08-failures, 8.7): юнит vms-vmsworker на srv-a перезапущен, а",
+    out = ["# 08-7. Две копии одного воркера (часть 08-failures, 8.7): юнит vms-camworker на srv-a перезапущен, а",
            "# старый процесс ещё жив (завис, был остановлен SIGSTOP) — или второй запущен руками. Второй берёт имя",
            "# w-srv-a-1 сразу (новый gen); первый узнаёт об этом на продлении, и его эпохи уже не его.", ""]
     mark = s.log.mark()
@@ -891,10 +891,10 @@ def s08_8_spares() -> str:
     ws, ctl = running(s, capacity=1)
     out = ["# 08-8. Камер больше ёмкости (часть 08-failures, 8.8). Чтобы не создавать 151 камеру, ёмкость воркеров",
            "# здесь 1 (CAPACITY=1): три камеры заняли всех. Камера 4 «Касса» (vlan:cctv) ждёт. Проход контроллера",
-           "# считает недостачу и пишет ПРЕДЛОЖЕНИЕ слота (offer) — пустую строку vms/slots/w-<N> с набором меток;",
-           "# w2c-spares.sh на srv-c (таймер w2c-spares-vmsworker, пользователь w2c-spares) читает /metrics и запускает",
-           "# запасной из шаблона юнита роли: пишет строку SPARE_FOR=vlan:cctv в /run/w2c-spares/vms-vmsworker-spare@1.service.env",
-           "# и делает `systemctl start vms-vmsworker-spare@1` (polkit разрешает этому пользователю только start шаблонов).",
+           "# считает недостачу и пишет ПРЕДЛОЖЕНИЕ слота (offer) — пустую строку cam/slots/w-<N> с набором меток;",
+           "# w2c-spares.sh на srv-c (таймер w2c-spares-camworker, пользователь w2c-spares) читает /metrics и запускает",
+           "# запасной из шаблона юнита роли: пишет строку SPARE_FOR=vlan:cctv в /run/w2c-spares/vms-camworker-spare@1.service.env",
+           "# и делает `systemctl start vms-camworker-spare@1` (polkit разрешает этому пользователю только start шаблонов).",
            "# Шаблон — юнит воркера без WORKER_NAME (тот же пользователь vms, группы, ключ, сторож; RTSP_PORT=auto);",
            "# w2c-run.sh берёт из файла только строку SPARE_FOR=. Запасной, как и любой воркер, регистрируется у ресурса",
            "# srv-c (make_worker), берёт предложение по CAS, контроллер размещает на нём камеру. Механика сцен курса",
@@ -908,8 +908,8 @@ def s08_8_spares() -> str:
             f"# отчёт: units_short={rep['units_short']}, workers_needed={rep['workers_needed']}, "
             f"spare_offers={rep['spare_offers']}, spares_starting={rep['spares_starting']}", ""]
     text = metrics_text(s.console("srv-c", who="console on srv-c (w2c-spares.sh → GET /metrics)"), 0.0)
-    series = ("vms_workers_live", "vms_worker_load", "vms_workers_needed", "vms_units_short", "vms_spare_offers",
-              "vms_server_labels", "vms_spares_starting")
+    series = ("cam_workers_live", "cam_worker_load", "cam_workers_needed", "cam_units_short", "cam_spare_offers",
+              "cam_server_labels", "cam_spares_starting")
     keep = [l for l in text.splitlines() if l.replace("# TYPE ", "").replace("# HELP ", "").split("{")[0].split(" ")[0] in series]
     out += ["# ---- что w2c-spares.sh читает в /metrics (строки серий, которые читает скрипт) ----"]
     out += ["#   " + l for l in keep]
@@ -917,7 +917,7 @@ def s08_8_spares() -> str:
     mark = s.log.mark()
     spare = s.worker("srv-c", capacity=1, spare_for="vlan:cctv")
     spare.heartbeat_once()
-    out += ["# ---- запасной на srv-c: systemctl start vms-vmsworker-spare@1 (SPARE_FOR=vlan:cctv из его файла) ----",
+    out += ["# ---- запасной на srv-c: systemctl start vms-camworker-spare@1 (SPARE_FOR=vlan:cctv из его файла) ----",
             s.view(mark, writes_only).render(), f"# итого: {s.counts(mark)}; имя запасного: {spare.name}", ""]
     mark = s.log.mark()
     rep = controller_pass(ctl)
@@ -935,11 +935,11 @@ def s08_9_garbled() -> str:
     con = Console(s, "srv-a")
     try:
         out = ["# 08-9. Строка камеры 2 в хранилище не читается (часть 08-failures, 8.9): root через admin-сокет пишет в",
-               "# vms/cameras/2 поле revision = «два» (правка руками). Что делают контроллер, воркер w-srv-b-1 и консоль.", ""]
+               "# cam/cameras/2 поле revision = «два» (правка руками). Что делают контроллер, воркер w-srv-b-1 и консоль.", ""]
         v = s.door("admin", "root on srv-a")
-        row, idx = v.get("vms/cameras/2")
+        row, idx = v.get("cam/cameras/2")
         mark = s.log.mark()
-        v.put("vms/cameras/2", {**row, "revision": "два"}, cas=idx)
+        v.put("cam/cameras/2", {**row, "revision": "два"}, cas=idx)
         out += ["# ---- порча ----", s.view(mark).render(), ""]
         mark = s.log.mark()
         rep = controller_pass(ctl)
@@ -948,7 +948,7 @@ def s08_9_garbled() -> str:
                 f"where(2) = {ctl.where(2)}", ""]
         mark = s.log.mark()
         ws["srv-b"].reconcile_once(); ws["srv-b"].heartbeat_once()
-        hb = json.loads(ws["srv-b"].objects.local.get("vms/heartbeats/w-srv-b-1"))
+        hb = json.loads(ws["srv-b"].objects.local.get("cam/heartbeats/w-srv-b-1"))
         out += ["# ---- проход w-srv-b-1 ----", s.view(mark).render(),
                 f"# работает {sorted(ws['srv-b'].actuator.running)}; в heartbeat: "
                 + json.dumps({k: v_ for k, v_ in hb.get("extra", hb).items() if "garbl" in k or k in ("status",)}, ensure_ascii=False), ""]
@@ -1027,11 +1027,11 @@ def _measure(n: int, capacity: int) -> dict:
     s.clock.advance(w.MARK_SWEEP)
     m = s.log.mark()
     w.beat_once()                         # взгляд, на который пришлась уборка отметок (раз в MARK_SWEEP с)
-    beat_sweep = s.counts(m, who="vmsworker")
+    beat_sweep = s.counts(m, who="camworker")
     beat_sweep_res = s.counts(m, who="resource")
-    raw = w.objects.local.get("vms/heartbeats/w-srv-a-1") or b""
+    raw = w.objects.local.get("cam/heartbeats/w-srv-a-1") or b""
     hb = (unit_size(raw), len(raw))
-    snap = {k: len(ctl.objects.local.get(k) or b"") for k in ctl.objects.local.list("vms/snapshot/")}
+    snap = {k: len(ctl.objects.local.get(k) or b"") for k in ctl.objects.local.list("cam/snapshot/")}
     return {"n": n, "capacity": capacity, "placed": n - rep.get("unplaced", 0), "first": first, "steady": steady,
             "worker_pass": wpass, "hbeat": hbeat, "lease": lease, "beat": beat, "beat_sweep": beat_sweep, "beat_sweep_res": beat_sweep_res, "running_a": len(w.actuator.running), "hb": hb, "snap": snap,
             "short": rep.get("units_short"), "needed": rep.get("workers_needed")}
@@ -1067,11 +1067,11 @@ def s10_limits() -> str:
     running(s)
     v = s.door("admin", "root on srv-a")
     mark = s.log.mark()
-    v.get("vms/cameras/1")
+    v.get("cam/cameras/1")
     c = s.log.calls[mark]
     raw = json.dumps(c.answer["items"], ensure_ascii=False).encode()
     w = next(x for x in s.log.calls if x.kind == "store" and x.write and isinstance(x.body, dict)
-             and x.body.get("key") == "vms/cameras/1")
+             and x.body.get("key") == "cam/cameras/1")
     body = json.dumps(w.body, ensure_ascii=False).encode()
     out += ["# ---- строка камеры 1 «Ворота» (как её отдаёт хранилище) ----", s.view(mark).render(),
             f"# items в JSON: {len(raw)} байт (UTF-8), полей {len(c.answer['items'])}; тело записи POST /v1/write при "

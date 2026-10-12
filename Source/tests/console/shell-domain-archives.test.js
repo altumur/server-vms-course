@@ -3,7 +3,7 @@
 // свёрнутое остаётся свёрнутым после опроса. У члена с несколькими камерами — камеры, затем его архивы.
 // (Члены — списком контракта модуля, камеры и архивы — units вида курса; см. shell-domain.)
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-darc-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -12,12 +12,12 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const u=(sub,cluster,unit,o={})=>({sub,cluster,unit,ref:"",name:"",server:cluster,worker:"w",phase:"running",worker_state:"live",...o});
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"srv-box":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:[{name:"srv",holder:true,state:"ok",age:0,rpo:0,reaches:[]},{name:"cam-a",holder:false,state:"ok",age:2,rpo:2,reaches:[]},{name:"office",holder:false,state:"ok",age:2,rpo:2,reaches:[]}],
-  units:{vms:[u("vms","cam-a","1",{ref:"SN-A",name:"door a"}),u("vms","office","1",{ref:"SN-B",name:"hall"}),u("vms","office","2",{ref:"SN-C",name:"lobby"})],
+  units:{cam:[u("cam","cam-a","1",{ref:"SN-A",name:"door a"}),u("cam","office","1",{ref:"SN-B",name:"hall"}),u("cam","office","2",{ref:"SN-C",name:"lobby"})],
          rec:[u("rec","cam-a","1-sd",{name:"1-sd",phase:"standby"}),u("rec","office","SN-A")]},tables:{}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

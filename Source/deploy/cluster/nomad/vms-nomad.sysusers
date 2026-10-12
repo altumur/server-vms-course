@@ -10,7 +10,7 @@
 # key ring's (the events archive and the objects are its own: the box's `w2c.sysusers`).
 m w2c w2c-console
 m w2c w2c-secrets
-m vms vms-vmsworker
+m vms vms-camworker
 m vms vms-recworker
 m vms vms-obsd
 m vms w2c-events

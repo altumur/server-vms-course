@@ -6,12 +6,12 @@
    "read": [
     "platform/schema",
     "auto/*",
+    "cam/*",
     "det/*",
     "detjob/*",
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*",
     "platform/*",
     "domain/keys",
     "domain/member",
@@ -23,13 +23,13 @@
     "domain/holder",
     "domain/backup-taken",
     "domain/member-list",
+    "objects/cam/commands/*",
     "objects/det/commands/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
-    "objects/vms/commands/*",
     "door/signer",
     "door/keys",
     "domain/backup*",
@@ -46,6 +46,13 @@
     "platform/drain",
     "platform/decommission/*",
     "platform/schema",
+    "cam/cameras/*",
+    "cam/next_id",
+    "cam/idem/*",
+    "cam/policy",
+    "cam/sweep",
+    "cam/requests/*",
+    "cam/devices/*",
     "det/units/*",
     "det/next_id",
     "det/idem/*",
@@ -79,16 +86,9 @@
     "survey/policy",
     "survey/sweep",
     "survey/requests/*",
-    "vms/cameras/*",
-    "vms/next_id",
-    "vms/idem/*",
-    "vms/policy",
-    "vms/sweep",
-    "vms/requests/*",
-    "vms/devices/*",
+    "objects/cam/commands/*",
     "objects/det/commands/*",
     "objects/rec/commands/*",
-    "objects/vms/commands/*",
     "door/signer",
     "door/keys"
    ],
@@ -103,6 +103,13 @@
     "platform/drain",
     "platform/decommission/*",
     "platform/schema",
+    "cam/cameras/*",
+    "cam/next_id",
+    "cam/idem/*",
+    "cam/policy",
+    "cam/sweep",
+    "cam/requests/*",
+    "cam/devices/*",
     "det/units/*",
     "det/next_id",
     "det/idem/*",
@@ -136,13 +143,6 @@
     "survey/policy",
     "survey/sweep",
     "survey/requests/*",
-    "vms/cameras/*",
-    "vms/next_id",
-    "vms/idem/*",
-    "vms/policy",
-    "vms/sweep",
-    "vms/requests/*",
-    "vms/devices/*",
     "door/signer",
     "door/keys"
    ]
@@ -178,8 +178,8 @@
     "domain/keys",
     "domain/member",
     "door/keys",
-    "vms/requests/*",
-    "objects/vms/commands/*",
+    "cam/requests/*",
+    "objects/cam/commands/*",
     "rec/requests/*",
     "objects/rec/commands/*",
     "det/requests/*",
@@ -189,17 +189,67 @@
     "auto/epoch/*",
     "auto/slots/*",
     "auto/holds/*",
+    "cam/requests/*",
     "det/requests/*",
-    "rec/requests/*",
-    "vms/requests/*"
+    "rec/requests/*"
    ],
    "delete": [
     "auto/epoch/*",
     "auto/slots/*",
     "auto/holds/*",
+    "cam/requests/*",
     "det/requests/*",
-    "rec/requests/*",
-    "vms/requests/*"
+    "rec/requests/*"
+   ]
+  },
+  "camcontroller": {
+   "group": "w2c-camcontroller",
+   "read": [
+    "platform/schema",
+    "cam/*",
+    "rec/*",
+    "platform/*",
+    "!rec/asked/*"
+   ],
+   "write": [
+    "cam/workers/*",
+    "cam/placement/*",
+    "cam/slots/*",
+    "cam/decommissioned/*"
+   ],
+   "delete": [
+    "cam/workers/*",
+    "cam/placement/*",
+    "cam/slots/*",
+    "cam/decommissioned/*"
+   ]
+  },
+  "camworker": {
+   "group": "vms-camworker",
+   "read": [
+    "platform/schema",
+    "platform/epoch_floor",
+    "cam/*",
+    "platform/decommission/*",
+    "platform/servers/*",
+    "domain/keys",
+    "domain/member",
+    "door/keys",
+    "objects/cam/commands/*"
+   ],
+   "write": [
+    "cam/epoch/*",
+    "cam/slots/*",
+    "cam/holds/*",
+    "cam/devices/*",
+    "objects/cam/commands/*"
+   ],
+   "delete": [
+    "cam/epoch/*",
+    "cam/slots/*",
+    "cam/holds/*",
+    "cam/devices/*",
+    "objects/cam/commands/*"
    ]
   },
   "detcontroller": {
@@ -207,8 +257,8 @@
    "read": [
     "platform/schema",
     "det/*",
+    "cam/*",
     "rec/*",
-    "vms/*",
     "platform/*",
     "!rec/asked/*"
    ],
@@ -231,7 +281,7 @@
     "platform/schema",
     "platform/epoch_floor",
     "det/*",
-    "vms/*",
+    "cam/*",
     "platform/decommission/*",
     "platform/servers/*",
     "domain/keys",
@@ -257,8 +307,8 @@
    "read": [
     "platform/schema",
     "detjob/*",
+    "cam/*",
     "rec/*",
-    "vms/*",
     "platform/*",
     "!rec/asked/*"
    ],
@@ -281,7 +331,7 @@
     "platform/schema",
     "platform/epoch_floor",
     "detjob/*",
-    "vms/*",
+    "cam/*",
     "platform/decommission/*",
     "platform/servers/*",
     "domain/keys",
@@ -304,7 +354,7 @@
    "read": [
     "platform/schema",
     "live/*",
-    "vms/*",
+    "cam/*",
     "platform/*"
    ],
    "write": [
@@ -327,14 +377,14 @@
     "platform/schema",
     "platform/epoch_floor",
     "live/*",
-    "vms/*",
+    "cam/*",
     "platform/decommission/*",
     "platform/servers/*",
     "domain/keys",
     "domain/member",
     "door/keys",
-    "domain/vms/stream-clients/*",
-    "domain/vms/stream-accounts",
+    "domain/cam/stream-clients/*",
+    "domain/cam/stream-accounts",
     "domain/grants/*"
    ],
    "write": [
@@ -355,7 +405,7 @@
    "read": [
     "platform/schema",
     "rec/*",
-    "vms/*",
+    "cam/*",
     "platform/*",
     "!rec/asked/*"
    ],
@@ -378,23 +428,23 @@
     "platform/schema",
     "platform/epoch_floor",
     "rec/*",
-    "vms/*",
+    "cam/*",
     "platform/decommission/*",
     "platform/servers/*",
     "domain/keys",
     "domain/member",
     "door/keys",
-    "domain/vms/primaries",
-    "domain/vms/sources",
-    "domain/vms/upstream",
-    "domain/vms/asks",
+    "domain/cam/primaries",
+    "domain/cam/sources",
+    "domain/cam/upstream",
+    "domain/cam/asks",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
-    "vms/requests/*",
-    "objects/vms/commands/*",
+    "cam/requests/*",
+    "objects/cam/commands/*",
     "domain/grants/*",
     "!rec/asked/*"
    ],
@@ -402,7 +452,7 @@
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
-    "vms/requests/*",
+    "cam/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
@@ -413,7 +463,7 @@
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
-    "vms/requests/*",
+    "cam/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
@@ -426,7 +476,7 @@
    "read": [
     "platform/schema",
     "survey/*",
-    "vms/*",
+    "cam/*",
     "platform/*"
    ],
    "write": [
@@ -448,7 +498,7 @@
     "platform/schema",
     "platform/epoch_floor",
     "survey/*",
-    "vms/*",
+    "cam/*",
     "platform/decommission/*",
     "platform/servers/*",
     "domain/keys",
@@ -464,56 +514,6 @@
     "survey/epoch/*",
     "survey/slots/*",
     "survey/holds/*"
-   ]
-  },
-  "vmscontroller": {
-   "group": "w2c-vmscontroller",
-   "read": [
-    "platform/schema",
-    "vms/*",
-    "rec/*",
-    "platform/*",
-    "!rec/asked/*"
-   ],
-   "write": [
-    "vms/workers/*",
-    "vms/placement/*",
-    "vms/slots/*",
-    "vms/decommissioned/*"
-   ],
-   "delete": [
-    "vms/workers/*",
-    "vms/placement/*",
-    "vms/slots/*",
-    "vms/decommissioned/*"
-   ]
-  },
-  "vmsworker": {
-   "group": "vms-vmsworker",
-   "read": [
-    "platform/schema",
-    "platform/epoch_floor",
-    "vms/*",
-    "platform/decommission/*",
-    "platform/servers/*",
-    "domain/keys",
-    "domain/member",
-    "door/keys",
-    "objects/vms/commands/*"
-   ],
-   "write": [
-    "vms/epoch/*",
-    "vms/slots/*",
-    "vms/holds/*",
-    "vms/devices/*",
-    "objects/vms/commands/*"
-   ],
-   "delete": [
-    "vms/epoch/*",
-    "vms/slots/*",
-    "vms/holds/*",
-    "vms/devices/*",
-    "objects/vms/commands/*"
    ]
   },
   "resource": {
@@ -534,6 +534,8 @@
     "audit/alarms_retention",
     "auto/retention",
     "auto/alarms_retention",
+    "cam/retention",
+    "cam/alarms_retention",
     "console/retention",
     "console/alarms_retention",
     "det/retention",
@@ -545,9 +547,7 @@
     "rec/retention",
     "rec/alarms_retention",
     "survey/retention",
-    "survey/alarms_retention",
-    "vms/retention",
-    "vms/alarms_retention"
+    "survey/alarms_retention"
    ],
    "write": [
     "platform/doors/*",
@@ -566,12 +566,12 @@
     "identity/*",
     "platform/*",
     "auto/*",
+    "cam/*",
     "det/*",
     "detjob/*",
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -591,19 +591,19 @@
     "!domain/signer*",
     "platform/*",
     "auto/*",
+    "cam/*",
     "det/*",
     "detjob/*",
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*",
     "!domain/backup*",
     "!domain/book-seal*",
     "!domain/break-glass/*",
+    "!domain/cam/stream-accounts*",
+    "!domain/cam/stream-clients/*",
     "!domain/member-key*",
     "!domain/users/*",
-    "!domain/vms/stream-accounts*",
-    "!domain/vms/stream-clients/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -626,9 +626,9 @@
    "read": [
     "*",
     "!domain/book-seal*",
+    "!domain/cam/stream-clients/*",
     "!domain/signer*",
     "!domain/users/*",
-    "!domain/vms/stream-clients/*",
     "!door/signer*",
     "!rec/asked/*"
    ],
@@ -646,17 +646,17 @@
     "!domain/pending/*",
     "!domain/keepers/*",
     "!domain/ldevid/*",
-    "!domain/vms/asks/*",
-    "!domain/vms/polls/*",
-    "!domain/vms/primaries/*",
-    "!domain/vms/sources/*",
-    "!domain/vms/stream-accounts/*",
-    "!domain/vms/upstream/*",
-    "!domain/vms/crossings",
-    "!domain/vms/roads",
-    "!domain/vms/stream-clients/*",
-    "!domain/vms/worker",
-    "!domain/vms/heartbeat"
+    "!domain/cam/asks/*",
+    "!domain/cam/polls/*",
+    "!domain/cam/primaries/*",
+    "!domain/cam/sources/*",
+    "!domain/cam/stream-accounts/*",
+    "!domain/cam/upstream/*",
+    "!domain/cam/crossings",
+    "!domain/cam/roads",
+    "!domain/cam/stream-clients/*",
+    "!domain/cam/worker",
+    "!domain/cam/heartbeat"
    ],
    "delete": [
     "domain/*",
@@ -672,44 +672,44 @@
     "!domain/pending/*",
     "!domain/keepers/*",
     "!domain/ldevid/*",
-    "!domain/vms/asks/*",
-    "!domain/vms/polls/*",
-    "!domain/vms/primaries/*",
-    "!domain/vms/sources/*",
-    "!domain/vms/stream-accounts/*",
-    "!domain/vms/upstream/*",
-    "!domain/vms/crossings",
-    "!domain/vms/roads",
-    "!domain/vms/stream-clients/*",
-    "!domain/vms/worker",
-    "!domain/vms/heartbeat"
+    "!domain/cam/asks/*",
+    "!domain/cam/polls/*",
+    "!domain/cam/primaries/*",
+    "!domain/cam/sources/*",
+    "!domain/cam/stream-accounts/*",
+    "!domain/cam/upstream/*",
+    "!domain/cam/crossings",
+    "!domain/cam/roads",
+    "!domain/cam/stream-clients/*",
+    "!domain/cam/worker",
+    "!domain/cam/heartbeat"
    ]
   },
-  "vmsdomain": {
-   "group": "vms-vmsdomain",
+  "camdomain": {
+   "group": "vms-camdomain",
    "read": [
     "platform/schema",
-    "domain/vms/*",
+    "domain/cam/*",
     "domain/keys",
     "domain/topology",
     "domain/members",
     "domain/shared",
     "platform/*",
     "auto/*",
+    "cam/*",
     "det/*",
     "detjob/*",
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*",
     "domain/grants/*",
     "!rec/asked/*"
    ],
    "write": [
-    "domain/vms/*"
+    "domain/cam/*"
    ],
    "delete": [
-    "domain/vms/*"
+    "domain/cam/*"
    ]
   }
  }

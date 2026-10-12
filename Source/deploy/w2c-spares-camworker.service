@@ -1,6 +1,6 @@
-# /etc/systemd/system/w2c-spares-vmsworker.service — the one-shot its timer fires: spare camera workers
-# (`w2c-spares.sh vmsworker`), for the label sets this server covers, as many as `vms_workers_needed on /metrics` says and
-# the role's declaration allows (`/etc/vms/roles/vmsworker.env`: HOST_MEMORY_MB / WORKER_MEMORY_MB, ADR-0070). Each is `systemctl start vms-vmsworker-spare@<n>` — its role's unit's template, the same user, groups and key —
+# /etc/systemd/system/w2c-spares-camworker.service — the one-shot its timer fires: spare camera workers
+# (`w2c-spares.sh camworker`), for the label sets this server covers, as many as `cam_workers_needed on /metrics` says and
+# the role's declaration allows (`/etc/vms/roles/camworker.env`: HOST_MEMORY_MB / WORKER_MEMORY_MB, ADR-0070). Each is `systemctl start vms-camworker-spare@<n>` — its role's unit's template, the same user, groups and key —
 # with `SPARE_FOR=<set>` in its one-line file: it takes an offer of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
 # `w2c-spares.service`.
 [Unit]
@@ -14,7 +14,7 @@ Type=oneshot
 # nothing else (М11's `w2c-spares.rules`, installed by its `install.sh --spares`); it opens no store and reads no key.
 User=w2c
 Group=w2c
-ExecStart=/usr/local/bin/w2c-spares.sh vmsworker
+ExecStart=/usr/local/bin/w2c-spares.sh camworker
 EnvironmentFile=-/etc/w2c/w2c.env
 EnvironmentFile=-/etc/vms/vms.env
 ProtectSystem=strict

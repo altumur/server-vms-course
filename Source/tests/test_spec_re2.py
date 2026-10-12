@@ -147,7 +147,7 @@ def _regexes(node, at=""):
 
 
 def test_every_spec_of_the_course_loads_and_writes_only_re2():
-    """`Source/vms/*.subsystem.yaml` and `testdata/testsub*.yaml` load as they are — `rec`'s edge volume url says
+    """`Source/cam/*.subsystem.yaml` and `testdata/testsub*.yaml` load as they are — `rec`'s edge volume url says
     «no other scheme than file://» by `anyOf`/`not`, not by a lookahead — and every regex in them is RE2."""
     paths = sorted(glob.glob(os.path.join(HERE, "..", "vms", "*.subsystem.yaml"))) + \
         sorted(glob.glob(os.path.join(TESTDATA, "testsub*.subsystem.yaml")))

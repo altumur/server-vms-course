@@ -23,7 +23,7 @@ Source/
     uplink.py, members.py, topology.py, relay.py   L10, L6, L17   reports up, the list of members, who reaches whom, the relay
     signer_service.py, tokendoor.py, runtime.py, steps.py   the processes: the signer's doors, the wiring, a pass's steps
   vms/domainpart/          М12B — the VMS on the domain
-    keys.py                the VMS's rows of the domain: `domain/vms/…`, by the names `vms.subsystem.yaml` declares
+    keys.py                the VMS's rows of the domain: `domain/cam/…`, by the names `cam.subsystem.yaml` declares
     crossing.py            L13  a stream from another cluster: one recording cluster per camera, the source book, backfill
     ingest.py              L16  a camera nobody can reach: ingest, stream tokens, the long poll, the pusher, asks
     scenario.py            L12, L16  scenarios between cameras
@@ -43,13 +43,13 @@ python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.age
 # on a server: deploy/domain/systemd — w2c-run.sh signer | domainconsole | domainagent | vms domainpart
 ```
 
-## What the VMS declares (`vms.subsystem.yaml`, `domain:`)
+## What the VMS declares (`cam.subsystem.yaml`, `domain:`)
 
-`ref: ref` (a camera is found across clusters by its `ref`), `view: [name]`, `books: [sources, primaries, polls, upstream, asks]`, `kept: [crossings, roads]`, `tables: [crossings]`, `tokens: {stream: {lifetime: 86400, claims: [aud, ref]}, ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}}`, `keys:` — the key families of `domain/vms/…` (roads, crossings, sources, primaries, polls, upstream, asks, worker; their words in `display.keys`), `shared: [folders, alarms]` — the fields whose domain-wide value the domain holds, resolved by the platform and served at the cluster console's `GET /domain/shared/vms` (no VMS route); `rec.subsystem.yaml`: `reports: [polled/]`, `witness: polled` (where an ingest takes streams is its recorder's heartbeat field `ingest`, ADR-0065). The platform moves these rows and issues these tokens without reading them; what they mean is this package's.
+`ref: ref` (a camera is found across clusters by its `ref`), `view: [name]`, `books: [sources, primaries, polls, upstream, asks]`, `kept: [crossings, roads]`, `tables: [crossings]`, `tokens: {stream: {lifetime: 86400, claims: [aud, ref]}, ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}}`, `keys:` — the key families of `domain/cam/…` (roads, crossings, sources, primaries, polls, upstream, asks, worker; their words in `display.keys`), `shared: [folders, alarms]` — the fields whose domain-wide value the domain holds, resolved by the platform and served at the cluster console's `GET /domain/shared/cam` (no VMS route); `rec.subsystem.yaml`: `reports: [polled/]`, `witness: polled` (where an ingest takes streams is its recorder's heartbeat field `ingest`, ADR-0065). The platform moves these rows and issues these tokens without reading them; what they mean is this package's.
 
 ## What the product page shows (for «Консоль»)
 
-The platform's domain page draws members, units and causes from `domain/view`. What is the VMS's to show — domain cameras with their `ref` and name, crossings (which cluster records which camera of another: `domain/view` → `tables["vms/crossings"]`, or `GET /domain/vms/crossings`), scenarios between cameras and the catalogue of what one camera may ask another (`GET /catalog` on the VMS domain worker's door, `DOMAINPART_PORT`), the streams' numbers (`GET /metrics` there) — is the product page's, not a platform `domain/page.html`.
+The platform's domain page draws members, units and causes from `domain/view`. What is the VMS's to show — domain cameras with their `ref` and name, crossings (which cluster records which camera of another: `domain/view` → `tables["cam/crossings"]`, or `GET /domain/cam/crossings`), scenarios between cameras and the catalogue of what one camera may ask another (`GET /catalog` on the VMS domain worker's door, `DOMAINPART_PORT`), the streams' numbers (`GET /metrics` there) — is the product page's, not a platform `domain/page.html`.
 
 The domain card's «Ключи» tab: the families are the spec's now — `/spec` → `domain.keys` (`[{id, keys, prefix}]`) and
 `display.keys` (`{<id>: {title, about, absent}}`), merged by id; the product page's `KEY_FAMILIES` constant gives way to

@@ -39,7 +39,7 @@ def test_slow_versus_stuck():
 
 def test_the_report_from_what_clusters_publish():
     """Two real clusters; the domain placed 1 and 2 in north and nothing in
-    south. The shadow reads heartbeats and vms/epoch/* — never a controller."""
+    south. The shadow reads heartbeats and cam/epoch/* — never a controller."""
     fed, links = make_domain({"north": (), "south": ()}, "north"); wall = Clock()
     n = Running(fed.clusters["north"], wall); n.create(1, 2)
     s = Running(fed.clusters["south"], wall); s.create(3)
@@ -55,13 +55,13 @@ def test_the_report_from_what_clusters_publish():
 
 def test_one_garbled_epoch_row_is_skipped_and_the_report_of_every_cluster_stands():
     """The review's sixth pass, the reading side of «one camera's garbled epoch stops everybody»: `reports_from`
-    read every `vms/epoch/<id>` of every cluster bare, and one row with a word for a number — in one cluster —
+    read every `cam/epoch/<id>` of every cluster bare, and one row with a word for a number — in one cluster —
     raised out of the shadow report of the whole domain. The row is skipped; that camera's worker is taken at its
     word, and the other cameras and clusters are compared as before."""
     fed, links = make_domain({"north": (), "south": ()}, "north"); wall = Clock()
     n = Running(fed.clusters["north"], wall); n.create(1, 2)
     s = Running(fed.clusters["south"], wall); s.create(3)
-    fed.clusters["north"].vars.put("vms/epoch/2", {"epoch": "two"})              # a hand edit
+    fed.clusters["north"].vars.put("cam/epoch/2", {"epoch": "two"})              # a hand edit
     reports, epochs, down = reports_from(fed)
     assert down == [] and sorted(r.cluster for r in reports) == ["north", "south"]
     assert epochs[("north", "1")] == 1 and ("north", "2") not in epochs and epochs[("south", "3")] == 1

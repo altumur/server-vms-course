@@ -19,8 +19,8 @@ from tests.cluster.trace import TraceLog, body_shown
 from w2cplatform.configstorevars import ConfigstoreVariables
 from w2cplatform.storemachine import Rights, StoreMachine, answer, local_transport
 
-RIGHTS = Rights.parse({"roles": {"console": {"group": "w2c-console", "read": ["vms/*"], "write": ["vms/cameras/*"],
-                                             "delete": ["vms/cameras/*"]}}})
+RIGHTS = Rights.parse({"roles": {"console": {"group": "w2c-console", "read": ["cam/*"], "write": ["cam/cameras/*"],
+                                             "delete": ["cam/cameras/*"]}}})
 
 
 class _Daemon:
@@ -63,20 +63,20 @@ class _Daemon:
 
 
 def _script(v):
-    v.put("vms/cameras/7", {"name": "Ворота", "labels": "vlan:cctv-a"}, cas=0)
-    items, idx = v.get("vms/cameras/7")
-    v.put("vms/cameras/7", {**items, "name": "Северные ворота"}, cas=idx)
+    v.put("cam/cameras/7", {"name": "Ворота", "labels": "vlan:cctv-a"}, cas=0)
+    items, idx = v.get("cam/cameras/7")
+    v.put("cam/cameras/7", {**items, "name": "Северные ворота"}, cas=idx)
     try:
-        v.put("vms/cameras/7", {"name": "stale"}, cas=idx)           # the second writer, with the old version
+        v.put("cam/cameras/7", {"name": "stale"}, cas=idx)           # the second writer, with the old version
     except Conflict:
         pass
-    v.list("vms/cameras/")
-    v.get("vms/cameras/8")
+    v.list("cam/cameras/")
+    v.get("cam/cameras/8")
     try:
-        v.put("vms/epoch/7", {"epoch": "1"})                          # not the console's
+        v.put("cam/epoch/7", {"epoch": "1"})                          # not the console's
     except Forbidden:
         pass
-    v.delete("vms/cameras/7", cas=v.get("vms/cameras/7")[1])
+    v.delete("cam/cameras/7", cas=v.get("cam/cameras/7")[1])
 
 
 def _without_id(body):
@@ -113,12 +113,12 @@ def test_the_printed_trace_leaves_out_the_id_and_the_percent_signs_and_says_what
     path = "/run/configstore/console.sock"
     v = ConfigstoreVariables(path, transport=log.transport("console on srv-a", path,
                                                            local_transport(m.apply, RIGHTS, "console")))
-    v.put("vms/cameras/1", {"name": "gate"}, cas=0)
-    v.get("vms/cameras/1")
+    v.put("cam/cameras/1", {"name": "gate"}, cas=0)
+    v.get("cam/cameras/1")
     text = log.render()
     assert "# console on srv-a → /run/configstore/console.sock" in text
-    assert 'POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {"name": "gate"}}' in text
-    assert "GET /v1/get?key=vms/cameras/1\n" in text and "%2F" not in text and '"id"' not in text
+    assert 'POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "", "items": {"name": "gate"}}' in text
+    assert "GET /v1/get?key=cam/cameras/1\n" in text and "%2F" not in text and '"id"' not in text
     assert '→ 200 {"index": 1001}' in text
     assert log.calls[0].target == "/v1/write" and "id" in log.calls[0].body          # sent, not printed
     assert list(body_shown({"items": {}, "id": "x", "cas": None, "key": "k", "op": "put"})) == ["op", "key", "cas", "items"]

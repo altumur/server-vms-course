@@ -49,7 +49,7 @@ def _all_workers(box):
     from vms.autoworker import AutoWorker
     from vms.config import AUTO_SPEC
     from w2cplatform.contract import requests_acl
-    auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
+    auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
                       box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={})
     return [_holder(box)] + _workers(box) + [auto]
 
@@ -334,7 +334,7 @@ def test_the_vms_holder_and_recorders_fenced_for_the_schema_stop_speaking_when_a
         w = _holders(box)[i]
         kind = type(w).__name__
         assert w.lease_pass() == []
-        Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall).set_schema(SCHEMA + 1)
+        Controller(Subsystem("cam"), box.vars, box.objects, wall=box.wall).set_schema(SCHEMA + 1)
         w.lease_pass()
         assert not w.writing_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason and w.seeking is None, kind
         w.heartbeat_once()                                                  # the name is still its own: it says so
@@ -354,7 +354,7 @@ def test_every_kind_of_vms_worker_on_a_store_raised_past_its_build_is_nobody_onc
     from w2cplatform.contract import SCHEMA, Controller, Subsystem
     box = Box()
     workers = _every_kind(box)
-    Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall).set_schema(SCHEMA + 1)
+    Controller(Subsystem("cam"), box.vars, box.objects, wall=box.wall).set_schema(SCHEMA + 1)
     for w in workers:
         kind = type(w).__name__
         w.take_epoch("u")

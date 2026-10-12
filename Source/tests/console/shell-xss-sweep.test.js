@@ -5,7 +5,7 @@
 // выполняется ни разу, чужих элементов в разметке нет, данные видны текстом. (По образцу продуктового; фикстуры —
 // ответы курса: тома с held_by, удержания с name, вид домена с units и tables.)
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-xss-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`).replace('{lang:"ru",','{lang:"ru",poll_s:0,'));
@@ -15,9 +15,9 @@ async function sweep(P,tag){
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const p=s=>P+s;
 b.FIX["/session"]={open:true,user:p("u"),until:1790800000,login_url:"http://srv:8070/api/login"};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"cred_secret",type:"string"}],
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"cred_secret",type:"string"}],
   display:{unit:"камера",units:"камеры",kinds:{[P]:P,"io.input":P},tree:{group_by:"folders",nested_by:"/"},form:[{title:"Размещение",placement:true,state:true,fields:["name","source","labels","folders","cred_secret"]}]}};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],display:{kinds:{[P]:P}}},live:{name:"live",rows:"streams",id:"cam",about:{sub:"vms",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],display:{kinds:{[P]:P}}},live:{name:"live",rows:"streams",id:"cam",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:P,source:"driverpack://"+encodeURIComponent(P)+"/10.0.0.11/ch/1",enabled:true,labels:[P],folders:[p("f")+"/"+p("g")],ref:p("ref"),cred_secret:"***"},{id:2,name:P,source:P,enabled:false,labels:[],folders:[]}],
   rows:[{id:1,worker:p("w"),phase:"failed",epoch:P,why:P,warning:P,device_state:"opening",live_url:P}]};
 b.FIX["/servers"]={servers:{[p("s")]:{resource:P,resource_url:P,labels:[P],labels_source:"console",space:{total:9e9,free:1e9},workers:[{worker:p("w"),status:{volume_missing:p("v"),shrink_pending:5e8,"writer.state":P},capacity:50,load:1,labels:P,state:P,released:false,slot_until:1,holds:[P],hung:true,hung_since:1,presence_unknown:P,
@@ -34,20 +34,20 @@ b.FIX["/events"]={events:[{t:3,subsystem:"rec",kind:"volume.missing",unit:"rec/1
   {t:4,subsystem:"auto",kind:"fired",unit:"auto/"+p("sc"),actions:P}],state:P};
 b.FIX["/domain"]={holder:"srv",url:"http://srv/"+P,as_of:1,age:1,complete:false,
   members:[{name:"srv",holder:true,state:"ok"},{name:p("m"),state:P,age:2,error:P,reaches:[P]},{name:p("cam"),state:"ok",age:2}],
-  units:{vms:[{sub:"vms",id:"1",cluster:p("cam"),unit:"1",ref:p("ref2"),name:P,server:P,worker:P,phase:P,state:P,age:1,view:{name:P,enabled:true},worker_state:P,as_of:P},
-              {sub:"vms",id:P,cluster:p("m"),unit:P,ref:P,name:P,state:"live",age:1,view:{name:P},worker_state:"live"},{sub:"vms",id:"2",cluster:p("m"),unit:"2",ref:p("r3"),name:P,state:P,view:{[P]:P}}],
+  units:{cam:[{sub:"cam",id:"1",cluster:p("cam"),unit:"1",ref:p("ref2"),name:P,server:P,worker:P,phase:P,state:P,age:1,view:{name:P,enabled:true},worker_state:P,as_of:P},
+              {sub:"cam",id:P,cluster:p("m"),unit:P,ref:P,name:P,state:"live",age:1,view:{name:P},worker_state:"live"},{sub:"cam",id:"2",cluster:p("m"),unit:"2",ref:p("r3"),name:P,state:P,view:{[P]:P}}],
          rec:[{sub:"rec",id:p("rec"),cluster:p("cam"),unit:p("rec"),name:P,worker:P,server:P,phase:P,state:"stale",worker_state:"stale",as_of:P}]},
-  tables:{"vms/crossings":{[p("ref2")]:P,[P]:P}},
+  tables:{"cam/crossings":{[p("ref2")]:P,[P]:P}},
   topology:{rev:1,centre:"srv",star:[],via:{[p("cam")]:p("m")},by:P},knocking:[{name:p("kn"),times:P,last:1,fingerprint:P}],member_list:{rev:1,members:{[p("m")]:{how:P,since:1}}},
   term:{term:P,record:{holder:"srv"},backup_holders:[p("m")],backup:{term:P,rev:P},copies:{[p("m")]:{term:P,rev:P},[p("cam")]:{garbled:P}}}};
-b.FIX["/domain/alarms"]={events:[{kind:P,member:p("m"),of:"vms/1",t:1,subsystem:P,unit:P,alive_via:P}],complete:false,sentence:P};
+b.FIX["/domain/alarms"]={events:[{kind:P,member:p("m"),of:"cam/1",t:1,subsystem:P,unit:P,alive_via:P}],complete:false,sentence:P};
 b.FIX["/api/held"]={cluster:"srv",holder:{holder:P,term:P,url:P},term:P,keys:{current:P},backup:{term:P,rev:P}};
 b.FIX["/domain/keys"]={vars:[{key:"domain/"+P,fields:[P,"pub"],public:{pub:P},index:P},{key:"domain/w/"+P,withheld:P}],objects:[{key:"domain/members/"+P,size:1,age:P}],error:P};
 b.FIX["/domain/users"]={users:[{name:p("u"),how:"password",by:P,at:1},{name:p("u2"),how:"oidc",disabled:true}]};
-b.FIX["/domain/grants"]={grants:{domain:[{subject:p("u"),cap:"admin",scope:"*",by:P}],[p("m")]:[{subject:p("u"),cap:"view",scope:"unit:vms/"+P,by:P}]}};
+b.FIX["/domain/grants"]={grants:{domain:[{subject:p("u"),cap:"admin",scope:"*",by:P}],[p("m")]:[{subject:p("u"),cap:"view",scope:"unit:cam/"+P,by:P}]}};
 b.FIX["/domain/break-glass"]={clusters:{[p("m")]:{set_at:1}}};
-b.FIX["/domain/shared/vms"]={sub:"vms",rev:P,fields:{folders:{groups:[p("site")],from:P}}};
-b.FIX["/auto/scenarios"]={configured:[{id:p("sc"),name:P,when:[{sub:P,kind:P,unit:P,match:{[P]:P}}],then:[{sub:"vms",action:"output",unit:P,port:P},{sub:P,action:P,x:P}],enabled:true,within:P}],rows:[{id:p("sc"),phase:"refused",why:P,unfit:[P],worker:P}]};
+b.FIX["/domain/shared/cam"]={sub:"cam",rev:P,fields:{folders:{groups:[p("site")],from:P}}};
+b.FIX["/auto/scenarios"]={configured:[{id:p("sc"),name:P,when:[{sub:P,kind:P,unit:P,match:{[P]:P}}],then:[{sub:"cam",action:"output",unit:P,port:P},{sub:P,action:P,x:P}],enabled:true,within:P}],rows:[{id:p("sc"),phase:"refused",why:P,unfit:[P],worker:P}]};
 b.FIX["/det/spec"]={name:"det"};
 
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

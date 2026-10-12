@@ -1,15 +1,15 @@
 """python3 -m vms.domainpart — the VMS's worker on the domain: the books' pass at the holder.
 
 The books the VMS writes for each member — sources, primaries, poll, upstream, asks (`keys.py`, `domain.books` of
-`vms.subsystem.yaml`) — were a pass of the platform's signer until the boundary's «no hooks»: the platform knew which
+`cam.subsystem.yaml`) — were a pass of the platform's signer until the boundary's «no hooks»: the platform knew which
 books, in which order, and what was in them. Now they are this process's: it runs at the holder, reads the members by
-the platform's read view, writes `domain/vms/…` with its own role's rights, and asks the signer for the tokens the books
+the platform's read view, writes `domain/cam/…` with its own role's rights, and asks the signer for the tokens the books
 carry over the signer's own socket (`w2cplatform.domain.tokendoor`) — the key stays the signer's. The platform's agent
 carries each member's books home as it carries any row a spec declares, without reading them.
 
-    its slot        `domain/vms/worker` in the holder's store: {instance, at}, taken by CAS — one pass at a time; a
+    its slot        `domain/cam/worker` in the holder's store: {instance, at}, taken by CAS — one pass at a time; a
                     second instance waits until the first has been silent `SLOT_LOST` seconds
-    its heartbeat   `domain/vms/heartbeat` in the holder's object store: {ts, instance, passes, failing, step_failures}
+    its heartbeat   `domain/cam/heartbeat` in the holder's object store: {ts, instance, passes, failing, step_failures}
 
 Environment: `CLUSTERS` and `DOMAIN_HOLDER` as the domain's console reads them (`w2cplatform.domain.runtime`);
 `SIGNER_TOKENS_UNIX` — the signer's socket; `DOMAIN_CONSOLE_URL` — the domain console's door, where the people and the

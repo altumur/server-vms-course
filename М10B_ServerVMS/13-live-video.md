@@ -46,7 +46,7 @@
 name: live
 slot: {prefix: g, name_env: LIVE_NAME}
 worker: {writes: [streams]}   # a gateway deletes the fan-out it holds once nobody has watched it for `grace`
-about: {sub: vms, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
+about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
   rows: streams                      # live/streams/<cam>
   id: cam                            # named by the camera it fans out, never numbered
@@ -135,7 +135,7 @@ class Upstream:
 ```python
     def rtp_source(self, cam: str):
         """`(server, live_url, epoch)` of the worker holding the camera — its RTSP fan-out, on any server."""
-        found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url", eyes=self.eyes)
+        found = holder_of(self.objects, "cam/", cam, self.wall(), phase="running", field="live_url", eyes=self.eyes)
         if found is None:
             return None
         _, hb, st = found
@@ -143,7 +143,7 @@ class Upstream:
         if local_only(st["live_url"], server, self.server):
             …                                       # loopback on ANOTHER server: not for us; said once per camera
             return None
-        return server, st["live_url"], number(f"vms/status/{cam}#epoch", st.get("epoch", 0), int, 0)
+        return server, st["live_url"], number(f"cam/status/{cam}#epoch", st.get("epoch", 0), int, 0)
 ```
 
 **Тот же поиск, что у регистратора** (урок 10), с точностью до возвращаемой эпохи. `holder_of` — платформенный (М10A, урок 15, шаг 10): живой воркер, чей heartbeat говорит про эту камеру `phase == "running"` и называет `live_url`, — и никогда не звоня воркеру. Раздача на loopback **другого** сервера объявлена честно, но не для этого шлюза: он ждёт, пока тот сервер объявит достижимый адрес (`RTSP_HOST`). Эпоха из чужого статуса читается словом (`number`): испорченное слово — беда этой камеры, а не прохода.

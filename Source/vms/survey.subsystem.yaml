@@ -19,7 +19,7 @@ name: survey
 # The slot a worker of this subsystem makes, `s-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: s, name_env: SURVEY_NAME}
-about: {sub: vms, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
+about: {sub: cam, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
 unit:
   rows: watches                      # survey/watches/<name>
   id: name                           # "<cam>-<kind>", the operator's name for the pair
@@ -48,7 +48,7 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                           # it writes its events into the resource on its own server
-  near:       {sub: vms, by: cam}                # An affinity: be beside the worker HOLDING this camera, so the
+  near:       {sub: cam, by: cam}                # An affinity: be beside the worker HOLDING this camera, so the
                                                  # archive bytes cross a loopback and not the network. Never a
                                                  # filter — the door answers over HTTP from anywhere, it is only
                                                  # cheaper next door. `by: cam` because this unit is `7-lpr` and

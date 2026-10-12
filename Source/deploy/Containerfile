@@ -20,7 +20,7 @@
 # gone; the worker's truth is the platform's stores).
 #
 # - `python3-yaml` — PyYAML, which `w2cplatform.spec.SubsystemSpec.load` imports lazily to parse
-#   `vms.subsystem.yaml`; `vms/config.py` loads the spec at import and every verb reaches it (the
+#   `cam.subsystem.yaml`; `vms/config.py` loads the spec at import and every verb reaches it (the
 #   controller, console and resource directly; the worker through `vms.worker`'s `from .config import row`).
 #   The one Python dependency beyond the standard library.
 #

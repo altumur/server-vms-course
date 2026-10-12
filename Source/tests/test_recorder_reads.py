@@ -132,14 +132,14 @@ def test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_
     objects.list = lambda prefix, *a, **kw: lists.append(prefix) or real_objects(prefix, *a, **kw)
     r.reconcile_once()
     r.backfill(budget=1, force=True)
-    assert lists.count("rec/recordings/") == 1 and lists.count("vms/heartbeats/") == 2      # the pass, then the backfill
+    assert lists.count("rec/recordings/") == 1 and lists.count("cam/heartbeats/") == 2      # the pass, then the backfill
     assert lists.count("rec/heartbeats/") == 1                                               # backfill's backup sources
     assert r.sources["7"] == "rtsp://srv-1:8554/7"
     with r.looking():                                        # a pass that lasts: read again after a heartbeat's period
         r.source("7"), r.source("8")
         box.clock.advance(r._look().FRESH)
         r.source("7")
-    assert lists.count("vms/heartbeats/") == 4
+    assert lists.count("cam/heartbeats/") == 4
     now = box.wall()
     box.objects.put(SPEC.sub.heartbeat_key("w-1"), Heartbeat("w-1", now, [
         {"id": str(i), "phase": "running", "live_url": f"rtsp://srv-9:8554/{i}"} for i in range(1, 51)], {"server": "srv-9"}).to_bytes())
@@ -160,11 +160,11 @@ def test_a_store_that_does_not_answer_is_asked_once_a_pass_and_every_recording_k
     r, _, objects = _recorder(box, "r-1", "srv-a")
     r.reconcile_once()
     before = dict(r.sources)
-    objects.fail, errors, lists = "vms/heartbeats/", r.store_errors, []
+    objects.fail, errors, lists = "cam/heartbeats/", r.store_errors, []
     real = objects.list
     objects.list = lambda prefix, *a, **kw: lists.append(prefix) or real(prefix, *a, **kw)
     assert r.reconcile_once() == [] and r.sources == before                                 # nothing stopped, nothing moved
-    assert lists.count("vms/heartbeats/") == 1 and r.store_errors - errors == 100
+    assert lists.count("cam/heartbeats/") == 1 and r.store_errors - errors == 100
 
 
 def _placement_site(n: int, recorders: int):
@@ -174,7 +174,7 @@ def _placement_site(n: int, recorders: int):
     volumes.write(box.vars, {"name": "copy", "kind": "backup", "server": "srv-b", "url": "/tmp/copy", "quota_bytes": 64 << 20})
     per: list[list[dict]] = [[] for _ in range(recorders)]
     for i in range(1, n + 1):
-        box.vars.put(f"vms/cameras/{i}", {"id": str(i), "name": f"c{i}", "source": f"driverpack://file/{i}", "enabled": "true"})
+        box.vars.put(f"cam/cameras/{i}", {"id": str(i), "name": f"c{i}", "source": f"driverpack://file/{i}", "enabled": "true"})
         box.vars.put(f"rec/recordings/{i}", {"id": str(i), "name": str(i), "cam": str(i), "home": "disks"})
         per[i % recorders].append({"id": str(i), "cam": str(i), "phase": "running"})
         if i % 2:

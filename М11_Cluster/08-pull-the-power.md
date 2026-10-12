@@ -4,7 +4,7 @@
 **Вы напишете:** два ответа на «процесс пропал» — перезапуск, который делает systemd на том же сервере, и перенос, который делает контроллер назначением; числа отказа, которые с ними согласны (слот, запас, аренда, бюджет аренды против паузы выборов лидера хранилища); выдернутое питание на стенде; и правило, по которому контроллер действует по молчанию — только когда кто-то может сказать, что процесс мёртв, или по двум молчаниям.
 **Время:** ~150 минут.
 
-> **Число, которое экспортирует этот урок.** Худшее из трёх учений [`deploy/cluster/failover-drill.sh`](../Source/deploy/cluster/failover-drill.sh): секунды от выдернутого питания до момента, когда каждая единица умершего сервера снова держится на другом воркере (у VMS — каждая камера снова пишется), по настенным часам того, кто проводит учения. Это время восстановления продукта, которое урок 1 попросил записать. `<sub>_failover_seconds` на консоли (`vms_failover_seconds` у VMS) мерит другое — перезапуск под тем же именем (шаг 5).
+> **Число, которое экспортирует этот урок.** Худшее из трёх учений [`deploy/cluster/failover-drill.sh`](../Source/deploy/cluster/failover-drill.sh): секунды от выдернутого питания до момента, когда каждая единица умершего сервера снова держится на другом воркере (у VMS — каждая камера снова пишется), по настенным часам того, кто проводит учения. Это время восстановления продукта, которое урок 1 попросил записать. `<sub>_failover_seconds` на консоли (`cam_failover_seconds` у VMS) мерит другое — перезапуск под тем же именем (шаг 5).
 
 ## Зачем этот урок
 
@@ -42,7 +42,7 @@
 | **Перезапуск** | тот же сервер, то же имя | systemd: `Restart=always`, `RestartSec=2` (на macOS — launchd, `KeepAlive`) | через ~2 с после смерти процесса | упавший процесс — у VMS, скажем, SDK производителя, утянувший воркер за собой | то же; место, строка которого называет этот сервер, идёт за именем сразу (урок 3); у VMS писателя тома, оставленного демону `obsd`, новый процесс забирает под тем же владельцем (`reattached`, М10B, урок 10) |
 | **Перенос** | единица уходит к воркеру на другом сервере | контроллер: строка размещения с причиной, потом назначения | при истечении слота, если процесс мёртв; через ~90 с, если молчит сервер (шаг 2) | умерший сервер; процесс, который не поднимается | старое место хранит прошлое, новое берёт будущее |
 
-Из юнита воркера VMS (`deploy/cluster/systemd/vms-vmsworker.service`):
+Из юнита воркера VMS (`deploy/cluster/systemd/vms-camworker.service`):
 
 ```ini
 ExecStart=/opt/w2c/bin/w2c-run.sh vms worker
@@ -106,8 +106,8 @@ TimeoutStopSec=20
 **Правильный ответ** — строка с CAS. Так `w-srv-b-1` берёт эпоху единицы 1 в сцене выдернутого питания:
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
 → 200 {"index": 1039}
 ```
 
@@ -176,8 +176,8 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch
 Девяносто секунд не происходит ничего, кроме обычной жизни живых: `w-srv-b-1` продлевает свой слот, ресурсы `srv-b` и `srv-c` шлют heartbeat'ы.
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1020, "items": {
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-b-1", "cas": 1020, "items": {
   "holder": "srv-b:4102:001006",
   "until": "1757500075.0",
   "released": "false",
@@ -190,8 +190,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1020, "items":
 Контроллер на `srv-b` всё это время читает heartbeat `w-srv-a-1` — тот, что слышал последним (урок 6, шаг 3), — и смотрит, как он стареет. На 80-й секунде (тест `test_the_power_pull`) — ничего: слот ещё в запасе. На 93-й оба молчания на месте, и проход контроллера переносит единицы. Сначала решение — строка размещения с причиной:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1011, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500093.0",
@@ -203,31 +203,31 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
 Потом назначения: единица уходит из назначения `w-srv-a-1` и приходит в назначение `w-srv-b-1` — первое создаётся с `cas: ""`, «только если строки нет»:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1016, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1016, "items": {
   "units": "2,3",
   "rev": "4"
 }}
 → 200 {"index": 1031}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
 → 200 {"index": 1032}
 ```
 
 — и так для единиц 2 и 3: решение первым, назначения за ним (урок 9, шаг 4, объясняет порядок). `w-srv-b-1` читает своё назначение и берёт следующую эпоху каждой единицы:
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
 → 200 {"index": 1039}
 
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
 → 200 {"index": 1040}
 
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
 → 200 {"index": 1041}
 ```
 
@@ -238,7 +238,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch
 # 93 s after the power went: w-srv-b-1 runs [1, 2, 3] under epochs {1: 2, 2: 2, 3: 2}; where(1..3) = ['w-srv-b-1', 'w-srv-b-1', 'w-srv-b-1']
 ```
 
-93 секунды: 45 — слот, 45 — запас, 3 — до прохода контроллера. GET'ов много: проход начинается со взгляда на всё, по чему судит (`Controller.look`: строка двери каждого сервера, слоты; тринадцатое ревью), а на стенде контроллеры смотрят и перед каждым сдвигом часов теста — как настоящий проход раз в несколько секунд. На настоящем кластере к ним прибавляется время запуска конвейеров; [`deploy/cluster/failover-drill.sh`](../Source/deploy/cluster/failover-drill.sh) мерит всё вместе. Он трижды останавливает все юниты сервера по ssh (`systemctl kill -s KILL`, потом `stop` — вместо выключения питания; для настоящего — `outage.sh power-cut` из М9), ждёт, пока каждая камера сервера не станет живой на другом воркере, и оставляет худшее. После каждого прогона он возвращает сервер и читает `vms_epoch_conflicts`: число из урока 9. Учения написаны для VMS — камеры, её метрики; для другой подсистемы меняются только имена рядов. Режим `process` убивает только процесс воркера: systemd поднимает его через две секунды, единицы не едут, и число — время перезапуска.
+93 секунды: 45 — слот, 45 — запас, 3 — до прохода контроллера. GET'ов много: проход начинается со взгляда на всё, по чему судит (`Controller.look`: строка двери каждого сервера, слоты; тринадцатое ревью), а на стенде контроллеры смотрят и перед каждым сдвигом часов теста — как настоящий проход раз в несколько секунд. На настоящем кластере к ним прибавляется время запуска конвейеров; [`deploy/cluster/failover-drill.sh`](../Source/deploy/cluster/failover-drill.sh) мерит всё вместе. Он трижды останавливает все юниты сервера по ssh (`systemctl kill -s KILL`, потом `stop` — вместо выключения питания; для настоящего — `outage.sh power-cut` из М9), ждёт, пока каждая камера сервера не станет живой на другом воркере, и оставляет худшее. После каждого прогона он возвращает сервер и читает `cam_epoch_conflicts`: число из урока 9. Учения написаны для VMS — камеры, её метрики; для другой подсистемы меняются только имена рядов. Режим `process` убивает только процесс воркера: systemd поднимает его через две секунды, единицы не едут, и число — время перезапуска.
 
 Чего новый держатель **не** делал: не спрашивал контроллер ни о чём, кроме своего назначения, не читал опубликованный объект, ничего не восстанавливал. Он прочитал хранилище и начал работать. Строки единиц не переписаны ни одной — изменились размещение и назначения, и в причине написано почему.
 
@@ -274,8 +274,8 @@ POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch
 Два молчания из разных процессов одной коробки — это факт о сервере. Контроллер переносит его единицы туда, где есть место, и в причине пишет почему:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1011, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500186.0",
@@ -287,8 +287,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
 `w-srv-b-1` берёт следующую эпоху каждой единицы и начинает работать:
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
 → 200 {"index": 1032}
 ```
 
@@ -311,7 +311,7 @@ srv-a вернулся: w-srv-a-1 взят снова, назначение пу
 ## Результат
 
 - Выдерните питание у сервера; худшее из трёх учений `failover-drill.sh` и сколько секунд камеры 7 потеряно.
-- Убейте только процесс воркера (`failover-drill.sh … process`): systemd поднимает его через две секунды под тем же именем, единицы не едут, `vms_failover_seconds{kind="last"}` — время перезапуска.
+- Убейте только процесс воркера (`failover-drill.sh … process`): systemd поднимает его через две секунды под тем же именем, единицы не едут, `cam_failover_seconds{kind="last"}` — время перезапуска.
 - Трасса, в которой контроллер переносит единицы назначением с причиной «server srv-a gone», а новый держатель берёт следующие эпохи, — и ни одна строка единицы не переписана.
 - Падение процесса при живом ресурсе не двигает ничего, пока ресурс не скажет, что процесс мёртв; смерть сервера переносит единицы через слот и запас.
 

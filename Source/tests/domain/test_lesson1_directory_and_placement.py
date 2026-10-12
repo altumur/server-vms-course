@@ -28,7 +28,7 @@ def test_where_across_three_clusters_from_what_the_clusters_publish():
     assert down == [] and holdings["south"] == {"w-0": ["7"]} and holdings["cloud"] == {"w-0": ["50"]}
     # ONE OBJECT PER WORKER — the heartbeat's shape, and for the same reason: north runs two workers,
     # so north publishes two objects. The cluster that grows publishes more of them, not a bigger one.
-    assert fed.clusters["north"].objects.list("vms/snapshot/") == ["vms/snapshot/w-0", "vms/snapshot/w-1"]
+    assert fed.clusters["north"].objects.list("cam/snapshot/") == ["cam/snapshot/w-0", "cam/snapshot/w-1"]
     assert d.ages() == {"cloud": 0.0, "north": 0.0, "south": 0.0}                     # the snapshot's age is the domain's RPO, shown
 
 
@@ -78,9 +78,9 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
     because a directory is only as fresh as its oldest part."""
     fed, _ = make_domain({"north": ()}, "north")
     c = fed.clusters["north"]
-    c.objects.put("vms/snapshot/w-0", json.dumps({"cluster": "north", "worker": "w-0", "ts": 1000.0,
+    c.objects.put("cam/snapshot/w-0", json.dumps({"cluster": "north", "worker": "w-0", "ts": 1000.0,
         "cameras": [{"id": 1, "ref": "7", "name": "cam7", "worker": "w-0", "server": "srv-1"}]}).encode())
-    c.objects.put("vms/snapshot/w-1", json.dumps({"cluster": "north", "worker": "w-1", "ts": 1005.0,
+    c.objects.put("cam/snapshot/w-1", json.dumps({"cluster": "north", "worker": "w-1", "ts": 1005.0,
         "cameras": [{"id": 1, "ref": "7", "name": "cam7", "worker": "w-1", "server": "srv-2"}]}).encode())
     a = DomainDirectory(fed, wall=lambda: 1010.0).where(7)
     assert a.found and (a.worker, a.server) == ("w-1", "srv-2")          # the newer shard, not a raise
@@ -89,9 +89,9 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
 
 def test_placement_is_by_reachability_then_headroom():
     fed, _ = make_domain({"north": ("vlan:a", "vlan:b"), "south": ("vlan:b",), "cloud": ("vlan:c",)}, "north")
-    head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: vms_headroom
+    head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: cam_headroom
     admit(fed)
-    p = ClusterPlacer(fed, sub="vms", headroom=lambda c: head[c], clock=lambda: 1234.0)
+    p = ClusterPlacer(fed, sub="cam", headroom=lambda c: head[c], clock=lambda: 1234.0)
     a = p.place(UnitSite(1, "vlan:a"))
     assert a.cluster == "north" and "only cluster reaching vlan:a" in a.reason        # capacity elsewhere is irrelevant
     b = p.place(UnitSite(2, "vlan:b"))
@@ -100,7 +100,7 @@ def test_placement_is_by_reachability_then_headroom():
         p.place(UnitSite(3, "vlan:z")); raise AssertionError("must refuse")
     except Refused as e:
         assert "no cluster in the domain reaches vlan:z" in str(e)                    # never "cluster X is full"
-    stored, _ = fed.domain_holder.vars.get("domain/placement/vms/2")
+    stored, _ = fed.domain_holder.vars.get("domain/placement/cam/2")
     assert stored["cluster"] == "south" and stored["at"] == "1234.0" and stored["reason"]   # stored, with a reason and a time
     assert p.place(UnitSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
 
@@ -111,7 +111,7 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     fed, _ = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     wall = Clock(); s = Running(fed.clusters["south"], wall, workers=(("w-0", "srv-9"), ("w-1", "srv-10")))
     admit(fed)
-    p = ClusterPlacer(fed, sub="vms")
+    p = ClusterPlacer(fed, sub="cam")
     pl = p.place(UnitSite(7, "vlan:b"))
     assert pl.cluster == "south"
     (cid,) = s.create(7, labels=["vlan:b"])                                           # the domain console forwards the create to south, with ref 7
@@ -119,7 +119,7 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     assert where.worker in ("w-0", "w-1") and "reaching vlan:b" in where.reason and "on srv-" in where.reason
     a = DomainDirectory(fed).where(7)
     assert a.cluster == "south" and a.worker == where.worker                          # the snapshot carried the cluster's decision up
-    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/vms/7"]  # the domain stored its level, nothing about workers
+    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/cam/7"]  # the domain stored its level, nothing about workers
 
 
 def test_two_placers_racing_agree_by_cas():
@@ -128,7 +128,7 @@ def test_two_placers_racing_agree_by_cas():
     def race(seed):
         head = {"north": 10.0 + seed, "south": 10.0 + (1 - seed)}      # each placer would pick a different cluster
         admit(fed)
-        p = ClusterPlacer(fed, sub="vms", headroom=lambda c: head[c])
+        p = ClusterPlacer(fed, sub="cam", headroom=lambda c: head[c])
         for cam in range(1, 41):
             results.append((cam, p.place(UnitSite(cam, "vlan:a")).cluster))
     ts = [threading.Thread(target=race, args=(i,)) for i in range(2)]
@@ -143,7 +143,7 @@ def test_two_placers_racing_agree_by_cas():
 def test_a_dead_cluster_is_not_a_trigger():
     fed, links = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     admit(fed)
-    p = ClusterPlacer(fed, sub="vms")
+    p = ClusterPlacer(fed, sub="cam")
     assert p.place(UnitSite(7, "vlan:b")).cluster == "south"
     links["south"].up = False
     assert p.place(UnitSite(7, "vlan:b")).cluster == "south"     # already placed: untouched, not re-placed

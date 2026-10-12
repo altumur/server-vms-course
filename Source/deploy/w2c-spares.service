@@ -1,5 +1,5 @@
 # /etc/systemd/system/w2c-spares.service — the one-shot the timer fires: spare RECORDERS (`w2c-spares.sh recworker`).
-# The other roles have a pair each (`w2c-spares-vmsworker`, `-liveworker`, `-autoworker`): one per role, so a spare
+# The other roles have a pair each (`w2c-spares-camworker`, `-liveworker`, `-autoworker`): one per role, so a spare
 # is started with its own role's rights and groups, and a role can be switched on alone.
 #
 # Deliberately NOT a container. It talks to systemd on this host, and the two ways to let a container do

@@ -23,7 +23,7 @@ Environment=SIGNER_UNIX=/run/w2c-domain/signer.sock
 Environment=CONSOLE_MONITORS=127.0.0.1
 RuntimeDirectory=w2c-domain
 RuntimeDirectoryMode=0700
-# The tokens' socket: in `/run/w2c-signer` (2750 w2c:vms-vmsdomaintokens, `w2c-domain.tmpfiles`) — the socket takes the
+# The tokens' socket: in `/run/w2c-signer` (2750 w2c:vms-camdomaintokens, `w2c-domain.tmpfiles`) — the socket takes the
 # directory's group, the tokens socket's own (ADR-0031: `<deployment>-<sub>domaintokens`, one member, the books' worker),
 # so the books' worker opens it and no other process of the box does — whoever else joins a store role's group.
 Environment=SIGNER_TOKENS_UNIX=/run/w2c-signer/tokens.sock

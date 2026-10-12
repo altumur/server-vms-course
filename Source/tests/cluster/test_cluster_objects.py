@@ -50,11 +50,11 @@ def test_a_heartbeat_written_on_one_server_is_read_on_another():
     through srv-b's resource; the resources' own heartbeats are found the same way. No ceiling on the way."""
     c = Three()
     try:
-        sub = Subsystem("vms")
+        sub = Subsystem("cam")
         from vms.config import SPEC
         w = Worker(sub, "w-srv-a-1", c.vars, c.store["srv-a"], wall=c.wall, spec=SPEC)
         w.heartbeat([{"id": 7, "phase": "running"}], server="srv-a")
-        assert os.path.exists(os.path.join(c.root, "srv-a", "objects", "vms", "heartbeats", "w-srv-a-1"))
+        assert os.path.exists(os.path.join(c.root, "srv-a", "objects", "cam", "heartbeats", "w-srv-a-1"))
         assert not [k for k in c.vars.list("objects/")]                     # not a row: a file
         ctl = Controller(sub, c.vars, c.store["srv-b"], wall=c.wall)
         assert ctl.workers_seen()["w-srv-a-1"].extra["server"] == "srv-a"
@@ -69,12 +69,12 @@ def test_the_copy_written_last_wins_wherever_it_is():
     every reader, srv-a's included, gets the one written last, by `written` (the writer's clock)."""
     c = Three()
     try:
-        c.store["srv-a"].put("vms/snapshot/w-1", b"from srv-a")
+        c.store["srv-a"].put("cam/snapshot/w-1", b"from srv-a")
         c.wall.advance(30)
-        c.store["srv-b"].put("vms/snapshot/w-1", b"from srv-b")
+        c.store["srv-b"].put("cam/snapshot/w-1", b"from srv-b")
         for name in ("srv-a", "srv-b", "srv-c"):
-            assert c.store[name].get("vms/snapshot/w-1") == b"from srv-b", name
-        assert c.store["srv-c"].list("vms/snapshot/") == ["vms/snapshot/w-1"]
+            assert c.store[name].get("cam/snapshot/w-1") == b"from srv-b", name
+        assert c.store["srv-c"].list("cam/snapshot/") == ["cam/snapshot/w-1"]
     finally:
         c.stop()
 
@@ -86,13 +86,13 @@ def test_a_server_gone_is_named_and_the_others_are_read():
     c = Three()
     try:
         for name in c.store:
-            c.store[name].put(f"vms/heartbeats/w-{name}-1", b"{}")
+            c.store[name].put(f"cam/heartbeats/w-{name}-1", b"{}")
         c.srv["srv-c"].shutdown(); c.srv["srv-c"].server_close()
-        assert c.store["srv-a"].list("vms/heartbeats/") == ["vms/heartbeats/w-srv-a-1", "vms/heartbeats/w-srv-b-1"]
+        assert c.store["srv-a"].list("cam/heartbeats/") == ["cam/heartbeats/w-srv-a-1", "cam/heartbeats/w-srv-b-1"]
         assert c.store["srv-a"].missing == ["srv-c"]
-        assert c.store["srv-a"].get("vms/heartbeats/w-srv-b-1") == b"{}"
+        assert c.store["srv-a"].get("cam/heartbeats/w-srv-b-1") == b"{}"
         try:
-            c.store["srv-c"].list("vms/")
+            c.store["srv-c"].list("cam/")
             raise AssertionError("a silent door on this server was read as an empty cluster")
         except ObjectsUnavailable as e:
             assert "does not answer" in str(e)
@@ -110,19 +110,19 @@ def test_a_reader_that_heard_a_server_answers_with_what_it_said_last_while_it_is
     c = Three()
     try:
         for name in c.store:
-            c.store[name].put(f"vms/heartbeats/w-{name}-1", f'{{"ts": "{name}"}}'.encode())
+            c.store[name].put(f"cam/heartbeats/w-{name}-1", f'{{"ts": "{name}"}}'.encode())
         reader, late = c.store["srv-a"], ClusterObjectStore(os.path.join(c.root, "late"), c.store["srv-a"].resource,
                                                             c.vars, wall=c.wall, list_fresh=0)
         reader.list_fresh = 0
-        assert reader.list("vms/heartbeats/") == [f"vms/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
-        assert reader.get("vms/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
+        assert reader.list("cam/heartbeats/") == [f"cam/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
+        assert reader.get("cam/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
         c.srv["srv-c"].shutdown(); c.srv["srv-c"].server_close()
-        assert reader.list("vms/heartbeats/") == [f"vms/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
-        assert reader.missing == ["srv-c"] and reader.get("vms/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
-        assert late.list("vms/heartbeats/") == ["vms/heartbeats/w-srv-a-1", "vms/heartbeats/w-srv-b-1"]   # never heard it
-        assert late.get("vms/heartbeats/w-srv-c-1") is None
-        c.store["srv-b"].local.delete("vms/heartbeats/w-srv-b-1")                  # an answering server, without the key
-        assert reader.list("vms/heartbeats/") == ["vms/heartbeats/w-srv-a-1", "vms/heartbeats/w-srv-c-1"]
+        assert reader.list("cam/heartbeats/") == [f"cam/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
+        assert reader.missing == ["srv-c"] and reader.get("cam/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
+        assert late.list("cam/heartbeats/") == ["cam/heartbeats/w-srv-a-1", "cam/heartbeats/w-srv-b-1"]   # never heard it
+        assert late.get("cam/heartbeats/w-srv-c-1") is None
+        c.store["srv-b"].local.delete("cam/heartbeats/w-srv-b-1")                  # an answering server, without the key
+        assert reader.list("cam/heartbeats/") == ["cam/heartbeats/w-srv-a-1", "cam/heartbeats/w-srv-c-1"]
     finally:
         c.srv["srv-a"].shutdown(); c.srv["srv-b"].shutdown()
 
@@ -158,29 +158,29 @@ def test_a_shard_of_a_megabyte_is_an_object_like_any_other():
     try:
         big = json.dumps({"cameras": ["x" * 1000] * 1048}).encode()
         assert len(big) > 1 << 20
-        c.store["srv-a"].put("vms/snapshot/w-1", big)
-        assert c.store["srv-c"].get("vms/snapshot/w-1") == big
+        c.store["srv-a"].put("cam/snapshot/w-1", big)
+        assert c.store["srv-c"].get("cam/snapshot/w-1") == big
     finally:
         c.stop()
 
 
 def test_a_command_mark_is_a_row_and_conflicts_across_the_cluster():
     """Two holders of one device on two servers both mark the command: create-only on two directories would be two
-    winners. The mark is a row `objects/vms/commands/<id>` in the store, so the second `put_new` loses wherever it is,
+    winners. The mark is a row `objects/cam/commands/<id>` in the store, so the second `put_new` loses wherever it is,
     and every server lists and reads it. A create-only key the store does not route there is refused, in words."""
     c = Three()
     try:
         a, b = c.store["srv-a"], c.store["srv-b"]
-        assert a.put_new("vms/commands/r1", json.dumps({"instance": "a"}).encode())
-        assert not b.put_new("vms/commands/r1", json.dumps({"instance": "b"}).encode())
-        assert c.vars.list("objects/") == ["objects/vms/commands/r1"]
-        assert not os.path.exists(os.path.join(c.root, "srv-a", "objects", "vms", "commands"))
-        assert json.loads(c.store["srv-c"].get("vms/commands/r1"))["instance"] == "a"
-        assert "vms/commands/r1" in c.store["srv-c"].list("vms/")
-        b.delete("vms/commands/r1")
-        assert a.get("vms/commands/r1") is None
+        assert a.put_new("cam/commands/r1", json.dumps({"instance": "a"}).encode())
+        assert not b.put_new("cam/commands/r1", json.dumps({"instance": "b"}).encode())
+        assert c.vars.list("objects/") == ["objects/cam/commands/r1"]
+        assert not os.path.exists(os.path.join(c.root, "srv-a", "objects", "cam", "commands"))
+        assert json.loads(c.store["srv-c"].get("cam/commands/r1"))["instance"] == "a"
+        assert "cam/commands/r1" in c.store["srv-c"].list("cam/")
+        b.delete("cam/commands/r1")
+        assert a.get("cam/commands/r1") is None
         try:
-            a.put_new("vms/heartbeats/w-1", b"{}")
+            a.put_new("cam/heartbeats/w-1", b"{}")
             raise AssertionError("a create-only write went to files")
         except ValueError as e:
             assert "objects.rows" in str(e)
@@ -230,11 +230,11 @@ def test_the_bench_file_store_deletes_under_its_directory_lock():
     import tempfile
     d = tempfile.mkdtemp(prefix="bench-objects-")
     s = open_store(f"file://{d}")
-    assert s.put_new("vms/marks/r-1", b"{}") and s.get("vms/marks/r-1") == b"{}"
-    assert s.delete("vms/marks/r-1") is True and s.get("vms/marks/r-1") is None
-    assert s.delete("vms/marks/r-1") is False and s.delete("vms/none/r-2") is False
+    assert s.put_new("cam/marks/r-1", b"{}") and s.get("cam/marks/r-1") == b"{}"
+    assert s.delete("cam/marks/r-1") is True and s.get("cam/marks/r-1") is None
+    assert s.delete("cam/marks/r-1") is False and s.delete("cam/none/r-2") is False
     assert not os.path.exists(os.path.join(d, "vms", "none"))          # nothing made to say there was nothing
-    assert s.put_new("vms/marks/r-1", b"{}")                           # the name is free again
+    assert s.put_new("cam/marks/r-1", b"{}")                           # the name is free again
 
 
 def test_the_bench_file_store_reads_a_key_deleted_meanwhile_as_no_object():
@@ -248,7 +248,7 @@ def test_the_bench_file_store_reads_a_key_deleted_meanwhile_as_no_object():
     errors, got = [], []
 
     def churn(n):
-        key = f"vms/marks/r-{n % 7}"
+        key = f"cam/marks/r-{n % 7}"
         try:
             for _ in range(20):
                 s.put_new(key, b"{}"); got.append(s.get(key)); s.delete(key); got.append(s.get(key))
@@ -261,15 +261,15 @@ def test_the_bench_file_store_reads_a_key_deleted_meanwhile_as_no_object():
         t.join(30)
     assert not errors, errors[:3]
     assert set(got) <= {b"{}", None}
-    s.put_new("vms/marks/gone", b"{}")
+    s.put_new("cam/marks/gone", b"{}")
     real_open = open
     def open_after_delete(path, *a, **kw):               # the file goes between whatever looked and the read
-        if str(path).endswith("vms/marks/gone"):
+        if str(path).endswith("cam/marks/gone"):
             os.remove(path)
         return real_open(path, *a, **kw)
     import builtins
     builtins.open = open_after_delete
     try:
-        assert s.get("vms/marks/gone") is None
+        assert s.get("cam/marks/gone") is None
     finally:
         builtins.open = real_open

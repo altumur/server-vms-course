@@ -1,9 +1,9 @@
 """python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs|domainpart —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
-(`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
+(`python3 -m w2cplatform controller cam|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
 the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: host}`), and so are the
 resource (`python3 -m w2cplatform resource`: what a keep holds is the spec's `holds:`) and the console (`python3 -m
-w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and doors). What is left of the VMS's own
+w2cplatform console`, `CONSOLE_ROOT=cam`: the specs' rows, tables, requests and doors). What is left of the VMS's own
 beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
@@ -39,7 +39,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # file-backed stores under `$PLATFORM_DIR` with the *right token for the verb*, builds the process's object
 # from `worker.py` / `recworker.py` / `detworker.py` / …, and runs it until SIGTERM/SIGINT. It is
 # glue and nothing else: no logic of its own beyond wiring, and each verb's token is deliberately narrower
-# than the whole `vms/*` prefix. `tests/test_deploy_units.py` imports this module (without running it) and
+# than the whole `cam/*` prefix. `tests/test_deploy_units.py` imports this module (without running it) and
 # checks that the verbs in the dispatch table are exactly the ones the units invoke.
 #
 # Environment (from the docstring and the code):
@@ -78,7 +78,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 #
 # ## Notes
 # - One token per process, each from the specs: a worker's (`acl_worker_role`: its epochs, its slot, its hold, and the
-#   rows its spec's `worker.writes` names — `vms/devices/*`), the platform's controller (`acl_controller`: placement and
+#   rows its spec's `worker.writes` names — `cam/devices/*`), the platform's controller (`acl_controller`: placement and
 #   the assignments, `w2c-controller@<sub>`), and the console's grant (`acl_console`: the operator's rows), which `jobs`
 #   holds for the families it writes. None of them can do another's job. The mounts in `deploy/` repeat the same split
 #   in bytes (`test_who_may_write_where_is_in_the_mounts_too`).
@@ -130,18 +130,18 @@ def make_recorder(vars_, objects, actuator=None, env: dict | None = None, **kw):
     return r
 
 
-# Builds `vmsworker`:
+# Builds `camworker`:
 # - The slot name is the runtime's, by the spec's `slot` (`Worker.given_name`: `WORKER_NAME`, else `w-$SLOT_INDEX`,
 #   else `None` — whichever is free), taken by the constructor.
-# - Opens Variables as writer `vmsworker` with `config.WORKER_ACL` — `Subsystem.acl_worker()` for `vms`
-#   (epochs, slot, the place it took) plus `vms/devices/*`: a worker says what a device it holds turned out to
+# - Opens Variables as writer `camworker` with `config.WORKER_ACL` — `Subsystem.acl_worker()` for `vms`
+#   (epochs, slot, the place it took) plus `cam/devices/*`: a worker says what a device it holds turned out to
 #   be (М10B Lesson 25), and can write nothing else. A bug that tried to write a camera row would be a
 #   `Forbidden` from the store.
 # - Tries `gstvms.actuator.GstActuator()` — `driverpacksrc ! tee`, served as the RTSP fan-out on :8554; on
 #   `ImportError` (no `gi`) logs a warning and uses `FakeActuator`, which holds nothing. The worker records
 #   nothing either way: recording is the recorder's (`recorder` below).
 # - Constructs `VmsWorker(name, vars_, objects, act, capacity=$CAPACITY, resource_root=archive)` — its events
-#   go to this server's resource under `vms/<cam>/` — the
+#   go to this server's resource under `cam/<cam>/` — the
 #   constructor claims the slot — logs the claimed name and instance, and calls `w.run(stop=stop)`. `run`
 #   releases the slot on the way out, so SIGTERM is an orderly stop (scale-in), while a kill leaves the slot
 #   to lapse.
@@ -154,7 +154,7 @@ def worker() -> None:
         rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")     # loopback unless somebody opens it (`vms/config.py`)
         act = GstActuator(rtsp_port=port_of(os.environ.get("RTSP_PORT"), RTSP_PORT), rtsp_address=rtsp_host)
         from .config import opened_beyond_loopback
-        opened_beyond_loopback("the RTSP fan-out", rtsp_host, logging.getLogger("vmsworker"))
+        opened_beyond_loopback("the RTSP fan-out", rtsp_host, logging.getLogger("camworker"))
     except ImportError:
         logging.warning("no GStreamer: the fake actuator holds nothing")
         act = FakeActuator()
@@ -261,7 +261,7 @@ def detworker() -> None:
 
 def autoworker() -> None:
     """A scenario evaluator. Its token is the only one in the course that reaches across a subsystem's
-    name — `requests_acl("vms", "rec", "det")` — and it reaches exactly one family: bounded work, addressed
+    name — `requests_acl("cam", "rec", "det")` — and it reaches exactly one family: bounded work, addressed
     to a unit or turned into one by the console. It cannot write a camera, a recording, a detector or a placement."""
     from .autoworker import AutoWorker
     from .config import AUTO_SPEC
@@ -502,7 +502,7 @@ def jobs() -> None:
 
 def domainpart() -> None:
     """The VMS's worker on the domain, on the server that holds it (`vms/domainpart/worker.py`): the books' pass
-    for every member, its slot and heartbeat under `domain/vms/`, its door (`DOMAINPART_PORT`)."""
+    for every member, its slot and heartbeat under `domain/cam/`, its door (`DOMAINPART_PORT`)."""
     from .domainpart.worker import main
     main()
 

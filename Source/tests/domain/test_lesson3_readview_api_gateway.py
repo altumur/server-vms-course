@@ -234,21 +234,21 @@ def test_console_over_http():
     port = srv.server_address[1]
     try:
         import time; time.sleep(0.2)
-        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/vms/cameras"))
+        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/cam/cameras"))
         assert body["total"] == 1 and body["rows"][0]["as_of"] == "as of 2 s ago"
         w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/where/7"))
         assert w["cluster"] == "south" and w["worker"] == "w-0" and w["complete"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"enabled":false}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/cam/cameras/7", data=b'{"enabled":false}', method="PUT",
                                      headers={"Idempotency-Key": "abc"})
         assert json.load(urllib.request.urlopen(req))["cluster"] == "south"
         # a camera's name is its cluster's console's: `domain.edit: [enabled]` of the VMS's spec (ADR-0031)
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/cam/cameras/7", data=b'{"name":"x"}', method="PUT",
                                      headers={"Idempotency-Key": "ghi"})
         try:
             urllib.request.urlopen(req); raise AssertionError()
         except urllib.error.HTTPError as e:
             assert e.code == 400 and "domain.edit" in json.load(e)["detail"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/cam/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
                                      headers={"Idempotency-Key": "def"})
         try:
             urllib.request.urlopen(req); raise AssertionError()
@@ -287,9 +287,9 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         return out, time.monotonic() - began
     try:
         assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
-        reply, took = raw(b"PUT /domain/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        reply, took = raw(b"PUT /domain/cam/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
-        reply, took = raw(b"PUT /domain/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        reply, took = raw(b"PUT /domain/cam/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
         held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
         for s in held:
@@ -349,7 +349,7 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             time.sleep(0.02)
         assert srv.bounds.used["common"] == srv.bounds.limit
         assert ask("192.0.2.7", "/healthz").startswith(b"HTTP/1.0 200")             # the reserve
-        busy = ask("192.0.2.7", "/domain/vms/cameras")
+        busy = ask("192.0.2.7", "/domain/cam/cameras")
         assert busy.startswith(b"HTTP/1.0 503") and b"/healthz" in busy               # nothing else on it
         assert ask("192.0.2.100", "/healthz").startswith(b"HTTP/1.0 200")           # a listed monitor: its own lane
     finally:
@@ -387,7 +387,7 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     monitors' lane in code, and their deploy set none of it. Their units name the unix sockets — each in the unit's
     own runtime directory, 0700 — and the monitors (the box's loopback; the site adds its scrapers' addresses, never a
     network). The tokens' socket is in a directory made at boot, setgid to the tokens socket's own group — derived by
-    the platform's rule (`rights.tokens_group`: `vms-vmsdomaintokens`), never the worker's store role group: the socket
+    the platform's rule (`rights.tokens_group`: `vms-camdomaintokens`), never the worker's store role group: the socket
     takes that group, and the worker opens it and nothing else of the box does."""
     import os
     from w2cplatform.domain.rights import tokens_group
@@ -403,8 +403,8 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     assert signer["env"]["SIGNER_TOKENS_UNIX"] == u["vms-domainpart"]["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tmpfiles = open(os.path.join(here, "deploy", "domain", "systemd", "w2c-domain.tmpfiles")).read()
-    group = tokens_group("vms", "vms")
-    assert group == "vms-vmsdomaintokens"
+    group = tokens_group("cam", "vms")
+    assert group == "vms-camdomaintokens"
     assert f"d /run/w2c-signer 2750 w2c {group} -" in tmpfiles
     assert group in u["vms-domainpart"]["SupplementaryGroups"][0].split()
     assert group not in signer["SupplementaryGroups"][0].split()                # the directory gives the group, not the signer
@@ -420,7 +420,7 @@ def test_the_tokens_socket_has_a_group_of_its_own_with_one_member_the_subsystems
     import os
     from tests.cluster.test_recorder_job import unit
     from w2cplatform.domain.rights import tokens_group
-    group = tokens_group("vms", "vms")
+    group = tokens_group("cam", "vms")
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     deploy = os.path.join(here, "deploy")
     joined = []
@@ -458,7 +458,7 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     want = {"w2c-domain": ("domain", "signer", "w2c", "-m w2cplatform.domain.signer_service"),
             "w2c-domain-console": ("domainconsole", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
             "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent"),
-            "vms-domainpart": ("vmsdomain", "vms domainpart", "vms", "-m vms domainpart")}
+            "vms-domainpart": ("camdomain", "vms domainpart", "vms", "-m vms domainpart")}
     u = _units()
     assert sorted(u) == sorted(want)
     d = tempfile.mkdtemp(prefix="run-")
@@ -546,7 +546,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     units = _units()
     assert units["w2c-domain"]["env"]["PLATFORM_STORE"] == own                           # the unit says the signer's default
     books = units["vms-domainpart"]["env"]["PLATFORM_STORE"]
-    assert books == "configstore:///run/configstore/vmsdomain.sock"                     # the books: the VMS worker's role
+    assert books == "configstore:///run/configstore/camdomain.sock"                     # the books: the VMS worker's role
     d = tempfile.mkdtemp(prefix="cs")                                  # a socket's path is short: the run's root is
     daemon = StoreDaemon(LocalBackend("north", 1000), node_id="north", sockets=d, rights=rights)
     try:
@@ -558,7 +558,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         ids = IdentityStore(signer, vars_, FsObjectStore(os.path.join(d, "objects")), publish_floor=0)
         ids.create_local("ann", "a long enough password", ["admin"])
         assert ids.login("ann", "a long enough password") and ids.publish(force=True)
-        open_vars(books.replace("/run/configstore", d)).put("domain/vms/sources/north", {"book": "{}"})
+        open_vars(books.replace("/run/configstore", d)).put("domain/cam/sources/north", {"book": "{}"})
         assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
         agent = open_vars(f"configstore://{d}/domainagent.sock")
         assert agent.get(KEYS_PATH)[0] is not None
@@ -579,15 +579,15 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     view = ReadView(fed, lost_after=45, wall=wall)
-    view.refresh(); view.publish(north.objects, {"vms/crossings": {"SN7": "north"}})
+    view.refresh(); view.publish(north.objects, {"cam/crossings": {"SN7": "north"}})
 
     st, d = domain_view(north.objects, wall())
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
     members = {m["name"]: m for m in d["members"]}
     assert d["holder"] == "north" and members["north"]["holder"] and not members["south"]["holder"]
-    assert members["south"]["state"] == "ok" and len(d["units"]["vms"]) == 200
-    assert d["tables"] == {"vms/crossings": {"SN7": "north"}}
-    assert {c["cluster"] for c in d["units"]["vms"] if c["worker"] == "w-0"} == {"north", "south"}
+    assert members["south"]["state"] == "ok" and len(d["units"]["cam"]) == 200
+    assert d["tables"] == {"cam/crossings": {"SN7": "north"}}
+    assert {c["cluster"] for c in d["units"]["cam"] if c["worker"] == "w-0"} == {"north", "south"}
     assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
     links["south"].up = False; wall.advance(30); view.refresh(); view.publish(north.objects)
@@ -613,9 +613,9 @@ def test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directo
     north, south = fed.clusters["north"], fed.clusters["south"]
     snapshot(south, {151: ("w-0", "srv-9")}, ts=wall())
     snapshot(north, {7: ("w-0", "srv-1")}, ts=wall())
-    north.objects.put("vms/snapshot/w-9", b'{"ts": 9999, "cameras": [')             # half a write
-    north.objects.put("vms/heartbeats/w-1", b'{"worker": "w-1", "ts": ')
-    south.objects.put("vms/heartbeats/w-5", json.dumps({"worker": "w-5", "ts": wall(), "server": "srv-9",
+    north.objects.put("cam/snapshot/w-9", b'{"ts": 9999, "cameras": [')             # half a write
+    north.objects.put("cam/heartbeats/w-1", b'{"worker": "w-1", "ts": ')
+    south.objects.put("cam/heartbeats/w-5", json.dumps({"worker": "w-5", "ts": wall(), "server": "srv-9",
                                                         "status": [{"id": "x", "revision": "two"}]}).encode())
     before = MEMBER_OBJECTS.counts.get("north", 0)
     view = ReadView(fed, lost_after=45, wall=wall)

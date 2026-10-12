@@ -52,7 +52,7 @@
 
 ```
 # console on srv-b → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "id": "1",
   "revision": "2",
   "name": "edited during the failover",
@@ -67,8 +67,8 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
 Девяносто три секунды спустя контроллер на `srv-b` видит два молчания и отдаёт единицу `w-srv-b-1`. Сначала решение — строка размещения с причиной, — потом назначения:
 
 ```
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1008, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1008, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500113.0",
@@ -80,8 +80,8 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1008, "items": {
 `w-srv-b-1` читает назначение и строку единицы и берёт эпоху — следующую:
 
 ```
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
 → 200 {"index": 1024}
 ```
 
@@ -94,7 +94,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 Единица запущена с новым именем. Для этого не понадобилось ничего опубликовать, никуда скопировать, ничего восстановить. Тест кончается строкой, которую стоит прочитать дважды:
 
 ```python
-    assert c.objects.get("vms/config") is None                             # nothing was published for this to work
+    assert c.objects.get("cam/config") is None                             # nothing was published for this to work
 ```
 
 В первом проекте были `publish.py`, `rehydrate.py`, восстановление в шесть шагов и измеренный RPO в несколько секунд. Всё это существовало потому, что правда держателя жила на держателе. Перенесите правду в хранилище кластера с одним писателем на префикс — и новый держатель читает её так же, как читал прежний: тем же вызовом, те же строки, на одну версию дальше. Внутри кластера нет состояния «сохранено, но ещё не разошлось»: запись либо в журнале большинства, либо ей отказали.
@@ -124,12 +124,12 @@ class ClusterObjectStore:
 **Записать — значит записать файл у себя.** Трасса [`06-objects-across-servers`](../Source/traces/06-objects-across-servers.txt) начинается с того, что воркер `w-srv-a-1` сначала читает прежний heartbeat под своим именем — не оставил ли его предыдущий экземпляр (`Worker.previous_said`, урок 1), — и только потом пишет свой:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → the resource on srv-a, http://srv-a:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camworker w-srv-a-1 on srv-a → the resource on srv-a, http://srv-a:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 404
 
-# vmsworker w-srv-a-1 on srv-a → its own files on srv-a
-PUT vms/heartbeats/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → its own files on srv-a
+PUT cam/heartbeats/w-srv-a-1
 ```
 
 Ни одной записи в хранилище: это файл на `srv-a`. Время записи — часы писателя (`os.utime`), и это время пригодится читателю.
@@ -137,12 +137,12 @@ PUT vms/heartbeats/w-srv-a-1
 **Прочитать — значит спросить ресурс своего сервера** — если дверь ресурса этот ключ отдаёт. Двери отдают семейства платформы (heartbeat'ы, метки претендентов, снимок, отчёты прохода, блобы, домен — `resource.PLATFORM_DOOR`) и то, что спека подсистемы объявила (`objects.door`); любой другой файл читается только на сервере писателя, из своего каталога, и ресурс его не спрашивают (`door_readable`). Контроллер на `srv-b` хочет знать, кто жив. Он спрашивает **свой** ресурс, с `scope=cluster`, а тот спрашивает остальные ресурсы (`scope=local`: каждый отвечает только за себя) и складывает:
 
 ```
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=cam/heartbeats/&scope=cluster
 → 200 {
   "server": "srv-b",
   "objects": {
-    "vms/heartbeats/w-srv-a-1": {
+    "cam/heartbeats/w-srv-a-1": {
       "written": 1757500000.0,
       "server": "srv-a",
       "size": 478
@@ -150,14 +150,14 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
   }
 }
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 200 {"bytes": 478, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 ```
 
 Откуда ресурс `srv-b` знает, где остальные. Не из heartbeat'ов — они сами объекты за этими дверями. Каждый ресурс при старте пишет **строку** `platform/doors/<сервер> {url, since}` в хранилище, и остальные читают их не чаще раза в десять секунд (`DOORS_FRESH`). Поэтому в трассах уроков чтение чужих объектов видно как ресурс, читающий `platform/doors/*`, а версии в сценах начинаются с 1004: первые три записи стенда — двери трёх ресурсов, и в трассу сцены они не попадают.
 
-**Свежая копия выигрывает.** Ключ может лежать на двух серверах: контроллер переехал с `srv-a` на `srv-b`, а старый шард `vms/snapshot/w-1` ещё на диске `srv-a`. Читатель берёт копию с самым поздним `written`, где бы она ни лежала, — `test_the_copy_written_last_wins_wherever_it_is`. Время — часы писателя, а не читателя. У двух копий с разных серверов это часы двух машин: если часы `srv-a` убежали вперёд на X секунд, его старая копия выигрывает ещё X секунд после того, как её перестали писать, — потом новый писатель её обгоняет. Ошибка ограничена расхождением часов, а не временем жизни копии.
+**Свежая копия выигрывает.** Ключ может лежать на двух серверах: контроллер переехал с `srv-a` на `srv-b`, а старый шард `cam/snapshot/w-1` ещё на диске `srv-a`. Читатель берёт копию с самым поздним `written`, где бы она ни лежала, — `test_the_copy_written_last_wins_wherever_it_is`. Время — часы писателя, а не читателя. У двух копий с разных серверов это часы двух машин: если часы `srv-a` убежали вперёд на X секунд, его старая копия выигрывает ещё X секунд после того, как её перестали писать, — потом новый писатель её обгоняет. Ошибка ограничена расхождением часов, а не временем жизни копии.
 
 **Потолка нет.** `max_bytes = 0`: шард в мебибайт пишется на `srv-a` и читается целиком на `srv-c` (`test_a_shard_of_a_megabyte_is_an_object_like_any_other`). Что из этого следует для снимка и для потолка, который хранилище всё ещё может объявить, — М10A, урок [19](../М10A_Platform/19-Snapshot-and-Limits.md).
 
@@ -166,8 +166,8 @@ GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
 Первый — ключ, который должен быть создан **один раз на весь кластер**: отметка воркера перед тем, как он выполнит просьбу (`<sub>/commands/*`, `put_new`; у VMS — команду устройству). Два держателя одной единицы в одни и те же две секунды не должны оба решить, что они первые (М10A, урок 8). `link` на файл — «создать, только если нет» на **одном** сервере, а два держателя сидят на двух. Поэтому такой ключ — строка `objects/<ключ>` в хранилище, записанная с `cas: ""`:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "objects/vms/commands/r-17", "cas": "", "items": {
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "objects/cam/commands/r-17", "cas": "", "items": {
   "data": "{\"instance\": \"srv-a:4101:001005\"}"
 }}
 → 200 {"index": 1005}
@@ -180,12 +180,12 @@ POST /v1/write {"op": "put", "key": "objects/vms/commands/r-17", "cas": "", "ite
 **Молчащий сервер назван, а не спрятан.** `srv-a` ложится. Ресурс `srv-b` не может спросить его и говорит об этом:
 
 ```
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=cam/heartbeats/&scope=cluster
 → 200 {"server": "srv-b", "objects": {}, "missing": ["srv-a"]}
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 404 {"X-Missing": "srv-a"}
 ```
 

@@ -255,11 +255,11 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     door = con2.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
     with Served(SpecConsole(con2, wall=box2.wall)) as call:                  # the spec's `requests:` (step 6)
         for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
-            payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
+            payload = f'{{"unit": "cam/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
             st, body = call("POST", "/requests", raw=payload, key=f"k{i}")
             # `NaN`/`Infinity` are no JSON: refused at the body (`not_json`); a word — by the schema or the deadline's rule
             assert st == 400 and (body.get("fault") == "not_json" or "valid_until" in body["detail"]), (bad, st, body)
-    assert box2.vars.list("vms/requests/") == []
+    assert box2.vars.list("cam/requests/") == []
 
 
 # -- the resource: restore under the pulse (part 1, M4), the watermark, the keeps ---------------------------------------
@@ -274,7 +274,7 @@ def test_restore_beats_under_the_same_pulse_as_the_pass():
 
     class Peer:
         def mirrored(self, url, server):
-            return [Bucket("vms", "7", 1, i * 600.0, (i + 1) * 600.0, f"vms/7/1/{i}.events.jsonl", 1) for i in range(6)]
+            return [Bucket("cam", "7", 1, i * 600.0, (i + 1) * 600.0, f"cam/7/1/{i}.events.jsonl", 1) for i in range(6)]
 
         def get(self, url, server, path):
             box.wall.advance(30); box.clock.advance(30)                # 6 × 30 s: well past `lost_after`
@@ -338,13 +338,13 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for cam in ("7", "8", "9"):
-        EventLog(box.resource_root, "vms", cam, 1).append(old, "motion")
-        box.vars.put(f"vms/retention", {"days": "30"})
+        EventLog(box.resource_root, "cam", cam, 1).append(old, "motion")
+        box.vars.put(f"cam/retention", {"days": "30"})
     box.vars.put(keeps.key("9-1-2"), {"cam": "9", "from": "yesterday", "to": "today"})
     for _ in range(2):
         res.retain()
-    assert bucket_names_under(box.resource_root, "vms", "7", 600) == [] and bucket_names_under(box.resource_root, "vms", "8", 600) == []
-    assert len(bucket_names_under(box.resource_root, "vms", "9", 600)) == 1
+    assert bucket_names_under(box.resource_root, "cam", "7", 600) == [] and bucket_names_under(box.resource_root, "cam", "8", 600) == []
+    assert len(bucket_names_under(box.resource_root, "cam", "9", 600)) == 1
     assert keeps.declared(box.vars) == [] and keeps.KEEPS.counts.get("rec") == 1
     assert "rows_garbled" in res.heartbeat()
     _forget_garbled()
@@ -363,19 +363,19 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(2)
     t = box.wall()
-    box.objects.put("vms/heartbeats/w-2", Heartbeat("w-2", t, [], {
+    box.objects.put("cam/heartbeats/w-2", Heartbeat("w-2", t, [], {
         "server": "srv-b", "capacity": "many", "headroom": "some", "conflicts": "few", "store_errors": "x",
         "pass_failures": "y", "unconfirmed": "z", "slots_garbled": "w", "holds_garbled": "v",
         "command_counts": {"performed": "many"}, "command_road": {"buckets": ["x"], "count": 1, "sum": 1, "skewed": "s"},
         "command_wait": "nonsense"}).to_bytes())
     box.objects.put("platform/resources/srv-b/heartbeat", json.dumps(
         {"server": "srv-b", "ts": t, "url": "http://srv-b", "space": {"full": "n/a"}, "short": "lots"}).encode())
-    box.objects.put("vms/controller/pass", json.dumps({"ts": "then", "last_success": "never", "failures": "many",
+    box.objects.put("cam/controller/pass", json.dumps({"ts": "then", "last_success": "never", "failures": "many",
                                                        "unplaced": "?", "seconds": "slow"}).encode())
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
     _prometheus(text)
-    assert "vms_reconcile_last_pass_age_seconds -1" in text and 'w2c_resource_full{server="srv-b"} 0' in text
-    assert 'vms_worker_holds_garbled{worker="w-2"} 0' in text                # the holds, on the page (a minor)
+    assert "cam_reconcile_last_pass_age_seconds -1" in text and 'w2c_resource_full{server="srv-b"} 0' in text
+    assert 'cam_worker_holds_garbled{worker="w-2"} 0' in text                # the holds, on the page (a minor)
     _prometheus(spec_metrics(ctl))
 
     det = SpecController(DET_SPEC, box.vars, box.objects, wall=box.wall)
@@ -393,7 +393,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     box.objects.put("auto/heartbeats/a-1", Heartbeat("a-1", t, [], {
         "pass_seconds": "slow", "late": "lots", "waits": "w", "latency": {"buckets": [1], "count": "c", "sum": 0}}).to_bytes())
     _prometheus(spec_metrics(auto))
-    assert SPEC.name == "vms"
+    assert SPEC.name == "cam"
     _forget_garbled()
 
 
@@ -429,9 +429,9 @@ def test_a_garbled_id_counter_gives_the_next_number_past_the_largest_id():
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(3)
     ctl.delete_camera(3)
-    box.vars.put("vms/next_id", {"n": "seven"})
+    box.vars.put("cam/next_id", {"n": "seven"})
     new = ctl.create_camera({"name": "cam4", "source": "driverpack://file/cam4.mp4"})["id"]
-    assert new == 4 and box.vars.get("vms/next_id")[0] == {"n": "4"}
+    assert new == 4 and box.vars.get("cam/next_id")[0] == {"n": "4"}
     assert ctl.create_camera({"name": "cam5", "source": "driverpack://file/cam5.mp4"})["id"] == 5
     _forget_garbled()
 
@@ -446,7 +446,7 @@ def test_a_name_in_an_assignment_that_is_no_units_id_stops_no_move():
     box, ctl = _placed(3)
     on1 = [u for u in ctl.assignment("w-1").units]
     assert on1
-    box.vars.put("vms/workers/w-1", {"units": ",".join(on1 + ["seven"]), "rev": "3"})
+    box.vars.put("cam/workers/w-1", {"units": ",".join(on1 + ["seven"]), "rev": "3"})
     box.vars.put(DRAIN_KEY, {"server": "srv-a"})
     ctl.redistribute()
     assert all(ctl.where(int(u)) == "w-2" for u in on1)
@@ -574,7 +574,7 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     box, ctl = _box_with_cameras(1)
     t = box.wall()
     bad = '7"x\nnew'
-    box.objects.put(f"vms/heartbeats/{bad}", Heartbeat(bad, t, [], {"server": 's"1\n', "headroom": 1, "capacity": 2,
+    box.objects.put(f"cam/heartbeats/{bad}", Heartbeat(bad, t, [], {"server": 's"1\n', "headroom": 1, "capacity": 2,
                                                                      "command_counts": {"performed": 1},
                                                                      "command_road": {"auto": {"buckets": [1], "count": 1, "sum": 0.1}}}).to_bytes())
     box.objects.put('platform/resources/s"1/heartbeat', json.dumps(
@@ -612,7 +612,7 @@ class _Peer:
         from w2cplatform.events import Bucket
         if self.dead:
             raise OSError(f"{url}: 503 Service Unavailable")
-        return [Bucket("vms", "7", 1, 0.0, 600.0, p, 1) for p in self.paths]
+        return [Bucket("cam", "7", 1, 0.0, 600.0, p, 1) for p in self.paths]
 
     def get(self, url, server, path):
         self.asked.append(path)
@@ -632,8 +632,8 @@ def test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_c
     from w2cplatform.resource import RESTORE_RETRY, Resource
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
-    paths = [f"vms/7/e1/{i:02d}.events.jsonl" for i in range(20)]
-    good, dead = _Peer(paths + ["../../escape.events.jsonl"], bad={paths[3]}), _Peer(["vms/8/e1/0.events.jsonl"], dead=True)
+    paths = [f"cam/7/e1/{i:02d}.events.jsonl" for i in range(20)]
+    good, dead = _Peer(paths + ["../../escape.events.jsonl"], bad={paths[3]}), _Peer(["cam/8/e1/0.events.jsonl"], dead=True)
 
     class Peers:
         def mirrored(self, url, server):
@@ -679,7 +679,7 @@ def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_t
     box, ctl = _box_with_cameras(1)
     t = box.wall()
     for i in range(4):
-        log = EventLog(box.resource_root, "vms", "7", 1)
+        log = EventLog(box.resource_root, "cam", "7", 1)
         for n in range(1 + (200 if i == 1 else 0)):                   # the second bucket is the big one
             log.append(t - 86400 + i * 600 + n * 0.01, "motion", note="x" * 50)
     sent: dict = {"srv-2": [], "srv-3": []}
@@ -740,8 +740,8 @@ def test_the_peer_client_writes_only_a_whole_200_as_a_bucket_and_skips_a_garbled
 
         def do_GET(self):
             if self.path.startswith("/mirrored/"):
-                good = Bucket("vms", "7", 1, 0.0, 600.0, "vms/7/e1/a.events.jsonl", 1).line()
-                body = (good + "\n" + '{"subsystem": "vms", "unit": 7, "epoch": "one"}\n' + good.replace("/a.", "/b.") + "\n").encode()
+                good = Bucket("cam", "7", 1, 0.0, 600.0, "cam/7/e1/a.events.jsonl", 1).line()
+                body = (good + "\n" + '{"subsystem": "cam", "unit": 7, "epoch": "one"}\n' + good.replace("/a.", "/b.") + "\n").encode()
                 self.send_response(200)
             else:
                 body = b"partial"
@@ -755,9 +755,9 @@ def test_the_peer_client_writes_only_a_whole_200_as_a_bucket_and_skips_a_garbled
     url = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         listed = PeerClient().mirrored(url, "srv-1")
-        assert [b.path for b in listed] == ["vms/7/e1/a.events.jsonl", "vms/7/e1/b.events.jsonl"]
-        for call in (lambda: PeerClient().get_into(url, "srv-1", "vms/7/e1/a.events.jsonl", io.BytesIO()),
-                     lambda: PeerClient().get(url, "srv-1", "vms/7/e1/a.events.jsonl")):
+        assert [b.path for b in listed] == ["cam/7/e1/a.events.jsonl", "cam/7/e1/b.events.jsonl"]
+        for call in (lambda: PeerClient().get_into(url, "srv-1", "cam/7/e1/a.events.jsonl", io.BytesIO()),
+                     lambda: PeerClient().get(url, "srv-1", "cam/7/e1/a.events.jsonl")):
             try:
                 call()
                 raise AssertionError("a 206 was taken for a bucket")
@@ -894,18 +894,18 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     day = lambda d: now - d * 86400
     for d in (40, 35, 32):
         for cam in ("7", "8"):
-            EventLog(box.resource_root, "vms", cam, 1).append(day(d), "motion")
+            EventLog(box.resource_root, "cam", cam, 1).append(day(d), "motion")
         EventLog(box.resource_root, "auto", "any-door", 1).append(day(d), "fired")
-    for unit in ("vms/retention", "auto/retention"):
+    for unit in ("cam/retention", "auto/retention"):
         box.vars.put(unit, {"days": "30"})
-    box.vars.put("auto/scenarios/any-door", {"name": "any-door", "when": json.dumps([{"sub": "vms", "kind": "io.input"}]),
+    box.vars.put("auto/scenarios/any-door", {"name": "any-door", "when": json.dumps([{"sub": "cam", "kind": "io.input"}]),
                                              "then": "[]"})
     box.vars.put(keeps.key("7-a"), {"cam": "7", "from": str(day(36)), "to": str(day(34)), "at": "yesterday"})   # sound but for `at`
     box.vars.put(keeps.key("8-b"), {"cam": "8", "from": str(day(33)), "to": "later"})                          # its end lost
     res.retain()
     left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.resource_root, sub, unit, 600))
-    assert left("vms", "7") == [35]                                    # its interval, and no more
-    assert left("vms", "8") == [32]                                    # from its start on: 40 and 35 go
+    assert left("cam", "7") == [35]                                    # its interval, and no more
+    assert left("cam", "8") == [32]                                    # from its start on: 40 and 35 go
     assert left("auto", "any-door") == []                              # about nobody (the spec's `holds:`, step 6): no keep holds it
     garbled: list = []
     keeps.declared(box.vars, garbled)
@@ -924,7 +924,7 @@ def test_one_resource_answering_another_shape_costs_its_window_and_not_the_merge
     t = box.wall()
     for s in ("srv-a", "srv-b", "srv-c"):
         box.objects.put(f"platform/resources/{s}/heartbeat", json.dumps({"server": s, "ts": t, "url": f"http://{s}"}).encode())
-    line = {"t": t - 5, "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "id": "c-1"}
+    line = {"t": t - 5, "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "cam", "epoch": 1, "id": "c-1"}
     answers = {"http://srv-a": [1, 2], "http://srv-b": {"events": [{"t": "then", "server": "srv-b"}, {**line, "server": "srv-b", "id": "b-1"}]},
                "http://srv-c": {"events": [line], "state": "live"}}
     got = MergedIndex(box.objects, fetch=lambda url, params: answers[url], wall=box.wall).query(t - 60, t)
@@ -951,7 +951,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     from w2cplatform.resource import RESTORE_RETRY, RESTORE_RETRY_MAX, Resource
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
-    paths = [f"vms/7/e1/{i:02d}.events.jsonl" for i in range(20)]
+    paths = [f"cam/7/e1/{i:02d}.events.jsonl" for i in range(20)]
     east, west = _Peer(paths[:10]), _Peer(paths[10:])
     peers = {"http://srv-2": east, "http://srv-3": west}
 
@@ -989,7 +989,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     assert res.restore_due()
     assert res.restore()["pulled"] == 10
     assert all(east.asked.count(p) == 1 for p in paths[:10]) and len(east.asked) == 10   # east was not asked again
-    assert sum(1 for _ in __import__("os").scandir(f"{box.resource_root}/vms/7/e1")) == 20
+    assert sum(1 for _ in __import__("os").scandir(f"{box.resource_root}/cam/7/e1")) == 20
     box.clock.advance(RESTORE_RETRY_MAX)
     _peer_heartbeat(box, "srv-2", box.wall(), 10)
     _peer_heartbeat(box, "srv-3", box.wall(), 10)
@@ -1076,7 +1076,7 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     box = Box()
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
-    for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
+    for sub, unit in (("cam", "7"), ("cam", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
         EventLog(box.resource_root, sub, unit, 1).append(old, "motion")                     # inside the keep below
         EventLog(box.resource_root, sub, unit, 1).append(old - 86400, "motion")             # a day before it: nobody's keep
         box.vars.put(f"{sub}/retention", {"days": "30"})
@@ -1088,8 +1088,8 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     for _ in range(2):
         out = res.pass_()
         assert "errors" not in out, out
-    assert bucket_names_under(box.resource_root, "vms", "8", 600) == []                      # swept by its days
-    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1                  # the kept minutes, and only them
+    assert bucket_names_under(box.resource_root, "cam", "8", 600) == []                      # swept by its days
+    assert len(bucket_names_under(box.resource_root, "cam", "7", 600)) == 1                  # the kept minutes, and only them
     for sub, unit in (("det", "55"), ("rec", "r9")):
         left = bucket_names_under(box.resource_root, sub, unit, 600)
         assert len(left) == 1 and left[0].start <= old < left[0].end, (sub, unit, left)   # held as ANY, the rest swept
@@ -1112,10 +1112,10 @@ def test_the_peer_client_takes_no_answer_without_a_frame_and_no_length_that_is_n
     from w2cplatform.events import Bucket
     from w2cplatform.resource import PeerClient
 
-    answers = {"/events/.mirror/srv-1/vms/7/e1/close.events.jsonl": b"HTTP/1.0 200 OK\r\n\r\n{\"t\": 1}\n",
-               "/events/.mirror/srv-1/vms/7/e1/ten.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: ten\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
-               "/events/.mirror/srv-1/vms/7/e1/whole.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: 9\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
-               "/mirrored/srv-1": b"HTTP/1.0 200 OK\r\n\r\n" + Bucket("vms", "7", 1, 0.0, 600.0, "vms/7/e1/a.events.jsonl", 1).line().encode() + b"\n"}
+    answers = {"/events/.mirror/srv-1/cam/7/e1/close.events.jsonl": b"HTTP/1.0 200 OK\r\n\r\n{\"t\": 1}\n",
+               "/events/.mirror/srv-1/cam/7/e1/ten.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: ten\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
+               "/events/.mirror/srv-1/cam/7/e1/whole.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: 9\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
+               "/mirrored/srv-1": b"HTTP/1.0 200 OK\r\n\r\n" + Bucket("cam", "7", 1, 0.0, 600.0, "cam/7/e1/a.events.jsonl", 1).line().encode() + b"\n"}
     srv = socket.socket()
     srv.bind(("127.0.0.1", 0))
     srv.listen(8)
@@ -1136,13 +1136,13 @@ def test_the_peer_client_takes_no_answer_without_a_frame_and_no_length_that_is_n
         for name in ("close", "ten"):
             dest = io.BytesIO()
             try:
-                PeerClient().get_into(url, "srv-1", f"vms/7/e1/{name}.events.jsonl", dest)
+                PeerClient().get_into(url, "srv-1", f"cam/7/e1/{name}.events.jsonl", dest)
                 raise AssertionError(f"{name}: an answer whose end cannot be told was taken for a bucket")
             except IOError as e:
                 assert "neither chunks nor a length" in str(e), (name, e)
             assert dest.getvalue() == b"", name                                        # not a byte of it written
         dest = io.BytesIO()
-        assert PeerClient().get_into(url, "srv-1", "vms/7/e1/whole.events.jsonl", dest) == 9
+        assert PeerClient().get_into(url, "srv-1", "cam/7/e1/whole.events.jsonl", dest) == 9
         assert dest.getvalue() == b'{"t": 1}\n'
         try:                                         # …and a listing: one cut short is not a peer that holds less (`_whole`)
             PeerClient().mirrored(url, "srv-1")
@@ -1162,13 +1162,13 @@ def test_a_line_whose_values_only_convert_is_merged_as_converted_and_stops_no_ti
     t = box.wall()
     for s in ("srv-a", "srv-b"):
         box.objects.put(f"platform/resources/{s}/heartbeat", json.dumps({"server": s, "ts": t, "url": f"http://{s}"}).encode())
-    ours = {"t": t - 5, "server": "srv-a", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "id": "a-1"}
-    odd = {"t": str(t - 9), "server": "srv-b", "kind": "motion", "unit": ["7"], "subsystem": "vms", "epoch": "2",
+    ours = {"t": t - 5, "server": "srv-a", "kind": "motion", "unit": "7", "subsystem": "cam", "epoch": 1, "id": "a-1"}
+    odd = {"t": str(t - 9), "server": "srv-b", "kind": "motion", "unit": ["7"], "subsystem": "cam", "epoch": "2",
            "id": ["b", 1]}
-    copy = {"t": str(t - 7), "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "bucket": [1]}
+    copy = {"t": str(t - 7), "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "cam", "epoch": 1, "bucket": [1]}
     answers = {"http://srv-a": {"events": [ours]}, "http://srv-b": {"events": [odd, copy]}}
     got = MergedIndex(box.objects, fetch=lambda url, params: answers[url], wall=box.wall).query(
-        t - 60, t, current_epochs={("vms", "7"): 1})
+        t - 60, t, current_epochs={("cam", "7"): 1})
     assert [e["t"] for e in got["events"]] == [t - 9, t - 7, t - 5], got
     assert got["events"][0]["epoch"] == 2 and got["events"][0]["id"] == "['b', 1]" and not got["events"][0]["fenced"]
     _forget_garbled()

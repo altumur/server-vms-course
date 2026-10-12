@@ -478,11 +478,11 @@ def test_shortening_common_days_does_not_erase_the_events_somebody_marked():
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
     event_log(box.resource_root, 8, 1).append(t0 + 10, "motion")
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
-    box.vars.put("vms/retention", {"days": 1})
+    box.vars.put("cam/retention", {"days": 1})
 
     assert res.retain() == 2                                           # camera 8's, and camera 7's outside the keep
-    left = buckets_under(box.resource_root, "vms", "7", 600)
-    assert len(left) == 1 and left[0].start <= t0 + 10 < left[0].end and buckets_under(box.resource_root, "vms", "8", 600) == []
+    left = buckets_under(box.resource_root, "cam", "7", 600)
+    assert len(left) == 1 and left[0].start <= t0 + 10 < left[0].end and buckets_under(box.resource_root, "cam", "8", 600) == []
 
 
 def test_a_keep_holds_every_subsystems_events_about_its_camera():
@@ -504,10 +504,10 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     box.vars.put("survey/watches/7-lpr", {"name": "7-lpr", "cam": "7", "kind": "lpr"})
     box.vars.put("rec/recordings/7-cloud", {"name": "7-cloud", "cam": "7"})        # made after the keep: not in its names
     box.vars.put("auto/scenarios/gate", {"name": "gate", "when": _json.dumps([{"sub": "det", "kind": "motion", "unit": "7-motion"}]),
-                                         "then": _json.dumps([{"sub": "vms", "action": "output", "unit": "12", "port": 1}])})
-    box.vars.put("auto/scenarios/yard", {"name": "yard", "when": _json.dumps([{"sub": "vms", "kind": "motion", "unit": "8"}]),
+                                         "then": _json.dumps([{"sub": "cam", "action": "output", "unit": "12", "port": 1}])})
+    box.vars.put("auto/scenarios/yard", {"name": "yard", "when": _json.dumps([{"sub": "cam", "kind": "motion", "unit": "8"}]),
                                          "then": _json.dumps([{"sub": "rec", "action": "record", "cam": "8", "minutes": 1}])})
-    box.vars.put("auto/scenarios/anywhere", {"name": "anywhere", "when": _json.dumps([{"sub": "vms", "kind": "silent"}]),
+    box.vars.put("auto/scenarios/anywhere", {"name": "anywhere", "when": _json.dumps([{"sub": "cam", "kind": "silent"}]),
                                              "then": "[]"})                    # any camera: cannot be told
     units = [("det", "7-motion"), ("det", "8-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"),
              ("auto", "gate"), ("auto", "yard"), ("auto", "anywhere"), ("det", "orphan")]
@@ -625,12 +625,12 @@ def test_the_list_of_keeps_is_what_the_caller_may_see():
     say whose they are (`rights.unit_of`) is what the caller may see — by a grant on the camera, or by its labels."""
     from tests.test_console_gate import Tokens, _call, _console
     box = Box()
-    access = Tokens({"boris": [("view", "vms/1", ())], "vera": [("view", None, ("hall",))], "admin": [("admin", None, ())]})
+    access = Tokens({"boris": [("view", "cam/1", ())], "vera": [("view", None, ("hall",))], "admin": [("admin", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
     try:
         for cam, labels in (("1", []), ("3", ["hall"])):
             ctl.create_camera({"source": f"driverpack://file/{cam}.mp4", "labels": labels})
-        box.vars.put("vms/cameras/3", {**box.vars.get("vms/cameras/2")[0], "id": "3"})
+        box.vars.put("cam/cameras/3", {**box.vars.get("cam/cameras/2")[0], "id": "3"})
         for cam in ("1", "3", "ref:SN-A"):
             keeps.write(box.vars, {"cam": cam, "from": 100.0, "to": 200.0}, [], "anna", box.wall())
         cams = lambda who: sorted(k["cam"] for k in _call(base, "GET", "/rec/keeps", token=who)[1]["keeps"])   # noqa: E731
@@ -987,7 +987,7 @@ def test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy
         [line] = _verified_lines(k)
         assert line["keep"] == kp.id and line["ok"] is True and line["user"] == "anna" and line["integrity"] == "ok"
         # what the line is about (ADR-0069; the review's fifteenth pass, minor 6): the keep's row, and the camera it holds
-        assert (line["sub"], line["table"], line["target"], line["of"]) == ("rec", "keeps", kp.id, f"vms/{kp.cam}"), line
+        assert (line["sub"], line["table"], line["target"], line["of"]) == ("rec", "keeps", kp.id, f"cam/{kp.cam}"), line
         for path in (f"/keeps/{kp.id}/verify", f"/rec/keeps/{kp.id}/verify"):
             assert _post(base + path)[0] in (404, 405), path              # not the console's: the door's
     finally:

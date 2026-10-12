@@ -36,7 +36,7 @@
 #
 # WHAT IT WRITES IS ITS GROUP'S (the thirteenth review, major 13): `umask 0007` before anything runs. A unit says
 # `UMask=0007`, but Nomad's `raw_exec` (the appendix, `deploy/cluster/nomad/`) hands on the agent's 0022 — the events
-# archive's buckets came out 2755 `vms:w2c-events`, the resource (`w2c`) could not delete them, and its retention
+# archive's buckets came out 2755 `cam:w2c-events`, the resource (`w2c`) could not delete them, and its retention
 # stopped. The archive and the objects are setgid directories shared by a group; this makes it so however it was run.
 #
 # A BOX ON macOS (`install.sh --box <dir>`, the thirteenth review, major 15): there is no /data and no /etc/w2c there,

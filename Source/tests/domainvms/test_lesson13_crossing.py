@@ -274,10 +274,10 @@ def test_a_recording_moves_to_another_cluster_and_the_books_follow():
     out = crossings.record(SERIAL, on="north", move=True)
     assert out["recorded_by"] == "north" and out["moved_from"] == "south"
     crossings.publish(); report_sync(agent)
-    assert south.vars.get("domain/vms/sources")[0] == {}
+    assert south.vars.get("domain/cam/sources")[0] == {}
     try:
         resolve(south.vars, f"ref:{SERIAL}", wall())
         raise AssertionError("south records it no more")
     except NotResolvable:
         pass
-    assert json.loads(north.vars.get("domain/vms/sources/north")[0][SERIAL])["live_url"] == "rtsp://10.1.0.71/live"
+    assert json.loads(north.vars.get("domain/cam/sources/north")[0][SERIAL])["live_url"] == "rtsp://10.1.0.71/live"

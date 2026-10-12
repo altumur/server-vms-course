@@ -5,7 +5,7 @@
 // Запись без кадров в отрезке (result: empty) — «нет кадров — запечатывать нечего», не провал. Копия продуктового
 // vmsworker/vms/consoletest/shell-keep-verify.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-kv-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -13,8 +13,8 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},fields:[{name:"cam",type:"string"}],
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}],
   places:{table:"volumes"},door:{routes:["timeline","segment","keeps"]}}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
@@ -36,7 +36,7 @@ const J=(status,body)=>Promise.resolve({status,ok:status<300,headers:{get:()=>nu
   return f0(u,i)}}
 await b.ready(700);await w.platformConsole.ready;await w.eval("reloadRec()");const d=w.document,pc=w.platformConsole,out={};
 const main=()=>d.querySelector("main");
-pc.select("unit:vms/1");await b.ready(80);
+pc.select("unit:cam/1");await b.ready(80);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(200);
 const btn=re=>[...main().querySelectorAll('[data-tab="rec"].pc-tab button')].find(x=>re.test(x.textContent));
 out.verifyOffered=!!btn(/Проверить/);

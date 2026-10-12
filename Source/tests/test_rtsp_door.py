@@ -3,7 +3,7 @@ addendum of 2026-10-07; ADR-0024: the gateway reads the accounts because its spe
 
 One box: a VMS worker holding two cameras, a live gateway with the door over `FakeRTSPServer` (what speaks RTSP is
 pluggable, as the WebRTC peer is). What the cluster's agent would have carried is written as it lies: the accounts this
-cluster is granted, sealed with the cluster's ring (`domain/vms/stream-accounts`), and its grants (`domain/grants`). The
+cluster is granted, sealed with the cluster's ring (`domain/cam/stream-accounts`), and its grants (`domain/grants`). The
 declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
 import json
 import os
@@ -34,7 +34,7 @@ def _key():
 def _box():
     """A VMS worker holding cameras 1 and 2 on srv-1 — what the gateway's door finds their streams by."""
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console()), box.objects,
                         wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
@@ -82,7 +82,7 @@ def test_a_mount_per_camera_and_on_it_only_the_accounts_whose_grants_let_them_vi
     key = _key()
     box, w = _box()
     until = box.wall() + 3600
-    _carried(box.vars, key, PW, [Grant("wall1", "view", "vms/1", until), Grant("wall2", "view", None, until),
+    _carried(box.vars, key, PW, [Grant("wall1", "view", "cam/1", until), Grant("wall2", "view", None, until),
                                  Grant("anna", "admin", None, until)])
     with declared():
         srv = FakeRTSPServer()
@@ -109,7 +109,7 @@ def test_a_revoked_grant_is_honoured_on_the_next_sync_and_a_lapsed_one_too():
     on the next pass; a grant that lapsed — the agent did not renew it — the same."""
     key = _key()
     box, _ = _box()
-    _carried(box.vars, key, PW, [Grant("wall1", "view", "vms/1", box.wall() + 3600),
+    _carried(box.vars, key, PW, [Grant("wall1", "view", "cam/1", box.wall() + 3600),
                                  Grant("wall2", "view", None, box.wall() + 60)])
     with declared():
         srv = FakeRTSPServer()
@@ -131,8 +131,8 @@ def test_a_grant_on_labels_mounts_the_cameras_that_carry_them_and_a_camera_nobod
     """The door over a store of its own: a grant on labels covers the cameras that carry all of them; a camera whose
     stream nobody serves now has no mount, and a client gets a 404; back, it is mounted again."""
     v = FakeVariables()
-    v.put("vms/cameras/7", {"id": "7", "name": "lobby", "source": "driverpack://acme/10.0.0.77/ch/1", "labels": "lobby,floor0"})
-    v.put("vms/cameras/8", {"id": "8", "name": "yard", "source": "driverpack://acme/10.0.0.78/ch/1"})
+    v.put("cam/cameras/7", {"id": "7", "name": "lobby", "source": "driverpack://acme/10.0.0.77/ch/1", "labels": "lobby,floor0"})
+    v.put("cam/cameras/8", {"id": "8", "name": "yard", "source": "driverpack://acme/10.0.0.78/ch/1"})
     v.put(STREAM_ACCOUNTS_KEY, {"accounts_secret": json.dumps({"wall1": PW["wall1"]})})
     v.put("domain/grants", grants_to_items([Grant("wall1", "view", None, 2000.0, ("lobby",))]))
     up = {"7": "rtsp://srv-1:8554/7", "8": "rtsp://srv-1:8554/8"}
@@ -159,7 +159,7 @@ def test_a_play_and_its_end_are_lines_in_the_gateways_journal():
     from w2cplatform.events import buckets_under
     key = _key()
     box, _ = _box()
-    _carried(box.vars, key, PW, [Grant("wall1", "view", "vms/1", box.wall() + 3600)])
+    _carried(box.vars, key, PW, [Grant("wall1", "view", "cam/1", box.wall() + 3600)])
     with declared():
         srv = FakeRTSPServer()
         g = _gateway(box, {"LIVE_RTSP_LISTEN": "127.0.0.1:8554", "SECRETS_KEY": key}, srv)

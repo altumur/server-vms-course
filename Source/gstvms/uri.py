@@ -27,7 +27,7 @@ from urllib.parse import urlsplit
 
 
 # `media_dir` defaults to `$MEDIA_DIR` (`/data/media`; `deploy/vms.env.example` sets it, and
-# `vmsworker@.container` mounts it read-only). `urlsplit(uri)` and then three refusals, each a `ValueError`:
+# `camworker@.container` mounts it read-only). `urlsplit(uri)` and then three refusals, each a `ValueError`:
 # - scheme is not `driverpack` — "not a driverpack URI" (`rtsp://…` is refused: the VMS never opens a stream
 #   itself);
 # - netloc is not `file` — "driverpack://<vendor>/… names a vendor driver; this course ships only

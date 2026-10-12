@@ -6,7 +6,7 @@
 #
 #   --spares   also `w2c-spares.sh` and its timers (М10's `Source/deploy/`): every minute it reads the console's
 #              numbers and starts the spares this server can serve — never stops one (lesson 4) — each from its role's
-#              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist).
+#              template (`vms-camworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist).
 #              On Linux it runs as the platform's `w2c` (ADR 0030), and the polkit rule `w2c-spares.rules` lets
 #              that user `systemctl start` those templates' instances and nothing else
 #
@@ -54,10 +54,10 @@ fi
 
 # A subsystem's controller is an instance of the platform's template (`w2c-controller@<sub>`, ADR 0023): its file is
 # `w2c-controller@.service`, one for every subsystem.
-UNITS="configstore w2c-resource w2c-console vms-jobs w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker"
+UNITS="configstore w2c-resource w2c-console vms-jobs w2c-controller@cam w2c-controller@rec vms-camworker vms-recworker"
 # A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
 # `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
-SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
+SPARE_UNITS="vms-camworker-spare@ vms-recworker-spare@"
 # The longest name of a store socket (`/run/configstore/<role>.sock`): a box's must fit a unix socket's path.
 LONGEST_SOCKET=reccontroller.sock
 
@@ -222,7 +222,7 @@ if [ "$OS" = linux ]; then
   systemctl daemon-reload
   for u in $UNITS; do systemctl enable --now "$u.service"; done
   if [ "$SPARES" = yes ]; then
-    systemctl enable --now w2c-spares.timer w2c-spares-vmsworker.timer
+    systemctl enable --now w2c-spares.timer w2c-spares-camworker.timer
   fi
 else
   echo "neither systemd nor launchd here: the code and the files are in place, nothing was started" >&2

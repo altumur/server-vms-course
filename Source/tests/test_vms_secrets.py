@@ -41,13 +41,13 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
                                                       headers={"Idempotency-Key": "s1"})).read()
     finally:
         srv.shutdown()
-    row, _ = box.vars.get("vms/cameras/1")
+    row, _ = box.vars.get("cam/cameras/1")
     assert is_sealed(row["cred_secret"]) and row["cred_username"] == "admin"
     for path in box.vars.list(""):                                    # the whole store: not one plaintext copy
         items, _ = box.vars.get(path)
         assert not any(secret in str(v) for v in (items or {}).values()), path
     con.update(1, {"name": "front gate"})                              # an edit of another field
-    assert box.vars.get("vms/cameras/1")[0]["cred_secret"] == row["cred_secret"]            # sealed once, not twice
+    assert box.vars.get("cam/cameras/1")[0]["cred_secret"] == row["cred_secret"]            # sealed once, not twice
 
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
     ctl.assign("w-1", ["1"])
@@ -65,7 +65,7 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
 
     said = []
     h = logging.Handler(); h.emit = lambda r: said.append(r.getMessage())
-    logging.getLogger("vmsworker").addHandler(h)
+    logging.getLogger("camworker").addHandler(h)
     try:
         box2_act = Recording()
         nokey = VmsWorker("w-1", box.vars, box.objects, box2_act, clock=box.clock, wall=box.wall, resource_root=box.resource_root, env={})
@@ -74,7 +74,7 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
         assert not hasattr(box2_act, "last")                           # a sealed password and no key: not started…
         assert any("sealed and this process has no key" in m for m in said)                  # …and the reason names the key
     finally:
-        logging.getLogger("vmsworker").removeHandler(h)
+        logging.getLogger("camworker").removeHandler(h)
 
 
 def test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status():
@@ -109,15 +109,15 @@ def test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_t
     con = _console_with_key(box, key)
     con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
     con.create_camera({"name": "b", "source": "driverpack://file/b.mp4", "cred_secret": "Hunter3"})
-    items, idx = box.vars.get("vms/cameras/1")
-    box.vars.put("vms/cameras/1", {**items, "cred_secret": "enc:v1:x"}, cas=idx)             # a copy that lost its tail, past the console
+    items, idx = box.vars.get("cam/cameras/1")
+    box.vars.put("cam/cameras/1", {**items, "cred_secret": "enc:v1:x"}, cas=idx)             # a copy that lost its tail, past the console
     VmsController(box.vars, box.objects, wall=box.wall).assign("w-1", ["1", "2"])
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.resource_root, env={"SECRETS_KEY": key})
     w.reconcile_once()
     st = {s["id"]: s for s in w.status()}
     assert st[1]["phase"] != "running" and "looks sealed" in st[1]["why"]
     assert st[2]["phase"] == "running"                                                        # the camera after it started
-    for pasted in ("enc:v1:x", box.vars.get("vms/cameras/2")[0]["cred_secret"]):
+    for pasted in ("enc:v1:x", box.vars.get("cam/cameras/2")[0]["cred_secret"]):
         try:
             con.create_camera({"name": "c", "source": "driverpack://file/c.mp4", "cred_secret": pasted})
             raise AssertionError("a sealed value was taken at the door")

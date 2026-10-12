@@ -46,7 +46,7 @@ def test_a_spare_takes_an_offer_then_stops():
     spare.heartbeat_once()
     rep = ctl.pass_once(1)
     assert ctl.where(9) == "w-2" and "on srv-c" in ctl.placement(9).reason and rep["workers_needed"] == {"": 0}
-    spare.reconcile_once(); spare.release_slot()                            # `systemctl stop vms-vmsworker-spare-1`
+    spare.reconcile_once(); spare.release_slot()                            # `systemctl stop vms-camworker-spare-1`
     con.delete_camera(1); con.delete_camera(2)                               # room to move into
     ctl.pass_once(1)
     assert ctl.where(9) in ("w-srv-a-1", "w-srv-b-1") and ctl.assignment("w-2").units == []
@@ -72,11 +72,11 @@ def test_rights_by_the_socket_a_process_came_through():
     c, ctl, con = _cluster(1, capacity=50)
     w = c.worker("srv-a")
     try:
-        w.vars.put("vms/cameras/1", {"name": "tampered"}); assert False
+        w.vars.put("cam/cameras/1", {"name": "tampered"}); assert False
     except Forbidden:
         pass
     w.take_epoch("1"); con.update_camera(1, {"name": "ok"})
-    assert ctl.camera(1)["name"] == "ok" and c.vars.get("vms/epoch/1")[0] == {"epoch": "1"}
+    assert ctl.camera(1)["name"] == "ok" and c.vars.get("cam/epoch/1")[0] == {"epoch": "1"}
     assert con.create_camera({"source": "driverpack://file/2.mp4"})["id"] == 2 and con.update_camera(2, {"name": "from the console"})["revision"] == 2
     w.heartbeat_once()
     try:
@@ -118,9 +118,9 @@ def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server()
     from w2cplatform.cluster.objectstore import ClusterObjectStore
     from w2cplatform.configstorevars import ConfigstoreVariables
     d = tempfile.mkdtemp(prefix="main-")
-    env = m.cluster_env("vmscontroller", {"OBJECTS": f"cluster://{d}/objects?resource=http://127.0.0.1:8090"})
+    env = m.cluster_env("camcontroller", {"OBJECTS": f"cluster://{d}/objects?resource=http://127.0.0.1:8090"})
     vars_, objects = host.stores(env)
-    assert isinstance(vars_, ConfigstoreVariables) and vars_.path == "/run/configstore/vmscontroller.sock"
+    assert isinstance(vars_, ConfigstoreVariables) and vars_.path == "/run/configstore/camcontroller.sock"
     assert isinstance(objects, ClusterObjectStore) and objects.rows.vars is vars_ and objects.resource == "http://127.0.0.1:8090"
     vars_, _ = host.stores(m.cluster_env("console", {"PLATFORM_STORE": f"file://{d}/config", "OBJECTS": f"file://{d}/o"}))
     assert type(vars_).__name__ == "FileVariables"
@@ -129,9 +129,9 @@ def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server()
 
 def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_rights():
     """The thirteenth review, major 20 (`m11_console_turn`): the reaper (`vms/jobs.py`, `clear_requests`) reads a
-    holder's mark (`vms/commands/<id>`, a create-only row of the store here) to tell a command its holder began from
+    holder's mark (`cam/commands/<id>`, a create-only row of the store here) to tell a command its holder began from
     one nobody performed — and the console's rights did not grant that read: `Forbidden: console may not read
-    objects/vms/commands/x1` on every turn, the command stood, `w2c_requests_expired_total` did not move, and the
+    objects/cam/commands/x1` on every turn, the command stood, `w2c_requests_expired_total` did not move, and the
     exception left the rows after it unlooked at. Through the console's own socket, under the committed rights: a
     command past its deadline that nobody held is ended and counted; one its holder answered (a mark with an outcome) is
     cleared and not counted; one its holder began (a mark, no outcome) stays its holder's while that holder holds its
@@ -144,21 +144,21 @@ def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_
     con, w = c.console(), c.worker("srv-a")
     late = c.wall() - requests.REAP_AFTER - 60
     for rid in ("x1", "x2", "x3"):
-        con.vars.put(f"vms/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
+        con.vars.put(f"cam/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
     assert w._mark("x1", "1", late - 20) and w._mark("x3", "1", late - 20)            # the holder's marks, by its socket
-    w.objects.put("vms/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
-    before, unknown = requests.expired.get("vms", 0), requests.unknown.get("vms", 0)
+    w.objects.put("cam/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
+    before, unknown = requests.expired.get("cam", 0), requests.unknown.get("cam", 0)
     requests.clear_requests(con)
-    assert con.vars.list("vms/requests/") == ["vms/requests/x1"], con.vars.list("vms/requests/")
-    assert requests.expired.get("vms", 0) - before == 1
+    assert con.vars.list("cam/requests/") == ["cam/requests/x1"], con.vars.list("cam/requests/")
+    assert requests.expired.get("cam", 0) - before == 1
     # …and each end is in its mark, written by the console's own socket (ADR-0054): nobody began x2 — `expired`, the
     # reaper's word, create-only; x3's answer is the holder's and stays as it was
-    x2 = json.loads(con.objects.get("vms/commands/x2"))
+    x2 = json.loads(con.objects.get("cam/commands/x2"))
     assert (x2["outcome"], x2["ended_by"], x2["unit"], x2["action"]) == ("expired", "reaper", "1", "output"), x2
-    assert json.loads(con.objects.get("vms/commands/x3")) == {"instance": w.instance, "outcome": "performed"}
+    assert json.loads(con.objects.get("cam/commands/x3")) == {"instance": w.instance, "outcome": "performed"}
     w.release_slot()                                                                   # the holder went
     requests.clear_requests(con)
-    assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
-    assert requests.expired.get("vms", 0) - before == 1 and requests.unknown.get("vms", 0) - unknown == 1
-    x1 = json.loads(con.objects.get("vms/commands/x1"))                               # completed, its beginner kept
+    assert con.vars.list("cam/requests/") == [], con.vars.list("cam/requests/")
+    assert requests.expired.get("cam", 0) - before == 1 and requests.unknown.get("cam", 0) - unknown == 1
+    x1 = json.loads(con.objects.get("cam/commands/x1"))                               # completed, its beginner kept
     assert (x1["outcome"], x1["instance"], x1["slot"]) == ("unknown", w.instance, w.name) and "ended_by" not in x1, x1

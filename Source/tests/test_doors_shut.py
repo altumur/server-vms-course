@@ -50,25 +50,25 @@ def test_the_door_to_a_devices_archive_binds_to_loopback_unless_it_is_opened():
 
     said = []
     handler = logging.Handler(); handler.emit = lambda r: said.append(r.getMessage())
-    logging.getLogger("vmsworker").addHandler(handler)
+    logging.getLogger("camworker").addHandler(handler)
     box, w = _worker({"PLAYBACK_PORT": "auto", "PLAYBACK_HOST": "0.0.0.0"})
     srv = w.serve_playback()
     try:
         assert srv.server_address[0] == "0.0.0.0"
         assert any("asks for a process's capability for the camera" in m for m in said)   # opened: and the process says what it asks (the fourth review: not "nobody")
     finally:
-        srv.shutdown(); logging.getLogger("vmsworker").removeHandler(handler)
+        srv.shutdown(); logging.getLogger("camworker").removeHandler(handler)
 
 
 def test_a_recorder_on_another_server_does_not_knock_on_its_own_loopback():
     from w2cplatform.contract import Heartbeat
     from tests.test_volumes import _recorder
     box = Box()
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
-        {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7", "live_shm": "shm:///run/vms/7.shm"}],
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
+        {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7", "live_shm": "shm:///run/cam/7.shm"}],
         {"server": "srv-b"}).to_bytes())
     far, near = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
-    assert near.source("7") == ("srv-b", "shm:///run/vms/7.shm")       # the same server: shared memory, as before
+    assert near.source("7") == ("srv-b", "shm:///run/cam/7.shm")       # the same server: shared memory, as before
     assert far.source("7") is None and far.behind_loopback == {"7": "srv-b"}
     far.waiting = {"7"}
     why = far.status_extra({"id": "7", "cam": "7"})["why"]
@@ -83,7 +83,7 @@ def test_a_gateway_and_a_backfill_do_not_knock_on_their_own_loopback_either():
     from tests.test_lesson8_live import _gateway
     from tests.test_volumes import _recorder
     box = Box()
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
         {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7",
          "playback_url": "http://127.0.0.1:8083/playback/7", "coverage": {"from": 1, "to": 2}}], {"server": "srv-b"}).to_bytes())
     g = _gateway(box, "g-1")                                           # on srv-1

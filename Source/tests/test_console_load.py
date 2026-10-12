@@ -66,7 +66,7 @@ def test_a_body_is_not_read_before_the_caller_is_known_nor_past_its_ceiling():
     with a token who declares more than `MAX_BODY` is 413, also without a byte read; within it, the body is read as
     before."""
     box = Box()
-    ctl, rec, m, srv, base = _console(box, Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]}))
+    ctl, rec, m, srv, base = _console(box, Tokens({"guard": [("edit", "cam/1", ())], "admin": [("admin", None, ())]}))
     port = srv.server_address[1]
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
@@ -79,7 +79,7 @@ def test_a_body_is_not_read_before_the_caller_is_known_nor_past_its_ceiling():
         reply, _ = _raw(port, b"POST /cameras HTTP/1.1\r\nHost: x\r\nContent-Length: lots\r\n"
                               b"Authorization: Bearer admin\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
-        assert _call(base, "POST", "/marks", {"unit": "vms/1", "note": "seen"}, token="guard")[0] == 201   # a body within it: as before
+        assert _call(base, "POST", "/marks", {"unit": "cam/1", "note": "seen"}, token="guard")[0] == 201   # a body within it: as before
     finally:
         srv.shutdown()
 
@@ -393,7 +393,7 @@ def test_four_or_eight_addresses_flooding_keep_neither_an_honest_door_in_nor_a_l
                 else:                                                 # the reserve gone too: only the listed monitor, over TCP
                     assert srv.bounds.used["reserve"] == wc.CONSOLE_RESERVE
                     assert session.startswith(b"HTTP/1.0 503") and cameras.startswith(b"HTTP/1.0 503")
-                assert metrics.startswith(b"HTTP/1.0 200") and b"vms_" in metrics, metrics[:200]   # the monitor: always
+                assert metrics.startswith(b"HTTP/1.0 200") and b"cam_" in metrics, metrics[:200]   # the monitor: always
                 listed = _ask(_as(who, "192.0.2.100", port), get("/healthz"))                 # a listed address
                 assert listed.startswith(b"HTTP/1.0 200"), listed[:80]
             finally:
@@ -565,7 +565,7 @@ def test_one_listed_monitor_holds_two_places_of_its_lane_and_another_listed_one_
         assert srv.bounds.by_addr.get(("monitor", "198.18.0.5")) == wc.MONITOR_PER_ADDRESS
         assert srv.bounds.used["monitor"] == wc.MONITOR_PER_ADDRESS
         metrics = _ask(_as(who, "198.18.0.6", port), b"GET /metrics HTTP/1.1\r\nHost: x\r\n\r\n")
-        assert metrics.startswith(b"HTTP/1.0 200") and b"vms_" in metrics, metrics[:120]           # another listed one
+        assert metrics.startswith(b"HTTP/1.0 200") and b"cam_" in metrics, metrics[:120]           # another listed one
     finally:
         for s in held:
             s.close()
@@ -605,7 +605,7 @@ def test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a
     field of the spec and of nothing else; and `BLOBS_AT_ONCE` of them are read at a time."""
     from w2cplatform import console as wc
     box = Box()
-    access = Tokens({"nobody": [], "one": [("admin", "vms/1", ())], "two": [("admin", "vms/2", ())], "admin": [("admin", None, ())]})
+    access = Tokens({"nobody": [], "one": [("admin", "cam/1", ())], "two": [("admin", "cam/2", ())], "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     port = srv.server_address[1]
     was = _env(BLOBS_AT_ONCE=2)
@@ -619,8 +619,8 @@ def test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a
         for i in (1, 2):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
         assert _call(base, "POST", "/det/units", {"name": "1-motion", "cam": "1", "kind": "motion"}, token="admin")[0] == 201
-        scenario = {"name": "lobby", "when": [{"sub": "vms", "kind": "motion", "unit": "1"}],
-                    "then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1}]}
+        scenario = {"name": "lobby", "when": [{"sub": "cam", "kind": "motion", "unit": "1"}],
+                    "then": [{"sub": "cam", "action": "output", "unit": "1", "port": 1}]}
         assert _call(base, "POST", "/auto/scenarios", scenario, token="admin")[0] == 201
         blob = "/det/units/1-motion/mask"
         # 32 MiB declared and never sent: each of these is answered at once, the body not waited for
@@ -673,7 +673,7 @@ def _holder(box, dev, **attrs):
     from vms.controller import VmsController
     from vms.worker import FakeActuator, VmsWorker
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    placer = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
                   resource_root=box.resource_root, device_factory=lambda k: dev)
     for k, v in attrs.items():
@@ -902,7 +902,7 @@ def test_a_viewer_slower_than_the_floor_is_let_go_by_the_floor_not_by_a_sockets_
         def emit(self, record):
             said.append(record.getMessage())
     catch = Catch()
-    logging.getLogger("vmsworker").addHandler(catch)
+    logging.getLogger("camworker").addHandler(catch)
     try:
         let_go = _released(door, dev, wait=25.0)
         s = socket.socket()
@@ -930,7 +930,7 @@ def test_a_viewer_slower_than_the_floor_is_let_go_by_the_floor_not_by_a_sockets_
         assert any("slower than the 2000000 bytes a second" in m for m in said), said
         assert let_go.dev_open == 0 and not dev.open
     finally:
-        logging.getLogger("vmsworker").removeHandler(catch)
+        logging.getLogger("camworker").removeHandler(catch)
         door.shutdown()
 
 
@@ -941,7 +941,7 @@ def test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles():
     from w2cplatform.console import ConsoleServer
     from tests.test_lesson8_live import _gateway
     box = Box()
-    box.vars.put("vms/cameras/1", {"name": "gate", "labels": ""})
+    box.vars.put("cam/cameras/1", {"name": "gate", "labels": ""})
     g = _gateway(box, "g-1")
     srv = g.serve("127.0.0.1", 0)
     port = srv.server_address[1]
@@ -965,8 +965,8 @@ def test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole
     res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     srv = wr.serve(res, "127.0.0.1", 0)
     port = srv.server_address[1]
-    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    path = "/mirror/srv-2/cam/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "cam", "7", "e1", "1757499600.events.jsonl")
     put = lambda n, body=b"": f"PUT {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {n}\r\n\r\n".encode() + body
     try:
         assert isinstance(srv, ConsoleServer)
@@ -999,8 +999,8 @@ def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole():
     srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
-    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    path = "/mirror/srv-2/cam/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "cam", "7", "e1", "1757499600.events.jsonl")
 
     def trickle(target: str, n: int) -> tuple[bytes, float]:
         s = socket.create_connection(("127.0.0.1", port))
@@ -1047,8 +1047,8 @@ def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared
     srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
-    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    path = "/mirror/srv-2/cam/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "cam", "7", "e1", "1757499600.events.jsonl")
 
     def trickle(p: int, target: str, n: int, head: bytes = b"PUT") -> tuple[bytes, float]:
         s = socket.create_connection(("127.0.0.1", p))
@@ -1167,7 +1167,7 @@ def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():
     from w2cplatform import resource as wr
     box = Box()
     res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
-    rel = "vms/7/e1/1757499600.events.jsonl"
+    rel = "cam/7/e1/1757499600.events.jsonl"
     os.makedirs(os.path.join(box.resource_root, os.path.dirname(rel)), exist_ok=True)
     line = b'{"t": 1, "kind": "motion", "pad": "' + b"p" * 200 + b'"}\n'
     with open(os.path.join(box.resource_root, rel), "wb") as f:

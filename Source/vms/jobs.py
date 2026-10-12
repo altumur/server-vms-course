@@ -37,7 +37,7 @@ TERMINAL = ("done", "failed")
 # worker's news and stay in the heartbeat: nothing downstream acts on them.
 MIRRORED = ("fetching", "running") + TERMINAL
 # How long a finished job's row stays after the reaper saw it end. Its events are in the archive under the
-# archive's days and are found by `/events?unit=vms/<cam>`; the ROW is the operator's list of what ran, and a list that
+# archive's days and are found by `/events?unit=cam/<cam>`; the ROW is the operator's list of what ran, and a list that
 # keeps every scan a scenario ever asked for is a list nobody can read. Three days is the window in which
 # somebody asks "did last night's search finish" (the review's second pass).
 FINISHED_RETENTION_SECONDS = 3 * 86400.0

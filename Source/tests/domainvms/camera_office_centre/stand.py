@@ -435,7 +435,7 @@ class Site:
                  ("the read view's pass", c.view.refresh))
 
     def start_domainpart(self) -> None:
-        """`vms.domainpart.worker.main` on srv: the VMS's books, by the role `vmsdomain`, its tokens asked of the signer's
+        """`vms.domainpart.worker.main` on srv: the VMS's books, by the role `camdomain`, its tokens asked of the signer's
         socket (`TokenDoor`) — the key stays the signer's."""
         from w2cplatform.configstorevars import unix_transport
         from w2cplatform.domain.members import Members
@@ -447,8 +447,8 @@ class Site:
         from vms.domainpart.crossing import Crossings
         from vms.domainpart.worker import DomainPartWorker
         srv = self.cluster("srv")
-        who = "vmsdomain on srv"
-        v = srv.door("vmsdomain", who)
+        who = "camdomain on srv"
+        v = srv.door("camdomain", who)
         fed = self.federation(v, srv.objects_on("srv", v, who))
         holder = fed.domain_holder
         view = ReadView(fed, lost_after=45.0, wall=self.wall)
@@ -656,7 +656,7 @@ class Site:
         self.log.note(f"→ {said}")
         return said
 
-    # -- the clusters' controllers: `w2c-controller@vms`, `w2c-controller@rec` on every server ------------------------------
+    # -- the clusters' controllers: `w2c-controller@cam`, `w2c-controller@rec` on every server ------------------------------
     def controllers(self, name: str) -> list:
         """The platform's placement controllers of `name` for the VMS and the recorder (`host.placement_pass` each pass):
         on an office they place its recordings, and they publish the snapshots its agent reports — an office with no
@@ -668,7 +668,7 @@ class Site:
         from w2cplatform.spec import SpecController
         c = self.cluster(name)
         out = []
-        for role, make in (("vmscontroller", lambda v, o: VmsController(v, o, wall=self.wall, cluster=name)),
+        for role, make in (("camcontroller", lambda v, o: VmsController(v, o, wall=self.wall, cluster=name)),
                            ("reccontroller", lambda v, o: SpecController(REC_SPEC, v, o, wall=self.wall, cluster=name))):
             who = f"{role} on {name}"
             v = c.door(role, who)

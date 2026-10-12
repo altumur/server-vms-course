@@ -54,7 +54,7 @@ def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
         # the cluster joins a domain: its agent carries the key set and the grants into ITS store
         vars_.put(KEYS_PATH, signer.keyset().to_items())
         vars_.put(GRANTS_PATH, grants_to_items([
-            Grant("alice", "view", "vms/1", clk() + 86400), Grant("bob", "edit", None, clk() + 86400, ("ground",)),
+            Grant("alice", "view", "cam/1", clk() + 86400), Grant("bob", "edit", None, clk() + 86400, ("ground",)),
             Grant("root", "admin", None, clk() + 86400), Grant("late", "admin", None, clk() + 60)]))
         tok = lambda who, life=900: signer.issue(who, life, now=clk(), kind="person")
 
@@ -88,15 +88,15 @@ def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
 
 
 def test_a_labelled_grant_travels_as_a_row_and_never_means_every_camera():
-    g = [Grant("bob", "edit", None, 2000.0, ("ground", "east")), Grant("bob", "view", "vms/7", 2000.0), Grant("ann", "admin", None, 2000.0)]
+    g = [Grant("bob", "edit", None, 2000.0, ("ground", "east")), Grant("bob", "view", "cam/7", 2000.0), Grant("ann", "admin", None, 2000.0)]
     assert sorted(grants_from_items(grants_to_items(g)), key=str) == sorted(
-        [Grant("bob", "edit", None, 2000.0, ("east", "ground")), Grant("bob", "view", "vms/7", 2000.0), Grant("ann", "admin", None, 2000.0)], key=str)
+        [Grant("bob", "edit", None, 2000.0, ("east", "ground")), Grant("bob", "view", "cam/7", 2000.0), Grant("ann", "admin", None, 2000.0)], key=str)
     from w2cplatform.domain.grants import ClusterGrants
     cg = ClusterGrants("south", now=lambda: 1000.0); cg.renew_from_domain(grants_from_items(grants_to_items(g)))
-    assert cg.may("bob", "edit", "vms/3", labels=["ground", "east", "roof"]) and not cg.may("bob", "edit", "vms/3", labels=["ground"])
-    assert not cg.may("bob", "edit", "vms/3") and not cg.may("bob", "edit", None)      # asked about no camera's labels: it is not "all"
-    assert cg.may("bob", "view", "vms/7") and cg.may("ann", "edit", "vms/3")
-    assert not cg.may("bob", "view", "7") and not cg.may("bob", "view", "rec/7")       # a unit is `<sub>/<id>`: nothing else is vms/7
+    assert cg.may("bob", "edit", "cam/3", labels=["ground", "east", "roof"]) and not cg.may("bob", "edit", "cam/3", labels=["ground"])
+    assert not cg.may("bob", "edit", "cam/3") and not cg.may("bob", "edit", None)      # asked about no camera's labels: it is not "all"
+    assert cg.may("bob", "view", "cam/7") and cg.may("ann", "edit", "cam/3")
+    assert not cg.may("bob", "view", "7") and not cg.may("bob", "view", "rec/7")       # a unit is `<sub>/<id>`: nothing else is cam/7
 
 
 def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_token():

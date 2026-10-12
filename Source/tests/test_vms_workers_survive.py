@@ -50,7 +50,7 @@ def test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same():
     measure its own failover — bare: a garbled one raised out of the constructor, and the process restarted for
     ever over the very object its first heartbeat would have replaced. Unparsed, there is no failover to measure."""
     box = Box()
-    box.objects.put("vms/heartbeats/w-1", b'{"worker": "w-1", "ts": ')                      # cut short
+    box.objects.put("cam/heartbeats/w-1", b'{"worker": "w-1", "ts": ')                      # cut short
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a")
     assert (w.previous_hb, w.previous_instance) == (0.0, "")
     w.heartbeat_once()

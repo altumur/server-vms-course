@@ -358,7 +358,7 @@ def _ask_recorder(rec_ctl, unit: str, t0: float, t1: float, now: float, by: str,
 **Скан читает запись своей камеры, и запись у задачи не меняется.** `cam` строки неизменяем с четвёртого ревью, и ворота проверяют камеру в нём. Но скан называет камеру ещё и через `rec` — запись, чьё видео он читает, — и ничто не требовало, чтобы это была та же камера. `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` с `admin` на камеру 1 отвечал 200: скан читал архив камеры 2, а найденное писал под камерой 1 (пятое ревью, major, воспроизведено запуском). Теперь это три слова спеки, и исполняет их платформа, а не код VMS (ADR 0013):
 
 ```yaml
-about: {sub: vms, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
+about: {sub: cam, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
 …
     rec:     {type: string, required: true, fixed: true, ref: rec/recordings, must_match: {cam: cam}}
 ```

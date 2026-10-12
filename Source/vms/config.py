@@ -1,15 +1,15 @@
 """The VMS's schema — as a spec the platform's controller runs from
-(vms.subsystem.yaml, beside this file). What this module keeps is the
+(cam.subsystem.yaml, beside this file). What this module keeps is the
 Python view of the same thing, for the worker and the tests:
 
-    vms/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
-    vms/workers/<worker>  units, rev                                      (the controller writes)
-    vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
-    vms/retention        days — subsystem-wide event retention (the resource reads)
-    vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
-    vms/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
+    cam/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
+    cam/workers/<worker>  units, rev                                      (the controller writes)
+    cam/placement/<id>    worker, reason, at, rev                         (the controller writes)
+    cam/retention        days — subsystem-wide event retention (the resource reads)
+    cam/epoch/<id>        epoch                                           (a worker takes, by CAS)
+    cam/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
                           (its holder, on a change: the declared table `devices`, through its field rules)
-    vms/next_id           n                                               (the controller)
+    cam/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
 here is controller-derived status — that is in the worker's heartbeat.
@@ -17,20 +17,20 @@ here is controller-derived status — that is in the worker's heartbeat.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # config.py — the VMS's schema as the Python view over `vms.subsystem.yaml`: `SPEC`, `row()`, `items()`
+# # config.py — the VMS's schema as the Python view over `cam.subsystem.yaml`: `SPEC`, `row()`, `items()`
 #
-# **Role in the module.** The schema itself is the YAML beside this file (see `vms.subsystem.yaml`), and the
+# **Role in the module.** The schema itself is the YAML beside this file (see `cam.subsystem.yaml`), and the
 # platform's `SubsystemSpec` parses it. This module loads that spec once at import and exposes the two
 # conversions the worker and the tests need — a Variables row of strings to a typed camera dict, and back.
 # The docstring is the VMS's key map, worth keeping in view:
 #
-# - `vms/cameras/<id>` — the row: the spec's fields plus `revision` (the controller writes; the console's
+# - `cam/cameras/<id>` — the row: the spec's fields plus `revision` (the controller writes; the console's
 #   token may too).
-# - `vms/workers/<worker>` — `units, rev` (the controller writes; the worker reads).
-# - `vms/placement/<id>` — `worker, reason, at, rev` (the controller writes).
-# - `vms/retention`, `vms/alarms_retention` — subsystem-wide days, read by the resource.
-# - `vms/epoch/<id>` — `epoch` (a worker takes, by CAS).
-# - `vms/next_id` — `n` (the controller).
+# - `cam/workers/<worker>` — `units, rev` (the controller writes; the worker reads).
+# - `cam/placement/<id>` — `worker, reason, at, rev` (the controller writes).
+# - `cam/retention`, `cam/alarms_retention` — subsystem-wide days, read by the resource.
+# - `cam/epoch/<id>` — `epoch` (a worker takes, by CAS).
+# - `cam/next_id` — `n` (the controller).
 #
 # "A camera row is small, rare and must be consistent: raft's shape. Nothing here is controller-derived
 # status — that is in the worker's heartbeat." Used by `worker.py` (`row` on every refresh), `controller.py`
@@ -38,10 +38,10 @@ here is controller-derived status — that is in the worker's heartbeat.
 # the tests (`SPEC.acl_console()` / `acl_controller()` to build the two tokens).
 #
 # ## Module-level names
-# - `SPEC` — `SubsystemSpec.load(<this directory>/vms.subsystem.yaml)`, parsed once at import. PyYAML is
+# - `SPEC` — `SubsystemSpec.load(<this directory>/cam.subsystem.yaml)`, parsed once at import. PyYAML is
 #   imported lazily inside `load`, so this is the one import in the VMS that needs it.
 # - `OPERATOR_FIELDS` — `tuple(SPEC.fields)`: the field names the operator owns, in YAML order, whatever they are
-#   now (`vms.subsystem.yaml` is the list; this follows it). What the operator may never send is the platform's
+#   now (`cam.subsystem.yaml` is the list; this follows it). What the operator may never send is the platform's
 #   `PLATFORM_FIELDS`, refused by `SubsystemSpec.refuse`.
 #
 # ## Notes
@@ -58,7 +58,7 @@ from w2cplatform.doors import numeric
 from w2cplatform.events import COMMAND, COMMAND_FAILED
 from w2cplatform.spec import SubsystemSpec
 
-SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
+SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cam.subsystem.yaml"))
 LIVE_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "live.subsystem.yaml"))   # the second subsystem: live fan-outs
 DET_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "det.subsystem.yaml"))     # the third: detectors
 REC_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "rec.subsystem.yaml"))     # the fourth: recorders, on the archive
@@ -67,7 +67,7 @@ AUTO_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__fi
 SURVEY_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "survey.subsystem.yaml"))  # the sixth: watching an archive we do not own
 
 
-# A camera as the platform names a unit: `vms/<id>` — and `"*"`, every one, as it is (the boundary's step 2: the
+# A camera as the platform names a unit: `cam/<id>` — and `"*"`, every one, as it is (the boundary's step 2: the
 # platform names units `<sub>/<id>` and nothing else; the VMS's own rows and routes name its cameras by id).
 def cam_ref(cam) -> str:
     from w2cplatform.doors import unit_ref
@@ -180,7 +180,7 @@ def device_of(source: str) -> str:
     # …and the key as a page says an address (the thirteenth review, major 9; a run): what the cuts below leave of a row
     # stored before the refusals is still a credential in the vendor or the host — `acme:hunter2/10.0.0.5` (a password
     # where a port stands), `acme/10.0.0.5&password=hunter2` (a pair) —, and the key is in `POST /requests`,
-    # `vms/requests/*`, the heartbeat and `vms/devices/<key>`. A key with none in it is the key it always was.
+    # `cam/requests/*`, the heartbeat and `cam/devices/<key>`. A key with none in it is the key it always was.
     said = lambda key: hide_in_url(f"{scheme}://{key}")[len(scheme) + 3:]
     if not parts:
         return said(vendor)
@@ -194,7 +194,7 @@ def device_of(source: str) -> str:
 
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
-# is (`identity` in its row, `vms/devices/<host>`: a serial number, a MAC; the driver's word). A DNS name and the
+# is (`identity` in its row, `cam/devices/<host>`: a serial number, a MAC; the driver's word). A DNS name and the
 # address it resolves to are two hosts and one identity. A spelling no holder has opened yet has no identity, and is its
 # key alone until a holder opens it (М10B Lesson 15). The answer is by the ROW's name — the host (`device_row_name`).
 #
@@ -221,13 +221,13 @@ def device_identities(vars_) -> dict[str, str]:
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
-# `vms/devices/<host>`, keyed by DEVICE and not by camera: a sixteen-channel recorder is one device and one
+# `cam/devices/<host>`, keyed by DEVICE and not by camera: a sixteen-channel recorder is one device and one
 # set of relays, and keyed by camera the same facts would be written sixteen times. Its one writer is the
 # worker that holds the device (`group_by: {field: source, cut_at: host}` makes that one worker), and it writes only
 # when the answer changes — on a camera the row is on flash, and a description does not change between passes.
 #
 # A DECLARED TABLE, NAMED BY THE HOST (ADR 0012, ADR 0053; «Архитектор», 2026-10-06). `worker.writes` names only a unit's
-# rows or a declared table, so `devices` is declared in vms.subsystem.yaml (`tables.devices: {key: device, fields}`) and
+# rows or a declared table, so `devices` is declared in cam.subsystem.yaml (`tables.devices: {key: device, fields}`) and
 # the holder writes a row through the table's field rules (`tables.write_row`), as the console writes one. The row's name
 # is the device's GROUP — the host its sources name, in its one spelling (`SPEC.group_of`: `10.0.0.50`, `nvr50.local`,
 # `fe80::1`), never the driver's session key: `device_of` says `acme/10.0.0.50` — the vendor and a port, a leftover of
@@ -253,7 +253,7 @@ HOLDER_EVENTS = (COMMAND, COMMAND_FAILED, "silent")
 # row it writes that is not a claim about itself — what a device turned out to be. The process (`__main__.worker`) and a
 # cluster's rights file (`w2cplatform/cluster/rights.py`) read the same declaration.
 WORKER_ACL = SPEC.acl_worker_role()
-# (Its objects — its heartbeat, the marks it leaves before it calls a device, `vms/commands/<id>` — are the platform's
+# (Its objects — its heartbeat, the marks it leaves before it calls a device, `cam/commands/<id>` — are the platform's
 # to grant, from the spec's `objects.rows`: `w2cplatform/cluster/rights.py`.)
 
 
@@ -294,7 +294,7 @@ def parse_device_row(items: dict | None) -> dict | None:
     # through `rows.number` (the review's seventh pass): a word in one device's row raised out of the evaluator's whole
     # pass (`Catalog.check`) and out of the scenario catalogue page. Not said, none — and counted.
     from w2cplatform.rows import number
-    n = lambda f: number(f"vms/devices#{f}", items.get(f) or 0, int, 0)
+    n = lambda f: number(f"cam/devices#{f}", items.get(f) or 0, int, 0)
     return {"events": [e for e in str(items.get("events", "")).split(",") if e],
             "rays": n("rays"), "relays": n("relays"), "ptz": str(items.get("ptz")) == "true", "presets": n("presets")}
 
@@ -378,15 +378,15 @@ def source_refusal(source: str) -> str | None:
 
 # The longest a command's argument may be — `port`, `state`, `pulse_ms`, `n`: a number or a word (the product's
 # cross-check of the eleventh review: an argument had no size). The console refuses longer at its door by the spec's
-# schema (`requests.schema` in `vms.subsystem.yaml`: `maxLength: 32`), the holder refuses a row that holds one anyway
+# schema (`requests.schema` in `cam.subsystem.yaml`: `maxLength: 32`), the holder refuses a row that holds one anyway
 # (`VmsWorker.perform`).
 COMMAND_ARG_MAX = 32
 
 
 # A port an instance was told, where `auto` (or `0`) means "ask the operating system for a free one".
 #
-# A door with a number baked into a TEMPLATE is a door only one instance can open. `vmsworker@w-1` and
-# `vmsworker@w-2` on one box are the ordinary way to use capacity — and the second one binds the same
+# A door with a number baked into a TEMPLATE is a door only one instance can open. `camworker@w-1` and
+# `camworker@w-2` on one box are the ordinary way to use capacity — and the second one binds the same
 # 8554, dies, and `Restart=always` raises it every two seconds until morning. Nothing in the system needs
 # the number to be 8554: every subscriber reads the address out of the heartbeat, which is what the
 # heartbeat is for. So the number may be zero, and what gets published is what the OS gave.
@@ -487,7 +487,7 @@ OPERATOR_FIELDS = tuple(SPEC.fields)
 
 # `SPEC.row(items)`: Variables items (all strings) to a typed dict with `id`, every spec field (its default
 # if absent) and `revision` (default 1). The worker calls it on each camera row named by its assignment;
-# `retain` calls it on every row under `vms/cameras/`.
+# `retain` calls it on every row under `cam/cameras/`.
 def row(items: dict) -> dict:
     return SPEC.row(items)
 

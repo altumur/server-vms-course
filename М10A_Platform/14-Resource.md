@@ -1276,7 +1276,7 @@ def guarded(name, globals=None, locals=None, fromlist=(), level=0):
 **В Go отказ — это несостоявшаяся сборка**, поэтому тест **собирает**:
 
 ```go
-var portable = []string{"./w2cplatform/...", "./vms/...", "./cmd/..."}
+var portable = []string{"./w2cplatform/...", "./cam/...", "./cmd/..."}
 
 cmd := exec.Command(goBin, append([]string{"build", "-o", os.DevNull}, portable...)...)
 cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH=amd64", "CGO_ENABLED=0")

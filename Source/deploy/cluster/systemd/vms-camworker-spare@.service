@@ -1,9 +1,9 @@
-# /etc/systemd/system/vms-vmsworker-spare@.service — a SPARE worker, started by `w2c-spares.sh` as
-# `vms-vmsworker-spare@<n>` for a label set the controller offered (lesson 4). The worker's unit, line for line —
+# /etc/systemd/system/vms-camworker-spare@.service — a SPARE worker, started by `w2c-spares.sh` as
+# `vms-camworker-spare@<n>` for a label set the controller offered (lesson 4). The worker's unit, line for line —
 # the same user, groups, socket, key, umask, watchdog — but no name: a spare takes only an OFFER of its set, by CAS,
 # and with none it waits holding nothing. It ran from `systemd-run` as root before, without the key or the opened
 # fan-out (the twelfth review, blocker 6): the cameras of a dead server with a sealed password did not start on the
-# very process started for them. `tests/cluster/test_units.py` holds this file to `vms-vmsworker.service`.
+# very process started for them. `tests/cluster/test_units.py` holds this file to `vms-camworker.service`.
 [Unit]
 Description=VMS spare worker %i — takes an offer of its label set, else waits holding nothing
 After=network-online.target configstore.service w2c-resource.service
@@ -16,11 +16,11 @@ Requisite=configstore.service
 [Service]
 User=vms
 Group=vms
-SupplementaryGroups=vms-vmsworker w2c-events w2c-store w2c-secrets
-Environment=PLATFORM_STORE=configstore:///run/configstore/vmsworker.sock
-# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/vmsworker.env — CAPACITY,
+SupplementaryGroups=vms-camworker w2c-events w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/camworker.sock
+# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/camworker.env — CAPACITY,
 # WORKER_MEMORY_MB, HOST_MEMORY_MB; the administrator's file, not the spares pass's.
-Environment=W2C_ROLE=vmsworker
+Environment=W2C_ROLE=camworker
 # Its label set: the file `w2c-spares.sh` writes before it starts the instance, of which `w2c-run.sh` reads the line
 # `SPARE_FOR=` and nothing else, checked against the labels' alphabet — no line, or no set: it does not start, else it
 # would be a worker taking any free name. Not `EnvironmentFile=` (the product's cross-check, 4 Oct): whoever could

@@ -89,7 +89,7 @@ def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():
 
 def test_a_member_that_leaves_leaves_the_running_views_list_in_the_same_pass():
     """The scenario «камера — офис — центр», N8: after `DELETE /domain/members/cam-a2` the domain's console still listed
-    cam-a2's camera in `/domain/vms/cameras` as live — its view, made before the leave, kept the member's heartbeats and
+    cam-a2's camera in `/domain/cam/cameras` as live — its view, made before the leave, kept the member's heartbeats and
     snapshot after the member left the federation (`clusters` no longer named it, the rows did). A member removed leaves
     the list in the same pass it leaves the membership (ADR-0074, its addition): nothing of it is kept as last known."""
     wall = Clock(1000.0)

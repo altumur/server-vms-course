@@ -8,8 +8,8 @@
 
 | Часть | Где у VMS | Почему здесь |
 |---|---|---|
-| Что подсистема даёт домену | раздел `domain:` в `vms.subsystem.yaml` и `rec.subsystem.yaml` | платформа читает объявление и не зовёт код подсистемы; объявление сверяется с продуктом по YAML (ADR 0019) |
-| Работа | воркер `vms/domainpart` у держателя, роль `vmsdomain`, свои строки `domain/vms/…` | книги — решения VMS о камерах, и писать их должен процесс VMS со своими правами |
+| Что подсистема даёт домену | раздел `domain:` в `cam.subsystem.yaml` и `rec.subsystem.yaml` | платформа читает объявление и не зовёт код подсистемы; объявление сверяется с продуктом по YAML (ADR 0019) |
+| Работа | воркер `vms/domainpart` у держателя, роль `camdomain`, свои строки `domain/cam/…` | книги — решения VMS о камерах, и писать их должен процесс VMS со своими правами |
 | Показ | страница продукта: камеры домена, пересечения, сценарии | что значит строка VMS, знает только VMS; дверь держателя отдаёт её как хранит |
 
 Платформа переносит объявленное, не читая. Секрет в объявленной строке она находит по форме имени (`*_secret`) и запечатывает на каждом шаге, не зная, зачем он.
@@ -19,15 +19,15 @@
 | Вопрос | Решение | Почему |
 |---|---|---|
 | Как VMS даёт домену своё | **Раздел `domain:` спеки: `ref`, `view`, `edit`, `books`, `kept`, `tables`, `tokens`, `keys`, `shared`; у `rec` — `reports`, `witness: {report, member_field}`, `edit`; у `auto` — `shared` с документом `scenarios` (ADR 0010)** | Объект подсистемы с методами, который домен зовёт, — крючок (ADR 0002). Объявление проверяет загрузчик (ADR 0012), его видно в YAML, и `w2cplatform/domain` собирается на `testsub` без `vms`. |
-| Кто пишет книги | **Воркер VMS у держателя, `python3 -m vms domainpart` (`vms-domainpart.service`, пользователь `vms`, роль `vmsdomain`); один экземпляр пишет, слот `domain/vms/worker` по CAS** | Книги решают, кто пишет камеру, куда ей толкать и кого просить, — это VMS. Процесс VMS пишет свой префикс своей ролью, а платформенным процессам группа подсистемы не нужна (ADR 0030). Слот, а не число экземпляров: запасной экземпляр не пишет, пока первый жив. |
-| Где ключи для токенов книг | **У подписывающего; воркер просит токен через сокет токенов (`SIGNER_TOKENS_UNIX`), группа сокета — своя, `vms-vmsdomaintokens`, с одним членом — воркером** | Подписывающий — единственный процесс с ключами домена (ADR 0032). Сокет открыт только процессу, которому токены нужны (ADR 0031); до mTLS дверь закрыта правами файла, а не аутентификацией (ADR 0034). |
+| Кто пишет книги | **Воркер VMS у держателя, `python3 -m vms domainpart` (`vms-domainpart.service`, пользователь `vms`, роль `camdomain`); один экземпляр пишет, слот `domain/cam/worker` по CAS** | Книги решают, кто пишет камеру, куда ей толкать и кого просить, — это VMS. Процесс VMS пишет свой префикс своей ролью, а платформенным процессам группа подсистемы не нужна (ADR 0030). Слот, а не число экземпляров: запасной экземпляр не пишет, пока первый жив. |
+| Где ключи для токенов книг | **У подписывающего; воркер просит токен через сокет токенов (`SIGNER_TOKENS_UNIX`), группа сокета — своя, `vms-camdomaintokens`, с одним членом — воркером** | Подписывающий — единственный процесс с ключами домена (ADR 0032). Сокет открыт только процессу, которому токены нужны (ADR 0031); до mTLS дверь закрыта правами файла, а не аутентификацией (ADR 0034). |
 | Что в токене книги | **Вид, объявленные утверждения и срок из спеки (`stream`: `aud`, `ref`; `ask`: `aud`, `ref`, `by`, `acts`, `up`; оба на сутки); прав нет** | Что может субъект, решают гранты, а не токен (ADR 0031). Подписывающий выпускает только объявленное (`DeclaredIssuer`), и два вида с одним именем у двух спек — отказ, иначе токен одной подсистемы открывал бы дверь другой. |
 | Секрет в книге | **Поле `token_secret` записи книги; запечатан у держателя его кольцом, в дороге — ключом члена, у члена — кольцом члена** | Суточный токен на предъявителя лежал бы открытым в каждой книге, у держателя и на каждом члене (ADR 0024). Платформа запечатывает его по имени поля и не знает, что это токен. |
 | Что держатель хранит для всего домена | **`kept: [crossings, roads]` — в копии держателя, переносом восстанавливаются; книги не копируются** | Решение, какой кластер пишет камеру, и память дорог второй раз так же не принять. Книги — функция от отчётов членов и решений: следующий проход пересчитывает их. |
 | Что видит член | **Только свои книги, через дверь держателя (`GET /api/carry/<член>`), по объявлению `domain.books`** | Член не читает хранилище держателя вовсе: права, позволявшие читать свои строки, позволяли читать все. Агент несёт объявленное и не читает его. |
-| Сервер, пишущий камеру другого кластера | **Двери камеры — в книге источников кластера записи; регистратор разрешает `ref:` по своей копии; один кластер записи на камеру — `domain/vms/crossings`, по CAS (урок 2)** | Регистратор не должен зависеть от домена. Камера отдаёт одну живую сессию и одну дозапись, поэтому второй кластер записи — отказ, как второе размещение. В обратную сторону — книга основных без времени: свежесть — в RAM, чтобы не изнашивать флеш. |
+| Сервер, пишущий камеру другого кластера | **Двери камеры — в книге источников кластера записи; регистратор разрешает `ref:` по своей копии; один кластер записи на камеру — `domain/cam/crossings`, по CAS (урок 2)** | Регистратор не должен зависеть от домена. Камера отдаёт одну живую сессию и одну дозапись, поэтому второй кластер записи — отказ, как второе размещение. В обратную сторону — книга основных без времени: свежесть — в RAM, чтобы не изнашивать флеш. |
 | Медиа камеры, до которой никто не дотягивается | **Камера толкает один поток на приёмник кластера записи — и для записи, и для живого видео; куда и по какому праву — книга основных и ключ потока; когда — по долгому опросу; дозапись — выгрузка по заявке (урок 3)** | Тянуть с камеры за NAT нельзя. Раздача переезжает в кластер, который поток потребляет; кто пишет, не меняется. Туннель не нужен: опрос несёт только управление. |
-| Толкает камера или регистратор забирает | **Решает воркер по сетям, которые стороны называют сами (`domain/reaches`), и по свидетелю — регистратору, который не смог забрать; память дорог — `domain/vms/roads`** | Это факт о сети, а не выбор человека. Без памяти следующий проход вернул бы забор, и дорога качалась бы. |
+| Толкает камера или регистратор забирает | **Решает воркер по сетям, которые стороны называют сами (`domain/reaches`), и по свидетелю — регистратору, который не смог забрать; память дорог — `domain/cam/roads`** | Это факт о сети, а не выбор человека. Без памяти следующий проход вернул бы забор, и дорога качалась бы. |
 | Карта камеры | **Буфер, не том движка: файлы сегментов, которые пишет регистратор камеры с её кольца (М10B, урок 26, шаг 10); сервер читает её, спрашивая камеру; не смогла — отказ, а не пустота** | Кольцо камеры — 32 МиБ из бюджета процесса в 40 МиБ (ADR 0036), а движку нужно 20–25 МБ на писателя. Карту читает один читатель, и держит она часы. |
 | Дозапись срезанного | **По слову камеры об аплинке, в любой час; не по окну `22–6` (ADR 0040)** | Камера знает, несёт ли аплинк поток; окно бережёт аплинк, о котором сервер не знает ничего. |
 | Многоуровневая площадка | **Каждый уровень звонит на уровень выше; медиа — урок 3 на каждом переходе; от камеры поток получает один кластер; звезда для ретранслятора, к которому не дозвониться (урок 4)** | Нового механизма нет. Прямые отчёты оставляют камеры видимыми, когда ретранслятор лёг. |
@@ -38,15 +38,15 @@
 
 | Ключ | У VMS | Платформа | VMS |
 |---|---|---|---|
-| `ref` | `ref` | каталог домена (`declared.directory`), `/domain/where/<ref>`, `/domain/vms/cameras` | — |
+| `ref` | `ref` | каталог домена (`declared.directory`), `/domain/where/<ref>`, `/domain/cam/cameras` | — |
 | `view` | `[name, enabled]` | общий вид `domain/view`: `units.vms[].view` | — |
-| `edit` | `vms: [enabled]`, `rec: [enabled, retention_days]` | дверь держателя: `PUT /domain/vms/cameras/<ref>`, иное поле — 400 (`ConsoleAPI._refuse_undeclared`) | — |
+| `edit` | `vms: [enabled]`, `rec: [enabled, retention_days]` | дверь держателя: `PUT /domain/cam/cameras/<ref>`, иное поле — 400 (`ConsoleAPI._refuse_undeclared`) | — |
 | `books` | `[sources, primaries, poll, upstream, asks]` | дверь держателя несёт `<книга>/<член>` члену (`carry.own_rows`, `agent.per_cluster`); запреты агента | `keys.py` называет, `books.py` пишет |
 | `kept` | `[crossings, roads]` | копия держателя (`term.exported`); запреты агента | `crossing.py` пишет и читает |
-| `tables` | `[crossings]` | `GET /domain/vms/crossings`, `domain/view` → `tables["vms/crossings"]` | — |
+| `tables` | `[crossings]` | `GET /domain/cam/crossings`, `domain/view` → `tables["cam/crossings"]` | — |
 | `tokens` | `stream`, `ask` | подписывающий (`DeclaredIssuer`, сокет токенов `tokendoor.py`) | `TokenDoor` из воркера |
-| `keys` | восемь семей `domain/vms/…` | `/spec` → `domain.keys`; `GET /domain/keys` | слова — `display.keys` |
-| `shared` | `vms`: `[folders, alarms, общий срок событий]`; `auto`: документ `{name: scenarios, type: json, schema}` | `shared.resolve`, `GET /domain/shared/vms`; правка с необъявленным полем или значением, которое отвергает схема, — 400 (`shared.refusals`) | сценарии проверяет по описаниям камер проход книг (`scenario.refusals` → `refused`) |
+| `keys` | восемь семей `domain/cam/…` | `/spec` → `domain.keys`; `GET /domain/keys` | слова — `display.keys` |
+| `shared` | `vms`: `[folders, alarms, общий срок событий]`; `auto`: документ `{name: scenarios, type: json, schema}` | `shared.resolve`, `GET /domain/shared/cam`; правка с необъявленным полем или значением, которое отвергает схема, — 400 (`shared.refusals`) | сценарии проверяет по описаниям камер проход книг (`scenario.refusals` → `refused`) |
 | `reports`, `witness` | `rec`: `[polled/]`, `{report: polled, member_field: cam}` | отчёт члена (`declared.reported_objects`), свидетель тревог (`declared.witnesses`) | heartbeat регистратора с приёмником пишет `rec/polled/<приёмник>`; где приёмник — поле `ingest` того же heartbeat (ADR-0065) |
 | `names` | нет (учёток RTSP в курсе нет; форма продукта по ADR 0031 — `stream-clients/`) | `declared.guarded` на каждой записи хранилища держателя | — |
 
@@ -54,16 +54,16 @@
 
 | Семья | У держателя | У члена | Пишет | В копии держателя | Урок |
 |---|---|---|---|---|---|
-| `crossings` | `domain/vms/crossings` | — | воркер (`Crossings.record`) | да | 2 |
-| `roads` | `domain/vms/roads` | — | воркер (`Crossings._road`) | да | 3 |
-| `sources` | `domain/vms/sources/<член>` | `domain/vms/sources` | воркер (`Crossings.publish`) | нет | 2 |
-| `primaries` | `domain/vms/primaries/<член>` | `domain/vms/primaries` | воркер (`Crossings.publish_primaries`) | нет | 2, 3 |
-| `polls` | `domain/vms/polls/<член>` | `domain/vms/polls` | воркер (`Crossings.publish_polls`) | нет | 3 |
-| `upstream` | `domain/vms/upstream/<ретранслятор>` | `domain/vms/upstream` | воркер (`chain.publish_upstream`) | нет | 4 |
-| `asks` | `domain/vms/asks/<член>` | `domain/vms/asks` | воркер (`ingest.publish_asks`) | нет | 3, 4 |
-| `worker` | `domain/vms/worker` (слот) | — | воркер (`DomainPartWorker.claim`) | нет | 1 |
+| `crossings` | `domain/cam/crossings` | — | воркер (`Crossings.record`) | да | 2 |
+| `roads` | `domain/cam/roads` | — | воркер (`Crossings._road`) | да | 3 |
+| `sources` | `domain/cam/sources/<член>` | `domain/cam/sources` | воркер (`Crossings.publish`) | нет | 2 |
+| `primaries` | `domain/cam/primaries/<член>` | `domain/cam/primaries` | воркер (`Crossings.publish_primaries`) | нет | 2, 3 |
+| `polls` | `domain/cam/polls/<член>` | `domain/cam/polls` | воркер (`Crossings.publish_polls`) | нет | 3 |
+| `upstream` | `domain/cam/upstream/<ретранслятор>` | `domain/cam/upstream` | воркер (`chain.publish_upstream`) | нет | 4 |
+| `asks` | `domain/cam/asks/<член>` | `domain/cam/asks` | воркер (`ingest.publish_asks`) | нет | 3, 4 |
+| `worker` | `domain/cam/worker` (слот) | — | воркер (`DomainPartWorker.claim`) | нет | 1 |
 
-Рядом, в хранилище объектов держателя, — пульс воркера `domain/vms/heartbeat`. Тест держит, что каждый ключ, который VMS пишет на домене, попадает в объявленную семью (`test_domain_secrets_vms.py::test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares`).
+Рядом, в хранилище объектов держателя, — пульс воркера `domain/cam/heartbeat`. Тест держит, что каждый ключ, который VMS пишет на домене, попадает в объявленную семью (`test_domain_secrets_vms.py::test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares`).
 
 ## Процессы у держателя
 
@@ -72,20 +72,20 @@
 | подписывающий | `w2c-domain.service` (`w2c-run.sh signer`) | `w2c`, `domain` | весь проход держателя: вид, закрытые правки, неделя тревог, копия; четыре операции с ключами (ADR 0032) | да |
 | консоль домена | `w2c-domain-console.service` (`w2c-run.sh domainconsole`) | `w2c`, `domainconsole` | что решает человек без ключа: члены, топология, гранты, правка снова | нет |
 | агент | `w2c-domainagent.service` (`w2c-run.sh domainagent`) | `w2c`, `domainagent` | свои копии `domain/*`, отчёт | нет |
-| воркер VMS | `vms-domainpart.service` (`w2c-run.sh vms domainpart`) | `vms`, `vmsdomain` | `domain/vms/*`; пульс `domain/vms/heartbeat` | нет; просит токены через сокет |
+| воркер VMS | `vms-domainpart.service` (`w2c-run.sh vms domainpart`) | `vms`, `camdomain` | `domain/cam/*`; пульс `domain/cam/heartbeat` | нет; просит токены через сокет |
 
 ## Уроки
 
 | № | Урок | Код | Тесты |
 |---|---|---|---|
-| 1 | VMS на домене: вклад подсистемы | `vms.subsystem.yaml`, `rec.subsystem.yaml` (`domain:`); `vms/domainpart/keys.py`, `worker.py`, `books.py`; платформа — `w2cplatform/domain/declared.py`, `rights.py`, `carry.py`, `tokendoor.py`, `w2cplatform/spec.py` (`DomainSection`) | `tests/domainvms/test_domain_secrets_vms.py` — 5; `tests/test_domain_platform.py` — 16 (платформа на `testsub`); `tests/test_boundary.py`; `tests/test_deploy_units.py` |
+| 1 | VMS на домене: вклад подсистемы | `cam.subsystem.yaml`, `rec.subsystem.yaml` (`domain:`); `vms/domainpart/keys.py`, `worker.py`, `books.py`; платформа — `w2cplatform/domain/declared.py`, `rights.py`, `carry.py`, `tokendoor.py`, `w2cplatform/spec.py` (`DomainSection`) | `tests/domainvms/test_domain_secrets_vms.py` — 5; `tests/test_domain_platform.py` — 16 (платформа на `testsub`); `tests/test_boundary.py`; `tests/test_deploy_units.py` |
 | 2 | Поток из другого кластера | `vms/domainpart/crossing.py` — `Crossings` (`record`, `publish`, `publish_primaries`), `resolve`, `resolve_in`, `plan_backfill`; `vms/recworker.py` — `carried_primary`, `source` по книге (`_source_of_ref`) | `tests/domainvms/test_lesson13_crossing.py` — 8 |
 | 3 | Камера, до которой никто не дотягивается | `vms/recworker.py` — `RecWorker.host_ingest` (приёмник и передатчик живут в регистраторе, ADR-0065); `vms/ingestrec.py` — `IngestRecordings` (запись подписана на приёмник и пишет пришедшее, `written_through`, `push_waiting`); `vms/domainpart/ingest.py` — `Ingest` (`stats`), `ingest_urls`, `heartbeat_peers`, `IngestLiveEndpoint`, `CameraPusher`, `Asker`, `publish_asks`, `stream_metrics`; `scenario.py` — от сценария к запросу, `refusals`, `catalog`; `crossing.py` — дорога (`_road`), ключ потока (`_ingest`), книга опроса, резерв (`backups_of`, `plan_takeback`, `ColdStandby`); `vms/card.py` — карта | `test_lesson16_nobody_reaches.py` — 31, `test_lesson16_card.py` — 35, `test_lesson16_break.py` — 26, `test_two_servers.py` — 14 |
 | 4 | Цепочка: объект, ретранслятор, центр | `vms/domainpart/chain.py` — `Forwarder` (вверх — `lift`, по событию — `serve`, `retry_wait`; слова продукта в heartbeat — `stats`), `publish_upstream`; `ingest.py` — `pull`, `inject`; платформа — `w2cplatform/domain/relay.py` (`relay_down`, `RelayDoor`, `bundle`, `BundleView`, `say_seen`), `topology.py` | `test_lesson17_chain.py` — 29; `tests/domain/test_topology.py` — 12 |
 
 ## Код целиком
 
-`Source/vms/domainpart/` — пакет VMS на домене, без строки платформенного кода: `keys.py` (имена строк по объявлениям), `worker.py` (процесс, слот, пульс, дверь), `books.py` (проход по книгам), `crossing.py`, `ingest.py`, `scenario.py`, `chain.py`; рядом `device.py` (камера как член, М12A, урок 10), `gateway.py` (шлюз живого видео, М12A, урок 3), `cloud.py` (арифметика урока 8 М12A). Он стоит на `w2cplatform/domain` и `w2cplatform/trust` и импортирует их; обратного импорта нет, и это держит тест границы. Юнит — `Source/deploy/domain/systemd/vms-domainpart.service`, каталог сокета токенов — `w2c-domain.tmpfiles`, роль — `deploy/cluster/configstore-rights.json` (`vmsdomain`, выводится из спеки `rights.roles`).
+`Source/vms/domainpart/` — пакет VMS на домене, без строки платформенного кода: `keys.py` (имена строк по объявлениям), `worker.py` (процесс, слот, пульс, дверь), `books.py` (проход по книгам), `crossing.py`, `ingest.py`, `scenario.py`, `chain.py`; рядом `device.py` (камера как член, М12A, урок 10), `gateway.py` (шлюз живого видео, М12A, урок 3), `cloud.py` (арифметика урока 8 М12A). Он стоит на `w2cplatform/domain` и `w2cplatform/trust` и импортирует их; обратного импорта нет, и это держит тест границы. Юнит — `Source/deploy/domain/systemd/vms-domainpart.service`, каталог сокета токенов — `w2c-domain.tmpfiles`, роль — `deploy/cluster/configstore-rights.json` (`camdomain`, выводится из спеки `rights.roles`).
 
 ## Что открыто
 

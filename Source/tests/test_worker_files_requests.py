@@ -74,10 +74,10 @@ def test_a_worker_files_to_the_subsystem_its_spec_names_and_to_no_other():
     assert w.file_request("testsub", "add-2", {"unit": "testsub/c1", "add": 1})
     assert box.vars.get("testsub/requests/add-2")[0]["by"] == "testsub2/t-1"
     _refused(lambda: w.file_request("testsub2", "self", {"unit": "testsub2/t1", "add": 1}), "does not name 'testsub2'")
-    _refused(lambda: w.file_request("vms", "x", {"unit": "vms/1"}), "does not name 'vms'")
+    _refused(lambda: w.file_request("cam", "x", {"unit": "cam/1"}), "does not name 'cam'")
     _refused(lambda: w.file_request("testsub", "a/b", {"unit": "testsub/c1"}), "a name, not a path")
     _refused(lambda: w.file_request("testsub", "own", {"unit": "testsub/c1", "by": "me"}), "the platform's to stamp")
-    assert box.vars.list("testsub2/requests/") == [] and box.vars.list("vms/requests/") == []
+    assert box.vars.list("testsub2/requests/") == [] and box.vars.list("cam/requests/") == []
     assert sorted(box.vars.list("testsub/requests/")) == ["testsub/requests/add-1", "testsub/requests/add-2"]
     assert w.filings == {"filed": 2, "again": 0, "refused": 5}
 

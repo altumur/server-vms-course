@@ -37,7 +37,7 @@ def _site(wall, nets=("vlan:a", "vlan:a", "vlan:b")):
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
                                      published=d.local_objects(),
                                      pages=lambda d=d: pages(cards[d.name], wall()))
-        cards[d.name] = Card("vms", tempfile.mkdtemp(prefix="card-"), on_alarm=agents[d.name].wake)
+        cards[d.name] = Card("cam", tempfile.mkdtemp(prefix="card-"), on_alarm=agents[d.name].wake)
 
     def report(skip=()):                                               # every camera that is on: one pass of its agent
         for name, a in agents.items():
@@ -92,13 +92,13 @@ def test_a_card_is_where_its_caller_says_and_nowhere_made_up():
     of them left by the suites. So the root is the caller's to give, and an empty one is refused."""
     for root in ("", None):
         try:
-            Card("vms", root)
+            Card("cam", root)
         except ValueError as e:
             assert "root" in str(e)
         else:
             raise AssertionError(f"a card on {root!r} was made")
     d = tempfile.mkdtemp(prefix="card-")
-    card = Card("vms", d)
+    card = Card("cam", d)
     card.observe(1, NOW, "door.forced", alarm=True)
     assert card.root == d and card.alarms(NOW - 1, NOW + 1, 10)["events"][0]["kind"] == "door.forced"
 
@@ -109,7 +109,7 @@ def test_an_agent_the_card_cannot_wake_asks_it_once_a_second():
     newer than the last page it reported? Asked by the loop with `due`, once a second; the report goes at once."""
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
-    card, d = Card("vms", tempfile.mkdtemp(prefix="card-")), devices["cam-SN0"]  # no `on_alarm`: another process
+    card, d = Card("cam", tempfile.mkdtemp(prefix="card-")), devices["cam-SN0"]  # no `on_alarm`: another process
     agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
                         published=d.local_objects(), pages=lambda: pages(card, wall()), alarm_waiting=card.waiting)
     report_sync(agent)
@@ -280,7 +280,7 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     fed.add(north)
     cam = DeviceCluster("SN7", FakeVariables(), wall=wall)
     cam.boot()
-    card = Card("vms", tempfile.mkdtemp(prefix="card-"))
+    card = Card("cam", tempfile.mkdtemp(prefix="card-"))
     fed.add(member_copy("office", north.objects, wall=wall))
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="office"))
     topo = Topology(north.vars)
@@ -288,7 +288,7 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     relay = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
                         published=office.objects, bundle_store=office.objects,
                         relay_members=lambda: topo.relayed_by("office"), bundle_members=lambda: topo.relayed_by("office"))
-    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    office.objects.put("cam/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
     through = Relay(relay, office.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), pages=lambda: pages(card, wall()))
@@ -314,7 +314,7 @@ def test_an_office_with_no_page_that_reported_and_went_quiet_is_silent_by_its_la
     fed.add(north)
     fed.add(member_copy("office", north.objects, wall=wall))
     fed.add(member_copy("cam-SN9", north.objects, wall=wall))            # admitted, and never reported
-    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    office.objects.put("cam/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
     agent = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
                         published=office.objects)                       # no `pages`: the office says no alarms
     report_sync(agent)
@@ -354,13 +354,13 @@ def test_a_pass_reads_an_offices_bundle_once_however_many_cameras_are_behind_it(
     relay = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
                         published=office.objects, bundle_store=office.objects,
                         relay_members=lambda: topo.relayed_by("office"), bundle_members=lambda: topo.relayed_by("office"))
-    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    office.objects.put("cam/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
     through = Relay(relay, office.objects)
     agents = []
     for c in cams:
         c.boot()
         fed.add(member_copy(c.name, north.objects, wall=wall, via="office"))
-        card = Card("vms", tempfile.mkdtemp(prefix="card-"))
+        card = Card("cam", tempfile.mkdtemp(prefix="card-"))
         agents.append(DomainAgent(c.name, through.vars, c.flash, now=wall, domain_objects=through.objects,
                                   published=c.local_objects(), pages=lambda card=card: pages(card, wall())))
     report_sync(relay)

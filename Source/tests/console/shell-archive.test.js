@@ -3,7 +3,7 @@
 // сразу записью через console.api (PUT/DELETE /rec/recordings/<имя>); её удержания (/rec/keeps) — поставить (с — по,
 // зачем) и снять. Без rec в консоли — карточка «подсистема записи не подключена», без кнопок.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-arc-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -12,8 +12,8 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30,enabled:true},{id:"1-b",cam:"1",home:"bk",retention_days:7,enabled:false,when:"offline"}],
   rows:[{id:"1",worker:"r-1",server:"box-a",phase:"running"}]};
@@ -28,7 +28,7 @@ await b.ready(700);await w.platformConsole.ready;await w.eval("reloadRec()");awa
 const d=w.document,pc=w.platformConsole,out={};
 const main=()=>d.querySelector("main"),tab=()=>main().querySelector('.pc-tab[data-tab="rec"]');
 const call=(n,m,p)=>w.__calls.slice(n).find(x=>x.method===m&&x.path===p);
-pc.select("unit:vms/1");await b.ready(60);
+pc.select("unit:cam/1");await b.ready(60);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(200);
 const t=tab().textContent+" "+[...tab().querySelectorAll("input")].map(x=>x.value).join(" | ");
 out.recordingsListed=/Запись камеры/.test(t)&&/том «disk-a»/.test(t)&&/Пишет/.test(t)&&/Выключена/.test(t)&&/r-1 · box-a/.test(t);
@@ -64,7 +64,7 @@ b.report(out,["errors"]);
 // без rec: архива нет — так и сказано
 for(const k of ["/mounts","/rec/recordings","/rec/volumes","/rec/keeps"])delete b.FIX[k];
 const w2=b.boot();await b.ready(700);await w2.platformConsole.ready;await w2.eval("reloadRec()");
-w2.platformConsole.select("unit:vms/1");await b.ready(60);
+w2.platformConsole.select("unit:cam/1");await b.ready(60);
 w2.document.querySelector('main .pc-tabs [data-tab="rec"]').click();await b.ready(150);
 const off={noRecSaid:/подсистема записи не подключена/.test(w2.document.querySelector("main").textContent)&&!w2.document.querySelector('main [data-act="addRec"]')};
 b.report(off);

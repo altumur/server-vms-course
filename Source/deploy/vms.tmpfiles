@@ -8,7 +8,7 @@
 #
 # **Role.** A container's `Volume=` of a host directory that does not exist does not start. /run is a tmpfs, empty
 # at every boot, and /run/vms was made only by obsd.service (then `RuntimeDirectory=obsd vms`): without the daemon —
-# not installed yet, or failing — neither `vmsworker@` nor `recworker@` started, and the box held no camera at all
+# not installed yet, or failing — neither `camworker@` nor `recworker@` started, and the box held no camera at all
 # for want of an archive engine (the review's fourth pass, blocker 2). So the directories are the box's, made here:
 #
 # - `/run/vms` — the workers' shared-memory branches (`live_shm`), written by the holder and read by a recorder on

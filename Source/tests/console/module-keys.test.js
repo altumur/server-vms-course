@@ -16,7 +16,7 @@ b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/domain"]={holder:"h",age:1,complete:true,members:[{name:"h",holder:true,state:"ok"}],topology:{rev:1}};
 b.FIX["/domain/keys"]={vars:[
   {key:"domain/root",index:"7",fields:["pub","seal"],public:{pub:"ed25519:AAAA"}},
-  {key:"domain/vms/primaries",index:"9",fields:["SN-A","SN-B"]},
+  {key:"domain/cam/primaries",index:"9",fields:["SN-A","SN-B"]},
   {key:"domain/secret-thing",withheld:"a sealed row"}],
   objects:[{key:"domain/view",size:2048,age:3}]};
 (async()=>{
@@ -27,7 +27,7 @@ b.FIX["/domain/keys"]={vars:[
   const tab=d.querySelector('.pc-tab[data-tab="keys"]'),t=tab.textContent;
   const row=k=>[...tab.querySelectorAll(".dk-key")].find(x=>x.querySelector("code").textContent===k);
   out.drawnNotStuck=!/Спрашиваем консоль/.test(t)&&!!row("domain/view");
-  out.fieldNamesShown=/поля: 2/.test(row("domain/vms/primaries").textContent)&&/SN-A/.test(row("domain/vms/primaries").textContent)&&!row("domain/vms/primaries").querySelector("pre");
+  out.fieldNamesShown=/поля: 2/.test(row("domain/cam/primaries").textContent)&&/SN-A/.test(row("domain/cam/primaries").textContent)&&!row("domain/cam/primaries").querySelector("pre");
   out.publicHalfShownOnlyIt=row("domain/root").querySelectorAll("pre").length===1&&/ed25519:AAAA/.test(row("domain/root").textContent)&&/seal/.test(row("domain/root").textContent);
   out.withheldSaysWhy=/не показана: a sealed row/.test(row("domain/secret-thing").textContent);
   out.objectByKeySizeAge=/2\.0 КБ|2048|2\.0/.test(row("domain/view").textContent)&&/3/.test(row("domain/view").textContent)&&!row("domain/view").querySelector("pre,details");

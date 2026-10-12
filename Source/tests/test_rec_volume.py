@@ -21,7 +21,7 @@ from tests.vmsconftest import OBSD_LINGER_MS, Box, recorder
 def _site():
     """A camera held by a worker on srv-1, and a recording of it placed on a recorder of srv-1."""
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console() + REC_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)

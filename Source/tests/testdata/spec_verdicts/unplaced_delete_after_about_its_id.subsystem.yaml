@@ -34,4 +34,4 @@ display:
       status:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
-about: {sub: vms, field: name}
+about: {sub: cam, field: name}

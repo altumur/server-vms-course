@@ -1,16 +1,16 @@
 # spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).
 # A line goes when both sides have the key, or neither; a new difference is not written here but made good.
 course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are not in the product — «Сборка»
-course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-product-only vms.subsystem.yaml metrics[driver_budget_exits_total]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
-product-only vms.subsystem.yaml metrics[driver_budget_small]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
-product-only vms.subsystem.yaml placement.weight   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
-product-only vms.subsystem.yaml placement.weight.field   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
-product-only vms.subsystem.yaml placement.weight.default   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
-product-only vms.subsystem.yaml unit.fields.weight   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
-product-only vms.subsystem.yaml unit.fields.weight.type   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
-product-only vms.subsystem.yaml unit.fields.weight.default   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+course-only cam.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
+course-only cam.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
+course-only cam.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
+product-only cam.subsystem.yaml metrics[driver_budget_exits_total]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
+product-only cam.subsystem.yaml metrics[driver_budget_small]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
+product-only cam.subsystem.yaml placement.weight   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+product-only cam.subsystem.yaml placement.weight.field   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+product-only cam.subsystem.yaml placement.weight.default   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+product-only cam.subsystem.yaml unit.fields.weight   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+product-only cam.subsystem.yaml unit.fields.weight.type   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
+product-only cam.subsystem.yaml unit.fields.weight.default   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
 product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[peer_url]   # ADR-0075 «продукт»: дверь рекордера между процессами (окно 2) — курс её не держит — «Сборка»

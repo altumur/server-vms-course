@@ -58,17 +58,17 @@ def ev(t, sub, unit, kind, **fields):
 
 
 DOOR = {"name": "door-on-badge",
-        "when": [{"sub": "vms", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}},
+        "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}},
                  {"sub": "det", "kind": "motion", "unit": "7-motion"}],
         "within": 30,
-        "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500},
+        "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500},
                  {"sub": "rec", "action": "record", "cam": "7", "minutes": 10}]}
 
 
 def _worker(box, log, name="a-1"):
     """With the token a scenario evaluator actually gets: its own prefix, plus
     the one family of somebody else's it may write."""
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec"))
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec"))
     return AutoWorker(name, vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
                       server="srv-a", resource_root=box.resource_root, env={})
 
@@ -89,15 +89,15 @@ def test_two_triggers_inside_the_window_fire_once_and_file_what_was_asked():
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"),
-                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+                ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
 
     assert w.reconcile_once() == ["door-on-badge"]
 
-    rows = sorted(box.vars.list("vms/requests/") + box.vars.list("rec/requests/"))
+    rows = sorted(box.vars.list("cam/requests/") + box.vars.list("rec/requests/"))
     assert len(rows) == 2, "one firing, two actions, two rows"
-    out, _ = box.vars.get([k for k in rows if k.startswith("vms/")][0])
+    out, _ = box.vars.get([k for k in rows if k.startswith("cam/")][0])
     assert out["action"] == "output" and out["unit"] == "12" and out["port"] == "2"
     assert out["by"] == "auto/door-on-badge"
     assert float(out["valid_until"]) == (t - 5) + 30            # the scenario's own window, not a guess
@@ -117,12 +117,12 @@ def test_an_actions_values_are_filed_in_the_bases_one_text_not_pythons():
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"),
-                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+                ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, then=[{"sub": "rec", "action": "record", "cam": 7, "minutes": 5.0},
                          {"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 2.5,
                           "params": {"thr": 0.5}}])
     _assigned(box, "door-on-badge")
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det"))
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec", "det"))
     w = AutoWorker("a-1", vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
                    server="srv-a", resource_root=box.resource_root, env={})
     assert w.reconcile_once() == ["door-on-badge"]
@@ -141,19 +141,19 @@ def test_the_same_log_read_again_files_nothing_new():
     row rather than a second door."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
 
     w.reconcile_once()
-    before = sorted(box.vars.list("vms/requests/") + box.vars.list("rec/requests/"))
+    before = sorted(box.vars.list("cam/requests/") + box.vars.list("rec/requests/"))
     w.reconcile_once(); w.reconcile_once()
-    assert sorted(box.vars.list("vms/requests/") + box.vars.list("rec/requests/")) == before
+    assert sorted(box.vars.list("cam/requests/") + box.vars.list("rec/requests/")) == before
 
     # a FRESH process — the memory gone, the cursor kept — does not fire them again either
     w2 = _worker(box, log, name="a-1")
     w2.reconcile_once()
-    assert sorted(box.vars.list("vms/requests/") + box.vars.list("rec/requests/")) == before
+    assert sorted(box.vars.list("cam/requests/") + box.vars.list("rec/requests/")) == before
 
 
 def test_a_firing_filed_again_is_the_same_request_and_an_edited_one_is_refused_not_held():
@@ -168,7 +168,7 @@ def test_a_firing_filed_again_is_the_same_request_and_an_edited_one_is_refused_n
     w = _worker(box, _Log([]))
     row = {"id": "door-on-badge", "then": DOOR["then"]}
     assert w.file(row, "door-on-badge-d-1", t - 5)
-    rows = {k: box.vars.get(k) for k in box.vars.list("vms/requests/") + box.vars.list("rec/requests/")}
+    rows = {k: box.vars.get(k) for k in box.vars.list("cam/requests/") + box.vars.list("rec/requests/")}
     assert len(rows) == 2 and w.filed == 2
     box.wall.advance(3)
     w.fired.clear()                                      # the restart
@@ -187,12 +187,12 @@ def test_outside_the_window_is_not_a_firing():
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 400, "det", "7-motion", "motion"),                      # four hundred seconds earlier
-                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+                ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
 
     assert w.reconcile_once() == []
-    assert box.vars.list("vms/requests/") == []
+    assert box.vars.list("cam/requests/") == []
 
 
 def test_a_bouncing_sensor_does_not_ring_the_door():
@@ -200,7 +200,7 @@ def test_a_bouncing_sensor_does_not_ring_the_door():
     chatters is not two hundred people at the door."""
     box = Box()
     t = box.wall()
-    bounce = [ev(t - 30 + i * 0.2, "vms", 12, "io.input", port="1", value="closed") for i in range(50)]
+    bounce = [ev(t - 30 + i * 0.2, "cam", 12, "io.input", port="1", value="closed") for i in range(50)]
     _scenario(box, name="buzz", when=[DOOR["when"][0]], within=0, rate_per_minute=3,
               then=[DOOR["then"][0]])
     _assigned(box, "buzz")
@@ -208,7 +208,7 @@ def test_a_bouncing_sensor_does_not_ring_the_door():
 
     for _ in range(5):
         w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 3, "the ceiling holds across passes, not inside one"
+    assert len(box.vars.list("cam/requests/")) == 3, "the ceiling holds across passes, not inside one"
 
 
 def test_more_firings_than_a_pass_files_wait_for_the_next_pass_and_none_is_lost():
@@ -217,17 +217,17 @@ def test_more_firings_than_a_pass_files_wait_for_the_next_pass_and_none_is_lost(
     just before the first firing left over, and the next pass files it."""
     box = Box()
     t = box.wall()
-    events = [ev(t - 20 + i, "vms", 12, "io.input", port="1", value="closed") for i in range(6)]
+    events = [ev(t - 20 + i, "cam", 12, "io.input", port="1", value="closed") for i in range(6)]
     _scenario(box, name="six", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "six")
     w = _worker(box, _Log(events))
     assert w.PER_PASS == 4
     w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 4
+    assert len(box.vars.list("cam/requests/")) == 4
     w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 6                    # the two that waited
+    assert len(box.vars.list("cam/requests/")) == 6                    # the two that waited
     w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 6 and w.suppressed == 0
+    assert len(box.vars.list("cam/requests/")) == 6 and w.suppressed == 0
 
 
 def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
@@ -239,13 +239,13 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
     from w2cplatform.eventdatabase import EventIndex
     box = Box()
     t = box.wall()
-    bounce = [ev(t - 20 + i * 0.2, "vms", 12, "io.input", port="1", value="closed") for i in range(50)]
+    bounce = [ev(t - 20 + i * 0.2, "cam", 12, "io.input", port="1", value="closed") for i in range(50)]
     _scenario(box, name="buzz", when=[DOOR["when"][0]], within=0, rate_per_minute=3, then=[DOOR["then"][0]])
     _assigned(box, "buzz")
     w = _worker(box, _Log(bounce))
     for _ in range(4):
         w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 3 and w.suppressed == 47
+    assert len(box.vars.list("cam/requests/")) == 3 and w.suppressed == 47
     w.heartbeat_once()
     lines = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 60, t + 1, subsystem="auto")["events"]
              if e["kind"] == "suppressed"]
@@ -257,12 +257,12 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
 def test_a_scenario_that_is_off_decides_nothing():
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="off", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]], enabled=False)
     _assigned(box, "off")
     w = _worker(box, log)
 
-    assert w.reconcile_once() == [] and box.vars.list("vms/requests/") == []
+    assert w.reconcile_once() == [] and box.vars.list("cam/requests/") == []
     assert w.status_by_unit["off"]["why"] == "disabled"
 
 
@@ -271,10 +271,10 @@ def test_the_token_reaches_requests_and_nothing_else():
     to give: `requests` cannot change configuration, cannot place anything and
     cannot outlive the row it writes."""
     box = Box()
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec"))
-    vars_.put("vms/requests/x", {"unit": "12", "action": "output"})           # allowed
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec"))
+    vars_.put("cam/requests/x", {"unit": "12", "action": "output"})           # allowed
     vars_.put("rec/requests/y", {"unit": "7", "action": "record"})            # allowed
-    for forbidden in ("vms/cameras/12", "rec/recordings/7", "vms/placement/12", "auto/scenarios/x"):
+    for forbidden in ("cam/cameras/12", "rec/recordings/7", "cam/placement/12", "auto/scenarios/x"):
         try:
             vars_.put(forbidden, {"a": "b"})
             raise AssertionError(f"the evaluator wrote {forbidden}")
@@ -282,7 +282,7 @@ def test_the_token_reaches_requests_and_nothing_else():
             pass
 
     # and the grant is exactly two prefixes, named out loud
-    assert requests_acl("vms", "rec") == ["rec/requests/*", "vms/requests/*"]
+    assert requests_acl("cam", "rec") == ["cam/requests/*", "rec/requests/*"]
 
 
 def test_a_fenced_event_is_not_evidence():
@@ -291,12 +291,12 @@ def test_a_fenced_event_is_not_evidence():
     disputed, and acting on them is acting twice."""
     box = Box()
     t = box.wall()
-    stale = ev(t - 5, "vms", 12, "io.input", port="1", value="closed"); stale["fenced"] = True
+    stale = ev(t - 5, "cam", 12, "io.input", port="1", value="closed"); stale["fenced"] = True
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, _Log([stale]))
 
-    assert w.reconcile_once() == [] and box.vars.list("vms/requests/") == []
+    assert w.reconcile_once() == [] and box.vars.list("cam/requests/") == []
 
 
 def test_a_scenarios_minutes_become_a_recording_and_then_stop_being_one():
@@ -315,7 +315,7 @@ def test_a_scenarios_minutes_become_a_recording_and_then_stop_being_one():
     box = Box()
     t = box.wall()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
     w.reconcile_once()
@@ -368,18 +368,18 @@ def test_an_event_that_reaches_the_merge_late_is_still_considered():
     no log line, just a scenario that does not fire."""
     box = Box()
     t = box.wall()
-    late = ev(t - 1, "vms", 12, "io.input", port="1", value="closed")
+    late = ev(t - 1, "cam", 12, "io.input", port="1", value="closed")
     log = _Log([late], lag=3.0, wall=box.wall)                    # visible only three seconds after it happened
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
 
     assert w.reconcile_once() == []                               # nothing to see yet — and that is fine
-    assert box.vars.list("vms/requests/") == []
+    assert box.vars.list("cam/requests/") == []
 
     box.wall.advance(4)                                           # now the merge has it
     assert w.reconcile_once() == ["one"]
-    assert len(box.vars.list("vms/requests/")) == 1
+    assert len(box.vars.list("cam/requests/")) == 1
 
 
 def test_a_noisy_log_does_not_hide_the_event_the_scenario_watches():
@@ -393,16 +393,16 @@ def test_a_noisy_log_does_not_hide_the_event_the_scenario_watches():
     box = Box()
     t = box.wall()
     noise = [ev(t - 300 + i * 0.1, "rec", 7, "stats", n=str(i)) for i in range(2000)]
-    wanted = ev(t - 2, "vms", 12, "io.input", port="1", value="closed")
+    wanted = ev(t - 2, "cam", 12, "io.input", port="1", value="closed")
     log = _Log(noise + [wanted], wall=box.wall)
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
 
     assert w.reconcile_once() == ["one"], "the event was there and the noise buried it"
-    assert len(box.vars.list("vms/requests/")) == 1
+    assert len(box.vars.list("cam/requests/")) == 1
     # one query per kind the scenario watches, each naming what it wants
-    assert [(q["subsystem"], q["kind"]) for q in log.asked] == [("vms", "io.input")]
+    assert [(q["subsystem"], q["kind"]) for q in log.asked] == [("cam", "io.input")]
 
 
 def test_a_cut_window_is_reported_even_when_fencing_hides_the_count():
@@ -418,7 +418,7 @@ def test_a_cut_window_is_reported_even_when_fencing_hides_the_count():
     box = Box()
     t = box.wall()
     watched = "io.input"
-    rows = [ev(t - 300 + i * 0.1, "vms", 12, watched, port="1", value="open", fenced=(i % 2 == 0))
+    rows = [ev(t - 300 + i * 0.1, "cam", 12, watched, port="1", value="open", fenced=(i % 2 == 0))
             for i in range(AutoWorker.PER_KIND * 2)]
     log = _Log(rows, wall=box.wall)
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
@@ -435,7 +435,7 @@ def test_a_cut_window_is_reported_even_when_fencing_hides_the_count():
 
     cut = log.asked[-1]
     assert cut["limit"] == AutoWorker.PER_KIND and cut["keep"] == "newest"   # it asks for the newest end…
-    assert any("came back full" in m and "vms.io.input" in m for m in seen), \
+    assert any("came back full" in m and "cam.io.input" in m for m in seen), \
         "the window was cut and the evaluator said nothing: fencing put the count below the limit"
 
 
@@ -452,7 +452,7 @@ def test_the_summary_of_a_suppressed_storm_does_not_fire_a_scenario():
     re-invents."""
     box = Box()
     t = box.wall()
-    summary = ev(t - 2, "vms", 12, "io.input", port="1", value="closed",
+    summary = ev(t - 2, "cam", 12, "io.input", port="1", value="closed",
                  repeats=200, since=t - 10, until=t - 2)
 
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
@@ -460,17 +460,17 @@ def test_the_summary_of_a_suppressed_storm_does_not_fire_a_scenario():
 
     w = _worker(box, _Log([summary], wall=box.wall))
     assert w.reconcile_once() == [], "the summary of a storm fired a scenario on its own"
-    assert box.vars.list("vms/requests/") == []
+    assert box.vars.list("cam/requests/") == []
 
     box2 = Box()
     _scenario(box2, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box2, "one")
     t2 = box2.wall()
-    w2 = _worker(box2, _Log([ev(t2 - 10, "vms", 12, "io.input", port="1", value="closed"),
-                             ev(t2 - 2, "vms", 12, "io.input", port="1", value="closed",
+    w2 = _worker(box2, _Log([ev(t2 - 10, "cam", 12, "io.input", port="1", value="closed"),
+                             ev(t2 - 2, "cam", 12, "io.input", port="1", value="closed",
                                 repeats=200, since=t2 - 10, until=t2 - 2)], wall=box2.wall))
     assert w2.reconcile_once() == ["one"]                       # the observation fires it…
-    assert len(box2.vars.list("vms/requests/")) == 1, "one continuous event, one request"   # …and only it
+    assert len(box2.vars.list("cam/requests/")) == 1, "one continuous event, one request"   # …and only it
 
 
 # -- feedback on the event log's load: three defects ---------------------------------------------------------
@@ -479,7 +479,7 @@ def test_the_evaluator_runs_as_a_process_and_lets_its_slot_go_when_stopped():
     test noticed, because every test drives `reconcile_once` by hand. This one drives the loop."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 3, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 3, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
@@ -490,7 +490,7 @@ def test_the_evaluator_runs_as_a_process_and_lets_its_slot_go_when_stopped():
         def wait(self, s): return None
 
     w.run(poll=0, stop=OnePass())
-    assert len(box.vars.list("vms/requests/")) == 1                   # a pass ran, and filed
+    assert len(box.vars.list("cam/requests/")) == 1                   # a pass ran, and filed
     assert w.slot is None                                              # an orderly stop: the slot let go, said so
     assert box.vars.get(w.sub.slot_key("a-1"))[0]["released"] == "true"
 
@@ -501,7 +501,7 @@ def test_the_evaluators_loop_keeps_its_leases_and_its_slot_for_longer_than_half_
     above move the wall clock; a lease runs on the monotonic one — this test moves both, through the loop."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 3, "vms", 12, "io.input", port="1", value="closed")], wall=box.wall)
+    log = _Log([ev(t - 3, "cam", 12, "io.input", port="1", value="closed")], wall=box.wall)
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
@@ -515,11 +515,11 @@ def test_the_evaluators_loop_keeps_its_leases_and_its_slot_for_longer_than_half_
             box.clock.advance(9); box.wall.advance(9)
             if self.n == 6:
                 now = box.wall()
-                log.events += [ev(now - 4, "vms", 12, "io.input", port="1", value="open"),
-                               ev(now - 3, "vms", 12, "io.input", port="1", value="closed")]
+                log.events += [ev(now - 4, "cam", 12, "io.input", port="1", value="open"),
+                               ev(now - 3, "cam", 12, "io.input", port="1", value="closed")]
 
     w.run(poll=0, stop=Minute())
-    assert len(box.vars.list("vms/requests/")) == 2                   # the first pass, and one a minute later
+    assert len(box.vars.list("cam/requests/")) == 2                   # the first pass, and one a minute later
     assert w.epochs == {"one": 1} and w.may_act("one")              # the same epoch, renewed — not taken again
     slot, _ = box.vars.get(w.sub.slot_key("a-1"))
     assert slot["released"] == "true" and float(slot["until"]) >= box.wall() - 1    # held to the end, then let go
@@ -545,7 +545,7 @@ def test_a_window_a_server_did_not_answer_for_does_not_move_the_cursor():
     line. Now the cursor holds, the scenario says what it is waiting for, and the event fires when srv-b is back."""
     box = Box()
     t = box.wall()
-    door = {**ev(t - 5, "vms", 12, "io.input", port="1", value="closed"), "server": "srv-b"}
+    door = {**ev(t - 5, "cam", 12, "io.input", port="1", value="closed"), "server": "srv-b"}
     log = _Holey([door], wall=box.wall)
     log.missing = {"srv-b": "did not answer"}
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
@@ -557,7 +557,7 @@ def test_a_window_a_server_did_not_answer_for_does_not_move_the_cursor():
     box.wall.advance(10)
     log.missing = {}                                                   # srv-b answers again
     assert w.reconcile_once() == ["one"]
-    assert len(box.vars.list("vms/requests/")) == 1 and "holding" not in w.status()[0]
+    assert len(box.vars.list("cam/requests/")) == 1 and "holding" not in w.status()[0]
 
 
 def test_a_server_that_never_comes_back_holds_a_scenario_five_minutes_and_then_it_says_so():
@@ -609,18 +609,18 @@ def test_a_short_window_between_triggers_is_not_a_short_life_for_the_request():
     seven seconds. The life is `valid_for`, thirty seconds unless the scenario says otherwise."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 18, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 18, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, within=5); _assigned(box, "door-on-badge")
     _worker(box, log).reconcile_once()
-    out, _ = box.vars.get(sorted(box.vars.list("vms/requests/"))[0])
+    out, _ = box.vars.get(sorted(box.vars.list("cam/requests/"))[0])
     assert float(out["valid_until"]) == (t - 18) + 30
 
     box2 = Box()
     t2 = box2.wall()
     _scenario(box2, within=5, valid_for=10); _assigned(box2, "door-on-badge")
-    _worker(box2, _Log([ev(t2 - 8, "det", "7-motion", "motion"), ev(t2 - 6, "vms", 12, "io.input", port="1",
+    _worker(box2, _Log([ev(t2 - 8, "det", "7-motion", "motion"), ev(t2 - 6, "cam", 12, "io.input", port="1",
                                                                      value="closed")])).reconcile_once()
-    out, _ = box2.vars.get(sorted(box2.vars.list("vms/requests/"))[0])
+    out, _ = box2.vars.get(sorted(box2.vars.list("cam/requests/"))[0])
     assert float(out["valid_until"]) == (t2 - 6) + 10
     try:
         _scenario(Box(), name="x", valid_for=2)
@@ -669,7 +669,7 @@ def test_scenarios_watching_one_kind_share_one_query_a_pass():
     once, over the longest window any scenario on it needs, and each scenario reads its own part."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "cam", 12, "io.input", port="1", value="closed")])
     for name in ("a", "b", "c"):
         _scenario(box, name=name, when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     ctl = SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -685,10 +685,10 @@ def test_a_cut_in_the_shared_answer_counts_only_against_the_scenario_it_reached(
     nothing, and says nothing."""
     box = Box()
     t = box.wall()
-    rows = [ev(t - 3000 + i * 5, "vms", 12, "io.input", port="1", value="open") for i in range(600)]
+    rows = [ev(t - 3000 + i * 5, "cam", 12, "io.input", port="1", value="open") for i in range(600)]
     log = _Log(rows, wall=box.wall)
     _scenario(box, name="long", within=3600,
-              when=[DOOR["when"][0], {"sub": "vms", "kind": "io.input", "unit": "12", "match": {"value": "open"}}],
+              when=[DOOR["when"][0], {"sub": "cam", "kind": "io.input", "unit": "12", "match": {"value": "open"}}],
               then=[DOOR["then"][0]])
     _scenario(box, name="short", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     ctl = SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -696,7 +696,7 @@ def test_a_cut_in_the_shared_answer_counts_only_against_the_scenario_it_reached(
     w = _worker(box, log)
     w.reconcile_once()
     st = {s["id"]: s for s in w.status()}
-    assert st["long"]["cut"] == ["vms.io.input@12"] and "cut" not in st["short"]
+    assert st["long"]["cut"] == ["cam.io.input@12"] and "cut" not in st["short"]
     assert len(log.asked) == 1
 
 
@@ -708,7 +708,7 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     from w2cplatform.contract import Heartbeat
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 4, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 4, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
@@ -738,14 +738,14 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     from w2cplatform.eventdatabase import EventIndex
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 120, "vms", 12, "io.input", port="1", value="closed"),
-                ev(t - 4, "vms", 12, "io.input", port="1", value="open"),
-                ev(t - 3, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 120, "cam", 12, "io.input", port="1", value="closed"),
+                ev(t - 4, "cam", 12, "io.input", port="1", value="open"),
+                ev(t - 3, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
     w.reconcile_once(); w.heartbeat_once()
-    reqs = [box.vars.get(p)[0] for p in box.vars.list("vms/requests/")]
+    reqs = [box.vars.get(p)[0] for p in box.vars.list("cam/requests/")]
     assert len(reqs) == 1 and float(reqs[0]["at"]) == t - 3              # the fresh one; the old one is not filed
     assert w.status()[0]["late"] == 1 and w.late == 1
     fired = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 400, t + 1, subsystem="auto")["events"]
@@ -755,7 +755,7 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     assert 'auto_fired_late_total{worker="a-1"} 1' in spec_metrics(con)
     w.reconcile_once()
-    assert len(box.vars.list("vms/requests/")) == 1 and w.late == 1      # remembered: not late twice
+    assert len(box.vars.list("cam/requests/")) == 1 and w.late == 1      # remembered: not late twice
 
 
 def test_the_merge_asks_its_resources_at_once_and_does_not_wait_twice_for_one_that_hung():
@@ -801,13 +801,13 @@ def test_a_loud_camera_does_not_cut_the_quiet_one_a_scenario_watches():
     that names its unit gets a query for that unit, which no other camera can crowd."""
     box = Box()
     t = box.wall()
-    noise = [ev(t - 250 + i * 0.4, "vms", 13, "io.input", port="1", value="open") for i in range(600)]
-    log = _Log(noise + [ev(t - 200, "vms", 12, "io.input", port="1", value="closed")], wall=box.wall)
+    noise = [ev(t - 250 + i * 0.4, "cam", 13, "io.input", port="1", value="open") for i in range(600)]
+    log = _Log(noise + [ev(t - 200, "cam", 12, "io.input", port="1", value="closed")], wall=box.wall)
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, log)
     assert w.reconcile_once() == ["one"] and "cut" not in w.status()[0]
-    assert log.asked[0]["unit"] == "vms/12"
+    assert log.asked[0]["unit"] == "cam/12"
 
 
 def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
@@ -820,9 +820,9 @@ def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"),
-                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+                ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
-    f = box.vars._file("vms/cameras/7")
+    f = box.vars._file("cam/cameras/7")
     text = open(f).read()
     open(f, "w").write(text[: len(text) // 2])                               # the lobby's row, torn
     w = _worker(box, log)
@@ -830,8 +830,8 @@ def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
     st = w.status_by_unit["door-on-badge"]
     assert st["phase"] == "running" and any("camera 7" in u and "not checked" in u for u in st["unchecked"]), st
     reply = Catalog(box.vars).reply()
-    assert reply["vms"]["7"]["can"] is None and "cannot be read" in reply["vms"]["7"]["unread"], reply["vms"]
-    assert "12" in reply["vms"]
+    assert reply["cam"]["7"]["can"] is None and "cannot be read" in reply["cam"]["7"]["unread"], reply["cam"]
+    assert "12" in reply["cam"]
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     con.create({**DOOR, "name": "door-again"})                               # checked against the rest, not a 500
 

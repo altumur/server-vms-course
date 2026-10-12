@@ -137,7 +137,7 @@ def test_a_dead_worker_is_not_kept_fresh_by_two_readers_giving_one_judge_two_tok
     hb = Heartbeat.from_bytes(box.objects.get(key))
     for _ in range(12):                                   # a minute of a page asking both, the worker silent
         box.wall.advance(5)
-        live = builds(box.objects, box.wall(), eyes=ctl.eyes)["vms/w-1"]["live"]
+        live = builds(box.objects, box.wall(), eyes=ctl.eyes)["cam/w-1"]["live"]
         ctl.eyes.fresh(key, hb.token, 45.0)
     assert live is False
 

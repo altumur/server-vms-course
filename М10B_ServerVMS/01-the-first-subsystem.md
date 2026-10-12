@@ -1,7 +1,7 @@
 # Урок 1 — Первая подсистема
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/vms.subsystem.yaml` — имя и слот, поля оператора, размещение и снимок; `vms/config.py` — раскладку ключей VMS и две конверсии; `vms/controller.py` — подкласс, который добавляет к платформе слово «камера» и больше ничего.
+**Вы напишете:** `vms/cam.subsystem.yaml` — имя и слот, поля оператора, размещение и снимок; `vms/config.py` — раскладку ключей VMS и две конверсии; `vms/controller.py` — подкласс, который добавляет к платформе слово «камера» и больше ничего.
 **Время:** ~80 минут.
 
 ## Зачем этот урок
@@ -37,31 +37,31 @@
 
 ```yaml
 # The VMS, as the platform sees it. Everything the controller does for this
-# subsystem is here; the worker (vmsworker) is the part that knows what a camera is.
+# subsystem is here; the worker (camworker) is the part that knows what a camera is.
 …
-name: vms
+name: cam
 # The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; …).
 slot: {prefix: w, name_env: WORKER_NAME}
 ```
 
-Одна строка `name: vms` порождает **всю раскладку ключей**. `SubsystemSpec.sub` становится `Subsystem("vms")` из урока 5 М10A, и дальше:
+Одна строка `name: cam` порождает **всю раскладку ключей**. `SubsystemSpec.sub` становится `Subsystem("cam")` из урока 5 М10A, и дальше:
 
 | Ключ | Что в нём |
 |---|---|
-| `vms/cameras/<id>` | строка камеры |
-| `vms/next_id` | счётчик идентификаторов |
-| `vms/workers/<w>` | назначение: что читает воркер |
-| `vms/placement/<id>` | размещение с причиной |
-| `vms/slots/<w>` | слот |
-| `vms/epoch/<id>` | эпоха камеры |
-| `vms/idem/<key>` | заявки идемпотентности |
-| `vms/retention`, `vms/alarms_retention` | сроки хранения наблюдений и тревог (шаг 4) |
-| `vms/devices/<host>` | что держатель узнал об устройстве: объявленная таблица `devices`, строка по хосту устройства (урок 25) |
-| `vms/heartbeats/<w>` | объект: heartbeat воркера |
-| `vms/snapshot/<w>` | объекты: снимок для М12A, по одному на воркера |
+| `cam/cameras/<id>` | строка камеры |
+| `cam/next_id` | счётчик идентификаторов |
+| `cam/workers/<w>` | назначение: что читает воркер |
+| `cam/placement/<id>` | размещение с причиной |
+| `cam/slots/<w>` | слот |
+| `cam/epoch/<id>` | эпоха камеры |
+| `cam/idem/<key>` | заявки идемпотентности |
+| `cam/retention`, `cam/alarms_retention` | сроки хранения наблюдений и тревог (шаг 4) |
+| `cam/devices/<host>` | что держатель узнал об устройстве: объявленная таблица `devices`, строка по хосту устройства (урок 25) |
+| `cam/heartbeats/<w>` | объект: heartbeat воркера |
+| `cam/snapshot/<w>` | объекты: снимок для М12A, по одному на воркера |
 
-И то же имя — префикс каждой метрики (`vms_workers_live`), и каталог подсистемы в дереве ресурса (`<корень ресурса>/vms/<cam>/…`), и токены всех ролей подсистемы — консоли, контроллера, воркера, — вырезанные из спецификации (М10A, урок 9). **Одно слово — вся раскладка**, и ни одного ключа не пришлось писать.
+И то же имя — префикс каждой метрики (`cam_workers_live`), и каталог подсистемы в дереве ресурса (`<корень ресурса>/cam/<cam>/…`), и токены всех ролей подсистемы — консоли, контроллера, воркера, — вырезанные из спецификации (М10A, урок 9). **Одно слово — вся раскладка**, и ни одного ключа не пришлось писать.
 
 Вторая строка — `slot`: как зовут воркеров этой подсистемы (`w-<n>`) и в какой переменной юнит называет имя процесса. Это тоже слово спеки, а не класса: читает его база воркера (`Worker.slot_prefix`, `Worker.name_env`; М10A, урок 7, шаг 9), и в уроке 3 класс воркера VMS не скажет о своём имени ничего.
 
@@ -69,15 +69,15 @@ slot: {prefix: w, name_env: WORKER_NAME}
 
 ```yaml
 unit:
-  rows: cameras                      # vms/cameras/<id>
-  id: numeric                        # vms/next_id
+  rows: cameras                      # cam/cameras/<id>
+  id: numeric                        # cam/next_id
 ```
 
 `rows: cameras` — имя каталога строк и пути в консоли (`GET/POST /cameras`, `PUT/DELETE /cameras/<id>`); `/spec` отдаёт его как `rows`, и модуль консоли (М10A, урок 16) строит по нему список и адреса правок.
 
 Заметьте, чего здесь нет: слова, которое прочтёт человек. «Камера», «камеры», «камер» лежат в другом разделе той же спеки, `display:` (`unit: камера`, `units: камеры`, `units_count: камер`), и читает его только страница; платформа не читает из него ничего (ADR 0005). Имя каталога — для машин, слово на экране — для людей, и русской морфологии нечего делать в ключе хранилища.
 
-`id: numeric` — идентификаторы выдаёт контроллер, CAS-инкрементом на `vms/next_id`. Альтернатива — именованный идентификатор, как у детекторов (`7-motion`), где имя составляет оператор. Для камер выбрано числовое, потому что у камеры нет естественного уникального имени: два «Вход» в разных корпусах — обычное дело.
+`id: numeric` — идентификаторы выдаёт контроллер, CAS-инкрементом на `cam/next_id`. Альтернатива — именованный идентификатор, как у детекторов (`7-motion`), где имя составляет оператор. Для камер выбрано числовое, потому что у камеры нет естественного уникального имени: два «Вход» в разных корпусах — обычное дело.
 
 Следствие числового идентификатора: `POST` с полем `id` в теле **отклоняется**. `id` входит в `PLATFORM_FIELDS`, и оператор его не отправляет никогда.
 
@@ -142,7 +142,7 @@ unit:
 
 ## Шаг 4 — Общие сроки хранения
 
-Ресурс читает `vms/retention {days}` для наблюдений и `vms/alarms_retention {days}` для тревог.
+Ресурс читает `cam/retention {days}` для наблюдений и `cam/alarms_retention {days}` для тревог.
 Это общие настройки подсистемы, а не поля камеры. Без них действуют 365 и 1095 дней соответственно.
 
 Удаление камеры прекращает получение новых событий. Сохранённые наблюдения и тревоги остаются до общей очистки
@@ -191,28 +191,28 @@ metrics:
   …
 console:
   …
-  running: cameras_running             # vms_cameras_running: cameras held — streaming to whoever subscribes; recording is rec's gauge
+  running: cameras_running             # cam_cameras_running: cameras held — streaming to whoever subscribes; recording is rec's gauge
 ```
 
-Снимок — это копия, **которая покидает кластер** (урок 19 М10A). Перечислено то, что нужно слою выше, и не больше: `folders` здесь нет (замер, шаг 3), пароля устройства нет никогда (урок 19). Контроллер добавляет `id`, `revision`, `worker` и `server`. Сами строки наружу не отдаются никогда: снимок — объекты `vms/snapshot/<воркер>`, по одному на воркера, и их можно читать без прав на конфигурацию.
+Снимок — это копия, **которая покидает кластер** (урок 19 М10A). Перечислено то, что нужно слою выше, и не больше: `folders` здесь нет (замер, шаг 3), пароля устройства нет никогда (урок 19). Контроллер добавляет `id`, `revision`, `worker` и `server`. Сами строки наружу не отдаются никогда: снимок — объекты `cam/snapshot/<воркер>`, по одному на воркера, и их можно читать без прав на конфигурацию.
 
-`running: cameras_running` — имя метрики, которую та же спека объявила в `metrics:` (считать статусы в фазе `running` у живых воркеров; М10A, урок 15, шаг 11), и комментарий рядом важнее самой строки: **`vms_cameras_running` считает камеры, которые *держатся*, а не которые записываются.** Запись — метрика подсистемы `rec`. Различение, на котором стоит весь модуль, впервые появляется здесь, в имени датчика.
+`running: cameras_running` — имя метрики, которую та же спека объявила в `metrics:` (считать статусы в фазе `running` у живых воркеров; М10A, урок 15, шаг 11), и комментарий рядом важнее самой строки: **`cam_cameras_running` считает камеры, которые *держатся*, а не которые записываются.** Запись — метрика подсистемы `rec`. Различение, на котором стоит весь модуль, впервые появляется здесь, в имени датчика.
 
 ## Шаг 7 — `config.py`: раскладка и две конверсии
 
 ```python
 """The VMS's schema — as a spec the platform's controller runs from
-(vms.subsystem.yaml, beside this file). What this module keeps is the
+(cam.subsystem.yaml, beside this file). What this module keeps is the
 Python view of the same thing, for the worker and the tests:
 
-    vms/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
-    vms/workers/<worker>  units, rev                                      (the controller writes)
-    vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
-    vms/retention        days — subsystem-wide event retention (the resource reads)
-    vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
-    vms/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
+    cam/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
+    cam/workers/<worker>  units, rev                                      (the controller writes)
+    cam/placement/<id>    worker, reason, at, rev                         (the controller writes)
+    cam/retention        days — subsystem-wide event retention (the resource reads)
+    cam/epoch/<id>        epoch                                           (a worker takes, by CAS)
+    cam/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
                           (its holder, on a change: the declared table `devices`, through its field rules)
-    vms/next_id           n                                               (the controller)
+    cam/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
 here is controller-derived status — that is in the worker's heartbeat.
@@ -224,7 +224,7 @@ here is controller-derived status — that is in the worker's heartbeat.
 Последняя фраза отсекает частую ошибку: *ничего здесь не является выведенным статусом — статус в heartbeat'е воркера.* Соблазн положить `phase` в строку камеры велик: тогда одно чтение даёт всё. И тогда строку камеры пишут двое.
 
 ```python
-SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
+SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cam.subsystem.yaml"))
 LIVE_SPEC = SubsystemSpec.load(…)    # the second subsystem: live fan-outs
 DET_SPEC = SubsystemSpec.load(…)     # the third: detectors
 REC_SPEC = SubsystemSpec.load(…)     # the fourth: recorders, on the archive
@@ -303,7 +303,7 @@ server, and it is the hostname.
 
 > *Which of them a given process may actually complete is decided by the token its `vars_` carries, not by this class.*
 
-**Один класс, разные права — и процесс контроллера его даже не знает.** Контроллер VMS как процесс — платформенный: `python3 -m w2cplatform controller vms` (юнит `w2c-controller@vms`) гонит `SpecController` прямо по `vms.subsystem.yaml` из каталога спек (М10A, урок 19), и подкласс ему не нужен. `VmsController` — словарь, которым говорят тесты VMS и её собственный код (`vms/console.py`, `vms/__main__.py`). Тот же класс под токеном контроллера размещает, под токеном консоли на `place` получает `Forbidden` (`test_lesson6_controller.py::test_the_console_over_http`). Разграничение не в классе и не в наследовании — в хранилище (урок 3 М10A).
+**Один класс, разные права — и процесс контроллера его даже не знает.** Контроллер VMS как процесс — платформенный: `python3 -m w2cplatform controller cam` (юнит `w2c-controller@cam`) гонит `SpecController` прямо по `cam.subsystem.yaml` из каталога спек (М10A, урок 19), и подкласс ему не нужен. `VmsController` — словарь, которым говорят тесты VMS и её собственный код (`vms/console.py`, `vms/__main__.py`). Тот же класс под токеном контроллера размещает, под токеном консоли на `place` получает `Forbidden` (`test_lesson6_controller.py::test_the_console_over_http`). Разграничение не в классе и не в наследовании — в хранилище (урок 3 М10A).
 
 ## Результат
 
@@ -313,7 +313,7 @@ from vms.controller import VmsController
 
 box = Box()                                                   # tests/vmsconftest.py: two stores in a temp directory
 con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
 c = con.create_camera({"source": "driverpack://file/lobby.mp4"})
 # {'id': 1, 'name': 'cam1', 'source': 'driverpack://file/lobby.mp4', 'enabled': True,
 #  'live': 'always', 'kind': 'video', 'revision': 1}

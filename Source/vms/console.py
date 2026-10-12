@@ -6,7 +6,7 @@ recorder's tables and requests under `/rec/…` — is `w2cplatform.console.Spec
 the live stream do NOT go through it (the owner's decision 1): `GET /where/<id>` hands out the door of the unit's
 holder with a token (`door:` in a spec, `w2cplatform/door.py`), and the page reads the holder itself — a recording's
 recorder (`vms/footage.py`: its spans, its pieces, and what the camera holds itself), a gateway for the stream.
-The deployed console is the platform's verb, `python3 -m w2cplatform console` with `CONSOLE_ROOT=vms` (`host.py`); this
+The deployed console is the platform's verb, `python3 -m w2cplatform console` with `CONSOLE_ROOT=cam` (`host.py`); this
 module builds the same `Mount` for the tests and the lessons, from the VMS's specs: its own token, the operator's rows —
 cameras, next_id, retention — and never placement.
 """

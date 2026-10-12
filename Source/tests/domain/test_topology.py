@@ -303,7 +303,7 @@ def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
 
     def book():
         cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8010"])
+        return json.loads(north.vars.get("domain/cam/sources/south")[0]["SN8010"])
 
     e = book()
     assert (e["push"], e["live_url"]) == (True, "ingest://south/SN8010") and "sees none" in e["road"]
@@ -346,7 +346,7 @@ def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remember
 
     def book():
         cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8011"])
+        return json.loads(north.vars.get("domain/cam/sources/south")[0]["SN8011"])
 
     assert book()["push"] is False                                     # the networks say: pull
     recorder(unreachable=True)
@@ -373,14 +373,14 @@ def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
     for c in (north, south, west):
         fed.add(c)
     snapshot(west, {"DOOR8": ("w-0", "srv-9")}, ts=wall())
-    west.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-9",
+    west.objects.put("cam/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-9",
         "status": [{"id": 1, "ref": "DOOR8", "phase": "running"}], "live_url": "rtsp://10.9.0.8/live"}).encode())
     report_sync(DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: ["vlan:south"], own_objects=south.objects))
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(north.vars, view, wall)
     crossings.record("DOOR8", on="south")
     crossings.publish()
-    e = json.loads(north.vars.get("domain/vms/sources/south")[0]["DOOR8"])
+    e = json.loads(north.vars.get("domain/cam/sources/south")[0]["DOOR8"])
     assert (e["push"], e["live_url"]) == (False, "rtsp://10.9.0.8/live") and "not a member camera" in e["road"]
 
 

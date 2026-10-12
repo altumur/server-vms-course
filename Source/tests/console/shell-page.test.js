@@ -1,24 +1,24 @@
 // Страница VMS курса — оболочка над модулем платформы (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10): подключает модуль и его вид по
 // /platform/console.js|css?v=1, монтирует его один раз и не дублирует платформенного — своего входа, своего дерева
 // серверов, своего домена, своего журнала у неё нет, за /session, /servers, /domain она не ходит (кроме доли VMS
-// в домене: книги /domain/vms/books/…, ADR-0010, и where записи другого кластера /domain/at/…, ADR-0061). Один
+// в домене: книги /domain/cam/books/…, ADR-0010, и where записи другого кластера /domain/at/…, ADR-0061). Один
 // встроенный скрипт и ни одного обработчика в атрибуте — ни в разметке, ни в том, что она рисует: CSP консоли (page_csp) пускает
 // только скрипт страницы по хешу и файлы своего источника. Разделы ленты — модуля и «Сценарии» страницы.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const b=require("./boot");
 const out={};
 const inline=[...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 out.oneInlineScript=inline.length===1;
 out.moduleAndLook=PAGE.includes('<script src="/platform/console.js?v=1"></script>')&&PAGE.includes('<link rel="stylesheet" href="/platform/console.css?v=1">');
-out.mountedOnce=(inline[0].match(/PlatformConsole\.mount\(/g)||[]).length===1&&/subsystems:SUBS/.test(inline[0])&&/const SUBS=\["vms","rec","live"\]/.test(inline[0]);
+out.mountedOnce=(inline[0].match(/PlatformConsole\.mount\(/g)||[]).length===1&&/subsystems:SUBS/.test(inline[0])&&/const SUBS=\["cam","rec","live"\]/.test(inline[0]);
 // no handler in an attribute: none in the markup, none in what the script writes
 out.noInlineHandlerInSource=!/\son[a-z]+\s*=\s*["'`$]/i.test(PAGE.replace(/<!--[\s\S]*?-->/g,""));
 // the platform's parts are the module's: the page reads none of their routes and draws none of them — but the VMS's
-// share of the domain: the book of primaries the spec shows (/domain/vms/books/…, ADR-0010) and another cluster's
+// share of the domain: the book of primaries the spec shows (/domain/cam/books/…, ADR-0010) and another cluster's
 // recording's where through this console (/domain/at/…, ADR-0061)
 const code=inline[0].replace(/^\s*\/\/.*$/gm,"");
-out.noPlatformRoutes=!/["'`]\/(session|servers|domain(?!\/vms\/books\/|\/at\/)|policy|drain|mounts|spec|unplaceable|metrics)["'`?\/]/.test(code)&&!/["'`]\/where\//.test(code);
+out.noPlatformRoutes=!/["'`]\/(session|servers|domain(?!\/cam\/books\/|\/at\/)|policy|drain|mounts|spec|unplaceable|metrics)["'`?\/]/.test(code)&&!/["'`]\/where\//.test(code);
 out.noOwnLogin=!/type="password" name="password"|signin|break-glass/.test(PAGE);
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
