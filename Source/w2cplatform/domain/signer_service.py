@@ -840,6 +840,27 @@ class Holder:
                 path = self.path.split("?", 1)[0]
                 if path.startswith(("/api/member/", "/api/relay/")) and holder.carry_door is not None:
                     return self._report(path)
+                if path.startswith("/api/tokens/") and holder.carry_door is not None:
+                    from .carry import Refused
+                    from .tokenrequest import MAX_REQUEST
+                    from w2cplatform.trust.memberkey import AGENT_HEADER
+                    if not read_body(self, MAX_REQUEST):
+                        return
+                    raw = self.rfile.read(int(self.headers["Content-Length"]))
+                    parts = path[len("/api/tokens/"):].split("/")
+                    if len(parts) != 3:
+                        return self._send(400, {"detail": "invalid token request route"})
+                    refused = holder.refusal()
+                    if refused:
+                        return self._send(*refused)
+                    try:
+                        from . import declared
+                        from w2cplatform.trust.tokens import DeclaredIssuer
+                        issuer = DeclaredIssuer(holder.signer.tokens, declared.token_kinds())
+                        got = holder.carry_door.token(*parts, raw, self.headers.get(AGENT_HEADER, ""), issuer=issuer)
+                    except Refused as e:
+                        return self._send(e.status, {"detail": e.detail})
+                    return self._send(200, got)
                 body = self._body()
                 if body is None:
                     return
