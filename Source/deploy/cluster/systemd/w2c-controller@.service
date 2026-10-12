@@ -1,5 +1,5 @@
 # /etc/systemd/system/w2c-controller@.service — a subsystem's controller, the platform's process from the spec
-# (`python3 -m w2cplatform.cluster controller <sub>`): `w2c-controller@vms` places cameras, `w2c-controller@rec`
+# (`python3 -m w2cplatform.cluster controller <sub>`): `w2c-controller@cam` places cameras, `w2c-controller@rec`
 # recordings — one instance per subsystem of the catalogue, on every server. One would do; several are safe, because
 # every write is a CAS (lesson 10) — and with one on every server none has to be moved anywhere. It never starts a
 # process: it publishes numbers and offers (`<sub>/slots/<w-N>` with `offer`), and `w2c-spares.sh` on each server does
