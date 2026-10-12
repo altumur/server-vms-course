@@ -350,3 +350,42 @@ C2–C7 — книги по порядку доп. 2, каждая после к
 `stream-accounts`, `asks`, уход `domainpart`). `domain.names` на `kept`-семье живёт до шага `stream-accounts`, на
 книге с `from` — с первого шага; две формы одного ключа только внутри окна C, шаг `stream-accounts` снимает `kept`-форму
 без алиаса — на обеих сторонах одинаково. Загрузчик `tokens.<вид>` отказывает на неизвестный ключ (ADR-0012).
+
+**Поправка к дополнению 3 (2026-10-12, владелец): `primaries` + `sources` — продукт первым.** Ключи книг
+`primaries` и `sources` (`from/key/pick/to`) и ключи `grant`/`placement` вида `stream` курс кладёт только последним
+шагом своего окна, вместе с издателями, читателями и снятием `crossings`/`roads`/предметной двери — раньше нельзя,
+книга с `from` без издателя ломает курсу его VMS. Чтобы стороны шли параллельно, а не по очереди, шаг C2 продукта идёт
+первым по пути правила 15 для ключей продукта: «Сборка» подаёт форму C2 «Архитектору», ключи кладёт в спеки продукта,
+на «готово» «Архитектор» кладёт строки `product-only … # ADR-0074 «продукт»` в ведомость курса; команда зеркалит те
+же байты ключей на своём шаге и снимает строки. Формы закреплены текстом ADR: состав книг — доп. 2, назначение —
+доп. 4 с поправкой, токен — доп. 5; имена полей команда берёт из формы C2, записанной в ADR до её шага. Остальные
+книги (`upstream`, `polls`, `stream-accounts`, `asks`) — по-прежнему курс первым, если владелец не решит иначе.
+
+**Форма C2 продукта (2026-10-12, «Сборка», принята; байты ключей для зеркала курса).** Ключи:
+`vms: domain.books.sources: {from: vms/sources/, key: ref, pick: unique, to: to}`;
+`vms: domain.tokens.stream: {lifetime: 86400, claims: [aud, ref], grant: [vmsworker], placement: {sub: rec, caller:
+origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}}`;
+`rec: domain.books.primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role]}`;
+`worker.reads` у `vms` — `domain/rec/primaries`, `domain/placed/rec/`; у `rec` — `domain/vms/sources`,
+`domain/placed/rec/`. Уходят без алиаса: `domain/vms/primaries`, `kept: [crossings, roads]`, `tables: [crossings]`,
+семьи `roads`/`crossings`/`primaries` у `vms`, `POST /crossings`. Назначение `domain/placement/rec/<ref>`: `cluster` —
+основная запись, `origin` — кластер камеры, `copies` — резервы; в C2 пишет только оператор (как `crossings`), размещение
+по достижимости — отдельной формой; `polls`/`upstream`/`asks` до своих шагов читают карту `{ref: cluster}` из
+назначения, `crossings` вторым источником не живёт. Строку записи на кластере `cluster` заводит страница: `PUT`
+назначения, затем `POST rec/recordings` у консоли кластера; перенос — `PUT` с новым `cluster` и `DELETE` на старом;
+рекордер строк по `domain/placed` не заводит. Элемент `sources` `{ref, to, live_url, codec, server, as_of, push,
+polls}`, `to` = `cluster` + `copies`; `road`, `reachable`, `ingest://`, `backups`, `door` уходят. Элемент `primaries`
+`{ref, recording, role: primary|backup|card, enabled, running, coverage, peer_url, ingest, push, to}`, `to` = `origin` +
+`cluster` + `copies`; push решает рекордер-получатель — его `primary`-элемент несёт `push: true` и `ingest`, память
+`roads` — память рекордера; `starting` никто не сообщает, читатель ждёт выдержку. Токен `stream` просит пушер камеры
+через дверь агента сертификатом `vmsworker`; `sub` = `ref`, `aud` = `cluster` + `copies`; приёмник без изменений;
+опросы на токенах `domainpart` до шага `polls`. Стенд `vms-macos`: комплекты `domainagent`/`vmsworker` кластерам камер
+только для двери токенов. Ветка одна, слияние одно; приёмка — по принятым файлам книг (основная и две резервные,
+переезд с 412 `guard`, обрыв pull → push → восстановление, дозапись с карты и резерва, три камеры стенда до и после).
+
+**Поправка к форме C2 (2026-10-12, ADR-0079).** Подсистема камер называется `cam`: ключи формы C2 читаются с новыми
+именами — `cam: domain.books.sources: {from: cam/sources/, key: ref, pick: unique, to: to}`, `cam: domain.tokens.stream`
+с `grant: [camworker]`, `worker.reads` у `cam` — `domain/rec/primaries`, `domain/placed/rec/`; у `rec` —
+`domain/cam/sources`, `domain/placed/rec/`; уходят `domain/cam/primaries` (бывш. `domain/vms/primaries`), семьи
+`roads`/`crossings`/`primaries` у `cam`. Пушер просит токен сертификатом `camworker`. Переименование — отдельным
+окном продукта до C2.
