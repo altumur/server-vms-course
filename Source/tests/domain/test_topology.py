@@ -48,7 +48,8 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
               for c in (north, south)]
     for a in agents:
         report_sync(a)
-    placer = ClusterPlacer(fed, clock=wall)
+    admit(fed)
+    placer = ClusterPlacer(fed, sub="vms", clock=wall)
     assert placer.place(UnitSite(1, "vlan:b")).cluster == "south"
     seen["south"] = ["vlan:b", "vlan:c"]
     assert agents[1].say_reaches() and not agents[1].say_reaches()   # written when it changes, and only then
@@ -381,3 +382,10 @@ def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
     crossings.publish()
     e = json.loads(north.vars.get("domain/vms/sources/south")[0]["DOOR8"])
     assert (e["push"], e["live_url"]) == (False, "rtsp://10.9.0.8/live") and "not a member camera" in e["road"]
+
+
+def admit(fed):
+    from w2cplatform.domain.members import Members
+    members = Members(fed.domain_holder.vars, configured=lambda: list(fed.clusters), domain=fed.domain_holder.name)
+    members.settle()
+    members.list_holder(fed.domain_holder.name, None, None)
