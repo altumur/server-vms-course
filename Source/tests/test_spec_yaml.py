@@ -15,7 +15,7 @@ from w2cplatform.spec import SubsystemSpec
 TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
 SPECS = [os.path.join(TESTDATA, f) for f in ("testsub.subsystem.yaml", "testsub2.subsystem.yaml")] + \
     [os.path.join(os.path.dirname(TESTDATA), "..", "vms", f) for f in
-     ("vms.subsystem.yaml", "rec.subsystem.yaml", "live.subsystem.yaml", "det.subsystem.yaml", "detjob.subsystem.yaml",
+     ("cam.subsystem.yaml", "rec.subsystem.yaml", "live.subsystem.yaml", "det.subsystem.yaml", "detjob.subsystem.yaml",
       "survey.subsystem.yaml", "auto.subsystem.yaml")]
 
 BASE = """name: probe
