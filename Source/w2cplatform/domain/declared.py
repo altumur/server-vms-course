@@ -118,6 +118,14 @@ class GrantTooWide(Refused):
     """A grant to a subject of a family wider than the family's `grant`."""
 
 
+class NamesUnavailable(Refused):
+    """An incomplete name index cannot prove a name free or a grant safe to expand (HTTP 503)."""
+    def __init__(self, where, missing=()):
+        self.missing = tuple(missing)
+        super().__init__(f"{where}: temporarily unavailable; missing members: " +
+                         (", ".join(self.missing) if self.missing else "unknown (index absent or damaged)"))
+
+
 def _holds(items) -> bool:
     """A row that names someone: there, and not the platform's mark of a person deleted (`identity.py`'s tombstone)."""
     return bool(items) and items.get("kind") != "deleted"
@@ -150,7 +158,7 @@ def _person(vars_, row: str) -> bool:
 def subject_families() -> list[tuple[str, str, str, str | None]]:
     """`(sub, <family prefix 'domain/<sub>/<family>/'>, <the people's prefix>, <grant or None>)` of every loaded spec."""
     return [(s.name, f"{s.domain_prefix}{k}", PEOPLE[rule["exclusive_with"]], rule.get("grant")) for s in specs()
-            for k, rule in s.domain.names.items()]
+            for k, rule in s.domain.names.items() if k in s.domain.kept]
 
 
 def _name_under(path: str, prefix: str) -> str | None:
@@ -175,6 +183,8 @@ def refusal(vars_, path: str, items) -> tuple[type, str] | None:
     from w2cplatform.access import RANK
     if not _holds(items):
         return None
+    from .booknames import refuse_write
+    refuse_write(vars_, path, items)
     for sub, family, people, ceiling in subject_families():
         rule = f"{sub}'s domain.names.{family.split('/', 2)[2]}"
         name = _name_under(path, family)
@@ -211,8 +221,10 @@ class Guarded:
         self.inner = vars_
 
     def put(self, path: str, items: dict, *a, **kw):
-        refuse(self.inner, path, items)
-        return self.inner.put(path, items, *a, **kw)
+        from .booknames import MUTATIONS
+        with MUTATIONS:
+            refuse(self.inner, path, items)
+            return self.inner.put(path, items, *a, **kw)
 
     def __getattr__(self, name):
         return getattr(self.inner, name)

@@ -62,13 +62,13 @@ def own_rows(cluster: str) -> list[str]:
 
 
 # -- the secrets in a row, wherever the platform can see them without reading what the row means ------------------------
-def _walk(items: dict, fn, ctx: str) -> dict:
+def _walk(items: dict, fn, ctx: str, *, include_empty=False) -> dict:
     """`items` with `fn(field, value, ctx)` applied to every `*_secret` value: at the top of the row, and anywhere inside
     a value that is a JSON object (`ctx#<key>` — the item it lies in). The structure is walked; what it means is not
     read: a subsystem's book is moved and sealed without the platform knowing what a field of it is for."""
     out = {}
     for k, v in (items or {}).items():
-        if is_secret_field(k) and isinstance(v, str) and v:
+        if is_secret_field(k) and isinstance(v, str) and (v or include_empty):
             out[k] = fn(k, v, ctx)
             continue
         if isinstance(v, str) and v.startswith("{") and "_secret" in v:
@@ -83,7 +83,7 @@ def _walk(items: dict, fn, ctx: str) -> dict:
                     if isinstance(x, dict):
                         out_ = {}
                         for f, y in x.items():
-                            if is_secret_field(f) and isinstance(y, str) and y:
+                            if is_secret_field(f) and isinstance(y, str) and (y or include_empty):
                                 out_[f] = fn(f, y, where)
                                 touched.append(f)
                             else:
@@ -100,11 +100,11 @@ def _walk(items: dict, fn, ctx: str) -> dict:
     return out
 
 
-def seal_row(sealer, items: dict, ctx: str) -> dict:
+def seal_row(sealer, items: dict, ctx: str, *, force=False) -> dict:
     """Every secret of the row sealed with `sealer` (the platform's ring); as it is with no ring."""
     if sealer is None:
         return dict(items or {})
-    return _walk(items, lambda f, v, c: sealer.seal(f, v, c), ctx)
+    return _walk(items, lambda f, v, c: sealer.seal(f, v, c, force=force), ctx, include_empty=force)
 
 
 def open_row(sealer, items: dict, ctx: str) -> dict:
@@ -129,20 +129,23 @@ def _member_ctx(path: str, cluster: str) -> str:
 
 
 # -- the holder's side -------------------------------------------------------------------------------------------------
-def answer(holder_vars, holder_objects, cluster: str, seal_to: str | None = None, sealer=None) -> dict:
+def answer(holder_vars, holder_objects, cluster: str, seal_to: str | None = None, sealer=None, *, now=None) -> dict:
     """What `cluster` carries home, from the holder's stores. With `seal_to` (the member's X25519 public key, hex), every
     secret is opened with the holder's ring (`sealer`) and sealed to the member, bound to the row as it will lie in the
     member's store; without it the rows go as they are stored (the holder's own agent, the tests' in-process members)."""
     from w2cplatform.trust.memberkey import seal_to as seal_for
+    from .booknames import delivery
+    now = time.time() if now is None else now
     rows, objects = {}, {}
     for path in public_rows() + own_rows(cluster):
         items, _ = holder_vars.get(path)
         if items is None:
             continue
+        items = delivery(holder_vars, path, cluster, items, now)
         if seal_to:
             dest = _member_ctx(path, cluster)
             items = _walk(open_row(sealer, items, path), lambda f, v, c, d=dest: seal_for(seal_to, f, v, d + c[len(path):]),
-                          path)
+                          path, include_empty=True)
         rows[path] = dict(items)
         obj = items.get("object") if isinstance(items, dict) else None
         if obj and holder_objects is not None and obj not in objects:
@@ -190,7 +193,7 @@ class HolderDoor:
         if for_member is None or for_member == cluster:
             if seal != me.get("seal", seal):
                 raise Refused(401, f"the ask names a sealing key that is not {cluster}'s")
-            return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
+            return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer, now=self.wall())
         # …and only for a MEMBER (the three-site run, O9): the topology alone was asked, and a member
         # deleted from the list while the topology still placed it behind its office was answered all the same — its
         # public rows, no secret, `key: null` — and the relay then refused the member as one "admitted without a key".
@@ -199,7 +202,8 @@ class HolderDoor:
         if Topology(self.vars).via(for_member) != cluster:
             raise Refused(403, f"{cluster} does not relay {for_member} (the domain's topology says so)")
         theirs = members[for_member]
-        out = answer(self.vars, self.objects, for_member, seal_to=theirs.get("seal") or None, sealer=self.sealer)
+        out = answer(self.vars, self.objects, for_member, seal_to=theirs.get("seal") or None, sealer=self.sealer,
+                     now=self.wall())
         if not theirs.get("seal"):
             # Nobody to seal to: the relay is given no secret of a member it could open, only the rest.
             out["rows"] = {p: _walk(i, lambda f, v, c: "", p) for p, i in out["rows"].items()}
@@ -273,7 +277,7 @@ class HolderDoor:
             raise Refused(409, f"{cluster}: {e}") from None
         except ValueError as e:
             raise Refused(400, f"{cluster}: {e}") from None
-        return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
+        return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer, now=self.wall())
 
     def relay(self, relay: str, body: bytes, signature: str) -> dict:
         """`POST /api/relay/<relay>`: `{relayed: {member: publication}}` — the summary report of the members behind the

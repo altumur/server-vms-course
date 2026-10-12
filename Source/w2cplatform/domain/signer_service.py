@@ -131,6 +131,8 @@ class Holder:
             out.append(("following the topology", self._follow_topology))
         if self.view is not None:
             out.append(("the read view's pass", self.view.refresh))
+        from .bookruntime import steps as book_steps
+        out.extend(book_steps(self))
         if self.pending is not None:
             out.append(("collecting kept edits", lambda: self.pending.collect(self.fed)))   # what the members' reports say
         if self.alarms is not None:
@@ -647,7 +649,7 @@ class Holder:
     # family's declared `grant` — no write of the people's makes one, every grant a person loses is narrower; said all
     # the same).
     def _users(self, method: str, name: str, who: str, body: dict) -> tuple[int, dict]:
-        from .declared import GrantTooWide, NameTaken
+        from .declared import GrantTooWide, NameTaken, NamesUnavailable
         from .grants import BadName, LastAdmin
         if method == "GET" and not name:
             return 200, {"users": [{"name": u.id, "how": "oidc" if u.kind == "idp" else "password", "roles": u.roles,
@@ -662,6 +664,8 @@ class Holder:
                 self.ids.create_local(uid, password, roles, by=who)
             except (BadName, TypeError, GrantTooWide) as e:
                 return 400, {"detail": str(e)}
+            except NamesUnavailable as e:
+                return 503, {"detail": str(e)}
             except NameTaken as e:
                 return 409, {"detail": str(e)}
             except ValueError as e:                      # it exists

@@ -14,6 +14,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
 from w2cplatform.domain.grants import Grant, grants_from_items, grants_to_items
 from w2cplatform.trust.tokens import RevocationList, TokenError, TokenIssuer, verify
+from w2cplatform.trust.memberkey import MemberKey
 from vms.console import make_console
 from vms.controller import VmsController
 
@@ -44,7 +45,7 @@ def _call(base, method, path, token=None, body=None):
 
 def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
     clk = Clock(1_757_500_000.0)
-    signer = TokenIssuer("acme")
+    signer = TokenIssuer("acme", book_seal=MemberKey.new().seal_pub)
     vars_, ctl, srv, base = _cluster(clk)
     try:
         assert _call(base, "POST", "/cameras", body={"source": "driverpack://file/1.mp4", "labels": ["ground"]})[0] == 201   # no domain yet: open
@@ -58,7 +59,7 @@ def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
         tok = lambda who, life=900: signer.issue(who, life, now=clk(), kind="person")
 
         assert _call(base, "GET", "/cameras")[0] == 401                                     # the console asks now
-        assert _call(base, "GET", "/cameras", TokenIssuer("acme").issue("alice", 900, now=clk(), kind="person"))[0] == 401   # another signer's token
+        assert _call(base, "GET", "/cameras", TokenIssuer("acme", book_seal=MemberKey.new().seal_pub).issue("alice", 900, now=clk(), kind="person"))[0] == 401   # another signer's token
         alice, bob, root = tok("alice"), tok("bob"), tok("root")
         assert _call(base, "GET", "/cameras", alice)[0] == 200
         assert _call(base, "GET", "/where/1", alice)[0] in (200, 404) and _call(base, "GET", "/where/2", alice)[0] == 403
@@ -112,7 +113,7 @@ def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_t
     import importlib
     from w2cplatform.access import Gate
     assert importlib.import_module("w2cplatform.domain.access").cluster_access                 # what the gate imports is there to be loaded
-    vars_ = FakeVariables(); vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
+    vars_ = FakeVariables(); vars_.put(KEYS_PATH, TokenIssuer("acme", book_seal=MemberKey.new().seal_pub).keyset().to_items())
     assert type(Gate(vars_, lambda: 0.0).access()).__name__ == "ClusterAccess"     # …and with a key set in the store, the gate loads it
 
 
@@ -122,7 +123,7 @@ def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
     the console checks it as the gate would and sets a cookie the page's script cannot read, for as long as the
     token lives. A request that ACTS, rides on the cookie and comes from another site's page is refused."""
     clk = Clock(1_757_500_000.0)
-    signer = TokenIssuer("acme")
+    signer = TokenIssuer("acme", book_seal=MemberKey.new().seal_pub)
     vars_, ctl, srv, base = _cluster(clk)
 
     import itertools
@@ -205,7 +206,7 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
 
     try:
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 400   # open: nothing to break into
-        vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
+        vars_.put(KEYS_PATH, TokenIssuer("acme", book_seal=MemberKey.new().seal_pub).keyset().to_items())
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 403   # no account for this cluster
         vars_.put(glass, home.get(glass)[0])                                            # what the agent carried home…
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "glass-for-south"})[0] == 403
@@ -239,7 +240,7 @@ def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
     signer of ours writes one, and it is refused too. Each is 401 at a cluster's console and at `POST /session`."""
     from w2cplatform.trust.tokens import _b64
     clk = Clock(1_757_500_000.0)
-    signer = TokenIssuer("acme")
+    signer = TokenIssuer("acme", book_seal=MemberKey.new().seal_pub)
     vars_, ctl, srv, base = _cluster(clk)
     vars_.put(KEYS_PATH, signer.keyset().to_items())
     vars_.put(GRANTS_PATH, grants_to_items([Grant("root", "admin", None, clk() + 86400)]))

@@ -97,7 +97,7 @@ def test_a_stolen_holder_can_neither_take_the_domain_nor_hand_out_keys_of_its_ow
     forged = sign({"term": 9, "holder": "cam-SN0", "at": wall()}, thief.tokens)
     import json
     holder.vars.put("domain/holder", {"doc": json.dumps(forged, sort_keys=True)})
-    mine = KeySet(current="evil", keys={"evil": Ed25519PrivateKey.generate().public_key().public_bytes(
+    mine = KeySet(current="evil", book_seal=thief.book_key.seal_pub, keys={"evil": Ed25519PrivateKey.generate().public_key().public_bytes(
         serialization.Encoding.Raw, serialization.PublicFormat.Raw)})
     DomainPublisher(holder.vars).publish_keys(mine)
     report_sync(agents["cam-SN2"])

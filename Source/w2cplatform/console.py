@@ -1681,11 +1681,33 @@ class SpecConsole:
                 entry = json.loads(raw)
                 if not isinstance(entry, dict):
                     raise TypeError(f"not a JSON object ({len(str(raw))} bytes)")
+                if book in s.domain.merged:
+                    from .domain.booknames import _parse
+                    entry = _parse(raw)
+                    missing = entry.get("missing")
+                    if not isinstance(missing, list) or any(not isinstance(m, str) or not m for m in missing):
+                        raise TypeError("invalid collected book missing list")
+                    if item == "":
+                        if set(entry) != {"missing"}:
+                            raise TypeError("invalid collected book marker")
+                        shown = {"missing": missing}
+                    else:
+                        if set(entry) != {"entries", "missing"} or not isinstance(entry["entries"], list):
+                            raise TypeError("invalid collected book envelope")
+                        values = []
+                        for e in entry["entries"]:
+                            if (not isinstance(e, dict) or set(e) != {"member", "item", "value"} or
+                                    any(not isinstance(e[f], str) or not e[f] for f in ("member", "item")) or
+                                    not isinstance(e["value"], dict)):
+                                raise TypeError("invalid collected book entry")
+                            values.append({"member": e["member"], "item": e["item"],
+                                           "value": {f: _without_secrets(e["value"][f]) for f in show if f in e["value"]}})
+                        shown = {"entries": values, "missing": missing}
             except PARSE_ERRORS as e:                    # what it holds is not said: an entry carries tokens
                 BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
                 continue
             BOOK_ENTRIES.parsed(f"{key}#{item}")
-            out[item] = {f: _without_secrets(entry[f]) for f in show if f in entry}
+            out[item] = shown if book in s.domain.merged else {f: _without_secrets(entry[f]) for f in show if f in entry}
         return 200, out
 
     # This cluster's units of `s` by their `domain.ref` (`id`: the id itself), each as a grant is asked about it

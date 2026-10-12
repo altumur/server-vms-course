@@ -119,8 +119,8 @@ class Sealer:
     def _aad(field: str, ctx: str) -> bytes:
         return f"{ctx}:{field}".encode() if ctx else field.encode()
 
-    def seal(self, field: str, value: str, ctx: str) -> str:
-        if not value or is_sealed(value):
+    def seal(self, field: str, value: str, ctx: str, *, force: bool = False) -> str:
+        if not force and (not value or is_sealed(value)):
             return value
         nonce = _secrets.token_bytes(12)
         ct = self._aead[self.current].encrypt(nonce, value.encode(), self._aad(field, ctx))

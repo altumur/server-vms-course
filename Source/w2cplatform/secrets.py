@@ -95,6 +95,7 @@ SECRET_MASK = "***"
 PLATFORM_SECRET_READERS: dict[str, tuple[str, ...]] = {
     "domain/break-glass/": ("console", "domain", "domainagent"),
     "domain/signer": ("domain",),
+    "domain/book-seal": ("domain",),
     "domain/users/": ("domain",),
     "domain/member-key": ("domainagent", "console", "domain"),
     "domain/backup": ("console", "domain", "domainagent"),

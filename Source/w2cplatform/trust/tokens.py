@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import secrets
 import time
 from dataclasses import dataclass, field
@@ -108,13 +109,16 @@ class KeySet:
     # list of members, because the list travels in backups and an older backup does not know of the theft; the
     # key set every member holds, signed by the root, only goes forward.
     revoked_members: set[str] = field(default_factory=set)
+    book_seal: str | None = None              # required in every serialized key set (ADR-0074)
 
     @property
     def root(self) -> bytes | None:
         return self.keys.get(ROOT_KID)
 
     def to_items(self) -> dict:
-        items = {"current": self.current}
+        if not isinstance(self.book_seal, str) or not re.fullmatch("[0-9a-f]{64}", self.book_seal):
+            raise ValueError("a key set requires book_seal, a 32-byte X25519 public key")
+        items = {"current": self.current, "book_seal": self.book_seal}
         for kid, pub in self.keys.items():
             items[f"key:{kid}"] = pub.hex()
             if kid in self.retire_at:
@@ -130,7 +134,10 @@ class KeySet:
             ks.rev, ks.revoked_ca, ks.issuing = int(d["rev"]), set(d.get("revoked_ca", [])), set(d.get("issuing", []))
             ks.revoked_members = set(d.get("revoked_members", []))
             return ks
-        ks = cls(current=items["current"])
+        public = items.get("book_seal")
+        if not isinstance(public, str) or not re.fullmatch("[0-9a-f]{64}", public):
+            raise ValueError("a key set requires book_seal, a 32-byte X25519 public key")
+        ks = cls(current=items["current"], book_seal=public)
         for k, v in items.items():
             if k.startswith("key:"):
                 ks.keys[k[4:]] = bytes.fromhex(v)
@@ -155,10 +162,12 @@ def kid_of(token: str) -> str | None:
 class TokenIssuer:
     """Half of the domain signer. Holds the private key; issues short tokens."""
 
-    def __init__(self, domain: str, private_key: Ed25519PrivateKey | None = None, kid: str | None = None):
+    def __init__(self, domain: str, private_key: Ed25519PrivateKey | None = None, kid: str | None = None,
+                 *, book_seal: str | None = None):
         self.domain = domain
         self.key = private_key or Ed25519PrivateKey.generate()
         self.kid = kid or secrets.token_hex(4)
+        self.book_seal = book_seal
         self.previous: list[tuple[str, bytes, float]] = []    # (kid, public, retire_at) still in the set
 
     @property
@@ -167,7 +176,7 @@ class TokenIssuer:
         return self.key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
 
     def keyset(self) -> KeySet:
-        ks = KeySet(current=self.kid, keys={self.kid: self.public_bytes})
+        ks = KeySet(current=self.kid, keys={self.kid: self.public_bytes}, book_seal=self.book_seal)
         for kid, pub, until in self.previous:
             ks.keys[kid] = pub
             ks.retire_at[kid] = until

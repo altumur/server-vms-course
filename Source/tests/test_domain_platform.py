@@ -277,7 +277,7 @@ def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_
     from w2cplatform.trust.signer import DomainRoot
     from w2cplatform.trust.tokens import KeySet
     pub = Ed25519PrivateKey.generate().public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-    ks = KeySet(current="k1")
+    ks = KeySet(current="k1", book_seal=MemberKey.new().seal_pub)
     ks.keys["k1"] = pub
     root = DomainRoot("north")
     signed, plain = root.key_set(ks, 3), ks.to_items()
@@ -295,7 +295,7 @@ def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_
     assert by["domain/member-key"]["public"] == {"pub": mk.pub, "seal_pub": mk.seal_pub}
     assert by["domain/ldevid/south"]["public"] == {"cert": cert}
     assert secret not in text and "kept here" not in text and "enc:v1:k1:x" not in text
-    assert plain == {"current": "k1", "key:k1": pub.hex()}
+    assert plain == {"current": "k1", "key:k1": pub.hex(), "book_seal": ks.book_seal}
     assert keys(_Store({"domain/keys": plain}), None, 0.0)["vars"][0]["public"] == plain
     # a document in a public field that carries a secret is not shown: the check reads into it
     tainted = {"doc": json.dumps({"keys": {}, "root": "ab", "x": {"token_secret": "t"}})}

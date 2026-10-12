@@ -45,7 +45,7 @@ def tokens_group(sub: str, deployment: str) -> str:
 
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
-    out = [SIGNER_KEYS, "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
+    out = [SIGNER_KEYS, "!domain/book-seal*", "!domain/names/*", "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
            "!domain/grants/*", "!domain/pending/*", "!domain/keepers/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
@@ -125,7 +125,10 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
         # does not read (`domain/users/` is the role `domain`'s alone, the shared table): it lists their keys, as every
         # role lists every prefix (`declared._person`)
         apart = [f"{declared.GRANTS_PREFIX}*"] if s.domain.names else []
-        out[f"{s.name}domain"] = role(f"{s.name}domain", [f"{s.domain_prefix}*"],
+        if any(b + "/" in s.domain.names for b in s.domain.merged):
+            apart.append(f"domain/names/{s.name}/*")
+        write = [f"{s.domain_prefix}*", *[f"!{s.domain_prefix}{b}/*" for b in s.domain.merged]]
+        out[f"{s.name}domain"] = role(f"{s.name}domain", write,
                                       reads(f"{s.name}domain", [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology",
                                                                 "domain/members", "domain/shared", "platform/*", *units, *apart]))
     return out

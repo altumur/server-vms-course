@@ -18,6 +18,8 @@ class Collected:
     rows: dict[str, dict[str, str]]
     # Only identities and reasons, never a contribution's value or a parse exception containing it.
     diagnostics: tuple[tuple[str, str, str, str], ...]  # member, item, key (when known), reason
+    subjects: dict[str, tuple[str, ...]]  # before recipient projection and unique conflicts
+    missing: tuple[str, ...]
 
 
 def _object(pairs):
@@ -67,7 +69,7 @@ Grant checks and resealing must precede publication; this function's output alon
 """
     admitted = set(members)
     active = admitted - set(lost)
-    missing, diagnostics, candidates = set(), [], {}
+    missing, diagnostics, candidates, subjects = set(), [], {}, {}
     for member in sorted(active):
         report = reports.get(member)
         if report is None:
@@ -90,24 +92,26 @@ Grant checks and resealing must precede publication; this function's output alon
                     if rule.pick == "unique" and key in seen:
                         raise ValueError("duplicate key in member")
                     seen.add(key)
+                    # Reject overflowed JSON numbers even for a contribution with no admitted destination.
+                    _json(value)
                     to = value.get(rule.to)
                     if isinstance(to, str):
                         to = [to]
-                    if not isinstance(to, list) or not to or any(not isinstance(m, str) or not m for m in to):
+                    if not isinstance(to, list) or any(not isinstance(m, str) or not m for m in to):
                         raise ValueError("invalid recipients")
                     # One unknown destination invalidates the contribution, not just that destination.
                     # Do not echo a purported recipient: it may contain data from an invalid payload.
                     if set(to) - admitted:
                         diagnostics.append((member, f"{writer}/{item}" if writer else item, key, "unknown recipient"))
                         continue
-                    # Reject overflowed JSON numbers too (1e999 is infinity without parse_constant).
-                    _json(value)
                     entry = {"member": member, "item": f"{writer}/{item}" if writer else item, "value": value}
                     pending.append((key, entry, set(to)))
         except (ValueError, TypeError, OverflowError, RecursionError, UnicodeError):
             missing.add(member)
             diagnostics.append((member, "", "", "invalid input"))
             continue                          # discard every contribution of this member for this book
+        for key in seen:
+            subjects.setdefault(key, set()).add(member)
         for key, entry, to in pending:
             candidates.setdefault(key, []).append((entry, to))
 
@@ -122,4 +126,5 @@ Grant checks and resealing must precede publication; this function's output alon
             selected = [entry for entry, to in entries if recipient in to]
             if selected:
                 rows[recipient][key] = _json({"entries": selected, "missing": absent})
-    return Collected(rows, tuple(sorted(diagnostics)))
+    return Collected(rows, tuple(sorted(diagnostics)),
+                     {k: tuple(sorted(v)) for k, v in sorted(subjects.items())}, tuple(absent))
