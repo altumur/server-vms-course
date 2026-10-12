@@ -9,6 +9,8 @@ operator's explicit word — a copy named (`copy: {term, rev}` with `why`) or `s
 Three clusters on files, each with its console (the processes' doors, `/api/held` and `/api/backup`), the holder's
 signer moving the domain at its door (`Holder.move`, as `POST /domain/move` hands it on); every holder installed as a
 holder is (`term.install`, with no member key handed in: its agent made one on its box)."""
+
+from tests.reporting import sync as report_sync
 import json
 import os
 import tempfile
@@ -65,8 +67,8 @@ class Site:
         """Each member's agent carries from `holder`'s store: its copy of the backup, its list of members."""
         h = self.c[holder]
         for n in members:
-            assert DomainAgent(n, h.vars, self.c[n].vars, now=self.wall, domain_objects=h.objects,
-                               cluster_objects=self.c[n].objects).sync(), n
+            assert report_sync(DomainAgent(n, h.vars, self.c[n].vars, now=self.wall, domain_objects=h.objects,
+                               cluster_objects=self.c[n].objects)), n
 
     def console(self, n: str) -> str:
         if n not in self.consoles:
