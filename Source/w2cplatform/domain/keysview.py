@@ -36,7 +36,7 @@ PREFIX = "domain/"
 # The rows holding public halves, and which of their fields are: `(key, or a prefix ending in "/"; fields)`. Exact
 # names, not a pattern — a field added to one of these rows later stays a name until it is put here.
 PUBLIC = (
-    ("domain/keys", lambda f: f in ("current", "doc") or f.startswith(("key:", "retire:"))),   # `KeySet.to_items`, `DomainRoot.key_set`
+    ("domain/keys", lambda f: f in ("current", "doc", "book_seal") or f.startswith(("key:", "retire:"))),
     ("domain/root", lambda f: f == "pub"),                                                      # `agent.ROOT_PATH`
     ("domain/member-key", lambda f: f in ("pub", "seal_pub")),                                  # `memberkey.ROW`
     ("domain/ldevid/", lambda f: f in ("cert", "chain")),                                       # `agent.LDEVID_PATH`
