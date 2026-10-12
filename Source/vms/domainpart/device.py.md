@@ -3,7 +3,7 @@
 **Role in the module.** Part two's member. A camera is not a worker in somebody's cluster (nothing on it can move) and "all cameras, one cluster" would be raft among cameras; so each camera is a cluster of one — one store on its flash, one writer. The domain reads a cluster's heartbeats and snapshot shards and nothing else, so a camera that publishes one of each, named by its serial, is read like a server room. What is new is physical: flash wears (heartbeats go to RAM), and a camera is rebooted whole (the door opens after the first publish). Used by the tests of Lessons 10–15 as the member; `alarms.EventDoor` and `term` use its door and durable store.
 
 ## Module-level names
-- `ROW = "vms/cameras/1"`, `EPOCH = "vms/epoch/1"` — the camera's row (cluster-local id 1, `ref` = serial) and its epoch.
+- `ROW = "cam/cameras/1"`, `EPOCH = "cam/epoch/1"` — the camera's row (cluster-local id 1, `ref` = serial) and its epoch.
 
 ## `class Flash`
 The camera's Variables, counting `writes` — reads are free, every put is an erase somewhere. `get`, `list`, `put` delegate.
