@@ -45,7 +45,7 @@ VALID = 30.0
 RATE = 6                               # asks per scenario per minute, the product's default
 
 
-# What one camera may ask another — М10B's `vms.preset` and `vms.output`, and nothing else: an ask is a thing
+# What one camera may ask another — М10B's `cam.preset` and `cam.output`, and nothing else: an ask is a thing
 # a camera DOES, over the poll it holds, and the recording of another camera is not one (that is the recorder's
 # cluster's automation, М10B Lesson 25). `arg` is the preset's number, or the relay's port.
 ACTIONS = {"preset": "the preset's number", "output": "the relay's port"}
