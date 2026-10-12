@@ -79,31 +79,31 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
     ctl.failover_seconds()                                                  # this one scraped while w-srv-a-1 was alive
     c.wall.advance(SLOT_TTL + LOST_AFTER + 3)                               # srv-a silent, the slot out and the margin
     ctl.pass_once(1)                                                        # the controller gives the name
-    v = c.door("vmsworker")
+    v = c.door("camworker")
     b = VmsWorker(None, v, c.objects_on("srv-b", v), FakeActuator(), env=c.env("srv-b", "w-srv-a-1"), clock=c.clock,
                   wall=lambda: c.wall() - 600.0)                            # srv-b's clock: 10 min behind
     b.reconcile_once(); b.heartbeat_once()
     assert ctl.failover_seconds() == {"w-srv-a-1": 93.0}                    # by the reader's clock — not −507
     assert fresh.failover_seconds() == {} and fresh.failovers_unmeasured == 1
-    assert "vms_failovers_unmeasured 1" in metrics_text(fresh, 0.0)
+    assert "cam_failovers_unmeasured 1" in metrics_text(fresh, 0.0)
     # the same server: one clock, the workers' own numbers (`started − previous_hb`)
     c2, ctl2, a2, _, _ = _recording(b=False)
     c2.wall.advance(31)
     again = c2.worker("srv-a"); again.reconcile_once(); again.heartbeat_once()
     assert VmsController(c2.vars, c2.objects, wall=c2.wall).failover_seconds() == {"w-srv-a-1": 31.0}
-    assert 'vms_failover_seconds{kind="worst"} 31.0' in metrics_text(VmsController(c2.vars, c2.objects, wall=c2.wall), 0.0)
+    assert 'cam_failover_seconds{kind="worst"} 31.0' in metrics_text(VmsController(c2.vars, c2.objects, wall=c2.wall), 0.0)
     # a number that is not one: not said, counted — and the worst stays the worst this reader measured
     from w2cplatform.contract import Heartbeat
-    hb = Heartbeat.from_bytes(again.objects.get("vms/heartbeats/w-srv-a-1"))
-    again.objects.put("vms/heartbeats/w-srv-a-1", Heartbeat("w-srv-a-1", hb.ts, hb.status, {**hb.extra, "previous_hb": "-inf"}).to_bytes())
+    hb = Heartbeat.from_bytes(again.objects.get("cam/heartbeats/w-srv-a-1"))
+    again.objects.put("cam/heartbeats/w-srv-a-1", Heartbeat("w-srv-a-1", hb.ts, hb.status, {**hb.extra, "previous_hb": "-inf"}).to_bytes())
     from w2cplatform.rows import FIELDS
-    assert ctl2.failover_seconds() == {} and "vms/heartbeats/w-srv-a-1#previous_hb" in FIELDS.bad   # not said: counted once
-    assert 'vms_failover_seconds{kind="worst"} 0.0' in metrics_text(ctl2, 0.0)
+    assert ctl2.failover_seconds() == {} and "cam/heartbeats/w-srv-a-1#previous_hb" in FIELDS.bad   # not said: counted once
+    assert 'cam_failover_seconds{kind="worst"} 0.0' in metrics_text(ctl2, 0.0)
     c.wall.advance(SLOT_TTL + LOST_AFTER + 5)                               # it fails again, srv-b silent this time
     ctl.pass_once(1)
     third = c.worker("srv-c", name="w-srv-a-1"); third.reconcile_once(); third.heartbeat_once()
     text = metrics_text(ctl, 0.0)
-    assert 'vms_failover_seconds{kind="last",worker="w-srv-a-1"} 95.0' in text and 'vms_failover_seconds{kind="worst"} 95.0' in text
+    assert 'cam_failover_seconds{kind="last",worker="w-srv-a-1"} 95.0' in text and 'cam_failover_seconds{kind="worst"} 95.0' in text
     import sys
     sys.modules["w2cplatform.rows"].forget()          # the counts are the process's: every later heartbeat would carry them
 
@@ -119,7 +119,7 @@ def test_one_silence_moves_nothing_and_two_silences_move_the_cameras_under_eithe
     c, ctl, a, act_a, b = _recording()
     rs = c.resources
     assert ctl.policy() == {"servers": "shared"}                                              # the default: a box is several workers on one server
-    assert c.console().set_policy({"servers": "distinct"}) == {"servers": "distinct"}         # the administrator's choice, one row: vms/policy
+    assert c.console().set_policy({"servers": "distinct"}) == {"servers": "distinct"}         # the administrator's choice, one row: cam/policy
     assert ctl.assignment("w-srv-b-1").units == []
     # a hang: w-srv-a-1's process lives (its lock in srv-a's tree held) and says nothing; srv-a's resource heartbeats
     c.wall.advance(2 * LOST_AFTER + 3); b.lease_pass(); b.heartbeat_once(); rs["srv-a"].heartbeat(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
@@ -160,7 +160,7 @@ def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended
     try:
         c.servers["srv-a"].res.heartbeat()
         said = resources_seen(c.objects)["srv-a"]
-        assert said["workers"] == said["running"] == {"vms": ["w-srv-a-1"], "rec": ["r-srv-a-1"]}, said
+        assert said["workers"] == said["running"] == {"cam": ["w-srv-a-1"], "rec": ["r-srv-a-1"]}, said
 
         def beat(seconds):                                  # srv-a's resource answers; w-srv-a-1 says nothing
             for _ in range(int(seconds // 10)):
@@ -175,7 +175,7 @@ def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended
         a.absent()                                                              # its process ends; systemd does not bring it back
         beat(10)
         said = resources_seen(c.objects)["srv-a"]
-        assert said["workers"]["vms"] == ["w-srv-a-1"] and "vms" not in said["running"], said
+        assert said["workers"]["cam"] == ["w-srv-a-1"] and "cam" not in said["running"], said
         ctl.pass_once(1)
         assert [ctl.where(i) for i in (1, 2, 3)] == ["w-srv-b-1"] * 3
         assert ctl.placement(1).reason.startswith("w-srv-a-1's process on srv-a is not running"), ctl.placement(1).reason
@@ -193,7 +193,7 @@ def test_the_worker_entry_point_registers_its_process_before_it_runs():
     import vms.__main__ as m
     c = Cluster(); c.resources_up()
     srv = c.servers["srv-a"]
-    v = c.door("vmsworker")
+    v = c.door("camworker")
     env = {**c.env("srv-a", "w-srv-a-1"), "RTSP_HOST": "0.0.0.0", "PLAYBACK_PORT": "auto"}
     saved, stores = {k: os.environ.get(k) for k in env}, m._stores
     built = []
@@ -214,10 +214,10 @@ def test_the_worker_entry_point_registers_its_process_before_it_runs():
             os.environ.pop(k, None) if val is None else os.environ.__setitem__(k, val)
     d = os.path.join(srv.resource, ".workers")
     said = [json.load(open(os.path.join(d, f))) for f in os.listdir(d) if f.endswith(".json")]
-    assert said == [{"sub": "vms", "name": "w-srv-a-1", "pid": os.getpid()}], said
+    assert said == [{"sub": "cam", "name": "w-srv-a-1", "pid": os.getpid()}], said
     srv.res.heartbeat()
     from w2cplatform.resource import resources_seen
-    assert resources_seen(c.objects)["srv-a"]["running"] == {"vms": ["w-srv-a-1"]}
+    assert resources_seen(c.objects)["srv-a"]["running"] == {"cam": ["w-srv-a-1"]}
     built[0].absent()
 
 
