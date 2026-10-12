@@ -1,9 +1,9 @@
 """A request quoted in a lesson is a request the stand made — every line of it.
 
-The lessons quote the stand's traces: who called through which socket (`# vmsworker w-srv-a-1 on srv-a →
-/run/configstore/vmsworker.sock`), request lines in the configstore's API (`GET /v1/get?key=…`, `GET /v1/list?prefix=…`,
+The lessons quote the stand's traces: who called through which socket (`# camworker w-srv-a-1 on srv-a →
+/run/configstore/camworker.sock`), request lines in the configstore's API (`GET /v1/get?key=…`, `GET /v1/list?prefix=…`,
 `POST /v1/write {…}`, `POST /v1/join {…}`), the resource's object door (`GET /v1/objects?…`), the console's `/metrics`
-(`GET /metrics`), a file a process wrote on its own server (`PUT vms/heartbeats/w-srv-a-1`), and every answer (`→ 200 {"index": 1004}`, `→ 200 {"items": null, "index": ""}`, a 403 with its
+(`GET /metrics`), a file a process wrote on its own server (`PUT cam/heartbeats/w-srv-a-1`), and every answer (`→ 200 {"index": 1004}`, `→ 200 {"items": null, "index": ""}`, a 403 with its
 words, a 409 with the version now). `test_stand.py` keeps the traces equal to the code; this keeps the lessons equal
 to the traces.
 
@@ -119,9 +119,9 @@ def test_the_patterns_know_the_traces_own_lines():
     assert sum(1 for l in traces if HEADER.match(l)) > 100 and sum(1 for l in traces if ANSWER.match(l)) > 100
     assert any(REQUEST.match(l) for l in traces if l == "GET /metrics")
     assert not any(NOMAD.search(l) for l in traces)
-    for old in ('PUT /v1/var/vms/slots/w-0?namespace=default&cas=0',
-                'GET /v1/vars?prefix=vms/slots/&namespace=default',
-                '→ 200 {"Path": "vms/slots/w-0", "ModifyIndex": 1001}',
+    for old in ('PUT /v1/var/cam/slots/w-0?namespace=default&cas=0',
+                'GET /v1/vars?prefix=cam/slots/&namespace=default',
+                '→ 200 {"Path": "cam/slots/w-0", "ModifyIndex": 1001}',
                 '{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1"}}'):
         assert NOMAD.search(old), old
         assert not REQUEST.match(old) and not HEADER.match(old), old
@@ -135,7 +135,7 @@ def test_a_block_that_quotes_a_trace_is_checked_line_by_line():
         "Прозой: `GET /v1/get?key=x` не в начале строки.",
         "GET /v1/list?prefix=vms/",
         "```",
-        "# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock",
+        "# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock",
         'POST /v1/write {"op": "put", "key": "k", "cas": "", "items": {',
         '  "holder": "srv-a:4101:001005",',
         "  …",
@@ -148,7 +148,7 @@ def test_a_block_that_quotes_a_trace_is_checked_line_by_line():
     ])
     assert [l for _, l in quotes(text)] == [
         "GET /v1/list?prefix=vms/",
-        "# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock",
+        "# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock",
         'POST /v1/write {"op": "put", "key": "k", "cas": "", "items": {',
         '"holder": "srv-a:4101:001005",',
         "}}",
