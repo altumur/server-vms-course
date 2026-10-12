@@ -23,7 +23,7 @@
 		<key>CONSOLE_PORT</key>
 		<string>8080</string>
 		<key>CONSOLE_ROOT</key>
-		<string>vms</string>
+		<string>cam</string>
 		<key>CONSOLE_UNIX</key>
 		<string>__BOX__/state/run/w2c-console/console.sock</string>
 		<key>SECRETS_KEY</key>
