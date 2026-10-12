@@ -152,7 +152,7 @@ def test_local_socket_role_is_fixed_and_failed_request_leaves_no_cached_reply():
         placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north", "origin": "south"}, e.wall)
         agent = DomainAgent("south", client(e), e.fed.clusters["south"].vars, now=e.wall, key=e.memberkeys["south"])
         path = str(Path(temp) / "role.sock")
-        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "testsub", "testsubworker"), Bounds())):
+        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "testsubworker"), Bounds())):
             caller = tokenrequest.WorkerTokenDoor(path)
             first = caller.request("tally", "badge")
             assert verify(first["token"], e.signer.tokens.keyset(), now=e.wall())["ref"] == "badge"
@@ -186,7 +186,7 @@ def test_remote_body_cannot_supply_target_claims_or_replay_reply_to_another_requ
 
 def test_local_handler_refuses_network_connections_even_with_an_allowed_role():
     with issuing() as e:
-        with serving(ConsoleServer(("127.0.0.1", 0), tokenrequest.local_handler(None, "testsub", "testsubworker"))) as srv:
+        with serving(ConsoleServer(("127.0.0.1", 0), tokenrequest.local_handler(None, "testsubworker"))) as srv:
             import urllib.request, urllib.error
             req = urllib.request.Request(f"http://127.0.0.1:{srv.server_port}/tokens/tally", data=b'{"ref":"badge"}')
             assert raises(urllib.error.HTTPError, lambda: urllib.request.urlopen(req)).code == 403
@@ -220,7 +220,7 @@ def test_local_client_timeout_drops_late_reply_and_retry_asks_again():
             return result
         agent.request_token = slow
         path = str(Path(temp) / "role.sock")
-        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "testsub", "testsubworker"), Bounds())):
+        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "testsubworker"), Bounds())):
             short = tokenrequest.WorkerTokenDoor(path, timeout=0.03)
             try:
                 raises(TimeoutError, lambda: short.request("tally", "badge"))
@@ -232,6 +232,99 @@ def test_local_client_timeout_drops_late_reply_and_retry_asks_again():
             retried = tokenrequest.WorkerTokenDoor(path, timeout=1).request("tally", "badge")
             assert retried["request_id"] not in replies
             assert "token" not in agent.__dict__
+
+
+def test_one_role_socket_resolves_kinds_of_two_subsystems_and_refuses_foreign_role():
+    with issuing(two=True) as e, tempfile.TemporaryDirectory(prefix="token-kind-") as temp:
+        specs = list(catalog._loaded.values())
+        specs[1].domain.tokens["tally2"]["grant"] = ("testsubworker",)
+        placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north", "origin": "south"}, e.wall)
+        placement.assign(e.north.vars, "testsub2", "badge2", {"cluster": "north", "origin": "south"}, e.wall)
+        agent = DomainAgent("south", client(e), e.fed.clusters["south"].vars, now=e.wall, key=e.memberkeys["south"])
+        path = str(Path(temp) / "role.sock")
+        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "testsubworker"), Bounds())):
+            caller = tokenrequest.WorkerTokenDoor(path)
+            assert verify(caller.request("tally", "badge")["token"], e.signer.tokens.keyset(), now=e.wall())["ref"] == "badge"
+            assert verify(caller.request("tally2", "badge2")["token"], e.signer.tokens.keyset(), now=e.wall())["ref"] == "badge2"
+            assert raises(Refused, lambda: caller.request("unknown", "badge")).status == 403
+        with serving(UnixConsoleServer(path, tokenrequest.local_handler(agent, "strangerworker"), Bounds())):
+            assert raises(Refused, lambda: tokenrequest.WorkerTokenDoor(path).request("tally", "badge")).status == 403
+        specs[1].domain.tokens["tally"] = specs[1].domain.tokens["tally2"]
+        raises(ValueError, tokenrequest.grants)
+
+
+def test_role_socket_startup_is_disabled_by_default_and_refuses_unsafe_real_directories():
+    import os
+    with issuing() as e, tempfile.TemporaryDirectory(prefix="token-mode-") as temp:
+        assert tokenrequest.open_role_doors(None, {}) == []
+        assert tokenrequest.WorkerTokenDoor.from_env("testsubworker", {}) is None
+        assert tokenrequest.WorkerTokenDoor.from_env("testsubworker", {"TOKEN_REQUESTS_DIR": temp}).call is not None
+        role = Path(temp) / "testsubworker"
+        role.mkdir(); os.chown(role, -1, os.getegid()); role.chmod(0o2770)
+        gid = role.stat().st_gid
+        assert tokenrequest.open_role_doors(None, {"TOKEN_REQUESTS_DIR": temp, "SPEC_DIR": "testsub"}) == []
+        raises(PermissionError, lambda: tokenrequest._protected_directory(str(role), gid, 0o2770))
+        alias = Path(temp) / "alias"; alias.symlink_to(role)
+        raises(PermissionError, lambda: tokenrequest._protected_directory(str(alias), gid, 0o2770))
+        actual = os.lstat
+        def root_owned(path):
+            info = actual(path)
+            vals = list(info); vals[4] = 0
+            return os.stat_result(vals)
+        # Deployment owner injected; modes and filesystem objects remain real.
+        with patch("os.lstat", side_effect=root_owned):
+            tokenrequest._protected_directory(str(role), gid, 0o2770)
+            role.chmod(0o2775)
+            raises(PermissionError, lambda: tokenrequest._protected_directory(str(role), gid, 0o2770))
+            role.chmod(0o2770)
+            raises(PermissionError, lambda: tokenrequest._protected_directory(str(role), gid+1, 0o2770))
+
+
+def test_role_socket_bootstrap_and_installation_follow_loaded_grants():
+    import os
+    import stat
+    from types import SimpleNamespace
+    with issuing(two=True) as e, tempfile.TemporaryDirectory(prefix="token-bootstrap-") as temp:
+        specs = list(catalog._loaded.values())
+        specs[1].domain.tokens["tally2"]["grant"] = ("testsubworker",)
+        files, groups = tokenrequest.installation("/run/w2c-token-requests", "example")
+        assert files.count("2770") == 1
+        assert "example-testsubworker" in files and "example-testsubworker" in groups
+        raises(ValueError, lambda: tokenrequest.installation("/run/unsafe path", "example"))
+        for s in specs:
+            for rule in s.domain.tokens.values():
+                rule.pop("grant", None)
+        assert tokenrequest.installation("/run/w2c-token-requests", "example")[1] == "[Service]\n"
+        specs[0].domain.tokens["tally"]["grant"] = ("testsubworker",)
+        placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north", "origin": "south"}, e.wall)
+        agent = DomainAgent("south", client(e), e.fed.clusters["south"].vars, now=e.wall, key=e.memberkeys["south"])
+        directory = Path(temp); directory.chmod(0o755)
+        role = directory / "testsubworker"
+        role.mkdir(); os.chown(role, -1, os.getegid()); role.chmod(0o2770)
+        actual_lstat, actual_stat = os.lstat, os.stat
+        def deployment_info(info, path):
+            vals = list(info)
+            if stat.S_ISDIR(info.st_mode):
+                vals[4] = 0
+                # Simulate privileged provisioning only; socket uid/gid/mode are real.
+                if str(path) == str(directory): vals[5] = 0
+                else: vals[0] &= ~0o022 if str(path) != str(role) else -1
+            return os.stat_result(vals)
+        def lstat(path): return deployment_info(actual_lstat(path), path)
+        def stored(path): return deployment_info(actual_stat(path), path)
+        with patch("os.lstat", side_effect=lstat), patch("os.stat", side_effect=stored), \
+                patch("grp.getgrnam", return_value=SimpleNamespace(gr_gid=os.getegid())):
+            servers = tokenrequest.open_role_doors(agent, {"TOKEN_REQUESTS_DIR": temp, "SPEC_DIR": "example"})
+            assert len(servers) == 1
+            try:
+                door = tokenrequest.WorkerTokenDoor.from_env("testsubworker", {"TOKEN_REQUESTS_DIR": temp})
+                assert verify(door.request("tally", "badge")["token"], e.signer.tokens.keyset(), now=e.wall())["ref"] == "badge"
+                socket_info = actual_lstat(role / "tokens.sock")
+                assert stat.S_IMODE(socket_info.st_mode) == 0o660 and socket_info.st_gid == os.getegid()
+            finally:
+                for server in servers:
+                    server.shutdown(); server.server_close()
+        assert not (role / "tokens.sock").exists()
 
 
 def test_revoked_member_and_frozen_holder_do_not_issue_tokens():
