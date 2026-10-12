@@ -382,3 +382,10 @@ polls}`, `to` = `cluster` + `copies`; `road`, `reachable`, `ingest://`, `backups
 опросы на токенах `domainpart` до шага `polls`. Стенд `vms-macos`: комплекты `domainagent`/`vmsworker` кластерам камер
 только для двери токенов. Ветка одна, слияние одно; приёмка — по принятым файлам книг (основная и две резервные,
 переезд с 412 `guard`, обрыв pull → push → восстановление, дозапись с карты и резерва, три камеры стенда до и после).
+
+**Поправка к форме C2 (2026-10-12, ADR-0079).** Подсистема камер называется `cam`: ключи формы C2 читаются с новыми
+именами — `cam: domain.books.sources: {from: cam/sources/, key: ref, pick: unique, to: to}`, `cam: domain.tokens.stream`
+с `grant: [camworker]`, `worker.reads` у `cam` — `domain/rec/primaries`, `domain/placed/rec/`; у `rec` —
+`domain/cam/sources`, `domain/placed/rec/`; уходят `domain/cam/primaries` (бывш. `domain/vms/primaries`), семьи
+`roads`/`crossings`/`primaries` у `cam`. Пушер просит токен сертификатом `camworker`. Переименование — отдельным
+окном продукта до C2.
