@@ -52,7 +52,7 @@ def _resource_process(box):
 
 def test_three_subsystems_events_reach_one_timeline_through_the_resource_process_and_the_console():
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     det_ctl = SpecController(DET_SPEC, box.vars.as_writer("detcontroller", DET_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -72,30 +72,30 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         for _ in range(3):
             box.wall.advance(2); gpu.reconcile_once()                                    # one event, on the third pass
         # the operator marks a moment, and the camera goes silent: three subsystems' events on one resource
-        call(base, "POST", "/marks", {"unit": "vms/1", "note": "check this"}, {"Idempotency-Key": "m1", "X-User": "murat"})
+        call(base, "POST", "/marks", {"unit": "cam/1", "note": "check this"}, {"Idempotency-Key": "m1", "X-User": "murat"})
         w.actuator.dead.append(1); w.pump_once()
-        st, out = call(base, "GET", "/events?unit=vms/1"); ev = out["events"]             # nobody tailed, nobody told: the files, as they are
+        st, out = call(base, "GET", "/events?unit=cam/1"); ev = out["events"]             # nobody tailed, nobody told: the files, as they are
         assert st == 200 and out["state"] == "live"
         assert [(e["subsystem"], e["kind"], e["server"], e["fenced"]) for e in ev] == [
-            ("det", "linecross", "srv-1", False), ("console", "mark", "srv-1", False), ("vms", "silent", "srv-1", False)]
-        assert ev[0]["unit"] == "det/1-linecross" and ev[0]["of"] == "vms/1" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[1]["user"] == "murat"
+            ("det", "linecross", "srv-1", False), ("cam", "silent", "srv-1", False), ("console", "mark", "srv-1", False)]
+        assert ev[0]["unit"] == "det/1-linecross" and ev[0]["of"] == "cam/1" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[2]["user"] == "murat"
         # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button —
         # the VMS's page over the platform's console module, which draws the servers and the journal
         page = urllib.request.urlopen(base + "/").read().decode()
         assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/platform/console.js" in page
         # the same answer under the mount: /det/events fences by det's epochs too
-        assert call(base, "GET", "/det/events?unit=vms/1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
+        assert call(base, "GET", "/det/events?unit=cam/1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
         # an open bucket keeps growing: the next event is in the next answer — the file is looked at, not remembered
         for _ in range(3):
             box.wall.advance(2); gpu.reconcile_once()
-        assert len(call(base, "GET", "/events?unit=vms/1&subsystem=det")[1]["events"]) == 2
+        assert len(call(base, "GET", "/events?unit=cam/1&subsystem=det")[1]["events"]) == 2
         # another detector instance takes the unit's epoch: the first one's events are fenced, nobody else's
         box.vars.put("det/epoch/1-linecross", {"epoch": "2"})
-        assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?unit=vms/1")[1]["events"]] == [
-            ("det", True), ("console", False), ("vms", False), ("det", True)]
+        assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?unit=cam/1")[1]["events"]] == [
+            ("det", True), ("console", False), ("cam", False), ("det", True)]
         # the resource process stops: the console says so by name, and answers with what it has — nothing
         rsrv.shutdown(); rsrv.server_close()
-        st, out = call(base, "GET", "/events?unit=vms/1")
+        st, out = call(base, "GET", "/events?unit=cam/1")
         assert st == 200 and out["events"] == [] and out["state"] == "live; srv-1 unreachable"
     finally:
         srv.shutdown(); srv.server_close()
@@ -115,11 +115,11 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     again = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     assert again.query(0, 1e12)["events"] == res.index.query(0, 1e12)["events"]          # nothing of its own: two indexes, one tree
     m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), unit=p.get("unit")), wall=box.wall)
-    assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [t + 10, box.wall() - 100]
-    box.vars.put("vms/retention", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
+    assert [e["t"] for e in m.query(0, 1e12, unit="cam/7")["events"]] == [t + 10, box.wall() - 100]
+    box.vars.put("cam/retention", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
     assert res.retain() == 1                                                              # the file went — and its events with it
-    assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [box.wall() - 100]
-    assert box.vars.list("vms/events") == [] and box.objects.list("vms/events") == []     # nothing about events in any store
+    assert [e["t"] for e in m.query(0, 1e12, unit="cam/7")["events"]] == [box.wall() - 100]
+    assert box.vars.list("cam/events") == [] and box.objects.list("cam/events") == []     # nothing about events in any store
 
 
 def test_a_torn_last_line_loses_the_line_not_the_bucket():
@@ -133,7 +133,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     from tests.vmsconftest import Box
 
     box = Box()
-    log = EventLog(box.resource_root, "vms", "8123", 7, 600)
+    log = EventLog(box.resource_root, "cam", "8123", 7, 600)
     for i in range(5):
         p = log.append(1000.0 + i, "motion", score=i)
     with open(p, "a") as f:                                   # the writer died mid-append
@@ -145,8 +145,8 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     assert ev.torn == before + 1                              # and the damage is counted, not silent
 
     db = EventIndex(box.resource_root, "srv-1", lambda: 2000.0, 600)
-    assert len(db.query(0, 1e12, kind=None, subsystem="vms", unit="vms/8123",
-                        current_epochs={("vms", "8123"): 7})["events"]) == 5
+    assert len(db.query(0, 1e12, kind=None, subsystem="cam", unit="cam/8123",
+                        current_epochs={("cam", "8123"): 7})["events"]) == 5
 
 
 def _events(box, n, cam=7):
@@ -208,7 +208,7 @@ def test_the_merge_does_not_cut_the_newest_end_twice():
     window partial, and the reader is told that, not which server did it."""
     from w2cplatform.resource import RESOURCES
     box = Box()
-    rows = [{"subsystem": "vms", "unit": "7", "cam": 7, "epoch": 1, "t": 1000.0 + i, "kind": "motion",
+    rows = [{"subsystem": "cam", "unit": "7", "cam": 7, "epoch": 1, "t": 1000.0 + i, "kind": "motion",
              "server": f"srv-{i % 2 + 1}", "bucket": f"b-{i % 2 + 1}", "n": i} for i in range(8)]
     for s in ("srv-1", "srv-2"):
         box.objects.put(f"{RESOURCES}/{s}/heartbeat",
@@ -320,9 +320,9 @@ def test_the_merge_keeps_an_alarm_a_busier_neighbour_would_have_crowded_out():
     from w2cplatform.events import ALARM
     from w2cplatform.resource import RESOURCES
     box = Box()
-    rows = [{"subsystem": "vms", "unit": "7", "cam": 7, "epoch": 1, "t": 1000.0 + i, "kind": "stats",
+    rows = [{"subsystem": "cam", "unit": "7", "cam": 7, "epoch": 1, "t": 1000.0 + i, "kind": "stats",
              "server": "srv-1", "bucket": "b-1", "class": "observation", "n": i} for i in range(6)]
-    rows += [{"subsystem": "vms", "unit": "8", "cam": 8, "epoch": 1, "t": 1000.5, "kind": "io.input",
+    rows += [{"subsystem": "cam", "unit": "8", "cam": 8, "epoch": 1, "t": 1000.5, "kind": "io.input",
               "server": "srv-2", "bucket": "b-2", "class": ALARM, "port": "1"}]
     for s in ("srv-1", "srv-2"):
         box.objects.put(f"{RESOURCES}/{s}/heartbeat",
@@ -351,7 +351,7 @@ def test_a_traffic_class_is_a_declared_value_and_not_a_convention_on_kind():
     one thing, and they drift."""
     from w2cplatform.events import EventLog
     box = Box()
-    log = EventLog(box.resource_root, "vms", "7", 1)
+    log = EventLog(box.resource_root, "cam", "7", 1)
 
     try:
         log.append(1000.0, "io.input", "Alarm")
@@ -441,7 +441,7 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
     import w2cplatform.events as ev
     from w2cplatform.events import ALARM, EventLog
     box = Box()
-    log = EventLog(box.resource_root, "vms", "7", 1)
+    log = EventLog(box.resource_root, "cam", "7", 1)
     synced, dirs = [], []
     real_durably, real_dir = ev.durably, ev.durable_dir
     ev.durably = lambda f: synced.append(f.name)
@@ -464,7 +464,7 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
 
     # …and the alarm lies in a tree of its own (feedback BO): the same shape, another first directory
     from w2cplatform.events import read_bucket
-    assert os.path.relpath(p, box.resource_root).startswith("vms/7/e1/") and os.path.relpath(pa, box.resource_root).startswith("vms.alarms/7/e1/")
+    assert os.path.relpath(p, box.resource_root).startswith("cam/7/e1/") and os.path.relpath(pa, box.resource_root).startswith("cam.alarms/7/e1/")
     assert [r["kind"] for r in read_bucket(p)] == ["stats"] and [r["kind"] for r in read_bucket(pa)] == ["io.input", "io.input"]
 
 
@@ -554,8 +554,8 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     epochs of the units in its answer, so a fence that fell a moment ago still shows."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 60
-    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
-    event_log(box.resource_root, 9, 1).append(t + 2, "motion"); box.vars.put("vms/epoch/9", {"epoch": "2"})   # a zombie's line: epoch 1 < 2
+    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("cam/epoch/7", {"epoch": "1"})
+    event_log(box.resource_root, 9, 1).append(t + 2, "motion"); box.vars.put("cam/epoch/9", {"epoch": "2"})   # a zombie's line: epoch 1 < 2
     con = _console_over(box, EventIndex(box.resource_root, "srv-1", wall=box.wall))
     con.clock = box.clock
 
@@ -582,12 +582,12 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     assert fenced(ask()) == [("7", False), ("9", True)] and vars_.scans == 2                   # past the window: read again
     # one camera: no scan, one row — its own — and read now, not from the cache
     vars_.scans = vars_.epochs = 0
-    assert fenced(ask(unit="vms/9")) == [("9", True)] and (vars_.scans, vars_.epochs) == (0, 1)
-    box.vars.put("vms/epoch/7", {"epoch": "3"})                                                 # the camera's holder changed this instant
-    assert fenced(ask(unit="vms/7")) == [("7", True)] and vars_.scans == 0                      # the camera's timeline knows at once…
+    assert fenced(ask(unit="cam/9")) == [("9", True)] and (vars_.scans, vars_.epochs) == (0, 1)
+    box.vars.put("cam/epoch/7", {"epoch": "3"})                                                 # the camera's holder changed this instant
+    assert fenced(ask(unit="cam/7")) == [("7", True)] and vars_.scans == 0                      # the camera's timeline knows at once…
     assert fenced(ask()) == [("7", False), ("9", True)]                                         # …the whole one, inside its three seconds, not yet
     # the review's third pass, minor: one epoch row that does not parse was no reply at all; now that unit is unfenced
-    box.vars.put("vms/epoch/9", {"epoch": "torn"})
+    box.vars.put("cam/epoch/9", {"epoch": "torn"})
     box.clock.advance(con.EPOCH_CACHE + 1)
     rep = ask()
     assert rep[0] == 200 and fenced(rep) == [("7", True), ("9", False)] and "epochs" not in rep[1]
@@ -665,16 +665,16 @@ def test_the_consoles_records_outlive_what_they_refer_to():
     event_log(box.resource_root, 7, 1).append(old, "motion")             # a camera that keeps two years…
     marks = EventLog(box.resource_root, "console", "c-1", 1)
     mark = marks.append(old, "mark", user="anna", note="checked")  # …and the record written the same day
-    box.vars.put("vms/retention", {"days": "730"})
+    box.vars.put("cam/retention", {"days": "730"})
 
     res = platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0                                       # neither is old enough yet
     assert os.path.exists(mark)
 
-    box.vars.put("vms/retention", {"days": "500"})               # still longer than the console's year
+    box.vars.put("cam/retention", {"days": "500"})               # still longer than the console's year
     assert res.retain() == 0 and os.path.exists(mark), "the record was swept while the events it names stayed"
 
-    assert console_floor({("vms", "7"): 500.0, ("console", "c-1"): 365.0}) == 500.0
+    assert console_floor({("cam", "7"): 500.0, ("console", "c-1"): 365.0}) == 500.0
     assert console_floor({("console", "c-1"): 365.0}) == 0.0       # nothing to outlive: its own days stand
 
 
@@ -734,7 +734,7 @@ def test_the_operators_timeline_says_which_servers_a_window_is_missing():
 
     class Merge:
         def query(self, t0, t1, *a, **kw):
-            evs = [{"t": t0 + i, "subsystem": "vms", "unit": "7", "kind": "motion", "class": "observation"} for i in range(50)]
+            evs = [{"t": t0 + i, "subsystem": "cam", "unit": "7", "kind": "motion", "class": "observation"} for i in range(50)]
             return {"events": evs, "state": "live", "complete": False, "incomplete": {"srv-2": "did not answer"}}
 
     now = box.wall()
@@ -754,7 +754,7 @@ def test_a_query_holds_what_the_answer_can_carry_and_answers_as_before():
     from w2cplatform.events import ALARM, EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.resource_root, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "cam", "7", 1, 600)
     for i in range(20_000):
         log.append(now - 20_000 + i + 0.5, "motion", n=i)
     for i in range(30):
@@ -882,7 +882,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
     try:
         res.PULSE_SECONDS = 0.02
         for i in range(8):                                            # eight closed buckets for the mirror to send
-            EventLog(box.resource_root, "vms", "7", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+            EventLog(box.resource_root, "cam", "7", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
         res.heartbeat()
         seen = {}
@@ -939,7 +939,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
         box.vars.put("platform/space", {"enabled": "false"})
         for i in range(2):
-            EventLog(box.resource_root, "vms", "8", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+            EventLog(box.resource_root, "cam", "8", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
         peer.hang, peer.took = True, []
         peer_hb(); res.heartbeat()
         res.pass_()
@@ -966,7 +966,7 @@ def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_ope
     limit = res.PULSE_LIMIT * res.lost_after                        # two seconds, as the review measured against
     n = 2000
     for i in range(n):                                              # closed buckets of one camera, a few lines each
-        p = bucket_path(box.resource_root, "vms", "7", 1, box.wall() - (n - i + 1) * 600)
+        p = bucket_path(box.resource_root, "cam", "7", 1, box.wall() - (n - i + 1) * 600)
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w") as f:
             f.write("".join(json.dumps({"t": 0, "kind": "stats", "n": k}) + "\n" for k in range(5)))
@@ -974,7 +974,7 @@ def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_ope
     box.objects.put("platform/resources/srv-2/heartbeat",
                     json.dumps({"server": "srv-2", "ts": box.wall(), "url": "http://srv-2"}).encode())
     res.heartbeat()
-    held = sorted(b.path for b in ev_mod.bucket_names_under(box.resource_root, "vms", "7", 600))
+    held = sorted(b.path for b in ev_mod.bucket_names_under(box.resource_root, "cam", "7", 600))
 
     class Peer:                                                     # holds every one already: the pass is the walk
         def mirrored(self, url, server):
@@ -1043,7 +1043,7 @@ def _year_of_buckets(box, n, root=None, t0=None):
     from w2cplatform.events import bucket_path
     t0 = box.wall() - 60 * 86400 if t0 is None else t0
     for i in range(n):
-        p = bucket_path(root or box.resource_root, "vms", "7", 1, t0 + i * 600)
+        p = bucket_path(root or box.resource_root, "cam", "7", 1, t0 + i * 600)
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w") as f:
             f.write(json.dumps({"t": 0, "kind": "stats"}) + "\n")
@@ -1063,7 +1063,7 @@ def test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_
                    lost_after=0.5)
     limit = res.PULSE_LIMIT * res.lost_after
     n = 2000
-    box.vars.put("vms/retention", {"days": "30"})
+    box.vars.put("cam/retention", {"days": "30"})
     _year_of_buckets(box, n)                                                        # two weeks of them, the newest 46 days old: past the 30 kept
     _year_of_buckets(box, n, root=os.path.join(box.resource_root, MIRROR_DIR, "srv-2"))   # …and as many copies of a peer's
     with _slow_disk(box, res, limit) as disk:
@@ -1118,8 +1118,8 @@ def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_the
     box = Box()
     res, rsrv = _resource_process(box)
     try:
-        _os.makedirs(_os.path.join(box.resource_root, "vms", "7"), exist_ok=True)
-        open(_os.path.join(box.resource_root, "vms", "7", "keep.bin"), "wb").write(b"x" * 1000)
+        _os.makedirs(_os.path.join(box.resource_root, "cam", "7"), exist_ok=True)
+        open(_os.path.join(box.resource_root, "cam", "7", "keep.bin"), "wb").write(b"x" * 1000)
         real_getsize = _os.path.getsize
 
         def getsize(path):
@@ -1151,7 +1151,7 @@ def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_s
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.resource_root, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "cam", "7", 1, 600)
     for i in range(6):
         log.append(now - 3 * 86400 + i * 3600, "motion", n=i)                   # six hours, three days ago
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
@@ -1167,7 +1167,7 @@ def test_a_query_reads_the_files_of_its_window_and_nothing_else_and_nothing_twic
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.resource_root, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "cam", "7", 1, 600)
     for i in range(3 * 144):
         log.append(now - 3 * 86400 + i * 600 + 5, "motion", n=i)                 # a line in every bucket of three days
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
@@ -1196,7 +1196,7 @@ def test_the_cache_keeps_to_its_ceiling():
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.resource_root, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "cam", "7", 1, 600)
     for i in range(20):
         log.append(now - 20 * 600 + i * 600 + 5, "motion", pad="x" * 200)
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall, cache_bytes=5 * 300)
@@ -1206,7 +1206,7 @@ def test_the_cache_keeps_to_its_ceiling():
 
 
 def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_own():
-    """A detector `7-motion` is about camera 7 (det.subsystem.yaml, `about`) and says so in every line (`of: vms/7`):
+    """A detector `7-motion` is about camera 7 (det.subsystem.yaml, `about`) and says so in every line (`of: cam/7`):
     its name is not its camera. Once its lines have said camera 7, a timeline for camera 9 does not read its buckets."""
     from vms.config import DET_SPEC
     from w2cplatform.events import EventLog
@@ -1215,8 +1215,8 @@ def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_
     now = box.wall()
     stamped(EventLog(box.resource_root, "det", "7-motion", 1, 600), DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
-    assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="vms/7")["events"]] == [("det/7-motion", "vms/7")]
-    assert db._may_be_about("srv-1", "det", "7-motion", "vms/9") is False and db.query(now - 600, now, unit="vms/9")["events"] == []
+    assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="cam/7")["events"]] == [("det/7-motion", "cam/7")]
+    assert db._may_be_about("srv-1", "det", "7-motion", "cam/9") is False and db.query(now - 600, now, unit="cam/9")["events"] == []
 
 
 def test_a_resource_says_busy_rather_than_queueing_without_end():
@@ -1249,7 +1249,7 @@ def test_the_timeline_fences_a_subsystem_its_scan_did_not_list_and_says_one_it_m
     from vms.archive import event_log
     from w2cplatform.events import EventLog
     box = Box(); t = box.wall() - 60
-    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
+    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("cam/epoch/7", {"epoch": "1"})
     EventLog(box.resource_root, "det", "7-motion", 1, 600).append(t + 2, "motion")
     box.vars.put("det/epoch/7-motion", {"epoch": "2"})                        # det's holder changed: epoch 1 is a zombie's
     con = _console_over(box, EventIndex(box.resource_root, "srv-1", wall=box.wall))
@@ -1275,7 +1275,7 @@ def test_the_timeline_fences_a_subsystem_its_scan_did_not_list_and_says_one_it_m
     real = con.ctl.vars
     con.ctl.vars = Rights(real)
     rep = ask()
-    assert lines(rep) == {("vms", "7"): False, ("det", "7-motion"): True} and "epochs_unread" not in rep[1], rep
+    assert lines(rep) == {("cam", "7"): False, ("det", "7-motion"): True} and "epochs_unread" not in rep[1], rep
     con.ctl.vars = Rights(real, deny=True)
     con._epochs = (-1e18, {})
     rep = ask()
