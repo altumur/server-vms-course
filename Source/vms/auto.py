@@ -25,8 +25,8 @@ of a scenario it cannot run."""
 #
 # **The catalogue is not the device.** `ACTIONS` says preset is a thing automation may ask for; it does not
 # say camera 12 has a telemetry, or that it raises `io.input`, or that detector `7` exists. That is a FACT,
-# and only the holder of the device knows it: it writes it in `vms/devices/<host>` (`config.describe`, the host ADR 0053).
-# `Catalog` reads those rows beside the operator's own (`vms/cameras/*`, `det/units/*`), and the evaluator checks a
+# and only the holder of the device knows it: it writes it in `cam/devices/<host>` (`config.describe`, the host ADR 0053).
+# `Catalog` reads those rows beside the operator's own (`cam/cameras/*`, `det/units/*`), and the evaluator checks a
 # scenario against both on its pass. A misfit is refused there; a scenario the fact cannot vouch for yet (the device
 # has never been held) runs and is named on every pass.
 #
@@ -53,8 +53,8 @@ TRIGGER_KEYS = ("sub", "kind", "unit", "match")
 # What automation may ask for. `(subsystem, action)` -> the fields the request needs, and the ones it may
 # have. Every one of these becomes a row in `<sub>/requests/<id>`, performed by whoever holds the unit.
 ACTIONS = {
-    ("vms", "output"): {"need": ("unit", "port"), "may": ("state", "pulse_ms")},
-    ("vms", "preset"): {"need": ("unit", "n"), "may": ()},
+    ("cam", "output"): {"need": ("unit", "port"), "may": ("state", "pulse_ms")},
+    ("cam", "preset"): {"need": ("unit", "n"), "may": ()},
     ("rec", "record"): {"need": ("cam", "minutes"), "may": ("archive",)},
     # The detectors' two: the stream for minutes from now, or the archive around the moment (`vms/jobs.py`).
     ("det", "detect"): {"need": ("cam", "kind", "minutes"), "may": ("params",)},
@@ -229,14 +229,14 @@ class Catalog:
         cam = self.camera(unit)
         if cam is None:
             if self.camera_unread(unit):
-                unsure.append(f"camera {unit}: {self.camera_unread(unit)} — vms.{name} is not checked")
+                unsure.append(f"camera {unit}: {self.camera_unread(unit)} — cam.{name} is not checked")
             else:
                 misfit.append(f"there is no camera {unit}")
             return
         d = self._device_or_none(cam)
         if d is None:
             unsure.append(f"camera {unit} has not said what it can do — its device has not been held yet; "
-                          f"vms.{name} is not checked")
+                          f"cam.{name} is not checked")
             return
         if name == "output":
             port = str(a.get("port", ""))
@@ -282,7 +282,7 @@ class Catalog:
                 for n, d in sorted(self.detectors().items())}
         return {"actions": {f"{s}.{n}": {"need": list(v["need"]), "may": list(v["may"])} for (s, n), v in sorted(ACTIONS.items())},
                 "trigger_keys": list(TRIGGER_KEYS), "holder_events": list(HOLDER_EVENTS),
-                "vms": cams, "det": dets}
+                "cam": cams, "det": dets}
 
 
 # The whole language, checked. Every message names the thing that is wrong and what would be right: this
