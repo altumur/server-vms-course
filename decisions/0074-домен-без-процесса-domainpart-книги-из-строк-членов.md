@@ -360,3 +360,25 @@ C2–C7 — книги по порядку доп. 2, каждая после к
 же байты ключей на своём шаге и снимает строки. Формы закреплены текстом ADR: состав книг — доп. 2, назначение —
 доп. 4 с поправкой, токен — доп. 5; имена полей команда берёт из формы C2, записанной в ADR до её шага. Остальные
 книги (`upstream`, `polls`, `stream-accounts`, `asks`) — по-прежнему курс первым, если владелец не решит иначе.
+
+**Форма C2 продукта (2026-10-12, «Сборка», принята; байты ключей для зеркала курса).** Ключи:
+`vms: domain.books.sources: {from: vms/sources/, key: ref, pick: unique, to: to}`;
+`vms: domain.tokens.stream: {lifetime: 86400, claims: [aud, ref], grant: [vmsworker], placement: {sub: rec, caller:
+origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}}`;
+`rec: domain.books.primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role]}`;
+`worker.reads` у `vms` — `domain/rec/primaries`, `domain/placed/rec/`; у `rec` — `domain/vms/sources`,
+`domain/placed/rec/`. Уходят без алиаса: `domain/vms/primaries`, `kept: [crossings, roads]`, `tables: [crossings]`,
+семьи `roads`/`crossings`/`primaries` у `vms`, `POST /crossings`. Назначение `domain/placement/rec/<ref>`: `cluster` —
+основная запись, `origin` — кластер камеры, `copies` — резервы; в C2 пишет только оператор (как `crossings`), размещение
+по достижимости — отдельной формой; `polls`/`upstream`/`asks` до своих шагов читают карту `{ref: cluster}` из
+назначения, `crossings` вторым источником не живёт. Строку записи на кластере `cluster` заводит страница: `PUT`
+назначения, затем `POST rec/recordings` у консоли кластера; перенос — `PUT` с новым `cluster` и `DELETE` на старом;
+рекордер строк по `domain/placed` не заводит. Элемент `sources` `{ref, to, live_url, codec, server, as_of, push,
+polls}`, `to` = `cluster` + `copies`; `road`, `reachable`, `ingest://`, `backups`, `door` уходят. Элемент `primaries`
+`{ref, recording, role: primary|backup|card, enabled, running, coverage, peer_url, ingest, push, to}`, `to` = `origin` +
+`cluster` + `copies`; push решает рекордер-получатель — его `primary`-элемент несёт `push: true` и `ingest`, память
+`roads` — память рекордера; `starting` никто не сообщает, читатель ждёт выдержку. Токен `stream` просит пушер камеры
+через дверь агента сертификатом `vmsworker`; `sub` = `ref`, `aud` = `cluster` + `copies`; приёмник без изменений;
+опросы на токенах `domainpart` до шага `polls`. Стенд `vms-macos`: комплекты `domainagent`/`vmsworker` кластерам камер
+только для двери токенов. Ветка одна, слияние одно; приёмка — по принятым файлам книг (основная и две резервные,
+переезд с 412 `guard`, обрыв pull → push → восстановление, дозапись с карты и резерва, три камеры стенда до и после).
