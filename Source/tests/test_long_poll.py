@@ -807,7 +807,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     w = _worker(box, log)
     assert w.wants() == [] and w._resources() == {}                  # before its first pass; and a fake index keeps no list
     assert w.reconcile_once() == ["door-on-badge"]
-    assert w.wants() == [("det", "motion", "7-motion"), ("cam", "io.input", "12")]   # the unit is in the want (M8)
+    assert w.wants() == [("cam", "io.input", "12"), ("det", "motion", "7-motion")]   # the unit is in the want (M8)
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     w.heartbeat_once()
     assert "auto_waits_total{" not in spec_metrics(con)                 # the long poll was not asked for
@@ -1440,7 +1440,7 @@ def test_what_a_reader_asks_again_with_never_skips_a_change_and_a_refusal_does_n
 def test_a_want_is_refused_when_it_is_empty_not_a_name_or_too_many():
     """An empty `want` held a place for thirty seconds and answered nothing; `want=../../x/k` sent the watcher to list
     a directory outside the volumes; nothing bounded how many were named. Each is 400 now."""
-    assert longpoll.parse_wants("cam/io.input,det/motion/7-motion") == [("det", "motion", "7-motion"), ("cam", "io.input", "")]
+    assert longpoll.parse_wants("cam/io.input,det/motion/7-motion") == [("cam", "io.input", ""), ("det", "motion", "7-motion")]
     for bad in ("", " , ", "../../x/k", "cam", "cam/", "cam/io.input/../x", ",".join(f"cam/k{i}" for i in range(65))):
         try:
             longpoll.parse_wants(bad)

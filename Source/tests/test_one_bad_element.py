@@ -655,7 +655,7 @@ def test_channel_of_reads_any_value_as_channel_key_and_device_of_do():
 
 def test_the_resources_are_said_once_per_console_under_the_platforms_name():
     """A resource is the PLATFORM's — one per server, whatever subsystems write into it — and every mounted console
-    said its numbers again under its own prefix: `vms_resources_live`, `det_resources_live`, `detjob_…`, one fact as
+    said its numbers again under its own prefix: `cam_resources_live`, `det_resources_live`, `detjob_…`, one fact as
     many times as there were subsystems (the course's decision on the platform's names). Now `w2c_resources_live` and
     `w2c_resource_*`, on the root's page of a `Mount` only — a console mounted later included — and on a console that
     serves alone; no subsystem's page carries a resource line under any prefix."""
