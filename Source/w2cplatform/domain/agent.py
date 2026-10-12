@@ -246,7 +246,10 @@ class DomainAgent:
         except Exception:                                   # noqa: BLE001 — what is there does not open: written anew
             said = None
         if said != items and not (have is None and not items):
-            self.cluster_vars.put(path, seal_row(self.sealer, items, path), cas=idx)
+            # A door has already opened its authenticated X25519 envelopes. Even a
+            # plaintext that resembles enc:v1 is sealed under this member's ring.
+            self.cluster_vars.put(path, seal_row(self.sealer, items, path,
+                                                force=hasattr(self.domain_vars, "answer_for")), cas=idx)
 
     # The key set, carried with one rule per lesson. Lesson 4: as it is — the channel was the trust. Lesson 15:
     # once this member has a root pinned, only a key set that root SIGNED, and never an older revision than it
@@ -471,16 +474,17 @@ class DomainAgent:
             from .carry import Refused
             from .uplink import NotPublished, publication, report
             from .reports import StaleReport
+            from .booksecrets import Unavailable as BookUnavailable
             try:
                 paged_at = self.now()
                 pages = self.pages() if self.pages else None
                 if door:
                     self.domain_vars.publish(publication(self.cluster, self.cluster_vars, self.published, paged_at,
-                                                         pages, key=self.key))
+                                                         pages, key=self.key, sealer=self.sealer))
                     self.reported = "reported through the door"
                 else:
                     n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, paged_at, pages,
-                               key=self.key)
+                               key=self.key, sealer=self.sealer)
                     self.reported = f"reported ({n} written)"
                 self._paged_at = paged_at
                 self._say_refused("the report", "")
@@ -488,6 +492,9 @@ class DomainAgent:
                 self.reported = str(e)
             except StaleReport as e:
                 self.reported = f"refused by the report receiver: {e}"
+                self._say_refused("the report", self.reported)
+            except BookUnavailable as e:
+                self.reported = f"local report refused: {e}"
                 self._say_refused("the report", self.reported)
             except Refused as e:                           # the door said no: said once, the pass goes on
                 self.reported = f"refused by the domain's door: {e.detail}"
