@@ -51,12 +51,12 @@ def test_the_units_run_the_entrypoints_the_package_has():
     # every subsystem's controller is an instance of the platform's one template (ADR 0023): `w2c-controller@<sub>`
     platform = {"w2c-controller@.container": "%i"}
     assert {f[:-len(".subsystem.yaml")] for f in os.listdir(os.path.join(HERE, "vms")) if f.endswith(".subsystem.yaml")} \
-        == {"vms", "rec", "live", "det", "detjob", "survey", "auto"}                    # the instances the image has specs for
+        == {"cam", "rec", "live", "det", "detjob", "survey", "auto"}                    # the instances the image has specs for
     assert not [n for n in os.listdir(DEPLOY) if n.endswith("controller.container")]   # no controller of a subsystem's name
     image = open(os.path.join(DEPLOY, "Containerfile")).read()
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE and "console" in host.USAGE
-    for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
+    for name, entry in [("camworker@.container", "worker"), ("w2c-resource.container", "resource"),
                         ("w2c-console.container", "console"), ("vmsjobs.container", "jobs"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
@@ -68,7 +68,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
             assert u["Container"]["Exec"] == "python3 -m w2cplatform resource"         # the platform's own (step 6)
         elif name == "w2c-console.container":
             assert u["Container"]["Exec"] == "python3 -m w2cplatform console"          # the platform's own (step 6)
-            assert "CONSOLE_ROOT=vms" in u["Container"]["Environment"]                 # the deployment says what is at `/`
+            assert "CONSOLE_ROOT=cam" in u["Container"]["Environment"]                 # the deployment says what is at `/`
         elif name in platform:
             assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"   # the instance names the spec
         else:
@@ -76,7 +76,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it — and a
         # role of the spares, its declaration last (ADR-0070: its CAPACITY and memory budget, no other role's)
         role = name.split("@")[0]
-        declared = [f"/etc/vms/roles/{role}.env"] if role in ("vmsworker", "recworker", "liveworker", "autoworker") else []
+        declared = [f"/etc/vms/roles/{role}.env"] if role in ("camworker", "recworker", "liveworker", "autoworker") else []
         assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env", *declared], name
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
             assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/w2c-console:",   # sockets on a tmpfs, not state
@@ -97,11 +97,11 @@ def test_who_may_write_where_is_in_the_mounts_too():
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
             # the two stores, never /data/platform whole: its etc/secrets holds the key ring
             assert "/data/platform" not in vols(n) and not any(v.startswith("/data/platform/etc") for v in vols(n)), n
-    assert vols("vmsworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, vms/<cam>/, on this box's resource
-    assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
+    assert vols("camworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, cam/<cam>/, on this box's resource
+    assert vols("camworker@.container")["/data/media"].endswith(":ro,z")
     assert vols("recworker@.container")[EVENTS] == f"{EVENTS}:z"                      # its events; its volume is the daemon's
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
+    assert vols("camworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
     # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
@@ -129,7 +129,7 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     platform = open(os.path.join(DEPLOY, "w2c.env.example")).read()
     assert "PLATFORM_DIR=/data/platform" in platform and f"RESOURCE_ROOT={EVENTS}" in platform   # the events archive is the platform's
     assert not re.search(r"^#? ?CAPACITY=", env, re.M)                # each role's, in its declaration (ADR-0070)
-    for role in ("vmsworker", "recworker", "liveworker", "autoworker"):
+    for role in ("camworker", "recworker", "liveworker", "autoworker"):
         said = _env_names(os.path.join("roles", f"{role}.env.example"))
         assert said == {"CAPACITY", "WORKER_MEMORY_MB", "HOST_MEMORY_MB"}, (role, said)
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
@@ -158,7 +158,7 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     # the cluster's key ring: one file of the platform's, in the three units that open sealed fields and no other
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
-    assert keyed == {"w2c-console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    assert keyed == {"w2c-console.container", "camworker@.container", "recworker@.container"}, keyed
     for n in keyed:
         assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
         assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
@@ -357,7 +357,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
         assert st.st_gid == group and st.st_mode & 0o060 == 0o060, (f, oct(st.st_mode))
         assert _may_unlink(f, *resource) and _may(f, *resource, 4), f
     res = platform_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
-    box.vars.put("vms/retention", {"days": "1"})
+    box.vars.put("cam/retention", {"days": "1"})
     assert res.retain() == 1                                                 # the resource deletes the client's old bucket
     assert sum(1 for f in files if os.path.exists(f)) == 2
     _, _, old = tree(0o022)                                                  # the box's units before: every process root
@@ -379,7 +379,7 @@ def test_a_platform_stores_files_are_its_groups_under_the_units_umask():
     try:
         objects, vars_ = FsObjectStore(os.path.join(root, "objects")), FileVariables(os.path.join(root, "config"))
         objects.put("platform/resources/srv-1/heartbeat", b"{}")
-        assert objects.put_new("vms/commands/1/a", b"1")
+        assert objects.put_new("cam/commands/1/a", b"1")
         vars_.put("platform/doors/srv-1", {"url": "http://srv-1:8090"})
     finally:
         os.umask(was)
@@ -387,9 +387,9 @@ def test_a_platform_stores_files_are_its_groups_under_the_units_umask():
     made = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs]
     assert not any(f.endswith(".tmp") and os.path.basename(f) != DIR_LOCK for f in made), made
     assert {os.path.relpath(f, root): oct(os.stat(f).st_mode & 0o777) for f in made} == {
-        "objects/platform/resources/srv-1/heartbeat": "0o660", "objects/vms/commands/1/a": "0o660",
+        "objects/platform/resources/srv-1/heartbeat": "0o660", "objects/cam/commands/1/a": "0o660",
         # the directories' locks, which every write of the file store takes (ADR-0054: a mark written by its index)
-        f"objects/platform/resources/srv-1/{DIR_LOCK}": "0o660", f"objects/vms/commands/1/{DIR_LOCK}": "0o660",
+        f"objects/platform/resources/srv-1/{DIR_LOCK}": "0o660", f"objects/cam/commands/1/{DIR_LOCK}": "0o660",
         "config/vars/platform%2Fdoors%2Fsrv-1.json": "0o660", "config/lock": "0o660", "config/index": "0o660"}
 
 
@@ -419,7 +419,7 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         assert ("User" in c) == platform, n
         if platform:
             assert (c["User"], c["Group"]) == (W2C, W2C), n
-    assert writers == {"w2c-resource.container", "w2c-console.container", "w2c-controller@.container", "vmsworker@.container", "recworker@.container",
+    assert writers == {"w2c-resource.container", "w2c-console.container", "w2c-controller@.container", "camworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
                        "autoworker@.container", "liveworker@.container"}, writers
     r = unit("w2c-resource.container")["Container"]
@@ -480,7 +480,7 @@ def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_noth
     import tempfile
     box = tempfile.mkdtemp(prefix="install-box-")
     old = {"data/config/w2c.env": "PLATFORM_DIR=/data/platform\n", "data/config/vms.env": "CAPACITY=7\n",
-           "data/secrets/platform.key": "k1 00\n", "data/archive/vms/7/e1/20261004T100000Z.events.jsonl": '{"t": 1}\n',
+           "data/secrets/platform.key": "k1 00\n", "data/archive/cam/7/e1/20261004T100000Z.events.jsonl": '{"t": 1}\n',
            "data/volume/ring.0": "ring", "etc/w2c/configstore-rights.json": "{}\n"}
     for path, text in old.items():
         os.makedirs(os.path.dirname(os.path.join(box, path)), exist_ok=True)
@@ -497,7 +497,7 @@ def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_noth
     assert open(at("data/platform/etc/secrets/platform.key")).read() == "k1 00\n"
     key = at("data/platform/etc/secrets/platform.key")
     assert f"chgrp w2c-secrets {key}" in calls and f"chmod 0640 {key}" in calls
-    assert os.path.exists(at("data/platform/events/vms/7/e1/20261004T100000Z.events.jsonl")) and not os.path.exists(at("data/archive"))
+    assert os.path.exists(at("data/platform/events/cam/7/e1/20261004T100000Z.events.jsonl")) and not os.path.exists(at("data/archive"))
     assert os.path.exists(at("etc/w2c/configstore-rights.json"))             # the real /etc/w2c's file, moved under the link
     assert not os.path.exists(at("data/config")) and not os.path.exists(at("data/secrets"))   # emptied, so gone
     out, calls = _install_obsd(owned=True, same_unit=True, box=box)          # again: a box in order
@@ -610,11 +610,11 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
     assert "no volume declared for srv-1" in out.stdout
 
 
-ROLES_WITH_TEMPLATES = ("vmsworker", "recworker", "liveworker", "autoworker")
+ROLES_WITH_TEMPLATES = ("camworker", "recworker", "liveworker", "autoworker")
 
 
 # The roles' declarations a run of the script finds (`ROLES_DIR`, ADR-0070): the examples' numbers, a ceiling of 4 or 2.
-DECLARED = {"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n",
+DECLARED = {"camworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n",
             "recworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n",
             "liveworker": "CAPACITY=100\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n",
             "autoworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}
@@ -697,35 +697,35 @@ def _said_to(out, unit: str) -> str | None:
     return open(p).read() if os.path.exists(p) else None
 
 
-NEEDED = """# TYPE vms_workers_needed gauge
-vms_workers_needed{labels=""} 1
-vms_workers_needed{labels="vlan:dmz"} 2
-vms_workers_needed{labels="vlan:x"} 1
-# TYPE vms_server_labels gauge
-vms_server_labels{server="srv-a",labels="vlan:dmz",source="console"} 1
-vms_server_labels{server="srv-b",labels="vlan:x",source="console"} 1
+NEEDED = """# TYPE cam_workers_needed gauge
+cam_workers_needed{labels=""} 1
+cam_workers_needed{labels="vlan:dmz"} 2
+cam_workers_needed{labels="vlan:x"} 1
+# TYPE cam_server_labels gauge
+cam_server_labels{server="srv-a",labels="vlan:dmz",source="console"} 1
+cam_server_labels{server="srv-b",labels="vlan:x",source="console"} 1
 """
 
 
 def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing():
-    """The product's P5, the course's `w2c-spares.sh vmsworker`, run with its commands shimmed. The console wants one
+    """The product's P5, the course's `w2c-spares.sh camworker`, run with its commands shimmed. The console wants one
     camera worker on no label, two on `vlan:dmz`, one on `vlan:x`; srv-a reaches `vlan:dmz` by the console's row
-    (`vms_server_labels … source="console"`). Under a ceiling of 2 (the role's declaration: 1024 MiB of the host's for
+    (`cam_server_labels … source="console"`). Under a ceiling of 2 (the role's declaration: 1024 MiB of the host's for
     workers of 512 each, ADR-0070): a spare for the empty set and one for `vlan:dmz`,
-    each `systemctl start vms-vmsworker-spare@<n>` with its set in the one-line file its template reads; none for
+    each `systemctl start vms-camworker-spare@<n>` with its set in the one-line file its template reads; none for
     `vlan:x`, which srv-a does not reach; the second `vlan:dmz` not, the ceiling. Run again: the two run, the ceiling is
     reached, nothing more. Never a stop, never a kill."""
-    two = {"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}
-    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, roles=two)
+    two = {"camworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}
+    out, calls = _spares("camworker", pages={"/metrics": NEEDED}, roles=two)
     assert out.returncode == 0, out.stderr
     started = [c for c in calls if c.startswith("systemctl start")]
-    assert started == ["systemctl start vms-vmsworker-spare@1", "systemctl start vms-vmsworker-spare@2"], calls
-    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-vmsworker-spare@2") == "SPARE_FOR=vlan:dmz\n"
+    assert started == ["systemctl start vms-camworker-spare@1", "systemctl start vms-camworker-spare@2"], calls
+    assert _said_to(out, "vms-camworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-camworker-spare@2") == "SPARE_FOR=vlan:dmz\n"
     assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
     assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
     assert all(c.startswith("systemctl start ") for c in calls), calls      # the one verb polkit gives its user
-    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, roles=two,
-                         active=("vms-vmsworker-spare@1", "vms-vmsworker-spare@2"))
+    out, calls = _spares("camworker", pages={"/metrics": NEEDED}, roles=two,
+                         active=("vms-camworker-spare@1", "vms-camworker-spare@2"))
     assert out.returncode == 0 and not [c for c in calls if c.startswith("systemctl start")], calls
 
 
@@ -735,26 +735,26 @@ def test_the_spares_ceiling_is_derived_from_the_roles_declaration_and_nothing_el
     file never run (`$(…)` in it runs nothing). No file, no line, 0, a fraction, a negative, a word, a file with
     `CAPACITY` alone: nothing started for that role and the file named; the other roles go on. The hand-written ceilings
     are gone without a fallback (ADR-0003): `MAX_WORKERS` in the environment counts for nothing."""
-    many = 'vms_workers_needed{labels=""} 9\n'
-    out, calls = _spares("vmsworker", pages={"/metrics": many}, env={"MAX_WORKERS": "9"},
-                         roles={"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=300\nHOST_MEMORY_MB=1000\n"})
+    many = 'cam_workers_needed{labels=""} 9\n'
+    out, calls = _spares("camworker", pages={"/metrics": many}, env={"MAX_WORKERS": "9"},
+                         roles={"camworker": "CAPACITY=50\nWORKER_MEMORY_MB=300\nHOST_MEMORY_MB=1000\n"})
     assert out.returncode == 0, out.stderr
-    assert [c for c in calls if c.startswith("systemctl start")] == [f"systemctl start vms-vmsworker-spare@{n}" for n in (1, 2, 3)]
+    assert [c for c in calls if c.startswith("systemctl start")] == [f"systemctl start vms-camworker-spare@{n}" for n in (1, 2, 3)]
     assert "the ceiling here is 3" in out.stderr, out.stderr
     for text in (None, "", "CAPACITY=50\n", "WORKER_MEMORY_MB=0\nHOST_MEMORY_MB=1000\n",
                  "WORKER_MEMORY_MB=2.5\nHOST_MEMORY_MB=1000\n", "WORKER_MEMORY_MB=-1\nHOST_MEMORY_MB=1000\n",
                  "WORKER_MEMORY_MB=lots\nHOST_MEMORY_MB=1000\n", "WORKER_MEMORY_MB=512\n"):
-        out, calls = _spares("vmsworker", "recworker", roles={"vmsworker": text},
+        out, calls = _spares("camworker", "recworker", roles={"camworker": text},
                              pages={"/metrics": many, "/rec/metrics": 'rec_workers_needed{labels=""} 1\n'})
         assert out.returncode == 0, (text, out.stderr)
         assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-recworker-spare@1"], (text, calls)
-        assert "vmsworker.env" in out.stderr and "nothing started" in out.stderr, (text, out.stderr)
-    out, calls = _spares("vmsworker", pages={"/metrics": many},
-                         roles={"vmsworker": "WORKER_MEMORY_MB=$(touch ran)512\nHOST_MEMORY_MB=1024\n"})
+        assert "camworker.env" in out.stderr and "nothing started" in out.stderr, (text, out.stderr)
+    out, calls = _spares("camworker", pages={"/metrics": many},
+                         roles={"camworker": "WORKER_MEMORY_MB=$(touch ran)512\nHOST_MEMORY_MB=1024\n"})
     assert not os.path.exists(os.path.join(out.dir, "ran")) and not os.path.exists("ran")
     assert not [c for c in calls if c.startswith("systemctl start")], calls
-    out, calls = _spares("vmsworker", pages={"/metrics": many},
-                         roles={"vmsworker": "WORKER_MEMORY_MB=999\n  WORKER_MEMORY_MB=512  \nHOST_MEMORY_MB=1024\n"})
+    out, calls = _spares("camworker", pages={"/metrics": many},
+                         roles={"camworker": "WORKER_MEMORY_MB=999\n  WORKER_MEMORY_MB=512  \nHOST_MEMORY_MB=1024\n"})
     assert len([c for c in calls if c.startswith("systemctl start")]) == 2, calls     # the last line of a key, as `.` leaves it
 
 
@@ -762,27 +762,27 @@ def test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried()
     """The script runs as the platform's `w2c` now (ADR 0030), whom polkit lets `start` a spare template's instance and nothing else (the
     product's cross-check, 4 Oct) — so no `reset-failed` before a start either: an instance past systemd's start limit,
     or one polkit refuses, fails its `start`. That is said, and the next number is tried, within the ceiling."""
-    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'},
-                         roles={"vmsworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}, refused=("vms-vmsworker-spare@1",))
+    out, calls = _spares("camworker", pages={"/metrics": 'cam_workers_needed{labels=""} 1\n'},
+                         roles={"camworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}, refused=("vms-camworker-spare@1",))
     assert out.returncode == 0, out.stderr
-    assert calls == ["systemctl start vms-vmsworker-spare@1 (refused)", "systemctl start vms-vmsworker-spare@2"], calls
-    assert "vms-vmsworker-spare@1 did not start — the next number is tried" in out.stderr, out.stderr
-    assert "started vms-vmsworker-spare@2" in out.stdout
+    assert calls == ["systemctl start vms-camworker-spare@1 (refused)", "systemctl start vms-camworker-spare@2"], calls
+    assert "vms-camworker-spare@1 did not start — the next number is tried" in out.stderr, out.stderr
+    assert "started vms-camworker-spare@2" in out.stdout
 
 
 def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console():
-    """No `vms_server_labels` row with `source="console"` for this server: the host's `$LABELS`. A console that does
-    not answer, and one whose controller's pass is stale (the page carries no `vms_workers_needed`): nothing started,
+    """No `cam_server_labels` row with `source="console"` for this server: the host's `$LABELS`. A console that does
+    not answer, and one whose controller's pass is stale (the page carries no `cam_workers_needed`): nothing started,
     and the script ends 0 — the console being away is not a reason to start anything. Roles from `SPARES_ROLES`; a
     recorder by `rec_workers_needed{labels=""}` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
     no_row = NEEDED.replace('server="srv-a"', 'server="srv-c"')
-    out, calls = _spares("vmsworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
+    out, calls = _spares("camworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
     assert [c for c in calls if c.startswith("systemctl start")] == \
-        ["systemctl start vms-vmsworker-spare@1", "systemctl start vms-vmsworker-spare@2"], calls
-    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-vmsworker-spare@2") == "SPARE_FOR=vlan:x\n"
-    out, calls = _spares("vmsworker", pages={})
+        ["systemctl start vms-camworker-spare@1", "systemctl start vms-camworker-spare@2"], calls
+    assert _said_to(out, "vms-camworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-camworker-spare@2") == "SPARE_FOR=vlan:x\n"
+    out, calls = _spares("camworker", pages={})
     assert out.returncode == 0 and calls == [] and "no answer" in out.stderr, out.stderr
-    out, calls = _spares("vmsworker", pages={"/metrics": "vms_units_unplaced 3\n"})
+    out, calls = _spares("camworker", pages={"/metrics": "cam_units_unplaced 3\n"})
     assert out.returncode == 0 and calls == [] and "nothing started" in out.stdout, out.stdout
     out, calls = _spares(pages={"/rec/metrics": 'rec_workers_needed{labels=""} 1\n', "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
                          env={"SPARES_ROLES": "recworker,liveworker"})
@@ -796,10 +796,10 @@ def test_the_spares_script_starts_only_for_the_empty_set_where_the_console_does_
     says `source="unknown"` — placement puts nothing that needs a label there, so neither its last word nor this host's
     `$LABELS` is a reason for a spare of a labelled set: only the empty set's."""
     unknown = NEEDED.replace('labels="vlan:dmz",source="console"', 'labels="vlan:dmz",source="unknown"')
-    out, calls = _spares("vmsworker", pages={"/metrics": unknown}, env={"LABELS": "vlan:x"})
+    out, calls = _spares("camworker", pages={"/metrics": unknown}, env={"LABELS": "vlan:x"})
     assert out.returncode == 0, out.stderr
-    assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-vmsworker-spare@1"], calls
-    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n"
+    assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-camworker-spare@1"], calls
+    assert _said_to(out, "vms-camworker-spare@1") == "SPARE_FOR=\n"
 
 
 def test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one():
@@ -807,11 +807,11 @@ def test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one
     loopback; a camera of the dead server with a sealed password did not start on the spare started for it. Now a
     spare is its role's TEMPLATE (`vms-<role>-spare@.service`, the regular unit's twin) or nothing: a server without
     the template starts nothing for that role and says why, and the script calls no `systemd-run` at all."""
-    out, calls = _spares("vmsworker", "recworker", pages={"/metrics": NEEDED, "/rec/metrics": 'rec_workers_needed{labels=""} 1\n'},
+    out, calls = _spares("camworker", "recworker", pages={"/metrics": NEEDED, "/rec/metrics": 'rec_workers_needed{labels=""} 1\n'},
                          templates=("recworker",))
     assert out.returncode == 0, out.stderr
     assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-recworker-spare@1"], calls
-    assert "no spare template for vmsworker" in out.stderr and "runs as its role's unit or not at all" in out.stderr
+    assert "no spare template for camworker" in out.stderr and "runs as its role's unit or not at all" in out.stderr
     assert "systemd-run" not in open(os.path.join(DEPLOY, "w2c-spares.sh")).read().split("set -eu", 1)[1]
 
 
@@ -828,21 +828,21 @@ def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_
     if not shutil.which("plutil"):
         import pytest
         pytest.skip("no plutil: the macOS path is checked on macOS")
-    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False)
+    out, calls = _spares("camworker", pages={"/metrics": 'cam_workers_needed{labels=""} 1\n'}, linux=False)
     assert out.returncode == 0, out.stderr
-    plist = os.path.join(out.dir, "spares", "com.w2c.vms.vmsworker.spare-1.plist")
+    plist = os.path.join(out.dir, "spares", "com.w2c.vms.camworker.spare-1.plist")
     assert calls == [f"launchctl bootstrap gui/{os.getuid()} {plist}"], calls + [out.stdout, out.stderr]
-    assert "started vms-vmsworker-spare@1" in out.stdout
+    assert "started vms-camworker-spare@1" in out.stdout
     with open(plist, "rb") as f:
         p = plistlib.load(f)
-    assert p["Label"] == "com.w2c.vms.vmsworker.spare-1" and p["ProgramArguments"] == ["/opt/w2c/bin/w2c-run.sh", "vmsworker"]
-    assert p["EnvironmentVariables"] == {"PLATFORM_STORE": "configstore:///var/run/configstore/vmsworker.sock",
+    assert p["Label"] == "com.w2c.vms.camworker.spare-1" and p["ProgramArguments"] == ["/opt/w2c/bin/w2c-run.sh", "camworker"]
+    assert p["EnvironmentVariables"] == {"PLATFORM_STORE": "configstore:///var/run/configstore/camworker.sock",
                                          "SECRETS_KEY": "/etc/w2c/secrets/platform.key", "RTSP_HOST": "0.0.0.0",
                                          "ARCHIVE_PORT": "8084", "SPARE_FOR": "", "RTSP_PORT": "auto"}, p
-    assert p["StandardErrorPath"] == "/var/log/w2c/com.w2c.vms.vmsworker.spare-1.log" and p["KeepAlive"] is True
-    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False,
-                         roles={"vmsworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=512\n"},
-                         active=("com.w2c.vms.vmsworker.spare-1",))
+    assert p["StandardErrorPath"] == "/var/log/w2c/com.w2c.vms.camworker.spare-1.log" and p["KeepAlive"] is True
+    out, calls = _spares("camworker", pages={"/metrics": 'cam_workers_needed{labels=""} 1\n'}, linux=False,
+                         roles={"camworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=512\n"},
+                         active=("com.w2c.vms.camworker.spare-1",))
     assert out.returncode == 0 and calls == [], calls
 
 
@@ -851,7 +851,7 @@ def test_every_spares_unit_runs_the_script_for_its_role():
     gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
     each timer every minute — and the one directory it writes, where each spare's set is for its runner to read;
     each as the platform's user, `w2c` (ADR 0030), never root."""
-    for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
+    for role in ("recworker", "camworker", "liveworker", "autoworker"):
         name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
         svc = unit(name + ".service")["Service"]
         assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
@@ -908,9 +908,9 @@ def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_
     recorder, the live gateways, the detectors, the scans, the survey and automation under their names — one token."""
     import tempfile
     from w2cplatform import host
-    env = {"SPEC_DIR": os.path.join(HERE, "vms"), "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"}
+    env = {"SPEC_DIR": os.path.join(HERE, "vms"), "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "cam"}
     m, ctls = host.build_console(env)
-    assert m.root.spec.name == "vms" and set(m.mounts) == {"rec", "live", "det", "detjob", "survey", "auto"}
+    assert m.root.spec.name == "cam" and set(m.mounts) == {"rec", "live", "det", "detjob", "survey", "auto"}
     assert "door" not in m.root.describe()                               # no door at a camera's holder
     assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "segment", "keeps"]}
     assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
@@ -932,7 +932,7 @@ def test_every_roles_example_fits_the_prices_its_spec_says():
     otherwise (`memorybudget.memory_budget`); each example's ceiling is a whole number of workers above 0."""
     from vms.config import AUTO_SPEC, LIVE_SPEC, REC_SPEC, SPEC
     from w2cplatform.memorybudget import memory_budget
-    for role, spec in (("vmsworker", SPEC), ("recworker", REC_SPEC), ("liveworker", LIVE_SPEC), ("autoworker", AUTO_SPEC)):
+    for role, spec in (("camworker", SPEC), ("recworker", REC_SPEC), ("liveworker", LIVE_SPEC), ("autoworker", AUTO_SPEC)):
         assert spec.capacity_unit_mb > 0 and spec.capacity_base_mb > 0, role
         env = dict(re.findall(r"^([A-Z_]+)=(\S+)$", open(os.path.join(DEPLOY, "roles", f"{role}.env.example")).read(), re.M))
         assert memory_budget(spec, env) == float(env["WORKER_MEMORY_MB"]), role
