@@ -1,7 +1,8 @@
 # A token requested by a member's ordinary worker (ADR-0074, supplement 5)
 
-`local_handler(agent, sub, role)` is bound to one role's private Unix socket. The
-role and declaring subsystem come from that binding; the body takes only `ref`.
+`local_handler(agent, role)` is bound to one role's private Unix socket. The
+role comes from that binding; the unique kind identifies the declaring subsystem.
+The body takes only `ref`.
 A TCP connection is refused. The worker uses `WorkerTokenDoor(path).request(kind,
 ref)`; it has neither the member key nor the issuer key.
 
@@ -23,11 +24,12 @@ book row, publication, journal or backup stores the token.
 
 The signer HTTP handler checks handover/deposition before issuing and uses its
 current issuer. The local handler returns the result only on the requesting
-connection. The role socket's filesystem ownership and access must be established
-by deployment; constructing this handler alone does not provision a protected
-socket or activate it in `domain.agent.main`.
-
-This diff provides the request core, holder/relay HTTP handlers, agent method and
-worker handle. The member process's role socket startup and the subsystem publisher,
-consumer and spec switch are the next integration step. The intermediate branch
-is not a completed migration window and must not be merged by itself.
+connection.
+The agent opens `open_role_doors` at startup and closes servers on shutdown.
+`TOKEN_REQUESTS_DIR` unset disables issuance. Provisioned base is root:root 0755;
+role directories are root:role-group 2770, sockets 0660. Unsafe owner, mode, group,
+symlink or bind fails closed for that role, while carry and reports continue.
+`installation` derives tmpfiles and agent groups from loaded grants, using
+`cluster.rights.group`. Every request resolves its unique kind against the current
+catalogue. Publisher, consumer and spec switch remain unfinished; this branch
+must not be merged on its own.
