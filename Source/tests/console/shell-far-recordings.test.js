@@ -1,11 +1,11 @@
 // Записи камеры в других кластерах домена (ADR-0061): консоль кластера камеры узнаёт их из книги, которую несёт её
-// кластер (GET /domain/vms/books/primaries — recorded_by, recording и backups [{cluster, recording}]; ADR-0010,
+// кластер (GET /domain/cam/books/primaries — recorded_by, recording и backups [{cluster, recording}]; ADR-0010,
 // дополнение 2026-10-06), у члена и у держателя одинаково — вид домена для этого не читается; и спрашивает дверь записи у консоли
 // того кластера через себя: GET /domain/at/<кластер>/rec/where/<запись>. Кусок — с двери держателя напрямую, мимо
 // обеих консолей. Отказ того кластера — словами: 403 «на … вас не знают», 502 «консоль … не видна по сети».
 // Копия продуктового vmsworker/vms/consoletest/shell-far-recordings.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-far-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`).replace('{lang:"ru",','{lang:"ru",poll_s:0,'));
@@ -14,15 +14,15 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000,ms=x=>Math.round(x*1000);
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"demo",ref:"SN-DEMO"},{id:2,name:"x",ref:"SN-X"},{id:3,name:"y",ref:"SN-Y"},{id:4,name:"own",ref:"SN-OWN"},{id:5,name:"z",ref:"SN-Z"},{id:6,name:"bk",ref:"SN-BK"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1-card",cam:"1",home:"card",backup:true},{id:"SN-OWN",cam:"4",home:"card"},{id:"6-card",cam:"6",home:"card",backup:true}],rows:[]};
 b.FIX["/rec/volumes"]={volumes:[{name:"card",kind:"backup",server:"cam-demo",held_by:"r-1"}]};
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 // член: вида домена нет (404), книга primaries — кто пишет камеры
-b.FIX["/domain/vms/books/primaries"]={"SN-DEMO":{recorded_by:"relay-b",recording:"SN-DEMO"},"SN-X":{recorded_by:"relay-x",recording:"SN-X"},"SN-Y":{recorded_by:"relay-y",recording:"SN-Y"},"SN-OWN":{recorded_by:"cam-demo",recording:"SN-OWN"},"SN-Z":{recorded_by:"relay-z",recording:"SN-Z"},
+b.FIX["/domain/cam/books/primaries"]={"SN-DEMO":{recorded_by:"relay-b",recording:"SN-DEMO"},"SN-X":{recorded_by:"relay-x",recording:"SN-X"},"SN-Y":{recorded_by:"relay-y",recording:"SN-Y"},"SN-OWN":{recorded_by:"cam-demo",recording:"SN-OWN"},"SN-Z":{recorded_by:"relay-z",recording:"SN-Z"},
   // резервы — списком: каждый своей строкой; свой кластер и нечитаемый элемент не спрашиваются через /domain/at
   "SN-BK":{recorded_by:"relay-b",recording:"SN-BK",backups:[{cluster:"relay-k",recording:"SN-BK-b"},{cluster:"cam-demo",recording:"6-card"},"x",{cluster:"relay-k"}]}};
 (async()=>{
@@ -50,7 +50,7 @@ await w.eval("loadTimeline('1')");await b.ready(80);
 const sp=V().spans;
 out.farRecordingOnTheTimeline=sp.some(s=>s.recording==="SN-DEMO"&&s.where==="/domain/at/relay-b/rec/where/SN-DEMO"&&Math.round(s.start-now)===-600);
 out.askedThroughThisConsole=calls.some(([u])=>u==="/domain/at/relay-b/rec/where/SN-DEMO")&&calls.some(([u,a])=>u.startsWith("http://relay-b:9101/timeline/SN-DEMO")&&a==="Bearer RB");
-out.primariesFromTheBook=calls.some(([u])=>u==="/domain/vms/books/primaries");
+out.primariesFromTheBook=calls.some(([u])=>u==="/domain/cam/books/primaries");
 // кусок — с двери держателя relay-b напрямую
 const url=await w.eval(`(()=>{const s=V.spans.find(x=>x.recording==="SN-DEMO");return segmentURL(s,{start:s.start,end:s.start+5})})()`);
 out.pieceFromTheHoldersDoor=/^http:\/\/relay-b:9101\/segment\/SN-DEMO\/e4\//.test(String(url||""));
@@ -71,7 +71,7 @@ out.backupFromTheBook=V().spans.some(s=>s.recording==="SN-BK-b"&&s.where==="/dom
 out.backupRowsWellFormedOnly=JSON.stringify(w.eval("farRecsOfCam('6')").map(r=>[r.cluster,r.id,r.backup]))===JSON.stringify([["relay-b","SN-BK",false],["relay-k","SN-BK-b",true]]);
 // держатель читает ту же книгу: вид домена говорит другое — не читается для записей камеры
 b.FIX["/domain"]={holder:"cam-demo",age:1,complete:true,members:[{name:"cam-demo",state:"ok",age:1,holder:true}],topology:{rev:1,centre:"cam-demo",star:[],via:{}}};
-b.FIX["/domain/vms/state"]={cameras:[{cluster:"cam-demo",id:"1",ref:"SN-DEMO",recorded_by:"relay-state",recordings:[{cluster:"relay-state",id:"FROM-STATE"}]}]};
+b.FIX["/domain/cam/state"]={cameras:[{cluster:"cam-demo",id:"1",ref:"SN-DEMO",recorded_by:"relay-state",recordings:[{cluster:"relay-state",id:"FROM-STATE"}]}]};
 await w.platformConsole.refresh();await b.ready(120);
 out.holderReadsTheBook=JSON.stringify(w.eval("farRecsOfCam('1')").map(r=>[r.cluster,r.id]))===JSON.stringify([["relay-b","SN-DEMO"]]);
 out.errors=errs;out.noErrors=!errs.length;
