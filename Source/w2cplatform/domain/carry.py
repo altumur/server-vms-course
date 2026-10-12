@@ -171,8 +171,13 @@ class HolderDoor:
     `SKEW`, the door remembers it in the holder's objects (`members.note_knock`) — the person who admits the cluster
     compares that key's fingerprint with the one the box shows. Refused all the same: a knock admits nobody."""
 
-    def __init__(self, holder_vars, holder_objects, sealer=None, wall=time.time):
+    def __init__(self, holder_vars, holder_objects, sealer=None, wall=time.time, token_issuer=None):
         self.vars, self.objects, self.sealer, self.wall = holder_vars, holder_objects, sealer, wall
+        self.token_issuer = token_issuer
+
+    def token(self, member, sub, kind, body, signature, *, issuer=None):
+        from .tokenrequest import issue
+        return issue(self, issuer or self.token_issuer, member, sub, kind, body, signature)
 
     def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None,
               key: str | None = None) -> dict:
@@ -375,6 +380,10 @@ class CarryClient:
         rows = {p: _walk(i, lambda f, v, c, p=p: self.key.open(f, v, _member_ctx(p, self.cluster) + c[len(p):]), p)
                 for p, i in got.get("rows", {}).items()}
         return {**got, "rows": rows}
+
+    def request_token(self, sub, kind, ref, role):
+        from .tokenrequest import request
+        return request(self, sub, kind, ref, role)
 
     def carry_for(self, member: str) -> dict:
         return self._ask(member)
