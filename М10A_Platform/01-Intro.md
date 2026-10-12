@@ -267,7 +267,7 @@ class Box:
 
 ```python
 PLATFORM_TREE = "w2cplatform"                                  # walked whole, every subpackage
-SUBSYSTEM_PACKAGES = ("vms", "gstvms")                         # what the platform must not reach (`Source/<name>/`)
+SUBSYSTEM_PACKAGES = ("cam", "gstvms")                         # what the platform must not reach (`Source/<name>/`)
 ```
 
 Платформа — это всё дерево `w2cplatform/`, с подпакетами (`cluster/`, `domain/`, `trust/`), HTML страницы и YAML. И её тесты: `PLATFORM_TESTS` перечисляет тестовые файлы, предмет которых — механизм платформы, вместе с `conftest.py` и обеими выдуманными спецификациями, и они проверяются так же, как её модули. Каждый такой тест доказывает своё правило на платформе одной или на `testsub` и `testsub2`. Тест, предмет которого — подсистема (работа её воркера, её спецификация, её маршрут), принадлежит подсистеме: он лежит в своём модуле, берёт помощников из `vmsconftest.py` и в этот список не входит; тест, который доказывал и то и другое, разделён надвое.
@@ -276,7 +276,7 @@ SUBSYSTEM_PACKAGES = ("vms", "gstvms")                         # what the platfo
 
 ```python
 PRODUCT_WORDS = [
-    ("vms", dict(forms=("vms",))),
+    ("cam", dict(forms=("cam",))),
     ("cam", dict(forms=("cam", "cams"))),
     ("camera", dict(forms=("camera", "cameras"))),
     ("rec", dict(forms=("rec", "recs"), mean=True)),         # the subsystem; `record` (a row, a write) is allowed
@@ -301,7 +301,7 @@ PRODUCT_WORDS = [
 ```python
     cases = {
         "the worker is alive; receive, recover, automatic, deliver, a record, records": {},
-        "cam_id = row.camera_id  # the vms_cam": {"cam": 2, "camera": 1, "vms": 1},
+        "cam_id = row.camera_id  # the vms_cam": {"cam": 2, "camera": 1, "cam": 1},
         "N workers live · a live server · workers_live": {},
         "the live gateway's door; LIVE_NAME; live_url": {"live": 3},
         "a volume of the resource, place_by: volume": {},
