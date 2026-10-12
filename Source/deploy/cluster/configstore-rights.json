@@ -598,6 +598,7 @@
     "survey/*",
     "vms/*",
     "!domain/backup*",
+    "!domain/book-seal*",
     "!domain/break-glass/*",
     "!domain/member-key*",
     "!domain/users/*",
@@ -622,6 +623,7 @@
    "group": "w2c-domainagent",
    "read": [
     "*",
+    "!domain/book-seal*",
     "!domain/signer*",
     "!domain/users/*",
     "!domain/vms/stream-clients/*",
@@ -631,6 +633,7 @@
    "write": [
     "domain/*",
     "!domain/signer*",
+    "!domain/book-seal*",
     "!domain/names/*",
     "!domain/users/*",
     "!domain/members",
@@ -656,6 +659,7 @@
    "delete": [
     "domain/*",
     "!domain/signer*",
+    "!domain/book-seal*",
     "!domain/names/*",
     "!domain/users/*",
     "!domain/members",
