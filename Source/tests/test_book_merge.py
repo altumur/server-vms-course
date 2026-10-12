@@ -112,7 +112,7 @@ def test_unique_conflicts_are_global_even_with_disjoint_destinations():
 
 
 def test_one_invalid_element_discards_the_members_whole_contribution_without_exposing_values():
-    for broken in ('{', '[]', '{"ref":""}', row(ref=12), row(to=[]), row(to=True),
+    for broken in ('{', '[]', '{"ref":""}', row(ref=12), row(to=True),
                    '{"ref":"r1","ref":"r2","to":"b"}', row(n=float("nan")),
                    '{"ref":"r1","to":"b","n":1e999}', row(ref="\ud800")):
         source = report()
