@@ -4,6 +4,8 @@ The first answer to "who may change the domain" was an admin of the cluster that
 (Lesson 15), and the domain's administrators would have moved with it. So the domain keeps its grants in
 `domain/grants/domain`, they travel in the backup, a `GET` asks for `view`, and the last admin cannot be
 taken away through the door it guards."""
+
+from tests.reporting import sync as report_sync
 import json
 import urllib.error
 import urllib.request
@@ -88,7 +90,7 @@ def test_the_domains_administrators_do_not_move_with_the_holder():
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
     set_domain_grants(holder.vars, [Grant("anna", "admin", None, 0.0)], wall())
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     new, _ = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
     assert new.vars.get(DOMAIN_GRANTS)[0] == holder.vars.get(DOMAIN_GRANTS)[0]
     assert domain_may(new.vars, "anna", "admin", wall())
