@@ -6,8 +6,8 @@ The file is a copy of the product's (its committed main, `testdata/secret_in.tsv
 text's, `testdata/log_mask.tsv`, read by the platform's `secrets.mask_text`.
 
 A row names its field (ADR-0053, addendum of 2026-10-06: a volume's url has words of its own): five columns,
-tab-separated — `field, raw, masked, fault, note`. `field` is `<sub>.<field>` for a unit's (`vms.source`) or
-`<sub>.<table>.<field>` for a table's (`rec.volumes.url`), of `Source/vms/<sub>.subsystem.yaml`; a name that is no url
+tab-separated — `field, raw, masked, fault, note`. `field` is `<sub>.<field>` for a unit's (`cam.source`) or
+`<sub>.<table>.<field>` for a table's (`rec.volumes.url`), of `Source/cam/<sub>.subsystem.yaml`; a name that is no url
 field there is the row's error, never a row skipped."""
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ COLUMNS = ("field", "raw", "masked", "fault", "note")
 
 @contextlib.contextmanager
 def _deployment():
-    """The catalogue for a while holds the VMS's specs alone (`Source/vms/*.subsystem.yaml`), as a deployment's process
+    """The catalogue for a while holds the VMS's specs alone (`Source/cam/*.subsystem.yaml`), as a deployment's process
     holds them: an address nested in a field's is read by every loaded spec's rule (ADR-0053, `nested`), and a spec
     another test loaded is no deployment's. Yields them by name."""
     from w2cplatform import catalog
@@ -110,16 +110,16 @@ def test_every_address_of_the_shared_table_is_masked_and_refused_as_the_table_sa
 
 
 def test_the_tables_reader_asks_each_row_of_the_field_it_names_and_an_unknown_name_is_the_rows_error():
-    """The reader on a table of its own: rows of `vms.source` and of `rec.volumes.url`, each by its field's rule and
+    """The reader on a table of its own: rows of `cam.source` and of `rec.volumes.url`, each by its field's rule and
     `credentials` — the VMS's `session=` refused at a camera and taken at a volume, an `@` with no `://` refused at a
     volume (ADR-0053) — and rows naming a field no spec has, a table no spec has, a field that is no url, or a row of
     four columns: each the row's error, never skipped."""
     import tempfile
     rows = [
-        ("vms.source", "rtsp://10.0.0.5/live?usr=admin&pwd=Hunter2", "rtsp://10.0.0.5/live?usr=admin&pwd=***", "cred_secret"),
-        ("vms.source", "rtsp://admin@10.0.0.5/live", "rtsp://admin@10.0.0.5/live", "cred_username"),
-        ("vms.source", "rtsp://10.0.0.5/live?session=Hunter2", "rtsp://10.0.0.5/live?session=***", "cred_secret"),
-        ("vms.source", "rtsp://10.0.0.5/Streaming/Channels/101", "rtsp://10.0.0.5/Streaming/Channels/101", ""),
+        ("cam.source", "rtsp://10.0.0.5/live?usr=admin&pwd=Hunter2", "rtsp://10.0.0.5/live?usr=admin&pwd=***", "cred_secret"),
+        ("cam.source", "rtsp://admin@10.0.0.5/live", "rtsp://admin@10.0.0.5/live", "cred_username"),
+        ("cam.source", "rtsp://10.0.0.5/live?session=Hunter2", "rtsp://10.0.0.5/live?session=***", "cred_secret"),
+        ("cam.source", "rtsp://10.0.0.5/Streaming/Channels/101", "rtsp://10.0.0.5/Streaming/Channels/101", ""),
         ("rec.volumes.url", "s3://h/eu/bucket?session=abc", "s3://h/eu/bucket?session=abc", ""),
         ("rec.volumes.url", "https://acct.blob.example/c?sv=1&sig=Hunter2", "https://acct.blob.example/c?sv=1&sig=***", "access_secret"),
         ("rec.volumes.url", "AKIA:Hunter2@s3.example.com/eu", "AKIA:***@s3.example.com/eu", "access_secret"),
@@ -128,7 +128,7 @@ def test_the_tables_reader_asks_each_row_of_the_field_it_names_and_an_unknown_na
     ]
     bad = [("vms.nosuch", "rtsp://h/x", "rtsp://h/x", ""), ("rec.nosuch.url", "s3://h/b", "s3://h/b", ""),
            ("nosuch.source", "rtsp://h/x", "rtsp://h/x", ""), ("rec.volumes.kind", "local", "local", "")]
-    lines = ["# a table of the reader's own", *("\t".join([*r, "a note"]) for r in rows + bad), "vms.source\trtsp://h/x\trtsp://h/x\t"]
+    lines = ["# a table of the reader's own", *("\t".join([*r, "a note"]) for r in rows + bad), "cam.source\trtsp://h/x\trtsp://h/x\t"]
     with tempfile.NamedTemporaryFile("w", suffix=".tsv", encoding="utf-8", delete=False) as f:
         f.write("\n".join(lines) + "\n")
     try:
@@ -207,7 +207,7 @@ def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says(
     that hides a value shows `hunter2`."""
     from w2cplatform.secrets import mask_text
     from w2cplatform.spec import SubsystemSpec
-    rules = SubsystemSpec.load(os.path.join(SOURCE, "vms", "vms.subsystem.yaml")).fields["source"].rules
+    rules = SubsystemSpec.load(os.path.join(SOURCE, "vms", "cam.subsystem.yaml")).fields["source"].rules
     wrong, n = [], 0
     with open(LOG_MASK, encoding="utf-8") as f:
         for i, line in enumerate(f.read().split("\n"), 1):
