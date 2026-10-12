@@ -93,7 +93,7 @@ BACKUP_TAKEN, BACKUP_REFUSED = "domain/backup-taken", "domain/backup-refused"
 # backup — their secrets SEALED UNDER THE BACKUP KEY (`Signer.backup_key`, HMAC of the root's key and a revision; the
 # product's r23-seal), not under the holder's ring, which no other holder has, and never in the clear: a member chosen to
 # keep a copy reads no hash of it. The signer's own keys are not in the backup, ever.
-PLATFORM_EXPORTED = ("domain/pending/", "domain/grants/", "domain/shared", "domain/topology", "domain/members",
+PLATFORM_EXPORTED = ("domain/book-seal", "domain/pending/", "domain/grants/", "domain/shared", "domain/topology", "domain/members",
                      "domain/placement", "domain/licence", "domain/break-glass/", "domain/users/", "domain/names/")
 
 
@@ -634,6 +634,9 @@ class DomainHolder:
             return
         _, idx = self.vars.get("domain/signer")
         self.vars.put("domain/signer", {"forgotten": f"deposed by term {self.deposed_by['term']}"}, cas=idx)
+        from .booksecrets import ROW
+        _, idx = self.vars.get(ROW)
+        self.vars.put(ROW, {}, cas=idx)                   # erase the receive seed along with the issuing keys
 
     # What this holder alone held, decided ONCE — the moment it learns it was replaced — and kept (feedback AS).
     # Later there is nothing to decide it against: after a second move the record names a term restored from
@@ -828,6 +831,16 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
                          f"{'term %d rev %d' % have if have else 'none'}, and {'; '.join(newer)} — restoring it would "
                          f"roll the domain back. Make the newer copy readable here, or name the copy to restore "
                          f"(copy: {{term, rev}}) and say why")
+    from .booksecrets import ROW
+    if root is not None and keys.book_seal is not None and not stolen and not best:
+        raise ValueError("a planned move cannot preserve the book receive key without a domain backup")
+    if best and ROW not in best[1]["state"]:
+        raise ValueError("the domain backup has no book receive key")
+    if best and root is not None and not stolen:
+        from .booksecrets import decode
+        restored_key = decode(best[1]["state"][ROW], signer.backup_sealer())
+        if keys.book_seal is not None and restored_key.seal_pub != keys.book_seal:
+            raise ValueError("a planned move cannot restore a retired book receive key; take a current backup")
     if best:
         # Each secret opened with the backup key this holder derives — from the recovery file's root, or the signer's
         # backup — and sealed again with this holder's own ring. A backup this holder cannot open is not a backup of
@@ -846,6 +859,14 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     if top_holder and top_holder != new and not stolen:
         _keep_replaced(new_vars, top_holder, top_term, holder_keys.get(top_holder), wall, revoked=keys.revoked_members)
     keys_rev = None
+    if best:
+        signer.reload_book_key()
+    if stolen:
+        from .booksecrets import replace
+        signer.book_key = replace(new_vars, sealer)
+        signer.tokens.book_seal = signer.book_key.seal_pub
+    if root is None:
+        keys = signer.tokens.keyset()
     if root is None:
         DomainPublisher(new_vars).publish_keys(keys)
     else:
