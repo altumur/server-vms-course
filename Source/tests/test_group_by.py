@@ -26,7 +26,7 @@ from tests.vmsconftest import Box
 def _ctl(box):
     """The pair every test here needs: the controller places, the console creates —
     two tokens, as on a real box."""
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     return ctl, con
 
@@ -243,8 +243,8 @@ def test_a_device_with_no_picture_is_a_unit_like_any_other():
     assert w.epochs[str(door)] >= 1                                 # held, fenced, its own epoch
 
     # a subscriber looking for something to watch finds the camera and not the door — no new check anywhere
-    assert holder_of(box.objects, "vms/", cam, box.wall(), phase="running", field="live_url") is not None
-    assert holder_of(box.objects, "vms/", door, box.wall(), phase="running", field="live_url") is None
+    assert holder_of(box.objects, "cam/", cam, box.wall(), phase="running", field="live_url") is not None
+    assert holder_of(box.objects, "cam/", door, box.wall(), phase="running", field="live_url") is None
 
     # …and it observes: an input change is an event in its own bucket, like any other event
     assert w.observe(door, "io.input", port=1, value="closed") is not None
@@ -402,14 +402,14 @@ def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
     box = Box(); ctl, con = _ctl(box)
     door = con.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
     with Served(SpecConsole(con, wall=box.wall)) as call:
-        status, body = call("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 2,
+        status, body = call("POST", "/requests", {"unit": f"cam/{door}", "action": "output", "port": 2,
                                                   "state": "pulse", "pulse_ms": 500})
         assert status == 202 and float(body["queued"]["valid_until"]) == box.wall() + 30   # thirty seconds by default
         assert body["queued"]["group"] == "10.0.0.90"                                          # what its rights were asked on
         assert box.vars.list(SPEC.sub.requests_prefix())
 
-        for bad, why in (({"unit": "vms/999", "action": "output"}, "no such unit"),
-                         ({"unit": f"vms/{door}", "action": "reboot"}, "refused"),
+        for bad, why in (({"unit": "cam/999", "action": "output"}, "no such unit"),
+                         ({"unit": f"cam/{door}", "action": "reboot"}, "refused"),
                          ({"unit": str(door), "action": "output"}, "denied")):     # a bare id: whose camera would the gate ask?
             st, b = call("POST", "/requests", bad)
             assert st in (400, 404) and b["error"] == why, (bad, st, b)
@@ -417,14 +417,14 @@ def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
         # an argument longer than a word: 400 at the door, the field named and not its value, no row written (the
         # product's cross-check of the eleventh review; the holder refuses such a row too, `VmsWorker.perform`)
         rows = len(box.vars.list(SPEC.sub.requests_prefix()))
-        st, b = call("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 1, "state": "x" * 5000})
+        st, b = call("POST", "/requests", {"unit": f"cam/{door}", "action": "output", "port": 1, "state": "x" * 5000})
         assert st == 400 and "the request.state is at most 32 characters" in b["detail"] and "xxxx" not in json.dumps(b)
         assert len(box.vars.list(SPEC.sub.requests_prefix())) == rows
 
 
 def test_two_workers_on_one_box_open_their_own_doors():
     """The defect this exists for is not subtle once seen: a port in a TEMPLATE
-    is a door only the first instance can open. `vmsworker@w-2` on the same box
+    is a door only the first instance can open. `camworker@w-2` on the same box
     binds a taken socket, dies, and `Restart=always` raises it every two seconds
     until morning.
 
@@ -487,7 +487,7 @@ def test_two_clusters_of_one_on_one_bench_do_not_share_an_rtp_port():
 
 def test_what_became_of_the_commands_is_counted_and_exported():
     """Performed, refused by the device, or arrived after its moment: each is counted in the holder's heartbeat,
-    and the console sums them into `vms_commands_total`. A share of `expired` that grows is the road from an
+    and the console sums them into `cam_commands_total`. A share of `expired` that grows is the road from an
     event to the holder getting longer than the requests live."""
     from w2cplatform.metrics import text as spec_metrics
     box = Box(); ctl, con = _ctl(box)
@@ -500,5 +500,5 @@ def test_what_became_of_the_commands_is_counted_and_exported():
                                                  "valid_until": str(box.wall() + 30), **fields})
     w.requests(); w.heartbeat_once()
     text = spec_metrics(ctl)
-    assert 'vms_commands_total{outcome="performed"} 1' in text
-    assert 'vms_commands_total{outcome="refused"} 1' in text and 'vms_commands_total{outcome="expired"} 1' in text
+    assert 'cam_commands_total{outcome="performed"} 1' in text
+    assert 'cam_commands_total{outcome="refused"} 1' in text and 'cam_commands_total{outcome="expired"} 1' in text
