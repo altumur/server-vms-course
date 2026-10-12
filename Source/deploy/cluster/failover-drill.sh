@@ -12,12 +12,12 @@
 #
 # For each run: note which cameras w-<server>-1 holds, pull, wait until every one of them is live on another worker
 # (or, `process`, on the same name again), read the console's numbers, bring the server back, and read
-# vms_epoch_conflicts after its old instance has woken: the old one fenced by the epochs, its footage kept.
+# cam_epoch_conflicts after its old instance has woken: the old one fenced by the epochs, its footage kept.
 set -u
 SERVER="${1:?the server to pull, e.g. srv-a}"; CONSOLE="${2:?console host:port, e.g. 10.0.0.12:8080}"
 RUNS="${3:-3}"; MODE="${4:-server}"
 WORKER="w-$SERVER-1"
-UNITS="vms-vmsworker vms-recworker w2c-console w2c-controller@vms w2c-controller@rec w2c-resource configstore"
+UNITS="vms-camworker vms-recworker w2c-console w2c-controller@cam w2c-controller@rec w2c-resource configstore"
 
 held() {                      # the cameras a worker holds, live, from the console's /cameras rows
   W="$1" python3 -c '
@@ -47,7 +47,7 @@ for i in $(seq 1 "$RUNS"); do
   t0=$(date +%s)
   echo "run $i: $WORKER holds cameras $cams; pulling ($MODE) at $(date -u +%H:%M:%S)"
   if [ "$MODE" = process ]; then
-    ssh "$SERVER" systemctl kill -s KILL vms-vmsworker.service
+    ssh "$SERVER" systemctl kill -s KILL vms-camworker.service
   else
     ssh "$SERVER" systemctl kill -s KILL $UNITS
     ssh "$SERVER" systemctl stop $UNITS
@@ -68,8 +68,8 @@ for i in $(seq 1 "$RUNS"); do
   if [ "$MODE" != process ]; then
     ssh "$SERVER" systemctl start $UNITS
     sleep 30
-    conflicts="$(curl -s "http://$CONSOLE/metrics" | awk -v w="$WORKER" '$0 ~ "vms_epoch_conflicts\\{worker=\"" w "\"" {print $2; exit}')"
-    echo "run $i: $SERVER returned; vms_epoch_conflicts{$WORKER}: ${conflicts:-?}   (the old instance fenced by the epochs, its footage kept under its epoch; nothing moves back)"
+    conflicts="$(curl -s "http://$CONSOLE/metrics" | awk -v w="$WORKER" '$0 ~ "cam_epoch_conflicts\\{worker=\"" w "\"" {print $2; exit}')"
+    echo "run $i: $SERVER returned; cam_epoch_conflicts{$WORKER}: ${conflicts:-?}   (the old instance fenced by the epochs, its footage kept under its epoch; nothing moves back)"
   fi
 done
 echo
