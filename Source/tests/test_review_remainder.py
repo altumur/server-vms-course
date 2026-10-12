@@ -560,7 +560,7 @@ def test_a_clock_running_behind_is_a_number_too():
     box.wall.advance(5)
     box.objects.put(SPEC.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall() - 31, [], {"server": "srv-a"}).to_bytes())
     assert "w-2" in ctl.workers_seen()
-    m = re.search(r"\nvms_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())
+    m = re.search(r"\ncam_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())
     assert m and float(m.group(1)) <= -31.0
 
 
