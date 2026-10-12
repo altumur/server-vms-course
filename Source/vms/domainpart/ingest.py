@@ -1241,15 +1241,17 @@ class Ingest:
         up after one piece's time. Whatever happens, nothing of the request stays here."""
         wait = piece_wait() if wait is None else wait
         rid = self.request_range(ref, t0, t1, recording)
-        asked = time.monotonic()
+        until = time.monotonic() + wait
         try:
             while True:
                 gen = self._gen
+                # Progress is read before the result: the final upload replaces parts with the answer.
+                # Never shorten the deadline when that intermediate record disappears between reads.
+                came = [p[2] for ing in self._cluster() for p in [ing._cam(ref).parts.get(rid)] if p is not None]
+                until = max([until] + [at + wait for at in came])
                 got = self.result(ref, rid)
                 if got is not None:
                     return got
-                came = [p[2] for ing in self._cluster() for p in [ing._cam(ref).parts.get(rid)] if p is not None]
-                until = max([asked] + came) + wait
                 if time.monotonic() >= until:
                     raise RangeFailed(f"camera {ref} did not answer a range: nothing of it came for {wait:.0f} s")
                 self._wait(gen, until)
