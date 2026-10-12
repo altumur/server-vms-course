@@ -18,7 +18,7 @@ from w2cplatform import specyaml
 from tests.productdir import SOURCE
 
 TABLE = os.path.join(SOURCE, "tests", "testdata", "group_of.tsv")
-VMS = os.path.join(SOURCE, "vms", "vms.subsystem.yaml")
+VMS = os.path.join(SOURCE, "vms", "cam.subsystem.yaml")
 TESTSUB2 = os.path.join(SOURCE, "tests", "testdata", "testsub2.subsystem.yaml")
 NONE = ("(none)", "<none>")
 
