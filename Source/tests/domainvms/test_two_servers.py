@@ -135,7 +135,7 @@ def test_while_a_writes_the_camera_sends_one_stream_to_a_and_neither_standby_rec
     # Where its backup is: the cluster AND the recording there — what a page opens it by (ADR-0010, the addition)
     assert e["backups"] == [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}] and "backup_on" not in e
     # B's copy, in the product's shape too (`PrimaryEntry`): the same facts, B among its backups, no road, no token
-    there = json.loads(o.b.vars.get("domain/vms/primaries/srv-b")[0][SERIAL])
+    there = json.loads(o.b.vars.get("domain/cam/primaries/srv-b")[0][SERIAL])
     assert there["backups"] == e["backups"] and there["recorded_by"] == "srv-a"
     assert not {"backup", "ingest", "backup_on"} & set(there)
     assert o.pusher.pass_once(_frames(wall, 5))["road"] == "primary"
@@ -167,9 +167,9 @@ def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_t
     e = o.pusher.entry()
     assert e["backups"] == both and e["backup"]["urls"] == B_URLS                  # one second road: to the first
     for name in ("srv-b", "srv-c"):
-        there = json.loads(o.b.vars.get(f"domain/vms/primaries/{name}")[0][SERIAL])   # the copy at the holder (on B)
+        there = json.loads(o.b.vars.get(f"domain/cam/primaries/{name}")[0][SERIAL])   # the copy at the holder (on B)
         assert there["backups"] == both and not {"backup", "ingest", "backup_on"} & set(there)
-    carried = json.loads(c.vars.get("domain/vms/primaries")[0][SERIAL])               # carried home by srv-c's agent
+    carried = json.loads(c.vars.get("domain/cam/primaries")[0][SERIAL])               # carried home by srv-c's agent
     assert carried["backups"] == both and carried["recorded_by"] == "srv-a"
     row_c = {"id": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"}
     assert not _covers(c.vars, c.objects, row_c, wall()) and not _covers(o.b.vars, o.b.objects, BACKUP, wall())
@@ -180,7 +180,7 @@ def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_t
 
 
 def test_the_page_reads_where_the_camera_is_recorded_backups_included_from_the_book_and_no_token():
-    """`GET /domain/vms/books/primaries`, on the VMS's own spec (`show: [recorded_by, recording, backups]`, «Паритет»'s
+    """`GET /domain/cam/books/primaries`, on the VMS's own spec (`show: [recorded_by, recording, backups]`, «Паритет»'s
     bytes): the camera's cluster and the backup's each answer from their own copy — who records it, the recording, and
     its backups each by cluster and recording, as the domain wrote them; never a road, never its token (ADR-0010, the
     addition)."""
@@ -198,16 +198,16 @@ def test_the_page_reads_where_the_camera_is_recorded_backups_included_from_the_b
     want = {SERIAL: {"recorded_by": "srv-a", "recording": SERIAL,
                      "backups": [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}]}}
     for carried in (o.cam.flash, o.b.vars):
-        copy = carried.get("domain/vms/primaries")[0]
+        copy = carried.get("domain/cam/primaries")[0]
         assert copy and json.loads(copy[SERIAL]).get("backups"), "the copy was carried home"
         # The copy as carried, in a store of its own: a console outside any domain, open — the gate is not the question
         root = tempfile.mkdtemp(prefix="primaries-")
         vars_ = FileVariables(os.path.join(root, "config"), volatile=True)
-        vars_.put("domain/vms/primaries", copy)
+        vars_.put("domain/cam/primaries", copy)
         objects = FsObjectStore(os.path.join(root, "objects"))
         srv = Mount(SpecConsole(SpecController(SPEC, vars_, objects, wall=wall), wall=wall)).serve("127.0.0.1", 0)
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/domain/vms/books/primaries") as r:
+            with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/domain/cam/books/primaries") as r:
                 body = r.read().decode()
         finally:
             srv.shutdown()
@@ -306,7 +306,7 @@ def test_a_whose_recorder_let_go_is_left_at_once_on_its_own_ingests_word_no_doma
     o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")          # A's recorder let go
     out = o.pusher.pass_once(_frames(wall, 3, start=3))
     assert out["road"] == "backup" and [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
-    assert json.loads(o.cam.flash.get("domain/vms/primaries")[0][SERIAL])["running"] is True   # the book: behind
+    assert json.loads(o.cam.flash.get("domain/cam/primaries")[0][SERIAL])["running"] is True   # the book: behind
     assert edge_gate(o.pusher)(EDGE) is True and backup_gate(o.ing["srv-b"])(BACKUP) is True
 
 
@@ -397,7 +397,7 @@ def test_a_camera_that_a_pulls_is_not_called_uncovered_and_its_card_does_not_rec
     o.cam.pushes = False; o.cam.door_open = True                       # pulled by A now
     o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")  # A's recorder pulls; it is not on the ingest
     o.domain_pass()
-    assert not json.loads(o.a.vars.get("domain/vms/sources")[0][SERIAL])["live_url"].startswith("ingest://")
+    assert not json.loads(o.a.vars.get("domain/cam/sources")[0][SERIAL])["live_url"].startswith("ingest://")
     out = o.pusher.pass_once(_frames(wall, 3))
     assert out["road"] == "primary" and o.q["srv-b"].drain() == []     # no second stream
     assert edge_gate(o.pusher)(EDGE) is False                          # and the card holds
@@ -529,7 +529,7 @@ def test_the_recorder_takes_what_the_camera_pushes_writes_it_says_have_and_the_b
     assert abs(o.ing["srv-a"].poll(token, SERIAL, camera_now=wall())["have"] - (t0 + 49 * 0.04)) < 0.01   # the camera's `have`
     o.domain_pass()
     assert o.pusher.entry()["running"] is True                                        # the book of primaries: A writes it
-    assert json.loads(o.cam.flash.get("domain/vms/primaries")[0][SERIAL])["running"] is True
+    assert json.loads(o.cam.flash.get("domain/cam/primaries")[0][SERIAL])["running"] is True
     assert rb.store.spans(f"{SERIAL}-copy") == []                                    # one stream, to A: the backup wrote nothing
 
     o.down.add("srv-a"); o.a_link.up = False                                          # A is off
