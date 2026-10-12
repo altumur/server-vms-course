@@ -26,7 +26,7 @@ from tests.vmsconftest import Box
 
 
 def _ctl(box, capacity=2):
-    return VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, capacity=capacity,
+    return VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, capacity=capacity,
                          wall=box.wall)
 
 
@@ -57,7 +57,7 @@ def _resource(box, server: str) -> None:
 
 def _offers(box) -> dict:
     out = {}
-    for p in box.vars.list("vms/slots/"):
+    for p in box.vars.list("cam/slots/"):
         items, _ = box.vars.get(p)
         if items and "offer" in items and not items.get("holder"):
             out[p.rsplit("/", 1)[1]] = items
@@ -101,7 +101,7 @@ def test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_wait
             return getattr(box.vars, name)
 
         def put(self, key, items, cas=None):
-            if key.startswith("vms/slots/") and not self.waited:
+            if key.startswith("cam/slots/") and not self.waited:
                 self.waited = True
                 both_read.wait(5)
             return box.vars.put(key, items, cas=cas)
@@ -119,7 +119,7 @@ def test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_wait
     waiting = [s for s in spares if s.name is None]
     assert len(took) == 1 and len(waiting) == 1, [(s.name, s.seeking) for s in spares]
     assert took[0].name == "w-2" and waiting[0].seeking is not None and waiting[0].slot is None
-    row, _ = box.vars.get("vms/slots/w-2")
+    row, _ = box.vars.get("cam/slots/w-2")
     assert row["holder"] == took[0].instance and row["offer"] == "" and _offers(box) == {}
     waiting[0].heartbeat_once()
     assert sorted(ctl.workers_seen()) == ["w-1", "w-2"]                  # the one waiting says nothing
@@ -139,7 +139,7 @@ def test_an_offer_not_needed_any_more_is_removed_by_the_controller():
     _worker(box, "w-9", server="srv-b", capacity=4)                       # room for the third camera
     rep = ctl.pass_once()
     assert rep["workers_needed"] == {"": 0} and rep["spare_offers"] == {"": 0}, rep
-    assert _offers(box) == {} and box.vars.get("vms/slots/w-2")[0] is None
+    assert _offers(box) == {} and box.vars.get("cam/slots/w-2")[0] is None
 
 
 def test_an_ordinary_process_never_takes_an_offer():
@@ -149,7 +149,7 @@ def test_an_ordinary_process_never_takes_an_offer():
     _worker(box)
     _cameras(box, 3)
     _ctl(box).pass_once()
-    offer = Slot.from_items("w-2", box.vars.get("vms/slots/w-2")[0])
+    offer = Slot.from_items("w-2", box.vars.get("cam/slots/w-2")[0])
     assert offer.offer == "" and offer.offered() and not offer.claimable(box.wall() + 1e6)
     w = _worker(box, server="srv-b")
     assert w.name == "w-3" and list(_offers(box)) == ["w-2"]
@@ -195,7 +195,7 @@ def test_a_taken_offer_whose_worker_is_not_heard_counts_as_issued_for_90_s():
     assert OFFER_GRACE == 90.0
     for _ in range(3):
         box.clock.advance(25); box.wall.advance(25)
-        box.objects.put("vms/heartbeats/w-1", box.objects.get("vms/heartbeats/w-1"))
+        box.objects.put("cam/heartbeats/w-1", box.objects.get("cam/heartbeats/w-1"))
         _worker(box, "w-1")
         rep = ctl.pass_once()
         assert rep["workers_needed"] == {"": 0} and rep["spares_starting"] == {"": 1} and _offers(box) == {}, rep
@@ -206,8 +206,8 @@ def test_a_taken_offer_whose_worker_is_not_heard_counts_as_issued_for_90_s():
 
 
 def test_the_numbers_on_metrics_without_a_token_while_the_pass_is_fresh():
-    """`/metrics` (and `/live/metrics`, `/auto/metrics` — the mounts): `vms_workers_needed{labels=""}` always, a row per
-    set, `vms_units_short`, `vms_spare_offers`, `vms_server_labels{server,labels,source}` — the console's row for a
+    """`/metrics` (and `/live/metrics`, `/auto/metrics` — the mounts): `cam_workers_needed{labels=""}` always, a row per
+    set, `cam_units_short`, `cam_spare_offers`, `cam_server_labels{server,labels,source}` — the console's row for a
     server, else its node's word. No token asked. A pass older than a minute: none of the four — a script reading a
     stale number would start processes for a shortage that may be gone."""
     from w2cplatform.spec import SpecController
@@ -234,15 +234,15 @@ def test_the_numbers_on_metrics_without_a_token_while_the_pass_is_fresh():
             return r.read().decode()
     try:
         text = page("/metrics")
-        assert 'vms_workers_needed{labels=""} 1\n' in text and 'vms_units_short{labels=""} 1\n' in text, text
-        assert 'vms_spare_offers{labels=""} 1\n' in text
-        assert 'vms_server_labels{server="srv-a",labels="vlan:a,vlan:b",source="console"} 1\n' in text
+        assert 'cam_workers_needed{labels=""} 1\n' in text and 'cam_units_short{labels=""} 1\n' in text, text
+        assert 'cam_spare_offers{labels=""} 1\n' in text
+        assert 'cam_server_labels{server="srv-a",labels="vlan:a,vlan:b",source="console"} 1\n' in text
         assert 'live_workers_needed{labels=""} 0\n' in page("/live/metrics")
         assert 'auto_workers_needed{labels=""} 0\n' in page("/auto/metrics")
         box.wall.advance(61)
         stale = page("/metrics")
-        assert "vms_workers_needed" not in stale and "vms_server_labels" not in stale
-        assert "vms_units_unplaced" in stale                                 # the rest of the page stands
+        assert "cam_workers_needed" not in stale and "cam_server_labels" not in stale
+        assert "cam_units_unplaced" in stale                                 # the rest of the page stands
     finally:
         srv.shutdown()
 
@@ -256,8 +256,8 @@ def test_a_spare_waiting_for_an_offer_runs_its_loop_holding_nothing_and_takes_on
     assert spare.name is None and spare.seeking is not None
     for _ in range(3):
         spare.reconcile_once(); spare.lease_pass(); spare.heartbeat_once()
-    assert spare.writing_allowed and spare.pass_failures == 0 and box.vars.list("vms/slots/") == ["vms/slots/w-1"]
-    assert box.objects.list("vms/heartbeats/") == ["vms/heartbeats/w-1"]
+    assert spare.writing_allowed and spare.pass_failures == 0 and box.vars.list("cam/slots/") == ["cam/slots/w-1"]
+    assert box.objects.list("cam/heartbeats/") == ["cam/heartbeats/w-1"]
     _cameras(box, 3)
     _ctl(box).pass_once()                                                 # w-1 takes two, one is short: an offer
     spare.lease_pass()
@@ -279,7 +279,7 @@ def test_the_name_comes_from_the_unit_and_a_spare_has_none():
     w = _worker(box, env={"WORKER_NAME": "w-srv-a-1"})
     assert w.name == "w-srv-a-1"
     spare = _worker(box, server="srv-b", env={"WORKER_NAME": "w-srv-b-1", "SPARE_FOR": ""})
-    assert spare.name is None and box.vars.get("vms/slots/w-srv-b-1")[0] is None
+    assert spare.name is None and box.vars.get("cam/slots/w-srv-b-1")[0] is None
     assert math.ceil(3 / 2) == 2
 
 
@@ -320,7 +320,7 @@ def test_no_offer_where_no_server_could_carry_a_spare():
 
 def test_a_withheld_shortage_and_the_reach_budget_are_numbers_on_metrics():
     """The review's thirteenth pass, «Вопросы» 2 and 3: `reach_budget` was in the pass report and nowhere on `/metrics`;
-    `vms_spares_withheld` was seen as its TYPE line alone while the report said a set was withheld. Both are pinned here
+    `cam_spares_withheld` was seen as its TYPE line alone while the report said a set was withheld. Both are pinned here
     with their values: the set withheld, 1; the budget the controller works with."""
     from vms.console import make_console
     box = Box()
@@ -337,8 +337,8 @@ def test_a_withheld_shortage_and_the_reach_budget_are_numbers_on_metrics():
             text = r.read().decode()
     finally:
         srv.shutdown()
-    assert 'vms_spares_withheld{labels="vlan:dmz"} 1\n' in text, [l for l in text.splitlines() if "withheld" in l]
-    assert f"vms_reach_budget {ctl.reach_budget}\n" in text
+    assert 'cam_spares_withheld{labels="vlan:dmz"} 1\n' in text, [l for l in text.splitlines() if "withheld" in l]
+    assert f"cam_reach_budget {ctl.reach_budget}\n" in text
 
 
 def test_a_group_left_whole_on_a_leaving_slot_is_short_and_a_spare_too_small_for_it_is_not_offered():
