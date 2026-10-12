@@ -174,7 +174,7 @@ def test_a_members_agent_neither_reads_nor_writes_the_signers_key():
     r = Rights({"domainagent": agent})
     for action in ("read", "write", "delete"):
         assert not r.allows("domainagent", action, "domain/signer"), action
-    for key in (f"{PRIMARIES_PATH}/cam-SN1", f"{SOURCES_PATH}/srv-a", "domain/vms/crossings", "domain/members"):
+    for key in (f"{PRIMARIES_PATH}/cam-SN1", f"{SOURCES_PATH}/srv-a", "domain/cam/crossings", "domain/members"):
         assert not r.allows("domainagent", "write", key), key
     assert r.allows("domainagent", "write", PRIMARIES_PATH) and r.allows("domainagent", "write", "domain/member-key")
     box = FileVariables(tempfile.mkdtemp(prefix="acl-"), "domainagent", {"domainagent": agent["write"]}, volatile=True)
@@ -186,8 +186,8 @@ def test_a_members_agent_neither_reads_nor_writes_the_signers_key():
 
 
 def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares():
-    """The domain card's «keys» tab lists the VMS's rows by the families `vms.subsystem.yaml` declares (`domain.keys`,
-    the product's `KEY_FAMILIES` mapped to `domain/vms/…`). Every `domain/vms/…` key a pass wrote — at the holder, in the
+    """The domain card's «keys» tab lists the VMS's rows by the families `cam.subsystem.yaml` declares (`domain.keys`,
+    the product's `KEY_FAMILIES` mapped to `domain/cam/…`). Every `domain/cam/…` key a pass wrote — at the holder, in the
     recording member, in the camera — falls into one; so does every path the worker's code names (each book at the
     holder and carried home, each kept row, the worker's slot); and every family has its words."""
     from vms.config import SPEC
