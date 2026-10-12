@@ -1,26 +1,26 @@
-# /etc/containers/systemd/vmsworker@.container — the worker, on М9's box.
-# `systemctl start vmsworker@w-1` — the instance name is the slot the worker
+# /etc/containers/systemd/camworker@.container — the worker, on М9's box.
+# `systemctl start camworker@w-1` — the instance name is the slot the worker
 # claims (М10 Lesson 4). One instance on one box; in М11 this unit becomes
-# vmsworker.nomad.hcl with count = N and the slot from NOMAD_ALLOC_INDEX.
+# camworker.nomad.hcl with count = N and the slot from NOMAD_ALLOC_INDEX.
 # М9's worker.container, with Postgres gone: the worker's truth is the
 # platform's stores on the data partition, and its archive is the resource.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # vmsworker@.container — the worker as a Quadlet template: `systemctl start vmsworker@w-1`, the instance
+# # camworker@.container — the worker as a Quadlet template: `systemctl start camworker@w-1`, the instance
 # name is the slot
 #
-# **Role.** The Podman Quadlet unit for `vmsworker` on М9's box, installed at
-# `/etc/containers/systemd/vmsworker@.container`; Quadlet generates `vmsworker@.service` from it. A
+# **Role.** The Podman Quadlet unit for `camworker` on М9's box, installed at
+# `/etc/containers/systemd/camworker@.container`; Quadlet generates `camworker@.service` from it. A
 # template: the instance name after `@` (`%i`) is the slot the worker claims (М10 Lesson 4), so
-# `vmsworker@w-1` and `vmsworker@w-2` are two workers with stable names. It is М9's `worker.container` with
+# `camworker@w-1` and `camworker@w-2` are two workers with stable names. It is М9's `worker.container` with
 # Postgres gone — the worker's truth is the platform's stores on the data partition and its archive is the
-# resource. In М11 this unit becomes `vmsworker.nomad.hcl` with `count = N` and the slot from
+# resource. In М11 this unit becomes `camworker.nomad.hcl` with `count = N` and the slot from
 # `NOMAD_ALLOC_INDEX`. Checked by `tests/test_deploy_units.py` (image, `Exec`, env file, `/data/` volumes,
 # the archive writable, media read-only, `StopTimeout=20`) and by `check-quadlet.sh` on a box with podman.
 #
 # ## Notes
-# - One instance per box is the course's setting; nothing forbids `vmsworker@w-2` on the same box — that is
+# - One instance per box is the course's setting; nothing forbids `camworker@w-2` on the same box — that is
 #   how "the zombie on one box" is reproduced by hand with two real processes (start `w-1` twice under
 #   different unit names, or pause one).
 # - What differs from the controller and console units is exactly the mounts: only this unit has
@@ -43,10 +43,10 @@ Exec=python3 -m vms worker
 # exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which
 # process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.
 Environment=WORKER_NAME=%i
-# `PLATFORM_DIR`, `RESOURCE_ROOT` (`w2c.env.example`), `MEDIA_DIR`, `LOG_LEVEL` (`vms.env.example`), `CAPACITY` (`roles/vmsworker.env.example`):
+# `PLATFORM_DIR`, `RESOURCE_ROOT` (`w2c.env.example`), `MEDIA_DIR`, `LOG_LEVEL` (`vms.env.example`), `CAPACITY` (`roles/camworker.env.example`):
 # `/etc/w2c` and `/etc/vms` are links into the data partition, never a rootfs slot.
 # The worker's TWO doors, and neither may be a constant in a template: the RTSP fan-out and the playback
-# surface. A second `vmsworker@w-2` on the same box is the ordinary way to use capacity (the autoscaler
+# surface. A second `camworker@w-2` on the same box is the ordinary way to use capacity (the autoscaler
 # does exactly that), and a fixed 8554 turns it into a crash loop. `auto` asks the OS; both addresses are
 # published per camera in the heartbeat (`live_url`, `playback_url`) and read from there by the recorder,
 # the gateway, the detectors and the console — which is what the heartbeat has been for since Lesson 4.
@@ -56,8 +56,8 @@ EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
 # the role's declaration on this box (ADR-0070): CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB — the administrator's
 # file, read last, so its CAPACITY is the role's own and no other role's
-EnvironmentFile=/etc/vms/roles/vmsworker.env
-# the two stores, read-write: the worker writes `vms/epoch/*`, `vms/slots/*`, `vms/devices/*` (its token) and its heartbeat
+EnvironmentFile=/etc/vms/roles/camworker.env
+# the two stores, read-write: the worker writes `cam/epoch/*`, `cam/slots/*`, `cam/devices/*` (its token) and its heartbeat
 # object. `:z` relabels for SELinux, shared.
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
 # `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
@@ -75,7 +75,7 @@ Volume=/etc/w2c/secrets/platform.key:/run/secrets/platform.key:ro,z
 GroupAdd=2104
 Environment=SECRETS_KEY=/run/secrets/platform.key
 # the worker records nothing — the recorder does (`recworker@.container`). Read-write here
-# because the camera's event buckets, `vms/<cam>/e<epoch>/`, are the worker's, on this server's resource;
+# because the camera's event buckets, `cam/<cam>/e<epoch>/`, are the worker's, on this server's resource;
 # it never writes under `rec/`.
 Volume=/data/platform/events:/data/platform/events:z
 # a CLIENT of the platform's events archive: `w2c-events`, by number — what it writes there the resource deletes.
@@ -108,5 +108,5 @@ Restart=always
 RestartSec=2
 
 [Install]
-# enabled instances start at boot (`systemctl enable vmsworker@w-1`).
+# enabled instances start at boot (`systemctl enable camworker@w-1`).
 WantedBy=multi-user.target
