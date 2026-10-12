@@ -71,7 +71,7 @@ import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlsplit, unquote
 
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.variables import Conflict, Forbidden
@@ -557,6 +557,27 @@ class Console:
                 if route is not None:
                     return self._early() or self._to_signer("PUT", route)
                 try:
+                    if u.path.startswith("/domain/placement/") and console.holder_vars is not None:
+                        subject = self._admin("placement is")
+                        if console.admin is None or subject is None:
+                            raise ApiError(403, "placement needs an authenticated domain admin")
+                        if self._early():
+                            return
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        if len(parts) != 2:
+                            return self._send(400, {"detail": "placement needs subsystem and reference"})
+                        from w2cplatform import catalog
+                        from .placement import assign
+                        try:
+                            catalog.spec(parts[0])
+                            body = self._body()
+                            if body is not None:
+                                self._send(200, assign(console.holder_vars, parts[0], unquote(parts[1]), body))
+                        except (ValueError, KeyError):
+                            return self._send(400, {"detail": "invalid placement identity"})
+                        except Conflict:
+                            return self._send(409, {"detail": "placement changed during this request"})
+                        return
                     if u.path == "/domain/topology" and console.topology is not None:
                         return self._topology()
                     if u.path.startswith("/domain/grants/") and console.holder_vars is not None:
