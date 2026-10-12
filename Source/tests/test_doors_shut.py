@@ -65,10 +65,10 @@ def test_a_recorder_on_another_server_does_not_knock_on_its_own_loopback():
     from tests.test_volumes import _recorder
     box = Box()
     box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
-        {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7", "live_shm": "shm:///run/cam/7.shm"}],
+        {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7", "live_shm": "shm:///run/vms/7.shm"}],
         {"server": "srv-b"}).to_bytes())
     far, near = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
-    assert near.source("7") == ("srv-b", "shm:///run/cam/7.shm")       # the same server: shared memory, as before
+    assert near.source("7") == ("srv-b", "shm:///run/vms/7.shm")       # the same server: shared memory, as before
     assert far.source("7") is None and far.behind_loopback == {"7": "srv-b"}
     far.waiting = {"7"}
     why = far.status_extra({"id": "7", "cam": "7"})["why"]
