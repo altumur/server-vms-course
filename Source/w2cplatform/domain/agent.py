@@ -367,7 +367,7 @@ class DomainAgent:
         from .carry import answer
         if hasattr(self.domain_vars, "answer_for"):
             return self.domain_vars.answer_for(self.cluster, self.key)
-        return answer(self.domain_vars, self.domain_objects, self.cluster)
+        return answer(self.domain_vars, self.domain_objects, self.cluster, now=self.now())
 
     def _sync(self) -> bool:
         from .carry import CarriedObjects, CarriedVars, Refused
