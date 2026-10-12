@@ -74,12 +74,17 @@ def index(collected, previous=None):
     """Current subjects plus last known names ONLY of members still explicitly missing.
 
 Lost/removed members are absent from collected.missing and therefore lose their old names.
-A complete collection repairs even a corrupt previous index; an incomplete one cannot.
+An unreadable predecessor carries no known names. Fresh results still replace it;
+the missing marker independently prevents creation and grant expansion.
 """
     subjects = {k: set(v) for k, v in collected.subjects.items()}
     missing = set(collected.missing)
     if missing and previous is not None:
-        old, _ = decode(previous, "previous book name index")
+        from .declared import NamesUnavailable
+        try:
+            old, _ = decode(previous, "previous book name index")
+        except NamesUnavailable:
+            old = {}
         for key, owners in old.items():
             retained = missing.intersection(owners)
             if retained:
@@ -100,15 +105,16 @@ if an output write fails, the previous index remains. The holder supplies sealed
 
 def _publish(vars_, spec, book, collected, now):
     where = path(spec.name, book)
-    previous, idx = vars_.get(where)
-    names = index(collected, previous)
+    named = book + "/" in spec.domain.names
+    previous, idx = vars_.get(where) if named else (None, 0)
+    names = index(collected, previous) if named else None
     for member, items in collected.rows.items():
         dest = f"{spec.domain_prefix}{book}/{member}"
         row = delivery(vars_, dest, member, items, now)
         have, rev = vars_.get(dest)
         if have != row:
             vars_.put(dest, row, cas=rev)
-    if previous != names:
+    if named and previous != names:
         vars_.put(where, names, cas=idx)
 
 
