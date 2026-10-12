@@ -49,7 +49,7 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
     for a in agents:
         report_sync(a)
     admit(fed)
-    placer = ClusterPlacer(fed, sub="vms", clock=wall)
+    placer = ClusterPlacer(fed, sub="cam", clock=wall)
     assert placer.place(UnitSite(1, "vlan:b")).cluster == "south"
     seen["south"] = ["vlan:b", "vlan:c"]
     assert agents[1].say_reaches() and not agents[1].say_reaches()   # written when it changes, and only then
