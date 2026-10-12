@@ -115,6 +115,7 @@ class ClusterPlacer:
 
 
 PREFIX = "domain/placement/"
+COPIES_PREFIX = "domain/placed/"
 
 
 def path(sub, ref):
@@ -145,6 +146,13 @@ def decode(items):
 
 def read(vars_, sub, ref):
     items, _ = vars_.get(path(sub, ref))
+    return decode(items) if items else None
+
+
+def placed(vars_, sub, ref):
+    """The agent's copy, including on the holder member; no fallback to the holder row."""
+    key = COPIES_PREFIX + path(sub, ref)[len(PREFIX):]
+    items, _ = vars_.get(key)
     return decode(items) if items else None
 
 
