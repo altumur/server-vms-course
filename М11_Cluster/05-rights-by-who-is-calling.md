@@ -50,13 +50,13 @@
 Трасса — [`Source/traces/05-who-may-write-what.txt`](../Source/traces/05-who-may-write-what.txt). Каждый процесс кластера через сокет своей роли пробует одну запись, которая его, и одну, которая нет:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/7", "cas": null, "items": {"epoch": "1"}}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/7", "cas": null, "items": {"epoch": "1"}}
 → 200 {"index": 1004}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
-→ 403 {"kind": "forbidden", "error": "vmsworker may not write vms/placement/7"}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
+→ 403 {"kind": "forbidden", "error": "camworker may not write cam/placement/7"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
@@ -68,35 +68,35 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
 POST /v1/write {"op": "put", "key": "rec/recordings/7", "cas": null, "items": {"cam": "7"}}
 → 403 {"kind": "forbidden", "error": "recworker may not write rec/recordings/7"}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "moved"}}
-→ 403 {"kind": "forbidden", "error": "vmscontroller may not write vms/cameras/7"}
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "moved"}}
+→ 403 {"kind": "forbidden", "error": "camcontroller may not write cam/cameras/7"}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "north-gate"}}
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "north-gate"}}
 → 200 {"index": 1007}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
-→ 403 {"kind": "forbidden", "error": "console may not write vms/workers/w-srv-a-1"}
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
+→ 403 {"kind": "forbidden", "error": "console may not write cam/workers/w-srv-a-1"}
 
 # resource on srv-a → /run/configstore/resource.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "mine"}}
-→ 403 {"kind": "forbidden", "error": "resource may not write vms/cameras/7"}
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "mine"}}
+→ 403 {"kind": "forbidden", "error": "resource may not write cam/cameras/7"}
 ```
 
 (Удачные записи контроллера и ресурса — размещение и своя дверь, `platform/doors/srv-a`, — в полной трассе.) Сведённое в таблицу — это и есть права записи из файла прав. Роли у каждой спеки каталога одни и те же — `<sub>worker` и `<sub>controller`, — а префиксы их — имя спеки; ниже они у подсистем VMS, на стенде:
 
 | Роль (сокет) | Пишет | Не может писать |
 |---|---|---|
-| **`<sub>worker`** — `vmsworker` | эпохи, слоты, холды своей подсистемы — у каждого воркера (`Subsystem.acl_worker`): `vms/epoch/*`, `vms/slots/*`, `vms/holds/*`; что спека говорит в `worker.writes` — у VMS `vms/devices/*` (что умеет устройство — урок 25 М10B); строки своих объектов «создать один раз» — `objects/vms/commands/*` | ни строк, ни размещения, ни назначений |
+| **`<sub>worker`** — `camworker` | эпохи, слоты, холды своей подсистемы — у каждого воркера (`Subsystem.acl_worker`): `cam/epoch/*`, `cam/slots/*`, `cam/holds/*`; что спека говорит в `worker.writes` — у VMS `cam/devices/*` (что умеет устройство — урок 25 М10B); строки своих объектов «создать один раз» — `objects/cam/commands/*` | ни строк, ни размещения, ни назначений |
 | **`recworker`** | `rec/epoch/*`, `rec/slots/*`, `rec/holds/*`, `objects/rec/used/*`, `objects/rec/commands/*` | ни записей, ни размещения |
-| **`<sub>controller`** — `vmscontroller` | `vms/workers/*`, `vms/placement/*`, `vms/slots/*`, `vms/decommissioned/*` (`acl_controller`) | ни одной строки единицы |
-| **`console`** | строки оператора каждой спеки (`acl_console`): у VMS `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/policy`, `vms/requests/*`, `vms/retention/*`, `vms/alarms_retention/*`, `vms/sweep`, под `rec/` — `rec/recordings/*`, `rec/next_id`, `rec/idem/*`, `rec/policy`, `rec/sweep`, `rec/requests/*`, `rec/volumes/*`, `rec/keeps/*` (так же у `live`, `auto`, `det`…); платформы — `platform/drain`, `platform/decommission/*`, `platform/servers/*` (метки сервера, одна строка на сервер для всех подсистем; ADR 0026 — читают её контроллеры и воркеры), `platform/schema`, ключ дверей держателей `door/signer`, `door/keys`; из объектов-строк — отметки просьб, куда жнец пишет итог (`acl_objects_console`): `objects/vms/commands/*`, `objects/rec/commands/*` | ни размещения, ни назначений, ни слотов |
+| **`<sub>controller`** — `camcontroller` | `cam/workers/*`, `cam/placement/*`, `cam/slots/*`, `cam/decommissioned/*` (`acl_controller`) | ни одной строки единицы |
+| **`console`** | строки оператора каждой спеки (`acl_console`): у VMS `cam/cameras/*`, `cam/next_id`, `cam/idem/*`, `cam/policy`, `cam/requests/*`, `cam/retention/*`, `cam/alarms_retention/*`, `cam/sweep`, под `rec/` — `rec/recordings/*`, `rec/next_id`, `rec/idem/*`, `rec/policy`, `rec/sweep`, `rec/requests/*`, `rec/volumes/*`, `rec/keeps/*` (так же у `live`, `auto`, `det`…); платформы — `platform/drain`, `platform/decommission/*`, `platform/servers/*` (метки сервера, одна строка на сервер для всех подсистем; ADR 0026 — читают её контроллеры и воркеры), `platform/schema`, ключ дверей держателей `door/signer`, `door/keys`; из объектов-строк — отметки просьб, куда жнец пишет итог (`acl_objects_console`): `objects/cam/commands/*`, `objects/rec/commands/*` | ни размещения, ни назначений, ни слотов |
 | **`resource`** | `platform/doors/*` — где он отвечает; просьбу освободить место — у спеки с `requests: {free: true}` (у VMS `rec/requests/free-*`) | ничего больше из подсистем |
 | **`domainagent`** (М12A) | `domain/*` с запретами на всё, что пишет только держатель: `!domain/signer*`, `!domain/users/*`, `!domain/members`, `!domain/grants/*`, `!domain/pending/*`, `!domain/keepers/*`, `!domain/ldevid/*`, книги и сохраняемые строки подсистем — и вместе с `domain` единственный, кто удаляет `domain/*` | ничего из подсистем; читает `*` без секретных строк, которых не читает по общей таблице: ключей домена `domain/signer*`, людей `domain/users/*`, секретов спек, ведомостей людей `<sub>/asked/*` — как у продукта; отчёт члена несёт эпохи подсистем (`rec/epoch/*`, находка N3 сценария «камера — офис — центр») |
 | **`domain`** (М12A, в хранилище держателя домена) | `domain/*`, `identity/*` | ничего из подсистем |
-| **`<sub>domain`** — `vmsdomain` (М12B) | `domain/vms/*` — вклад подсистемы в домен (ADR 0024) | ничего, кроме своего раздела домена |
+| **`<sub>domain`** — `camdomain` (М12B) | `domain/cam/*` — вклад подсистемы в домен (ADR 0024) | ничего, кроме своего раздела домена |
 
 Heartbeat'ов, срезов снимка и отчётов прохода в этой таблице нет: это файлы на сервере писателя, и строк под них в хранилище нет — ни у кого нет права их писать строкой (`test_nothing_writes_what_it_has_no_business_writing` проверяет и это).
 
@@ -108,7 +108,7 @@ Heartbeat'ов, срезов снимка и отчётов прохода в э
 
 **Чтения тоже по правам.** `get` ключа, который роли читать нельзя, — `403`. А `list` называет любой роли все ключи под префиксом: только имена, ничего из значений (ADR-0021, дополнение 2026-10-10, правило продукта: «`list` без `read`», как у Nomad). Роли хранилища — процессы одной коробки (ADR-0034), и имя строки для них не секрет. Что видят люди, решает консоль своими правами. Раньше курс резал листинг по праву чтения, и консоль домена не могла проверить имя учётки RTSP, которую ей читать нельзя (находка F1 сценария «камера — офис — центр»). Теперь имя проверяется по ключу из листинга, как `subjectsOf` продукта (`declared._listed`), а удалённая учётка — это удалённая строка, не надгробие. Удаляет её воркер VMS на домене в своём префиксе: `domain/<sub>/…` ему можно удалять, остальное в `domain/` — только ролям домена (`rights.may_delete_domain`). Воркер читает свою подсистему, схему, строку списания своего сервера и ровно то из домена, что спрашивает его дверь воспроизведения (ключи и отметку члена домена) — никогда не гранты и не хеш аварийного пароля (`test_the_holder_reads_no_more_of_the_domain_than_its_door_asks`).
 
-**Консоль читает отметку держателя, прежде чем закончить просьбу, и пишет в неё итог.** Жнец просьб — платформы: консоль каждого сервера гоняет `requests.turn` (`w2cplatform/requests.py`, `clear_requests`) по каждой спеке, у которой есть просьбы. Он смотрит на `<sub>/commands/<id>`, чтобы отличить просьбу, которую держатель начал, от той, которую не выполнил никто. В кластере эта отметка — строка хранилища `objects/<sub>/commands/<id>` (создаётся только один раз, шаг 1), и без права её читать консоль получала бы `Forbidden: console may not read objects/vms/commands/x1` на каждом ходе, просьба стояла бы, `w2c_requests_expired_total` не рос бы (тринадцатое ревью, major 20). Поэтому консоль читает эти строки у каждой спеки — те же, что пишет её воркер (`rights.py`, `_worker_objects`); у `rec`, который тоже берёт просьбы (`requests: {free: true}`), это `objects/rec/commands/*`. И пишет их: итог просьбы, которую никто не исполнил, жнец кладёт в её отметку (ADR 0054). `expired` — только если отметки нет (`put_new`, та же запись «создать один раз», что у держателя, шаг 1), с `ended_by: reaper`; `unknown` — в отметку без исхода, чей держатель ушёл, по индексу, который прочёл (`complete_mark`: `get_at`/`put_at`, CAS на индексе строки). Отметку с исходом он не трогает. Это право записи роли `console` на `objects/<sub>/commands/*` — объекты `acl_objects_console`, которые строки (`_rows`); и это единственное семейство, у которого писателей двое. Тест `test_lesson2_jobs.py::test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_rights` гоняет жнеца через сокет консоли с правами из файла: просьба, начатая держателем и брошенная, и просьба без держателя закончены и посчитаны, а отвеченная — убрана без счёта. Каждый итог лёг в отметку через сокет консоли: у никем не начатой — `expired` от жнеца, у брошенной — `unknown` с начавшим держателем, а ответ держателя остался как был. Что исключение на одной строке обрывает обход остальных строк этой спеки до следующего хода — это код жнеца (`clear_requests`), и это открыто.
+**Консоль читает отметку держателя, прежде чем закончить просьбу, и пишет в неё итог.** Жнец просьб — платформы: консоль каждого сервера гоняет `requests.turn` (`w2cplatform/requests.py`, `clear_requests`) по каждой спеке, у которой есть просьбы. Он смотрит на `<sub>/commands/<id>`, чтобы отличить просьбу, которую держатель начал, от той, которую не выполнил никто. В кластере эта отметка — строка хранилища `objects/<sub>/commands/<id>` (создаётся только один раз, шаг 1), и без права её читать консоль получала бы `Forbidden: console may not read objects/cam/commands/x1` на каждом ходе, просьба стояла бы, `w2c_requests_expired_total` не рос бы (тринадцатое ревью, major 20). Поэтому консоль читает эти строки у каждой спеки — те же, что пишет её воркер (`rights.py`, `_worker_objects`); у `rec`, который тоже берёт просьбы (`requests: {free: true}`), это `objects/rec/commands/*`. И пишет их: итог просьбы, которую никто не исполнил, жнец кладёт в её отметку (ADR 0054). `expired` — только если отметки нет (`put_new`, та же запись «создать один раз», что у держателя, шаг 1), с `ended_by: reaper`; `unknown` — в отметку без исхода, чей держатель ушёл, по индексу, который прочёл (`complete_mark`: `get_at`/`put_at`, CAS на индексе строки). Отметку с исходом он не трогает. Это право записи роли `console` на `objects/<sub>/commands/*` — объекты `acl_objects_console`, которые строки (`_rows`); и это единственное семейство, у которого писателей двое. Тест `test_lesson2_jobs.py::test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_rights` гоняет жнеца через сокет консоли с правами из файла: просьба, начатая держателем и брошенная, и просьба без держателя закончены и посчитаны, а отвеченная — убрана без счёта. Каждый итог лёг в отметку через сокет консоли: у никем не начатой — `expired` от жнеца, у брошенной — `unknown` с начавшим держателем, а ответ держателя остался как был. Что исключение на одной строке обрывает обход остальных строк этой спеки до следующего хода — это код жнеца (`clear_requests`), и это открыто.
 
 **У домена свои роли** — платформы (домен — служба платформы, ADR 0024), и говорит их платформенный домен из спек (`w2cplatform/domain/rights.py`). Подписант М12A открывает `domain.sock`; роли, которой нет в файле прав, демон сокета не открывает, первое чтение подписанта — `StoreUnavailable`, и задание ходит по кругу перезапусков (тринадцатое ревью, major 11; тест М12A, который проверял только создание объекта хранилища, этого не видел — `open_vars` ленив и ничего не открывает). Роль `domain` есть, сокет — группы `w2c-domain`, права — строки домена и людей `identity/*` и чтение своего кластера. Ключи домена `domain/signer*` читает и пишет только `domain`; агент домена в каждом кластере читает `domain/*` без `!domain/signer*` и пишет с запретами на всё, что пишет только держатель (таблица выше). Отдельной роли отчёта члена нет: член ничего не читает из хранилища держателя. Тесты — `test_policies.py::test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone` и в М12A `test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_rights`: настоящий демон с файлом прав курса, подписант делает через свой сокет свои первые чтения и записи, а сокет агента ключей не читает.
 
@@ -117,11 +117,11 @@ Heartbeat'ов, срезов снимка и отчётов прохода в э
 Права демон читает из файла `/etc/w2c/configstore-rights.json` (в репозитории — [`deploy/cluster/configstore-rights.json`](../Source/deploy/cluster/configstore-rights.json)), формата продукта:
 
 ```json
-{"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*", "…"], "write": ["vms/epoch/*", "vms/slots/*", "…"],
+{"roles": {"camworker": {"group": "vms-camworker", "read": ["cam/*", "…"], "write": ["cam/epoch/*", "cam/slots/*", "…"],
                          "delete": ["…"]}}}
 ```
 
-Шаблон со звёздочкой в конце — `vms/epoch/*` — покрывает всё под префиксом. Шаблон **без** звёздочки — один точный ключ. Шаблон с `!` в начале — **запрет**, и запреты спрашиваются раньше разрешений, где бы в списке они ни стояли. Демон (`w2cplatform/storemachine.py`) спрашивает одну функцию платформы — ту же, что ручка в процессе (`w2cplatform/rights.py`):
+Шаблон со звёздочкой в конце — `cam/epoch/*` — покрывает всё под префиксом. Шаблон **без** звёздочки — один точный ключ. Шаблон с `!` в начале — **запрет**, и запреты спрашиваются раньше разрешений, где бы в списке они ни стояли. Демон (`w2cplatform/storemachine.py`) спрашивает одну функцию платформы — ту же, что ручка в процессе (`w2cplatform/rights.py`):
 
 ```python
     def allows(self, role: str, action: str, key: str) -> bool:
@@ -154,7 +154,7 @@ def allowed(patterns, key: str) -> bool:
                                           socket_group(role, self.rights)))
 ```
 
-`/run/configstore/<роль>.sock` — права 0660, группа — `group` роли из файла: `<развёртывание>-<роль>` у воркеров подсистемы (`vms-vmsworker`), `w2c-<роль>` у ролей платформы — консоли, ресурса, домена и контроллера каждой спеки (`w2c-vmscontroller`; ADR 0023, `rights.group`). `admin.sock` — 0600: открыть его могут только пользователь демона (`configstore`) и root; через него идут команды оператора (`configstore status`, `join`, `backup`, `import`…). Юнит процесса входит в группу своей роли (`SupplementaryGroups=vms-vmsworker`, урок 3), группы создаёт `w2c-cluster.sysusers`, а пользователь демона `configstore` — член каждой из них, потому что отдаёт сокеты их группам. Поэтому процесс может открыть сокет своей роли и никакой другой — и **сокет, который он открыл, и есть то, кто звонит**. Демон спрашивает файл прав по роли сокета до того, как что-то переслать лидеру или применить (урок 2, шаг 6). Тесты — `test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners`, `test_every_unit_opens_its_roles_socket_and_joins_its_group`.
+`/run/configstore/<роль>.sock` — права 0660, группа — `group` роли из файла: `<развёртывание>-<роль>` у воркеров подсистемы (`vms-camworker`), `w2c-<роль>` у ролей платформы — консоли, ресурса, домена и контроллера каждой спеки (`w2c-camcontroller`; ADR 0023, `rights.group`). `admin.sock` — 0600: открыть его могут только пользователь демона (`configstore`) и root; через него идут команды оператора (`configstore status`, `join`, `backup`, `import`…). Юнит процесса входит в группу своей роли (`SupplementaryGroups=vms-camworker`, урок 3), группы создаёт `w2c-cluster.sysusers`, а пользователь демона `configstore` — член каждой из них, потому что отдаёт сокеты их группам. Поэтому процесс может открыть сокет своей роли и никакой другой — и **сокет, который он открыл, и есть то, кто звонит**. Демон спрашивает файл прав по роли сокета до того, как что-то переслать лидеру или применить (урок 2, шаг 6). Тесты — `test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners`, `test_every_unit_opens_its_roles_socket_and_joins_its_group`.
 
 **Файл генерируется из спек.** Никто его не пишет: `python3 -m w2cplatform.cluster rights` ([`w2cplatform/cluster/rights.py`](../Source/w2cplatform/cluster/rights.py)) печатает его из каталога спек (`SPEC_DIR`) — тех же списков, по которым код решает, что ему писать. Ни одного имени подсистемы в генераторе нет: роль воркера — у каждой спеки, по одному циклу:
 
@@ -169,7 +169,7 @@ def allowed(patterns, key: str) -> bool:
 
 Записи — из `acl_console`, `acl_controller`, `acl_worker_role` (эпохи, слоты, холды и `worker.writes` спеки) и строк объектов, которые спека назвала строками; роль удаляет то, что пишет, — кроме консоли и меток просьб: метку она пишет (второй писатель, ADR 0054), но не удаляет, потому что метка — запись «не больше одного раза» (ADR 0013), и её удаление открыло бы повторное исполнение; метки подметает только держатель (`Worker.sweep_marks`), когда строки просьбы уже нет. Чтения — списком, у каждого рядом код, который это чтение делает: своя подсистема, та, о чьих единицах эта (`about`), строка списания, что достаёт каждый сервер (`platform/servers/*`), ключи ворот и дверей, `worker.reads` спеки и строки её `secrets.reads`, а у воркера, который подаёт просьбы (`worker.requests`), — строки и метки просьб тех подсистем, куда он подаёт (`filed_to`): стоящую строку под занятым id он сравнивает (`Worker._filed_already`), а метку читает, прежде чем подать под id, чья строка уже ушла (`Worker._spent_by`; «Архитектор» после четырнадцатого ревью, major 2). Раньше он их только писал, и повтор под занятым id на кластере отказывался всегда. Кто читает секретную строку, сверяется с объявлением спеки (`secrets: {readers, reads}`, `check_secrets`): расходятся — файл не делается. Закоммиченный файл обязан быть тем, что генерируется сейчас: `install.sh` проверяет это (`w2c-run.sh rights --check`) и устаревший файл не ставит, а отказывается.
 
-Что воркер читает из книг домена, говорит его спека, и только она. Регистратор держит у себя приёмник и передатчик (ADR-0065, дополнение 2026-10-08), а они читают книги, которые агент кластера принёс домой: книгу источников (`domain/vms/sources`), книгу пути наверх у офиса (`domain/vms/upstream`) и просьбы, которые офис несёт наверх (`domain/vms/asks`). Спека записи называла только книгу основных (`domain/vms/primaries`), и на configstore передатчик регистратора не поднимался: первое же его чтение получало `403`, а приёмник получал отказ на каждом опросе. Это нашёл сценарий «камера — офис — центр» (находка F3). Теперь `worker.reads` спеки записи называет все четыре книги, и роль `recworker` их читает. Регистратор продукта читает их как `*` за вычетом запретов. Файл прав по-прежнему не правят руками: его генерируют заново (`test_the_recorder_reads_the_books_its_ingest_and_forwarder_read`).
+Что воркер читает из книг домена, говорит его спека, и только она. Регистратор держит у себя приёмник и передатчик (ADR-0065, дополнение 2026-10-08), а они читают книги, которые агент кластера принёс домой: книгу источников (`domain/cam/sources`), книгу пути наверх у офиса (`domain/cam/upstream`) и просьбы, которые офис несёт наверх (`domain/cam/asks`). Спека записи называла только книгу основных (`domain/cam/primaries`), и на configstore передатчик регистратора не поднимался: первое же его чтение получало `403`, а приёмник получал отказ на каждом опросе. Это нашёл сценарий «камера — офис — центр» (находка F3). Теперь `worker.reads` спеки записи называет все четыре книги, и роль `recworker` их читает. Регистратор продукта читает их как `*` за вычетом запретов. Файл прав по-прежнему не правят руками: его генерируют заново (`test_the_recorder_reads_the_books_its_ingest_and_forwarder_read`).
 
 ## Шаг 4 — Проверить на сервере
 
@@ -182,24 +182,24 @@ put()  { api "$1" POST /v1/write "{\"op\": \"put\", \"key\": \"$2\", \"items\": 
 ```
 
 ```bash
-[ "$(put vmsworker vms/slots/w-verify)" = 200 ] && ok "vmsworker.sock writes vms/slots/*" || bad "vmsworker.sock cannot claim a slot"
-[ "$(put vmsworker vms/cameras/verify)" = 403 ] && ok "vmsworker.sock refused on vms/cameras/* (403)" || bad "vmsworker.sock wrote a camera row — one writer per key is NOT enforced"
-[ "$(put vmsworker vms/placement/verify)" = 403 ] && ok "vmsworker.sock refused on vms/placement/* (403)" || bad "vmsworker.sock wrote placement"
-[ "$(put console vms/cameras/verify)" = 200 ] && ok "console.sock writes vms/cameras/*" || bad "console.sock cannot write a camera row"
-[ "$(put console vms/placement/verify)" = 403 ] && ok "console.sock refused on vms/placement/* (403) — a console that can place is a second controller" || bad "console.sock wrote placement"
+[ "$(put camworker cam/slots/w-verify)" = 200 ] && ok "camworker.sock writes cam/slots/*" || bad "camworker.sock cannot claim a slot"
+[ "$(put camworker cam/cameras/verify)" = 403 ] && ok "camworker.sock refused on cam/cameras/* (403)" || bad "camworker.sock wrote a camera row — one writer per key is NOT enforced"
+[ "$(put camworker cam/placement/verify)" = 403 ] && ok "camworker.sock refused on cam/placement/* (403)" || bad "camworker.sock wrote placement"
+[ "$(put console cam/cameras/verify)" = 200 ] && ok "console.sock writes cam/cameras/*" || bad "console.sock cannot write a camera row"
+[ "$(put console cam/placement/verify)" = 403 ] && ok "console.sock refused on cam/placement/* (403) — a console that can place is a second controller" || bad "console.sock wrote placement"
 ```
 
 Ожидаемые строки:
 
 ```
-  PASS  vmsworker.sock writes vms/slots/*
-  PASS  vmsworker.sock refused on vms/cameras/* (403)
-  PASS  vmsworker.sock refused on vms/placement/* (403)
-  PASS  console.sock writes vms/cameras/*
-  PASS  console.sock refused on vms/placement/* (403) — a console that can place is a second controller
+  PASS  camworker.sock writes cam/slots/*
+  PASS  camworker.sock refused on cam/cameras/* (403)
+  PASS  camworker.sock refused on cam/placement/* (403)
+  PASS  console.sock writes cam/cameras/*
+  PASS  console.sock refused on cam/placement/* (403) — a console that can place is a second controller
 ```
 
-Если `vmsworker.sock` когда-нибудь вернёт `200` на строку камеры, предложение, на котором стоит модуль, превращается в договорённость — а договорённости не переживают первого «быстрого исправления». Рядом в том же скрипте: каждый сокет роли — 0660 и группа своей роли; права, которые держит демон (`GET /v1/rights` через `admin.sock`), — это установленный файл, а файл — то, что генерирует спека; дверь `-api` не отвечает клиенту без сертификата.
+Если `camworker.sock` когда-нибудь вернёт `200` на строку камеры, предложение, на котором стоит модуль, превращается в договорённость — а договорённости не переживают первого «быстрого исправления». Рядом в том же скрипте: каждый сокет роли — 0660 и группа своей роли; права, которые держит демон (`GET /v1/rights` через `admin.sock`), — это установленный файл, а файл — то, что генерирует спека; дверь `-api` не отвечает клиенту без сертификата.
 
 ## Шаг 5 — Файл прав и код: в обе стороны
 
@@ -209,13 +209,13 @@ put()  { api "$1" POST /v1/write "{\"op\": \"put\", \"key\": \"$2\", \"items\": 
 
 | Когда | Что записывает код | Чего не было в политике | Что сломалось бы на кластере |
 |---|---|---|---|
-| снимок разрезан по воркерам | `objects/vms/snapshot/w-1` | было `objects/vms/snapshot` — **точный** путь без звёздочки | каждый срез — `403`, каждые пять секунд, в журнале «placement pass failed» |
-| у консоли появился маршрут для больших полей | `objects/vms/blobs/*` | ничего | маршрут не мог работать на кластере вообще |
+| снимок разрезан по воркерам | `objects/cam/snapshot/w-1` | было `objects/cam/snapshot` — **точный** путь без звёздочки | каждый срез — `403`, каждые пять секунд, в журнале «placement pass failed» |
+| у консоли появился маршрут для больших полей | `objects/cam/blobs/*` | ничего | маршрут не мог работать на кластере вообще |
 | контроллер записей | `objects/rec/snapshot/*` | ничего — с того дня, как он написан | снимок записей не публиковался никогда |
 | регистратор берёт том (М10B, урок 10) | `rec/holds/<том>` | ничего | первый регистратор, взявший объявленный том, — `403` |
-| воркер берёт место | `vms/holds/<место>` | ничего | то же для воркеров |
-| консоль пишет заявки и тома | `vms/requests/*`, `rec/requests/*`, `rec/volumes/*` | ничего | заявка на дозапись с карты или объявление тома из консоли — `403` |
-| консоль ведёт учёт уборки больших полей (М10A, урок 20) | `vms/sweep`, `rec/sweep` | ничего | консоли отказали бы в её же учёте при первом проходе уборки |
+| воркер берёт место | `cam/holds/<место>` | ничего | то же для воркеров |
+| консоль пишет заявки и тома | `cam/requests/*`, `rec/requests/*`, `rec/volumes/*` | ничего | заявка на дозапись с карты или объявление тома из консоли — `403` |
+| консоль ведёт учёт уборки больших полей (М10A, урок 20) | `cam/sweep`, `rec/sweep` | ничего | консоли отказали бы в её же учёте при первом проходе уборки |
 | оператор объявляет плановую остановку сервера (М10A, урок 17) | `platform/drain` | ничего | машина, которую хотели вывести аккуратно, ушла бы как молчание |
 
 Все восемь были невидимы, потому что тесты шли против хранилища без прав вообще. Три вещи вместе делают их видимыми.
@@ -395,9 +395,9 @@ def _installation_ca(path: str) -> bytes:
 
 ## Упражнения
 
-1. Уберите из юнита воркера `SupplementaryGroups=vms-vmsworker`. Что ответит его сокет, и какая строка `verify-bench.sh` это поймает?
+1. Уберите из юнита воркера `SupplementaryGroups=vms-camworker`. Что ответит его сокет, и какая строка `verify-bench.sh` это поймает?
 2. Добавьте в код воркера новую запись — скажем, `vms/stats/<воркер>`. Что сделают сцены стенда, что — `test_policies.py`, что — `install.sh` с незаново сгенерированным файлом?
-3. Запишите в файл прав консоли `"!vms/policy"` рядом с её разрешениями. Что изменится и какой тест это покажет?
+3. Запишите в файл прав консоли `"!cam/policy"` рядом с её разрешениями. Что изменится и какой тест это покажет?
 4. Выпустите `w2c-ca.sh issue srv-a recworker` и попробуйте этим сертификатом `GET /v1/status` на двери `-api`. Что ответит дверь — и что, если в сертификате нет SAN URI, а CN `configstore.srv-a`?
 5. Перечислите двери между процессами кластера, которые ещё никого не спрашивают, и для каждой скажите, что сделал бы процесс, дотянувшийся до неё без права.
 
