@@ -10,6 +10,7 @@ import json
 
 from . import bookmerge, booknames, booksecrets, declared
 from .federation import Unreachable
+from .members import Members
 from .reports import pinned
 
 
@@ -23,7 +24,7 @@ def collect(holder, spec, book):
 def _collect(holder, spec, book):
     rule = spec.domain.merged[book]
     now = holder.wall()
-    members = sorted(holder.fed.clusters)
+    members = sorted(Members(holder.vars).read()["members"])
     grace = holder.view.lost_after if holder.view is not None else 45.0
     lost, observations, diagnostics = set(), {}, []
     for member in members:
