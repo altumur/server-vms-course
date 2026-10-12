@@ -15,9 +15,11 @@ from w2cplatform.spec import SubsystemSpec
 from w2cplatform.variables import FileVariables
 
 
-def spec(sub="testsub"):
+def spec(sub="testsub", *, show=()):
     raw = yaml.safe_load((Path(__file__).parent / "testdata" / f"{sub}.subsystem.yaml").read_text())
     raw["domain"]["books"] = {"counts": {"from": f"{sub}/counts/", "key": "name", "pick": "unique", "to": "to"}}
+    if show:
+        raw["domain"]["books"]["counts"]["show"] = list(show)
     raw["domain"]["names"] = {"counts/": {"exclusive_with": "domain/users", "grant": "view"}}
     return SubsystemSpec.from_dict(raw)
 
@@ -77,16 +79,29 @@ def test_missing_retains_names_but_lost_removed_and_withdrawn_members_release_th
         assert booknames.index(got, old) == {"": '{"missing":[]}'}
 
 
-def test_corrupt_index_is_unknown_and_only_complete_collection_repairs_it():
+def test_corrupt_index_is_unknown_and_fresh_collection_repairs_it_even_with_missing():
     s = spec()
     for bad in (None, {}, {"": "{}"}, {"": '{"missing":["a","a"]}'},
                 {"": '{"missing":[]}', "badge": '{"members":[]}'},
                 {"": '{"missing":[],"missing":[]}'}, {"": '{"missing":["\\ud800"]}'},
                 {"": '{"missing":[]}', "badge": 'not JSON'}):
         raises(declared.NamesUnavailable, lambda: booknames.decode(bad, "index"))
-        if bad is not None:
-            raises(declared.NamesUnavailable, lambda: booknames.index(result(s, {"a": None, "b": {}}), bad))
+        assert booknames.index(result(s, {"a": None, "b": {}}), bad) == {"": '{"missing":["a"]}'}
         assert booknames.index(result(s), bad)["badge"] == '{"members":["a"]}'
+
+
+def test_corrupt_previous_index_does_not_stop_delivery_and_incomplete_creation_is_503():
+    with site() as (s, v):
+        v.put(booknames.path(s.name, "counts"), {"": "broken"})
+        v.put("domain/grants/b", {"badge|view|": "200"})
+        got = result(s, {"a": None, "b": report(s)})
+        booknames.publish(v, s, "counts", got, 100)
+        row = v.get("domain/testsub/counts/b")[0]
+        assert json.loads(row["badge"])["entries"][0]["member"] == "b"
+        assert json.loads(row[""])["missing"] == ["a"]
+        assert booknames.decode(v.get(booknames.path(s.name, "counts"))[0], "index") == ({"badge": ("b",)}, ("a",))
+        err = raises(declared.NamesUnavailable, lambda: declared.guarded(v).put("domain/users/new", {"kind": "local"}))
+        assert err.missing == ("a",)
 
 
 def test_guard_uses_subjects_not_recipient_names_and_checks_grant_ceiling():
