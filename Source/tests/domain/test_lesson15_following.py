@@ -7,6 +7,8 @@ reads — and follows the greatest term that verifies against the key set the me
 A planned handover is the same rule from the other side: the target takes the domain onto its own store, and the
 outgoing holder writes none but its own.
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.domain.agent import DomainAgent, HolderFollower
@@ -61,7 +63,7 @@ def _writes(devices):
 def _follows(agents, name, holder):
     a = agents[name]
     for _ in range(POLLS):
-        a.sync()
+        report_sync(a)
         if a.holder_at == holder:
             return True
     return False
@@ -75,11 +77,11 @@ def test_after_a_move_no_member_store_is_written_and_every_agent_follows_the_new
     fed, devices, signer, offline, holder, _ = one._site(wall)
     agents = {n: _follower(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     assert one._keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["pending"]
     holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     devices["cam-SN0"].power_off()
     devices["cam-SN3"].boot()
     writes = _writes(devices)
@@ -106,10 +108,10 @@ def test_after_a_theft_the_move_writes_only_the_new_holder_and_the_members_follo
     fed, devices, root, holder, _, _ = rooted._site(wall)
     agents = {n: _follower(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     devices["cam-SN0"].power_off()
     writes = _writes(devices)
     before = writes()
@@ -136,7 +138,7 @@ def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_t
     fed, devices, root, holder, _, _ = rooted._site(wall)
     agents = {n: _by_url(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall,
@@ -149,7 +151,7 @@ def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_t
     wall = Clock()
     fed, devices, root, holder, _, _ = rooted._site(wall)
     lost = _by_url(fed, devices, "cam-SN2", wall)
-    lost.sync()
+    report_sync(lost)
     devices["cam-SN0"].power_off()
     _, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall)
     assert "url" not in report["record"]
@@ -209,17 +211,18 @@ def test_after_a_move_by_the_file_a_members_report_goes_to_the_new_holders_door_
     product's does (`POST /api/member/<m>`, signed `X-Agent-Signature`; ADR-0066), and follows the holder with the rows:
     after a move by the recovery file each member's report reaches the new holder, and not one more reaches the old."""
     from w2cplatform.domain.uplink import REPORTED, base
+    from w2cplatform.domain.reports import read
     wall = Clock()
     fed, devices, root, holder, keys = _door_site(wall)
     agents = {n: _through_doors(fed, devices, keys, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        assert a.sync() and a.reported == "reported through the door", (a.cluster, a.reported, a.keys)
+        assert report_sync(a) and a.reported == "reported through the door", (a.cluster, a.reported, a.keys)
     old, new = devices["cam-SN0"].disk, devices["cam-SN1"].disk
     for name in agents:
-        assert json.loads(old.get(base(name) + REPORTED))["key"] == keys[name].pub        # the door keeps it
+        assert read(name, old).document()["key"] == keys[name].pub        # the door keeps it
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     before = {k: old.get(k) for k in old.list(base(""))}
     devices["cam-SN0"].power_off()
     _, moved = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall,
@@ -230,9 +233,9 @@ def test_after_a_move_by_the_file_a_members_report_goes_to_the_new_holders_door_
     wall.advance(1)
     for name in ("cam-SN2", "cam-SN3"):
         a = agents[name]
-        assert a.sync() and a.reported == "reported through the door", (name, a.reported)
+        assert report_sync(a) and a.reported == "reported through the door", (name, a.reported)
         mark = json.loads(new.get(base(name) + REPORTED))
-        assert mark["key"] == keys[name].pub and mark["ts"] == wall(), mark            # this pass's, at the new holder
+        assert read(name, new).document()["key"] == keys[name].pub and abs(mark["sent_at"] - wall()) < 1e-6, mark            # this pass's, at the new holder
     assert {k: old.get(k) for k in old.list(base(""))} == before                        # and nothing more at the old
 
 
@@ -244,7 +247,7 @@ def test_a_planned_handover_is_taken_by_the_target_and_the_outgoing_holder_write
     fed, devices, signer, offline, holder, _ = one._site(wall)
     agents = {n: _follower(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     writes = _writes(devices)
     by_target = []
 
@@ -257,7 +260,7 @@ def test_a_planned_handover_is_taken_by_the_target_and_the_outgoing_holder_write
 
     before = writes()
     new, report = handover(holder, "cam-SN1", one._objects(devices),
-                           lambda: as_target(agents["cam-SN1"].sync),
+                           lambda: as_target(lambda: report_sync(agents["cam-SN1"])),
                            lambda: as_target(lambda: move_domain(fed, "cam-SN1", offline, one.DOMAIN,
                                                                   one._objects(devices), wall)), wall)
     after = writes()
@@ -279,13 +282,13 @@ def test_a_forged_or_unsigned_larger_term_is_followed_by_nobody():
     fed, devices, signer, offline, holder, _ = one._site(wall)
     agents = {n: _follower(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     forged = sign({"term": 9, "holder": "cam-SN2", "at": wall(), "url": "http://elsewhere:8445"}, TokenIssuer(one.DOMAIN))
     devices["cam-SN2"].flash.put(HOLDER, {"doc": json.dumps(forged, sort_keys=True)})
     devices["cam-SN3"].flash.put(HOLDER, {"doc": json.dumps({"term": 10, "holder": "cam-SN3", "at": wall()})})
     a = agents["cam-SN1"]
     for _ in range(POLLS + 1):
-        assert a.sync()
+        assert report_sync(a)
     assert a.holder_at == "cam-SN0" and read_holder(devices["cam-SN1"].flash, signer.tokens.keyset(), wall())["term"] == 1
     assert "refused from cam-SN2, cam-SN3" in a.followed, a.followed
 
@@ -298,7 +301,7 @@ def test_held_says_the_record_the_key_set_and_which_backup_by_term_and_rev_and_n
     wall = Clock()
     fed, devices, signer, offline, holder, agents = one._site(wall)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
-    agents["cam-SN1"].sync()
+    report_sync(agents["cam-SN1"])
     said = held("cam-SN1", devices["cam-SN1"].flash)
     assert sorted(said) == ["backup", "cluster", "holder", "keys", "term"], said
     assert said["holder"]["term"] == said["term"] == 1 and said["holder"]["sig"] and said["backup"] == {"term": 1, "rev": 1}
