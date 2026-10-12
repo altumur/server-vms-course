@@ -48,7 +48,7 @@ def test_crash_before_pointer_recovers_with_new_body_after_restart():
     store.put=crash
     with pytest.raises(OSError): accept('a',_body(2),store,received_at=2)
     assert read('a',store).raw==_body(1)
-    assert base('a')+'reports/2' not in export(store)
+    assert base('a')+'reports/2' not in export(store).objects
     store=FsObjectStore(store.root)
     accept('a',_body(3),store,received_at=3)
     snap=read('a',store)
@@ -157,6 +157,22 @@ def test_orphans_are_pruned_but_not_exported():
     store=_store()
     accept('a',_body(1),store,received_at=1)
     store.put(base('a')+'reports/2',_body(2))
-    assert base('a')+'reports/2' not in export(store)
+    assert base('a')+'reports/2' not in export(store).objects
     assert prune('a',store)==1
     assert read('a',store).raw==_body(1)
+
+
+def test_export_omits_whole_damaged_members_and_counts_them():
+    store=_store()
+    for member in ('good','bad-body','bad-mark','missing-body','bad-previous'):
+        accept(member,_body(1),store,received_at=1)
+        accept(member,_body(2),store,received_at=2)
+    store.put(base('bad-body')+'reports/2',b'broken')
+    store.put(base('bad-mark')+REPORTED,b'broken')
+    store.delete(base('missing-body')+'reports/2')
+    store.put(base('bad-previous')+'reports/1',b'\xff')
+    result=export(store)
+    assert result.skipped==('bad-body','bad-mark','bad-previous','missing-body')
+    assert result.skipped_count==4
+    assert set(result.objects)=={base('good')+s for s in ('reported','reports/1','reports/2')}
+    assert read('good',store).mark['rev']==2
