@@ -79,14 +79,14 @@ def cluster(n: int = 1000, workers: int = 20, servers: int = 4, recording: bool 
         w = names[i % workers]
         row = SPEC.new_row(i, {"name": f"cam{i}", "source": f"driverpack://file/cam{i}.mp4"})
         vars_.put(SPEC.sub.config(SPEC.rows, str(i)), SPEC.items(row))
-        _place(vars_, "vms", str(i), w)
+        _place(vars_, "cam", str(i), w)
         units[w].append(str(i))
         status[w].append({"id": str(i), "phase": "running", "epoch": 1})
     cap = 2 * n // workers + 1
     for w in names:
-        vars_.put(f"vms/workers/{w}", {"units": ",".join(sorted(units[w])), "rev": 1})
-        vars_.put(f"vms/slots/{w}", Slot(w, f"inst-{w}", NOW + 30, False, 1).to_items())
-        _heartbeat(objects, "vms", w, status[w], server=server_of[w], capacity=cap, headroom=cap - len(units[w]), labels="")
+        vars_.put(f"cam/workers/{w}", {"units": ",".join(sorted(units[w])), "rev": 1})
+        vars_.put(f"cam/slots/{w}", Slot(w, f"inst-{w}", NOW + 30, False, 1).to_items())
+        _heartbeat(objects, "cam", w, status[w], server=server_of[w], capacity=cap, headroom=cap - len(units[w]), labels="")
     if recording:
         rec_units: dict[str, list[str]] = {}
         rec_status: dict[str, list] = {}
@@ -212,7 +212,7 @@ def test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once():
     snapshot in the same pass reads nothing again. The recordings' controller likewise: 25 164 before. And an idle pass
     still changes no row."""
     n = 1000
-    for make, label in ((_vms, "vms"), (_rec, "rec")):
+    for make, label in ((_vms, "cam"), (_rec, "rec")):
         vars_, objects = cluster(n)
         before = rows(vars_)
         v, o = Reads(vars_), Reads(objects)
@@ -237,20 +237,20 @@ def _busy(vars_) -> None:
     one camera on the wrong server (its recording is elsewhere)."""
     from vms.config import SPEC
     for i in range(1, 21):
-        vars_.delete(f"vms/placement/{i}")
-    for w in vars_.list("vms/workers/"):
+        vars_.delete(f"cam/placement/{i}")
+    for w in vars_.list("cam/workers/"):
         it = vars_.get(w)[0]
         vars_.put(w, {**it, "units": ",".join(u for u in it["units"].split(",") if not (u.isdigit() and int(u) <= 20))})
     for i in range(201, 211):
         vars_.put(SPEC.sub.config(SPEC.rows, str(i)),
                   SPEC.items(SPEC.new_row(i, {"name": f"cam{i}", "source": f"driverpack://file/cam{i}.mp4"})))
-    it = vars_.get("vms/cameras/30")[0]
-    vars_.put("vms/cameras/30", {**it, "deleted": "true"})
-    s = vars_.get("vms/slots/w-3")[0]
-    vars_.put("vms/slots/w-3", {**s, "released": "true"})
-    p = vars_.get("vms/placement/41")[0]                     # 41 is on w-2 (srv-1); put it on w-4 (srv-3)
-    vars_.put("vms/placement/41", {**p, "worker": "w-4"})
-    for w, add in (("vms/workers/w-2", False), ("vms/workers/w-4", True)):
+    it = vars_.get("cam/cameras/30")[0]
+    vars_.put("cam/cameras/30", {**it, "deleted": "true"})
+    s = vars_.get("cam/slots/w-3")[0]
+    vars_.put("cam/slots/w-3", {**s, "released": "true"})
+    p = vars_.get("cam/placement/41")[0]                     # 41 is on w-2 (srv-1); put it on w-4 (srv-3)
+    vars_.put("cam/placement/41", {**p, "worker": "w-4"})
+    for w, add in (("cam/workers/w-2", False), ("cam/workers/w-4", True)):
         it = vars_.get(w)[0]
         units = [u for u in it["units"].split(",") if u != "41"] + (["41"] if add else [])
         vars_.put(w, {**it, "units": ",".join(sorted(units))})
@@ -276,11 +276,11 @@ def test_a_busy_pass_decides_exactly_what_the_pass_that_read_everything_again_de
         results.append((rows(vars_), objects_but_the_report(objects)))
     assert results[0][0] == results[1][0]
     assert results[0][1] == results[1][1]
-    placed = {k for k, it in results[0][0].items() if k.startswith("vms/placement/") and it.get("worker")}
-    assert {f"vms/placement/{i}" for i in (*range(1, 21), *range(201, 211))} - {"vms/placement/30"} <= placed
-    assert "vms/placement/30" not in placed                 # the deleted one is unplaced
-    assert not results[0][0]["vms/workers/w-3"]["units"]    # the released slot was emptied
-    assert results[0][0]["vms/placement/41"]["worker"] != "w-4"   # and 41 came home
+    placed = {k for k, it in results[0][0].items() if k.startswith("cam/placement/") and it.get("worker")}
+    assert {f"cam/placement/{i}" for i in (*range(1, 21), *range(201, 211))} - {"cam/placement/30"} <= placed
+    assert "cam/placement/30" not in placed                 # the deleted one is unplaced
+    assert not results[0][0]["cam/workers/w-3"]["units"]    # the released slot was emptied
+    assert results[0][0]["cam/placement/41"]["worker"] != "w-4"   # and 41 came home
     assert counts[0] * 5 < counts[1], counts
 
 
@@ -291,7 +291,7 @@ def test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again():
     import threading
     from w2cplatform.memvariables import MemVariables as Mem
     vars_, objects = Mem(), MemObjects()
-    vars_.put("vms/placement/1", {"worker": "w-1", "reason": "r", "at": NOW, "rev": 1})
+    vars_.put("cam/placement/1", {"worker": "w-1", "reason": "r", "at": NOW, "rev": 1})
     v = Reads(vars_)
     ctl = _vms(v, objects)
     other = Mem(vars_._s)                                    # another controller instance on the same store
@@ -299,13 +299,13 @@ def test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again():
         v.zero()
         assert ctl.placement(1).worker == "w-1" and ctl.placement(1).worker == "w-1"
         assert v.gets == 1                                   # once
-        other.put("vms/placement/1", {"worker": "w-2", "reason": "r", "at": NOW, "rev": 2})
+        other.put("cam/placement/1", {"worker": "w-2", "reason": "r", "at": NOW, "rev": 2})
         assert ctl.placement(1).worker == "w-1"              # the pass's copy: at most a pass old
         seen = []
-        t = threading.Thread(target=lambda: seen.append(ctl.vars.get("vms/placement/1")[0]["worker"]))
+        t = threading.Thread(target=lambda: seen.append(ctl.vars.get("cam/placement/1")[0]["worker"]))
         t.start(), t.join()
         assert seen == ["w-2"]                               # another thread reads the store
-        new = ctl.write("vms/placement/1", lambda it: {**it, "reason": "moved", "rev": int(it["rev"]) + 1})
+        new = ctl.write("cam/placement/1", lambda it: {**it, "reason": "moved", "rev": int(it["rev"]) + 1})
         assert new["worker"] == "w-2" and new["rev"] == 3    # the CAS lost on the copy, the retry read the store
         assert ctl.placement(1).reason == "moved"            # …and the pass reads back its own write
     assert ctl.vars is v                                     # the pass ended: the store itself again
@@ -318,7 +318,7 @@ def _console(vars_, objects):
     from w2cplatform.spec import SpecController
     return {"rec": _rec(vars_, objects), "det": SpecController(DET_SPEC, vars_, objects, wall=wall),
             "job": SpecController(DETJOB_SPEC, vars_, objects, wall=wall),
-            "survey": SpecController(SURVEY_SPEC, vars_, objects, wall=wall), "vms": _vms(vars_, objects)}
+            "survey": SpecController(SURVEY_SPEC, vars_, objects, wall=wall), "cam": _vms(vars_, objects)}
 
 
 def _old_requests_turn(c, now):
@@ -380,7 +380,7 @@ def test_the_reaper_reads_each_job_detector_and_recording_once_a_turn():
     c = _console(v, o)
     v.zero(), o.zero()
     m._reap_turn([c["job"]], c["rec"], c["det"], c["survey"], now=NOW)
-    requests.turn([c["rec"], c["vms"]], sweep=True)                  # …and the console's clearing of the two request families
+    requests.turn([c["rec"], c["cam"]], sweep=True)                  # …and the console's clearing of the two request families
     assert v.n + o.n <= 6 * n + 100, (v.n, o.n)
 
     stores = []
@@ -389,12 +389,12 @@ def test_the_reaper_reads_each_job_detector_and_recording_once_a_turn():
         c = _console(vars_, objects)
         if new:
             m._reap_turn([c["job"]], c["rec"], c["det"], c["survey"], now=NOW)
-            requests.turn([c["rec"], c["vms"]], sweep=True)
+            requests.turn([c["rec"], c["cam"]], sweep=True)
         else:
             with without_pass_reads():
                 jobs.reap(c["job"]), jobs.forget_finished(c["job"], NOW), jobs.ask_for_footage(c["job"], c["rec"])
                 jobs.scan_what_arrived(c["rec"], c["det"], c["job"]), jobs.keep_what_fired(c["survey"], c["rec"])
-                requests.clear_requests(c["rec"]), requests.clear_requests(c["vms"])
+                requests.clear_requests(c["rec"]), requests.clear_requests(c["cam"])
         stores.append(rows(vars_))
     assert stores[0] == stores[1]
     assert sum(1 for k in stores[0] if k.startswith("detjob/jobs/") and f"-{int(NOW) - 900}-" in k) == 40   # four recorders, ten spans each
@@ -522,7 +522,7 @@ def test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost():
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
     vars_, objects = cluster(600, 12, 3, recording=False)
-    _waiting(vars_, objects, "vms", 500)
+    _waiting(vars_, objects, "cam", 500)
     v, o = Reads(vars_), Reads(objects)
     ctl = _vms(v, o)
     v.zero(), o.zero()
@@ -549,7 +549,7 @@ def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan
     n = 1000
     vars_, objects = cluster(n)
     for i in range(1, n + 1):
-        key = f"vms/cameras/{i}"
+        key = f"cam/cameras/{i}"
         vars_.put(key, {**vars_.get(key)[0], "labels": "vlan:a"})
     for s in range(4):
         vars_.put(f"platform/servers/srv-{s}", {"labels": "vlan:a"})
@@ -573,5 +573,5 @@ def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan
     print(f"reads: the idle pass {idle}, a pass moving ten off srv-0 {busy}")
     assert busy <= idle + 10 * 15, (idle, busy)
     moved = [k for k, it in rows(vars_).items()
-             if k.startswith("vms/placement/") and "srv-0 no longer reaches vlan:a" in it.get("reason", "")]
+             if k.startswith("cam/placement/") and "srv-0 no longer reaches vlan:a" in it.get("reason", "")]
     assert len(moved) == 10
