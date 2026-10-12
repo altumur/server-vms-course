@@ -137,7 +137,8 @@ def answer(holder_vars, holder_objects, cluster: str, seal_to: str | None = None
     from .booknames import delivery
     now = time.time() if now is None else now
     rows, objects = {}, {}
-    for path in public_rows() + own_rows(cluster):
+    from .placement import PREFIX
+    for path in public_rows() + own_rows(cluster) + ["domain/placement", *holder_vars.list(PREFIX)]:
         items, _ = holder_vars.get(path)
         if items is None:
             continue
