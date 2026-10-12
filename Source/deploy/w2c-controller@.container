@@ -1,5 +1,5 @@
 # /etc/containers/systemd/w2c-controller@.container — a subsystem's controller, the platform's process from the
-# subsystem's spec: one instance per subsystem the image carries (`w2c-controller@vms`, `@rec`, `@live`, `@det`,
+# subsystem's spec: one instance per subsystem the image carries (`w2c-controller@cam`, `@rec`, `@live`, `@det`,
 # `@detjob`, `@survey`, `@auto`), one per box (one per cluster in М11). Stateless — restart it freely. No port: nothing
 # asks it anything. Its token writes its subsystem's placement only — `<sub>/workers/*`, `<sub>/placement/*`,
 # `<sub>/slots/*`, the snapshot — and never an operator's row.
@@ -9,7 +9,7 @@
 # # w2c-controller@.container — a subsystem's controller: the platform's, one instance per spec, stateless, no port
 #
 # **Role.** The Quadlet template at `/etc/containers/systemd/w2c-controller@.container`; Quadlet generates
-# `w2c-controller@.service` from it, and the instance names the subsystem (`systemctl start w2c-controller@vms`). It
+# `w2c-controller@.service` from it, and the instance names the subsystem (`systemctl start w2c-controller@cam`). It
 # runs `python3 -m w2cplatform controller %i` — the platform's `SpecController` from `%i.subsystem.yaml` alone (the
 # boundary's steps 5 and 6: no subsystem's code runs here): the placement pass every five seconds — `ensure_placed`,
 # `redistribute`, `publish_snapshot`. A platform process, so the platform's name and user (ADR 0023): `w2c`, by
@@ -23,7 +23,7 @@
 # - `RestartSec=2`.
 #
 # ## Notes
-# - No `count` and no scheduler client: how many workers exist is systemd's (`vmsworker@…` instances) or
+# - No `count` and no scheduler client: how many workers exist is systemd's (`camworker@…` instances) or
 #   Nomad's; the controller only reads their heartbeats and the `released` flag on slots.
 # - Two of these running against one store are harmless (`test_two_controllers_agree_by_cas`), so a restart
 #   overlapping an old instance needs no lock.
@@ -69,5 +69,5 @@ Restart=always
 RestartSec=2
 
 [Install]
-# enabled instances start at boot (`systemctl enable w2c-controller@vms`), one for every spec of the image.
+# enabled instances start at boot (`systemctl enable w2c-controller@cam`), one for every spec of the image.
 WantedBy=multi-user.target
