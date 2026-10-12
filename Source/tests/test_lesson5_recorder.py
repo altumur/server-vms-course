@@ -56,14 +56,14 @@ def test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_
     # server (no RTSP hop, no fan-out process on the recording path) — under the RECORDER's epoch
     assert r.reconcile_once() == [("start", "1")]
     started = r.actuator.started["1"]
-    assert started["source"] == live_shm(1) == "shm:///run/cam/1.shm" and started["via"] == "shm" and started["source_server"] == "srv-1"
+    assert started["source"] == live_shm(1) == "shm:///run/vms/1.shm" and started["via"] == "shm" and started["source_server"] == "srv-1"
     assert live_url("srv-1", 1) == "rtsp://srv-1:8554/1"                                           # what a recorder on another server would read
     assert started["epoch"] == 1 and box.vars.get("rec/epoch/1")[0] == {"epoch": "1"} and w.epochs == {"1": 1}   # two epochs, two writers, one camera
     sink = started["sink"]                                                                          # what it writes into: its volume's writer, as `1/e1`
     assert isinstance(sink, RecSink) and sink.store is r.store and (sink.unit, sink.epoch) == ("1", 1)
     r.heartbeat_once()
     st = rec_ctl.workers_seen()["r-1"].status[0]
-    assert st["phase"] == "running" and st["cam"] == "1" and st["source"] == "shm:///run/cam/1.shm" and st["via"] == "shm" and st["epoch"] == 1
+    assert st["phase"] == "running" and st["cam"] == "1" and st["source"] == "shm:///run/vms/1.shm" and st["via"] == "shm" and st["epoch"] == 1
     assert "rec_recordings_running 1" in r.metrics_text()
     # what the pipeline hands its sink lands in the volume, as the stream `1/e1` — and the resource's tree stays events-only
     assert r.actuator.feed("1", box.wall() - 600, box.wall()) == {"OK": 600}
@@ -97,12 +97,12 @@ def test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_
     assert "it follows rec onto srv-1" in ctl.placement(3).reason
     w.reconcile_once(); w.heartbeat_once(); w2.reconcile_once(); w2.heartbeat_once()
     box.clock.advance(10)
-    assert r2.reconcile_once() == [] and r2.actuator.started["2"]["via"] == "shm" and r2.actuator.started["2"]["source"] == "shm:///run/cam/2.shm"
+    assert r2.reconcile_once() == [] and r2.actuator.started["2"]["via"] == "shm" and r2.actuator.started["2"]["source"] == "shm:///run/vms/2.shm"
     assert sorted(r.resubscribe()) == ["1", "3"]                                                   # both sources are on this server again
     box.clock.advance(10)                                                                          # past the restart's backoff
     assert r.reconcile_once() == [("start", "1"), ("start", "3")]
     for cid in ("1", "3"):                                                                         # the network hop is gone: shared memory again
-        assert r.actuator.started[cid]["via"] == "shm" and r.actuator.started[cid]["source"] == f"shm:///run/cam/{cid}.shm"
+        assert r.actuator.started[cid]["via"] == "shm" and r.actuator.started[cid]["source"] == f"shm:///run/vms/{cid}.shm"
 
 
 def test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someone_does():
@@ -116,7 +116,7 @@ def test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someon
     assert st["phase"] == "waiting" and st["why"] == "camera held by nobody" and st["source"] is None
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()                                   # the worker takes it
     box.clock.advance(10)
-    assert r.reconcile_once() == [("start", "2")] and r.actuator.started["2"]["source"] == "shm:///run/cam/2.shm"   # held here: the tee's shared memory
+    assert r.reconcile_once() == [("start", "2")] and r.actuator.started["2"]["source"] == "shm:///run/vms/2.shm"   # held here: the tee's shared memory
     # a camera with no recording is watched, not recorded: it is held (live, detection, events), and has no stream
     assert rec_ctl.units() == [{"id": "2", "name": "2", "cam": "2", "retention_days": 30, "enabled": True, "labels": [], "home": "", "until": 0.0, "min_depth_days": 0.0, "when": "always", "revision": 1}]
     assert [c["id"] for c in ctl.cameras()] == [1, 2] and subsystems_under(box.resource_root) == {}
