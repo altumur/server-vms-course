@@ -32,7 +32,7 @@ CARD = "driverpack://acme/10.0.0.7"
 
 def _box():
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + REC_SPEC.acl_console() + DET_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     return box, ctl, con, con_vars
@@ -73,7 +73,7 @@ def test_one_session_per_device_however_many_channels_are_assigned():
     dev = {d["device"]: d for d in w.device_status()}
     assert dev["acme/10.0.0.50"]["channels"] == 32
     assert len(dev["acme/10.0.0.50"]["unimported"]) == 29                  # 32 channels, 3 imported
-    assert "vms/cameras/*" not in getattr(box.vars, "acl", []) or True     # the worker's token never writes rows
+    assert "cam/cameras/*" not in getattr(box.vars, "acl", []) or True     # the worker's token never writes rows
 
     # and the second kind of output, beside the live one
     st = {s["id"]: s for s in w.status()}
@@ -360,7 +360,7 @@ def _redundant_spec():
     path = os.path.join(os.path.dirname(vms.__file__), "rec.subsystem.yaml")
     d = specyaml.loads(open(path, encoding="utf-8"))
     d["placement"]["spread_by"] = "cam"                                     # the line under test
-    d["placement"].update({"requires": "none", "servers": "shared", "near": "vms"})
+    d["placement"].update({"requires": "none", "servers": "shared", "near": "cam"})
     for k in ("place_by", "home", "places"):                                # placed by server: no places of its own
         d["placement"].pop(k, None)
     return SubsystemSpec.from_dict(d)
@@ -802,12 +802,12 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     m = make_console(con, box.resource_root, wall=box.wall, mounts={"rec": rec_ctl})   # the console's token: it may say "draining"
 
     assert m.drain_route("GET", {})[1] == {"draining": "", "safe": True,
-                                           "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
+                                           "subsystems": {"cam": {"draining": "", "subsystem": "cam"},
                                                           "rec": {"draining": "", "subsystem": "rec"}}}
     status, rep = m.drain_route("POST", {"server": "srv-1"})
     assert status == 200 and rep["draining"] == "srv-1" and rep["safe"] is False
     assert rep["subsystems"]["rec"]["units"] == 1                  # the recorder still carries it
-    assert rep["would_strand"] == {"vms": ["1"]}                   # and the camera has nowhere to go at all:
+    assert rep["would_strand"] == {"cam": ["1"]}                   # and the camera has nowhere to go at all:
     #                                                                one vms worker in the box, and it is on this machine.
     #                                                                An upgrade script stops here rather than after the reboot.
     _worker_on(box, "w-2", "srv-2")                                # give it somewhere, and the dry run goes quiet
@@ -817,7 +817,7 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     assert [(mv[1], mv[2]) for mv in ctl.redistribute()] == [("w-1", "w-2")]
     r.lease_pass(); r.heartbeat_once()
     rep = m.drain_route("GET", {})[1]
-    assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["vms"]["units"] == 0
+    assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["cam"]["units"] == 0
     assert rep["safe"] is True                                      # now the power may go
     # …unless a worker of the machine still holds writes it has not made durable (`pending_writes`, §2.5 of the boundary
     # note): no units is not "nothing left here" for a subsystem that buffers on the machine's disk
@@ -828,7 +828,7 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     assert m.drain_route("GET", {})[1]["safe"] is True
 
     assert m.drain_route("DELETE", {})[1] == {"draining": "", "safe": True,
-                                              "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
+                                              "subsystems": {"cam": {"draining": "", "subsystem": "cam"},
                                                              "rec": {"draining": "", "subsystem": "rec"}}}
 
 
@@ -1057,9 +1057,9 @@ def test_a_job_is_not_promised_minutes_the_device_does_not_have():
     srv = w.serve_playback(port=0)
     try:
         # the heartbeat names the holder's own port; in the test the server is on another
-        hb = Heartbeat.from_bytes(box.objects.get("vms/heartbeats/" + w.name))
+        hb = Heartbeat.from_bytes(box.objects.get("cam/heartbeats/" + w.name))
         st = dict(hb.status[0]); st["index_url"] = f"http://127.0.0.1:{srv.server_address[1]}/recordings/1"
-        box.objects.put("vms/heartbeats/" + w.name,
+        box.objects.put("cam/heartbeats/" + w.name,
                         Heartbeat(w.name, box.wall(), [st], hb.extra).to_bytes())
 
         j = DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
