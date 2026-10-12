@@ -201,3 +201,39 @@ def test_knocking_pins_identity_time_and_count_to_one_generation():
     assert (shown['last'],shown['times'],shown['key'])==(1,1,first.pub)
     shown=members.knocking(store)[0]
     assert (shown['last'],shown['times'],shown['key'])==(2,2,second.pub)
+
+
+def test_real_backup_and_move_skip_a_broken_observation_but_keep_domain_state():
+    from tests.test_domain_platform import site
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.term import DomainHolder, move_domain
+    from w2cplatform.domain.uplink import base
+    from w2cplatform.trust.signer import Signer
+    fed,wall=site()
+    north,south=fed.clusters['north'],fed.clusters['south']
+    signer=Signer('acme',north.vars,now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    key=MemberKey.new()
+    for member in ('north','south'):
+        for delta in (-2,-1):
+            accept(member,_body(key,wall()+delta),north.objects,received_at=wall()+delta)
+    good=read('south',north.objects)
+    north.objects.put(base('north')+'reports/2',b'broken')
+    holder=DomainHolder(fed,'north',signer,1,wall,objects=north.objects)
+    holder.claim()
+    rev=holder.backup(['south'],north.objects)
+    assert rev==1
+    assert holder.backup_reports.skipped==('north',) and holder.backup_reports.skipped_count==1
+    copied=json.loads(north.objects.get('backup/rev-1'))
+    assert copied['state'] and copied['sig']
+    assert not any(k.startswith(base('north')) for k in copied['objects'])
+    assert DomainAgent('south',north.vars,south.vars,now=wall,domain_objects=north.objects,
+                       cluster_objects=south.objects).sync()
+    new,_=move_domain(fed,'south',signer.backup(),'acme',lambda n:fed.clusters[n].objects,wall)
+    assert new.term==2 and read('south',south.objects).raw==good.raw
+    assert south.objects.list(base('north'))==[]
+    # A later healthy copy clears the diagnostic instead of accumulating old skipped members.
+    accept('north',_body(key,wall()),north.objects,received_at=wall())
+    accept('north',_body(key,wall()+1),north.objects,received_at=wall()+1)
+    holder.backup(['south'],north.objects)
+    assert holder.backup_reports.skipped==() and holder.backup_reports.skipped_count==0
