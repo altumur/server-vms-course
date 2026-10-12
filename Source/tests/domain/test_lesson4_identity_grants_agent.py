@@ -56,7 +56,7 @@ def test_nothing_about_a_user_reaches_a_worker_only_trust_does():
     south.vars.acl = {"agent": ["domain/*"]}
     assert report_sync(agent)
     assert south.vars.list("identity/") == [] and sorted(south.vars.list("domain/")) == ["domain/keys", "domain/member"]   # keys, no people
-    for path in ("vms/cameras/7", "vms/epoch/7", "vms/slots/w-0"):
+    for path in ("cam/cameras/7", "cam/epoch/7", "cam/slots/w-0"):
         try:
             south.vars.as_writer("agent").put(path, {"x": 1}); raise AssertionError()
         except Forbidden:
@@ -160,18 +160,18 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     fed, links, dc, signer = _domain(clk)
     south = fed.clusters["south"]
     pub = DomainPublisher(dc.vars); pub.publish_keys(signer.tokens.keyset())
-    pub.publish_grants("south", [Grant("alice", "view", None, clk() + GRANT_LIFETIME), Grant("alice", "edit", "vms/7", clk() + GRANT_LIFETIME)])
+    pub.publish_grants("south", [Grant("alice", "view", None, clk() + GRANT_LIFETIME), Grant("alice", "edit", "cam/7", clk() + GRANT_LIFETIME)])
     agent = DomainAgent("south", dc.vars, south.vars, now=clk); report_sync(agent)
     assert sorted(south.vars.list("domain/")) == ["domain/grants", "domain/keys", "domain/member"]   # trust and grants, no user
     g = ClusterGrants("south", now=clk)
     g.renew_from_domain(ClusterTrust(south.vars).grants())                            # the console loads them from ITS cluster
     auth = ClusterAuthoriser(g, signer.tokens.keyset(), now=clk)
     tok = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk(), kind="person")
-    assert auth.authorise(tok, "view", "vms/12") == "alice" and auth.authorise(tok, "edit", "vms/7") == "alice"
+    assert auth.authorise(tok, "view", "cam/12") == "alice" and auth.authorise(tok, "edit", "cam/7") == "alice"
     try:
-        auth.authorise(tok, "edit", "vms/12"); raise AssertionError()
+        auth.authorise(tok, "edit", "cam/12"); raise AssertionError()
     except PermissionError as e:
-        assert "no edit grant on vms/12 in south" in str(e)
+        assert "no edit grant on cam/12 in south" in str(e)
     # The revoke cannot reach south (unreachable). State in advance when access ends:
     stated = g.access_ends("alice", token_exp=clk() + TOKEN_LIFETIME)
     assert stated == clk() + TOKEN_LIFETIME                                  # the token is the shorter lifetime here
@@ -179,14 +179,14 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     # ...then measure it: the token expires, the grant is still there, access is gone anyway.
     clk.advance(TOKEN_LIFETIME + 61)
     try:
-        auth.authorise(tok, "view", "vms/12"); raise AssertionError()
+        auth.authorise(tok, "view", "cam/12"); raise AssertionError()
     except PermissionError as e:
         assert "expired" in str(e)
     # And the other direction: a fresh token, but south's agent could not renew its grants past their expiry.
     clk.advance(GRANT_LIFETIME)
     tok2 = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk(), kind="person")         # the domain is back and issues a fresh token...
     try:
-        auth.authorise(tok2, "view", "vms/12"); raise AssertionError()
+        auth.authorise(tok2, "view", "cam/12"); raise AssertionError()
     except PermissionError as e:
         assert "no view grant" in str(e)
     # The agent renews what the domain still grants — and drops what it does not.
