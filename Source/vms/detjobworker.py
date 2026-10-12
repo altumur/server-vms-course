@@ -96,13 +96,13 @@ class DetJobWorker(Worker):
     # `from`, `to`, `fragments` — never an index: the device's own archive is behind its door, and this is all a heartbeat carries
     # (М10B Lesson 15). Enough to tell "nobody recorded this" from "somebody did, just not us".
     def device_has(self, cam, t0: float, t1: float) -> bool:
-        found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage", eyes=self.eyes)   # fresh by change (the 13th pass)
+        found = holder_of(self.objects, "cam/", str(cam), self.wall(), field="coverage", eyes=self.eyes)   # fresh by change (the 13th pass)
         if found is None or not found[2].get("coverage"):
             return False
         cov = found[2]["coverage"] if isinstance(found[2]["coverage"], dict) else {}
         from w2cplatform.rows import number               # what one holder says it holds, through the one reader (the seventh pass)
-        start, end = number(f"vms/status/{cam}#coverage.from", cov.get("from"), float, None), \
-            number(f"vms/status/{cam}#coverage.to", cov.get("to"), float, None)
+        start, end = number(f"cam/status/{cam}#coverage.from", cov.get("from"), float, None), \
+            number(f"cam/status/{cam}#coverage.to", cov.get("to"), float, None)
         if start is None or end is None or not (end > t0 and start < t1):
             return False                                  # outside what the device holds at all — or not said
         # Inside the summary is not the same as "there is footage there". A device recording on motion has
@@ -263,7 +263,7 @@ class DetJobWorker(Worker):
         return sorted(self.running)
 
     # Waiting for what is missing — until `wait_max` after it began, then `done` with `partial`. The line `scan.partial`
-    # is written once, at the interval's start in media time (where `/events?unit=vms/<cam>` finds the scan's answer), and the
+    # is written once, at the interval's start in media time (where `/events?unit=cam/<cam>` finds the scan's answer), and the
     # end is remembered beside the progress, so the next pass before the reaper does not write it again.
     def _wait_or_end(self, job: str, row: dict, log_: ScanLog, missing: list[str], why: str, scans=None) -> dict:
         waited = log_.waiting() or log_.wait(self.wall())
