@@ -405,9 +405,9 @@ class DomainAgent:
         for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
                             (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
             self._carry(path, items)
-        # Placement rows keep their identities on every member, unlike addressed books.
+        # Holder assignments are read-only to agents; copies have their own family on every member.
         # The authenticated carry response is the same authority as the member list.
-        from .placement import PREFIX, decode, path as placement_path
+        from .placement import PREFIX, COPIES_PREFIX, decode, path as placement_path
         if self.keys == "carried" or self.keys.startswith("rev "):
             incoming = dv.list(PREFIX)
             for path in incoming:
@@ -417,20 +417,21 @@ class DomainAgent:
                     if len(identity) != 2 or placement_path(*identity) != path:
                         raise ValueError("invalid placement identity")
                     fresh = decode(items)
-                    old = self.cluster_vars.get(path)[0]
+                    target = COPIES_PREFIX + path[len(PREFIX):]
+                    old = self.cluster_vars.get(target)[0]
                     try:
                         previous = decode(old) if old else None
                     except ValueError:
                         previous = None
                     if previous is None or fresh["rev"] > previous["rev"]:
-                        self._carry(path, items)
+                        self._carry(target, items)
                     elif fresh["rev"] == previous["rev"] and fresh != previous:
                         self._say_refused("placement", "conflicting placement revision")
                 except ValueError:
                     self._say_refused("placement", "invalid placement row")
             counter = dv.get("domain/placement")[0]
             if counter:
-                self._carry("domain/placement", counter)
+                self._carry(COPIES_PREFIX.rstrip("/"), counter)
         # The emergency hash under its own name (`break_glass_row`): on the holder that row IS the domain's, and the
         # holder's own agent, which reads it as stored — sealed by the holder's ring — takes nothing: only this side
         # seals what it carried (the product's `keepPeople`), and a sealed value came from no door.
