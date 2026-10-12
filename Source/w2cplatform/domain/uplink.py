@@ -25,7 +25,7 @@ pass; this module is the other half of that same pass.
             the last known rows are kept, named as such, and the answer is incomplete — Lesson 1's rule,
             unchanged in meaning
     clocks  a member's clock is not the domain's, a small box's least of all. So the domain does not believe
-            the time a report carries: it notes, by its own clock, WHEN it first saw each report (each has
+            the time a report carries: it persists, by its own clock, WHEN it accepted each report (each has
             a sequence number), and that is the report's age. The times inside the report — every `ts` in a
             heartbeat or a snapshot shard — are moved onto the domain's clock by the difference between
             "the member stamped it" and "the domain saw it". A member fifteen minutes slow is otherwise
@@ -51,7 +51,7 @@ from . import declared
 from .federation import MEMBER_OBJECTS, REACHES, Cluster, Unreachable
 
 # What a member reported is read with the platform's one list of what a parse raises (`PARSE_ERRORS`), not a list of
-# this file's own: the lists here left out `KeyError` in one place, `OverflowError` (`"seq": 1e999`) and `RecursionError`
+# this file's own: the lists here left out `KeyError` in one place, `OverflowError` (`"rev": 1e999`) and `RecursionError`
 # (a mark nested ten thousand deep) everywhere — and what they left out raised out of the member's every read (the
 # review's eighth pass).
 
@@ -134,7 +134,7 @@ def publication(member: str, member_vars, member_objects, now: float, pages: dic
            "pages": {n: raw.decode("utf-8", "surrogateescape") for n, raw in (pages or {}).items()}}
     if outcomes is not None:
         pub["outcomes"] = outcomes
-    # The keys it presents ride on the mark (ADR-0032): a member nobody admitted yet is KNOCKING, and the person who
+    # The keys it presents ride in the report body (ADR-0074): a member nobody admitted yet is KNOCKING, and the person who
     # admits it on the domain's console admits it by this key — after comparing its fingerprint with the one the box
     # shows (`Members.accept`). The mark proves nothing by itself; the person's comparison does.
     if key is not None:
@@ -150,11 +150,8 @@ def _json_or_text(v):
         return v
 
 
-def entries(pub: dict, prev_mark: bytes | None = None, keep_seq: bool = False) -> tuple[dict[str, bytes], bytes]:
-    """A publication as the holder keeps it under `base(member)`: `({sub: bytes}, mark)` — `o/<key>`, `v/<path>`,
-    `p/<name>`, and the mark `reported`, written last. The mark counts on from `prev_mark`; with `keep_seq` (a relay's
-    summary, which carries a silent member's last publication again) it counts only when the member's `sent_at` moved.
-    Raises ValueError for a publication that is not one."""
+def projection(pub: dict) -> dict[str, bytes]:
+    """Read-only projections of one pinned report, restricted to declared inputs."""
     from .pending import OUTCOMES_PATH
     if not isinstance(pub, dict):
         raise ValueError("a publication is an object {sent_at, objects}")
@@ -163,7 +160,7 @@ def entries(pub: dict, prev_mark: bytes | None = None, keep_seq: bool = False) -
     except PARSE_ERRORS:
         raise ValueError("a publication names when it was sent: `sent_at`, a number") from None
     want: dict[str, bytes] = {}
-    # What the domain reads of a member, and nothing more: an object or a row it does not read is dropped at the door
+    # What the domain reads of a member: undeclared objects and rows stay outside the projection.
     # (the product's `Collect`: "anything else in a member's store is nobody else's business").
     kept_objects, kept_rows = objects(), _rows()
     for part, fam in (("objects", "o/"), ("rows", "v/"), ("pages", "p/")):
@@ -191,221 +188,119 @@ def entries(pub: dict, prev_mark: bytes | None = None, keep_seq: bool = False) -
             raise ValueError("`outcomes` of a publication is an object")
         items = {k: v if isinstance(v, str) else json.dumps(v, ensure_ascii=False, sort_keys=True) for k, v in outcomes.items()}
         want["v/" + OUTCOMES_PATH] = json.dumps({"items": items, "idx": 0}, sort_keys=True).encode()
-    presented = {f: pub[f] for f in ("key", "seal") if isinstance(pub.get(f), str) and pub[f]}
-    # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
-    # before the new one was written, so it was never written again: the member stopped reporting for good, by one
-    # object (М10's seventh review, part 2). It starts again from the clock's milliseconds — a number the domain has
-    # not seen, which is all `_Fresh` asks of a sequence — and is written whole.
-    try:
-        prev = json.loads(prev_mark) if prev_mark else {}
-        seq = int(prev.get("seq", 0)) if isinstance(prev, dict) else 0
-        same = isinstance(prev, dict) and prev.get("ts") == sent_at
-    except PARSE_ERRORS:
-        seq, same = int(sent_at * 1000) - 1, False
-    if not (keep_seq and same and prev_mark):
-        seq += 1
-    mark = json.dumps({"ts": sent_at, "seq": seq, "items": len(want), **presented}).encode()
-    return want, mark
+    return want
 
 
-def take(member: str, pub: dict, domain_objects) -> int:
-    """The holder's half: one member's publication into its own object store, under `base(member)` — only what changed
-    is rewritten, what the member no longer has is swept, and the mark goes last: the report is whole."""
-    b = base(member)
-    want, mark = entries(pub, domain_objects.get(b + REPORTED))
-    written = 0
-    for k, raw in want.items():
-        if domain_objects.get(b + k) != raw:                       # only what changed is rewritten
-            domain_objects.put(b + k, raw)
-            written += 1
-    # Only the report's own families are the report's to sweep (`o/`, `v/`, `p/`): beside them under the same prefix
-    # lies what another writer keeps for this member — a relay's summary of its members (`relay.BUNDLE`) — and the
-    # office's own report deleted its bundle on every pass, written again at once: two writes for none, and between them
-    # no member behind it reported to the holder (the three-site run, O3).
-    keep = {b + k for k in want}
-    for full in domain_objects.list(b):
-        if full[len(b):].startswith(("o/", "v/", "p/")) and full not in keep:
-            domain_objects.delete(full)                            # gone from the member: gone from its report
-    domain_objects.put(b + REPORTED, mark)                         # last: the report is whole
-    return written + 1
+def take(member: str, body: bytes, domain_objects, *, received_at: float, signature: str = '', via: str = '') -> int:
+    """Store one authenticated report, then prune. Never write mutable per-part projections."""
+    from .reports import accept, prune
+    previous = domain_objects.get(base(member)+REPORTED)
+    accept(member, body, domain_objects, received_at=received_at, signature=signature, via=via)
+    prune(member, domain_objects)
+    return 0 if previous == domain_objects.get(base(member)+REPORTED) else 2
 
 
 def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None,
            key=None) -> int:
-    """One report with no door between: the member's publication taken into `domain_objects` itself — the holder's own
-    agent on its own box, a member behind a relay into its relay's objects, the tests."""
-    return take(member, publication(member, member_vars, member_objects, now, pages, key), domain_objects)
+    """Local reports use exactly the serialization and signature of the HTTP client."""
+    from w2cplatform.trust.memberkey import MemberKey, sign_request, verify_request
+    from .carry import SKEW, publication_bytes
+    if key is None:
+        key = MemberKey.load_or_make(member_vars)
+    body = publication_bytes(publication(member, member_vars, member_objects, now, pages, key))
+    signature = sign_request(key, 'POST', f'/api/member/{member}', body, now)
+    why = verify_request(key.pub, signature, 'POST', f'/api/member/{member}', body, now, SKEW)
+    if why:
+        raise ValueError(why)
+    return take(member, body, domain_objects, received_at=now, signature=signature)
 
 
 def reported_at(member: str, domain_objects) -> float | None:
-    """The time the member stamped its last report with — ITS clock. For how old the report is, ask the copy."""
-    raw = domain_objects.get(base(member) + REPORTED)
+    from .reports import read
     try:
-        return float(json.loads(raw)["ts"]) if raw else None
-    except PARSE_ERRORS:
-        return None                                                  # a mark nobody can read says no time (the seventh review)
+        return read(member, domain_objects).mark['sent_at']
+    except Unreachable:
+        return None
 
 
 class _Fresh:
-    """How old a member's report is, by the domain's clock: when the domain first saw its sequence number."""
-
-    def __init__(self, member: str, store, lost_after: float, wall):
+    """A complete generation, pinned once per logical read pass; freshness survives restart."""
+    def __init__(self, member, store, lost_after, wall):
         self.member, self.store, self.lost_after, self.wall = member, store, lost_after, wall
         self.base = base(member)
-        self.seq, self.seen_at, self.offset = None, None, 0.0
+        self.rev, self.seen_at, self.offset = None, None, 0.0
+        self.parts = {}
 
-    def check(self) -> None:
-        raw = self.store.get(self.base + REPORTED)
-        if not raw:
-            raise Unreachable(f"{self.member} has never reported to the domain")
+    def check(self, stale_ok=False):
+        from .reports import pinned
         try:
-            mark, now = json.loads(raw), self.wall()
-            ts = finite(mark["ts"])                                  # `nan` would make every time of the member `nan`
-        except PARSE_ERRORS as e:
-            # Not a report the domain can read: as if the member had not reported (М10's seventh review) — it raised a
-            # `ValueError` out of every read of the member, which nothing above takes for a silent member.
-            raise Unreachable(f"{self.member}'s last report mark does not parse ({e}): the member writes it again "
-                              f"with its next report") from None
-        if mark.get("seq") != self.seq:                              # a new report: seen now, by our clock
-            self.seq, self.seen_at = mark.get("seq"), now
-            self.offset = now - ts                                   # our clock minus theirs, as of this report
-        age = now - self.seen_at
-        if age > self.lost_after:
-            raise Unreachable(f"{self.member} has not reported for {age:.0f} s")
+            snap = pinned(self.member, self.store)
+        except Unreachable:
+            self.rev, self.seen_at, self.parts = None, None, {}
+            raise
+        self.rev = snap.mark['rev']
+        self.seen_at = snap.mark['received_at']
+        self.offset = self.seen_at - snap.mark['sent_at']
+        self.parts = projection(snap.document())
+        if not stale_ok and self.wall() - self.seen_at > self.lost_after:
+            raise Unreachable(f'{self.member} has not reported for {self.wall()-self.seen_at:.0f} s')
 
-    def domain_time(self, ts) -> float:
+    def domain_time(self, ts):
         return float(ts) + self.offset
 
 
 class _CopyObjects:
-    """A member's objects, as its last report left them. Read only."""
-
-    def __init__(self, fresh: _Fresh):
+    def __init__(self, fresh):
         self.f = fresh
 
-    def get(self, key: str) -> bytes | None:
+    def get(self, key):
         self.f.check()
-        raw = self.f.store.get(self.f.base + "o/" + key)
+        raw = self.f.parts.get('o/'+key)
         if raw and self.f.offset:
-            try:                                                     # the member's `ts`, on the domain's clock
-                d = json.loads(raw)
-                if isinstance(d, dict) and "ts" in d:
-                    d["ts"] = self.f.domain_time(d["ts"])
-                    raw = json.dumps(d).encode()
-            except PARSE_ERRORS:                          # `ts: null` too: handed on as it is, the reader decides
+            try:
+                doc = json.loads(raw)
+                if isinstance(doc, dict) and 'ts' in doc:
+                    doc['ts'] = self.f.domain_time(doc['ts'])
+                    raw = json.dumps(doc).encode()
+            except PARSE_ERRORS:
                 pass
         return raw
 
-    def list(self, prefix: str) -> list[str]:
+    def list(self, prefix):
         self.f.check()
-        n = len(self.f.base) + 2
-        return [k[n:] for k in self.f.store.list(self.f.base + "o/" + prefix)]
+        return [k[2:] for k in self.f.parts if k.startswith('o/'+prefix)]
 
     def put(self, key, data):
-        raise PermissionError("the domain writes nothing into a member's report: its agent does")
+        raise PermissionError('a report projection is read only')
 
     def delete(self, key):
-        raise PermissionError("the domain writes nothing into a member's report: its agent does")
+        raise PermissionError('a report projection is read only')
 
 
 class _CopyVars:
-    """A member's rows, as its last report left them: `(items, index)` as the member's own store answered."""
-
-    def __init__(self, fresh: _Fresh):
+    def __init__(self, fresh):
         self.f = fresh
 
-    def get(self, path: str):
+    def get(self, path):
         self.f.check()
-        raw = self.f.store.get(self.f.base + "v/" + path)
-        if not raw:
+        raw = self.f.parts.get('v/'+path)
+        if raw is None:
             return None, 0
-        try:
-            d = json.loads(raw)
-            return d["items"], d["idx"]
-        except PARSE_ERRORS as e:
-            # A row of the copy that does not parse is not a row that is gone: this read is as one the member did not
-            # answer (М10's seventh review) — said, counted, and each reader's own "not reached" decides.
-            MEMBER_OBJECTS.garbled(f"{self.f.member}/{path}", e)
-            raise Unreachable(f"{self.f.member}'s copy of {path} does not parse ({e})") from None
+        doc = json.loads(raw)
+        return doc['items'], doc['idx']
 
-    def list(self, prefix: str) -> list[str]:
+    def list(self, prefix):
         self.f.check()
-        n = len(self.f.base) + 2
-        return [k[n:] for k in self.f.store.list(self.f.base + "v/" + prefix)]
+        return [k[2:] for k in self.f.parts if k.startswith('v/'+prefix)]
 
     def put(self, path, items, cas=None):
-        raise PermissionError("the domain writes nothing into a member: what it wants there is a row its agent takes home")
+        raise PermissionError('a report projection is read only')
 
 
-def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.0, wall=time.time,
-                via: str | None = None) -> Cluster:
-    """The domain's handle on a member it never reaches: a `Cluster` over that member's last report. Its
-    `objects.f.offset` is how far the member's clock is from the domain's, as of the last report.
-
-    `via`: Lesson 17's summary report — the member reports to that relay, and the relay carries one bundle
-    for all its members. Read the same way; silent together with the relay."""
-    if via is not None:
-        from .relay import BundleView
-        domain_objects = NewerRoad(member, domain_objects, BundleView(via, domain_objects), lost_after, wall)
+def member_copy(member, domain_objects, reaches=(), lost_after=45.0, wall=time.time, via=None):
+    # Both roads are accepted into the same member sequence by the holder's receiver.
     f = _Fresh(member, domain_objects, lost_after, wall)
     return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches), via=via)
-
-
-class NewerRoad:
-    """A member placed behind a relay is read from the relay's bundle — and from its own direct report too. The
-    topology describes a road; it does not forbid another (feedback AM): a member that can reach the domain after
-    all, or that has not yet been moved, is not made silent by a record that says it goes round.
-
-    Which of the two: among the roads still ALIVE on the domain's clock — whose report changed within
-    `lost_after` — the newer by the report's `ts`, the member's own clock, the same one on both roads (not by its
-    number, which each store counts for itself). A road that has gone silent gives way to a live one whatever
-    the member's clock says: a member whose clock stepped back would otherwise freeze on its stale road until it
-    counted as silent (found by the product). The number the domain's freshness sees is the road's name with its
-    own, so a switch of road is a new report."""
-
-    def __init__(self, member: str, direct, bundled, lost_after: float = 45.0, wall=time.time):
-        self.member, self.roads, self.lost_after, self.wall = member, {"direct": direct, "via": bundled}, lost_after, wall
-        self.seen: dict[str, tuple] = {}                  # road -> (its report number, when the domain first saw it)
-        self.unread: set[str] = set()                     # roads that could not be read on the last pick
-
-    def _pick(self) -> str:
-        now, marks, self.unread = self.wall(), {}, set()
-        for name, road in self.roads.items():
-            try:
-                raw = road.get(base(self.member) + REPORTED)
-            except Unreachable:
-                self.unread.add(name)
-                continue                               # a relay whose bundle cannot be read is no road this pass — the
-            if not raw:                                  # member's own report still is (the review's eighth pass)
-                continue
-            try:
-                mark = json.loads(raw)
-                finite(mark.get("ts", 0))
-            except PARSE_ERRORS:
-                continue                                 # a road whose mark does not parse is no road this pass (the seventh review)
-            if self.seen.get(name, (None,))[0] != mark.get("seq"):
-                self.seen[name] = (mark.get("seq"), now)
-            marks[name] = mark
-        if not marks:
-            return "direct" if "via" not in self.unread else "via"   # neither road reads: the bundle's own words, if it is that
-        alive = [n for n in marks if now - self.seen[n][1] <= self.lost_after] or \
-                [max(marks, key=lambda n: self.seen[n][1])]          # both silent: the one heard last
-        return max(alive, key=lambda n: (float(marks[n].get("ts", 0)), self.seen[n][1]))
-
-    def get(self, key: str):
-        name = self._pick()
-        raw = self.roads[name].get(key)
-        if raw is not None and key == base(self.member) + REPORTED:
-            try:
-                mark = json.loads(raw)
-                mark["seq"] = f"{name}:{mark.get('seq')}"
-            except PARSE_ERRORS:
-                return raw                               # as it is: `_Fresh` reads it as no report, with the words
-            return json.dumps(mark).encode()
-        return raw
-
-    def list(self, prefix: str) -> list[str]:
-        return self.roads[self._pick()].list(prefix)
 
 
 def offset_of(copy: Cluster) -> float:
@@ -417,15 +312,13 @@ _FRESH: dict[tuple[int, str], _Fresh] = {}
 
 
 def last_report_at(member: str, domain_objects, lost_after: float = 45.0, wall=time.time) -> float | None:
-    """When the member's last report was made, on the domain's clock — however old; None: it never reported (or its mark
-    does not read). What the domain calls a member silent by when it reports no page (the three-site
-    run, N9): the same remembered sequence as its pages' (`_FRESH`)."""
+    """Persisted receipt time, even for a stale report; None for a missing or corrupt generation."""
     f = _FRESH.setdefault((id(domain_objects), member), _Fresh(member, domain_objects, lost_after, wall))
     f.lost_after, f.wall = lost_after, wall
     try:
         f.check()
     except Unreachable:
-        if f.seq is None:
+        if f.rev is None:
             return None
     return f.seen_at
 
@@ -438,12 +331,8 @@ def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=
     A member that never reported is still Unreachable."""
     f = _FRESH.setdefault((id(domain_objects), member), _Fresh(member, domain_objects, lost_after, wall))
     f.lost_after, f.wall = lost_after, wall
-    try:
-        f.check()
-    except Unreachable:
-        if not stale_ok or f.seq is None:
-            raise
-    raw = domain_objects.get(base(member) + "p/" + name)
+    f.check(stale_ok=stale_ok)
+    raw = f.parts.get("p/" + name)
     if not raw:
         return None
     try:
