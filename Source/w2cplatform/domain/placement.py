@@ -14,12 +14,15 @@ dead cluster is not a trigger either — its units cannot be reached from
 anywhere else.
 
 The placement is STORED, with a reason and a time, in the domain holder's
-store under domain/placement/<unit> — by check-and-set, which is why two
+store under domain/placement/<sub>/<ref> — by check-and-set, which is why two
 placers racing is harmless: the second gets a conflict and re-reads.
 """
 from __future__ import annotations
 
 import time
+import json
+import math
+import re
 from dataclasses import dataclass
 
 from w2cplatform.variables import Conflict, Variables
@@ -40,6 +43,8 @@ class ClusterPlacement:
     reason: str
     at: float
     rev: int
+    origin: str = ""
+    copies: tuple[str, ...] = ()
 
 
 class Refused(Exception):
@@ -48,25 +53,31 @@ class Refused(Exception):
 
 
 class ClusterPlacer:
-    def __init__(self, fed: Federation, vars_: Variables | None = None, headroom=None, clock=time.time):
+    def __init__(self, fed: Federation, vars_: Variables | None = None, headroom=None, clock=time.time, *, sub: str):
         """`headroom(cluster) -> float` is the cluster's spare capacity, from its own
         placement service; the domain does not measure it."""
+        path(sub, "check")
+        self.sub = sub
         self.fed = fed
         self.vars = vars_ or fed.domain_holder.vars
         self.headroom = headroom or (lambda c: 1.0)
         self.clock = clock
 
     def path(self, unit) -> str:
-        return f"domain/placement/{unit}"
+        return path(self.sub, unit)
 
     def current(self, unit) -> ClusterPlacement | None:
         items, _ = self.vars.get(self.path(unit))
         if not items or not items.get("cluster"):
             return None
-        return ClusterPlacement(items["cluster"], items["reason"], float(items["at"]), int(items["rev"]))
+        d = decode(items)
+        return ClusterPlacement(d["cluster"], d["reason"], d["at"], d["rev"], d["origin"], tuple(d["copies"]))
 
     def candidates(self, site: UnitSite, unreachable: set[str] = frozenset()) -> list[Cluster]:
-        return [c for c in self.fed.clusters.values() if site.network in c.networks() and c.name not in unreachable]
+        from .members import Members
+        admitted = set(Members(self.vars).names())
+        return [c for c in self.fed.clusters.values()
+                if c.name in admitted and site.network in c.networks() and c.name not in unreachable]
 
     def place(self, site: UnitSite, unreachable: set[str] = frozenset()) -> ClusterPlacement:
         """Place ONE new unit. An existing placement is returned untouched."""
@@ -87,27 +98,101 @@ class ClusterPlacer:
 
     def _store(self, unit, cluster: str, reason: str, retries: int = 5) -> ClusterPlacement:
         for _ in range(retries):
-            items, idx = self.vars.get(self.path(unit))
-            if items and items.get("cluster"):           # somebody placed it while we thought
-                return ClusterPlacement(items["cluster"], items["reason"], float(items["at"]), int(items["rev"]))
-            rev = self._rev()
-            pl = ClusterPlacement(cluster, reason, self.clock(), rev)
+            have = self.current(unit)
+            if have is not None:
+                return have
+            _, idx = self.vars.get(self.path(unit))
             try:
-                self.vars.put(self.path(unit), {"cluster": cluster, "reason": reason, "at": pl.at, "rev": rev}, cas=idx)
-                return pl
+                assign(self.vars, self.sub, unit, {"cluster": cluster, "reason": reason}, self.clock, cas=idx)
+                return self.current(unit)
             except Conflict:
-                continue                                 # the other placer won; re-read and agree with it
-        raise RuntimeError(f"could not store placement for unit {unit} after {retries} conflicts")
-
-    def _rev(self) -> int:
-        items, idx = self.vars.get("domain/placement")
-        rev = int(items["rev"]) + 1 if items else 1
-        try:
-            self.vars.put("domain/placement", {"rev": rev}, cas=idx)
-        except Conflict:
-            return self._rev()
-        return rev
+                continue
+        raise RuntimeError("could not store placement after conflicts")
 
     def rebalance_across_clusters(self, *a, **k):
         raise NotImplementedError("a worker never crosses a cluster (М11); the domain moves a unit between "
                                   "clusters only when an operator asks, and then as delete-here/create-there")
+
+
+PREFIX = "domain/placement/"
+
+
+def path(sub, ref):
+    ref = str(ref)
+    if not isinstance(sub, str) or not re.fullmatch(r"[a-z][a-z0-9_-]*", sub) \
+            or not ref or ref in (".", "..") or "/" in ref or any(ord(c) < 32 for c in ref):
+        raise ValueError("invalid placement identity")
+    return PREFIX + sub + "/" + ref
+
+
+def decode(items):
+    """Strict assignment row, with lists stored as JSON in Variables' string values."""
+    if not isinstance(items, dict) or set(items) - {"cluster", "origin", "copies", "reason", "at", "rev"}:
+        raise ValueError("invalid placement row")
+    try:
+        copies = json.loads(items.get("copies", "[]"))
+        out = {"cluster": items["cluster"], "origin": items.get("origin", ""), "copies": copies,
+               "reason": items.get("reason", ""), "at": float(items["at"]), "rev": int(items["rev"])}
+        if not isinstance(out["cluster"], str) or not out["cluster"] or not isinstance(out["origin"], str) \
+                or not isinstance(out["reason"], str) or not isinstance(copies, list) \
+                or any(not isinstance(n, str) or not n for n in copies) or len(set(copies)) != len(copies) \
+                or out["cluster"] in copies or not math.isfinite(out["at"]) or out["rev"] <= 0:
+            raise ValueError()
+        return out
+    except (ValueError, TypeError, KeyError, OverflowError):
+        raise ValueError("invalid placement row") from None
+
+
+def read(vars_, sub, ref):
+    items, _ = vars_.get(path(sub, ref))
+    return decode(items) if items else None
+
+
+def assign(vars_, sub, ref, body, wall=time.time, *, cas=None):
+    """Holder/operator write: member links checked against admission, no payload in errors."""
+    from .members import Members
+    from .api import ApiError
+    from .booknames import MUTATIONS
+    key = path(sub, ref)
+    if not isinstance(body, dict) or set(body) - {"cluster", "origin", "copies", "reason"}:
+        raise ApiError(400, "placement takes cluster, origin, copies and reason")
+    candidate = {**body, "copies": json.dumps(body.get("copies", [])), "at": str(wall()), "rev": "1"}
+    try:
+        decoded = decode(candidate)
+    except ValueError:
+        raise ApiError(400, "invalid placement fields") from None
+    candidate = {"cluster": decoded["cluster"], "origin": decoded["origin"],
+                 "copies": json.dumps(sorted(decoded["copies"])), "reason": decoded["reason"],
+                 "at": str(decoded["at"]), "rev": "1"}
+    decoded["copies"] = sorted(decoded["copies"])
+    with MUTATIONS:
+        members = Members(vars_).read()["members"]
+        links = [decoded["cluster"], *decoded["copies"], *([decoded["origin"]] if decoded["origin"] else [])]
+        if any(n not in members for n in links):
+            raise ApiError(400, "placement names an unadmitted member")
+        old, index = vars_.get(key)
+        if old:
+            try:
+                before = decode(old)
+            except ValueError:
+                before = None
+            if before and all(before[k] == decoded[k] for k in ("cluster", "origin", "copies", "reason")):
+                if cas is not None and cas != index:
+                    raise Conflict(key)
+                return before
+        while True:
+            counter, ci = vars_.get("domain/placement")
+            try:
+                rev = int((counter or {}).get("rev", 0)) + 1
+                if rev <= 0:
+                    raise ValueError()
+            except (ValueError, TypeError):
+                raise ApiError(503, "placement revision is unreadable") from None
+            try:
+                vars_.put("domain/placement", {"rev": str(rev)}, cas=ci)
+                break
+            except Conflict:
+                continue
+        candidate["rev"] = str(rev)
+        vars_.put(key, candidate, cas=index if cas is None else cas)
+        return decode(candidate)
