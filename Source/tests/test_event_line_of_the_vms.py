@@ -17,14 +17,14 @@ def test_a_scenario_counts_in_event_time_and_is_named_after_the_event():
     box = Box()
     t = box.wall()
     # Two badges in one millisecond are two firings: the name is the event's, not its time
-    same = [ev(t - 10, "vms", 12, "io.input", port="1", value="closed", id="12-e1-abc-1"),
-            ev(t - 10, "vms", 12, "io.input", port="1", value="closed", id="12-e1-abc-2")]
+    same = [ev(t - 10, "cam", 12, "io.input", port="1", value="closed", id="12-e1-abc-1"),
+            ev(t - 10, "cam", 12, "io.input", port="1", value="closed", id="12-e1-abc-2")]
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
     _assigned(box, "one")
     w = _worker(box, _Log(same))
     w.reconcile_once()
-    assert sorted(box.vars.list("vms/requests/")) == ["vms/requests/one-12-e1-abc-1-0", "vms/requests/one-12-e1-abc-2-0"]
-    assert box.vars.get("vms/requests/one-12-e1-abc-1-0")[0]["valid_until"] == number_text(t - 10 + 30.0)   # one text for a number (`canonical`)
+    assert sorted(box.vars.list("cam/requests/")) == ["cam/requests/one-12-e1-abc-1-0", "cam/requests/one-12-e1-abc-2-0"]
+    assert box.vars.get("cam/requests/one-12-e1-abc-1-0")[0]["valid_until"] == number_text(t - 10 + 30.0)   # one text for a number (`canonical`)
 
 
 def test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late_to_act_on():
@@ -34,20 +34,20 @@ def test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late
     # Written 190 s apart, they HAPPENED inside the window: the scenario fires. But the action was due thirty
     # seconds after the contact closed: nothing is filed, and the firing says how late it was.
     events = [ev(t - 200, "det", "7-motion", "motion", id="m-1"),
-              ev(t - 5, "vms", 12, "io.input", port="1", value="closed", id="d-1", occurred=t - 190)]
+              ev(t - 5, "cam", 12, "io.input", port="1", value="closed", id="d-1", occurred=t - 190)]
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, _Log(events))
     w.reconcile_once()
-    assert box.vars.list("vms/requests/") == [] and w.late == 1 and w.filed == 0
+    assert box.vars.list("cam/requests/") == [] and w.late == 1 and w.filed == 0
 
     # …and written in time, it is filed with the deadline counted from when it happened
     box2 = Box(); t = box2.wall()
     events = [ev(t - 12, "det", "7-motion", "motion", id="m-1"),
-              ev(t - 1, "vms", 12, "io.input", port="1", value="closed", id="d-1", occurred=t - 4)]
+              ev(t - 1, "cam", 12, "io.input", port="1", value="closed", id="d-1", occurred=t - 4)]
     _scenario(box2); _assigned(box2, "door-on-badge")
     w = _worker(box2, _Log(events))
     w.reconcile_once()
-    assert box2.vars.get("vms/requests/door-on-badge-d-1-0")[0]["valid_until"] == number_text(t - 4 + 30.0)
+    assert box2.vars.get("cam/requests/door-on-badge-d-1-0")[0]["valid_until"] == number_text(t - 4 + 30.0)
 
 
 def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
@@ -82,7 +82,7 @@ def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
     (`Worker.of`, from the spec's `about` and the unit's row): nine call sites passed it by hand, and the one written
     through `observe` (a recording's refused backfill) did not. No VMS module passes `of` to anything now, and none
     writes a unit's lines through an `EventLog` of its own beside the worker's `observe` and `write_event` — the
-    camera's own log (`archive.event_log`: `vms/<cam>`, about nothing but itself) is the one writer left.
+    camera's own log (`archive.event_log`: `cam/<cam>`, about nothing but itself) is the one writer left.
 
     A line of the journal is not a unit's line: it lies in `audit`, one of the trees that say their own `of`
     (`events.OWN_OF_TREES`), and a door's line names the unit it is about by `target` and `of` (ADR-0069; the review's
@@ -90,7 +90,7 @@ def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
     import ast
     from tests.productdir import SOURCE
     found = []
-    for top in ("vms", "gstvms"):
+    for top in ("cam", "gstvms"):
         for d, _, files in os.walk(os.path.join(SOURCE, top)):
             for f in sorted(files):
                 if not f.endswith(".py"):
@@ -105,7 +105,7 @@ def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
                     where = f"{os.path.relpath(p, SOURCE)}:{node.lineno}"
                     if any(k.arg == "of" for k in node.keywords) and name != "say":
                         found.append(f"{where}: says `of`")
-                    if name == "EventLog" and os.path.relpath(p, SOURCE) != os.path.join("vms", "archive.py"):
+                    if name == "EventLog" and os.path.relpath(p, SOURCE) != os.path.join("cam", "archive.py"):
                         found.append(f"{where}: an EventLog of its own")
     assert not found, "\n".join(found)
 
