@@ -3,14 +3,14 @@ srv-a: {'units': 1, 'buckets': 2, 'mirrored': [], 'cached': 0}
 srv-b: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
 srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
 
-# GET /events?unit=vms/7 on the console — merged from every live resource
+# GET /events?unit=cam/7 on the console — merged from every live resource
 {
   "state": "live",
   "events": [
     {
       "t": 1757492812.0,
-      "subsystem": "vms",
-      "unit": "vms/7",
+      "subsystem": "cam",
+      "unit": "cam/7",
       "of": "",
       "kind": "motion",
       "server": "srv-a",
@@ -21,7 +21,7 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
       "t": 1757492830.0,
       "subsystem": "det",
       "unit": "det/d-12",
-      "of": "vms/7",
+      "of": "cam/7",
       "kind": "person",
       "server": "srv-c",
       "epoch": 1,
@@ -29,8 +29,8 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
     },
     {
       "t": 1757492840.0,
-      "subsystem": "vms",
-      "unit": "vms/7",
+      "subsystem": "cam",
+      "unit": "cam/7",
       "of": "",
       "kind": "silent",
       "server": "srv-a",
@@ -39,8 +39,8 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
     },
     {
       "t": 1757494005.0,
-      "subsystem": "vms",
-      "unit": "vms/7",
+      "subsystem": "cam",
+      "unit": "cam/7",
       "of": "",
       "kind": "motion",
       "server": "srv-b",
@@ -49,8 +49,8 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
     },
     {
       "t": 1757499600.0,
-      "subsystem": "vms",
-      "unit": "vms/7",
+      "subsystem": "cam",
+      "unit": "cam/7",
       "of": "",
       "kind": "motion",
       "server": "srv-a",
@@ -68,7 +68,7 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
       "t": 1757492830.0,
       "subsystem": "det",
       "unit": "det/d-12",
-      "of": "vms/7",
+      "of": "cam/7",
       "kind": "person",
       "server": "srv-c",
       "epoch": 1,
@@ -76,8 +76,8 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
     },
     {
       "t": 1757494005.0,
-      "subsystem": "vms",
-      "unit": "vms/7",
+      "subsystem": "cam",
+      "unit": "cam/7",
       "of": "",
       "kind": "motion",
       "server": "srv-b",
