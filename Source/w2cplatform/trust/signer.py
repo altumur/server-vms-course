@@ -271,6 +271,9 @@ class Signer:
         # absent row is a first start.
         if items is not None and "issuing_key_secret" not in items:
             raise RuntimeError(f"this cluster no longer holds the domain's keys ({items.get('forgotten', 'forgotten')})")
+        from w2cplatform.domain.booksecrets import load
+        if items is None:
+            self.book_key = load(vars_, sealer, create=True)
         if items is not None:
             try:
                 items = open_row(sealer, items, SIGNER_ROW)          # `Sealed`: sealed, and no key here — said, not guessed
@@ -300,6 +303,9 @@ class Signer:
             self._backup_key = backup_key(_key_bytes(self.root.key), self.backup_rev)   # its own root's, kept sealed
             self.tokens = TokenIssuer(domain)
             self._persist()
+        if items is not None:
+            self.book_key = load(vars_, sealer)
+        self.tokens.book_seal = self.book_key.seal_pub
         self.serial = 0
 
     @classmethod
@@ -311,8 +317,42 @@ class Signer:
         s.domain, s.org, s.now, s.vars, s.chain, s.serial, s.generation = domain, root.org, now, vars_, [], 0, 1
         s.sealer, s.backup_rev = sealer, backup_rev
         s._backup_key = backup_key(_key_bytes(root.key), backup_rev)
+        from w2cplatform.domain.booksecrets import load
+        s.book_key = load(vars_, sealer, create=True)
         s._issue_from(root)
+        s.tokens.book_seal = s.book_key.seal_pub
         return s
+
+    def reload_book_key(self):
+        """After restoring domain state, use its receive seed under this holder's ring."""
+        from w2cplatform.domain.booksecrets import load
+        self.book_key = load(self.vars, self.sealer)
+        self.tokens.book_seal = self.book_key.seal_pub
+
+    def rotate_book_seal(self, root: DomainRoot):
+        """An offline-root operation: replace the receive seed and sign the next set.
+
+        The old seed is not retained. A failed second write leaves old contributions
+        unreadable, never usable via a fallback; recovery with the root publishes the
+        current seed's public key in a later set. Accepted report bytes stay untouched.
+        """
+        from w2cplatform.domain.booknames import MUTATIONS
+        from w2cplatform.domain.booksecrets import replace
+        from .documents import verify
+        with MUTATIONS:
+            items, idx = self.vars.get("domain/keys")
+            doc = json.loads(items["doc"])
+            only_root = KeySet(current="", keys={ROOT_KID: root.public_bytes})
+            verify(doc, only_root, self.now())
+            old = KeySet.from_items(items)
+            if doc.get("kid") != ROOT_KID or old.root != root.public_bytes:
+                raise ValueError("the receive key rotates only under the domain's pinned root")
+            self.book_key = replace(self.vars, self.sealer)
+            self.tokens.book_seal = old.book_seal = self.book_key.seal_pub
+            want = root.key_set(old, old.rev + 1, revoked_ca=old.revoked_ca,
+                                issuing=old.issuing, revoked_members=old.revoked_members)
+            self.vars.put("domain/keys", want, cas=idx)
+            return old.rev + 1
 
     @property
     def backup_key(self) -> bytes:
@@ -423,6 +463,8 @@ class Signer:
     def restore(cls, domain: str, vars_, backup: bytes, now=time.time, sealer=None) -> "Signer":
         from w2cplatform.sealing import seal_items
         d = json.loads(backup)
+        from w2cplatform.domain.booksecrets import load
+        load(vars_, sealer, create=True)
         _, idx = vars_.get(SIGNER_ROW)
         vars_.put(SIGNER_ROW, seal_items(sealer, d, SIGNER_ROW), cas=idx)
         return cls(domain, vars_, now=now, sealer=sealer)
