@@ -23,4 +23,4 @@ product-only vms.subsystem.yaml unit.fields.alarms_retention_days.type   # ADR-0
 product-only vms.subsystem.yaml unit.fields.events_retention_days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
 product-only vms.subsystem.yaml unit.fields.events_retention_days.inherit   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
 product-only vms.subsystem.yaml unit.fields.events_retention_days.type   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
-product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: Н5, puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
+product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
