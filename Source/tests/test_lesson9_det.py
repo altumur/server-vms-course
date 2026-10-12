@@ -22,7 +22,7 @@ from tests.vmsconftest import Box
 
 def _box():
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     det_ctl = SpecController(DET_SPEC, box.vars.as_writer("detcontroller", DET_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -73,10 +73,10 @@ def call(base, method, path, body=None, headers=None):
 def test_one_console_mounts_every_subsystem_it_fronts():
     box, ctl, det_ctl, w, srv, base = _box()
     try:
-        assert call(base, "GET", "/spec")[1]["name"] == "vms" and call(base, "GET", "/live/spec")[1]["name"] == "live"
+        assert call(base, "GET", "/spec")[1]["name"] == "cam" and call(base, "GET", "/live/spec")[1]["name"] == "live"
         assert call(base, "GET", "/det/spec")[1]["rows"] == "units"
         m = call(base, "GET", "/mounts")[1]
-        assert m["root"] == "vms" and sorted(m["mounts"]) == ["det", "live"] and m["mounts"]["det"]["id"] == "name"
+        assert m["root"] == "cam" and sorted(m["mounts"]) == ["det", "live"] and m["mounts"]["det"]["id"] == "name"
         assert call(base, "GET", "/det/units")[1] == {"rows": [], "configured": []}
         assert "det_workers_live 0" in urllib.request.urlopen(f"{base}/det/metrics").read().decode()
         assert call(base, "GET", "/det/nope")[0] == 404 and call(base, "GET", "/nope/spec")[0] == 404
