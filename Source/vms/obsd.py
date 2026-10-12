@@ -91,7 +91,7 @@ def default_socket() -> str:
 
 # The name a session says in HELLO when its caller names none: the PROCESS's — `python3 -m vms` is `vms`, a script
 # `run.py` is `run` — and not a subsystem's. This client is the VMS's (ADR 0001: the archive's engine is the VMS's, and
-# the platform knows none); it used to say "vms" for every caller.
+# the platform knows none); it used to say "cam" for every caller.
 def process_name() -> str:
     """This process's name, as HELLO and a session's token carry it: letters, digits, `.`, `_`, `-`."""
     import sys
