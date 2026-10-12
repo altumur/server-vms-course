@@ -2,6 +2,8 @@
 worker; the agent carries keys, revocations and the cluster's grants and
 nothing else; grants are cluster-local with expiry; the revocation window
 is stated then measured; break-glass is one account, audited."""
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.cluster.variables import Forbidden
@@ -52,7 +54,7 @@ def test_nothing_about_a_user_reaches_a_worker_only_trust_does():
     DomainPublisher(dc.vars).publish_keys(signer.tokens.keyset())
     agent = DomainAgent("south", dc.vars, south.vars.as_writer("agent"), now=clk)
     south.vars.acl = {"agent": ["domain/*"]}
-    assert agent.sync()
+    assert report_sync(agent)
     assert south.vars.list("identity/") == [] and sorted(south.vars.list("domain/")) == ["domain/keys", "domain/member"]   # keys, no people
     for path in ("vms/cameras/7", "vms/epoch/7", "vms/slots/w-0"):
         try:
@@ -83,11 +85,11 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     south = fed.clusters["south"]
     DomainPublisher(dc.vars).publish_keys(signer.tokens.keyset())     # a key set, no grants for south, no root pinned
     agent = DomainAgent("south", dc.vars, south.vars, now=clk)
-    assert agent.sync()
+    assert report_sync(agent)
     assert MEMBER_PATH in DOMAIN_MARKS and south.vars.get(MEMBER_PATH)[0] == {"cluster": "south"}
     assert [p for p in DOMAIN_MARKS if has_mark(south.vars, p)] == [MEMBER_PATH]     # the only mark there is
     idx = south.vars.get(MEMBER_PATH)[1]
-    agent.sync()
+    report_sync(agent)
     assert south.vars.get(MEMBER_PATH)[1] == idx                                   # not rewritten every pass
 
     south.vars._items.pop(KEYS_PATH)                                               # the key set is lost: a rollback, past the store
@@ -102,7 +104,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     finally:
         srv.shutdown()
     south.vars._items.pop(MEMBER_PATH)
-    assert agent.sync() and south.vars.get(MEMBER_PATH)[0] and south.vars.get(KEYS_PATH)[0]   # both back on the next pass
+    assert report_sync(agent) and south.vars.get(MEMBER_PATH)[0] and south.vars.get(KEYS_PATH)[0]   # both back on the next pass
 
 
 def test_domain_down_clusters_keep_verifying_nobody_new_logs_in():
@@ -113,10 +115,10 @@ def test_domain_down_clusters_keep_verifying_nobody_new_logs_in():
     ids.create_local("alice", "pw", ["operator"])
     DomainPublisher(dc.vars).publish_keys(signer.tokens.keyset())
     agent = DomainAgent("south", dc.vars, south.vars, now=clk)
-    agent.sync()
+    report_sync(agent)
     tok = ids.login("alice", "pw")
     links["north"].up = False                                              # the domain holder is gone
-    assert agent.sync() is False and agent.last_synced == 1000.0           # the agent stops updating, writes nothing
+    assert report_sync(agent) is False and agent.last_synced == 1000.0           # the agent stops updating, writes nothing
     trust = ClusterTrust(south.vars)
     assert verify(tok, trust.keyset(), now=clk())["sub"] == "alice"        # existing tokens: fine, offline
     try:
@@ -131,17 +133,17 @@ def test_revocation_travels_by_the_agent_and_rotation_overlaps():
     south = fed.clusters["south"]
     pub = DomainPublisher(dc.vars)
     pub.publish_keys(signer.tokens.keyset())
-    agent = DomainAgent("south", dc.vars, south.vars, now=clk); agent.sync()
+    agent = DomainAgent("south", dc.vars, south.vars, now=clk); report_sync(agent)
     tok = signer.tokens.issue("mallory", 900, now=clk(), kind="person")
     rl = RevocationList(); rl.revoke(verify(tok, signer.tokens.keyset(), now=clk()))
-    pub.publish_revoked(rl); agent.sync()
+    pub.publish_revoked(rl); report_sync(agent)
     trust = ClusterTrust(south.vars)
     try:
         verify(tok, trust.keyset(), trust.revoked(), now=clk()); raise AssertionError()
     except Revoked:
         pass
     old_tok = signer.tokens.issue("alice", 900, now=clk(), kind="person")
-    signer.tokens.rotate(overlap=600, now=clk()); pub.publish_keys(signer.tokens.keyset()); agent.sync()
+    signer.tokens.rotate(overlap=600, now=clk()); pub.publish_keys(signer.tokens.keyset()); report_sync(agent)
     trust = ClusterTrust(south.vars)
     assert verify(old_tok, trust.keyset(), now=clk())["sub"] == "alice"    # the previous key is still in the set
     new_tok = signer.tokens.issue("alice", 900, now=clk(), kind="person")
@@ -159,7 +161,7 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     south = fed.clusters["south"]
     pub = DomainPublisher(dc.vars); pub.publish_keys(signer.tokens.keyset())
     pub.publish_grants("south", [Grant("alice", "view", None, clk() + GRANT_LIFETIME), Grant("alice", "edit", "vms/7", clk() + GRANT_LIFETIME)])
-    agent = DomainAgent("south", dc.vars, south.vars, now=clk); agent.sync()
+    agent = DomainAgent("south", dc.vars, south.vars, now=clk); report_sync(agent)
     assert sorted(south.vars.list("domain/")) == ["domain/grants", "domain/keys", "domain/member"]   # trust and grants, no user
     g = ClusterGrants("south", now=clk)
     g.renew_from_domain(ClusterTrust(south.vars).grants())                            # the console loads them from ITS cluster
