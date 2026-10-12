@@ -21,7 +21,7 @@ Environment=SECRETS_KEY=%d/platform.key
 # the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
 UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh domainagent
-ReadWritePaths=/data/platform/objects /run/w2c-token-requests
+ReadWritePaths=/data/platform/objects -/run/w2c-token-requests
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
