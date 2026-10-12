@@ -6,7 +6,7 @@ import threading
 import pytest
 
 from w2cplatform.objects import FsObjectStore
-from w2cplatform.domain.reports import accept, read, prune, StaleReport
+from w2cplatform.domain.reports import accept, read, prune, export, StaleReport
 from w2cplatform.domain.federation import Unreachable
 from w2cplatform.domain.uplink import base, REPORTED
 
@@ -16,7 +16,7 @@ def _store():
 
 
 def _body(seq):
-    return json.dumps({'seq':seq,'sent_at':seq,'objects':{},'pages':{},
+    return json.dumps({'sent_at':seq,'objects':{},'pages':{},
                       'rows':{'testsub/status':{'items':{'n':str(seq)},'idx':seq},
                               'testsub2/status':{'items':{'n':str(seq)},'idx':seq}}},indent=1).encode()
 
@@ -25,60 +25,67 @@ def test_every_publication_boundary_reads_whole_old_or_new_and_preserves_origina
     store=_store()
     accept('a',_body(1),store,received_at=100)
     pinned=read('a',store)
-    old_new=store.put_new
+    old_new=store.put
     def inspect(key,raw):
         assert read('a',store).raw == _body(1)
         result=old_new(key,raw)
-        assert read('a',store).raw == _body(1)
+        if key.endswith('/reports/2'):
+            assert read('a',store).raw == _body(1)
         return result
-    store.put_new=inspect
+    store.put=inspect
     accept('a',_body(2),store,received_at=101)
     assert read('a',store).raw == _body(2) and pinned.raw == _body(1)
     assert not any('/v/' in k or '/o/' in k or '/p/' in k for k in store.list(base('a')))
 
 
-def test_crash_before_pointer_does_not_publish_and_same_bytes_can_finish_after_restart():
+def test_crash_before_pointer_recovers_with_new_body_after_restart():
     store=_store()
     accept('a',_body(1),store,received_at=1)
-    store.put_at=lambda *args: (_ for _ in ()).throw(OSError('power loss'))
-    with pytest.raises(OSError):
-        accept('a',_body(2),store,received_at=2)
-    assert read('a',store).raw == _body(1)
+    put=store.put
+    def crash(key,raw):
+        if key.endswith('/reported'): raise OSError('power loss')
+        put(key,raw)
+    store.put=crash
+    with pytest.raises(OSError): accept('a',_body(2),store,received_at=2)
+    assert read('a',store).raw==_body(1)
+    assert base('a')+'reports/2' not in export(store)
     store=FsObjectStore(store.root)
-    accept('a',_body(2),store,received_at=3)
-    assert read('a',store).raw == _body(2)
-    mark=store.get(base('a')+REPORTED)
-    for seq in (1,2):
-        with pytest.raises(StaleReport):
-            accept('a',_body(seq),store,received_at=999)
-        assert store.get(base('a')+REPORTED) == mark
+    accept('a',_body(3),store,received_at=3)
+    snap=read('a',store)
+    assert snap.raw==_body(3) and snap.mark['rev']==2
+    assert store.get(base('a')+'reports/1')==_body(1)
+    assert accept('a',_body(3),store,received_at=999).mark==snap.mark
+    with pytest.raises(StaleReport): accept('a',_body(2),store,received_at=999)
+    with pytest.raises(StaleReport): accept('a',_body(3)+b' ',store,received_at=999)
+    assert read('a',store).mark==snap.mark
 
 
-def test_reordered_concurrent_publishers_never_move_pointer_backwards():
+def test_concurrent_requests_cannot_overwrite_an_accepted_body():
     store=_store()
     accept('a',_body(1),store,received_at=1)
-    wrote=threading.Event()
-    resume=threading.Event()
-    put=store.put_at
+    wrote,resume,started=threading.Event(),threading.Event(),threading.Event()
+    put=store.put
     errors=[]
-    def delayed(key,raw,index):
-        if json.loads(raw)['seq']==2:
+    def delayed(key,raw):
+        put(key,raw)
+        if key.endswith('/reports/2'):
             wrote.set()
             assert resume.wait(5)
-        return put(key,raw,index)
-    store.put_at=delayed
-    def old():
+    store.put=delayed
+    def send(n):
         try:
-            accept('a',_body(2),store,received_at=2)
-        except StaleReport:
-            errors.append('stale')
-    t=threading.Thread(target=old)
-    t.start()
+            if n==3: started.set()
+            accept('a',_body(n),store,received_at=n)
+        except BaseException as e: errors.append(e)
+    first=threading.Thread(target=send,args=(2,));first.start()
     assert wrote.wait(5)
-    accept('a',_body(3),store,received_at=3)
-    resume.set()
-    t.join(5)
-    assert not t.is_alive() and errors==['stale']
+    second=threading.Thread(target=send,args=(3,));second.start()
+    assert started.wait(5)
+    assert read('a',store).raw==_body(1)
+    resume.set();first.join(5);second.join(5)
+    assert not errors and not first.is_alive() and not second.is_alive()
+    assert read('a',store).mark['rev']==3
+    assert store.get(base('a')+'reports/2')==_body(2)
     assert read('a',store).raw==_body(3)
 
 
@@ -134,15 +141,22 @@ def test_a_reader_pins_the_pointer_before_a_concurrent_prune_and_never_switches_
     assert read('a',store).raw==_body(3)
 
 
-def test_unknown_sequence_shape_or_reused_sequence_with_other_bytes_never_replaces_a_body():
-    for seq in (None,True,0,-1,1.5,2**53):
-        doc=json.loads(_body(1));doc['seq']=seq
-        with pytest.raises(ValueError):
-            accept('a',json.dumps(doc).encode(),_store(),received_at=1)
+def test_corrupt_pointer_is_not_reset_and_signature_is_in_the_mark():
     store=_store()
-    store.put_new(base('a')+'reports/1',_body(1))
-    changed=json.loads(_body(1));changed['objects']={'testsub/extra':{}}
-    with pytest.raises(ValueError):
-        accept('a',json.dumps(changed).encode(),store,received_at=1)
-    assert store.get(base('a')+REPORTED) is None
-    assert store.get(base('a')+'reports/1')==_body(1)
+    accept('a',_body(1),store,received_at=1,signature='signed-body')
+    original=read('a',store).mark
+    assert original['signature']=='signed-body'
+    for rev in (None,True,0,-1,1.5,2**53):
+        mark={**original,'rev':rev}
+        store.put(base('a')+REPORTED,json.dumps(mark).encode())
+        with pytest.raises(ValueError): accept('a',_body(2),store,received_at=2)
+        with pytest.raises(Unreachable): read('a',store)
+
+
+def test_orphans_are_pruned_but_not_exported():
+    store=_store()
+    accept('a',_body(1),store,received_at=1)
+    store.put(base('a')+'reports/2',_body(2))
+    assert base('a')+'reports/2' not in export(store)
+    assert prune('a',store)==1
+    assert read('a',store).raw==_body(1)
