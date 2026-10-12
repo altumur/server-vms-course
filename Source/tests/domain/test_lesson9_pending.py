@@ -27,7 +27,7 @@ def _snapshot(cluster, rows: dict[str, dict], ts: float) -> None:
     """A member's snapshot carrying the fields an operator edits, the way a controller publishes it."""
     cameras = [{"id": i + 1, "ref": ref, "worker": "w-0", "server": "srv-1", **fields}
                for i, (ref, fields) in enumerate(rows.items())]
-    cluster.objects.put("vms/snapshot/w-0", json.dumps({"cluster": cluster.name, "worker": "w-0", "ts": ts,
+    cluster.objects.put("cam/snapshot/w-0", json.dumps({"cluster": cluster.name, "worker": "w-0", "ts": ts,
                                                         "cameras": cameras}).encode())
 
 
