@@ -67,14 +67,14 @@ def recommend(cameras: int, mbit_per_camera: float, uplink_mbit: float, retentio
 
 
 def _worker_jobspec() -> str:
-    """М11's worker job as the appendix «форма поставки» writes it — deploy/cluster/nomad/vmsworker.nomad.hcl: a rented
+    """М11's worker job as the appendix «форма поставки» writes it — deploy/cluster/nomad/camworker.nomad.hcl: a rented
     cluster is where an orchestrator is justified, and М11's own servers run the same worker from a systemd unit."""
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))     # the code root
-    with open(os.path.join(here, "deploy", "cluster", "nomad", "vmsworker.nomad.hcl"), encoding="utf-8") as f:
+    with open(os.path.join(here, "deploy", "cluster", "nomad", "camworker.nomad.hcl"), encoding="utf-8") as f:
         return f.read()
 
 
-def render_three_ways(job: str = "vmsworker") -> dict[str, str]:
+def render_three_ways(job: str = "camworker") -> dict[str, str]:
     """The same worker job for a local rack, a rented instance, and a split
     site. What differs is the datacenter and the object store's address.
     What must never differ: everything about the worker."""
