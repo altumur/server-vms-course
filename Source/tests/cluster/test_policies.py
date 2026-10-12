@@ -8,7 +8,7 @@ caller came through. The file is GENERATED from the specs of the catalogue (`pyt
 code that makes each read.
 
 The history this file comes from: on Nomad the policies were written by hand in `*-policy.hcl`, and inside two
-commits they stopped matching the code three times — the controller's grant named `objects/vms/snapshot` exactly when
+commits they stopped matching the code three times — the controller's grant named `objects/cam/snapshot` exactly when
 the snapshot had become one object per worker; the console got a `blob` route and no grant for it; the rec controller
 never had a grant for its own snapshot. All three were invisible, because the suite ran against a store with no
 rights at all. The stand now runs every process through its own role's door with THIS file's rights, so a missing
@@ -62,7 +62,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
     for role in doc()["roles"]:
         platform = role in ("resource", "console", "domain", "domainconsole", "domainagent") or role.endswith("controller")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
-    assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
+    assert {"console", "camcontroller", "reccontroller", "camworker", "recworker", "resource"} <= set(r.roles)
 
 
 def _expected_writes() -> dict[str, set[str]]:
@@ -90,11 +90,11 @@ def test_a_controller_deletes_a_unit_row_only_when_its_spec_says_unplaced_delete
     a stream nobody holds; the VMS's deletes no camera."""
     r = rights()
     assert r.allows("livecontroller", "delete", "live/streams/7") and not r.allows("livecontroller", "write", "live/streams/7")
-    assert not r.allows("vmscontroller", "delete", "vms/cameras/7") and not r.allows("reccontroller", "delete", "rec/recordings/7")
+    assert not r.allows("camcontroller", "delete", "cam/cameras/7") and not r.allows("reccontroller", "delete", "rec/recordings/7")
 
 
 def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
-    """Both directions against the code's own lists. What `objects/vms/*` would fail — the grant the worker once had,
+    """Both directions against the code's own lists. What `objects/cam/*` would fail — the grant the worker once had,
     whose comment said "its heartbeat" while the pattern said the whole subsystem. And an object that is a FILE now
     (a heartbeat, a shard, a pass report, a blob) is no row, so no grant names it: only the create-only keys are."""
     got = {role: set(g["write"]) for role, g in doc()["roles"].items()}
@@ -112,19 +112,19 @@ def test_nothing_writes_what_it_has_no_business_writing():
     configuration; the controller places and edits nothing; the console edits and places nothing; the resource
     stays inside its doors; nobody writes an object that is a file."""
     r = rights()
-    denied = [("vmsworker", "vms/cameras/7"), ("vmsworker", "vms/placement/7"), ("vmsworker", "vms/workers/w-srv-a-1"),
-              ("recworker", "rec/recordings/7"), ("recworker", "vms/epoch/7"),
-              ("vmscontroller", "vms/cameras/7"), ("vmscontroller", "vms/epoch/7"), ("vmscontroller", "rec/placement/7"),
-              ("console", "vms/placement/7"), ("console", "vms/workers/w-srv-a-1"), ("console", "vms/slots/w-srv-a-1"),
-              ("resource", "vms/cameras/7"), ("resource", "platform/schema"),
-              ("domainagent", "vms/cameras/7")]
+    denied = [("camworker", "cam/cameras/7"), ("camworker", "cam/placement/7"), ("camworker", "cam/workers/w-srv-a-1"),
+              ("recworker", "rec/recordings/7"), ("recworker", "cam/epoch/7"),
+              ("camcontroller", "cam/cameras/7"), ("camcontroller", "cam/epoch/7"), ("camcontroller", "rec/placement/7"),
+              ("console", "cam/placement/7"), ("console", "cam/workers/w-srv-a-1"), ("console", "cam/slots/w-srv-a-1"),
+              ("resource", "cam/cameras/7"), ("resource", "platform/schema"),
+              ("domainagent", "cam/cameras/7")]
     for role in r.roles:
-        denied += [(role, OBJECTS + k) for k in ("vms/heartbeats/w-1", "vms/snapshot/w-1", "vms/controller/pass",
+        denied += [(role, OBJECTS + k) for k in ("cam/heartbeats/w-1", "cam/snapshot/w-1", "cam/controller/pass",
                                                  "platform/resources/srv-a/heartbeat")]
     for role, key in denied:
         assert not r.allows(role, "write", key), f"{role} may write {key}"
     for role in r.roles:
-        assert not r.allows(role, "delete", "vms/epoch/7")
+        assert not r.allows(role, "delete", "cam/epoch/7")
         assert (role in ("domain", "domainagent")) == r.allows(role, "delete", "domain/keys"), role
 
 
@@ -134,10 +134,10 @@ def test_the_console_writes_the_marks_of_requests_and_no_other_object_of_a_worke
     writes (heartbeats, contenders, used); it never deletes a mark — only the holder sweeps one (`Worker.sweep_marks`), a
     mark being «not more than once» (ADR 0013). Create-only and by-index are the code's, not the grant's."""
     r = rights()
-    for k in ("vms/commands/r-1", "rec/commands/r-1"):
+    for k in ("cam/commands/r-1", "rec/commands/r-1"):
         assert r.allows("console", "write", OBJECTS + k), k
         assert not r.allows("console", "delete", OBJECTS + k), k                 # only the holder sweeps a mark
-    for k in ("vms/heartbeats/w-1", "vms/contenders/7", "vms/used/srv-a", "rec/used/srv-a"):
+    for k in ("cam/heartbeats/w-1", "cam/contenders/7", "cam/used/srv-a", "rec/used/srv-a"):
         assert not r.allows("console", "write", OBJECTS + k), k
     written = [p for p in roles(SPECS, "vms")["console"]["write"] if p.startswith(OBJECTS)]
     assert all(p.endswith("/commands/*") for p in written), written
@@ -155,16 +155,16 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     r = rights()
     assert r.groups["domain"] == "w2c-domain"
     for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "domain/users/u1"),
-                        ("read", "identity/pointer"), ("write", "domain/vms/crossings"), ("read", "vms/cameras/7"),
+                        ("read", "identity/pointer"), ("write", "domain/cam/crossings"), ("read", "cam/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
-    for role in ("domainagent", "domainconsole", "vmsdomain", "console", "vmsworker"):
+    for role in ("domainagent", "domainconsole", "camdomain", "console", "camworker"):
         for action in ("read", "write", "delete"):
             assert not r.allows(role, action, "domain/signer"), (role, action)
     assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants")
     assert not r.allows("domainagent", "write", "domain/grants/north") and "member" not in r.roles
-    assert r.allows("vmsdomain", "write", "domain/vms/primaries/cam-SN1") and not r.allows("vmsdomain", "write", "domain/keys")
-    assert not r.allows("domain", "write", "vms/cameras/7")
+    assert r.allows("camdomain", "write", "domain/cam/primaries/cam-SN1") and not r.allows("camdomain", "write", "domain/keys")
+    assert not r.allows("domain", "write", "cam/cameras/7")
 
 
 def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
@@ -179,14 +179,14 @@ def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
     r = rights()
     assert r.groups["domainconsole"] == "w2c-domainconsole"
     for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/shared", "domain/keepers/north",
-                "domain/view", "domain/vms/crossings"):
+                "domain/view", "domain/cam/crossings"):
         assert not r.allows("domainconsole", "write", key), key
     for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/break-glass/north",
                 "domain/member-key", "domain/backup", "domain/backup-taken"):
         assert not r.allows("domainconsole", "read", key), key
     for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north"):
         assert r.allows("domainconsole", "write", key), key
-    for key in ("domain/keys", "domain/shared", "domain/vms/crossings", "vms/cameras/7", "domain/keepers/north"):
+    for key in ("domain/keys", "domain/shared", "domain/cam/crossings", "cam/cameras/7", "domain/keepers/north"):
         assert r.allows("domainconsole", "read", key), key
     assert not r.allows("domainconsole", "delete", "domain/members")          # the store's rule: the domain's roles alone
 
@@ -225,7 +225,7 @@ def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_e
     from tests.domain.conftest import Clock, make_cluster
     r = rights()
     assert sorted(doc()["roles"]["domainagent"]["read"]) == sorted(
-        ["*", "!domain/book-seal*", "!domain/signer*", "!domain/users/*", "!domain/vms/stream-clients/*", "!door/signer*", "!rec/asked/*"])
+        ["*", "!domain/book-seal*", "!domain/signer*", "!domain/users/*", "!domain/cam/stream-clients/*", "!door/signer*", "!rec/asked/*"])
 
     class AsAgent:                       # the daemon: every name listed to every role, a get as the file says
         def __init__(self, inner):
@@ -270,7 +270,7 @@ def _doors(s) -> None:
     v = s.door("reccontroller", "reccontroller on srv-b")
     rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
     s.wall.watchers += [rec_con, rc]                      # each judges by what it saw change: it looks as time moves
-    srv = spec_console({"vms": con, "rec": rec_con}, "vms").serve("127.0.0.1", 0)
+    srv = spec_console({"cam": con, "rec": rec_con}, "cam").serve("127.0.0.1", 0)
     try:
         for url in (f"http://127.0.0.1:{door.server_address[1]}/playback/1?from=0&to=1",
                     f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
@@ -361,7 +361,7 @@ def test_every_write_the_code_makes_is_granted():
     stand — every scene, and the passes and doors the scenes do not run — is allowed by that role's rights; and the
     stand refused none of them, except in the scenes whose point is the refusal."""
     _, writes = code_calls()
-    assert {"vmsworker", "recworker", "vmscontroller", "reccontroller", "console", "resource"} <= set(writes), sorted(writes)
+    assert {"camworker", "recworker", "camcontroller", "reccontroller", "console", "resource"} <= set(writes), sorted(writes)
     r = rights()
     refused, outside = [], []
     for role, made in sorted(writes.items()):
@@ -379,7 +379,7 @@ def test_every_row_the_code_reads_is_granted():
     from the daemon. A listing names every key to every role (ADR-0021's addition of 2026-10-10, the product's rule):
     it needs no grant, and what the code reads of what it listed is a get, checked here."""
     reads, _ = code_calls()
-    assert {"vmsworker", "recworker", "vmscontroller", "reccontroller", "console", "resource"} <= set(reads), sorted(reads)
+    assert {"camworker", "recworker", "camcontroller", "reccontroller", "console", "resource"} <= set(reads), sorted(reads)
     r = rights()
     for role, made in sorted(reads.items()):
         for op, key in sorted(made):
@@ -398,7 +398,7 @@ def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():
     for key in (TRUST_KEYS, *[m + "north" if m.endswith("/") else m for m in DOMAIN_MARKS], "domain/grants/acme"):
         assert r.allows("console", "read", key), f"console may not read {key}"
     for key in (TRUST_KEYS, MEMBER_MARK):                # the holder's door verifies no token (`Gate.gated`)
-        assert r.allows("vmsworker", "read", key), f"vmsworker may not read {key}"
+        assert r.allows("camworker", "read", key), f"camworker may not read {key}"
     for role in r.roles:
         assert r.allows(role, "read", SCHEMA_KEY), f"{role} may not read {SCHEMA_KEY}"
 
@@ -413,7 +413,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     from w2cplatform.access import MEMBER_MARK, TRUST_KEYS
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables
-    granted = {p for p in doc()["roles"]["vmsworker"]["read"] if p.startswith("domain")}
+    granted = {p for p in doc()["roles"]["camworker"]["read"] if p.startswith("domain")}
     assert granted == {TRUST_KEYS, MEMBER_MARK}, sorted(granted)
     root = tempfile.mkdtemp()
     vars_, read = FileVariables(f"{root}/vars"), []
@@ -442,17 +442,17 @@ def test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_passwor
     deploy = os.path.join(os.path.dirname(RIGHTS), "systemd")
     loaders = {f for f in os.listdir(deploy) if f.endswith(".service")
                and "LoadCredential=platform.key:/etc/w2c/secrets/platform.key" in open(os.path.join(deploy, f)).read()}
-    assert loaders == {"w2c-console.service", "vms-vmsworker.service", "vms-recworker.service",
-                       "vms-vmsworker-spare@.service", "vms-recworker-spare@.service"}
+    assert loaders == {"w2c-console.service", "vms-camworker.service", "vms-recworker.service",
+                       "vms-camworker-spare@.service", "vms-recworker-spare@.service"}
 
 
 def test_a_key_is_exact_and_a_prefix_says_so():
     """Kept as a named case because it cost a production morning on Nomad: a pattern without a trailing `*` is ONE
     key. The daemon's patterns say the same (`storemachine.Rights`), and a denial (`!`) wins over a grant."""
-    r = Rights.parse({"roles": {"c": {"write": ["objects/vms/snapshot/*", "vms/policy", "vms/*", "!vms/epoch/*"]}}})
-    assert r.allows("c", "write", "objects/vms/snapshot/w-1") and not r.allows("c", "write", "objects/vms/snapshot")
-    assert r.allows("c", "write", "vms/policy") and r.allows("c", "write", "vms/cameras/1")
-    assert not r.allows("c", "write", "vms/epoch/1")
+    r = Rights.parse({"roles": {"c": {"write": ["objects/cam/snapshot/*", "cam/policy", "cam/*", "!cam/epoch/*"]}}})
+    assert r.allows("c", "write", "objects/cam/snapshot/w-1") and not r.allows("c", "write", "objects/cam/snapshot")
+    assert r.allows("c", "write", "cam/policy") and r.allows("c", "write", "cam/cameras/1")
+    assert not r.allows("c", "write", "cam/epoch/1")
 
 
 def test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grants_and_no_other_does():
@@ -466,11 +466,11 @@ def test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grant
     assert {"liveworker", "recworker"} <= with_door
     for s in SPECS:
         assert r.allows(f"{s.name}worker", "read", "domain/grants/room-a") == (f"{s.name}worker" in with_door), s.name
-    assert not r.allows("domainconsole", "read", "domain/vms/stream-clients/wall1")
-    assert not r.allows("domainconsole", "read", "domain/vms/stream-accounts")
-    assert not r.allows("domainagent", "read", "domain/vms/stream-clients/wall1")
-    assert r.allows("domainagent", "read", "domain/vms/stream-accounts")
-    assert r.allows("domain", "read", "domain/vms/stream-clients/wall1")              # the signer backs up domain.kept
+    assert not r.allows("domainconsole", "read", "domain/cam/stream-clients/wall1")
+    assert not r.allows("domainconsole", "read", "domain/cam/stream-accounts")
+    assert not r.allows("domainagent", "read", "domain/cam/stream-clients/wall1")
+    assert r.allows("domainagent", "read", "domain/cam/stream-accounts")
+    assert r.allows("domain", "read", "domain/cam/stream-clients/wall1")              # the signer backs up domain.kept
 
 
 def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
@@ -496,8 +496,8 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     fw.book()
     fw.asks_book()
     should_from_snapshot(objects, sources=AsRecorder())("SN-A")
-    books = {p for p in read if p.startswith("domain/vms/")}
-    assert books == {"domain/vms/upstream", "domain/vms/asks", "domain/vms/sources"}, sorted(books)
+    books = {p for p in read if p.startswith("domain/cam/")}
+    assert books == {"domain/cam/upstream", "domain/cam/asks", "domain/cam/sources"}, sorted(books)
     assert set(REC_SPEC.worker_reads) >= books, REC_SPEC.worker_reads
 
 
@@ -592,6 +592,6 @@ def test_a_door_of_a_move_whose_store_does_not_answer_says_503_never_no_copy():
 def test_resource_reads_common_retention_and_never_a_units_old_policy():
     r = rights()
     for family in ("retention", "alarms_retention"):
-        assert r.allows("resource", "read", f"vms/{family}")
-        assert not r.allows("resource", "read", f"vms/{family}/7")
-        assert not r.allows("console", "write", f"vms/{family}/7")
+        assert r.allows("resource", "read", f"cam/{family}")
+        assert not r.allows("resource", "read", f"cam/{family}/7")
+        assert not r.allows("console", "write", f"cam/{family}/7")
