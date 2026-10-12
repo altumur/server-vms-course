@@ -1527,12 +1527,28 @@ class Resource:
         # in this one loop, and one row with a word for `days` raised out of it: nothing of anybody's was swept, every
         # pass. Not knowing a unit's days is not "zero days" — that unit is left alone this pass (`inf`), named in
         # `retention_garbled` and in the log, and the others are swept by theirs.
+        # One inventory for the policy and the sweep: a writer's new unit waits for the next pass.
+        # Copies belong in the floor too, even when this resource holds no original of their unit.
+        inventory = self.units()
+        mirrors = []
+        for path in self.volumes.values():
+            for server in mirrored_servers(path):
+                base = os.path.join(path, MIRROR_DIR, server)
+                mirrors.append((base, subsystems_under(base)))
+                self._progressed()
         days_of, garbled = {}, []
-        for sub, units in self.units().items():
-            for unit in units:
-                days_of[(sub, unit)] = self._days(sub, unit, garbled)
-                self._progressed()                                      # a row read per unit: each is a step
-        floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
+        for units_by_sub in [inventory, *(units for _, units in mirrors)]:
+            for sub, units in units_by_sub.items():
+                for unit in units:
+                    if (sub, unit) not in days_of:
+                        days_of[(sub, unit)] = self._days(sub, unit, garbled)
+                        self._progressed()                              # a row read per unit: each is a step
+        # Unknown days keep the material indefinitely this pass; its operator records must stay too.
+        floor = console_floor(days_of)
+        for _, units_by_sub in mirrors:
+            floor = max(floor, console_floor({(sub, unit): days_of[(sub, unit)] + MIRROR_GRACE / 86400
+                                             for sub, units in units_by_sub.items() for unit in units}))
+        # The extra hour a copy has for clock skew also belongs to its records, including local ones.
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: the specs say which rows
         # HOLD a unit for a stretch (`holds:`), and `kept` — called once a pass — reads them and returns
         # `(subsystem, unit, start, end) -> bool`. Reducing the common days must not erase marked events. If it raises,
@@ -1542,43 +1558,29 @@ class Resource:
         self._progressed()
         self._retain_failed_pass = False
         swept: dict[tuple[str, str], tuple] = {}
-        for sub, units in self.units().items():
-            for unit in units:
-                self._progressed()
-                days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)]
-                for path in self.volumes.values():
-                    # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
-                    # …and a mark per REMOVAL (the sixth): the names are all marked while the list is built, and then
-                    # the files go one after another — a year past its days is fifty thousand unlinks, and the pulse
-                    # saw none of them.
-                    for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
-                        if b.end < self.wall() - days * 86400:
-                            if kept(sub, unit, b.start, b.end):
-                                continue                                # somebody said to keep it: past its days, and here
-                            if not self._removed(os.path.join(path, b.path)):
-                                continue                                # that bucket's, said and counted: the rest go on
-                            removed.append(b.path)
-                            self._progressed()
-                            n, a, z = swept.get((sub, unit), (0, b.start, b.end))
-                            swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
-        # What the pass removed, per unit, in the journal: whose buckets, how many, of what period, by what
-        # days. It used to be one number in a log line (feedback BN).
-        for (sub, unit), (n, a, z) in sorted(swept.items()):
-            self.journal.say("events.removed", sub=sub, target=unit, buckets=n, since=a, until=z,
-                             days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)])
-            self._progressed()                                          # a line written to the medium per unit
-        # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
-        # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
-        # with the mirror on it only ever grew. A copy is kept by the days of ITS unit, as the original is,
-        # and a keep holds it the same way. `MIRROR_GRACE` later than the original, because the two servers
-        # have two clocks: a copy swept a moment before its original would be sent again on the owner's next
-        # pass, and swept again.
-        for path in self.volumes.values():
-            for server in mirrored_servers(path):
-                base = os.path.join(path, MIRROR_DIR, server)
-                for sub, units in subsystems_under(base).items():
+        try:
+            for sub, units in inventory.items():
+                for unit in units:
+                    self._progressed()
+                    days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)]
+                    for path in self.volumes.values():
+                        # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
+                        # …and a mark per REMOVAL (the sixth): a year past its days is fifty thousand unlinks.
+                        for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
+                            if b.end < self.wall() - days * 86400:
+                                if kept(sub, unit, b.start, b.end):
+                                    continue                            # somebody said to keep it: past its days, and here
+                                if not self._removed(os.path.join(path, b.path)):
+                                    continue                            # that bucket's, said and counted: the rest go on
+                                removed.append(b.path)
+                                n, a, z = swept.get((sub, unit), (0, b.start, b.end))
+                                swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
+                                self._progressed()
+            # THE COPIES AGE TOO. A copy has its unit's days and holds, with an hour for the two clocks.
+            for base, units_by_sub in mirrors:
+                for sub, units in units_by_sub.items():
                     for unit in units:
-                        days = self._days(sub, unit, garbled)
+                        days = days_of[(sub, unit)]
                         days = max(days, floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days
                         self._progressed()
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
@@ -1587,9 +1589,18 @@ class Resource:
                                 if self._removed(os.path.join(base, b.path)):
                                     self.mirror_removed += 1
                                 self._progressed()
-        if removed and self.index is not None:
-            self.index.forget(self.server, removed)                     # out of its cache with the file
-        self.retention_garbled = sorted(set(garbled))
+        finally:
+            # A later walk can fail after files have gone. Say what DID go, then forget it in the index
+            # even if writing the journal fails. The original failure still ends the pass.
+            try:
+                for (sub, unit), (n, a, z) in sorted(swept.items()):
+                    self.journal.say("events.removed", sub=sub, target=unit, buckets=n, since=a, until=z,
+                                     days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)])
+                    self._progressed()                                  # a line written to the medium per unit
+            finally:
+                self.retention_garbled = sorted(set(garbled))
+                if removed and self.index is not None:
+                    self.index.forget(self.server, removed)              # out of its cache with the file
         if self._retain_failing and not self._retain_failed_pass:
             self._retain_failing = False
             log.warning("%s: every bucket past its days is removed again", self.server)
