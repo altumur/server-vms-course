@@ -1,8 +1,8 @@
-# /etc/systemd/system/vms-vmsworker.service — the worker: it HOLDS the camera (one connection, one epoch, one
+# /etc/systemd/system/vms-camworker.service — the worker: it HOLDS the camera (one connection, one epoch, one
 # fan-out rtsp://<server>:8554/<cam> the recorder and the gateway subscribe to) and writes its events into the
 # resource on this server. One per server, its name from the unit (product P4): `w-%l-1` — w-srv-a-1 on srv-a. A
 # crash is systemd's to restart under the same name; a dead server is the controller's to act on, by assignment.
-# A SPARE of it is `vms-vmsworker-spare@.service`: this unit's lines but the name — `tests/cluster/test_units.py` holds the two.
+# A SPARE of it is `vms-camworker-spare@.service`: this unit's lines but the name — `tests/cluster/test_units.py` holds the two.
 [Unit]
 Description=VMS worker — holds its cameras: DriverPack, the fan-out, the events
 After=network-online.target configstore.service w2c-resource.service
@@ -15,11 +15,11 @@ User=vms
 Group=vms
 # Its store socket's group; the events archive (its events, its registration) and the objects (its heartbeat) of the
 # box's layout (WP-E); the key ring's.
-SupplementaryGroups=vms-vmsworker w2c-events w2c-store w2c-secrets
-Environment=PLATFORM_STORE=configstore:///run/configstore/vmsworker.sock
-# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/vmsworker.env — CAPACITY,
+SupplementaryGroups=vms-camworker w2c-events w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/camworker.sock
+# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/camworker.env — CAPACITY,
 # WORKER_MEMORY_MB, HOST_MEMORY_MB; the administrator's file, not the spares pass's.
-Environment=W2C_ROLE=vmsworker
+Environment=W2C_ROLE=camworker
 Environment=WORKER_NAME=w-%l-1
 # The fan-out, OPENED: its default is loopback (М10B Lesson 4), and a recorder or a gateway on another server has to
 # reach it. Nobody is asked who they are at this door: the cluster's network keeps it closed to everybody else.
