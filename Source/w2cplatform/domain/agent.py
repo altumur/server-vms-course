@@ -405,6 +405,32 @@ class DomainAgent:
         for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
                             (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
             self._carry(path, items)
+        # Placement rows keep their identities on every member, unlike addressed books.
+        # The authenticated carry response is the same authority as the member list.
+        from .placement import PREFIX, decode, path as placement_path
+        if self.keys == "carried" or self.keys.startswith("rev "):
+            incoming = dv.list(PREFIX)
+            for path in incoming:
+                items = dv.get(path)[0]
+                try:
+                    identity = path[len(PREFIX):].split("/")
+                    if len(identity) != 2 or placement_path(*identity) != path:
+                        raise ValueError("invalid placement identity")
+                    fresh = decode(items)
+                    old = self.cluster_vars.get(path)[0]
+                    try:
+                        previous = decode(old) if old else None
+                    except ValueError:
+                        previous = None
+                    if previous is None or fresh["rev"] > previous["rev"]:
+                        self._carry(path, items)
+                    elif fresh["rev"] == previous["rev"] and fresh != previous:
+                        self._say_refused("placement", "conflicting placement revision")
+                except ValueError:
+                    self._say_refused("placement", "invalid placement row")
+            counter = dv.get("domain/placement")[0]
+            if counter:
+                self._carry("domain/placement", counter)
         # The emergency hash under its own name (`break_glass_row`): on the holder that row IS the domain's, and the
         # holder's own agent, which reads it as stored — sealed by the holder's ring — takes nothing: only this side
         # seals what it carried (the product's `keepPeople`), and a sealed value came from no door.
