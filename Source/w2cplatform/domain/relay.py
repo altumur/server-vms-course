@@ -226,6 +226,23 @@ class RelayDoor:
         raise Refused(404, f"{getattr(a, 'cluster', 'the relay')} relays no member {cluster}: the domain's topology "
                            f"does not place it here, or the relay has not reached the domain for it yet")
 
+    def token(self, member, sub, kind, body, signature):
+        """Original member signature and reply remain opaque to the relay."""
+        from .carry import Refused, SKEW
+        from .tokenrequest import MAX_REQUEST, route, pass_on
+        from w2cplatform.trust.memberkey import verify_request
+        kept = self._kept(member)
+        if not isinstance(body, bytes) or len(body) > MAX_REQUEST:
+            raise Refused(413, "token request exceeds body limit")
+        why = verify_request(kept.get("key", ""), signature, "POST", route(member, sub, kind),
+                             body, self.agent.now(), SKEW)
+        if why:
+            raise Refused(401, "token request member signature does not verify")
+        road = self.agent.domain_vars
+        if not hasattr(road, "door"):
+            raise Refused(503, "relay has no authenticated token request road")
+        return pass_on(road, member, sub, kind, body, signature)
+
     def plain(self, cluster: str) -> dict:
         from .carry import Refused
         kept = self._kept(cluster)
@@ -305,6 +322,22 @@ def door_handler(door: RelayDoor):
         def do_POST(self):
             from .uplink import MAX_PUBLICATION
             path = self.path.split('?', 1)[0]
+            if path.startswith('/api/tokens/'):
+                from .tokenrequest import MAX_REQUEST
+                from w2cplatform.console import read_body
+                if not read_body(self, MAX_REQUEST):
+                    return
+                parts = path[len('/api/tokens/'):].split('/')
+                if len(parts) != 3:
+                    return self._send(400, {'detail': 'invalid token request route'})
+                body = self.rfile.read(int(self.headers['Content-Length']))
+                try:
+                    got = door.token(*parts, body, self.headers.get('X-Agent-Signature', ''))
+                except Refused as e:
+                    return self._send(e.status, {'detail': e.detail})
+                except (OSError, Unreachable):
+                    return self._send(503, {'detail': 'token request road is unavailable'})
+                return self._send(200, got)
             if not path.startswith('/api/member/'):
                 return self._send(404, {'detail': 'no such route'})
             try:
