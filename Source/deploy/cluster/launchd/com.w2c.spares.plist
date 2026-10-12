@@ -20,7 +20,7 @@
 		<string>__BOX__/bin/w2c-run.sh</string>
 		<string>spares</string>
 		<string>recworker</string>
-		<string>vmsworker</string>
+		<string>camworker</string>
 	</array>
 	<key>StartInterval</key>
 	<integer>60</integer>
