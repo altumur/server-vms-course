@@ -19,7 +19,8 @@ NOW = 1_000_000.0
 
 
 def _tokens():
-    t = TokenIssuer("acme")
+    from w2cplatform.trust.memberkey import MemberKey
+    t = TokenIssuer("acme", book_seal=MemberKey.new().seal_pub)
     return t, {
         "person": t.issue("alice", 900, now=NOW, kind="person"),
         "stream": t.issue("cam-SN5001", 900, now=NOW, aud=audience("south"), ref="SN5001", kind="stream"),
