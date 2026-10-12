@@ -179,7 +179,9 @@ def test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_be
     with open(os.path.join(root, "testdata", "new.tsv"), "w") as f:
         f.write("not yet\n")
     was = os.environ.get("W2C_PRODUCT_DIR")
+    was_ref = productdir.REF
     os.environ["W2C_PRODUCT_DIR"] = root
+    productdir.REF = "main"              # the synthetic checkout owns its ref, independent of the run's snapshot
     try:
         assert productdir.product_file("testdata/secret_in.tsv") == b"committed\n"
         assert productdir.product_file("testdata/new.tsv") is None
@@ -187,6 +189,7 @@ def test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_be
         os.environ["W2C_PRODUCT_DIR"] = os.path.join(root, "nowhere")
         assert productdir.product_file("testdata/secret_in.tsv") is None and productdir.product_files("testdata") == []
     finally:
+        productdir.REF = was_ref
         if was is None:
             os.environ.pop("W2C_PRODUCT_DIR", None)
         else:
