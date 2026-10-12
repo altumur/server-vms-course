@@ -1,8 +1,8 @@
-"""The VMS page's core is the product's (the boundary's step 3: «copy with a check»). `vms/vms.shell.html` of the
+"""The VMS page's core is the product's (the boundary's step 3: «copy with a check»). `vms/cam.shell.html` of the
 course is the course's own page, written by its lessons over the platform's console module; but how it reaches the bytes — the
 holders' doors, the timeline merged from every door and every place, what yields to what, the pieces, the live picture —
 is ONE code for the course and the product: `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`,
-`play`, `playNext`, `negotiateLive`, `stopLive`, each the product's `vmsworker/vms/vms.shell.html` on its `main`
+`play`, `playNext`, `negotiateLive`, `stopLive`, each the product's `vmsworker/vms/cam.shell.html` on its `main`
 (`productdir.py`), between the course page's two «core» lines. Without the product's checkout beside the course this is
 skipped: the course builds alone.
 
@@ -27,11 +27,11 @@ from tests.productdir import SOURCE, product_file
 
 CORE = ("whereAt", "doorOf", "doorFetch", "yieldCut", "loadTimeline", "segmentURL", "play", "playNext",
         "negotiateLive", "stopLive")
-PRODUCT = "vmsworker/vms/vms.shell.html"
-OURS = os.path.join(SOURCE, "vms", "vms.shell.html")
+PRODUCT = "vmsworker/vms/cam.shell.html"
+OURS = os.path.join(SOURCE, "vms", "cam.shell.html")
 BEGIN, END = "// ── core: COPY WITH A CHECK", "// ── end of core"
 DEBT = os.path.join(SOURCE, "tests", "testdata", "shell_core_debt.txt")
-HEAD = ("# shell_core_debt.txt — the lines the core of the course's VMS page (vms/vms.shell.html) differs from the product's by\n"
+HEAD = ("# shell_core_debt.txt — the lines the core of the course's VMS page (vms/cam.shell.html) differs from the product's by\n"
         "# (test_shell_core.py): where the course leads, until the product follows. It only shrinks.\n"
         "#   <function> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>\n")
 _THEIRS = product_file(PRODUCT)
