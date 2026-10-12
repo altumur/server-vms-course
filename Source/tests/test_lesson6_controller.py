@@ -1,4 +1,4 @@
-"""Lesson 6 — vmscontroller: the only writer; refusals; placement with its
+"""Lesson 6 — camcontroller: the only writer; refusals; placement with its
 property tests; two controllers; the read model; the failure arithmetic."""
 import json
 import os
@@ -34,9 +34,9 @@ def test_camera_lifecycle_has_no_individual_event_or_alarm_retention():
     from w2cplatform.resource import retention_days
     box = Box()
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
-    box.vars.put("vms/retention", {"days": "30"})
-    box.vars.put("vms/alarms_retention", {"days": "400"})
-    before = {k: box.vars.get(k) for k in ("vms/retention", "vms/alarms_retention")}
+    box.vars.put("cam/retention", {"days": "30"})
+    box.vars.put("cam/alarms_retention", {"days": "400"})
+    before = {k: box.vars.get(k) for k in ("cam/retention", "cam/alarms_retention")}
     row = ctl.create_camera({"source": "driverpack://file/gate.mp4"})
     for field in ("events_retention_days", "alarms_retention_days"):
         assert field not in row and field not in SPEC.fields and field not in SPEC.snapshot
@@ -50,9 +50,9 @@ def test_camera_lifecycle_has_no_individual_event_or_alarm_retention():
     ctl.delete_camera(row["id"])
     ctl.delete_camera(row["id"])  # a repeated delete cannot shorten either retention
     assert {k: box.vars.get(k) for k in before} == before
-    assert box.vars.list("vms/retention/") == box.vars.list("vms/alarms_retention/") == []
-    assert retention_days(box.vars, "vms", str(row["id"])) == 30
-    assert retention_days(box.vars, "vms.alarms", str(row["id"])) == 400
+    assert box.vars.list("cam/retention/") == box.vars.list("cam/alarms_retention/") == []
+    assert retention_days(box.vars, "cam", str(row["id"])) == 30
+    assert retention_days(box.vars, "cam.alarms", str(row["id"])) == 400
 
 
 def test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing():
@@ -178,7 +178,7 @@ def test_the_console_over_http():
     and unplaces what it deleted."""
     from vms.config import SPEC
     from w2cplatform.variables import Forbidden
-    box = Box(); ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    box = Box(); ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)   # what the console process holds
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
     w.heartbeat_once()
@@ -209,9 +209,9 @@ def test_the_console_over_http():
         assert where["worker"] == where["directory"] == "w-1"                         # the placement says, the assignments agree
         spec = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/spec"))      # what the page reads first: the YAML, not code
         assert spec["rows"] == "cameras" and "media" not in spec and {f["name"] for f in spec["fields"]} >= {"name", "source", "enabled"}
-        assert b"vms_cameras_running 1" in urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics").read()   # held and streaming; recording is rec's gauge
+        assert b"cam_cameras_running 1" in urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics").read()   # held and streaming; recording is rec's gauge
         # an operator's mark is the CONSOLE's event: its own bucket, never a worker's
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/marks", data=json.dumps({"unit": "vms/1", "note": "left the bag"}).encode(),
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/marks", data=json.dumps({"unit": "cam/1", "note": "left the bag"}).encode(),
                                      method="POST", headers={"Idempotency-Key": "k3", "X-User": "murat"})
         m = json.load(urllib.request.urlopen(req))
         assert m["subsystem"] == "console" and m["bucket"].startswith(f"console/{m['unit']}/e1/")
@@ -219,8 +219,8 @@ def test_the_console_over_http():
         ev = read_bucket(os.path.join(box.resource_root, m["bucket"]))
         name = ev[0].pop("id")                                                                   # every line has a name, given by its writer
         assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
-        assert ev == [{"t": box.wall(), "kind": "mark", "of": "vms/1", "user": "murat", "note": "left the bag"}]   # about camera 1
-        # not in vms/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
+        assert ev == [{"t": box.wall(), "kind": "mark", "of": "cam/1", "user": "murat", "note": "left the bag"}]   # about camera 1
+        # not in cam/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
         assert subsystems_under(box.resource_root) == {"audit": ["console"], "console": [m["unit"]]}
         # the page, and what it plays: the spans a recording's recorder says at its door — handed out with the recording's
         # place (`/rec/where/<name>`) — raw, in milliseconds, and a piece of one epoch as an MP4, from the same door; the
@@ -275,29 +275,29 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
             except urllib.error.HTTPError as e: return e.code, json.load(e)
         first = post(p1, "k-1"); again = post(p2, "k-1")                     # the retry reaches the OTHER console
         assert first == again and first[0] == 201 and len(a.cameras()) == 1
-        assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
+        assert box.vars.get("cam/idem/k-1")[0]["state"] == "done"
         # in flight: console B holds the claim and has not answered yet; A waits for B's reply rather than writing.
         # B's claim says whose request and of what body, as every console's does (a claim that says neither answers
         # nobody: the fourteenth review, minor 6)
         from w2cplatform.console import IdempotencyKeys
-        tag = IdempotencyKeys(box.vars, "vms/idem/", box.wall)._tag(
+        tag = IdempotencyKeys(box.vars, "cam/idem/", box.wall)._tag(
             "operator", json.dumps({"name": "gate", "source": "driverpack://file/g.mp4"}).encode())
-        box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall(), **tag}, cas=0)
+        box.vars.put("cam/idem/k-2", {"state": "pending", "at": box.wall(), **tag}, cas=0)
         out = {}
         t = threading.Thread(target=lambda: out.setdefault("r", post(p1, "k-2"))); t.start()
         time.sleep(0.15); assert "r" not in out and len(a.cameras()) == 1
-        box.vars.put("vms/idem/k-2", {"state": "done", "status": 201, "body": json.dumps({"id": 1, "worker": None}), "at": box.wall(), **tag})
+        box.vars.put("cam/idem/k-2", {"state": "done", "status": 201, "body": json.dumps({"id": 1, "worker": None}), "at": box.wall(), **tag})
         t.join(3); assert out["r"] == (201, {"id": 1, "worker": None}) and len(a.cameras()) == 1
         # a key with a slash is not a path segment
         assert post(p1, "a/b")[0] == 400
         # old keys go: a day later the next claim prunes them (at most once a minute)
-        keys = IdempotencyKeys(box.vars, "vms/idem/", box.wall, clock=box.clock)
+        keys = IdempotencyKeys(box.vars, "cam/idem/", box.wall, clock=box.clock)
         box.wall.advance(90000); box.clock.advance(61)
-        assert keys.prune() == 2 and box.vars.list("vms/idem/") == [] and keys.prune() == 0
+        assert keys.prune() == 2 and box.vars.list("cam/idem/") == [] and keys.prune() == 0
         # a forgotten key is a new request, by design — and what stops the second camera then is the rule about
         # sources (`source: {unique: canonical}`, the platform's since the boundary's step 6): camera 1 is that address
         code, body = post(p2, "k-1")
-        assert code == 409 and body.get("fault") == "unique" and "vms 1 has that source already" in body["detail"] and len(a.cameras()) == 1
+        assert code == 409 and body.get("fault") == "unique" and "cam 1 has that source already" in body["detail"] and len(a.cameras()) == 1
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 
@@ -316,7 +316,7 @@ def _claim_tag(key, name="gate", user=None):
     """What another console's claim of `_post(port, key, name, user)` says — whose request and of what body: every claim
     a console makes carries it, and one that does not answers nobody (the fourteenth review, minor 6)."""
     from w2cplatform.console import IdempotencyKeys
-    return IdempotencyKeys(None, "vms/idem/", None)._tag(
+    return IdempotencyKeys(None, "cam/idem/", None)._tag(
         user or "operator", json.dumps({"name": name, "source": f"driverpack://file/{key}.mp4"}).encode())
 
 
@@ -346,31 +346,31 @@ def test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_an
     m, srv, port = _console_with_its_own_clock(box, a)
     try:
         # the neighbour's clock is ninety seconds behind: its `at` says "old", and it is not
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall() - 90, **_claim_tag("k-1")}, cas=0)
+        box.vars.put("cam/idem/k-1", {"state": "pending", "at": box.wall() - 90, **_claim_tag("k-1")}, cas=0)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # in flight: waited, served nothing, wrote nothing
         box.clock.advance(20)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds of standing still: not yet
         # …re-made by somebody meanwhile (a new revision): the count starts again
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")})
+        box.vars.put("cam/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")})
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds since the first claim, none since this revision
         box.clock.advance(20)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # forty since the first, twenty of this one
         box.clock.advance(11)
         assert _post(port, "k-1")[0] == 201 and len(a.cameras()) == 1      # thirty-one of the same revision: nobody's — taken over
-        assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
+        assert box.vars.get("cam/idem/k-1")[0]["state"] == "done"
         # the store takes the camera and refuses the reply: the client still hears 201, once, for one camera
         store = m.root.seen.store
         m.root.seen.store = lambda key, resp: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
         code, body = _post(port, "k-2")
         assert code == 201 and body["id"] == 2 and len(a.cameras()) == 2
-        claim = box.vars.get("vms/idem/k-2")[0]
+        claim = box.vars.get("cam/idem/k-2")[0]
         assert claim["state"] == "pending" and claim["id"] == "2"           # left standing, naming its camera: a retry waits on it…
         m.root.seen.store = store
         assert _post(port, "k-2")[0] == 409
         box.clock.advance(31)
         assert _post(port, "k-2") == (code, body) and len(a.cameras()) == 2   # …and past the TTL takes it over: camera 2 exists, so camera 2 is the answer
         # the first attempt died between reserving the id and writing the row: the retry creates under the reserved id
-        box.vars.put("vms/idem/k-3", {"state": "pending", "at": box.wall(), "id": "9", **_claim_tag("k-3")}, cas=0)
+        box.vars.put("cam/idem/k-3", {"state": "pending", "at": box.wall(), "id": "9", **_claim_tag("k-3")}, cas=0)
         assert _post(port, "k-3")[0] == 409
         box.clock.advance(31)
         assert _post(port, "k-3")[1]["id"] == 9 and [c["id"] for c in a.cameras()] == [1, 2, 9]
@@ -396,9 +396,9 @@ def test_an_idempotency_key_is_one_callers_for_one_body():
         code, body = _post(port, "k-1", user="anna", name="yard")
         assert code == 422 and body["error"] == "key reused" and len(a.cameras()) == 1   # anna, another body: said so, not swallowed
         # …and while the first caller's claim is still pending on another console, the stranger is told at once
-        box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall(), "sub": "anna", "sha256": "0" * 64}, cas=0)
+        box.vars.put("cam/idem/k-2", {"state": "pending", "at": box.wall(), "sub": "anna", "sha256": "0" * 64}, cas=0)
         assert _post(port, "k-2", user="boris")[0] == 422
-        assert box.vars.get("vms/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("vms/idem/k-1")[0]["digest"]) == 64
+        assert box.vars.get("cam/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("cam/idem/k-1")[0]["digest"]) == 64
     finally:
         srv.shutdown(); srv.server_close()
 
@@ -430,9 +430,9 @@ def test_a_console_whose_claim_was_taken_over_while_it_stood_still_writes_nothin
                 ma.root.seen.reserve = lambda k, uid: (reserve(k, uid), go.wait(120))[0]
             t = threading.Thread(target=lambda: out.setdefault("a", _post(pa, key))); t.start()
             deadline = time.monotonic() + 60
-            while not box.vars.get(f"vms/idem/{key}")[0] and time.monotonic() < deadline:   # A holds the claim and stands still
+            while not box.vars.get(f"cam/idem/{key}")[0] and time.monotonic() < deadline:   # A holds the claim and stands still
                 time.sleep(0.01)
-            assert box.vars.get(f"vms/idem/{key}")[0], "A's claim never appeared"
+            assert box.vars.get(f"cam/idem/{key}")[0], "A's claim never appeared"
             assert _post(pb, key)[0] == 409                                      # B sees it in flight…
             box.clock.advance(31)
             code, body = _post(pb, key)                                          # …and thirty seconds later takes it over
@@ -466,33 +466,33 @@ def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
         return _post(port, key, name)
 
     try:
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")}, cas=0)   # claimed by a console that then died
+        box.vars.put("cam/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")}, cas=0)   # claimed by a console that then died
         assert post("k-1")[0] == 409                                                   # seen once: in flight, for all this console knows
         box.clock.advance(31)
         assert post("k-1")[0] == 201 and len(a.cameras()) == 1                          # taken over: the work is done
-        assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
+        assert box.vars.get("cam/idem/k-1")[0]["state"] == "done"
 
         create = a.create
         a.create = lambda body, **kw: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
         code, body = post("k-2")
         assert code == 503 and body["error"] == "store unavailable"
-        assert box.vars.get("vms/idem/k-2")[0] is None                                 # the claim was let go, not left pending
+        assert box.vars.get("cam/idem/k-2")[0] is None                                 # the claim was let go, not left pending
         a.create = create
         assert post("k-2")[0] == 201 and len(a.cameras()) == 2                          # the retry does the work
 
-        keys = IdempotencyKeys(box.vars, "vms/idem/", box.wall, clock=box.clock)
+        keys = IdempotencyKeys(box.vars, "cam/idem/", box.wall, clock=box.clock)
         assert keys.claim("k-3") is None
         keys.store("k-3", (500, {"error": "the write failed"}))
-        assert box.vars.get("vms/idem/k-3")[0] is None                                 # a 5xx is not the key's answer
+        assert box.vars.get("cam/idem/k-3")[0] is None                                 # a 5xx is not the key's answer
         keys.store("k-3", (400, {"error": "no such source"}))
-        assert box.vars.get("vms/idem/k-3")[0]["status"] == "400"                      # a refusal is
+        assert box.vars.get("cam/idem/k-3")[0]["status"] == "400"                      # a refusal is
     finally:
         srv.shutdown()
 
 
 def test_the_vms_page_is_served_at_the_consoles_root_and_none_under_rec_or_live():
-    """The VMS's page is `vms/vms.shell.html`, beside `vms.subsystem.yaml` (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1; no file of
-    the old name is left), served at `/` of the console whose root is the VMS (`CONSOLE_ROOT=vms`, as the deployment
+    """The VMS's page is `vms/cam.shell.html`, beside `cam.subsystem.yaml` (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1; no file of
+    the old name is left), served at `/` of the console whose root is the VMS (`CONSOLE_ROOT=cam`, as the deployment
     builds it). The recorder and the live gateways are mounted: `/rec/` and `/live/` serve no page — 404 — and the
     module shows their units on the VMS's page."""
     import tempfile
@@ -500,9 +500,9 @@ def test_the_vms_page_is_served_at_the_consoles_root_and_none_under_rec_or_live(
     from w2cplatform import host
     from w2cplatform.console import page_csp
     vms = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms")
-    own = os.path.join(vms, "vms.shell.html")
+    own = os.path.join(vms, "cam.shell.html")
     assert os.path.isfile(own) and not os.path.exists(os.path.join(vms, "shell.html"))
-    m, _ = host.build_console({"SPEC_DIR": vms, "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"})
+    m, _ = host.build_console({"SPEC_DIR": vms, "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "cam"})
     assert {"rec", "live"} <= set(m.mounts), sorted(m.mounts)
     srv = m.serve("127.0.0.1", 0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
