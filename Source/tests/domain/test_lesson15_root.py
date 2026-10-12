@@ -6,6 +6,8 @@ domain itself, by a holder record with a larger term. So the key that decides wh
 holder: the root is in the recovery file, and signs the key set, the holder record and the holder's issuing
 certificate. The holder keeps what signs every minute; a theft is answered by a move that drops those keys.
 """
+
+from tests.reporting import sync as report_sync
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -51,7 +53,7 @@ def _site(wall, n=4):
         ldevids[name] = holder.signer.issue(name[4:], "ldevid", device_keys[name].public_key())
     agents = {name: _agent(fed, devices, name, "cam-SN0", wall) for name in devices if name != "cam-SN0"}
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     return fed, devices, root, holder, agents, ldevids
 
 
@@ -98,7 +100,7 @@ def test_a_stolen_holder_can_neither_take_the_domain_nor_hand_out_keys_of_its_ow
     mine = KeySet(current="evil", keys={"evil": Ed25519PrivateKey.generate().public_key().public_bytes(
         serialization.Encoding.Raw, serialization.PublicFormat.Raw)})
     DomainPublisher(holder.vars).publish_keys(mine)
-    agents["cam-SN2"].sync()
+    report_sync(agents["cam-SN2"])
     member = devices["cam-SN2"].flash
     keys = ClusterTrust(member).keyset()
     assert agents["cam-SN2"].keys == "refused: a key set not signed by the domain's root"
@@ -120,7 +122,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     shared.edit(lambda s: s.update(shared={"vms": {"events_retention_days": 30}}), base_rev=0, by="anna")
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     for a in agents.values():
-        a.sync()
+        report_sync(a)
     stolen_token = holder.signer.tokens.issue("mallory", 900, now=wall(), role="admin", kind="person")
     old_ca = holder.signer.root.cert
     devices["cam-SN0"].power_off()
@@ -129,7 +131,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     assert report["keys_rev"] > 1 and new.signer.tokens.kid != holder.signer.tokens.kid
     assert sorted(report["reissued"]) == ["cam-SN1", "cam-SN2", "cam-SN3"]
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
-    a2.sync()
+    report_sync(a2)
     trust = ClusterTrust(devices["cam-SN2"].flash)
     keys = trust.keyset()
     assert keys.rev == report["keys_rev"]
@@ -162,14 +164,14 @@ def test_a_planned_move_gives_the_new_holder_keys_of_its_own_and_the_old_ones_li
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
-    agents["cam-SN1"].sync()
+    report_sync(agents["cam-SN1"])
     old_token = holder.signer.tokens.issue("anna", 900, now=wall(), kind="person")
     new, report = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
     assert not report["reissued"] and new.signer.tokens.kid != holder.signer.tokens.kid
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
-    a2.sync()
+    report_sync(a2)
     assert verify(old_token, ClusterTrust(devices["cam-SN2"].flash).keyset(), now=wall())["sub"] == "anna"
-    holder_agent(fed, devices, "cam-SN0", wall).sync()                  # its own agent carries term 2 home
+    report_sync(holder_agent(fed, devices, "cam-SN0", wall))                  # its own agent carries term 2 home
     assert holder.check() is False
     stored, _ = holder.vars.get("domain/signer")
     assert "token_key" not in stored and "deposed by term 2" in stored["forgotten"]
@@ -188,16 +190,16 @@ def test_a_key_set_only_goes_forward():
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
     old_items, _ = holder.vars.get("domain/keys")
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     devices["cam-SN0"].power_off()
     _, report = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     rev = report["keys_rev"]
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
-    a2.sync()
+    report_sync(a2)
     assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == rev > 1
     devices["cam-SN0"].boot()
     holder.vars.put("domain/keys", old_items)
-    agents["cam-SN2"].sync()                                            # still pointed at the old holder
+    report_sync(agents["cam-SN2"])                                            # still pointed at the old holder
     assert agents["cam-SN2"].keys == f"holding rev {rev}"
     assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == rev
 
@@ -232,11 +234,11 @@ def test_a_member_that_pinned_another_root_is_named_and_not_accepted():
     install(impostor_fed, "cam-X0", DOMAIN, DomainRoot(DOMAIN, now=wall), wall=wall, objects=x0.disk)
     sn9 = DeviceCluster("SN9", FakeVariables(), wall=wall)
     sn9.boot()
-    DomainAgent(sn9.name, impostor_fed.clusters["cam-X0"].vars, sn9.flash, now=wall, domain_objects=x0.disk_door(),
-                published=sn9.local_objects()).sync()                    # the first answer: the impostor's
+    report_sync(DomainAgent(sn9.name, impostor_fed.clusters["cam-X0"].vars, sn9.flash, now=wall, domain_objects=x0.disk_door(),
+                published=sn9.local_objects()))                    # the first answer: the impostor's
     real = DomainAgent(sn9.name, holder.vars, sn9.flash, now=wall, domain_objects=devices["cam-SN0"].disk_door(),
                        published=sn9.local_objects())
-    real.sync()
+    report_sync(real)
     assert real.keys == "refused: signed by a root this member did not pin"
     members = Members(holder.vars, wall)
     knock = {k["name"]: k for k in members.knocking(devices["cam-SN0"].disk_door())}
@@ -258,21 +260,21 @@ def test_the_holder_becomes_a_member_with_the_key_it_was_admitted_with():
     fed, devices, root, holder, agents, ldevids = _site(wall)
     pub = lambda c: c.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()   # noqa: E731
     holder.member_key = pub(ldevids["cam-SN0"])
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     new, _ = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
     members = Members(new.vars, wall).read()["members"]
     assert members["cam-SN0"]["key"] == pub(ldevids["cam-SN0"])
     assert new.member_key == pub(ldevids["cam-SN1"])                    # its own, for its own backups
-    a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall); a2.sync()
-    new.backup(["cam-SN2"], devices["cam-SN1"].disk_door()); a2.sync()
+    a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall); report_sync(a2)
+    new.backup(["cam-SN2"], devices["cam-SN1"].disk_door()); report_sync(a2)
     devices["cam-SN1"].power_off()                                      # now SN1 is stolen
     third, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert "cam-SN0" in report["reissued"]                              # the former holder, by the key it was admitted with
     assert "cam-SN1" not in report["reissued"]                          # never the stolen one: the thief has its key
     row = Members(third.vars, wall).read()["members"]["cam-SN1"]
     assert "key" not in row and pub(ldevids["cam-SN1"]) in row["revoked_keys"]   # revoked, not merely skipped (CH)
-    a3 = _agent(fed, devices, "cam-SN3", "cam-SN2", wall); a3.sync()
-    third.backup(["cam-SN3"], devices["cam-SN2"].disk_door()); a3.sync()
+    a3 = _agent(fed, devices, "cam-SN3", "cam-SN2", wall); report_sync(a3)
+    third.backup(["cam-SN3"], devices["cam-SN2"].disk_door()); report_sync(a3)
     devices["cam-SN2"].power_off()                                      # a second theft, of somebody else
     _, report = move_domain(fed, "cam-SN3", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert "cam-SN1" not in report["reissued"] and "cam-SN0" in report["reissued"]   # the first thief's key stays dead
@@ -286,15 +288,15 @@ def test_a_revoked_member_key_survives_a_backup_from_before_the_theft():
     wall = Clock()
     fed, devices, root, holder, agents, ldevids = _site(wall)
     pub = lambda c: c.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()   # noqa: E731
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     second, _ = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
-    a3 = _agent(fed, devices, "cam-SN3", "cam-SN1", wall); a3.sync()
-    second.backup(["cam-SN3"], devices["cam-SN1"].disk_door()); a3.sync()   # a copy from BEFORE the theft, on SN3
+    a3 = _agent(fed, devices, "cam-SN3", "cam-SN1", wall); report_sync(a3)
+    second.backup(["cam-SN3"], devices["cam-SN1"].disk_door()); report_sync(a3)   # a copy from BEFORE the theft, on SN3
     devices["cam-SN1"].power_off()                                      # SN1 is stolen
     third, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert pub(ldevids["cam-SN1"]) in ClusterTrust(third.vars).keyset().revoked_members
     for name in ("cam-SN0", "cam-SN3"):
-        _agent(fed, devices, name, "cam-SN2", wall).sync()              # the members carry the new key set home
+        report_sync(_agent(fed, devices, name, "cam-SN2", wall))              # the members carry the new key set home
     devices["cam-SN2"].power_off()                                      # SN2 stolen too, and it backed up nowhere
     fourth, report = move_domain(fed, "cam-SN3", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert "cam-SN1" not in report["reissued"]                          # the old copy's list had its key: the key set says no
@@ -312,7 +314,7 @@ def test_a_move_signs_a_revision_larger_than_any_a_member_out_of_reach_may_hold(
     least the root's clock: a move made later always signs more."""
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
-    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     _, first = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
     wall.advance(10)
     _, later = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall)
