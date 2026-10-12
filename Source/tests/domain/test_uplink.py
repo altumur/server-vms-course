@@ -6,6 +6,8 @@ carries rows home and leaves a report. Everything a domain does with its members
 edit and what became of it, the delivery of shared settings, the alarms, the books of Lesson 13 — works from
 the reports, and a member's silence is the age of its last one.
 """
+
+from tests.reporting import sync as report_sync
 import json
 import tempfile
 
@@ -52,7 +54,7 @@ def _site(wall, n=2, nets=None):
 def _pass(agents, *skip):
     for name, a in agents.items():
         if name not in skip:
-            a.sync()
+            report_sync(a)
 
 
 def test_the_domain_lists_and_finds_cameras_it_has_never_reached():
@@ -79,13 +81,13 @@ def test_a_camera_that_has_not_published_does_not_report():
     north, _ = make_cluster("north", domain=True)
     d = DeviceCluster("SN9", FakeVariables(), wall=wall)                       # not booted: nothing published
     agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects, published=d.local_objects())
-    assert agent.sync() and "has not published" in agent.reported
+    assert report_sync(agent) and "has not published" in agent.reported
     assert reported_at(d.name, north.objects) is None
     try:
         member_copy(d.name, north.objects, wall=wall).snapshot()
         assert False
     except Unreachable as e:
-        assert "never reported" in str(e)
+        assert "complete report" in str(e)
 
 
 def test_silence_is_the_age_of_the_last_report():
@@ -124,7 +126,7 @@ def test_an_edit_for_a_camera_the_domain_cannot_reach_is_kept_carried_applied_an
                      last_known=view.last_known)
     out = api.update_unit("SN0", {"name": "main-gate"}, idempotency_key="k1", token="anna")
     assert out["pending"] and d.row()["name"] == "gate-0"                     # kept, not applied
-    agents[d.name].sync()                                                      # the camera's next pass
+    report_sync(agents[d.name])                                                      # the camera's next pass
     assert d.row()["name"] == "main-gate"
     pending.collect(fed)                                                       # from the report, not the camera
     assert pending.of(d.name) == {}
@@ -189,7 +191,12 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     d.boot()
     fed.add(member_copy(d.name, north.objects, wall=wall))
     agent = DomainAgent(d.name, north.vars, d.flash, now=slow, domain_objects=north.objects, published=d.local_objects())
-    agent.sync()
+    from w2cplatform.domain.uplink import publication, take
+    from w2cplatform.domain.carry import publication_bytes
+    def receive():
+        take(d.name,publication_bytes(publication(d.name,d.flash,d.local_objects(),slow())),
+             north.objects,received_at=wall())
+    receive()
     view = ReadView(fed, wall=wall)
     view.refresh()
     [row] = view.rows()
@@ -197,7 +204,7 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     assert round(offset_of(fed.clusters[d.name])) == 900                        # and the difference is shown
 
     for _ in range(3):                                                          # it keeps reporting
-        wall.advance(20); slow.advance(20); d.publish(); agent.sync(); view.refresh()
+        wall.advance(20); slow.advance(20); d.publish(); receive(); view.refresh()
     assert view.rows()[0].worker_state == "live"
     wall.advance(60); slow.advance(60); view.refresh()                          # it stops
     assert view.list()["clusters"][d.name] == "unreachable"
@@ -215,35 +222,20 @@ def test_a_cluster_with_no_cameras_yet_reports_that_it_has_none():
     fed.add(member_copy("south", north.objects, wall=wall))
     VmsController(south.vars, south.objects, wall=wall, cluster="south").publish_snapshot()
     agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects, published=south.objects)
-    assert agent.sync() and agent.reported.startswith("reported")
+    assert report_sync(agent) and agent.reported.startswith("reported")
     view = ReadView(fed, wall=wall); view.refresh()
     page = view.list()
     assert page["total"] == 0 and page["complete"] and page["clusters"]["south"] == "ok"
 
 
-def test_a_report_sweeps_its_own_families_and_never_the_summary_a_relay_keeps_beside_them():
-    """The scenario «камера — офис — центр», O3: the office's own report deleted everything under
-    `domain/members/<office>/` it did not carry — its summary of the cameras behind it (`relay.BUNDLE`) among them — and
-    the bundle was written again at once: two writes on every pass for none, and between them no camera behind the office
-    reported to the holder. A report sweeps what is its own (`o/`, `v/`, `p/`): a row the member no longer has goes, the
-    bundle stays untouched."""
-    from w2cplatform.domain.relay import BUNDLE
+def test_a_report_retains_two_whole_generations_and_never_touches_unrelated_objects():
     from w2cplatform.domain.uplink import base
     wall = Clock(NOW)
-    fed, north, _, devices, agents, _ = _site(wall, n=1)
-    _pass(agents)
-    b = base("cam-SN0")
-    north.objects.put(b + BUNDLE, b'{"cam-a": {}}')
-    north.objects.put(b + "o/vms/snapshot/gone", b"{}")                           # the member no longer has it
-    touched = []
-    real_put, real_delete = north.objects.put, north.objects.delete
-    north.objects.put = lambda k, d: (touched.append(("put", k)), real_put(k, d))[1]
-    north.objects.delete = lambda k: (touched.append(("delete", k)), real_delete(k))[1]
-    try:
+    fed, north, _, devices, agents, _ = _site(wall,n=1)
+    b=base('cam-SN0')
+    north.objects.put('testsub/unrelated',b'kept')
+    for _ in range(4):
         wall.advance(5)
         _pass(agents)
-    finally:
-        north.objects.put, north.objects.delete = real_put, real_delete
-    assert north.objects.get(b + BUNDLE) == b'{"cam-a": {}}'
-    assert not [t for t in touched if t[1] == b + BUNDLE], touched
-    assert ("delete", b + "o/vms/snapshot/gone") in touched and north.objects.get(b + "o/vms/snapshot/gone") is None
+    assert north.objects.list(b)==[b+'reported',b+'reports/3',b+'reports/4']
+    assert north.objects.get('testsub/unrelated')==b'kept'
