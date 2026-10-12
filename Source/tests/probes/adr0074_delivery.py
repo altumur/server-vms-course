@@ -62,13 +62,13 @@ def main():
     refused(lambda: open_row(member_ring, row, "domain/testsub/counts/south"))
     print("CONFIRMED: collected ciphertext needs both a transport key and a new row/item binding")
 
-    # Both natural declarations fail: names only accepts kept families, and a book cannot be kept.
+    # The accepted names contract now loads; declaring the same book as kept remains refused.
     proposed = copy.deepcopy(raw)
     proposed["domain"]["names"]["counts/"] = {"exclusive_with": "domain/users", "grant": "view"}
-    refused(lambda: SubsystemSpec.from_dict(proposed))
+    assert "counts/" in SubsystemSpec.from_dict(proposed).domain.names
     proposed["domain"]["kept"].append("counts/")
     refused(lambda: SubsystemSpec.from_dict(proposed))
-    print("CONFIRMED: names cannot currently declare subjects of a collected book")
+    print("IMPLEMENTED: collected book names load without a kept family; the kept overlap is refused")
 
 
 if __name__ == "__main__":
