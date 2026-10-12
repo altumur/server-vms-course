@@ -131,6 +131,8 @@ class Holder:
             out.append(("following the topology", self._follow_topology))
         if self.view is not None:
             out.append(("the read view's pass", self.view.refresh))
+        from .bookruntime import steps as book_steps
+        out.extend(book_steps(self))
         if self.pending is not None:
             out.append(("collecting kept edits", lambda: self.pending.collect(self.fed)))   # what the members' reports say
         if self.alarms is not None:
