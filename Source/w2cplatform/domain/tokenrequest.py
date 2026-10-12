@@ -141,13 +141,12 @@ def open_role_doors(agent, env=None):
     import os
     import stat
     import threading
-    from w2cplatform.cluster.rights import group
     from w2cplatform.console import Bounds, UnixConsoleServer
     env = os.environ if env is None else env
     directory = env.get("TOKEN_REQUESTS_DIR")
     if not directory:
         return []
-    deployment = os.path.basename(os.path.normpath(env.get("SPEC_DIR", "")))
+    deployment = env.get("ROLE_GROUP") or os.path.basename(os.path.normpath(env.get("SPEC_DIR", "")))
     servers = []
     roles = sorted({r for _, granted in grants().values() for r in granted})
     for role in roles:
@@ -163,7 +162,7 @@ def open_role_doors(agent, env=None):
                 if parent == os.path.dirname(parent):
                     break
                 parent = os.path.dirname(parent)
-            gid = grp.getgrnam(group(role, deployment)).gr_gid
+            gid = grp.getgrnam(role_groups(deployment)[role]).gr_gid
             path = socket_path(directory, role)
             _protected_directory(os.path.dirname(path), gid, 0o2770)
             if os.path.lexists(path):
@@ -183,17 +182,24 @@ def open_role_doors(agent, env=None):
     return servers
 
 
+
+def role_groups(deployment):
+    from w2cplatform import catalog
+    from w2cplatform.cluster.rights import roles
+    # Preserve platform controllers' groups and the ROLE_GROUP override too.
+    return {role: rule["group"] for role, rule in roles(catalog.specs(), deployment).items()}
+
 def installation(directory, deployment):
     """Deployment files derive their groups and directories from loaded grants."""
     import os
     import re
-    from w2cplatform.cluster.rights import group
     if not os.path.isabs(directory) or any(c.isspace() for c in directory) or "%" in directory:
         raise ValueError("token request installation directory must be an absolute literal path")
     if not re.fullmatch(r"[a-zA-Z0-9_-]+", deployment):
         raise ValueError("token request installation requires a deployment name")
     roles = sorted({r for _, granted in grants().values() for r in granted})
-    groups = [group(role, deployment) for role in roles]
+    derived = role_groups(deployment)
+    groups = [derived[role] for role in roles]
     rows = [f"d {directory} 0755 root root -"]
     rows += [f"d {os.path.dirname(socket_path(directory, role))} 2770 root {g} -"
              for role, g in zip(roles, groups)]
@@ -282,5 +288,5 @@ if __name__ == "__main__":
     directory = os.environ.get("TOKEN_REQUESTS_DIR")
     if not directory:
         parser.error("TOKEN_REQUESTS_DIR is required for provisioning")
-    files, groups = installation(directory, os.path.basename(os.path.normpath(os.environ.get("SPEC_DIR", ""))))
+    files, groups = installation(directory, os.environ.get("ROLE_GROUP") or os.path.basename(os.path.normpath(os.environ.get("SPEC_DIR", ""))))
     print(files if args.output == "tmpfiles" else groups, end="")
