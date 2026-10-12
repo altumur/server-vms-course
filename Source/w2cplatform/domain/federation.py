@@ -17,6 +17,8 @@ the incompleteness kept as a first-class field of every answer.
 """
 from __future__ import annotations
 
+from .steps import one_pass
+
 import json
 import time
 from dataclasses import dataclass, field
@@ -97,6 +99,7 @@ class Cluster:
     is_domain_holder: bool = False        # the one that runs the domain services — a stated decision
     via: str | None = None                # Lesson 17: a member that reaches only this relay — and through it the domain
 
+    @one_pass()
     def networks(self) -> frozenset:
         """The networks this cluster can see: what it reports (`REACHES`, from its agent), with any stated here."""
         try:
@@ -106,6 +109,7 @@ class Cluster:
         said = published(self.name, REACHES, raw, lambda v: _names(v.get("networks", []))) or {}
         return self.reaches | frozenset(said.get("networks", []))       # what does not parse says no network (the seventh review)
 
+    @one_pass()
     def snapshot(self, sub: str | None = None) -> dict | None:
         """The cluster's units and placement, merged from one object per worker, of one subsystem or of every
         subsystem of the directory: `{cluster, ts, units: [{sub, id, <snapshot fields>, worker, server}]}`.
@@ -139,6 +143,7 @@ class Cluster:
                         best[uid] = (ts, {**row, "sub": s.name})
         return {"cluster": self.name, "ts": oldest or 0, "units": [r for _, r in best.values()]}
 
+    @one_pass()
     def heartbeats(self, sub: str | None = None) -> dict[str, dict]:
         """worker -> its last heartbeat (М10's shape: status, server, epoch per unit), each with its `sub`. A worker's
         name is its subsystem's: two subsystems' workers are keyed `<sub>/<worker>` when the read covers more than one.
@@ -235,6 +240,7 @@ class DomainDirectory:
     def __init__(self, fed: Federation, wall=time.time):
         self.fed, self.wall = fed, wall
 
+    @one_pass()
     def scan(self) -> tuple[dict[str, dict], list[str]]:
         """{cluster: snapshot}, and the clusters that did not answer."""
         out, down = {}, []
@@ -245,6 +251,7 @@ class DomainDirectory:
                 down.append(name)
         return out, down
 
+    @one_pass()
     def where(self, ref) -> Answer:
         """`ref` is the DOMAIN's name for a unit — the value of its spec's `domain.ref` field, which the domain gave
         the cluster when it forwarded the create. A cluster's own `id` is the cluster's: two clusters both have an id
@@ -259,6 +266,7 @@ class DomainDirectory:
                           sub=row.get("sub"))
         return Answer(str(ref), None, None, None, sorted(scan), sorted(down))
 
+    @one_pass()
     def holdings(self) -> tuple[dict[str, dict[str, list[str]]], list[str]]:
         """{cluster: {worker: [refs]}} from the snapshots, and the silent clusters."""
         scan, down = self.scan()
@@ -270,6 +278,7 @@ class DomainDirectory:
                     ref_of(row) or f"{cl}/{row.get('sub')}/{row.get('id')}")
         return out, down
 
+    @one_pass()
     def ages(self) -> dict[str, float]:
         """How old each cluster's snapshot is — the domain's RPO, shown, never hidden."""
         scan, _ = self.scan()
