@@ -6,7 +6,7 @@
 # pipeline, carries no media — which is why this unit has no /data/media, no /run/vms and no port.
 #
 # Its token is the only one here that reaches across a subsystem's name: `auto/epoch/*`, `auto/slots/*`,
-# `auto/holds/*` — and `vms/requests/*`, `rec/requests/*`. That grant cannot change configuration, cannot
+# `auto/holds/*` — and `cam/requests/*`, `rec/requests/*`. That grant cannot change configuration, cannot
 # place anything, and cannot outlive the row it writes; a scenario asks, the holder performs.
 [Unit]
 Description=VMS scenario evaluator %i — reads the event log, files what a scenario asks for
