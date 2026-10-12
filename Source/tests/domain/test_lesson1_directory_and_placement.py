@@ -28,7 +28,7 @@ def test_where_across_three_clusters_from_what_the_clusters_publish():
     assert down == [] and holdings["south"] == {"w-0": ["7"]} and holdings["cloud"] == {"w-0": ["50"]}
     # ONE OBJECT PER WORKER — the heartbeat's shape, and for the same reason: north runs two workers,
     # so north publishes two objects. The cluster that grows publishes more of them, not a bigger one.
-    assert fed.clusters["north"].objects.list("vms/snapshot/") == ["vms/snapshot/w-0", "vms/snapshot/w-1"]
+    assert fed.clusters["north"].objects.list("cam/snapshot/") == ["cam/snapshot/w-0", "cam/snapshot/w-1"]
     assert d.ages() == {"cloud": 0.0, "north": 0.0, "south": 0.0}                     # the snapshot's age is the domain's RPO, shown
 
 
@@ -78,9 +78,9 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
     because a directory is only as fresh as its oldest part."""
     fed, _ = make_domain({"north": ()}, "north")
     c = fed.clusters["north"]
-    c.objects.put("vms/snapshot/w-0", json.dumps({"cluster": "north", "worker": "w-0", "ts": 1000.0,
+    c.objects.put("cam/snapshot/w-0", json.dumps({"cluster": "north", "worker": "w-0", "ts": 1000.0,
         "cameras": [{"id": 1, "ref": "7", "name": "cam7", "worker": "w-0", "server": "srv-1"}]}).encode())
-    c.objects.put("vms/snapshot/w-1", json.dumps({"cluster": "north", "worker": "w-1", "ts": 1005.0,
+    c.objects.put("cam/snapshot/w-1", json.dumps({"cluster": "north", "worker": "w-1", "ts": 1005.0,
         "cameras": [{"id": 1, "ref": "7", "name": "cam7", "worker": "w-1", "server": "srv-2"}]}).encode())
     a = DomainDirectory(fed, wall=lambda: 1010.0).where(7)
     assert a.found and (a.worker, a.server) == ("w-1", "srv-2")          # the newer shard, not a raise
@@ -89,7 +89,7 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
 
 def test_placement_is_by_reachability_then_headroom():
     fed, _ = make_domain({"north": ("vlan:a", "vlan:b"), "south": ("vlan:b",), "cloud": ("vlan:c",)}, "north")
-    head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: vms_headroom
+    head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: cam_headroom
     p = ClusterPlacer(fed, headroom=lambda c: head[c], clock=lambda: 1234.0)
     a = p.place(UnitSite(1, "vlan:a"))
     assert a.cluster == "north" and "only cluster reaching vlan:a" in a.reason        # capacity elsewhere is irrelevant
