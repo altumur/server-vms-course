@@ -1,5 +1,5 @@
 """The RTSP accounts' declarations (ADR-0031, the addendum of 2026-10-07; ADR-0024) — for the tests of the code that reads
-them. The course's YAML carries them in the product's spelling (`vms.subsystem.yaml`: `secrets.readers`, `domain.books`,
+them. The course's YAML carries them in the product's spelling (`cam.subsystem.yaml`: `secrets.readers`, `domain.books`,
 `domain.kept`, `domain.names`, `domain.keys`; `live.subsystem.yaml`: `secrets.reads`).
 
 `declared()` puts the course's `vms` and `live` specs, as their YAML says, in this process's catalogue — what the code reads
@@ -12,7 +12,7 @@ import os
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))       # Source/
 
-FAMILY = "domain/vms/stream-"                     # the rows of the accounts: stream-clients/, stream-accounts
+FAMILY = "domain/cam/stream-"                     # the rows of the accounts: stream-clients/, stream-accounts
 
 
 def _yaml(name: str) -> dict:
@@ -23,7 +23,7 @@ def _yaml(name: str) -> dict:
 def specs(keys: bool = True):
     """`(vms, live)` as the course's YAML says them — or, `keys=False`, with the accounts' declarations taken out."""
     from w2cplatform.spec import SubsystemSpec
-    vms, live = _yaml("vms"), _yaml("live")
+    vms, live = _yaml("cam"), _yaml("live")
     if not keys:
         d = vms["domain"]
         d["books"] = {k: v for k, v in d["books"].items() if k != "stream-accounts"}
@@ -40,7 +40,7 @@ def specs(keys: bool = True):
 def _registered(keys: bool, in_vms: bool = True, in_live: bool = True):
     import vms.config  # noqa: F401 — the course's specs, loaded: what the catalogue holds again on the way out
     from w2cplatform import catalog
-    was = {n: catalog.spec(n) for n in ("vms", "live")}
+    was = {n: catalog.spec(n) for n in ("cam", "live")}
     v, l_ = specs(keys)
     try:
         if in_vms:
