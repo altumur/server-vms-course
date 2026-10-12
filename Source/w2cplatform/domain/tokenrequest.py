@@ -102,7 +102,105 @@ def request(client, sub, kind, ref, role):
         raise Refused(502, "invalid token request reply") from None
 
 
-def local_handler(agent, sub, role):
+
+def grants():
+    """One role socket for all of its kinds; duplicate kind owners are refused."""
+    from . import declared
+    declared.token_kinds()
+    return {kind: (spec.name, tuple(rule.get("grant", ())))
+            for spec in declared.specs() for kind, rule in spec.domain.tokens.items()
+            if rule.get("grant") and rule.get("placement")}
+
+
+def owner(kind, role):
+    binding = grants().get(kind)
+    if not binding or role not in binding[1]:
+        raise Refused(403, "role has no token request grant")
+    return binding[0]
+
+
+def socket_path(directory, role):
+    import os
+    route("local", role, "local")
+    return os.path.join(directory, role, "tokens.sock")
+
+
+def _protected_directory(path, gid, mode):
+    import os
+    import stat
+    info = os.lstat(path)
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_gid != gid \
+            or stat.S_IMODE(info.st_mode) != mode:
+        raise PermissionError("token request directory is not protected")
+
+
+def open_role_doors(agent, env=None):
+    """Only pre-provisioned root-owned directories; failure disables that role."""
+    import grp
+    import logging
+    import os
+    import stat
+    import threading
+    from w2cplatform.cluster.rights import group
+    from w2cplatform.console import Bounds, UnixConsoleServer
+    env = os.environ if env is None else env
+    directory = env.get("TOKEN_REQUESTS_DIR")
+    if not directory:
+        return []
+    deployment = os.path.basename(os.path.normpath(env.get("SPEC_DIR", "")))
+    servers = []
+    roles = sorted({r for _, granted in grants().values() for r in granted})
+    for role in roles:
+        server = None
+        try:
+            # The parent cannot be renamed/replaced by a worker with the same uid.
+            _protected_directory(directory, 0, 0o755)
+            parent = os.path.dirname(os.path.realpath(directory))
+            while True:
+                info = os.stat(parent)
+                if info.st_uid != 0 or stat.S_IMODE(info.st_mode) & 0o022:
+                    raise PermissionError("token request ancestor can be replaced")
+                if parent == os.path.dirname(parent):
+                    break
+                parent = os.path.dirname(parent)
+            gid = grp.getgrnam(group(role, deployment)).gr_gid
+            path = socket_path(directory, role)
+            _protected_directory(os.path.dirname(path), gid, 0o2770)
+            if os.path.lexists(path):
+                info = os.lstat(path)
+                if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.geteuid() or info.st_gid != gid:
+                    raise PermissionError("token request path is not this agent's socket")
+            server = UnixConsoleServer(path, local_handler(agent, role), Bounds())
+            info = os.lstat(path)
+            if info.st_gid != gid or stat.S_IMODE(info.st_mode) != 0o660:
+                raise PermissionError("token request socket has unsafe permissions")
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            servers.append(server)
+        except (OSError, KeyError, ValueError):
+            if server is not None:
+                server.server_close()
+            logging.getLogger(__name__).error("token request door unavailable for role %s", role)
+    return servers
+
+
+def installation(directory, deployment):
+    """Deployment files derive their groups and directories from loaded grants."""
+    import os
+    import re
+    from w2cplatform.cluster.rights import group
+    if not os.path.isabs(directory) or any(c.isspace() for c in directory) or "%" in directory:
+        raise ValueError("token request installation directory must be an absolute literal path")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", deployment):
+        raise ValueError("token request installation requires a deployment name")
+    roles = sorted({r for _, granted in grants().values() for r in granted})
+    groups = [group(role, deployment) for role in roles]
+    rows = [f"d {directory} 0755 root root -"]
+    rows += [f"d {os.path.dirname(socket_path(directory, role))} 2770 root {g} -"
+             for role, g in zip(roles, groups)]
+    dropin = "[Service]\n" + ("SupplementaryGroups=" + " ".join(groups) + "\n" if groups else "")
+    return "\n".join(rows) + "\n", dropin
+
+def local_handler(agent, role):
     """One role's private Unix socket. No network listener and no role from the body."""
     from http.server import BaseHTTPRequestHandler
     from w2cplatform.console import Deadlined, read_body
@@ -131,6 +229,7 @@ def local_handler(agent, sub, role):
                 body = parse_json(self.rfile.read(int(self.headers["Content-Length"])))
                 if not isinstance(body, dict) or set(body) != {"ref"} or not isinstance(body["ref"], str) or not body["ref"]:
                     raise Refused(400, "local token request takes ref only")
+                sub = owner(parts[2], role)
                 result = agent.request_token(sub, parts[2], body["ref"], role)
                 self._send(200, result)
             except Refused as e:
@@ -151,6 +250,13 @@ class WorkerTokenDoor:
         from w2cplatform.configstorevars import unix_transport
         self.call, self.timeout = unix_transport(path), timeout
 
+    @classmethod
+    def from_env(cls, role, env=None):
+        import os
+        env = os.environ if env is None else env
+        directory = env.get("TOKEN_REQUESTS_DIR")
+        return cls(socket_path(directory, role)) if directory else None
+
     def request(self, kind, ref):
         route("local", "local", kind)
         raw = publication_bytes({"ref": ref})
@@ -165,3 +271,16 @@ class WorkerTokenDoor:
             return result
         except (ValueError, TypeError):
             raise Refused(502, "invalid local token reply") from None
+
+
+if __name__ == "__main__":
+    import argparse
+    import os
+    parser = argparse.ArgumentParser(description="Role token doors: deployment derived from loaded specs")
+    parser.add_argument("output", choices=("tmpfiles", "groups"))
+    args = parser.parse_args()
+    directory = os.environ.get("TOKEN_REQUESTS_DIR")
+    if not directory:
+        parser.error("TOKEN_REQUESTS_DIR is required for provisioning")
+    files, groups = installation(directory, os.path.basename(os.path.normpath(os.environ.get("SPEC_DIR", ""))))
+    print(files if args.output == "tmpfiles" else groups, end="")
