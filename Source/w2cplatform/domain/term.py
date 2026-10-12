@@ -545,6 +545,9 @@ class DomainHolder:
                 raw = self.objects.get(key)
                 if raw is not None:
                     out[key] = raw.decode()
+        if self.objects is not None:
+            from .reports import export
+            out.update(export(self.objects))
         return out
 
     # A REVISION IS THE DOMAIN'S CONTENT (the three-site run, N10, «Архитектор» 2026-10-11): the
