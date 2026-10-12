@@ -4,7 +4,7 @@
 // (и сетевые) и только камеры, которых там ещё нет; имя — номер камеры, а если оно занято, <номер>-<том>; негодный
 // срок не уходит. Двери домена (/domain/crossings) курс не отдаёт — страница туда не ходит.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-aadd-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -12,8 +12,8 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"},{id:3,name:"склад"}],rows:[]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30},{id:"2",cam:"2",home:"nas",retention_days:30}],rows:[]};
 b.FIX["/rec/volumes"]={volumes:[{name:"disk-a",server:"box-a",kind:"local",url:"file:///a",quota_bytes:1e11,enabled:true,held_by:"r-1"},
@@ -67,7 +67,7 @@ main().querySelector('[data-act="addCam"]').click();await b.ready(30);
 out.fromVolumeCard=JSON.stringify(opts("home"))==='["disk-b"]'&&opts("cam").length===3;
 no();
 // со вкладки «Архив» камеры: камера выбрана, тома — любые и «любой свободный»
-pc.select("unit:vms/1");await b.ready(60);
+pc.select("unit:cam/1");await b.ready(60);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(150);
 main().querySelector('[data-act="addRec"]').click();await b.ready(30);
 out.fromCameraTab=JSON.stringify(opts("cam"))==='["1"]'&&opts("home")[0]===""&&opts("home").length===4;
