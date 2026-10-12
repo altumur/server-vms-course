@@ -45,7 +45,7 @@ def tokens_group(sub: str, deployment: str) -> str:
 
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
-    out = [SIGNER_KEYS, "!domain/book-seal*", "!domain/names/*", "!domain/users/*", "!domain/members", "!domain/licence", "!domain/stranded",
+    out = [SIGNER_KEYS, "!domain/book-seal*", "!domain/placement*", "!domain/names/*", "!domain/users/*", "!domain/members", "!domain/licence", "!domain/stranded",
            "!domain/grants/*", "!domain/pending/*", "!domain/keepers/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
