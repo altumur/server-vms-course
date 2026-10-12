@@ -998,7 +998,7 @@ class DomainSection:
         stray = [t for t in sec.tables if t not in sec.kept]       # a family is no table: the door serves one row
         if stray:
             raise ValueError(f"{where}.tables names rows that are not kept: {stray}")
-        sec.names = cls._names(spec, d.get("names"), sec.kept, where)
+        sec.names = cls._names(spec, d.get("names"), sec.kept, where, sec.merged)
         tokens = d.get("tokens") or {}
         if not isinstance(tokens, dict):
             raise ValueError(f"{where}.tokens is {{<kind>: {{lifetime, claims}}}}")
@@ -1148,7 +1148,7 @@ class DomainSection:
         return tuple(out), docs
 
     @staticmethod
-    def _names(spec: "SubsystemSpec", raw, kept: tuple, where: str) -> dict:
+    def _names(spec: "SubsystemSpec", raw, kept: tuple, where: str, merged=None) -> dict:
         """`names: {<kept family>/: {exclusive_with: domain/users, grant: <grant>}}` — a family this spec keeps whose
         rows are subjects of the grants beside the domain's people (a subsystem's accounts): held apart from them, and
         granted no wider than `grant`."""
@@ -1160,7 +1160,8 @@ class DomainSection:
             raise ValueError(f"{where}.names is {shape}")
         out = {}
         for name, rule in raw.items():
-            if not isinstance(name, str) or not name.endswith("/") or name not in kept:
+            if not isinstance(name, str) or not name.endswith("/") or (
+                    name not in kept and name[:-1] not in (merged or {})):
                 raise ValueError(f"{where}.names: {name!r} is not a family this spec keeps (`domain.kept` with a "
                                  f"trailing `/`: {[k for k in kept if k.endswith('/')]})")
             if not isinstance(rule, dict) or "exclusive_with" not in rule or set(rule) - {"exclusive_with", "grant"}:
