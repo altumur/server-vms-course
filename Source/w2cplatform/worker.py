@@ -310,10 +310,16 @@ class Worker:
                 now = self.wall()
                 new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, "", cur.offer, cur.offered_at, now,
                            self.server or "")
+                inputs = self._slot_input_paths(cand)
+                new.released = bool(inputs)  # the agent sees no owner until cleanup is complete
                 try:
-                    self.vars.put(prefix + cand, new.to_items(), cas=idx)
+                    claimed_index = self.vars.put(prefix + cand, new.to_items(), cas=idx)
                 except Conflict:
                     continue                                   # another spare took it between the read and the write
+                self._clear_slot_inputs(cand, claimed_index, inputs)
+                if new.released:
+                    new.released = False
+                    self.vars.put(prefix + cand, new.to_items(), cas=claimed_index)
                 self.slot, self.name = new, cand
                 log.warning("%s: a spare for labels '%s' took offer %s", self.instance, self.spare_for, cand)
                 return cand
@@ -405,10 +411,16 @@ class Worker:
                         self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
                         raise refused
                 new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, server=self.server or "")
+                inputs = self._slot_input_paths(cand)
+                new.released = bool(inputs)
                 try:
-                    self.vars.put(prefix + cand, new.to_items(), cas=idx)
+                    claimed_index = self.vars.put(prefix + cand, new.to_items(), cas=idx)
                 except Conflict:
                     continue                                   # somebody took it between the read and the write
+                self._clear_slot_inputs(cand, claimed_index, inputs)
+                if new.released:
+                    new.released = False
+                    self.vars.put(prefix + cand, new.to_items(), cas=claimed_index)
                 self._slot_seen.pop(cand, None)
                 self.slot, self.name = new, cand
                 if prefer is not None:
@@ -599,6 +611,28 @@ class Worker:
             return False
         self.slot = new
         return True
+
+    def _slot_input_paths(self, name):
+        """Control rows owned by this slot, declared by the loaded specs (ADR-0074)."""
+        from . import catalog
+        specs = {s.name: s for s in catalog.specs()}
+        specs[self.spec.name] = self.spec
+        paths = set()
+        for s in specs.values():
+            if s.name != self.sub.name or s.domain is None:
+                continue
+            for rule in s.domain.merged.values():
+                if rule.source.endswith("/"):
+                    paths.add(rule.source + name)
+                elif rule.source.rsplit("/", 1)[-1] == name:
+                    paths.add(rule.source)
+        return sorted(paths)
+
+    def _clear_slot_inputs(self, name, index, paths):
+        """The slot stays released until its predecessor's rows are removed."""
+        for path in paths:
+            # Losing the slot between claim and cleanup must not erase the next owner's row.
+            self.vars.delete(path, guard={"key": self.sub.slot_key(name), "index": index})
 
     def put_under_slot(self, path: str, items: dict, cas=None):
         """Publish control state only under a presently confirmed slot (ADR-0074).
