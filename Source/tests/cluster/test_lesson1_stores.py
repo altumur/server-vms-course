@@ -18,14 +18,14 @@ from vms.config import SPEC as VMS_SPEC
 def test_cas_is_the_same_promise_as_the_files_made():
     c = Cluster()
     v = c.door("console")
-    idx = v.put("vms/cameras/1", {"name": "gate"}, cas=0)
-    v.put("vms/cameras/1", {"name": "gate 2"}, cas=idx)
+    idx = v.put("cam/cameras/1", {"name": "gate"}, cas=0)
+    v.put("cam/cameras/1", {"name": "gate 2"}, cas=idx)
     try:
-        v.put("vms/cameras/1", {"name": "stale"}, cas=idx); assert False
+        v.put("cam/cameras/1", {"name": "stale"}, cas=idx); assert False
     except Conflict:
         pass
-    items, _ = v.get("vms/cameras/1")
-    assert items == {"name": "gate 2"} and v.list("vms/cameras/") == ["vms/cameras/1"]
+    items, _ = v.get("cam/cameras/1")
+    assert items == {"name": "gate 2"} and v.list("cam/cameras/") == ["cam/cameras/1"]
 
 
 def test_one_writer_per_prefix_is_the_rights_of_a_socket():
@@ -33,10 +33,10 @@ def test_one_writer_per_prefix_is_the_rights_of_a_socket():
     by the rights file — the worker's code holds no list of its own (`as_writer` stays as a second, client-side
     check, and is not asked here)."""
     c = Cluster()
-    ctl, wrk = c.door("vmscontroller"), c.door("vmsworker")
-    ctl.put("vms/placement/7", {"worker": "w-srv-a-1"})
-    wrk.put("vms/epoch/7", {"epoch": 1})
-    for v, key in ((wrk, "vms/cameras/7"), (wrk, "vms/placement/7"), (ctl, "vms/cameras/7"), (ctl, "vms/epoch/7")):
+    ctl, wrk = c.door("camcontroller"), c.door("camworker")
+    ctl.put("cam/placement/7", {"worker": "w-srv-a-1"})
+    wrk.put("cam/epoch/7", {"epoch": 1})
+    for v, key in ((wrk, "cam/cameras/7"), (wrk, "cam/placement/7"), (ctl, "cam/cameras/7"), (ctl, "cam/epoch/7")):
         try:
             v.put(key, {"name": "y"}); assert False, key
         except Forbidden:
@@ -44,11 +44,11 @@ def test_one_writer_per_prefix_is_the_rights_of_a_socket():
 
 
 def test_the_epoch_issuer_under_four_threads_on_the_clusters_store():
-    c = Cluster(); v = c.door("vmsworker"); got = []
+    c = Cluster(); v = c.door("camworker"); got = []
 
     def take():
         for _ in range(50):
-            got.append(next_epoch(v, "vms/epoch/7")[0])
+            got.append(next_epoch(v, "cam/epoch/7")[0])
     ts = [threading.Thread(target=take) for _ in range(4)]
     [t.start() for t in ts]; [t.join() for t in ts]
     assert sorted(got) == list(range(1, 201))
@@ -70,16 +70,16 @@ def test_objects_are_files_on_each_server_read_across():
     them. The worker on srv-a puts its heartbeat — a file on srv-a, no row in the store — and the controller on
     srv-c reads it through srv-c's resource, which asks srv-a's. No ceiling: the 64 KiB of a Nomad Variable went with
     the Variables. The contract is the point — nothing in vms/ knows which store it is talking to."""
-    c = Cluster(); sub = Subsystem("vms")
-    v = c.door("vmsworker")
+    c = Cluster(); sub = Subsystem("cam")
+    v = c.door("camworker")
     w = Worker(sub, "w-srv-a-1", v, c.objects_on("srv-a", v), clock=c.clock, wall=c.wall, spec=VMS_SPEC)
     w.heartbeat([{"id": 7, "phase": "running", "pad": "x" * 100_000}], server="srv-a")
-    assert os.path.exists(os.path.join(c.servers["srv-a"].objects, "vms", "heartbeats", "w-srv-a-1"))
+    assert os.path.exists(os.path.join(c.servers["srv-a"].objects, "cam", "heartbeats", "w-srv-a-1"))
     assert c.vars.list("objects/") == []                                  # not a row: a file
-    reader = c.objects_on("srv-c", c.door("vmscontroller"))
-    ctl = Controller(sub, c.door("vmscontroller"), reader, wall=c.wall)
+    reader = c.objects_on("srv-c", c.door("camcontroller"))
+    ctl = Controller(sub, c.door("camcontroller"), reader, wall=c.wall)
     assert ctl.workers_seen()["w-srv-a-1"].extra["server"] == "srv-a"
-    assert reader.list("vms/") == ["vms/heartbeats/w-srv-a-1"] and reader.max_bytes == 0
+    assert reader.list("cam/") == ["cam/heartbeats/w-srv-a-1"] and reader.max_bytes == 0
     assert not os.path.exists(os.path.join(c.servers["srv-c"].objects, "vms"))   # read across, not copied here
 
 
@@ -91,25 +91,25 @@ def test_a_command_mark_is_create_only_across_the_cluster():
     marks' second writer (ADR-0054: `expired` for a request nobody began), by its own socket and create-only too: a mark
     a holder made first is not written over."""
     c = Cluster()
-    v = c.door("vmsworker")
+    v = c.door("camworker")
     a, b = c.objects_on("srv-a", v), c.objects_on("srv-b", v)
-    assert a.put_new("vms/commands/r1", json.dumps({"instance": "a"}).encode())
-    assert not b.put_new("vms/commands/r1", json.dumps({"instance": "b"}).encode())
-    assert json.loads(b.get("vms/commands/r1"))["instance"] == "a"             # …and not written over
-    assert c.vars.list("objects/") == ["objects/vms/commands/r1"]
+    assert a.put_new("cam/commands/r1", json.dumps({"instance": "a"}).encode())
+    assert not b.put_new("cam/commands/r1", json.dumps({"instance": "b"}).encode())
+    assert json.loads(b.get("cam/commands/r1"))["instance"] == "a"             # …and not written over
+    assert c.vars.list("objects/") == ["objects/cam/commands/r1"]
     console = c.objects_on("srv-a", c.door("console"))
-    assert not console.put_new("vms/commands/r1", b'{"ended_by":"reaper"}')     # the holder's mark stands
-    assert json.loads(a.get("vms/commands/r1"))["instance"] == "a"
-    assert console.put_new("vms/commands/r2", b'{"ended_by":"reaper"}')         # nobody began r2: the reaper's word
+    assert not console.put_new("cam/commands/r1", b'{"ended_by":"reaper"}')     # the holder's mark stands
+    assert json.loads(a.get("cam/commands/r1"))["instance"] == "a"
+    assert console.put_new("cam/commands/r2", b'{"ended_by":"reaper"}')         # nobody began r2: the reaper's word
 
 
 def test_every_writer_sees_one_log():
     """A version comes from ONE log, whichever socket wrote. Two writers' views of the store must never hand out the
     same version — or a stale CAS can match a write it never saw, and an edit is lost with no 409 to say so. The
     fake broke this once: each writer's view counted on its own; the fake keeps the rule too."""
-    for console, worker in ((lambda c: (c.door("console"), c.door("vmsworker")))(Cluster()),
-                            (lambda v: (v.as_writer("console", ["vms/cameras/*"]), v.as_writer("vmsworker", ["vms/epoch/*"])))(FakeVariables())):
-        a = console.put("vms/cameras/1", {"name": "gate"}, cas=0)
-        b = worker.put("vms/epoch/1", {"epoch": "1"}, cas=0)
-        c = console.put("vms/cameras/1", {"name": "gate-2"}, cas=a)
+    for console, worker in ((lambda c: (c.door("console"), c.door("camworker")))(Cluster()),
+                            (lambda v: (v.as_writer("console", ["cam/cameras/*"]), v.as_writer("camworker", ["cam/epoch/*"])))(FakeVariables())):
+        a = console.put("cam/cameras/1", {"name": "gate"}, cas=0)
+        b = worker.put("cam/epoch/1", {"epoch": "1"}, cas=0)
+        c = console.put("cam/cameras/1", {"name": "gate-2"}, cas=a)
         assert a < b < c and len({a, b, c}) == 3
