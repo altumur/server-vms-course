@@ -140,6 +140,7 @@ def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_t
     for a in agents.values():
         report_sync(a)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
+    report_sync(rooted._agent(fed, devices, "cam-SN1", "cam-SN0", wall))
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall,
                               url="http://cam-SN1:8445")
@@ -152,6 +153,8 @@ def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_t
     fed, devices, root, holder, _, _ = rooted._site(wall)
     lost = _by_url(fed, devices, "cam-SN2", wall)
     report_sync(lost)
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
+    report_sync(rooted._agent(fed, devices, "cam-SN1", "cam-SN0", wall))
     devices["cam-SN0"].power_off()
     _, report = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall)
     assert "url" not in report["record"]
