@@ -5,8 +5,8 @@ A video wall, another VMS, an analytics server: a DEVICE, not a person — it is
 it speaks RTSP with Digest, not tokens. So it is an account of its own kind, kept by the holder beside the people, with
 grants like a person's: the cameras it may play are the cameras it may view.
 
-    domain/vms/stream-clients/<name>   the holder's: {doc: {name, disabled, at, by}, password_secret}
-    domain/vms/stream-accounts         a cluster's: {accounts_secret: {name: password}} — the clients that have a grant
+    domain/cam/stream-clients/<name>   the holder's: {doc: {name, disabled, at, by}, password_secret}
+    domain/cam/stream-accounts         a cluster's: {accounts_secret: {name: password}} — the clients that have a grant
                                        there, carried home by its agent (the book `stream-accounts/<cluster>` the VMS's
                                        worker on the domain writes at the holder, `domainpart/streamclients.py`); the
                                        holder reads its own records
@@ -37,7 +37,7 @@ from w2cplatform.rows import PARSE_ERRORS
 
 from .config import SPEC
 
-# The names, as the product's spec spells them (`vms.subsystem.yaml`: `domain.kept`, `domain.books`).
+# The names, as the product's spec spells them (`cam.subsystem.yaml`: `domain.kept`, `domain.books`).
 CLIENTS_FAMILY = "stream-clients/"
 ACCOUNTS_BOOK = "stream-accounts"
 STREAM_CLIENTS_PREFIX = SPEC.domain_prefix + CLIENTS_FAMILY
