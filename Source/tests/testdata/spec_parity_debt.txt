@@ -9,3 +9,17 @@ product-only rec.subsystem.yaml secrets.reads   # ADR-0034: the recorder signs a
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only vms.subsystem.yaml metrics[driver_budget_exits_total]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
 product-only vms.subsystem.yaml metrics[driver_budget_small]   # ADR-0070 «продукт»: the driver host's memory budget — the course has no driver host — «Сборка»
+product-only vms.subsystem.yaml domain.shared[events_retention_days]   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml snapshot[events_retention_days]   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived.items   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived.items.days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived.on_delete   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived.on_delete.days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.derived.row   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.alarms_retention_days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.alarms_retention_days.inherit   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.alarms_retention_days.type   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.events_retention_days   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.events_retention_days.inherit   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»
+product-only vms.subsystem.yaml unit.fields.events_retention_days.type   # ADR-0076 «курс»: общие сроки; продукт удаляет индивидуальные поля и derived — «Сборка»

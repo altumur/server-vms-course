@@ -9,7 +9,7 @@
 # same disk is no second place to record, while a second one on another disk of the same box is exactly
 # that. How far back the footage is SHOWN is this row's `retention_days` — a ceiling the recorder's archive
 # door applies; what is still there, the volume's ring decides. The camera's events are the worker's and
-# retained by the VMS row's `events_retention_days`.
+# retained by the subsystem-wide `vms/retention` policy.
 #
 # WHY A NAME AND NOT THE CAMERA. `id: cam` stood here while every camera had at most one recording, and it
 # stopped being true the day an archive stopped meaning "this box's disks": with a network archive as a

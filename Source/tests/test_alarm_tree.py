@@ -44,39 +44,47 @@ def test_the_writer_picks_the_tree_and_the_index_answers_under_one_name():
 
 def test_the_alarms_have_days_of_their_own_and_three_years_when_nobody_said():
     box = Box()
-    con = console_ctl(box, testsub2())
-    a = con.create({"name": "t1", "of": "c1"})["id"]
-    b = con.create({"name": "t2", "of": "c2", "keep_days": 30, "alarm_days": 400})["id"]
-    assert (retention_days(box.vars, "testsub2", a), retention_days(box.vars, "testsub2.alarms", a)) == (365.0, 1095.0) and ALARM_DAYS == 1095
-    assert (retention_days(box.vars, "testsub2", b), retention_days(box.vars, "testsub2.alarms", b)) == (30.0, 400.0)
-    assert box.vars.get(f"testsub2/alarms_retention/{b}")[0] == {"days": "400"}
-    assert retention_days(box.vars, "testsub.alarms", "c7") == 1095.0    # a subsystem with no row for it: `ALARM_DAYS`
-    box.vars.put("testsub/alarms_retention", {"days": 730})
-    assert retention_days(box.vars, "testsub.alarms", "c7") == 730.0 and retention_days(box.vars, "testsub", "c7") == 365.0
+    assert retention_days(box.vars, "testsub2", "a") == 365
+    assert retention_days(box.vars, "testsub2.alarms", "a") == ALARM_DAYS == 1095
+    box.vars.put("testsub2/retention", {"days": 30})
+    box.vars.put("testsub2/alarms_retention", {"days": 400})
+    # Old per-unit rows cannot override the subsystem policy, even if corrupt.
+    box.vars.put("testsub2/retention/a", {"days": "not days"})
+    box.vars.put("testsub2/alarms_retention/a", {"days": 0})
+    for unit in ("a", "b"):
+        assert retention_days(box.vars, "testsub2", unit) == 30
+        assert retention_days(box.vars, "testsub2.alarms", unit) == 400
+    box.vars.delete("testsub2/retention")
+    assert retention_days(box.vars, "testsub2", "a") == 365
 
 
-def test_deleting_a_unit_ends_its_observations_and_not_the_record_of_what_happened():
+def test_deleting_a_unit_leaves_both_classes_until_the_subsystems_days_expire():
     box = Box()
     con = console_ctl(box, testsub2())
-    unit = con.create({"name": "t1", "of": "c1", "alarm_days": 400})["id"]
+    box.vars.put("testsub2/retention", {"days": 7})
+    box.vars.put("testsub2/alarms_retention", {"days": 400})
+    before = {k: box.vars.get(k) for k in ("testsub2/retention", "testsub2/alarms_retention")}
+    unit = con.create({"name": "t1", "of": "c1"})["id"]
+    con.update(unit, {"name": "t1"})
     t = box.wall() - 2 * DAY
     log = EventLog(box.resource_root, "testsub2", str(unit), 1)
     log.append(t, "stats", n=1)
     log.append(t, "lane.jam", ALARM, lane="1")
     res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
-    assert res.retain() == 0
-
     con.delete(unit)
-    assert box.vars.get(f"testsub2/retention/{unit}")[0] == {"days": "0"}     # its observations: gone at the next pass — though
-                                                                              # its days were INHERITED and it had no row of its own
-    assert box.vars.get(f"testsub2/alarms_retention/{unit}")[0] == {"days": "400"}   # its alarms: the row is left alone
+    assert {k: box.vars.get(k) for k in before} == before
+    assert box.vars.list("testsub2/retention/") == []
+    assert box.vars.list("testsub2/alarms_retention/") == []
+    assert res.retain() == 0
+    assert len(buckets_under(box.resource_root, "testsub2", str(unit), 600)) == 1
+    assert len(buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600)) == 1
+    box.wall.advance(6 * DAY)
     assert res.retain() == 1
-    assert buckets_under(box.resource_root, "testsub2", str(unit), 600) == [] and len(buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600)) == 1
     rows = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall(), subsystem="testsub2")["events"]
     assert [(r["kind"], r["class"]) for r in rows] == [("lane.jam", "alarm")]
-
-    box.wall.advance(399 * DAY)
-    assert res.retain() == 1 and buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600) == []   # …and by their own days, they go
+    box.wall.advance(393 * DAY)
+    assert res.retain() == 1
+    assert buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600) == []
 
 
 def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
@@ -88,8 +96,7 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     t = box.wall() - 5 * DAY
     EventLog(box.resource_root, "testsub", "c7", 1).append(t + 10, "lane.jam", ALARM, lane="1")
     EventLog(box.resource_root, "testsub", "c8", 1).append(t + 10, "lane.jam", ALARM, lane="1")
-    for unit in ("c7", "c8"):
-        box.vars.put(f"testsub/alarms_retention/{unit}", {"days": 1})
+    box.vars.put("testsub/alarms_retention", {"days": 1})
     write_row(testsub2(), "notches", box.vars, {"of": "c7", "from": t, "to": t + 60}, "anna", box.wall())
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     with in_catalogue(testsub2()):                                     # the resource reads the holds testsub2 declares

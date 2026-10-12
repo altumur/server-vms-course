@@ -479,7 +479,7 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
     event_log(box.resource_root, 8, 1).append(t0 + 10, "motion")
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
-    box.vars.put("vms/retention/7", {"days": 0}); box.vars.put("vms/retention/8", {"days": 0})
+    box.vars.put("vms/retention", {"days": 0})
 
     assert res.retain() == 2                                           # camera 8's, and camera 7's outside the keep
     left = buckets_under(box.resource_root, "vms", "7", 600)
@@ -515,7 +515,7 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     for sub, unit in units:
         EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "seen", ALARM)            # the alarms' tree…
         EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "stats")                  # …and the observations'
-        box.vars.put(f"{sub}/retention/{unit}", {"days": 0}); box.vars.put(f"{sub}/alarms_retention/{unit}", {"days": 0})
+        box.vars.put(f"{sub}/retention", {"days": 0}); box.vars.put(f"{sub}/alarms_retention", {"days": 0})
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
 
     res.retain()

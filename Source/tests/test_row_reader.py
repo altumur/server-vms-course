@@ -339,7 +339,7 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
     old = box.wall() - 40 * 86400
     for cam in ("7", "8", "9"):
         EventLog(box.resource_root, "vms", cam, 1).append(old, "motion")
-        box.vars.put(f"vms/retention/{cam}", {"days": "30"})
+        box.vars.put(f"vms/retention", {"days": "30"})
     box.vars.put(keeps.key("9-1-2"), {"cam": "9", "from": "yesterday", "to": "today"})
     for _ in range(2):
         res.retain()
@@ -896,7 +896,7 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
         for cam in ("7", "8"):
             EventLog(box.resource_root, "vms", cam, 1).append(day(d), "motion")
         EventLog(box.resource_root, "auto", "any-door", 1).append(day(d), "fired")
-    for unit in ("vms/retention/7", "vms/retention/8", "auto/retention/any-door"):
+    for unit in ("vms/retention", "auto/retention"):
         box.vars.put(unit, {"days": "30"})
     box.vars.put("auto/scenarios/any-door", {"name": "any-door", "when": json.dumps([{"sub": "vms", "kind": "io.input"}]),
                                              "then": "[]"})
@@ -1079,7 +1079,7 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
         EventLog(box.resource_root, sub, unit, 1).append(old, "motion")                     # inside the keep below
         EventLog(box.resource_root, sub, unit, 1).append(old - 86400, "motion")             # a day before it: nobody's keep
-        box.vars.put(f"{sub}/retention/{unit}", {"days": "30"})
+        box.vars.put(f"{sub}/retention", {"days": "30"})
     box.vars.put(keeps.key(f"7-{int(old) - 60}-{int(old) + 60}"), {"cam": "7", "from": old - 60, "to": old + 60})
     for path in ("det/units/55", "auto/scenarios/s1", "rec/recordings/r9"):
         box.vars.put(path, {"name": "x"})

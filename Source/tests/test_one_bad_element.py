@@ -287,7 +287,7 @@ def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_eva
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     EventLog(box.resource_root, "vms", "8", 1).append(old, "motion")
-    box.vars.put("vms/retention/8", {"days": "30"})
+    box.vars.put("vms/retention", {"days": "30"})
     box.vars.put("auto/scenarios/s1", {"name": "s1", "when": DEEP, "then": "[]"})
     out = res.pass_()
     assert "errors" not in out and bucket_names_under(box.resource_root, "vms", "8", 600) == [], out

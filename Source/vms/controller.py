@@ -42,9 +42,9 @@ is a cluster of one: the snapshot still says which server, and it is the hostnam
 #
 # ### Aliases
 # - `create_camera = SpecController.create` — `refuse`, take the next numeric id from `vms/next_id`, write
-#   `vms/cameras/<id>` with `cas=0`, write the derived `vms/retention/<id>`; not placed here.
+#   `vms/cameras/<id>` with `cas=0`; not placed here.
 # - `update_camera = SpecController.update` — `refuse`, read-modify-write, `revision + 1` (what makes the
-#   worker restart the pipeline), derived rows refreshed if their source changed.
+#   worker restart the pipeline).
 # - `delete_camera = SpecController.delete` — marks the row `deleted: "true"` and sets `vms/retention/<id>`
 #   to `{days: 0}`; the placement is taken back by the controller's next `unplace_deleted`.
 # - `camera = SpecController.unit` — the row, or `None`.

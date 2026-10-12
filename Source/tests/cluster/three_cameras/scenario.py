@@ -444,8 +444,8 @@ def s07_edit_delete() -> str:
         out = ["# 07. Правка камеры 2 и удаление камеры 3 (часть 07-edit-and-delete), консоль на srv-a; затем проходы",
                "# воркеров и контроллера. Камера 2 у w-srv-b-1, камера 3 у w-srv-c-1.", ""]
         mark = s.log.mark()
-        con.call("PUT", "/cameras/2", {"events_retention_days": 30}, key="k-anna-0004")
-        out += ["# ---- PUT /cameras/2 {events_retention_days: 30} ----", s.view(mark).render(), ""]
+        con.call("PUT", "/cameras/2", {"priority": 30}, key="k-anna-0004")
+        out += ["# ---- PUT /cameras/2 {priority: 30} ----", s.view(mark).render(), ""]
         mark = s.log.mark()
         con.call("DELETE", "/cameras/3")
         out += ["# ---- DELETE /cameras/3 (ключа идемпотентности у DELETE нет) ----", s.view(mark).render(), ""]

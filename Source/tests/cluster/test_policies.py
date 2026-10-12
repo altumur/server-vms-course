@@ -586,3 +586,11 @@ def test_a_door_of_a_move_whose_store_does_not_answer_says_503_never_no_copy():
     assert st == 503 and "not «no copy»" in said["detail"], (st, said)
     st, said = backup_answer("south", Away(), None, "east", now, east.sign(backup_message("south", "east", now)), now)
     assert st == 503, (st, said)
+
+
+def test_resource_reads_common_retention_and_never_a_units_old_policy():
+    r = rights()
+    for family in ("retention", "alarms_retention"):
+        assert r.allows("resource", "read", f"vms/{family}")
+        assert not r.allows("resource", "read", f"vms/{family}/7")
+        assert not r.allows("console", "write", f"vms/{family}/7")

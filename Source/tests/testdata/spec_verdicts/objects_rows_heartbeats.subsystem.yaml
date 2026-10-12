@@ -120,15 +120,6 @@ unit:
     alarm_days:
       type: int
       inherit: 1095
-  derived:
-  - row: retention/{id}
-    items:
-      days: keep_days
-    on_delete:
-      days: '0'
-  - row: alarms_retention/{id}
-    items:
-      days: alarm_days
 tables:
   shelves:
     key: name

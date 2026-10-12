@@ -93,7 +93,7 @@ def two_editors_one_row() -> str:
     def mutate(items):
         if not first["done"]:                   # between A's read and A's write, B writes
             first["done"] = True
-            b.update(1, {"events_retention_days": 30})
+            b.update(1, {"priority": 30})
         items["name"] = "north-gate-2"
         return items
 

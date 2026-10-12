@@ -31,11 +31,3 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {
   "kind": "video"
 }}
 → 200 {"index": 1005}
-
-# console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/retention/1
-→ 200 {"items": null, "index": ""}
-
-# console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/alarms_retention/1
-→ 200 {"items": null, "index": ""}

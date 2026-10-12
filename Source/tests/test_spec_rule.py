@@ -44,7 +44,6 @@ IMPLEMENTED = {
     "snapshot", "door.routes",
     "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *{f"unit.fields.*.{k}" for k in FIELD},
-    "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",
     "tables.*.key", *{f"tables.*.fields.*.{k}" for k in TABLE_FIELD}, "tables.*.schema", "tables.*.stamp",
     "tables.*.journal.written", "tables.*.journal.deleted",
     "placement.capacity.from", "placement.capacity.default", "placement.capacity.unit_mb", "placement.capacity.base_mb",
