@@ -91,13 +91,16 @@ def source(items, ref: str) -> Observation:
 
 def primary(items, ref: str, member: str) -> Observation | None:
     """The placed recording, never the first all entry; None applies standby grace."""
-    return _primary(read(items, ref), member)
+    return _primary(read(items, ref), member, "primary")
 
 
-def _primary(facts, member):
+def _primary(facts, member, role):
     if not isinstance(member, str) or not member:
         raise Unconfirmed("primary placement has no member identity")
-    matches = [e for e in facts.entries if e.member == member]
+    own = [e for e in facts.entries if e.member == member]
+    if any(e.value.get("role") not in ("primary", "backup", "card") for e in own):
+        raise Unconfirmed("recording role is invalid")
+    matches = [e for e in own if e.value["role"] == role]
     if member in facts.missing or not matches:
         return None
     if len(matches) != 1:
@@ -105,8 +108,7 @@ def _primary(facts, member):
     value = matches[0].value
     if not isinstance(value.get("recording"), str) or not value["recording"]:
         raise Unconfirmed("recording has no identity")
-    if any(type(value.get(field)) is not bool for field in ("enabled", "running")) \
-            or "starting" in value and type(value["starting"]) is not bool:
+    if any(type(value.get(field)) is not bool for field in ("enabled", "running")):
         raise Unconfirmed("recording state is invalid")
     return matches[0]
 
@@ -115,4 +117,4 @@ def copies(items, ref: str, assigned) -> tuple[Observation, ...]:
     """Only explicitly assigned reserve recordings, each with its own origin."""
     facts = read(items, ref)
     return tuple(fact for member in sorted(set(assigned))
-                 if (fact := _primary(facts, member)) is not None)
+                 if (fact := _primary(facts, member, "backup")) is not None)
