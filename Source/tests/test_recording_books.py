@@ -8,7 +8,7 @@ from w2cplatform.spec import BookMerge
 
 def fact(member, recording, **fields):
     return {"member": member, "item": "r1/" + recording,
-            "value": {"ref": "cam", "recording": recording, "enabled": True, "running": True, **fields}}
+            "value": {"ref": "cam", "recording": recording, "enabled": True, "running": True, "role": "primary", **fields}}
 
 
 def row(entries, missing=()):
@@ -26,7 +26,7 @@ def refused(fn):
 
 
 def test_primary_is_the_placed_recording_in_every_entry_order_with_two_reserves():
-    entries = [fact("a-reserve", "b1"), fact("z-main", "main", running=False), fact("b-reserve", "b2")]
+    entries = [fact("a-reserve", "b1", role="backup"), fact("z-main", "main", running=False), fact("b-reserve", "b2", role="backup")]
     for order in itertools.permutations(entries):
         items = row(list(order))
         chosen = books.primary(items, "cam", "z-main")
@@ -72,7 +72,7 @@ def test_old_flat_books_torn_markers_and_malformed_values_are_refused_without_pa
 
 
 def test_recorder_state_is_boolean_and_duplicate_recording_origins_do_not_pick_a_winner():
-    for field in ("running", "enabled", "starting"):
+    for field in ("running", "enabled"):
         for bad in (None, 1, "true", [], {}):
             refused(lambda: books.primary(row([fact("main", "r", **{field: bad})]), "cam", "main"))
     a, b = fact("main", "r"), fact("main", "r")
@@ -84,15 +84,25 @@ def test_collector_delivers_facts_before_a_stream_runs_and_a_stranger_gets_no_ad
     members = ["camera", "main", "reserve1", "reserve2", "stranger"]
     reports = {m: {} for m in members}
     for member, recording in (("main", "r"), ("reserve1", "b1"), ("reserve2", "b2")):
-        value = fact(member, recording, running=False, starting=True)["value"]
+        value = fact(member, recording, running=False)["value"]
         value.update(to=members[:-1], ingest={"urls": ["http://" + member + "/ingest"]})
         reports[member] = {"rec/primaries/w1": {recording: json.dumps(value)}}
     rule = BookMerge(source="rec/primaries/", key="ref", pick="all", to="to")
     collected = collect(rule, reports, members)
     for member in members[:-1]:
         chosen = books.primary(collected.rows[member], "cam", "main")
-        assert chosen.value["starting"] and not chosen.value["running"]
+        assert not chosen.value["running"] and "starting" not in chosen.value
         assert "token_secret" not in json.dumps(collected.rows[member])
     assert set(collected.rows["stranger"]) == {""}
     reports["main"] = {}
     assert books.primary(collect(rule, reports, members).rows["camera"], "cam", "main") is None
+
+
+def test_primary_card_and_backup_on_one_member_are_not_order_based():
+    entries = [fact("main", "card", role="card"), fact("main", "reserve", role="backup"), fact("main", "main")]
+    for order in itertools.permutations(entries):
+        assert books.primary(row(list(order)), "cam", "main").value["recording"] == "main"
+        assert books.copies(row(list(order)), "cam", ["main"])[0].value["recording"] == "reserve"
+    for role in (None, "unknown", 1):
+        refused(lambda: books.primary(row([fact("main", "main", role=role)]), "cam", "main"))
+    assert books.primary(row([fact("main", "reserve", role="backup")]), "cam", "main") is None
