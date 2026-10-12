@@ -41,7 +41,7 @@ def _site(wall, n=2, nets=None):
     for i in range(n):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall, reaches=((nets or ["vlan:a"] * n)[i],))
         d.boot(first_name=f"gate-{i}")
-        cards[d.name] = Card("vms", tempfile.mkdtemp(prefix="card-"))
+        cards[d.name] = Card("cam", tempfile.mkdtemp(prefix="card-"))
         fed.add(member_copy(d.name, north.objects, d.reaches, wall=wall))
         devices[d.name] = d
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d, current=d.current,
@@ -136,7 +136,7 @@ def test_shared_settings_delivery_is_read_from_what_members_reported():
     wall = Clock(NOW)
     fed, north, signer, devices, agents, _ = _site(wall, n=3)
     shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
-    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(alarms=["tamper"]), base_rev=0,
+    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("cam", {}).update(alarms=["tamper"]), base_rev=0,
                 by="anna")
     _pass(agents, "cam-SN2")
     wall.advance(60)
@@ -169,13 +169,13 @@ def test_the_domain_cannot_write_into_a_member_and_needs_no_door():
     fed, north, _, devices, agents, _ = _site(wall, n=1)
     _pass(agents)
     c = fed.clusters["cam-SN0"]
-    for write in (lambda: c.vars.put("vms/cameras/1", {"name": "x"}), lambda: c.objects.put("vms/snapshot/x", b"{}")):
+    for write in (lambda: c.vars.put("cam/cameras/1", {"name": "x"}), lambda: c.objects.put("cam/snapshot/x", b"{}")):
         try:
             write()
             assert False
         except PermissionError:
             pass
-    assert json.loads(c.objects.get("vms/snapshot/SN0"))["cluster"] == "cam-SN0"
+    assert json.loads(c.objects.get("cam/snapshot/SN0"))["cluster"] == "cam-SN0"
 
 
 def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale():
