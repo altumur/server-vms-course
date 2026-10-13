@@ -198,23 +198,27 @@ def s06_office_ready(site) -> None:
 def s07_who_records(site) -> None:
     log = site.log
     site.wall.advance(20)
-    log.note("Сцена 7. Кто пишет SN-A. Решение «камеру SN-A пишет кластер relay-a» — одно на камеру, у держателя\n"
-             "(domain/cam/crossings). Двери у него в курсе нет: это вызов Crossings.record в процессе воркера VMS на домене\n"
-             "(module-design.md М12B, открытый пункт 2); у продукта — POST /domain/cam/crossings {ref, on, move: true}\n"
-             "консоли srv (stand.sh setup).")
+    log.note("Сцена 7. Кто пишет SN-A. Оператор сохраняет назначение записи через дверь домена\n"
+             "PUT /domain/placement/rec/<ref>: cluster, origin, copies. Обычные воркеры издают факты,\n"
+             "держатель собирает sources и primaries из подписанных отчётов членов.")
     with log.muted():                                      # the offices' and the centre's recorders say where they take streams
         for name in ("relay-a", "relay-b", "srv"):
             site.recorders[name].heartbeat_once()
         site.agents_pass()
         site.holder.run_pass()
         site.console_pass()
-    with log.acting("camdomain on srv"):
-        got = site.crossings.record("SN-A", on="relay-a", move=True)
+    status, got = site.ask("anna", "PUT", "domain console", "/domain/placement/rec/SN-A",
+                           {"cluster": "relay-a", "origin": "cam-a", "copies": []})
+    if status != 200:
+        raise RuntimeError(f"assignment refused: {status} {got}")
     log.note(f"→ {json.dumps(got, ensure_ascii=False)}")
     with log.muted():
-        site.crossings.record("SN-B", on="relay-b", move=True)
-    log.note("Проход воркера VMS на домене: книги sources (relay-a), primaries (cam-a: куда толкать и токен потока),\n"
-             "polls, upstream (relay-a: куда передавать вверх, в центр); токены — у подписывающего, через его сокет токенов.")
+        status, got = site.ask("anna", "PUT", "domain console", "/domain/placement/rec/SN-B",
+                               {"cluster": "relay-b", "origin": "cam-b", "copies": []})
+        if status != 200:
+            raise RuntimeError(f"assignment refused: {status} {got}")
+    log.note("Проход держателя: sources и primaries из отчётов; токен потока запрашивает камера через дверь своей роли.\n"
+             "Остальные книги пока ведёт процесс VMS на домене.")
     site.domainpart.pass_once()
 
 
@@ -659,7 +663,8 @@ def f09_backup_office(site) -> None:
     site.domainpart.pass_once()
     site.sync("relay-a")
     site.sync("cam-a")
-    from vms.domainpart.keys import PRIMARIES_PATH, opened
+    from vms.recording_books import PRIMARIES_PATH
+    from vms.domainpart.keys import opened
     items = opened(site.cams["cam-a"].flash_store.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, site.ring("cam-a"))
     entry = json.loads((items or {}).get("SN-A", "{}"))
     for road in ("ingest", "backup"):
