@@ -10,6 +10,7 @@ that neither waits for silent members in turn nor keeps asking them every five s
 from tests.reporting import sync as report_sync
 from w2cplatform.cluster.variables import FakeVariables
 
+from tests.member_console import admit_fixtures, device_console
 from w2cplatform.domain.api import ConsoleAPI
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
@@ -146,14 +147,22 @@ def test_a_bulk_edit_answered_from_memory_keeps_what_went_silent_since_the_pass(
     view.refresh()
     by_name = {d.name: d for d in devices}
     pending = PendingEdits(fed.domain_holder.vars, wall)
-    api = ConsoleAPI(view, lambda name: by_name[name], pending=pending, last_known=view.last_known)
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
+    api = ConsoleAPI(view, pending=pending, last_known=view.last_known)
 
     devices[3].power_off()                               # after the pass, before the edit
-    results = [api.update_unit(d.serial, {"priority": 14}, idempotency_key=f"k{i}")
+    results = [api.update_unit(d.serial, {"enabled": False}, idempotency_key=f"k{i}", sub="cam")
                for i, d in enumerate(devices)]
-    kept = [r for r in results if r.get("pending")]
-    assert [r["cluster"] for r in kept] == [devices[3].name]
-    assert all(d.row().get("priority") == 14 for d in devices if d is not devices[3])
+    kept = [r for r in results if r.get("kept")]
+    assert [r["cluster"] for r in kept] == [d.name for d in devices]
+    assert all(d.row().get("enabled", True) is True for d in devices)
+    for d in devices:
+        if d is devices[3]:
+            continue
+        from w2cplatform.domain.pending import apply_pending
+        pending.reconcile(d.name, apply_pending(pending.of(d.name), device_console(d), wall()))
+        assert d.row()["enabled"] is False and pending.of(d.name) == {}
+    assert pending.of(devices[3].name) and devices[3].row().get("enabled", True) is True
 
 
 def test_lanes_are_real_threads_not_only_arithmetic():
