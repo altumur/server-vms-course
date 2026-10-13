@@ -75,9 +75,11 @@ box_instance = runtime.instance_on_box
 # What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13): the VMS's book
 # under the prefix the platform gives it (`vms.domainpart.keys`); and where the agent says when it last reached the
 # domain — the platform's own mark (`w2cplatform.domain.agent.DOMAIN_SEEN`). The recorder reads; the agent writes.
-from vms.domainpart.keys import PRIMARIES_PATH as PRIMARIES  # noqa: E402
+from w2cplatform.domain.memberbook import read as member_book
+
+PRIMARIES = "domain/rec/primaries"
 # …and the source book, the other way: where each camera of another cluster that THIS one records is (М12B урок 2).
-from vms.domainpart.keys import SOURCES_PATH as SOURCES  # noqa: E402
+SOURCES = "domain/cam/sources"
 from w2cplatform.domain.agent import DOMAIN_SEEN  # noqa: E402,F401
 
 log = logging.getLogger("recworker")
@@ -175,7 +177,19 @@ class Look:
 
     # The book of primaries the camera's agent carries home, and when it last reached the domain (`carried_primary`).
     def primaries(self) -> dict | None:
-        return self._once("primaries", lambda: self.rec.vars.get(PRIMARIES)[0])
+        return self._once("primaries", lambda: member_book(self.rec.vars, PRIMARIES, self.member()))
+
+    def member(self):
+        from .recording_publication import member
+        return self._once("member", lambda: member(self.rec.vars))
+
+    def ref(self, row):
+        from .recording_publication import ref_of
+        return self._once(("ref", str(row.get("cam", ""))), lambda: ref_of(self.rec.vars, row))
+
+    def placed(self, ref):
+        from w2cplatform.domain.placement import placed
+        return self._once(("placed", ref), lambda: placed(self.rec.vars, "rec", ref))
 
     def domain_seen(self) -> bytes | None:
         return self._once("domain_seen", lambda: self.rec.objects.get(DOMAIN_SEEN))
@@ -183,7 +197,7 @@ class Look:
     # …and the source book it carries home: where each camera of ANOTHER cluster this one records is (`source`, М12B
     # урок 2) — once a pass for every recording of such a camera, as the product's `passview` reads it.
     def sources(self) -> dict | None:
-        return self._once("sources", lambda: self.rec.vars.get(SOURCES)[0])
+        return self._once("sources", lambda: member_book(self.rec.vars, SOURCES, self.member()))
 
     def edges(self) -> set[str]:
         return self._once("edges", lambda: volumes.edges(self.rec.vars))
@@ -396,6 +410,7 @@ class RecWorker(VmsWorker):
                  window: tuple[int, int] | None = None, keep_days: float = 30.0, settle: float = 900.0,
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
+        self._token_requests_env = env
         events_root = runtime.events_root(env, resource_root)    # the platform's events archive (WP-E): /data/platform/events
         instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`Worker.hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
@@ -649,31 +664,48 @@ class RecWorker(VmsWorker):
     # does not name — or names in an entry that does not read — waits, and its status says why (`unresolved`).
     def _source_of_ref(self, cam: str) -> tuple[str, str] | None:
         from .config import local_only
-        from .domainpart.crossing import NotResolvable, resolve_in
+        from .recording_books import Unconfirmed, source
+        from .recording_publication import member
         try:
-            src = resolve_in(self._look().sources(), cam, self.wall())
+            ref = cam[4:]
+            look = self._look()
+            assignment = look.placed(ref)
+            own = member(self.vars)
+            from w2cplatform.domain.topology import member_topology
+            topology = member_topology(self.vars, own)
+            if assignment is not None and topology["rev"] > 0 and topology["centre"] == own \
+                    and assignment["cluster"] != own:
+                self.unresolved.pop(cam, None)
+                self.behind_loopback.pop(cam, None)
+                self.last_source[cam] = (own, f"ingest://{own}/{ref}")
+                return self.last_source[cam]
+            if assignment is None or own not in (assignment["cluster"], *assignment["copies"]):
+                raise Unconfirmed("this cluster is not assigned to receive the camera")
+            fact = source(look.sources(), ref)
+            if fact.member != assignment["origin"]:
+                raise Unconfirmed("source origin does not match placement")
+            value = fact.value
+            related = [str(r["id"]) for r in self.rows if str(r.get("cam")) == cam]
+            failed = any(getattr(self, "unreachable_sources", {}).get(i) for i in related)
+            remembered = any(getattr(self, "_push_sources", {}).get(i, (None,))[0]
+                             and self._push_sources[i][0][0] == assignment["rev"] for i in related)
+            address = f"ingest://{own}/{ref}" if value.get("push") or failed or remembered else value["live_url"]
+            server = value["server"] or fact.member
+            if local_only(address, server, self.server):
+                self.behind_loopback[cam] = server
+                return None
         except OSError as e:
             self.store_errors += 1
-            last = self.last_source.get(cam)
-            log.warning("%s: the store did not answer for the source book (%s): %s", self.name, e,
-                        f"camera {cam}'s last source {last[1]} stands" if last else f"camera {cam} was never read there")
-            return last
-        except (NotResolvable, Forbidden) as e:
-            # …and a store that refuses this recorder the book is said as it is: its role's reads lack `domain/cam/sources`
-            # (the scenario's F3 — the rights are the platform's, from the spec's `worker.reads`)
-            why = str(e) if isinstance(e, NotResolvable) else f"this recorder may not read the source book {SOURCES} ({e})"
-            if self.unresolved.get(cam) != why:
-                log.warning("%s: camera %s: %s", self.name, cam, why)
-            self.unresolved[cam] = why
+            log.warning("%s: source book unavailable (%s)", self.name, e)
+            return self.last_source.get(cam)
+        except (Unconfirmed, Forbidden) as e:
+            self.unresolved[cam] = str(e)
             self.last_source.pop(cam, None)
             return None
         self.unresolved.pop(cam, None)
-        if local_only(src.live_url, src.cluster, self.server):
-            self.behind_loopback[cam] = src.cluster
-            return None
         self.behind_loopback.pop(cam, None)
-        self.last_source[cam] = (src.cluster, src.live_url)
-        return src.cluster, src.live_url
+        self.last_source[cam] = (server, address)
+        return server, address
 
     # A HOLDER NOT HEARD IS NOT A HOLDER GONE (the twelfth review, major 10). In a cluster the camera's heartbeat is an
     # object on its holder's server, read through that server's resource door: with only the door away (its port
@@ -1041,71 +1073,47 @@ class RecWorker(VmsWorker):
     # room's cluster, written by the room's recorder. Looking only here, the backup on its card found no
     # primary and never covered — not when the room was down either, which is the one moment it exists for.
     #
-    # So the domain, which reads both clusters, writes a BOOK OF PRIMARIES for the camera's cluster, and the
-    # camera's agent carries it home like the grants: per camera, by the domain's name for it (`ref`), who
-    # records it (`recorded_by`), whether it SHOULD be written (`enabled`), whether it IS (`running`), and whether it
-    # is still STARTING (`starting`, there only when true: no recorder of that cluster has named it yet — the only case
-    # that gets the grace). No timestamps in it, on purpose: a book that
-    # changed on every pass of the domain would be rewritten on the camera's flash every few seconds. How
-    # current the book is comes separately — the time the agent last reached the domain, an object in the
-    # cluster's object store (RAM on a camera). A book the agent has not refreshed for `lost_after` is a book
-    # nobody can vouch for, and then the backup records: it cannot know, and not knowing is a failure.
+    # The collector delivers recorder observations; placement selects the primary by member identity.
+    # An absent observation gets local grace, an incomplete book chooses no substitute primary.
     def carried_primary(self, row: dict, now: float) -> bool | None:
         """None: the camera's primary is not in another cluster — decide as always. Else: whether to cover."""
         word = RecWorker.carried_word(self, row, now)            # М12's two-server tests run it over its two stores
         return None if word is None else word[0]
 
     def carried_word(self, row: dict, now: float) -> tuple[bool, str] | None:
-        """`carried_primary`, with why — the words of the product's `carriedPrimary`."""
-        look = look_of(self)                                     # a recorder, or only its two stores (М12's gate)
-        items = look.primaries()                                 # once a pass, not once a backup (the scaling pass)
-        if not items:
+        from .recording_books import Unconfirmed, primary
+        from .recording_publication import ref_of
+        look = look_of(self)
+        if look.member() is None:
             return None
-        if str(row.get("cam", "")).startswith("ref:"):
-            ref = str(row["cam"])[4:]                            # a camera of ANOTHER cluster, by the domain's name — a
-        else:                                                    # backup kept here for another server's primary (М11 lesson 1)
-            cam, _ = self.vars.get(f"cam/cameras/{row['cam']}")
-            ref = str((cam or {}).get("ref") or "")
-        if not ref or ref not in items:
+        ref = look.ref(row)
+        assignment = look.placed(ref) if ref else None
+        if assignment is None:
             return None
-        import json
         key = f"ref:{ref}"
-        # An entry of the book, or the agent's mark, that does not parse is a book nobody can vouch for: the backup records
-        # (the review's seventh pass). Read bare, it raised out of `enrich` — out of the reconciler's loop: every start
-        # after this backup, every stop, the gate and the writer's pass were skipped.
         try:
-            e = json.loads(items[ref])
+            fact = primary(look.primaries(), ref, assignment["cluster"])
             raw = look.domain_seen()
             seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
-            if not isinstance(e, dict):
-                raise TypeError("a book's entry is not an object")
-        except PARSE_ERRORS as err:
-            FIELDS.garbled(f"{PRIMARIES}#{ref}", err)
+        except (Unconfirmed, *PARSE_ERRORS) as err:
             self._not_written_since.pop(key, None)
-            return True, f"the book of primaries' entry for {ref} does not parse: nobody can vouch for it"
-        FIELDS.parsed(f"{PRIMARIES}#{ref}")
-        rec = f"{e.get('recording') or ref} in {e.get('recorded_by') or 'another cluster'}"
-        # …as old by what THIS recorder saw change (the product's r29-writers2): `ts` is the agent's clock, and an agent
-        # whose clock ran an hour ahead and then lost the domain vouched for the book for that hour. A recorder that has
-        # only its two stores (М12's gate) reads the agent's clock as before.
+            return True, "the assigned primary has no confirmed observation"
         eyes = getattr(self, "eyes", None)
         stale = (not raw or eyes.age(DOMAIN_SEEN, seen) > self.CARRIED_LOST_AFTER) if eyes is not None else \
             now - seen > self.CARRIED_LOST_AFTER
-        if stale:                                                # the book is as old as the agent's last contact
+        if stale:
             self._not_written_since.pop(key, None)
-            return True, (f"nothing is known of the primary recording {rec}: the agent has not reached the domain"
-                          + (" since the start" if not raw else " for longer than the book is vouched for"))
-        if not e.get("enabled"):                                 # the product's names (`PrimaryEntry`, ADR-0003)
-            self._not_written_since.pop(key, None)
-            return False, f"the primary recording {rec} is off: a decision, nothing to stand in for"
-        if e.get("running"):
-            self._not_written_since.pop(key, None)
-            return False, f"the primary recording {rec} is being written"
-        if not e.get("starting"):                                # absent: it ran and stopped — cover at once (feedback AB)
-            self._not_written_since.pop(key, None)
-            return True, f"the primary recording {rec} is not being written"
-        since = self._not_written_since.setdefault(key, now)    # still starting: every event begins this way
-        return now - since >= self.START_GRACE, f"the primary recording {rec} has not started yet"
+            return True, "the agent has not confirmed the primary book recently"
+        if fact is None:
+            since = self._not_written_since.setdefault(key, now)
+            return now - since >= self.START_GRACE, "the assigned primary has not been observed within its grace"
+        value = fact.value
+        self._not_written_since.pop(key, None)
+        if not value["enabled"]:
+            return False, "the assigned primary is disabled"
+        if value["running"]:
+            return False, "the assigned primary is being written"
+        return True, "the assigned primary is not being written"
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved -------------------
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the
@@ -1215,7 +1223,11 @@ class RecWorker(VmsWorker):
 
     def heartbeat_once(self) -> None:
         self.take_pushed()
-        super().heartbeat_once()
+        from .recording_publication import publish_facts
+        status = self.status()
+        self.heartbeat(status, **{**self.platform_fields(), **self.heartbeat_fields()})
+        publish_facts(self, "primaries", status)
+        publish_facts(self, "upstream", status)
 
     # What this recorder adds to the heartbeat.
     def heartbeat_extra(self) -> dict:
@@ -1350,6 +1362,7 @@ class RecWorker(VmsWorker):
         from w2cplatform.domain.agent import ClusterTrust
         from w2cplatform.domain.federation import Unreachable
         from vms.domainpart.chain import Forwarder
+        from w2cplatform.domain.tokenrequest import WorkerTokenDoor
         from vms.domainpart.ingest import (Ingest, heartbeat_peers, keep_clocks, should_from_snapshot,
                                            written_from_heartbeats)
         url = url or (self.archive_url + "/ingest" if self.archive_url else "")
@@ -1371,6 +1384,7 @@ class RecWorker(VmsWorker):
             self.actuator = IngestRecordings(self.actuator, self)
         self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
                                    objects=self.objects)
+        self.forwarder.tokens.door = WorkerTokenDoor.from_env("recworker", self._token_requests_env)
         return ing
 
     def ingest_fields(self) -> dict:
@@ -2578,6 +2592,9 @@ class RecWorker(VmsWorker):
     # recorders' entries from the map by recording — a thousand recordings asked this once each, and each asking read
     # every row twice and every recorder's heartbeat.
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
+        domain = self.domain_archive_sources(row)
+        if domain is not None:
+            return domain
         now = self.wall() if now is None else now
         look = self._look()
         names = look.backups()
@@ -2608,6 +2625,49 @@ class RecWorker(VmsWorker):
                 src["lagging"] = stream["lagging"]           # the camera's own word on its uplink (`backfill`); a word
                                                              # that is no yes or no is none, and the window decides
             out.append(src)
+        return out
+
+    def domain_archive_sources(self, row):
+        from .recording_books import Unconfirmed, read, recording_value
+        from .recording_publication import member, ref_of
+        look = self._look()
+        if look.member() is None:
+            return None
+        ref = look.ref(row)
+        assignment = look.placed(ref) if ref else None
+        if assignment is None:
+            return None
+        own = member(self.vars)
+        allowed = {assignment["origin"], assignment["cluster"], *assignment["copies"]}
+        if own not in allowed:
+            return []
+        try:
+            facts = read(look.primaries(), ref)
+        except Unconfirmed:
+            return []
+        out = []
+        for observation in facts.entries:
+            if observation.member == own or observation.member not in allowed or observation.member in facts.missing:
+                continue
+            try:
+                value = recording_value(observation.value)
+            except Unconfirmed:
+                continue
+            role = value["role"]
+            expected = (role == "primary" and observation.member == assignment["cluster"]) or \
+                       (role == "backup" and observation.member in assignment["copies"]) or \
+                       (role == "card" and observation.member == assignment["origin"])
+            if not expected or not value.get("coverage"):
+                continue
+            kind = "edge" if role == "card" else "backup"
+            url = value.get("peer_url", "")
+            if (kind == "edge" and self.card_range is None) or (kind == "backup" and not url):
+                continue
+            key = f"{kind}:{observation.member}/{value['recording']}"
+            if self._source_waits(key):
+                continue
+            out.append({"key": key, "kind": kind, "recording": value["recording"], "cam": str(row["cam"]),
+                        "recorder": observation.member, "url": url, "coverage": value["coverage"]})
         return out
 
     # Where one recording's gaps can come from, in order: the device's own archive (Lesson 16), then every
