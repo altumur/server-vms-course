@@ -60,7 +60,7 @@ def test_the_door_asks_for_view_to_look_and_admin_to_change():
     fed, devices, root, holder, agents, _ = _site(wall)
     set_domain_grants(holder.vars, [Grant("anna", "admin", None, 0.0), Grant("boris", "view", None, 0.0)], wall())
     may = lambda cap: (lambda s: domain_may(holder.vars, s, cap, wall()))         # noqa: E731
-    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None,
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed),
                   verifier=lambda t: t), refresh_interval=60, members=Members(holder.vars, wall),
                   admin=may("admin"), viewer=may("view"), holder_objects=devices["cam-SN0"].disk_door())
     srv = con.serve(port=0)
@@ -124,13 +124,11 @@ def test_a_name_that_does_not_exist_costs_as_much_as_a_wrong_password():
 def test_a_devices_password_is_not_the_domains_to_carry():
     """Feedback CD: an edit for a cluster that is off is KEPT — in the holder's store, its backups, a relay's
     books — and a password there would be in the clear past the cluster's key. Refused before anything is kept."""
-    api = ConsoleAPI(None, None)
-    try:
-        api.update_unit(7, {"name": "gate", "cred_secret": "Hunter2"}, "k1")
-        raise AssertionError("refused")
-    except ApiError as e:
-        assert e.status == 400 and "cred_secret" in e.detail and "Hunter2" not in e.detail
-    assert api._seen == {}
+    from tests.test_member_edits import site, raises
+    with site() as e:
+        raises(400, lambda: e.api.queue("POST", "testsub", "counters", None,
+                                       {"name": "gate", "cred_secret": "Hunter2"}, "k1", "north"))
+        assert e.pending.of("north") == {}
 
 
 def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays():
@@ -166,30 +164,32 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
     published. `refuse_addresses` asks every string inside (`secrets.refusal_within`), and an address inside a parameter
     too (the review's blocker 6): refused at the door before anything is kept, and on the camera whoever sends it; the
     words name the place, never the value. A list of plain addresses is taken."""
-    from tests.domain.test_lesson9_pending import CAM, _domain_with_a_camera_that_went_off
+    from tests.test_member_edits import site
     leaks = lambda x: "hunter2" in json.dumps(x, default=str).lower()
     nested = (["rtsp://admin:Hunter2@10.0.0.5/s"], {"url": "http://h/x?pwd=Hunter2"},
               [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"}],
               "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs",
-              ["rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"])            # escaped whole (the product's r28-secrets2)
+              ["rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"])
     for value in nested:
-        wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
-        try:
-            api.update_unit(CAM, {"source": value}, idempotency_key="n", token="anna")
-            raise AssertionError(f"the door kept {value!r}")
-        except ApiError as e:
-            assert e.status == 400 and e.detail.startswith("source") and not leaks(e.detail), e.detail
-        assert not leaks([fed.domain_holder.vars.get(k)[0] for k in fed.domain_holder.vars.list("")])
+        with site(fields={"endpoint": {"type": "url", "secret_in": [{"nested": ["src", "url"]}]}}) as e:
+            try:
+                e.api.queue("POST", "testsub", "counters", None, {"name": "unit", "source": value}, "nested", "north")
+                raise AssertionError("the domain kept a credential")
+            except ApiError as err:
+                assert err.status == 400 and err.detail.startswith("source") and not leaks(err.detail), err.detail
+            assert not leaks([e.vars.get(path)[0] for path in e.vars.list("")])
         d = DeviceCluster("SN1", FakeVariables(), wall=Clock())
         d.boot()
         try:
             d._update(1, {"source": value}, None)
-            raise AssertionError(f"the camera applied {value!r}")
-        except ApiError as e:
-            assert e.status == 400 and not leaks(e.detail), e.detail
+            raise AssertionError("the camera applied a credential")
+        except ApiError as err:
+            assert err.status == 400 and not leaks(err.detail), err.detail
         assert not leaks(d.row())
-    wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
-    assert api.update_unit(CAM, {"labels": ["rtsp://10.0.0.5/s", "yard"]}, idempotency_key="ok", token="anna")
+    with site() as e:
+        assert e.api.queue("POST", "testsub", "counters", None,
+                           {"name": "unit", "labels": ["rtsp://10.0.0.5/s", "yard"]}, "plain", "north")["kept"]
+
 
 
 def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_it():
@@ -198,24 +198,19 @@ def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_
     password in both. The reply is masked as a cluster masks a row (`api.said`): `*_secret` as `***`, every address
     hidden, at any depth — for an edit and for a create, and in what a retry under the same key is answered with."""
     from types import SimpleNamespace
+    from tests.test_member_edits import site
+    from w2cplatform.domain.pending import apply_pending
     leaks = lambda x: "hunter2" in json.dumps(x, default=str).lower()
-    row = {"id": 7, "name": "gate", "source": "rtsp://admin:Hunter2@10.0.0.5/s", "cred_secret": "Hunter2",
+    row = {"name": "gate", "source": "rtsp://admin:Hunter2@10.0.0.5/s", "cred_secret": "Hunter2",
            "extra": [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam"}], "cred_username": "admin"}
-
-    class Member:
-        def update_unit(self, camera, fields, subject):
-            return dict(row, **fields)
-
-        def create_unit(self, fields, subject):
-            return dict(row, **fields)
-
-    class Directory:
-        def where(self, camera):
-            return SimpleNamespace(found=True, cluster="room-a", worker="w-1", complete=True)
-
-    api = ConsoleAPI(Directory(), lambda name: Member())
-    for resp in (api.update_unit(7, {"name": "gate2"}, "k1"), api.update_unit(7, {"name": "gate2"}, "k1"),
-                 api.create_unit({"name": "yard"}, "room-a", "k2"), api.create_unit({"name": "yard"}, "room-a", "k2")):
-        assert not leaks(resp), resp
-        assert resp["result"]["cred_secret"] == "***" and resp["result"]["cred_username"] == "admin"
-    assert not leaks(api._seen)
+    with site(fields={"endpoint": {"type": "url", "secret_in": [{"nested": ["src", "url"]}]}}) as e:
+        for method, body in (("POST", {"name": "gate"}), ("PUT", {"start": 4})):
+            entry = e.pending.add("north", method, "/testsub/counters" + ("/gate" if method == "PUT" else ""), body, method)
+            entries = {entry["id"]: entry}
+            out = apply_pending(entries, SimpleNamespace(apply=lambda _: (200, row)), e.wall())
+            again = apply_pending(entries, SimpleNamespace(apply=lambda _: (_ for _ in ()).throw(AssertionError("reapplied"))), e.wall(), out)
+            assert out == again and not leaks(out)
+            assert out[entry["id"]]["result"]["cred_secret"] == "***"
+            assert out[entry["id"]]["result"]["cred_username"] == "admin"
+            e.pending.reconcile("north", out)
+        assert not leaks([e.vars.get(path)[0] for path in e.vars.list("")])
