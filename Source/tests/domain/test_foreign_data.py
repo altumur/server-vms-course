@@ -4,6 +4,7 @@ pass, part 4: the relay's bundle, `RecursionError`, kept edits, grants, asks, th
 a name that is a number; and the open rest of the seventh: the trust readers, the agent's pass, the books' steps,
 `identity.users`, the signer's start)."""
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
 import logging
@@ -83,8 +84,12 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     a = d.where("101")                                                  # a camera of north: raised before
     assert a.found and a.cluster == "north" and a.unreachable == [cam.name]
     console = _Console()
-    api = ConsoleAPI(d, lambda name: console)
-    assert api.update_unit("101", {"name": "lobby"}, "k1")["cluster"] == "north" and console.edits
+    pending = PendingEdits(north.vars, wall)
+    north.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {} for n in fed.clusters}})})
+    api = ConsoleAPI(d, pending=pending)
+    reply = api.queue("PUT", "cam", "cameras", "101", {"enabled": False}, "k1", "north")
+    assert reply["cluster"] == "north" and not console.edits
+    assert pending.of("north")[reply["kept"]]["body"] == {"enabled": False}
 
     books = Books(BookInputs(north.vars, view, wall, issuer=signer.tokens), north.objects)
     for _ in range(2):
@@ -167,16 +172,16 @@ def test_one_members_unparsable_outcome_leaves_the_other_members_edits_reconcile
     for c in (north, a, b):
         fed.add(c)
     pending = PendingEdits(north.vars, wall=Clock())
-    pending.add("cam-A", "1", {"name": "x"}, {"name": "old"}, "anna")
-    e = pending.add("cam-B", "1", {"name": "y"}, {"name": "old"}, "anna")
-    a.vars.put(OUTCOMES_PATH, {"1": "applied"})
-    b.vars.put(OUTCOMES_PATH, {"1": json.dumps({"rev": e["rev"], "applied": ["name"]})})
+    a_edit = pending.add("cam-A", "PUT", "/testsub/counters/1", {"start": 7}, "a")
+    e = pending.add("cam-B", "PUT", "/testsub/counters/1", {"start": 8}, "b")
+    a.vars.put(OUTCOMES_PATH, {a_edit["id"]: "applied"})
+    b.vars.put(OUTCOMES_PATH, {e["id"]: json.dumps({"id": e["id"], "status": 200, "result": {}, "error": "", "at": 1000.0, "what": e["what"], "kept_at": e["at"]})})
     pending.collect(fed); pending.collect(fed)
-    assert pending.of("cam-B") == {} and "1" in pending.of("cam-A")
-    assert "cam-A/domain/outcomes#1" in MEMBER_OBJECTS.bad
+    assert pending.of("cam-B") == {} and a_edit["id"] in pending.of("cam-A")
+    assert "cam-A/domain/outcomes#" + a_edit["id"] in MEMBER_OBJECTS.bad
     items, idx = north.vars.get("domain/pending/cam-A")
     north.vars.put("domain/pending/cam-A", {**items, "9": "{torn"}, cas=idx)
-    pending.add("cam-A", "2", {"name": "z"}, {"name": "old"}, "anna")
+    pending.add("cam-A", "PUT", "/testsub/counters/2", {"start": 9}, "a2")
     assert north.vars.get("domain/pending/cam-A")[0]["9"] == "{torn"                # not dropped by a write about camera 2
 
 
@@ -374,7 +379,7 @@ def test_the_agents_pass_goes_on_past_a_row_of_the_domain_that_does_not_parse_an
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall)
     cam.boot()
-    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
+    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, console=device_console(cam),
                         domain_objects=north.objects, cluster_objects=cam.local_objects(), published=cam.local_objects())
     assert report_sync(agent)
     north.vars.put(f"domain/pending/{cam.name}", {SERIAL: "{torn", "other": json.dumps({"rev": 1, "fields": 3})})
