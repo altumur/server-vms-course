@@ -30,11 +30,11 @@ def test_generated_reads_reach_family_children_without_granting_siblings_or_writ
     grants = roles(specs, "tests")
     for s in specs:
         own = grants[f"{s.name}worker"]
-        for key in (f"domain/{s.name}/counts", f"domain/placed/{s.name}/badge"):
+        for key in (f"domain/{s.name}/counts", f"domain/{s.name}/counts/north", f"domain/placed/{s.name}/badge", f"domain/placement/{s.name}/badge"):
             assert allowed(own["read"], key)
             assert not allowed(own["write"], key)
-        for key in (f"domain/{s.name}/counts/badge", f"domain/placed/{s.name}-other/badge",
-                    f"domain/placed/{s.name}", "domain/placed/foreign/badge"):
+        for key in (f"domain/{s.name}/counts-other/north", f"domain/placed/{s.name}-other/badge",
+                    f"domain/placed/{s.name}", "domain/placed/foreign/badge", "domain/placement/foreign/badge"):
             assert not allowed(own["read"], key)
 
 
@@ -88,11 +88,11 @@ def test_configstore_enforces_generated_reads_and_guarded_book_writes_at_its_doo
         for s in specs:
             wrk = door(f"{s.name}worker")
             family, exact = f"domain/placed/{s.name}/badge", f"domain/{s.name}/counts"
-            for key in (family, exact):
+            for key in (family, exact, exact + "/north"):
                 seed.put(key, {"fact": "confirmed"})
                 assert wrk.get(key)[0] == {"fact": "confirmed"}
                 raises(Forbidden, lambda: wrk.put(key, {"fact": "invented"}))
-            for key in (f"domain/placed/{s.name}-other/badge", exact + "/badge"):
+            for key in (f"domain/placed/{s.name}-other/badge", exact + "-other/north"):
                 seed.put(key, {"fact": "private"})
                 raises(Forbidden, lambda: wrk.get(key))
             worker = Worker(s.sub, None, wrk, None, wall=wall, clock=wall, spec=s)
