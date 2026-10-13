@@ -20,6 +20,7 @@ import tracemalloc
 from w2cplatform.domain.federation import Unreachable
 from vms.domainpart.ingest import (ANSWER_KEPT, LANDED_KEPT, POLL_ROUND, UPLINK_FLOOR, CameraPusher, RangeFailed, card_range,
                                    piece_wait)
+from tests.domainvms.recording_domain import camera_pusher, role_requests
 from tests.domain.conftest import Clock, real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site, _times
 from tests.vmsconftest import ingest_recorder
@@ -92,7 +93,7 @@ def test_a_break_of_ten_minutes_is_half_a_minute_of_stream_and_the_rest_is_backf
         for a in range(0, 630, 30):                                    # what the card wrote: 4 Mbit/s, five frames a second
             for s in fake_samples(start + a, start + a + 30, step=0.2, gop=2.0, size=100_000):
                 card.append("1-card/e1", s)
-        pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, card=card.pieces, recording="1-card")
+        pusher = camera_pusher(SERIAL, cam.flash, dial, clock=wall, card=card.pieces, recording="1-card")
         ingest.want(SERIAL, "recorder:r")
         ingest.subscribe(SERIAL, "recorder:r")
         sink = ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = _Sink()
@@ -134,7 +135,7 @@ def test_the_camera_answers_a_range_off_its_card_with_the_cards_own_frames_on_th
     fast = Clock(wall() + 90)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = _card(fast() - 1000, fast())
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=fast, card=card.pieces)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=fast, card=card.pieces)
     pusher.pass_once([])                                               # the camera states its clock
     rid = ingest.request_range(SERIAL, wall() - 600, wall() - 590)
     assert pusher.pass_once([])["uploaded"] == [(fast() - 600, fast() - 590)]
@@ -153,7 +154,7 @@ def test_a_range_is_answered_in_pieces_the_camera_can_hold_and_names_the_recordi
     card = real_card(wall() - 100, wall() - 40, step=0.2, size=100_000)          # a minute at 4 Mbit/s: thirty megabytes
     real_card(wall() - 100, wall() - 90, recording="2-card", card=card)          # …and a second recording on the same card
     try:
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
         sizes, upload = [], ingest.upload
 
         def weighed(token, ref, rid, samples, **kw):
@@ -190,7 +191,7 @@ def test_the_ingest_forgets_an_answer_it_has_handed_over_and_one_nobody_came_for
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = _card(wall() - 1000, wall())
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
     for _ in range(20):
         rid = ingest.request_range(SERIAL, wall() - 600, wall() - 540)
         pusher.pass_once([])
@@ -225,7 +226,7 @@ def test_a_camera_without_a_card_pushes_and_continues_from_memory_and_answers_a_
     once and asks again later — never an empty answer it would remember as "not on the card"."""
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card
     ingest.want(SERIAL, "recorder:r-0")
     q = ingest.subscribe(SERIAL, "recorder:r-0")
     wall.advance(1); assert pusher.pass_once([{"t": wall(), "key": True}])["pushed"] == 1
@@ -256,7 +257,7 @@ def test_a_range_the_card_could_not_read_fails_and_a_later_ask_lands_it():
             if broken["at"] == n:
                 raise OSError("reading 1-card/e1: 512 of 4096 bytes — the segment is shorter than written")
             yield piece
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
     for at in (0, 3):                                                  # at once, and with three pieces already up
         broken["at"] = at
         rid = ingest.request_range(SERIAL, wall() - 600, wall() - 590)
@@ -281,7 +282,7 @@ def test_the_recorders_card_range_asks_the_camera_and_waits_for_its_answer():
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = _card(wall() - 1000, wall())
     real_card(wall() - 1000, wall() - 990, recording="2-card", card=card)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
     ask = card_range(ingest, lambda src: SERIAL, wait=5.0)
     stop = threading.Event()
 
@@ -333,7 +334,7 @@ def test_a_range_is_waited_for_a_piece_at_a_time_so_a_slow_camera_is_not_a_silen
             time.sleep(0.15)
             read.append(n)
             yield piece
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=slow)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=slow)
     ask = card_range(ingest, lambda src: SERIAL, wait=1.0)             # a second for each piece
     stop = threading.Event()
 
@@ -375,7 +376,7 @@ def test_with_one_upload_in_twenty_lost_and_one_answer_in_twenty_lost_every_rang
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = real_card(wall() - 1000, wall(), step=0.2, size=50_000)    # 2 Mbit/s: twenty seconds are five pieces
     try:
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
         rng, lost, upload = random.Random(16), {"uploads": 0, "answers": 0}, ingest.upload
 
         def lossy(*a, **kw):
@@ -444,7 +445,7 @@ def test_the_whole_camera_holds_its_frames_inside_its_memory_budget_through_a_br
         ring = CamRing(clock=wall)
         act = CardActuator(ring, card, threaded=False)
         act("start", {"id": "1-card", "epoch": 1})                      # the card writes every frame: its queue is full work
-        pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, card=card.pieces, recording="1-card", ring=ring)
+        pusher = camera_pusher(SERIAL, cam.flash, dial, clock=wall, card=card.pieces, recording="1-card", ring=ring)
         ingest.want(SERIAL, "recorder:r")
         ingest.subscribe(SERIAL, "recorder:r")
         writer = ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
@@ -553,7 +554,7 @@ def test_below_the_streams_bitrate_what_the_stream_skips_is_on_the_card_and_back
         act = CardActuator(ring, card, threaded=False)
         row = {"id": "1-card", "cam": "1", "when": "offline"}
         act("start", {"id": "1-card", "epoch": 1, "hold": True})        # a standby: on hold, the ring its pre-record
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
                               ring=ring)
         gate = _gate(ring, act, pusher, wall, row)
         ingest.want(SERIAL, "recorder:r")
@@ -631,7 +632,7 @@ def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorde
             ring = CamRing(clock=camclock, steady=wall)                 # (the camera's steady clock: the true one)
             act = CardActuator(ring, card, threaded=False)
             act("start", {"id": "1-card", "epoch": 1})                  # the card writes every frame
-            pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=camclock, ring=ring)
+            pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=camclock, ring=ring)
             ingest.want(SERIAL, "recorder:r")
             ingest.subscribe(SERIAL, "recorder:r")
             got = []
@@ -704,7 +705,7 @@ def test_a_lagging_stream_keeps_on_the_card_what_it_skipped_until_backfill_has_i
         act = CardActuator(ring, card, threaded=False)
         row = {"id": "1-card", "cam": "1", "when": "offline"}
         act("start", {"id": "1-card", "epoch": 1, "hold": True})
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
                               ring=ring)
         card.owed = pusher.owed_spans                                   # (the camera's recorder does it: `stream_owed`)
         gate = _gate(ring, act, pusher, wall, row)
@@ -814,7 +815,7 @@ def test_backfill_across_a_forward_step_of_the_cameras_clock_asks_the_card_for_t
             ring = CamRing(clock=camclock, steady=wall)
             act = CardActuator(ring, card, threaded=False)
             act("start", {"id": "1-card", "epoch": 1})                  # the card writes every frame
-            pusher = CameraPusher(SERIAL, cam.flash, dial, card=card.pieces, recording="1-card", ring=ring)
+            pusher = camera_pusher(SERIAL, cam.flash, dial, card=card.pieces, recording="1-card", ring=ring)
             ingest.want(SERIAL, "recorder:r")
             ingest.subscribe(SERIAL, "recorder:r")
             live = []
@@ -876,7 +877,7 @@ def _camera_process(wall, vars_, objects, root, flash, dial):
     rec.reconcile_once(); rec.heartbeat_once()
     assert rec.card is not None and "1-card" in rec.reconciler.running()
     rec.card.segment_span = 10.0
-    return ring, act, rec, camera_process(SERIAL, flash, dial, rec)
+    return ring, act, rec, camera_process(SERIAL, flash, dial, rec, token_requests=role_requests(flash))
 
 
 def test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_wired_as_a_camera_wires_it():
@@ -1118,7 +1119,7 @@ def _process(wall, path, camclock, steady, epoch, ingest_of, cam):
     card = CardBuffer(path)
     act = CardActuator(ring, card, threaded=False)
     act("start", {"id": "1-card", "epoch": epoch, "hold": False})
-    pusher = CameraPusher(SERIAL, cam.flash, ingest_of, card=card.pieces, recording="1-card", ring=ring)
+    pusher = camera_pusher(SERIAL, cam.flash, ingest_of, card=card.pieces, recording="1-card", ring=ring)
     return ring, card, act, pusher
 
 
@@ -1320,9 +1321,9 @@ def test_polls_in_the_middle_of_an_upload_recreate_nothing_and_the_answer_lands_
         reads.append((t0, t1))
         return card.pieces(recording, t0, t1, max_bytes)
     try:
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
         pusher.pass_once([])
-        token, upload, seqs = pusher.entry()["ingest"]["token_secret"], ingest.upload, []
+        token, upload, seqs = pusher.assigned.stream_token(), ingest.upload, []
 
         def poll():
             return ingest.poll(token, SERIAL, camera_now=wall(), version=pusher.versions.get("primary"))
@@ -1489,7 +1490,7 @@ def _road(scenario: str, travel: float, dur: float = 20.0) -> dict:
                     return fn(*a, camera_now=camera_now, **kw)
                 return call
         road = Road()
-        pusher = CameraPusher(SERIAL, cam.flash, lambda url: road, ring=ring, card=card.pieces, recording="1-card")
+        pusher = camera_pusher(SERIAL, cam.flash, lambda url: road, ring=ring, card=card.pieces, recording="1-card")
         ingest.want(SERIAL, "recorder:r")
         ingest.subscribe(SERIAL, "recorder:r")
         got = {}
@@ -1550,7 +1551,7 @@ def test_a_long_poll_held_at_the_ingest_is_not_a_request_that_travelled_and_tell
     from vms.domainpart.ingest import CLOCK_STEP
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token_secret"]
+    token = pusher.assigned.stream_token()
     for _ in range(3):
         ingest.poll(token, SERIAL, camera_now=wall())
         wall.advance(0.5)
@@ -1574,7 +1575,7 @@ def test_a_range_told_by_the_travel_of_a_first_request_fails_and_is_told_again_b
     (`Ingest._untold`) — RANGE FAILED, never a wrong answer — and asked again it is told by the offset held."""
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token_secret"]
+    token = pusher.assigned.stream_token()
     rid = ingest.request_range(SERIAL, wall() - 60.0, wall() - 50.0)
     work = ingest.poll(token, SERIAL, camera_now=wall() - 8.0)        # the first request: eight seconds on its way
     assert abs(work["ranges"][rid]["from"] - (wall() - 68.0)) < 0.01   # told by the travel
@@ -1868,7 +1869,7 @@ def test_a_step_of_this_clusters_clock_inside_the_cameras_round_trip_is_taken_an
     def world():
         wall = Clock(100_000.0)
         *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-        return wall, ingest, pusher.entry()["ingest"]["token_secret"]
+        return wall, ingest, pusher.assigned.stream_token()
 
     def polls(wall, ingest, token, seconds, behind, rtt, every=5.0):
         """The camera polls every `every` s for `seconds`: its clock `behind` the cluster's (its road's travel in it)."""
@@ -1929,7 +1930,7 @@ def test_the_ranges_a_camera_could_not_read_are_remembered_to_a_bound_and_all_of
     from vms.domainpart.ingest import FAILED_KEPT
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card: every range fails
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card: every range fails
     for i in range(FAILED_KEPT + 20):
         rid = ingest.request_range(SERIAL, wall() - 600 + i, wall() - 590 + i)
         pusher.pass_once([])
@@ -1953,7 +1954,7 @@ def _kept_world(wall):
     assert is_row(clock_key(SERIAL))                                   # the rec spec's `objects.rows`: ingest/clock/*
     rows = VariablesObjectStore(south.vars)
     keep_clocks(ingest, rows)
-    return rows, ingest, pusher.entry()["ingest"]["token_secret"]
+    return rows, ingest, pusher.assigned.stream_token()
 
 
 def _polls(wall, ingest, token, seconds, skew, every=5.0):
