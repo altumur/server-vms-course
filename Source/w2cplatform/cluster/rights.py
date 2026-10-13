@@ -151,7 +151,8 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, EPOCH_FLOOR_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
-                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads,
+                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY,
+                                       *[r + "*" if r.endswith("/") else r for r in s.worker_reads],
                                        *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to, *grants])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
