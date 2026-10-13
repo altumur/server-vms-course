@@ -503,6 +503,23 @@ class Console:
                                                                      int(q.get("size", 50)), q.get("cluster"), sub=sub))
                         items, _ = console.holder_vars.get(declared.table(sub, name)) if console.holder_vars is not None else (None, 0)
                         return self._send(200, dict(items or {}))
+                    if u.path == "/domain/placement" or u.path.startswith("/domain/placement/"):
+                        from .placement import overview, read, path
+                        if console.holder_vars is None:
+                            return self._send(404, {"detail": "no holder store"})
+                        if u.path == "/domain/placement":
+                            return self._send(200, overview(console.holder_vars))
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        try:
+                            if len(parts) != 2:
+                                raise ValueError()
+                            sub, ref = parts[0], unquote(parts[1])
+                            declared.catalog.spec(sub)
+                            path(sub, ref)
+                        except (ValueError, KeyError):
+                            return self._send(400, {"detail": "invalid placement identity"})
+                        result = read(console.holder_vars, sub, ref)
+                        return self._send(200, result) if result is not None else self._send(404, {"detail": "no assignment"})
                     if u.path == "/domain":
                         return self._send(*console.view_doc())
                     if u.path == "/domain/alarms":
@@ -666,6 +683,27 @@ class Console:
                 route = console.signer_route(u.path, "DELETE")
                 if route is not None:
                     return self._early() or self._to_signer("DELETE", route)
+                if u.path.startswith("/domain/placement/") and console.holder_vars is not None:
+                    from .placement import remove, path
+                    try:
+                        subject = self._admin("placement is")
+                        if console.admin is None or subject is None:
+                            raise ApiError(403, "placement needs an authenticated domain admin")
+                        if self._early():
+                            return
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        if len(parts) != 2:
+                            return self._send(400, {"detail": "placement needs subsystem and reference"})
+                        sub, ref = parts[0], unquote(parts[1])
+                        declared.catalog.spec(sub)
+                        path(sub, ref)
+                        return self._send(200, remove(console.holder_vars, sub, ref))
+                    except ApiError as e:
+                        return self._send(e.status, {"detail": e.detail})
+                    except (ValueError, KeyError):
+                        return self._send(400, {"detail": "invalid placement identity"})
+                    except Conflict:
+                        return self._send(409, {"detail": "placement changed during this request"})
                 if not (u.path.startswith("/domain/members/") and console.members is not None):
                     return self._send(404, {"detail": "no such route"})
                 name = u.path.rsplit("/", 1)[1]
