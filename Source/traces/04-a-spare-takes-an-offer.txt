@@ -7,10 +7,27 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": "", "items": {
   "offer": "",
   "offered_at": "1757500000.0"
 }}
-→ 200 {"index": 1048}
+→ 200 {"index": 1056}
 
 # camworker spare on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1048, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1056, "items": {
+  "holder": "srv-c:4103:001007",
+  "until": "1757500045.0",
+  "released": "true",
+  "gen": "1",
+  "offer": "",
+  "offered_at": "1757500000.0",
+  "taken_at": "1757500000.0",
+  "server": "srv-c"
+}}
+→ 200 {"index": 1057}
+
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "delete", "key": "cam/sources/w-2", "cas": null, "guard": {"key": "cam/slots/w-2", "index": 1057}}
+→ 200 {"index": 1058}
+
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1057, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500045.0",
   "released": "false",
@@ -20,7 +37,11 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1048, "items": {
   "taken_at": "1757500000.0",
   "server": "srv-c"
 }}
-→ 200 {"index": 1049}
+→ 200 {"index": 1059}
+
+# camworker spare on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/sources/w-2", "cas": null, "items": {}, "guard": {"key": "cam/slots/w-2", "index": 1059}}
+→ 200 {"index": 1060}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
@@ -29,24 +50,24 @@ POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1050}
+→ 200 {"index": 1061}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": "", "items": {"units": "9", "rev": "1"}}
-→ 200 {"index": 1051}
+→ 200 {"index": 1062}
 
 # camworker spare on srv-c → /run/configstore/camworker.sock
 POST /v1/write {"op": "put", "key": "cam/epoch/9", "cas": "", "items": {"epoch": "1"}}
-→ 200 {"index": 1052}
+→ 200 {"index": 1063}
 
 # camworker spare on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1049, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1059, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500000.0",
   "released": "true",
   "gen": "1"
 }}
-→ 200 {"index": 1053}
+→ 200 {"index": 1064}
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
@@ -65,7 +86,7 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "kind": "video",
   "deleted": "true"
 }}
-→ 200 {"index": 1054}
+→ 200 {"index": 1065}
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "cam/cameras/2", "cas": 1007, "items": {
@@ -84,58 +105,58 @@ POST /v1/write {"op": "put", "key": "cam/cameras/2", "cas": 1007, "items": {
   "kind": "video",
   "deleted": "true"
 }}
-→ 200 {"index": 1055}
+→ 200 {"index": 1066}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1035, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1041, "items": {
   "units": "3,5,7",
   "rev": "5"
 }}
-→ 200 {"index": 1056}
+→ 200 {"index": 1067}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1022, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1028, "items": {
   "worker": "",
   "reason": "deleted",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1057}
+→ 200 {"index": 1068}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1037, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1043, "items": {
   "units": "4,6,8",
   "rev": "5"
 }}
-→ 200 {"index": 1058}
+→ 200 {"index": 1069}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1024, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1030, "items": {
   "worker": "",
   "reason": "deleted",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1059}
+→ 200 {"index": 1070}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": 1050, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": 1061, "items": {
   "worker": "w-srv-a-1",
   "reason": "slot w-2 released; most free capacity (1); on srv-a",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1060}
+→ 200 {"index": 1071}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1051, "items": {"units": "", "rev": "2"}}
-→ 200 {"index": 1061}
+POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1062, "items": {"units": "", "rev": "2"}}
+→ 200 {"index": 1072}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1056, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1067, "items": {
   "units": "3,5,7,9",
   "rev": "6"
 }}
-→ 200 {"index": 1062}
+→ 200 {"index": 1073}
 
-# … and 141 GET requests, omitted
+# … and 143 GET requests, omitted
