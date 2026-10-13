@@ -12,6 +12,7 @@ Every ingest here lives in a RECORDER of its cluster, and the relay's forwarder 
 heartbeat (`ingest`), and what the forwarder carried and lost is in the relay's (`upstream`, the product's words).
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 from tests.domainvms.recording_domain import RecordingDomain, camera_pusher, role_requests
 import json
@@ -455,7 +456,7 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                                bundle_store=east.objects, bundle_members=[cam.name], relay_members=[cam.name])
     through = Relay(relay_agent, east.objects)                         # all the camera can reach: east, and what it keeps
-    cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
+    cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, console=device_console(cam),
                             domain_objects=through.objects, published=cam.local_objects(), seen_store=cam.local_objects())
     host = ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects)   # the relay's ingest, in its recorder
     relay = host.ingest
@@ -478,10 +479,11 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     def no_door(name):
         raise Unreachable(f"{name} is reached only through its relay")
 
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), no_door, verifier=lambda t: t, pending=pending, last_known=view.last_known)
-    assert api.update_unit(SERIAL, {"name": "yard"}, idempotency_key="k1", token="anna")["pending"]
+    admit_fixtures(north.vars, fed.clusters)
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda t: t, pending=pending, last_known=view.last_known)
+    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")["kept"]
     passes()
-    assert cam.row()["name"] == "yard"                                 # carried down by the relay, applied by the camera
+    assert cam.row()["enabled"] is False                                 # carried down by the relay, applied by the camera
     view.refresh(); pending.collect(fed)
     assert pending.of(cam.name) == {}                                  # the outcome came up in the bundle
 
@@ -944,7 +946,7 @@ def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address(
     except ApiError as e:
         assert e.status == 400 and "Hunter2" not in e.detail
     items, idx = cam.flash.get("cam/cameras/1")
-    cam._put_row({**json.loads(items["row"]), "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2",
+    cam._put_row({**cam.row(), "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2",
                   "cred_secret": "Hunter2"}, cas=idx)                          # as an older build stored it
     cam.publish()
     snap = cam.ram.get(f"cam/snapshot/{SERIAL}")
