@@ -47,7 +47,8 @@ class LinkedVariables(FakeVariables):
     def _linked(self):
         if not self.link.up: raise Unreachable("region did not answer")
     def get(self, path): self._linked(); return super().get(path)
-    def put(self, path, items, cas=None): self._linked(); return super().put(path, items, cas)
+    def put(self, path, items, cas=None, *, guard=None): self._linked(); return super().put(path, items, cas, guard=guard)
+    def delete(self, path, cas=None, *, guard=None): self._linked(); return super().delete(path, cas, guard=guard)
     def list(self, prefix): self._linked(); return super().list(prefix)
     def as_writer(self, writer, allowed=None):
         v = LinkedVariables.__new__(LinkedVariables); v.__dict__ = self.__dict__.copy(); v.writer = writer
