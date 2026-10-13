@@ -13,6 +13,7 @@ from vms.config import REC_SPEC
 from w2cplatform.console import Heartbeat
 from w2cplatform.domain.federation import Unreachable
 from vms.domainpart.ingest import CameraPusher, written_from_heartbeats
+from tests.domainvms.recording_domain import camera_pusher
 from tests.domain.conftest import Clock, real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site
 from tests.vmsconftest import ingest_recorder
@@ -31,7 +32,7 @@ def _world(wall, card=None, clock=None, **kw):
             raise Unreachable(f"{url} did not answer")
         return ingest
     nothing = lambda recording, t0, t1, max_bytes: iter(())            # a card that holds nothing of the range
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=card or nothing, clock=clock or wall, **kw)
+    pusher = camera_pusher(SERIAL, cam.flash, dial, card=card or nothing, clock=clock or wall, **kw)
     ingest.want(SERIAL, "recorder:r")
     rq = ingest.subscribe(SERIAL, "recorder:r", maxsize=1000)
     return south, ingest, pusher, rq, down
@@ -259,7 +260,7 @@ def test_have_is_the_recorders_word_on_the_cameras_clock_whichever_ingest_it_rea
 
 
 def _token(ingest, pusher):
-    return pusher.entry()["ingest"]["token_secret"]
+    return pusher.assigned.stream_token()
 
 
 # -- the seventh review: nothing moves until an ingest took it; a break goes a piece at a time ------------------------
@@ -489,16 +490,17 @@ def test_a_torn_book_entry_snapshot_shard_or_heartbeat_field_is_that_ones_troubl
     of every poll at the ingest. Each is skipped and counted once (`BOOKS`, `FIELDS`), and what was read last of it is
     kept: the camera pushes on by the entry it read before, the ingest says what the shards it can read say."""
     import json
-    from vms.domainpart.keys import PRIMARIES_PATH
+    from vms.recording_books import PRIMARIES_PATH
     from vms.domainpart.ingest import BOOKS, should_from_snapshot
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     _second(wall, pusher, 2)
     items, idx = pusher.flash.get(PRIMARIES_PATH)
-    pusher.flash.put(PRIMARIES_PATH, {**items, SERIAL: '{"recorded_by": "south", "ingest": {"urls": '}, cas=idx)   # half a write
+    pusher.flash.put(PRIMARIES_PATH, {**items, SERIAL: '{"entries": ['}, cas=idx)   # half a write
     _second(wall, pusher, 2)
     assert [f["t"] for f in rq.drain()] == [1001.0, 1002.0, 1003.0, 1004.0] and "pushing" in pusher.state
-    assert f"{PRIMARIES_PATH}/{SERIAL}" in BOOKS.bad
+    fresh = camera_pusher(SERIAL, pusher.flash, pusher.dial, clock=wall)
+    assert fresh.pass_once([_frame(wall())]).get("pushed", 0) == 0
     row = {"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True}
     south.objects.put("rec/snapshot/a", json.dumps({"recordings": [row]}).encode())
     south.objects.put("rec/snapshot/b", b'{"recordings": [')
