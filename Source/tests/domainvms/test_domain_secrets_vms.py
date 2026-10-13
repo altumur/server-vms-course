@@ -208,7 +208,7 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
              if (n.endswith("_PATH") or n in ("SLOT",)) and isinstance(getattr(m, n), str)
              and getattr(m, n).startswith(SPEC.domain_prefix)]
     named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
-    assert chain.UPSTREAM_PATH == "domain/rec/upstream"
+    assert chain.UPSTREAM_PATH == "domain/cam/upstream"
     assert keys.ASKS_PATH in named and worker.SLOT in named
     stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
     assert not stray, f"keys in no declared family: {stray}"
