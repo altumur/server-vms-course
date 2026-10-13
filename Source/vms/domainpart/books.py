@@ -3,6 +3,7 @@ on each other. The console's pass reads (the view, `domain/view`, kept edits); t
 runs where the signer's key is: `domain.signer_service`, when it is given CLUSTERS.
 
     C2 sources/primaries are published by ordinary workers and collected by the platform.
+    upstream     Lesson 17   for each relay: the centre ingest and stream token, until C3
     polls        Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
@@ -20,6 +21,7 @@ from __future__ import annotations
 
 import logging
 
+from .chain import publish_upstream
 from .ingest import publish_asks
 from .scenario import pairs, refusals, unchecked
 from .streamclients import publish_accounts
@@ -42,8 +44,9 @@ class Books:
             ("following the topology", self._follow_topology),
             ("the read view's pass", c.view.refresh),
             ("polls", lambda: len(c.publish_polls())),
+            ("upstream", lambda: len(publish_upstream(c, c.centre, star=c.star)) if c.centre else None),
             ("the shared settings", lambda: published(c.vars, self.objects)))
-        out = {k: got[k] for k in ("polls",) if got.get(k) is not None}
+        out = {k: got[k] for k in ("polls", "upstream") if got.get(k) is not None}
         if "the shared settings" in got:                 # a document nobody can read writes no book of asks: the last stays
             settings = got["the shared settings"]
             more = self.steps.run(
