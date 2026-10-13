@@ -57,18 +57,6 @@ def issue(door, issuer, member, sub, kind, body, signature):
         if not row:
             raise Refused(403, "token request has no assignment")
         def values(field):
-            if field in ("centre", "star_centre"):
-                from .topology import Topology
-                try:
-                    topology = Topology(door.vars).read()
-                except (ValueError, TypeError, KeyError, OverflowError):
-                    raise Refused(409, "topology has no confirmed centre") from None
-                if field == "star_centre" and row["cluster"] not in (topology or {}).get("star", []):
-                    return []
-                centre = (topology or {}).get("centre")
-                if not isinstance(centre, str) or not centre or topology.get("rev", 0) <= 0:
-                    raise Refused(409, "topology has no centre")
-                return [centre]
             v = row[field]
             return v if isinstance(v, list) else ([v] if v else [])
         links = values("cluster") + values("origin") + values("copies")
