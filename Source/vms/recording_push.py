@@ -111,8 +111,11 @@ class AssignedPush:
         for name, route in sorted(entry["channels"].items()):
             channel = self.channels.get(name)
             if channel is None:
-                channel = CameraPusher(p.serial, p.flash, p.dial, card=p.card, clock=p.clock,
+                channel = CameraPusher(p.serial, p.flash, p.dial, clock=p.clock,
                                        perform=p.perform, hold_seconds=p.hold_seconds, recording=p.recording)
+                # The camera owns its card. A held poll must not keep a reader
+                # that was removed or replaced while this channel was waiting.
+                channel._card_owner = p
                 channel.frames, channel.clock = p.frames, p.clock
                 channel._moved = len(p.frames.moves())
                 if name == entry["primary"]:
@@ -120,7 +123,7 @@ class AssignedPush:
                     channel.since, channel.delivered = p.since, [list(span) for span in p.delivered]
                     channel.have, channel.foreign_before = p.have, p.foreign_before
                 self.channels[name] = channel
-            channel.perform, channel.lag_limit, channel.card = p.perform, p.lag_limit, p.card
+            channel.perform, channel.lag_limit = p.perform, p.lag_limit
             channel.ring_seconds = p.ring_seconds
             if "uplink_free" in p.__dict__:
                 channel.uplink_free = p.uplink_free
