@@ -245,7 +245,7 @@ class StreamClientDoors:
 
 
 # -- the book ----------------------------------------------------------------------------------------------------------
-def publish_accounts(crossings) -> int | None:
+def publish_accounts(inputs) -> int | None:
     """For every cluster the domain reads, the RTSP accounts granted there (`streamclients.accounts_for`) as its book
     `stream-accounts/<cluster>` at the holder: `{accounts_secret: {name: password}}`, written through the books' store
     (`keys.OpenedVars`: sealed with the holder's ring; the platform opens it for the carry it seals to the member, and the
@@ -255,11 +255,11 @@ def publish_accounts(crossings) -> int | None:
     if not sc.book_declared():
         return None
     from w2cplatform.domain.agent import KEYS_PATH
-    v = crossings.vars
+    v = inputs.vars
     if v.get(KEYS_PATH)[0] is None:
         return None
     written = 0
-    for member in sorted(crossings.view.fed.clusters):
+    for member in sorted(inputs.view.fed.clusters):
         raw = json.dumps(sc.accounts_for(v, member), sort_keys=True, separators=(",", ":"))
         path = f"{sc.STREAM_ACCOUNTS_KEY}/{member}"
         have, idx = v.get(path)
