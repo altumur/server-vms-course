@@ -293,19 +293,6 @@ def _a_road(road) -> None:
         raise TypeError("a road is its urls and its token")
 
 
-def _a_primary(e) -> dict:
-    """A camera's entry in the book of primaries: the cluster that records it (`recorded_by`), and — when it pushes —
-    the road to its ingest, and the backup's when it has one: `backup` is that road itself. Where its backups are
-    (`backups`, `[{cluster, recording}]`) is the page's to read (ADR-0010, the addition): the camera pushes on roads."""
-    if not isinstance(e, dict):
-        raise TypeError(f"not an object: {type(e).__name__}")
-    if e.get("ingest"):
-        _a_road(e["ingest"])
-    if e.get("backup"):
-        _a_road(e["backup"])
-    return e
-
-
 def piece_wait(piece: int = PIECE_BYTES) -> float:
     """How long the next piece of a range is waited for: the poll's round, and `piece` bytes at the uplink's floor."""
     return POLL_ROUND + piece / UPLINK_FLOOR
@@ -577,11 +564,15 @@ class Ingest:
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
         try:
-            p = verify(token, ks, self.revoked(), now=self.wall(), kind="stream")
+            p = verify(token, ks, self.revoked(), now=self.wall())
+            if p.get("kind") not in ("stream", "upstream"):
+                raise Refused("stream token refused: wrong kind")
         except TokenError as e:
             raise Refused(f"stream token refused: {e}")
-        if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
-            raise Refused(f"stream token is for {p.get('ref')} at {p.get('aud')}, not {ref} at {audience(self.cluster)}")
+        recipients = p.get("aud")
+        if not isinstance(recipients, list) or any(not isinstance(n, str) or not n for n in recipients) \
+                or len(set(recipients)) != len(recipients) or self.cluster not in recipients or p.get("ref") != str(ref):
+            raise Refused("stream token does not authorize this receiver and reference")
         if camera_now is not None:                               # every request says what time the camera thinks it is
             cam, now = self._cam(ref), self.wall()
             offset = now - _finite_clock(camera_now)
@@ -1817,7 +1808,8 @@ class CameraPusher:
     sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
 
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
-                 hold_seconds: float = 30.0, recording: str | None = None, ring=None, steady=None):
+                 hold_seconds: float = 30.0, recording: str | None = None, ring=None, steady=None,
+                 token_requests=None, role="camworker", env=None):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
         what happened: "performed", or "refused: <why>". `recording`: this camera's recording on its card — what a
         break is continued from (None: the card's one). `ring`: the camera's ring (`vms.card.CamRing`) — the frames
@@ -1901,6 +1893,10 @@ class CameraPusher:
         self.rtt: float | None = None
         # The ranges it was told, by road, and how many moves of its line it had followed when it was first told each.
         self._told: dict[str, tuple[str, int]] = {}
+        from ..recording_push import AssignedPush
+        self.assigned = AssignedPush(self, token_requests, role=role, env=env, clock=steady or base)
+        self._channel_entry = None
+
 
     # THE LINE MOVES, AND THE PUSHER'S PLACE WITH IT (the eleventh review, blockers 1 and 2): the camera's line goes on from
     # the card's when the card is attached (`vms.card.CamLine.restore`), and is re-anchored when an unset clock is set
@@ -1958,29 +1954,22 @@ class CameraPusher:
         return out
 
     def entry(self) -> dict | None:
-        """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
-        asks, never told to push (step 8)."""
-        from .keys import POLLS_PATH, PRIMARIES_PATH, opened
-        items = opened(self.flash.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, self.sealer)
-        raw = (items or {}).get(self.serial)
-        if raw:
-            e = BOOKS.read(f"{PRIMARIES_PATH}/{self.serial}", lambda: _a_primary(json.loads(raw)))
-            if e is not None:
-                self._entry = e
-            return e if e is not None else self._entry           # torn: the entry read last (`BOOKS`)
-
-        def polls(p) -> dict:
-            road = {k: p[k] for k in ("urls", "token_secret", "until")}
-            _a_road(road)
-            return {"cluster": str(p["cluster"]), "polls_only": True, "ingest": road}
+        if self._channel_entry is not None:
+            return self._channel_entry
+        entry = self.assigned.entry()
+        if entry is not None:
+            return entry
+        # Poll-only cameras keep their separate declared book until C4.
+        from .keys import POLLS_PATH, opened
         items = opened(self.flash.get(POLLS_PATH)[0], POLLS_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if not raw:
             return None
-        e = BOOKS.read(f"{POLLS_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
-        if e is not None:
-            self._entry = e
-        return e if e is not None else self._entry
+        def polls(value):
+            road = {k: value[k] for k in ("urls", "token_secret", "until")}
+            _a_road(road)
+            return {"cluster": str(value["cluster"]), "polls_only": True, "ingest": road}
+        return BOOKS.read(f"{POLLS_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
 
     def behind(self) -> float:
         """How far the stream it pushes is behind the newest frame, in seconds: catching up after a break."""
@@ -2533,15 +2522,8 @@ class CameraPusher:
             performed.append((a["action"], outcome))
         return performed, True
 
-    def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
-        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll; never while
-        the pass has work left over (`busy`).
-
-        Two roads when the camera has a backup on another server (М11 lesson 1): the PRIMARY's ingest, and
-        the backup's. One stream, never two — the camera pushes to the backup when, and only when, the primary
-        does not take it: no ingest of the primary answers, or the book says the primary should be written and
-        is not (and is not merely starting). The stream goes on, on whichever road, from the last frame an ingest
-        took."""
+    def pass_once(self, frames_now: list = (), wait: float = 0.0) -> dict:
+        """Feed the shared frame buffer once; each assigned receiver has its own transport cursor."""
         loose = [f for f in frames_now if _t(f) is None]                # frames with no time: this pass's, or nobody's
         self.frames.add([f for f in frames_now if _t(f) is not None])
         self._follow()
@@ -2551,87 +2533,70 @@ class CameraPusher:
             self.seen = self.frames.newest()
 
     def _pass(self, loose: list, wait: float) -> dict:
-        e = self.entry()
-        if not e or not e.get("ingest"):
-            self.state = "no book yet" if not e else "recorded in its own cluster: nothing to push"
+        from ..recording_books import Unconfirmed
+        try:
+            entry = self.entry()
+        except (Unconfirmed, ValueError):
+            self.assigned.observe_absence()
+            routes = {name: channel._route for name, channel in self.assigned.channels.items()
+                      if channel.pushing is not None}
+            entry = {"channels": routes, "primary": self.assigned.scope[1] if self.assigned.scope else ""}
+        if entry is not None and "channels" in entry:
+            return self.assigned.pass_once(entry, loose, wait)
+        return self._channel_pass(loose, wait)
+
+    def _channel_pass(self, loose: list, wait: float) -> dict:
+        entry = self.entry()
+        if not entry or not entry.get("ingest"):
+            self.state = "no poll destination yet"
             return {"state": self.state}
-        backup = e.get("backup")
-        ing, work, url = self._poll(e["ingest"], "primary", 0.0 if backup or self.busy() else wait)
+        ing, work, url = self._poll(entry["ingest"], "primary", 0.0 if self.busy() else wait)
         pushed, uploaded, performed, road = 0, [], [], None
-        takes = primary_takes(e, ing is not None, work)
-        # What the card (edge) goes by, decided HERE and now: the primary does not take the stream — its ingest
-        # did not answer, or said the recording is uncovered, or (with no word from it) the book says so.
-        self.uncovered = not takes if ing is None or "uncovered" in (work or {}) or backup else None
         if ing is not None:
-            p, u, a, ok = self._serve(ing, e["ingest"]["token_secret"], work if takes else {**work, "push": False}, loose,
-                                      "primary")
-            pushed, uploaded, performed = p, u, a
-            if takes and ok:
+            if "push" in entry and not entry["push"]:
+                work = {**work, "push": False}
+            pushed, uploaded, performed, ok = self._serve(ing, entry["ingest"]["token_secret"], work, loose, "primary")
+            if ok:
                 road = ("primary", url, work["push"])
-        if road is None and backup:
-            bing, bwork, burl = self._poll(backup, "backup", 0.0 if self.busy() else wait)
-            if bing is not None:
-                p, u, a, ok = self._serve(bing, backup["token_secret"], bwork, loose, "backup")
-                pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
-                if ok:
-                    road = ("backup", burl, bwork["push"])
         if road is None:
             if self.pushing is not None and self.broken_at is None:
-                self.broken_at = self.sent if self.sent is not None else self.clock()   # it broke while pushing (CB)
+                self.broken_at = self.sent if self.sent is not None else self.clock()
             self.pushing, self._card = None, None
-        elif not road[2]:                                              # back, and nobody wants it now: nothing to continue
+        elif not road[2]:
             self.broken_at, self.cursor, self.pushing, self._card, self.resuming = None, None, None, None, False
         behind = self.behind()
         if behind <= 0:
             self.catching = False
-        if self._judge_lag(self.clock()):
-            self.uncovered = True                                      # the card writes what the stream cannot carry
+        self._judge_lag(self.clock())
         said = {"continue": dict(self.continued), "behind": round(behind, 1), "lagging": self.lag}
         if road is None:
-            at = e["cluster"] if e.get("polls_only") else e["recorded_by"]     # the book of polls, or of primaries
-            self.state = f"no ingest of {at} answered" + (" nor of its backup" if backup else "")
-            return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, **said}
-        which, where, pushing = road
-        self.road = which
-        lagging = (f" — {behind:.0f} s behind: the uplink does not carry the stream; the card records it" if self.lag else
-                   f" — catching up after a break, {behind:.0f} s behind" if self.catching and behind >= 1.0 else
-                   f" — {behind:.0f} s behind" if behind >= 1.0 else "")
-        self.state = (f"pushing to {where}" + (" — the backup: the primary does not take the stream" if which == "backup" else "")
-                      + lagging
-                      if pushing else
-                      f"polling {where}: nobody records it, asks only" if e.get("polls_only") else
-                      f"idle at {where}: nobody wants the stream")
-        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, "road": which, **said}
+            self.state = f"no ingest of {entry['cluster']} answered"
+        elif road[2]:
+            lagging = (f" — {behind:.0f} s behind: the uplink does not carry the stream; the card records it" if self.lag else
+                       f" — catching up after a break, {behind:.0f} s behind" if self.catching and behind >= 1.0 else
+                       f" — {behind:.0f} s behind" if behind >= 1.0 else "")
+            self.state = f"pushing to {road[1]}" + lagging
+        else:
+            self.state = (f"polling {road[1]}: asks only" if entry.get("polls_only") else
+                          f"polling {road[1]}: nobody wants the stream")
+        self.road = "primary" if road is not None else None
+        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed,
+                "road": self.road, **said}
+
 
 
 def live_road(entry: dict, dial) -> str | None:
-    """Where a viewer of this camera opens its stream: the road the camera is pushing on — by the same rule the
-    camera follows (`primary_takes`). "primary", "backup", or None when neither answers. A gateway on either
-    server asks this and opens the matching ingest, so its want lands where the one stream goes."""
-    def answers(road):
-        for url in road["urls"]:
+    """Choose an available assigned member for a viewer, independently of recording gates."""
+    routes = (entry or {}).get("channels", {})
+    main = (entry or {}).get("primary")
+    for member in sorted(routes, key=lambda name: (name != main, name)):
+        for url in routes[member]["urls"]:
             try:
                 dial(url)
-                return True
+                return member
             except Unreachable:
                 continue
-        return False
-    if primary_takes(entry, answers(entry["ingest"])):                 # (the ingest's own word reaches the camera,
-        return "primary"                                               # not the gateway: the book stands in for it)
-    backup = entry.get("backup")
-    return "backup" if backup and answers(backup) else None
-
-
-def primary_takes(entry: dict, answered: bool, work: dict | None = None) -> bool:
-    """Whether the camera's primary takes its stream. First what its ingest SAID — no answer, or "uncovered"
-    (it should record and no recorder takes it): the primary's own word, fresh, and no domain in it. Only when
-    the ingest says nothing about it, the book: it is `enabled` and not `running` — a stop, not a start (feedback
-    AB): a start has its grace (`starting`, absent when false)."""
-    if not answered:
-        return False
-    if work is not None and "uncovered" in work:
-        return not work["uncovered"]
-    return not (entry.get("enabled") and not entry.get("running") and not entry.get("starting") and entry.get("backup"))
+    return None
 
 
 # -- the standbys' gates: what the stream says (vms.recworker.RecWorker.stream_says) -------------------------
@@ -2656,12 +2621,20 @@ def should_from_snapshot(objects, wall=time.time, sources=None):
 
     def should(ref) -> bool | None:
         if sources is not None:
-            from .keys import SOURCES_PATH
-            items, _ = sources.get(SOURCES_PATH)
-            raw = (items or {}).get(str(ref))
-            e = BOOKS.read(f"{SOURCES_PATH}/{ref}", lambda: _an_object(json.loads(raw)), {}) if raw else {}
-            if not str(e.get("live_url", "")).startswith("ingest://"):
-                return None                                  # pulled, or not ours to say: the book decides
+            from ..recording_books import Unconfirmed, read, recording_value
+            from ..recording_publication import member
+            from w2cplatform.domain.placement import placed
+            try:
+                assignment, own = placed(sources, "rec", str(ref)), member(sources)
+                if assignment is None or own != assignment["cluster"]:
+                    return None
+                facts = read(sources.get("domain/rec/primaries")[0], str(ref))
+                pushed = any(fact.member == own and recording_value(fact.value)["role"] == "primary"
+                             and fact.value.get("push") is True for fact in facts.entries)
+                if own in facts.missing or not pushed:
+                    return None
+            except (Unconfirmed, ValueError):
+                return None
         rows = []
         for key in objects.list("rec/snapshot/"):
             raw = objects.get(key)
@@ -2920,32 +2893,32 @@ def _urls(v: dict) -> None:
 # cluster that records B and, when that cluster forwards B up (Lesson 17), the ingest above — with a token to
 # ask B at each, naming the actions the scenarios allow (`acts`). `scenarios`: [{"trigger": ref A, "target":
 # ref B, "actions": [...]}], from the shared settings (Lesson 12, `scenario.pairs`). A target nobody records
-# polls the poll home (`Crossings.polled_at`).
-def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) -> dict[str, dict]:
+# polls the poll home (`BookInputs.polled_at`).
+def publish_asks(inputs, scenarios: list[dict], lifetime: float = 86400.0) -> dict[str, dict]:
     from .chain import UPSTREAM_PATH
-    now, books = crossings.wall(), {}
+    now, books = inputs.wall(), {}
 
     # Where another cluster takes streams: what its recorders say in their heartbeats (`ingest_urls`; ADR-0065, its
     # addition) — the product's `Cameras.IngestURLs`. A cluster that is silent, or none of whose recorders heard lately
     # says an ingest, gives no road, as the product's book of asks gives none (`len(urls) > 0`).
     def urls_of(cluster, old: dict | None = None):
-        c = crossings.view.fed.clusters.get(cluster)
+        c = inputs.view.fed.clusters.get(cluster)
         try:
             urls = ingest_urls(cluster, c.objects, now) if c is not None else []
         except Unreachable:
             urls = []
         return urls or None
 
-    dc = getattr(crossings.view.fed, "domain_holder", None)
-    top = crossings.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
+    dc = getattr(inputs.view.fed, "domain_holder", None)
+    top = inputs.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
 
     def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
-                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token_secret", "")) == crossings.issuer.kid:
+                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token_secret", "")) == inputs.issuer.kid:
             return old
         claims = {"aud": audience(cluster), "ref": b, "by": a, "acts": acts, **({"up": up} if up else {})}
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
-                "token_secret": crossings.issuer.issue("ask", sub, now=now, **claims)}
+                "token_secret": inputs.issuer.issue("ask", sub, now=now, **claims)}
 
     # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S (vmsserver's eleventh review, a major; a run): the entries
     # of the book of asks and of the upstream book were read bare, and `upstream/east[SN7001] = "{"` — the very entry the
@@ -2962,31 +2935,34 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             return out
         return BOOKS.read(key, parse, {}) if raw else {}
 
-    def upstream_of(key: str, raw) -> dict:
-        def parse():
-            v = _an_object(json.loads(raw))
-            if v.get("mode") == "push":
-                _urls(v)                                     # a road up is its addresses
-            return v
-        return BOOKS.read(key, parse, {}) if raw else {}
+    def upstream_of(key, items, ref):
+        from vms.recording_books import read, Unconfirmed
+        try:
+            facts = read(items, ref)
+            if facts.missing or len(facts.entries) != 1:
+                return {}
+            value = facts.entries[0].value
+            return {"mode": "pull" if key in inputs.star else "push", "urls": value["urls"]}
+        except (Unconfirmed, KeyError, TypeError):
+            return {}
 
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
         acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
-        known_a, on = crossings.view.last_known(a), crossings.polled_at(b)
-        if known_a is None or on is None or crossings.issuer is None:
+        known_a, on = inputs.view.last_known(a), inputs.polled_at(b)
+        if known_a is None or on is None or inputs.issuer is None:
             continue
         home = known_a[0]
-        via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that relay
-        have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
+        via = inputs.via_of(home)                         # Lesson 17: this camera reaches only that relay
+        have, _ = inputs.vars.get(f"{ASKS_PATH}/{home}")
         old = roads_of(f"{ASKS_PATH}/{home}/{b}", (have or {}).get(b))
-        up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = upstream_of(f"{UPSTREAM_PATH}/{on}/{b}", (up or {}).get(b))
+        up, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
+        above = upstream_of(on, up, b)
         if via and on != via:
             # The target is in another relay. The only road this camera has is its own relay, marked UP; the
             # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
             # road down to the target: it polls the top, or its relay forwards it there.
-            ohave, _ = crossings.vars.get(f"{ASKS_PATH}/{via}")
+            ohave, _ = inputs.vars.get(f"{ASKS_PATH}/{via}")
             oold = roads_of(f"{ASKS_PATH}/{via}/{b}|{a}", (ohave or {}).get(f"{b}|{a}"))
             mine, theirs = urls_of(via, old.get(via)), urls_of(top, oold.get(top))
             if not (on == top or above.get("mode") == "push") or mine is None or theirs is None:
@@ -2998,24 +2974,24 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             # Its own relay (the only one it reaches), or — for a camera that reaches the centre — the cluster
             # where the target polls, then the centre that cluster forwards it to.
             wanted = [(on, urls_of(on, old.get(on)))]
-            if not via and above.get("mode") == "push" and crossings.centre:
-                wanted.append((crossings.centre, above["urls"]))
+            if not via and above.get("mode") == "push" and inputs.centre:
+                wanted.append((inputs.centre, above["urls"]))
             roads = [road(old.get(cluster), cluster, urls, home, a, b, acts) for cluster, urls in wanted if urls]
         if roads:
             books.setdefault(home, {})[b] = json.dumps({"roads": roads}, sort_keys=True)
     for home, book in books.items():
         path = f"{ASKS_PATH}/{home}"
-        have, idx = crossings.vars.get(path)
+        have, idx = inputs.vars.get(path)
         if have != book:
-            crossings.vars.put(path, book, cas=idx)
+            inputs.vars.put(path, book, cas=idx)
     # A scenario taken out of the document takes the right with it: a book nobody's scenario fills any more is
     # emptied, and the agent carries the empty book home. (A token already carried runs to its expiry — a day;
     # revoke it by its jti for sooner, as any token.)
-    for path in crossings.vars.list(f"{ASKS_PATH}/"):
+    for path in inputs.vars.list(f"{ASKS_PATH}/"):
         if path[len(ASKS_PATH) + 1:] not in books:
-            have, idx = crossings.vars.get(path)
+            have, idx = inputs.vars.get(path)
             if have:
-                crossings.vars.put(path, {}, cas=idx)
+                inputs.vars.put(path, {}, cas=idx)
     return books
 
 
