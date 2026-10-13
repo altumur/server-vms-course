@@ -150,10 +150,62 @@ def read(vars_, sub, ref):
 
 
 def placed(vars_, sub, ref):
-    """The agent's copy, including on the holder member; no fallback to the holder row."""
-    key = COPIES_PREFIX + path(sub, ref)[len(PREFIX):]
-    items, _ = vars_.get(key)
-    return decode(items) if items else None
+    """Member copy or holder record, newest revision (ADR-0074, holder correction)."""
+    record = path(sub, ref)
+    copy = COPIES_PREFIX + record[len(PREFIX):]
+    candidates = []
+    for key in (copy, record):
+        items, _ = vars_.get(key)
+        if items:
+            candidates.append(decode(items))
+    if not candidates:
+        return None
+    latest = max(candidates, key=lambda value: value["rev"])
+    if any(value["rev"] == latest["rev"] and value != latest for value in candidates):
+        raise ValueError("conflicting placement locations")
+    return latest
+
+
+def overview(vars_):
+    """The operator's typed assignment view, never raw store rows."""
+    from .booknames import MUTATIONS
+    with MUTATIONS:
+        counter, _ = vars_.get(PREFIX.rstrip("/"))
+        rev = int((counter or {}).get("rev", 0))
+        if rev < 0:
+            raise ValueError("invalid placement revision")
+        records = {}
+        for key in vars_.list(PREFIX):
+            parts = key[len(PREFIX):].split("/")
+            if len(parts) != 2 or path(*parts) != key:
+                raise ValueError("invalid placement identity")
+            items, _ = vars_.get(key)
+            if items:
+                records["/".join(parts)] = decode(items)
+        return {"rev": rev, "records": records}
+
+
+def remove(vars_, sub, ref):
+    from .booknames import MUTATIONS
+    from .api import ApiError
+    key = path(sub, ref)
+    with MUTATIONS:
+        items, index = vars_.get(key)
+        if items is None:
+            raise ApiError(404, "no assignment")
+        decode(items)
+        while True:
+            counter, ci = vars_.get(PREFIX.rstrip("/"))
+            rev = int((counter or {}).get("rev", 0)) + 1
+            if rev <= 0:
+                raise ValueError("invalid placement revision")
+            try:
+                vars_.put(PREFIX.rstrip("/"), {"rev": str(rev)}, cas=ci)
+                break
+            except Conflict:
+                continue
+        vars_.delete(key, cas=index)
+        return overview(vars_)
 
 
 def assign(vars_, sub, ref, body, wall=time.time, *, cas=None):
