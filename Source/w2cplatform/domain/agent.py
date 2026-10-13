@@ -402,7 +402,9 @@ class DomainAgent:
         pending, _ = dv.get(f"{PENDING_PATH}/{self.cluster}")
         # What the domain decided for THIS cluster in the later lessons — each one more row of the same
         # kind: written by the domain under `<path>/<cluster>`, carried home to `<path>`.
-        later = [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
+        from .memberbook import holds
+        is_holder = holds(self.cluster_vars, self.cluster)
+        later = [] if is_holder else [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
         self.keys = self._carry_keys(keys)
         self._say_refused("the key set", self.keys)
         from .members import MEMBERS
@@ -410,13 +412,13 @@ class DomainAgent:
         from .topology import TOPOLOGY
         # …and the list of members, under a name of this cluster's (`term.MEMBER_LIST`): its console knows a member by it
         # when one asks for the backup copy kept here (`GET /api/backup`)
-        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
-                            (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
+        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants),
+                            *([] if is_holder else [(MEMBER_LIST, dv.get(MEMBERS)[0]), ("domain/member-topology", dv.get(TOPOLOGY)[0])]), *later):
             self._carry(path, items)
         # Holder assignments are read-only to agents; copies have their own family on every member.
         # The authenticated carry response is the same authority as the member list.
         from .placement import PREFIX, COPIES_PREFIX, decode, path as placement_path
-        if self.keys == "carried" or self.keys.startswith("rev "):
+        if not is_holder and (self.keys == "carried" or self.keys.startswith("rev ")):
             incoming = dv.list(PREFIX)
             for path in incoming:
                 items = dv.get(path)[0]
@@ -600,10 +602,9 @@ class DomainAgent:
     def relays(self) -> list[str]:
         """The members this cluster relays, by the domain's topology as it last carried it."""
         import json
-        from .topology import TOPOLOGY
-        items, _ = self.cluster_vars.get(TOPOLOGY)
+        from .topology import member_topology
         try:
-            via = json.loads(items["doc"]).get("via", {}) if items and items.get("doc") else {}
+            via = member_topology(self.cluster_vars, self.cluster)["via"]
         except PARSE_ERRORS:
             via = {}
         return sorted(m for m, r in via.items() if r == self.cluster)
@@ -723,7 +724,8 @@ def main() -> None:
     # this cluster's own `OBJECTS` (`w2c.env`): through the holder's door (`POST /api/member/<cluster>`), which it follows
     # with the rows; behind a relay, into the relay's objects (`RELAY_OBJECTS_URL`); on the holder's own box, into its
     # objects (`DOMAIN_OBJECTS_URL`).
-    report = os.environ.get("REPORT") == "1"
+    # Collected books require every member's signed report, including the holder.
+    report = os.environ.get("REPORT") == "1" or any(s.domain.merged for s in declared.specs())
     from w2cplatform.sealing import Sealer
     from w2cplatform.trust.memberkey import MemberKey
     from .carry import CarryClient
@@ -745,7 +747,8 @@ def main() -> None:
         domain_objects = None                            # the report and the relay's summary go through the door
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
-        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
+        domain_objects = open_store(os.environ.get("DOMAIN_OBJECTS_URL") or os.environ["OBJECTS"]) \
+            if report or os.environ.get("RELAY_MEMBERS") else None
     # Which members this relay cluster works for: the domain's topology (`domain/topology`, the operator's one record),
     # read on every pass — RELAY_MEMBERS only where there is no topology yet. RELAY=1 says this cluster is an
     # relay at all: it keeps the relay and the bundle in its own stores.
