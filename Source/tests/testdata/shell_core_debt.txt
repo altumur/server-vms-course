@@ -1,3 +1,3 @@
-# shell_core_debt.txt — the lines the core of the course's VMS page (vms/vms.shell.html) differs from the product's by
+# shell_core_debt.txt — the lines the core of the course's VMS page (vms/cam.shell.html) differs from the product's by
 # (test_shell_core.py): where the course leads, until the product follows. It only shrinks.
 #   <function> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>

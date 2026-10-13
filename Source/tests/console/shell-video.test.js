@@ -7,7 +7,7 @@
 // дверь шлюза (404/503 — повтор, 401 — where заново), трубка — DELETE на двери со свежим токеном. Отметка через
 // console.api; опрос не трогает плеер; выбор другого объекта кладёт трубку. (По образцу продуктового shell-video.)
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-vid-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`).replace('{lang:"ru",','{lang:"ru",poll_s:0.4,'));
@@ -16,16 +16,16 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000,ms=x=>Math.round(x*1000);
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"camera.footage.lost":"камера потеряла запись"}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"camera.footage.lost":"камера потеряла запись"}}};
 // таблица мест — не «volumes»: страница берёт её имя из спеки rec, а не пишет сама
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"disks"},fields:[{name:"cam",type:"string"}]},live:{name:"live",rows:"streams",id:"cam",about:{sub:"vms",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"disks"},fields:[{name:"cam",type:"string"}]},live:{name:"live",rows:"streams",id:"cam",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main"},{id:"1-b",cam:"1",home:"card"}],rows:[]};
 b.FIX["/rec/disks"]={disks:[{name:"main",kind:"local",server:"box-a"},{name:"old",kind:"local",server:"box-b"},{name:"gone",kind:"local",server:"box-c"},{name:"card",kind:"backup",server:"cam-a"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
 b.FIX["/live/streams"]={configured:[],rows:[]};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/servers"]={servers:{},policy:{}};
-b.FIX["/events"]={events:[{t:now-500,kind:"camera.footage.lost",subsystem:"vms",unit:"1",epoch:3,lost_s:20}],state:"live"};
+b.FIX["/events"]={events:[{t:now-500,kind:"camera.footage.lost",subsystem:"cam",unit:"1",epoch:3,lost_s:20}],state:"live"};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve()};
@@ -55,7 +55,7 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
 w.RTCPeerConnection=function(){this.addTransceiver=()=>{};this.createOffer=async()=>({sdp:"v=0"});this.setLocalDescription=async d=>{this.localDescription=d};this.setRemoteDescription=async()=>{};this.close=()=>{this.closed=true};this.connectionState="connected"};
 await b.ready(600);await w.platformConsole.ready;await w.eval("reloadRec()");const d=w.document,pc=w.platformConsole,out={};
 const main=()=>d.querySelector("main");
-pc.select("unit:vms/1");await b.ready(80);
+pc.select("unit:cam/1");await b.ready(80);
 main().querySelector('.pc-tabs [data-tab="vid"]').click();await b.ready(250);
 out.tabShown=!!main().querySelector("#timeline")&&!!main().querySelector("video");
 // шкала — только двери: запись, её прежний том, резервная запись; консольного /timeline нет
@@ -107,9 +107,9 @@ out.existsGoesOn=streamsPost===2&&whep.length===2&&liveTokens===lt+1&&!!w.eval("
 const mk=main().querySelector("#markForm");mk.elements.note.value="видел";let n=w.__calls.length;
 mk.dispatchEvent(new w.Event("submit",{cancelable:true}));await b.ready(80);
 const c=w.__calls.slice(n).find(x=>x.path==="/marks");
-out.markViaApi=!!c&&c.body.note==="видел"&&c.body.unit==="vms/1"&&!("cam" in c.body)&&!!c.key;
+out.markViaApi=!!c&&c.body.note==="видел"&&c.body.unit==="cam/1"&&!("cam" in c.body)&&!!c.key;
 // другой объект — трубка положена
-pc.select("unit:vms/2");await b.ready(80);
+pc.select("unit:cam/2");await b.ready(80);
 out.hangsUpOnSelect=w.eval("V.live")===null;
 // участок, записанный самой камерой (yields), уступает регистратору
 const cut=w.eval(`JSON.stringify(yieldCut([{start:100,end:200},{start:50,end:300,yields:true},{start:400,end:500,yields:true}]).map(s=>[s.start,s.end,!!s.yields]).sort((a,b)=>a[0]-b[0]))`);

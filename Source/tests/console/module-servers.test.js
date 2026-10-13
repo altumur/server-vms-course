@@ -13,7 +13,7 @@ b.FIX["/session"]={open:true};
 b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"addr",type:"string"},{name:"labels",type:"list"},{name:"key_secret",type:"string",bound_to:["addr"]}]};
 b.FIX["/things"]={configured:[{id:1,name:"one",addr:"x://1",labels:["a"],key_secret:"***"},{id:2,name:"two",addr:"x://2",labels:[],key_secret:""}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/drain"]={draining:"",safe:true,subsystems:{}};
-b.FIX["/schema"]={can_raise_to:3,builds:["b-1"],processes:{vms:{live:true},rec:{live:false}}};
+b.FIX["/schema"]={can_raise_to:3,builds:["b-1"],processes:{cam:{live:true},rec:{live:false}}};
 b.FIX["/servers"]={policy:{servers:"shared"},servers:{
   "s-con":{resource:"live",workers:[W({})],labels:["b"],labels_node:["a"],labels_source:"console",decommissionable:false,decommission_refusal:"server s-con answers: drain it and switch it off first",decommission:null},
   "s-dead":{resource:"silent",resource_heard_at:1757490000,workers:[W({worker:"w-2",state:"stale",holds:["place-a"]})],labels:["a"],labels_source:"node",decommissionable:true,decommission:null},

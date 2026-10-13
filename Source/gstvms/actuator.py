@@ -212,7 +212,7 @@ class GstActuator:
         return dead, posted
 
     # `self("stop", {"id": cid})` for every running pipeline: EOS then NULL for each. Called by
-    # `VmsWorker.fence` and at the end of `VmsWorker.run` — with `vmsworker@.container`'s `StopTimeout=20`
+    # `VmsWorker.fence` and at the end of `VmsWorker.run` — with `camworker@.container`'s `StopTimeout=20`
     # giving the finalizations time.
     def stop_all(self) -> None:
         for cid in list(self.pipelines):

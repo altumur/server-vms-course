@@ -1,17 +1,17 @@
 # console on srv-a → /run/configstore/console.sock
-GET /v1/list?prefix=vms/workers/
-→ 200 {"keys": {"vms/workers/w-srv-a-1": 1038, "vms/workers/w-srv-b-1": 1040, "vms/workers/w-srv-c-1": 1042}}
+GET /v1/list?prefix=cam/workers/
+→ 200 {"keys": {"cam/workers/w-srv-a-1": 1038, "cam/workers/w-srv-b-1": 1040, "cam/workers/w-srv-c-1": 1042}}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-a-1
+GET /v1/get?key=cam/workers/w-srv-a-1
 → 200 {"items": {"units": "1,4,7", "rev": "3"}, "index": 1038}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-b-1
+GET /v1/get?key=cam/workers/w-srv-b-1
 → 200 {"items": {"units": "2,5,8", "rev": "3"}, "index": 1040}
 
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/workers/w-srv-c-1
+GET /v1/get?key=cam/workers/w-srv-c-1
 → 200 {"items": {"units": "3,6,9", "rev": "3"}, "index": 1042}
 
 # where(1..9) = {1: 'w-srv-a-1', 2: 'w-srv-b-1', 3: 'w-srv-c-1', 4: 'w-srv-a-1', 5: 'w-srv-b-1', 6: 'w-srv-c-1', 7: 'w-srv-a-1', 8: 'w-srv-b-1', 9: 'w-srv-c-1'}; scans = 1

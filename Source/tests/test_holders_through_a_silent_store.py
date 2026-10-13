@@ -59,7 +59,7 @@ def test_a_holder_says_in_its_status_and_metrics_how_long_it_has_recorded_unconf
     w.objects = box.objects; w.heartbeat_once()
     from w2cplatform.console import SpecConsole
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_worker_unconfirmed{worker="w-1"} 2' in text
+    assert 'cam_worker_unconfirmed{worker="w-1"} 2' in text
 
     store.down = False
     assert w.lease_pass() == [] and act.running == {1, 2} and act.epochs == {1: 1, 2: 1}   # confirmed: no stop, no seam
@@ -94,7 +94,7 @@ def _spec_with(unconfirmed_max):
     from w2cplatform import specyaml
     from tests.productdir import SOURCE
     from w2cplatform.spec import SubsystemSpec
-    with open(os.path.join(SOURCE, "vms", "vms.subsystem.yaml"), encoding="utf-8") as f:
+    with open(os.path.join(SOURCE, "vms", "cam.subsystem.yaml"), encoding="utf-8") as f:
         d = specyaml.loads(f)
     return SubsystemSpec.from_dict({**d, "lease": {"unconfirmed_max": unconfirmed_max}})
 
@@ -218,8 +218,8 @@ def test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_whe
     pipeline falls over in a pass whose assignment read failed: it comes back under the epoch it holds (feedback BK),
     not a new one, and not never."""
     box, store, act, w, act2, w2 = _moved_away()
-    store.refused = {"vms/workers/w-1"}
+    store.refused = {"cam/workers/w-1"}
     act.dead.append(2); w.pump_once()
     box.clock.advance(5); box.wall.advance(5)                         # inside camera 2's lease
     assert ("start", 2) in w.reconcile_once() and act.epochs[2] == 1 and act.running == {2}
-    assert int(box.vars.get("vms/epoch/2")[0]["epoch"]) == 1
+    assert int(box.vars.get("cam/epoch/2")[0]["epoch"]) == 1

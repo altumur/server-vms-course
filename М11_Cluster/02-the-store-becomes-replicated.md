@@ -98,8 +98,8 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-d", "cas": null, "items"
 ```
 
 ```
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-d-1", "cas": "", "items": {
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-d-1", "cas": "", "items": {
 ```
 
 Ни одной строки других серверов `srv-d` не записал. Данные группы новый демон получил от лидера сам — raft присылает журнал или снимок, — и это не шаг, который кто-то пишет. Тест — `test_a_server_that_joins_a_running_group_gets_its_data` (`Source/tests/test_configstore.py`): пятьдесят строк на первом сервере, два сервера вступают — третий через второго, ведомого, — и в **своей** копии у третьего те же ключи и **те же версии**; потом первый сервер останавливают, и двое пишут дальше.
@@ -229,15 +229,15 @@ MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see t
 
 Трасса — [`Source/traces/02-console-creates-a-camera.txt`](../Source/traces/02-console-creates-a-camera.txt). Консоль платформы (`SpecConsole`) создаёт строку единицы по спеке подсистемы; на стенде это спека VMS, и единица — камера `north-gate` (у `testsub` это был бы счётчик `testsub/counters/<имя>`). Первый запрос — чтение `platform/schema`: консоль сверяет формат хранилища, прежде чем писать (М10A, урок 17); здесь его не разбираем.
 
-Сначала номер. Единицам номера выдаёт счётчик подсистемы `<sub>/next_id` (здесь `vms/next_id`), и выдаёт по CAS, как любую другую запись:
+Сначала номер. Единицам номера выдаёт счётчик подсистемы `<sub>/next_id` (здесь `cam/next_id`), и выдаёт по CAS, как любую другую запись:
 
 ```
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/next_id
+GET /v1/get?key=cam/next_id
 → 200 {"items": null, "index": ""}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/next_id", "cas": "", "items": {"n": "1"}}
+POST /v1/write {"op": "put", "key": "cam/next_id", "cas": "", "items": {"n": "1"}}
 → 200 {"index": 1004}
 ```
 
@@ -246,14 +246,14 @@ POST /v1/write {"op": "put", "key": "vms/next_id", "cas": "", "items": {"n": "1"
 Между номером и строкой — запрос списка: консоль проверяет поле, которое спека объявила уникальным (`SpecController.refuse_refs`). У VMS это `source: {unique: canonical}` — один канал устройства, одна камера, адреса сравниваются в одном написании по RFC 3986 (ADR 0002). Камер пока нет, список пуст:
 
 ```
-GET /v1/list?prefix=vms/cameras/
+GET /v1/list?prefix=cam/cameras/
 → 200 {"keys": {}}
 ```
 
 Потом сама строка — тоже с `"cas": ""`, чтобы не перезаписать чужую строку, если номер почему-то уже занят:
 
 ```
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "", "items": {
   "id": "1",
   "revision": "1",
   "name": "north-gate",
@@ -273,7 +273,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {
 
 Все значения — строки: `"enabled": "true"`, `"priority": "100"`, список меток — строка через запятую. Так у файлов, так у хранилища кластера: строка — словарь строк. Типы восстанавливает спека подсистемы при чтении (`SPEC.row`, М10A урок 9): хранилище хранит текст, смысл знает подсистема.
 
-Создание камеры не читает и не пишет сроки хранения: они общие для подсистемы, и ресурс читает `vms/retention` и `vms/alarms_retention` самостоятельно (ADR-0076).
+Создание камеры не читает и не пишет сроки хранения: они общие для подсистемы, и ресурс читает `cam/retention` и `cam/alarms_retention` самостоятельно (ADR-0076).
 
 Полностью путь `POST /cameras` через консоль VMS — с ключом идемпотентности и ответом, который найдёт повтор, — разобран в части 3 записок [`three-cameras`](../_notes-ru/three-cameras/03-creating-a-camera.md). Здесь мы смотрим на то, что под ним: на то, как запросы держатся на CAS.
 
@@ -283,7 +283,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": "", "items": {
 
 ```
 # console on srv-a → /run/configstore/console.sock
-GET /v1/get?key=vms/cameras/1
+GET /v1/get?key=cam/cameras/1
 → 200 {
   "items": {
     …
@@ -292,7 +292,7 @@ GET /v1/get?key=vms/cameras/1
 }
 
 # console on srv-b → /run/configstore/console.sock
-GET /v1/get?key=vms/cameras/1
+GET /v1/get?key=cam/cameras/1
 → 200 {
   "items": {
     …
@@ -305,7 +305,7 @@ GET /v1/get?key=vms/cameras/1
 
 ```
 # console on srv-b → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "id": "1",
   "revision": "2",
   "name": "north-gate",
@@ -321,7 +321,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
 
 ```
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "id": "1",
   "revision": "1",
   "name": "north-gate-2",
@@ -329,7 +329,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
 }}
 → 409 {
   "kind": "conflict",
-  "error": "vms/cameras/1: the version is 1006, not the one the write named",
+  "error": "cam/cameras/1: the version is 1006, not the one the write named",
   "index": 1006
 }
 ```
@@ -338,7 +338,7 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
 
 ```
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1006, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1006, "items": {
   "id": "1",
   "revision": "2",
   "name": "north-gate-2",
@@ -381,14 +381,14 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1006, "items": {
 Трасса — [`Source/traces/02-a-worker-may-not-write-a-camera.txt`](../Source/traces/02-a-worker-may-not-write-a-camera.txt), и она короткая:
 
 ```
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": null, "items": {"name": "mine now"}}
-→ 403 {"kind": "forbidden", "error": "vmsworker may not write vms/cameras/1"}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": null, "items": {"name": "mine now"}}
+→ 403 {"kind": "forbidden", "error": "camworker may not write cam/cameras/1"}
 ```
 
 Сокет воркера разрешает писать его эпохи, его слот, его место — и ничего больше. Строка единицы — не его. Отказ приходит от хранилища, а не из кода воркера: даже воркер с ошибкой, даже воркер, в который кто-то пролез, не может переписать конфигурацию.
 
-**Кто звонит, демон знает по сокету.** Сокет роли воркера подсистемы, `<sub>worker.sock`, принадлежит группе `<развёртывание>-<sub>worker` (здесь `vmsworker.sock` и `vms-vmsworker`), и открыть его может только процесс, чей юнит в этой группе (урок 5). **И спрашивает права демон того сервера, к которому пришли, до того, как что-то переслать или применить** (`storemachine.answer`):
+**Кто звонит, демон знает по сокету.** Сокет роли воркера подсистемы, `<sub>worker.sock`, принадлежит группе `<развёртывание>-<sub>worker` (здесь `camworker.sock` и `vms-camworker`), и открыть его может только процесс, чей юнит в этой группе (урок 5). **И спрашивает права демон того сервера, к которому пришли, до того, как что-то переслать или применить** (`storemachine.answer`):
 
 ```python
             key = check_key(body.get("key", ""))
@@ -537,8 +537,8 @@ worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
 Первое обещание однажды нарушил фейк модуля, `FakeVariables` (`w2cplatform/cluster/variables.py`, для тестов, которым не нужны двери, и для М12A). У него есть `as_writer(writer, allowed)` — тот же фейк, увиденный другим писателем. Сделано это копированием атрибутов объекта. Словарь записей при копировании остаётся общим, а счётчик версий, будь он **числом**, у каждой копии становится своим. Консоль и воркер пишут тогда в один словарь, но нумеруют записи каждый по-своему:
 
 ```
-консоль:  put vms/cameras/1 → версия 1001
-воркер:   put vms/epoch/1   → версия 1001      ← тот же номер
+консоль:  put cam/cameras/1 → версия 1001
+воркер:   put cam/epoch/1   → версия 1001      ← тот же номер
 ```
 
 Чем это опасно? CAS сравнивает версию, которую процесс прочитал, с версией ключа сейчас. Если два разных изменения могут получить один номер, то процесс с устаревшей версией однажды попадёт на совпадение — и его запись пройдёт поверх чужой, без `409`. Ровно та потерянная правка, от которой защищает шаг 5, — и фейк бы её пропустил, а настоящее хранилище нет. Исправление — счётчик в общем списке, который копия разделяет, а не дублирует:
@@ -568,7 +568,7 @@ worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
                                                            f"for its own server, not for {node_id}"}
 ```
 
-Прав на строки у него нет вовсе (урок 5), и ни за кого другого он не говорит. **Пересылки запросов через дверь `-api` больше нет.** До тринадцатого ревью дверь отвечала на запрос с заголовком `X-Configstore-Forwarded: <роль>` с правами названной роли: так пересылает за процесс демон продукта, потому что `hashicorp/raft` команд не носит. Но демон курса такого заголовка не шлёт никогда — команды к лидеру несёт сама библиотека по порту raft. Заголовок был только поверхностью атаки, и ревью прошло через неё пробой: сертификатом демона `srv-b` у двери `srv-a` с ролью воркера (`vmsworker`) удалило слот `vms/slots/w-1`, с `domain` прочло и удалило `domain/keys/k1` (этого не может даже `admin`). Решение автора: путь убран до второго захода mTLS. Запрос к строкам на двери `-api` — `403`, с заголовком или без, какую бы роль он ни называл. Тест — `test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touches_a_row`.
+Прав на строки у него нет вовсе (урок 5), и ни за кого другого он не говорит. **Пересылки запросов через дверь `-api` больше нет.** До тринадцатого ревью дверь отвечала на запрос с заголовком `X-Configstore-Forwarded: <роль>` с правами названной роли: так пересылает за процесс демон продукта, потому что `hashicorp/raft` команд не носит. Но демон курса такого заголовка не шлёт никогда — команды к лидеру несёт сама библиотека по порту raft. Заголовок был только поверхностью атаки, и ревью прошло через неё пробой: сертификатом демона `srv-b` у двери `srv-a` с ролью воркера (`camworker`) удалило слот `cam/slots/w-1`, с `domain` прочло и удалило `domain/keys/k1` (этого не может даже `admin`). Решение автора: путь убран до второго захода mTLS. Запрос к строкам на двери `-api` — `403`, с заголовком или без, какую бы роль он ни называл. Тест — `test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touches_a_row`.
 
 И вступление не оставляет голосующего, которого никто не запускал: id, который группа держит на другом адресе raft, или адрес, который держит другой id, — `409` (`RaftBackend.add`; то же для `join` оператора через `admin.sock`). **Адреса сравниваются по тому, куда они ведут, а не по тексту.** Тринадцатое ревью воспроизвело пробой: `srv-d` той же CA вступил с `raft=localhost:<порт srv-a>` — `200`, ложный голосующий, и группа из трёх перестала переживать потерю одного. Теперь каждый адрес разрешается в набор (ip, порт) (`_places`), и сравниваются эти наборы: строки членов группы, адрес самого демона и голосующие библиотеки, которых строка может и не назвать. `localhost`, `LOCALHOST.`, `[::ffff:127.0.0.1]` и `127.1` — это `127.0.0.1` `srv-a`. Адрес, который никуда не ведёт или ведёт на все интерфейсы (`0.0.0.0`), не называет сервера — отказ. Новый голосующий должен ответить на своём порту raft до того, как его добавят: его демон стартует раньше, чем просит о вступлении. Повтор собственного вступления, написанный по-другому, — это повтор, под тем написанием, которое держит группа. Тесты — `test_a_join_under_another_spelling_of_a_members_raft_address_is_refused` (проба ревью и её соседи) и `test_a_daemon_joins_only_as_its_own_server_and_no_join_leaves_a_voter_nobody_runs` (на настоящей группе из двух).
 

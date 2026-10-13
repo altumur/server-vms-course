@@ -32,7 +32,7 @@ def test_the_rule_is_a_suffix_and_masking_is_a_copy():
 
 
 def test_a_spec_may_not_put_a_secret_in_the_snapshot():
-    """`vms/snapshot/*` is what leaves the cluster for М12's directory. So this is refused at LOAD time,
+    """`cam/snapshot/*` is what leaves the cluster for М12's directory. So this is refused at LOAD time,
     which is a different thing from being watched for at review time: a subsystem written a year from now
     cannot make the mistake, and nobody has to remember the rule to be protected by it."""
     base = {"name": "x", "unit": {"fields": {"host": {"type": "string"}, "api_secret": {"type": "string"}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}}
@@ -116,7 +116,7 @@ def test_the_console_never_hands_out_the_secret_and_the_store_holds_one_copy():
         items, _ = box.vars.get(path)
         for k, v in (items or {}).items():
             if secret in str(v):
-                assert path == "vms/cameras/1" and k == "cred_secret", f"the secret is also stored at {path}[{k}]"
+                assert path == "cam/cameras/1" and k == "cred_secret", f"the secret is also stored at {path}[{k}]"
 
 
 def test_neither_half_of_the_credential_leaves_the_cluster():
@@ -133,12 +133,12 @@ def test_neither_half_of_the_credential_leaves_the_cluster():
     assert "cred_username" not in SPEC.snapshot      # allowed there, and still pointless: nobody reads it
     assert "cred_username" in SPEC.fields and "cred_secret" in SPEC.fields
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.5",
                        "cred_username": "admin", "cred_secret": "Hunter2"})
     ctl.publish_snapshot()
-    snap = published_snapshot(box.objects, "vms")     # every shard, the way М12 reads them
+    snap = published_snapshot(box.objects, "cam")     # every shard, the way М12 reads them
     row = snap["cameras"][0]
     assert "cred_secret" not in row and "cred_username" not in row
     assert "Hunter2" not in json.dumps(snap) and "admin" not in json.dumps(snap)
@@ -186,7 +186,7 @@ def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_s
         pass
 
     # …one stored before the rule (or by another build): said nowhere
-    key = f"vms/cameras/{ok['id']}"
+    key = f"cam/cameras/{ok['id']}"
     items, idx = box.vars.get(key)
     box.vars.as_writer("console", SPEC.acl_console()).put(key, {**items, "source": CRED_QUERIES[0][0]}, cas=idx)
     srv = serve(con, box.resource_root, port=0, wall=box.wall)
@@ -199,9 +199,9 @@ def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_s
         srv.shutdown()
     # the password hidden, the login said: it identifies (`secret_in.login`, the final form)
     assert "Hunter2" not in page and "Hunter2" not in one and "videostream.cgi?usr=admin&pwd=***" in page
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     ctl.publish_snapshot()
-    assert "Hunter2" not in json.dumps(published_snapshot(box.objects, "vms"))
+    assert "Hunter2" not in json.dumps(published_snapshot(box.objects, "cam"))
     for src, _ in CRED_QUERIES:
         assert "Hunter2" not in device_of(src) and "Hunter2" not in shown_source(src) and "Hunter2" not in hide_in_url(src)
         try:
@@ -280,7 +280,7 @@ def _leaks(text) -> bool:
 def test_a_login_in_any_part_of_an_address_is_refused_and_a_stored_one_is_said_nowhere():
     """The twelfth review, blocker 8 — a run: `rtsp://10.0.0.9:554/user=admin_password=…_channel=1_stream=0.sdp`, how
     XMeye/Xiongmai recorders and many cheap cameras take their login, was 201, and the password stood in the reply,
-    `GET /cameras`, the snapshot and the device's key (`device_of`: the heartbeat, `/devices`, `vms/requests/*`); of the
+    `GET /cameras`, the snapshot and the device's key (`device_of`: the heartbeat, `/devices`, `cam/requests/*`); of the
     review's 38 spellings 16 were said as stored (and the product's own detection caught 10 of 38). Pairs are read in
     path segments and in `_` chains now (`secrets._pairs`), a password's name segment gives the next one, the list has
     `pw`, `psd`, `user_id`, `X-Amz-Signature`, `AWSAccessKeyId`, escapes are undone to the end, and a port that is no
@@ -316,16 +316,16 @@ def test_a_login_in_any_part_of_an_address_is_refused_and_a_stored_one_is_said_n
 
     # …one stored before the rule: said nowhere. Every form, in turn, as camera `made[0]`'s source.
     ctl2, rec, m, srv, base = _console(box)
-    key = f"vms/cameras/{made[0]['id']}"
+    key = f"cam/cameras/{made[0]['id']}"
     writer = box.vars.as_writer("console", SPEC.acl_console())
-    snap = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    snap = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     said = 0
     try:
         for src in LOGIN_FORMS:
             items, idx = box.vars.get(key)
             writer.put(key, {**items, "source": src}, cas=idx)
             st, page = _call(base, "GET", "/cameras")
-            st2, cmd = _call(base, "POST", "/requests", {"unit": f"vms/{made[0]['id']}", "action": "output", "port": "1",
+            st2, cmd = _call(base, "POST", "/requests", {"unit": f"cam/{made[0]['id']}", "action": "output", "port": "1",
                                                          "state": "on"})
             snap.publish_snapshot()
             element = ""
@@ -333,14 +333,14 @@ def test_a_login_in_any_part_of_an_address_is_refused_and_a_stored_one_is_said_n
                 resolve(src)
             except ValueError as e:
                 element = str(e)
-            outs = [page, cmd, published_snapshot(box.objects, "vms"), device_of(src), shown_source(src), hide_in_url(src),
+            outs = [page, cmd, published_snapshot(box.objects, "cam"), device_of(src), shown_source(src), hide_in_url(src),
                     mask_secrets([{"source": src}]), source_refusal(src), element]
             assert st == 200 and st2 == 202 and not any(_leaks(json.dumps(o, default=str)) for o in outs), (src, outs)
             said += 1
     finally:
         srv.shutdown()
     assert said == len(LOGIN_FORMS)
-    rows = [box.vars.get(k)[0] for k in box.vars.list("vms/requests/")]
+    rows = [box.vars.get(k)[0] for k in box.vars.list("cam/requests/")]
     assert rows and not _leaks(json.dumps(rows))
 
 
@@ -348,7 +348,7 @@ def test_a_refusal_never_quotes_a_password_and_the_idempotency_copy_keeps_none()
     """The twelfth review, major 16 — a run: `rtsp://admin:Hunter2?x@…` (a password with an unescaped `?`, `#` or `/`)
     is read by `urlsplit` as host `admin`, port `Hunter2`, and the refusal said `…is not an address: Port could not be
     cast to integer value as 'Hunter2'` — in the reply, and in the reply's copy under its `Idempotency-Key`
-    (`vms/idem/*`, 4 of 5). The words name what is wrong and never the value (`secrets.NOT_AN_ADDRESS`), at the spec's
+    (`cam/idem/*`, 4 of 5). The words name what is wrong and never the value (`secrets.NOT_AN_ADDRESS`), at the spec's
     refusal, at `source_refusal` and at the element; and the idempotency copy says every address in a reply as a page
     does (`IdempotencyKeys.store` → `hide_in_reply`), whatever the reply that came to it — the sibling the review did
     not name."""
@@ -368,15 +368,15 @@ def test_a_refusal_never_quotes_a_password_and_the_idempotency_copy_keeps_none()
         assert not _leaks(ev)
     finally:
         srv.shutdown()
-    kept = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]
+    kept = [box.vars.get(k)[0] for k in box.vars.list("cam/idem/")]
     assert len(kept) >= 6 and not _leaks(json.dumps(kept))
 
     # …and whatever reply reaches the copy, it keeps no address as typed.
-    seen = IdempotencyKeys(box.vars.as_writer("console", SPEC.acl_console()), "vms/idem/", box.wall)
+    seen = IdempotencyKeys(box.vars.as_writer("console", SPEC.acl_console()), "cam/idem/", box.wall)
     assert seen.claim("raw") is None
     seen.store("raw", (400, {"detail": "rtsp://admin:Hunter2@h/user=a_password=Hunter2_channel=1 is not taken",
                              "rows": [{"source": "http://h/x?pwd=Hunter2"}]}))
-    assert not _leaks(json.dumps(box.vars.get("vms/idem/raw")[0]))
+    assert not _leaks(json.dumps(box.vars.get("cam/idem/raw")[0]))
     assert seen.claim("raw")[0] == 400
 
 
@@ -488,19 +488,19 @@ def test_an_address_inside_a_parameter_is_an_address_and_a_camera_asks_the_platf
         ok = _call(base, "POST", "/cameras", {"name": "relay", "source": "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs"})
         assert ok[0] == 201 and ok[1]["source"] == "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs"
         # …a stored one (an older build's): said by no reader
-        key = f"vms/cameras/{cam['id']}"
+        key = f"cam/cameras/{cam['id']}"
         writer = box.vars.as_writer("console", SPEC.acl_console())
-        snap = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        snap = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         for src in NESTED_FORMS:
             items, idx = box.vars.get(key)
             writer.put(key, {**items, "source": src}, cas=idx)
             page = _call(base, "GET", "/cameras")[1]
             one = _call(base, "PUT", f"/cameras/{cam['id']}", {"name": "c2"})[1]
             snap.publish_snapshot()
-            assert not _leaks(page) and not _leaks(one) and not _leaks(published_snapshot(box.objects, "vms")), src
+            assert not _leaks(page) and not _leaks(one) and not _leaks(published_snapshot(box.objects, "cam")), src
     finally:
         srv.shutdown()
-    assert box.vars.list("vms/idem/") and not _leaks(json.dumps([box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]))
+    assert box.vars.list("cam/idem/") and not _leaks(json.dumps([box.vars.get(k)[0] for k in box.vars.list("cam/idem/")]))
     for src in NESTED_FORMS:                                     # the sibling door on the same rule: a volume's url
         try:
             declare_volume(Box().vars, {"name": "cold", "kind": "network", "url": src, "quota_bytes": 1})
@@ -515,10 +515,10 @@ def test_an_address_inside_a_parameter_is_an_address_and_a_camera_asks_the_platf
 
 def test_a_host_in_the_path_is_read_for_its_port_and_neither_a_refusal_nor_a_device_key_says_the_password():
     """The thirteenth review, majors 8 and 9 — runs: `driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1` was 400 with the
-    password in the words ("the port in '…:Hunter2…' is not a port"), kept a day in `vms/idem/*`: `driverpack://` names
+    password in the words ("the port in '…:Hunter2…' is not a port"), kept a day in `cam/idem/*`: `driverpack://` names
     its host in the path, where `hide_in_url` did not look for a port. And a row stored before the rules
     (`acme:hunter2/10.0.0.5`, `acme/10.0.0.5&password=hunter2`) kept the password in its device key (`device_of`) — in
-    `POST /requests`, `vms/requests/*`, the heartbeat and `vms/devices/<key>`. Now the host in the path is read for its
+    `POST /requests`, `cam/requests/*`, the heartbeat and `cam/devices/<key>`. Now the host in the path is read for its
     port (`secrets._hosts`) where an address is refused and where it is said, `source_refusal` quotes no address, and
     `device_of` says its key as a page says an address. A key with nothing in it is the key it was."""
     from tests.test_console_gate import _call, _console
@@ -537,16 +537,16 @@ def test_a_host_in_the_path_is_read_for_its_port_and_neither_a_refusal_nor_a_dev
             st, b = _call(base, "POST", "/cameras", {"name": "c", "source": src})
             st2, b2 = _call(base, "PUT", f"/cameras/{cam['id']}", {"source": src})
             assert st == st2 == 400 and not _leaks(b) and not _leaks(b2), (src, b, b2)
-        key = f"vms/cameras/{cam['id']}"
+        key = f"cam/cameras/{cam['id']}"
         writer = box.vars.as_writer("console", SPEC.acl_console())
         for src in HOST_IN_PATH_FORMS:                           # stored by an older build: the device key says none
             items, idx = box.vars.get(key)
             writer.put(key, {**items, "source": src}, cas=idx)
-            st, cmd = _call(base, "POST", "/requests", {"unit": f"vms/{cam['id']}", "action": "output", "port": "1", "state": "on"})
+            st, cmd = _call(base, "POST", "/requests", {"unit": f"cam/{cam['id']}", "action": "output", "port": "1", "state": "on"})
             assert st == 202 and not _leaks(cmd) and not _leaks(_call(base, "GET", "/cameras")[1]), (src, cmd)
     finally:
         srv.shutdown()
-    kept = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/") + box.vars.list("vms/requests/")]
+    kept = [box.vars.get(k)[0] for k in box.vars.list("cam/idem/") + box.vars.list("cam/requests/")]
     assert kept and not _leaks(json.dumps(kept))
 
 
@@ -617,7 +617,7 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
 
 def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_the_password():
     """The thirteenth review, major 7 — a run: the camera's row held `cred_secret` sealed, and the idempotency claim
-    beside it (`vms/idem/<key>`, a day) held the sha256 of the raw body; `admin123` and `qwerty2024` came back from it
+    beside it (`cam/idem/<key>`, a day) held the sha256 of the raw body; `admin123` and `qwerty2024` came back from it
     with a dictionary of seven words. Now, with the cluster's key ring, the claim holds an HMAC under a key derived
     from the ring's (`Sealer.mac`), which the store never sees; without one, the sha256 of the body as a page says it
     (`*_secret` masked, addresses hidden). Either way the dictionary finds nothing; the same body under the same key is
@@ -675,8 +675,8 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
             assert send("PUT", "/cameras/1", {"cred_secret": "qwerty2024"}, "s2")[0] == 200
         finally:
             srv.shutdown()
-        row = box.vars.get("vms/cameras/1")[0]
-        claims = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]
+        row = box.vars.get("cam/cameras/1")[0]
+        claims = [box.vars.get(k)[0] for k in box.vars.list("cam/idem/")]
         assert is_sealed(row["cred_secret"]) == keyed and len(con.cameras()) == 1
         assert all(("mac" in c) == keyed and "digest" in c and "sha256" not in c for c in claims), claims
         assert reversed_(claims, row) == [], reversed_(claims, row)
@@ -685,13 +685,13 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
     k1, k2 = os.urandom(32), os.urandom(32)
     box = Box()
     w = box.vars.as_writer("console", SPEC.acl_console())
-    a = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k1": k1}, "k1"))
-    ahead = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k1": k1, "k2": k2}, "k2"), sleep=lambda s: None)
-    other = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k3": k2}, "k3"), sleep=lambda s: None)
+    a = IdempotencyKeys(w, "cam/idem/", box.wall, sealer=Sealer({"k1": k1}, "k1"))
+    ahead = IdempotencyKeys(w, "cam/idem/", box.wall, sealer=Sealer({"k1": k1, "k2": k2}, "k2"), sleep=lambda s: None)
+    other = IdempotencyKeys(w, "cam/idem/", box.wall, sealer=Sealer({"k3": k2}, "k3"), sleep=lambda s: None)
     body = json.dumps({"name": "gate", "cred_secret": "admin123"}).encode()
     assert a.claim("r1", "anna", body) is None
     a.store("r1", (201, {"id": 1}))
-    assert box.vars.get("vms/idem/r1")[0]["mac"].startswith("k1:")
+    assert box.vars.get("cam/idem/r1")[0]["mac"].startswith("k1:")
     assert ahead.claim("r1", "anna", body) == (201, {"id": 1})                  # the same request, by the kid it names
     assert ahead.claim("r1", "anna", body + b" ")[0] == 422                      # another body
     # …and a ring whose kid was REMOVED within the claim's day (the product's r28-secrets2): the claim's `mac` is one no
@@ -700,8 +700,8 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
     assert other.claim("r1", "anna", body) == (201, {"id": 1})
     assert other.claim("r1", "anna", json.dumps({"name": "yard", "cred_secret": "admin123"}).encode())[0] == 422
     assert other.claim("r1", "boris", body)[0] == 422                            # another caller: never
-    items, idx = box.vars.get("vms/idem/r1")
-    box.vars.put("vms/idem/r1", {k: v for k, v in items.items() if k != "digest"}, cas=idx)
+    items, idx = box.vars.get("cam/idem/r1")
+    box.vars.put("cam/idem/r1", {k: v for k, v in items.items() if k != "digest"}, cas=idx)
     assert other.claim("r1", "anna", body)[0] == 422
 
 
@@ -791,7 +791,7 @@ def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
     from tests.test_console_gate import Tokens, _call, _console
     from w2cplatform.access import TRUST_KEYS
     box = Box()
-    ctl, rec, m, srv, base = _console(box, Tokens({"one": [("admin", "vms/2", ())], "admin": [("admin", None, ())]}))
+    ctl, rec, m, srv, base = _console(box, Tokens({"one": [("admin", "cam/2", ())], "admin": [("admin", None, ())]}))
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
         box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the gate is shut to strangers
@@ -811,12 +811,12 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
     """The thirteenth review, minor: the page drew `cred_secret` as `type="text"` — the password on the screen while it
     is typed, where `access_secret` beside it was a password field. A camera's fields are the platform's console module's
     general form now (`fieldInput` in `w2cplatform/console.js`: a secret is a password field, empty, «задан» when one
-    is set — `tests/console/module-form.test.js`), and the VMS's page (`vms/vms.shell.html`) draws no field of a spec
+    is set — `tests/console/module-form.test.js`), and the VMS's page (`vms/cam.shell.html`) draws no field of a spec
     itself; the one secret it asks — a network volume's `access_secret`, in its declaring dialog — is a password field
     with no value: filled with the row's `***` it would save `***` as the bucket's key."""
     import os
     import re
-    page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "vms.shell.html"), encoding="utf-8").read()
+    page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "cam.shell.html"), encoding="utf-8").read()
     assert "function input(" not in page and "fillEdit" not in page and "cred_secret" not in page
     asked = re.findall(r"\{name:\"(\w+_secret)\"[^}]*\}", page)
     assert asked == ["access_secret"], asked
@@ -826,7 +826,7 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
 
 def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_from_the_spec():
     """The boundary's step 4: the name lists, the XMeye chain, a password's name segment, DriverPack's host in the path
-    and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `vms.subsystem.yaml` now, with
+    and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `cam.subsystem.yaml` now, with
     `schemes` and `credentials`. Without those rules the platform refuses an `@`, a port that is no number and its few
     common names of a credential (`COMMON_RULES`: `pwd`, `token`…), and no vendor's spelling — the
     forms below stand; with them every one is refused, its password hidden, and the refusal names `cred_secret` — and

@@ -23,7 +23,7 @@
 #                  deleted by age: `retention_days` is a CEILING on what the doors show (`visible_from`), and
 #                  how deep the archive really is, is read off the index (`depth_days`)
 #
-# Events are not here. They stay what they were — buckets of lines on the resource's tree, `vms/<cam>/` and
+# Events are not here. They stay what they were — buckets of lines on the resource's tree, `cam/<cam>/` and
 # `rec/<name>/` (`event_log`, the platform's `EventLog`) — a file tree the platform retains, mirrors and
 # indexes, on the server of whoever wrote them.
 # ================================================================================================
@@ -44,7 +44,7 @@ from vms.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailabl
 from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
-EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
+EVENTS_SUB = "cam"   # the worker's tree: the camera's event buckets
 STITCH = 2.0         # seconds: two spans closer than this are one run — the seam between two sequences is no gap
 # How a volume is formatted, unless its row says otherwise: the block, and the read size the engine cuts
 # sequences by. A block must hold a sequence — the read size plus up to one group of pictures — or a long group
@@ -73,7 +73,7 @@ TIMELINE_WINDOW = 5 * 86400 * 1000    # how much of a stream one timeline questi
 
 def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog:
     """The camera's event log on this resource: what the worker holding the
-    camera's epoch writes into, recording or not — `vms/<cam>/`, not `rec/`."""
+    camera's epoch writes into, recording or not — `cam/<cam>/`, not `rec/`."""
     return EventLog(root, EVENTS_SUB, str(cam), epoch, bucket_seconds)
 
 

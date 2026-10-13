@@ -170,7 +170,7 @@ def test_each_of_the_five_operations_runs_in_the_signer_and_refuses_while_a_hand
     h.run_pass()                                                          # the view read every member: backups have keepers
     h.term.frozen_for = "cam-SN1"                                         # a handover is under way
     del wrote[:]
-    ops = [lambda: h.shared(anna, {"base_rev": 0, "shared": {"vms": {"retention_days": 3}}}),
+    ops = [lambda: h.shared(anna, {"base_rev": 0, "shared": {"cam": {"retention_days": 3}}}),
            lambda: h.people("POST", "users", anna, {"name": "vera", "password": "a long password"}),
            lambda: h.people("PUT", "break-glass/cam-SN1", anna, {"password": "glass glass glass"}),
            lambda: h.handover(anna, {"to": "cam-SN1"}),
@@ -282,7 +282,7 @@ def test_every_output_of_the_holders_pass_has_one_writer_and_it_is_the_signer():
     base = f"http://127.0.0.1:{door.server_address[1]}"
     try:
         for path in ("/domain", "/domain/alarms", "/domain/backup", "/domain/members", "/domain/grants", "/domain/keys",
-                     "/domain/shared", "/domain/topology", "/domain/causes", "/domain/vms/cameras", "/healthz"):
+                     "/domain/shared", "/domain/topology", "/domain/causes", "/domain/cam/cameras", "/healthz"):
             assert _call(base, "GET", path)[0] == 200, path
         assert console_wrote == []
         view = _call(base, "GET", "/domain")[1]
@@ -341,7 +341,7 @@ def test_the_stores_no_is_answered_403_in_words_never_a_dropped_connection():
 
         def put(self, key, *a, **kw):
             if key.startswith("domain/grants/"):
-                raise Forbidden("domainconsole may not read domain/vms/stream-clients/anna")
+                raise Forbidden("domainconsole may not read domain/cam/stream-clients/anna")
             return self.inner.put(key, *a, **kw)
 
         def list(self, prefix):

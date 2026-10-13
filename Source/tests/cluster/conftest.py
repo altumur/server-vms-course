@@ -280,13 +280,13 @@ class Cluster:
 
     def worker(self, server: str, capacity: int = 50, actuator=None, name: str | None = None, spare_for=None,
                instance: str | None = None, **kw) -> VmsWorker:
-        """`vms-vmsworker` on `server` — `w-<server>-1`, or a spare for `spare_for` (`vms-vmsworker-spare-<n>`)."""
+        """`vms-camworker` on `server` — `w-<server>-1`, or a spare for `spare_for` (`vms-camworker-spare-<n>`)."""
         name = None if spare_for is not None else (name or f"w-{server}-1")
         env = self.env(server, name, **({"SPARE_FOR": spare_for} if spare_for is not None else {}))
         if instance:
             env["INSTANCE_ID"] = instance
-        who = f"vmsworker {name or 'spare'} on {server}"
-        v = self.door("vmsworker", who)
+        who = f"camworker {name or 'spare'} on {server}"
+        v = self.door("camworker", who)
         from vms.__main__ import make_worker
         return make_worker(v, self.objects_on(server, v, who), actuator or FakeActuator(), env=env,
                            clock=self.clock, wall=self.wall, capacity=capacity, **kw)
@@ -307,8 +307,8 @@ class Cluster:
         return {"resource_root": self.servers[server].archive, "obsd": obsd_session(f"rec-{name}-{self.pids}"),
                 "default_quota": TEST_QUOTA, "block": TEST_BLOCK, "read": TEST_READ}
 
-    def controller(self, server: str = "srv-a", who: str | None = None, role: str = "vmscontroller", **kw):
-        """`w2c-controller@vms` on `server` (a unit on every server, safe at two)."""
+    def controller(self, server: str = "srv-a", who: str | None = None, role: str = "camcontroller", **kw):
+        """`w2c-controller@cam` on `server` (a unit on every server, safe at two)."""
         from vms.controller import VmsController
         who = who or f"{role} on {server}"
         v = self.door(role, who)

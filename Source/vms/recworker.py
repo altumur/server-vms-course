@@ -606,7 +606,7 @@ class RecWorker(VmsWorker):
         # fell over during the outage restarts it on the source it read last (the review's second pass, blocker 4:
         # the camera's worker is still there; what is away is the book). A camera never read stays unstartable.
         try:
-            found = self._look().holder("vms", cam, self.wall(), phase="running", field="live_url")
+            found = self._look().holder("cam", cam, self.wall(), phase="running", field="live_url")
         except OSError as e:
             self.store_errors += 1
             last = self.last_source.get(str(cam))
@@ -659,7 +659,7 @@ class RecWorker(VmsWorker):
                         f"camera {cam}'s last source {last[1]} stands" if last else f"camera {cam} was never read there")
             return last
         except (NotResolvable, Forbidden) as e:
-            # …and a store that refuses this recorder the book is said as it is: its role's reads lack `domain/vms/sources`
+            # …and a store that refuses this recorder the book is said as it is: its role's reads lack `domain/cam/sources`
             # (the scenario's F3 — the rights are the platform's, from the spec's `worker.reads`)
             why = str(e) if isinstance(e, NotResolvable) else f"this recorder may not read the source book {SOURCES} ({e})"
             if self.unresolved.get(cam) != why:
@@ -692,8 +692,8 @@ class RecWorker(VmsWorker):
         if last is None or holder is None:
             return None
         try:
-            hb = self._look().heard("vms").get(holder)
-            if hb is not None and self.eyes.fresh(f"vms/heartbeats/{holder}", hb.token, 45.0, hb.ts, "vms"):
+            hb = self._look().heard("cam").get(holder)
+            if hb is not None and self.eyes.fresh(f"cam/heartbeats/{holder}", hb.token, 45.0, hb.ts, "cam"):
                 return None                              # it speaks, and does not say it runs the camera
             placed, _ = self.vars.get(SPEC.sub.config("placement", cam))
             if not placed or placed.get("worker") != holder:
@@ -1064,7 +1064,7 @@ class RecWorker(VmsWorker):
         if str(row.get("cam", "")).startswith("ref:"):
             ref = str(row["cam"])[4:]                            # a camera of ANOTHER cluster, by the domain's name — a
         else:                                                    # backup kept here for another server's primary (М11 lesson 1)
-            cam, _ = self.vars.get(f"vms/cameras/{row['cam']}")
+            cam, _ = self.vars.get(f"cam/cameras/{row['cam']}")
             ref = str((cam or {}).get("ref") or "")
         if not ref or ref not in items:
             return None
@@ -2503,7 +2503,7 @@ class RecWorker(VmsWorker):
     # `(cam, playback_url, coverage)` for a recording whose camera is held by a worker that serves the
     # device's own archive — found the way everything is found here: in the holder's heartbeat.
     def device_source(self, cam) -> tuple[str, dict] | None:
-        found = self._look().holder("vms", cam, self.wall(), field="playback_url")
+        found = self._look().holder("cam", cam, self.wall(), field="playback_url")
         if found is None or not found[2].get("coverage"):
             return None                       # no phase: a channel held only for its archive answers too
         from .config import local_only

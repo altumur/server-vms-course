@@ -108,7 +108,7 @@ def a_worker_may_not_write_a_camera() -> str:
     w = s.worker("srv-a")
     mark = s.log.mark()
     try:
-        w.vars.put("vms/cameras/1", {"name": "mine now"})
+        w.vars.put("cam/cameras/1", {"name": "mine now"})
     except Exception:                                                    # noqa: BLE001 — the point
         pass
     return s.log.render(since=mark)
@@ -190,11 +190,11 @@ def a_spare_takes_an_offer() -> str:
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
     mark = s.log.mark()
     host.placement_pass(ctl)                                                   # full: the ninth waits — and an offer is written
-    spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemctl start vms-vmsworker-spare@1`, `SPARE_FOR=` in its file
+    spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemctl start vms-camworker-spare@1`, `SPARE_FOR=` in its file
     spare.heartbeat_once()
     host.placement_pass(ctl)
     spare.reconcile_once()
-    spare.release_slot()                                               # `systemctl stop vms-vmsworker-spare@1`: SIGTERM
+    spare.release_slot()                                               # `systemctl stop vms-camworker-spare@1`: SIGTERM
     con.delete_camera(1); con.delete_camera(2)                         # room to move into
     host.placement_pass(ctl)
     return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
@@ -254,8 +254,8 @@ def what_the_spares_script_reads() -> str:
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4", "labels": ["vlan:cctv-b"]})
     host.placement_pass(ctl)
     text = SpecConsole(s.console()).metrics_text()
-    series = ("vms_workers_live", "vms_worker_load", "vms_workers_needed", "vms_units_short", "vms_spare_offers",
-              "vms_server_labels")
+    series = ("cam_workers_live", "cam_worker_load", "cam_workers_needed", "cam_units_short", "cam_spare_offers",
+              "cam_server_labels")
     keep = [l for l in text.splitlines()
             if l.replace("# TYPE ", "").split("{")[0].split(" ")[0] in series]
     return "GET /metrics\n" + "\n".join(keep) + "\n"
@@ -281,16 +281,16 @@ def who_may_write_what() -> str:
     spec (`acl_worker`, `acl_controller`, `acl_console`); the 403 is the daemon's."""
     s = Stand()
     tries = [
-        ("vmsworker", "vmsworker w-srv-a-1 on srv-a", [("vms/epoch/7", {"epoch": "1"}),
-                                                       ("vms/placement/7", {"worker": "w-srv-a-1"})]),
+        ("camworker", "camworker w-srv-a-1 on srv-a", [("cam/epoch/7", {"epoch": "1"}),
+                                                       ("cam/placement/7", {"worker": "w-srv-a-1"})]),
         ("recworker", "recworker r-srv-a-1 on srv-a", [("rec/holds/disks-a", {"holder": "srv-a:4102:001006"}),
                                                        ("rec/recordings/7", {"cam": "7"})]),
-        ("vmscontroller", "vmscontroller on srv-a", [("vms/placement/7", {"worker": "w-srv-a-1", "reason": "…"}),
-                                                     ("vms/cameras/7", {"name": "moved"})]),
-        ("console", "console on srv-a", [("vms/cameras/7", {"name": "north-gate"}),
-                                         ("vms/workers/w-srv-a-1", {"units": "7"})]),
+        ("camcontroller", "camcontroller on srv-a", [("cam/placement/7", {"worker": "w-srv-a-1", "reason": "…"}),
+                                                     ("cam/cameras/7", {"name": "moved"})]),
+        ("console", "console on srv-a", [("cam/cameras/7", {"name": "north-gate"}),
+                                         ("cam/workers/w-srv-a-1", {"units": "7"})]),
         ("resource", "resource on srv-a", [("platform/doors/srv-a", {"url": "http://srv-a:8090", "since": "0"}),
-                                           ("vms/cameras/7", {"name": "mine"})]),
+                                           ("cam/cameras/7", {"name": "mine"})]),
     ]
     for role, who, writes in tries:
         v = s.door(role, who)
@@ -399,17 +399,17 @@ def objects_across_servers() -> str:
     mark = s.log.mark()
     w.heartbeat_once()
     seen = ctl.workers_seen()
-    made = w.objects.put_new("vms/commands/r-17", b'{"instance": "srv-a:4101:001005"}')
+    made = w.objects.put_new("cam/commands/r-17", b'{"instance": "srv-a:4101:001005"}')
     s.servers["srv-a"].down = True
     later = ctl.workers_seen()
     keep = ("objects", "file", "store")
-    calls = [c for c in s.log.calls[mark:] if c.who.startswith(("vmsworker", "vmscontroller")) and c.kind in keep
+    calls = [c for c in s.log.calls[mark:] if c.who.startswith(("camworker", "camcontroller")) and c.kind in keep
              and (c.kind != "store" or "commands" in c.target or "commands" in str(c.body))]
     s.log.calls[mark:] = calls
     # The heartbeat holds the box's paths, and the trace shows them under `/data`: its size is shown as that object's
     # would be, not as long as wherever this run's temp dir happens to be (a run root's pid has 4 digits or 5).
     hb, = [open(os.path.join(d, f), "rb").read() for d, _, fs in os.walk(os.path.join(s.root, "srv-a")) for f in fs
-           if os.path.join(d, f).endswith(os.path.join("vms", "heartbeats", "w-srv-a-1"))]
+           if os.path.join(d, f).endswith(os.path.join("cam", "heartbeats", "w-srv-a-1"))]
     real, shown = len(hb), len(hb.replace(s.root.encode(), b"/data"))
     for c in calls:
         if isinstance(c.answer, dict):
@@ -428,11 +428,11 @@ def _events_site():
     from tests.cluster.test_lesson3_events import _observe
     s = Stand()
     t = s.wall() - 7200
-    _observe(s, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")          # the VMS worker, camera 7, before the failover
-    _observe(s, "srv-a", "vms", "7", 3, t + 40, "silent")
-    _observe(s, "srv-b", "vms", "7", 4, t + 1205, "motion")                      # after it: next epoch, other server
-    _observe(s, "srv-c", "det", "d-12", 1, t + 30, "person", of="vms/7", cam=7, score=0.9)  # a detector ABOUT camera 7, on a GPU server
-    _observe(s, "srv-a", "vms", "7", 3, t + 6800, "motion")                      # in srv-a's OPEN bucket
+    _observe(s, "srv-a", "cam", "7", 3, t + 12, "motion", zone="gate")          # the VMS worker, camera 7, before the failover
+    _observe(s, "srv-a", "cam", "7", 3, t + 40, "silent")
+    _observe(s, "srv-b", "cam", "7", 4, t + 1205, "motion")                      # after it: next epoch, other server
+    _observe(s, "srv-c", "det", "d-12", 1, t + 30, "person", of="cam/7", cam=7, score=0.9)  # a detector ABOUT camera 7, on a GPU server
+    _observe(s, "srv-a", "cam", "7", 3, t + 6800, "motion")                      # in srv-a's OPEN bucket
     return s, t
 
 
@@ -463,10 +463,10 @@ def events_merged() -> str:
     for name in rs:
         out.append(f"{name}: {rs[name].index.listing()}")
     m = _merged(s)
-    out += ["", "# GET /events?unit=vms/7 on the console — merged from every live resource",
-            _json(_short(m.query(t, t + 7200, unit="vms/7", current_epochs={("vms", "7"): 4})))]
+    out += ["", "# GET /events?unit=cam/7 on the console — merged from every live resource",
+            _json(_short(m.query(t, t + 7200, unit="cam/7", current_epochs={("cam", "7"): 4})))]
     s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    out += ["", "# srv-a has been silent for 60 s", _json(_short(m.query(t, t + 7200, unit="vms/7", current_epochs={("vms", "7"): 4})))]
+    out += ["", "# srv-a has been silent for 60 s", _json(_short(m.query(t, t + 7200, unit="cam/7", current_epochs={("cam", "7"): 4})))]
     return "\n".join(out) + "\n"
 
 
@@ -490,14 +490,14 @@ def the_events_mirror() -> str:
     for name in rs:
         out.append(f"{name} index -> {rs[name].index.listing()}")
     m = _merged(s)
-    out += ["", "# srv-a answers: its own events, the open bucket included", _json(_short(m.query(t, t + 7200, unit="vms/7")))]
+    out += ["", "# srv-a answers: its own events, the open bucket included", _json(_short(m.query(t, t + 7200, unit="cam/7")))]
     s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    out += ["", "# srv-a silent: its closed buckets, from srv-b's copy", _json(_short(m.query(t, t + 7200, unit="vms/7")))]
+    out += ["", "# srv-a silent: its closed buckets, from srv-b's copy", _json(_short(m.query(t, t + 7200, unit="cam/7")))]
     shutil.rmtree(s.servers["srv-a"].archive); os.makedirs(s.servers["srv-a"].archive)
     rs["srv-a"].heartbeat()
     out += ["", f"# srv-a back with an EMPTY disk: restore -> {rs['srv-a'].restore()}"]
     rs["srv-a"].heartbeat()
-    out += [_json(_short(m.query(t, t + 7200, unit="vms/7")))]
+    out += [_json(_short(m.query(t, t + 7200, unit="cam/7")))]
     return "\n".join(out) + "\n"
 
 
@@ -628,7 +628,7 @@ def two_controllers_one_camera() -> str:
     first = {"done": False}
 
     def racing_put(path, items, cas=None):
-        if path == "vms/placement/1" and not first["done"]:
+        if path == "cam/placement/1" and not first["done"]:
             first["done"] = True
             b.place(1)                                               # B gets there between A's read and A's write
         return put(path, items, cas)
@@ -649,7 +649,7 @@ def where_is_camera_7() -> str:
         con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
     ctl.ensure_placed()
     mark = s.log.mark()
-    d = Directory(s.door("console", "console on srv-a"), "vms", ttl=5.0, clock=s.clock)
+    d = Directory(s.door("console", "console on srv-a"), "cam", ttl=5.0, clock=s.clock)
     answers = {i: d.where(i) for i in range(1, 10)}
     return s.log.render(since=mark) + f"\n# where(1..9) = {answers}; scans = {d.scans}\n"
 
@@ -667,7 +667,7 @@ def the_snapshot() -> str:
     s.log.objects = True
     mark = s.log.mark()
     ctl.publish_snapshot()
-    shards = {k: len(ctl.objects.local.get(k) or b"") for k in ctl.objects.local.list("vms/snapshot/")}
+    shards = {k: len(ctl.objects.local.get(k) or b"") for k in ctl.objects.local.list("cam/snapshot/")}
     return (s.log.render(since=mark, kinds=("file",))
             + f"\n# on srv-a, /data/platform/objects: {shards}\n")
 

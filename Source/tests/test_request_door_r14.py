@@ -27,7 +27,7 @@ TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
 
 def _spec(key: bool = True, per_person: bool = True):
     """testsub2 as its file says it, or — built here, the spec's bytes are «Паритет»'s — with the body's `id` naming a
-    request (no `key`), as `vms.subsystem.yaml` names one, and an `id` and a `note` in its schema."""
+    request (no `key`), as `cam.subsystem.yaml` names one, and an `id` and a `note` in its schema."""
     if key and per_person:
         return testsub2()
     testsub2()

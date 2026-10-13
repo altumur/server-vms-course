@@ -1,16 +1,16 @@
-# vmsworker w-srv-a-1 on srv-a → the resource on srv-a, http://srv-a:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camworker w-srv-a-1 on srv-a → the resource on srv-a, http://srv-a:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 404
 
-# vmsworker w-srv-a-1 on srv-a → its own files on srv-a
-PUT vms/heartbeats/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → its own files on srv-a
+PUT cam/heartbeats/w-srv-a-1
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=cam/heartbeats/&scope=cluster
 → 200 {
   "server": "srv-b",
   "objects": {
-    "vms/heartbeats/w-srv-a-1": {
+    "cam/heartbeats/w-srv-a-1": {
       "written": 1757500000.0,
       "server": "srv-a",
       "size": 478
@@ -18,22 +18,22 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
   }
 }
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 200 {"bytes": 478, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "objects/vms/commands/r-17", "cas": "", "items": {
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "objects/cam/commands/r-17", "cas": "", "items": {
   "data": "{\"instance\": \"srv-a:4101:001005\"}"
 }}
 → 200 {"index": 1005}
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=cam/heartbeats/&scope=cluster
 → 200 {"server": "srv-b", "objects": {}, "missing": ["srv-a"]}
 
-# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
-GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+# camcontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 → 404 {"X-Missing": "srv-a"}
 
 # workers_seen() on srv-b = ['w-srv-a-1']; the mark made: True

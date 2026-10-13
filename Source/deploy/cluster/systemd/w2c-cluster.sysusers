@@ -10,7 +10,7 @@
 # name as its socket's (`vms-<role>` for a worker, the platform's `w2c-<role>`):
 # a unit joins its own and opens no other socket; the daemon chowns every socket to its group, so configstore is a
 # member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in. The signer's
-# tokens socket has a group of its own, `vms-vmsdomaintokens` (ADR-0031: `<deployment>-<sub>domaintokens`), and no `m`
+# tokens socket has a group of its own, `vms-camdomaintokens` (ADR-0031: `<deployment>-<sub>domaintokens`), and no `m`
 # line: its one member is the VMS's domain worker, by its unit's `SupplementaryGroups=` — not configstore, not `vms`.
 # `w2c-spares.sh` (`install.sh --spares`) runs as `w2c` too (ADR 0030), whom polkit lets `systemctl start` a spare
 # template's instance and nothing else (`w2c-spares.rules`; the product's cross-check, 4 Oct: the script ran as root).
@@ -28,9 +28,9 @@ g w2c-domain        -
 g w2c-domainconsole -
 g w2c-domainagent   -
 g w2c-console       -
-g w2c-vmscontroller -
+g w2c-camcontroller -
 g w2c-reccontroller -
-g vms-vmsworker     -
+g vms-camworker     -
 g vms-recworker     -
 g w2c-autocontroller -
 g vms-autoworker -
@@ -42,16 +42,16 @@ g w2c-livecontroller -
 g vms-liveworker -
 g w2c-surveycontroller -
 g vms-surveyworker -
-g vms-vmsdomain   -
-g vms-vmsdomaintokens -
+g vms-camdomain   -
+g vms-camdomaintokens -
 m configstore w2c-resource
 m configstore w2c-domain
 m configstore w2c-domainconsole
 m configstore w2c-domainagent
 m configstore w2c-console
-m configstore w2c-vmscontroller
+m configstore w2c-camcontroller
 m configstore w2c-reccontroller
-m configstore vms-vmsworker
+m configstore vms-camworker
 m configstore vms-recworker
 m configstore w2c-autocontroller
 m configstore vms-autoworker
@@ -63,4 +63,4 @@ m configstore w2c-livecontroller
 m configstore vms-liveworker
 m configstore w2c-surveycontroller
 m configstore vms-surveyworker
-m configstore vms-vmsdomain
+m configstore vms-camdomain

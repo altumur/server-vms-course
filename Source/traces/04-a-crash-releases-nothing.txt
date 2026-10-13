@@ -1,9 +1,9 @@
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/list?prefix=vms/placement/
-→ 200 {"keys": {"vms/placement/1": 1007}}
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/list?prefix=cam/placement/
+→ 200 {"keys": {"cam/placement/1": 1007}}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/get?key=vms/placement/1
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/get?key=cam/placement/1
 → 200 {
   "items": {
     "worker": "w-srv-c-1",
@@ -14,8 +14,8 @@ GET /v1/get?key=vms/placement/1
   "index": 1007
 }
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/get?key=vms/cameras/1
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/get?key=cam/cameras/1
 → 200 {
   "items": {
     "id": "1",
@@ -35,12 +35,12 @@ GET /v1/get?key=vms/cameras/1
   "index": 1005
 }
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/list?prefix=vms/slots/
-→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/list?prefix=cam/slots/
+→ 200 {"keys": {"cam/slots/w-srv-c-1": 1006}}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/get?key=vms/slots/w-srv-c-1
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/get?key=cam/slots/w-srv-c-1
 → 200 {
   "items": {
     "holder": "srv-c:4101:001005",
@@ -52,24 +52,24 @@ GET /v1/get?key=vms/slots/w-srv-c-1
   "index": 1006
 }
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=platform/doors/srv-c
 → 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=platform/drain
 → 200 {"items": null, "index": ""}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/list?prefix=platform/decommission/
 → 200 {"keys": {}}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/list?prefix=vms/slots/
-→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/list?prefix=cam/slots/
+→ 200 {"keys": {"cam/slots/w-srv-c-1": 1006}}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-GET /v1/get?key=vms/slots/w-srv-c-1
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+GET /v1/get?key=cam/slots/w-srv-c-1
 → 200 {
   "items": {
     "holder": "srv-c:4101:001005",
@@ -81,20 +81,20 @@ GET /v1/get?key=vms/slots/w-srv-c-1
   "index": 1006
 }
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=platform/decommission/srv-c
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/list?prefix=vms/slots/
-→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/list?prefix=cam/slots/
+→ 200 {"keys": {"cam/slots/w-srv-c-1": 1006}}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-c-1
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-c-1
 → 200 {
   "items": {
     "holder": "srv-c:4101:001005",
@@ -106,8 +106,8 @@ GET /v1/get?key=vms/slots/w-srv-c-1
   "index": 1006
 }
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-c-1
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-c-1
 → 200 {
   "items": {
     "holder": "srv-c:4101:001005",
@@ -119,8 +119,8 @@ GET /v1/get?key=vms/slots/w-srv-c-1
   "index": 1006
 }
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1006, "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "false",
@@ -129,12 +129,12 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items":
 }}
 → 200 {"index": 1010}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/workers/w-srv-c-1
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/get?key=cam/workers/w-srv-c-1
 → 200 {"items": {"units": "1", "rev": "1"}, "index": 1008}
 
-# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/cameras/1
+# camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
+GET /v1/get?key=cam/cameras/1
 → 200 {
   "items": {
     "id": "1",

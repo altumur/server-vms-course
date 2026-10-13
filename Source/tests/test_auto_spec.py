@@ -17,10 +17,10 @@ from tests.vmsconftest import Box, door_site
 
 
 DOOR = {"name": "door-on-badge",
-        "when": [{"sub": "vms", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}},
+        "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}},
                  {"sub": "det", "kind": "motion", "unit": "7-motion"}],
         "within": 30,
-        "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500},
+        "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500},
                  {"sub": "rec", "action": "record", "cam": "7", "minutes": 10, "archive": "cold"}]}
 
 
@@ -37,7 +37,7 @@ def _evaluator(box, *names):
 
     class _Quiet:
         def query(self, *a, **kw): return {"events": [], "state": "live", "truncated": False}
-    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
+    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
                       box.objects, index=_Quiet(), clock=box.clock, wall=box.wall, server="srv-a",
                       resource_root=box.resource_root, env={})
 
@@ -73,19 +73,19 @@ def test_what_the_platform_checks_and_what_it_does_not():
         assert "when" in str(e), e
 
     try:
-        con.create({**DOOR, "name": "huge", "when": [{"sub": "vms", "kind": "x", "match": {"a": "b" * 5000}}]})
+        con.create({**DOOR, "name": "huge", "when": [{"sub": "cam", "kind": "x", "match": {"a": "b" * 5000}}]})
         raise AssertionError("a single field ate the row's ceiling")
     except Refused as e:
         assert "ceiling" in str(e)
 
     assert AUTO_SPEC.fields["when"].type == "json" and AUTO_SPEC.fields["when"].schema is not None
     try:
-        con.create({**DOOR, "name": "nonsense", "when": [{"sub": "vms", "kind": "io.input", "colour": "red"}],
+        con.create({**DOOR, "name": "nonsense", "when": [{"sub": "cam", "kind": "io.input", "colour": "red"}],
                     "within": 0})
         raise AssertionError("a trigger with an invented key was accepted")
     except Refused as e:
         assert "when[0] has no key 'colour'" in str(e), str(e)
-    con.create({**DOOR, "name": "no-such-camera", "when": [{"sub": "vms", "kind": "io.input", "unit": "99"}], "within": 0})
+    con.create({**DOOR, "name": "no-such-camera", "when": [{"sub": "cam", "kind": "io.input", "unit": "99"}], "within": 0})
     # …taken: whether camera 99 exists is not the shape — the evaluator says it (`test_a_scenario_is_checked_…`)
 
 
@@ -96,10 +96,10 @@ def test_every_refusal_at_the_door_says_where_and_what_would_be_right():
     cases = [
         ({"when": [], "within": 0}, "when has at least 1 entry"),
         ({"when": [DOOR["when"][0]] * 5, "within": 30}, "when has at most 4 entries"),
-        ({"then": [{"sub": "vms", "action": "reboot", "unit": "1"}]}, "then[0] fits none of what it may be"),
+        ({"then": [{"sub": "cam", "action": "reboot", "unit": "1"}]}, "then[0] fits none of what it may be"),
         ({"then": [{"sub": "rec", "action": "record", "cam": "7"}]}, "then[0] needs 'minutes'"),
-        ({"then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1, "volume": "x"}]}, "then[0] has no key 'volume'"),
-        ({"when": [{"sub": "vms"}], "within": 0}, "when[0] needs 'kind'"),
+        ({"then": [{"sub": "cam", "action": "output", "unit": "1", "port": 1, "volume": "x"}]}, "then[0] has no key 'volume'"),
+        ({"when": [{"sub": "cam"}], "within": 0}, "when[0] needs 'kind'"),
         ({"rate_per_minute": 9999}, "rate_per_minute is at most 600"),
         ({"valid_for": 2}, "valid_for is at least 5"),
         ({"within": 99999}, "within is at most 3600"),
@@ -143,22 +143,22 @@ def test_matching_is_equality_and_nothing_else():
     """The evaluator's half of the language, beside the catalogue on purpose:
     two files would drift, and the drift would look like a scenario that never
     fires — the hardest kind of bug to see, because nothing happens."""
-    ev = {"subsystem": "vms", "unit": "vms/12", "kind": "io.input", "t": 100.0, "port": "1", "value": "closed"}
-    assert fires({"sub": "vms", "kind": "io.input"}, ev)
-    assert fires({"sub": "vms", "kind": "io.input", "unit": "12"}, ev)
-    assert fires({"sub": "vms", "kind": "io.input", "match": {"port": 1}}, ev)       # numbers compare as text
+    ev = {"subsystem": "cam", "unit": "cam/12", "kind": "io.input", "t": 100.0, "port": "1", "value": "closed"}
+    assert fires({"sub": "cam", "kind": "io.input"}, ev)
+    assert fires({"sub": "cam", "kind": "io.input", "unit": "12"}, ev)
+    assert fires({"sub": "cam", "kind": "io.input", "match": {"port": 1}}, ev)       # numbers compare as text
     assert not fires({"sub": "det", "kind": "io.input"}, ev)
-    assert not fires({"sub": "vms", "kind": "motion"}, ev)
-    assert not fires({"sub": "vms", "kind": "io.input", "unit": "13"}, ev)
-    assert not fires({"sub": "vms", "kind": "io.input", "match": {"value": "open"}}, ev)
-    assert not fires({"sub": "vms", "kind": "io.input", "match": {"nothing": "x"}}, ev)
+    assert not fires({"sub": "cam", "kind": "motion"}, ev)
+    assert not fires({"sub": "cam", "kind": "io.input", "unit": "13"}, ev)
+    assert not fires({"sub": "cam", "kind": "io.input", "match": {"value": "open"}}, ev)
+    assert not fires({"sub": "cam", "kind": "io.input", "match": {"nothing": "x"}}, ev)
 
 
 def test_the_catalogue_is_the_boundary():
     """What automation may ask for is narrower than what the subsystems can do,
     and the narrow list is the point: every entry is a request somebody has to
     have written a performer for."""
-    assert set(ACTIONS) == {("vms", "output"), ("vms", "preset"), ("rec", "record"), ("det", "detect"), ("det", "scan")}
+    assert set(ACTIONS) == {("cam", "output"), ("cam", "preset"), ("rec", "record"), ("det", "detect"), ("det", "scan")}
     for (sub, action), spec in ACTIONS.items():
         assert spec["need"], f"{sub}.{action} names no required field"
 
@@ -191,9 +191,9 @@ def _held(box, key_source, **devkw):
                                                                                     "headroom": 50}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",
                     json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
-    ctl = VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall)
     ctl.ensure_placed()
-    token = box.vars.as_writer("vmsworker", WORKER_ACL)
+    token = box.vars.as_writer("camworker", WORKER_ACL)
     w = VmsWorker("w-1", token, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a", env={},
                   resource_root=box.resource_root, device_factory=lambda key: FakeDevice(key, channels=["1"], **devkw))
     return w, cid
@@ -201,19 +201,19 @@ def _held(box, key_source, **devkw):
 
 def test_the_holder_says_what_its_device_raises_and_can_do_once():
     """Only the process that opened the device knows it has one contact, two relays and its own motion
-    analytics. It writes that where automation reads it — `vms/devices/<host>`, keyed by device — and
+    analytics. It writes that where automation reads it — `cam/devices/<host>`, keyed by device — and
     writes it ONCE: on a camera the row is on flash, and a description does not change between passes. The
     same description leaves the cluster in the heartbeat, per camera (`can`), for a domain to read."""
     box = Box()
     w, cid = _held(box, "driverpack://acme/10.0.0.77/ch/1", rays=1, relays=2, presets=5, events=("motion",))
     w.refresh()
-    row, idx = box.vars.get("vms/devices/10.0.0.77")
+    row, idx = box.vars.get("cam/devices/10.0.0.77")
     assert row == {"device": "10.0.0.77", "events": "command,command.failed,io.input,motion,silent", "rays": "1",
                    "relays": "2", "ptz": "true", "presets": "5"}                       # a row of the table `devices`
     assert w.describe_devices() == 0                                    # memory, not the store: nothing again
     w.reconcile_once(); w.heartbeat_once()
     from w2cplatform.contract import Heartbeat
-    hb = Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1"))
+    hb = Heartbeat.from_bytes(box.objects.get("cam/heartbeats/w-1"))
     st = next(s for s in hb.status if s["id"] == cid)
     assert st["can"]["relays"] == 2 and "motion" in st["can"]["events"]
     assert hb.extra["devices"][0]["can"]["presets"] == 5
@@ -221,13 +221,13 @@ def test_the_holder_says_what_its_device_raises_and_can_do_once():
     w.release_slot()                                                    # a restart: a fresh memory…
     again, _ = _held(box, "driverpack://acme/10.0.0.77/ch/1", rays=1, relays=2, presets=5, events=("motion",))
     again.refresh()
-    assert box.vars.get("vms/devices/10.0.0.77")[1] == idx         # …compared with the store: not rewritten
+    assert box.vars.get("cam/devices/10.0.0.77")[1] == idx         # …compared with the store: not rewritten
 
 
 def test_two_drivers_sessions_on_one_host_are_one_device_row_named_by_the_host():
     """The row's name is the device's group, the host in its one spelling (ADR 0053; «Архитектор», 2026-10-06), not the
     driver's session key: `acme/10.0.0.77` and `onvif/10.0.0.77:8000` are two sessions and one box, and one row
-    `vms/devices/10.0.0.77` — what either can do, the device can. Written through the table's field rules (`write_row`):
+    `cam/devices/10.0.0.77` — what either can do, the device can. Written through the table's field rules (`write_row`):
     its key field `device` is the host. A file has no host, and no row."""
     from vms.config import SPEC as VMS
     from vms.controller import VmsController
@@ -241,11 +241,11 @@ def test_two_drivers_sessions_on_one_host_are_one_device_row_named_by_the_host()
             "onvif/10.0.0.77:8000": FakeDevice("onvif/10.0.0.77:8000", channels=["2"], relays=2, ptz=True),
             "file/clip.mp4": FakeDevice("file/clip.mp4", channels=["1"], relays=4)}
     w.device_factory = devs.get
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     w.refresh()
     assert set(w.devices) == set(devs), w.devices                       # three sessions held…
-    assert box.vars.list("vms/devices/") == ["vms/devices/10.0.0.77"]  # …one row: the file has no host
-    row, _ = box.vars.get("vms/devices/10.0.0.77")
+    assert box.vars.list("cam/devices/") == ["cam/devices/10.0.0.77"]  # …one row: the file has no host
+    row, _ = box.vars.get("cam/devices/10.0.0.77")
     assert row == {"device": "10.0.0.77", "events": "command,command.failed,motion,silent", "rays": "0", "relays": "2",
                    "ptz": "true", "presets": "0", "identity": "SN-77"}, row
     assert w.describe_devices() == 0                                    # one row, written once
@@ -261,24 +261,24 @@ def test_a_scenario_is_checked_against_what_the_units_are():
     cases = [
         ({"when": [{"sub": "det", "kind": "motion", "unit": "7"}], "within": 0},
          "there is no detector 7 — a detector is named by its unit: 7-motion (camera 7's)"),
-        ({"when": [{"sub": "vms", "kind": "motoin", "unit": "7"}], "within": 0},
+        ({"when": [{"sub": "cam", "kind": "motoin", "unit": "7"}], "within": 0},
          "camera 7 does not raise 'motoin' — it raises command, command.failed, motion, silent"),
-        ({"when": [{"sub": "vms", "kind": "io.input", "unit": "12", "match": {"port": "2"}}], "within": 0},
+        ({"when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": "2"}}], "within": 0},
          "camera 12 has 1 input(s), not port 2"),
         ({"when": [{"sub": "det", "kind": "lpr", "unit": "7-motion"}], "within": 0},
          "detector 7-motion raises motion, not 'lpr'"),
-        ({"when": [{"sub": "vms", "kind": "io.input", "unit": "99"}], "within": 0}, "there is no camera 99"),
-        ({"then": [{"sub": "vms", "action": "output", "unit": "12", "port": 3}]}, "camera 12 has 2 relay(s), not port 3"),
-        ({"then": [{"sub": "vms", "action": "output", "unit": "7", "port": 1}]}, "camera 7 has no relays"),
-        ({"then": [{"sub": "vms", "action": "preset", "unit": "12", "n": 1}]}, "camera 12 has no telemetry"),
-        ({"then": [{"sub": "vms", "action": "preset", "unit": "7", "n": 9}]}, "camera 7 has 5 preset(s), not 9"),
+        ({"when": [{"sub": "cam", "kind": "io.input", "unit": "99"}], "within": 0}, "there is no camera 99"),
+        ({"then": [{"sub": "cam", "action": "output", "unit": "12", "port": 3}]}, "camera 12 has 2 relay(s), not port 3"),
+        ({"then": [{"sub": "cam", "action": "output", "unit": "7", "port": 1}]}, "camera 7 has no relays"),
+        ({"then": [{"sub": "cam", "action": "preset", "unit": "12", "n": 1}]}, "camera 12 has no telemetry"),
+        ({"then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 9}]}, "camera 7 has 5 preset(s), not 9"),
         ({"then": [{"sub": "rec", "action": "record", "cam": "99", "minutes": 10}]}, "there is no camera 99 to record"),
     ]
     names = []
     for i, (patch, _) in enumerate(cases):
         con.create({**DOOR, "name": f"bad{i}", **patch})                # the shape is right: taken at the door
         names.append(f"bad{i}")
-    con.create({**DOOR, "then": DOOR["then"] + [{"sub": "vms", "action": "preset", "unit": "7", "n": 3}]})   # fits
+    con.create({**DOOR, "then": DOOR["then"] + [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]})   # fits
     w = _evaluator(box, *names, "door-on-badge")
     w.reconcile_once()
     said = {st["id"]: st for st in w.status()}
@@ -293,9 +293,9 @@ def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitti
     check, on every pass. And a scenario that fitted when it was written can stop fitting: the lobby camera replaced
     by one without a telemetry. The evaluator checks again every pass, and refuses it now, saying why."""
     box = Box(); con = _con(box)
-    box.vars.put("vms/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
-    gate = {"name": "gate-to-lobby", "when": [{"sub": "vms", "kind": "io.input", "unit": "20"}], "within": 0,
-            "then": [{"sub": "vms", "action": "preset", "unit": "7", "n": 3}]}
+    box.vars.put("cam/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
+    gate = {"name": "gate-to-lobby", "when": [{"sub": "cam", "kind": "io.input", "unit": "20"}], "within": 0,
+            "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}
     con.create(gate)
     w = _evaluator(box, "gate-to-lobby")
     w.reconcile_once()
@@ -303,9 +303,9 @@ def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitti
     assert st["unchecked"] == ["camera 20 has not said what it raises — its device has not been held yet; "
                                "'io.input' is not checked"] and "unfit" not in st and st["phase"] != "refused"
 
-    box.vars.put("vms/devices/10.0.0.20", {"device": "10.0.0.20", "events": "command,command.failed,io.input,silent", "rays": "2",
+    box.vars.put("cam/devices/10.0.0.20", {"device": "10.0.0.20", "events": "command,command.failed,io.input,silent", "rays": "2",
                                                 "relays": "0", "ptz": "false", "presets": "0"})   # held, at last
-    box.vars.put("vms/devices/10.0.0.77", {"device": "10.0.0.77", "events": "command,command.failed,silent", "rays": "0",
+    box.vars.put("cam/devices/10.0.0.77", {"device": "10.0.0.77", "events": "command,command.failed,silent", "rays": "0",
                                                 "relays": "0", "ptz": "false", "presets": "0"})   # the lobby, replaced
     w.reconcile_once()
     st = w.status()[0]
@@ -318,17 +318,17 @@ def test_the_catalogue_says_what_each_unit_raises_and_can_do():
     nobody has held says `can: null`. (The console served it as `/auto/catalog`, a route of the VMS's on the
     platform's console, until the boundary's step 6; the page builds its form from the routes the specs declare.)"""
     box = Box(); _con(box)
-    box.vars.put("vms/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
+    box.vars.put("cam/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
     cat = Catalog(box.vars).reply()
-    assert set(cat["actions"]) == {"vms.output", "vms.preset", "rec.record", "det.detect", "det.scan"}
-    assert cat["vms"]["12"]["can"]["relays"] == 2 and "io.input" in cat["vms"]["12"]["can"]["events"]
-    assert cat["vms"]["7"]["can"]["presets"] == 5 and cat["vms"]["20"]["can"] is None
+    assert set(cat["actions"]) == {"cam.output", "cam.preset", "rec.record", "det.detect", "det.scan"}
+    assert cat["cam"]["12"]["can"]["relays"] == 2 and "io.input" in cat["cam"]["12"]["can"]["events"]
+    assert cat["cam"]["7"]["can"]["presets"] == 5 and cat["cam"]["20"]["can"] is None
     assert cat["det"] == {"7-motion": {"cam": "7", "raises": ["motion"]}}
-    assert list(cat["vms"]) == ["7", "12", "20"]                        # numeric ids in numeric order
+    assert list(cat["cam"]) == ["7", "12", "20"]                        # numeric ids in numeric order
 
 
 def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accepts():
-    """The VMS's page (`vms/vms.shell.html`, «Сценарии») builds its «то» from a catalogue (`RACTIONS`), and the catalogue is
+    """The VMS's page (`vms/cam.shell.html`, «Сценарии») builds its «то» from a catalogue (`RACTIONS`), and the catalogue is
     the auto spec's `then`: each `anyOf` of its schema is one action, its `required` (beside `sub` and `action`) the
     fields the form will not send empty, the rest optional — an operator cannot ask for what no executor is written for,
     and is not refused at the door for a field the form never showed. The page's words for the triggers are the VMS
@@ -337,7 +337,7 @@ def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accept
     import os
     import re
     page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms",
-                             "vms.shell.html"), encoding="utf-8").read()
+                             "cam.shell.html"), encoding="utf-8").read()
     cat = page.split("const RACTIONS=[", 1)[1].split("];", 1)[0]
     offered = {}
     for m in re.finditer(r'\{sub:"(\w+)",action:"(\w+)",label:"[^"]*",fields:\[(.*?)\]\}', cat):
@@ -352,4 +352,4 @@ def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accept
     for k, (need, may) in offered.items():
         assert need == spec[k][0], f"{k}: the form requires {sorted(need)}, the spec {sorted(spec[k][0])}"
         assert may <= spec[k][1] - spec[k][0], f"{k}: the form offers {sorted(may)}, which the spec does not take"
-    assert 'pc.display("vms").kinds' in page and "/auto/catalog" not in page
+    assert 'pc.display("cam").kinds' in page and "/auto/catalog" not in page

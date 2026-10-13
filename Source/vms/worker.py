@@ -1,7 +1,7 @@
-"""vmsworker — DriverPack as the worker: the process that HOLDS a camera.
+"""camworker — DriverPack as the worker: the process that HOLDS a camera.
 
 One process, N pipelines, its own loop. It reads its assignment
-(vms/workers/<me>) and the camera rows it names, runs М9's reconcile loop
+(cam/workers/<me>) and the camera rows it names, runs М9's reconcile loop
 over them with the actuator that builds `driverpacksrc ! tee` and serves the
 tee as an RTSP fan-out (`rtsp://<server>:8554/<cam>`, in the heartbeat as
 `live_url`) — one connection to the camera, N subscribers: the recorder
@@ -18,7 +18,7 @@ loop is the process.
 What the environment hands a process, on a box or in an allocation:
 
     WORKER_NAME / SLOT_INDEX     -> the slot to claim: w-<index>. The index is the preference;
-                                    the claim (CAS on vms/slots/w-N) is the proof
+                                    the claim (CAS on cam/slots/w-N) is the proof
     SERVER_NAME (or the hostname) -> `server` in the heartbeat: whose resource its events go to, and the host in `live_url`
     LABELS                        -> `labels` in the heartbeat: what this server can reach; the controller places by them
     INSTANCE_ID                   -> the instance; CAPACITY -> the worker's own number, from М9 Lesson 7's probe
@@ -30,30 +30,30 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # worker.py — vmsworker: DriverPack as the worker — N pipelines against an assignment, an epoch per
+# # worker.py — camworker: DriverPack as the worker — N pipelines against an assignment, an epoch per
 # camera,
 # a lease, a heartbeat with server, labels and capacity
 #
 # **Role in the module.** Lesson 4. One process, N pipelines, its own loop. `VmsWorker` extends
 # `w2cplatform.worker.Worker` (the base worker has `claim_slot`, `claim_at_start`, `renew_slot`, `release_slot`,
 # `take_epoch`, `renew_leases`, `lease_pass`, `heartbeat`) and is the thing that knows what a camera is. It reads its
-# assignment `vms/workers/<me>` and the camera rows it names, runs the platform's reconcile helper over them
+# assignment `cam/workers/<me>` and the camera rows it names, runs the platform's reconcile helper over them
 # (`w2cplatform/reconcile.py`, ADR 0033 — М9's loop) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
-# carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
-# `vms/devices/*` — the last one what it found a device to be, a discovery and not a decision. systemd (Quadlet
+# carrying its status. It never writes configuration: its token is `cam/epoch/*`, `cam/slots/*` and
+# `cam/devices/*` — the last one what it found a device to be, a discovery and not a decision. systemd (Quadlet
 # on a box) supervises the process; the process supervises its pipelines; nothing supervises the loop, because
 # the loop is the process. What the environment hands a process is the runtime's neutral names
-# (`w2cplatform/runtime.py`): `WORKER_NAME` / `SLOT_INDEX` (the slot preference; the CAS claim on `vms/slots/w-N`
+# (`w2cplatform/runtime.py`): `WORKER_NAME` / `SLOT_INDEX` (the slot preference; the CAS claim on `cam/slots/w-N`
 # is the proof), `SPARE_FOR` (a spare: only an offer of its set), `SERVER_NAME` or the hostname (`server`: which
 # resource it records into), `LABELS` (what this server can reach; the controller places by them), `INSTANCE_ID`
 # (the instance), `CAPACITY` (the worker's own number, from М9 Lesson 7's probe). Run by `__main__.worker`;
 # tested in `tests/test_lesson4_worker.py` and used across Lesson 6's tests.
 #
 # ## Module-level names
-# - `log` — logger `vmsworker`.
-# - `VMS` — `Subsystem("vms")`, the key layout.
+# - `log` — logger `camworker`.
+# - `VMS` — `Subsystem("cam")`, the key layout.
 #
 # ### `__init__(self, name, vars_, objects, actuator=None, lease_ttl=30.0, lease_margin=5.0,
 # clock=time.monotonic, wall=time.time, server=None, capacity=None, instance=None, slot_ttl=45.0,
@@ -130,8 +130,8 @@ def commands_beat(env) -> float:
     return float(raw) if raw else COMMANDS_BEAT
 
 
-log = logging.getLogger("vmsworker")
-VMS = Subsystem("vms")
+log = logging.getLogger("camworker")
+VMS = Subsystem("cam")
 
 
 # Bytes a door may hold at once, across its connections: `take(n, wait)` — True once `n` are free (within `wait`
@@ -588,7 +588,7 @@ class VmsWorker(Worker):
         return out
 
     # Read the assignment (`assignment_rev` kept for the heartbeat) and, for each unit it names, the row
-    # `vms/cameras/<id>`; rows that are missing or marked `deleted: "true"` are skipped. "A fresh worker
+    # `cam/cameras/<id>`; rows that are missing or marked `deleted: "true"` are skipped. "A fresh worker
     # knows nothing and reads everything; nothing about what is running is stored." An unassigned worker has
     # no rows and invents nothing (`test_worker_runs_its_assignment…`: the first `reconcile_once` is `[]`).
     def refresh(self) -> None:
@@ -834,14 +834,14 @@ class VmsWorker(Worker):
     def _device_name(self, dev) -> str:
         return next((k for k, d in self.devices.items() if d is dev), str(getattr(dev, "key", "?")))
 
-    # What each held device is, written where automation reads it: `vms/devices/<host>` (`config.py` says
+    # What each held device is, written where automation reads it: `cam/devices/<host>` (`config.py` says
     # why a row). Only when the answer differs from what is stored — the first pass after a start compares
     # with the store, every later one with memory, so a worker that holds a camera for a year writes its row
     # once. A device that described nothing is left alone: silence is "unknown", and a row saying "no relays"
     # would be a lie that refuses scenarios.
     #
     # A ROW OF A DECLARED TABLE, NAMED BY THE HOST (ADR 0012, ADR 0053; «Архитектор», 2026-10-06). The row is written
-    # through the table's field rules (`tables.write_row`, `tables.devices` in vms.subsystem.yaml), as the console writes
+    # through the table's field rules (`tables.write_row`, `tables.devices` in cam.subsystem.yaml), as the console writes
     # one — by CAS against what this pass read: an operator's delete or write in between is not overwritten blind, it is
     # read again on the next pass. Its name is the host (`device_row_name`), not the driver's session (`device_of`):
     # two sessions on one host — two drivers, two ports — are one device, and its row is written from both (`_merged`).
@@ -863,7 +863,7 @@ class VmsWorker(Worker):
     #   a coincidence is said          an identity learned now and found under another host's row (`device_identities`,
     #                                  any vendor) is written all the same, said in the log once, counted
     #                                  (`coincidences`: `identity_coincidences` in the heartbeat,
-    #                                  `vms_device_identity_coincidences` on `/metrics`) and named in the status of every
+    #                                  `cam_device_identity_coincidences` on `/metrics`) and named in the status of every
     #                                  camera of the device (`warning`) — two names of one device or two devices with one
     #                                  serial: an operator can tell which, the holder cannot
     #
@@ -952,7 +952,7 @@ class VmsWorker(Worker):
     # ANOTHER DEVICE UNDER THE SAME KEY (the product team's sibling of the review's tenth pass): the recorder at an address
     # was replaced, or a name was pointed elsewhere, and the holder went on as if nothing happened — the row took the new
     # serial number without a word, and the cameras recorded another box's channels. Said in the log, counted
-    # (`identity_changes` in the heartbeat, `vms_device_identity_changes_total` on `/metrics`); not refused — the device
+    # (`identity_changes` in the heartbeat, `cam_device_identity_changes_total` on `/metrics`); not refused — the device
     # that answers is the one the address names, and only a person knows whether that is what was meant.
     def _changed(self, key: str, was: str, now: str) -> None:
         self.identity_changes += 1
@@ -967,7 +967,7 @@ class VmsWorker(Worker):
         log.warning("%s: device %s gives the same serial number (%s) as device %s. Either they are one device under two "
                     "names, or two devices with one serial number (firmware clones). Both are recorded. If it is one "
                     "device, point all its cameras at one of the two names and remove the device row of the other "
-                    "(vms/devices/%s)", self.name, name, ident, other, other)
+                    "(cam/devices/%s)", self.name, name, ident, other, other)
 
     # Whether the device row of `other` still says `ident` — the warning about a coincidence holds while it does.
     def _still_known_as(self, other: str, ident: str) -> bool:
@@ -1028,7 +1028,7 @@ class VmsWorker(Worker):
                         log.warning("%s: camera %s not started: no epoch for it (%s)", self.name, unit, e)
                         return False
                 except Exception as e:                          # noqa: BLE001
-                    # …and a row `vms/epoch/<unit>` that does not parse is THIS camera's trouble too (the review's fifth
+                    # …and a row `cam/epoch/<unit>` that does not parse is THIS camera's trouble too (the review's fifth
                     # pass, the class det and survey were mended for in the fourth): the `ValueError` went out through the
                     # reconciler and ended the pass — the cameras after this one were not started, and one taken away
                     # was not stopped, every pass. A failed start now, retried with the reconciler's backoff, and why
@@ -1107,8 +1107,8 @@ class VmsWorker(Worker):
     # this server's resource, through the spec's `events.suppress`, `occurred` kept out of a repeat's identity), with
     # `(cid, t, kind)` kept in `observed` for the tests and diagnostics — a repeat the suppressor swallows too.
     # `test_the_worker_observes_what_it_holds_recording_or_not`: before the first reconcile `observe(1, ...)` is `None`;
-    # after it the line lands in `<resource root>/vms/1/e1/…`; camera 2 (not assigned) is `None`; after `fence` a post is
-    # dropped; `vms/events` in the store stays empty.
+    # after it the line lands in `<resource root>/cam/1/e1/…`; camera 2 (not assigned) is `None`; after `fence` a post is
+    # dropped; `cam/events` in the store stays empty.
     def observe(self, cid: int, kind: str, **fields) -> str | None:
         """An event: written by this worker, now, into the camera's bucket on
         this server's resource, under the epoch this worker holds for it —
@@ -1221,7 +1221,7 @@ class VmsWorker(Worker):
     # `EventLog.append`, which refuses `class` and `v` with a `ValueError`, and a value JSON cannot carry raised a
     # `TypeError` — out of this loop, and what the bus had handed over after that line, any camera's, was gone with
     # every dead camera's `lost`. Now the line is dropped, logged and counted (`events_refused`, on `/metrics` as
-    # `vms_device_events_refused_total`); a resource that does not answer (`OSError`) is not the line's, and is left
+    # `cam_device_events_refused_total`); a resource that does not answer (`OSError`) is not the line's, and is left
     # to the loop as before.
     def drain_bus(self) -> None:
         dead, posted = self.actuator.pump()
@@ -1274,7 +1274,7 @@ class VmsWorker(Worker):
     # `position` (`converged | lagging | stalled`), `revision`, `observed_revision` (what is actually
     # running), `epoch` (held, or 0). This list is the heartbeat's `status`; the controller's `read_model`
     # and the console's `/cameras` show it, and `/metrics` counts `phase == running` into
-    # `vms_cameras_running`.
+    # `cam_cameras_running`.
     def status(self) -> list[dict]:
         running, st = self.reconciler.running(), self.reconciler.status()
         out, back = [], self.held_back()
@@ -1314,8 +1314,8 @@ class VmsWorker(Worker):
         return out
 
     # What each held device is, and what it has that we have not imported. Discovery is an OBSERVATION and
-    # goes where observations go: this worker's token writes `vms/epoch/*`, `vms/slots/*` and what a device
-    # is (`vms/devices/*`), never `vms/cameras/*`. The operator imports channels from the page, with their
+    # goes where observations go: this worker's token writes `cam/epoch/*`, `cam/slots/*` and what a device
+    # is (`cam/devices/*`), never `cam/cameras/*`. The operator imports channels from the page, with their
     # own token.
     #
     # Its two questions to each device are asked through `_ask_devices` (the scaling pass) — in the heartbeat's one round
@@ -1818,7 +1818,7 @@ class VmsWorker(Worker):
         return max(0, self.capacity - len(self.rows))
 
     # The platform's heartbeat (`Worker.platform_fields`: `server`, `instance`, `labels`, `capacity`, `headroom`,
-    # `conflicts`, `started`, `previous_*`, `fenced` while fenced, `fetched`) to the object `vms/heartbeats/<name>`, with
+    # `conflicts`, `started`, `previous_*`, `fenced` while fenced, `fetched`) to the object `cam/heartbeats/<name>`, with
     # the holder's own beside it (`heartbeat_fields`): `alloc`, `assignment_rev`, `passes`, the counters, `devices` and
     # `heartbeat_extra`. The controller's `capacity_of`, `labels_of`, `server_of`, `headroom`, `failover_seconds` and the
     # console's metrics all read from here.
@@ -1856,7 +1856,7 @@ class VmsWorker(Worker):
     # what only a holder of devices can say.
     def heartbeat_extra(self) -> dict:
         # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer — on
-        # `/metrics` as `vms_devices_slow` (metrics vms.subsystem.yaml declares, `metrics:`), beside the base's
+        # `/metrics` as `cam_devices_slow` (metrics cam.subsystem.yaml declares, `metrics:`), beside the base's
         # `commands_in_flight`.
         slow = self._slow_devices()
         return {**({"devices_slow": len(slow)} if slow else {}),

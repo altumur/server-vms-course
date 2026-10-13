@@ -4,7 +4,7 @@
 // монтирует det), отказы — до отправки, теми же словами; новый — POST /auto/scenarios, существующий — PUT без имени,
 // удаление — после подтверждения; последние срабатывания — события fired вычислителя.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-rules-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -13,11 +13,11 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"io.input":"вход устройства",silent:"камера молчит"}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"io.input":"вход устройства",silent:"камера молчит"}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
-b.FIX["/auto/scenarios"]={configured:[{id:"door",name:"door",enabled:true,when:JSON.stringify([{sub:"vms",kind:"io.input",unit:"12",match:{port:"1"}}]),then:JSON.stringify([{sub:"vms",action:"output",unit:"12",port:"2"}]),within:0},
-  {id:"bad",name:"bad",enabled:true,when:[{sub:"vms",kind:"silent"}],then:[{sub:"rec",action:"record",cam:"9",minutes:"10"}]}],
+b.FIX["/auto/scenarios"]={configured:[{id:"door",name:"door",enabled:true,when:JSON.stringify([{sub:"cam",kind:"io.input",unit:"12",match:{port:"1"}}]),then:JSON.stringify([{sub:"cam",action:"output",unit:"12",port:"2"}]),within:0},
+  {id:"bad",name:"bad",enabled:true,when:[{sub:"cam",kind:"silent"}],then:[{sub:"rec",action:"record",cam:"9",minutes:"10"}]}],
   rows:[{id:"door",worker:"a-1",phase:"running"},{id:"bad",worker:"a-1",phase:"refused",why:"no camera 9",unfit:["no camera 9"]}]};
 b.FIX["/events"]={events:[{t:now-60,subsystem:"auto",kind:"fired",unit:"auto/door",actions:1}],state:"live"};
 (async()=>{
@@ -35,7 +35,7 @@ const pick=id=>host().querySelector(`[data-act="pick"][data-id="${id}"]`).click(
 pick("bad");await b.ready(60);
 out.refusalShown=/Вычислитель отказал: no camera 9/.test(host().textContent);
 pick("door");await b.ready(150);
-out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==="vms|io.input|12|port=1";
+out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==="cam|io.input|12|port=1";
 out.kindsFromSpec=[...host().querySelectorAll("#vms-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
 out.lastFired=/Последние срабатывания/.test(host().textContent)&&[...host().querySelectorAll("table td")].pop().textContent==="1";
 // без det в консоли — действий детекторов нет
@@ -56,7 +56,7 @@ const ak=host().querySelector('[data-act="akind"]');ak.value="2";ak.dispatchEven
 for(const [f,v] of [["cam","1"],["minutes","5"]]){const x=[...host().querySelectorAll('[data-act="af"]')].find(y=>y.dataset.f===f);x.value=v;x.dispatchEvent(new w.Event("change"));await b.ready(20)}
 n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.ready(150);
 c=call(n,"POST","/auto/scenarios");
-out.newPost=!!c&&c.body.name==="night"&&c.body.when[0].sub==="vms"&&c.body.when[0].kind==="io.input"&&JSON.stringify(c.body.then)==='[{"sub":"rec","action":"record","cam":"1","minutes":"5"}]';
+out.newPost=!!c&&c.body.name==="night"&&c.body.when[0].sub==="cam"&&c.body.when[0].kind==="io.input"&&JSON.stringify(c.body.then)==='[{"sub":"rec","action":"record","cam":"1","minutes":"5"}]';
 pick("door");await b.ready(60);
 n=w.__calls.length;host().querySelector('[data-act="del"]').click();await b.ready(150);
 out.deleteAsksFirst=asked.some(q=>/Удалить сценарий «door»/.test(q))&&!!call(n,"DELETE","/auto/scenarios/door");

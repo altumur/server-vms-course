@@ -41,24 +41,24 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-d", "cas": null, "items"
 }}
 → 200 {"index": 1004}
 
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
 GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
 GET /v1/get?key=platform/decommission/srv-d
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
-GET /v1/list?prefix=vms/slots/
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
+GET /v1/list?prefix=cam/slots/
 → 200 {"keys": {}}
 
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-d-1
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-d-1
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-d-1", "cas": "", "items": {
+# camworker w-srv-d-1 on srv-d → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-d-1", "cas": "", "items": {
   "holder": "srv-d:4101:001005",
   "until": "1757500045.0",
   "released": "false",
@@ -90,7 +90,7 @@ GET /v1/get?key=platform/doors/srv-b
 GET /v1/get?key=platform/doors/srv-c
 → 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
 GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 

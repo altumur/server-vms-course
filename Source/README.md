@@ -46,7 +46,7 @@ Source/
     archive.py                 М10B L7  the course's vocabulary over obsd: streams <recording>/e<epoch> (…/backfill, e0 for a keep's copy), Span,
                                authoritative (the highest epoch owns each stretch), visible_from (retention as a ceiling), ArchiveError (wrong / away / busy),
                                Archive — one volume: open (format at quota), put, finish, seal, a fresh reader per question, spans, samples
-    worker.py                  Lesson 4  vmsworker: holds N cameras against an assignment — one connection, one fan-out (live_url) each, events into the resource, no footage; an epoch per camera; a lease; the heartbeat with server, labels and capacity — on a box or in an allocation
+    worker.py                  Lesson 4  camworker: holds N cameras against an assignment — one connection, one fan-out (live_url) each, events into the resource, no footage; an epoch per camera; a lease; the heartbeat with server, labels and capacity — on a box or in an allocation
     rec.subsystem.yaml         Lesson 5  the FOURTH subsystem, as a spec: recordings named by the operator (id: name — one per archive a camera is written to), retention_days, requires: resource, servers: distinct over place_by: volume — the only one placed on the archive
     recworker.py               Lesson 5  RecWorker: VmsWorker over rec/recordings/*, fed by the worker's tee from the VMS heartbeat — shared memory on the same server, RTSP from another;
                                takes a volume (declared, by hold, or its server's own) and writes into it through obsd under owner rec:<volume>; re-subscribes when the
@@ -58,14 +58,14 @@ Source/
                                and raises), CardActuator (hold, keep by recording, a queue in bytes that drops to the next key frame, the ring taken a piece
                                at a time, a recording that goes on from where it stopped), CardRecorder (RecWorker's gate over the card; a failing card closed,
                                said and opened again; `card.prebuffer.short`)
-    vms.subsystem.yaml         Lesson 6  the VMS's controller, as a spec: cameras numbered, seven operator fields, vms/retention/<cam> derived, labels-subset placement, requires: resource (for its events), the snapshot
+    cam.subsystem.yaml         Lesson 6  the VMS's controller, as a spec: cameras numbered, seven operator fields, cam/retention/<cam> derived, labels-subset placement, requires: resource (for its events), the snapshot
     controller.py              Lesson 6  the VMS's words (create_camera, cameras) over the platform's SpecController, for the tests and the
-                               lessons — no process: the controller of `vms` is `python3 -m w2cplatform controller vms`
+                               lessons — no process: the controller of `vms` is `python3 -m w2cplatform controller cam`
     console.py                 Lesson 7  the one-box console's Mount for the tests and the lessons (the process is `python3 -m w2cplatform
-                               console`, `CONSOLE_ROOT=vms`): the platform's SpecConsole over the VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
+                               console`, `CONSOLE_ROOT=cam`): the platform's SpecConsole over the VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
                                the footage from the recorder (/timeline, /segment) and the stream from the gateway (/whep) itself; the first viewer asks for a
                                fan-out with POST /live/streams
-    vms.shell.html             Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=vms (beside vms.subsystem.yaml): a shell over the platform's console module —
+    cam.shell.html             Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=cam (beside cam.subsystem.yaml): a shell over the platform's console module —
                                the camera's video (live at the gateway's door, the timeline from the recorders' and the places' doors) and archive, the volumes,
                                the scenarios, the domain's cameras; its core (the doors, the timeline, the pieces, WHEP) the product's, checked by
                                tests/test_shell_core.py; jsdom tests tests/console/shell-*.test.js
@@ -92,7 +92,7 @@ Source/
                                each access unit a sample into the volume's writer
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
                                w2c-controller@.container (every subsystem's controller, one instance per spec, as `w2c`), w2c-console.container,
-                               w2c-resource.container — the platform's; vmsworker@, recworker@ (the only writer of footage), liveworker@, detworker@,
+                               w2c-resource.container — the platform's; camworker@, recworker@ (the only writer of footage), liveworker@, detworker@,
                                detjobworker@, surveyworker@, autoworker@.container and vmsjobs.container — the VMS's; w2c-spares.sh and its units
                                (a spare for an offer); w2c.env.example + vms.env.example, check-quadlet.sh
   tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
@@ -115,10 +115,10 @@ Source/
 ```bash
 OBSD_BIN=<out>/build/obsd python3 tests/run.py        # obsd built from ObjectStorage: standalone-build/build.sh <out>
 python3 tests/cluster/run.py; python3 tests/domain/run.py; python3 tests/domainvms/run.py   # М11's, М12A's, М12B's suites
-SPEC_DIR=vms python3 -m w2cplatform controller vms     # the cameras' controller: the platform's, from vms.subsystem.yaml
+SPEC_DIR=vms python3 -m w2cplatform controller cam     # the cameras' controller: the platform's, from cam.subsystem.yaml
 SPEC_DIR=vms python3 -m w2cplatform controller rec     # the recordings' — one per spec: vms rec live det detjob survey auto
 SPEC_DIR=vms python3 -m w2cplatform resource           # the box's resource: heartbeat, every spec's buckets, /events
-SPEC_DIR=vms CONSOLE_ROOT=vms python3 -m w2cplatform console   # the console on :8080: the VMS at /, the others under /rec/, /live/, …
+SPEC_DIR=vms CONSOLE_ROOT=cam python3 -m w2cplatform console   # the console on :8080: the VMS at /, the others under /rec/, /live/, …
 WORKER_NAME=w-1 python3 -m vms worker                  # with GStreamer: holds cameras, rtsp://<box>:8554/<cam>; without: the fake actuator
 RECORDER_NAME=r-1 python3 -m vms recorder              # subscribes to the fan-out, writes into its volume through the host's obsd
 LIVE_NAME=g-1 python3 -m vms gateway                   # a live gateway: WHEP for the camera's viewers
@@ -158,7 +158,7 @@ The numbers are the ones the `tests/test_lessonN_*.py` names keep, not today's l
 
 **The controller never decides how many workers there are.** It has no scheduler client and no `count`. `test_scale_in_releases_a_slot_and_the_controller_redistributes` shows the only thing it does about worker numbers: moving the cameras of a slot whose holder *said* it was stopping — and leaving a merely silent one alone for Nomad. The workers export `headroom`; `/metrics` serves it; whoever runs `count` reads it.
 
-**The platform knows nothing about video.** `test_the_platform_knows_nothing_about_its_subsystems` greps `w2cplatform/` — `events.py` included — for an import from `vms/` (or any subsystem's package) and for the word *camera*, which it reads from `vms/vms.subsystem.yaml`; `test_boundary.py` holds the whole tree to every word of the product.
+**The platform knows nothing about video.** `test_the_platform_knows_nothing_about_its_subsystems` greps `w2cplatform/` — `events.py` included — for an import from `vms/` (or any subsystem's package) and for the word *camera*, which it reads from `vms/cam.subsystem.yaml`; `test_boundary.py` holds the whole tree to every word of the product.
 
 ## Verified where
 

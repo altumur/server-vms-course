@@ -546,7 +546,7 @@ class AutoWorker(Worker):
                 fields = {"unit": fields.get("cam", ""), **fields}
             # Filed by the base (`Worker.file_request`, ADR-0013): only to a subsystem this spec's `worker.requests`
             # names, create-only, stamped by the platform — `by` `auto/<scenario>`, `at` the event's moment, `filed` now
-            # by this clock (what the holder measures the request's own road from, `vms_request_to_device_seconds`).
+            # by this clock (what the holder measures the request's own road from, `cam_request_to_device_seconds`).
             # Idempotent (ADR-0013): the same firing filed again — after a restart forgot `fired` — is the same request
             # (the id, `at` and the deadline are the event's), stands, and is not counted `filed` twice; a different one
             # under its id (the scenario was edited meanwhile) is refused, logged and counted by the base, and the

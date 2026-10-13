@@ -128,14 +128,14 @@ def snapshot(cluster: Cluster, cameras: dict[int, tuple[str, str]], ts: float) -
         shards.setdefault(w or "unplaced", []).append(
             {"id": i + 1, "ref": str(c), "name": f"cam{c}", "worker": w or None, "server": s})
     for name, rows in shards.items():
-        cluster.objects.put(f"vms/snapshot/{name}", json.dumps(
+        cluster.objects.put(f"cam/snapshot/{name}", json.dumps(
             {"cluster": cluster.name, "worker": rows[0]["worker"], "ts": ts, "cameras": rows}).encode())
 
 
 def heartbeat(cluster: Cluster, worker: str, cams: list[int], ts: float, server: str = "srv-1", epoch: int = 1,
               revision: int = 1, observed: int | None = None, phase: str = "running") -> None:
     """What М10's worker writes: its status per camera."""
-    cluster.objects.put(f"vms/heartbeats/{worker}", json.dumps({
+    cluster.objects.put(f"cam/heartbeats/{worker}", json.dumps({
         "worker": worker, "ts": ts, "server": server, "instance": f"{worker}-i", "capacity": 50, "headroom": 50 - len(cams),
         "status": [{"id": c, "name": f"cam{c}", "enabled": True, "phase": phase, "position": "converged",
                     "revision": revision, "observed_revision": revision if observed is None else observed, "epoch": epoch} for c in cams]}).encode())

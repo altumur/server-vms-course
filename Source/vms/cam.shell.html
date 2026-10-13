@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- The VMS's console page: a SHELL over the platform's console module (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md), served at `/`
-     when the console's root is the VMS (`page_of`: the `vms.shell.html` beside `vms.subsystem.yaml`).
+     when the console's root is the VMS (`page_of`: the `cam.shell.html` beside `cam.subsystem.yaml`).
      Everything the platform knows — the frame, the tree, the cards of units, servers, workers, the domain, people,
      the journal, the session — and the console's look (/platform/console.css) are the module's; the VMS's words come
      from its specs (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
@@ -12,17 +12,17 @@
 <!--
 NOTES — what this page is, its parts and its state (each function is described where it is defined)
 
-# vms/vms.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
+# vms/cam.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
-**Role.** The page at `/` of a console whose root is `vms` (`w2cplatform/console.py`: `page_of` — a subsystem's own
+**Role.** The page at `/` of a console whose root is `cam` (`w2cplatform/console.py`: `page_of` — a subsystem's own
 page is `<sub>.shell.html` beside its spec, `SHELL`, served by the console's root alone). It mounts the module
-(`PlatformConsole.mount(#app, {lang, subsystems: [vms, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
+(`PlatformConsole.mount(#app, {lang, subsystems: [cam, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
 their specs with `pc.spec(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
 journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: `tests/console/shell-*.test.js`.
 
 ## The core: copied with a check
 `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
-`stopLive` are the product's (`vmsworker/vms/vms.shell.html` on its `main`), between the two «core» lines below;
+`stopLive` are the product's (`vmsworker/vms/cam.shell.html` on its `main`), between the two «core» lines below;
 `tests/test_shell_core.py` compares each with the product's, and what differs is `tests/testdata/shell_core_debt.txt`
 — only shrinking, and empty now. The places a recording may lie on are the rows of the table the rec spec names
 (`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
@@ -54,12 +54,12 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
   auto spec's `then` accepts (`RACTIONS`, held to the spec by `tests/test_auto_spec.py`), the last firings.
 - The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
   — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
-  `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Пересечения» (`vms/crossings`).
+  `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Пересечения» (`cam/crossings`).
 - `addMenu("unit")` — «Смотреть видео», «Архив».
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks` (writes through `pc.api`), `/domain/vms/books/primaries`; the holders' doors from
+`/events`, `/marks` (writes through `pc.api`), `/domain/cam/books/primaries`; the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
@@ -109,7 +109,7 @@ cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents
 <script>
 "use strict";
 // The VMS's words (display) and what its subsystems are about (about) the module reads from each one's spec.
-const SUBS=["vms","rec","live"];
+const SUBS=["cam","rec","live"];
 const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
 window.platformConsole=pc;
 // ── Helpers ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -135,18 +135,18 @@ const fmtHMS=t=>new Date(t*1000).toLocaleTimeString("ru-RU",{hour12:false});
 // The units as the module last read them (refresh): the cameras, their recordings; and the domain's view.
 let UNITS={},domView=null;
 pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.domain});
-const camById=id=>(UNITS.vms||[]).find(u=>String(u.id)===String(id))||null;
+const camById=id=>(UNITS.cam||[]).find(u=>String(u.id)===String(id))||null;
 const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"камера "+id};
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
 // The camera's recordings in the other clusters of the domain (ADR-0061): {cluster, id, home, backup} — read at their
 // cluster's console through this one (GET /domain/at/<cluster>/rec/where/…, `member_forward`), the bytes from the
 // holder's door. Where this console learns them: the book of primaries its own cluster carries (ADR-0010, 2026-10-06),
-// the same at a member and at the holder — GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording, backups:
+// the same at a member and at the holder — GET /domain/cam/books/primaries: {<ref>: {recorded_by, recording, backups:
 // [{cluster, recording}]}}, the fields the spec lets show, never its tokens. The domain's state is not read for this.
 let PRIMARIES=null;
 pc.on("refresh",async d=>{
   if(!(d&&"domain" in d))return;
-  try{const r=await fetch("/domain/vms/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
+  try{const r=await fetch("/domain/cam/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
 });
 function farRecsOfCam(id){
   const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref];if(!p)return[];
@@ -162,8 +162,8 @@ function farRecsOfCam(id){
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
 const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
 const placeWhere=(rec,T,place)=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(place)}?unit=${encodeURIComponent("rec/"+rec.id)}`;
-const camOf=ref=>String(ref).replace(/^unit:vms\//,"");
-const isCam=ref=>String(ref).startsWith("unit:vms/");
+const camOf=ref=>String(ref).replace(/^unit:cam\//,"");
+const isCam=ref=>String(ref).startsWith("unit:cam/");
 const goTab=t=>setTimeout(()=>{const x=document.querySelector(`.pc-tabs [data-tab="${t}"]`);if(x)x.click()},60);
 
 // ── A camera: its icons, its address, its notes, its events ───────────────────────────────────────────────────
@@ -264,7 +264,7 @@ function setCap(text){const el=$("#playing");if(el)el.textContent=text}
 function evAt(e){return e.occurred||e.t}
 function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
 
-// ── core: COPY WITH A CHECK — the product's vms/vms.shell.html (main), function by function; test_shell_core.py ──
+// ── core: COPY WITH A CHECK — the product's vms/cam.shell.html (main), function by function; test_shell_core.py ──
 async function whereAt(url){
   try{const r=await fetch(url);let d={};try{d=await r.json()}catch(e){}
     return{status:r.status,door:d&&d.door&&d.door.url?d.door:null,missing:r.headers.get("X-Unreachable")||(d&&d.unreachable)||"",error:d&&d.error||""}}
@@ -508,7 +508,7 @@ async function pinBackup(){
 async function fetchEvents(id,from,to){
   V.events=[];V.groups=[];V.evstate="";V.aggregated=false;V.truncated=false;V.rate=0;V.norm=0;
   try{
-    const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("vms/"+id)}`);
+    const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("cam/"+id)}`);
     // Past the console's norm the answer is `groups`, not `events` — read both, and say why the list changed shape.
     if(r.ok){const d=await r.json();
       V.events=d.events||[];V.groups=d.groups||[];V.evstate=d.state||"";
@@ -568,8 +568,8 @@ async function addMark(e,id){
   e.preventDefault();
   const note=e.target.elements.note.value.trim();
   if(!note)return false;
-  try{await pc.api("POST","/marks",{unit:"vms/"+id,note});e.target.reset();pc.toast("Отметка записана");
-    setTimeout(()=>{if(pc.selected()==="unit:vms/"+id)loadTimeline(id)},3500)}
+  try{await pc.api("POST","/marks",{unit:"cam/"+id,note});e.target.reset();pc.toast("Отметка записана");
+    setTimeout(()=>{if(pc.selected()==="unit:cam/"+id)loadTimeline(id)},3500)}
   catch(err){pc.toast("Отказано: "+err.message)}
   return false;
 }
@@ -601,7 +601,7 @@ function h265Dynamic(sdp){
 async function pollLive(id){
   if(!V.live)return;
   let d;
-  try{const r=await fetch(`/events?from=${V.live.since}&to=1e12&unit=${encodeURIComponent("vms/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
+  try{const r=await fetch(`/events?from=${V.live.since}&to=1e12&unit=${encodeURIComponent("cam/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
   if(!V.live)return;                       // the viewer hung up while it was asked
   const feed=$("#livefeed");if(!feed)return;
   (d.events||[]).sort((a,b)=>a.t-b.t).forEach(e=>{
@@ -870,7 +870,7 @@ async function addToArchive(opt){
   const homes=vols.filter(v=>v.enabled&&(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
   // a camera the server (the volume) writes already is not offered again: one camera, one recording a place
   const here=opt.home?[opt.home]:opt.server?serverVolumes(opt.server).map(v=>v.name):[];
-  const cams=(UNITS.vms||[]).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
+  const cams=(UNITS.cam||[]).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
   if(!cams.length){pc.toast("Камер, которых этот архив ещё не пишет, нет");return}
   const v=await pc.dialog(opt.server?"Камеру в архив сервера "+opt.server:"Новая запись камеры",[
     {name:"cam",label:"Камера",options:cams.map(c=>[String(c.id),(c.name||"камера "+c.id)+" · "+c.id])},
@@ -905,7 +905,7 @@ function volumeCard(host,name){
   if(!v){host.innerHTML=`<h1>Тома «${esc(name)}» нет</h1>`;return}
   host.innerHTML=volCardHtml(v);
   wire(host,{withdraw:()=>delVolume(v.name),redeclare:()=>openVolume(v.kind,v.server,v),addCam:()=>addToArchive({home:v.name,server:v.server}),
-    openRec:el=>{pc.select("unit:vms/"+el.dataset.cam);goTab("rec")}});
+    openRec:el=>{pc.select("unit:cam/"+el.dataset.cam);goTab("rec")}});
 }
 function netVolumesCard(host){
   const list=networkVolumes();
@@ -976,8 +976,8 @@ pc.addMenu("vol",ref=>{const v=volByName(ref.slice(4));return v&&v.enabled?[{lab
 // executor is written for — `tests/test_auto_spec.py` holds the two together. A detector's actions are offered when
 // the console mounts det.
 const RACTIONS=[
-  {sub:"vms",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
-  {sub:"vms",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
+  {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
+  {sub:"cam",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
   {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут"},{id:"archive",label:"Архив",opt:true}]},
   {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут"}]},
   {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true},{id:"after",label:"Секунд после",opt:true},{id:"rec",label:"Запись",opt:true}]}];
@@ -985,7 +985,7 @@ let RSEL=null,ruleDraft=null,ruleFires={},autos=[],autoOff=false,detOn=false,RUL
 const actionsOn=()=>RACTIONS.filter(a=>a.sub!=="det"||detOn);
 const actionKind=a=>RACTIONS.find(k=>k.sub===a.sub&&k.action===a.action)||{sub:a.sub,action:a.action,label:(a.sub||"?")+"."+(a.action||"?"),fields:[]};
 // The events a trigger may name: the words the VMS's spec has for its kinds (display.kinds), and any other typed in.
-const triggerKinds=()=>Object.entries(pc.display("vms").kinds||{});
+const triggerKinds=()=>Object.entries(pc.display("cam").kinds||{});
 async function loadAuto(){
   try{
     const d=await getJSON("/auto/scenarios");
@@ -1073,10 +1073,10 @@ function renderRules(){
   const num=v=>parseInt(v,10)||0,i=el=>+el.dataset.i;
   wire(RULES_HOST,{
     pick:el=>{RSEL=el.dataset.id;ruleDraft=null;renderRules()},
-    new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"vms",kind:(triggerKinds()[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
+    new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"cam",kind:(triggerKinds()[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
     rf:(el)=>{const d=editRule(),f=el.dataset.f;d[f]=f==="enabled"?el.value==="1":f==="name"?el.value.trim():num(el.value);renderRules()},
     tf:(el)=>{const t=editRule().when[i(el)],f=el.dataset.f,v=el.value.trim();if(f==="match"){const m=parseMatch(v);if(Object.keys(m).length)t.match=m;else delete t.match}else if(v)t[f]=v;else delete t[f];renderRules()},
-    tadd:()=>{editRule().when.push({sub:"vms",kind:""});renderRules()},
+    tadd:()=>{editRule().when.push({sub:"cam",kind:""});renderRules()},
     tdel:el=>{editRule().when.splice(i(el),1);renderRules()},
     akind:el=>{const k=actionsOn()[+el.value];if(k)editRule().then[i(el)]={sub:k.sub,action:k.action};renderRules()},
     af:el=>{const a=editRule().then[i(el)];if(el.value.trim())a[el.dataset.f]=el.value.trim();else delete a[el.dataset.f];renderRules()},
@@ -1103,7 +1103,7 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 
 // ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
 // The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
-// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`vms/crossings`:
+// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`cam/crossings`:
 // for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
 // keys); this is the rest: a member's cameras and archives in the tree, their cards, the crossings. Read only: the
 // domain's edits go through its own door, not this console.
@@ -1111,20 +1111,20 @@ const DOM_CAM={live:["идёт",""],stale:["воркер молчит — пос
 const domUnits=(sub,cluster)=>((((domView&&domView.units)||{})[sub])||[]).filter(u=>cluster==null||u.cluster===cluster);
 const domKey=u=>u.cluster+"/"+u.unit;
 const domFind=(sub,key)=>domUnits(sub).find(u=>domKey(u)===key)||null;
-const crossings=()=>((domView&&domView.tables)||{})["vms/crossings"]||{};
+const crossings=()=>((domView&&domView.tables)||{})["cam/crossings"]||{};
 const domDot=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return[st[1]==="off"?"var(--rd)":st[1]==="wait"?"#f0c36a":"var(--gn)",st[0]]};
 const domBadge=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return`<span class="bd ${st[1]}">${esc(st[0])}</span>`};
 // a member's cameras, then its archives (the recordings it writes); a member of one camera stands as its camera, its
 // archives under it, open from the first look (the product's camera server)
 pc.addTreeNodes("member",ref=>{
-  const name=ref.slice(7),cams=domUnits("vms",name),arcs=domUnits("rec",name);
+  const name=ref.slice(7),cams=domUnits("cam",name),arcs=domUnits("rec",name);
   const arc=u=>({ref:"da:"+domKey(u),label:"Архив · "+(u.name||u.unit),icon:"storage",dot:domDot(u),title:"Запись кластера "+u.cluster});
   const cam=u=>({ref:"dc:"+domKey(u),label:u.name||u.ref||u.unit,icon:"camera",dot:domDot(u),tags:[{text:u.ref||"id "+u.unit,title:"Имя камеры в домене"}]});
   if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
   return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
 });
 function domCamCard(host,key){
-  const u=domFind("vms",key);
+  const u=domFind("cam",key);
   if(!u){host.innerHTML=`<h1>Нет такой камеры</h1>`;return}
   const by=u.ref?crossings()[u.ref]:"";
   host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>${esc(u.name||u.ref||u.unit)}</h1>
@@ -1146,17 +1146,17 @@ function domArcCard(host,key){
 pc.addCard("dc",(host,ref)=>domCamCard(host,ref.slice(3)));
 pc.addCard("da",(host,ref)=>domArcCard(host,ref.slice(3)));
 // the member's VMS part only: its cameras and its archives; the cluster itself — networks, leaving — is the module's
-pc.addBlock("member",{id:"vms",render:(host,ref)=>{
-  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="vms"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="vms"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="vms"&&u.ref&&crossings()[u.ref]?" · пишет кластер "+esc(crossings()[u.ref]):""}</small></span>${domBadge(u)}</div>`;
-  host.innerHTML=card("Камеры",domUnits("vms",name).map(row).join("")||`<p class="sub">Камер нет — по последнему ответу кластера.</p>`)+
+pc.addBlock("member",{id:"cam",render:(host,ref)=>{
+  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="cam"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="cam"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="cam"&&u.ref&&crossings()[u.ref]?" · пишет кластер "+esc(crossings()[u.ref]):""}</small></span>${domBadge(u)}</div>`;
+  host.innerHTML=card("Камеры",domUnits("cam",name).map(row).join("")||`<p class="sub">Камер нет — по последнему ответу кластера.</p>`)+
     card("Архивы",domUnits("rec",name).map(row).join("")||`<p class="sub">Записей нет — по последнему ответу кластера.</p>`);
   wire(host,{go:el=>pc.select(el.dataset.ref)});
 }});
 // on the domain's overview: the crossings — a camera of one cluster recorded by another
-pc.addBlock("domain",{id:"vms",render:host=>{
+pc.addBlock("domain",{id:"cam",render:host=>{
   const x=Object.entries(crossings());
   if(!domView){host.innerHTML="";return}
-  const nameOf=ref=>{const u=domUnits("vms").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
+  const nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
   host.innerHTML=card("Пересечения",x.length?`<table><tr><th>Камера</th><th>Пишет кластер</th></tr>${x.map(([ref,cl])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(cl)}</td></tr>`).join("")}</table>`
     :`<p class="sub">Пересечений нет: каждую камеру пишет её собственный кластер.</p>`);
 }});

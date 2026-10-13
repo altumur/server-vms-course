@@ -65,27 +65,27 @@ def test_a_delete_is_a_write_and_an_epoch_is_never_deleted():
     And an epoch row is a counter — deleted, it starts again from 1 under names (`e1`) that footage and events
     already carry. The rule is one function, so the backends cannot disagree."""
     for store in (Box().vars, MemVariables()):
-        store.put("vms/cameras/7", {"name": "gate"})
-        store.put("vms/requests/r1", {"unit": "7"})
-        worker = store.as_writer("vmsworker", SPEC.sub.acl_worker())
+        store.put("cam/cameras/7", {"name": "gate"})
+        store.put("cam/requests/r1", {"unit": "7"})
+        worker = store.as_writer("camworker", SPEC.sub.acl_worker())
         console = store.as_writer("console", SPEC.acl_console())
         try:
-            worker.delete("vms/cameras/7")
+            worker.delete("cam/cameras/7")
             raise AssertionError("a worker deleted a row it may not write")
         except Forbidden as e:
-            assert "vmsworker may not delete vms/cameras/7" in str(e)
-        assert store.get("vms/cameras/7")[0] is not None
-        console.delete("vms/requests/r1")                              # its own family: as before
-        assert store.get("vms/requests/r1")[0] is None
+            assert "camworker may not delete cam/cameras/7" in str(e)
+        assert store.get("cam/cameras/7")[0] is not None
+        console.delete("cam/requests/r1")                              # its own family: as before
+        assert store.get("cam/requests/r1")[0] is None
 
-        assert next_epoch(worker, "vms/epoch/7")[0] == 1
+        assert next_epoch(worker, "cam/epoch/7")[0] == 1
         for handle in (worker, console, store):                        # its writer, another token, and no token at all
             try:
-                handle.delete("vms/epoch/7")
+                handle.delete("cam/epoch/7")
                 raise AssertionError("an epoch was deleted")
             except Forbidden as e:
                 assert "a counter nobody deletes" in str(e)
-        assert next_epoch(worker, "vms/epoch/7")[0] == 2               # …and the count goes on
+        assert next_epoch(worker, "cam/epoch/7")[0] == 2               # …and the count goes on
 
 
 def test_a_lost_cas_waits_a_random_moment_that_grows_and_stays_short():
@@ -125,9 +125,9 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
     import builtins
     box = Box(); t = box.wall() - 7200
     roots, res = _two_resources(box)
-    EventLog(roots["srv-a"], "vms", "7", 1).append(t + 5, "alarm")
-    EventLog(roots["srv-a"], "vms", "8", 1).append(t + 5, "motion")
-    EventLog(roots["srv-a"], "vms", "8", 1).append(t + 3000, "motion")
+    EventLog(roots["srv-a"], "cam", "7", 1).append(t + 5, "alarm")
+    EventLog(roots["srv-a"], "cam", "8", 1).append(t + 5, "motion")
+    EventLog(roots["srv-a"], "cam", "8", 1).append(t + 3000, "motion")
     for r in res.values(): r.heartbeat()
     box.vars.put(MIRROR_KEY, {"enabled": "true", "copies": "1"})
     assert res["srv-a"].pass_()["mirrored"] == 3
@@ -141,7 +141,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
         builtins.open = real
     assert [p for p in opened if p.endswith(".events.jsonl")] == []    # …and swept over, with no bucket opened
 
-    box.vars.put("vms/retention", {"days": 1})
+    box.vars.put("cam/retention", {"days": 1})
     keeps.write(box.vars, {"cam": "8", "from": t, "to": t + 60}, ["8"], "anna", box.wall())
     # (what a keep holds is the spec's `holds:`, read by every resource itself — the boundary's step 6)
     box.wall.advance(DAY - 5000)                                       # the two early buckets are past their day…
@@ -154,7 +154,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
     res["srv-b"].retain()
     assert res["srv-b"].mirror_removed == 2                            # camera 8's SECOND bucket, old now too
     left = [b.path for b in mirrored_buckets(roots["srv-b"], "srv-a")]
-    assert len(left) == 1 and left[0].startswith("vms/8/")             # the copy under the keep is held like its original
+    assert len(left) == 1 and left[0].startswith("cam/8/")             # the copy under the keep is held like its original
 
 
 def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days():
@@ -234,7 +234,7 @@ def test_a_command_carries_a_deadline_and_a_near_one():
     from vms.auto import MAX_VALID_FOR
     from w2cplatform.console import SpecConsole
     with Served(SpecConsole(con, wall=box.wall)) as call:
-        far = {"unit": f"vms/{door}", "action": "output", "port": 1, "valid_until": now + 601}
+        far = {"unit": f"cam/{door}", "action": "output", "port": 1, "valid_until": now + 601}
         assert call("POST", "/requests", far, key="far-1")[1]["error"] == "too far"
     assert MAX_VALID_FOR == w.most_valid() == SPEC.requests["most_valid"]
 
@@ -250,16 +250,16 @@ def test_a_command_retried_is_one_command():
     served = Served(SpecConsole(con, wall=box.wall))
 
     def post(key, **fields):
-        return served("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 1, **fields}, key=key or False)
+        return served("POST", "/requests", {"unit": f"cam/{door}", "action": "output", "port": 1, **fields}, key=key or False)
 
     assert post(None)[0] == 400 and post(None)[1]["error"] == "Idempotency-Key required"
-    assert box.vars.list("vms/requests/") == []
+    assert box.vars.list("cam/requests/") == []
     first = post("click-1")
     assert first[0] == 202 and first[1]["queued"]["id"] == "click-1"
     box.wall.advance(3)
     assert post("click-1") == first                                       # the same request: the row it filed, not a second one
-    assert box.vars.list("vms/requests/") == [SPEC.sub.request_key("click-1")]
-    assert post("click-2")[0] == 202 and len(box.vars.list("vms/requests/")) == 2   # another click is another command
+    assert box.vars.list("cam/requests/") == [SPEC.sub.request_key("click-1")]
+    assert post("click-2")[0] == 202 and len(box.vars.list("cam/requests/")) == 2   # another click is another command
     assert post("a/b")[0] == 400                                          # a key is a name, not a path (one segment)
     assert post("click-3", id="by-name")[1]["queued"]["id"] == "by-name"  # a body may still name its request
     served.close()
@@ -278,7 +278,7 @@ def test_a_command_another_instance_began_is_not_performed_again():
     dev = w.devices["acme/10.0.0.90"]
     slow, dev.output = dev.output, lambda *a, **k: (gate.wait(5), slow(*a, **k))[1]
     assert w.requests() == []                                             # …the call is in flight
-    mark = json.loads(box.objects.get("vms/commands/r1"))
+    mark = json.loads(box.objects.get("cam/commands/r1"))
     assert mark["instance"] == w.instance and mark["unit"] == str(door)   # said before the device was called
     assert "outcome" not in mark                                          # and how it went is not known yet
     # …and the worker dies before the device answers: the row is still there, and another instance holds the device
@@ -295,19 +295,19 @@ def test_a_command_another_instance_began_is_not_performed_again():
     # the request is cleared by the console; its mark goes on a later pass, and not before — nor before the request
     # could no longer be performed: its deadline plus the reaper's margin (the review's fourteenth pass, major 2)
     box.clock.advance(31)
-    w2.requests(); assert box.objects.get("vms/commands/r1") is not None
+    w2.requests(); assert box.objects.get("cam/commands/r1") is not None
     con.vars.delete(SPEC.sub.request_key("r1"))
-    w2.requests(); assert box.objects.get("vms/commands/r1") is not None         # not yet: every thirty seconds
+    w2.requests(); assert box.objects.get("cam/commands/r1") is not None         # not yet: every thirty seconds
     box.clock.advance(31)
-    w2.requests(); assert box.objects.get("vms/commands/r1") is not None         # …and its deadline is not past
+    w2.requests(); assert box.objects.get("cam/commands/r1") is not None         # …and its deadline is not past
     box.wall.advance(30 + requests.REAP_AFTER + 1)
     box.clock.advance(31)
-    w2.requests(); assert box.objects.get("vms/commands/r1") is None
+    w2.requests(); assert box.objects.get("cam/commands/r1") is None
 
     # a request that waits for its device carries no mark: nobody began it
     con.vars.put(SPEC.sub.request_key("r2"), req)
     w2.device_of_row = lambda row: None
-    assert w2.requests() == [] and box.objects.get("vms/commands/r2") is None
+    assert w2.requests() == [] and box.objects.get("cam/commands/r2") is None
 
 
 def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_ask_again():
@@ -330,7 +330,7 @@ def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_a
             return e.code, json.load(e)
     import urllib.error
     try:
-        pulse = {"unit": f"vms/{door}", "action": "output", "port": 1}
+        pulse = {"unit": f"cam/{door}", "action": "output", "port": 1}
         first = post("open-1", pulse)
         assert first[0] == 202 and box.vars.list(SPEC.sub.requests_prefix()) == [SPEC.sub.request_key("open-1")]
         box.vars.delete(SPEC.sub.request_key("open-1"))                     # answered by the holder, cleared by the controller
@@ -338,7 +338,7 @@ def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_a
         assert post("open-1", pulse) == first                               # the retry: the first reply…
         assert box.vars.list(SPEC.sub.requests_prefix()) == []              # …and no second command
         assert post("open-1", {**pulse, "port": 2})[0] == 422               # the same key for another command: refused
-        assert post("open-2", {"unit": "vms/999", "action": "output"})[0] == 404
+        assert post("open-2", {"unit": "cam/999", "action": "output"})[0] == 404
         assert post("open-2", pulse)[0] == 202                              # a refusal did not spend the key
     finally:
         srv.shutdown()
@@ -368,7 +368,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.93/ch/1"})["id"]
     assert ctl.placement(gate) is None                                    # no worker anywhere: nobody holds it
     with Served(SpecConsole(con, wall=box.wall)) as call:
-        filed = call("POST", "/requests", {"unit": f"vms/{gate}", "action": "output", "port": 1}, key="open-gate")
+        filed = call("POST", "/requests", {"unit": f"cam/{gate}", "action": "output", "port": 1}, key="open-gate")
     assert filed[0] == 202
     until = float(filed[1]["queued"]["valid_until"])
     now = box.wall()
@@ -376,7 +376,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
                                                        "valid_until": "soon", "at": str(now)})
     con.vars.put(SPEC.sub.request_key("answered"), {"unit": str(gate), "action": "output", "port": "1",
                                                     "valid_until": str(now + 30)})
-    box.objects.put("vms/commands/answered", json.dumps({"instance": "w-x", "outcome": "performed"}).encode())
+    box.objects.put("cam/commands/answered", json.dumps({"instance": "w-x", "outcome": "performed"}).encode())
     rec.vars.put(REC_SPEC.sub.request_key("snap-0"), {"unit": str(gate), "action": "snapshot", "at": str(now),
                                                       "valid_until": str(now + 30), "by": "auto/s-1"})
     rec.vars.put(REC_SPEC.sub.request_key("s-1"), {"action": "record", "cam": str(gate), "minutes": "10", "at": str(now)})
@@ -394,13 +394,13 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     requests.turn([rec, con], sweep=True)
     assert standing(con, SPEC) == ["no-deadline"]                         # its filing is not ten minutes old yet
     assert standing(rec, REC_SPEC) == ["7-1-2", "s-1"]
-    assert requests.expired.get("vms", 0) == was.get("vms", 0) + 1           # the answered one is not counted again
+    assert requests.expired.get("cam", 0) == was.get("cam", 0) + 1           # the answered one is not counted again
     assert requests.expired.get("rec", 0) == was.get("rec", 0) + 1
     box.wall.advance(SPEC.requests["most_valid"])                          # the declared longest wait, no other
     requests.turn([rec, con], sweep=True)
-    assert standing(con, SPEC) == [] and requests.expired.get("vms", 0) == was.get("vms", 0) + 2
+    assert standing(con, SPEC) == [] and requests.expired.get("cam", 0) == was.get("cam", 0) + 2
     text = "\n".join(requests.metrics_lines())                               # the request loops' process's own numbers
-    assert f'w2c_requests_expired_total{{sub="vms"}} {requests.expired.get("vms", 0)}' in text, text
+    assert f'w2c_requests_expired_total{{sub="cam"}} {requests.expired.get("cam", 0)}' in text, text
 
 
 def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_holder_went_is_not_known():
@@ -417,20 +417,20 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     now = box.wall()
     con.vars.put(SPEC.sub.request_key("slow"), {"unit": str(gate), "action": "output", "port": "1",
                                                 "valid_until": str(now + 30)})
-    box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:1:aaaaaa", now + 45, False, 1).to_items())
-    box.objects.put("vms/commands/slow", json.dumps({"instance": "box-a:1:aaaaaa", "slot": "w-1", "unit": str(gate),
+    box.vars.put("cam/slots/w-1", Slot("w-1", "box-a:1:aaaaaa", now + 45, False, 1).to_items())
+    box.objects.put("cam/commands/slow", json.dumps({"instance": "box-a:1:aaaaaa", "slot": "w-1", "unit": str(gate),
                                                      "at": now}).encode())                 # begun: the call has not returned
     was, unknown = dict(requests.expired), dict(requests.unknown)
     box.wall.advance(30 + requests.REAP_AFTER + 5)
     requests.turn([con], sweep=True)
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is not None                     # its holder's to answer
-    assert requests.expired.get("vms", 0) == was.get("vms", 0) and requests.unknown.get("vms", 0) == unknown.get("vms", 0)
-    box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:2:bbbbbb", box.wall() + 45, False, 2).to_items())   # it went
+    assert requests.expired.get("cam", 0) == was.get("cam", 0) and requests.unknown.get("cam", 0) == unknown.get("cam", 0)
+    box.vars.put("cam/slots/w-1", Slot("w-1", "box-a:2:bbbbbb", box.wall() + 45, False, 2).to_items())   # it went
     requests.turn([con], sweep=True)
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is None
-    assert requests.expired.get("vms", 0) == was.get("vms", 0) and requests.unknown.get("vms", 0) == unknown.get("vms", 0) + 1
+    assert requests.expired.get("cam", 0) == was.get("cam", 0) and requests.unknown.get("cam", 0) == unknown.get("cam", 0) + 1
     text = "\n".join(requests.metrics_lines())
-    assert f'w2c_requests_unknown_total{{sub="vms"}} {requests.unknown.get("vms", 0)}' in text, text
+    assert f'w2c_requests_unknown_total{{sub="cam"}} {requests.unknown.get("cam", 0)}' in text, text
 
 
 def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():
@@ -447,7 +447,7 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
 
     con.vars.put(SPEC.sub.request_key("d1"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     assert [d["request"] for d in w.requests()] == ["d1"] and w.devices["acme/10.0.0.91"].did == [("output", 1, "pulse", 0)]
-    assert w.may_act(str(door)) and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "1"            # under a lease from here on
+    assert w.may_act(str(door)) and box.vars.get(f"cam/epoch/{door}")[0]["epoch"] == "1"            # under a lease from here on
     con.vars.delete(SPEC.sub.request_key("d1"))                                                        # the console clears what was answered
 
     # a second holder of the same device — the seconds of a double assignment: its command takes epoch 2, and the
@@ -465,14 +465,14 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     con.vars.put(SPEC.sub.request_key("d3"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     # "still assigned to it" is what a pass reads: let go by the lease step, the unit is not taken back on the rows read
     # before (a beat between passes; `test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_…`)
-    assert w.requests() == [] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "2"
+    assert w.requests() == [] and box.vars.get(f"cam/epoch/{door}")[0]["epoch"] == "2"
     w.reconcile_once()                                                                                 # the double assignment still stands
-    assert [d["request"] for d in w.requests()] == ["d3"] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "3"
+    assert [d["request"] for d in w.requests()] == ["d3"] and box.vars.get(f"cam/epoch/{door}")[0]["epoch"] == "3"
     assert str(door) in w2.lease_pass() and not w2.may_act(str(door))
 
     # the mark: the store says who made it
     assert w2._mark("m1", str(door), box.wall()) and not w._mark("m1", str(door), box.wall())
-    assert json.loads(box.objects.get("vms/commands/m1"))["instance"] == w2.instance                     # …and it was not written over
+    assert json.loads(box.objects.get("cam/commands/m1"))["instance"] == w2.instance                     # …and it was not written over
 
     # a store with no create-only (the review's third pass): reading the mark back after a last-writer-wins write is
     # no fence — A puts, A reads its own name, B puts, B reads its own — so the command is REFUSED, and says why
@@ -483,12 +483,12 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
                 raise AttributeError(n)
             return getattr(self._r, n)
     w.objects = LastWriterWins(box.objects)
-    assert w._mark("m2", str(door), box.wall()) is None and box.objects.get("vms/commands/m2") is None
+    assert w._mark("m2", str(door), box.wall()) is None and box.objects.get("cam/commands/m2") is None
     con.vars.delete(SPEC.sub.request_key("d3"))
     con.vars.put(SPEC.sub.request_key("d4"), {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)})
     did = list(w.devices["acme/10.0.0.91"].did)
     [answer] = [d for d in w.requests() if d["request"] == "d4"]
-    assert "create-only" in answer["error"] and box.objects.get("vms/commands/d4") is None
+    assert "create-only" in answer["error"] and box.objects.get("cam/commands/d4") is None
     assert w.devices["acme/10.0.0.91"].did == did                                                      # the device was not called
 
 
@@ -522,15 +522,15 @@ def test_a_writers_clock_ahead_or_behind_neither_holds_nor_drops_it_and_the_skew
     box.wall.advance(10); beat(*skew)                                          # all four beat
     now = box.wall()
     assert sorted(ctl.workers_seen()) == ["w-1", "w-2", "w-3", "w-4"]
-    assert sorted(holders(box.objects, "vms/", now, eyes=ctl.eyes)) == ["w-1", "w-2", "w-3", "w-4"]
-    assert all(b["live"] for n, b in contract.builds(box.objects, now, eyes=ctl.eyes).items() if n.startswith("vms/"))
+    assert sorted(holders(box.objects, "cam/", now, eyes=ctl.eyes)) == ["w-1", "w-2", "w-3", "w-4"]
+    assert all(b["live"] for n, b in contract.builds(box.objects, now, eyes=ctl.eyes).items() if n.startswith("cam/"))
     states = {w["worker"]: w["state"] for s in con.servers()["servers"].values() for w in s["workers"]}
     assert states == {"w-1": "live", "w-2": "live", "w-3": "live", "w-4": "live"}
     text = con.metrics_text()
-    assert "vms_workers_live 4" in text
-    assert contract.SKEW_MAX["vms"] >= 60 and contract.SKEW_MIN["vms"] <= -100
+    assert "cam_workers_live 4" in text
+    assert contract.SKEW_MAX["cam"] >= 60 and contract.SKEW_MIN["cam"] <= -100
     rep = ctl.pass_once()
-    assert set(rep["clock_skew"]) == {"vms/heartbeats/w-3", "vms/heartbeats/w-4"}, rep["clock_skew"]
+    assert set(rep["clock_skew"]) == {"cam/heartbeats/w-3", "cam/heartbeats/w-4"}, rep["clock_skew"]
     assert said.kinds().count(("clock.skew", ALARM)) == 2
     ctl.pass_once()
     assert said.kinds().count(("clock.skew", ALARM)) == 2                      # once an episode
@@ -560,7 +560,7 @@ def test_a_clock_running_behind_is_a_number_too():
     box.wall.advance(5)
     box.objects.put(SPEC.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall() - 31, [], {"server": "srv-a"}).to_bytes())
     assert "w-2" in ctl.workers_seen()
-    m = re.search(r"\nvms_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())
+    m = re.search(r"\ncam_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())
     assert m and float(m.group(1)) <= -31.0
 
 

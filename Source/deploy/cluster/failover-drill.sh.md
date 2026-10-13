@@ -6,7 +6,7 @@
 1. Reads from the console's `/cameras` which cameras `w-<server>-1` holds, live (`held`).
 2. Pulls. `server` (the default): every unit of the server is killed (SIGKILL) and stopped over ssh — the store's member, the resource, the console, the controllers, the workers — standing in for the power cut (an orderly stop would release the slot, and the cameras would move at once: that is a stop, not a failure). `process`: only the worker's process is killed; systemd starts the unit again in two seconds.
 3. Waits, up to 240 s, until every one of those cameras is live again — on another worker (`server`) or under the same name (`process`) — and prints the wall-clock seconds (`where`).
-4. `server`: starts the units again, waits 30 s, reads `vms_epoch_conflicts{worker="w-<server>-1"}` — the old instance fenced by the epochs at its first lease pass, its footage kept under its epoch, nothing moving back.
+4. `server`: starts the units again, waits 30 s, reads `cam_epoch_conflicts{worker="w-<server>-1"}` — the old instance fenced by the epochs at its first lease pass, its footage kept under its epoch, nothing moving back.
 The worst of the runs is the datasheet number.
 
 ## What to expect

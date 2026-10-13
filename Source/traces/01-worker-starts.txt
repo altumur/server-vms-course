@@ -1,21 +1,21 @@
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/decommission/srv-a
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/list?prefix=vms/slots/
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/list?prefix=cam/slots/
 → 200 {"keys": {}}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-GET /v1/get?key=vms/slots/w-srv-a-1
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-a-1
 → 200 {"items": null, "index": ""}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",

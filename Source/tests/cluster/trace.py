@@ -3,8 +3,8 @@
 The lessons show every store call as the request the handle sends to its server's configstore daemon — the role's
 socket, the method and route, the body, the answer:
 
-    # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-    POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {…}}
+    # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+    POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "", "items": {…}}
     → 200 {"index": 1004}
 
 Written by hand, those examples drift from the code the first time the code changes. So they are not written by
@@ -15,7 +15,7 @@ bytes the handle would have put on the socket, nothing rebuilt. `test_trace.py` 
 unix socket and compares.
 
 Two things are left out of what is printed, and only out of the printing: the operation id (`"id"` in every write,
-a fresh uuid per call — a trace must read the same on every run), and the percent-encoding of the query (`key=vms/…`,
+a fresh uuid per call — a trace must read the same on every run), and the percent-encoding of the query (`key=cam/…`,
 not `key=vms%2F…`). A write's body is printed with `op`, `key` and `cas` first, so its first line says what is asked.
 
 Objects are files on each server now (`cluster://`) and are not in the store's trace. A scene about them turns on

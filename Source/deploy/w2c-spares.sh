@@ -5,7 +5,7 @@
 #
 #   role         the console's number                                   its declaration (the ceiling)
 #   recworker    rec_workers_needed{labels=""}  on /rec/metrics         $ROLES_DIR/recworker.env
-#   vmsworker    vms_workers_needed{labels}     on /metrics             $ROLES_DIR/vmsworker.env
+#   camworker    cam_workers_needed{labels}     on /metrics             $ROLES_DIR/camworker.env
 #   liveworker   live_workers_needed{labels}    on /live/metrics        $ROLES_DIR/liveworker.env
 #   autoworker   auto_workers_needed{labels}    on /auto/metrics        $ROLES_DIR/autoworker.env
 #
@@ -27,7 +27,7 @@
 #
 # NOT AS ROOT on Linux (the product's cross-check, 4 Oct): as `w2c`, the platform's user, whom
 # polkit lets do one thing — `systemctl start` of an instance of a spare template (М11's `w2c-spares.rules`: the verb
-# `start`, the units `vms-vmsworker-spare@<n>`, `vms-recworker-spare@<n>`) — and nothing else: no stop, no other
+# `start`, the units `vms-camworker-spare@<n>`, `vms-recworker-spare@<n>`) — and nothing else: no stop, no other
 # unit, no `reset-failed`. What it writes for a spare is read by the spare's runner one line deep (`w2c-run.sh`: `SPARE_FOR=`,
 # checked against the labels' alphabet), so the file it may write sets no other variable in a process holding the
 # role's key. On macOS it runs as the box's user (`install.sh --box`, the thirteenth review, major 15): the roles' plists
@@ -158,7 +158,7 @@ start() {                                           # sh has no locals: the argu
             plutil -replace EnvironmentVariables.SPARE_FOR -string "$3" "$plist"
         fi
         case "$1" in
-            vmsworker) plutil -replace EnvironmentVariables.RTSP_PORT -string auto "$plist" ;;
+            camworker) plutil -replace EnvironmentVariables.RTSP_PORT -string auto "$plist" ;;
             recworker) plutil -replace EnvironmentVariables.ARCHIVE_PORT -string 0 "$plist" ;;
         esac
         logs=$(plutil -extract StandardErrorPath raw -o - "$plist" 2>/dev/null) || logs=""
@@ -184,10 +184,10 @@ srv=$(printf '%s' "$SERVER" | sed 's/[.]/\\./g')
 for role in $roles; do
     case "$role" in
         recworker)  page=/rec/metrics;  prefix=rec ;;
-        vmsworker)  page=/metrics;      prefix=vms ;;
+        camworker)  page=/metrics;      prefix=cam ;;
         liveworker) page=/live/metrics; prefix=live ;;
         autoworker) page=/auto/metrics; prefix=auto ;;
-        *) echo "$ME: no role $role (recworker, vmsworker, liveworker, autoworker)" >&2; continue ;;
+        *) echo "$ME: no role $role (recworker, camworker, liveworker, autoworker)" >&2; continue ;;
     esac
     cap=$(ceiling_of "$role") || continue           # said on stderr; the other roles go on
     text=$(curl -fsS --max-time 5 "$CONSOLE$page" 2>/dev/null) || {

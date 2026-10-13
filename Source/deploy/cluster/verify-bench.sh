@@ -35,7 +35,7 @@ else
 fi
 
 # 2
-for u in configstore w2c-resource w2c-console w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker vms-obsd; do
+for u in configstore w2c-resource w2c-console w2c-controller@cam w2c-controller@rec vms-camworker vms-recworker vms-obsd; do
   systemctl is-active --quiet "$u.service" && ok "$u active" || bad "$u not active"
 done
 
@@ -53,13 +53,13 @@ file="$(python3 -c 'import json;print(json.dumps(json.load(open("/etc/w2c/config
 "$RUN" rights --check /etc/w2c/configstore-rights.json >/dev/null && ok "the rights file is what the spec generates" || bad "the rights file is not what the spec generates now"
 
 # 5
-[ "$(put vmsworker vms/slots/w-verify)" = 200 ] && ok "vmsworker.sock writes vms/slots/*" || bad "vmsworker.sock cannot claim a slot"
-[ "$(put vmsworker vms/cameras/verify)" = 403 ] && ok "vmsworker.sock refused on vms/cameras/* (403)" || bad "vmsworker.sock wrote a camera row — one writer per key is NOT enforced"
-[ "$(put vmsworker vms/placement/verify)" = 403 ] && ok "vmsworker.sock refused on vms/placement/* (403)" || bad "vmsworker.sock wrote placement"
-[ "$(put console vms/cameras/verify)" = 200 ] && ok "console.sock writes vms/cameras/*" || bad "console.sock cannot write a camera row"
-[ "$(put console vms/placement/verify)" = 403 ] && ok "console.sock refused on vms/placement/* (403) — a console that can place is a second controller" || bad "console.sock wrote placement"
-[ "$(put vmscontroller vms/placement/verify)" = 200 ] && ok "vmscontroller.sock writes vms/placement/*" || bad "vmscontroller.sock cannot place"
-drop vms/slots/w-verify; drop vms/cameras/verify; drop vms/placement/verify
+[ "$(put camworker cam/slots/w-verify)" = 200 ] && ok "camworker.sock writes cam/slots/*" || bad "camworker.sock cannot claim a slot"
+[ "$(put camworker cam/cameras/verify)" = 403 ] && ok "camworker.sock refused on cam/cameras/* (403)" || bad "camworker.sock wrote a camera row — one writer per key is NOT enforced"
+[ "$(put camworker cam/placement/verify)" = 403 ] && ok "camworker.sock refused on cam/placement/* (403)" || bad "camworker.sock wrote placement"
+[ "$(put console cam/cameras/verify)" = 200 ] && ok "console.sock writes cam/cameras/*" || bad "console.sock cannot write a camera row"
+[ "$(put console cam/placement/verify)" = 403 ] && ok "console.sock refused on cam/placement/* (403) — a console that can place is a second controller" || bad "console.sock wrote placement"
+[ "$(put camcontroller cam/placement/verify)" = 200 ] && ok "camcontroller.sock writes cam/placement/*" || bad "camcontroller.sock cannot place"
+drop cam/slots/w-verify; drop cam/cameras/verify; drop cam/placement/verify
 
 # 6
 api_addr="$(python3 -c 'import sys;[print(l.split("=",1)[1].strip()) for l in open("/etc/w2c/w2c.env") if l.startswith("CONFIGSTORE_API=")]')"
@@ -70,11 +70,11 @@ else
 fi
 
 # 7
-listed="$(curl -s 'http://127.0.0.1:8090/v1/objects?prefix=vms/heartbeats/&scope=cluster' | python3 -c 'import sys,json;d=json.load(sys.stdin);print(" ".join(sorted({o["server"] for o in d["objects"].values()})), "missing:", ",".join(d.get("missing", [])) or "none")' 2>/dev/null)"
+listed="$(curl -s 'http://127.0.0.1:8090/v1/objects?prefix=cam/heartbeats/&scope=cluster' | python3 -c 'import sys,json;d=json.load(sys.stdin);print(" ".join(sorted({o["server"] for o in d["objects"].values()})), "missing:", ",".join(d.get("missing", [])) or "none")' 2>/dev/null)"
 [ -n "$listed" ] && ok "objects: heartbeats from $listed" || bad "objects: the resource here does not list the cluster's heartbeats"
 
 # 8
-curl -s -o /dev/null -w "%{http_code}" -X PUT --data-binary '{"t":0,"kind":"probe"}' "http://127.0.0.1:8090/mirror/srv-verify/vms/0/e1/19700101T000000Z.events.jsonl" | grep -q 204 \
+curl -s -o /dev/null -w "%{http_code}" -X PUT --data-binary '{"t":0,"kind":"probe"}' "http://127.0.0.1:8090/mirror/srv-verify/cam/0/e1/19700101T000000Z.events.jsonl" | grep -q 204 \
   && curl -s "http://127.0.0.1:8090/mirrored/srv-verify" | grep -q '"path"' && ok "mirror: the resource took a copy and lists it" || bad "mirror: PUT/GET on the resource failed"
 
 echo; echo "$pass passed, $fail failed"

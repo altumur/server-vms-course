@@ -1,14 +1,14 @@
 # Урок 12 — Страница VMS
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/vms.shell.html` — страницу VMS над модулем консоли платформы: значки и метку камеры, редактор её источника, заметки и слова событий, вкладки «Видео» и «Архив», тома под серверами и «Камеру в архив», раздел «Сценарии», домен глазами VMS. Ядро страницы — двери держателей, шкала, куски, живое видео — копия продуктового, сверенная тестом (`tests/test_shell_core.py`). И `vms/console.py` — `make_console`: консоль VMS, в которой своего у VMS нет ни строки.
+**Вы напишете:** `vms/cam.shell.html` — страницу VMS над модулем консоли платформы: значки и метку камеры, редактор её источника, заметки и слова событий, вкладки «Видео» и «Архив», тома под серверами и «Камеру в архив», раздел «Сценарии», домен глазами VMS. Ядро страницы — двери держателей, шкала, куски, живое видео — копия продуктового, сверенная тестом (`tests/test_shell_core.py`). И `vms/console.py` — `make_console`: консоль VMS, в которой своего у VMS нет ни строки.
 **Время:** ~90 минут.
 
 ## Зачем этот урок
 
 Модуль из [урока 16 М10A](../М10A_Platform/16-HTML.md) умеет всё общее: дерево, карточку единицы, серверы, домен, права, журнал, вход. Камеры он не знает. Оператору VMS нужно больше: картинка, архив, тома, сценарии.
 
-Куда это положить — вопрос урока, и ответ на него задан границей (ADR 0001, 0002). У подсистемы три места, и консоль не из них: спека, воркер, страница. Маршрутов на консоли у VMS нет ни одного. Консоль VMS — это консоль платформы, запущенная с `CONSOLE_ROOT=vms`: она читает спеки VMS и отдаёт то, что они объявили. Всё, что VMS показывает сверх модуля, — страница рядом со спекой. А байты — шкалу, куски архива, живой поток — страница берёт у держателей сама, через двери, которые консоль только называет (ADR 0009, 0015).
+Куда это положить — вопрос урока, и ответ на него задан границей (ADR 0001, 0002). У подсистемы три места, и консоль не из них: спека, воркер, страница. Маршрутов на консоли у VMS нет ни одного. Консоль VMS — это консоль платформы, запущенная с `CONSOLE_ROOT=cam`: она читает спеки VMS и отдаёт то, что они объявили. Всё, что VMS показывает сверх модуля, — страница рядом со спекой. А байты — шкалу, куски архива, живой поток — страница берёт у держателей сама, через двери, которые консоль только называет (ADR 0009, 0015).
 
 Четыре вещи, ради которых урок стоит читать.
 
@@ -51,7 +51,7 @@ def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_
     return spec_console(ctls, ctl.spec.name, resource_root, index, wall)
 ```
 
-Весь `vms/console.py` — эта функция и `serve` вокруг неё; ими его зовут тесты и уроки. Развёрнутая консоль — глагол платформы: `python3 -m w2cplatform console` с `CONSOLE_ROOT=vms` (`deploy/w2c-console.container`, служба `w2c-console.service` — то же имя, что на кластере; ADR 0023), процесс платформы под пользователем `w2c` (ADR 0030). `spec_console` (М10A, урок 15, шаг 14) ставит VMS на корень, остальные спеки — под их именами, с одним журналом и одним слиянием событий на всех.
+Весь `vms/console.py` — эта функция и `serve` вокруг неё; ими его зовут тесты и уроки. Развёрнутая консоль — глагол платформы: `python3 -m w2cplatform console` с `CONSOLE_ROOT=cam` (`deploy/w2c-console.container`, служба `w2c-console.service` — то же имя, что на кластере; ADR 0023), процесс платформы под пользователем `w2c` (ADR 0030). `spec_console` (М10A, урок 15, шаг 14) ставит VMS на корень, остальные спеки — под их именами, с одним журналом и одним слиянием событий на всех.
 
 Что консоль делает для VMS, VMS **объявляет**, а не пишет:
 
@@ -73,7 +73,7 @@ def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_
 
 ## Шаг 2 — Страница рядом со спекой
 
-Консоль отдаёт на `/` страницу корня (`page_of`, М10A, урок 16, шаг 1): `<sub>.shell.html` рядом с файлом его спеки. У VMS это `vms/vms.shell.html` рядом с `vms.subsystem.yaml`. Смонтированные `/rec/`, `/live/` своих страниц не отдают: их единицы модуль показывает на этой.
+Консоль отдаёт на `/` страницу корня (`page_of`, М10A, урок 16, шаг 1): `<sub>.shell.html` рядом с файлом его спеки. У VMS это `vms/cam.shell.html` рядом с `cam.subsystem.yaml`. Смонтированные `/rec/`, `/live/` своих страниц не отдают: их единицы модуль показывает на этой.
 
 Голова страницы — три строки контракта и одна опция:
 
@@ -85,12 +85,12 @@ def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_
 <script>
 "use strict";
 // The VMS's words (display) and what its subsystems are about (about) the module reads from each one's spec.
-const SUBS=["vms","rec","live"];
+const SUBS=["cam","rec","live"];
 const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
 window.platformConsole=pc;
 ```
 
-`subsystems` сужает дерево до камер, записей и потоков. `rec` и `live` говорят в спеке `about: {sub: vms, field: cam}`, поэтому модуль сам вкладывает записи и потоки камеры под её узел: странице не нужно знать, что записи живут под камерами. Слова — «камера», «Оборудование», подписи полей, блоки формы — приходят из `display` спеки VMS; в странице их нет.
+`subsystems` сужает дерево до камер, записей и потоков. `rec` и `live` говорят в спеке `about: {sub: cam, field: cam}`, поэтому модуль сам вкладывает записи и потоки камеры под её узел: странице не нужно знать, что записи живут под камерами. Слова — «камера», «Оборудование», подписи полей, блоки формы — приходят из `display` спеки VMS; в странице их нет.
 
 Состояние, которое странице нужно от модуля, она берёт из его событий:
 
@@ -100,12 +100,12 @@ pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.do
 const camById=id=>(UNITS.vms||[]).find(u=>String(u.id)===String(id))||null;
 …
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
-const isCam=ref=>String(ref).startsWith("unit:vms/");
+const isCam=ref=>String(ref).startsWith("unit:cam/");
 ```
 
 За `/cameras` и `/rec/recordings`-как-единицами страница не ходит: их читает модуль, и каждый опрос отдаёт их ей.
 
-**Чего у страницы нет** — проверено буквально (`shell-page.test.js`): один встроенный скрипт, модуль и его облик по `?v=1`, `mount` один раз с `subsystems:SUBS`; ни своего входа, ни запросов к `/session`, `/servers`, `/domain`, `/policy`, `/drain`, `/mounts`, `/spec`, `/unplaceable`, `/metrics`, `/where/`; в ленте — разделы модуля и «Сценарии» страницы сразу после «Оборудования». Из `/domain` страница берёт только долю VMS: книгу, поля которой показывает спека (`/domain/vms/books/primaries`, ADR-0010), и `where` записи другого кластера через свою консоль (`/domain/at/…`, ADR-0061; шаг 6).
+**Чего у страницы нет** — проверено буквально (`shell-page.test.js`): один встроенный скрипт, модуль и его облик по `?v=1`, `mount` один раз с `subsystems:SUBS`; ни своего входа, ни запросов к `/session`, `/servers`, `/domain`, `/policy`, `/drain`, `/mounts`, `/spec`, `/unplaceable`, `/metrics`, `/where/`; в ленте — разделы модуля и «Сценарии» страницы сразу после «Оборудования». Из `/domain` страница берёт только долю VMS: книгу, поля которой показывает спека (`/domain/cam/books/primaries`, ADR-0010), и `where` записи другого кластера через свою консоль (`/domain/at/…`, ADR-0061; шаг 6).
 
 И нет того, чего курс не отдаёт: страница продукта показывает ещё «Записанное сервером», учётки потребителей потока домена, правки домена, «Видеоускоритель», «Опции», вкладку «Детекторы» и мастер устройств. Мёртвых кнопок под маршруты, которых нет, страница курса не рисует.
 
@@ -199,7 +199,7 @@ function evNoteRu(e){
 Отсюда начинается ядро — между двумя строками-метками страницы:
 
 ```js
-// ── core: COPY WITH A CHECK — the product's vms/vms.shell.html (main), function by function; test_shell_core.py ──
+// ── core: COPY WITH A CHECK — the product's vms/cam.shell.html (main), function by function; test_shell_core.py ──
 …
 // ── end of core ──────────────────────────────────────────────────────────────────────────────────────────────────
 ```
@@ -207,7 +207,7 @@ function evNoteRu(e){
 ```python
 CORE = ("whereAt", "doorOf", "doorFetch", "yieldCut", "loadTimeline", "segmentURL", "play", "playNext",
         "negotiateLive", "stopLive")
-PRODUCT = "vmsworker/vms/vms.shell.html"
+PRODUCT = "vmsworker/vms/cam.shell.html"
 ```
 
 `test_the_core_of_the_course_page_is_the_products_but_for_the_debt` сравнивает каждую из десяти функций с той же функцией страницы продукта на его `main`; `test_the_core_functions_stand_in_the_marked_block_of_the_course_page` — что они стоят между метками. Разница — только долг `testdata/shell_core_debt.txt`, и он только сокращается (`W2C_SHELL_CORE_SHRINK=1`); сегодня он пуст. Остальная страница — курса: её пишут уроки. А то, как страница доходит до байтов, — один код. Ошибка в повторе по 401 или в слиянии участков иначе жила бы в двух местах и чинилась бы в одном.
@@ -248,7 +248,7 @@ Cookie консоли к держателю не идёт никогда: две
 
 ## Шаг 6 — Шкала: каждая запись и каждое место
 
-Шкала камеры — это шкала её записей. Своей двери у держателя камеры для страницы нет (`vms.subsystem.yaml`: *the scale is built from the camera's recordings*):
+Шкала камеры — это шкала её записей. Своей двери у держателя камеры для страницы нет (`cam.subsystem.yaml`: *the scale is built from the camera's recordings*):
 
 ```js
 async function loadTimeline(id){
@@ -310,7 +310,7 @@ async function loadTimeline(id){
 
 Без этого страница нарисовала бы дыру там, где лежит видео выключенного сервера, и оператор искал бы запись на карте камеры или списал бы её как потерянную. Тест: регистратор тома `old` замолчал — место отвечает 404 с `X-Unreachable: old@srv-1`, на шкале минуты `new`, а `old@srv-1` назван рядом с `gone@srv-3` (`test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn`).
 
-**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую несёт её собственный кластер, — у члена и у держателя домена одинаково (ADR-0010, дополнение 2026-10-06): `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: […]}`), без токенов дорог; ключ `*_secret` внутри показанного значения консоль не отдаёт никогда (`_without_secrets`). Книга перечитывается на каждом `refresh`, в котором модуль принёс ключ `domain`. Из записи о камере страница берёт основную запись (`recorded_by`, `recording`) и каждый резерв из списка `backups` (`[{cluster, recording}]`) — со знаком `backup: true`, своей строкой на шкале. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
+**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую несёт её собственный кластер, — у члена и у держателя домена одинаково (ADR-0010, дополнение 2026-10-06): `GET /domain/cam/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: […]}`), без токенов дорог; ключ `*_secret` внутри показанного значения консоль не отдаёт никогда (`_without_secrets`). Книга перечитывается на каждом `refresh`, в котором модуль принёс ключ `domain`. Из записи о камере страница берёт основную запись (`recorded_by`, `recording`) и каждый резерв из списка `backups` (`[{cluster, recording}]`) — со знаком `backup: true`, своей строкой на шкале. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
 
 ```js
 function farRecsOfCam(id){
@@ -420,16 +420,16 @@ function piecesFrom(i,t){
 ```js
 async function fetchEvents(id,from,to){
   …
-    const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("vms/"+id)}`);
+    const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("cam/"+id)}`);
     // Past the console's norm the answer is `groups`, not `events` — read both, and say why the list changed shape.
     if(r.ok){const d=await r.json();
       V.events=d.events||[];V.groups=d.groups||[];V.evstate=d.state||"";
       V.aggregated=!!d.aggregated;V.truncated=!!d.truncated;V.rate=+d.rate_per_minute||0;V.norm=+d.per_minute||0}
 ```
 
-События камеры — одним запросом из слияния (М10A, урок 15, шаг 7): `unit=vms/<id>` отдаёт и строки о камере от подсистем, которые про неё (`of`). На шкале событие стоит там, где **произошло** (`occurred`), а не где записано (`t`); опоздавшее подписано «записано в …». Цвет подсистемы назначается при первой встрече (`subColor`): реестра подсистем у страницы нет. Поля события выводятся вычитанием: известные — на своих местах, остальные `ключ=значение`, и новое поле детектора появляется на экране в тот же день. `state`, отличный от `live`, красится: список событий короче правды, потому что какой-то ресурс не ответил. За нормативом потока (`per_minute`) ответ — `groups`, и страница показывает счёт, а не строки, и говорит почему.
+События камеры — одним запросом из слияния (М10A, урок 15, шаг 7): `unit=cam/<id>` отдаёт и строки о камере от подсистем, которые про неё (`of`). На шкале событие стоит там, где **произошло** (`occurred`), а не где записано (`t`); опоздавшее подписано «записано в …». Цвет подсистемы назначается при первой встрече (`subColor`): реестра подсистем у страницы нет. Поля события выводятся вычитанием: известные — на своих местах, остальные `ключ=значение`, и новое поле детектора появляется на экране в тот же день. `state`, отличный от `live`, красится: список событий короче правды, потому что какой-то ресурс не ответил. За нормативом потока (`per_minute`) ответ — `groups`, и страница показывает счёт, а не строки, и говорит почему.
 
-Отметка оператора — `POST /marks {unit: "vms/<id>", note}` через `pc.api`: тот же ключ на отправку, что у всех записей.
+Отметка оператора — `POST /marks {unit: "cam/<id>", note}` через `pc.api`: тот же ключ на отправку, что у всех записей.
 
 ## Шаг 9 — Живое видео
 
@@ -544,8 +544,8 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 
 ```js
 const RACTIONS=[
-  {sub:"vms",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
-  {sub:"vms",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
+  {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
+  {sub:"cam",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
   {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут"},{id:"archive",label:"Архив",opt:true}]},
   …
 ```
@@ -554,11 +554,11 @@ const RACTIONS=[
 
 ## Шаг 13 — Домен глазами VMS
 
-Модуль рисует платформенную часть домена: члены, топология, тревоги, ключи. Камеры и архивы членов — это VMS, и их страница берёт из того же вида держателя (`GET /domain`, который модуль отдаёт ей в `refresh`): `units` — единицы членов с кластером, сервером, воркером и состоянием, `tables` — таблицы домена, которые служат спеки (`vms/crossings`: для камеры одного кластера — кластер, который её пишет; [урок 3 М12B](../М12B_DomainVMS/03-a-camera-nobody-can-reach.md)).
+Модуль рисует платформенную часть домена: члены, топология, тревоги, ключи. Камеры и архивы членов — это VMS, и их страница берёт из того же вида держателя (`GET /domain`, который модуль отдаёт ей в `refresh`): `units` — единицы членов с кластером, сервером, воркером и состоянием, `tables` — таблицы домена, которые служат спеки (`cam/crossings`: для камеры одного кластера — кластер, который её пишет; [урок 3 М12B](../М12B_DomainVMS/03-a-camera-nobody-can-reach.md)).
 
 ```js
 pc.addTreeNodes("member",ref=>{
-  const name=ref.slice(7),cams=domUnits("vms",name),arcs=domUnits("rec",name);
+  const name=ref.slice(7),cams=domUnits("cam",name),arcs=domUnits("rec",name);
   …
   if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
   return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
@@ -570,11 +570,11 @@ pc.addTreeNodes("member",ref=>{
 ## Результат
 
 ```
-GET  /                                  → vms/vms.shell.html над /platform/console.js (CSP: 'self' и хеш её скрипта)
+GET  /                                  → vms/cam.shell.html над /platform/console.js (CSP: 'self' и хеш её скрипта)
 GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment, keeps]}}
 GET  /rec/where/volumes/old?unit=rec/7  → дверь держателя тома для записи 7
                                           или 404, door: null, X-Unreachable: old@srv-1
-GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording, backups?: [{cluster, recording}]}} — кто пишет камеру в другом кластере
+GET  /domain/cam/books/primaries        → {<ref>: {recorded_by, recording, backups?: [{cluster, recording}]}} — кто пишет камеру в другом кластере
 GET  /domain/at/east/rec/where/SN-7     → дверь записи кластера east, выданная его консолью (ADR-0061);
                                           403/404/502/503 — словами в подписи шкалы
 GET  <door>/timeline/7?from&to          → [{start_ms, end_ms, epoch, source?, fenced?, yields?}]   (Bearer)
@@ -606,8 +606,8 @@ GET  /timeline/7, /segment/…, /whep/7  → 404: у консоли байтов
 
 ## Итог
 
-- Консоль VMS — консоль платформы с `CONSOLE_ROOT=vms`: `make_console` — это `spec_console` над спеками VMS, и маршрутов у VMS на ней нет. Что ей нужно, VMS объявляет: таблицы, заявки, двери, места, права, слова.
-- Страница VMS — `vms/vms.shell.html` рядом со спекой, оболочка над модулем: `mount` с `subsystems: ["vms", "rec", "live"]`, своё — вызовами библиотеки, платформенного — ничего.
+- Консоль VMS — консоль платформы с `CONSOLE_ROOT=cam`: `make_console` — это `spec_console` над спеками VMS, и маршрутов у VMS на ней нет. Что ей нужно, VMS объявляет: таблицы, заявки, двери, места, права, слова.
+- Страница VMS — `vms/cam.shell.html` рядом со спекой, оболочка над модулем: `mount` с `subsystems: ["cam", "rec", "live"]`, своё — вызовами библиотеки, платформенного — ничего.
 - Под CSP ни одного обработчика в разметке: `data-act` и `wire`; всё из данных — через `esc`.
 - Ядро — двери, шкала, куски, живое — копия продуктового, сверенная по функциям; долг пуст.
 - Дверь — `{url, token, expires}`: токен `door1.` на единицу и держателя, Bearer для `fetch`, `?t=` для плеера, заново за 20 с до конца и один раз на 401.

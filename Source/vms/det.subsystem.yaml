@@ -9,7 +9,7 @@ name: det
 # The slot a worker of this subsystem makes, `d-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: d, name_env: DET_NAME}
-about: {sub: vms, field: cam}   # a model runs on a camera's stream: its events, grants and labels are the camera's
+about: {sub: cam, field: cam}   # a model runs on a camera's stream: its events, grants and labels are the camera's
 unit:
   rows: units                        # det/units/<name>
   id: name                           # "<cam>-<kind>", the operator's name for the pair
@@ -87,7 +87,7 @@ metrics:
 console:
   running: units_running               # det_units_running
 events:
-  # Which of this subsystem's events collapse when they repeat — the VMS's rule (vms.subsystem.yaml), applied
+  # Which of this subsystem's events collapse when they repeat — the VMS's rule (cam.subsystem.yaml), applied
   # by the detector worker before the write (`Suppressor`). Until this every line a model produced went into the
   # log (M12 of the review): a motion model re-reports for as long as the scene moves, which on a windy camera is
   # all night, once a pass. The first line of a window is the news and goes in unchanged; what the window

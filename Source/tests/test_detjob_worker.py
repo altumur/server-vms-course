@@ -207,7 +207,7 @@ def _holder_of_camera(box, cam, cov=None):
     st = {"id": str(cam), "phase": "running", "live_url": f"rtsp://srv-1:8554/{cam}"}
     if cov is not None:
         st["coverage"] = cov
-    box.objects.put("vms/heartbeats/w-1",
+    box.objects.put("cam/heartbeats/w-1",
                     Heartbeat("w-1", box.wall(), [st], {"server": "srv-1", "capacity": 50, "headroom": 49}).to_bytes())
 
 

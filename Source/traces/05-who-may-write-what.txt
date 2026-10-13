@@ -1,10 +1,10 @@
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/7", "cas": null, "items": {"epoch": "1"}}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/7", "cas": null, "items": {"epoch": "1"}}
 → 200 {"index": 1004}
 
-# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
-→ 403 {"kind": "forbidden", "error": "vmsworker may not write vms/placement/7"}
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
+→ 403 {"kind": "forbidden", "error": "camworker may not write cam/placement/7"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
@@ -16,24 +16,24 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
 POST /v1/write {"op": "put", "key": "rec/recordings/7", "cas": null, "items": {"cam": "7"}}
 → 403 {"kind": "forbidden", "error": "recworker may not write rec/recordings/7"}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {
   "worker": "w-srv-a-1",
   "reason": "…"
 }}
 → 200 {"index": 1006}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "moved"}}
-→ 403 {"kind": "forbidden", "error": "vmscontroller may not write vms/cameras/7"}
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "moved"}}
+→ 403 {"kind": "forbidden", "error": "camcontroller may not write cam/cameras/7"}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "north-gate"}}
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "north-gate"}}
 → 200 {"index": 1007}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
-→ 403 {"kind": "forbidden", "error": "console may not write vms/workers/w-srv-a-1"}
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
+→ 403 {"kind": "forbidden", "error": "console may not write cam/workers/w-srv-a-1"}
 
 # resource on srv-a → /run/configstore/resource.sock
 POST /v1/write {"op": "put", "key": "platform/doors/srv-a", "cas": null, "items": {
@@ -43,5 +43,5 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-a", "cas": null, "items"
 → 200 {"index": 1008}
 
 # resource on srv-a → /run/configstore/resource.sock
-POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "mine"}}
-→ 403 {"kind": "forbidden", "error": "resource may not write vms/cameras/7"}
+POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "mine"}}
+→ 403 {"kind": "forbidden", "error": "resource may not write cam/cameras/7"}

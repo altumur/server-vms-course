@@ -1,4 +1,4 @@
-"""Lesson 4 — vmsworker: М9's loop over an assignment; the epoch and the
+"""Lesson 4 — camworker: М9's loop over an assignment; the epoch and the
 lease; the restart with the controller stopped; the zombie on one box."""
 import json
 import os
@@ -110,7 +110,7 @@ def test_worker_runs_its_assignment_and_takes_an_epoch_per_camera():
     ctl.assign("w-1", ["1", "2"])
     assert w.reconcile_once() == [("start", 1), ("start", 2)]
     assert act.epochs == {1: 1, 2: 1} and w.may_act("1") and w.may_act("2")
-    assert box.vars.get("vms/epoch/1")[0] == {"epoch": "1"}
+    assert box.vars.get("cam/epoch/1")[0] == {"epoch": "1"}
     ctl.update_camera(1, {"name": "gate"})                   # an edit: revision 2
     assert w.reconcile_once() == [("restart", 1)] and act.epochs[1] == 1     # a restart keeps its epoch
     ctl.assign("w-1", ["2"])                                  # camera 1 reassigned away
@@ -136,7 +136,7 @@ def test_restart_with_the_controller_stopped():
 
 
 def test_the_failover_on_metrics_is_the_one_the_workers_measured():
-    """The review's eighth pass, found by the coordinator: `vms_failover_seconds{kind="worst"}` was the number the console
+    """The review's eighth pass, found by the coordinator: `cam_failover_seconds{kind="worst"}` was the number the console
     was built with — nothing on a cluster, 0.0 after any failover. It is measured now from what the instances wrote: the
     replacement's start less the last heartbeat of the instance before, per worker (`kind="last"`) and the worst."""
     from w2cplatform.console import SpecConsole
@@ -144,13 +144,13 @@ def test_the_failover_on_metrics_is_the_one_the_workers_measured():
     ctl.assign("w-1", ["1"])
     a = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     a.reconcile_once(); a.heartbeat_once()
-    assert 'vms_failover_seconds{kind="worst"} 0.0' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'cam_failover_seconds{kind="worst"} 0.0' in SpecConsole(ctl, wall=box.wall).metrics_text()
     box.wall.advance(31); box.clock.advance(31)                # the box lost power; the replacement starts 31 s later
     b = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     b.reconcile_once(); b.heartbeat_once()
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_failover_seconds{kind="worst"} 31.0' in text and 'vms_failover_seconds{kind="last",worker="w-1"} 31.0' in text, text
-    assert 'vms_failover_seconds{kind="worst"} 48.0' in SpecConsole(ctl, worst_failover=48.0, wall=box.wall).metrics_text()
+    assert 'cam_failover_seconds{kind="worst"} 31.0' in text and 'cam_failover_seconds{kind="last",worker="w-1"} 31.0' in text, text
+    assert 'cam_failover_seconds{kind="worst"} 48.0' in SpecConsole(ctl, worst_failover=48.0, wall=box.wall).metrics_text()
 
 
 def test_a_previous_heartbeat_that_is_no_time_makes_no_failover_however_finite():
@@ -160,7 +160,7 @@ def test_a_previous_heartbeat_that_is_no_time_makes_no_failover_however_finite()
     from w2cplatform.contract import Heartbeat
     box, ctl = _box_with_cameras(1)
     for prev in ("-1e308", "1", str(box.wall() - 31)):
-        box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {
+        box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {
             "server": "srv-a", "previous_server": "srv-a", "instance": f"i-{prev}", "started": str(box.wall()),
             "previous_hb": prev}).to_bytes())
         got = ctl.failover_seconds()
@@ -255,7 +255,7 @@ def test_the_worker_observes_what_it_holds_recording_or_not():
     assert w.observe(1, "motion") is None                          # no epoch held yet: not mine to observe
     w.reconcile_once()
     p = w.observe(1, "motion", zone="gate")
-    assert p and p.startswith(os.path.join(box.resource_root, "vms", "1", "e1")) and read_bucket(p)[0]["zone"] == "gate"
+    assert p and p.startswith(os.path.join(box.resource_root, "cam", "1", "e1")) and read_bucket(p)[0]["zone"] == "gate"
     assert w.observe(2, "motion") is None                          # camera 2 is not assigned to me
     act.post(1, "person", score=0.91)                              # an element posted on the bus...
     w.pump_once()                                                  # ...and the worker, holding the epoch, made it a line
@@ -265,7 +265,7 @@ def test_the_worker_observes_what_it_holds_recording_or_not():
     assert read_bucket(p)[1]["score"] == 0.91
     w.fence("test"); act.post(1, "motion"); w.pump_once()
     assert len(read_bucket(p)) == 3                                # a fenced instance's bus still posts; observe drops it
-    assert box.vars.list("vms/events") == [] and ctl.workers_seen() == {}    # nobody was told; nothing went to the store
+    assert box.vars.list("cam/events") == [] and ctl.workers_seen() == {}    # nobody was told; nothing went to the store
 
 
 def test_a_reassignment_is_not_a_zombie():
@@ -342,7 +342,7 @@ def test_the_first_heartbeat_does_not_wait_for_the_first_tick():
 
     assert sent and sent[0] == 0.0, f"the first heartbeat waited: {sent}"
     assert len(sent) == 2, sent          # the announcement, and the orderly stop's own
-    assert box.objects.get("vms/heartbeats/w-1")
+    assert box.objects.get("cam/heartbeats/w-1")
 
 
 def test_a_storm_becomes_one_line_and_a_count_of_what_it_swallowed():
@@ -413,7 +413,7 @@ def test_a_contact_that_changes_is_never_one_event_and_a_storm_that_ends_is_coun
 def test_the_same_kind_is_an_alarm_on_one_device_and_noise_on_the_next():
     """Where the class lives is the whole decision, and it is not in the spec.
 
-    Declared per kind in `vms.subsystem.yaml`, `io.input` would be an alarm
+    Declared per kind in `cam.subsystem.yaml`, `io.input` would be an alarm
     everywhere or nowhere. But it is a door forced on the camera watching the gate
     and a technician opening a cabinet on the one in the plant room — the same
     event type, the same firmware, a different pair of wires. A subsystem cannot

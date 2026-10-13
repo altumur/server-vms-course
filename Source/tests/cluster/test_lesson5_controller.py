@@ -49,7 +49,7 @@ def test_where_is_camera_7_in_one_scan():
     for i in range(9):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.ensure_placed()
-    d = Directory(c.vars, "vms", ttl=5.0, clock=c.clock)
+    d = Directory(c.vars, "cam", ttl=5.0, clock=c.clock)
     assert d.where(7) == ctl.where(7) and d.scans == 1
     for i in range(1, 10):
         assert d.where(i) == ctl.where(i)
@@ -58,7 +58,7 @@ def test_where_is_camera_7_in_one_scan():
 
 
 def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
-    """The review's sixth pass, the follow-up. The directory is one scan of every `vms/workers/*`, each row parsed
+    """The review's sixth pass, the follow-up. The directory is one scan of every `cam/workers/*`, each row parsed
     bare: one worker's `rev` with a word in it — a hand edit — and "where is camera 7" had no answer for ANY camera.
     The row is read for the units it names (`w2cplatform.contract.read_assignment`), as the controller reads it."""
     c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
@@ -67,8 +67,8 @@ def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.ensure_placed()
     w = ctl.where(7)
-    c.vars.put(f"vms/workers/{w}", {"units": ",".join(ctl.assignment(w).units), "rev": "seven"})
-    d = Directory(c.vars, "vms", ttl=5.0, clock=c.clock)
+    c.vars.put(f"cam/workers/{w}", {"units": ",".join(ctl.assignment(w).units), "rev": "seven"})
+    d = Directory(c.vars, "cam", ttl=5.0, clock=c.clock)
     assert [d.where(i) for i in range(1, 10)] == [ctl.where(i) for i in range(1, 10)] and d.where(7) == w
     assert ctl.pass_once()["ok"]                                             # and the controller's pass is a pass
     import sys                                                               # the count is the process's, and every heartbeat
@@ -93,7 +93,7 @@ def test_two_controllers_agree_under_constraints():
 
 
 def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
-    """The review's eighth pass, found by the coordinator: `vms_units_unplaced` and `vms_reconcile_pass_seconds` are read
+    """The review's eighth pass, found by the coordinator: `cam_units_unplaced` and `cam_reconcile_pass_seconds` are read
     from the report `pass_once` writes, and the cluster's controller loops called the placement steps one by one and
     never wrote it — on a cluster the gauges said 0 and -1 whatever was unplaced. A pass of either loop is the box's
     pass now — the platform's, which both loops run (`host.placement_pass`, `host.controller_loop`): the report, then
@@ -107,12 +107,12 @@ def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     text = SpecConsole(ctl, wall=c.wall).metrics_text()
-    assert "vms_reconcile_last_pass_age_seconds -1" in text and "vms_units_unplaced 0" in text   # no report: what it said
+    assert "cam_reconcile_last_pass_age_seconds -1" in text and "cam_units_unplaced 0" in text   # no report: what it said
     host.placement_pass(ctl, "placement")
     text = SpecConsole(ctl, wall=c.wall).metrics_text()
-    assert "vms_units_unplaced 1" in text and "vms_reconcile_last_pass_age_seconds 0" in text, text
-    assert "vms_reconcile_last_success_age_seconds 0" in text and "vms_reconcile_pass_seconds " in text
-    assert "vms_snapshot_age_seconds -1" not in text
+    assert "cam_units_unplaced 1" in text and "cam_reconcile_last_pass_age_seconds 0" in text, text
+    assert "cam_reconcile_last_success_age_seconds 0" in text and "cam_reconcile_pass_seconds " in text
+    assert "cam_snapshot_age_seconds -1" not in text
     rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
     rec.create({"name": "1", "cam": "1"})
     host.placement_pass(rec, "rec placement")
@@ -144,7 +144,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     assert ctl.assignment(A).units == [] and ctl.placement(a).reason.startswith("resource on srv-a silent; ")
     assert ctl.placement(a).reason.endswith("; on srv-b")
     # the console shows the label beside the fact: whether each server's resource answers
-    sv = spec_console({"vms": ctl}, "vms").root.servers()["servers"]
+    sv = spec_console({"cam": ctl}, "cam").root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
     assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
     assert "archive" not in sv["srv-a"]          # what a server holds of a subsystem's tables is its spec's `servers.show` (step 6)
@@ -169,8 +169,8 @@ def test_the_snapshot_is_the_only_thing_that_leaves_the_cluster():
     # workers is three objects — a cluster that grows publishes MORE of them, never a bigger one. That is
     # the whole difference from the single object this used to be, which grew with the cluster under a
     # store that caps an object at 64 KiB.
-    keys = c.objects.list("vms/snapshot/")
-    assert keys == ["vms/snapshot/" + w for w in sorted(ws)]
+    keys = c.objects.list("cam/snapshot/")
+    assert keys == ["cam/snapshot/" + w for w in sorted(ws)]
     held = [json.loads(c.objects.get(k)) for k in keys]
     rows = [r for sh in held for r in sh["cameras"]]
     assert len(rows) == 3                                                  # every camera, once
@@ -188,7 +188,7 @@ def test_the_console_over_http():
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
     rec_con = SpecController(REC_SPEC, c.vars.as_writer("console", REC_SPEC.acl_console()), c.objects, wall=c.wall)   # the console's door to recordings
-    srv = spec_console({"vms": ctl, "rec": rec_con}, "vms", c.servers["srv-a"].archive, worst_failover=48.0).serve("127.0.0.1", 0)
+    srv = spec_console({"cam": ctl, "rec": rec_con}, "cam", c.servers["srv-a"].archive, worst_failover=48.0).serve("127.0.0.1", 0)
     port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     def call(method, path, body=None, headers=None):
@@ -207,7 +207,7 @@ def test_the_console_over_http():
     st, out = call("GET", "/where/1"); d = json.loads(out)
     assert st == 200 and d["worker"] == d["directory"] and "on srv-" in d["reason"]
     st, out = call("GET", "/metrics")
-    assert 'vms_failover_seconds{kind="worst"} 48.0' in out and "vms_workers_live 3" in out and "vms_cameras_running 1" in out
+    assert 'cam_failover_seconds{kind="worst"} 48.0' in out and "cam_workers_live 3" in out and "cam_cameras_running 1" in out
     st, out = call("GET", "/resources"); assert st == 200 and json.loads(out) == {}
     # the administrator's knob: one row, the console's to write, the controller's to read on its next pass
     st, out = call("GET", "/policy"); assert st == 200 and json.loads(out)["servers"] == "shared"
@@ -216,7 +216,7 @@ def test_the_console_over_http():
     st, out = call("GET", "/servers"); assert json.loads(out)["policy"] == {"servers": "distinct"}
     call("PUT", "/policy", {"servers": "shared"})
     # the recorder at /rec/…: the page's Record toggle writes a recording row; placement is the rec controller's, not the console's
-    st, out = call("GET", "/mounts"); assert json.loads(out) == {"root": "vms", "mounts": {"rec": json.loads(call("GET", "/rec/spec")[1])}}
+    st, out = call("GET", "/mounts"); assert json.loads(out) == {"root": "cam", "mounts": {"rec": json.loads(call("GET", "/rec/spec")[1])}}
     st, out = call("POST", "/rec/recordings", {"name": "1", "cam": "1", "retention_days": 7}, {"Idempotency-Key": "r1"}); assert st == 201 and json.loads(out)["worker"] is None
     assert c.vars.get("rec/recordings/1")[0]["retention_days"] == "7" and json.loads(call("GET", "/rec/policy")[1])["servers"] == "distinct"   # the recorder's own knob
     assert call("PUT", "/rec/recordings/1", {"worker": "r-srv-a-1"})[0] == 400
@@ -231,9 +231,9 @@ def test_the_console_over_http():
     res = platform_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
     # an operator's mark: the console's own bucket on srv-a's resource; the console has no index — it asks srv-a's, by HTTP, and finds the `cam` field
-    st, out = call("POST", "/marks", {"unit": "vms/1", "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
+    st, out = call("POST", "/marks", {"unit": "cam/1", "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
     m = json.loads(out); assert st == 201 and m["bucket"].startswith(f"console/{m['unit']}/e1/")
-    st, out = call("GET", "/events?unit=vms/1"); ev = json.loads(out)
+    st, out = call("GET", "/events?unit=cam/1"); ev = json.loads(out)
     assert st == 200 and [(e["subsystem"], e["kind"], e["user"], e["server"]) for e in ev["events"]] == [("console", "mark", "murat", "srv-a")] and ev["state"] == "live"
     # the page, and playback across the cluster: footage in srv-a's volume, at its recorder's door — the console hands
     # the door out with the recording's place and carries none of it (the boundary's step 6)
@@ -267,7 +267,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
     from vms.config import REC_SPEC
 
     class Tokens:                                                     # an `Access` with no cryptography: a token is a name
-        grants = {"viewer": [("view", "vms/1")], "guard": [("edit", "vms/1")], "admin": [("admin", None)]}   # units: <sub>/<id>
+        grants = {"viewer": [("view", "cam/1")], "guard": [("edit", "cam/1")], "admin": [("admin", None)]}   # units: <sub>/<id>
 
         def who(self, token):
             if token not in self.grants:
@@ -283,7 +283,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
 
     c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
-    m = spec_console({"vms": ctl, "rec": rec}, "vms")
+    m = spec_console({"cam": ctl, "rec": rec}, "cam")
     for con in (m.root, *m.mounts.values()):
         con.gate.impl = Tokens()
     srv = m.serve("127.0.0.1", 0)
@@ -312,7 +312,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
         assert 'rec_workers_needed{labels=""}' in call("GET", "/rec/metrics", "admin")[1]   # what `w2c-spares.sh` reads for recorders
-        assert m.mounts["rec"].journal is m.root.journal and m.mounts["rec"].spec.about_sub == "vms"   # a recording is about its camera
+        assert m.mounts["rec"].journal is m.root.journal and m.mounts["rec"].spec.about_sub == "cam"   # a recording is about its camera
     finally:
         srv.shutdown()
 

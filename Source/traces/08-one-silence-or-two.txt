@@ -1,8 +1,8 @@
 # a hang — w-srv-a-1 silent, its process running, srv-a's resource alive: gone_servers() = {}, redistribute() = [], fate: 'hung', writes: 0
 # the power pull — w-srv-a-1 AND srv-a's resource silent: gone_servers() = {'w-srv-a-1': 'srv-a'}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1011, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500186.0",
@@ -10,19 +10,19 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
 }}
 → 200 {"index": 1028}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1016, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1016, "items": {
   "units": "2,3",
   "rev": "4"
 }}
 → 200 {"index": 1029}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
 → 200 {"index": 1030}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1013, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (49); on srv-b",
   "at": "1757500186.0",
@@ -30,19 +30,19 @@ POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
 }}
 → 200 {"index": 1031}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1029, "items": {"units": "3", "rev": "5"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1029, "items": {"units": "3", "rev": "5"}}
 → 200 {"index": 1032}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1030, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1030, "items": {
   "units": "1,2",
   "rev": "2"
 }}
 → 200 {"index": 1033}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": 1015, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": 1015, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (48); on srv-b",
   "at": "1757500186.0",
@@ -50,25 +50,25 @@ POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": 1015, "items": {
 }}
 → 200 {"index": 1034}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1032, "items": {"units": "", "rev": "6"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1032, "items": {"units": "", "rev": "6"}}
 → 200 {"index": 1035}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1033, "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1033, "items": {
   "units": "1,2,3",
   "rev": "3"
 }}
 → 200 {"index": 1036}
 
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
 → 200 {"index": 1037}
 
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
 → 200 {"index": 1038}
 
-# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
-POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
+# camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
 → 200 {"index": 1039}

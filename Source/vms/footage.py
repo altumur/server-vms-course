@@ -63,7 +63,7 @@ def coverage_of(found) -> tuple[float, float] | None:
     cov = found[2].get("coverage")
     if not cov:
         return None
-    key = f"vms/{HEARTBEATS}/{found[0]}#coverage"
+    key = f"cam/{HEARTBEATS}/{found[0]}#coverage"
     try:
         return finite(cov["from"]), finite(cov["to"])
     except PARSE_ERRORS as e:
@@ -295,7 +295,7 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
         cam = str((items or {}).get("cam") or "")
         if not cam or (items or {}).get("deleted") == "true":
             return None
-        return holder_of(objects, "vms/", cam, wall(), field="playback_url")
+        return holder_of(objects, "cam/", cam, wall(), field="playback_url")
 
     def device_coverage(unit: str):
         return coverage_of(device_holder(unit))

@@ -124,7 +124,7 @@ def test_the_console_runs_it_and_the_evaluator_may_file_it():
     loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     assert "detect_on_request(" in loop and "expire(det_ctl" in loop
     assert "_requests_loop" in inspect.getsource(m.jobs)            # the VMS's housekeeping since the boundary's step 6
-    assert 'requests_acl("vms", "rec", "det")' in inspect.getsource(m.autoworker)
+    assert 'requests_acl("cam", "rec", "det")' in inspect.getsource(m.autoworker)
 
 
 def test_requests_are_looked_at_far_more_often_than_they_live():

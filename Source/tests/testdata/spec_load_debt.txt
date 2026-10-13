@@ -2,7 +2,7 @@
 # `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
-vms:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
+cam:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
 testsub2:domain.tokens.feed.grant   # ADR-0074 «курс»: запрос токена воркером (доп. 5) положен продуктом в C1 первым, курс несёт ключ своим окном книг — команда курса
 testsub2:domain.tokens.feed.placement   # ADR-0074 «курс»: запрос токена воркером (доп. 5) положен продуктом в C1 первым, курс несёт ключ своим окном книг — команда курса
 cam:domain.tokens.stream.grant   # ADR-0074 «курс»: окно C2 положено продуктом первым (поправка к доп. 3), курс несёт ключ своим окном книг — команда курса

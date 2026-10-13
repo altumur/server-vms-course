@@ -1,15 +1,15 @@
-# deploy/cluster/nomad/vmsworker.nomad.hcl — the appendix «форма поставки»: the worker as a Nomad service job, for a site
+# deploy/cluster/nomad/camworker.nomad.hcl — the appendix «форма поставки»: the worker as a Nomad service job, for a site
 # where an orchestrator is justified (a rented cluster, М12 Lesson 8). It HOLDS the camera and writes its events
-# into the resource on its node; the same installation and runner as `vms-vmsworker.service`. What Nomad adds is
+# into the resource on its node; the same installation and runner as `vms-camworker.service`. What Nomad adds is
 # the one thing this module does without: it starts the worker again on ANOTHER node when its node is lost — so the
 # name comes from the allocation's index (`SLOT_INDEX`), which moves with the allocation, and `lost_after` is the
 # margin the controller would otherwise wait. Count is the operator's; no autoscaler (the spares script reads the
 # same numbers on a server of this module).
-job "vmsworker" {
+job "camworker" {
   datacenters = ["room-a"]
   type        = "service"
 
-  group "vmsworker" {
+  group "camworker" {
     count = 2
 
     # spread, not distinct_hosts: workers on different nodes when they can be, doubled up when they must.
@@ -24,7 +24,7 @@ job "vmsworker" {
       reconcile            = "best_score"
     }
 
-    task "vmsworker" {
+    task "camworker" {
       driver       = "raw_exec"
       # No umask of its own (the agent's 0022 is handed on): the runner sets 0007, as a unit's UMask= — what it
       # writes in the setgid events archive and objects is the group's (the thirteenth review, major 13).
@@ -35,7 +35,7 @@ job "vmsworker" {
         args    = ["vms", "worker"]
       }
       env {
-        PLATFORM_STORE  = "configstore:///run/configstore/vmsworker.sock"
+        PLATFORM_STORE  = "configstore:///run/configstore/camworker.sock"
         SLOT_INDEX      = "${NOMAD_ALLOC_INDEX}"     # the name moves with the allocation: w-<index>
         INSTANCE_ID     = "${NOMAD_ALLOC_ID}"
         SERVER_NAME     = "${node.unique.name}"

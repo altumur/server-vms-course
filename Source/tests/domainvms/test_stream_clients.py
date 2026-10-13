@@ -100,8 +100,8 @@ class Site:
                                refresh_interval=60, admin=may("admin"), viewer=may("view"), holder_vars=b.vars,
                                signer_url=f"http://127.0.0.1:{self.signer_srv.server_address[1]}")
         self.console_srv = self.console.serve(port=0)
-        # the worker on the domain writes and removes in its own prefix by its role (`vmsdomain`, ADR-0021's addition)
-        self.doors = StreamClientDoors(guarded(b.vars.as_writer("vmsdomain")), sealer=self.rings["srv-b"], wall=wall,
+        # the worker on the domain writes and removes in its own prefix by its role (`camdomain`, ADR-0021's addition)
+        self.doors = StreamClientDoors(guarded(b.vars.as_writer("camdomain")), sealer=self.rings["srv-b"], wall=wall,
                                        console=ConsoleDoor(f"http://127.0.0.1:{self.console_srv.server_address[1]}"))
         self.door = open_doors("127.0.0.1", 0, door_handler(fed, None, verifier=lambda t: t, viewer=may("view"),
                                                              admin=may("admin"), clients=self.doors),
@@ -145,7 +145,7 @@ def test_a_client_is_made_its_password_shown_once_and_sealed_in_the_store():
         try:
             status, made = s.call("POST", "/stream-clients", body={"name": "wall1"})
             assert status == 200 and made["client"] == "wall1" and len(made["password"]) == 32, (status, made)
-            row, _ = s.b.vars.get("domain/vms/stream-clients/wall1")
+            row, _ = s.b.vars.get("domain/cam/stream-clients/wall1")
             assert is_sealed(row["password_secret"]) and made["password"] not in json.dumps(row)
             assert json.loads(row["doc"])["name"] == "wall1" and json.loads(row["doc"])["by"] == "anna"
             status, listed = s.call("GET", "/stream-clients", "boris")
@@ -173,7 +173,7 @@ def test_a_name_a_person_holds_is_refused_409_and_a_person_is_not_made_under_a_c
         try:
             status, said = s.call("POST", "/stream-clients", body={"name": "anna"})
             assert status == 409 and said == {"error": "refused", "detail": "there is a user anna already"}, said
-            assert s.b.vars.get("domain/vms/stream-clients/anna")[0] is None
+            assert s.b.vars.get("domain/cam/stream-clients/anna")[0] is None
             assert s.call("POST", "/stream-clients", body={"name": "wall1"})[0] == 200
             status, said = s.call("POST", "/stream-clients", body={"name": "wall1"})
             assert status == 409 and said["detail"] == "there is a stream client wall1 already"
@@ -202,7 +202,7 @@ def test_a_name_a_person_holds_is_refused_409_and_a_person_is_not_made_under_a_c
 def test_the_book_of_a_cluster_carries_only_the_clients_its_grants_name_and_no_disabled_one():
     """The books' pass writes `stream-accounts/<cluster>` for every cluster: the clients a line of ITS grants names,
     none disabled — sealed at the holder with its ring; the agent carries it home sealed to the member's key, and keeps
-    it sealed with the member's ring as `domain/vms/stream-accounts`, which the member opens with its own ring alone."""
+    it sealed with the member's ring as `domain/cam/stream-accounts`, which the member opens with its own ring alone."""
     with declared():
         s = _site()
         try:
@@ -217,7 +217,7 @@ def test_the_book_of_a_cluster_carries_only_the_clients_its_grants_name_and_no_d
             assert sc.stream_accounts(s.c.vars, "srv-c", s.rings["srv-c"]) == {"wall3": pw["wall3"]}
             # the holder hands its own from its records (it holds the keys), and it granted nobody here
             assert sc.stream_accounts(s.b.vars, "srv-b", s.rings["srv-b"]) == {}
-            for store, path in ((s.b.vars, "domain/vms/stream-accounts/srv-a"), (s.a.vars, "domain/vms/stream-accounts")):
+            for store, path in ((s.b.vars, "domain/cam/stream-accounts/srv-a"), (s.a.vars, "domain/cam/stream-accounts")):
                 items, _ = store.get(path)
                 assert is_sealed(items["accounts_secret"]) and pw["wall1"] not in json.dumps(items), path
             assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-c"]) == {}     # another ring opens nothing
@@ -252,7 +252,7 @@ def test_deleting_a_client_drops_every_grant_that_names_it_through_the_domain_co
             assert subjects("srv-a") == {"wall2"} and subjects("srv-c") == set()
             assert domain_may(s.b.vars, "anna", "admin", s.wall())               # the domain's own grants untouched
             assert sc.read_stream_client(s.b.vars, "wall1", s.rings["srv-b"]) == (None, "")
-            assert s.b.vars.get("domain/vms/stream-clients/wall1")[0] is None    # its row removed, not marked (ADR-0021)
+            assert s.b.vars.get("domain/cam/stream-clients/wall1")[0] is None    # its row removed, not marked (ADR-0021)
             assert [c.name for c in sc.stream_clients(s.b.vars)] == ["wall2"]
             s.carry()
             assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {"wall2": pw["wall2"]}
@@ -278,7 +278,7 @@ def _nothing_declared():
         s.grant("srv-a", ("wall1", "view"))
         out = s.books.pass_once()
         assert "stream-accounts" not in out
-        assert s.b.vars.list("domain/vms/stream-accounts") == []
+        assert s.b.vars.list("domain/cam/stream-accounts") == []
         assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {}
     finally:
         s.close()
@@ -320,7 +320,7 @@ class _AsDaemon:
 def test_the_domain_console_grants_admin_and_edit_and_checks_an_accounts_name_by_its_key_alone():
     """The three-site run, F1 (ADR-0021's addition of 2026-10-10): the domain's console, under its own role
     (`domainconsole`, which does not read the RTSP accounts), wrote no grant of `admin` or `edit` — the name check read
-    `domain/vms/stream-clients/<subject>` and the store refused it. The name is checked by its key, listed (as the
+    `domain/cam/stream-clients/<subject>` and the store refused it. The name is checked by its key, listed (as the
     product's `subjectsOf`): a person is granted `admin`, an account anything above `view` is refused in words (400), and
     once the account is deleted — its row removed — the name is a person's to be granted again."""
     with declared():

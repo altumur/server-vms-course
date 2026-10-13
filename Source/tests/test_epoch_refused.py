@@ -2,7 +2,7 @@
 
 The fourth pass mended the detector and the survey: `take_epoch` on a row `<sub>/epoch/<unit>` that does not
 parse raised a `ValueError` out of the pass, and every unit after that one was not looked at. The same class
-stood in the holder, the recorder, the scan, the evaluator and the gateway: the review wrote `vms/epoch/4` by
+stood in the holder, the recorder, the scan, the evaluator and the gateway: the review wrote `cam/epoch/4` by
 hand, and three passes in a row raised — camera 5 never started, camera 1, taken away, never stopped; the scan's
 job did not move and the heartbeat did not say why. Now each of them refuses THAT unit, says why in its status
 (the gateway in its heartbeat's `refused`) and in the log, and serves the rest.
@@ -23,7 +23,7 @@ def test_the_holder_refuses_one_camera_and_starts_and_stops_the_others():
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
     ctl.assign("w-1", ["1", "2"])
     assert w.reconcile_once() == [("start", 1), ("start", 2)]
-    box.vars.put("vms/epoch/3", GARBLED)
+    box.vars.put("cam/epoch/3", GARBLED)
     ctl.assign("w-1", ["2", "3", "4"])                                 # 1 taken away, 3 garbled, 4 after it
     for _ in range(3):                                                 # every pass, not once
         acts = w.reconcile_once()
@@ -74,7 +74,7 @@ def test_the_evaluator_refuses_one_scenario_and_decides_the_next():
     from tests.test_autoworker import DOOR, _Log, _assigned, _scenario, _worker, ev
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="a-door")
     _scenario(box)                                                     # `door-on-badge`, after `a-door` in the pass
     ctl = _assigned(box, "a-door")
@@ -127,13 +127,13 @@ def _ask(box, con, rid, unit, **fields):
 
 def test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_other_devices_are_commanded():
     """П-M11's remainder. A unit held without a lease takes its epoch before its first command (`requests`), and that
-    `take_epoch` stood outside any `try`: with `vms/epoch/1` garbled, the `ValueError` went out of `requests` and of
+    `take_epoch` stood outside any `try`: with `cam/epoch/1` garbled, the `ValueError` went out of `requests` and of
     every `pump_once` after it — the review ran it for 600 s, the request's whole life — and the command to door 2,
     behind it in the pass, never reached its device. Now the refusal is that command's: answered, counted, said in
     the unit's status, and the pass goes on to the next request."""
     box = Box()
     con, (one, two), w = _two_doors(box)
-    box.vars.put(f"vms/epoch/{one}", GARBLED)
+    box.vars.put(f"cam/epoch/{one}", GARBLED)
     _ask(box, con, "a-1", one)
     _ask(box, con, "b-2", two)
     for _ in range(3):                                                 # every pump, not once
@@ -145,9 +145,9 @@ def test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_oth
     st = {s["id"]: s for s in w.status()}
     assert "epoch could not be taken" in st[one]["why"] and "why" not in st[two]
     w.heartbeat_once()
-    hb = Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1"))
+    hb = Heartbeat.from_bytes(box.objects.get("cam/heartbeats/w-1"))
     assert hb.extra["command_counts"]["refused"] == 1 and hb.extra["fetched"] == "a-1,b-2"
-    box.vars.put(f"vms/epoch/{one}", {"epoch": "3"})                    # mended by hand: the next command is performed
+    box.vars.put(f"cam/epoch/{one}", {"epoch": "3"})                    # mended by hand: the next command is performed
     _ask(box, con, "c-1", one)
     w.pump_once()
     assert w.devices["acme/10.0.0.91"].did == [("output", 1, "pulse", 0)] and w.epochs[str(one)] == 4
@@ -175,7 +175,7 @@ def test_a_command_whose_mark_is_nested_past_jsons_depth_is_that_commands_and_th
     performed again — and it is that command's: the next is performed in the same look."""
     box = Box()
     con, (one, two), w = _two_doors(box)
-    box.objects.put("vms/commands/a-1", b"[" * 100_000)
+    box.objects.put("cam/commands/a-1", b"[" * 100_000)
     _ask(box, con, "a-1", one)
     _ask(box, con, "b-2", two)
     for _ in range(2):

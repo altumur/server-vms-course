@@ -40,7 +40,7 @@ Restart=always
 RestartSec=2
 # SIGTERM: the pipelines stop, the writer closes after its flush (up to 30 s), then the hold goes.
 TimeoutStopSec=40
-# The watchdog, as the worker's (`vms-vmsworker.service`): six minutes without a turn of its loop, and systemd starts
+# The watchdog, as the worker's (`vms-camworker.service`): six minutes without a turn of its loop, and systemd starts
 # it again — a recorder hung in obsd is what the stand-in holds its place for, five minutes, and no longer.
 WatchdogSec=360
 NoNewPrivileges=yes

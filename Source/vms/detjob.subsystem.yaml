@@ -18,14 +18,14 @@ name: detjob
 # The slot a worker of this subsystem makes, `j-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: j, name_env: DETJOB_NAME}
-about: {sub: vms, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
+about: {sub: cam, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
 unit:
   rows: jobs                         # detjob/jobs/<name>
   id: name                           # the console composes it: "<cam>-<kind>-<n>", unique per run
   fields:
     name:    {type: string, required: true}
     cam:     {type: string, required: true, fixed: true}   # the camera the footage is of — what every event line is
-                                                 # about (`of: vms/7`): `/events?unit=vms/7` finds a scan's results by the
+                                                 # about (`of: cam/7`): `/events?unit=cam/7` finds a scan's results by the
                                                  # LINE, not the tree
     # The RECORDING whose streams hold the footage — a recording OF `cam`: a scan reads the footage of the camera it
     # names (the review's fifth pass, major: `{"rec": "2"}` on a job of camera 1 read camera 2's archive and filed what

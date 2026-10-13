@@ -28,14 +28,14 @@ configstore с закоммиченным файлом прав (`Source/deploy/
 - Почему: запись идёт через `declared.guarded` (`w2cplatform/domain/console.py`, `set_grants` →
   `agent.DomainPublisher.publish_grants` / `grants.set_domain_grants`). Проверка `declared.refusal`
   (`w2cplatform/domain/declared.py`, строка с `_holds(vars_.get(family + subject))`) для строки с правом шире потолка
-  семьи читает `domain/vms/stream-clients/<subject>` (семья учёток RTSP VMS, `domain.names` спеки). Роли `domainconsole`
-  это чтение запрещено файлом прав (`"!domain/vms/stream-clients/*"` в её `read`). `Forbidden` обработчик не ловит —
+  семьи читает `domain/cam/stream-clients/<subject>` (семья учёток RTSP VMS, `domain.names` спеки). Роли `domainconsole`
+  это чтение запрещено файлом прав (`"!domain/cam/stream-clients/*"` в её `read`). `Forbidden` обработчик не ловит —
   ответа нет.
 - Когда: любая строка с `admin` или `edit` (у `view` проверки нет).
 - Трасса: `03-admitted` (Анна выдаёт себе `admin` на `relay-a` и Борису `view` на домене).
 - Обход в сценарии: права пишет оператор на srv через роль `domain` (`DomainPublisher.publish_grants`,
   `grants.set_domain_grants`) — как это делает команда продукта `domain grant` (`stand.sh setup`).
-- Что решить: либо роль `domainconsole` читает `domain/vms/stream-clients/*` (только чтение — проверить имя), либо
+- Что решить: либо роль `domainconsole` читает `domain/cam/stream-clients/*` (только чтение — проверить имя), либо
   проверка имени семьи не требует её строки от того, кто пишет права; и в любом случае обработчик отвечает словами, а не
   рвёт соединение.
 
@@ -54,22 +54,22 @@ configstore с закоммиченным файлом прав (`Source/deploy/
 - Подтверждено в отказе 5 (`f05-holder-moved`): подписывающий relay-a, поднимая домен по файлу восстановления, читает
   соседей через их консоли (`GET /api/held`, `GET /api/backup`) — ни одна не отвечает (srv выключен, остальные — F2), и
   срок 2 начинается «пустым, кроме ключей» («no backup could be reached — the domain starts empty but for its keys»):
-  список членов, топология, решения VMS (`domain/vms/crossings`) не восстановлены. Члены за новым держателем не следуют:
+  список членов, топология, решения VMS (`domain/cam/crossings`) не восстановлены. Члены за новым держателем не следуют:
   `/api/held` молчит, агенты несут через дверь srv, которой нет. (Копию домена к тому же офисы не берут — O5.)
 
 ### F3. Приёмник и передатчик в регистраторе не читают своих книг
 
-**Исправлено:** 50c1122c (`worker.reads` спеки записи: `domain/vms/sources`, `upstream`, `asks`), 2fd020a9 (ведомость паритета). Пересъёмка: накладка `+F3` убрана, регистратор и передатчик читают книги своей ролью.
+**Исправлено:** 50c1122c (`worker.reads` спеки записи: `domain/cam/sources`, `upstream`, `asks`), 2fd020a9 (ведомость паритета). Пересъёмка: накладка `+F3` убрана, регистратор и передатчик читают книги своей ролью.
 
 - Что: на configstore регистратор офиса не поднимает передатчик вовсе: `RecWorker.host_ingest` строит
-  `chain.Forwarder`, и тот в конструкторе (`restore_up` → `book`) читает `domain/vms/upstream` — `Forbidden`. Приёмник
-  на каждом опросе читает `domain/vms/sources` (`ingest.should_from_snapshot`), передатчик — ещё `domain/vms/asks`
+  `chain.Forwarder`, и тот в конструкторе (`restore_up` → `book`) читает `domain/cam/upstream` — `Forbidden`. Приёмник
+  на каждом опросе читает `domain/cam/sources` (`ingest.should_from_snapshot`), передатчик — ещё `domain/cam/asks`
   (`Forwarder.asks_book`).
 - Почему: приёмник и передатчик живут в регистраторе (ADR-0065, дополнение 2026-10-08), а роли `recworker` в файле прав
-  из книг VMS дано чтение только `domain/vms/primaries`.
+  из книг VMS дано чтение только `domain/cam/primaries`.
 - Трасса: `06-office-ready` и дальше.
-- Обход в сценарии: ручка приёмника и передатчика — роль `recworker` с чтением `domain/vms/sources`,
-  `domain/vms/upstream`, `domain/vms/asks` сверх файла прав (накладка сценария, `stand.Site.f3_handle`); каждая её
+- Обход в сценарии: ручка приёмника и передатчика — роль `recworker` с чтением `domain/cam/sources`,
+  `domain/cam/upstream`, `domain/cam/asks` сверх файла прав (накладка сценария, `stand.Site.f3_handle`); каждая её
   строка в трассе помечена дверью `/run/configstore/recworker.sock (+F3)`. Своя ручка регистратора — как в файле прав.
 - Что решить: дать роли `recworker` чтение этих трёх книг (они несут токены потока — запечатаны кольцом кластера).
 
@@ -108,7 +108,7 @@ no such member». Первую запись списка в курсе дела�
 
 **Исправлено:** 870db47a (резервная говорит, почему держит). Пересъёмка `04-camera-boots`: `standby`, `hold: true`, «no primary recording of this camera is known — not in this cluster, not in the book of primaries: nothing to stand in for». Карта по-прежнему не пишет, пока у камеры нет книги — теперь это сказано верно.
 
-Пока у камеры нет книги основных (`domain/vms/primaries`), толкатель не говорит ничего (`uncovered` = None), книги нет, и
+Пока у камеры нет книги основных (`domain/cam/primaries`), толкатель не говорит ничего (`uncovered` = None), книги нет, и
 `primary_needs_cover` не находит основной записи в своём кластере: `1-sd` (`when: offline`) стоит `standby`, `hold: true`,
 с объяснением «the primary recording is being written». Карта не пишет, хотя камеру не пишет никто. Трасса:
 `04-camera-boots`. У продукта `1-sd` без `when` (`stand.sh setup`) — карта пишет всегда.
@@ -200,7 +200,7 @@ be told from anybody on the site» — о члене, которого удал�
 
 **Исправлено:** 0e509bf3 (`domainagent` читает `*` с запретами, как у продукта). Пересъёмка: накладка `+N3` убрана.
 
-`uplink.report` несёт эпохи всех подсистем (`declared.epoch_prefixes`: `rec/epoch/*`, `vms/epoch/*`, …) из хранилища
+`uplink.report` несёт эпохи всех подсистем (`declared.epoch_prefixes`: `rec/epoch/*`, `cam/epoch/*`, …) из хранилища
 кластера; роли `domainagent` в файле прав дано чтение только `platform/schema` и `domain/*`. До 2cd2947a листинг роли не
 называл чужих ключей, и отчёт их просто не видел; теперь листинг называет `rec/epoch/SN-A`, чтение — `Forbidden`, и проход
 агента офиса падает с той минуты, как его регистратор взял эпоху (с `06-office-ready`). У продукта `domainagent` читает `*`
@@ -294,7 +294,7 @@ relay-a, в объектах srv их нет, а свой агент srv соб�
 что у `_left`), а выброшенное считается в `dropped`. Продукт так и делает (`stopStream`). Тест —
 `test_a_relay_the_centre_stopped_wanting_lets_go_of_its_subscription_and_the_next_viewer_gets_no_old_frames`.
 
-### N8. Удалённый член остаётся в `/domain/vms/cameras` живым
+### N8. Удалённый член остаётся в `/domain/cam/cameras` живым
 
 **Исправлено:** 2f2ddf54. После `DELETE /domain/members/cam-a2` консоль домена показывала камеру cam-a2 со
 словом `live`, хотя в `clusters` её уже не было: `ReadView` хранил биения и снимок ушедшего так же, как хранит их
@@ -328,5 +328,5 @@ reported» остаётся только для члена без единого
 - Провода у приёмника нет: вызовы `Ingest` печатаются маршрутами продукта.
 - Первый человек домена — вызовы `IdentityStore.create_local` и `grants.set_domain_grants` (у продукта `domain user add`,
   `domain grant`); корень и файл восстановления — `DomainRoot(...).recovery()` (у продукта `domain install`).
-- Решение «кто пишет камеру» — вызов `Crossings.record` (у продукта `POST /domain/vms/crossings`).
+- Решение «кто пишет камеру» — вызов `Crossings.record` (у продукта `POST /domain/cam/crossings`).
 - Обходов находок в сценарии нет.

@@ -5,7 +5,7 @@
 // Страница сопоставляет ключи со строками rec/keeps; чего спека не назвала, не читает. Копия продуктового
 // vmsworker/vms/consoletest/shell-keep-states.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-ks-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`).replace('{lang:"ru",','{lang:"ru",poll_s:0,'));
@@ -15,8 +15,8 @@ for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 const STATUS=[{field:"keeps",title:"удержания",of:"keeps"},{field:"incidents_lost",title:"потеряно",of:"keeps"},{field:"incidents_at_risk",title:"под угрозой",of:"keeps"}];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
-b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],servers:{status:STATUS}}}};
+b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],servers:{status:STATUS}}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk",retention_days:30,enabled:true}],rows:[]};
 b.FIX["/rec/volumes"]={volumes:[{name:"inc",kind:"incidents",server:"box-a",enabled:true,admits:false,quota_bytes:1e9,held_by:"r-2"}]};
@@ -36,7 +36,7 @@ b.FIX["/events"]={events:[],state:"live"};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 await b.ready(700);await w.platformConsole.ready;await w.platformConsole.refresh();await w.eval("reloadRec()");const d=w.document,pc=w.platformConsole,out={};
-pc.select("unit:vms/1");await b.ready(80);
+pc.select("unit:cam/1");await b.ready(80);
 d.querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(200);
 const rows=[...d.querySelectorAll('.pc-tab[data-tab="rec"] .it')],row=n=>rows.find(x=>x.textContent.includes(n))||{textContent:""};
 out.keptSaid=/в архиве инцидентов · 120 с/.test(row("note-a").textContent);

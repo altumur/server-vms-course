@@ -30,7 +30,7 @@ class Every:
 
 def _holder(box, cam="7", newest=m(100), spans=((m(0), m(10)), (m(50), m(60))), oldest=None):
     """A VMS worker holding the camera: the summary, and WHERE to ask for the index."""
-    box.objects.put("vms/heartbeats/w-1",
+    box.objects.put("cam/heartbeats/w-1",
                     Heartbeat("w-1", box.wall(), [{"id": str(cam), "phase": "running",
                                                    "coverage": {"from": oldest if oldest is not None else spans[0][0],
                                                                 "to": newest, "fragments": 9},
@@ -179,7 +179,7 @@ def test_the_survey_carries_its_own_budget():
     assert SURVEY_SPEC.sub.heartbeat_key("x") != DET_SPEC.sub.heartbeat_key("x")
     assert SURVEY_SPEC.capacity_default != DET_SPEC.capacity_default
     assert SURVEY_SPEC.retire_field == ""                             # it does not end
-    assert SURVEY_SPEC.near == "vms" and SURVEY_SPEC.near_by == "cam"
+    assert SURVEY_SPEC.near == "cam" and SURVEY_SPEC.near_by == "cam"
     assert SURVEY_SPEC.home == ""
 
 

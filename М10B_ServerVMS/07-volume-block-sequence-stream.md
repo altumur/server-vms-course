@@ -14,7 +14,7 @@
 том (через obsd)    <запись>/e<эпоха>                         видео: пишет РЕГИСТРАТОР, под своей эпохой
                     <запись>/e<эпоха>/backfill                дозапись в дыру (урок 16)
 том incidents       <запись>/e0                               копия удержания (урок 18)
-ресурс сервера      vms/<cam>/e<epoch>/<start>Z.events.jsonl  события: пишет ДЕРЖАТЕЛЬ камеры
+ресурс сервера      cam/<cam>/e<epoch>/<start>Z.events.jsonl  события: пишет ДЕРЖАТЕЛЬ камеры
 ```
 
 Видео пишет регистратор, события — держатель камеры. Это два разных процесса, у каждого своя эпоха, и они могут работать на разных серверах. Отсюда три нормальных состояния:
@@ -55,22 +55,22 @@
 
 И кончается тем, что в томе не лежит:
 
-> *Events are not here. They stay what they were — buckets of lines on the resource's tree, `vms/<cam>/` and `rec/<name>/` (`event_log`, the platform's `EventLog`) — a file tree the platform retains, mirrors and indexes, on the server of whoever wrote them.*
+> *Events are not here. They stay what they were — buckets of lines on the resource's tree, `cam/<cam>/` and `rec/<name>/` (`event_log`, the platform's `EventLog`) — a file tree the platform retains, mirrors and indexes, on the server of whoever wrote them.*
 
 ```python
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
-EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
+EVENTS_SUB = "cam"   # the worker's tree: the camera's event buckets
 
 
 def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog:
     """The camera's event log on this resource: what the worker holding the
-    camera's epoch writes into, recording or not — `vms/<cam>/`, not `rec/`."""
+    camera's epoch writes into, recording or not — `cam/<cam>/`, not `rec/`."""
     return EventLog(root, EVENTS_SUB, str(cam), epoch, bucket_seconds)
 ```
 
 `event_log` — функция в одну строку, которая существует ради докстроки. Читающий код видит: события идут в `vms/`, и пишутся они независимо от записи.
 
-Правило «один писатель на префикс» из М10A здесь держат две разные вещи. В томе — движок: один писатель на том на хосте (урок 6, шаг 12). На ресурсе — дерево: в `vms/<cam>/` пишет только держатель камеры. Координации между регистратором и держателем не нужно, потому что их места не пересекаются.
+Правило «один писатель на префикс» из М10A здесь держат две разные вещи. В томе — движок: один писатель на том на хосте (урок 6, шаг 12). На ресурсе — дерево: в `cam/<cam>/` пишет только держатель камеры. Координации между регистратором и держателем не нужно, потому что их места не пересекаются.
 
 `test_events_are_buckets_on_the_resource_recording_or_not` проверяет всю картинку. Докстрока:
 
@@ -79,9 +79,9 @@ def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog
 Три строки теста стоит увидеть:
 
 ```python
-    assert subsystems_under(box.resource_root) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
+    assert subsystems_under(box.resource_root) == {"cam": ["7"]} and st.units() == []   # watched, not recorded
     ...
-    assert subsystems_under(box.resource_root) == {"vms": ["7"]}         # the resource's tree holds no footage at all
+    assert subsystems_under(box.resource_root) == {"cam": ["7"]}         # the resource's tree holds no footage at all
     ...
     assert st.coverage("7") == [(t0 + 600, t0 + 1200)]             # the footage, untouched: the ring decides for it
 ```
@@ -691,7 +691,7 @@ class RecSink:
   7/e4              живая запись после перезапуска
   7/e4/backfill     дыра, скачанная с карты камеры
 ресурс srv-1
-  vms/7/e<n>/<start>Z.events.jsonl    события держателя камеры, под его эпохой
+  cam/7/e<n>/<start>Z.events.jsonl    события держателя камеры, под его эпохой
 ```
 
 Убейте регистратор посреди записи — новый процесс под тем же слотом получит того же писателя, и минуты до убийства на месте. Остановите аккуратно — писатель закроется со сбросом, и только потом том получит следующий.

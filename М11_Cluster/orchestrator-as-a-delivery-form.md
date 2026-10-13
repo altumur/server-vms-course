@@ -40,7 +40,7 @@
 |---|---|---|
 | [`configstore.nomad.hcl`](../Source/deploy/cluster/nomad/configstore.nomad.hcl) | `system` — по аллокации на узел, прибита к нему | `configstore.service` |
 | [`console.nomad.hcl`](../Source/deploy/cluster/nomad/console.nomad.hcl) | `system`, от пользователя `w2c`, служба Consul `w2c-console`, `CONSOLE_UNIX=/run/w2c-console/console.sock` | `w2c-console.service` |
-| [`vmsworker.nomad.hcl`](../Source/deploy/cluster/nomad/vmsworker.nomad.hcl) | `service`, `count` у оператора | `vms-vmsworker.service` |
+| [`camworker.nomad.hcl`](../Source/deploy/cluster/nomad/camworker.nomad.hcl) | `service`, `count` у оператора | `vms-camworker.service` |
 | [`recworker.nomad.hcl`](../Source/deploy/cluster/nomad/recworker.nomad.hcl) | `service` | `vms-recworker.service` |
 
 Каждое задание запускает `raw_exec` того же `/opt/w2c/bin/w2c-run.sh`, что и юнит: та же установка (`install.sh`), тот же файл прав, тот же `/etc/w2c/tls`, те же флаги из `/etc/w2c/w2c.env`. Переменные Nomad — **не** хранилище, и политик ACL для Variables нет: процессы открывают сокеты `configstore` своего узла, а права — у демона.
@@ -60,7 +60,7 @@
 
 Цена приложения названа в нём самом: у `raw_exec` нет групп на задачу, поэтому пользователь `vms` узла состоит в группах всех ролей своих заданий (`vms-nomad.sysusers`), и любой процесс `vms` может открыть любой сокет `vms-*`. Это слабее, чем `SupplementaryGroups=` юнита, где каждый процесс открывает только сокет своей роли. Задание консоли — процесс платформы и работает от `w2c` (ADR 0023): `vms-nomad.sysusers` кладёт в группы `w2c-console` и `w2c-secrets` пользователя `w2c`, а не `vms`.
 
-Приложение читает [М12A, урок 8](../М12A_Domain/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md): [`render_three_ways()`](../Source/vms/domainpart/cloud.py) берёт `deploy/cluster/nomad/vmsworker.nomad.hcl` и доказывает, что воркер, развёрнутый в стойке, в арендованном облаке и на раздельной площадке, — один артефакт от `group` и ниже.
+Приложение читает [М12A, урок 8](../М12A_Domain/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md): [`render_three_ways()`](../Source/vms/domainpart/cloud.py) берёт `deploy/cluster/nomad/camworker.nomad.hcl` и доказывает, что воркер, развёрнутый в стойке, в арендованном облаке и на раздельной площадке, — один артефакт от `group` и ниже.
 
 ### Kubernetes — что понадобилось бы
 

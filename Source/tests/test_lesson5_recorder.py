@@ -19,7 +19,7 @@ from tests.vmsconftest import Box, recorder
 
 def _box():
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = VmsController(box.vars.as_writer("camcontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console() + REC_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     rec_con = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)                      # the console's door to recordings
@@ -70,7 +70,7 @@ def test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_
     r.store.seal()
     assert [(s.stream, s.start, s.end) for s in r.store.spans("1")] == [("1/e1", box.wall() - 600, box.wall())]
     w.observe(1, "motion")
-    assert subsystems_under(box.resource_root) == {"vms": ["1"]}
+    assert subsystems_under(box.resource_root) == {"cam": ["1"]}
     # the camera's worker fails over to srv-2: the recorder re-subscribes — to the RTSP fan-out now, the worker is on another
     # server — same recorder, same disks, same tree; a new pipeline is a new epoch (e1 before the move, e2 after, both here)
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", resource_root=box.resource_root)
@@ -121,7 +121,7 @@ def test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someon
     assert rec_ctl.units() == [{"id": "2", "name": "2", "cam": "2", "retention_days": 30, "enabled": True, "labels": [], "home": "", "until": 0.0, "min_depth_days": 0.0, "when": "always", "revision": 1}]
     assert [c["id"] for c in ctl.cameras()] == [1, 2] and subsystems_under(box.resource_root) == {}
     w.observe(1, "motion")
-    assert subsystems_under(box.resource_root) == {"vms": ["1"]}
+    assert subsystems_under(box.resource_root) == {"cam": ["1"]}
     # stop recording: the row goes, the placement is taken back on the next pass, the footage stays until the ring needs the room
     rec_con.delete("2"); rec_ctl.unplace_deleted()
     assert rec_ctl.assignment("r-1").units == [] and r.reconcile_once() == [("stop", "2")]

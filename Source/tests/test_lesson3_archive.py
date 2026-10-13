@@ -71,7 +71,7 @@ def test_retention_is_a_ceiling_on_what_is_shown_and_the_ring_decides_what_is_th
 
 def test_events_are_buckets_on_the_resource_recording_or_not():
     """An event is an observation, written by the WORKER holding the camera's epoch, into the camera's bucket on
-    the worker's server's resource — `vms/<cam>/e<epoch>/` — recording or not. Footage is the RECORDER's, in a
+    the worker's server's resource — `cam/<cam>/e<epoch>/` — recording or not. Footage is the RECORDER's, in a
     volume, under its own epoch: `7/e<epoch>`. Two places, two writers, one camera: a camera that is watched and
     never recorded has buckets and no stream; the volume's index answers for media, the resource's event index
     for the buckets; each is kept by its own rule. No controller wrote any of it."""
@@ -85,22 +85,22 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     box.wall.t = t0 + 2000
     log = event_log(box.resource_root, 7, 3)                             # the worker holds epoch 3 for camera 7
     p = log.append(t0 + 12.5, "motion", zone="gate")               # not recorded: still an event
-    assert parse_bucket(p, box.resource_root) == ("vms", "7", 3, t0) and read_bucket(p)[0]["zone"] == "gate"
+    assert parse_bucket(p, box.resource_root) == ("cam", "7", 3, t0) and read_bucket(p)[0]["zone"] == "gate"
     log.append(t0 + 40.0, "silent")                                # the event with no footage, by definition
     p2 = log.append(t0 + 700.0, "person", score=0.9)               # the next bucket: rolled by the clock
-    assert subsystems_under(box.resource_root) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
+    assert subsystems_under(box.resource_root) == {"cam": ["7"]} and st.units() == []   # watched, not recorded
     db = EventIndex(box.resource_root, "box", wall=box.wall)
-    assert [e["kind"] for e in db.query(t0, t0 + 1200, unit="vms/7")["events"]] == ["motion", "silent", "person"]
+    assert [e["kind"] for e in db.query(t0, t0 + 1200, unit="cam/7")["events"]] == ["motion", "silent", "person"]
     # now a recorder records the camera under ITS epoch, into its volume: a span on the timeline, the events still the worker's
     footage(st, "7", 4, t0 + 600, t0 + 1200)
     assert st.units() == ["7"]
     assert [(x["epoch"], x["fenced"]) for x in st.timeline("7", t0, t0 + 1200, current_epoch=4)] == [(4, False)]
-    assert subsystems_under(box.resource_root) == {"vms": ["7"]}         # the resource's tree holds no footage at all
+    assert subsystems_under(box.resource_root) == {"cam": ["7"]}         # the resource's tree holds no footage at all
     # bucket retention is the platform's, and footage is not on its tree for it to touch
-    box.vars.put("vms/retention", {"days": 30})                  # what the VMS controller writes for a camera's events
+    box.vars.put("cam/retention", {"days": 30})                  # what the VMS controller writes for a camera's events
     platform = Resource(box.resource_root, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
     platform.index = db
     assert platform.retain() == 2 and not os.path.exists(p) and not os.path.exists(p2)
-    assert db.query(t0, t0 + 1200, unit="vms/7")["events"] == []
+    assert db.query(t0, t0 + 1200, unit="cam/7")["events"] == []
     assert st.coverage("7") == [(t0 + 600, t0 + 1200)]             # the footage, untouched: the ring decides for it
-    assert box.vars.list("vms/events") == []
+    assert box.vars.list("cam/events") == []

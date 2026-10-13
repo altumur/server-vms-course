@@ -55,12 +55,12 @@ def test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(3)
     t = box.wall()
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [], {"server": "srv-a", "capacity": 50}).to_bytes())
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", t, [], {"server": "srv-a", "capacity": 50}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat", json.dumps({"server": "srv-a", "ts": t, "url": "http://a"}).encode())
-    bad = {"vms/heartbeats/w-2": {"worker": "w-2", "ts": t, "status": [], "server": ["srv-x"]},
-           "vms/heartbeats/w-3": {"worker": "w-3", "ts": t, "status": [], "server": 5},
-           "vms/heartbeats/w-4": {"worker": ["w-4"], "ts": t, "status": [], "server": "srv-b"},
-           "vms/heartbeats/w-5": {"worker": "w-5", "ts": t, "status": [], "server": ""},
+    bad = {"cam/heartbeats/w-2": {"worker": "w-2", "ts": t, "status": [], "server": ["srv-x"]},
+           "cam/heartbeats/w-3": {"worker": "w-3", "ts": t, "status": [], "server": 5},
+           "cam/heartbeats/w-4": {"worker": ["w-4"], "ts": t, "status": [], "server": "srv-b"},
+           "cam/heartbeats/w-5": {"worker": "w-5", "ts": t, "status": [], "server": ""},
            "platform/resources/srv-x/heartbeat": {"server": ["srv-x"], "ts": t, "url": "http://x"},
            "platform/resources/srv-y/heartbeat": {"server": 7, "ts": t, "url": "http://y"}}
     for k, v in bad.items():
@@ -71,14 +71,14 @@ def test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no
     assert list(con.servers()["servers"]) == ["srv-a"]
     assert ctl.unplaceable() == []                                     # placed on w-1 by the pass below, or eligible there
     text = con.metrics_text()
-    assert "w2c_resources_live 1" in text and 'vms_worker_headroom{worker="w-1",server="srv-a"}' in text
-    assert GARBLED["vms"] >= 4 and GARBLED["platform"] >= 2                # counted as heartbeats that do not parse
+    assert "w2c_resources_live 1" in text and 'cam_worker_headroom{worker="w-1",server="srv-a"}' in text
+    assert GARBLED["cam"] >= 4 and GARBLED["platform"] >= 2                # counted as heartbeats that do not parse
     assert list(resources_seen(box.objects)) == ["srv-a"]
     ctl.pass_once()
     assert all(ctl.placement(i).worker == "w-1" for i in (1, 2, 3))   # placement went on past them
     ctl.drain("srv-a")
     status, rep = m.drain_route("GET", {})
-    assert status == 200 and rep["subsystems"]["vms"]["workers"] == ["w-1"]
+    assert status == 200 and rep["subsystems"]["cam"]["workers"] == ["w-1"]
     _forget_garbled()
 
 
@@ -93,18 +93,18 @@ def test_schema_lists_a_process_whose_schema_does_not_read_and_raises_past_nobod
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
     t = box.wall()
-    box.objects.put("vms/heartbeats/w-1", b'{"worker": "w-1", "ts": %f, "status": [], "server": "srv-a", "schema": 1e999, '
+    box.objects.put("cam/heartbeats/w-1", b'{"worker": "w-1", "ts": %f, "status": [], "server": "srv-a", "schema": 1e999, '
                                           b'"build": ["x"]}' % t)
     m = Mount(SpecConsole(ctl, wall=box.wall))
     status, rep = m.schema_route("GET", {})
-    assert status == 200 and rep["processes"]["vms/w-1"]["schema"] is None and rep["builds"] == ["?"], rep
-    assert rep["can_raise_to"] == 1 and rep["schema_unknown"] == ["vms/w-1"]
+    assert status == 200 and rep["processes"]["cam/w-1"]["schema"] is None and rep["builds"] == ["?"], rep
+    assert rep["can_raise_to"] == 1 and rep["schema_unknown"] == ["cam/w-1"]
     try:
         ctl.set_schema(2)
         raise AssertionError("raised past a process whose schema nobody can read")
     except SchemaTooNew as e:
-        assert "vms/w-1" in str(e)
-    assert builds(box.objects, t)["vms/w-1"]["live"]
+        assert "cam/w-1" in str(e)
+    assert builds(box.objects, t)["cam/w-1"]["live"]
     box.vars.put("platform/schema", {"version": "two"})
     status, rep = m.schema_route("GET", {})
     assert status == 200 and rep["version"] is None
@@ -134,15 +134,15 @@ def test_a_source_that_does_not_parse_costs_its_camera_not_drain_unplaceable_or_
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(2)
     t = box.wall()
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [], {"server": "srv-a", "capacity": 50}).to_bytes())
-    box.vars.put("vms/cameras/9", {"id": "9", "name": "x", "source": "rtsp://[::1/x", "revision": "1"})
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", t, [], {"server": "srv-a", "capacity": 50}).to_bytes())
+    box.vars.put("cam/cameras/9", {"id": "9", "name": "x", "source": "rtsp://[::1/x", "revision": "1"})
     assert device_of("rtsp://[::1/x") == "rtsp://[::1/x"
     m = Mount(SpecConsole(ctl, wall=box.wall))
     assert isinstance(ctl.unplaceable(), list)
     ctl.drain("srv-a")
     status, rep = m.drain_route("GET", {})
-    assert status == 200 and "9" in rep["subsystems"]["vms"]["would_strand"], rep
-    cams = Catalog(box.vars).reply()["vms"]
+    assert status == 200 and "9" in rep["subsystems"]["cam"]["would_strand"], rep
+    cams = Catalog(box.vars).reply()["cam"]
     assert set(cams) == {"1", "2", "9"} and cams["9"]["can"] is None
 
 
@@ -162,7 +162,7 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     box, ctl = _box_with_cameras(1)
     t = box.wall()
     box.vars.put("rec/recordings/1", {"name": "1", "cam": "1"})
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", t, [
         {"id": 1, "phase": "running", "coverage": {"from": "x", "to": "y"}, "playback_url": "http://w-1/play/1"}],
         {"server": "srv-a"}).to_bytes())
     door = page_door(box)
@@ -178,7 +178,7 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
         assert get(f"/timeline/1?from={t - 60}&to={t}") == (200, [])                 # no device spans
         status, rep = get(f"/segment/1/e0/{(t - 60) * 1000:.0f}-{t * 1000:.0f}.device.mp4")
         assert status == 404 and rep["error"] == "no device archive", rep            # held to the ceiling, and answered
-        assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
+        assert "cam/heartbeats/w-1#coverage" in FIELDS.bad
         assert get("/timeline/1?from=yesterday")[0] == 400                          # a word in the query: 400, not no reply
     finally:
         door.shutdown()
@@ -286,14 +286,14 @@ def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_eva
     box = Box()
     res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
-    EventLog(box.resource_root, "vms", "8", 1).append(old, "motion")
-    box.vars.put("vms/retention", {"days": "30"})
+    EventLog(box.resource_root, "cam", "8", 1).append(old, "motion")
+    box.vars.put("cam/retention", {"days": "30"})
     box.vars.put("auto/scenarios/s1", {"name": "s1", "when": DEEP, "then": "[]"})
     out = res.pass_()
-    assert "errors" not in out and bucket_names_under(box.resource_root, "vms", "8", 600) == [], out
+    assert "errors" not in out and bucket_names_under(box.resource_root, "cam", "8", 600) == [], out
 
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box, name="a-door")
     _scenario(box)
     _assigned(box, "a-door").assign("a-1", ["a-door", "door-on-badge"])
@@ -325,10 +325,10 @@ def test_infinity_in_a_rows_integer_stops_no_workers_pass_and_no_lease():
     assert w.status_by_unit["7-lpr-1"]["phase"] == "failed"
     assert w.status_by_unit["7-lpr-2"]["phase"] in ("running", "done")
 
-    box.vars.put("vms/epoch/1", {"epoch": "1"})
-    box.vars.put("vms/epoch/2", {"epoch": "1"})
-    _hand_edit(box, "vms/epoch/2", "epoch")
-    good, bad = Lease(box.vars, "vms/epoch/1", 1, clock=box.clock), Lease(box.vars, "vms/epoch/2", 1, clock=box.clock)
+    box.vars.put("cam/epoch/1", {"epoch": "1"})
+    box.vars.put("cam/epoch/2", {"epoch": "1"})
+    _hand_edit(box, "cam/epoch/2", "epoch")
+    good, bad = Lease(box.vars, "cam/epoch/1", 1, clock=box.clock), Lease(box.vars, "cam/epoch/2", 1, clock=box.clock)
     assert good.renew() is True and bad.renew() is False
     _forget_garbled()
 
@@ -339,9 +339,9 @@ def test_a_placement_row_counting_past_any_number_still_says_where_its_unit_is()
     `rev` does not parse — its worker stands, `rev 0` — and the next write of it counts from one."""
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(2)
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
     ctl.pass_once()
-    _hand_edit(box, "vms/placement/1", "rev")
+    _hand_edit(box, "cam/placement/1", "rev")
     pl = ctl.placement(1)
     assert pl.worker == "w-1" and pl.rev == 0
     ctl.pass_once()
@@ -409,13 +409,13 @@ def test_a_restore_whose_listing_skipped_lines_asks_that_peer_again():
     from w2cplatform.events import Bucket
     from w2cplatform.resource import RESTORE_RETRY, Listing, Resource
     box = Box()
-    paths = [f"vms/7/e1/{i:02d}.events.jsonl" for i in range(10)]
+    paths = [f"cam/7/e1/{i:02d}.events.jsonl" for i in range(10)]
 
     class Peers:
         skip = 10
 
         def mirrored(self, url, server):
-            out = Listing(Bucket("vms", "7", 1, 0.0, 600.0, p, 1) for p in paths)
+            out = Listing(Bucket("cam", "7", 1, 0.0, 600.0, p, 1) for p in paths)
             out.skipped = self.skip
             return out
 
@@ -452,7 +452,7 @@ def test_two_controllers_in_one_pass_do_not_read_each_others_memo():
     vms = VmsController(box.vars, box.objects, wall=box.wall)
     survey = SpecController(SURVEY_SPEC, box.vars, box.objects, wall=box.wall)
     job = SpecController(DETJOB_SPEC, box.vars, box.objects, wall=box.wall)
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [{"id": 7, "phase": "running"}], {"server": "srv-a"}).to_bytes())
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", t, [{"id": 7, "phase": "running"}], {"server": "srv-a"}).to_bytes())
     box.objects.put("rec/heartbeats/r-1", Heartbeat("r-1", t, [{"id": "r9", "cam": "7", "phase": "running"}],
                                                      {"server": "srv-a"}).to_bytes())
     with one_pass(vms, survey, job):
@@ -508,10 +508,10 @@ def test_a_moment_of_four_hundred_digits_in_a_request_is_that_requests_in_the_ho
     holder.reconcile_once()
     now = box.wall()
     for rid in ("a", "b"):
-        box.vars.put(f"vms/requests/{rid}", {"unit": str(cid), "action": "output", "port": "1", "at": str(now),
+        box.vars.put(f"cam/requests/{rid}", {"unit": str(cid), "action": "output", "port": "1", "at": str(now),
                                              "filed": str(now), "by": "auto/door", "valid_until": str(now + 30)})
-    _hand_edit(box, "vms/requests/a", "at", BIG)
-    _hand_edit(box, "vms/requests/a", "filed", BIG)
+    _hand_edit(box, "cam/requests/a", "at", BIG)
+    _hand_edit(box, "cam/requests/a", "filed", BIG)
     holder.requests()
     assert holder.commands["performed"] == 2 and len(called) == 2
     assert holder.road["auto"]["count"] == 1 and holder.request_road["auto"]["count"] == 1   # "b" alone is measured
@@ -533,7 +533,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     past `float`'s `(TypeError, ValueError)`, a field `class` raised in `EventLog.append`, a value JSON cannot carry a
     `TypeError` — out of the loop, and the lines after it, of any camera, and the dead cameras' `lost` were gone. Now a
     moment that is no number is dropped and counted (`fields_garbled`), a line that cannot be written is dropped and
-    counted (`events_refused`, `vms_device_events_refused_total`), and the rest of the bus is written."""
+    counted (`events_refused`, `cam_device_events_refused_total`), and the rest of the bus is written."""
     from w2cplatform import rows
     from w2cplatform.console import heartbeats
     from w2cplatform.events import read_bucket
@@ -560,9 +560,9 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     one = {e["kind"] + e.get("port", ""): e for e in lines[1]}
     assert "occurred" not in one["io.input1"] and "occurred" not in one["io.input2"] and "silent" in one
     assert any(e["kind"] == "io.input" and e.get("port") == "3" for e in lines[2])
-    assert rows.counts()["field"].get("vms") == 1                      # both moments: one spell of camera 1's `occurred`
+    assert rows.counts()["field"].get("cam") == 1                      # both moments: one spell of camera 1's `occurred`
     w.heartbeat_once()
-    assert 'vms_device_events_refused_total{worker="w-1"} 2' in spec_metrics(ctl).splitlines()
+    assert 'cam_device_events_refused_total{worker="w-1"} 2' in spec_metrics(ctl).splitlines()
     _forget_garbled()
 
 
@@ -621,7 +621,7 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
     from w2cplatform.console import Mount, SpecConsole
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(3)
-    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
+    box.objects.put("cam/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
 
     def taken(row):                                   # a filter that trips on one row (the platform's own, since `admit` is gone)
         if str(row["id"]) == "2":
@@ -637,8 +637,8 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
         assert ctl.would_strand("srv-b") == ["2"]                     # the others are not on it; "2" is on nobody
         ctl.drain("srv-a")
         status, rep = Mount(SpecConsole(ctl, wall=box.wall)).drain_route("GET", {})
-        assert status == 200 and set(rep["subsystems"]["vms"]["would_strand"]) == {"1", "2", "3"}, rep
-        assert rows.counts()["unit_judged"].get("vms") == 2, rows.counts()["unit_judged"]   # one spell in each walk
+        assert status == 200 and set(rep["subsystems"]["cam"]["would_strand"]) == {"1", "2", "3"}, rep
+        assert rows.counts()["unit_judged"].get("cam") == 2, rows.counts()["unit_judged"]   # one spell in each walk
     finally:
         del ctl.servers_taken
         _forget_garbled()
@@ -655,7 +655,7 @@ def test_channel_of_reads_any_value_as_channel_key_and_device_of_do():
 
 def test_the_resources_are_said_once_per_console_under_the_platforms_name():
     """A resource is the PLATFORM's — one per server, whatever subsystems write into it — and every mounted console
-    said its numbers again under its own prefix: `vms_resources_live`, `det_resources_live`, `detjob_…`, one fact as
+    said its numbers again under its own prefix: `cam_resources_live`, `det_resources_live`, `detjob_…`, one fact as
     many times as there were subsystems (the course's decision on the platform's names). Now `w2c_resources_live` and
     `w2c_resource_*`, on the root's page of a `Mount` only — a console mounted later included — and on a console that
     serves alone; no subsystem's page carries a resource line under any prefix."""
@@ -673,9 +673,9 @@ def test_the_resources_are_said_once_per_console_under_the_platforms_name():
     m = Mount(root, {"detjob": jobs})
     m.mount("det", det)
     pages = {c.spec.name: c.metrics_text() for c in (root, jobs, det)}
-    assert pages["vms"].count("\nw2c_resources_live 1\n") == 1 and 'w2c_resource_short_bytes{server="srv-a"} 0' in pages["vms"]
+    assert pages["cam"].count("\nw2c_resources_live 1\n") == 1 and 'w2c_resource_short_bytes{server="srv-a"} 0' in pages["cam"]
     for name, text in pages.items():
         assert "_resources_live" not in text.replace("w2c_resources_live", ""), name   # never under a subsystem's prefix
         assert f"{name}_resource_" not in text, name
-        if name != "vms":
+        if name != "cam":
             assert "w2c_resource" not in text, name                                     # said once: by the root

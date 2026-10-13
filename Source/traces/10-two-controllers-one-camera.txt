@@ -1,5 +1,5 @@
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "worker": "w-srv-a-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
   "at": "1757500000.0",
@@ -7,12 +7,12 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 }}
 → 200 {"index": 1009}
 
-# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+# camcontroller on srv-b → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
 → 200 {"index": 1010}
 
-# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+# camcontroller on srv-a → /run/configstore/camcontroller.sock
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "worker": "w-srv-a-1",
   "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
   "at": "1757500000.0",
@@ -20,7 +20,7 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 }}
 → 409 {
   "kind": "conflict",
-  "error": "vms/placement/1: the version is 1009, not the one the write named",
+  "error": "cam/placement/1: the version is 1009, not the one the write named",
   "index": 1009
 }
 

@@ -79,7 +79,7 @@ def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_addre
     d = devices[SERIAL]
     row = {**d.row(), "worker": SERIAL, "server": SERIAL, "cred_secret": "Hunter2",
            "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2"}
-    d.ram.put(f"vms/snapshot/{SERIAL}", json.dumps({"cluster": d.name, "worker": SERIAL, "ts": wall(),
+    d.ram.put(f"cam/snapshot/{SERIAL}", json.dumps({"cluster": d.name, "worker": SERIAL, "ts": wall(),
                                                     "cameras": [row]}).encode())     # as an older build wrote it
     report_sync(agents[SERIAL])
     view = ReadView(fed, wall=wall)
@@ -128,7 +128,7 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
     report_sync(DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall))
-    assert d.flash.list("") == ["domain/grants", "domain/member-key", "vms/cameras/1", "vms/epoch/1"]
+    assert d.flash.list("") == ["cam/cameras/1", "cam/epoch/1", "domain/grants", "domain/member-key"]
 
 
 def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():

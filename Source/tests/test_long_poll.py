@@ -75,12 +75,12 @@ def _holder(box, **kw):
     if box.objects.get("platform/resources/srv-a/heartbeat") is None:
         box.objects.put("platform/resources/srv-a/heartbeat",
                         json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     dev = FakeDevice("acme/10.0.0.90", channels=["1"], rays=1, relays=2)
     called: list[float] = []
     real = dev.output
     dev.output = lambda *a, **k: (called.append(time.time()), real(*a, **k))[1]
-    w = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    w = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                   wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=lambda key: dev, **kw)
     return w, cid, dev, called
 
@@ -88,10 +88,10 @@ def _holder(box, **kw):
 def _evaluator(box, cid, index=None):
     """An evaluator holding one scenario: the contact of camera `cid` closes — its relay 2 is pulsed."""
     SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
-        {"name": "door", "when": [{"sub": "vms", "kind": "io.input", "unit": str(cid)}], "within": 0,
-         "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 2, "pulse_ms": 500}], "rate_per_minute": 600})
+        {"name": "door", "when": [{"sub": "cam", "kind": "io.input", "unit": str(cid)}], "within": 0,
+         "then": [{"sub": "cam", "action": "output", "unit": str(cid), "port": 2, "pulse_ms": 500}], "rate_per_minute": 600})
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
-    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")),
+    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec", "det")),
                       box.objects, index=index or MergedIndex(box.objects, wall=box.wall), clock=box.clock, wall=box.wall,
                       server="srv-a", resource_root=box.resource_root, env={})
 
@@ -251,10 +251,10 @@ def test_a_wait_with_nothing_happening_is_answered_unchanged_at_its_timeout():
     res, srv = _resource(box)
     try:
         t0 = time.monotonic()
-        rep = _ask(res.url, "vms/io.input", 0.5)
+        rep = _ask(res.url, "cam/io.input", 0.5)
         assert rep["changed"] is False and "full" not in rep and 0.45 <= time.monotonic() - t0 < 1.5
         assert res.watch.waiting() == 0
-        assert longpoll.WAIT_MAX == 30.0 and res.watch.wait([("vms", "io.input")], -5.0)["changed"] is False   # at once
+        assert longpoll.WAIT_MAX == 30.0 and res.watch.wait([("cam", "io.input")], -5.0)["changed"] is False   # at once
     finally:
         srv.shutdown()
 
@@ -266,9 +266,9 @@ def test_a_line_of_a_wanted_kind_answers_the_wait_and_a_line_of_another_kind_doe
     box = _real_box()
     res, srv = _resource(box)
     try:
-        log_ = EventLog(box.resource_root, "vms", "7", 1)
+        log_ = EventLog(box.resource_root, "cam", "7", 1)
         log_.append(time.time(), "motion")                           # the unit exists before anybody waits
-        t, out = _asking(res.url, "vms/io.input", 5.0)
+        t, out = _asking(res.url, "cam/io.input", 5.0)
         _until(lambda: res.watch.waiting() == 1, what="the request to be held")
         time.sleep(0.25)
         log_.append(time.time(), "motion")                           # the same unit, another kind
@@ -280,11 +280,11 @@ def test_a_line_of_a_wanted_kind_answers_the_wait_and_a_line_of_another_kind_doe
         t.join(timeout=3)
         assert out["rep"]["changed"] is True and time.monotonic() - written < 0.6
         assert set(out["rep"]) == {"changed", "seq", "touched"}      # a hint: nothing of the event is in it…
-        assert out["rep"]["touched"] == ["vms/io.input/7"]           # …but which unit's kind it was (the seventh review)
+        assert out["rep"]["touched"] == ["cam/io.input/7"]           # …but which unit's kind it was (the seventh review)
 
-        t, out = _asking(res.url, "vms/tamper,det/motion", 5.0, since=out["rep"]["seq"])
+        t, out = _asking(res.url, "cam/tamper,det/motion", 5.0, since=out["rep"]["seq"])
         _until(lambda: res.watch.waiting() == 1, what="the second request to be held")
-        log_.append(time.time(), "tamper", ALARM)                    # an alarm: `vms.alarms/7/e1/…`
+        log_.append(time.time(), "tamper", ALARM)                    # an alarm: `cam.alarms/7/e1/…`
         t.join(timeout=3)
         assert out["rep"]["changed"] is True
     finally:
@@ -298,11 +298,11 @@ def test_a_line_written_between_two_waits_is_not_lost_between_them():
     box = _real_box()
     res, srv = _resource(box)
     try:
-        log_ = EventLog(box.resource_root, "vms", "7", 1)
+        log_ = EventLog(box.resource_root, "cam", "7", 1)
         log_.append(time.time(), "motion")
         other_log = EventLog(box.resource_root, "det", "7-motion", 1)
         other_log.append(time.time(), "motion")
-        t, out = _asking(res.url, "vms/io.input", 5.0)
+        t, out = _asking(res.url, "cam/io.input", 5.0)
         other, _ = _asking(res.url, "det/motion", 5.0)               # somebody else waits too, for another subsystem
         _until(lambda: res.watch.waiting() == 2)
         time.sleep(0.25)
@@ -313,13 +313,13 @@ def test_a_line_written_between_two_waits_is_not_lost_between_them():
         time.sleep(0.4)                                              # …and looked at all the same: it was wanted a moment ago
         assert other.is_alive()
         t0 = time.monotonic()
-        assert _ask(res.url, "vms/io.input", 5.0, since=seq)["changed"] is True and time.monotonic() - t0 < 0.3
+        assert _ask(res.url, "cam/io.input", 5.0, since=seq)["changed"] is True and time.monotonic() - t0 < 0.3
         other_log.append(time.time(), "motion"); other.join(timeout=3)   # now nobody waits at all
         assert res.watch.waiting() == 0
         log_.append(time.time(), "io.input", n=3)
         time.sleep(0.3)                                              # inside `LINGER`: the sizes are remembered
         t0 = time.monotonic()
-        assert _ask(res.url, "vms/io.input", 5.0, since=res.watch.seq)["changed"] is True and time.monotonic() - t0 < 0.6
+        assert _ask(res.url, "cam/io.input", 5.0, since=res.watch.seq)["changed"] is True and time.monotonic() - t0 < 0.6
     finally:
         srv.shutdown()
 
@@ -331,17 +331,17 @@ def test_the_seventeenth_waiter_is_answered_full_at_once_and_the_door_still_serv
     box = _real_box()
     res, srv = _resource(box)
     try:
-        EventLog(box.resource_root, "vms", "7", 1).append(time.time(), "motion")
+        EventLog(box.resource_root, "cam", "7", 1).append(time.time(), "motion")
         assert longpoll.WAITERS_MAX == 16
-        asked = [_asking(res.url, "vms/io.input", 8.0) for _ in range(16)]
+        asked = [_asking(res.url, "cam/io.input", 8.0) for _ in range(16)]
         _until(lambda: res.watch.waiting() == 16, what="sixteen requests to be held")
         t0 = time.monotonic()
-        rep = _ask(res.url, "vms/io.input", 8.0)
+        rep = _ask(res.url, "cam/io.input", 8.0)
         assert rep["changed"] is False and rep["full"] is True and time.monotonic() - t0 < 0.5
         assert res.watch.full == 1 and res.watch.waiting() == 16
-        with urllib.request.urlopen(f"{res.url}/events?from=0&to={time.time() + 1}&subsystem=vms", timeout=5) as r:
+        with urllib.request.urlopen(f"{res.url}/events?from=0&to={time.time() + 1}&subsystem=cam", timeout=5) as r:
             assert [e["kind"] for e in json.loads(r.read())["events"]] == ["motion"]
-        EventLog(box.resource_root, "vms", "7", 1).append(time.time(), "io.input")     # one line answers all sixteen
+        EventLog(box.resource_root, "cam", "7", 1).append(time.time(), "io.input")     # one line answers all sixteen
         for t, out in asked:
             t.join(timeout=3)
             assert out["rep"]["changed"] is True
@@ -357,14 +357,14 @@ def test_with_nobody_waiting_the_watcher_looks_at_nothing():
     res, srv = _resource(box)
     try:
         for unit in ("1", "2", "3"):
-            EventLog(box.resource_root, "vms", unit, 1).append(time.time(), "motion")
+            EventLog(box.resource_root, "cam", unit, 1).append(time.time(), "motion")
         assert res.watch.stats == 0 and res.watch._thread is None    # a resource nobody waits at
-        _ask(res.url, "vms/io.input", 0.55)
+        _ask(res.url, "cam/io.input", 0.55)
         looked = res.watch.stats
         assert 3 <= looked <= 3 * 2 * 9, f"three units, a tick every 0.1 s for half a second: {looked} stats"
         _until(lambda: res.watch._thread is None, 1.0, "the watcher to stop with its last waiter")
         for unit in ("1", "2", "3"):
-            EventLog(box.resource_root, "vms", unit, 1).append(time.time(), "io.input")
+            EventLog(box.resource_root, "cam", unit, 1).append(time.time(), "io.input")
         time.sleep(0.5)
         assert res.watch.stats == looked and res.watch._thread is None
     finally:
@@ -380,12 +380,12 @@ def test_shutting_the_door_releases_the_waiters_and_a_client_that_left_is_droppe
     res, srv = _resource(box)
     host, port = "127.0.0.1", srv.server_address[1]
     gone = socket.create_connection((host, port))
-    gone.sendall(b"GET /events/wait?want=vms/io.input&timeout=30 HTTP/1.0\r\n\r\n")
+    gone.sendall(b"GET /events/wait?want=cam/io.input&timeout=30 HTTP/1.0\r\n\r\n")
     _until(lambda: res.watch.waiting() == 1, what="the request to be held")
     gone.close()                                                     # the client went away
     _until(lambda: res.watch.waiting() == 0, 3.0, "the waiter of a client that left to be dropped")
 
-    asked = [_asking(res.url, "vms/io.input", 30.0) for _ in range(3)]
+    asked = [_asking(res.url, "cam/io.input", 30.0) for _ in range(3)]
     _until(lambda: res.watch.waiting() == 3, what="three requests to be held")
     t0 = time.monotonic()
     srv.shutdown()
@@ -393,7 +393,7 @@ def test_shutting_the_door_releases_the_waiters_and_a_client_that_left_is_droppe
         t.join(timeout=3)
         assert out["rep"]["changed"] is False and out["rep"]["closed"] is True
     assert time.monotonic() - t0 < 3.0 and res.watch.waiting() == 0
-    assert res.watch.wait([("vms", "io.input")], 5.0) == {"changed": False, "closed": True, "seq": res.watch.seq}
+    assert res.watch.wait([("cam", "io.input")], 5.0) == {"changed": False, "closed": True, "seq": res.watch.seq}
 
 
 # -- the reader's side: the gap, and the lease step ---------------------------------------------------------------
@@ -420,7 +420,7 @@ def test_a_flood_of_changes_is_one_early_pass_per_gap_and_the_lease_step_stays_o
     thread.start()
     try:
         _until(lambda: res.watch.waiting() == 1, what="the evaluator's request to be held")
-        log_ = EventLog(box.resource_root, "vms", "1", 1)
+        log_ = EventLog(box.resource_root, "cam", "1", 1)
         t0, n0, flooded = time.monotonic(), len(passes), 3.6
         while time.monotonic() - t0 < flooded:
             log_.append(time.time(), "io.input", port="1", value="closed")
@@ -485,16 +485,16 @@ def test_a_resource_with_no_room_or_no_such_route_costs_a_pause_and_never_a_pass
 
     wake = longpoll.Wake()
     resources = {"a": "http://a", "b": "http://b"}
-    lp = longpoll.LongPoll(wake, lambda: resources, lambda: [("vms", "io.input")], backoff=0.2, fetch=fetch)
+    lp = longpoll.LongPoll(wake, lambda: resources, lambda: [("cam", "io.input")], backoff=0.2, fetch=fetch)
     lp.sync()
     _until(lambda: lp.errors == 2, 2.0, "both refusals to be counted")
     assert not wake.event.is_set() and lp.woken == 0
     resources.pop("a"); resources["c"] = "http://c"
     lp.sync()
     _until(lambda: lp.woken == 1 and wake.event.is_set(), 2.0, "the answer of the resource that joined")
-    _until(lambda: ("http://c", (("vms", "io.input"),), 4) in asked, 2.0, "the next request to carry `since`")
+    _until(lambda: ("http://c", (("cam", "io.input"),), 4) in asked, 2.0, "the next request to carry `since`")
     time.sleep(0.5)
-    assert [a for a in asked if a[0] == "http://a"] == [("http://a", (("vms", "io.input"),), None)]   # asked once, then gone
+    assert [a for a in asked if a[0] == "http://a"] == [("http://a", (("cam", "io.input"),), None)]   # asked once, then gone
     lp.resources = lambda: (_ for _ in ()).throw(OSError("the store is away"))
     lp.sync()                                                        # never raises: the list as it was
     lp.close()
@@ -522,7 +522,7 @@ def _looping(beat: float = COMMANDS_BEAT, poll: float = 2.0, **kw):
 
     def command(rid: str) -> float:
         now = time.time()
-        box.vars.put(f"vms/requests/{rid}", {"unit": str(cid), "action": "output", "port": "2", "at": str(now),
+        box.vars.put(f"cam/requests/{rid}", {"unit": str(cid), "action": "output", "port": "2", "at": str(now),
                                              "by": "operator", "valid_until": str(now + 30)})
         return now
 
@@ -610,7 +610,7 @@ def test_a_fenced_holder_on_a_beat_does_not_act():
         _until(lambda: len(looks) >= 3, 1.5, "three looks at the requests")
         assert one.called == [] and one.dev.did == []
         assert holder.commands == {"performed": 0, "refused": 0, "expired": 0, "unknown": 0} and holder.fetched == []
-        assert one.box.vars.get("vms/requests/r1")[0] is not None    # the row stands, for the holder that may
+        assert one.box.vars.get("cam/requests/r1")[0] is not None    # the row stands, for the holder that may
     finally:
         one.close()
 
@@ -631,12 +631,12 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_
     theirs, _ = next_epoch(box.vars, key)                            # the camera's new holder took the next epoch
     assert unit in holder.lease_pass() and unit not in holder.leases   # …and this one let the camera go
     now = box.wall()
-    box.vars.put("vms/requests/r1", {"unit": unit, "action": "output", "port": "2", "at": str(now),
+    box.vars.put("cam/requests/r1", {"unit": unit, "action": "output", "port": "2", "at": str(now),
                                      "by": "operator", "valid_until": str(now + 30)})
     for _ in range(8):
         holder.beat_once()                                           # two seconds of beats
     assert dev.did == [] and current_epoch(box.vars, key) == theirs, (dev.did, current_epoch(box.vars, key), theirs)
-    assert holder.commands["performed"] == 0 and box.vars.get("vms/requests/r1")[0] is not None
+    assert holder.commands["performed"] == 0 and box.vars.get("cam/requests/r1")[0] is not None
     holder.reconcile_once()                                          # the pass: the assignment still names it here
     holder.pump_once()
     assert current_epoch(box.vars, key) == theirs + 1 and holder.may_act(unit)
@@ -667,7 +667,7 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assign
             holder.assignment = lambda: (_ for _ in ()).throw(OSError("one read timed out"))
         else:
             holder.vars.get = lambda path, *a, **k: ((_ for _ in ()).throw(OSError("one read timed out"))
-                                                     if path.startswith("vms/cameras/") else real_get(path, *a, **k))
+                                                     if path.startswith("cam/cameras/") else real_get(path, *a, **k))
         acts = holder.reconcile_once()
         holder.refresh, holder.assignment, holder.vars.get = real_refresh, real_assignment, real_get
         if fails == "a row after the assignment":                      # the assignment DID read, and names it here:
@@ -704,7 +704,7 @@ def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
         assert holder.store_errors == 1 and len([m for m in said if "between passes" in m]) == 1
         away["on"] = False
         now = box.wall()
-        box.vars.put("vms/requests/r1", {"unit": str(cid), "action": "output", "port": "2", "at": str(now),
+        box.vars.put("cam/requests/r1", {"unit": str(cid), "action": "output", "port": "2", "at": str(now),
                                          "by": "operator", "valid_until": str(now + 30)})
         holder.beat_once()
         assert dev.did == [("output", 2, "pulse", 0)] and holder.store_errors == 1
@@ -732,7 +732,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     now = box.wall()
 
     def put(rid, at, by="auto/door", filed=None):
-        box.vars.put(f"vms/requests/{rid}", {"unit": str(cid), "action": "output", "port": "1", "at": str(at), "by": by,
+        box.vars.put(f"cam/requests/{rid}", {"unit": str(cid), "action": "output", "port": "1", "at": str(at), "by": by,
                                              "valid_until": str(now + 30), **({"filed": str(filed)} if filed is not None else {})})
 
     holder.requests()                                                # a listing with nothing in it: "before" for what follows
@@ -772,19 +772,19 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     holder.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     text = spec_metrics(con)
-    for line in ('vms_event_to_device_seconds_bucket{worker="w-1",by="auto",le="0.25"} 2',
-                 'vms_event_to_device_seconds_count{worker="w-1",by="auto"} 4',
-                 'vms_event_to_device_seconds_count{worker="w-1",by="operator"} 1',
-                 'vms_event_to_device_skewed_total{worker="w-1",by="auto",direction="ahead"} 1',
-                 'vms_request_to_device_skewed_total{worker="w-1",by="auto",direction="behind"} 1',
-                 'vms_request_to_device_seconds_count{worker="w-1",by="auto"} 4',
-                 'vms_request_seen_to_device_seconds_bucket{worker="w-1",le="1"} 4',
-                 'vms_request_seen_to_device_seconds_sum{worker="w-1"} 1.5'):
+    for line in ('cam_event_to_device_seconds_bucket{worker="w-1",by="auto",le="0.25"} 2',
+                 'cam_event_to_device_seconds_count{worker="w-1",by="auto"} 4',
+                 'cam_event_to_device_seconds_count{worker="w-1",by="operator"} 1',
+                 'cam_event_to_device_skewed_total{worker="w-1",by="auto",direction="ahead"} 1',
+                 'cam_request_to_device_skewed_total{worker="w-1",by="auto",direction="behind"} 1',
+                 'cam_request_to_device_seconds_count{worker="w-1",by="auto"} 4',
+                 'cam_request_seen_to_device_seconds_bucket{worker="w-1",le="1"} 4',
+                 'cam_request_seen_to_device_seconds_sum{worker="w-1"} 1.5'):
         assert line in text, line
 
     # a holder started again: a standing row first seen at its call is not a road of zero — it was filed long ago
     holder.release_slot()                                            # an orderly stop; the next instance takes the name
-    again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    again = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                       wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=lambda key: dev)
     again.reconcile_once()
     put("d", box.wall() - 4.0, filed=box.wall() - 4.0)
@@ -802,12 +802,12 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     from w2cplatform.metrics import text as spec_metrics
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
     assert w.wants() == [] and w._resources() == {}                  # before its first pass; and a fake index keeps no list
     assert w.reconcile_once() == ["door-on-badge"]
-    assert w.wants() == [("det", "motion", "7-motion"), ("vms", "io.input", "12")]   # the unit is in the want (M8)
+    assert w.wants() == [("cam", "io.input", "12"), ("det", "motion", "7-motion")]   # the unit is in the want (M8)
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     w.heartbeat_once()
     assert "auto_waits_total{" not in spec_metrics(con)                 # the long poll was not asked for
@@ -860,9 +860,9 @@ def test_a_holder_reads_a_request_row_once_and_another_holders_rows_never_again(
     holder.reconcile_once()
     now = box.wall()
     for i in range(1000):                                            # a thousand rows of other holders' devices
-        box.vars.put(f"vms/requests/other-{i:04d}", {"unit": "999", "action": "output", "port": "1",
+        box.vars.put(f"cam/requests/other-{i:04d}", {"unit": "999", "action": "output", "port": "1",
                                                      "valid_until": str(now + 300)})
-    box.vars.put("vms/requests/mine", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(now + 300)})
+    box.vars.put("cam/requests/mine", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(now + 300)})
     reads = _counting(holder)
     holder.requests()
     assert len(reads) == 1001 and dev.did == [("output", 1, "pulse", 0)]     # each row once: they are new
@@ -879,10 +879,10 @@ def test_a_holder_reads_a_request_row_once_and_another_holders_rows_never_again(
         holder.requests()
     before = (time.perf_counter() - t0) / 4
     assert len(reads) == 4 * 1000 and after < before / 3, f"a beat over 1000 rows: {after * 1000:.1f} ms, was {before * 1000:.1f} ms"
-    box.vars.put("vms/requests/new", {"unit": str(cid), "action": "output", "port": "2", "valid_until": str(now + 300)})
+    box.vars.put("cam/requests/new", {"unit": str(cid), "action": "output", "port": "2", "valid_until": str(now + 300)})
     del reads[:]
     holder.requests()
-    assert reads == ["vms/requests/new"] and dev.did[-1] == ("output", 2, "pulse", 0)   # a new row: read, and performed
+    assert reads == ["cam/requests/new"] and dev.did[-1] == ("output", 2, "pulse", 0)   # a new row: read, and performed
 
 
 def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float = 0.25, start: int = 0, prefix: str = ""):
@@ -897,14 +897,14 @@ def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float
         while owed >= 1.0:
             owed -= 1.0
             n += 1
-            box.vars.put(f"vms/requests/{prefix}c-{n:05d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(box.wall()),
+            box.vars.put(f"cam/requests/{prefix}c-{n:05d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(box.wall()),
                                                      "by": "auto/door", "valid_until": str(box.wall() + 30), "filed": str(box.wall())})
         holder.requests()
         if t - last_hb >= 10.0:
             holder.lease_pass(); holder.heartbeat_once(); last_hb = t   # the lease step, at least as often
         if t - last_clear >= CLEAR_EVERY:
             clear_requests(con, sweep=False); last_clear = t
-        standing.append(len(box.vars.list("vms/requests/")))
+        standing.append(len(box.vars.list("cam/requests/")))
         box.clock.advance(beat); box.wall.advance(beat); t += beat
     return standing, n
 
@@ -933,10 +933,10 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     assert max(standing[-40:]) <= max(standing[40:80]) + 4, f"the rows grow: {standing[40:80]} … {standing[-40:]}"
     assert len(holder.fetched_said()) <= VmsWorker.FETCHED_BYTES
     # …the holder dies here, between two heartbeats, its last answers unsaid; its slot lapses and a new one takes it
-    left = len(box.vars.list("vms/requests/"))
+    left = len(box.vars.list("cam/requests/"))
     assert left > 0
     box.clock.advance(46.0); box.wall.advance(46.0)                   # past `valid_until` too: performed is not expired
-    again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    again = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                       wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=lambda key: dev)
     assert again.name == "w-1" and again.instance != holder.instance
     again.reconcile_once()
@@ -946,10 +946,10 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     assert "command.failed" not in [k for _, _, k in again.observed] and len(dev.did) == 180    # nothing failed, nothing twice
     assert again.reanswered == left
     again.heartbeat_once()
-    assert clear_requests(con, sweep=False) == left and box.vars.list("vms/requests/") == []
+    assert clear_requests(con, sweep=False) == left and box.vars.list("cam/requests/") == []
     # and the review's own split, read back from the mark: a call that never came back is still `unknown`
-    box.objects.put("vms/commands/c-99999", json.dumps({"instance": "gone:1:abc", "slot": "w-1", "unit": str(cid)}).encode())
-    box.vars.put("vms/requests/c-99999", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    box.objects.put("cam/commands/c-99999", json.dumps({"instance": "gone:1:abc", "slot": "w-1", "unit": str(cid)}).encode())
+    box.vars.put("cam/requests/c-99999", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     again.requests()
     assert again.commands["unknown"] == 1                            # no answer in the mark: not known, said so
 
@@ -981,7 +981,7 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     said it (`_confirm`); one write the store refused, and a restart in the ten seconds after, and the next instance
     found the bare mark — `unknown`, a `command.failed`. The answer is owed now (`_marks_owed`) and written again at
     every look until the store takes it. And what the beat waits on is on `/metrics`: slow devices, calls in flight,
-    answers said again (`metrics:` in vms.subsystem.yaml)."""
+    answers said again (`metrics:` in cam.subsystem.yaml)."""
     from w2cplatform.metrics import text as spec_metrics
     box = Box()
     holder, cid, dev, _called = _holder(box)
@@ -989,21 +989,21 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     real, refusing = box.objects.put, {"on": True}
 
     def put(key, data, *a, **k):
-        if refusing["on"] and key.startswith("vms/commands/") and b'"outcome"' in data:
+        if refusing["on"] and key.startswith("cam/commands/") and b'"outcome"' in data:
             raise OSError("the store is away")
         return real(key, data, *a, **k)
     box.objects.put = put
-    box.vars.put("vms/requests/r-1", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    box.vars.put("cam/requests/r-1", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     holder.requests()
     assert dev.did == [("output", 1, "pulse", 0)] and "r-1" in holder._marks_owed
-    assert "outcome" not in json.loads(box.objects.get("vms/commands/r-1"))           # the store did not take the answer
+    assert "outcome" not in json.loads(box.objects.get("cam/commands/r-1"))           # the store did not take the answer
     holder.requests()
     assert "r-1" in holder._marks_owed                                                # still away: still owed
     refusing["on"] = False
     holder.requests()                                                                 # the next look writes it
-    assert not holder._marks_owed and json.loads(box.objects.get("vms/commands/r-1"))["outcome"] == "performed"
+    assert not holder._marks_owed and json.loads(box.objects.get("cam/commands/r-1"))["outcome"] == "performed"
     holder.release_slot()
-    again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    again = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                       wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=lambda key: dev)
     again.reconcile_once()
     again.requests()
@@ -1012,8 +1012,8 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     again.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     text = spec_metrics(con)
-    for line in ('vms_commands_reanswered_total{worker="w-1"} 1', 'vms_devices_slow{worker="w-1"} 0',
-                 'vms_commands_in_flight{worker="w-1"} 0'):
+    for line in ('cam_commands_reanswered_total{worker="w-1"} 1', 'cam_devices_slow{worker="w-1"} 0',
+                 'cam_commands_in_flight{worker="w-1"} 0'):
         assert line in text, line
 
 
@@ -1027,11 +1027,11 @@ def test_a_command_is_performed_only_on_the_device_it_was_given_for():
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
     until = str(box.wall() + 300)
-    box.vars.put("vms/requests/moved", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until,
+    box.vars.put("cam/requests/moved", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until,
                                         "group": "10.0.0.91"})
-    box.vars.put("vms/requests/here", {"unit": str(cid), "action": "output", "port": "2", "valid_until": until,
+    box.vars.put("cam/requests/here", {"unit": str(cid), "action": "output", "port": "2", "valid_until": until,
                                        "group": "10.0.0.90"})
-    box.vars.put("vms/requests/old", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until})
+    box.vars.put("cam/requests/old", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until})
     done = []
     for _ in range(3):
         done += holder.requests()
@@ -1066,7 +1066,7 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
                                                                                     "headroom": 250}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",
                     json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     gate = threading.Event()
     hung = {f"acme/10.0.{i // 250}.{i % 250}" for i in range(0, VmsWorker.HUNG_TARGETS, 2)}
     called: dict[str, float] = {}
@@ -1083,7 +1083,7 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         dev.output = output
         return dev
 
-    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    holder = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                        wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=device,
                        lease_ttl=6.0, lease_margin=3.0)                # the lease step every second
     leased: list[float] = []
@@ -1096,18 +1096,18 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         _until(lambda: len(holder.epochs) == len(cams) and holder.passes >= 1, 60.0, "every camera started")
         now = time.time()
         for i, cid in enumerate(cams[:-1]):
-            box.vars.put(f"vms/requests/burst-{i:03d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(now),
+            box.vars.put(f"cam/requests/burst-{i:03d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(now),
                                                          "by": "auto/x", "valid_until": str(now + 30)})
         time.sleep(0.5)
         n = len(cams) - 1
         fast = f"acme/10.0.{n // 250}.{n % 250}"
-        box.vars.put("vms/requests/z-fast", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
+        box.vars.put("cam/requests/z-fast", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
                                              "by": "operator", "valid_until": str(time.time() + 30)})
         _until(lambda: fast in called, 10.0, "the command filed during the burst to be performed")   # not after the 30 s
         _until(lambda: len([k for k in called if k not in hung]) == len(cams) - len(hung), 10.0, "every free device called")
         assert not gate.is_set()                                     # the hung ones still hang: their rows stand ahead
         filed = time.monotonic()                                     # last in the order of keys: behind every hung row
-        box.vars.put("vms/requests/z-fast-2", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
+        box.vars.put("cam/requests/z-fast-2", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
                                                "by": "operator", "valid_until": str(time.time() + 30)})
         _until(lambda: called[fast] > filed, 5.0, "the fast command to be performed")
         assert called[fast] - filed < 1.5, f"the fast command waited {called[fast] - filed:.2f} s"
@@ -1133,7 +1133,7 @@ def _hanging_holder(box, n: int, **kw):
                                                                                     "headroom": 250}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",
                     json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     hung, gate, hang = set(keys[::2]), threading.Event(), threading.Event()
     asked: dict = {}
 
@@ -1151,7 +1151,7 @@ def _hanging_holder(box, n: int, **kw):
         def close(self): return self._call("close", super().close)
 
     cam_of = dict(zip(keys, cams))
-    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    holder = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                        wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root,
                        device_factory=lambda key: Hanging(key, channels=["1"], rays=1, relays=2,
                                                           coverage={str(cam_of[key]): (0.0, 60.0)}), **kw)
@@ -1236,7 +1236,7 @@ def test_a_device_that_refuses_to_open_or_never_opens_is_that_devices_and_the_pa
                                                                                     "headroom": 50}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",
                     json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     gate, opened = threading.Event(), []
 
     def factory(key):
@@ -1247,7 +1247,7 @@ def test_a_device_that_refuses_to_open_or_never_opens_is_that_devices_and_the_pa
             gate.wait(30)
         return FakeDevice(key, channels=["1"])
 
-    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    holder = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                        wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root, device_factory=factory)
     try:
         t = time.monotonic()
@@ -1277,8 +1277,8 @@ def test_an_evaluator_is_woken_by_the_units_it_watches_and_its_early_pass_reads_
         {"name": "gate", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
     assert str(gate) == "2"
     SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
-        {"name": "other", "when": [{"sub": "vms", "kind": "io.input", "unit": "2"}], "within": 0,
-         "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 1, "pulse_ms": 100}], "rate_per_minute": 600})
+        {"name": "other", "when": [{"sub": "cam", "kind": "io.input", "unit": "2"}], "within": 0,
+         "then": [{"sub": "cam", "action": "output", "unit": str(cid), "port": 1, "pulse_ms": 100}], "rate_per_minute": 600})
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign(
         "a-1", ["door", "other"])
     passes: list[tuple] = []                                         # (what the pass was told was touched, what it evaluated)
@@ -1294,25 +1294,25 @@ def test_an_evaluator_is_woken_by_the_units_it_watches_and_its_early_pass_reads_
             passes.append((k.get("only"), list(current)))
     evaluator.reconcile_once = counted
     for unit in ("777", "2", str(cid)):
-        EventLog(box.resource_root, "vms", unit, 1).append(time.time(), "motion")   # the units exist before anybody waits
+        EventLog(box.resource_root, "cam", unit, 1).append(time.time(), "motion")   # the units exist before anybody waits
     evaluator.watch_events(ON)
     stop = threading.Event()
     thread = threading.Thread(target=evaluator.run, kwargs={"poll": 2.0, "stop": stop}, daemon=True)
     thread.start()
     try:
         _until(lambda: res.watch.waiting() == 1 and evaluator.wants(), what="the evaluator's request to be held")
-        assert evaluator.wants() == sorted([("vms", "io.input", "2"), ("vms", "io.input", str(cid))])
+        assert evaluator.wants() == sorted([("cam", "io.input", "2"), ("cam", "io.input", str(cid))])
         time.sleep(0.3)
         t0, n0 = time.monotonic(), len(passes)
-        noisy = EventLog(box.resource_root, "vms", "777", 1)
+        noisy = EventLog(box.resource_root, "cam", "777", 1)
         while time.monotonic() - t0 < 3.0:                           # camera 777's contact, twenty times a second
             noisy.append(time.time(), "io.input", port="1", value="closed")
             time.sleep(0.05)
         flood = passes[n0:]
         assert len(flood) <= 3 and evaluator.wake.early == 0, f"{len(flood)} passes, {evaluator.wake.early} early, in 3 s"
         n1 = len(passes)
-        EventLog(box.resource_root, "vms", "2", 1).append(time.time(), "io.input", port="1", value="closed")
-        early = lambda: [p for p in passes[n1:] if p[0] is not None and ("vms", "io.input", "2") in p[0]]
+        EventLog(box.resource_root, "cam", "2", 1).append(time.time(), "io.input", port="1", value="closed")
+        early = lambda: [p for p in passes[n1:] if p[0] is not None and ("cam", "io.input", "2") in p[0]]
         _until(lambda: early(), 2.0, "an early pass for camera 2's contact")
         assert early()[0][1] == ["other"], f"the early pass evaluated {early()[0][1]}"   # and read no other scenario
         assert all(p[1] == ["door", "other"] for p in passes if p[0] is None and p[1])    # the ordinary pass: all of them
@@ -1335,7 +1335,7 @@ def test_the_gap_widens_with_a_long_pass_and_with_a_resource_that_refuses():
     from tests.test_autoworker import _Log, _assigned, _scenario, _worker, ev
     box = Box()
     t = box.wall()
-    log_ = _Log([ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log_ = _Log([ev(t - 5, "cam", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log_)
     query = log_.query
@@ -1359,23 +1359,23 @@ def test_a_client_holds_one_wait_the_total_is_a_setting_and_the_counts_are_on_th
     res.watch.waiters_max = longpoll.waiters_from({"LONG_POLL_WAITERS": "3"})
     assert res.watch.waiters_max == 3 and longpoll.waiters_from({}) == longpoll.WAITERS_MAX == 2 * longpoll.EVALUATORS_EXPECTED
     try:
-        EventLog(box.resource_root, "vms", "7", 1).append(time.time(), "motion")
-        first, out1 = _asking(res.url, "vms/io.input&client=a-1", 8.0)
+        EventLog(box.resource_root, "cam", "7", 1).append(time.time(), "motion")
+        first, out1 = _asking(res.url, "cam/io.input&client=a-1", 8.0)
         _until(lambda: res.watch.waiting() == 1)
-        again, out2 = _asking(res.url, "vms/io.input&client=a-1", 8.0)   # the same evaluator asks again
+        again, out2 = _asking(res.url, "cam/io.input&client=a-1", 8.0)   # the same evaluator asks again
         first.join(timeout=3)
         assert out1["rep"]["replaced"] is True and out1["rep"]["changed"] is False
         _until(lambda: res.watch.waiting() == 1, what="one request of a-1, the newer")
-        others = [_asking(res.url, f"vms/io.input&client=a-{i}", 8.0) for i in (2, 3)]
+        others = [_asking(res.url, f"cam/io.input&client=a-{i}", 8.0) for i in (2, 3)]
         _until(lambda: res.watch.waiting() == 3)
-        assert _ask(res.url, "vms/io.input&client=a-4", 8.0)["full"] is True
+        assert _ask(res.url, "cam/io.input&client=a-4", 8.0)["full"] is True
         assert res.watch.counts() == {"waiting": 3, "held": 4, "full": 1, "replaced": 1, "max": 3}
         assert res.heartbeat()["waits"]["full"] == 1
         text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall), wall=box.wall).metrics_text()
         for line in ('w2c_resource_waits{server="srv-a"} 3', 'w2c_resource_waits_full_total{server="srv-a"} 1',
                      'w2c_resource_waits_held_total{server="srv-a"} 4', 'w2c_resource_waits_replaced_total{server="srv-a"} 1'):
             assert line in text, line
-        EventLog(box.resource_root, "vms", "7", 1).append(time.time(), "io.input")
+        EventLog(box.resource_root, "cam", "7", 1).append(time.time(), "io.input")
         for t, out in [(again, out2)] + others:
             t.join(timeout=3)
             assert out["rep"]["changed"] is True
@@ -1409,7 +1409,7 @@ def test_what_a_reader_asks_again_with_never_skips_a_change_and_a_refusal_does_n
                 self.armed = False
                 with self.real:
                     watch.seq += 1
-                    watch.last[("vms", "io.input", "7")] = watch.seq
+                    watch.last[("cam", "io.input", "7")] = watch.seq
     watch._lock = Lock()
     calls = {"n": 0}
 
@@ -1417,9 +1417,9 @@ def test_what_a_reader_asks_again_with_never_skips_a_change_and_a_refusal_does_n
         calls["n"] += 1
         watch._lock.armed = threading.get_ident()                   # this thread's next release is the waiter leaving
         return True
-    rep = watch.wait([("vms", "io.input", "7")], 5.0, gone=gone)
+    rep = watch.wait([("cam", "io.input", "7")], 5.0, gone=gone)
     assert rep["changed"] is False and watch.seq == rep["seq"] + 1
-    assert watch.wait([("vms", "io.input", "7")], 0.0, since=rep["seq"])["changed"] is True      # not swallowed
+    assert watch.wait([("cam", "io.input", "7")], 0.0, since=rep["seq"])["changed"] is True      # not swallowed
     asked: list = []
     answers = [{"changed": True, "seq": 4, "touched": []}, {"changed": False, "full": True, "seq": 99},
                {"changed": False, "closed": True, "seq": 98}]
@@ -1430,7 +1430,7 @@ def test_what_a_reader_asks_again_with_never_skips_a_change_and_a_refusal_does_n
             return answers.pop(0)
         time.sleep(0.05)
         return {"changed": False, "seq": 4}
-    lp = longpoll.LongPoll(longpoll.Wake(), lambda: {"a": "http://a"}, lambda: [("vms", "io.input")], backoff=0.02, fetch=fetch)
+    lp = longpoll.LongPoll(longpoll.Wake(), lambda: {"a": "http://a"}, lambda: [("cam", "io.input")], backoff=0.02, fetch=fetch)
     lp.sync()
     _until(lambda: len(asked) >= 4, 3.0, "four requests")
     lp.close()
@@ -1440,8 +1440,8 @@ def test_what_a_reader_asks_again_with_never_skips_a_change_and_a_refusal_does_n
 def test_a_want_is_refused_when_it_is_empty_not_a_name_or_too_many():
     """An empty `want` held a place for thirty seconds and answered nothing; `want=../../x/k` sent the watcher to list
     a directory outside the volumes; nothing bounded how many were named. Each is 400 now."""
-    assert longpoll.parse_wants("vms/io.input,det/motion/7-motion") == [("det", "motion", "7-motion"), ("vms", "io.input", "")]
-    for bad in ("", " , ", "../../x/k", "vms", "vms/", "vms/io.input/../x", ",".join(f"vms/k{i}" for i in range(65))):
+    assert longpoll.parse_wants("cam/io.input,det/motion/7-motion") == [("cam", "io.input", ""), ("det", "motion", "7-motion")]
+    for bad in ("", " , ", "../../x/k", "cam", "cam/", "cam/io.input/../x", ",".join(f"cam/k{i}" for i in range(65))):
         try:
             longpoll.parse_wants(bad)
         except ValueError:
@@ -1450,7 +1450,7 @@ def test_a_want_is_refused_when_it_is_empty_not_a_name_or_too_many():
     box = _real_box()
     res, srv = _resource(box)
     try:
-        for bad in ("", "..%2F..%2Fx%2Fk", ",".join(f"vms/k{i}" for i in range(65))):
+        for bad in ("", "..%2F..%2Fx%2Fk", ",".join(f"cam/k{i}" for i in range(65))):
             t0 = time.monotonic()
             try:
                 _ask(res.url, bad, 5.0)
@@ -1470,22 +1470,22 @@ def test_the_watcher_looks_at_the_units_it_was_asked_about_and_lists_a_directory
     res, srv = _resource(box)
     try:
         for unit in range(1000):
-            EventLog(box.resource_root, "vms", str(unit), 1).append(time.time(), "motion")
+            EventLog(box.resource_root, "cam", str(unit), 1).append(time.time(), "motion")
         listed: list[str] = []
         real = os.listdir
         os.listdir = lambda p: (listed.append(p), real(p))[1]
         try:
-            _ask(res.url, "vms/io.input/7", 0.55)
+            _ask(res.url, "cam/io.input/7", 0.55)
         finally:
             os.listdir = real
         assert res.watch.stats <= 2 * 8, f"{res.watch.stats} stats for one camera in half a second"
         assert len(listed) <= 4, f"listed {len(listed)} directories for one camera"
-        t, out = _asking(res.url, "vms/io.input/7", 5.0)
+        t, out = _asking(res.url, "cam/io.input/7", 5.0)
         _until(lambda: res.watch.waiting() == 1)
         time.sleep(0.3)
-        EventLog(box.resource_root, "vms", "7", 2).append(time.time(), "io.input")      # camera 7 started again: epoch 2
+        EventLog(box.resource_root, "cam", "7", 2).append(time.time(), "io.input")      # camera 7 started again: epoch 2
         t.join(timeout=4)
-        assert out["rep"]["changed"] is True and out["rep"]["touched"] == ["vms/io.input/7"]
+        assert out["rep"]["changed"] is True and out["rep"]["touched"] == ["cam/io.input/7"]
     finally:
         srv.shutdown()
 
@@ -1525,17 +1525,17 @@ def test_an_ordinary_pass_reads_the_catalog_once_however_many_scenarios_name_no_
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     names = [f"any-{i}" for i in range(4)]
     for name in names:
-        con.create({"name": name, "when": [{"sub": "vms", "kind": "io.input"}], "within": 0,
-                    "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]})
+        con.create({"name": name, "when": [{"sub": "cam", "kind": "io.input"}], "within": 0,
+                    "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]})
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", names)
     w = _worker(box, _Log([]))
     listed: list[str] = []
     real = w.catalog.vars.list
     w.catalog.vars.list = lambda prefix, *a, **k: (listed.append(prefix), real(prefix, *a, **k))[1]
     w.reconcile_once()
-    assert listed.count("vms/cameras/") == 1, listed                # four scenarios, one listing
+    assert listed.count("cam/cameras/") == 1, listed                # four scenarios, one listing
     del listed[:]
-    w.reconcile_once(only={("vms", "io.input", "12")})
+    w.reconcile_once(only={("cam", "io.input", "12")})
     assert listed == [] and all(w.status_by_unit[n]["phase"] == "running" for n in names)
 
 
@@ -1551,18 +1551,18 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
     res, srv = _resource(box)
     holder, cid, _dev, _called = _holder(box)
     evaluator = _evaluator(box, cid)
-    evaluator._watched = {("vms", "io.input", str(i)) for i in range(1, 71)}   # what seventy scenarios' triggers watch
+    evaluator._watched = {("cam", "io.input", str(i)) for i in range(1, 71)}   # what seventy scenarios' triggers watch
     for unit in ("42", "77"):
-        EventLog(box.resource_root, "vms", unit, 1).append(time.time(), "motion")      # the units exist before anybody waits
-    assert evaluator.wants() == [("vms", "io.input", "")] and evaluator.wants_folded == 70
+        EventLog(box.resource_root, "cam", unit, 1).append(time.time(), "motion")      # the units exist before anybody waits
+    assert evaluator.wants() == [("cam", "io.input", "")] and evaluator.wants_folded == 70
     evaluator.watch_events(ON)
     try:
         evaluator.long_poll.sync()
         _until(lambda: res.watch.waiting() == 1, what="the folded request to be held")
         assert evaluator.long_poll.errors == 0
-        EventLog(box.resource_root, "vms", "42", 1).append(time.time(), "io.input", port="1", value="closed")
+        EventLog(box.resource_root, "cam", "42", 1).append(time.time(), "io.input", port="1", value="closed")
         _until(lambda: evaluator.long_poll.woken >= 1, 3.0, "the folded request to be answered")
-        assert ("vms", "io.input", "42") in evaluator.long_poll.take_touched()
+        assert ("cam", "io.input", "42") in evaluator.long_poll.take_touched()
         evaluator.heartbeat_once()
         hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
         assert hb.extra["wants_folded"] == 70 and hb.extra["wait_errors"] == 0
@@ -1571,9 +1571,9 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
         assert 'auto_wants_folded{worker="a-1"} 70' in text
     finally:
         evaluator.stop_polling(); srv.shutdown()
-    assert longpoll.fold([("vms", f"k{i}", "1") for i in range(70)]) == ([], 70)  # more kinds than a request names: the pass
+    assert longpoll.fold([("cam", f"k{i}", "1") for i in range(70)]) == ([], 70)  # more kinds than a request names: the pass
     calls = []
-    lp = longpoll.LongPoll(longpoll.Wake(), lambda: {"srv-a": "http://srv-a"}, lambda: [("vms", "io.input", "")],
+    lp = longpoll.LongPoll(longpoll.Wake(), lambda: {"srv-a": "http://srv-a"}, lambda: [("cam", "io.input", "")],
                            backoff=0.01, fetch=lambda *a: (calls.append(1), [1, 2])[1])
     lp.sync()
     _until(lambda: len(calls) >= 3, 3.0, "the thread to ask again after an answer of another shape")
@@ -1590,8 +1590,8 @@ def _nvr_holder(box, n: int, device, server: str = "srv-a"):
                                                                                     "headroom": 250}).to_bytes())
     box.objects.put(f"platform/resources/{server}/heartbeat",
                     json.dumps({"server": server, "ts": box.wall(), "url": "http://x", "units": {}}).encode())
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
-    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    holder = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
                        wall=box.wall, server=server, env={}, resource_root=box.resource_root, device_factory=device)
     return holder, cams
 
@@ -1779,7 +1779,7 @@ def test_a_slow_question_does_not_keep_a_relay_from_being_answered_in_its_look()
         holder.heartbeat_once()                                       # the coverage hangs: slow for questions
         dev = holder.devices["acme/10.0.0.50"]
         assert id(dev) in holder._slow_asks and "acme/10.0.0.50" not in holder._slow
-        box.vars.put("vms/requests/r-1", {"unit": str(cams[0]), "action": "output", "port": "1",
+        box.vars.put("cam/requests/r-1", {"unit": str(cams[0]), "action": "output", "port": "1",
                                           "valid_until": str(time.time() + 30)})
         done = holder.requests()
         assert [d.get("action") for d in done if d["request"] == "r-1"] == ["output"], done   # answered in this look
@@ -1806,7 +1806,7 @@ def test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_tha
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     hung = con.create_camera({"name": "hung", "source": "driverpack://acme/10.0.0.51/ch/1"})["id"]
     con.create_camera({"name": "refused", "source": "driverpack://acme/10.0.0.52/ch/1"})
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     try:
         begun = time.time()
         holder.reconcile_once()
@@ -1820,7 +1820,7 @@ def test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_tha
         assert st[hung].get("device_state") == "opening" and "device_state" not in st[cams[0]]
         assert [d["device"] for d in holder.device_status()] == sorted(by)          # the door says the same
         from w2cplatform.metrics import text as spec_metrics
-        assert 'vms_devices_opening{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
+        assert 'cam_devices_opening{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
     finally:
         gate.set()
     _until(lambda: (holder.reconcile_once(), "acme/10.0.0.51" in holder.devices)[1], 5.0, "the late open to be held")
@@ -1871,27 +1871,27 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         def emit(self, record):
             said.append(record.getMessage())
     catch = Catch(level=logging.WARNING)
-    logging.getLogger("vmsworker").addHandler(catch)
+    logging.getLogger("camworker").addHandler(catch)
     try:
         holder.reconcile_once()
         assert holder.identity_changes == 0
         nvr.identity = "SN-NEW"
         holder.reconcile_once()
-        assert holder.identity_changes == 1 and box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "SN-NEW"
+        assert holder.identity_changes == 1 and box.vars.get("cam/devices/10.0.0.50")[0]["identity"] == "SN-NEW"
         assert any("now gives the serial number SN-NEW; it gave SN-OLD before" in m for m in said), said
         holder.heartbeat_once()
         hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
         assert hb.extra["identity_changes"] == 1
         from w2cplatform.metrics import text as spec_metrics
-        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
+        assert 'cam_device_identity_changes_total{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
         nvr.identity = "SN-THIRD"                                     # and a holder started on the row of the second
-        fresh = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(),
+        fresh = VmsWorker("w-1", box.vars.as_writer("camworker", WORKER_ACL), box.objects, FakeActuator(),
                           clock=box.clock, wall=box.wall, server="srv-a", env={}, resource_root=box.resource_root,
                           device_factory=lambda key: nvr)
         fresh.reconcile_once()
         assert fresh.identity_changes == 1
     finally:
-        logging.getLogger("vmsworker").removeHandler(catch)
+        logging.getLogger("camworker").removeHandler(catch)
 
 
 def test_the_doors_two_questions_share_one_wait_and_a_coverage_said_before_says_its_age():
@@ -1976,7 +1976,7 @@ def test_a_playback_door_to_a_hung_recorder_answers_ask_again_and_keeps_its_conn
     holder, cams = _nvr_holder(box, 8, lambda k: NVR(k, channels=[str(c) for c in range(1, 9)], max_playbacks=16, bps=1000))
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     healthy = con.create_camera({"name": "b1", "source": "driverpack://acme/10.0.0.60/ch/1"})["id"]
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     holder.DOOR_ASK_WAIT = 0.5
     for _ in range(2):
         holder.reconcile_once()
@@ -2155,7 +2155,7 @@ def test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and
         from w2cplatform.metrics import text as spec_metrics                       # …and on `/metrics` (the thirteenth pass)
         from w2cplatform.console import heartbeats
         holder.heartbeat_once()
-        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in spec_metrics(VmsController(holder.vars, holder.objects)).splitlines()
+        assert f'cam_door_reads_stuck{{worker="{holder.name}"}} 1' in spec_metrics(VmsController(holder.vars, holder.objects)).splitlines()
         hang.add(str(cams[2]))                                                 # a second camera of it hangs too
         try:
             holder.playback(cams[2], 0, 2)
@@ -2235,7 +2235,7 @@ def test_hung_reads_hold_none_of_the_doors_bytes_and_the_door_holds_a_bounded_nu
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     healthy = con.create_camera({"name": "b1", "source": "driverpack://acme/10.0.0.60/ch/1"})["id"]
     slow = con.create_camera({"name": "c1", "source": "driverpack://acme/10.0.0.70/ch/1"})["id"]
-    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    VmsController(box.vars.as_writer("camcontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     holder.DOOR_ASK_WAIT, holder.PLAYBACK_BUDGET_WAIT, holder.PLAYBACK_STALL = 1.0, 0.5, 0.3
     holder.PLAYBACK_BUDGET = 2 * holder.PLAYBACK_PIECE_BYTES
     for _ in range(2):
