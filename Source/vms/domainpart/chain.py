@@ -50,7 +50,7 @@ from w2cplatform.domain.federation import Unreachable
 from w2cplatform.trust.tokens import kid_of
 from w2cplatform.domain.uplink import REPORTED, UPLINK, base
 
-UPSTREAM_PATH = "domain/rec/upstream"  # in a recording cluster: where its streams go up, or come down from (star)
+from .keys import UPSTREAM_PATH  # in a recording cluster: where its streams go up, or come down from (star)
 
 log = logging.getLogger("chain")
 
@@ -73,6 +73,49 @@ def retry_wait(period: float) -> float:
 # centre none of whose recorders heard lately says an ingest keeps the road each entry already names — tokens are still
 # re-issued on it; one torn heartbeat raised out of the whole pass once, and a day later every relay's token to push up
 # had run out. A centre that does not answer: nothing is written.
+def publish_upstream(inputs, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
+    from .ingest import BOOKS, _an_object, audience, ingest_urls
+    now, books = inputs.wall(), {}
+    c = inputs.view.fed.clusters.get(centre)
+    if c is None or inputs.issuer is None:
+        return {}
+    try:
+        urls = ingest_urls(centre, c.objects, now) or None       # none said: each entry keeps the road it names
+    except Unreachable:
+        return {}
+    # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
+    # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
+    # a viewer in the centre, whose want the relay's forwarder carries down like any other.
+    polled = {ref: inputs._poll_home(home) for ref, home in inputs.unrecorded().items()}
+    for ref, on in [*inputs.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
+        if on == centre:
+            continue
+        mode = "pull" if on in star else "push"
+        have, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
+        raw_old = (have or {}).get(ref)
+        old = BOOKS.read(f"{UPSTREAM_PATH}/{on}/{ref}", lambda: _an_object(json.loads(raw_old)), {}) if raw_old else {}
+        road = urls if urls is not None else old.get("urls")
+        if not isinstance(road, list):
+            continue                                                  # no road known to the centre: none to give
+        try:
+            fresh = float(old.get("until", 0)) - now > lifetime / 2
+        except PARSE_ERRORS:
+            fresh = False
+        if old.get("urls") == road and old.get("mode") == mode and fresh \
+                and kid_of(str(old.get("token_secret", ""))) == inputs.issuer.kid:
+            entry = old
+        else:
+            entry = {"urls": road, "mode": mode, "until": now + lifetime,
+                     "token_secret": inputs.issuer.issue("stream", on, now=now, aud=[centre], ref=ref)}
+        books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
+    for on, book in books.items():
+        path = f"{UPSTREAM_PATH}/{on}"
+        have, idx = inputs.vars.get(path)
+        if have != book:
+            inputs.vars.put(path, book, cas=idx)
+    return books
+
+
 # -- the relay's side: the forwarder ------------------------------------------------------------------------
 # WHAT THE FORWARDER HOLDS FOR THE CENTRE, STATED (the eighth review, a minor: "does not lose frames when a push fails"
 # held for about a second and a half — thirty frames in its subscription, fifty kept — and what it dropped was counted
@@ -141,7 +184,7 @@ class Forwarder:
     sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
 
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None, objects=None,
-                 load_up=None, save_up=None, drop_up=None, token_requests=None, env=None):
+                 load_up=None, save_up=None, drop_up=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
         frames of a range from this cluster's archive — called with `recording=` when the centre named one, and
         raising `OSError` for a range it could not read. `needs(ref)`: whether this cluster wants the stream
@@ -149,9 +192,6 @@ class Forwarder:
         `drop_up(ref)`: where the centre's word on a camera is kept across a restart — by default over `objects`, this
         cluster's object store (`keep_ups`), and nowhere without it."""
         self.name, self.local, self.vars, self.dial = name, local, cluster_vars, dial
-        from vms.role_tokens import RoleTokens
-        self.tokens = RoleTokens("recworker", token_requests, env, clock=getattr(local, "wall", None))
-        self._routes = {}
         self.archive = archive or (lambda ref, t0, t1, recording=None: [])
         self.needs = needs or (lambda ref: False)
         self.up = f"up:{name}"
@@ -244,44 +284,15 @@ class Forwarder:
                 out[k] = e
         return out
 
-    def book(self, authorize=True) -> dict[str, dict]:
-        from vms.recording_upstream import observation
-        from vms.recording_books import Unconfirmed, source
-        from w2cplatform.domain.memberbook import read as member_book
-        from w2cplatform.domain.placement import placed
-        items = member_book(self.vars, UPSTREAM_PATH, self.name)
-        sources = member_book(self.vars, "domain/cam/sources", self.name)
-        out = {}
-        for ref in set((items or {}).keys()) | set(self._routes):
-            if not ref:
-                continue
-            assignment = placed(self.vars, "rec", ref)
-            if assignment is None or assignment["cluster"] != self.name:
-                self._routes.pop(ref, None)
-                self.tokens.forget("upstream", ref)
-                continue
-            try:
-                camera = source(sources, ref)
-                if not camera.value.get("polls"):
-                    continue
-                fact, topology = observation(self.vars, self.name, ref)
-                mode = "pull" if self.name in topology["star"] else "push"
-                scope = assignment["rev"], topology["rev"], fact.member, tuple(fact.value["urls"]), mode
-                self._routes[ref] = {"urls": fact.value["urls"], "mode": mode, "scope": scope}
-            except (Unconfirmed, ValueError):
-                if ref not in self._routes or ref not in self.queues and ref not in self.pulled:
-                    continue
-            route = self._routes.get(ref)
-            if route is not None:
-                if not authorize:
-                    out[ref] = {"urls": route["urls"], "mode": route["mode"]}
-                    continue
-                try:
-                    out[ref] = {"urls": route["urls"], "mode": route["mode"],
-                                "token_secret": self.tokens.get("upstream", ref, route["scope"])}
-                except Unconfirmed:
-                    continue
-        return out
+    def book(self) -> dict[str, dict]:
+        from .ingest import _a_road, _an_object
+
+        def entry(e):
+            _a_road(_an_object(e))
+            if e.get("mode") not in ("push", "pull"):
+                raise ValueError(f"its mode is {e.get('mode')!r}")
+            return e
+        return self._entries(UPSTREAM_PATH, lambda k: True, entry)
 
     def _centre(self, e: dict):
         for url in e["urls"]:
@@ -294,8 +305,6 @@ class Forwarder:
     def pass_once(self) -> dict[str, str]:
         book = self.book()
         self.restore_up(book)
-        for ref in set(self._routes) - book.keys():
-            self._silent(ref)
         for ref, e in book.items():
             ing = self._centre(e)
             if ing is None:
@@ -321,7 +330,7 @@ class Forwarder:
         taken for "no word kept", and a store that blinked at a restart lost the centre's word for good."""
         if self.load_up is None:
             return
-        for ref, e in (self.book(authorize=False) if book is None else book).items():
+        for ref, e in (self.book() if book is None else book).items():
             if ref in self._up_read or e.get("mode") != "push":
                 continue
             try:
@@ -679,7 +688,7 @@ class Forwarder:
     # `/metrics` the spec's lines over `up_dropped`, `down_breaks`, `up_expired` (`rec.subsystem.yaml`, `upstream_*_total`).
     def stats(self) -> dict[str, dict]:
         out = {}
-        for ref, e in self.book(authorize=False).items():
+        for ref, e in self.book().items():
             if not e.get("urls"):
                 continue                                         # no road: no loop for it, as the product's `Pass`
             st = {"mode": e["mode"], "state": self.state.get(ref, ""), "errors": self.errors.get(ref, 0)}
