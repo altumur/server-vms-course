@@ -79,4 +79,5 @@ class OpenedVars:
 
 
 POLLS_PATH = _book("polls")
+UPSTREAM_PATH = _book("upstream")
 ASKS_PATH = _book("asks")
