@@ -3,3 +3,5 @@
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
 cam:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
+cam:worker.reads   # ADR-0074 «курс»: семья domain/placed/rec/ (доп. 4) читается воркером — курс несёт ключ своим окном книг — команда курса
+rec:worker.reads   # ADR-0074 «курс»: семья domain/placed/rec/ (доп. 4) читается воркером — курс несёт ключ своим окном книг — команда курса
