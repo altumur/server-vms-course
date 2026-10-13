@@ -85,12 +85,46 @@ def test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassign
             placement.assign(e.north.vars, sub, "badge", {"cluster": "north", "origin": "south", "copies": ["south"]}, e.wall)
             got = client(e).request_token(sub, kind, "badge", f"{sub}worker")
             claims = verify(got["token"], e.signer.tokens.keyset(), now=e.wall(), kind=kind)
-            assert claims["sub"] == claims["ref"] == "badge" and claims["aud"] == ["north", "south"]
+            assert claims["sub"] == "south" and claims["ref"] == "badge" and claims["aud"] == ["north", "south"]
             assert got["exp"] == claims["exp"] == e.wall() + 60
             placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "north"}, e.wall)
             assert raises(Refused, lambda: client(e).request_token(sub, kind, "badge", f"{sub}worker")).status == 403
             new = client(e, "north").request_token(sub, kind, "badge", f"{sub}worker")
             assert verify(new["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["south"]
+
+
+def test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems():
+    with issuing(two=True) as e:
+        for sub, kind in (("testsub", "tally"), ("testsub2", "tally2")):
+            rule = catalog.spec(sub).domain.tokens[kind]
+            rule["placement"] = {**rule["placement"], "target_fields": ("cluster", "copies", "star_centre")}
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": "north", "star": ["south"], "via": {}})})
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "south", "copies": []}, e.wall)
+            got = client(e).request_token(sub, kind, "badge", f"{sub}worker")
+            assert verify(got["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["north", "south"]
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "north", "origin": "south", "copies": ["south"]}, e.wall)
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "elsewhere", "star": ["south"], "via": {}})})
+            got = client(e).request_token(sub, kind, "badge", f"{sub}worker")
+            assert verify(got["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["north", "south"]
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "south", "copies": []}, e.wall)
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 3, "centre": None, "star": ["south"], "via": {}})})
+            assert raises(Refused, lambda: client(e).request_token(sub, kind, "badge", f"{sub}worker")).status == 409
+
+
+def test_declared_centre_target_comes_only_from_confirmed_holder_topology():
+    with issuing(two=True) as e:
+        for sub, kind in (("testsub", "tally"), ("testsub2", "tally2")):
+            rule = catalog.spec(sub).domain.tokens[kind]
+            rule["placement"] = {**rule["placement"], "caller": "cluster", "target_fields": ("centre",)}
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "north"}, e.wall)
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 0, "centre": None})})
+            assert raises(Refused, lambda: client(e).request_token(sub, kind, "badge", f"{sub}worker")).status == 409
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": "north", "star": [], "via": {}})})
+            reply = client(e).request_token(sub, kind, "badge", f"{sub}worker")
+            assert verify(reply["token"], e.signer.tokens.keyset(), now=e.wall(), kind=kind)["aud"] == ["north"]
+            assert raises(Refused, lambda: client(e, "north").request_token(sub, kind, "badge", f"{sub}worker")).status == 403
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "not-admitted"})})
+            assert raises(Refused, lambda: client(e).request_token(sub, kind, "badge", f"{sub}worker")).status == 403
 
 
 def test_no_grant_foreign_role_ref_member_or_broken_assignment_cannot_issue():
