@@ -493,14 +493,22 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     class Local:
         def listen(self, fn):
             pass
+    # A joined member reads its carried source book; an unjoined recorder has none.
+    plain = FileVariables(f"{root}/vars")
+    plain.put("domain/member", {"cluster": "relay-a"})
+    plain.put("domain/placed/rec/SN-A", {"cluster": "relay-a", "copies": "[]", "at": "1000", "rev": "1"})
     objects = FsObjectStore(f"{root}/objects")
     fw = Forwarder("relay-a", Local(), AsRecorder(), dial=lambda url: None, objects=objects)
     fw.book()
     fw.asks_book()
     should_from_snapshot(objects, sources=AsRecorder())("SN-A")
+    from types import SimpleNamespace
+    from vms.recworker import Look
+    Look(SimpleNamespace(vars=AsRecorder())).sources()  # The recorder resolves pulls from sources.
     books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/"))}
-    assert books == {"domain/rec/upstream", "domain/cam/asks", "domain/cam/sources"}, sorted(books)
-    assert set(REC_SPEC.worker_reads) >= books, REC_SPEC.worker_reads
+    assert books == {"domain/cam/upstream", "domain/cam/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
+    own_books = {f"domain/{REC_SPEC.name}/{book}" for book in REC_SPEC.domain.books}
+    assert set(REC_SPEC.worker_reads) | own_books >= books, REC_SPEC.worker_reads
 
 
 class _AsRole:
