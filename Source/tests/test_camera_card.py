@@ -21,7 +21,7 @@ from vms.config import REC_SPEC
 from vms.worker import FakeDevice, fake_samples
 from vms.obsd import archive_ms, unix_s
 from w2cplatform.spec import SpecController
-from tests.vmsconftest import REC_ACL, footage, recorder
+from tests.vmsconftest import rec_acl, footage, recorder
 from tests.test_lesson11_edge import CARD, _box, _holder
 
 
@@ -635,7 +635,7 @@ def _camera(card_dir=None, when="offline", budget=64 << 20):
         {"name": "1-card", "cam": "1", "home": "card", **({"when": when} if when else {})})
     ring = CamRing(clock=box.wall)
     act = CardActuator(ring, threaded=False)
-    rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", REC_ACL), box.objects, ring, act, clock=box.clock,
+    rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", rec_acl()), box.objects, ring, act, clock=box.clock,
                        wall=box.wall, server="srv-1", resource_root=box.resource_root, env={})
     rec.lease_pass(); rec.heartbeat_once()
     rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -680,7 +680,7 @@ def test_a_network_volume_declared_in_the_cameras_cluster_does_not_take_the_came
     view = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]}
     assert view["card"]["served_by"] and view["nas"]["served_by"] is None
     assert volumes.holders(box.vars, REC_SPEC.sub)["card"].by == "r-1"
-    other = CardRecorder("r-2", box.vars.as_writer("recworker-r-2", REC_ACL), box.objects, ring,
+    other = CardRecorder("r-2", box.vars.as_writer("recworker-r-2", rec_acl()), box.objects, ring,
                          CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="srv-1",
                          resource_root=box.resource_root, env={})
     other.lease_pass()
@@ -720,7 +720,7 @@ def test_a_camera_configured_without_a_card_says_none_and_no_error_and_every_sta
     closed = {"opening", "recording", "failing", "stalled", "failed", "unavailable", "none"}
     box, ctl, con, con_vars = _box()
     ring = CamRing(clock=box.wall)
-    rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", REC_ACL), box.objects, ring,
+    rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", rec_acl()), box.objects, ring,
                        CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="srv-1",
                        resource_root=box.resource_root, env={})
     assert rec._card_said() == ("opening", "")                            # not looked yet
@@ -1110,7 +1110,7 @@ def _room_and_camera():
     primary = _recorder(box, "r-a", "srv-a", "disks")
     ring = CamRing(clock=box.wall)
     act = CardActuator(ring, threaded=False)
-    cam = CardRecorder("r-c", box.vars.as_writer("recworker-r-c", REC_ACL), box.objects, ring, act, clock=box.clock,
+    cam = CardRecorder("r-c", box.vars.as_writer("recworker-r-c", rec_acl()), box.objects, ring, act, clock=box.clock,
                        wall=box.wall, server="cam-1", resource_root=box.resource_root, env={})
     cam.lease_pass(); cam.heartbeat_once()
     SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects,
