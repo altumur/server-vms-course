@@ -33,8 +33,7 @@ def publish_facts(worker, family, status):
     if not worker.name:
         return False
     try:
-        from .recording_upstream import upstream
-        items = {"sources": sources, "primaries": primaries, "upstream": upstream}[family](worker, status)
+        items = {"sources": sources, "primaries": primaries}[family](worker, status)
         return publish(worker, family, items)
     except OSError:
         # A store outage leaves the last publication intact and never suppresses a pulse.
@@ -140,14 +139,6 @@ def primaries(worker, status):
             value["ingest"] = [worker.ingest_url]
         if push and worker.ingest_url:
             value["push"] = True
-        if role == "primary":
-            from .recording_upstream import observation
-            try:
-                up, topology = observation(worker.vars, own, ref)
-                if own in topology["star"]:
-                    value.update(ingest=up.value["urls"], ingest_cluster=up.member, push=True)
-            except Unconfirmed:
-                pass
         out[key] = json.dumps(recording_value(value), ensure_ascii=False, allow_nan=False, sort_keys=True)
     for key in set(memory) - seen:
         memory.pop(key)
