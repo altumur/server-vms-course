@@ -13,13 +13,15 @@ on the LAN, and from the card for the rest. A viewer opens the camera where its 
 """
 
 from tests.reporting import sync as report_sync
+from tests.domainvms.recording_domain import RecordingDomain, camera_pusher
 import json
 from types import SimpleNamespace
 
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-from vms.domainpart.crossing import Crossings, plan_takeback, resolve
+from vms.domainpart.inputs import BookInputs
+from vms.recording_sources import plan_takeback, resolve
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
@@ -69,8 +71,10 @@ def _office(wall):
                             published=cam.local_objects(), seen_store=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(b.vars, view, wall, issuer=signer.tokens)
-    crossings.record(SERIAL, on="srv-a")
+    crossings = BookInputs(b.vars, view, wall, issuer=signer.tokens)
+    recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
+    recording_domain.collect()
 
     def recorders(a_running=True, backup_coverage=None):              # what each server's recorder says
         from w2cplatform.contract import Heartbeat, Subsystem
@@ -81,6 +85,13 @@ def _office(wall):
         b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
             {"id": f"{SERIAL}-copy", "cam": f"ref:{SERIAL}", "enabled": True, "phase": "running", "coverage": cov}],
             {"url": "http://srv-b:9100/"}).to_bytes())
+        recording_domain.observe("srv-a", rec_a.units(), st, worker="r-a", ingest=A_URLS[0])
+        recording_domain.observe("srv-b", rec_b.units(), [{"id": f"{SERIAL}-copy", "phase": "running",
+            "coverage": {**cov, "fragments": cov.get("fragments", 1)}}], worker="r-b", kind="backup",
+            ingest=B_URLS[0], peer="http://srv-b:9100/")
+        recording_domain.observe(cam.name, [{"id": "card", "cam": "ref:"+SERIAL, "enabled": True}],
+            [{"id": "card", "phase": "running", "coverage": {**cam.coverage, "fragments": 1}}], kind="edge")
+
 
     def domain_pass(a_up=True, backup_coverage=None):
         for n, r in hosts.items():
@@ -90,7 +101,7 @@ def _office(wall):
         if a_up:
             recorders(backup_coverage=backup_coverage)
             report_sync(agents["srv-a"])
-        view.refresh(); crossings.publish(); crossings.publish_primaries()
+        view.refresh(); recording_domain.collect()
         report_sync(agents["srv-b"]); report_sync(cam_agent)
         if a_up:
             report_sync(agents["srv-a"])
@@ -104,16 +115,23 @@ def _office(wall):
         raise Unreachable(f"{url} did not answer")
 
     q = {n: (i.want(SERIAL, f"recorder:{n}"), i.subscribe(SERIAL, f"recorder:{n}", maxsize=1000))[1] for n, i in ing.items()}
-    pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
+    pusher = camera_pusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
     domain_pass()
     return SimpleNamespace(fed=fed, a=a, b=b, a_link=a_link, ing=ing, q=q, cam=cam, pusher=pusher, crossings=crossings,
-                           domain_pass=domain_pass, recorders=recorders, down=down, dial=dial, rec_a=rec_a)
+                           domain_pass=domain_pass, recorders=recorders, down=down, dial=dial, rec_a=rec_a, recording_domain=recording_domain)
+
+
+from weakref import WeakKeyDictionary
+_GATES = WeakKeyDictionary()
 
 
 def _covers(vars_, objects, row, now):
     """The standby's gate, as the recorder runs it (`vms.recworker.RecWorker.carried_primary`)."""
     from vms.recworker import RecWorker
-    me = SimpleNamespace(vars=vars_, objects=objects, _not_written_since={}, CARRIED_LOST_AFTER=45.0, START_GRACE=20.0)
+    me = _GATES.get(vars_)
+    if me is None:
+        me = SimpleNamespace(vars=vars_, objects=objects, _not_written_since={}, CARRIED_LOST_AFTER=45.0, START_GRACE=20.0)
+        _GATES[vars_] = me
     return RecWorker.carried_primary(me, row, now)
 
 
@@ -124,206 +142,122 @@ BACKUP = {"id": f"{SERIAL}-copy", "cam": f"ref:{SERIAL}", "home": "copy", "when"
 def _frames(wall, n, start=0):
     """The sensor's frames `start` to `start + n`, twenty-five a second: their capture times go forward with their
     numbers — a pusher takes no frame that is not newer than the last it holds (М12 Lesson 16, the seventh review)."""
-    return [{"t": wall() + (start + i) * 0.04, "n": start + i} for i in range(n)]
+    return [{"t": wall() + (start + i) * 0.04, "n": start + i, "key": (start + i) % 25 == 0} for i in range(n)]
 
 
-def test_while_a_writes_the_camera_sends_one_stream_to_a_and_neither_standby_records():
+def test_each_assigned_receiver_has_its_own_channel_while_reserve_gates_hold():
     wall = Clock()
     o = _office(wall)
     e = o.pusher.entry()
-    assert e["backup"]["urls"] == B_URLS                                    # its second road: the road itself
-    # Where its backup is: the cluster AND the recording there — what a page opens it by (ADR-0010, the addition)
-    assert e["backups"] == [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}] and "backup_on" not in e
-    # B's copy, in the product's shape too (`PrimaryEntry`): the same facts, B among its backups, no road, no token
-    there = json.loads(o.b.vars.get("domain/cam/primaries/srv-b")[0][SERIAL])
-    assert there["backups"] == e["backups"] and there["recorded_by"] == "srv-a"
-    assert not {"backup", "ingest", "backup_on"} & set(there)
-    assert o.pusher.pass_once(_frames(wall, 5))["road"] == "primary"
-    assert len(o.q["srv-a"].drain()) == 5 and o.q["srv-b"].drain() == []                    # one stream, to A
-    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())                     # the card holds
-    assert not _covers(o.b.vars, o.b.objects, BACKUP, wall())                                # the backup holds
+    assert e["primary"] == "srv-a" and set(e["channels"]) == {"srv-a", "srv-b"}
+    assert e["channels"]["srv-b"]["urls"] == B_URLS
+    assert o.pusher.pass_once(_frames(wall, 5))["pushed"] == 10
+    assert [f["n"] for f in o.q["srv-a"].drain()] == list(range(5))
+    assert [f["n"] for f in o.q["srv-b"].drain()] == list(range(5))
+    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())
+    assert not _covers(o.b.vars, o.b.objects, BACKUP, wall())
 
 
-def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_the_book_its_gate_reads():
-    """A third server keeps a backup of the camera too. The book names both, each by its cluster AND its recording
-    there — a page opens either through `/domain/at/<cluster>/…` (ADR-0010, the addition). Each backup's cluster gets the
-    copy its recorder's gate reads, itself among the `backups`, no road; the camera's second road stays one, to the
-    first. A dies: both backups cover."""
-    from vms import volumes
-    from vms.config import REC_SPEC
-    from w2cplatform.spec import SpecController
+def test_disabled_recording_is_observed_and_reassignment_withdraws_its_receiver():
     wall = Clock()
     o = _office(wall)
-    c, c_link = make_cluster("srv-c")
-    o.fed.add(c)
-    volumes.write(c.vars, {"name": "copy", "kind": "backup", "server": "srv-c", "url": "/data/copy", "quota_bytes": 10**12})
-    rec_c = SpecController(REC_SPEC, c.vars, c.objects, wall=wall)
-    rec_c.create({"name": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"})
-    rec_c.create({"name": f"{SERIAL}-off", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline", "enabled": False})
-    rec_c.publish_snapshot()                                          # …and one switched off: no backup (the product's)
-    c_agent = DomainAgent("srv-c", o.b.vars, c.vars, now=wall, seen_store=c.objects)
-    o.domain_pass(); report_sync(c_agent)
-    both = [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}, {"cluster": "srv-c", "recording": f"{SERIAL}-c"}]
-    e = o.pusher.entry()
-    assert e["backups"] == both and e["backup"]["urls"] == B_URLS                  # one second road: to the first
-    for name in ("srv-b", "srv-c"):
-        there = json.loads(o.b.vars.get(f"domain/cam/primaries/{name}")[0][SERIAL])   # the copy at the holder (on B)
-        assert there["backups"] == both and not {"backup", "ingest", "backup_on"} & set(there)
-    carried = json.loads(c.vars.get("domain/cam/primaries")[0][SERIAL])               # carried home by srv-c's agent
-    assert carried["backups"] == both and carried["recorded_by"] == "srv-a"
-    row_c = {"id": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"}
-    assert not _covers(c.vars, c.objects, row_c, wall()) and not _covers(o.b.vars, o.b.objects, BACKUP, wall())
-    o.down.add("srv-a"); o.a_link.up = False
-    wall.advance(5)
-    o.domain_pass(a_up=False); report_sync(c_agent)
-    assert _covers(c.vars, c.objects, row_c, wall()) and _covers(o.b.vars, o.b.objects, BACKUP, wall())
+    row = {"id": SERIAL+"-copy", "cam": "ref:"+SERIAL, "enabled": False}
+    o.recording_domain.observe("srv-b", [row], [{"id": row["id"], "phase": "pending"}],
+        kind="backup", worker="r-b", ingest=B_URLS[0])
+    o.recording_domain.collect()
+    assert set(o.pusher.entry()["channels"]) == {"srv-a", "srv-b"}
+    o.recording_domain.assign(SERIAL, "srv-a", copies=[])
+    o.recording_domain.collect()
+    assert set(o.pusher.entry()["channels"]) == {"srv-a"}
 
 
-def test_the_page_reads_where_the_camera_is_recorded_backups_included_from_the_book_and_no_token():
-    """`GET /domain/cam/books/primaries`, on the VMS's own spec (`show: [recorded_by, recording, backups]`, «Паритет»'s
-    bytes): the camera's cluster and the backup's each answer from their own copy — who records it, the recording, and
-    its backups each by cluster and recording, as the domain wrote them; never a road, never its token (ADR-0010, the
-    addition)."""
-    import os
+def test_page_projection_of_primary_and_backup_is_flat_and_has_no_transport_credentials():
     import tempfile
-    import urllib.request
-    from vms.config import SPEC
-    from w2cplatform.console import Mount, SpecConsole
+    from pathlib import Path
+    from vms.config import REC_SPEC
+    from w2cplatform.console import SpecConsole
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import SpecController
     from w2cplatform.variables import FileVariables
-    assert SPEC.domain.show["primaries"] == ("recorded_by", "recording", "backups")
+    from w2cplatform.domain.memberbook import read
     wall = Clock()
     o = _office(wall)
-    want = {SERIAL: {"recorded_by": "srv-a", "recording": SERIAL,
-                     "backups": [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}]}}
-    for carried in (o.cam.flash, o.b.vars):
-        copy = carried.get("domain/cam/primaries")[0]
-        assert copy and json.loads(copy[SERIAL]).get("backups"), "the copy was carried home"
-        # The copy as carried, in a store of its own: a console outside any domain, open — the gate is not the question
-        root = tempfile.mkdtemp(prefix="primaries-")
-        vars_ = FileVariables(os.path.join(root, "config"), volatile=True)
-        vars_.put("domain/cam/primaries", copy)
-        objects = FsObjectStore(os.path.join(root, "objects"))
-        srv = Mount(SpecConsole(SpecController(SPEC, vars_, objects, wall=wall), wall=wall)).serve("127.0.0.1", 0)
-        try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/domain/cam/books/primaries") as r:
-                body = r.read().decode()
-        finally:
-            srv.shutdown()
-            srv.server_close()
-        assert json.loads(body) == want, body
-        assert "token" not in body and "srt://" not in body and "backup_on" not in body, body
+    copy = read(o.b.vars, "domain/rec/primaries", "srv-b")
+    root = Path(tempfile.mkdtemp(prefix="primaries-"))
+    v = FileVariables(str(root/"config"), volatile=True)
+    v.put("domain/rec/primaries", copy)
+    con = SpecConsole(SpecController(REC_SPEC, v, FsObjectStore(str(root/"objects")), wall=wall), wall=wall)
+    status, body = con.book_route(None, "GET", REC_SPEC, "primaries")
+    assert status == 200
+    got = body[SERIAL]
+    assert got["missing"] == []
+    assert {(e["member"], e["recording"], e["role"]) for e in got["entries"]} == {
+        ("srv-a", SERIAL, "primary"), ("srv-b", SERIAL+"-copy", "backup"), (o.cam.name, "card", "card")}
+    assert "token" not in json.dumps(body) and "srt://" not in json.dumps(body)
 
 
-def test_a_dies_and_both_standbys_record_the_card_from_its_sensor_the_backup_from_the_one_stream():
+def test_both_reserves_follow_explicit_primary_stop_without_waiting_for_a_start():
     wall = Clock()
     o = _office(wall)
-    o.pusher.pass_once(_frames(wall, 5)); o.q["srv-a"].drain()
-    o.down.add("srv-a"); o.a_link.up = False                          # server A is gone
-    wall.advance(5)
-    o.domain_pass(a_up=False)                                         # the domain, on B, sees A silent
-    out = o.pusher.pass_once(_frames(wall, 5, start=5))
-    assert out["road"] == "backup" and [f["n"] for f in o.q["srv-b"].drain()] == [5, 6, 7, 8, 9]
-    assert _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())  # the card records
-    assert _covers(o.b.vars, o.b.objects, BACKUP, wall())             # and so does the backup
-    assert "the backup" in o.pusher.state
+    o.recorders(a_running=False)
+    o.recording_domain.collect()
+    assert _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())
+    assert _covers(o.b.vars, o.b.objects, BACKUP, wall())
+    o.pusher.pass_once(_frames(wall, 5))
+    assert len(o.q["srv-b"].drain()) == 5
 
 
-def test_when_as_ingest_cannot_say_the_book_decides_that_a_whose_recorder_stopped_does_not_take_the_stream():
-    """A's ingest answers but has no word on the recording (it cannot read its cluster's rows); A's recorder has
-    stopped: the book says A should write and does not, and it is not a start. The camera goes to the backup on
-    the book's word — "the primary does not take the stream" is about the recording, not about who answers."""
+def test_absent_primary_observation_has_grace_and_keeps_the_working_reserve_channel():
     wall = Clock()
     o = _office(wall)
-    o.ing["srv-a"].should = None                                      # the ingest has no word of its own
-    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
-    wall.advance(5)
-    o.domain_pass()
-    o.recorders(a_running=False)                                      # named, and not running: a stop
-    o.crossings.publish_primaries()
-    o.cam.publish()                                                    # the book reaches the camera on its agent's pass
-    report_sync(DomainAgent(o.cam.name, o.b.vars, o.cam.flash, now=wall, domain_objects=o.b.objects,
-                published=o.cam.local_objects(), seen_store=o.cam.local_objects()))
-    assert o.pusher.pass_once(_frames(wall, 3, start=3))["road"] == "backup"
-    assert [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
+    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-b"].drain()
+    o.down.add("srv-a"); o.a_link.up = False
+    wall.advance(46)
+    o.domain_pass(a_up=False)
+    assert not _covers(o.b.vars, o.b.objects, BACKUP, wall())
+    wall.advance(20)
+    o.b.objects.put("domain/seen", json.dumps({"ts": wall()}).encode())
+    assert _covers(o.b.vars, o.b.objects, BACKUP, wall())
+    assert o.pusher.pass_once(_frames(wall, 3))["road"] == "backup"
+    assert len(o.q["srv-b"].drain()) >= 3
 
 
-def test_a_back_takes_everything_home_from_the_backup_first_and_the_card_for_the_rest():
-    """A was down for ten minutes. The camera switched its stream to B at once, but B's recording starts a few
-    seconds into the outage (the switch, the gate) — those seconds are only on the card. A, back, gets the
-    camera's stream again, and its plan takes the hole from the backup where the backup has it, and the rest
-    from the card, asked NOW."""
+def test_primary_takeback_uses_assigned_backup_then_card_for_the_remaining_holes():
     wall = Clock(100_000.0)
     o = _office(wall)
     t0 = wall()
-    o.down.add("srv-a"); o.a_link.up = False
     wall.advance(600)
-    o.domain_pass(a_up=False)
-    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-b"].drain()
-    o.down.discard("srv-a"); o.a_link.up = True
-    o.cam.coverage = {"from": t0 - 3600, "to": wall()}                # the card recorded the whole outage
-    o.domain_pass(backup_coverage={"from": t0 + 5, "to": wall()})     # B holds it from its fifth second
-    assert o.pusher.pass_once(_frames(wall, 3))["road"] == "primary"  # A takes the stream again
-    assert o.q["srv-b"].drain() == []
-    src = resolve(o.a.vars, f"ref:{SERIAL}", wall())
-    assert [b["cluster"] for b in src.backups] == ["srv-b"] and src.backups[0]["url"] == "http://srv-b:9100"
-    ours = [(t0 - 1800, t0), (wall() - 1, wall())]                    # A's own archive: the hole is the outage
-    fetch, missing = plan_takeback(src, ours, wall(), keep_days=30, settle=0, ask_device=lambda: o.cam.coverage)
-    assert fetch == [((t0, t0 + 5), "card"), ((t0 + 5, wall() - 1), "backup:srv-b")]
+    o.cam.coverage = {"from": t0 - 3600, "to": wall()}
+    o.domain_pass(backup_coverage={"from": t0+5, "to": wall()})
+    src = resolve(o.a.vars, "ref:"+SERIAL, wall())
+    assert [b["cluster"] for b in src.backups] == ["srv-b"]
+    ours = [(t0-1800, t0), (wall()-1, wall())]
+    fetch, missing = plan_takeback(src, ours, wall(), 30, 0, lambda: o.cam.coverage)
+    assert fetch == [((t0, t0+5), "card"), ((t0+5, wall()-1), "backup:srv-b")]
     assert missing == []
 
 
-def test_a_viewer_opens_the_camera_where_its_one_stream_is_going():
+def test_viewer_chooses_an_available_assigned_member():
     wall = Clock()
     o = _office(wall)
-    e = o.pusher.entry()
-    assert live_road(e, o.dial) == "primary"
-    o.down.add("srv-a"); o.a_link.up = False
-    wall.advance(5); o.domain_pass(a_up=False)
-    e = o.pusher.entry()
-    assert live_road(e, o.dial) == "backup"
-    road = {"primary": audience("srv-a"), "backup": audience("srv-b")}
+    assert live_road(o.pusher.entry(), o.dial) == "srv-a"
+    o.down.add("srv-a")
+    assert live_road(o.pusher.entry(), o.dial) == "srv-b"
     eps = {audience(n): IngestLiveEndpoint(i, lambda t, c: "anna") for n, i in o.ing.items()}
-    gw = Gateway("gw-b", where=lambda c: road[live_road(o.pusher.entry(), o.dial)], endpoint=lambda w: eps[w])
-    vq = gw.watch(SERIAL, "anna-token", "anna")
-    o.pusher.pass_once(_frames(wall, 4))
-    gw.pump()
-    assert len(vq.drain()) == 4                                        # from B's ingest: where the camera is
+    gw = Gateway("gw-b", where=lambda c: audience(live_road(o.pusher.entry(), o.dial)), endpoint=lambda w: eps[w])
+    queue = gw.watch(SERIAL, "anna-token", "anna")
+    o.pusher.pass_once(_frames(wall, 4)); gw.pump()
+    assert len(queue.drain()) == 4
 
 
-
-# -- failover without the domain: what the stream says -----------------------------------------------------------
-def test_a_whose_recorder_let_go_is_left_at_once_on_its_own_ingests_word_no_domain_asked():
-    """A's recorder stops taking the stream. The book still says "running" — no domain pass has run. A's ingest
-    says it on the next poll: it should record the camera and no recorder takes it. The camera goes to B on
-    that word, and both standbys know it from the stream: the card because its camera did not hand the stream
-    on, the backup because the camera came to it."""
-    from vms.domainpart.ingest import backup_gate, edge_gate
+def test_receiver_unsubscription_does_not_change_assignment_or_other_channels():
     wall = Clock()
     o = _office(wall)
-    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
-    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")          # A's recorder let go
-    out = o.pusher.pass_once(_frames(wall, 3, start=3))
-    assert out["road"] == "backup" and [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
-    assert json.loads(o.cam.flash.get("domain/cam/primaries")[0][SERIAL])["running"] is True   # the book: behind
-    assert edge_gate(o.pusher)(EDGE) is True and backup_gate(o.ing["srv-b"])(BACKUP) is True
-
-
-def test_the_domain_dies_with_a_and_both_standbys_start_at_once_anyway():
-    """Suppose the domain lived on A and died with it. No book will say "not running" until it goes stale — 45 s.
-    Nothing waits for it: the camera cannot reach A's ingest and goes to B; the card and the backup start from
-    what the stream says; the book, stale or not, is only the fallback."""
-    from vms.domainpart.ingest import backup_gate, edge_gate
-    wall = Clock()
-    o = _office(wall)
-    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
-    o.down.add("srv-a"); o.a_link.up = False                           # A is gone; no domain pass runs after
-    wall.advance(2)
-    assert o.pusher.pass_once(_frames(wall, 3, start=3))["road"] == "backup"
-    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())          # the book still says running
-    assert edge_gate(o.pusher)(EDGE) is True                                        # the stream says otherwise
-    assert backup_gate(o.ing["srv-b"])(BACKUP) is True
+    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-b"].drain()
+    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")
+    o.pusher.pass_once(_frames(wall, 3, start=3))
+    assert [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
+    assert not _covers(o.b.vars, o.b.objects, BACKUP, wall())
 
 
 def test_a_standby_that_pulls_opens_the_one_session_only_when_the_primary_stops_writing():
@@ -331,7 +265,7 @@ def test_a_standby_that_pulls_opens_the_one_session_only_when_the_primary_stops_
     holds no session — the camera serves one. A goes silent: B opens its session. A is back: B keeps it a minute,
     so the archives overlap, and closes it. A partition, both servers alive: B cannot see A and opens a second
     session — two recordings for a while, which Lesson 8 of М11 prefers to none."""
-    from vms.domainpart.crossing import ColdStandby, neighbour_writes
+    from vms.recording_sources import ColdStandby, neighbour_writes
     wall = Clock()
     o = _office(wall)
     sessions = {"srv-a"}
@@ -356,7 +290,7 @@ def test_a_cold_standby_of_our_camera_asks_the_camera_and_a_partition_opens_no_s
     would pull from, nothing new to reach. A is gone: the camera says nobody takes it, B opens its session. A is
     back: a minute of overlap, then B closes. The servers lose sight of each other while A pulls: the camera
     still says A takes it, and B stays cold — one session."""
-    from vms.domainpart.crossing import ColdStandby, camera_taken
+    from vms.recording_sources import ColdStandby, camera_taken
     wall = Clock()
     cam = DeviceCluster("SN6002", FakeVariables(), wall=wall)
     cam.boot()                                                         # its door open to the site
@@ -395,13 +329,14 @@ def test_a_camera_that_a_pulls_is_not_called_uncovered_and_its_card_does_not_rec
     wall = Clock()
     o = _office(wall)
     o.cam.pushes = False; o.cam.door_open = True                       # pulled by A now
-    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")  # A's recorder pulls; it is not on the ingest
-    o.domain_pass()
-    assert not json.loads(o.a.vars.get("domain/cam/sources")[0][SERIAL])["live_url"].startswith("ingest://")
-    out = o.pusher.pass_once(_frames(wall, 3))
-    assert out["road"] == "primary" and o.q["srv-b"].drain() == []     # no second stream
-    assert edge_gate(o.pusher)(EDGE) is False                          # and the card holds
-    assert "uncovered" not in o.ing["srv-a"].poll(o.pusher.entry()["ingest"]["token_secret"], SERIAL)   # silent, not "covered"
+    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")
+    o.ing["srv-b"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-b")
+    o.domain_pass(); o.domain_pass()
+    from vms.recording_books import source
+    assert source(o.a.vars.get("domain/cam/sources")[0], SERIAL).value["live_url"].startswith("rtsp://")
+    assert set(o.pusher.entry()["channels"]) == {"srv-a", "srv-b"}
+    o.pusher.pass_once(_frames(wall, 3))
+    assert edge_gate(o.pusher)(EDGE) is False
 
 
 # -- the recorders themselves: placed, started from the book, written from the ingest (the scenario's O6) --------------
@@ -443,8 +378,10 @@ def _written_office(wall):
                             published=cam.local_objects(), seen_store=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(b.vars, view, wall, issuer=signer.tokens)
-    crossings.record(SERIAL, on="srv-a")
+    crossings = BookInputs(b.vars, view, wall, issuer=signer.tokens)
+    recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
+    recording_domain.collect()
     down = set()
 
     def servers():                                                     # each server that is on: placement, its recorder's pass
@@ -458,7 +395,7 @@ def _written_office(wall):
         cam.publish(); report_sync(cam_agent)
         if "srv-a" not in down:
             report_sync(agents["srv-a"])
-        view.refresh(); crossings.publish(); crossings.publish_primaries()
+        view.refresh(); recording_domain.collect()
         report_sync(agents["srv-b"]); report_sync(cam_agent)
         if "srv-a" not in down:
             report_sync(agents["srv-a"])                                     # A's source book, carried home
@@ -472,13 +409,13 @@ def _written_office(wall):
                 return i
         raise Unreachable(f"{url} did not answer")
 
-    pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
+    pusher = camera_pusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
     for c in ctl.values():
         c.publish_snapshot()                                           # what each records: the domain finds B's backup in it
     books()                                                            # the books home before the recorders' first pass:
     domain_pass()                                                      # a start that finds no source burns an epoch (the gate's)
     return SimpleNamespace(a=a, b=b, a_link=a_link, recs=recs, ing=ing, cam=cam, pusher=pusher, down=down,
-                           domain_pass=domain_pass, servers=servers)
+                           domain_pass=domain_pass, servers=servers, recording_domain=recording_domain)
 
 
 def _sensor(t0, n, start=0):
@@ -525,24 +462,28 @@ def test_the_recorder_takes_what_the_camera_pushes_writes_it_says_have_and_the_b
     ra.store.seal()
     spans = ra.store.spans(SERIAL)
     assert [s.stream for s in spans] == [f"{SERIAL}/e1"] and abs(spans[0].start - t0) < 0.01, spans
-    token = o.pusher.entry()["ingest"]["token_secret"]
+    token = o.pusher.assigned.stream_token()
     assert abs(o.ing["srv-a"].poll(token, SERIAL, camera_now=wall())["have"] - (t0 + 49 * 0.04)) < 0.01   # the camera's `have`
     o.domain_pass()
-    assert o.pusher.entry()["running"] is True                                        # the book of primaries: A writes it
-    assert json.loads(o.cam.flash.get("domain/cam/primaries")[0][SERIAL])["running"] is True
+    assert _primary(o).value["running"] is True                                        # the book of primaries: A writes it
+    assert _primary(o).value["running"] is True
     assert rb.store.spans(f"{SERIAL}-copy") == []                                    # one stream, to A: the backup wrote nothing
 
     o.down.add("srv-a"); o.a_link.up = False                                          # A is off
-    wall.advance(5)
+    wall.advance(46)
     o.domain_pass()
-    out = o.pusher.pass_once(_sensor(t0, 50, start=50))
+    rb.primary_needs_cover(rb.rows[0])
+    wall.advance(20)
+    rb.take_pushed()
+    second = wall()
+    out = o.pusher.pass_once(_sensor(second, 50))
     assert out["road"] == "backup", out
     st = _status(rb, f"{SERIAL}-copy")
     assert st["phase"] == "running" and st["samples_written"] == 50, st
-    assert abs(st["written_through"] - (t0 + 99 * 0.04)) < 0.01, st
+    assert abs(st["written_through"] - (second + 49 * 0.04)) < 0.01, st
     rb.store.seal()
     spans = rb.store.spans(f"{SERIAL}-copy")
-    assert [s.stream for s in spans] == [f"{SERIAL}-copy/e1"] and abs(spans[0].start - (t0 + 2.0)) < 0.01, spans
+    assert [s.stream for s in spans] == [f"{SERIAL}-copy/e1"] and abs(spans[0].start - second) < 0.01, spans
 
 
 def test_a_recording_the_camera_brings_nothing_to_is_waiting_and_the_book_says_so_until_the_first_frame():
@@ -558,7 +499,12 @@ def test_a_recording_the_camera_brings_nothing_to_is_waiting_and_the_book_says_s
     st = _status(ra, SERIAL)
     assert st["phase"] == "waiting" and st["push_waiting"] is True and "pushed nothing" in st["why"], st
     o.domain_pass()
-    assert o.pusher.entry()["running"] is False
+    assert _primary(o).value["running"] is False
     o.pusher.pass_once(_sensor(wall(), 25))
     st = _status(ra, SERIAL)
     assert st["phase"] == "running" and st["samples_written"] == 25 and st["epoch"] == 1, st
+
+
+def _primary(o):
+    from vms.recording_books import primary
+    return primary(o.cam.flash.get("domain/rec/primaries")[0], SERIAL, "srv-a")
