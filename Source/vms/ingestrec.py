@@ -2,7 +2,7 @@
 
 A camera nobody can dial pushes its stream to the ingest of the cluster that records it. Its recording there names it
 `cam: ref:<serial>`, and the recorder finds its source where it finds any camera of another cluster — in this cluster's
-copy of the source book (`RecWorker.source`, `crossing.resolve_in`) — which says `ingest://<cluster>/<ref>`. There is no
+copy of the source book (`RecWorker.source`, `recording_sources`) — which says `ingest://<cluster>/<ref>`. There is no
 pipeline to build for such a source: nothing to open, nothing to dial. The recording SUBSCRIBES to the ingest its
 recorder hosts (`RecWorker.host_ingest`) and writes what comes, through the same sink a pipeline writes through
 (`RecSink`: this volume's writer, as the stream `<recording>/e<epoch>`). As the product's `recact/ingestrec.go`:
@@ -61,6 +61,7 @@ class _Pushed:
     written: int = 0
     dropped: int = 0
     why: str = ""
+    covering: bool = True
 
 
 class IngestRecordings:
@@ -132,6 +133,20 @@ class IngestRecordings:
         return n
 
     def _write(self, p: _Pushed, frames: list) -> int:
+        if p.when == "offline":
+            from .recording_publication import ref_of
+            from w2cplatform.domain.placement import placed
+            row = next((row for row in self.rec.rows if str(row["id"]) == str(p.cid)), None)
+            assignment = placed(self.rec.vars, "rec", ref_of(self.rec.vars, row)) if row else None
+            if assignment is not None:
+                cover = self.rec.primary_needs_cover(row)
+                self.rec.ingest.want(p.ref, p.who, float("inf") if cover else 0.0)
+                if not cover:
+                    if p.covering and p.sink is not None:
+                        p.sink.finish()
+                    p.covering, p.need_key = False, True
+                    return 0
+                p.covering = True
         took = 0
         for f in frames:
             smp = f.get("sample") if isinstance(f, dict) else f
