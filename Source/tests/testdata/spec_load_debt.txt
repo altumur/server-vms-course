@@ -8,3 +8,4 @@ live:worker.writes   # ADR-0074 «курс»: таблица списочной 
 cam:domain.tokens.poll.unit   # ADR-0074 «курс»: объём unit вида токена poll (форма C4) положен продуктом первым, курс несёт ключ своим шагом polls — команда курса
 cam:domain.tokens.ask.scenario   # ADR-0074 «курс»: объём scenario вида токена ask (форма C6, пути полей документа) положен продуктом первым, курс несёт ключ своим шагом asks — команда курса
 rec:domain.tokens.upstream.unit   # ADR-0074 «курс»: fallback unit вида upstream (форма C6b) положен продуктом первым, курс несёт объём своим шагом C6b
+cam:domain.tokens.stream.placement.target_fields   # ADR-0074 «курс»: цель star_centre положена продуктом в C3b, курс несёт закрытую цель своим отдельным окном звезды — команда курса
