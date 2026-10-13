@@ -96,7 +96,7 @@ class Site:
         may = lambda cap: (lambda s: domain_may(b.vars, s, cap, wall()))         # noqa: E731
         self.signer_srv = _signer_stub(self.ids)
         self.console = Console(DomainDirectory(fed), ReadView(fed, wall=wall),
-                               ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
+                               ConsoleAPI(DomainDirectory(fed), verifier=lambda t: t),
                                refresh_interval=60, admin=may("admin"), viewer=may("view"), holder_vars=b.vars,
                                signer_url=f"http://127.0.0.1:{self.signer_srv.server_address[1]}")
         self.console_srv = self.console.serve(port=0)
