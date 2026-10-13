@@ -25,6 +25,7 @@ this process and printed as the product's request, marked (`tracing.TracedIngest
 """
 from __future__ import annotations
 
+from tests.member_console import device_console, admit_fixtures
 import json
 import os
 import tempfile
@@ -409,7 +410,7 @@ class Site:
         def consoles(cluster: str):
             raise Unreachable(f"{cluster} is reached only by its own agent; the edit waits for its next pass")
         pending = PendingEdits(fed.domain_holder.vars, self.wall)
-        api = ConsoleAPI(directory, consoles, verifier=lambda t: person(t)["sub"], pending=pending,
+        api = ConsoleAPI(directory, verifier=lambda t: person(t)["sub"], pending=pending,
                          last_known=view.last_known)
         hv, ho = fed.domain_holder.vars, fed.domain_holder.objects
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
@@ -588,7 +589,7 @@ class Site:
                                f"у продукта POST /api/member/{name} в дверь ретранслятора ({office}:{PORTS['relay door']})",
                                site=self, box=office)
         agent = DomainAgent(name, CarryClient(self.doors[f"relay door {office}"], name, key, wall=self.wall), own,
-                            now=self.wall, console=cam.local_console(), current=cam.current,
+                            now=self.wall, console=device_console(cam),
                             domain_objects=relay_objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             cluster_objects=cam.disk, pages=lambda: pages(Card("rec", cam.events), self.wall()),
                             alarm_waiting=Card("rec", cam.events).waiting,
