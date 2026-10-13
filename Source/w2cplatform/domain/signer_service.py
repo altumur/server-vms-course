@@ -176,21 +176,17 @@ class Holder:
             out["member_list"] = self.members.read()
             out["knocking"] = self.members.knocking(self.objects)
         if self.pending is not None:
-            # the edits kept for a cluster that is off (Lesson 9): waiting, or refused by the member — the course keeps
-            # a member's outcome on the entry it answers, so `outcomes` are the refused ones
+            from .pending import OUTCOMES_PATH, _load
             out["pending"], out["outcomes"] = {}, {}
-            for name, c in self.fed.clusters.items():
-                if c.is_domain_holder:
-                    continue
+            for name in self.fed.clusters:
                 entries = self.pending.of(name)
-                waiting = [{"what": ref, "id": ref, "rev": e.get("rev"), "fields": sorted(e.get("fields") or {})}
-                           for ref, e in entries.items() if not e.get("refused")]
-                refused = [{"what": ref, "id": ref, "status": 409, "error": e["refused"]}
-                           for ref, e in entries.items() if e.get("refused")]
+                done = _load(self.vars.get(OUTCOMES_PATH + "/" + name)[0], OUTCOMES_PATH + "/" + name)
+                waiting = [{"id": identity, "what": entry["what"], "method": entry["method"], "path": entry["path"]}
+                           for identity, entry in entries.items()]
                 if waiting:
                     out["pending"][name] = waiting
-                if refused:
-                    out["outcomes"][name] = refused
+                if done:
+                    out["outcomes"][name] = list(done.values())
         if self.term is not None:
             out["term"] = self.term_view()
         out["pass_failures"] = {**self.loop.said(), "by_step": dict(self.loop.by_step)}
