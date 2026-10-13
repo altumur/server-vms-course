@@ -1081,7 +1081,6 @@ class RecWorker(VmsWorker):
 
     def carried_word(self, row: dict, now: float) -> tuple[bool, str] | None:
         from .recording_books import Unconfirmed, primary
-        from .recording_publication import ref_of
         look = look_of(self)
         if look.member() is None:
             return None
@@ -1090,26 +1089,44 @@ class RecWorker(VmsWorker):
         if assignment is None:
             return None
         key = f"ref:{ref}"
+        state = getattr(self, "_carried_primary_state", None)
+        if state is None:
+            self._carried_primary_state = state = {}
+        scope = (assignment["rev"], assignment["cluster"])
+        previous = state.get(key)
+        if previous is None or previous[0] != scope:
+            previous = state[key] = (scope, None, False)
+            self._not_written_since.pop(key, None)
         try:
             fact = primary(look.primaries(), ref, assignment["cluster"])
-            raw = look.domain_seen()
-            seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
-        except (Unconfirmed, *PARSE_ERRORS) as err:
-            self._not_written_since.pop(key, None)
-            return True, "the assigned primary has no confirmed observation"
-        eyes = getattr(self, "eyes", None)
-        stale = (not raw or eyes.age(DOMAIN_SEEN, seen) > self.CARRIED_LOST_AFTER) if eyes is not None else \
-            now - seen > self.CARRIED_LOST_AFTER
-        if stale:
-            self._not_written_since.pop(key, None)
-            return True, "the agent has not confirmed the primary book recently"
+        except (Unconfirmed, *PARSE_ERRORS):
+            fact = None
         if fact is None:
+            # Silence cannot undo an explicit stop or interrupt a covering reserve.
+            if previous[1] is False:
+                return False, "the assigned primary is disabled"
+            if previous[2]:
+                return True, "covering continues while the primary observation is absent"
             since = self._not_written_since.setdefault(key, now)
-            return now - since >= self.START_GRACE, "the assigned primary has not been observed within its grace"
+            cover = now - since >= self.START_GRACE
+            state[key] = (scope, previous[1], cover)
+            return cover, "the assigned primary has not been observed within its grace"
         value = fact.value
         self._not_written_since.pop(key, None)
         if not value["enabled"]:
+            state[key] = (scope, False, False)
             return False, "the assigned primary is disabled"
+        raw = look.domain_seen()
+        try:
+            seen = finite(json.loads(raw).get("ts", 0)) if raw else 0.0
+        except PARSE_ERRORS:
+            raw, seen = None, 0.0
+        eyes = getattr(self, "eyes", None)
+        stale = (not raw or eyes.age(DOMAIN_SEEN, seen) > self.CARRIED_LOST_AFTER) if eyes is not None else \
+            now - seen > self.CARRIED_LOST_AFTER
+        state[key] = (scope, True, stale or not value["running"])
+        if stale:
+            return True, "the agent has not confirmed the primary book recently"
         if value["running"]:
             return False, "the assigned primary is being written"
         return True, "the assigned primary is not being written"
