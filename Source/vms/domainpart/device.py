@@ -187,10 +187,12 @@ class DeviceCluster:
     # -- the row: one writer, this camera's console ------------------------------------------------------
     def row(self) -> dict:
         items, _ = self.flash.get(ROW)
-        return json.loads(items["row"]) if items else {}
+        from vms.config import SPEC
+        return {k: v for k, v in SPEC.row(items).items() if k in items} if items else {}
 
     def _put_row(self, row: dict, cas) -> int:
-        return self.flash.put(ROW, {"row": json.dumps(row, ensure_ascii=False, sort_keys=True)}, cas=cas)
+        from vms.config import SPEC
+        return self.flash.put(ROW, {k: v for k, v in SPEC.items(row).items() if k in row}, cas=cas)
 
     def rec_prefix(self) -> str:
         return f"rec/{self.serial}/e{self.epoch}/"
@@ -286,7 +288,8 @@ class DeviceCluster:
         refuse_addresses(fields)
         for _ in range(10):
             items, idx = self.flash.get(ROW)
-            row = json.loads(items["row"])
+            from vms.config import SPEC
+            row = {k: v for k, v in SPEC.row(items).items() if k in items}
             row.update(fields)
             row["revision"] = int(row.get("revision", 1)) + 1
             try:
