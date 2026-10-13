@@ -198,5 +198,3 @@ class ColdStandby:
                 return "closed: the primary writes again"
             return "pulling: the overlap"
         return "cold: the primary writes"
-
-
