@@ -1667,15 +1667,27 @@ class SpecConsole:
         sees = self._visible(h)
         every = sees is None or sees("*", [])
         try:
-            items, _ = self.ctl.vars.get(key)
-            units = {} if every else self.units_by_ref(s)
+            if book in s.domain.merged:
+                from .domain.memberbook import read as member_book
+                own = (self.ctl.vars.get("domain/member")[0] or {}).get("cluster")
+                items = member_book(self.ctl.vars, key, own) if own else self.ctl.vars.get(key)[0]
+            else:
+                items, _ = self.ctl.vars.get(key)
+            units = {}
+            if not every:
+                from . import catalog
+                schemas = catalog.specs() if book in s.domain.merged else [s]
+                for schema in schemas:
+                    for ref, target in self.units_by_ref(schema).items():
+                        units.setdefault(ref, []).append(target)
         except OSError as e:
             return 503, {"error": "the store did not answer", "detail": no_paths(e)}
         out = {}
         for item, raw in sorted((items or {}).items()):
             if is_secret_field(item):
                 continue
-            if not every and (item not in units or not sees(*units[item])):
+            marker = book in s.domain.merged and item == ""
+            if not marker and not every and not any(sees(*target) for target in units.get(item, ())):
                 continue
             try:
                 entry = json.loads(raw)
@@ -1700,8 +1712,8 @@ class SpecConsole:
                                     any(not isinstance(e[f], str) or not e[f] for f in ("member", "item")) or
                                     not isinstance(e["value"], dict)):
                                 raise TypeError("invalid collected book entry")
-                            values.append({"member": e["member"], "item": e["item"],
-                                           "value": {f: _without_secrets(e["value"][f]) for f in show if f in e["value"]}})
+                            values.append({**{f: _without_secrets(e["value"][f]) for f in show if f in e["value"]},
+                                           "member": e["member"], "item": e["item"]})
                         shown = {"entries": values, "missing": missing}
             except PARSE_ERRORS as e:                    # what it holds is not said: an entry carries tokens
                 BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
