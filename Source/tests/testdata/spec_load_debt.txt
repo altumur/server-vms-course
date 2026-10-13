@@ -9,5 +9,8 @@ cam:domain.tokens.stream.grant   # ADR-0074 «курс»: окно C2 полож
 cam:domain.tokens.stream.placement   # ADR-0074 «курс»: окно C2 положено продуктом первым (поправка к доп. 3), курс несёт ключ своим окном книг — команда курса
 cam:worker.reads   # ADR-0074 «курс»: семья domain/placed/rec/ (доп. 4) читается воркером — курс несёт ключ своим окном книг — команда курса
 rec:worker.reads   # ADR-0074 «курс»: семья domain/placed/rec/ (доп. 4) читается воркером — курс несёт ключ своим окном книг — команда курса
-rec:domain.tokens.upstream.placement.target_fields   # ADR-0074 «курс»: имя centre в закрытом наборе target_fields (форма C3, поправка к доп. 5) положено продуктом первым, курс несёт ключ своим шагом upstream — команда курса
-cam:domain.tokens.poll.unit   # ADR-0074 «курс»: объём unit вида токена (форма C4) положен продуктом первым, курс несёт ключ своим шагом polls — команда курса
+rec:domain.tokens.upstream.grant   # ADR-0074 «курс»: вид токена upstream с grant/placement (форма C3) положен продуктом первым, курс несёт ключ своим шагом upstream — команда курса
+rec:domain.tokens.upstream.placement   # ADR-0074 «курс»: вид токена upstream с grant/placement, target_fields [centre] (форма C3) положен продуктом первым, курс несёт ключ своим шагом upstream — команда курса
+cam:domain.tokens.poll.grant   # ADR-0074 «курс»: вид токена poll с grant и объёмом unit (форма C4) положен продуктом первым, курс несёт ключ своим шагом polls — команда курса
+live:door.pass   # ADR-0074 «курс»: door.pass — консоль пропускает маршрут к воркеру (форма C5) положен продуктом первым, курс несёт ключ своим шагом stream-accounts — команда курса
+live:worker.writes   # ADR-0074 «курс»: таблица списочной формы в worker.writes (форма C5) положена продуктом первым, курс несёт правило своим шагом stream-accounts — команда курса
