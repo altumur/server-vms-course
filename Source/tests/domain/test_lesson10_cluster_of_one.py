@@ -8,11 +8,12 @@ wears, and a box that is rebooted whole, which makes the order of its boot a cor
 site that reads its door, and for the domain that reads its report.
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-from w2cplatform.domain.api import ConsoleAPI
+from w2cplatform.domain.api import ApiError, ConsoleAPI
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.grants import Grant
@@ -38,7 +39,7 @@ def _domain(wall, *serials):
         d = DeviceCluster(s, FakeVariables(), wall=wall)
         d.boot(first_name=f"gate-{s}")
         fed.add(member_copy(d.name, north.objects, wall=wall))
-        agents[s] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d.local_console(), current=d.current,
+        agents[s] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=device_console(d),
                                 domain_objects=north.objects, published=d.local_objects())
         report_sync(agents[s])
         devices[s] = d
@@ -143,22 +144,25 @@ def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
     report_sync(agents[SERIAL])
     view = ReadView(fed, wall=wall)
     view.refresh()
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
     pending = PendingEdits(fed.domain_holder.vars, wall)
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, verifier=lambda token: token, pending=pending,
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda token: token, pending=pending,
                      last_known=view.last_known)
 
-    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
+    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")["kept"]
     report_sync(agents[SERIAL])
-    assert d.row()["name"] == "main-gate" and d.row()["revision"] == 2
+    assert d.row()["enabled"] is False and d.row()["revision"] == 2
     pending.collect(fed)
     assert pending.of(d.name) == {}
 
-    view.refresh()                                                   # the domain's next pass: the row as it now is
-    api.update_unit(SERIAL, {"name": "x"}, idempotency_key="k2", token="boris")
-    report_sync(agents[SERIAL])
-    assert d.row()["name"] == "main-gate"                            # boris has no grant on this camera
-    pending.collect(fed)
-    assert "grant" in pending.of(d.name)[SERIAL]["refused"]
+    # Human grants remain enforced by the device's human console, separately
+    # from the local agent signature authorised by the domain admin.
+    try:
+        d._update(1, {"enabled": True}, "boris")
+        raise AssertionError("a person without a grant edited the camera")
+    except ApiError as err:
+        assert err.status == 403 and "grant" in err.detail
+    assert d.row()["enabled"] is False
 
 
 def test_the_door_opens_after_the_first_publish_not_before():
@@ -186,9 +190,10 @@ def test_the_door_opens_after_the_first_publish_not_before():
     # the domain meanwhile: the last report, and an edit kept for the agent to take home
     view = ReadView(fed, wall=wall)
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, pending=PendingEdits(fed.domain_holder.vars, wall),
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), pending=PendingEdits(fed.domain_holder.vars, wall),
                      last_known=view.last_known)
-    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k2")["pending"] is True
+    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k2", sub="cam")["kept"]
 
     # …and `boot` keeps that order: the door is still shut while the first publish is being made
     shut_during_publish = []
@@ -210,17 +215,18 @@ def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
     report_sync(agent)
     view = ReadView(fed, wall=wall)
     view.refresh()
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
     pending = PendingEdits(fed.domain_holder.vars, wall)
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, verifier=lambda token: token,
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda token: token,
                      pending=pending, last_known=view.last_known)
 
     d.power_off()
     view.refresh()
-    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
+    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")["kept"]
     wall.advance(3600)
     _grant(fed, d.name, "anna", wall)                    # grants are renewed while it is off; they expire otherwise
     d.boot()
     report_sync(agent)
-    assert d.row()["name"] == "main-gate"
+    assert d.row()["enabled"] is False
     pending.collect(fed)
     assert pending.of(d.name) == {}
