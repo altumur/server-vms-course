@@ -498,16 +498,16 @@ def test_a_book_of_primaries_nobody_can_read_makes_the_backup_record():
     is a book nobody can vouch for, and then the backup records, as for one that is old."""
     from tests.vmsconftest import recorder
     from vms.recworker import DOMAIN_SEEN, PRIMARIES
-    box = Box()
-    r = recorder(box)
-    box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
-    box.vars.put(PRIMARIES, {"SN1": '{"enabled": tru'})
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
-    box.vars.put(PRIMARIES, {"SN1": json.dumps({"enabled": True, "running": True})})
+    from tests.test_backup_archive import _camera_cluster
+    box, r, row, carry = _camera_cluster()
+    carry()
+    box.vars.put(PRIMARIES, {"SN1": '{"entries": ['})
+    assert r.carried_primary(row, box.wall()) is True
+    carry()
     box.objects.put(DOMAIN_SEEN, b'{"ts": "now"}')
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
+    assert r.carried_primary(row, box.wall()) is True
     box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is False   # mended: read as it says
+    assert r.carried_primary(row, box.wall()) is False
     _forget_garbled()
 
 
