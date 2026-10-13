@@ -553,7 +553,7 @@ def test_book_show_projects_value_fields_preserves_origin_and_never_shows_hidden
         console._visible = lambda h: None
         status, shown = console.book_route(None, "GET", spec(show=("n", "nested")), "counts")
         assert status == 200 and shown[""] == {"missing": []}
-        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "value": {"n": 7, "nested": [{}]}}],
+        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "n": 7, "nested": [{}]}],
                                   "missing": []}
         assert SECRET not in json.dumps(shown) and "token_secret" not in json.dumps(shown)
         assert "hidden-nonsecret-value" not in json.dumps(shown) and "enc:v1:" not in json.dumps(shown)
@@ -579,3 +579,26 @@ def test_knocking_member_report_is_not_a_contribution_or_missing():
         e.north.vars.put("domain/members", {"doc": "damaged"})
         got = bookruntime.collect(e.holder, e.specs[0], "counts")
         assert not got.subjects and not got.rows and got.missing == ()
+
+
+def test_collected_book_is_visible_by_ref_of_another_spec_without_global_view():
+    from w2cplatform.console import SpecConsole
+    with site(two=True) as e:
+        owner, publisher = e.specs
+        publisher.domain.ref = ""
+        publisher.domain.show["counts"] = ("n", "member", "item")
+        con = SpecConsole.__new__(SpecConsole)
+        con.ctl = SimpleNamespace(vars=e.north.vars)
+        con.units = {owner.name: SimpleNamespace(spec=owner, ctl=SimpleNamespace(units=lambda: [
+            {"id": "counter", "name": "badge"}, {"id": "other", "name": "hidden"}]))}
+        con._visible = lambda _: lambda unit, labels, of=None: unit == owner.ref("counter")
+        marker = json.dumps({"missing": []})
+        entry = {"member": "north", "item": "w1/i", "value": {"name": "badge", "n": 7,
+                 "member": "forged", "item": "forged", "token_secret": SECRET}}
+        e.north.vars.put("domain/testsub2/counts", {"": marker,
+            "badge": json.dumps({"entries": [entry], "missing": []}),
+            "hidden": json.dumps({"entries": [entry], "missing": []})})
+        status, shown = con.book_route(None, "GET", publisher, "counts")
+        assert status == 200 and set(shown) == {"", "badge"}
+        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "n": 7}], "missing": []}
+        assert SECRET not in json.dumps(shown) and "forged" not in json.dumps(shown)
