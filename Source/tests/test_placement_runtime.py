@@ -144,13 +144,62 @@ def test_unadmitted_configured_candidate_cannot_win_reachability_placement():
         assert p.place(placement.UnitSite("badge", "net")).cluster == "north"
 
 
-def test_holder_agent_carries_to_own_family_without_overwriting_holder_assignment():
+def test_holder_agent_uses_its_records_without_creating_member_copies():
     with site() as e:
         expected = placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north"}, e.wall)
         key = placement.path("testsub", "badge")
         before = e.north.vars.get(key)
+        e.north.vars.put("domain/holder", {"doc": json.dumps({"term": 1, "holder": "north"})})
         agent = DomainAgent("north", e.north.vars, e.north.vars, now=e.wall)
         assert agent._sync()
+        assert e.north.vars.get("domain/placed/testsub/badge")[0] is None
+        assert e.north.vars.get("domain/member-list")[0] is None
         assert placement.placed(e.north.vars, "testsub", "badge") == expected
         assert e.north.vars.get(key) == before
         assert placement.placed(e.north.vars, "testsub", "absent") is None
+
+
+def test_placed_reader_uses_holder_record_without_copy_and_never_returns_older_revision():
+    with site(two=True) as e:
+        for sub in ("testsub", "testsub2"):
+            expected = placement.assign(e.north.vars, sub, "badge", {"cluster": "north", "origin": "south"}, e.wall)
+            record, copy = placement.path(sub, "badge"), f"domain/placed/{sub}/badge"
+            assert e.north.vars.get(copy)[0] is None
+            assert placement.placed(e.north.vars, sub, "badge") == expected
+            old = e.north.vars.get(record)[0]
+            e.north.vars.put(copy, old)
+            fresh = placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "north"}, e.wall)
+            assert placement.placed(e.north.vars, sub, "badge") == fresh
+            e.north.vars.put(copy, e.north.vars.get(record)[0])
+            e.north.vars.put(record, old)
+            assert placement.placed(e.north.vars, sub, "badge") == fresh
+            bad = {**e.north.vars.get(copy)[0], "cluster": "north"}
+            e.north.vars.put(record, bad)
+            raises(ValueError, lambda: placement.placed(e.north.vars, sub, "badge"))
+
+
+def test_placement_get_and_delete_door_use_typed_view_and_strict_admin_scope():
+    from tests.conftest import Served
+    with site() as e:
+        directory = DomainDirectory(e.fed)
+        api = ConsoleAPI(directory, lambda n: None, verifier=lambda token: token)
+        writer = e.north.vars.as_writer("domainconsole", ["domain/placement*"])
+        con = Console(directory, e.holder.view, api, holder_vars=writer,
+                      admin=lambda subject: subject == "admin", viewer=lambda subject: subject in ("admin", "viewer"))
+        with Served(con) as call:
+            def headers(subject): return {"Authorization": "Bearer " + subject}
+            route = "/domain/placement/testsub/badge"
+            assert call("GET", route, headers=headers("viewer"))[0] == 404
+            assert call("GET", "/domain/placement", headers=headers("stranger"))[0] == 403
+            status, assigned = call("PUT", route, {"cluster": "north", "origin": "south"}, headers=headers("admin"))
+            assert status == 200
+            assert call("GET", route, headers=headers("viewer")) == (200, assigned)
+            status, overview = call("GET", "/domain/placement", headers=headers("viewer"))
+            assert status == 200 and overview == {"rev": assigned["rev"], "records": {"testsub/badge": assigned}}
+            assert call("DELETE", route, headers=headers("viewer"))[0] == 403
+            assert placement.read(e.north.vars, "testsub", "badge") == assigned
+            status, after = call("DELETE", route, headers=headers("admin"))
+            assert status == 200 and after["records"] == {} and after["rev"] > assigned["rev"]
+            assert call("GET", route, headers=headers("viewer"))[0] == 404
+            assert call("DELETE", route, headers=headers("admin"))[0] == 404
+            assert not __import__("w2cplatform.rights", fromlist=["may_delete_domain"]).may_delete_domain("domainconsole", "domain/signer")
