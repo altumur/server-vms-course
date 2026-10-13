@@ -8,7 +8,7 @@ from w2cplatform.spec import BookMerge
 
 def fact(member, recording, **fields):
     return {"member": member, "item": "r1/" + recording,
-            "value": {"ref": "cam", "recording": recording, "enabled": True, "running": True, "role": "primary", **fields}}
+            "value": {"ref": "cam", "recording": recording, "enabled": True, "running": True, "role": "primary", "to": ["camera", "main"], **fields}}
 
 
 def row(entries, missing=()):
@@ -44,7 +44,7 @@ def test_missing_primary_does_not_choose_a_running_reserve_and_absent_key_is_not
 
 
 def test_source_requires_one_complete_observation_and_keeps_authenticated_origin():
-    item = {"member": "camera", "item": "w1/c1", "value": {"ref": "cam", "live_url": "rtsp://camera/live"}}
+    item = {"member": "camera", "item": "w1/c1", "value": {"ref": "cam", "to": ["main"], "live_url": "rtsp://camera/live", "server": "camera", "as_of": 10}}
     items = row([item])
     seen = books.source(items, "cam")
     assert (seen.member, seen.item, seen.value["live_url"]) == ("camera", "w1/c1", "rtsp://camera/live")
@@ -85,7 +85,7 @@ def test_collector_delivers_facts_before_a_stream_runs_and_a_stranger_gets_no_ad
     reports = {m: {} for m in members}
     for member, recording in (("main", "r"), ("reserve1", "b1"), ("reserve2", "b2")):
         value = fact(member, recording, running=False)["value"]
-        value.update(to=members[:-1], ingest={"urls": ["http://" + member + "/ingest"]})
+        value.update(to=members[:-1], push=True, ingest=["http://" + member + "/ingest"])
         reports[member] = {"rec/primaries/w1": {recording: json.dumps(value)}}
     rule = BookMerge(source="rec/primaries/", key="ref", pick="all", to="to")
     collected = collect(rule, reports, members)
