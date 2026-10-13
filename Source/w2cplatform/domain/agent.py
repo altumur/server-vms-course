@@ -163,13 +163,13 @@ def ask_held(console: str, timeout: float = 3.0):
 
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
-                 console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
+                 console=None, domain_objects=None, cluster_objects=None, seen_store=None,
                  published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None, alarm_waiting=None,
                  reaches=None, own_objects=None, sealer=None, key=None, follow: HolderFollower | None = None,
                  open_door=None):
-        """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
-        `current(ref) -> (id, row)` for a unit by the domain's name. Given them, the agent also applies
-        the edits the domain kept while this cluster was off. Without them it only carries them home.
+        """`console` applies explicit CRUD through this member's own signed console (ADR-0074 C2).
+        The console's durable idempotency key answers retries; the agent writes only domain rows.
+        Without a console the agent carries the waiting edits home without applying them.
 
         `domain_objects` and `cluster_objects` are Lesson 12: where the domain publishes documents, and
         this cluster's DURABLE object store, where the agent keeps the copy it verified. Given them, it
@@ -203,7 +203,7 @@ class DomainAgent:
         self.followed = ""                                 # what the last pass found of the holder
         self.sealer, self.key = sealer, key
         self.relayed: dict[str, dict] = {}                 # a relay: what the domain answered for each member it relays
-        self.console, self.current = console, current
+        self.console = console
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
         self.published, self.pages = published, pages
@@ -380,11 +380,26 @@ class DomainAgent:
             return self.domain_vars.answer_for(self.cluster, self.key)
         return answer(self.domain_vars, self.domain_objects, self.cluster, now=self.now())
 
+    def _apply_edits(self, pending, holder=False):
+        import json
+        from .pending import OUTCOMES_PATH, PENDING_PATH, _load, apply_pending
+        if self.console is None:
+            return {}
+        target = OUTCOMES_PATH + "/" + self.cluster if holder else OUTCOMES_PATH
+        previous = _load(self.cluster_vars.get(target)[0], target)
+        outcomes = apply_pending(_load(pending, PENDING_PATH), self.console, self.now(), previous)
+        self._carry(target, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
+                             for k, v in outcomes.items()}, clear=True)
+        return outcomes
+
     def _sync(self) -> bool:
         from .carry import CarriedObjects, CarriedVars, Refused
-        from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
+        from .pending import OUTCOMES_PATH, PENDING_PATH
+        from .memberbook import holds
         if self.follow is not None:                        # Lesson 15: where the domain is held now — asked first
             self.followed = self._step("following the holder", self._follow)
+        if holds(self.cluster_vars, self.cluster):
+            self._apply_edits(self.cluster_vars.get(PENDING_PATH + "/" + self.cluster)[0], holder=True)
         try:
             got = self._answer()
         except Unreachable:
@@ -450,18 +465,10 @@ class DomainAgent:
         items, _ = dv.get(glass)
         if not any(is_sealed(v) for v in (items or {}).values() if isinstance(v, str)):
             self._carry(glass, items)
-        # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
-        # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
-        # this cluster's console and as the operator who made each one, and what happened written where the
-        # domain reads it. The agent writes `domain/*` and nothing else; the row is the console's.
-        self._carry(PENDING_PATH, pending, clear=True)
-        if self.console is not None and self.current is not None:
-            import json
-            from .pending import _load
-            entries = _load(pending if isinstance(pending, dict) else None, PENDING_PATH)   # one entry that does not parse: that unit's
-            outcomes = apply_pending(entries, self.current, self.console, self.now())
-            self._carry(OUTCOMES_PATH, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
-                                        for k, v in outcomes.items()}, clear=True)
+        # The holder applies directly above and carries no copy of its own queue.
+        if not is_holder:
+            self._carry(PENDING_PATH, pending, clear=True)
+            self._apply_edits(pending)
         # The shared settings (Lesson 12), checked against the key set this pass just carried — the member's
         # own, never one that came with the document.
         # And Lesson 15: which member holds the domain — carried like the keys, but never to a smaller term —
@@ -783,6 +790,8 @@ def main() -> None:
         from .relay import RelayDoor, door_handler
         open_doors(os.environ.get("RELAY_HOST", "0.0.0.0"), int(os.environ.get("RELAY_PORT", "8446")),
                    door_handler(RelayDoor(agent)), unix_env="RELAY_UNIX", say=False)
+    from .pending import AgentConsole
+    agent.console = AgentConsole(consoles_from_env().get(cluster, "http://127.0.0.1:8080"), key, agent.now)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
