@@ -135,7 +135,7 @@ def test_the_operator_edits_the_topology_in_the_domain_console():
     east, _ = make_cluster("east")
     fed.add(north); fed.add(east)
     view = ReadView(fed, wall=lambda: 1000.0)
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda token: token)
+    api = ConsoleAPI(DomainDirectory(fed), verifier=lambda token: token)
     con = Console(DomainDirectory(fed), view, api, refresh_interval=0.05, topology=Topology(north.vars),
                   admin=lambda subject: subject == "anna")
     srv = con.serve(port=0)
