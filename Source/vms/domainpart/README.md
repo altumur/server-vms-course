@@ -45,7 +45,7 @@ python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.age
 
 ## What the VMS declares (`cam.subsystem.yaml`, `domain:`)
 
-C2 is declared by `cam.domain.books.sources` and `rec.domain.books.primaries`, collected from guarded worker rows. Ordinary workers own the facts and consume their carried books. Assignment is `domain/placement/rec/<ref>` with the member copy `domain/placed/rec/<ref>`; the platform's typed route serves it. Tokens of `stream` are obtained through the agent's role door and remain in memory. This process still owns polls, asks and accounts until their ADR-0074 steps; none of it publishes C2 observations.
+C2 is declared by `cam.domain.books.sources` and `rec.domain.books.primaries`, collected from guarded worker rows. Ordinary workers own the facts and consume their carried books. Assignment is `domain/placement/rec/<ref>` with the member copy `domain/placed/rec/<ref>`; the platform's typed route serves it. Tokens of `stream` are obtained through the agent's role door and remain in memory. This process still owns polls, upstream, asks and accounts until their ADR-0074 steps; none of it publishes C2 observations.
 
 ## What the product page shows (for «Консоль»)
 
