@@ -313,6 +313,51 @@ def test_the_recorders_card_range_asks_the_camera_and_waits_for_its_answer():
     assert kept.answers == {} and kept.parts == {} and kept.failed == {} and kept.ranges == {}
 
 
+def test_an_assigned_channel_reads_the_current_card_after_its_poll_was_held(monkeypatch):
+    """Removal or replacement before a new range must never use the previous card's reader."""
+    wall = Clock(100_000.0)
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    old_card = _card(wall() - 1000, wall())
+    replacement = _card(wall() - 620, wall() - 610)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=old_card.pieces)
+    pusher.pass_once([])                                               # the assigned channel is already open
+    poll = ingest.poll
+    for reader in (None, replacement.pieces):
+        entered, resume, errors = threading.Event(), threading.Event(), []
+        def held(*args, **kwargs):
+            entered.set()
+            assert resume.wait(5), "the test never released the held poll"
+            return poll(*args, **kwargs)
+        monkeypatch.setattr(ingest, "poll", held)
+        def camera():
+            try:
+                pusher.pass_once([], wait=0.2)
+            except BaseException as err:
+                errors.append(err)
+        thread = threading.Thread(target=camera, daemon=True)
+        thread.start()
+        try:
+            assert entered.wait(5), "the assigned channel never reached its poll"
+            pusher.card = reader
+            rid = ingest.request_range(SERIAL, wall() - 600, wall() - 590, recording="1-card")
+            resume.set()
+            thread.join(timeout=5)
+            assert not thread.is_alive() and not errors, errors
+            if reader is None:
+                try:
+                    ingest.result(SERIAL, rid)
+                    raise AssertionError("the held channel answered from a removed card")
+                except RangeFailed as err:
+                    assert "no card" in str(err)
+            else:
+                # The replacement has footage elsewhere, and none of the old card's requested span.
+                assert ingest.result(SERIAL, rid) == []
+        finally:
+            resume.set(); thread.join(timeout=5)
+    kept = ingest.cams[SERIAL]
+    assert kept.answers == {} and kept.parts == {} and kept.failed == {} and kept.ranges == {}
+
+
 def test_a_range_is_waited_for_a_piece_at_a_time_so_a_slow_camera_is_not_a_silent_one():
     """The sixth review: the recorder waited ONE fixed time for the whole answer, whatever it weighed — a camera that
     answered in 1.2 s to a wait of 1 failed four requests of four, and read its card four times. The wait is for the
