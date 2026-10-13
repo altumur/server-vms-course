@@ -17,7 +17,7 @@ from w2cplatform.domain.agent import DomainAgent
 from w2cplatform.domain.api import ConsoleAPI
 from vms.domainpart.books import Books
 from w2cplatform.domain.console import Console
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster, member_name
 from w2cplatform.trust.enroll import Manufacturer, Pledge, Registrar
 from w2cplatform.domain.federation import DomainDirectory, Federation
@@ -60,10 +60,10 @@ def test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads():
     cam.boot()
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
                 published=cam.local_objects()))
-    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall), north.objects, members=members)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall), north.objects, members=members)
     out = books.pass_once()
     assert out["members"] == {"joined": ["cam-SN9001"], "left": []}
-    assert [r["ref"] for r in books.crossings.view.list()["rows"]] == ["SN9001"]
+    assert [r["ref"] for r in books.inputs.view.list()["rows"]] == ["SN9001"]
     assert books.pass_once()["members"] == {"joined": [], "left": []}          # followed once
 
 
