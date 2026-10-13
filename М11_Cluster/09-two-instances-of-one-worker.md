@@ -49,7 +49,7 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": 1012
 }
 ```
 
@@ -57,14 +57,14 @@ GET /v1/get?key=cam/slots/w-srv-a-1
 
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1010, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1012, "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500138.0",
   "released": "false",
   "gen": "1",
   "server": "srv-a"
 }}
-→ 200 {"index": 1042}
+→ 200 {"index": 1053}
 ```
 
 Второе — эпохи. Экземпляр продлевает аренду каждой своей единицы и на каждой находит, что эпоха уже не его:
@@ -72,15 +72,15 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1010, "items":
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/1
-→ 200 {"items": {"epoch": "2"}, "index": 1039}
+→ 200 {"items": {"epoch": "2"}, "index": 1049}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/2
-→ 200 {"items": {"epoch": "2"}, "index": 1040}
+→ 200 {"items": {"epoch": "2"}, "index": 1050}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/3
-→ 200 {"items": {"epoch": "2"}, "index": 1041}
+→ 200 {"items": {"epoch": "2"}, "index": 1051}
 ```
 
 Эпохи 1039–1041 — те самые, что `w-srv-b-1` взял в уроке 8. Каждая аренда потеряна, и каждая единица останавливается (`Worker.lease_pass`): `w-srv-a-1: camera 1 stopped: a newer epoch was issued for it`. Третье — назначение:
@@ -88,7 +88,7 @@ GET /v1/get?key=cam/epoch/3
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "", "rev": "6"}, "index": 1037}
+→ 200 {"items": {"units": "", "rev": "6"}, "index": 1047}
 ```
 
 Пусто: контроллер уже убрал единицы из назначения. Значит, это не захват, а переезд — тот же случай, что в шаге 4, — и экземпляр отпускает единицы, ничего больше не делая. Последняя строка трассы:
@@ -150,24 +150,24 @@ GET /v1/get?key=cam/workers/w-srv-a-1
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1013, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1016, "items": {
   "worker": "w-srv-b-1",
   "reason": "operator: srv-b sees that VLAN",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1021}
+→ 200 {"index": 1028}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1016, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1019, "items": {
   "units": "1,3",
   "rev": "4"
 }}
-→ 200 {"index": 1022}
+→ 200 {"index": 1029}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "2", "rev": "1"}}
-→ 200 {"index": 1023}
+→ 200 {"index": 1030}
 ```
 
 Порядок не случайный. **Строка размещения — решение, назначения его выполняют**, поэтому она первая: контроллер, упавший после неё, оставил решение записанным, и следующий проход доводит назначения до того, что говорит строка (`sync_assignments`, М10A, урок 11). Пойди первой запись в назначение источника, контроллер, упавший посередине, оставил бы единицу ни у кого — навсегда. А из источника раньше, чем в цель, — чтобы не было момента, когда единица в двух назначениях сразу.
@@ -176,8 +176,8 @@ POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items":
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
-→ 200 {"index": 1024}
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1021, "items": {"epoch": "2"}}
+→ 200 {"index": 1031}
 ```
 
 `w-srv-a-1` на своём проходе аренд продлевает слот — он всё ещё его — и проверяет эпохи. Эпоха единицы 2 теперь 2:
@@ -185,7 +185,7 @@ POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/2
-→ 200 {"items": {"epoch": "2"}, "index": 1024}
+→ 200 {"items": {"epoch": "2"}, "index": 1031}
 ```
 
 С точки зрения аренды это **то же самое**, что в шаге 1: продление нашло более новую эпоху. Слот всё ещё его — значит, другого экземпляра `w-srv-a-1` нет, и потеря аренды касается одной единицы, а не экземпляра. Он останавливает единицу 2, отдаёт её эпоху и оставляет себе остальные:
@@ -199,7 +199,7 @@ GET /v1/get?key=cam/epoch/2
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "1,3", "rev": "4"}, "index": 1022}
+→ 200 {"items": {"units": "1,3", "rev": "4"}, "index": 1029}
 ```
 
 Единицы 2 в нём нет — переезд: она отпущена без неудачи (`reconciler.drop`). Будь она там, эпоху взял бы кто-то, а единица осталась бы моей — зомби или хранилище, не подтвердившее аренду: это неудача (`reconciler.forget`), следующий старт ждёт задержки, и трижды за `Backoff.max` единица становится `stalled` (ADR 0033 с дополнениями; М10B, урок 4). Экземпляр ни в одном случае не огораживается.
