@@ -558,7 +558,9 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         ids = IdentityStore(signer, vars_, FsObjectStore(os.path.join(d, "objects")), publish_floor=0)
         ids.create_local("ann", "a long enough password", ["admin"])
         assert ids.login("ann", "a long enough password") and ids.publish(force=True)
-        open_vars(books.replace("/run/configstore", d)).put("domain/cam/sources/north", {"book": "{}"})
+        with pytest.raises(Forbidden):
+            open_vars(books.replace("/run/configstore", d)).put("domain/cam/sources/north", {"book": "{}"})
+        vars_.put("domain/cam/sources/north", {"": '{"missing": []}'})
         assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
         agent = open_vars(f"configstore://{d}/domainagent.sock")
         assert agent.get(KEYS_PATH)[0] is not None
@@ -579,14 +581,14 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     view = ReadView(fed, lost_after=45, wall=wall)
-    view.refresh(); view.publish(north.objects, {"cam/crossings": {"SN7": "north"}})
+    view.refresh(); view.publish(north.objects, {"testsub/assignments": {"SN7": "north"}})
 
     st, d = domain_view(north.objects, wall())
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
     members = {m["name"]: m for m in d["members"]}
     assert d["holder"] == "north" and members["north"]["holder"] and not members["south"]["holder"]
     assert members["south"]["state"] == "ok" and len(d["units"]["cam"]) == 200
-    assert d["tables"] == {"cam/crossings": {"SN7": "north"}}
+    assert d["tables"] == {"testsub/assignments": {"SN7": "north"}}
     assert {c["cluster"] for c in d["units"]["cam"] if c["worker"] == "w-0"} == {"north", "south"}
     assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
