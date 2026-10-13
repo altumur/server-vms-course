@@ -14,3 +14,4 @@ rec:domain.tokens.upstream.placement   # ADR-0074 «курс»: вид токе�
 cam:domain.tokens.poll.grant   # ADR-0074 «курс»: вид токена poll с grant и объёмом unit (форма C4) положен продуктом первым, курс несёт ключ своим шагом polls — команда курса
 live:door.pass   # ADR-0074 «курс»: door.pass — консоль пропускает маршрут к воркеру (форма C5) положен продуктом первым, курс несёт ключ своим шагом stream-accounts — команда курса
 live:worker.writes   # ADR-0074 «курс»: таблица списочной формы в worker.writes (форма C5) положена продуктом первым, курс несёт правило своим шагом stream-accounts — команда курса
+cam:domain.tokens.poll.unit   # ADR-0074 «курс»: объём unit вида токена poll (форма C4) положен продуктом первым, курс несёт ключ своим шагом polls — команда курса
