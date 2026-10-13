@@ -235,6 +235,13 @@
     "domain/keys",
     "domain/member",
     "door/keys",
+    "domain/rec/primaries",
+    "domain/placed/rec/*",
+    "domain/placement/rec/*",
+    "domain/holder",
+    "domain/rec/primaries/*",
+    "domain/cam/sources/*",
+    "domain/cam/sources",
     "objects/cam/commands/*"
    ],
    "write": [
@@ -242,6 +249,7 @@
     "cam/slots/*",
     "cam/holds/*",
     "cam/devices/*",
+    "cam/sources/*",
     "objects/cam/commands/*"
    ],
    "delete": [
@@ -249,6 +257,7 @@
     "cam/slots/*",
     "cam/holds/*",
     "cam/devices/*",
+    "cam/sources/*",
     "objects/cam/commands/*"
    ]
   },
@@ -434,10 +443,18 @@
     "domain/keys",
     "domain/member",
     "door/keys",
-    "domain/cam/primaries",
     "domain/cam/sources",
-    "domain/cam/upstream",
+    "domain/placed/rec/*",
+    "domain/member-topology",
+    "domain/rec/upstream",
     "domain/cam/asks",
+    "domain/placement/rec/*",
+    "domain/holder",
+    "domain/topology",
+    "domain/cam/sources/*",
+    "domain/rec/upstream/*",
+    "domain/rec/primaries/*",
+    "domain/rec/primaries",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
@@ -453,6 +470,8 @@
     "rec/slots/*",
     "rec/holds/*",
     "cam/requests/*",
+    "rec/primaries/*",
+    "rec/upstream/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
@@ -464,6 +483,8 @@
     "rec/slots/*",
     "rec/holds/*",
     "cam/requests/*",
+    "rec/primaries/*",
+    "rec/upstream/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/rec/ingest/clock/*",
@@ -648,15 +669,15 @@
     "!domain/ldevid/*",
     "!domain/cam/asks/*",
     "!domain/cam/polls/*",
-    "!domain/cam/primaries/*",
     "!domain/cam/sources/*",
     "!domain/cam/stream-accounts/*",
-    "!domain/cam/upstream/*",
-    "!domain/cam/crossings",
-    "!domain/cam/roads",
     "!domain/cam/stream-clients/*",
     "!domain/cam/worker",
-    "!domain/cam/heartbeat"
+    "!domain/cam/heartbeat",
+    "!domain/rec/primaries/*",
+    "!domain/rec/upstream/*",
+    "!domain/rec/worker",
+    "!domain/rec/heartbeat"
    ],
    "delete": [
     "domain/*",
@@ -674,15 +695,15 @@
     "!domain/ldevid/*",
     "!domain/cam/asks/*",
     "!domain/cam/polls/*",
-    "!domain/cam/primaries/*",
     "!domain/cam/sources/*",
     "!domain/cam/stream-accounts/*",
-    "!domain/cam/upstream/*",
-    "!domain/cam/crossings",
-    "!domain/cam/roads",
     "!domain/cam/stream-clients/*",
     "!domain/cam/worker",
-    "!domain/cam/heartbeat"
+    "!domain/cam/heartbeat",
+    "!domain/rec/primaries/*",
+    "!domain/rec/upstream/*",
+    "!domain/rec/worker",
+    "!domain/rec/heartbeat"
    ]
   },
   "camdomain": {
@@ -706,10 +727,42 @@
     "!rec/asked/*"
    ],
    "write": [
-    "domain/cam/*"
+    "domain/cam/*",
+    "!domain/cam/sources/*"
    ],
    "delete": [
-    "domain/cam/*"
+    "domain/cam/*",
+    "!domain/cam/sources/*"
+   ]
+  },
+  "recdomain": {
+   "group": "vms-recdomain",
+   "read": [
+    "platform/schema",
+    "domain/rec/*",
+    "domain/keys",
+    "domain/topology",
+    "domain/members",
+    "domain/shared",
+    "platform/*",
+    "auto/*",
+    "cam/*",
+    "det/*",
+    "detjob/*",
+    "live/*",
+    "rec/*",
+    "survey/*",
+    "!rec/asked/*"
+   ],
+   "write": [
+    "domain/rec/*",
+    "!domain/rec/primaries/*",
+    "!domain/rec/upstream/*"
+   ],
+   "delete": [
+    "domain/rec/*",
+    "!domain/rec/primaries/*",
+    "!domain/rec/upstream/*"
    ]
   }
  }
