@@ -80,10 +80,9 @@ def test_the_platform_knows_nothing_about_its_subsystems():
     """No import of a subsystem's package anywhere under w2cplatform/ — and not even the word for the unit of a
     subsystem whose package carries its spec, whatever that spec calls it (`test_boundary.py` holds the platform's
     whole tree to every word of the product)."""
-    from tests.test_boundary import ROOT, SUBSYSTEM_PACKAGES
+    from tests.test_boundary import ROOT, SUBSYSTEM_PACKAGES, UNIT_SPECS
     here = os.path.join(ROOT, "w2cplatform")
-    from vms.config import SPEC as CAM_SPEC
-    units = [CAM_SPEC.rows.rstrip("s")]
+    units = [SubsystemSpec.load(os.path.join(ROOT, s)).rows.rstrip("s") for s in UNIT_SPECS]
     assert units, "no subsystem package carries its own spec"
     for f in os.listdir(here):
         if f.endswith(".py"):
