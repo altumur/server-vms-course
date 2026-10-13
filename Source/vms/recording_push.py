@@ -62,7 +62,7 @@ class AssignedPush:
                 continue
             if fact.member in routes:
                 raise Unconfirmed("conflicting push receiver observations")
-            routes[fact.member] = {"cluster": value.get("ingest_cluster", fact.member), "urls": value["ingest"],
+            routes[fact.member] = {"cluster": fact.member, "urls": value["ingest"],
                                   "role": expected, "push": value.get("push", False)}
         # Missing reports cannot open a channel; a channel already carrying data stays until an explicit change.
         for name, channel in self.channels.items():
