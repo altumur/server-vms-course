@@ -146,6 +146,18 @@ def test_reserve_writers_independently_follow_primary_state_and_absence_grace():
         before = len(state.sink.frames)
         assert rec.actuator._write(state, [sample]) == 0
         box.wall.advance(20)
+        # Silence cannot revoke the explicit stop just observed above.
+        assert rec.actuator._write(state, [sample]) == 0 and len(state.sink.frames) == before
+        # Only a confirmed enabled primary releases that intent; its subsequent
+        # disappearance then exercises the cold reserve's independent grace.
+        primary_row(box, [fact("main", "primary", enabled=True, running=True)])
+        box.objects.put("domain/seen", json.dumps({"ts": box.wall()}).encode())
+        rec._look()._got.clear()
+        assert rec.actuator._write(state, [sample]) == 0
+        primary_row(box, [])
+        rec._look()._got.clear()
+        assert rec.actuator._write(state, [sample]) == 0
+        box.wall.advance(20)
         assert rec.actuator._write(state, [sample]) == 1 and len(state.sink.frames) == before + 1
 
 
