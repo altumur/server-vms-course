@@ -8,6 +8,7 @@ A planned handover is the same rule from the other side: the target takes the do
 outgoing holder writes none but its own.
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
 
@@ -30,7 +31,7 @@ def _follower(fed, devices, name, wall, holder="cam-SN0"):
 
     def open_door(rec):
         return fed.clusters[rec["holder"]].vars, devices[rec["holder"]].disk_door()
-    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=d.local_console(), current=d.current,
+    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=device_console(d),
                        domain_objects=devices[holder].disk_door(), cluster_objects=d.disk, published=d.local_objects(),
                        follow=HolderFollower(ask), open_door=open_door)
 
@@ -78,7 +79,7 @@ def test_after_a_move_no_member_store_is_written_and_every_agent_follows_the_new
     agents = {n: _follower(fed, devices, n, wall) for n in devices if n != "cam-SN0"}
     for a in agents.values():
         report_sync(a)
-    assert one._keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["pending"]
+    assert one._keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["kept"]
     holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
     for a in agents.values():
         report_sync(a)
@@ -97,7 +98,7 @@ def test_after_a_move_no_member_store_is_written_and_every_agent_follows_the_new
     for name in agents:
         assert _follows(agents, name, "cam-SN1"), (name, agents[name].followed)
         assert read_holder(devices[name].flash, keys, wall())["term"] == 2
-    assert devices["cam-SN3"].row()["name"] == "SN3-renamed"            # carried from the new holder's door
+    assert devices["cam-SN3"].row()["enabled"] is False            # carried from the new holder's door
 
 
 def test_after_a_theft_the_move_writes_only_the_new_holder_and_the_members_follow_the_roots_term():
@@ -202,7 +203,7 @@ def _through_doors(fed, devices, keys, name, wall):
     def open_door(rec):
         n = (rec.get("url") or "").removeprefix("http://").removesuffix(":8445")
         return (door(n), None) if n in fed.clusters else None
-    return DomainAgent(name, door("cam-SN0"), d.flash, now=wall, console=d.local_console(), current=d.current,
+    return DomainAgent(name, door("cam-SN0"), d.flash, now=wall, console=device_console(d),
                        cluster_objects=d.disk, published=d.local_objects(), key=keys[name],
                        follow=HolderFollower(ask), open_door=open_door)
 
