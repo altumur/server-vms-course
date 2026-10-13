@@ -107,7 +107,7 @@ TimeoutStopSec=20
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1020, "items": {"epoch": "2"}}
 → 200 {"index": 1039}
 ```
 
@@ -177,58 +177,58 @@ POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-b-1", "cas": 1020, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-b-1", "cas": 1026, "items": {
   "holder": "srv-b:4102:001006",
   "until": "1757500075.0",
   "released": "false",
   "gen": "1",
   "server": "srv-b"
 }}
-→ 200 {"index": 1023}
+→ 200 {"index": 1031}
 ```
 
 Контроллер на `srv-b` всё это время читает heartbeat `w-srv-a-1` — тот, что слышал последним (урок 6, шаг 3), — и смотрит, как он стареет. На 80-й секунде (тест `test_the_power_pull`) — ничего: слот ещё в запасе. На 93-й оба молчания на месте, и проход контроллера переносит единицы. Сначала решение — строка размещения с причиной:
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1011, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1014, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500093.0",
   "rev": "2"
 }}
-→ 200 {"index": 1030}
+→ 200 {"index": 1040}
 ```
 
 Потом назначения: единица уходит из назначения `w-srv-a-1` и приходит в назначение `w-srv-b-1` — первое создаётся с `cas: ""`, «только если строки нет»:
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1016, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1019, "items": {
   "units": "2,3",
   "rev": "4"
 }}
-→ 200 {"index": 1031}
+→ 200 {"index": 1041}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
-→ 200 {"index": 1032}
+→ 200 {"index": 1042}
 ```
 
 — и так для единиц 2 и 3: решение первым, назначения за ним (урок 9, шаг 4, объясняет порядок). `w-srv-b-1` читает своё назначение и берёт следующую эпоху каждой единицы:
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
-→ 200 {"index": 1039}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1020, "items": {"epoch": "2"}}
+→ 200 {"index": 1049}
 
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
-→ 200 {"index": 1040}
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1021, "items": {"epoch": "2"}}
+→ 200 {"index": 1050}
 
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
-→ 200 {"index": 1041}
+POST /v1/write {"op": "put", "key": "cam/epoch/3", "cas": 1022, "items": {"epoch": "2"}}
+→ 200 {"index": 1051}
 ```
 
 Последние строки трассы:
@@ -275,21 +275,21 @@ POST /v1/write {"op": "put", "key": "cam/epoch/3", "cas": 1019, "items": {"epoch
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1011, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1014, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500186.0",
   "rev": "2"
 }}
-→ 200 {"index": 1028}
+→ 200 {"index": 1037}
 ```
 
 `w-srv-b-1` берёт следующую эпоху каждой единицы и начинает работать:
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
-→ 200 {"index": 1032}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1020, "items": {"epoch": "2"}}
+→ 200 {"index": 1041}
 ```
 
 Когда `srv-a` вернётся, его юнит возьмёт `w-srv-a-1` снова, процесс прочитает пустое назначение и ничего не будет писать. Назад ничего не переезжает: добавить место для записи — значит не двигать ничего, как и при добавлении воркера (урок 4).
