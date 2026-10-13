@@ -13,14 +13,15 @@ heartbeat (`ingest`), and what the forwarder carried and lost is in the relay's 
 """
 
 from tests.reporting import sync as report_sync
+from tests.domainvms.recording_domain import RecordingDomain, camera_pusher, role_requests
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.chain import publish_upstream
+from vms.domainpart.chain import UPSTREAM_PATH
 from w2cplatform.domain.relay import bundle
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster, Ram
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
@@ -56,8 +57,10 @@ def _chain(wall, star=frozenset()):
     cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(north.vars, view, wall, issuer=signer.tokens, centre="north", star=star)
-    crossings.record(SERIAL, on="east")
+    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens, centre="north", star=star)
+    recording_domain = RecordingDomain(crossings, signer, agents=[cam_agent, relay_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "east")
+    recording_domain.collect()
 
     dialled = []
 
@@ -77,18 +80,24 @@ def _chain(wall, star=frozenset()):
             "east": ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects, dial=dial_from("relay", set()),
                                     archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)}
     centre, relay, fwd = recs["north"].ingest, recs["east"].ingest, recs["east"].forwarder
+    from tests.domainvms.recording_domain import role_requests
+    fwd.tokens.door = role_requests(east.vars)
     at.update(centre=centre, relay=relay)
-    pusher = CameraPusher(SERIAL, cam.flash, dial_from("camera", {"relay"} if not star else set()), clock=wall)
+    pusher = camera_pusher(SERIAL, cam.flash, dial_from("camera", {"relay"} if not star else set()), clock=wall)
 
     def domain_pass():
         for r in recs.values():
             r.heartbeat_once()                                         # where each recorder's ingest is, said again
-        view.refresh(); crossings.publish(); crossings.publish_primaries()
-        publish_upstream(crossings, "north", star=star)
+        view.refresh()
+        recording_domain.observe("east", [{"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}],
+            [{"id": SERIAL, "phase": "running"}], ingest=RELAY_URLS[0])
+        recording_domain.collect()
+        recording_domain.collect()
         report_sync(cam_agent); report_sync(relay_agent)
 
-    domain_pass.crossings, domain_pass.recorders = crossings, recs
-    domain_pass()
+    domain_pass.inputs, domain_pass.recorders = crossings, recs
+    domain_pass.recording_domain = recording_domain
+    domain_pass(); domain_pass()
     return north, east, centre, relay, pusher, fwd, dialled, domain_pass
 
 
@@ -99,11 +108,26 @@ def _upstream(rec) -> dict:
 
 
 def _in_book(rec, ref, mode="push") -> None:
-    """Camera `ref` in the upstream book the relay's agent carried (`domain/upstream`), as the domain writes it."""
-    from vms.domainpart.keys import UPSTREAM_PATH
-    items, idx = rec.vars.get(UPSTREAM_PATH)
-    rec.vars.put(UPSTREAM_PATH, {**(items or {}), ref: json.dumps({"urls": CENTRE_URLS, "mode": mode, "token_secret": "t",
-                                                                  "until": 1e12})}, cas=idx)
+    """Explicit C3 fixture observations; credentials are requested and kept in memory."""
+    from types import SimpleNamespace
+    from w2cplatform.trust.tokens import TokenIssuer
+    own, now = rec.ingest.cluster, rec.wall()
+    rec.vars.put("domain/member", {"cluster": own})
+    rec.vars.put("domain/placed/rec/"+ref, {"cluster": own, "origin": "camera", "copies": "[]",
+        "reason": "operator", "at": str(now), "rev": "1"})
+    rec.vars.put("domain/member-topology", {"doc": json.dumps({"rev": 1, "centre": "north",
+        "star": [own] if mode == "pull" else [], "via": {}})})
+    def add(path, member, value):
+        items, idx = rec.vars.get(path)
+        row = {**(items or {}), "": json.dumps({"missing": []}), ref: json.dumps({
+            "entries": [{"member": member, "item": "w1/"+ref, "value": value}], "missing": []})}
+        rec.vars.put(path, row, cas=idx)
+    add("domain/cam/sources", "camera", {"ref": ref, "to": [own], "live_url": "rtsp://camera/live",
+        "server": "camera", "as_of": now, "polls": True})
+    add(UPSTREAM_PATH, "north", {"ref": ref, "to": [own], "urls": CENTRE_URLS})
+    issuer = TokenIssuer("fixture")
+    rec.forwarder.tokens.door = SimpleNamespace(request=lambda kind, name: {"request_id": "fixture",
+        "exp": rec.wall()+86400, "token": issuer.issue(own, 86400, now=rec.wall(), kind=kind, ref=name, aud=["north"])})
 
 
 def test_a_viewer_in_the_centre_the_want_travels_down_and_the_stream_up():
@@ -206,7 +230,7 @@ def test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_camera
     in. Nobody dials the camera, nobody dials the relay."""
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall, star={"east"})
-    assert pusher.entry()["ingest"]["urls"] == CENTRE_URLS
+    assert pusher.entry()["channels"]["east"]["urls"] == CENTRE_URLS
     rq = relay.subscribe(SERIAL, "recorder:east")
     fwd.pass_once()                                                    # the relay wants it: pulling is wanting at the centre
     assert pusher.pass_once(["s1", "s2"])["pushed"] == 2               # the camera pushes to the centre
@@ -461,10 +485,15 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     view.refresh(); pending.collect(fed)
     assert pending.of(cam.name) == {}                                  # the outcome came up in the bundle
 
-    crossings = Crossings(north.vars, view, wall, issuer=signer.tokens)
-    crossings.record(SERIAL, on="east"); crossings.publish_primaries()
+    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    recording_domain = RecordingDomain(crossings, signer, agents=[relay_agent, cam_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "east")
+    recording_domain.collect(); recording_domain.collect()
+    recording_domain.observe("east", [{"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}],
+        [{"id": SERIAL, "phase": "running"}], ingest=RELAY_URLS[0])
+    recording_domain.collect(); recording_domain.collect()
     passes()
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: relay if url in RELAY_URLS else (_ for _ in ()).throw(Unreachable(url)))
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: relay if url in RELAY_URLS else (_ for _ in ()).throw(Unreachable(url)))
     relay.want(SERIAL, "recorder:east")
     assert pusher.pass_once(["f"])["pushed"] == 1                      # the stream token came down the same road
 
@@ -488,7 +517,7 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_c
     done = []
     pusher.perform = lambda action: done.append(action) or "performed"
     # the gate camera is a member like the yard camera: its report makes it known to the domain's view
-    crossings = domain_pass.crossings
+    crossings = domain_pass.inputs
     crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
     gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                              published=gate.local_objects())
@@ -551,7 +580,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     relay = hosts[-1].ingest
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
-    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
 
     def domain_pass():
         for h in hosts:
@@ -574,7 +603,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
         raise Unreachable(f"{url} is beyond the site's network")
 
     done = []
-    ptz = CameraPusher("SN7003", cams["SN7003"].flash, site_dial, clock=wall,
+    ptz = camera_pusher("SN7003", cams["SN7003"].flash, site_dial, clock=wall,
                        perform=lambda action: done.append(action) or "performed")
     e = ptz.entry()
     assert e["polls_only"] and e["cluster"] == "east" and e["ingest"]["urls"] == RELAY_URLS
@@ -645,7 +674,19 @@ def _two_relays(wall):
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
         {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
-    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north"), north.objects)
+    inputs = BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north")
+    recording_domain = RecordingDomain(inputs, signer, agents=[*agents, *relays], devices=cams.values())
+    from w2cplatform.domain.carry import CarryClient
+    north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "north", "star": [],
+        "via": {c.name: c.via for c in fed.clusters.values() if c.via}})})
+    for agent in relays:
+        agent.domain_vars = CarryClient(recording_domain.door, agent.cluster, agent.key, wall)
+        agent.domain_objects = None
+    for relay, refs in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
+        for ref in refs:
+            recording_domain.assign(ref, relay)
+        hosts[relay].forwarder.tokens.door = role_requests(hosts[relay].vars)
+    books = Books(inputs, north.objects)
 
     def domain_pass():
         for h in hosts.values():
@@ -656,6 +697,12 @@ def _two_relays(wall):
             report_sync(a)
         for o in relays:
             report_sync(o)
+        for relay, refs in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
+            recording_domain.observe(relay,
+                [{"id": ref, "cam": "ref:"+ref, "enabled": True} for ref in refs],
+                [{"id": ref, "phase": "running"} for ref in refs], ingest=ing[relay].urls[0])
+        recording_domain.collect(); recording_domain.collect()
+        inputs.view.refresh()
         books.pass_once()
         for o in relays:
             report_sync(o)
@@ -665,9 +712,9 @@ def _two_relays(wall):
     domain_pass(); domain_pass()
     fwd = {"east": hosts["east"].forwarder, "west": hosts["west"].forwarder}
     done = {PTZ7: [], YARD7: []}
-    ptz = CameraPusher(PTZ7, cams[PTZ7].flash, reach(EAST_URLS, "site"), clock=wall,
+    ptz = camera_pusher(PTZ7, cams[PTZ7].flash, reach(EAST_URLS, "site"), clock=wall,
                        perform=lambda a: done[PTZ7].append(a) or "performed")
-    yard = CameraPusher(YARD7, cams[YARD7].flash, reach(WEST_URLS, "site"), clock=wall,
+    yard = camera_pusher(YARD7, cams[YARD7].flash, reach(WEST_URLS, "site"), clock=wall,
                         perform=lambda a: done[YARD7].append(a) or "performed")
     gate = Scenarios(GATE7, SharedView(cams[GATE7].flash, cams[GATE7].disk, wall),
                      Asker(GATE7, cams[GATE7].flash, reach(EAST_URLS, "site"), clock=wall))
@@ -793,25 +840,30 @@ def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwa
     camera of the relay forwarded. The centre's ingest is said in its recorder's heartbeat now (ADR-0065, its addition):
     a torn heartbeat says no ingest, and each entry keeps the road it names; a torn entry of the domain's book is issued
     anew; a torn entry the relay carried is the one it read last — each counted once (`BOOKS`)."""
-    from vms.domainpart.keys import UPSTREAM_PATH
+    from vms.domainpart.chain import UPSTREAM_PATH
     from vms.domainpart.keys import ASKS_PATH
     from vms.domainpart.ingest import BOOKS
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
-    north.objects.put("rec/heartbeats/r-1", b'{"worker": "r-1", "ts": ')  # the centre's recorder's heartbeat, half written
-    books = publish_upstream(domain_pass.crossings, "north", lifetime=1.0)   # (a lifetime that asks for a new token)
-    assert json.loads(books["east"][SERIAL])["urls"] == CENTRE_URLS       # re-issued, on the road the entry named
-    domain_pass.recorders["north"].heartbeat_once()                       # …and said again whole
-    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
-    north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)   # the book's own entry, torn
-    books = publish_upstream(domain_pass.crossings, "north")
-    assert json.loads(books["east"][SERIAL])["token_secret"] and f"{UPSTREAM_PATH}/east/{SERIAL}" in BOOKS.bad
-    before = fwd.book()[SERIAL]
-    items, idx = east.vars.get(UPSTREAM_PATH)
-    east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)   # what the relay carried, torn
-    assert fwd.book()[SERIAL] == before and f"{UPSTREAM_PATH}/{SERIAL}" in BOOKS.bad
     centre.want(SERIAL, "recorder:centre")
-    assert "forwarding" in fwd.pass_once()[SERIAL]                        # the relay forwards on, by the entry read last
+    fwd.pass_once()  # Establish a flow before losing the report.
+    before = fwd.book()[SERIAL]
+    north.objects.put("rec/heartbeats/torn", b'{"worker": "torn", "ts": ')
+    domain_pass()
+    assert fwd.book()[SERIAL] == before
+    # The holder repairs its result from signed worker facts, never reissues a book token.
+    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
+    north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)
+    domain_pass.recording_domain.collect()
+    assert fwd.book()[SERIAL] == before
+    items, idx = east.vars.get(UPSTREAM_PATH)
+    east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)
+    assert fwd.book()[SERIAL] == before
+    assert "forwarding" in fwd.pass_once()[SERIAL]
+    from vms.domainpart.chain import Forwarder
+    fresh = Forwarder("east", relay, east.vars, lambda url: centre)
+    fresh.tokens.door = role_requests(east.vars)
+    assert fresh.book() == {}  # A broken observation cannot establish a new flow.
     road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token_secret": "t"}]})
     east.vars.put(ASKS_PATH, {"a|b": road, "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
     assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
@@ -825,7 +877,7 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     scenario: no camera's right to ask was issued again. Each entry is read through `BOOKS` now: a torn entry of the
     book of asks is issued anew, a torn upstream entry is "not pushed up" — counted, and every scenario is served. A
     scenario that is not an object is skipped and counted (`SCENARIOS`), and both show on the console's `/healthz`."""
-    from vms.domainpart.keys import UPSTREAM_PATH
+    from vms.domainpart.chain import UPSTREAM_PATH
     from vms.domainpart.keys import ASKS_PATH
     from vms.domainpart.ingest import BOOKS, publish_asks
     from vms.domainpart.scenario import SCENARIOS, pairs
@@ -833,7 +885,7 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
     gate.boot()
-    crossings = domain_pass.crossings
+    crossings = domain_pass.inputs
     crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
     report_sync(DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                 published=gate.local_objects()))
@@ -848,7 +900,7 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     books = publish_asks(crossings, scenarios)
     roads = json.loads(books[home][SERIAL])["roads"]
     assert roads and all(r["token_secret"] for r in roads)                     # issued anew
-    assert {f"{UPSTREAM_PATH}/east/{SERIAL}", f"{ASKS_PATH}/{home}/{SERIAL}"} <= BOOKS.bad
+    assert f"{ASKS_PATH}/{home}/{SERIAL}" in BOOKS.bad
     # a document from before the schema, or one the store tore: read past, each bad scenario counted where it stands
     settings = {"shared": {"auto": {"scenarios": [7, {"when": [], "then": {}},
                 {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}}}
@@ -1086,6 +1138,9 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     assert now.up_expired == {SERIAL: 1}                                # counted once
 
     now.dial = fwd.dial                                                 # the centre answers again: its word is said again
+    now.tokens.door = role_requests(east.vars)
+    for recorder in domain_pass.recorders.values():
+        recorder.claim_slot(recorder.name)
     domain_pass()                                                       # three days on: the stream token issued anew
     centre.want(SERIAL, "recorder:centre")
     centre.written = lambda ref: wall()
@@ -1324,7 +1379,7 @@ def test_a_camera_taken_out_of_the_upstream_book_ends_its_loop_and_its_subscript
     in the book is forwarded again by a loop of its own."""
     import threading
     import time
-    from vms.domainpart.keys import UPSTREAM_PATH
+    from vms.domainpart.chain import UPSTREAM_PATH
     store, centre = _FlakyStore(), _TakesAll()
     rec = ingest_recorder("east", RELAY_URLS[0], time.time, store, dial=lambda url: centre)
     local, fwd = rec.ingest, rec.forwarder
@@ -1335,7 +1390,8 @@ def test_a_camera_taken_out_of_the_upstream_book_ends_its_loop_and_its_subscript
         assert _until(lambda: SERIAL in fwd.queues and _alive(f"fwd-{SERIAL}"))
         assert fwd.up in local.tees[(SERIAL, "live")].subscribers
         items, idx = store.get(UPSTREAM_PATH)
-        store.put(UPSTREAM_PATH, {k: v for k, v in items.items() if k != SERIAL}, cas=idx)   # the domain took it out
+        # Explicit withdrawal ends a working flow; a lost report preserves it.
+        store.as_writer("domainagent").delete("domain/placed/rec/" + SERIAL)
         assert _until(lambda: not _alive(f"fwd-{SERIAL}"))
         assert SERIAL not in fwd.queues and SERIAL not in fwd.state
         assert fwd.up not in local.tees[(SERIAL, "live")].subscribers   # its subscription let go…
@@ -1364,15 +1420,18 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
     from tests.vmsconftest import Box
     box = Box()
     rec = ingest_recorder("east", RELAY_URLS[0], box.wall, objects=box.objects)
-    _in_book(rec, SERIAL); _in_book(rec, "SN7002", mode="pull")
+    _in_book(rec, SERIAL)
+    pull_rec = ingest_recorder("west", WEST_URLS[0], box.wall, objects=box.objects, name="r-pull")
+    _in_book(pull_rec, "SN7002", mode="pull")
+    pull_rec.forwarder.holes["SN7002"] = 2
     fwd, ing = rec.forwarder, rec.ingest
-    fwd.dropped[SERIAL], fwd.up_expired[SERIAL], fwd.holes["SN7002"] = 3, 1, 2
+    fwd.dropped[SERIAL], fwd.up_expired[SERIAL] = 3, 1
     fwd.errors[SERIAL] = 2                                               # two rounds its store failed (the blocker)
     q = ing.subscribe(SERIAL, "recorder:r-9", maxsize=2)
     frames = _frames(5, box.wall() - 1)
     ing.inject(SERIAL, frames); ing.inject(SERIAL, frames)              # three past a queue of two; five repeats
     ing.ahead[SERIAL] = 4                                                # (refused at the door as absurd)
-    rec.heartbeat_once()
+    rec.heartbeat_once(); pull_rec.heartbeat_once()
     hb = json.loads(box.objects.get("rec/heartbeats/r-1"))
     st = hb["ingest_streams"][SERIAL]
     assert q.dropped == 3 and "cut_for_full_queue" not in st and st["repeats_dropped"] == 5 and st["absurd_frames"] == 4
