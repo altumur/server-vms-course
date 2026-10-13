@@ -173,10 +173,10 @@ def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source
     says nothing: the source read last stands, and the other parts of the pass run."""
     from vms.config import live_shm
     from vms.recworker import RecWorker
-    from tests.vmsconftest import REC_ACL, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
+    from tests.vmsconftest import rec_acl, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
     from tests.test_lesson5_recorder import _box
     box, ctl, con, rec_con, rec_ctl, w = _box()
-    vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", REC_ACL)), Flaky(box.objects)
+    vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", rec_acl())), Flaky(box.objects)
     act = FakeActuator()
     r = RecWorker("r-1", vars_, objects, act, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root,
                   block=TEST_BLOCK, read=TEST_READ, default_quota=TEST_QUOTA, obsd=obsd_session("rec-outage"),
