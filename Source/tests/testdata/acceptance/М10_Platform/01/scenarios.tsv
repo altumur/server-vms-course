@@ -1,0 +1,80 @@
+# scenario	step	request	expect
+01-absent	1	GET /v1/get?key=acc/01-absent/c1	200 {"items":null,"index":""}
+02-create-once	1	POST /v1/write {"op":"put","key":"acc/02-create-once/c1","items":{"name":"c1"},"cas":""}	200 {"index":"$a"}
+02-create-once	2	POST /v1/write {"op":"put","key":"acc/02-create-once/c1","items":{"name":"other"},"cas":""}	409 {"kind":"conflict","index":"$a"}
+02-create-once	3	GET /v1/get?key=acc/02-create-once/c1	200 {"items":{"name":"c1"},"index":"$a"}
+03-read-back	1	POST /v1/write {"op":"put","key":"acc/03-read-back/c1","items":{"name":"c1","start":"7"}}	200 {"index":"$a"}
+03-read-back	2	GET /v1/get?key=acc/03-read-back/c1	200 {"items":{"name":"c1","start":"7"},"index":"$a"}
+04-stale-cas	1	POST /v1/write {"op":"put","key":"acc/04-stale-cas/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
+04-stale-cas	2	POST /v1/write {"op":"put","key":"acc/04-stale-cas/c1","items":{"n":"2"},"cas":"$a"}	200 {"index":"$b"}
+04-stale-cas	3	POST /v1/write {"op":"put","key":"acc/04-stale-cas/c1","items":{"n":"3"},"cas":"$a"}	409 {"kind":"conflict","index":"$b"}
+04-stale-cas	4	GET /v1/get?key=acc/04-stale-cas/c1	200 {"items":{"n":"2"},"index":"$b"}
+05-unconditional	1	POST /v1/write {"op":"put","key":"acc/05-unconditional/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
+05-unconditional	2	POST /v1/write {"op":"put","key":"acc/05-unconditional/c1","items":{"n":"2"}}	200 {"index":"$b"}
+05-unconditional	3	POST /v1/write {"op":"put","key":"acc/05-unconditional/c1","items":{"n":"3"},"cas":null}	200 {"index":"$c"}
+05-unconditional	4	GET /v1/get?key=acc/05-unconditional/c1	200 {"items":{"n":"3"},"index":"$c"}
+05-unconditional	5	ASSERT $a != $b $c	
+06-delete	1	POST /v1/write {"op":"put","key":"acc/06-delete/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
+06-delete	2	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"999999999999"}	409 {"kind":"conflict","index":"$a"}
+06-delete	3	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"$a"}	200 {"index":"$b"}
+06-delete	4	GET /v1/get?key=acc/06-delete/c1	200 {"items":null,"index":""}
+06-delete	5	POST /v1/write {"op":"delete","key":"acc/06-delete/c1"}	200 {"index":"$c"}
+06-delete	6	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"$a"}	409 {"kind":"conflict","index":""}
+07-no-reuse	1	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
+07-no-reuse	2	POST /v1/write {"op":"delete","key":"acc/07-no-reuse/c1","cas":"$a"}	200 {"index":"$b"}
+07-no-reuse	3	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"1"},"cas":""}	200 {"index":"$c"}
+07-no-reuse	4	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"2"},"cas":"$a"}	409 {"kind":"conflict","index":"$c"}
+07-no-reuse	5	ASSERT $a != $b $c	
+08-list	1	POST /v1/write {"op":"put","key":"acc/08-list/k/b","items":{"n":"b"}}	200 {"index":"$b"}
+08-list	2	POST /v1/write {"op":"put","key":"acc/08-list/k/a","items":{"n":"a"}}	200 {"index":"$a"}
+08-list	3	POST /v1/write {"op":"put","key":"acc/08-list/kk","items":{"n":"x"}}	200 {"index":"$x"}
+08-list	4	GET /v1/list?prefix=acc/08-list/k/	200 {"keys":{"acc/08-list/k/a":"$a","acc/08-list/k/b":"$b"}}
+08-list	5	GET /v1/list?prefix=acc/08-list/k	200 {"keys":{"acc/08-list/k/a":"$a","acc/08-list/k/b":"$b","acc/08-list/kk":"$x"}}
+08-list	6	GET /v1/list?prefix=acc/08-list/none/	200 {"keys":{}}
+09-guard	1	POST /v1/write {"op":"put","key":"acc/09-guard/slots/w-1","items":{"owner":"p1"},"cas":""}	200 {"index":"$s"}
+09-guard	2	POST /v1/write {"op":"put","key":"acc/09-guard/rows/r1","items":{"v":"1"},"guard":{"key":"acc/09-guard/slots/w-1","index":"$s"}}	200 {"index":"$r"}
+09-guard	3	POST /v1/write {"op":"put","key":"acc/09-guard/slots/w-1","items":{"owner":"p2"},"cas":"$s"}	200 {"index":"$s2"}
+09-guard	4	POST /v1/write {"op":"put","key":"acc/09-guard/rows/r1","items":{"v":"2"},"cas":"$r","guard":{"key":"acc/09-guard/slots/w-1","index":"$s"}}	412 {"kind":"guard","key":"acc/09-guard/slots/w-1","index":"$s2"}
+09-guard	5	GET /v1/get?key=acc/09-guard/rows/r1	200 {"items":{"v":"1"},"index":"$r"}
+09-guard	6	POST /v1/write {"op":"delete","key":"acc/09-guard/rows/r1","guard":{"key":"acc/09-guard/slots/w-1","index":"$s"}}	412 {"kind":"guard","key":"acc/09-guard/slots/w-1","index":"$s2"}
+09-guard	7	POST /v1/write {"op":"delete","key":"acc/09-guard/rows/r1","guard":{"key":"acc/09-guard/slots/w-1","index":"$s2"}}	200 {"index":"$d"}
+10-guard-absent	1	POST /v1/write {"op":"put","key":"acc/10-guard-absent/rows/r1","items":{"v":"1"},"guard":{"key":"acc/10-guard-absent/slots/w-1","index":""}}	200 {"index":"$r"}
+10-guard-absent	2	POST /v1/write {"op":"put","key":"acc/10-guard-absent/slots/w-1","items":{"owner":"p1"},"cas":""}	200 {"index":"$s"}
+10-guard-absent	3	POST /v1/write {"op":"put","key":"acc/10-guard-absent/rows/r1","items":{"v":"2"},"guard":{"key":"acc/10-guard-absent/slots/w-1","index":""}}	412 {"kind":"guard","key":"acc/10-guard-absent/slots/w-1","index":"$s"}
+11-guard-before-cas	1	POST /v1/write {"op":"put","key":"acc/11-guard-before-cas/slots/w-1","items":{"owner":"p1"},"cas":""}	200 {"index":"$s"}
+11-guard-before-cas	2	POST /v1/write {"op":"put","key":"acc/11-guard-before-cas/rows/r1","items":{"v":"1"},"cas":""}	200 {"index":"$r"}
+11-guard-before-cas	3	POST /v1/write {"op":"put","key":"acc/11-guard-before-cas/slots/w-1","items":{"owner":"p2"},"cas":"$s"}	200 {"index":"$s2"}
+11-guard-before-cas	4	POST /v1/write {"op":"put","key":"acc/11-guard-before-cas/rows/r1","items":{"v":"2"},"cas":"","guard":{"key":"acc/11-guard-before-cas/slots/w-1","index":"$s"}}	412 {"kind":"guard","key":"acc/11-guard-before-cas/slots/w-1","index":"$s2"}
+12-id	1	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"1"},"cas":"","id":"0123456789abcdef0123456789abcdef"}	200 {"index":"$a"}
+12-id	2	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"1"},"cas":"","id":"0123456789abcdef0123456789abcdef"}	200 {"index":"$a","again":true}
+12-id	3	GET /v1/get?key=acc/12-id/c1	200 {"items":{"n":"1"},"index":"$a"}
+12-id	4	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"2"},"cas":"","id":"0123456789abcdef0123456789abcdef"}	400 {"kind":"badrequest"}
+12-id	5	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"1"},"cas":"$a","id":"0123456789abcdef0123456789abcdef"}	400 {"kind":"badrequest"}
+12-id	6	GET /v1/get?key=acc/12-id/c1	200 {"items":{"n":"1"},"index":"$a"}
+13-bad-key	1	GET /v1/get?key=	400 {"kind":"badkey"}
+13-bad-key	2	GET /v1/get?key=/acc/13-bad-key/c1	400 {"kind":"badkey"}
+13-bad-key	3	GET /v1/get?key=acc/13-bad-key/../c1	400 {"kind":"badkey"}
+13-bad-key	4	POST /v1/write {"op":"put","key":"acc/13-bad-key/a/../b","items":{}}	400 {"kind":"badkey"}
+13-bad-key	5	POST /v1/write {"op":"put","key":"","items":{}}	400 {"kind":"badkey"}
+13-bad-key	6	POST /v1/write {"op":"put","key":"acc/13-bad-key/..foo","items":{"n":"1"}}	200 {"index":"$a"}
+14-bad-forms	1	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"cas":"abc"}	400 {"kind":"badrequest"}
+14-bad-forms	2	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"cas":7}	400 {"kind":"badrequest"}
+14-bad-forms	3	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"cas":"007"}	400 {"kind":"badrequest"}
+14-bad-forms	4	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"id":"ABC"}	400 {"kind":"badrequest"}
+14-bad-forms	5	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"guard":{"key":"acc/14-bad-forms/s"}}	400 {"kind":"badrequest"}
+14-bad-forms	6	POST /v1/write {"op":"put","key":"acc/14-bad-forms/c1","items":{},"guard":null}	400 {"kind":"badrequest"}
+14-bad-forms	7	POST /v1/write {"op":"rename","key":"acc/14-bad-forms/c1"}	400 {"kind":"badrequest"}
+14-bad-forms	8	GET /v1/get?key=acc/14-bad-forms/c1	200 {"items":null,"index":""}
+15-too-large	1	POST /v1/write {"op":"put","key":"acc/15-too-large/c1","items":{"blob":"@big(524288)"}}	413 {"kind":"toolarge","key":"acc/15-too-large/c1","size":524292,"limit":524288}
+15-too-large	2	GET /v1/get?key=acc/15-too-large/c1	200 {"items":null,"index":""}
+15-too-large	3	POST /v1/write {"op":"put","key":"acc/15-too-large/c1","items":{"blob":"@big(524284)"}}	200 {"index":"$a"}
+16-items	1	POST /v1/write {"op":"put","key":"acc/16-items/c1","items":{"n":1}}	400 {"kind":"badrequest"}
+16-items	2	POST /v1/write {"op":"put","key":"acc/16-items/c1","items":["n"]}	400 {"kind":"badrequest"}
+16-items	3	POST /v1/write {"op":"put","key":"acc/16-items/c1"}	400 {"kind":"badrequest"}
+16-items	4	POST /v1/write {"op":"put","key":"acc/16-items/c1","items":{}}	200 {"index":"$a"}
+16-items	5	GET /v1/get?key=acc/16-items/c1	200 {"items":{},"index":"$a"}
+17-routes	1	POST /v1/write not json	400 {"kind":"badrequest"}
+17-routes	2	POST /v1/write []	400 {"kind":"badrequest"}
+17-routes	3	GET /v1/nothing	404 {"kind":"badrequest"}
+17-routes	4	POST /v1/get	404 {"kind":"badrequest"}
+18-no-echo	1	POST /v1/write {"op":"put","key":"acc/18-no-echo/c1","items":{"n":"1"},"cas":"424242424242"}	409 {"kind":"conflict","index":"","error":"!contains 424242424242"}
