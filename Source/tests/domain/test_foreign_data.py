@@ -15,7 +15,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
 from vms.domainpart.books import Books
 from w2cplatform.domain.relay import MEMBER_SHARE, Relay, bundle, say_seen, RELAY_SEEN
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
@@ -86,10 +86,10 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     api = ConsoleAPI(d, lambda name: console)
     assert api.update_unit("101", {"name": "lobby"}, "k1")["cluster"] == "north" and console.edits
 
-    books = Books(Crossings(north.vars, view, wall, issuer=signer.tokens), north.objects)
+    books = Books(BookInputs(north.vars, view, wall, issuer=signer.tokens), north.objects)
     for _ in range(2):
         wall.advance(5); out = books.pass_once()
-    assert out["failing"] == [] and {"sources", "primaries", "polls", "asks"} <= set(out)
+    assert out["failing"] == [] and {"polls", "asks"} <= set(out)
     page_ = view.list()
     assert page_["clusters"][cam.name] == "unreachable" and "complete report" in page_["why"][cam.name]
     assert MEMBER_OBJECTS.counts.get(cam.name, 0) == before + 1           # once, not once per read or per pass
@@ -483,38 +483,32 @@ def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_who
     assert "east/cam/heartbeats/w-1" in MEMBER_OBJECTS.bad
 
 
-def test_a_recorders_url_or_ingest_that_is_a_list_stops_no_book_and_takes_no_road_away():
-    """Two reads of another cluster's data in the books, not through the one reader: the backup's recorder publishing
-    its archive door's `url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
-    and where an ingest takes streams said as other than a string passed `list(...)` as its letters, and the book of
-    primaries handed the camera a string for a road. Now each is that heartbeat's trouble — no backup archive from it,
-    no ingest from it (`ingest_urls`: `ingest` is a string by the spec, `heartbeat.strings`), counted — and the road the
-    book already held stays."""
-    from vms.domainpart.keys import PRIMARIES_PATH, SOURCES_PATH
-    from w2cplatform.contract import Heartbeat, Subsystem
-    from tests.domainvms.test_two_servers import A_URLS, SERIAL as SN, _office
+def test_invalid_input_does_not_publish_a_partial_report_and_working_flow_survives():
+    from tests.domainvms.test_two_servers import SERIAL, _office
+    from vms.recording_books import primary
+    from w2cplatform.domain.reports import read
     wall = Clock()
     o = _office(wall)
-    o.b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
-        {"id": f"{SN}-copy", "cam": f"ref:{SN}", "enabled": True, "phase": "running",
-         "coverage": {"from": wall() - 60, "to": wall()}}], {"url": ["http://srv-b:9100/"]}).to_bytes())
-    books = o.crossings.publish()
-    entry = json.loads(books["srv-a"][SN])
-    assert "backups" not in entry and json.loads(o.b.vars.get(f"{SOURCES_PATH}/srv-a")[0][SN]) == entry
-    assert any(k.endswith("#url") for k in MEMBER_OBJECTS.bad)
-    o.a.objects.put(Subsystem("rec").heartbeat_key("r-ingest"),                # srv-a's ingest, said as a list
-                    Heartbeat("r-ingest", wall(), [], {"ingest": A_URLS}).to_bytes())
-    o.crossings.publish_primaries()
-    assert any(k.endswith("#ingest") for k in MEMBER_OBJECTS.bad)
-    said = json.loads(o.b.vars.get(f"{PRIMARIES_PATH}/{o.cam.name}")[0][SN])
-    assert said["ingest"]["urls"] == A_URLS                               # the road it had, not a string
+    o.pusher.pass_once([{"t": wall(), "key": True}])
+    before = read("srv-a", o.b.objects)
+    o.a.vars.put("rec/primaries/r-a", {SERIAL: '{"ref":'})
+    o.recording_domain.collect()
+    after = read("srv-a", o.b.objects)
+    assert after.raw == before.raw and after.mark == before.mark
+    items = o.cam.flash.get("domain/rec/primaries")[0]
+    assert primary(items, SERIAL, "srv-a").value["running"] is True
+    assert "srv-a" in o.pusher.entry()["channels"]
+    wall.advance(46)
+    o.recording_domain.collect()
+    assert primary(o.cam.flash.get("domain/rec/primaries")[0], SERIAL, "srv-a") is None
+    assert "srv-a" in o.pusher.entry()["channels"]  # existing data flow is independent of a lost report
 
 
 def test_a_camera_that_says_who_takes_its_stream_as_a_string_is_not_read_as_its_letters():
     """The sibling of the string of urls: `taken_by: "srv-b"` passed `list(...)` as letters, every letter is somebody
     else, and the standby `srv-b` read the camera as taken by another and never pulled. A list of names, or nothing
     known (None: change nothing)."""
-    from vms.domainpart.crossing import camera_taken
+    from vms.recording_sources import camera_taken
 
     class Door:
         def __init__(self, said):
