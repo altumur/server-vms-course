@@ -800,7 +800,11 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
     if name in [str(x) for x in worker.get("requests") or []]:
         raise ValueError(f"spec {name}: worker.requests names {name!r}, which is the spec itself — a worker performs its "
                          f"own units' work, it files to others")
-    bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
+    bad = [x for x in worker.get("reads") or []
+           if not isinstance(x, str)
+           or not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+/?", x)
+           or any(part in (".", "..") for part in x.rstrip("/").split("/"))
+           or "*" in x[:-1]]
     if bad:
         raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {_q(str(bad[0]))}")
     return tuple(map(str, worker.get("writes") or ())), tuple(map(str, worker.get("reads") or ())), \
@@ -2203,11 +2207,14 @@ class SubsystemSpec:
         return out
 
     # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
-    # says it writes (`worker.writes`), and the request rows of the subsystems it files to (`worker.requests`).
+    # says it writes (`worker.writes`), its declared book inputs (`domain.books.*.from`), and the request rows of
+    # the subsystems it files to (`worker.requests`).
     def acl_worker_role(self) -> list[str]:
         from .contract import requests_acl
+        inputs = [rule.source + "*" if rule.source.endswith("/") else rule.source
+                  for rule in self.domain.merged.values()] if self.domain else []
         return (self.sub.acl_worker() + [self.sub.config(t, "*") for t in self.worker_writes]
-                + requests_acl(*self.worker_requests))
+                + requests_acl(*self.worker_requests) + list(dict.fromkeys(inputs)))
 
     # Placement: `<name>/workers/*`, `<name>/placement/*`, `<name>/slots/*` — never a unit's row. The
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the
