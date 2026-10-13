@@ -3,6 +3,8 @@ one cause per dead server; the API refuses placement at both levels and is
 idempotent; the gateway fans out and the worker sees one viewer."""
 import json
 import urllib.request
+from tests.member_console import admit_fixtures
+from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
 from w2cplatform.domain.federation import DomainDirectory
@@ -163,32 +165,35 @@ def test_api_refuses_placement_at_both_levels_and_is_idempotent():
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
     consoles = {"south": FakeClusterConsole()}
-    api = ConsoleAPI(DomainDirectory(fed), consoles.__getitem__)
-    r1 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")
-    r2 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")            # the same PUT, not a second edit
-    assert r1 is r2 and len(consoles["south"].edits) == 1 and r1["cluster"] == "south" and r1["worker"] == "w-0" and not r1["authenticated"]
+    pending = PendingEdits(fed.domain_holder.vars)
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
+    api = ConsoleAPI(DomainDirectory(fed), pending=pending)
+    r1 = api.update_unit(7, {"enabled": False}, idempotency_key="k1", sub="cam")
+    r2 = api.update_unit(7, {"enabled": False}, idempotency_key="k1", sub="cam")            # the same PUT, not a second edit
+    assert r1 == r2 and not consoles["south"].edits and r1["cluster"] == "south"
+    assert len(pending.of("south")) == 1
     for bad in ({"worker": "w-1"}, {"cluster": "north"}, {"server": "srv-1"}, {"placement": {}}, {"phase": "running"}, {"epoch": 9}):
         try:
-            api.update_unit(7, bad, idempotency_key="k2"); raise AssertionError("must refuse")
+            api.update_unit(7, bad, idempotency_key="k2", sub="cam"); raise AssertionError("must refuse")
         except ApiError as e:
             assert e.status == 400 and "may not set" in e.detail
     try:
-        api.update_unit(99, {"name": "x"}, idempotency_key="k3"); raise AssertionError("must 404")
+        api.update_unit(99, {"enabled": False}, idempotency_key="k3", sub="cam"); raise AssertionError("must 404")
     except ApiError as e:
         assert e.status == 404
-    c = api.create_unit({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4")
-    assert c["cluster"] == "south" and c["result"]["worker"] == "w-0"              # the cluster chose the worker; the domain forwarded
+    c = api.create_unit({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4", sub="cam")
+    assert c["cluster"] == "south" and c["kept"] in pending.of("south")              # the cluster chose the worker; the domain forwarded
 
 
 def test_api_says_503_not_404_when_a_cluster_is_unreachable():
     fed, links = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
     links["south"].up = False
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    api = ConsoleAPI(DomainDirectory(fed))
     try:
-        api.update_unit(7, {"name": "x"}, idempotency_key="k"); raise AssertionError()
+        api.update_unit(7, {"enabled": False}, idempotency_key="k", sub="cam"); raise AssertionError()
     except ApiError as e:
-        assert e.status == 503 and "unreachable" in e.detail
+        assert e.status == 503 and "unknown" in e.detail
 
 
 def test_gateway_fans_out_and_the_worker_sees_one_viewer():
@@ -228,7 +233,8 @@ def test_console_over_http():
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=1000.0)
     heartbeat(fed.clusters["south"], "w-0", [7], ts=1000.0, server="srv-9")
     view = ReadView(fed, wall=lambda: 1002.0)
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    admit_fixtures(fed.domain_holder.vars, fed.clusters)
+    api = ConsoleAPI(DomainDirectory(fed), pending=PendingEdits(fed.domain_holder.vars))
     con = Console(DomainDirectory(fed), view, api, refresh_interval=0.05)
     srv = con.serve(port=0)
     port = srv.server_address[1]
@@ -267,7 +273,7 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
     import time
     from w2cplatform.console import ConsoleServer
     fed, _ = make_domain({"north": (), "south": ()}, "north")
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    api = ConsoleAPI(DomainDirectory(fed))
     con = Console(DomainDirectory(fed), ReadView(fed, wall=lambda: 1002.0), api, refresh_interval=0.05)
     srv = con.serve(port=0)
     port = srv.server_address[1]
@@ -315,7 +321,7 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
     was = os.environ.get("CONSOLE_MONITORS")
     os.environ["CONSOLE_MONITORS"] = "192.0.2.100"
     fed, _ = make_domain({"north": (), "south": ()}, "north")
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    api = ConsoleAPI(DomainDirectory(fed))
     con = Console(DomainDirectory(fed), ReadView(fed, wall=lambda: 1002.0), api, refresh_interval=0.05)
     srv = con.serve(port=0)
     port, who, held = srv.server_address[1], {}, []
