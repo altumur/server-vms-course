@@ -125,6 +125,11 @@ def test_recorder_primary_selection_grace_and_backfill_use_the_whole_assigned_bo
         assert {p["recorder"] for p in peers} == {"main", "reserve1", "reserve2"}
     primary_row(box, entries[1:])
     rec._look()._got.clear()
+    # Losing the report cannot interrupt the reserve that already covers.
+    assert rec.carried_word(row, box.wall())[0] is True
+    # A new assignment starts a fresh grace instead of inheriting that decision.
+    placement(box, "camera", rev=2)
+    rec._look()._got.clear()
     assert rec.carried_word(row, box.wall())[0] is False
     box.wall.advance(rec.START_GRACE)
     assert rec.carried_word(row, box.wall())[0] is True
