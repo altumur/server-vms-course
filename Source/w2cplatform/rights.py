@@ -46,7 +46,7 @@ DELETE_ONLY = "delete:"
 # `domain/<sub>/…` — the key set, the members, the grants stay the domain's own roles'.
 def may_delete_domain(role: str | None, key: str) -> bool:
     """Whether `role` may remove `key` under `domain/` at all (the rights or the ACL decide the rest)."""
-    if role in DOMAIN_ROLES:
+    if role in DOMAIN_ROLES or role == "domainconsole" and key.startswith("domain/placement/"):
         return True
     sub = role[: -len("domain")] if role and role.endswith("domain") and role != "domain" else ""
     return bool(sub) and "/" not in sub and key.startswith(f"domain/{sub}/")
