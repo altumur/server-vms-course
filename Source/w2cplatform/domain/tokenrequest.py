@@ -57,6 +57,18 @@ def issue(door, issuer, member, sub, kind, body, signature):
         if not row:
             raise Refused(403, "token request has no assignment")
         def values(field):
+            if field in ("centre", "star_centre"):
+                from .topology import Topology
+                try:
+                    topology = Topology(door.vars).read()
+                except (ValueError, TypeError, KeyError, OverflowError):
+                    raise Refused(409, "topology has no confirmed centre") from None
+                if field == "star_centre" and row["cluster"] not in (topology or {}).get("star", []):
+                    return []
+                centre = (topology or {}).get("centre")
+                if not isinstance(centre, str) or not centre or topology.get("rev", 0) <= 0:
+                    raise Refused(409, "topology has no centre")
+                return [centre]
             v = row[field]
             return v if isinstance(v, list) else ([v] if v else [])
         links = values("cluster") + values("origin") + values("copies")
@@ -64,11 +76,11 @@ def issue(door, issuer, member, sub, kind, body, signature):
         if any(n not in admitted for n in links) or member not in values(binding["caller"]):
             raise Refused(403, "token request is outside assignment scope")
         targets = sorted({n for f in binding["target_fields"] for n in values(f)})
-        if not targets:
-            raise Refused(403, "assignment has no token audience")
+        if not targets or any(n not in admitted for n in targets):
+            raise Refused(403, "assignment has no admitted token audience")
         now = door.wall()
         claims = {binding["ref_claim"]: request["ref"], binding["audience_claim"]: targets}
-        token = issuer.issue(kind, request["ref"], now=now, **claims)
+        token = issuer.issue(kind, member, now=now, **claims)
         exp = now + issuer.lifetime(kind)
         return {"request_id": request["request_id"],
                 "token": seal_to(me["seal"], "token", token, context(path, request["request_id"], exp)), "exp": exp}
