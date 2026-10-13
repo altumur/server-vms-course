@@ -79,7 +79,7 @@ def test_agent_carries_all_assignment_rows_and_rejects_older_or_unverified_carry
 def test_placement_door_requires_admin_and_refuses_unknown_members_without_changing_state():
     with site() as e:
         directory = DomainDirectory(e.fed)
-        api = ConsoleAPI(directory, lambda n: None, verifier=lambda token: token)
+        api = ConsoleAPI(directory, verifier=lambda token: token)
         con = Console(directory, e.holder.view, api, holder_vars=e.north.vars, admin=lambda s: s == "admin")
         door = con.serve(port=0)
         def put(token, body, path="/domain/placement/testsub/badge"):
@@ -182,7 +182,7 @@ def test_placement_get_and_delete_door_use_typed_view_and_strict_admin_scope():
     from tests.conftest import Served
     with site() as e:
         directory = DomainDirectory(e.fed)
-        api = ConsoleAPI(directory, lambda n: None, verifier=lambda token: token)
+        api = ConsoleAPI(directory, verifier=lambda token: token)
         writer = e.north.vars.as_writer("domainconsole", ["domain/placement*"])
         con = Console(directory, e.holder.view, api, holder_vars=writer,
                       admin=lambda subject: subject == "admin", viewer=lambda subject: subject in ("admin", "viewer"))
