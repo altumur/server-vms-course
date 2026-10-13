@@ -3208,10 +3208,65 @@ class SpecConsole:
         finally:
             blobs_slots().release()
 
+    def agent_edit(self, h, method, path):
+        """A signed local agent opens only explicit unit CRUD, never a general route."""
+        from .trust.memberkey import ROW, verify_request
+        from .domain.api import ConsoleAPI, ApiError
+        rows = "/" + self.spec.rows
+        if not ((method == "POST" and path == rows) or
+                (method in ("PUT", "DELETE") and path.startswith(rows + "/") and len(path.split("/")) == 3)):
+            h.close_connection = True
+            return h._send(403, {"detail": "an agent signature opens only unit CRUD"})
+        if not self.read_body(h, MAX_BODY):
+            return
+        raw = h.rfile.getvalue()
+        original = urlsplit(h.path).path
+        if original != "/" + self.spec.name + path:
+            return h._send(403, {"detail": "an agent operation must name its subsystem"})
+        try:
+            keyrow = self.ctl.vars.get(ROW)[0]
+            pub = (keyrow or {}).get("pub", "")
+            why = verify_request(pub, h.headers.get("X-Agent-Signature", ""), method, original,
+                                 raw, self.wall(), 60)
+            if why:
+                return h._send(403, {"detail": "the local agent signature does not verify"})
+            key = h.headers.get("Idempotency-Key")
+            if not key:
+                return h._send(400, {"detail": "Idempotency-Key header is required"})
+            body = object_body(h)
+            checks = ConsoleAPI(None, None)
+            checks._refuse_placement(body)
+            checks._refuse_secrets(body)
+            if method == "PUT":
+                checks._refuse_undeclared(self.spec.name, body)
+            if method == "POST" and self.spec.domain and self.spec.domain.ref and not body.get(self.spec.domain.ref):
+                raise ApiError(400, "the spec's domain.ref field is required")
+            prior = self.seen.claim(key, "agent:" + method + ":" + original, raw)
+            if prior is not None:
+                return h._send(*prior)
+            try:
+                if method == "POST":
+                    reply = self.create(body, key, "agent")
+                else:
+                    uid = self.spec.parse_id(path.rsplit("/", 1)[1])
+                    reply = self.update(uid, body, "agent") if method == "PUT" else self.delete(uid, "agent")
+            except Exception as err:
+                reply = self._failed(key, err)
+            self._remember(key, reply)
+            return h._send(*reply)
+        except ApiError as err:
+            return h._send(err.status, {"detail": err.detail})
+        except (Refused, ValueError) as err:
+            return h._send(400, {"detail": str(err)})
+        except (OSError, Forbidden):
+            return h._send(503, {"detail": "the local member key or store is unavailable"})
+
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
+        if h.headers.get("X-Agent-Signature") is not None:
+            return self.agent_edit(h, method, path)
         rows_path = "/" + spec.rows
         if path in ("/session", "/session/break-glass"):  # the door in: anybody's, so its body is a token or a password
             if not self.read_body(h, SESSION_BODY):
@@ -4031,6 +4086,9 @@ class Mount:
                 # A connection of the reserve is for the door in and for monitoring, whichever subsystem's (`Bounds`).
                 if self.busy_unless(RESERVE_ROUTES, mnt.resolve(u.path)[1]):
                     return
+                if self.headers.get("X-Agent-Signature") is not None:
+                    con, path = mnt.resolve(u.path)
+                    return con.agent_edit(self, method, path)
                 if method in ("POST", "DELETE") and u.path.startswith("/servers/") and \
                         u.path.endswith("/decommission") and u.path.count("/") == 3:
                     user = mnt.admit(self, method)               # `admin`: every unit of a server moves
