@@ -11,7 +11,7 @@ So this is what a device has to be for the domain to treat it like any other mem
     its row         `cam/cameras/1`, made at its first boot by its own console, `ref` = its serial — the name
                     the domain knows it by. The cluster-local id stays an integer, as in every cluster
     its unit        pinned: the camera IS the unit. Nothing places it, so there is no controller, no slot, no
-                    assignment — the keys a placer would write are simply not there
+                    assignment for the pinned unit. When it contributes sources, its publisher owns a guarded slot
     its epoch       taken by the camera itself, once per boot, from its flash by CAS. It fences nothing — there
                     is no second instance to fence — but the archive path and the event buckets carry it, so
                     it must grow on every boot, a crash included
@@ -54,10 +54,15 @@ class Flash:
     def list(self, prefix):
         return self.inner.list(prefix)
 
-    def put(self, path, items, cas=None):
-        idx = self.inner.put(path, items, cas)
+    def put(self, path, items, cas=None, *, guard=None):
+        idx = self.inner.put(path, items, cas, guard=guard)
         self.writes += 1
         return idx
+
+    def delete(self, path, cas=None, *, guard=None):
+        index = self.inner.delete(path, cas, guard=guard)
+        self.writes += 1
+        return index
 
 
 class Ram:
@@ -164,6 +169,7 @@ class DeviceCluster:
         if self.flash.get(ROW)[0] is None:
             self._put_row({"id": 1, "ref": self.serial, "name": first_name or self.serial, "revision": 1}, cas=0)
         self.boots += 1
+        self.publisher = None
         self.publish()
         self.door_open = True
         return self.epoch
@@ -214,6 +220,25 @@ class DeviceCluster:
                 "cameras": [{**shown, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"cam/heartbeats/{self.serial}", json.dumps(hb).encode())
         self.ram.put(f"cam/snapshot/{self.serial}", json.dumps(snap).encode())
+        from vms.recording_publication import publish, sources
+        from w2cplatform.domain.placement import placed
+        assignment = placed(self.flash, "rec", self.serial)
+        if self.publisher is None:
+            if assignment is None:
+                return
+            from vms.config import SPEC
+            from w2cplatform.worker import Worker
+            self.publisher = Worker(SPEC.sub, None, self.flash, self.ram,
+                wall=self.wall, clock=self.wall, spec=SPEC)
+            self.publisher.SUB, self.publisher.server = SPEC.sub, self.serial
+            self.publisher.claim_slot(self.serial)
+        if not self.publisher.renew_slot():
+            self.publisher.writing_allowed = False
+        source_status = {**status, "live_url": hb["live_url"], "polls": True,
+                         **({"push": True} if self.pushes else {})}
+        publish(self.publisher, "sources", sources(self.publisher, [source_status]))
+
+
 
     def cluster(self, domain: bool = False) -> Cluster:
         """The domain's handle on this camera: its stores, through its door. `domain=True` is a camera that
