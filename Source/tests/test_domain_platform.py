@@ -473,7 +473,7 @@ def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_wi
             st, raw, _ = _call_raw(base, "GET", "/domain/at/gone/testsub/where/g1")
             assert st == 502 and json.loads(raw)["error"] == "gone's console did not answer", raw
             assert mnt.root.journal.lines == [("domain.forwarded", {"cluster": "gone", "path": "/domain/at/gone/testsub/where/g1",
-                                                                    "user": "operator", "status": 502})]
+                                                                    "user": "operator", "status": 502})], mnt.root.journal.lines
             # a real member's console: `/testsub/where/s1` is its root's `/where/s1` (дополнение п. 3); a hop onwards
             # from it is refused there
             with _Env("CLUSTERS", f"north,south={there_url}"):
