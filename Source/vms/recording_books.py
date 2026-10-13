@@ -6,6 +6,10 @@ supplies the primary's member from placement. Former flat books are refused.
 from __future__ import annotations
 from dataclasses import dataclass
 import json
+import math
+
+SOURCES_PATH = "domain/cam/sources"
+PRIMARIES_PATH = "domain/rec/primaries"
 
 
 class Unconfirmed(ValueError):
@@ -86,6 +90,7 @@ def source(items, ref: str) -> Observation:
     facts = read(items, ref)
     if facts.missing or len(facts.entries) != 1:
         raise Unconfirmed("source is absent, conflicting or incomplete")
+    source_value(facts.entries[0].value)
     return facts.entries[0]
 
 
@@ -110,6 +115,7 @@ def _primary(facts, member, role):
         raise Unconfirmed("recording has no identity")
     if any(type(value.get(field)) is not bool for field in ("enabled", "running")):
         raise Unconfirmed("recording state is invalid")
+    recording_value(value)
     return matches[0]
 
 
@@ -118,3 +124,53 @@ def copies(items, ref: str, assigned) -> tuple[Observation, ...]:
     facts = read(items, ref)
     return tuple(fact for member in sorted(set(assigned))
                  if (fact := _primary(facts, member, "backup")) is not None)
+
+
+def _fields(value, required, optional):
+    if not isinstance(value, dict) or not required <= value.keys() or value.keys() - required - optional:
+        raise Unconfirmed("invalid C2 fields")
+    if any(value[k] is None for k in value):
+        raise Unconfirmed("null C2 field")
+    _missing(value["to"])
+    if not value["to"] or not isinstance(value["ref"], str) or not value["ref"]:
+        raise Unconfirmed("invalid C2 subject or recipients")
+    for field in ("push", "polls"):
+        if field in value and value[field] is not True:
+            raise Unconfirmed("false optional C2 field must be absent")
+
+
+def _number(value):
+    return type(value) in (int, float) and math.isfinite(value)
+
+
+def source_value(value):
+    _fields(value, {"ref", "to", "live_url", "server", "as_of"}, {"codec", "push", "polls"})
+    if any(not isinstance(value[k], str) for k in ("live_url", "server")) or not _number(value["as_of"]):
+        raise Unconfirmed("invalid C2 source")
+    if "codec" in value and (not isinstance(value["codec"], str) or not value["codec"]):
+        raise Unconfirmed("invalid C2 codec")
+    return value
+
+
+def recording_value(value):
+    _fields(value, {"ref", "to", "recording", "role", "enabled", "running"},
+            {"coverage", "peer_url", "ingest", "ingest_cluster", "push"})
+    if not isinstance(value["recording"], str) or not value["recording"] \
+            or value["role"] not in ("primary", "backup", "card") \
+            or any(type(value[k]) is not bool for k in ("enabled", "running")):
+        raise Unconfirmed("invalid C2 recording")
+    if "coverage" in value:
+        cov = value["coverage"]
+        if not isinstance(cov, dict) or set(cov) != {"from", "to", "fragments"} \
+                or any(not _number(cov[k]) for k in ("from", "to")) or type(cov["fragments"]) is not int:
+            raise Unconfirmed("invalid C2 coverage")
+    if "peer_url" in value and (not isinstance(value["peer_url"], str) or not value["peer_url"]):
+        raise Unconfirmed("invalid C2 peer address")
+    if "ingest" in value and (not isinstance(value["ingest"], list) or not value["ingest"]
+                             or any(not isinstance(u, str) or not u for u in value["ingest"])):
+        raise Unconfirmed("invalid C2 ingest addresses")
+    if "ingest_cluster" in value and (not isinstance(value["ingest_cluster"], str) or not value["ingest_cluster"] or "ingest" not in value):
+        raise Unconfirmed("invalid C3b ingest member")
+    if value.get("push") and "ingest" not in value:
+        raise Unconfirmed("C2 push requires ingest addresses")
+    return value
