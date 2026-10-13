@@ -67,8 +67,7 @@ class RecordingDomain:
             vars_.put("domain/member", {"cluster": name})
             client = CarryClient(self.door, name, key, self.wall)
             _doors[vars_] = SimpleNamespace(request=lambda kind, ref, c=client:
-                c.request_token("rec" if kind == "upstream" else "cam", kind, ref,
-                    "recworker" if kind == "upstream" else "camworker"))
+                c.request_token("cam", kind, ref, "camworker"))
         self.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": roster})})
         if inputs.centre and self.vars.get("domain/topology")[0] is None:
             self.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": inputs.centre,
@@ -96,8 +95,7 @@ class RecordingDomain:
         self.vars.put("domain/members", {"doc": json.dumps(roster)})
         client = CarryClient(self.door, agent.cluster, key, self.wall)
         _doors[agent.cluster_vars] = SimpleNamespace(request=lambda kind, ref:
-            client.request_token("rec" if kind == "upstream" else "cam", kind, ref,
-                "recworker" if kind == "upstream" else "camworker"))
+            client.request_token("cam", kind, ref, "camworker"))
         if device is not None:
             self.devices.append(device)
 
@@ -156,7 +154,7 @@ class RecordingDomain:
             self.report_at[name] = sent
             report(name, self.stores[name], cluster.objects, self.objects, sent, key=self.keys[name])
         got = {}
-        for spec, book in ((SPEC, "sources"), (REC_SPEC, "primaries"), (REC_SPEC, "upstream")):
+        for spec, book in ((SPEC, "sources"), (REC_SPEC, "primaries")):
             got[book] = bookruntime.collect(self.holder, spec, book)
         for agent in self.agents:
             try:
