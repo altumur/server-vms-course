@@ -1805,6 +1805,15 @@ def stream_metrics(fed) -> list[str]:
 class CameraPusher:
     sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
 
+    @property
+    def card(self):
+        owner = getattr(self, "_card_owner", None)
+        return owner.card if owner is not None else self._card_reader
+
+    @card.setter
+    def card(self, reader):
+        self._card_reader = reader
+
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
                  hold_seconds: float = 30.0, recording: str | None = None, ring=None, steady=None,
                  token_requests=None, role="camworker", env=None):
@@ -2284,14 +2293,15 @@ class CameraPusher:
                     "backfill asks the card for them later", self.serial, e, upto - after)
 
     def _read_card(self, recording, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
-        if self.card is None:
+        card = self.card
+        if card is None:
             raise OSError("this camera has no card")
         if self.foreign_before is not None and t0 < self.foreign_before:
             if t1 <= self.foreign_before:
                 raise OSError("the card was written by another camera before this one began: its footage of that time "
                               "is not this camera's")
             t0 = self.foreign_before                                   # only what this camera wrote on it
-        pieces = self.card(recording, t0, t1, max_bytes)
+        pieces = card(recording, t0, t1, max_bytes)
         spans = [(lo, hi) for lo, hi in self.frames.unplaced() if lo <= t1 and hi > t0]
         return self._placed(pieces, spans) if spans else pieces
 
