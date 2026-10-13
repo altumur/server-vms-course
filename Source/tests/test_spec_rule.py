@@ -91,11 +91,7 @@ IMPLEMENTED = {
 # A key a decision brought to the loader before a spec says it — the spec bytes are «Паритет»'s since the lessons'
 # signal —, each with what goes in and where. The debt only shrinks: a key here that a spec now uses fails as a key
 # unused does, and the line goes.
-WAITING: dict[str, str] = {
-    f"domain.books.*.{key}": "ADR-0074 «курс»: testsub book declarations follow guarded publication and report snapshots; "
-                           "test_book_merge exercises the accepted form in memory first"
-    for key in ("from", "key", "pick", "to")
-}
+WAITING: dict[str, str] = {}
 
 
 def _paths(d, at: str = "") -> set[str]:
