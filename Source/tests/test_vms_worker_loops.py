@@ -254,11 +254,11 @@ def _holders(box):
     """The three proved here by the fence and `rejoin` (`lease_pass`): the holder, the recorder, and the camera's own
     recorder, which inherits the recorder's."""
     import tempfile
-    from tests.vmsconftest import REC_ACL, recorder
+    from tests.vmsconftest import rec_acl, recorder
     from vms.card import CamRing, CardActuator, CardRecorder
     ring = CamRing(clock=box.wall)
     return [_holder(box), recorder(box, "r-1", "srv-1"),
-            CardRecorder("r-9", box.vars.as_writer("recworker-r-9", REC_ACL), box.objects, ring,
+            CardRecorder("r-9", box.vars.as_writer("recworker-r-9", rec_acl()), box.objects, ring,
                          CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="cam-9",
                          resource_root=tempfile.mkdtemp(prefix="cam-"), env={})]
 
