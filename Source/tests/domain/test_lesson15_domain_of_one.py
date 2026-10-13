@@ -358,7 +358,7 @@ def test_a_write_that_slips_past_the_freeze_is_reported_not_trusted_away():
 
 
 # -- feedback AS ------------------------------------------------------------------------------------------------
-def test_a_move_keeps_the_topology_the_members_and_the_roads():
+def test_a_move_keeps_topology_members_and_recording_assignments():
     """The first backup stopped at Lesson 14. A move then lost every chain through a relay (the topology of
     Lesson 17), every road a recorder had said it could not pull (Lesson 16 — a push became a pull again), and the
     list of members — which, if nobody had ever written it, was the configuration of the old holder's processes and
@@ -367,15 +367,16 @@ def test_a_move_keeps_the_topology_the_members_and_the_roads():
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     topology = {"doc": json.dumps({"rev": 1, "centre": None, "star": [], "via": {"cam-SN3": "cam-SN2"}})}
-    roads = {"SN3": json.dumps({"road": "push", "why": "the recorder could not open its stream"})}
+    assignment = {"cluster": "cam-SN2", "origin": "cam-SN3", "copies": "[]",
+                  "reason": "operator", "at": str(wall()), "rev": "1"}
     holder.vars.put("domain/topology", topology)
-    holder.vars.put("domain/cam/roads", roads)
+    holder.vars.put("domain/placement/rec/SN3", assignment)
     assert holder.vars.get("domain/members")[0] is None                   # never written: configuration only
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     assert Members(holder.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the backup wrote it first
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
-    assert new.vars.get("domain/topology")[0] == topology and new.vars.get("domain/cam/roads")[0] == roads
+    assert new.vars.get("domain/topology")[0] == topology and new.vars.get("domain/placement/rec/SN3")[0] == assignment
     assert Members(new.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the old holder: a member now
 
 
