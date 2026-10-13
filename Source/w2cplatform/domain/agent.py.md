@@ -25,3 +25,14 @@ Lesson 15 — FOLLOWING THE HOLDER («Архитектор» 2026-10-06): a move
 - `local_networks()` — `REACHES`, else this host's IPv4 networks, not tunnels or host routes.
 - `main()` — the process (`w2c-run.sh domainagent`): `CLUSTER`, its store by its role's socket (`domainagent`), its member key and ring (`SECRETS_KEY`); what it carries through the domain's door (`DOMAIN_URL`, signed by the member key) or its relay's (`RELAY_URL`, `RELAY_OBJECTS_URL`) — only the holder's own agent reads its store (`DOMAIN_CONFIG_URL`, with `DOMAIN_OBJECTS_URL` for its report); with `DOMAIN_URL` the report and a relay's summary go through that door; with consoles in `CLUSTERS` (`runtime.consoles_from_env`) and no `RELAY_URL` it follows the holder — the holder's own agent too (`DOMAIN_CONFIG_URL`: the holder is a member first, and the signed record its agent carries home is what `term.DomainHolder.check` yields to; «Архитектор» 2026-10-11, ADR-0066, the office–centre scenario's N12) — the record's `url` (the signer's) is the door from then on, and the report goes through it (`open_door`'s objects, None: through the door); this cluster's objects by the platform's `OBJECTS`; `REPORT=1` for a member the domain never reaches, `RELAY=1`/`RELAY_MEMBERS` for a relay; object stores opened by `runtime.open_objects`.
 - `run(agent, interval, stop)` — the loop: the next pass set before the pass, a pass that raises said once.
+
+## C2 explicit edits (ADR-0074, addition 7)
+
+The agent takes explicit method/path/body/key, signs the original path and body,
+and uses the same Idempotency-Key at its own member console. There is no current(ref)
+hook, carried human subject or per-field merge. Outcomes bind to Edit.at through
+mandatory kept_at. The local runtime console address comes from this member's
+CLUSTERS entry, or its local loopback console; CONSOLE_URL remains the holder
+console advertised by the signer. The holder's agent reads pending/<self>
+directly, writes outcomes/<self>, and needs no report/copy to itself. The holder's
+pass settles that Outcome under its own queue rights.
