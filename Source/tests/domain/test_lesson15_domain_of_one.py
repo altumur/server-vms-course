@@ -10,6 +10,7 @@ of the domain's state that other members keep — and it needs a term, so that a
 being replaced steps down instead of splitting the site in two.
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
 
@@ -20,7 +21,7 @@ from w2cplatform.domain.api import ApiError, ConsoleAPI
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.grants import Grant
-from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.pending import PendingEdits, edit_id
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.domain.shared import sign
 from w2cplatform.trust.signer import Signer
@@ -57,7 +58,7 @@ def _site(wall, n=4):
 
 def _agent(fed, devices, name, holder, wall):
     d = devices[name]
-    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=d.local_console(), current=d.current,
+    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=device_console(d),
                        domain_objects=devices[holder].disk_door(), cluster_objects=d.disk, published=d.local_objects())
 
 
@@ -81,9 +82,10 @@ def _keep_an_edit_for(fed, devices, camera, holder_vars, wall, holder="cam-SN0")
     view.refresh()
     devices[f"cam-{camera}"].power_off()
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(dom, wall=wall), _no_door, verifier=lambda t: t,
+    api = ConsoleAPI(DomainDirectory(dom, wall=wall), verifier=lambda t: t,
                      pending=PendingEdits(holder_vars, wall), last_known=view.last_known)
-    return api.update_unit(camera, {"name": f"{camera}-renamed"}, idempotency_key=f"k-{camera}", token="anna")
+    admit_fixtures(holder_vars, dom.clusters)
+    return api.update_unit(camera, {"enabled": False}, idempotency_key=f"k-{camera}", token="anna", sub="cam")
 
 
 def _grant(holder_vars, who, wall):
@@ -109,14 +111,14 @@ def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     edit lands."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
-    assert _keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["pending"]
+    assert _keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)["kept"]
     assert holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door()) == 1
     report_sync(agents["cam-SN1"]); report_sync(agents["cam-SN2"])
     devices["cam-SN0"].power_off()                       # for good: flash worn out
 
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     assert (report["term"], report["rev"]) == (2, 1) and report["restored_from"] in ("cam-SN1", "cam-SN2")
-    assert "SN3" in PendingEdits(new.vars, wall).of("cam-SN3")
+    assert edit_id("cam-SN3", "k-SN3") in PendingEdits(new.vars, wall).of("cam-SN3")
     assert fed.domain_holder.name == "cam-SN1"
 
     d3 = devices["cam-SN3"]
@@ -124,7 +126,7 @@ def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     keys = signer.tokens.keyset()
     assert find_holder(fed, d3.flash, keys, wall()) == "cam-SN1"
     report_sync(_agent(fed, devices, "cam-SN3", "cam-SN1", wall))
-    assert d3.row()["name"] == "SN3-renamed"
+    assert d3.row()["enabled"] is False
 
 
 def test_the_week_of_alarms_leaves_the_holder_with_its_backup():
@@ -186,8 +188,8 @@ def test_an_old_holder_that_comes_back_steps_down_and_lists_what_it_alone_holds(
     except Deposed as e:
         assert "cam-SN1" in str(e) and "term 2" in str(e)
     left = stranded(fed.clusters["cam-SN0"].vars, report["state"], signer=signer)
-    assert [(p, k) for p, k, _ in left] == [("domain/pending/cam-SN2", "SN2")]
-    assert json.loads(left[0][2])["fields"]["name"]["new"] == "SN2-renamed"
+    assert [(p, k) for p, k, _ in left] == [("domain/pending/cam-SN2", edit_id("cam-SN2", "k-SN2"))]
+    assert json.loads(left[0][2])["body"] == {"enabled": False}
 
 
 def test_a_holder_that_comes_back_yields_on_its_own_agents_first_pass_by_the_signed_record_of_the_larger_term():
@@ -301,12 +303,12 @@ def test_a_planned_handover_strands_nothing():
     view.refresh()
     devices["cam-SN2"].power_off()
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(dom, wall=wall), _no_door, verifier=lambda t: t,
+    api = ConsoleAPI(DomainDirectory(dom, wall=wall), verifier=lambda t: t,
                      pending=GuardedPending(PendingEdits(holder.vars, wall), holder), last_known=view.last_known)
 
     def carry_to():
         try:                                             # the moment an operator edits during the handover
-            api.update_unit("SN2", {"name": "late"}, idempotency_key="k-late", token="anna")
+            api.update_unit("SN2", {"enabled": False}, idempotency_key="k-late", token="anna", sub="cam")
             raise AssertionError("a frozen holder must refuse the edit")
         except ApiError as e:
             assert e.status == 503 and "handing the domain over to cam-SN1" in e.detail
@@ -315,7 +317,7 @@ def test_a_planned_handover_strands_nothing():
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["planned"] and report["stranded"] == [] and report["term"] == 2
     assert report["sentence"].endswith("nothing stranded")
-    assert "SN3" in PendingEdits(new.vars, wall).of("cam-SN3")
+    assert edit_id("cam-SN3", "k-SN3") in PendingEdits(new.vars, wall).of("cam-SN3")
     assert holder.deposed_by["holder"] == "cam-SN1" and fed.domain_holder.name == "cam-SN1"
 
 
@@ -349,11 +351,11 @@ def test_a_write_that_slips_past_the_freeze_is_reported_not_trusted_away():
     fed, devices, signer, offline, holder, agents = _site(wall)
 
     def carry_to():
-        PendingEdits(holder.vars, wall).add("cam-SN2", "SN2", {"name": "sneaked"}, {"name": "SN2"}, "anna")   # no guard
+        PendingEdits(holder.vars, wall).add("cam-SN2", "PUT", "/cam/cameras/1", {"enabled": False}, "k-SN2")   # no guard
         report_sync(agents["cam-SN1"])
 
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
-    assert [(p, k) for p, k, _ in report["stranded"]] == [("domain/pending/cam-SN2", "SN2")]
+    assert [(p, k) for p, k, _ in report["stranded"]] == [("domain/pending/cam-SN2", edit_id("cam-SN2", "k-SN2"))]
     assert "1 item(s) stranded" in report["sentence"]
 
 
@@ -388,15 +390,16 @@ def test_a_report_that_closes_an_edit_during_a_handover_is_not_stranded():
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     _keep_an_edit_for(fed, devices, "SN3", holder.vars, wall)
-    rev = PendingEdits(holder.vars, wall).of("cam-SN3")["SN3"]["rev"]
+    identity = edit_id("cam-SN3", "k-SN3")
+    entry = PendingEdits(holder.vars, wall).of("cam-SN3")[identity]
 
     def carry_to():
-        PendingEdits(holder.vars, wall).reconcile("cam-SN3", {"SN3": {"rev": rev, "conflicts": {"name": {"current": "x"}}}})
+        PendingEdits(holder.vars, wall).reconcile("cam-SN3", {identity: {"id": identity, "status": 409, "result": {}, "error": "conflict", "at": wall(), "what": entry["what"], "kept_at": entry["at"]}})
         report_sync(agents["cam-SN1"])
 
     new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["stranded"] == [] and report["sentence"].endswith("nothing stranded")
-    assert PendingEdits(new.vars, wall).of("cam-SN3")["SN3"]["rev"] == rev
+    assert PendingEdits(new.vars, wall).of("cam-SN3")[identity] == entry
 
 
 def test_an_old_holder_that_learns_of_two_moves_from_its_own_agent_starts_deposed_and_keeps_its_list():
@@ -427,9 +430,9 @@ def test_an_old_holder_that_learns_of_two_moves_from_its_own_agent_starts_depose
     assert old.start() is False
     assert old.deposed_by["term"] == 3 and read_holder(devices["cam-SN0"].flash, signer.tokens.keyset(), wall())["term"] == 3
     kept = old.stranded_items()
-    assert kept["base"] == "its own last backup, rev 1" and [(p, k) for p, k, _ in kept["items"]] == [("domain/pending/cam-SN2", "SN2")]
+    assert kept["base"] == "its own last backup, rev 1" and [(p, k) for p, k, _ in kept["items"]] == [("domain/pending/cam-SN2", edit_id("cam-SN2", "k-SN2"))]
 
-    PendingEdits(old.vars, wall).add("cam-SN3", "SN3", {"name": "later"}, {"name": "SN3"}, "anna")   # a write past it
+    PendingEdits(old.vars, wall).add("cam-SN3", "PUT", "/cam/cameras/1", {"enabled": False}, "later")   # a write past it
     old.check()
     assert old.stranded_items() == kept                                  # decided once, not re-decided
 
