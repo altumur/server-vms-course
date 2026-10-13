@@ -155,7 +155,7 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     r = rights()
     assert r.groups["domain"] == "w2c-domain"
     for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "domain/users/u1"),
-                        ("read", "identity/pointer"), ("write", "domain/cam/crossings"), ("read", "cam/cameras/7"),
+                        ("read", "identity/pointer"), ("write", "domain/placement/rec/ref"), ("read", "cam/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
     for role in ("domainagent", "domainconsole", "camdomain", "console", "camworker"):
@@ -179,14 +179,14 @@ def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
     r = rights()
     assert r.groups["domainconsole"] == "w2c-domainconsole"
     for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/shared", "domain/keepers/north",
-                "domain/view", "domain/cam/crossings"):
+                "domain/view"):
         assert not r.allows("domainconsole", "write", key), key
     for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/break-glass/north",
                 "domain/member-key", "domain/backup", "domain/backup-taken"):
         assert not r.allows("domainconsole", "read", key), key
-    for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north"):
+    for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north", "domain/placement/rec/ref"):
         assert r.allows("domainconsole", "write", key), key
-    for key in ("domain/keys", "domain/shared", "domain/cam/crossings", "cam/cameras/7", "domain/keepers/north"):
+    for key in ("domain/keys", "domain/shared", "domain/placement/rec/ref", "cam/cameras/7", "domain/keepers/north"):
         assert r.allows("domainconsole", "read", key), key
     assert not r.allows("domainconsole", "delete", "domain/members")          # the store's rule: the domain's roles alone
 
@@ -414,7 +414,9 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables
     granted = {p for p in doc()["roles"]["camworker"]["read"] if p.startswith("domain")}
-    assert granted == {TRUST_KEYS, MEMBER_MARK}, sorted(granted)
+    assert granted == {TRUST_KEYS, MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
+                       "domain/cam/sources/*", "domain/rec/primaries/*", "domain/holder",
+                       "domain/placed/rec/*", "domain/placement/rec/*"}, sorted(granted)
     root = tempfile.mkdtemp()
     vars_, read = FileVariables(f"{root}/vars"), []
     real = vars_.get
@@ -496,8 +498,8 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     fw.book()
     fw.asks_book()
     should_from_snapshot(objects, sources=AsRecorder())("SN-A")
-    books = {p for p in read if p.startswith("domain/cam/")}
-    assert books == {"domain/cam/upstream", "domain/cam/asks", "domain/cam/sources"}, sorted(books)
+    books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/"))}
+    assert books == {"domain/rec/upstream", "domain/cam/asks", "domain/cam/sources"}, sorted(books)
     assert set(REC_SPEC.worker_reads) >= books, REC_SPEC.worker_reads
 
 
