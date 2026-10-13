@@ -264,22 +264,6 @@ class Console:
             raise ApiError(409, str(e)) from None
         return {"cluster": cluster, "lines": len(grants)}
 
-    def keep_again(self, member: str, body: dict, by: str | None) -> dict:
-        """`POST /domain/pending/<member> {ref, fields: {<field>: {old?, new}}}`: an edit an old holder held and the
-        new term did not have, kept again here by a person (Lesson 15) — an ordinary kept edit from now on."""
-        if self.pending is None:
-            raise ApiError(404, "this domain keeps no edits for members that are off")
-        ref, fields = body.get("ref"), body.get("fields")
-        if not isinstance(ref, str) or not ref or not isinstance(fields, dict) or not fields or \
-                not all(isinstance(v, dict) and "new" in v for v in fields.values()):
-            raise ApiError(400, "an edit kept again: {ref, fields: {<field>: {old, new}}}")
-        self.api._refuse_secrets({f: v["new"] for f, v in fields.items()})
-        e = self.pending.add(member, ref, {f: v["new"] for f, v in fields.items()},
-                             {f: v.get("old") for f, v in fields.items()}, by)
-        if self.journal is not None:
-            self.journal.say("domain.pending.kept", user=by or "?", target=f"{member}/{ref}", fields=",".join(sorted(fields)))
-        return {"pending": True, "cluster": member, "ref": ref, "rev": e["rev"]}
-
     # What the signer says of the holder (`/api/holder`), asked by this process as a process. The console refuses
     # early with it; the signer checks again in each of its operations (ADR-0032).
     def ask_signer(self, method: str, route: str, body: bytes | None = None, token: str | None = None,
@@ -357,10 +341,23 @@ class Console:
             entry = json.loads(item["value"])
         except (TypeError, ValueError):
             return 400, {"detail": f"{item['path']}#{item['key']} does not read as a kept edit"}
+        from .pending import validate_edit
+        try:
+            validate_edit(entry)
+        except (TypeError, ValueError, KeyError):
+            return 400, {"detail": "the stranded item is not an explicit member CRUD Edit"}
         member = str(item["path"])[len(PENDING_PATH) + 1:]
-        headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {token}"} if token else {})}
-        req = urllib.request.Request(f"{there.rstrip('/')}/domain/pending/{member}", method="POST", headers=headers,
-                                     data=json.dumps({"ref": item["key"], "fields": entry.get("fields") or {}}).encode())
+        from urllib.parse import urlencode
+        fields = dict(entry["body"])
+        route = "/domain" + entry["path"]
+        if entry["method"] == "POST":
+            fields["cluster"] = member
+        else:
+            route += "?" + urlencode({"cluster": member})
+        headers = {"Content-Type": "application/json", "Idempotency-Key": entry["key"],
+                   **({"Authorization": f"Bearer {token}"} if token else {})}
+        req = urllib.request.Request(there.rstrip("/") + route, method=entry["method"], headers=headers,
+                                     data=json.dumps(fields).encode())
         try:
             with urllib.request.urlopen(req, timeout=5.0) as r:
                 return r.status, json.loads(r.read() or b"{}")
@@ -566,8 +563,41 @@ class Console:
             def do_PUT(self):
                 self._answered(self._do_PUT)
 
+            def _queued(self, method, u):
+                parts = u.path.split("/")
+                if len(parts) not in (4, 5) or parts[:2] != ["", "domain"]:
+                    return False
+                spec = declared.spec(parts[2])
+                if spec is None or not spec.rows or parts[3] != spec.rows:
+                    return False
+                if (method == "POST") != (len(parts) == 4):
+                    self._send(404, {"detail": "no such unit route"}); return True
+                try:
+                    if self._steered():
+                        return True
+                    self._admin("domain unit operations are")
+                    if self._early():
+                        return True
+                    key = self.headers.get("Idempotency-Key")
+                    if not key:
+                        raise ApiError(400, "Idempotency-Key header is required")
+                    body = self._body()
+                    if body is None:
+                        return True
+                    cluster = body.pop("cluster", None) if method == "POST" else parse_qs(u.query).get("cluster", [None])[0]
+                    unit = parts[4] if len(parts) == 5 else None
+                    if not cluster and unit is not None:
+                        cluster, unit = console.api.resolve_unit(spec.name, unit)
+                    resp = console.api.queue(method, spec.name, spec.rows, unit, body, key, cluster, self._token())
+                    self._send(202, resp)
+                except ApiError as err:
+                    self._send(err.status, {"detail": err.detail})
+                return True
+
             def _do_PUT(self):
                 u = urlsplit(self.path)
+                if self._queued("PUT", u):
+                    return
                 if self._steered():
                     return
                 route = console.signer_route(u.path, "PUT")
@@ -630,6 +660,8 @@ class Console:
 
             def _do_POST(self):
                 u = urlsplit(self.path)
+                if self._queued("POST", u):
+                    return
                 if u.path in ("/session", "/session/break-glass"):
                     return self._session("POST")
                 if self._steered():
@@ -645,14 +677,6 @@ class Console:
                         body = self._body()
                         if body is not None:
                             self._send(*console.stranded_apply(body, self._token()))
-                        return
-                    if u.path.startswith("/domain/pending/") and len(u.path) > len("/domain/pending/"):
-                        subject = self._admin("kept edits are")
-                        if self._early():
-                            return
-                        body = self._body()
-                        if body is not None:
-                            self._send(202, console.keep_again(u.path[len("/domain/pending/"):], body, subject))
                         return
                     if not (u.path == "/domain/members" and console.members is not None):
                         return self._send(404, {"detail": "no such route"})
@@ -676,6 +700,8 @@ class Console:
 
             def _do_DELETE(self):
                 u = urlsplit(self.path)
+                if self._queued("DELETE", u):
+                    return
                 if u.path == "/session":
                     return self._session("DELETE")
                 if self._steered():
@@ -910,7 +936,7 @@ def main() -> None:
     auth = os.environ.get("AUTH", "1") == "1"
     from .pending import PendingEdits
     pending = PendingEdits(fed.domain_holder.vars)
-    api = ConsoleAPI(directory, consoles, verifier=(lambda t: person(t)["sub"]) if auth else None,
+    api = ConsoleAPI(directory, verifier=(lambda t: person(t)["sub"]) if auth else None,
                      pending=pending, last_known=view.last_known)
     from .topology import Topology
 
