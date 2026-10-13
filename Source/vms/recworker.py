@@ -410,7 +410,6 @@ class RecWorker(VmsWorker):
                  window: tuple[int, int] | None = None, keep_days: float = 30.0, settle: float = 900.0,
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
-        self._token_requests_env = env
         events_root = runtime.events_root(env, resource_root)    # the platform's events archive (WP-E): /data/platform/events
         instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`Worker.hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
@@ -1227,7 +1226,6 @@ class RecWorker(VmsWorker):
         status = self.status()
         self.heartbeat(status, **{**self.platform_fields(), **self.heartbeat_fields()})
         publish_facts(self, "primaries", status)
-        publish_facts(self, "upstream", status)
 
     # What this recorder adds to the heartbeat.
     def heartbeat_extra(self) -> dict:
@@ -1362,7 +1360,6 @@ class RecWorker(VmsWorker):
         from w2cplatform.domain.agent import ClusterTrust
         from w2cplatform.domain.federation import Unreachable
         from vms.domainpart.chain import Forwarder
-        from w2cplatform.domain.tokenrequest import WorkerTokenDoor
         from vms.domainpart.ingest import (Ingest, heartbeat_peers, keep_clocks, should_from_snapshot,
                                            written_from_heartbeats)
         url = url or (self.archive_url + "/ingest" if self.archive_url else "")
@@ -1384,7 +1381,6 @@ class RecWorker(VmsWorker):
             self.actuator = IngestRecordings(self.actuator, self)
         self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
                                    objects=self.objects)
-        self.forwarder.tokens.door = WorkerTokenDoor.from_env("recworker", self._token_requests_env)
         return ing
 
     def ingest_fields(self) -> dict:
