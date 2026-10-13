@@ -3234,7 +3234,7 @@ class SpecConsole:
             if not key:
                 return h._send(400, {"detail": "Idempotency-Key header is required"})
             body = object_body(h)
-            checks = ConsoleAPI(None, None)
+            checks = ConsoleAPI(None)
             checks._refuse_placement(body)
             checks._refuse_secrets(body)
             if method == "PUT":
