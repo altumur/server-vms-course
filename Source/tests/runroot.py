@@ -87,7 +87,19 @@ def leave(root: str | None = None) -> None:
 
 
 def _exit_on_term(signum, frame):              # noqa: ARG001 — SIGTERM's default ends the process without `atexit`
-    sys.exit(128 + signum)
+    # A weakref callback can swallow SystemExit. Run CPython's exit callbacks
+    # in their usual reverse order (daemons before leave), then end unconditionally.
+    signal.signal(signum, signal.SIG_IGN)       # another SIGTERM must not re-enter cleanup
+    try:
+        atexit._run_exitfuncs()
+        for stream in (sys.stdout, sys.stderr):
+            if stream is not None:
+                try:
+                    stream.flush()
+                except (OSError, ValueError):
+                    pass
+    finally:
+        os._exit(128 + signum)
 
 
 def enter() -> str:
