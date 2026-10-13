@@ -91,4 +91,3 @@ def test_agent_signature_opens_only_unit_crud_and_preserves_subsystem_prefix_and
             assert send(url, "PUT", path+"/badge", b'{"step":4}', "undeclared", e.key, e.wall)[0] == 400
         old = Clock(); old.t -= 61
         assert send(url, "POST", "/testsub/counters", b'{"name":"old"}', "old", e.key, old)[0] == 403
-
