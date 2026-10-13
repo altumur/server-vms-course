@@ -3,3 +3,4 @@
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
 cam:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
+rec:domain.tokens.upstream.placement.target_fields   # ADR-0074 «курс»: имя centre в закрытом наборе target_fields (форма C3, поправка к доп. 5) положено продуктом первым, курс несёт ключ своим шагом upstream — команда курса
