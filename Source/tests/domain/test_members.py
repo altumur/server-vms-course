@@ -126,7 +126,7 @@ def test_a_leave_from_the_domain_console_admins_only():
     fed, north, signer, members = _domain(wall)
     members.add("cam-SN9004", "approved by anna", serial="SN9004")
     view = ReadView(fed, wall=lambda: 1000.0)
-    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), verifier=lambda t: t),
                   refresh_interval=0.05, members=members, admin=lambda s: s == "anna")
     srv = con.serve(port=0)
     base = f"http://127.0.0.1:{srv.server_address[1]}/domain/members"
@@ -191,7 +191,7 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
     assert apply(fed, members, north.objects, wall=wall)["joined"] == ["cam-SN9001"] and "cam-SN9007" not in fed.clusters
 
     view = ReadView(fed, wall=lambda: 1000.0)
-    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), verifier=lambda t: t),
                   refresh_interval=60, members=members, admin=lambda s: s == "anna", holder_objects=north.objects)
     srv = con.serve(port=0)
     base = f"http://127.0.0.1:{srv.server_address[1]}/domain/members"
