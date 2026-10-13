@@ -421,6 +421,60 @@ def test_no_readable_saved_outcome_uses_only_the_domains_own_seconds():
             e.vars.put("domain/pending/north", {})
 
 
+def test_domain_backup_restore_keeps_completed_outcomes_and_distinct_markers_after_a_move():
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.carry import open_row
+    from w2cplatform.domain.federation import Cluster, Federation
+    from w2cplatform.domain.pending import _load
+    from w2cplatform.domain.term import BACKUP_TAKEN, DomainHolder, move_domain
+    from w2cplatform.trust.signer import Signer
+    for change in (0, -600):
+        with site() as e, console(e) as url, tempfile.TemporaryDirectory() as folder:
+            objects = {name: FsObjectStore(folder + "/" + name) for name in ("north", "south")}
+            south = FakeVariables()
+            south_key = MemberKey.load_or_make(south)
+            fed = Federation()
+            fed.add(Cluster("north", e.vars, objects["north"], is_domain_holder=True))
+            fed.add(Cluster("south", south, objects["south"]))
+            signer = Signer("queue-move", e.vars, now=e.wall)
+            DomainPublisher(e.vars).publish_keys(signer.tokens.keyset())
+            holder = DomainHolder(fed, "north", signer, 1, wall=e.wall, objects=objects["north"])
+            holder.claim()
+            first = e.pending.add("north", "POST", "/testsub/counters", {"name": "one"}, "moved-key")
+            own_console = AgentConsole(url, e.key, e.wall)
+            outcome = apply_pending({first["id"]: first}, own_console, e.wall())
+            assert outcome[first["id"]]["status"] == 201
+            outcome[first["id"]]["result"]["password_secret"] = "private"
+            e.pending.reconcile("north", outcome)
+            outcome_path = "domain/outcomes/north"
+            stored = e.vars.get(outcome_path)[0]
+            old = _load(stored, outcome_path)
+            assert "private" not in json.dumps(stored) and old[first["id"]]["result"]["password_secret"] == "***"
+            exported = holder.export()
+            holder.backup(["south"], objects["north"])
+            keeper = DomainAgent("south", e.vars, south, now=e.wall, domain_objects=objects["north"],
+                                 cluster_objects=objects["south"], key=south_key)
+            assert keeper.sync() and south.get(BACKUP_TAKEN)[0] is not None
+            moved, _ = move_domain(fed, "south", signer.backup(), "queue-move", objects.__getitem__, wall=e.wall)
+            assert moved.term == 2 and moved.restored_from == {"term": 1, "rev": 1}
+            restored_outcomes = south.get(outcome_path)[0]
+            e.wall.t += change
+            pending = PendingEdits(south, e.wall)
+            second = pending.add("north", "POST", first["path"], {"name": "two"}, first["key"])
+            pending.reconcile("north", old)
+            assert second["id"] in pending.of("north"), "the new holder settled a new edit with the old member outcome"
+            assert second["at"] > first["at"]
+            fresh = apply_pending({second["id"]: second}, own_console, e.wall(), old)
+            assert fresh[second["id"]]["status"] == 422 and fresh[second["id"]]["kept_at"] == second["at"]
+            pending.reconcile("north", fresh)
+            assert pending.of("north") == {} and e.vars.get("testsub/counters/two")[0] is None
+            assert open_row(signer.backup_sealer(), exported[outcome_path], outcome_path) == stored
+            assert restored_outcomes == stored
+            backup = json.loads(objects["south"].get(BACKUP_TAKEN))
+            assert open_row(signer.backup_sealer(), backup["state"][outcome_path], outcome_path) == stored
+            assert "private" not in json.dumps(backup["state"][outcome_path])
+
+
 def test_a_marker_that_cannot_grow_to_another_finite_number_is_not_persisted():
     import sys
     with site() as e:
@@ -435,6 +489,19 @@ def test_a_marker_that_cannot_grow_to_another_finite_number_is_not_persisted():
         else:
             raise AssertionError("a non-finite Edit.at must not be stored")
         assert e.pending.of("north") == {}
+
+
+def test_a_reused_key_with_a_new_operation_after_the_backup_is_stranded_exactly():
+    from w2cplatform.domain.term import exported, stranded
+    with site() as e:
+        first = e.pending.add("north", "POST", "/testsub/counters", {"name": "one"}, "same-key-after-backup")
+        snapshot = {path: e.vars.get(path)[0] for prefix in exported() for path in e.vars.list(prefix)}
+        outcome = apply_pending({first["id"]: first}, SimpleNamespace(apply=lambda _: (201, {"name": "one"})), e.wall())
+        e.pending.reconcile("north", outcome)
+        second = e.pending.add("north", "POST", first["path"], {"name": "two"}, first["key"])
+        assert second["id"] == first["id"] and second["body"] != first["body"] and second["at"] != first["at"]
+        assert stranded(e.vars, snapshot) == [["domain/pending/north", second["id"],
+                                               json.dumps(second, ensure_ascii=False, sort_keys=True)]]
 
 
 def test_a_stranded_edit_is_resubmitted_as_the_original_crud_with_the_same_key():
