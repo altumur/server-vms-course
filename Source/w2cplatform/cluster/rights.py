@@ -147,12 +147,21 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # 2026-10-07; the product's worker reads `*` less its denials, the same behaviour). And the floor under every
         # epoch (`platform/epoch_floor`, ADR-0070): it takes its units' epochs above it (`epoch.next_epoch`)
         rows = _worker_objects(s)
+        from w2cplatform.domain.placement import PREFIX, COPIES_PREFIX
+        assignment_reads = [PREFIX + r[len(COPIES_PREFIX):] for r in s.worker_reads if r.startswith(COPIES_PREFIX)]
+        collected = {spec.domain_prefix + b for spec in specs if spec.domain for b in spec.domain.merged}
+        member_results = [r + "/*" for r in s.worker_reads if r in collected]
+        member_results += [s.domain_prefix + b + "/*" for b in s.domain.merged] if s.domain else []
+        member_reads = ["domain/holder"] if any(r.startswith("domain/") for r in s.worker_reads) or s.domain and s.domain.merged else []
+        if "domain/member-topology" in s.worker_reads:
+            member_reads.append("domain/topology")
         grants = [f"{GRANTS_PREFIX}*"] if s.door_routes else []
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, EPOCH_FLOOR_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
                                        DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY,
-                                       *[r + "*" if r.endswith("/") else r for r in s.worker_reads],
+                                       *[r + "*" if r.endswith("/") else r for r in (*s.worker_reads, *assignment_reads, *member_reads, *member_results)],
+                                       *([s.domain_prefix + b for b in s.domain.merged] if s.domain else []),
                                        *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to, *grants])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
