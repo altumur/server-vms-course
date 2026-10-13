@@ -290,7 +290,15 @@ def test_restore_beats_under_the_same_pulse_as_the_pass():
             box.wall.advance(30); box.clock.advance(30)                # 6 × 30 s: well past `lost_after`
             # Wait for the actual pulse publication while this peer pull is blocked:
             # advancing the fake clocks does not schedule the pulse's thread.
-            assert beat_seen.wait(2.0), "restore did not publish its pulse while the peer pull waited"
+            deadline = time.monotonic() + 2.0
+            while True:
+                left = deadline - time.monotonic()
+                assert left > 0 and beat_seen.wait(left), "restore did not publish its pulse while the peer pull waited"
+                beat_seen.clear()
+                # The Event may belong to the clock before advance: only the
+                # heartbeat actually stored under the current clock is evidence.
+                if resources_seen(box.objects)["srv-1"]["ts"] == box.wall():
+                    break
             seen.append(resources_seen(box.objects)["srv-1"]["ts"] == box.wall())
             return b'{"ts": 1}\n'
 
