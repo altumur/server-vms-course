@@ -147,3 +147,14 @@ def test_pull_camera_that_polls_gets_an_ingest_address_without_requesting_push()
     rec.heartbeat_once()
     fact = json.loads(box.vars.get("rec/primaries/r-1")[0]["recording"])
     assert fact["ingest"] == ["http://main/ingest"] and "push" not in fact
+
+
+def test_centre_derives_a_receiver_without_receiving_the_camera_source_or_credentials():
+    box = Box()
+    placement(box, "centre", primary="relay", copies=())
+    box.vars.put("domain/member-topology", {"doc": json.dumps({"rev": 1, "centre": "centre", "star": [], "via": {}})})
+    rec = recorder(box)
+    assert box.vars.get("domain/cam/sources")[0] is None
+    assert rec.source("ref:serial") == ("centre", "ingest://centre/serial")
+    box.vars.put("domain/member-topology", {"doc": json.dumps({"rev": 2, "centre": "other", "star": [], "via": {}})})
+    assert rec.source("ref:serial") is None
