@@ -47,7 +47,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1015}
+→ 200 {"index": 1024}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "", "items": {
@@ -56,7 +56,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1017}
+→ 200 {"index": 1026}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
@@ -65,7 +65,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1019}
+→ 200 {"index": 1028}
 ```
 
 Между ними — записи назначений (`cam/workers/w-srv-a-1`, `cam/workers/w-srv-b-1`), по одной на единицу. И про четвёртую:
@@ -95,19 +95,19 @@ POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
 ```
 # console on srv-a → /run/configstore/console.sock
 GET /v1/list?prefix=cam/workers/
-→ 200 {"keys": {"cam/workers/w-srv-a-1": 1038, "cam/workers/w-srv-b-1": 1040, "cam/workers/w-srv-c-1": 1042}}
+→ 200 {"keys": {"cam/workers/w-srv-a-1": 1047, "cam/workers/w-srv-b-1": 1049, "cam/workers/w-srv-c-1": 1051}}
 
 # console on srv-a → /run/configstore/console.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "1,4,7", "rev": "3"}, "index": 1038}
+→ 200 {"items": {"units": "1,4,7", "rev": "3"}, "index": 1047}
 
 # console on srv-a → /run/configstore/console.sock
 GET /v1/get?key=cam/workers/w-srv-b-1
-→ 200 {"items": {"units": "2,5,8", "rev": "3"}, "index": 1040}
+→ 200 {"items": {"units": "2,5,8", "rev": "3"}, "index": 1049}
 
 # console on srv-a → /run/configstore/console.sock
 GET /v1/get?key=cam/workers/w-srv-c-1
-→ 200 {"items": {"units": "3,6,9", "rev": "3"}, "index": 1042}
+→ 200 {"items": {"units": "3,6,9", "rev": "3"}, "index": 1051}
 
 # where(1..9) = {1: 'w-srv-a-1', 2: 'w-srv-b-1', 3: 'w-srv-c-1', 4: 'w-srv-a-1', 5: 'w-srv-b-1', 6: 'w-srv-c-1', 7: 'w-srv-a-1', 8: 'w-srv-b-1', 9: 'w-srv-c-1'}; scans = 1
 ```
@@ -130,11 +130,11 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1009}
+→ 200 {"index": 1018}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
-→ 200 {"index": 1010}
+→ 200 {"index": 1019}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
@@ -145,8 +145,8 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
 }}
 → 409 {
   "kind": "conflict",
-  "error": "cam/placement/1: the version is 1009, not the one the write named",
-  "index": 1009
+  "error": "cam/placement/1: the version is 1018, not the one the write named",
+  "index": 1018
 }
 ```
 
@@ -187,8 +187,8 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": "", "items": {
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1048}
-→ 200 {"index": 1055}
+POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1056}
+→ 200 {"index": 1062}
 ```
 
 - **публикует числа** на `/metrics` консоли без токена, пока проход свежий (не старше 60 с), — то, что читает скрипт ([`04-what-the-spares-script-reads`](../Source/traces/04-what-the-spares-script-reads.txt)):
