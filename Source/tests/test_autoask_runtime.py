@@ -100,7 +100,7 @@ def test_duplicate_local_identity_and_unverified_shared_document_cannot_run():
 
 
 def test_embedded_device_calls_agent_as_autoworker_without_an_auto_worker():
-    from vms.domainpart.device import DeviceCluster
+    from vms.camera_cluster import DeviceCluster
     e=road_fixture();shared(e,[item()])
     device=DeviceCluster('A',e.box.vars,wall=e.box.wall,disk=e.box.objects)
     device.boot()
