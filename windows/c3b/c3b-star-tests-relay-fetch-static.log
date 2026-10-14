@@ -1,0 +1,9 @@
+base ee717a8a89e481fdeda2967943e76ae025cf021b
+compileall and git diff --check exit 0
+44 unaffected old helpers/tests/classes remain AST identical
+first patch preserved at c3b-star-tests-before-relay-fetch.patch
+Updated c3b-star-tests.patch includes full recorder→Forwarder.fetch_range→Ingest.fetch→camera real CardBuffer→recorder test.
+Named 2-card shares timestamps but different body size from 1-card; assertions compare complete sample begin/end/key/body.
+Threaded request waits for actual centre.request_range before camera upload. Future stays pending until actual reply.
+Separate forwarded fetch timeout .2 sec checks centre and relay ranges/answers/parts/failed cleanup.
+Runtime required: RecWorker.host_ingest installs card_range using ref_of(self.vars,src); Forwarder.fetch_range, Ingest.fetch as authorized. Runtime not available in this C3 baseline; execution remains pending parent integration.

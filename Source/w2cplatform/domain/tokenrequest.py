@@ -58,18 +58,23 @@ def issue(door, issuer, member, sub, kind, body, signature):
         if not row:
             raise Refused(403, "token request has no assignment")
         def values(field):
-            if field == "centre":
+            if field in ("centre", "star_centre"):
                 from .topology import TOPOLOGY, refusals
                 try:
                     items, _ = door.vars.get(TOPOLOGY)
                     topology = parse_json(items["doc"]) if items and items.get("doc") else {}
+                    if field == "star_centre" and not items:
+                        return []                         # no configured topology grants no additional audience
                     if not isinstance(topology, dict) or type(topology.get("rev")) is not int \
-                            or topology["rev"] <= 0 or not isinstance(topology.get("centre"), str) \
-                            or not topology["centre"] or not isinstance(topology.get("star", []), list) \
+                            or topology["rev"] <= 0 or not isinstance(topology.get("star", []), list) \
                             or not isinstance(topology.get("via", {}), dict) or refusals(topology):
                         raise ValueError("invalid confirmed topology")
                 except PARSE_ERRORS:
                     raise Refused(409, "topology has no confirmed centre") from None
+                if field == "star_centre" and row["cluster"] not in topology.get("star", []):
+                    return []
+                if not isinstance(topology.get("centre"), str) or not topology["centre"]:
+                    raise Refused(409, "topology has no confirmed centre")
                 return [topology["centre"]]
             v = row[field]
             return v if isinstance(v, list) else ([v] if v else [])

@@ -154,7 +154,7 @@ def source_value(value):
 
 def recording_value(value):
     _fields(value, {"ref", "to", "recording", "role", "enabled", "running"},
-            {"coverage", "peer_url", "ingest", "push"})
+            {"coverage", "peer_url", "ingest", "ingest_cluster", "push"})
     if not isinstance(value["recording"], str) or not value["recording"] \
             or value["role"] not in ("primary", "backup", "card") \
             or any(type(value[k]) is not bool for k in ("enabled", "running")):
@@ -169,6 +169,8 @@ def recording_value(value):
     if "ingest" in value and (not isinstance(value["ingest"], list) or not value["ingest"]
                              or any(not isinstance(u, str) or not u for u in value["ingest"])):
         raise Unconfirmed("invalid C2 ingest addresses")
+    if "ingest_cluster" in value and (not isinstance(value["ingest_cluster"], str) or not value["ingest_cluster"] or "ingest" not in value):
+        raise Unconfirmed("invalid C3b ingest member")
     if value.get("push") and "ingest" not in value:
         raise Unconfirmed("C2 push requires ingest addresses")
     return value

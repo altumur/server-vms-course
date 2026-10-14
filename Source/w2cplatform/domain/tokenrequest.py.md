@@ -1,5 +1,10 @@
 # A token requested by a member's ordinary worker (ADR-0074, supplement 5)
 
+`placement.target_fields` also accepts `star_centre`: the confirmed holder
+topology's centre, only when the assigned `cluster` is in its `star` list.
+A copy in `star` does not add an audience. The assignment remains unchanged.
+The holder never derives this audience from the member's topology copy.
+
 `local_handler(agent, role)` is bound to one role's private Unix socket. The
 role comes from that binding; the unique kind identifies the declaring subsystem.
 The body takes only `ref`.

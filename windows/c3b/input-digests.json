@@ -1,0 +1,21 @@
+{
+  "base": "ee717a8a89e481fdeda2967943e76ae025cf021b",
+  "source": {
+    "Source/tests/domainvms/test_lesson17_chain.py": "714e042bf484247007ac2ab6501ef0243aa0c1da89c7015b5eb58b8c114fa7da",
+    "Source/tests/test_token_requests.py": "ceaa3eed817b0f6561c4262bb36a3dc61cea69c7f42aa4b5e98ab8bcb8c28242",
+    "Source/tests/testdata/spec_load_debt.txt": "8ff74d8fa41c359f50f3d0ae4134c0ba2d5fd04e845acfe7b85d711365214dc8",
+    "Source/tests/testdata/spec_parity_debt.txt": "1bbca501eab48d0b7d421a1050b843b39739572a119c1341fc13a24e8b28ebda",
+    "Source/vms/cam.subsystem.yaml": "8d571347843fdf56103a23892069fcef447e1828400e570774e44d837195c3d7",
+    "Source/vms/domainpart/chain.py": "07d38ebd3dffc390162349ea11f781badd6957d542c97ad9f49ab8ef1bdaefc0",
+    "Source/vms/domainpart/ingest.py": "73d4fc2a7b24326d597afd43ad230c8c0d93773a7835864344af643abb529579",
+    "Source/vms/recording_books.py": "1e30c991ca4008e37a5310c2c05912f934490321b837b2a085adf3f24c78cdb7",
+    "Source/vms/recording_publication.py": "15c8bcc0cc9f2235ef8de3a1bdda943546dde49b276abf35e1a92a3980e14203",
+    "Source/vms/recording_push.py": "003e6664fa04a087a767bab7406d6ba470972bc704aaff4e680f25266d396ae4",
+    "Source/vms/recworker.py": "8ee11ad696040c48d311d429f28b1571dd52a5a5aa05c92bd9c225ab2548c9a4",
+    "Source/w2cplatform/domain/tokenrequest.py": "d440497d21fc6f243e950e88de68a3d91e951ad81fc7872047d0337a6327b7ae",
+    "Source/w2cplatform/domain/tokenrequest.py.md": "607d84e671c57b86c97447c1b2baae84a2c6fc55c9ab8a03fa12b3dabdc9e625",
+    "Source/w2cplatform/spec.py": "95778e88c7f0040b264ec594a724b349241368f20c5860c825b561d44544c297",
+    "Source/tests/test_recording_star.py": "2e27e717dc1e40d9dd66ec0b1d93ff902dc8e66d384e479a32a56c67df31ef10",
+    "Source/tests/test_star_ranges.py": "82feb4d0e731c991bed3b66ae2c82df19d225f863dbd0f9914e779a0080c3778"
+  }
+}

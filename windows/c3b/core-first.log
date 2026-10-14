@@ -1,0 +1,109 @@
+temp: /tmp/w2c-tests-73770
+test_recording_publication.py::test_camera_heartbeat_publishes_only_its_origin_and_replaced_writer_is_fenced ... OK
+test_recording_publication.py::test_centre_derives_a_receiver_without_receiving_the_camera_source_or_credentials ... OK
+test_recording_publication.py::test_pull_camera_that_polls_gets_an_ingest_address_without_requesting_push ... FAIL
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-star/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-star/Source/tests/test_recording_publication.py", line 154, in test_pull_camera_that_polls_gets_an_ingest_address_without_requesting_push
+    assert fact["ingest"] == ["http://main/ingest"] and "push" not in fact
+           ~~~~^^^^^^^^^^
+KeyError: 'ingest'
+test_recording_publication.py::test_recorder_failure_memory_is_local_and_resets_on_source_or_assignment_change ... FAIL
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-star/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-star/Source/tests/test_recording_publication.py", line 96, in test_recorder_failure_memory_is_local_and_resets_on_source_or_assignment_change
+    assert json.loads(publication.primaries(rec, status)["recording"])["push"] is True
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'push'
+test_recording_publication.py::test_recorder_heartbeat_publishes_enabled_and_running_false_without_tokens_or_nulls ... FAIL
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-star/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-star/Source/tests/test_recording_publication.py", line 78, in test_recorder_heartbeat_publishes_enabled_and_running_false_without_tokens_or_nulls
+    assert value["ingest"] == ["http://main/ingest"] and value["push"] is True
+           ~~~~~^^^^^^^^^^
+KeyError: 'ingest'
+test_recording_publication.py::test_recorder_primary_selection_grace_and_backfill_use_the_whole_assigned_book ... OK
+test_recording_push.py::test_corrupt_book_keeps_a_working_channel_and_covers_only_after_absence_grace ... OK
+test_recording_push.py::test_poll_only_route_answers_work_without_sending_frames_even_when_a_viewer_wants_them ... OK
+test_recording_push.py::test_pusher_uses_one_in_memory_token_and_distinct_cursors_for_primary_and_two_reserves ... OK
+test_recording_push.py::test_reserve_writers_independently_follow_primary_state_and_absence_grace ... OK
+test_recording_push.py::test_stream_receiver_accepts_only_member_list_reference_signature_and_current_token ... OK
+test_recording_star.py::test_camera_pushes_to_explicit_centre_and_independent_backup_with_original_placement ... OK
+test_recording_star.py::test_camera_reads_explicit_centre_from_primary_without_deriving_it_from_topology ... OK
+test_recording_star.py::test_ordinary_primary_and_star_assignments_backup_keep_their_own_receiver ... OK
+test_recording_star.py::test_recording_value_accepts_explicit_receiver_with_ingest_and_preserves_implicit_member ... OK
+test_recording_star.py::test_recording_value_rejects_empty_nonstring_or_addressless_explicit_receiver ... OK
+test_recording_star.py::test_star_primary_never_substitutes_its_unreachable_ingest_for_unconfirmed_upstream ... OK
+test_recording_star.py::test_star_primary_publishes_confirmed_centre_addresses_without_moving_recording_or_copies ... OK
+test_token_requests.py::test_declared_centre_target_comes_only_from_confirmed_holder_topology ... OK
+test_token_requests.py::test_local_client_timeout_drops_late_reply_and_retry_asks_again ... OK
+test_token_requests.py::test_local_handler_refuses_network_connections_even_with_an_allowed_role ... OK
+test_token_requests.py::test_local_socket_role_is_fixed_and_failed_request_leaves_no_cached_reply ... OK
+test_token_requests.py::test_no_grant_foreign_role_ref_member_or_broken_assignment_cannot_issue ... OK
+test_token_requests.py::test_one_role_socket_resolves_kinds_of_two_subsystems_and_refuses_foreign_role ... OK
+test_token_requests.py::test_real_holder_and_relay_http_preserve_the_member_signature_and_encrypted_reply ... OK
+test_token_requests.py::test_remote_body_cannot_supply_target_claims_or_replay_reply_to_another_request ... OK
+test_token_requests.py::test_reply_expiry_is_authenticated_with_the_ciphertext ... OK
+test_token_requests.py::test_revoked_member_and_frozen_holder_do_not_issue_tokens ... OK
+test_token_requests.py::test_role_groups_match_controller_and_worker_configstore_groups ... OK
+test_token_requests.py::test_role_socket_bootstrap_and_installation_follow_loaded_grants ... OK
+token request door unavailable for role testsubworker
+test_token_requests.py::test_role_socket_startup_is_disabled_by_default_and_refuses_unsafe_real_directories ... OK
+test_token_requests.py::test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassignment ... OK
+test_token_requests.py::test_signature_covers_bytes_route_time_and_reply_is_bound_to_original_member_and_request ... OK
+test_token_requests.py::test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems ... OK
+test_token_requests.py::test_token_spec_rejects_unknown_unsafe_and_partial_bindings ... OK
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_a_held_store_read_cannot_restore_have_after_the_confirmed_centre_changed ... OK
+forwarder: the centre's word on serial could not be kept; a restart of this relay forgets it: store unavailable
+test_upstream_kept.py::test_failed_persistence_does_not_mark_the_acknowledgement_as_durably_saved ... OK
+test_upstream_kept.py::test_first_reply_of_a_changed_centre_is_persisted_before_the_usual_write_period ... OK
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+relay: the centre wanted serial and has said nothing for 1757500000 s, longer than it is kept (86400 s); the camera's card goes by this relay's word again
+relay: the centre wanted serial and has said nothing for 86401 s, longer than it is kept (86400 s); the camera's card goes by this relay's word again
+test_upstream_kept.py::test_previous_version_malformed_and_expired_acknowledgements_never_restore_have ... OK
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_restart_after_centre_change_rejects_old_have_and_fresh_reply_names_new_centre ... OK
+test_upstream_kept.py::test_saved_acknowledgement_names_its_centre_and_restores_without_a_token_request ... OK
+relay: reading the centre's word on serial kept for a restart failed (OSError: store unavailable); counted (1 so far), tried again in about a period
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+forwarder: the centre's word on serial kept for a restart could not be dropped: store unavailable
+relay: dropping the centre's word on serial kept for a restart failed (OSError: store unavailable); counted (1 so far), tried again in about a period
+relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_store_read_or_discard_failure_is_retried_without_restoring_a_foreign_have ... OK
+test_upstream_kept.py::test_unconfirmed_topology_assignment_or_withdrawn_polls_cannot_restore_have ... OK
+test_upstream_runtime.py::test_assignment_or_topology_changes_invalidate_before_missing_fallback ... OK
+test_upstream_runtime.py::test_changing_urls_of_the_same_centre_preserves_unacknowledged_frames ... OK
+test_upstream_runtime.py::test_conflicting_missing_and_torn_facts_hold_only_a_working_route ... OK
+test_upstream_runtime.py::test_daemon_outage_keeps_retry_state_and_explicit_stop_ends_subscription ... OK
+test_upstream_runtime.py::test_explicit_poll_withdrawal_cannot_revive_after_a_missing_source ... OK
+test_upstream_runtime.py::test_late_reply_cannot_resurrect_a_forgotten_or_changed_scope ... OK
+test_upstream_runtime.py::test_metadata_and_restart_do_not_obtain_or_restore_tokens ... OK
+test_upstream_runtime.py::test_refused_carried_answer_refreshes_credential_without_changing_ask_format ... OK
+test_upstream_runtime.py::test_refused_drained_push_survives_token_outage_then_sends_every_frame ... OK
+test_upstream_runtime.py::test_refused_poll_forgets_the_token_and_retries_through_role_door ... OK
+test_upstream_runtime.py::test_refused_pull_does_not_advance_batch_or_inject_frames ... OK
+test_upstream_runtime.py::test_refused_upload_is_not_acknowledged_and_retries_with_a_current_token ... OK
+test_upstream_runtime.py::test_role_cache_refuses_malformed_or_outlived_reply ... OK
+test_upstream_runtime.py::test_role_cache_uses_steady_time_and_never_extends_a_failed_refresh ... OK
+test_upstream_runtime.py::test_scope_change_during_a_role_reply_forgets_its_orphaned_cache_immediately ... OK
+test_upstream_runtime.py::test_scope_changed_during_role_reply_or_held_poll_cannot_start_transport ... OK
+test_upstream_runtime.py::test_wrong_origin_empty_urls_and_unknown_topology_cannot_start_a_route ... OK
+
+57 passed, 3 failed, 0 skipped

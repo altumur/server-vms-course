@@ -9,7 +9,7 @@ import json
 import logging
 
 from w2cplatform.domain.placement import placed
-from w2cplatform.rows import finite
+from w2cplatform.rows import PARSE_ERRORS, finite
 from w2cplatform.variables import GuardFailed
 from .recording_books import recording_value, source_value
 
@@ -140,6 +140,22 @@ def primaries(worker, status):
             value["ingest"] = [worker.ingest_url]
         if push and worker.ingest_url:
             value["push"] = True
+        if role == "primary":
+            from .recording_upstream import observation
+            from w2cplatform.domain.topology import member_topology
+            try:
+                topology = member_topology(worker.vars, own)
+                if own in topology["star"]:
+                    # A star never advertises its own unreachable ingest as a fallback.
+                    value.pop("ingest", None)
+                    value.pop("push", None)
+                    if topology["rev"] <= 0:
+                        raise Unconfirmed("primary topology is not confirmed")
+                    up, _ = observation(worker.vars, own, ref)
+                    value.update(ingest=up.value["urls"], ingest_cluster=up.member, push=True)
+            except PARSE_ERRORS:
+                value.pop("ingest", None)
+                value.pop("push", None)
         out[key] = json.dumps(recording_value(value), ensure_ascii=False, allow_nan=False, sort_keys=True)
     for key in set(memory) - seen:
         memory.pop(key)

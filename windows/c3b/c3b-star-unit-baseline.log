@@ -1,0 +1,66 @@
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/test_recording_star.py", line 160, in test_camera_pushes_to_explicit_centre_and_independent_backup_with_original_placement
+    assert {name: [frame["n"] for frame in q.drain()] for name, q in queues.items()} == {"centre": [0, 1, 2], "backup": [0, 1, 2]}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/test_recording_star.py", line 130, in test_camera_reads_explicit_centre_from_primary_without_deriving_it_from_topology
+    entry = pusher.assigned.entry()
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_push.py", line 45, in entry
+    main = primary(items, p.serial, assignment["cluster"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 99, in primary
+    return _primary(read(items, ref), member, "primary")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 118, in _primary
+    recording_value(value)
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 156, in recording_value
+    _fields(value, {"ref", "to", "recording", "role", "enabled", "running"},
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 131, in _fields
+    raise Unconfirmed("invalid C2 fields")
+vms.recording_books.Unconfirmed: invalid C2 fields
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/test_recording_star.py", line 65, in test_recording_value_accepts_explicit_receiver_with_ingest_and_preserves_implicit_member
+    assert recording_value(value)["ingest_cluster"] == "centre"
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 156, in recording_value
+    _fields(value, {"ref", "to", "recording", "role", "enabled", "running"},
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/vms/recording_books.py", line 131, in _fields
+    raise Unconfirmed("invalid C2 fields")
+vms.recording_books.Unconfirmed: invalid C2 fields
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/test_recording_star.py", line 108, in test_star_primary_never_substitutes_its_unreachable_ingest_for_unconfirmed_upstream
+    assert not value.get("ingest") and not value.get("push") and "ingest_cluster" not in value, damage
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: wrong-origin
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/run.py", line 149, in main
+    res = fn(**kwargs)
+          ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c3b-star-unit-c3split/Source/tests/test_recording_star.py", line 84, in test_star_primary_publishes_confirmed_centre_addresses_without_moving_recording_or_copies
+    assert value["ingest"] == CENTRE_URLS and value["ingest_cluster"] == "centre" and value["push"] is True
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+temp: /tmp/w2c-tests-72155
+test_recording_star.py::test_camera_pushes_to_explicit_centre_and_independent_backup_with_original_placement ... FAIL
+test_recording_star.py::test_camera_reads_explicit_centre_from_primary_without_deriving_it_from_topology ... FAIL
+test_recording_star.py::test_ordinary_primary_and_star_assignments_backup_keep_their_own_receiver ... OK
+test_recording_star.py::test_recording_value_accepts_explicit_receiver_with_ingest_and_preserves_implicit_member ... FAIL
+test_recording_star.py::test_recording_value_rejects_empty_nonstring_or_addressless_explicit_receiver ... OK
+test_recording_star.py::test_star_primary_never_substitutes_its_unreachable_ingest_for_unconfirmed_upstream ... FAIL
+test_recording_star.py::test_star_primary_publishes_confirmed_centre_addresses_without_moving_recording_or_copies ... FAIL
+
+2 passed, 5 failed, 0 skipped
