@@ -1,0 +1,26 @@
+{
+  "backend": "file",
+  "pid": 62125,
+  "door": false,
+  "disk_files": [
+    "index",
+    "lock",
+    "vars/acc%2F02-create-once%2Fc1.json",
+    "vars/acc%2F03-read-back%2Fc1.json",
+    "vars/acc%2F04-stale-cas%2Fc1.json",
+    "vars/acc%2F05-unconditional%2Fc1.json",
+    "vars/acc%2F07-no-reuse%2Fc1.json",
+    "vars/acc%2F08-list%2Fk%2Fa.json",
+    "vars/acc%2F08-list%2Fk%2Fb.json",
+    "vars/acc%2F08-list%2Fkk.json",
+    "vars/acc%2F09-guard%2Fslots%2Fw-1.json",
+    "vars/acc%2F10-guard-absent%2Frows%2Fr1.json",
+    "vars/acc%2F10-guard-absent%2Fslots%2Fw-1.json",
+    "vars/acc%2F11-guard-before-cas%2Frows%2Fr1.json",
+    "vars/acc%2F11-guard-before-cas%2Fslots%2Fw-1.json",
+    "vars/acc%2F12-id%2Fc1.json",
+    "vars/acc%2F13-bad-key%2F..foo.json",
+    "vars/acc%2F15-too-large%2Fc1.json",
+    "vars/acc%2F16-items%2Fc1.json"
+  ]
+}
