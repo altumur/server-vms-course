@@ -66,6 +66,7 @@ PLATFORM_TESTS = (
     "tests/conftest.py", "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
+    "tests/storage_acceptance.py", "tests/test_storage_m10.py",
     # a mechanism of the platform as the subject, on testsub and testsub2
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
     "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
