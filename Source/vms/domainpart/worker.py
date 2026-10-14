@@ -92,7 +92,7 @@ def door_handler(fed, inputs=None, verifier=None, viewer=None):
             if who is None:
                 return
             if path == "/metrics":
-                from .ingest import stream_metrics
+                from vms.ingest import stream_metrics
                 return self._send(200, "\n".join(stream_metrics(fed)) + "\n", text=True)
             if path == "/catalog" and inputs is not None:
                 from .scenario import catalog
