@@ -145,7 +145,8 @@ resource:                                    # один процесс на се
   lost_after: 45                              # по смене на часах читателя
   pass:      каждые 600 с: retain → usage → relieve → mirror; каждый шаг в своей попытке; pass_stalled при зависании
   space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # доли; включено, пока не выключили
-  free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # для спек с requests.free, пока том > high;
+  free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # своя форма (ADR-0059): пишет и перезаписывает с cas только
+             ресурс, не создание-однажды, без unit/digest/схемы семьи; для спек с requests.free, пока том > high;
              free = used − total·low − Σ freeing из пульсов; при free ≤ 0 (и под отметкой low) строка снимается (ADR-0059); никто её не исполняет и не метит
   mirror:    platform/mirror {enabled, copies}; соседи — следующие copies живых серверов по имени; только закрытые бакеты;
              копия в .mirror/<сервер>/…; копия — никогда не источник, пока хозяин отвечает; PEER_FAILS 3, кусок ≤ 64 MiB,
@@ -157,7 +158,9 @@ resource:                                    # один процесс на се
 ### Н1.5 Просьба
 
 ```yaml
-<sub>/requests/<rid>:                        # строка; создание-однажды; писатель — консоль (дверь) или воркер (worker.requests)
+<sub>/requests/<rid>:                        # строка; создание-однажды; писатель — консоль (дверь) или воркер (worker.requests);
+                                             # free-<server>-<volume> — не эта форма: её пишет и перезаписывает ресурс (free_ask, Н1.4; ADR-0059),
+                                             # без unit, digest и requests.schema
   unit:        <id>                          # ДОЛЖЕН (кроме free-)
   <поля тела>: по requests.schema, текстом
   valid_until: <секунды>                     # когда у спеки valid_for
@@ -165,7 +168,7 @@ resource:                                    # один процесс на се
                                              # полей сервера; у поданной воркером — JCS объекта из полей тела строки как записаны (текстом), без unit,
                                              # valid_until и штампов; воркер считает его сам при записи (Н1.5); им сравнивают повторы
   by, at, group, <about-поле>:               # по requests.stamp
-  filed:                                     # у поданной воркером
+  filed:       <экземпляр воркера>           # ДОЛЖЕН у поданной воркером (worker.requests) — кто подал; у поданной дверью отсутствует
 rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе у двери консоли —
             r-<sha16(Idempotency-Key)> (заголовок обязателен, Н2); случайный — только у просьбы, которую воркер пишет сам (worker.requests, урок 5)
 spec:                                        # requests: (форма — урок 2)
