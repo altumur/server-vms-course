@@ -455,7 +455,7 @@ def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said
     """`int(can.get("presets"))` on "five" and `can_a['events']` on a description that is not one raised out of the
     pass over the books — every camera's books with it. A description that is not one says nothing: the camera
     reads as one that has not said, and `misfit` reads a count that is a word as none."""
-    from vms.domainpart.scenario import misfit
+    from vms.camera_actions import misfit
     assert misfit("cam", {"ptz": True, "presets": "five"}, {"action": "preset", "arg": 3}) is None
     assert misfit("cam", {"relays": "two"}, {"action": "output", "arg": 1}) == "cam has no relays"
 
@@ -631,7 +631,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
 def test_a_preset_or_a_port_in_digits_that_are_not_ascii_is_a_misfit_and_not_a_value_error():
     """The tenth pass's sweep of `isdigit` then `int` (М10B's `vms/auto.py` had it too): `"²".isdigit()` is true and
     `int("²")` raised out of `misfit` — out of the domain's check of the scenario being written. By `doors.numeric`."""
-    from vms.domainpart.scenario import misfit
+    from vms.camera_actions import misfit
     for arg in ("²", "١", "７"):
         assert misfit("cam", {"relays": 2}, {"action": "output", "arg": arg}) == f"cam has 2 relay(s), not port {arg}"
         assert misfit("cam", {"ptz": True, "presets": 4}, {"action": "preset", "arg": arg}) == f"cam has 4 preset(s), not {arg}"
