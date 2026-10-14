@@ -123,7 +123,8 @@ index:
   row:      {subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …поля}
   epoch_is: current | fenced | earlier-run   # по current_epochs и политике спеки; индексу говорят, он не решает
   cut:      при переполнении тревоги режутся последними; truncated — сколько не вошло
-  answer:   {events, state, truncated}; консоль: + complete, incomplete {сервер: did not answer | said <state> | silent}
+  answer:   {events, state, truncated, partial?}; truncated — число не вошедших событий (всегда, 0 — ничего); partial: true — хотя бы один
+            бакет читался с порванной последней строкой (она не отдана и в truncated не считается); консоль: + complete, incomplete {сервер: did not answer | said <state> | silent}
 merge:      консоль спрашивает живые ресурсы, сливает, дубли копий — по id, state: live[; <s> unreachable][; <s> from mirror]
 retention:
   <sub>/retention:        {days}      # умолчание 365; писатель — консоль
@@ -200,7 +201,7 @@ info: {title: М10/8 двери ресурса и просьб, version: "1"}
 paths:
   /v1/objects:                               # ресурс
     get:
-      parameters: [{name: prefix, in: query}, {name: scope, in: query, schema: {enum: [local, cluster]}}]
+      parameters: [{name: prefix, in: query, schema: {type: string}}, {name: scope, in: query, schema: {enum: [local, cluster]}}]
       responses: {"200": {description: "{server, objects: {key: {written, server, size}}, missing?: [server]}"}, "400": {description: scope или prefix не по форме}, "503": {description: листинг не удался}}
   /v1/objects/{key}:
     parameters: [{name: key, in: path, required: true, schema: {type: string}}]
@@ -227,23 +228,25 @@ paths:
         "400": {description: "keep/class/by не из слов; unit — голый id; limit не число"}
         "503": {description: "busy: N queries already being answered (Retry-After: 1) | this resource runs no event index"}
   /events/wait:
-    get:    {parameters: [{name: want, in: query}, {name: timeout, in: query, schema: {type: integer}}, {name: since, in: query}, {name: client, in: query}], description: долгий опрос новых строк, responses: {"200": {description: "{events, state} — по таймауту пусто"}, "400": {description: want или since не по форме}, "503": {description: busy | индекса нет}}}
+    get:    {parameters: [{name: want, in: query, schema: {type: string}}, {name: timeout, in: query, schema: {type: integer}}, {name: since, in: query, schema: {type: string}}, {name: client, in: query, schema: {type: string}}], description: долгий опрос новых строк, responses: {"200": {description: "{events, state} — по таймауту пусто"}, "400": {description: want или since не по форме}, "503": {description: busy | индекса нет}}}
   /events/{path}:
     parameters: [{name: path, in: path, required: true, schema: {type: string}}]
     get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
   /mirror/{server}/{path}:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     put:    {responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
-  /mirrored/{server}:                        # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
+  /mirrored/{server}:  # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: "{copies: [{path, written, size, sum}]}"}, "404": {description: копий этого сервера нет}}}
   /mirrored/{server}/{path}:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
   /marks:                                    # консоль
     post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
-  /{sub}/requests:                           # консоль
+  /{sub}/requests:  # консоль
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
     post:
-      parameters: [{name: Idempotency-Key, in: header, required: true}]
+      parameters: [{name: Idempotency-Key, in: header, required: true, schema: {type: string}}]
       requestBody: {content: {application/json: {schema: {type: object, required: [unit]}}}}
       responses:
         "202": {description: "{queued: rid}"}
@@ -254,7 +257,7 @@ paths:
         "429": {description: "too many — per_person; учёт не читается"}
         "503": {description: "busy | store unavailable"}
   /{sub}/asked/{sha16}:
-    parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: sha16, in: path, required: true, schema: {type: string}}]
     delete: {description: снять учёт человека, responses: {"200": {description: "{cleared: true}"}, "404": {description: учёта нет}}}
 ```
 
@@ -289,7 +292,7 @@ paths:
 → строки Н1.3; больше 8 запросов разом → 503 busy, Retry-After: 1
 ```
 
-**Гонки.** Чтение открытого бакета во время дописывания: отдаются только целые строки, порванная — `truncated: true`; закрытие бакета во время запроса — ответ по состоянию на момент перечисления.
+**Гонки.** Чтение открытого бакета во время дописывания: отдаются только целые строки, порванная не отдаётся и ответ несёт `partial: true` (`truncated` — число, Н1); закрытие бакета во время запроса — ответ по состоянию на момент перечисления.
 
 ### слияние (консоль)
 
@@ -321,14 +324,15 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### подать просьбу (консоль, POST /<sub>/requests)
 
 ```
-1. Idempotency-Key, тело — объект с unit; схема; rid = r-<sha16(Idempotency-Key)> при ключе (повтор находит ту же строку),
-   иначе случайный; valid_until = now + valid_for ≤ most_valid
-2. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор, учёт не меняется; иначе len(rids) ≥ per_person → 429;
-   иначе rids + rid
-3. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, строку не создавать;
-   иной digest → 409 spent. Иначе записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей);
-   иной digest → 409 exists (учёт вернуть)
-4. journal → строка журнала; 202 {queued: rid}
+1. Idempotency-Key, тело — объект с unit; схема; rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
+   поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)>; без того и другого — случайный;
+   valid_until = now + valid_for ≤ most_valid
+2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
+   иной digest → 409 spent
+3. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор ждущей, учёт не меняется; иначе len(rids) ≥ per_person
+   → 429; иначе rids + rid
+4. записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей); иной digest → 409 exists (учёт вернуть)
+5. journal → строка журнала; 202 {queued: rid}
 ```
 
 **Гонки.** Две подачи с одним `Idempotency-Key`: `rid` один, `cas ""` пропускает одну, вторая отвечает 202 той же просьбой (шаг 3); с разными ключами одной единице — две просьбы, держатель исполняет по порядку меток; подача против жнеца — новая строка до срока жнецу не видна.
@@ -386,6 +390,7 @@ asked:  учёт старше ttl/settle → снять
 | просьба: учёт человека полон; учёт не читается | 429 | слова | подождать |
 | нет пути; метод не из Н2 (например, GET /{sub}/requests) | 404 / 405 | слова | ошибка клиента |
 | бакет: часть по Range | 206 | байты | — |
+| зеркало: копия без длины | 411 | слова | сосед повторит |
 | бакет: Range вне файла | 416 | слова | ошибка клиента |
 | `/mirrored/<s>`: копий нет / нет такой копии | 404 | слова | сосед пропущен (урок 11 restore) |
 | держатель: метка уже есть | пропуск | — | другой начал |
@@ -417,7 +422,7 @@ asked:  учёт старше ttl/settle → снять
 
 1. **хранилище объектов на коробке и в кластере** (`OBJECTS` URI, каталоги, тумбстоуны удаления — урок 10), пределы размера;
 2. **как ресурс узнаёт присутствие процессов** (замки, pid) и что пишет при нечитаемом;
-3. **кэш индекса** (объём, политика) и параллелизм слияния;
+3. **политика вытеснения кэша индекса** в пределах 64 MiB (Н1); число полос слияния (8) и срок (3 с) — норма Н3, не выбор;
 4. **пределы просьб**: `FETCHED_COUNT`/`FETCHED_BYTES` в пульсе, повторы `cas` учёта, `MARK_SWEEP`;
 5. **долгий опрос `/events/wait`**: форма `want`, таймауты;
 6. **строка журнала**: поля сверх ADR-0069, роль-писатель, эпоха дерева (`e1`);
