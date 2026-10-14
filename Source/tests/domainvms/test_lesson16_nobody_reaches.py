@@ -594,7 +594,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
 def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_domain_moves():
     """No server: the domain runs on SN0 (Lesson 15), and SN0 runs a light ingest — polls and asks, no streams.
     Every camera polls it, as it takes everything else from it. The gate camera SN1 asks the PTZ camera SN2
-    through it. SN0 dies: asks stop, like edits of the shared settings — nothing to wait for, "not asked".
+    through it. SN0 dies: asks stop, like edits of the shared settings — nothing to wait for, "no ingest answered".
     The operator moves the domain to SN3; its first pass over the books names its own ingest, the agents carry the
     books home, and the same scenario acts again. The shared document comes back with the domain, from a
     member's copy: the book of asks is built from its scenarios."""
@@ -808,7 +808,7 @@ def test_a_held_poll_hears_a_linger_run_out_and_an_ask_expire_on_real_clocks():
 def test_an_ask_to_a_camera_that_never_polls_again_expires_and_is_then_forgotten():
     """AI. The yard camera was taken off the site: it never polls again. Its ask still dies at its deadline —
     the gate camera reads "expired", the answer that means "the target did not answer in time" — and after the
-    quarter hour an outcome is kept, "unknown". Dead asks do not pile up against the ceiling."""
+    quarter hour an outcome is kept, "lost: …". Dead asks do not pile up against the ceiling."""
     from vms.ingest import MAX_LIVE_ASKS, REMEMBER
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
