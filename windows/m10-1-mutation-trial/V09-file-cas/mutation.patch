@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/variables.py
++++ b/Source/w2cplatform/variables.py
+@@ -504,7 +504,7 @@
+         with self._locked():
+             guard_match(guard, self._current)
+             current = self._current(path)
+-            if cas is not None and cas != current:
++            if False:
+                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
+             idx = self._next_index()
+             tmp = self._file(path) + ".tmp"
