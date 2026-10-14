@@ -199,7 +199,8 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
     recording member, in the camera — falls into one; so does every path the worker's code names (each book at the
     holder and carried home, each kept row, the worker's slot); and every family has its words."""
     from vms.config import SPEC
-    from vms.domainpart import chain, inputs, ingest, keys, worker
+    from vms import forwarder as chain, ingest
+    from vms.domainpart import inputs, keys, worker
     wall = Clock(1000.0)
     fed, a, b, cam, door, member_keys, rings, pusher, q, signer = _site(wall)
     written = [k for store in (b.vars, a.vars, cam.flash) for k in store.list(SPEC.domain_prefix)]
