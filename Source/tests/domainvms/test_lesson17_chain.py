@@ -591,6 +591,13 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     view = ReadView(fed, wall=wall); view.refresh()
     assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == [SERIAL]   # up: the bundle
 
+    from tests.domain.books_fixture import initial_books
+    initial_books(fed, signer, wall, {"north": (north.vars, north.objects),
+                  "east": (east.vars, east.objects), cam.name: (cam.flash, cam.local_objects())})
+    # Enrollment above pins the real member identities; the relay's asks use those same keys.
+    from w2cplatform.trust.memberkey import MemberKey
+    relay_agent.key = MemberKey.load_or_make(east.vars)
+    cam_agent.key = MemberKey.load_or_make(cam.flash)
     DomainPublisher(north.vars).publish_grants(cam.name, [Grant("anna", "edit", None, wall() + 3600)])
     passes()
     assert [g.subject for g in ClusterTrust(cam.flash).grants()] == ["anna"]                   # down: the relay
@@ -701,11 +708,13 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     report_sync(relay_agent)
     hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects))
     relay = hosts[-1].ingest
-    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
-        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
+
     books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
     recording_domain = RecordingDomain(books.inputs, signer,
         agents=[*agents, relay_agent], devices=list(cams.values()), recorders=hosts)
+    recording_domain.collect()
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
+        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
 
     def domain_pass():
         recording_domain.collect()
@@ -790,9 +799,6 @@ def _two_relays(wall):
         through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
         report_sync(o)
-    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
-        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
-        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
     inputs = BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north")
     recording_domain = RecordingDomain(inputs, signer, agents=[*agents, *relays], devices=cams.values())
     from w2cplatform.domain.carry import CarryClient
@@ -828,6 +834,10 @@ def _two_relays(wall):
         for a in agents:
             report_sync(a)
 
+    domain_pass()                     # complete names before the operator writes
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
+        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
+        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
     domain_pass(); domain_pass()
     fwd = {"east": hosts["east"].forwarder, "west": hosts["west"].forwarder}
     done = {PTZ7: [], YARD7: []}
