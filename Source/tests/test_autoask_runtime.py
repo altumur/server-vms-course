@@ -1,0 +1,127 @@
+"""Worker-loop and embedded hosts of the C6 scenario executor."""
+import hashlib
+import json
+from types import SimpleNamespace
+
+from tests.test_autoask import item, road_fixture, settings
+from tests.test_autoworker import _Log, ev
+from tests.test_book_names import raises
+from vms.autoworker import AutoWorker
+from vms.config import SPEC
+from vms.recording_books import Unconfirmed
+from w2cplatform.trust.documents import sign
+
+
+def shared(e, items):
+    doc=sign({'term':1,'rev':1,'settings':settings(items)},e.issuer)
+    raw=json.dumps(doc).encode()
+    e.box.objects.put('domain/shared',raw)
+    e.box.vars.put('domain/shared',{'term':1,'rev':1,'sha256':hashlib.sha256(raw).hexdigest()})
+
+
+def site():
+    e=road_fixture()
+    shared(e,[item()])
+    e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'A','enabled':True}))
+    index=_Log([ev(e.box.wall()-1,'cam','1','motion')])
+    worker=AutoWorker('a-1',e.box.vars,e.box.objects,index=index,
+        clock=e.box.clock,wall=e.box.wall,server='server',env={},
+        ask_dial=e.dial,token_requests=e.door)
+    worker.heartbeat_once()
+    return SimpleNamespace(**locals())
+
+
+def test_unassigned_worker_executes_local_trigger_and_rereads_no_event_twice():
+    s=site();w,e=s.worker,s.e
+    assert w.assignment().units==[]
+    w.reconcile_once()
+    assert e.calls==[('ask','B','A')] and e.dialled==['http://home/ingest']
+    assert ('cam','motion','1') in w.wants()
+    assert s.index.asked[-1]['unit']=='cam/1'
+    w.reconcile_once()
+    assert len(e.dialled)==1
+
+
+def test_nonlocal_disabled_and_fenced_trigger_events_are_not_asks():
+    for mode in ('nonlocal','disabled','fenced','summary','old'):
+        s=site();e=s.e
+        if mode=='nonlocal':e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'other'}))
+        elif mode=='disabled':e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'A','enabled':False}))
+        elif mode=='fenced':s.index.events[0]['fenced']=True
+        elif mode=='summary':s.index.events[0]['repeats']=2
+        else:s.index.events[0]['occurred']=e.box.wall()-20
+        s.worker.reconcile_once()
+        assert not e.calls and not e.dialled
+
+
+def test_only_elected_worker_runs_shared_scenarios_and_slot_loss_cannot_dial():
+    s=site();e=s.e
+    other=AutoWorker('a-2',e.box.vars,e.box.objects,index=s.index,
+        clock=e.box.clock,wall=e.box.wall,env={},ask_dial=e.dial,token_requests=e.door)
+    other.heartbeat_once();other.reconcile_once()
+    assert not e.calls
+    request=e.door.request
+    def reply_after_loss(kind,ref,by):
+        reply=request(kind,ref,by)
+        key=s.worker.sub.slot_key(s.worker.name)
+        row,_=e.box.vars.get(key)
+        e.box.vars.put(key,{**row,'holder':'another-instance'})
+        return reply
+    e.door.request=reply_after_loss
+    s.worker.reconcile_once()
+    assert e.calls==[('ask','B','A')] and not e.dialled
+    assert s.worker.heartbeat_fields()['asks']['refused']=={'a-to-b':'ask transport or authority refused'}
+
+
+def test_invalid_and_partial_windows_are_said_without_leaking_settings():
+    s=site();e=s.e
+    shared(e,[{**item(),'enabled':'private-value'}])
+    s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={'refused':{'a-to-b':'invalid enabled flag'}}
+    shared(e,[item()])
+    query=s.index.query
+    s.index.query=lambda *a,**kw:{**query(*a,**kw),'truncated':True}
+    s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={'refused':{'a-to-b':'trigger event window is incomplete'}}
+    assert not e.calls
+
+
+def test_duplicate_local_identity_and_unverified_shared_document_cannot_run():
+    s=site();e=s.e
+    e.box.vars.put('cam/cameras/2',SPEC.items({'id':2,'ref':'A','enabled':True}))
+    s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={'refused':{'a-to-b':'trigger identity is not unique locally'}}
+    assert not e.calls
+    e.box.vars.delete('cam/cameras/2')
+    pointer,_=e.box.vars.get('domain/shared')
+    e.box.vars.put('domain/shared',{**pointer,'sha256':'wrong'})
+    s.worker.reconcile_once()
+    assert not e.calls and not s.worker.domain_scenarios.watched
+
+
+def test_embedded_device_calls_agent_as_autoworker_without_an_auto_worker():
+    from vms.domainpart.device import DeviceCluster
+    e=road_fixture();shared(e,[item()])
+    device=DeviceCluster('A',e.box.vars,wall=e.box.wall,disk=e.box.objects)
+    device.boot()
+    requests=[]
+    def request(sub,kind,ref,role,by,request_id):
+        requests.append((sub,kind,ref,role,by,request_id))
+        return {**e.door.request(kind,ref,by),'request_id':request_id}
+    agent=SimpleNamespace(request_token=request)
+    device.host_scenarios(agent,e.dial,steady=e.box.clock)
+    assert device.on_event('motion')[0]['state']=='asked'
+    assert requests[0][:5]==('cam','ask','B','autoworker','A')
+    assert requests[0][5] and not e.box.objects.list('auto/heartbeats/')
+    shared(e,[{**item(),'enabled':'private-value'}]);device.on_event('motion');device.publish()
+    hb=json.loads(device.ram.get('cam/heartbeats/A'))
+    assert hb['asks']=={'refused':{'a-to-b':'invalid enabled flag'}}
+    device.power_off();assert device.on_event('motion')==[]
+    device.boot();assert device.on_event('motion')==[]  # no agent or token cache survives a reboot
+
+
+def test_embedded_reply_requires_exact_correlation():
+    from vms.autoask_runtime import AgentDoor
+    for response in ({'token':'private','exp':100,'request_id':'wrong'},{}):
+        agent=SimpleNamespace(request_token=lambda *a:response)
+        raises(Unconfirmed,lambda:AgentDoor(agent).request('ask','B','A'))
