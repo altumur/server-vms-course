@@ -110,7 +110,7 @@ from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite
 
 from w2cplatform.domain.federation import Unreachable, published
 from .gateway import Forbidden, LeakyQueue, LiveTee
-from w2cplatform.trust.tokens import TokenError, kid_of, verify
+from w2cplatform.trust.tokens import TokenError, verify
 
 log = logging.getLogger("ingest")
 
@@ -282,13 +282,6 @@ def _an_object(v) -> dict:
     if not isinstance(v, dict):
         raise TypeError(f"not an object: {type(v).__name__}")
     return v
-
-
-def _a_road(road) -> None:
-    """A road of a book: its ingest's `urls` (a list of addresses) and a `token`."""
-    if not isinstance(road, dict) or not isinstance(road.get("urls"), list) \
-            or not all(isinstance(u, str) for u in road["urls"]) or not isinstance(road.get("token_secret"), str):
-        raise TypeError("a road is its urls and its token")
 
 
 def piece_wait(piece: int = PIECE_BYTES) -> float:
@@ -1081,13 +1074,21 @@ class Ingest:
             p = verify(token, ks, self.revoked(), now=self.wall(), kind="ask")
         except TokenError as e:
             raise Refused(f"ask token refused: {e}")
-        if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(target):
-            raise Refused(f"ask token is for {p.get('ref')} at {p.get('aud')}, not {target} at {audience(self.cluster)}")
+        aud = p.get('aud')
+        if not isinstance(aud, list) or not aud or any(not isinstance(n, str) or not n for n in aud) \
+                or len(set(aud)) != len(aud) or self.cluster not in aud or p.get('ref') != str(target):
+            raise Refused('ask token does not name this target and cluster')
         # The token names the actions the scenarios allow — "preset 3", not "anything the yard camera does".
         # A camera whose token was minted for preset 3 cannot ask for preset 9, or for the relay.
-        action = json.loads(json.dumps(action))
-        if action not in (p.get("acts") or []):
-            raise Refused(f"{p.get('by', p['sub'])} may ask {target} for {p.get('acts') or 'nothing'}, not {action}")
+        from w2cplatform.trust.jcs import jcs
+        try:
+            action = json.loads(jcs(action))
+            acts = p.get('acts')
+            if not isinstance(action, dict) or action.get('camera') != str(target) \
+                    or not isinstance(acts, list) or not any(jcs(action) == jcs(act) for act in acts):
+                raise Refused('ask token does not authorize the complete action')
+        except PARSE_ERRORS:
+            raise Refused('ask action is not a canonical object') from None
         now, by = self.wall(), p.get("by", p["sub"])
         # A DEADLINE IS A NUMBER (the review's eighth pass, major). `nan` passed every check and failed every comparison:
         # `nan > now` is false, so an ask of `nan` was never counted against `MAX_LIVE_ASKS` and never expired — two
@@ -2813,76 +2814,6 @@ def card_range(ingest, ref_of, wait: float | None = None):
     return lambda src, t0, t1: ingest.fetch_range(ref_of(src), t0, t1, wait, recording=src.get("recording"))
 
 
-# -- the asking camera -------------------------------------------------------------------------------------
-from .keys import ASKS_PATH          # in the asking camera's cluster: whom it may ask, by which roads  # noqa: E402
-
-
-class Asker:
-    """The camera whose event fired: it leaves the ask at an ingest its book names for the target, calling OUT.
-    The book lists roads nearest first — the cluster that records the target, then the level above that the
-    target's cluster forwards to (Lesson 17) — each with its own token; the first ingest that answers takes it."""
-    sealer = None                  # the ring its book's tokens are opened with: this process's (`keys.ring`) when None
-
-    def __init__(self, serial: str, flash, dial, clock=None):
-        self.serial, self.flash, self.dial, self.clock = str(serial), flash, dial, clock or time.time
-
-    # ONE TORN ENTRY OF THE BOOK IS THAT TARGET'S (vmsserver's eleventh review, the half of the `publish_asks` major that
-    # sits on the camera): the book was read whole with bare `json.loads`, and one torn `domain/asks` entry the agent
-    # carried home raised out of `book()` — no ask to any target. Each entry is read through `BOOKS`: one that does not
-    # parse is the one read last of it (`_last`), or none, counted once; the other targets are asked as before.
-    def book(self) -> dict[str, list[dict]]:
-        from .keys import opened
-        items = opened(self.flash.get(ASKS_PATH)[0], ASKS_PATH, self.sealer)
-        last = self.__dict__.setdefault("_last", {})
-
-        def roads(raw):
-            out = _an_object(json.loads(raw))["roads"]
-            if not isinstance(out, list):
-                raise TypeError("the roads are a list")
-            for r in out:
-                _a_road(r)
-            return out
-        book = {}
-        for ref, raw in (items or {}).items():
-            got = BOOKS.read(f"{ASKS_PATH}/{self.serial}/{ref}", lambda raw=raw: roads(raw))
-            if got is not None:
-                last[ref] = got
-            if ref in last:
-                book[ref] = last[ref]
-        return book
-
-    def ask(self, target: str, action: dict, within: float) -> tuple[object, str] | None:
-        """Returns (the ingest, the ask's id) — or None when no ingest answered. The outcome is read with
-        `outcome`, by the roads again: the ingest that took it may be another process by then."""
-        roads = self.book().get(str(target))
-        if not roads:
-            raise Refused(f"{self.serial} may not ask {target}: no scenario ties them")
-        for road in roads:
-            for url in road["urls"]:
-                try:
-                    ing = self.dial(url)
-                    return ing, ing.ask(road["token_secret"], target, action, self.clock() + within, camera_now=self.clock())
-                except Unreachable:
-                    continue
-        return None
-
-    def outcome(self, target: str, aid: str, deadline: float) -> str | None:
-        """What became of an ask: performed, refused, expired — None while it may still come. Asks live in the
-        ingest's memory, so an ingest that restarted knows nothing of one; past the deadline and a grace, an ask
-        no ingest knows of is LOST, and said so — never waited for."""
-        for road in self.book().get(str(target), []):
-            for url in road["urls"]:
-                try:
-                    out = self.dial(url).ask_outcome(target, aid)
-                except Unreachable:
-                    continue
-                if out is not None:
-                    return out
-        if self.clock() > deadline + ANSWER_GRACE:
-            return "unknown: no ingest knows this ask — it restarted, or the ask was lost on the way"
-        return None
-
-
 def _finite_clock(camera_now) -> float:
     """The time a camera says it is, as a number — `nan` would make its offset, and every range on its clock, `nan`
     (the product found `X-Camera-Clock: NaN` did): refused."""
@@ -2901,117 +2832,6 @@ def _round_trip(rtt) -> float | None:
     except PARSE_ERRORS:
         return None
     return v if v is not None and v >= 0 else None
-
-
-def _urls(v: dict) -> None:
-    """A road to an ingest (a book's entry): its `urls`, a list of strings."""
-    if not isinstance(v.get("urls"), list) or not all(isinstance(u, str) for u in v["urls"]):
-        raise TypeError("its urls are not a list of addresses")
-
-
-# -- the domain's side: the book of asks -----------------------------------------------------------------------
-# For every scenario "an event on camera A acts on camera B", A's cluster gets the roads to B: the ingest of the
-# cluster that records B and, when that cluster forwards B up (Lesson 17), the ingest above — with a token to
-# ask B at each, naming the actions the scenarios allow (`acts`). `scenarios`: [{"trigger": ref A, "target":
-# ref B, "actions": [...]}], from the shared settings (Lesson 12, `scenario.pairs`). A target nobody records
-# polls the poll home (`BookInputs.polled_at`).
-def publish_asks(inputs, scenarios: list[dict], lifetime: float = 86400.0) -> dict[str, dict]:
-    from .chain import UPSTREAM_PATH
-    now, books = inputs.wall(), {}
-
-    # Where another cluster takes streams: what its recorders say in their heartbeats (`ingest_urls`; ADR-0065, its
-    # addition) — the product's `Cameras.IngestURLs`. A cluster that is silent, or none of whose recorders heard lately
-    # says an ingest, gives no road, as the product's book of asks gives none (`len(urls) > 0`).
-    def urls_of(cluster, old: dict | None = None):
-        c = inputs.view.fed.clusters.get(cluster)
-        try:
-            urls = ingest_urls(cluster, c.objects, now) if c is not None else []
-        except Unreachable:
-            urls = []
-        return urls or None
-
-    dc = getattr(inputs.view.fed, "domain_holder", None)
-    top = inputs.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
-
-    def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
-        if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
-                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token_secret", "")) == inputs.issuer.kid:
-            return old
-        claims = {"aud": audience(cluster), "ref": b, "by": a, "acts": acts, **({"up": up} if up else {})}
-        return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
-                "token_secret": inputs.issuer.issue("ask", sub, now=now, **claims)}
-
-    # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S (vmsserver's eleventh review, a major; a run): the entries
-    # of the book of asks and of the upstream book were read bare, and `upstream/east[SN7001] = "{"` — the very entry the
-    # chain's test tears — raised out of the whole of this, for every scenario: no token re-issued anywhere. Each entry
-    # is read through `BOOKS` now (counted once, logged once, under `<book>/<entry>`): a torn entry of the book of asks
-    # is issued anew — the old road is not there to keep — and a torn entry of the upstream book is "not pushed up".
-    def roads_of(key: str, raw) -> dict:
-        def parse():
-            out = {}
-            for r in _an_object(json.loads(raw))["roads"]:
-                _a_road(r)
-                finite(r["until"])
-                out[str(r["cluster"])] = r
-            return out
-        return BOOKS.read(key, parse, {}) if raw else {}
-
-    def upstream_of(key, items, ref):
-        from vms.recording_books import Unconfirmed
-        from vms.recording_upstream import confirmed
-        try:
-            value = confirmed(items, key, ref, inputs.centre).value
-            return {"mode": "pull" if key in inputs.star else "push", "urls": value["urls"]}
-        except PARSE_ERRORS:
-            return {}
-
-    for sc in scenarios:
-        a, b = str(sc["trigger"]), str(sc["target"])
-        acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
-        known_a, on = inputs.view.last_known(a), inputs.polled_at(b)
-        if known_a is None or on is None or inputs.issuer is None:
-            continue
-        home = known_a[0]
-        via = inputs.via_of(home)                         # Lesson 17: this camera reaches only that relay
-        have, _ = inputs.vars.get(f"{ASKS_PATH}/{home}")
-        old = roads_of(f"{ASKS_PATH}/{home}/{b}", (have or {}).get(b))
-        up, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = upstream_of(on, up, b)
-        if via and on != via:
-            # The target is in another relay. The only road this camera has is its own relay, marked UP; the
-            # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
-            # road down to the target: it polls the top, or its relay forwards it there.
-            ohave, _ = inputs.vars.get(f"{ASKS_PATH}/{via}")
-            oold = roads_of(f"{ASKS_PATH}/{via}/{b}|{a}", (ohave or {}).get(f"{b}|{a}"))
-            mine, theirs = urls_of(via, old.get(via)), urls_of(top, oold.get(top))
-            if not (on == top or above.get("mode") == "push") or mine is None or theirs is None:
-                continue
-            roads = [road(old.get(via), via, mine, home, a, b, acts, up=top)]
-            books.setdefault(via, {})[f"{b}|{a}"] = json.dumps(
-                {"roads": [road(oold.get(top), top, theirs, via, a, b, acts)]}, sort_keys=True)
-        else:
-            # Its own relay (the only one it reaches), or — for a camera that reaches the centre — the cluster
-            # where the target polls, then the centre that cluster forwards it to.
-            wanted = [(on, urls_of(on, old.get(on)))]
-            if not via and above.get("mode") == "push" and inputs.centre:
-                wanted.append((inputs.centre, above["urls"]))
-            roads = [road(old.get(cluster), cluster, urls, home, a, b, acts) for cluster, urls in wanted if urls]
-        if roads:
-            books.setdefault(home, {})[b] = json.dumps({"roads": roads}, sort_keys=True)
-    for home, book in books.items():
-        path = f"{ASKS_PATH}/{home}"
-        have, idx = inputs.vars.get(path)
-        if have != book:
-            inputs.vars.put(path, book, cas=idx)
-    # A scenario taken out of the document takes the right with it: a book nobody's scenario fills any more is
-    # emptied, and the agent carries the empty book home. (A token already carried runs to its expiry — a day;
-    # revoke it by its jti for sooner, as any token.)
-    for path in inputs.vars.list(f"{ASKS_PATH}/"):
-        if path[len(ASKS_PATH) + 1:] not in books:
-            have, idx = inputs.vars.get(path)
-            if have:
-                inputs.vars.put(path, {}, cas=idx)
-    return books
 
 
 # -- where a cluster takes streams: its recorders' heartbeats ---------------------------------------------------
