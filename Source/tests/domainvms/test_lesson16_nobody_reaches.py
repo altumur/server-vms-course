@@ -19,11 +19,11 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
 from vms.domainpart.inputs import BookInputs
 from vms.recording_sources import resolve
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.recording_books import Unconfirmed
-from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import LINGER, CameraPusher, IngestLiveEndpoint, Refused, audience
+from vms.gateway import Gateway
+from vms.ingest import LINGER, CameraPusher, IngestLiveEndpoint, Refused, audience
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
@@ -165,7 +165,7 @@ def test_a_recorder_holding_an_always_recording_gets_the_stream_the_camera_pushe
     subscribes for it: the recorder the recording is placed on starts it from the book and takes the stream at the
     ingest it hosts (`vms.ingestrec`; the scenario «камера — офис — центр», O6). The camera pushes to the first ingest
     of the room that answers; the recording may be on the other recorder — the ingests pass the stream on (AG)."""
-    from vms.domainpart.ingest import wire
+    from vms.ingest import wire
     from vms.obsd import archive_ms, video
     wall = Clock(1_760_000_000.0)
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall, writes=True)
@@ -530,7 +530,7 @@ def test_the_token_names_the_actions_and_one_camera_cannot_flood_an_ingest():
     """The scenario says preset 3 and preset 9: the token to ask says so too, and preset 4 is refused at the
     ingest — before the yard camera hears of it. A token for twenty presets still holds at most sixteen live
     asks at one ingest: a ceiling, not a queue."""
-    from vms.domainpart.ingest import MAX_LIVE_ASKS
+    from vms.ingest import MAX_LIVE_ASKS
     wall = Clock()
     ingest, pusher, asker, done, asks_pass, signer, crossings, north = _two(wall)
     try:
@@ -574,7 +574,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
     and the gate camera, asking the roads again, is told nothing — until the deadline and a grace have passed,
     when "nobody knows" becomes an answer: lost, not late. Outcomes that were answered are kept a quarter of an
     hour for the asker, then forgotten."""
-    from vms.domainpart.ingest import ANSWER_GRACE, REMEMBER
+    from vms.ingest import ANSWER_GRACE, REMEMBER
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
     ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
@@ -838,7 +838,7 @@ def test_an_ask_to_a_camera_that_never_polls_again_expires_and_is_then_forgotten
     """AI. The yard camera was taken off the site: it never polls again. Its ask still dies at its deadline —
     the gate camera reads "expired", the answer that means "the target did not answer in time" — and after the
     quarter hour an outcome is kept, "unknown". Dead asks do not pile up against the ceiling."""
-    from vms.domainpart.ingest import MAX_LIVE_ASKS, REMEMBER
+    from vms.ingest import MAX_LIVE_ASKS, REMEMBER
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
     ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
@@ -973,7 +973,7 @@ def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as
     turn `cam-SN…` into the serial (it was `ref_of`, given by the tests alone)."""
     import json
     from w2cplatform.domain.alarms import DomainAlarms
-    from vms.domainpart.ingest import POLLED
+    from vms.ingest import POLLED
     wall = Clock()
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     pusher.pass_once([])                                                   # a poll
@@ -1015,7 +1015,7 @@ def test_a_recorder_that_hosts_an_ingest_says_where_and_what_in_its_heartbeat_an
     recorder that hosts no ingest says neither word."""
     import json
     from vms.config import REC_SPEC
-    from vms.domainpart.ingest import INGEST_LOST_AFTER, PEER_LOST_AFTER, ingest_urls
+    from vms.ingest import INGEST_LOST_AFTER, PEER_LOST_AFTER, ingest_urls
     from vms.recworker import RecWorker
     assert "ingest" in REC_SPEC.heartbeat_strings
     wall = Clock()
