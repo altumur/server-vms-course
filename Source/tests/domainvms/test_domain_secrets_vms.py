@@ -22,8 +22,8 @@ from w2cplatform.domain.uplink import member_copy
 from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
 from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster
-from vms.domainpart.ingest import CameraPusher
+from vms.camera_cluster import DeviceCluster
+from vms.ingest import CameraPusher
 from vms.recording_books import PRIMARIES_PATH, SOURCES_PATH
 from tests.domain.conftest import Clock, make_cluster
 from tests.vmsconftest import ingest_recorder
