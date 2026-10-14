@@ -158,10 +158,20 @@ domain:
       lifetime: 60
       claims: [ref, by, acts, up, aud]
       grant: [testsub2worker]
-      scenario: {doc: testsub2, items: rules, name: name, enabled: enabled,
-        trigger: when.item, target: then.item, act: then, placement: testsub,
-        ref_claim: ref, trigger_claim: by, acts_claim: acts, up_claim: up,
-        audience_claim: aud}
+      scenario:
+        doc: testsub2
+        items: rules
+        name: name
+        enabled: enabled
+        trigger: when.item
+        target: then.item
+        act: then
+        placement: testsub
+        ref_claim: ref
+        trigger_claim: by
+        acts_claim: acts
+        up_claim: up
+        audience_claim: aud
   shared:
     - name: rules
       type: json
