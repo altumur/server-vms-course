@@ -3,7 +3,6 @@
 row the spec does not: a book renamed in the spec and not here fails at import, not in a member's store.
 
     books (one per member at the holder, `<book>/<member>`; carried home to the member as `<book>`)
-        POLLS_PATH       for a pushing camera nobody records: the ingest it polls for asks (Lesson 16)
         ASKS_PATH        for each camera a scenario makes a trigger: whom it may ask, by which roads (Lesson 16)
 """
 from __future__ import annotations
@@ -78,5 +77,4 @@ class OpenedVars:
         return getattr(self.inner, name)
 
 
-POLLS_PATH = _book("polls")
 ASKS_PATH = _book("asks")
