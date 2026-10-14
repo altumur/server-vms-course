@@ -175,21 +175,24 @@ paths:
       requestBody: {content: {application/json: {schema: {type: object, required: [servers], properties: {servers: {enum: [shared, distinct]}}}}}}
       responses: {"200": {description: записано, журнал policy.changed}, "400": {description: иное слово или ключ}}
   /drain:
-    get:  {responses: {"200": {description: "{server?, safe, would_strand[]}"}}}
+    get:  {responses: {"200": {description: "{draining: <сервер> | \"\", safe: bool, subsystems: {<sub>: {draining, …}}}"}}}
     post:
-      requestBody: {content: {application/json: {schema: {type: object, required: [server]}}}}
+      parameters: [{name: server, in: query, required: true, schema: {type: string}}]
       responses: {"200": {description: дренаж начат}, "409": {description: "<s> is already draining; one server at a time"}}
     delete: {responses: {"200": {description: дренаж снят}}}
   /servers/{server}/labels:
+    get:
+      parameters: [{name: labels, in: query, schema: {type: string}, description: "метки через запятую — проба без записи"}]
+      responses: {"200": {description: "{would_move: [<id>…]} — что переедет"}}
     put:
-      requestBody: {content: {application/json: {schema: {type: object, required: [labels], properties: {labels: {type: array, items: {type: string}}}}}}}
-      responses: {"200": {description: строка меток записана}, "400": {description: не список строк; метка не по азбуке}, "404": {description: сервер не известен}}
+      requestBody: {content: {application/json: {schema: {type: object, required: [labels], properties: {labels: {type: array, items: {$ref: "#/components/schemas/label"}}}}}}}
+      responses: {"200": {description: "строка меток записана; {would_move?}"}, "400": {description: не список строк; метка не по азбуке}, "404": {description: сервер не известен}}
     delete: {responses: {"200": {description: строка снята, действуют метки узла}}}
-  /decommission/{server}:
+  /servers/{server}/decommission:
     post:
       requestBody: {content: {application/json: {schema: {type: object, properties: {why: {type: string}, gone: {type: boolean}}}}}}
       responses:
-        "202": {description: запрос записан; контроллер исполнит проходом}
+        "202": {description: "запрос записан; контроллер исполнит проходом; {warning?} — ресурс никогда не слышали"}
         "409": {description: "{error: server answers, server, may_confirm_gone}: сервер отвечает — ресурс, воркер или слот слышны менее LOST_AFTER назад"}
         "404": {description: сервер не известен}
     delete: {responses: {"200": {description: запрос отозван, отметка контроллера снята}}}
@@ -347,9 +350,9 @@ names_given[имя] = версия строки слота в момент су�
 | 01 | единица без воркера: `worker: null`, `/where` — 404 | Н1.1, Н2 |
 | 02 | `/unplaceable` называет её и `workers_live: 0` | Н2 |
 | 03 | политика: умолчание спеки, запись строгая, чтение | Н1.1, Н4 |
-| 04 | дренаж: один сервер, второй — 409, снятие | Н2, Н4 |
+| 04 | дренаж `?server=`: один сервер, второй — 409, `draining` в ответе, снятие | Н2, Н4 |
 | 05 | метки сервера: не список — 400, неизвестный сервер — 404 | Н2, Н4 |
-| 06 | вывод неизвестного сервера — 404 | Н4 |
+| 06 | `POST /servers/<s>/decommission` неизвестного сервера — 404 | Н4 |
 
 Проверяются чтением и стендом (нужны воркеры с пульсами — приёмка урока 5, стенд урока 11): выбор воркера и причина; группа целиком; вес и свободная ёмкость; `distinct` и хранитель места; спред, соседство, дом, сродство; судьба слота по каждому правилу и `names_given` с версией; переезд в три записи и починка `sync`; уход по каждой причине; дренаж и вывод с живыми воркерами, `gone: true`; предложения и отзыв; удаление по `delete_after`; `spec_rev` и `spec_behind` при двух ревизиях спеки; отчёт прохода.
 
