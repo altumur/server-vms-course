@@ -130,7 +130,7 @@ tables:                                   # спека (форма — урок 
     stamp:    [by, at, made_at]                   # что консоль дописывает
     journal:  {written: <вид>, deleted: <вид>}    # умолчание <t>.written / <t>.deleted
   list_form:  tables: [<t>] — только имя семьи для прав консоли; дверей нет
-names:      не rows, policy, slots, holds, epoch, idem, requests, asked, servers, decommissioned; не CONSOLE_ROUTES
+names:      не rows, policy, slots, holds, epoch, idem, requests, asked, servers, decommissioned; не первый сегмент дверей консоли платформы (закрытый список — урок 9 Н2)
 rows:       <sub>/<t>/<имя>; писатель — консоль; таблица из worker.writes (урок 6) — таблица воркера: он пишет строку целиком с cas,
             консоль только читает (GET с полями), POST/PUT/DELETE → 403 denied «written by its worker»; секреты запечатаны (урок 7)
 held_by:    у таблицы мест (placement.places.table) GET дописывает held_by: <воркер> | null

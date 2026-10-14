@@ -163,7 +163,8 @@ resource:                                    # один процесс на се
   valid_until: <секунды>                     # когда у спеки valid_for
   by, at, group, <about-поле>:               # по requests.stamp
   filed:                                     # у поданной воркером
-rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе случайный
+rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе у двери консоли —
+            r-<sha16(Idempotency-Key)> (заголовок обязателен, Н2); случайный — только у просьбы, которую воркер пишет сам (worker.requests, урок 5)
 spec:                                        # requests: (форма — урок 2)
   schema:      JSON Schema тела
   valid_for:   секунд до срока; обязателен без free
@@ -207,7 +208,7 @@ paths:
     parameters: [{name: key, in: path, required: true, schema: {type: string}}]
     get:
       responses: {"200": {description: "байты; заголовки X-Written, X-Server, X-Missing"}, "403": {description: семья не выдаётся дверью или строка-объект}, "404": {description: ни у кого нет}, "503": {description: копия не читается}}
-    put:    {description: только blobs — урок 10, responses: {"204": {description: копия принята}, "405": {description: не семья blobs}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}}}
+    put:    {description: "только blobs — приём копии тела; владелец двери и полный список кодов — урок 10 Н2", responses: {"204": {description: копия принята (остальные коды — урок 10)}}}
   /buckets/{sub}/{unit}:
     parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: unit, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: строки JSON по бакету}, "404": {description: нет такого бакета}, "403": {description: не своя подсистема}}}
@@ -299,7 +300,7 @@ paths:
 ```
 живые ресурсы (door row и пульс < 45 с) → параллельно (8 полос, 3 с); current_epochs — из <sub>/epoch/*; политика — из спек
 дубли по id → одна; не ответил / сказал не live / silent → incomplete[сервер]; state: live[; s unreachable][; s from mirror]
-с unit: запрос без ограждения, затем refence по эпохам
+с unit: запрос без ограждения, затем отсечение по эпохам (`epoch_is`, Н1.3)
 ```
 
 **Гонки.** Нет: чтение многих ресурсов и слияние в памяти; ресурс, ответивший позже таймаута, — `missing` в этом ответе и виден следующим.
@@ -325,7 +326,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 
 ```
 1. Idempotency-Key, тело — объект с unit; схема; rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
-   поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)>; без того и другого — случайный;
+   поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
    valid_until = now + valid_for ≤ most_valid
 2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
    иной digest → 409 spent
@@ -390,7 +391,6 @@ asked:  учёт старше ttl/settle → снять
 | просьба: учёт человека полон; учёт не читается | 429 | слова | подождать |
 | нет пути; метод не из Н2 (например, GET /{sub}/requests) | 404 / 405 | слова | ошибка клиента |
 | бакет: часть по Range | 206 | байты | — |
-| зеркало: копия без длины | 411 | слова | сосед повторит |
 | бакет: Range вне файла | 416 | слова | ошибка клиента |
 | `/mirrored/<s>`: копий нет / нет такой копии | 404 | слова | сосед пропущен (урок 11 restore) |
 | держатель: метка уже есть | пропуск | — | другой начал |

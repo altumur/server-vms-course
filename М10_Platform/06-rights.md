@@ -192,8 +192,8 @@ components:
 ### сгенерировать_права(каталог спек, развёртывание) → файл
 
 ```
-1. роли: console, resource, domain, domainconsole, domainagent; на каждую спеку — <s>controller, <s>worker,
-   <s>domain (если домен); группы по Н1.1
+1. роли: console, resource, domain, domainconsole, domainagent; на каждую спеку — <s>controller, <s>worker
+   (роли `<s>domain` нет — ADR-0074 п. 6); группы по Н1.1
 2. для каждой роли — write по Н1.4 из ключей спеки; delete = write, минус метки команд у консоли,
    плюс delete:<s>/<rows>/* у контроллера при delete_after
 3. read по Н1.4; worker.reads: ключ с `/` на конце → префикс; domain/placed/ → domain/placement/
