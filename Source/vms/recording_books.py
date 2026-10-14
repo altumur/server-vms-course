@@ -154,11 +154,17 @@ def source_value(value):
 
 def recording_value(value):
     _fields(value, {"ref", "to", "recording", "role", "enabled", "running"},
-            {"coverage", "peer_url", "ingest", "ingest_cluster", "push"})
+            {"coverage", "peer_url", "ingest", "ingest_cluster", "push", "retention_days", "when", "home"})
     if not isinstance(value["recording"], str) or not value["recording"] \
             or value["role"] not in ("primary", "backup", "card") \
             or any(type(value[k]) is not bool for k in ("enabled", "running")):
         raise Unconfirmed("invalid C2 recording")
+    if "retention_days" in value and (type(value["retention_days"]) is not int or value["retention_days"] < 1):
+        raise Unconfirmed("invalid recording retention")
+    if "when" in value and value["when"] not in ("always", "offline"):
+        raise Unconfirmed("invalid recording schedule")
+    if "home" in value and not isinstance(value["home"], str):
+        raise Unconfirmed("invalid recording volume")
     if "coverage" in value:
         cov = value["coverage"]
         if not isinstance(cov, dict) or set(cov) != {"from", "to", "fragments"} \
