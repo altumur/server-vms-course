@@ -1,6 +1,8 @@
 """Lesson 3 — the camera list from the workers' heartbeats; staleness shown;
 one cause per dead server; the API refuses placement at both levels and is
 idempotent; the gateway fans out and the worker sees one viewer."""
+
+from tests.catalog_fixture import isolated_catalog
 import json
 import urllib.request
 from tests.member_console import admit_fixtures
@@ -524,6 +526,7 @@ def test_the_domains_units_name_stores_that_open():
     assert "\nDOMAIN_CONFIG_URL=" not in member                                 # …only the holder's own agent reads a store
 
 
+@isolated_catalog()
 def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_rights():
     """The thirteenth review, major 11: the signer opens `configstore:///run/configstore/domain.sock`, and no rights file
     named a role `domain` — so no daemon opened that socket, its first `get` was `StoreUnavailable` and the job went
