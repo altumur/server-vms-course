@@ -305,7 +305,7 @@ def test_unknown_token_scope_probe_does_not_manufacture_refusals_of_partial_bind
 
 
 
-def test_unit_probe_recognizes_c4_and_names_only_unsupported_later_fields():
+def test_unit_probe_recognizes_c6b_and_names_only_unsupported_fields():
     from tests.test_token_requests import raw_spec
     raw = raw_spec()
     rule = raw["domain"]["tokens"]["tally"]
@@ -313,7 +313,9 @@ def test_unit_probe_recognizes_c4_and_names_only_unsupported_later_fields():
     rule["unit"] = {"ref_claim": "ref", "target_fields": ["poll_home"], "audience_claim": "aud"}
     assert refused_paths(raw) == []
     rule["unit"].update(sub="testsub", caller="poll_home")
-    assert refused_paths(raw) == ["domain.tokens.tally.unit.sub", "domain.tokens.tally.unit.caller"]
+    assert refused_paths(raw) == []
+    rule["unit"]["unknown"] = True
+    assert refused_paths(raw) == ["domain.tokens.tally.unit.unknown"]
 
 def test_unsupported_token_target_probe_does_not_manufacture_partial_binding_faults():
     from tests.test_token_requests import raw_spec

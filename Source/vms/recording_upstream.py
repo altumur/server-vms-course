@@ -4,8 +4,8 @@ import json
 from w2cplatform.contract import parse_heartbeat
 from w2cplatform.domain.memberbook import read as member_book
 from w2cplatform.domain.placement import placed
-from w2cplatform.domain.topology import member_topology
-from .recording_books import Unconfirmed, read
+from w2cplatform.domain.topology import member_topology, poll_home
+from .recording_books import Unconfirmed, read, source
 from .recording_publication import member
 
 
@@ -64,4 +64,15 @@ def upstream(worker, status):
             continue
         if assignment and assignment["cluster"] != own:
             out[ref] = json.dumps({"ref": ref, "to": [assignment["cluster"]], "urls": urls}, sort_keys=True)
+    sources = member_book(worker.vars, "domain/cam/sources", own)
+    for ref in sorted((sources or {}).keys() - {""}):
+        try:
+            if placed(worker.vars, "rec", ref) is not None:
+                continue
+            fact = source(sources, ref)
+            home = poll_home(worker.vars, fact.member)
+            if fact.value.get("polls") is True and own in fact.value["to"] and home != own:
+                out[ref] = json.dumps({"ref": ref, "to": [home], "urls": urls}, sort_keys=True)
+        except (ValueError, TypeError, KeyError, OverflowError):
+            continue
     return out

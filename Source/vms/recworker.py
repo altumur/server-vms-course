@@ -679,6 +679,14 @@ class RecWorker(VmsWorker):
                 self.behind_loopback.pop(cam, None)
                 self.last_source[cam] = (own, f"ingest://{own}/{ref}")
                 return self.last_source[cam]
+            if assignment is None and topology["rev"] > 0 and topology["centre"] == own:
+                fact = source(look.sources(), ref)
+                if fact.value.get("polls") is not True or own not in fact.value["to"]:
+                    raise Unconfirmed("unassigned camera does not poll the domain")
+                self.unresolved.pop(cam, None)
+                self.behind_loopback.pop(cam, None)
+                self.last_source[cam] = (own, f"ingest://{own}/{ref}")
+                return self.last_source[cam]
             if assignment is None or own not in (assignment["cluster"], *assignment["copies"]):
                 raise Unconfirmed("this cluster is not assigned to receive the camera")
             fact = source(look.sources(), ref)

@@ -3,5 +3,3 @@
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
 cam:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
-rec:domain.tokens.upstream.unit.sub   # ADR-0074 «курс»: fallback unit вида upstream (форма C6b) положен продуктом первым, курс несёт объём своим шагом C6b — команда курса
-rec:domain.tokens.upstream.unit.caller   # ADR-0074 «курс»: fallback unit вида upstream (форма C6b) положен продуктом первым, курс несёт объём своим шагом C6b — команда курса

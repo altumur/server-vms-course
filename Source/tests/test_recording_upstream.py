@@ -99,3 +99,44 @@ def test_confirmed_observation_refuses_wrong_recipients_origin_and_flat_values()
         pass
     else:
         raise AssertionError("a former flat upstream was accepted")
+
+
+def test_centre_publishes_unassigned_polling_source_to_its_exact_home_and_withdraws():
+    from w2cplatform.contract import Heartbeat
+    from vms.recording_upstream import upstream
+    box, worker = publisher_fixture()
+    box.vars.put('domain/holder',{'doc':json.dumps({'holder':'holder','term':1})})
+    box.vars.put('domain/member-topology',{'doc':json.dumps({'rev':1,'centre':'centre','star':[],'via':{'camera':'relay'}})})
+    box.objects.put('rec/heartbeats/r-1',Heartbeat('r-1',box.wall(),extra={'ingest':'http://centre/a'}).to_bytes())
+    value={'ref':'free','to':['relay','centre'],'polls':True,'live_url':'','server':'camera','as_of':box.wall()}
+    def source(value=value,missing=()):
+        box.vars.put('domain/cam/sources',{'':json.dumps({'missing':list(missing)}),
+            'free':json.dumps({'missing':list(missing),'entries':[{'member':'camera','item':'w/free','value':value}]})})
+    source()
+    assert json.loads(upstream(worker,[])['free'])=={'ref':'free','to':['relay'],'urls':['http://centre/a']}
+    source({**value,'to':['relay']});assert 'free' not in upstream(worker,[])
+    source({k:v for k,v in value.items() if k!='polls'});assert 'free' not in upstream(worker,[])
+    source(missing=['camera']);assert 'free' not in upstream(worker,[])
+    box.vars.put('domain/cam/sources',{});assert 'free' not in upstream(worker,[])
+
+
+def test_unassigned_source_opens_centre_ingest_and_forwarder_follows_exact_home():
+    from vms.domainpart.chain import Forwarder
+    from vms.domainpart.ingest import Ingest
+    from vms.recording_books import Unconfirmed
+    from tests.test_book_names import raises
+    box, worker = publisher_fixture()
+    box.vars.put('domain/holder',{'doc':json.dumps({'holder':'holder','term':1})})
+    box.vars.put('domain/member-topology',{'doc':json.dumps({'rev':1,'centre':'centre','star':[],'via':{'camera':'relay'}})})
+    value={'ref':'free','to':['relay','centre'],'polls':True,'live_url':'','server':'camera','as_of':box.wall()}
+    box.vars.put('domain/cam/sources',{'':json.dumps({'missing':[]}),
+        'free':json.dumps({'missing':[],'entries':[{'member':'camera','item':'w/free','value':value}]})})
+    rec = recorder(box,'r-2')
+    assert rec._source_of_ref('ref:free')==('centre','ingest://centre/free')
+    box.vars.put('domain/member',{'cluster':'relay'})
+    fwd=Forwarder('relay',Ingest('relay',['http://relay'],lambda:None,wall=box.wall),box.vars,lambda _:None)
+    assert fwd._policy('free')==(('unit','camera'),1,'centre','push')
+    box.vars.put('domain/member-topology',{'doc':json.dumps({'rev':2,'centre':'centre','star':[],'via':{'camera':'other'}})})
+    raises(Unconfirmed,lambda:fwd._policy('free'))
+    box.vars.put('domain/cam/sources',{})
+    raises(Unconfirmed,lambda:fwd._policy('free'))

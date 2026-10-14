@@ -87,7 +87,7 @@ KEYS = {
     "domain.tokens.*.placement.sub", "domain.tokens.*.placement.caller",
     "domain.tokens.*.placement.ref_claim", "domain.tokens.*.placement.target_fields",
     "domain.tokens.*.placement.audience_claim", "domain.tokens.*.unit.ref_claim",
-    "domain.tokens.*.unit.target_fields", "domain.tokens.*.unit.audience_claim", "domain.keys.id", "domain.keys.keys",
+    "domain.tokens.*.unit.sub", "domain.tokens.*.unit.caller", "domain.tokens.*.unit.target_fields", "domain.tokens.*.unit.audience_claim", "domain.keys.id", "domain.keys.keys",
     "domain.tokens.*.scenario.doc",
     "domain.tokens.*.scenario.items",
     "domain.tokens.*.scenario.name",

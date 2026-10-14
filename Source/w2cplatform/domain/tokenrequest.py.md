@@ -51,8 +51,17 @@ C4 adds the alternative `unit` binding, with exactly `ref_claim`,
 Only the immutable body named by its accepted report pointer proves that unit;
 local objects, orphan reports and another member's units do not. Withdrawal in
 its next accepted report removes that permission. A missing or malformed report
-returns 403. Both bindings together, cross-subsystem/caller options and other
-unit targets remain refused in C4.
+returns 403.
+
+C6b permits `placement` and `unit` together: an existing assignment is authoritative;
+only its absence permits unit scope. An invalid assignment never falls back. `scenario`
+remains exclusive. Unit scope may name `sub` (default: this token owner), `caller`
+(`self` by default, or `poll_home`) and targets `poll_home` and/or `centre`.
+For `poll_home`, exactly one admitted member must report the reference in its
+accepted immutable generation; the authenticated requester must be that member's
+confirmed poll home. The target subsystem must declare `domain.ref`. A missing,
+malformed, duplicate or withdrawn reference grants no token. Neither scope accepts
+caller-supplied audience or claims.
 
 `topology.poll_home(vars_, member, authoritative=False)` chooses `via[member]`,
 then centre, then a valid current holder. A worker's local `domain/member`

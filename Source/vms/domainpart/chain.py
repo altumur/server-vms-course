@@ -223,9 +223,20 @@ class Forwarder:
         from vms.recording_books import Unconfirmed
         assignment = placed(self.vars, "rec", ref)
         topology = member_topology(self.vars, self.name)
-        if assignment is None or assignment["cluster"] != self.name or topology["rev"] <= 0 \
-                or not isinstance(topology["centre"], str) or not topology["centre"] or topology["centre"] == self.name:
-            raise Unconfirmed("no confirmed foreign upstream assignment")
+        if topology["rev"] <= 0 or not isinstance(topology["centre"], str) \
+                or not topology["centre"] or topology["centre"] == self.name:
+            raise Unconfirmed("no confirmed foreign upstream centre")
+        if assignment is None:
+            from vms.recording_books import source
+            from w2cplatform.domain.memberbook import read as member_book
+            from w2cplatform.domain.topology import poll_home
+            fact = source(member_book(self.vars, "domain/cam/sources", self.name), ref)
+            if fact.value.get("polls") is not True or self.name not in fact.value["to"] \
+                    or poll_home(self.vars, fact.member) != self.name:
+                raise Unconfirmed("this cluster is not the unassigned camera's poll home")
+            return ("unit", fact.member), topology["rev"], topology["centre"], "push"
+        if assignment["cluster"] != self.name:
+            raise Unconfirmed("this cluster is not assigned to forward this camera")
         mode = "pull" if self.name in topology["star"] else "push"
         return assignment["rev"], topology["rev"], topology["centre"], mode
 

@@ -59,13 +59,12 @@ def claims(e, sub="testsub", member="south", **kw):
     return verify(requested(e, sub, member, **kw)["token"], e.signer.tokens.keyset(), now=e.wall())
 
 
-def test_unit_loader_is_closed_requires_claims_grant_ref_and_exactly_one_binding():
+def test_unit_loader_is_closed_requires_claims_grant_and_reference():
     for sub in ("testsub", "testsub2"):
         raw = unit_raw(sub)
         rule = SubsystemSpec.from_dict(raw).domain.tokens["tally"]
         assert rule["unit"] == {"ref_claim": "ref", "target_fields": ("poll_home",), "audience_claim": "aud"}
-        for change in ({"sub": sub}, {"caller": "self"}, {"caller": "poll_home"}, {"target_fields": ["centre"]},
-                       {"target_fields": ["poll_home", "centre"]}, {"target_fields": []},
+        for change in ({"sub": "bad/name"}, {"sub": None}, {"caller": "origin"}, {"caller": None}, {"target_fields": []},
                        {"target_fields": ["poll_home", "poll_home"]}, {"ref_claim": "other"},
                        {"audience_claim": "ref"}, {"extra": True}):
             broken = copy.deepcopy(raw)
@@ -81,7 +80,7 @@ def test_unit_loader_is_closed_requires_claims_grant_ref_and_exactly_one_binding
             raises(ValueError, lambda: SubsystemSpec.from_dict(broken))
         broken = copy.deepcopy(raw)
         broken["domain"]["tokens"]["tally"]["placement"] = raw_spec(sub)["domain"]["tokens"]["tally"]["placement"]
-        raises(ValueError, lambda: SubsystemSpec.from_dict(broken))
+        assert set(SubsystemSpec.from_dict(broken).domain.tokens["tally"]) >= {"placement", "unit"}
         broken = copy.deepcopy(raw)
         del broken["domain"]["ref"]
         raises(ValueError, lambda: SubsystemSpec.from_dict(broken))
@@ -247,3 +246,53 @@ def test_unit_binding_reads_only_home_policy_and_does_not_grant_domain_writes():
         rule = roles([SubsystemSpec.from_dict(unscoped)], "test")[sub + "worker"]
         for key in ("domain/member-topology", "domain/topology"):
             assert not allowed(rule["read"], key), key
+
+
+def test_unit_binding_accepts_cross_subsystem_poll_home_and_placement_fallback():
+    for sub in ('testsub','testsub2'):
+        raw = unit_raw(sub)
+        token = raw['domain']['tokens']['tally']
+        token['unit'].update(sub='testsub2' if sub=='testsub' else 'testsub',caller='poll_home',target_fields=['centre'])
+        token['placement'] = raw_spec(sub)['domain']['tokens']['tally']['placement']
+        del raw['domain']['ref']  # the referenced subsystem, not this token owner, provides domain.ref
+        rule = SubsystemSpec.from_dict(raw).domain.tokens['tally']
+        assert rule['unit']['caller']=='poll_home' and rule['unit']['target_fields']==('centre',)
+        assert set(rule) >= {'placement','unit'}
+
+
+def test_unit_poll_home_comes_from_another_subsystems_accepted_report_and_cannot_override_assignment():
+    from w2cplatform.domain import placement
+    with issuing() as e:
+        rule = catalog.spec('testsub2').domain.tokens['tally2']
+        rule['unit'].update(sub='testsub',caller='poll_home',target_fields=('centre',))
+        rule['placement'] = {'sub':'testsub2','caller':'cluster','ref_claim':'ref',
+                             'target_fields':('centre',),'audience_claim':'aud'}
+        e.north.vars.put('domain/topology',{'doc':json.dumps({'rev':1,'centre':'north','star':[],'via':{}})})
+        for name in e.fed.clusters:
+            publish(e,member=name,refs=('badge',) if name=='south' else ())
+        got = claims(e,'testsub2',member='north')
+        assert got['sub']=='north' and got['aud']==['north'] and got['ref']=='badge'
+        assert raises(Refused,lambda:requested(e,'testsub2',member='south')).status==403
+        # A real placement takes priority even when a unit-based grant would pass.
+        placement.assign(e.north.vars,'testsub2','badge',{'cluster':'south','origin':'south'},e.wall)
+        assert raises(Refused,lambda:requested(e,'testsub2',member='north')).status==403
+        assert claims(e,'testsub2',member='south')['aud']==['north']
+        e.north.vars.put('domain/placement/testsub2/badge',{'rev':'bad'})
+        assert raises(Refused,lambda:requested(e,'testsub2',member='north')).status==403
+
+
+def test_unit_poll_home_rejects_withdrawn_duplicate_and_unaccepted_report():
+    with issuing() as e:
+        rule=catalog.spec('testsub2').domain.tokens['tally2']
+        rule['unit'].update(sub='testsub',caller='poll_home',target_fields=('centre',))
+        e.north.vars.put('domain/topology',{'doc':json.dumps({'rev':1,'centre':'north','star':[],'via':{}})})
+        for name in e.fed.clusters:
+            publish(e,member=name,refs=())
+        publish(e,accepted=False)
+        assert raises(Refused,lambda:requested(e,'testsub2',member='north')).status==403
+        publish(e)
+        assert claims(e,'testsub2',member='north')['aud']==['north']
+        publish(e,member='north')
+        assert raises(Refused,lambda:requested(e,'testsub2',member='north')).status==403
+        publish(e,member='north',refs=());publish(e,refs=())
+        assert raises(Refused,lambda:requested(e,'testsub2',member='north')).status==403

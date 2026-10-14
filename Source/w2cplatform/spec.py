@@ -1015,8 +1015,8 @@ class DomainSection:
                         or len(set(grant)) != len(grant):
                     raise ValueError(f"{where}.tokens.{kind}.grant is a nonempty list of distinct roles")
                 bindings = [k for k in ("placement", "unit", "scenario") if k in t]
-                if len(bindings) != 1:
-                    raise ValueError(f"{where}.tokens.{kind} takes exactly one placement, unit or scenario binding")
+                if not bindings or "scenario" in bindings and len(bindings) != 1:
+                    raise ValueError(f"{where}.tokens.{kind} takes placement and/or unit, or scenario alone")
                 scope = bindings[0]
                 binding = t[scope]
                 if scope == "scenario":
@@ -1037,27 +1037,32 @@ class DomainSection:
                         raise ValueError(f"{where}.tokens.{kind}.scenario claims are declared and distinct")
                     sec.tokens[kind].update(grant=tuple(grant), scenario=dict(binding))
                     continue
-                fields = {"ref_claim", "target_fields", "audience_claim"}
-                links = {"cluster", "origin", "copies"}
-                if scope == "placement":
-                    fields |= {"sub", "caller"}
-                if not isinstance(binding, dict) or set(binding) != fields \
-                        or not isinstance(binding["ref_claim"], str) or binding["ref_claim"] not in claims \
-                        or not isinstance(binding["audience_claim"], str) or binding["audience_claim"] not in claims \
-                        or binding["ref_claim"] == binding["audience_claim"]:
-                    raise ValueError(f"{where}.tokens.{kind}.{scope} is a closed scope binding")
-                if scope == "placement" and (
-                        not isinstance(binding["sub"], str) or not _DOMAIN_NAME.fullmatch(binding["sub"]) \
-                        or not isinstance(binding["caller"], str) or binding["caller"] not in links):
-                    raise ValueError(f"{where}.tokens.{kind}.placement is a closed assignment binding")
-                if scope == "unit" and not sec.ref:
-                    raise ValueError(f"{where}.tokens.{kind}.unit needs domain.ref")
-                targets = binding["target_fields"]
-                allowed = links | {"centre", "star_centre"} if scope == "placement" else {"poll_home"}
-                if not isinstance(targets, list) or not targets or any(
-                        not isinstance(f, str) or f not in allowed for f in targets) or len(set(targets)) != len(targets):
-                    raise ValueError(f"{where}.tokens.{kind}.{scope}.target_fields names distinct scope fields")
-                sec.tokens[kind].update(grant=tuple(grant), **{scope: {**binding, "target_fields": tuple(targets)}})
+                sec.tokens[kind]["grant"] = tuple(grant)
+                for scope in bindings:
+                    binding = t[scope]
+                    required = {"ref_claim", "target_fields", "audience_claim"}
+                    allowed = required | {"sub", "caller"}
+                    if scope == "placement":
+                        required |= {"sub", "caller"}
+                    if not isinstance(binding, dict) or set(binding) - allowed or required - set(binding) \
+                            or not isinstance(binding["ref_claim"], str) or binding["ref_claim"] not in claims \
+                            or not isinstance(binding["audience_claim"], str) or binding["audience_claim"] not in claims \
+                            or binding["ref_claim"] == binding["audience_claim"]:
+                        raise ValueError(f"{where}.tokens.{kind}.{scope} is a closed scope binding")
+                    links = {"cluster", "origin", "copies"}
+                    if "sub" in binding and (not isinstance(binding["sub"], str) or not _DOMAIN_NAME.fullmatch(binding["sub"])):
+                        raise ValueError(f"{where}.tokens.{kind}.{scope}.sub is a subsystem name")
+                    callers = links if scope == "placement" else {"self", "poll_home"}
+                    if "caller" in binding and (not isinstance(binding["caller"], str) or binding["caller"] not in callers):
+                        raise ValueError(f"{where}.tokens.{kind}.{scope}.caller is a scope member")
+                    if scope == "unit" and "sub" not in binding and not sec.ref:
+                        raise ValueError(f"{where}.tokens.{kind}.unit needs domain.ref")
+                    targets = binding["target_fields"]
+                    targets_allowed = links | {"centre", "star_centre"} if scope == "placement" else {"poll_home", "centre"}
+                    if not isinstance(targets, list) or not targets or any(
+                            not isinstance(f, str) or f not in targets_allowed for f in targets) or len(set(targets)) != len(targets):
+                        raise ValueError(f"{where}.tokens.{kind}.{scope}.target_fields names distinct scope fields")
+                    sec.tokens[kind][scope] = {**binding, "target_fields": tuple(targets)}
         sec.keys = cls._families(spec, d.get("keys"), where)
         sec.shared, sec.documents = cls._shared(d.get("shared"), where)
         sec.edit = names("edit")

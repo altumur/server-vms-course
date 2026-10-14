@@ -154,6 +154,7 @@ domain:
       claims: [aud, ref]
       grant: [testsub2worker]
       placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
+      unit: {sub: testsub, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
     tally2:
       lifetime: 60
       claims: [ref, by, acts, up, aud]
