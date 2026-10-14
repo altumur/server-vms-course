@@ -369,8 +369,9 @@ class _Replay:
     def __init__(self):
         self.lock = threading.RLock()
         self.done = collections.OrderedDict()
+        self.pending = {}
 
-    def run(self, cmd, apply):
+    def run(self, cmd, apply, finish=None):
         op_id = cmd.get("id")
         fingerprint = hashlib.sha256(json.dumps(cmd, sort_keys=True).encode()).hexdigest() if op_id is not None else ""
         with self.lock:
@@ -380,6 +381,9 @@ class _Replay:
                     raise ValueError("this operation id was another write's")
                 if isinstance(result, Exception):
                     self.raise_copy(result)
+                if op_id in self.pending:
+                    self.finish(self.pending[op_id])
+                    del self.pending[op_id]
                 return {**result, "again": True}
             try:
                 result = apply()
@@ -387,13 +391,28 @@ class _Replay:
                 result = error.with_traceback(None)
             if op_id is not None:
                 self.done[op_id] = (fingerprint, result, time.monotonic())
+                if finish is not None and not isinstance(result, Exception):
+                    self.pending[op_id] = finish
                 while len(self.done) > 50_000:
                     if time.monotonic() - next(iter(self.done.values()))[2] < 120:
                         break
-                    self.done.popitem(last=False)
+                    forgotten, _ = self.done.popitem(last=False)
+                    self.pending.pop(forgotten, None)
             if isinstance(result, Exception):
                 self.raise_copy(result)
+            if finish is not None:
+                self.finish(finish)
+                self.pending.pop(op_id, None)
             return dict(result)
+
+    @staticmethod
+    def finish(barriers):
+        try:
+            barriers()
+        except OSError as error:
+            # The row is already visible. Never claim refusal or forget its receipt.
+            from .configstorevars import StoreAmbiguous
+            raise StoreAmbiguous("the row was published but its durability is unknown") from error
 
     @staticmethod
     def raise_copy(error):
@@ -551,10 +570,12 @@ class FileVariables:
             f.flush()
             durably(f)
 
-    def _durable_dirs(self) -> None:
-        if not self.volatile:
-            durable_dir(self.dir)
-            durable_dir(self.root)
+    def _durable_dirs(self, pending) -> None:
+        # Keep completed barriers out of the retry, including across handles. A volatile
+        # retrying handle cannot skip the original durable writer's remaining barriers.
+        while pending:
+            durable_dir(pending[0])
+            pending.pop(0)
 
     # Reads the path's file and returns `(items, index)`; a missing path is `(None, 0)`. Not locked: a
     # reader sees either the old file or the new one, never a half-written one, because writes rename into
@@ -623,7 +644,8 @@ class FileVariables:
         guard_check(cmd.get("guard"), self.writer, self.acl)
         # Same-process handles share replay memory; the existing file lock also serialises other processes.
         with self._replay.lock, self._locked():
-            return self._replay.run(cmd, lambda: self._apply_write(cmd))
+            pending = [] if self.volatile else [self.dir, self.root]
+            return self._replay.run(cmd, lambda: self._apply_write(cmd), lambda: self._durable_dirs(pending))
 
     def _apply_write(self, cmd):
         path = cmd["key"]
@@ -643,7 +665,8 @@ class FileVariables:
                 os.remove(self._file(path))
             except FileNotFoundError:
                 pass
-        self._durable_dirs()
+        # Publication and registration of the pending receipt share both locks. Remaining
+        # barriers run only after that registration; a retry must never apply this write twice.
         return {"index": idx, "again": False}
 
     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
