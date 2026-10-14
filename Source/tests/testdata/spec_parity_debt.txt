@@ -22,3 +22,4 @@ product-only rec.subsystem.yaml domain.books.primaries.show[retention_days]   # 
 product-only rec.subsystem.yaml domain.books.primaries.show[when]   # ADR-0074 «продукт»: окно C7 — книга primaries несёт настройки записи, какими их применил рекордер: страница домена показывает их без воркера VMS на домене — курс догоняет — «Сборка»
 product-only rec.subsystem.yaml unit.fields.retention_days.minimum   # ADR-0074 «продукт»: окно C7 — дверь домена проверяет значения правки: retention_days не меньше дня — курс догоняет — «Сборка»
 product-only rec.subsystem.yaml unit.fields.retention_days.schema   # ADR-0074 «продукт»: окно C7 — дверь домена проверяет значения правки: retention_days не меньше дня — курс догоняет — «Сборка»
+course-only auto.subsystem.yaml worker.reads[domain/shared]   # ADR-0074 «курс»: точный указатель общего документа по 934a1bc5 — «Сборка»
