@@ -41,11 +41,12 @@ class Site:
                 "urls": urls or ["http://"+home+"/ingest"]}}]})
         self.box.vars.put("domain/rec/polls", row)
 
-    def request_token(self, sub, kind, ref, role):
+    def request_token(self, sub, kind, ref, role, by=None, request_id=None):
+        assert by is None
         home = poll_home(self.box.vars, "camera")
         self.requests.append((sub, kind, ref, role, home))
         token = self.issuer.issue("camera", 86400, now=self.box.wall(), kind=kind, ref=ref, aud=[home])
-        reply = {"request_id": "local-poll", "token": token, "exp": self.box.wall()+86400}
+        reply = {"request_id": request_id or "local-poll", "token": token, "exp": self.box.wall()+86400}
         if self.before_reply:
             self.before_reply()
         return reply
