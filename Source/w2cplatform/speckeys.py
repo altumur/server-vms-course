@@ -27,7 +27,7 @@ from .tables import TABLE_KEYS
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
          "domain.tokens", "domain.names", "domain.books", "secrets.readers", "unit.fields.*.schemes",
          "tables.*.fields.*.schemes"}
-OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
+OPAQUE = {"display.field_help", "display.kinds", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
           "metrics.where", "metrics.unless.where", "metrics.labels",
@@ -74,7 +74,7 @@ KEYS = {
     "servers.status.title", "servers.status.of",
     *(f"metrics.{k}" for k in metrics.KEYS), "metrics.unless.table", "metrics.unless.where",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
-    "display.kinds", "display.actions", "display.tree.group_by", "display.tree.columns.field",
+    "display.kinds", "display.tree.group_by", "display.tree.columns.field",
     "display.tree.columns.title", "display.tree.columns.width", "display.tree.children",
     *(f"display.tree.{w}" for w in TREE_WORDS), "display.keys.*.title", "display.keys.*.about", "display.keys.*.absent",
     "display.general", "display.fields", "display.options.*", "display.form.title", "display.form.state",

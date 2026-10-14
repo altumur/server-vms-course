@@ -64,7 +64,7 @@ IMPLEMENTED = {
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns", "servers.status.field",
     "servers.status.field=path", "servers.status.title", "servers.status.of",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
-    "display.kinds", "display.actions", "display.tree.group_by", "display.tree.nested_by", "display.tree.columns.field",
+    "display.kinds", "display.tree.group_by", "display.tree.nested_by", "display.tree.columns.field",
     "display.tree.columns.title", "display.tree.columns.width", "display.tree.children", "display.tree.group_title",
     "display.tree.group_hint", "display.tree.filter", "display.tree.no_group", "display.tree.contents_title",
     "display.tree.group_word", "display.tree.no_group_suffix", "display.tree.pick_note", "display.tree.new_root",
