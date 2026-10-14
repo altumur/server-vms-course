@@ -132,8 +132,6 @@ def keep_ups(objects) -> tuple:
 # and carry its outcome back up. PULL mode (the star) — this cluster
 # wants the stream for its own recorder: pull it from the centre and inject it here.
 class Forwarder:
-    sealer = None                  # the ring for the remaining asks book: this process's when None
-
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None, objects=None,
                  load_up=None, save_up=None, drop_up=None, token_requests=None, env=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
@@ -165,7 +163,6 @@ class Forwarder:
         self.dropped: dict[str, int] = {}
         self.pulled: dict[str, tuple] = {}
         self.holes: dict[str, int] = {}                          # pulls whose centre had restarted since the last (`_pull`)
-        self._read_last: dict[tuple[str, str], dict] = {}        # (book, entry) -> the entry as read last (`_entries`)
         self._lock = threading.RLock()
         self.woken = threading.Event()                           # set by the local ingest: something changed here
         self.pending = threading.Event()                         # set when an ask went up: an outcome to wait for
@@ -219,25 +216,6 @@ class Forwarder:
     def errors_total(self) -> int:
         with self._said:
             return sum(self.errors.values())
-
-    # The books the relay's agent carried, read entry by entry (the eighth review's sibling): an entry that does not
-    # parse is the one read last — or none, when there never was one — counted (`ingest.BOOKS`); it raised out of the
-    # whole pass, every camera of the relay with it.
-    def _entries(self, path: str, keep, check) -> dict[str, dict]:
-        from .ingest import BOOKS
-        from .keys import opened
-        items = opened(self.vars.get(path)[0], path, self.sealer)
-        out = {}
-        for k, raw in (items or {}).items():
-            if not keep(k):
-                continue
-            e = BOOKS.read(f"{path}/{k}", lambda: check(json.loads(raw)))
-            if e is not None:
-                self._read_last[(path, k)] = e
-            e = self._read_last.get((path, k)) if e is None else e
-            if e is not None:
-                out[k] = e
-        return out
 
     def _policy(self, ref):
         from w2cplatform.domain.placement import placed
@@ -607,19 +585,6 @@ class Forwarder:
                 elif now > deadline + ANSWER_GRACE:
                     del self.carried[(ref, aid)]                          # the centre has called it expired itself
 
-    def asks_book(self) -> dict[str, dict]:
-        """What the domain let this relay carry up: {"<target>|<asker>": {"roads": [...]}}, one token per pair."""
-        from .ingest import ASKS_PATH, _a_road, _an_object
-
-        def entry(e):
-            roads = _an_object(e).get("roads")
-            if not isinstance(roads, list):
-                raise TypeError("its roads are not a list")
-            for road in roads:
-                _a_road(road)
-            return e
-        return self._entries(ASKS_PATH, lambda k: "|" in k, entry)
-
     def lift(self) -> dict[str, str]:
         """One round of the asks' work, run whenever the local ingest says something changed: new asks up to
         the centre, the outcomes of those that went up back down to the asker, and the outcomes of asks carried
@@ -627,28 +592,22 @@ class Forwarder:
         from .ingest import ANSWER_GRACE, Refused
         said: dict[str, str] = {}
         with self._lock:
-            book = self.asks_book()
             for ing in self.local._cluster():
                 for aid, a in ing.take_up():
-                    e = book.get(f"{a['target']}|{a['by']}")
-                    if e is None:
-                        ing.settle_up(aid, f"refused: {self.name} may not carry asks from {a['by']} to {a['target']}")
+                    from vms.autoask import Asker
+                    from vms.recording_books import Unconfirmed
+                    # The relay requests its own role credential for the original
+                    # target/trigger pair; no credential is read from a book.
+                    asker = Asker(a['by'], self.vars, self.dial, self.tokens, self.local.wall)
+                    try:
+                        sent = asker.ask_until(a['target'], a['action'], a['deadline'])
+                    except (Unconfirmed, OSError):
+                        ing.untake_up(aid)
+                        said[aid] = 'waiting for confirmed ask authority or road'
                         continue
-                    sent = None
-                    for road in e["roads"]:
-                        for url in road["urls"]:
-                            try:
-                                c = self.dial(url)
-                                sent = (c, c.ask(road["token_secret"], a["target"], a["action"], a["deadline"]))
-                                break
-                            except Unreachable:
-                                continue
-                            except Refused as err:
-                                ing.settle_up(aid, f"refused: {err}")
-                                sent = False
-                                break
-                        if sent is not None:
-                            break
+                    except Refused as err:
+                        ing.settle_up(aid, f'refused: {err}')
+                        continue
                     if sent is None:
                         ing.untake_up(aid)                                # the centre did not answer: again, till the deadline
                         said[aid] = "the centre did not answer"
