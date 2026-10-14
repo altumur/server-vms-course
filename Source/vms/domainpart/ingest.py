@@ -1223,6 +1223,13 @@ class Ingest:
         got = cam.answers.pop(rid, None)
         return None if got is None else got[0]
 
+    def fetch(self, token: str, ref: str, t0: float, t1: float,
+              wait: float | None = None, recording: str | None = None) -> list:
+        """A star recorder asks through the centre using its own upstream credential."""
+        if self._check(token, ref).get("kind") != "upstream":
+            raise Refused("a remote range needs an upstream token")
+        return self.fetch_range(ref, t0, t1, wait, recording)
+
     def fetch_range(self, ref: str, t0: float, t1: float, wait: float | None = None, recording: str | None = None) -> list:
         """The recorder's side, whole (the product's `Ingest.Request`): ask the camera for `[t0, t1)` of `recording`
         on its card — this cluster's clock — and wait for the upload. A camera that could not read it, or sent no
