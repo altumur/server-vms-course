@@ -5,6 +5,8 @@ The first answer to "who may change the domain" was an admin of the cluster that
 `domain/grants/domain`, they travel in the backup, a `GET` asks for `view`, and the last admin cannot be
 taken away through the door it guards."""
 
+from tests.catalog_fixture import isolated_catalog
+
 from tests.reporting import sync as report_sync
 import json
 import urllib.error
@@ -24,6 +26,7 @@ from tests.domain.conftest import Clock
 from tests.domain.test_lesson15_root import DOMAIN, _objects, _site
 
 
+@isolated_catalog()
 def test_a_grant_on_the_domain_is_on_the_whole_domain_and_admin_includes_view():
     v = FakeVariables()
     set_domain_grants(v, [Grant("anna", "admin", None, 0.0), Grant("boris", "view", None, 2000.0),
@@ -34,6 +37,7 @@ def test_a_grant_on_the_domain_is_on_the_whole_domain_and_admin_includes_view():
     assert not domain_may(v, "vera", "admin", 1000.0)                    # a camera is not the domain
 
 
+@isolated_catalog()
 def test_the_last_admin_is_not_taken_away():
     v = FakeVariables()
     set_domain_grants(v, [Grant("anna", "admin", None, 0.0)], 1000.0)
@@ -96,6 +100,7 @@ def test_the_domains_administrators_do_not_move_with_the_holder():
     assert domain_may(new.vars, "anna", "admin", wall())
 
 
+@isolated_catalog()
 def test_a_name_that_does_not_exist_costs_as_much_as_a_wrong_password():
     """Feedback BZ: the login door must not tell a stranger which names are real. Both refusals run scrypt once."""
     import w2cplatform.domain.identity as ident
@@ -131,6 +136,7 @@ def test_a_devices_password_is_not_the_domains_to_carry():
         assert e.pending.of("north") == {}
 
 
+@isolated_catalog()
 def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays():
     """Feedback CG: grants name a subject, not a record — left behind, they go to the next user of that name."""
     import tempfile
