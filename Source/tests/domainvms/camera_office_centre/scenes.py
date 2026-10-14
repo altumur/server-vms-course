@@ -274,7 +274,7 @@ def s09_stream_flows(site) -> None:
 
 
 def s10_watching(site) -> None:
-    from vms.domainpart.ingest import LINGER
+    from vms.ingest import LINGER
     log = site.log
     site.wall.advance(5)
     log.note("Сцена 10. Борис смотрит SN-A из центра. Шлюз в центре — модель курса (domainpart/gateway.py поверх\n"
