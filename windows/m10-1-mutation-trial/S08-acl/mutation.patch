@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -337,7 +337,7 @@
+             return False                          # the floor under every epoch is `configstore recover`'s alone (ADR-0070)
+         if role == ADMIN:
+             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
+-        return allowed(self.roles.get(role, {}).get(action, []), key)   # a denial first, wherever it stands
++        return True   # a denial first, wherever it stands
+ 
+ 
+ # -- the API ------------------------------------------------------------------------------------------
