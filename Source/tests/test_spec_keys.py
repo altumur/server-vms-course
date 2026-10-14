@@ -376,18 +376,18 @@ def test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_fam
     """ADR 0012 («Архитектор» with «Паритет», 2026-10-06): `worker.writes` names the subsystem's own unit rows or one of
     its DECLARED tables — a family whose form the spec says (`{key, fields}`) and whose rows a write goes through
     (`tables.write_row`). The course took any family under `<sub>/`: `writes: [finds]` with no `finds` declared was
-    a token writing rows of no form that nobody served. Now such a family is refused at load, named, and so is a table
-    only NAMED (`tables: [x]`): named is not declared. testsub2 (`writes: [shelves]`, a declared table) loads."""
+    a token writing undeclared rows. Unknown families remain refused; C5 permits explicitly
+    named tables without console CRUD. testsub2 writes its tallies; shelves remain console-owned."""
     shelf = {"tables": {"shelves": {"key": "name", "fields": {"name": {"type": "string", "required": True}}}}}
     assert _spec(worker={"writes": ["items"]}).acl_worker_role()[-1] == "probe/items/*"      # its units' rows
     assert _spec(worker={"writes": ["shelves"]}, **shelf).acl_worker_role()[-1] == "probe/shelves/*"
     _refused(lambda: _spec(worker={"writes": ["finds"]}),
-             "worker.writes names finds — neither its units' rows (items) nor one of its declared tables (none)")
+             "worker.writes names finds — no such row family")
     _refused(lambda: _spec(worker={"writes": ["shelves", "finds"]}, **shelf),
-             "worker.writes names finds — neither its units' rows (items) nor one of its declared tables (shelves)")
-    _refused(lambda: _spec(worker={"writes": ["notes"]}, tables=["notes"]), "worker.writes names notes")
+             "worker.writes names finds — no such row family")
+    assert "probe/notes/*" in _spec(worker={"writes": ["notes"]}, tables=["notes"]).acl_worker_role()
     two = SubsystemSpec.from_dict(_testsub2())
-    assert two.worker_writes == ("shelves",) and "testsub2/shelves/*" in two.acl_worker_role()
+    assert two.worker_writes == ("tallies",) and "testsub2/tallies/*" in two.acl_worker_role()
 
 
 def test_group_by_and_spread_by_name_a_field_of_the_row_in_every_form():
