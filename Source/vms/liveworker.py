@@ -97,6 +97,7 @@ class LiveWorker(Worker):
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  peer_factory=None, env: dict | None = None, resource_root: str | None = None, rtsp_server=None):
         env = dict(os.environ if env is None else env)
+        self.env = env
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.server = runtime.server(env, server)   # before the claim: a process on a decommissioned server gets no slot
@@ -118,16 +119,23 @@ class LiveWorker(Worker):
         self.waiting: dict[str, str] = {}                           # cameras assigned here whose stream nobody serves -> why (the heartbeat's `waiting`)
         self.waiting_since: dict[str, float] = {}                   # …and since when, by this gateway's wall clock
         self.lock = threading.Lock()
+        from w2cplatform.sealing import Sealer
+        from .live_accounts import LiveAccounts
+        from .live_account_doors import AccountDoors
+        from .live_account_client import ConsoleAPI
+        self.sealer = Sealer.from_env(env)
+        self.account_doors = AccountDoors(LiveAccounts(self.vars, self.objects, sealer=self.sealer,
+                                                      console=ConsoleAPI(env), wall=self.wall))
+        from w2cplatform.access import Gate
+        self.account_gate = Gate(self.vars, self.wall, glass=False)
         # RTSP outward (`rtspdoor.py`): the door over `rtsp_server`, where LIVE_RTSP_LISTEN asks for it and the spec
-        # says this gateway reads the accounts — the cluster's name (`CLUSTER`) is what the holder hands its accounts by,
-        # its ring (`SECRETS_KEY`) what the carried accounts open with.
+        # declares its account book; signed membership selects the copy and SECRETS_KEY opens it.
         from .rtspdoor import RTSPDoor, open_rtsp
         server = open_rtsp(env, rtsp_server)
         self.rtsp = None
         if server is not None:
-            from w2cplatform.sealing import Sealer
             self.rtsp = RTSPDoor(server, lambda cam: (self.rtp_source(cam) or (None, None))[1], self.vars,
-                                 env.get("CLUSTER", "room-a"), journal=lambda: self.journal, sealer=Sealer.from_env(env),
+                                 journal=lambda: self.journal, sealer=self.sealer,
                                  wall=self.wall, gateway=lambda: self.name)
 
     # -- where a camera's RTP is: the VMS heartbeat, never a call to the worker ----------------------
@@ -381,12 +389,19 @@ class LiveWorker(Worker):
     def heartbeat_once(self) -> None:
         for sid in [s for s in self.owners if s not in self.sessions]:
             self.owners.pop(sid, None)                  # swept or hung up: nobody's to hang up any more
-        self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
+        status = [up.to_status() for up in self.upstreams.values()]
+        self.heartbeat(status, server=self.server, instance=self.instance,
                        # `url`: the page's door too (the platform's word: `/live/where/<cam>` hands it out with a token)
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
                        swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}),
                        **({"waiting": dict(self.waiting)} if self.waiting else {}))
+        from .live_accounts import accounts
+        from .recording_publication import publish
+        try:
+            publish(self, "stream-accounts", accounts(self, status))
+        except OSError:
+            log.warning("%s: account contribution unavailable", self.name)
 
     def metrics_text(self) -> str:
         return (f"# TYPE live_sessions gauge\nlive_sessions {len(self.sessions)}\n"
@@ -417,6 +432,8 @@ class LiveWorker(Worker):
                 gw.door_keeper().preflight(self)
 
             def do_POST(self):
+                if self._account_request("POST"):
+                    return
                 self._extra_headers = gw.door_keeper().headers(self)      # a page of a console's origin reads the answer
                 if not self.path.startswith("/whep/"):
                     return self._send(404, {"error": "no such path"})
@@ -463,6 +480,8 @@ class LiveWorker(Worker):
                 return gw.door_keeper().admit(self, "whep", f"live/{cam}")
 
             def do_DELETE(self):
+                if self._account_request("DELETE"):
+                    return
                 self._extra_headers = gw.door_keeper().headers(self)
                 if not self.path.startswith("/whep/session/"):
                     return self._send(404, {"error": "no such path"})
@@ -487,21 +506,72 @@ class LiveWorker(Worker):
                 self._send(200 if ok else 404, {"closed": ok})
 
             def do_GET(self):
+                if self._account_request("GET"):
+                    return
                 if self.path == "/metrics":
                     return self._send(200, gw.metrics_text(), raw=True)
                 if self.path == "/sessions":
                     return self._send(200, {cam: up.to_status() for cam, up in gw.upstreams.items()})
                 self._send(404, {"error": "no such path"})
 
+            def do_PUT(self):
+                if not self._account_request("PUT"):
+                    self._send(404, {"error": "no such path"})
+
+            def _account_request(self, method):
+                from urllib.parse import unquote, urlsplit
+                from w2cplatform.access import Denied, token_of
+                from ipaddress import ip_address
+                from w2cplatform.console import object_body
+                from w2cplatform.spec import Refused
+                try:
+                    path = unquote(urlsplit(self.path).path, errors="strict")
+                except (ValueError, UnicodeError):
+                    self.close_connection = True
+                    self._send(400, {"error": "invalid path"})
+                    return True
+                if not gw.account_doors.serves(path):
+                    return False
+                try:
+                    if getattr(self.server, "tls_context", None) is not None:
+                        from w2cplatform.tls import role_certificate
+                        try:
+                            role_certificate(self.connection.getpeercert(), "console")
+                        except (ValueError, AttributeError):
+                            raise Denied(403, "this route requires the console certificate") from None
+                    # These headers never establish a human identity, even in box mode.
+                    for header in ("X-User", "X-Operator"):
+                        if header in self.headers:
+                            del self.headers[header]
+                    if not gw.account_gate.gated() and not ip_address(self.client_address[0]).is_loopback:
+                        raise Denied(403, "a box without domain keys admits only loopback callers")
+                    gw.account_gate.caller(self.headers)
+                    by = gw.account_gate.admit(self.headers, "view" if method == "GET" else "admin")
+                except Denied as error:
+                    self.close_connection = True
+                    self._send(error.status, {"error": "denied", "detail": error.why})
+                    return True
+                if not read_body(self, 1 << 20):
+                    return True
+                try:
+                    body = object_body(self) if int(self.headers.get("Content-Length") or 0) else {}
+                except Refused as error:
+                    self._send(400, {"error": "invalid body", "detail": str(error)})
+                    return True
+                token = token_of(self.headers)
+                auth = "Bearer " + token if token else ""
+                status, answer = gw.account_doors.handle(method, path, body, auth, by)
+                self._send(status, answer)
+                return True
+
         return H
 
     # Bounded like every door (`w2cplatform.console.door_server`; the review's sixth pass): so many connections at
     # once and so many to one address — a page's, which brings its viewer's offer here itself.
     def serve(self, host: str = "127.0.0.1", port: int = 8082) -> ThreadingHTTPServer:
-        srv = door_server((host, port), self.handler())
+        from w2cplatform.tls import worker_door
+        srv, self.url = worker_door(LIVE_SPEC.name, host, port, self.handler(), env=self.env, url=self.url)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
-        if not self.url:
-            self.url = f"http://{host}:{srv.server_address[1]}"
         return srv
 
     # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
