@@ -807,7 +807,11 @@ def _piece_two_specs():
     specs = [SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), f)) for f in ("testsub.subsystem.yaml",
                                                                                      "testsub2.subsystem.yaml")]
     roles = rights.roles(specs, "probe")
-    assert "testsub2/tallies/*" in roles["testsub2worker"]["write"] and {"testsub/*", "testsub/counters"} <= set(roles["testsub2worker"]["read"])
+    from w2cplatform.rights import allowed
+    worker = roles["testsub2worker"]
+    for key in ("testsub2/tallies/t1", "testsub2/shelves/s1"):
+        assert not allowed(worker["write"], key)
+    assert {"testsub/*", "testsub/counters"} <= set(worker["read"])
     assert "testsub/requests/*" in roles["testsub2worker"]["write"]                         # `worker.requests`
 
 
