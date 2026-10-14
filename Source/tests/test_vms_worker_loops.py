@@ -49,7 +49,7 @@ def _all_workers(box):
     from vms.autoworker import AutoWorker
     from vms.config import AUTO_SPEC
     from w2cplatform.contract import requests_acl
-    auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
+    auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role()),
                       box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={})
     return [_holder(box)] + _workers(box) + [auto]
 
