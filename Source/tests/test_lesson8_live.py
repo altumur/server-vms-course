@@ -42,8 +42,8 @@ def _box():
 
 
 def _gateway(box, name, capacity=100, labels="", url=""):
-    g = LiveWorker(name, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects,
-                    ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects, wall=box.wall),
+    g = LiveWorker(name, box.vars.as_writer("liveworker", LIVE_SPEC.acl_worker_role()), box.objects,
+                    ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", LIVE_SPEC.acl_worker_role()), box.objects, wall=box.wall),
                     capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels},
                     resource_root=box.resource_root)
     g.serve("127.0.0.1", 0); g.heartbeat_once()
@@ -327,7 +327,7 @@ def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
         _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once(); _whep(base, 1)
         assert sorted(p.split("/")[0] for p in box.vars.list("")) and all(p.startswith(("cam/", "live/")) for p in box.vars.list(""))
         assert [p for p in box.vars.list("live/") if "/idem/" not in p] == [
-            "live/epoch/1", "live/placement/1", "live/slots/g-1", "live/streams/1", "live/workers/g-1"]
+            "live/epoch/1", "live/placement/1", "live/slots/g-1", "live/stream-accounts/g-1", "live/streams/1", "live/workers/g-1"]
         assert not any("live" in p for p in box.vars.list("cam/"))                        # the VMS's rows carry nothing about viewers
         live_ctl.publish_snapshot()                                                      # the live controller publishes its own snapshot
         snap = published_snapshot(box.objects, "live", rows="streams")
