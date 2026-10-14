@@ -103,12 +103,13 @@ import urllib.parse
 from .canonical import parse_json
 from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
-from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path, guard_check
+from .variables import epoch_row, items_bytes, safe_path, guard_check
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
 CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string: "" (create-only), digits, a word
 CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
+MAX_KEY_BYTES = 1024       # raw UTF-8 key bytes; only File may refuse an encoded filename earlier
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
@@ -130,13 +131,12 @@ class Ambiguous(Unavailable):
 
 
 # -- keys ---------------------------------------------------------------------------------------------
-# A key is what `safe_path` lets through, and no longer than `FileVariables` can name a file: a store a box's rows
-# were imported into, and one a cluster's rows could be exported back from, must take the same keys.
+# The common door/memory key bound is raw UTF-8. FileVariables additionally checks its encoded filename.
 def check_key(key) -> str:
     if not isinstance(key, str):
         raise ValueError(f"not a key: a {type(key).__name__}")
-    if len(key.replace("%", "%25").replace("/", "%2F").encode()) > KEY_BYTES:
-        raise ValueError(f"not a key: longer than {KEY_BYTES} bytes as a file's name")
+    if len(key.encode()) > MAX_KEY_BYTES:
+        raise ValueError(f"not a key: longer than {MAX_KEY_BYTES} bytes")
     safe_path(key)                                # after the length: its refusal quotes the key
     return key
 
@@ -384,7 +384,7 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             return 200, {"items": got["items"], "index": wire_index(got["index"])}
         if method == "GET" and u.path == "/v1/list":
             prefix = q.get("prefix", "")
-            if len(prefix.encode()) > KEY_BYTES:
+            if len(prefix.encode()) > MAX_KEY_BYTES:
                 return 200, {"keys": {}}          # longer than any key: nothing to match, nothing to ask the log
             got = submit({"op": "list", "prefix": prefix})
             return 200, {"keys": {key: wire_index(index) for key, index in got["keys"].items()}}     # every name, to every role: nothing of a value (ADR-0021, 2026-10-10)
@@ -417,14 +417,9 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 check_write(body, wire=True)
             except ValueError as e:
                 return fault(400, "badrequest", str(e))
-            action = "write" if body["op"] == "put" else "delete"
-            if not rights.allows(role, action, key):
-                return fault(403, "forbidden", f"{role} may not {action} {key}")
             cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
             if body.get("guard") is not None:
                 guard = body["guard"]
-                if not rights.allows(role, "read", guard["key"]):
-                    return fault(403, "forbidden", f"{role} may not read {guard['key']}")
                 cmd["guard"] = dict(guard)
             if body["op"] == "put":
                 items = body.get("items")
@@ -434,6 +429,11 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 size = items_bytes(cmd["items"])
                 if size > MAX_VALUE:
                     return too_large(key, size)
+            action = "write" if body["op"] == "put" else "delete"
+            if not rights.allows(role, action, key):
+                return fault(403, "forbidden", f"{role} may not {action} {key}")
+            if body.get("guard") is not None and not rights.allows(role, "read", body["guard"]["key"]):
+                return fault(403, "forbidden", f"{role} may not read {body['guard']['key']}")
             if body.get("id"):
                 cmd["id"] = body["id"]
             got = submit(cmd)
