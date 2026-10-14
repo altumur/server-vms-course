@@ -193,10 +193,9 @@ class DeviceCluster:
             return []
         return self.asks.on_event(kind, event)
 
-    # An ask from another camera, done — or refused by the SAME description the domain checked the scenario
-    # against when it was written (`scenario.misfit`). One rule in two places would drift; here it cannot.
+    # An ask is checked against this camera's own advertised capabilities.
     def perform(self, action: dict) -> str:
-        from .domainpart.scenario import misfit
+        from .camera_actions import misfit
         why = misfit(f"camera {self.serial}", self.can, action) if self.can is not None else None
         return f"refused: {why}" if why else "performed"
 
