@@ -47,10 +47,10 @@ import threading
 from w2cplatform.rows import PARSE_ERRORS, finite
 
 from w2cplatform.domain.federation import Unreachable
-from w2cplatform.trust.tokens import kid_of
-from w2cplatform.domain.uplink import REPORTED, UPLINK, base
 
-from .keys import UPSTREAM_PATH  # in a recording cluster: where its streams go up, or come down from (star)
+from .ingest import Refused as StreamRefused
+
+UPSTREAM_PATH = "domain/rec/upstream"  # in a recording cluster: where its streams go up, or come down from (star)
 
 log = logging.getLogger("chain")
 
@@ -63,59 +63,8 @@ def retry_wait(period: float) -> float:
     return period * random.uniform(0.5, 1.5)
 
 
-# -- the domain's side: the book of a recording cluster's upstream ----------------------------------------
-# For every camera a cluster records, the centre's ingest and a token to push to it — or, for a star relay,
-# a token to PULL from it. Tokens are the domain signer's, re-issued past their half-life (Lesson 16).
-#
-# Where the centre takes streams is what its recorders say in their heartbeats (`ingest_urls`: ADR-0065, its addition of
-# 2026-10-08 — the ingest lives in the recorder, and no object of the centre's announces it). The books' own entries are
-# read past what does not parse (the eighth review's sibling, left here by the М12 pass): a torn entry is issued anew. A
-# centre none of whose recorders heard lately says an ingest keeps the road each entry already names — tokens are still
-# re-issued on it; one torn heartbeat raised out of the whole pass once, and a day later every relay's token to push up
-# had run out. A centre that does not answer: nothing is written.
-def publish_upstream(inputs, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
-    from .ingest import BOOKS, _an_object, audience, ingest_urls
-    now, books = inputs.wall(), {}
-    c = inputs.view.fed.clusters.get(centre)
-    if c is None or inputs.issuer is None:
-        return {}
-    try:
-        urls = ingest_urls(centre, c.objects, now) or None       # none said: each entry keeps the road it names
-    except Unreachable:
-        return {}
-    # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
-    # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
-    # a viewer in the centre, whose want the relay's forwarder carries down like any other.
-    polled = {ref: inputs._poll_home(home) for ref, home in inputs.unrecorded().items()}
-    for ref, on in [*inputs.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
-        if on == centre:
-            continue
-        mode = "pull" if on in star else "push"
-        have, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
-        raw_old = (have or {}).get(ref)
-        old = BOOKS.read(f"{UPSTREAM_PATH}/{on}/{ref}", lambda: _an_object(json.loads(raw_old)), {}) if raw_old else {}
-        road = urls if urls is not None else old.get("urls")
-        if not isinstance(road, list):
-            continue                                                  # no road known to the centre: none to give
-        try:
-            fresh = float(old.get("until", 0)) - now > lifetime / 2
-        except PARSE_ERRORS:
-            fresh = False
-        if old.get("urls") == road and old.get("mode") == mode and fresh \
-                and kid_of(str(old.get("token_secret", ""))) == inputs.issuer.kid:
-            entry = old
-        else:
-            entry = {"urls": road, "mode": mode, "until": now + lifetime,
-                     "token_secret": inputs.issuer.issue("stream", on, now=now, aud=[centre], ref=ref)}
-        books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
-    for on, book in books.items():
-        path = f"{UPSTREAM_PATH}/{on}"
-        have, idx = inputs.vars.get(path)
-        if have != book:
-            inputs.vars.put(path, book, cas=idx)
-    return books
-
-
+# The centre's ordinary recorder publishes the address observation (`vms.recording_upstream`).
+# The relay obtains its own ephemeral upstream credential through its recorder role door.
 # -- the relay's side: the forwarder ------------------------------------------------------------------------
 # WHAT THE FORWARDER HOLDS FOR THE CENTRE, STATED (the eighth review, a minor: "does not lose frames when a push fails"
 # held for about a second and a half — thirty frames in its subscription, fifty kept — and what it dropped was counted
@@ -181,10 +130,10 @@ def keep_ups(objects) -> tuple:
 # and carry its outcome back up. PULL mode (the star) — this cluster
 # wants the stream for its own recorder: pull it from the centre and inject it here.
 class Forwarder:
-    sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
+    sealer = None                  # the ring for the remaining asks book: this process's when None
 
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None, objects=None,
-                 load_up=None, save_up=None, drop_up=None):
+                 load_up=None, save_up=None, drop_up=None, token_requests=None, env=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
         frames of a range from this cluster's archive — called with `recording=` when the centre named one, and
         raising `OSError` for a range it could not read. `needs(ref)`: whether this cluster wants the stream
@@ -192,6 +141,10 @@ class Forwarder:
         `drop_up(ref)`: where the centre's word on a camera is kept across a restart — by default over `objects`, this
         cluster's object store (`keep_ups`), and nowhere without it."""
         self.name, self.local, self.vars, self.dial = name, local, cluster_vars, dial
+        from vms.role_tokens import RoleTokens
+        self.tokens = RoleTokens("recworker", token_requests, env)
+        self._routes = {}
+        self._active = set()
         self.archive = archive or (lambda ref, t0, t1, recording=None: [])
         self.needs = needs or (lambda ref: False)
         self.up = f"up:{name}"
@@ -284,15 +237,113 @@ class Forwarder:
                 out[k] = e
         return out
 
-    def book(self) -> dict[str, dict]:
-        from .ingest import _a_road, _an_object
+    def _policy(self, ref):
+        from w2cplatform.domain.placement import placed
+        from w2cplatform.domain.topology import member_topology
+        from vms.recording_books import Unconfirmed
+        assignment = placed(self.vars, "rec", ref)
+        topology = member_topology(self.vars, self.name)
+        if assignment is None or assignment["cluster"] != self.name or topology["rev"] <= 0 \
+                or not isinstance(topology["centre"], str) or not topology["centre"] or topology["centre"] == self.name:
+            raise Unconfirmed("no confirmed foreign upstream assignment")
+        mode = "pull" if self.name in topology["star"] else "push"
+        return assignment["rev"], topology["rev"], topology["centre"], mode
 
-        def entry(e):
-            _a_road(_an_object(e))
-            if e.get("mode") not in ("push", "pull"):
-                raise ValueError(f"its mode is {e.get('mode')!r}")
-            return e
-        return self._entries(UPSTREAM_PATH, lambda k: True, entry)
+    def _forget_route(self, ref):
+        with self._lock:
+            self._routes.pop(ref, None)
+            self._active.discard(ref)
+            self.tokens.forget("upstream", ref)
+            self._left(ref, threading.Event())
+
+    def _current_route(self, ref, route):
+        """A delayed role reply or held poll cannot reopen a withdrawn scope."""
+        from vms.recording_upstream import observation
+        from vms.recording_books import Unconfirmed, source
+        from w2cplatform.domain.memberbook import read as member_book
+        try:
+            if self._policy(ref) != route["policy"]:
+                return False
+            try:
+                camera = source(member_book(self.vars, "domain/cam/sources", self.name), ref)
+            except Unconfirmed:
+                if ref not in self._active:
+                    return False
+            else:
+                if not camera.value.get("polls"):
+                    return False
+            try:
+                fact, _ = observation(self.vars, self.name, ref)
+            except Unconfirmed:
+                if ref not in self._active:
+                    return False
+            else:
+                if tuple(fact.value["urls"]) != tuple(route["urls"]):
+                    return False
+        except (ValueError, TypeError, KeyError, OverflowError):
+            return False
+        with self._lock:
+            return self._routes.get(ref) is route
+
+    def book(self, authorize=True) -> dict[str, dict]:
+        from vms.recording_upstream import observation
+        from vms.recording_books import Unconfirmed, source
+        from w2cplatform.domain.memberbook import read as member_book
+        items = member_book(self.vars, UPSTREAM_PATH, self.name)
+        sources = member_book(self.vars, "domain/cam/sources", self.name)
+        with self._lock:
+            refs = set((items or {}).keys()) | set(self._routes)
+        out = {}
+        for ref in refs - {""}:
+            try:
+                policy = self._policy(ref)
+            except (ValueError, TypeError, KeyError, OverflowError):
+                self._forget_route(ref)
+                continue
+            with self._lock:
+                route = self._routes.get(ref)
+                if route is not None and route["policy"] != policy:
+                    self._forget_route(ref)
+                    route = None
+                try:
+                    camera = source(sources, ref)
+                    if not camera.value.get("polls"):
+                        self._forget_route(ref)
+                        continue
+                    fact, topology = observation(self.vars, self.name, ref)
+                    if (topology["rev"], fact.member) != policy[1:3]:
+                        raise Unconfirmed("upstream changed while reading")
+                    scope = (*policy, tuple(fact.value["urls"]))
+                    if route is None or route["scope"] != scope:
+                        if route is not None:
+                            # Another address of the same centre keeps its queued retry frames.
+                            self.tokens.forget("upstream", ref)
+                        route = {"urls": list(fact.value["urls"]), "mode": policy[3],
+                                 "scope": scope, "policy": policy}
+                        self._routes[ref] = route
+                except (Unconfirmed, ValueError):
+                    if route is None or ref not in self._active:
+                        continue
+            entry = {"urls": route["urls"], "mode": route["mode"], "_route": route}
+            if authorize:
+                try:
+                    entry["token_secret"] = self.tokens.get("upstream", ref, route["scope"])
+                except Unconfirmed:
+                    # Still a route: a temporary token outage must not end the stream's retry state.
+                    pass
+                if not self._current_route(ref, route):
+                    self.tokens.forget("upstream", ref, route["scope"])
+                    continue
+            out[ref] = entry
+        return out
+
+    def _refused(self, ref):
+        self.tokens.forget("upstream", ref)
+        self.state[ref] = "the centre refused this token; requesting a current token"
+        self._silent(ref)
+
+    def _usable(self, ref, e):
+        return bool(e.get("token_secret")) and self._current_route(ref, e["_route"])
 
     def _centre(self, e: dict):
         for url in e["urls"]:
@@ -306,6 +357,10 @@ class Forwarder:
         book = self.book()
         self.restore_up(book)
         for ref, e in book.items():
+            if not self._usable(ref, e):
+                self.state[ref] = "waiting for a current upstream token or observation"
+                self._silent(ref)
+                continue
             ing = self._centre(e)
             if ing is None:
                 self.state[ref] = "no ingest of the centre answered"
@@ -316,6 +371,8 @@ class Forwarder:
                     self.state[ref] = self._pull(ing, ref, e)
                 else:
                     self.state[ref] = self._push(ing, ref, e)
+            except StreamRefused:
+                self._refused(ref)
             except Unreachable as err:
                 self.state[ref] = f"the centre stopped answering: {err}"
                 self._silent(ref)
@@ -330,7 +387,7 @@ class Forwarder:
         taken for "no word kept", and a store that blinked at a restart lost the centre's word for good."""
         if self.load_up is None:
             return
-        for ref, e in (self.book() if book is None else book).items():
+        for ref, e in (self.book(authorize=False) if book is None else book).items():
             if ref in self._up_read or e.get("mode") != "push":
                 continue
             try:
@@ -419,7 +476,8 @@ class Forwarder:
         thread and its subscription grew with every camera the relay ever forwarded."""
         self._unsubscribe(ref)
         self.local.release(ref, self.up)
-        for kept in (self.unsent, self.versions, self.forwarding, self.state):
+        self._active.discard(ref)
+        for kept in (self.unsent, self.versions, self.forwarding, self.state, self.pulled):
             kept.pop(ref, None)
         self.local.up_have.pop(ref, None)
         with self._said:
@@ -429,6 +487,9 @@ class Forwarder:
 
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
         work = ing.poll(e["token_secret"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
+        if not self._usable(ref, e):
+            return "upstream scope changed while polling"
+        self._active.add(ref)
         self.versions[ref], self.forwarding[ref] = work["version"], work["push"]
         # WHAT THE CENTRE WROTE GOES DOWN TO THE CAMERA (the product's DY, checked in the course): what this relay's ingest
         # took, the camera counted delivered and its card let go of — whether or not it ever reached the centre. The
@@ -450,7 +511,7 @@ class Forwarder:
             if frames:
                 try:
                     ing.push(e["token_secret"], ref, frames)
-                except Unreachable:
+                except (Unreachable, StreamRefused):
                     self.unsent[ref] = self._kept(ref, frames)
                     raise
             lost = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)
@@ -476,7 +537,7 @@ class Forwarder:
             ing.upload(e["token_secret"], ref, rid, frames)                     # the answer to that request (AD)
         for aid, a in work.get("asks", {}).items():                     # an ask left above: down it goes…
             with self._lock:
-                self.carried.setdefault((ref, aid), (ing, e["token_secret"], float(a["deadline"])))
+                self.carried[(ref, aid)] = (ing, e["token_secret"], float(a["deadline"]))
             self.local.carry_ask(ref, aid, a)
         self._answer_carried()                                           # …and what became of it, up
         return said
@@ -491,6 +552,9 @@ class Forwarder:
                 if out is not None:
                     try:
                         ing.answer_ask(token, ref, aid, out)
+                    except StreamRefused:
+                        self._refused(ref)
+                        continue
                     except Unreachable:
                         continue                                          # the centre is away: next time
                     del self.carried[(ref, aid)]
@@ -583,6 +647,10 @@ class Forwarder:
                         e = self.book().get(ref)
                         if e is None:
                             return                                # the camera left the book: so does its loop
+                        if not self._usable(ref, e):
+                            self._silent(ref)
+                            stop.wait(retry_wait(period))
+                            continue
                         ing = self._centre(e)
                         if ing is None or e["mode"] != "push":
                             self._silent(ref)
@@ -594,6 +662,9 @@ class Forwarder:
                         self._works(ref, f"the stream of {ref} up")
                         if streaming:
                             stop.wait(stream_every)
+                    except StreamRefused:
+                        self._refused(ref)
+                        stop.wait(retry_wait(period))
                     except Unreachable:
                         self._silent(ref)
                         stop.wait(retry_wait(period))
@@ -688,7 +759,7 @@ class Forwarder:
     # `/metrics` the spec's lines over `up_dropped`, `down_breaks`, `up_expired` (`rec.subsystem.yaml`, `upstream_*_total`).
     def stats(self) -> dict[str, dict]:
         out = {}
-        for ref, e in self.book().items():
+        for ref, e in self.book(authorize=False).items():
             if not e.get("urls"):
                 continue                                         # no road: no loop for it, as the product's `Pass`
             st = {"mode": e["mode"], "state": self.state.get(ref, ""), "errors": self.errors.get(ref, 0)}
@@ -712,6 +783,9 @@ class Forwarder:
         # mark from before the centre restarted is never taken for one of after (the eighth review, blocker 2)
         had = self.pulled.get(ref, ())
         frames = ing.pull(e["token_secret"], ref, self.up, have=had)
+        if not self._usable(ref, e):
+            return "upstream scope changed while pulling"
+        self._active.add(ref)
         self.pulled[ref] = mark = getattr(frames, "have", ())
         # A BATCH LOST WITH THE SIDE THAT SENT IT IS COUNTED (the ninth review, a minor; the product's sibling E). The
         # centre keeps the batch it handed over until the relay says it has it — in memory: an answer lost on the way
