@@ -997,7 +997,7 @@ class DomainSection:
             if not isinstance(kind, str) or not _DOMAIN_NAME.match(kind) or kind == "person":
                 raise ValueError(f"{where}.tokens: {kind!r} is not a kind a subsystem may declare ('person' is the "
                                  f"platform's)")
-            if not isinstance(t, dict) or set(t) - {"lifetime", "claims", "grant", "placement", "unit"}:
+            if not isinstance(t, dict) or set(t) - {"lifetime", "claims", "grant", "placement", "unit", "scenario"}:
                 raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...]}} — a token "
                                  f"carries no rights")
             life = t.get("lifetime")
@@ -1008,17 +1008,35 @@ class DomainSection:
                                                        for c in claims):
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
-            if any(k in t for k in ("grant", "placement", "unit")):
+            if any(k in t for k in ("grant", "placement", "unit", "scenario")):
                 grant = t.get("grant")
                 if not isinstance(grant, list) or not grant or any(
                         not isinstance(r, str) or not re.fullmatch(r"[a-z][a-z0-9_-]*", r) for r in grant) \
                         or len(set(grant)) != len(grant):
                     raise ValueError(f"{where}.tokens.{kind}.grant is a nonempty list of distinct roles")
-                bindings = [k for k in ("placement", "unit") if k in t]
+                bindings = [k for k in ("placement", "unit", "scenario") if k in t]
                 if len(bindings) != 1:
-                    raise ValueError(f"{where}.tokens.{kind} takes exactly one placement or unit binding")
+                    raise ValueError(f"{where}.tokens.{kind} takes exactly one placement, unit or scenario binding")
                 scope = bindings[0]
                 binding = t[scope]
+                if scope == "scenario":
+                    required = {"doc", "items", "name", "enabled", "trigger", "target", "act",
+                                "ref_claim", "trigger_claim", "acts_claim", "up_claim", "audience_claim"}
+                    if not isinstance(binding, dict) or set(binding) - (required | {"placement"}) \
+                            or required - set(binding) or not sec.ref:
+                        raise ValueError(f"{where}.tokens.{kind}.scenario is a closed binding needing domain.ref")
+                    for field in required - {"doc"}:
+                        value = binding[field]
+                        if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*", value):
+                            raise ValueError(f"{where}.tokens.{kind}.scenario.{field} is a field path")
+                    for field in ("doc", "placement"):
+                        if field in binding and (not isinstance(binding[field], str) or not _DOMAIN_NAME.fullmatch(binding[field])):
+                            raise ValueError(f"{where}.tokens.{kind}.scenario.{field} is a subsystem name")
+                    outputs = [binding[f] for f in ("ref_claim", "trigger_claim", "acts_claim", "up_claim", "audience_claim")]
+                    if len(set(outputs)) != len(outputs) or any(c not in claims for c in outputs):
+                        raise ValueError(f"{where}.tokens.{kind}.scenario claims are declared and distinct")
+                    sec.tokens[kind].update(grant=tuple(grant), scenario=dict(binding))
+                    continue
                 fields = {"ref_claim", "target_fields", "audience_claim"}
                 links = {"cluster", "origin", "copies"}
                 if scope == "placement":
