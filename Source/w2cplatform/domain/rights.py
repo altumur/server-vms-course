@@ -51,7 +51,7 @@ def agent_denials(specs=None) -> list[str]:
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
         # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
         out += [f"!{s.domain_prefix}{k}{'*' if k.endswith('/') else ''}" for k in s.domain.kept]
-        if s.domain.books or s.domain.kept:
+        if s.domain.kept or set(s.domain.books) - set(s.domain.merged):
             out += [f"!{s.domain_prefix}worker", f"!{s.domain_prefix}heartbeat"]   # its worker's slot on the holder
     return out
 
@@ -125,7 +125,8 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
         "domainagent": role("domainagent", agent, reads("domainagent", ["*"])),
     }
     for s in on:
-        if not (s.domain.books or s.domain.kept):
+        # Member-collected books need no subsystem process on the holder (ADR-0074 C7).
+        if not (s.domain.kept or set(s.domain.books) - set(s.domain.merged)):
             continue
         # …and, with a family of subjects (`domain.names`), the grants the platform asks on its writes; the people it
         # does not read (`domain/users/` is the role `domain`'s alone, the shared table): it lists their keys, as every
