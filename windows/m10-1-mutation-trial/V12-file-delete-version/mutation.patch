@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/variables.py
++++ b/Source/w2cplatform/variables.py
+@@ -533,7 +533,7 @@
+                 os.remove(self._file(path))
+             except FileNotFoundError:
+                 pass
+-            self._next_index()
++            open(self.index_file, "w").write("1000")
+             self._durable_dirs()                    # the removal, too, survives the power going (the review's second pass)
+ 
+     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
