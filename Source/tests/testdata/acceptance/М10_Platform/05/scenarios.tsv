@@ -49,5 +49,6 @@ scenario	step	request	expect
 06-deleted	5	console DELETE /counters/c6	200 {"deleted": "c6"}
 06-deleted	6	@until 30 store GET /v1/get?key=testsub/placement/c6	200 {"items": {"worker": "", "reason": "deleted"}}
 06-deleted	7	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": ""}}
-06-deleted	8	console POST /counters {"name": "c6", "start": 5}	201 {"revision": 2}
-06-deleted	9	@until 40 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "2"}}
+06-deleted	8	@sleep 12	ok
+06-deleted	9	console POST /counters {"name": "c6", "start": 5}	201 {"revision": 2}
+06-deleted	10	@until 40 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "2"}}

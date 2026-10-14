@@ -73,7 +73,8 @@ users_groups:                                 # id — решает реализ
         подсистем: сокеты ролей в setgid-каталогах владельца w2c (ADR-0030)
 dirs:                                         # /data/platform; /etc/w2c → /data/platform/etc (ссылка)
   /data/platform/etc/secrets   2710 root:w2c-secrets   (ключ 0640; урок 7)
-  /data/platform/etc/tls       0750 root:configstore   (комплекты; ключи 0600/0640)
+  /data/platform/etc/tls       0751 root:root         (проход всем ролям; ca.pem, revoked — 0644)
+  /data/platform/etc/tls/<роль> 0750 root:<группа роли> (комплект роли; server.pem 0644, server.key 0640 — читает только своя группа)
   /data/platform/configstore   0700 configstore
   /data/platform/config        2770 w2c:w2c-store      (коробка)
   /data/platform/objects       2770 w2c:w2c-store
