@@ -65,5 +65,5 @@ class PollPush:
                 self.clear()
                 raise Unconfirmed("poll addresses changed during token request")
         self.route = route
-        return {"cluster": home, "polls_only": True, "push": False,
+        return {"cluster": home, "polls_only": True,
                 "ingest": {"urls": list(route), "token_secret": token}}
