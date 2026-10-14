@@ -278,6 +278,7 @@ class Asker:
         from w2cplatform.trust.jcs import jcs
         from w2cplatform.domain.federation import Unreachable
         from .recording_books import Unconfirmed
+        deadline = self.clock() + within
         own, facts = self._roads(target, action)
         if not facts:
             raise Unconfirmed('ask has no confirmed road')
@@ -302,7 +303,8 @@ class Asker:
             keys = trust.keyset()
             if keys is None:
                 raise Unconfirmed('ask has no trusted key set')
-            claims = verify(token, keys, trust.revoked(), now=self.clock(), kind='ask')
+            at = self.tokens.verification_time('ask', target, scope, token, by=self.serial)
+            claims = verify(token, keys, trust.revoked(), now=at, kind='ask')
             if claims.get('sub') != own or claims.get('ref') != target or claims.get('by') != self.serial \
                     or not isinstance(claims.get('aud'), list) or not claims['aud'] \
                     or not isinstance(claims.get('acts'), list) \
@@ -310,6 +312,8 @@ class Asker:
                 raise Unconfirmed('role token does not authorize this ask')
         except (TokenError, Untrusted, *PARSE_ERRORS):
             raise Unconfirmed('ask role token could not be verified') from None
+        if self.clock() >= deadline:
+            raise Unconfirmed('ask deadline passed during token request')
         # Authority comes from the signer; a book never adds a token audience or an upward hop.
         for fact in facts:
             if fact.member not in claims['aud'] or fact.value.get('up') != claims.get('up'):
@@ -317,7 +321,7 @@ class Asker:
             for url in fact.value['urls']:
                 try:
                     ingest = self.dial(url)
-                    aid = ingest.ask(token, target, action, self.clock() + within, camera_now=self.clock())
+                    aid = ingest.ask(token, target, action, deadline, camera_now=self.clock())
                     return ingest, aid
                 except Unreachable:
                     continue
