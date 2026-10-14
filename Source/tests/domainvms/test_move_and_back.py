@@ -54,6 +54,9 @@ class Site:
         for n in ("relay-a", "relay-b", "relay-c"):
             Members(self.c["srv"].vars, wall, domain="srv").add(n, "voucher", key=self.keys[n].pub,
                                                                   seal=self.keys[n].seal_pub)
+        from tests.domain.books_fixture import initial_books
+        initial_books(fed, self.holder.signer, wall,
+                      {n: (c.vars, c.objects) for n, c in self.c.items()})
         self.grant("srv", "anna")
         self.consoles = {}
 
