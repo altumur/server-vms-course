@@ -21,7 +21,7 @@ from w2cplatform.domain.readview import ReadView
 from w2cplatform.domain.uplink import member_copy
 from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
-from vms.domainpart.inputs import BookInputs
+from tests.domainvms.recording_domain import RecordingInputs
 from vms.camera_cluster import DeviceCluster
 from vms.ingest import CameraPusher
 from vms.recording_books import PRIMARIES_PATH, SOURCES_PATH
@@ -71,7 +71,7 @@ def _site(wall):
                             domain_objects=b.objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             sealer=rings["cam"], key=keys[cam.name])
     view = ReadView(fed, wall=wall)
-    crossings = BookInputs(b.vars, view, wall, sealer=rings["srv-b"])
+    crossings = RecordingInputs(b.vars, view, wall, sealer=rings["srv-b"])
 
     recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
