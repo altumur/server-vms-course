@@ -51,7 +51,7 @@ KEYS = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads",
     "worker.requests", "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads",
     "lease.unconfirmed_max", "snapshot",
-    "door.routes", "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
+    "door.routes", "door.pass", "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *(f"unit.fields.*.{k}" for k in FIELD_KEYS),
     *(f"tables.*.{k}" for k in TABLE_KEYS if k not in ("fields", "journal")), "tables.*.journal.written",
     "tables.*.journal.deleted", *(f"tables.*.fields.*.{k}" for k in TABLE_FIELD_KEYS),
