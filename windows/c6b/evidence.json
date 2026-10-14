@@ -18,7 +18,7 @@
   "expected_unit_failure": "platform_lists product parity: accepted 5acd45a2",
   "finding": "Поправка asks C6 перенесена, повторный полный unit завершён; только platform_lists",
   "product_changed": false,
-  "merged": false,
+  "merged": true,
   "previous_full_snapshot": {
     "source_commit": "b9947a21641b49c565085758583e2998e7b5ac5c",
     "source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-source.json",
@@ -67,5 +67,6 @@
       }
     ]
   },
-  "approval": "5e408bd3; C6 merged d6ef95cd"
+  "approval": "5e408bd3; C6 merged d6ef95cd",
+  "merge_commit": "9c93db83"
 }
