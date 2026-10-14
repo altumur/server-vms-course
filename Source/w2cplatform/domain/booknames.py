@@ -114,6 +114,11 @@ def _publish(vars_, spec, book, collected, now):
         have, rev = vars_.get(dest)
         if have != row:
             vars_.put(dest, row, cas=rev)
+    prefix = f"{spec.domain_prefix}{book}/"
+    for dest in vars_.list(prefix):
+        recipient = dest[len(prefix):]
+        if recipient and '/' not in recipient and recipient not in collected.rows:
+            vars_.delete(dest)
     if named and previous != names:
         vars_.put(where, names, cas=idx)
 
