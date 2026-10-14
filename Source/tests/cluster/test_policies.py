@@ -506,13 +506,18 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     objects = FsObjectStore(f"{root}/objects")
     fw = Forwarder("relay-a", Local(), AsRecorder(), dial=lambda url: None, objects=objects)
     fw.book()
-    fw.asks_book()
+    from vms.autoask import Asker
+    from vms.recording_books import Unconfirmed
+    try:
+        Asker("SN-A", AsRecorder(), lambda _: None)._roads("SN-A")
+    except Unconfirmed:
+        pass  # No complete generation was carried; the role must still be able to read it.
     should_from_snapshot(objects, sources=AsRecorder())("SN-A")
     from types import SimpleNamespace
     from vms.recworker import Look
     Look(SimpleNamespace(vars=AsRecorder())).sources()  # The recorder resolves pulls from sources.
-    books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/"))}
-    assert books == {"domain/rec/upstream", "domain/cam/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
+    books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/", "domain/auto/"))}
+    assert books == {"domain/rec/upstream", "domain/auto/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
     own_books = {f"domain/{REC_SPEC.name}/{book}" for book in REC_SPEC.domain.books}
     assert set(REC_SPEC.worker_reads) | own_books >= books, REC_SPEC.worker_reads
 
