@@ -158,6 +158,8 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
             member_reads.extend(["domain/holder", "domain/member-topology"])
         if "domain/member-topology" in s.worker_reads or unit_scope:
             member_reads.append("domain/topology")
+        if "domain/member-list" in s.worker_reads:
+            member_reads.append("domain/members")
         grants = [f"{GRANTS_PREFIX}*"] if s.door_routes else []
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
