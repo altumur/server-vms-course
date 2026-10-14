@@ -21,9 +21,9 @@ from vms.domainpart.books import Books
 from w2cplatform.domain.relay import Relay
 from w2cplatform.domain.console import Console
 from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
-from vms.domainpart.ingest import CameraPusher
+from vms.ingest import CameraPusher
 from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.placement import UnitSite, ClusterPlacer
 from w2cplatform.domain.readview import ReadView
@@ -219,7 +219,7 @@ def test_books_behind_a_relay_are_as_old_as_the_relay_says_on_the_cameras_own_cl
     compared, and a camera whose clock runs five minutes ahead still judges its books by their true age."""
     from w2cplatform.domain.relay import say_seen
     relay_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
-    relay_vars, relay_objects = FakeVariables(), __import__("vms.domainpart.device", fromlist=["Ram"]).Ram()
+    relay_vars, relay_objects = FakeVariables(), __import__("vms.camera_cluster", fromlist=["Ram"]).Ram()
     agent = DomainAgent("cam-SN8004", Relay(None, relay_objects).vars, FakeVariables(), now=cam_clock)
     last = relay_clock()
     say_seen(relay_objects, last, relay_clock())                     # the relay reached the domain just now
