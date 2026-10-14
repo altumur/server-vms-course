@@ -72,7 +72,7 @@ def _site(wall, down=(), writes=False):
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens)
     recording_domain = RecordingDomain(crossings, signer,
-        agents=[cam_agent, room_agent], devices=[cam])
+        agents=[cam_agent, room_agent], devices=[cam], recorders=recs)
     recording_domain.assign(SERIAL, "south")
     recording_domain.collect()
 
@@ -433,6 +433,7 @@ def _scenario_site(wall, scenarios, open_doors=()):
     shared = SharedDoor(north.vars, north.objects, signer, wall)                # a person's edit, at the signer's door
     shared.set_scenarios(scenarios)
     recording_domain = site_pass.recording_domain
+    recording_domain.add_recorder(home_rec)
     for d, a in [(gate, gate_agent), (ptz, ptz_agent), *extra.values()]:
         recording_domain.add_agent(a, d)
     books = Books(crossings, north.objects)
@@ -496,10 +497,12 @@ def test_a_scenario_in_the_shared_document_acts_on_two_cameras_one_recorded_and_
 def test_the_books_do_not_churn_and_a_scenario_taken_out_takes_the_right_with_it():
     wall = Clock()
     shared, books, domain_pass, gate, ptz, *_rest, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
-    writes = (gate.flash.writes, ptz.flash.writes)
+    def carried():
+        return [(d.flash.get("domain/rec/polls"), d.flash.get("domain/cam/asks")) for d in (gate, ptz)]
+    before = carried()
     for _ in range(10):
         wall.advance(30); domain_pass()
-    assert (gate.flash.writes, ptz.flash.writes) == writes            # five minutes of passes: no book rewritten
+    assert carried() == before                                     # five minutes: carried books and their versions stay
 
     shared.set_scenarios([])
     domain_pass()
@@ -594,6 +597,8 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     from vms.domainpart.scenario import Scenarios
     from w2cplatform.domain.shared import SharedView
     from w2cplatform.domain.term import DomainHolder, move_domain
+    from w2cplatform.domain.reports import pinned
+    import math
     from tests.domain.conftest import SharedDoor
     from tests.domain.test_lesson15_domain_of_one import _agent, _domain, _objects
 
@@ -616,32 +621,36 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     urls, ingests, recs = {"cam-SN0": ["srt://sn0.site:9000"], "cam-SN3": ["srt://sn3.site:9000"]}, {}, {}
 
     def light_ingest(name, vars_):                                     # on the domain camera's recorder: asks only
-        recs[name] = ingest_recorder(name, urls[name][0], wall, objects=fed.clusters[name].objects,
+        recs[name] = ingest_recorder(name, urls[name][0], wall, vars_=devices[name].flash, objects=devices[name].local_objects(),
                                      keys=lambda: ClusterTrust(vars_).keyset())
         ingests[name] = recs[name].ingest
 
+    dialled = []
     def dial(url):
+        dialled.append(url)
         for name, i in ingests.items():
             if url in urls[name] and devices[name].door_open:
                 return i
         raise Unreachable(f"{url} did not answer")
 
-    def settle(holder_name, issuer):                                     # the holder's pass over the books, agents both sides
+    def settle(holder_name, current_signer):                             # the holder's pass over the books, agents both sides
         live = [n for n in devices if n != holder_name and devices[n].door_open]
         agents = [_agent(fed, devices, n, holder_name, wall) for n in live]
         books = Books(BookInputs(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
-                                wall, issuer=issuer), devices[holder_name].disk)      # the holder reads reports, not doors
-        for n in live:
-            devices[n].publish()
-        recs[holder_name].heartbeat_once()                               # its ingest, said in its recorder's heartbeat
-        for a in agents:
-            report_sync(a)
-        books.pass_once()
-        for a in agents:
-            report_sync(a)
+                                wall, issuer=current_signer.tokens), devices[holder_name].disk)
+        publication = RecordingDomain(books.inputs, current_signer, agents=agents,
+            devices=[devices[n] for n in [holder_name, *live]], recorders=[recs[holder_name]],
+            domain_objects=devices[holder_name].disk)
+        # Topology and holder arrive first; then sources, the home's ordinary
+        # poll publication and its signed report travel through the same passes.
+        for _ in range(2):
+            publication.collect()
+            books.pass_once()
+            for a in agents:
+                report_sync(a)
 
     light_ingest("cam-SN0", home)
-    settle("cam-SN0", signer.tokens)
+    settle("cam-SN0", signer)
     done = []
     ptz = camera_pusher("SN2", devices["cam-SN2"].flash, dial, clock=wall, perform=lambda a: done.append(a) or "performed")
     gate = Scenarios("SN1", SharedView(devices["cam-SN1"].flash, devices["cam-SN1"].disk, wall),
@@ -662,7 +671,17 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     new, report = move_domain(fed, "cam-SN3", offline, "acme", _objects(devices), wall)
     assert report["shared_from"] == "cam-SN3"                          # the document, from the new holder's own copy
     light_ingest("cam-SN3", new.vars)
-    settle("cam-SN3", new.signer.tokens)
+    settle("cam-SN3", new.signer)
+    # The dead old home's accepted publication remains fresh for report grace.
+    # pick:unique refuses conflicting old/new polls; no old home or guessed new
+    # route is used during this observed availability delay after the move.
+    before = len(dialled)
+    assert ptz.entry() is None
+    assert ptz.pass_once([])["state"].startswith("ERROR")
+    assert len(dialled) == before
+    old_received = pinned("cam-SN0", devices["cam-SN3"].disk).mark["received_at"]
+    wall.advance(math.nextafter(old_received + 45.0, math.inf) - wall())
+    settle("cam-SN3", new.signer)
     assert ptz.entry()["cluster"] == "cam-SN3" and [r["cluster"] for r in gate.asker.book()["SN2"]] == ["cam-SN3"]
     wall.advance(15)
     [x] = gate.on_event("vehicle")
