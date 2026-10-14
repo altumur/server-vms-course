@@ -19,11 +19,11 @@ from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher,
 from vms.domainpart.books import Books
 from w2cplatform.domain.relay import MEMBER_SHARE, Relay, bundle, say_seen, RELAY_SEEN
 from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
 from w2cplatform.domain.identity import IdentityStore
-from vms.domainpart.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Refused, audience
+from vms.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Refused, audience
 from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.pending import OUTCOMES_PATH, PendingEdits
 from w2cplatform.domain.readview import ReadView
@@ -600,7 +600,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     `REMEMBER`, and every ask swept all of them: 27.5 s of the ingest's CPU. A deadline that has passed is refused now;
     an asker that lets its asks run out as fast as it may keeps at most `OUTCOMES_KEPT` outcomes at a camera, the
     oldest forgotten first; and another asker's outcome is not pushed out by it."""
-    from vms.domainpart.ingest import OUTCOMES_KEPT
+    from vms.ingest import OUTCOMES_KEPT
     wall = Clock(10_000.0)
     south, _ = make_cluster("south")
     signer = Signer("acme", south.vars, now=wall)
