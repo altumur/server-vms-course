@@ -110,6 +110,7 @@ def test_embedded_device_calls_agent_as_autoworker_without_an_auto_worker():
         return {**e.door.request(kind,ref,by),'request_id':request_id}
     agent=SimpleNamespace(request_token=request)
     device.host_scenarios(agent,e.dial,steady=e.box.clock)
+    device.door_open=False  # a camera behind NAT still executes its local events
     assert device.on_event('motion')[0]['state']=='asked'
     assert requests[0][:5]==('cam','ask','B','autoworker','A')
     assert requests[0][5] and not e.box.objects.list('auto/heartbeats/')
@@ -125,3 +126,46 @@ def test_embedded_reply_requires_exact_correlation():
     for response in ({'token':'private','exp':100,'request_id':'wrong'},{}):
         agent=SimpleNamespace(request_token=lambda *a:response)
         raises(Unconfirmed,lambda:AgentDoor(agent).request('ask','B','A'))
+
+
+def test_embedded_publisher_uses_common_facts_and_withdraws_when_path_changes():
+    from tests.test_autoask import publisher_fixture
+    from vms.autoask_runtime import EmbeddedPublisher
+    e = publisher_fixture('home')
+    shared(e, [item()])
+    e.box.objects.delete('auto/heartbeats/a-1')
+    publisher = EmbeddedPublisher('A', e.box.vars, e.box.objects, e.box.objects, e.box.wall, e.box.clock)
+    publisher.publish()
+    row = e.box.vars.get('auto/asks/A')[0]
+    assert json.loads(row['B'])['urls'] == ['http://home/ingest']
+    assert not e.box.objects.list('auto/heartbeats/')
+    assert not e.box.vars.list('auto/scenarios/')
+    # It remains the same publisher when topology/placement stops making this
+    # camera an endpoint. Its old authority must disappear, not age out in RAM.
+    assignment = e.box.vars.get('domain/placed/rec/B')[0]
+    e.box.vars.put('domain/placed/rec/B', {**assignment, 'cluster':'stranger','rev':'2'})
+    publisher.publish()
+    assert e.box.vars.get('auto/asks/A')[0] == {}
+
+
+def test_embedded_publisher_needs_a_live_ingest_and_obeys_slot_fencing():
+    from tests.test_autoask import publisher_fixture
+    from vms.autoask_runtime import EmbeddedPublisher
+    from w2cplatform.worker import Worker
+    from vms.config import AUTO_SPEC
+    e = publisher_fixture('home')
+    shared(e, [item()])
+    e.box.objects.delete('rec/heartbeats/r-1')
+    publisher = EmbeddedPublisher('A', e.box.vars, e.box.objects, e.box.objects, e.box.wall, e.box.clock)
+    publisher.publish()
+    assert not e.box.vars.list('auto/asks/') and not e.box.vars.list('auto/slots/')
+    e.beat('rec','r-1',ingest='http://home/ingest')
+    publisher.publish()
+    assert e.box.vars.get('auto/asks/A')[0]
+    other = Worker(AUTO_SPEC.sub, None, e.box.vars, e.box.objects, spec=AUTO_SPEC,
+                   clock=e.box.clock, wall=e.box.wall)
+    other.claim_slot('A')
+    before = e.box.vars.get('auto/asks/A')
+    publisher.publish()
+    assert e.box.vars.get('auto/asks/A') == before
+    assert publisher.worker.writing_allowed is False
