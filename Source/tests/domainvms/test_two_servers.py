@@ -22,10 +22,10 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from vms.domainpart.inputs import BookInputs
 from vms.recording_sources import plan_takeback, resolve
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
-from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import CameraPusher, IngestLiveEndpoint, audience, live_road
+from vms.gateway import Gateway
+from vms.ingest import CameraPusher, IngestLiveEndpoint, audience, live_road
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
@@ -325,7 +325,7 @@ def test_a_camera_that_a_pulls_is_not_called_uncovered_and_its_card_does_not_rec
     recorder pulls. Asked only "should A record it?", the ingest would call it uncovered: the card would record all
     the time and the camera would push a second stream to B. The ingest speaks only of a camera that pushes to it;
     of this one it says nothing, and the book — A writes it — decides."""
-    from vms.domainpart.ingest import edge_gate
+    from vms.ingest import edge_gate
     wall = Clock()
     o = _office(wall)
     o.cam.pushes = False; o.cam.door_open = True                       # pulled by A now
@@ -421,7 +421,7 @@ def _written_office(wall):
 def _sensor(t0, n, start=0):
     """What the camera's sensor gives, as the pusher pushes it (`ingest.wire`): frames `start`… of twenty-five a second
     from `t0`, a key frame each second, each carrying its sample record — what a recorder writes."""
-    from vms.domainpart.ingest import wire
+    from vms.ingest import wire
     from vms.obsd import archive_ms, video
     from vms.worker import FAKE_PPS, FAKE_SPS
     out = []
