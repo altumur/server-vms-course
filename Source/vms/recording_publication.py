@@ -18,7 +18,7 @@ def publish(worker, family, items):
     """A failed slot guard never retries and never suppresses the worker's pulse."""
     if not worker.name:
         return False
-    prefix = f"{worker.SUB.name}/{family}/"
+    prefix = f"{worker.sub.name}/{family}/"
     domain = worker.spec.domain
     if domain is None or not any(rule.source == prefix for rule in domain.merged.values()):
         return False
