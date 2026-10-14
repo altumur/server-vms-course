@@ -1,6 +1,6 @@
 {
   "source_full_run": "4304c4fe",
-  "current_code": "7a336699",
+  "current_code": "51e7ca4e",
   "full_source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-repaired-source.json",
   "full_source_unchanged_files": 1017,
   "checks": [
@@ -93,7 +93,23 @@
         0,
         0
       ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-holder-members-acceptance.log",
+      "sha256": "3f9756a9008b77013e3da7f330d14b3e10d6b433eb59d3c5fde40dfd3a4d23c9",
+      "exit": 0,
+      "counts": [
+        12,
+        0,
+        0
+      ]
     }
   ],
-  "status": "not complete: holder excluded from Members; decision requested in main 551beda7"
+  "status": "not complete: holder excluded from Members; decision requested in main 551beda7",
+  "stand_after_9ea7193f": {
+    "path": "/Users/murat/w2c/course-book-merge-evidence/c6-stand-holder-report.log",
+    "sha256": "0669db5c23fcf21cd5a3400be0a1bf94caff1457dfd5a30c0286475e2dddad2a",
+    "exit": 1,
+    "remaining": "recworker may not read domain/revoked; decision requested in 737b6296"
+  }
 }
