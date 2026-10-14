@@ -12,7 +12,7 @@ backfill, saying how much; and it goes ahead of the live edge a piece a pass, so
 from vms.config import REC_SPEC
 from w2cplatform.console import Heartbeat
 from w2cplatform.domain.federation import Unreachable
-from vms.domainpart.ingest import CameraPusher, written_from_heartbeats
+from vms.ingest import CameraPusher, written_from_heartbeats
 from tests.domainvms.recording_domain import camera_pusher
 from tests.domain.conftest import Clock, real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site
@@ -454,7 +454,7 @@ def test_a_push_repeated_after_its_answer_was_lost_adds_nothing_even_with_have_f
     assert w.repeats == 0 and w.written == [float(t) for t in range(1, int(wall()) + 1)]   # …and nobody got them twice
     # What the ingest did not hand on is said (the product's sibling: a full queue's refusals were counted nowhere).
     import json
-    from vms.domainpart.ingest import POLLED
+    from vms.ingest import POLLED
     ingest.push = real
     ingest.subscribe(SERIAL, "viewer:v", maxsize=2, edge=True)            # a viewer that does not read
     _second(wall, pusher, 5)
@@ -491,7 +491,7 @@ def test_a_torn_book_entry_snapshot_shard_or_heartbeat_field_is_that_ones_troubl
     kept: the camera pushes on by the entry it read before, the ingest says what the shards it can read say."""
     import json
     from vms.recording_books import PRIMARIES_PATH
-    from vms.domainpart.ingest import BOOKS, should_from_snapshot
+    from vms.ingest import BOOKS, should_from_snapshot
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     _second(wall, pusher, 2)
@@ -544,7 +544,7 @@ def test_a_frame_with_an_absurd_time_is_refused_and_counted_and_the_frames_after
     or whose time is no finite number, is refused now, counted (`ahead`, under `lost`), and never anybody's last frame;
     a frame of an hour ahead too. The same at the other doors into the tees, which the review did not name: what this
     cluster's forwarder injects, and what a peer ingest hands on."""
-    from vms.domainpart.ingest import FRAME_AHEAD, PeerLink
+    from vms.ingest import FRAME_AHEAD, PeerLink
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     token = _token(ingest, pusher)
@@ -617,7 +617,7 @@ def test_the_cameras_offset_is_held_through_the_travel_of_its_requests_and_moves
     offset at once (no request arrives before it was sent); one found BEHIND moves it only when every request for
     `OFFSET_RISE` says so. Each move is counted (`clock_steps`)."""
     import random
-    from vms.domainpart.ingest import OFFSET_RISE
+    from vms.ingest import OFFSET_RISE
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     token, w, rnd, n, true = _token(ingest, pusher), _Writer(ingest), random.Random(16), [0], [1000.0]
@@ -656,7 +656,7 @@ def test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door():
     A camera's own frame is held to its own clock now (`CAMERA_AHEAD`), and in the tee a frame further past the stream
     than `STREAM_JUMP` is the stream's only when the frame after it follows it: 251 of 251 at every door, the stray
     frame counted (`ahead`). A stream that truly jumps — a push begun again after a pause — loses nothing."""
-    from vms.domainpart.ingest import PeerLink
+    from vms.ingest import PeerLink
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     token = _token(ingest, pusher)
@@ -692,7 +692,7 @@ def test_a_sparse_stream_reaches_the_recorder_whole_and_at_once_at_every_door():
     60 s apart reach the recorder, every one, each the moment it arrives — and the stray frame from the future the hold
     is there for is still held and dropped (`test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door`)."""
     import random
-    from vms.domainpart.ingest import PeerLink
+    from vms.ingest import PeerLink
     rnd = random.Random(11)
     for door in ("push", "inject", "relay"):
         wall = Clock(1000.0)
@@ -722,7 +722,7 @@ def test_a_camera_clock_that_runs_fast_or_a_first_request_that_travelled_long_lo
     recorder once, in order, never further from where it was captured than the hold and the slew allow — and the open
     stream takes every correction: the drift stays within the hold, it does not grow with the stream."""
     import random
-    from vms.domainpart.ingest import OFFSET_HOLD
+    from vms.ingest import OFFSET_HOLD
     for case in ("fast clock", "slow first request"):
         wall = Clock(1000.0)
         south, ingest, pusher, rq, down = _world(wall)
