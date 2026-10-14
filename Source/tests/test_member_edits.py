@@ -543,3 +543,16 @@ def test_a_stranded_edit_is_resubmitted_as_the_original_crud_with_the_same_key()
             assert request.get_header("Authorization") == "Bearer person-token"
             assert request.full_url == "http://new-console/domain" + route + ("" if method == "POST" else "?cluster=north")
             assert json.loads(request.data) == ({**body, "cluster": "north"} if method == "POST" else body)
+
+
+def test_domain_rejects_wrong_field_types_and_schema_before_persisting_an_edit():
+    with site(fields={"budget": {"type": "int", "schema": {"minimum": 1}}}) as e:
+        # The same declared domain.edit set, extended by this test's own spec.
+        for schema in e.specs:
+            schema.domain.edit = tuple(schema.domain.edit) + ("budget",)
+        for number, value in enumerate((0, 1.5, "yes", True, None)):
+            raises(400, lambda: e.api.queue("PUT", "testsub", e.specs[0].rows, "1",
+                                          {"budget": value}, str(number), "north"))
+            assert e.pending.of("north") == {}
+        reply = e.api.queue("PUT", "testsub", e.specs[0].rows, "1", {"budget": 2}, "valid", "north")
+        assert reply["kept"] in e.pending.of("north")
