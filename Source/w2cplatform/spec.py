@@ -1481,6 +1481,7 @@ class SubsystemSpec:
     # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —
     # the holder's `url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
     door_routes: tuple = ()
+    door_pass: tuple = ()             # subsystem routes with no unit, forwarded to one live worker
     # `domain: {...}` — what this subsystem gives the domain above its clusters and takes from it (`DomainSection`; the
     # boundary's «no hooks»: it was code the domain called and named — the books, the rows a member carries, the fields
     # of the shared view, the kinds of token). None: the subsystem is not on the domain at all.
@@ -1744,7 +1745,21 @@ class SubsystemSpec:
                              f"is none — declare it under `metrics:`")
         self.holds = holds.parse(self.name, d.get("holds"), tables=self.tables)
         from .door import parse_routes
-        self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
+        door = d.get("door")
+        if door is not None:
+            if not isinstance(door, dict) or not door or set(door) - {"routes", "pass"}:
+                raise ValueError(f"spec {self.name}: door is {{routes: [<route>], pass: [<route>]}}, not {door!r}")
+            self.door_routes = parse_routes(f"spec {self.name}", {"routes": door["routes"]}) if "routes" in door else ()
+            if "pass" in door:
+                try:
+                    self.door_pass = parse_routes(f"spec {self.name}", {"routes": door["pass"]})
+                except ValueError as e:
+                    raise ValueError(str(e).replace("door.routes", "door.pass").replace("{routes:", "{pass:")) from None
+            if any(not re.fullmatch(r"[a-z][a-z0-9_-]{0,31}", route) for route in self.door_pass):
+                raise ValueError(f"spec {self.name}: door.pass takes one lower-case path segment per route")
+            collisions = set(self.door_pass) & (set(self.door_routes) | {self.rows} | CONSOLE_ROUTES)
+            if collisions:
+                raise ValueError(f"spec {self.name}: door.pass overlaps routes, unit.rows or console routes: {sorted(collisions)}")
         req = d.get("requests")
         if req is not None:
             known = set(REQUEST_KEYS)
@@ -1799,6 +1814,8 @@ class SubsystemSpec:
                 self._request_key(req)
         from .tables import parse as _tables
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
+        if set(self.door_pass) & set(self.table_specs):
+            raise ValueError(f"spec {self.name}: door.pass overlaps a table served by the console")
         # …a table the console SERVES (declared, `{key, fields}`) and the rows: a table only named (`tables: [x]`) is a
         # family the console's token may write and nobody serves — no route of its own to collide
         for where, n in [("unit.rows", self.rows)] + [(f"tables.{t}", t) for t in self.table_specs]:
@@ -1814,15 +1831,10 @@ class SubsystemSpec:
             if t is None or rel not in t.fields:
                 raise ValueError(f"spec {self.name}: holds.released is {rel!r}, which is no field of "
                                  f"tables.{self.holds['table']}.fields — declare it there, or let go of nothing")
-        # WHAT A WORKER WRITES HAS A DECLARED FORM (ADR 0012; «Архитектор» with «Паритет», 2026-10-06): `worker.writes`
-        # names its units' rows or one of its DECLARED tables (`{key, fields}`), whose field rules the write goes through
-        # (`tables.write_row`). Any other family under `<sub>/` — a table only named, or none — is rows of no declared
-        # form that nobody serves, and its token would write them: refused at load, the family named.
-        stray = [w for w in self.worker_writes if w != self.rows and w not in self.table_specs]
+        # C5: a named table may belong to the worker; its object declaration still supplies typed console reads.
+        stray = [w for w in self.worker_writes if w not in (self.rows, *self.tables)]
         if stray:
-            raise ValueError(f"spec {self.name}: worker.writes names {', '.join(stray)} — neither its units' rows "
-                             f"({self.rows}) nor one of its declared tables ({', '.join(self.table_specs) or 'none'}); "
-                             f"declare it under `tables:` with its key and fields, or write nothing there")
+            raise ValueError(f"spec {self.name}: worker.writes names {', '.join(stray)} — no such row family")
         disp = d.get("display")
         if disp is not None:
             if not isinstance(disp, dict):
@@ -2215,7 +2227,8 @@ class SubsystemSpec:
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
                DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
                SCHEMA_KEY]                                                                    # `PUT /schema`: the operator raises the layout once every machine is new
-        out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `testsub2/shelves/*`
+        # A table named by worker.writes is read-only at the console, including the object form with fields.
+        out += [f"{self.name}/{t}/*" for t in self.tables if t not in self.worker_writes]
         return out
 
     # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
