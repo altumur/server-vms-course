@@ -37,7 +37,7 @@ def _race(v, prefix='testsub'):
             raise AssertionError("late owner wrote")
         assert v.get(target) == ({'n': 'new'}, current)
     with pytest.raises(GuardFailed):
-        v.put(target, {}, guard={'key':slot,'index':str(new)})
+        v.put(target, {}, guard={'key':slot,'index':str(new)+'0'})
     with pytest.raises(Conflict):
         v.put(target, {}, cas=0, guard={'key': slot, 'index': new})
     v.delete(target, cas=current, guard={'key': slot, 'index': new})
@@ -59,7 +59,7 @@ def test_guard_requires_read_permission_and_never_grants_target_write_permission
     r = Rights({'testsubworker': {'read':['testsub/slots/contribution'], 'write':['testsub/*']}})
     calls = []
     code, _ = answer('POST','/v1/write',json.dumps({'op':'put','key':'testsub/slots/contribution','items':{},
-                     'guard':{'key':'testsub/slots/w-1','index':1}}).encode(), 'testsubworker',r,calls.append)
+                     'guard':{'key':'testsub/slots/w-1','index':'1'}}).encode(), 'testsubworker',r,calls.append)
     assert code == 403 and not calls
 
 
@@ -156,8 +156,8 @@ def test_guard_wire_refusal_has_the_exact_412_body_and_does_not_become_a_cas_con
     m=StoreMachine()
     current=m.apply({'op':'put','key':'testsub/slots/w-1','items':{}})['index']
     code,body=answer('POST','/v1/write',json.dumps({'op':'put','key':'testsub/a','items':{},
-                     'guard':{'key':'testsub/slots/w-1','index':0}}).encode(),'admin',Rights(),m.apply)
-    assert code==412 and body=={'error':'guard','key':'testsub/slots/w-1','index':current}
+                     'guard':{'key':'testsub/slots/w-1','index':''}}).encode(),'admin',Rights(),m.apply)
+    assert code==412 and body=={'kind':'guard','error':'guard','key':'testsub/slots/w-1','index':str(current)}
     assert 'testsub/a' not in m.rows
     code,body=answer('POST','/v1/write',json.dumps({'op':'put','key':'testsub/a','items':{},
                      'guard':None}).encode(),'admin',Rights(),m.apply)

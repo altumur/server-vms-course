@@ -8,7 +8,7 @@ GET /v1/get?key=cam/next_id
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "cam/next_id", "cas": "", "items": {"n": "1"}}
-→ 200 {"index": 1004}
+→ 200 {"index": "1004"}
 
 # console on srv-a → /run/configstore/console.sock
 GET /v1/list?prefix=cam/cameras/
@@ -30,4 +30,4 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "", "items": {
   "live": "always",
   "kind": "video"
 }}
-→ 200 {"index": 1005}
+→ 200 {"index": "1005"}

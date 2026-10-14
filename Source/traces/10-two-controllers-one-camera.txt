@@ -5,11 +5,11 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1018}
+→ 200 {"index": "1018"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
-→ 200 {"index": 1019}
+→ 200 {"index": "1019"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
@@ -21,7 +21,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
 → 409 {
   "kind": "conflict",
   "error": "cam/placement/1: the version is 1018, not the one the write named",
-  "index": 1018
+  "index": "1018"
 }
 
 # … and 59 GET requests, omitted

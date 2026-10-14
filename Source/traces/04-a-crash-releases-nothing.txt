@@ -1,6 +1,6 @@
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/list?prefix=cam/placement/
-→ 200 {"keys": {"cam/placement/1": 1010}}
+→ 200 {"keys": {"cam/placement/1": "1010"}}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=cam/placement/1
@@ -11,7 +11,7 @@ GET /v1/get?key=cam/placement/1
     "at": "1757500000.0",
     "rev": "1"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
@@ -32,12 +32,12 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1005
+  "index": "1005"
 }
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/list?prefix=cam/slots/
-→ 200 {"keys": {"cam/slots/w-srv-c-1": 1008}}
+→ 200 {"keys": {"cam/slots/w-srv-c-1": "1008"}}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=cam/slots/w-srv-c-1
@@ -49,12 +49,12 @@ GET /v1/get?key=cam/slots/w-srv-c-1
     "gen": "1",
     "server": "srv-c"
   },
-  "index": 1008
+  "index": "1008"
 }
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=platform/doors/srv-c
-→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": "1003"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=platform/drain
@@ -66,7 +66,7 @@ GET /v1/list?prefix=platform/decommission/
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/list?prefix=cam/slots/
-→ 200 {"keys": {"cam/slots/w-srv-c-1": 1008}}
+→ 200 {"keys": {"cam/slots/w-srv-c-1": "1008"}}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 GET /v1/get?key=cam/slots/w-srv-c-1
@@ -78,7 +78,7 @@ GET /v1/get?key=cam/slots/w-srv-c-1
     "gen": "1",
     "server": "srv-c"
   },
-  "index": 1008
+  "index": "1008"
 }
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
@@ -91,7 +91,7 @@ GET /v1/get?key=platform/decommission/srv-c
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/list?prefix=cam/slots/
-→ 200 {"keys": {"cam/slots/w-srv-c-1": 1008}}
+→ 200 {"keys": {"cam/slots/w-srv-c-1": "1008"}}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=cam/slots/w-srv-c-1
@@ -103,7 +103,7 @@ GET /v1/get?key=cam/slots/w-srv-c-1
     "gen": "1",
     "server": "srv-c"
   },
-  "index": 1008
+  "index": "1008"
 }
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
@@ -116,36 +116,36 @@ GET /v1/get?key=cam/slots/w-srv-c-1
     "gen": "1",
     "server": "srv-c"
   },
-  "index": 1008
+  "index": "1008"
 }
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1008, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": "1008", "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "true",
   "gen": "2",
   "server": "srv-c"
 }}
-→ 200 {"index": 1013}
+→ 200 {"index": "1013"}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "delete", "key": "cam/sources/w-srv-c-1", "cas": null, "guard": {"key": "cam/slots/w-srv-c-1", "index": 1013}}
-→ 200 {"index": 1014}
+POST /v1/write {"op": "delete", "key": "cam/sources/w-srv-c-1", "cas": null, "guard": {"key": "cam/slots/w-srv-c-1", "index": "1013"}}
+→ 200 {"index": "1014"}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1013, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": "1013", "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "false",
   "gen": "2",
   "server": "srv-c"
 }}
-→ 200 {"index": 1015}
+→ 200 {"index": "1015"}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-c-1
-→ 200 {"items": {"units": "1", "rev": "1"}, "index": 1011}
+→ 200 {"items": {"units": "1", "rev": "1"}, "index": "1011"}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=cam/cameras/1
@@ -165,5 +165,5 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1005
+  "index": "1005"
 }

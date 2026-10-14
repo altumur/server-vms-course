@@ -16,7 +16,7 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1005
+  "index": "1005"
 }
 
 # console on srv-b → /run/configstore/console.sock
@@ -37,11 +37,11 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1005
+  "index": "1005"
 }
 
 # console on srv-b → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "1005", "items": {
   "id": "1",
   "revision": "2",
   "name": "north-gate",
@@ -56,10 +56,10 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "live": "always",
   "kind": "video"
 }}
-→ 200 {"index": 1006}
+→ 200 {"index": "1006"}
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "1005", "items": {
   "id": "1",
   "revision": "1",
   "name": "north-gate-2",
@@ -77,7 +77,7 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
 → 409 {
   "kind": "conflict",
   "error": "cam/cameras/1: the version is 1006, not the one the write named",
-  "index": 1006
+  "index": "1006"
 }
 
 # console on srv-a → /run/configstore/console.sock
@@ -98,11 +98,11 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1006
+  "index": "1006"
 }
 
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1006, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "1006", "items": {
   "id": "1",
   "revision": "2",
   "name": "north-gate-2",
@@ -117,4 +117,4 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1006, "items": {
   "live": "always",
   "kind": "video"
 }}
-→ 200 {"index": 1008}
+→ 200 {"index": "1008"}

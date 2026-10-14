@@ -8,7 +8,7 @@ GET /v1/get?key=platform/decommission/srv-a
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/list?prefix=cam/slots/
-→ 200 {"keys": {"cam/slots/w-srv-a-1": 1010}}
+→ 200 {"keys": {"cam/slots/w-srv-a-1": "1010"}}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/slots/w-srv-a-1
@@ -20,7 +20,7 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
@@ -33,32 +33,32 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1010, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "1010", "items": {
   "holder": "srv-a:4102:001006",
   "until": "1757500045.0",
   "released": "true",
   "gen": "2",
   "server": "srv-a"
 }}
-→ 200 {"index": 1014}
+→ 200 {"index": "1014"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "delete", "key": "cam/sources/w-srv-a-1", "cas": null, "guard": {"key": "cam/slots/w-srv-a-1", "index": 1014}}
-→ 200 {"index": 1015}
+POST /v1/write {"op": "delete", "key": "cam/sources/w-srv-a-1", "cas": null, "guard": {"key": "cam/slots/w-srv-a-1", "index": "1014"}}
+→ 200 {"index": "1015"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1014, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "1014", "items": {
   "holder": "srv-a:4102:001006",
   "until": "1757500045.0",
   "released": "false",
   "gen": "2",
   "server": "srv-a"
 }}
-→ 200 {"index": 1016}
+→ 200 {"index": "1016"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/schema
@@ -74,12 +74,12 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "2",
     "server": "srv-a"
   },
-  "index": 1016
+  "index": "1016"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "1,2", "rev": "1"}, "index": 1011}
+→ 200 {"items": {"units": "1,2", "rev": "1"}, "index": "1011"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/cameras/1
@@ -99,7 +99,7 @@ GET /v1/get?key=cam/cameras/1
     "live": "always",
     "kind": "video"
   },
-  "index": 1005
+  "index": "1005"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
@@ -120,7 +120,7 @@ GET /v1/get?key=cam/cameras/2
     "live": "always",
     "kind": "video"
   },
-  "index": 1007
+  "index": "1007"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
@@ -129,11 +129,11 @@ GET /v1/get?key=platform/epoch_floor
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/1
-→ 200 {"items": {"epoch": "1"}, "index": 1012}
+→ 200 {"items": {"epoch": "1"}, "index": "1012"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1012, "items": {"epoch": "2"}}
-→ 200 {"index": 1017}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": "1012", "items": {"epoch": "2"}}
+→ 200 {"index": "1017"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/epoch_floor
@@ -141,8 +141,8 @@ GET /v1/get?key=platform/epoch_floor
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/2
-→ 200 {"items": {"epoch": "1"}, "index": 1013}
+→ 200 {"items": {"epoch": "1"}, "index": "1013"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": 1013, "items": {"epoch": "2"}}
-→ 200 {"index": 1018}
+POST /v1/write {"op": "put", "key": "cam/epoch/2", "cas": "1013", "items": {"epoch": "2"}}
+→ 200 {"index": "1018"}

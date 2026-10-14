@@ -40,9 +40,9 @@ def test_a_row_reaches_the_medium_before_it_is_renamed_into_place_unless_the_sto
     try:
         durable = FileVariables(os.path.join(box.root, "durable"), volatile=False)
         durable.put("testsub/epoch/7", {"epoch": 5})
-        assert calls == {"file": 2, "dir": 2}                     # the counter and the row; their two directories
+        assert calls == {"file": 2, "dir": 3}                     # counter reservation first, then row and final dirs
         durable.as_writer("w-1", ["testsub/*"]).put("testsub/epoch/8", {"epoch": 1})
-        assert calls["file"] == 4                                 # another identity on the same store: as durable
+        assert calls == {"file": 4, "dir": 6}                     # another identity reserves its version before writing
         calls.update(file=0, dir=0)
         FileVariables(os.path.join(box.root, "volatile"), volatile=True).put("testsub/epoch/7", {"epoch": 5})
         assert calls == {"file": 0, "dir": 0}

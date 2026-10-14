@@ -1,6 +1,6 @@
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 POST /v1/write {"op": "put", "key": "cam/epoch/7", "cas": null, "items": {"epoch": "1"}}
-→ 200 {"index": 1004}
+→ 200 {"index": "1004"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
@@ -10,7 +10,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {"w
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
   "holder": "srv-a:4102:001006"
 }}
-→ 200 {"index": 1005}
+→ 200 {"index": "1005"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/recordings/7", "cas": null, "items": {"cam": "7"}}
@@ -21,7 +21,7 @@ POST /v1/write {"op": "put", "key": "cam/placement/7", "cas": null, "items": {
   "worker": "w-srv-a-1",
   "reason": "…"
 }}
-→ 200 {"index": 1006}
+→ 200 {"index": "1006"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "moved"}}
@@ -29,7 +29,7 @@ POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"nam
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "north-gate"}}
-→ 200 {"index": 1007}
+→ 200 {"index": "1007"}
 
 # console on srv-a → /run/configstore/console.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
@@ -40,7 +40,7 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-a", "cas": null, "items"
   "url": "http://srv-a:8090",
   "since": "0"
 }}
-→ 200 {"index": 1008}
+→ 200 {"index": "1008"}
 
 # resource on srv-a → /run/configstore/resource.sock
 POST /v1/write {"op": "put", "key": "cam/cameras/7", "cas": null, "items": {"name": "mine"}}

@@ -47,7 +47,7 @@ from __future__ import annotations
 import threading
 
 from .limits import NO_CEILING, check
-from .variables import guard_check, guard_match, Conflict, Forbidden, items_bytes, refuse_delete, register_scheme, safe_path
+from .variables import guard_check, guard_match, Conflict, Forbidden, items_bytes, refuse_delete, register_scheme, safe_path, _Replay, _native_command, _wrapper_command
 
 # One store per name, per process. Module-level because that is what "per process" means; the lock is
 # around the registry, not around a store — each store has its own.
@@ -59,7 +59,8 @@ class _MemState:
     """What the handles share: the rows and the index. Not who may write what."""
 
     def __init__(self) -> None:
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
+        self.replay = _Replay()
         self.index = 1000           # matched to the file store so two backends read alike; a store that dies
                                     # with its process has no "before the restart", so the value is cosmetic here
         self.items: dict[str, tuple[dict, int]] = {}
@@ -98,33 +99,39 @@ class MemVariables:
             e = self._s.items.get(path)
             return (dict(e[0]), e[1]) if e else (None, 0)
 
-    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None) -> int:
-        safe_path(path)
-        self._refuse(path)
-        check(path, items_bytes(items), self.max_bytes)
-        guard_check(guard, self.writer, self.acl)
-        with self._s.lock:
-            guard_match(guard, lambda k: self._s.items.get(k, (None, 0))[1])
-            current = self._s.items.get(path, (None, 0))[1]
-            if cas is not None and cas != current:
-                raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
-            self._s.index += 1
-            self._s.items[path] = ({k: str(v) for k, v in items.items()}, self._s.index)
-            return self._s.index
+    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None,
+            id: str | None = None) -> int:
+        return self.write(_wrapper_command("put", path, cas, guard, id, items))["index"]
 
-    # A delete is a write: the same ACL as `put`, and never an epoch — the rule is the file backend's
-    # (`variables.refuse_delete`), so the two cannot disagree. Then the same CAS check as `put`.
-    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None) -> None:
-        safe_path(path)
-        refuse_delete(path, self.writer, self.acl)
-        guard_check(guard, self.writer, self.acl)
+    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None,
+               id: str | None = None) -> int:
+        return self.write(_wrapper_command("delete", path, cas, guard, id))["index"]
+
+    def write(self, cmd: dict) -> dict:
+        """Receipt belongs to this backend; память повторов живёт с процессом."""
+        cmd = _native_command(cmd)
+        path = cmd["key"]
+        if cmd["op"] == "delete":
+            refuse_delete(path, self.writer, self.acl)
+        else:
+            check(path, items_bytes(cmd["items"]), self.max_bytes)
+            self._refuse(path)
+        guard_check(cmd.get("guard"), self.writer, self.acl)
         with self._s.lock:
-            guard_match(guard, lambda k: self._s.items.get(k, (None, 0))[1])
-            current = self._s.items.get(path, (None, 0))[1]
-            if cas is not None and cas != current:
-                raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
+            return self._s.replay.run(cmd, lambda: self._apply_write(cmd))
+
+    def _apply_write(self, cmd):
+        path = cmd["key"]
+        guard_match(cmd.get("guard"), lambda k: self._s.items.get(k, (None, 0))[1])
+        current = self._s.items.get(path, (None, 0))[1]
+        if cmd.get("cas") is not None and cmd["cas"] != current:
+            raise Conflict("target version changed", index=current)
+        self._s.index += 1
+        if cmd["op"] == "put":
+            self._s.items[path] = (dict(cmd["items"]), self._s.index)
+        else:
             self._s.items.pop(path, None)
-            self._s.index += 1          # a delete burns an index too: the file backend's does
+        return {"index": self._s.index, "again": False}
 
     def list(self, prefix: str) -> list[str]:
         with self._s.lock:

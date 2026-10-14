@@ -20,7 +20,7 @@ raft would: one of them wins the CAS.
 # prefixes (the ACL policy). Everything in the platform that must be consistent — assignments, placement
 # rows, epochs, slots, idempotency keys, unit rows — lives here; bulk or frequent data (heartbeats,
 # snapshots, media) goes to `objects.py` instead. The store is a directory: one JSON file per path under
-# `<root>/vars/`, one counter file for the index, one lock file. Every write is write-then-rename and
+# `<root>/vars/`, one counter file for the index, one lock file; память повторов живёт с процессом. Every write is write-then-rename and
 # serialised by an `fcntl` lock, so two processes on the same box see exactly what two clients of one raft
 # would: one of them wins the CAS. A box keeps it; М11's cluster swaps it for `configstore://`, the same semantics
 # replicated by raft over the servers (`storemachine.py`, `configstore.py`), behind the same `Variables` Protocol.
@@ -50,7 +50,11 @@ raft would: one of them wins the CAS.
 # ================================================================================================
 from __future__ import annotations
 
+import collections
+import hashlib
 import json
+import re
+import threading
 import os
 import random
 import time
@@ -62,6 +66,10 @@ from .limits import NO_CEILING, TooLarge, check
 
 class Conflict(Exception):
     """The cas index did not match the current ModifyIndex."""
+
+    def __init__(self, message, *, index=None):
+        self.index = index
+        super().__init__(message)
 
 
 class GuardFailed(Exception):
@@ -148,9 +156,9 @@ def guard_match(guard, current):
             raise GuardFailed(guard["key"], index)
 
 
-# The store. Holds only paths (`root`, `dir`, `index_file`, `lock_file`) plus an optional writer identity
-# and ACL map; it keeps no cache, so any number of instances over the same directory — in one process or
-# many — are equivalent.
+# The store's rows live on disk; handles carry their own writer and ACL. Same-process handles of a
+# directory also share process-lifetime replay receipts. Other processes share rows and their file lock,
+# but not replay memory (the Architect's М10/1 decision); significant retries carry CAS.
 # -- the seam: which store is behind the contract, said as a URL ------------------------------------
 # A process is told `PLATFORM_STORE` (`store_url`) and nothing
 # else. `file://` is in-process — on a box there is no daemon, no hop and no second quorum, which is the
@@ -356,6 +364,114 @@ class KeyTooLong(TooLarge):
                          f"a shorter name")
 
 
+class _Replay:
+    """Process memory only: retain at least 50,000 answers and at least 120 seconds."""
+    def __init__(self):
+        self.lock = threading.RLock()
+        self.done = collections.OrderedDict()
+        self.pending = {}
+
+    def run(self, cmd, apply, finish=None):
+        op_id = cmd.get("id")
+        fingerprint = hashlib.sha256(json.dumps(cmd, sort_keys=True).encode()).hexdigest() if op_id is not None else ""
+        with self.lock:
+            if op_id in self.done:
+                was, result, _ = self.done[op_id]
+                if was != fingerprint:
+                    raise ValueError("this operation id was another write's")
+                if isinstance(result, Exception):
+                    self.raise_copy(result)
+                if op_id in self.pending:
+                    self.finish(self.pending[op_id])
+                    del self.pending[op_id]
+                return {**result, "again": True}
+            try:
+                result = apply()
+            except (Conflict, GuardFailed) as error:
+                result = error.with_traceback(None)
+            if op_id is not None:
+                self.done[op_id] = (fingerprint, result, time.monotonic())
+                if finish is not None and not isinstance(result, Exception):
+                    self.pending[op_id] = finish
+                while len(self.done) > 50_000:
+                    if time.monotonic() - next(iter(self.done.values()))[2] < 120:
+                        break
+                    forgotten, _ = self.done.popitem(last=False)
+                    self.pending.pop(forgotten, None)
+            if isinstance(result, Exception):
+                self.raise_copy(result)
+            if finish is not None:
+                self.finish(finish)
+                self.pending.pop(op_id, None)
+            return dict(result)
+
+    @staticmethod
+    def finish(barriers):
+        try:
+            barriers()
+        except OSError as error:
+            # The row is already visible. Never claim refusal or forget its receipt.
+            from .configstorevars import StoreAmbiguous
+            raise StoreAmbiguous("the row was published but its durability is unknown") from error
+
+    @staticmethod
+    def raise_copy(error):
+        if isinstance(error, GuardFailed):
+            raise GuardFailed(error.key, error.index)
+        raise Conflict(str(error), index=error.index)
+
+
+# Separate handles of one directory share answers, but no receipt is written to disk.
+# Include the process and directory identity: a fresh store at a reused pathname is not its predecessor.
+_FILE_REPLAYS = {}
+_FILE_REPLAYS_LOCK = threading.Lock()
+
+
+def _file_replay(directory):
+    st = os.stat(directory)
+    key = (os.getpid(), os.path.realpath(directory), st.st_dev, st.st_ino)
+    with _FILE_REPLAYS_LOCK:
+        return _FILE_REPLAYS.setdefault(key, _Replay())
+
+
+def _native_command(cmd):
+    """Validate a native command (0 = absent); wrappers string-encode item fields.
+
+    Wire grammar remains at the wire boundary; this API compares native versions unchanged.
+    """
+    from .storemachine import check_key, check_write
+    if not isinstance(cmd, dict) or cmd.get("op") not in ("put", "delete"):
+        raise ValueError("write is a put or delete command")
+    check_key(cmd.get("key"))
+    check_write(cmd)
+    if isinstance(cmd.get("cas"), bool):
+        raise ValueError("cas is a version, never boolean")
+    if "id" in cmd and (not isinstance(cmd["id"], str) or not re.fullmatch(r"[0-9a-f]{1,64}", cmd["id"])):
+        raise ValueError("id is 1 to 64 lowercase hex digits")
+    if cmd["op"] == "put" and (not isinstance(cmd.get("items"), dict)
+            or not all(isinstance(k, str) and isinstance(v, str) for k, v in cmd["items"].items())):
+        raise ValueError("items is a map of strings")
+    result = {"op": cmd["op"], "key": cmd["key"], "cas": cmd.get("cas")}
+    if cmd["op"] == "put":
+        result["items"] = dict(cmd["items"])
+    if cmd.get("guard") is not None:
+        result["guard"] = dict(cmd["guard"])
+    if "id" in cmd:
+        result["id"] = cmd["id"]
+    return result
+
+
+def _wrapper_command(op, path, cas, guard, op_id, items=None):
+    cmd = {"op": op, "key": path, "cas": cas}
+    if op == "put":
+        cmd["items"] = {str(k): str(v) for k, v in items.items()}
+    if guard is not None:
+        cmd["guard"] = guard
+    if op_id is not None:
+        cmd["id"] = op_id
+    return cmd
+
+
 class FileVariables:
     # `root` is the store directory; `<root>/vars/` is created. `writer` is this handle's identity (None
     # means unrestricted). `acl` is `{writer: [allowed prefixes]}`; when both `writer` and a non-empty `acl`
@@ -375,6 +491,7 @@ class FileVariables:
         self.index_file = os.path.join(root, "index")
         self.lock_file = os.path.join(root, "lock")
         self.writer, self.acl = writer, acl or {}
+        self._replay = _file_replay(self.dir)
         self.max_bytes = max_bytes          # a directory has no ceiling; a test or an install may say otherwise
 
     # Returns a new handle on the same directory seen through another identity, allowed only the given
@@ -385,7 +502,7 @@ class FileVariables:
     def as_writer(self, writer: str, allowed: list[str]) -> "FileVariables":
         """The same store seen through another identity, allowed only these
         prefixes ('<sub>/*', '<sub>/epoch/*') — what the daemon's rights file does for a role."""
-        v = FileVariables(self.root, writer, dict(self.acl), volatile=self.volatile)
+        v = FileVariables(self.root, writer, dict(self.acl), max_bytes=self.max_bytes, volatile=self.volatile)
         v.acl[writer] = allowed
         return v
 
@@ -431,12 +548,17 @@ class FileVariables:
                 n = int(raw)
             except ValueError:
                 raise Corrupt(f"{self.index_file} does not hold a number ({raw[:20]!r}): refusing to number again from 1000")
+        if n < 1000:
+            raise Corrupt(f"{self.index_file} is below the initial counter: refusing to reuse versions")
         n += 1
         tmp = self.index_file + ".tmp"
         with open(tmp, "w") as f:
             f.write(str(n))
             self._durable(f)
         os.replace(tmp, self.index_file)
+        # The reservation must survive before a row replacement/removal can.
+        if not self.volatile:
+            durable_dir(self.root)
         return n
 
     # The barriers. A row written with `write` + `rename` and nothing else is in the page cache: after a power
@@ -448,10 +570,12 @@ class FileVariables:
             f.flush()
             durably(f)
 
-    def _durable_dirs(self) -> None:
-        if not self.volatile:
-            durable_dir(self.dir)
-            durable_dir(self.root)
+    def _durable_dirs(self, pending) -> None:
+        # Keep completed barriers out of the retry, including across handles. A volatile
+        # retrying handle cannot skip the original durable writer's remaining barriers.
+        while pending:
+            durable_dir(pending[0])
+            pending.pop(0)
 
     # Reads the path's file and returns `(items, index)`; a missing path is `(None, 0)`. Not locked: a
     # reader sees either the old file or the new one, never a half-written one, because writes rename into
@@ -491,50 +615,59 @@ class FileVariables:
     # `SpecController.create` and `IdempotencyKeys.claim` rely on it); and every value is stringified on the
     # way in, which is why callers such as `Assignment.from_items` and `Slot.from_items` parse ints, floats
     # and `"true"`/`"false"` back out.
-    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None) -> int:
-        from .rights import refusal                     # the platform's one evaluator: `!` denials first
-        why = refusal(self.writer, self.acl, path)
-        if why:
-            raise Forbidden(why)
-        # Checked before the lock and before the write: an oversized row never half-lands, and the value
-        # that is already there is still the value that is there.
-        check(path, items_bytes(items), self.max_bytes)
-        self._file(path)                                # a key too long for a file's name: refused before the lock
-        guard_check(guard, self.writer, self.acl)
-        with self._locked():
-            guard_match(guard, self._current)
-            current = self._current(path)
-            if cas is not None and cas != current:
-                raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
-            idx = self._next_index()
+    def put(self, path: str, items: dict, cas: int | None = None, *, guard: dict | None = None,
+            id: str | None = None) -> int:
+        return self.write(_wrapper_command("put", path, cas, guard, id, items))["index"]
+
+    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None,
+               id: str | None = None) -> int:
+        return self.write(_wrapper_command("delete", path, cas, guard, id))["index"]
+
+    def write(self, cmd: dict) -> dict:
+        """Atomic backend receipt; память повторов живёт с процессом, never on disk."""
+        # File's own key bound applies before the common command validation and row weight.
+        if isinstance(cmd, dict) and cmd.get("op") in ("put", "delete") and isinstance(cmd.get("key"), str):
+            self._file(cmd["key"])
+            guard = cmd.get("guard")
+            if isinstance(guard, dict) and isinstance(guard.get("key"), str) and guard["key"]:
+                self._file(guard["key"])
+        cmd = _native_command(cmd)
+        path, op = cmd["key"], cmd["op"]
+        from .rights import refusal
+        if op == "delete":
+            refuse_delete(path, self.writer, self.acl)
+        else:
+            check(path, items_bytes(cmd["items"]), self.max_bytes)
+            why = refusal(self.writer, self.acl, path)
+            if why:
+                raise Forbidden(why)
+        guard_check(cmd.get("guard"), self.writer, self.acl)
+        # Same-process handles share replay memory; the existing file lock also serialises other processes.
+        with self._replay.lock, self._locked():
+            pending = [] if self.volatile else [self.dir, self.root]
+            return self._replay.run(cmd, lambda: self._apply_write(cmd), lambda: self._durable_dirs(pending))
+
+    def _apply_write(self, cmd):
+        path = cmd["key"]
+        guard_match(cmd.get("guard"), self._current)
+        current = self._current(path)
+        if cmd.get("cas") is not None and cmd["cas"] != current:
+            raise Conflict("target version changed", index=current)
+        idx = self._next_index()
+        if cmd["op"] == "put":
             tmp = self._file(path) + ".tmp"
             with open(tmp, "w") as f:
-                json.dump({"items": {k: str(v) for k, v in items.items()}, "index": idx}, f)
+                json.dump({"items": cmd["items"], "index": idx}, f)
                 self._durable(f)
             os.replace(tmp, self._file(path))
-            self._durable_dirs()
-            return idx
-
-    # A delete is a write: the same ACL as `put`, and never an epoch (`refuse_delete`). Then, under the lock:
-    # the same CAS check as `put`, remove the file (a missing file is not an error) and burn an index.
-    def delete(self, path: str, cas: int | None = None, *, guard: dict | None = None) -> None:
-        refuse_delete(path, self.writer, self.acl)
-        try:
-            self._file(path)
-        except KeyTooLong:
-            return                                      # nothing could have been written under it
-        guard_check(guard, self.writer, self.acl)
-        with self._locked():
-            guard_match(guard, self._current)
-            current = self._current(path)
-            if cas is not None and cas != current:
-                raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
+        else:
             try:
                 os.remove(self._file(path))
             except FileNotFoundError:
                 pass
-            self._next_index()
-            self._durable_dirs()                    # the removal, too, survives the power going (the review's second pass)
+        # Publication and registration of the pending receipt share both locks. Remaining
+        # barriers run only after that registration; a retry must never apply this write twice.
+        return {"index": idx, "again": False}
 
     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
     # prefixes ending in `/` (`"testsub/workers/"`, `"testsub/slots/"`, `"testsub/idem/"`) to enumerate a row family.

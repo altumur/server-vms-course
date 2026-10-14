@@ -312,12 +312,12 @@ def test_a_write_retried_with_its_id_after_its_first_copy_landed_is_applied_once
     try:
         v = open_vars(g.members[1].url())
         idx = v.put("testsub/slots/w-2", {"holder": "a"}, cas=0)
-        body = {"op": "put", "key": "testsub/slots/w-2", "items": {"holder": "a", "until": "1"}, "cas": idx,
+        body = {"op": "put", "key": "testsub/slots/w-2", "items": {"holder": "a", "until": "1"}, "cas": str(idx),
                 "id": uuid.uuid4().hex}
         first = v._call("POST", "/v1/write", body)
         again = open_vars(g.members[2].url())._call("POST", "/v1/write", body)
-        assert first == again, (first, again)
-        assert v.get("testsub/slots/w-2") == ({"holder": "a", "until": "1"}, first["index"])
+        assert again == {**first, "again": True}, (first, again)
+        assert v.get("testsub/slots/w-2") == ({"holder": "a", "until": "1"}, int(first["index"]))
         with pytest.raises(Conflict):                                 # a DIFFERENT write against the same version
             v.put("testsub/slots/w-2", {"holder": "b"}, cas=idx)
     finally:

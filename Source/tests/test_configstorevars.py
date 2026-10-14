@@ -1217,7 +1217,7 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
         assert next_epoch(h, "testsub/epoch/new")[0] == f1 + 1
         # the floor: raised by the operator's `floor` alone, never lowered, never put or deleted through a door
         for body in ({"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}},
-                     {"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}, "cas": h.get(EPOCH_FLOOR_KEY)[1]},
+                     {"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}, "cas": str(h.get(EPOCH_FLOOR_KEY)[1])},
                      {"op": "delete", "key": EPOCH_FLOOR_KEY}, {"op": "floor", "floor": 0}, {"op": "floor", "floor": "9"}):
             with pytest.raises(Forbidden):
                 h._call("POST", "/v1/write", body)

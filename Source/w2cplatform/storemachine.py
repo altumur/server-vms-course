@@ -42,9 +42,9 @@ the group, and what a test stand applies in one process — the same code, so th
 # `MAX_VALUE` bounded the items and nothing else: a delete whose `id` was 3 MiB was taken — the journal grew by
 # 3.2 MB on every member, and the machine kept the id among its 50 000 — and a `cas` of 3 MiB went into the log and
 # came back in the 409's text. Every request is a command of the log, reads too, so what a caller names is bounded
-# at the door before anything is submitted, and again by the machine (a function of the command alone): an `id` is
-# `OP_ID` — up to 64 letters, digits, `-` and `_` (the handle's are 32 hex digits); a `cas` is null, a number, or a
-# short word of the same alphabet (`CAS_WORD`: the platform's `TORN` is one); a key is a key (`check_key`, its
+# at the door before anything is submitted, and again by the machine (a function of the command alone). The
+# HTTP contract is strict: lowercase hex id, decimal version strings (or empty/create-only and null/no CAS).
+# Internal commands retain numeric log indexes; the door never accepts those numeric JSON versions. A key is a key (`check_key`, its
 # length asked before its text, so a refusal never quotes a long one); a list's prefix longer than any key matches
 # nothing and is answered so without a command. No refusal quotes what the caller sent but a key.
 #
@@ -103,12 +103,13 @@ import urllib.parse
 from .canonical import parse_json
 from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
-from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path, guard_check
+from .variables import epoch_row, items_bytes, safe_path, guard_check
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
 CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string: "" (create-only), digits, a word
 CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
+MAX_KEY_BYTES = 1024       # raw UTF-8 key bytes; only File may refuse an encoded filename earlier
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
@@ -130,22 +131,33 @@ class Ambiguous(Unavailable):
 
 
 # -- keys ---------------------------------------------------------------------------------------------
-# A key is what `safe_path` lets through, and no longer than `FileVariables` can name a file: a store a box's rows
-# were imported into, and one a cluster's rows could be exported back from, must take the same keys.
+# The common door/memory key bound is raw UTF-8. FileVariables additionally checks its encoded filename.
 def check_key(key) -> str:
     if not isinstance(key, str):
         raise ValueError(f"not a key: a {type(key).__name__}")
-    if len(key.replace("%", "%25").replace("/", "%2F").encode()) > KEY_BYTES:
-        raise ValueError(f"not a key: longer than {KEY_BYTES} bytes as a file's name")
+    if len(key.encode()) > MAX_KEY_BYTES:
+        raise ValueError(f"not a key: longer than {MAX_KEY_BYTES} bytes")
     safe_path(key)                                # after the length: its refusal quotes the key
     return key
 
 
 # What a write names besides its key and items, bounded (the notes: "What a caller names is bounded too"). Raises
-# `ValueError` naming the field, never quoting it.
-def check_write(cmd: dict) -> None:
+# `ValueError` naming the field, never quoting it. The door adds the strict wire grammar before submission.
+def check_write(cmd: dict, *, wire: bool = False) -> None:
     if "guard" in cmd and cmd["guard"] is None:
         raise ValueError("guard is {key, index}, never null")
+    if wire:
+        value = cmd.get("cas")
+        if value is not None and not wire_version(value):
+            raise ValueError("cas is null, empty, or a decimal version string")
+        if "id" in cmd and (not isinstance(cmd["id"], str) or not re.fullmatch(r"[0-9a-f]{1,64}", cmd["id"])):
+            raise ValueError("id is 1 to 64 lowercase hex digits")
+        guard = cmd.get("guard")
+        if guard is not None:
+            if (not isinstance(guard, dict) or set(guard) != {"key", "index"}
+                    or not isinstance(guard["key"], str) or not guard["key"]
+                    or not wire_version(guard["index"])):
+                raise ValueError("guard is {key, index}, index a decimal version string")
     op_id = cmd.get("id")
     if op_id is not None and not (isinstance(op_id, str) and OP_ID.match(op_id)):
         raise ValueError("a write's id is up to 64 letters, digits, - and _")
@@ -161,6 +173,14 @@ def check_write(cmd: dict) -> None:
     if isinstance(cas, str) and CAS_WORD.match(cas):
         return
     raise ValueError('a write\'s cas is null, a version, "" (create-only) or a word of up to 32 letters and digits')
+
+
+def wire_version(value):
+    return isinstance(value, str) and (value == "" or re.fullmatch(r"[1-9][0-9]{0,19}", value) is not None)
+
+
+def wire_index(value):
+    return str(value) if value else ""
 
 
 # The write an operation id stands for: what a repeat must be to be answered from memory. A function of the command
@@ -255,12 +275,12 @@ class StoreMachine:
             was, res = self.done[op_id]
             if was != fingerprint:
                 return {"error": "this operation id was another write's: a new write takes a new id"}
-            return dict(res)
+            return {**res, "again": True}
         current = self.rows.get(key, (None, 0))[1]
         cas = _cas(cmd.get("cas"))
         guard = cmd.get("guard")
         guarded = self.rows.get(guard["key"], (None, 0))[1] if guard is not None else None
-        if guard is not None and guard["index"] != guarded:
+        if guard is not None and _cas(guard["index"]) != guarded:
             res = {"error": "guard", "key": guard["key"], "index": guarded}
         elif cas is not None and cas != current:
             res = {"conflict": True, "index": current}
@@ -347,7 +367,7 @@ def fault(code: int, kind: str, error: str, **more) -> tuple[int, dict]:
 
 def too_large(key: str, size: int) -> tuple[int, dict]:
     return fault(413, "toolarge", f"{key}: a row of {size} bytes; a row here weighs at most {MAX_VALUE}",
-                 size=size, limit=MAX_VALUE)
+                 key=key, size=size, limit=MAX_VALUE)
 
 
 def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, submit) -> tuple[int, dict]:
@@ -361,20 +381,20 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             if not rights.allows(role, "read", key):
                 return fault(403, "forbidden", f"{role} may not read {key}")
             got = submit({"op": "get", "key": key})
-            return 200, {"items": got["items"], "index": got["index"] or ""}
+            return 200, {"items": got["items"], "index": wire_index(got["index"])}
         if method == "GET" and u.path == "/v1/list":
             prefix = q.get("prefix", "")
-            if len(prefix.encode()) > KEY_BYTES:
+            if len(prefix.encode()) > MAX_KEY_BYTES:
                 return 200, {"keys": {}}          # longer than any key: nothing to match, nothing to ask the log
             got = submit({"op": "list", "prefix": prefix})
-            return 200, {"keys": got["keys"]}     # every name, to every role: nothing of a value (ADR-0021, 2026-10-10)
+            return 200, {"keys": {key: wire_index(index) for key, index in got["keys"].items()}}     # every name, to every role: nothing of a value (ADR-0021, 2026-10-10)
         if method == "POST" and u.path == "/v1/write":
             try:
                 # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400` are
                 # 400 with the shared table's `fault` (the architect, 2026-10-06); nested past what is read, the same
                 body = parse_json(raw or b"{}")
-            except (ValueError, RecursionError) as e:
-                return fault(400, "badrequest", "the body is not JSON", fault=getattr(e, "fault", "") or "not_json")
+            except (ValueError, RecursionError):
+                return fault(400, "badrequest", "the body is not JSON")
             if isinstance(body, dict) and body.get("op") == "floor":
                 # THE FLOOR UNDER EVERY EPOCH, RAISED (ADR-0070; the external review of 2026-10-11; the product's
                 # `OpFloor`): the operator's alone — root's `admin.sock`, a restore before its first row — never a
@@ -387,45 +407,47 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                     return fault(400, "badrequest", f"{EPOCH_FLOOR_AT} is the hour since 2026-01-01 UTC the floor is "
                                                     f"raised at, a whole number, or nothing")
                 got = submit({"op": "floor", "floor": floor, **({EPOCH_FLOOR_AT: at} if at != "" else {})})
-                return 200, {"index": got["index"]}
+                return 200, {"index": wire_index(got["index"]), **({"again": True} if got.get("again") else {})}
             if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
                 return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
             key = check_key(body.get("key", ""))
+            if isinstance(body.get("guard"), dict) and isinstance(body["guard"].get("key"), str) and body["guard"]["key"]:
+                check_key(body["guard"]["key"])
             try:
-                check_write(body)
+                check_write(body, wire=True)
             except ValueError as e:
                 return fault(400, "badrequest", str(e))
-            action = "write" if body["op"] == "put" else "delete"
-            if not rights.allows(role, action, key):
-                return fault(403, "forbidden", f"{role} may not {action} {key}")
             cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
             if body.get("guard") is not None:
                 guard = body["guard"]
-                if not rights.allows(role, "read", guard["key"]):
-                    return fault(403, "forbidden", f"{role} may not read {guard['key']}")
                 cmd["guard"] = dict(guard)
             if body["op"] == "put":
                 items = body.get("items")
-                if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
+                if not isinstance(items, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in items.items()):
                     return fault(400, "badrequest", "items are a map of strings")
                 cmd["items"] = {k: str(v) for k, v in items.items()}
                 size = items_bytes(cmd["items"])
                 if size > MAX_VALUE:
                     return too_large(key, size)
+            action = "write" if body["op"] == "put" else "delete"
+            if not rights.allows(role, action, key):
+                return fault(403, "forbidden", f"{role} may not {action} {key}")
+            if body.get("guard") is not None and not rights.allows(role, "read", body["guard"]["key"]):
+                return fault(403, "forbidden", f"{role} may not read {body['guard']['key']}")
             if body.get("id"):
                 cmd["id"] = body["id"]
             got = submit(cmd)
             if got.get("error") == "guard":
-                return 412, got
+                return fault(412, "guard", "guard", key=got["key"], index=wire_index(got["index"]))
             if "error" in got:
-                return fault(400, "badkey", got["error"])
+                return fault(400, "badrequest", got["error"])
             if "toolarge" in got:
                 return too_large(key, got["toolarge"])
             if got.get("conflict"):
                 # The version now, not the one the write named: what the caller sent is not said back to it.
                 return fault(409, "conflict", f"{key}: the version is {got['index'] or 'absent'}, not the one the "
-                                              f"write named", index=got["index"] or "")
-            return 200, {"index": got["index"]}
+                                              f"write named", index=wire_index(got["index"]))
+            return 200, {"index": wire_index(got["index"]), **({"again": True} if got.get("again") else {})}
         return fault(404, "badrequest", f"no such route: {method} {u.path}")
     except ValueError as e:
         return fault(400, "badkey", str(e))

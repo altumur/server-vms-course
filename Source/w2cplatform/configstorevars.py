@@ -76,8 +76,8 @@ import urllib.parse
 import uuid
 
 from .limits import TooLarge, check
-from .storemachine import MAX_VALUE                 # the machine and the API, no raft and no socket
-from .variables import (GuardFailed, guard_check, KEY_BYTES, STORE_SCHEME, Conflict, Forbidden, KeyTooLong, items_bytes, refuse_delete,
+from .storemachine import MAX_KEY_BYTES, MAX_VALUE, wire_version                 # the machine and the API, no raft and no socket
+from .variables import (GuardFailed, guard_check, STORE_SCHEME, Conflict, Forbidden, items_bytes, refuse_delete,
                         register_scheme, safe_path)
 
 REFUSED_WAIT = 5.0         # D: how long a refused connection to this server's daemon is tried again
@@ -197,11 +197,11 @@ class ConfigstoreVariables:
         if why:
             raise Forbidden(why)
 
-    # The same longest key `FileVariables` takes, refused the same way: a box's rows and a cluster's are one set.
+    # The wire key bound is raw UTF-8, independent of FileVariables' earlier encoded filename limit.
     @staticmethod
     def _too_long(path: str) -> int:
-        n = len(safe_path(path).replace("%", "%25").replace("/", "%2F").encode())
-        return n if n > KEY_BYTES else 0
+        n = len(safe_path(path).encode())
+        return n if n > MAX_KEY_BYTES else 0
 
     def _call(self, method: str, target: str, body: dict | None = None) -> dict:
         write = body is not None
@@ -229,13 +229,17 @@ class ConfigstoreVariables:
             kind = StoreAmbiguous if write and code == 200 else StoreUnavailable
             raise kind(f"the store's answer did not parse: {code} {got[:40]!r}") from None
         if code == 200:
+            if ("index" in said and not wire_version(said["index"])) or (
+                    "keys" in said and (not isinstance(said["keys"], dict)
+                    or any(not wire_version(index) for index in said["keys"].values()))):
+                kind = StoreAmbiguous if write else StoreUnavailable
+                raise kind("the store answered with a malformed version")
             return said
         error = str(said.get("error", ""))
-        if code == 412 and said.get("error") == "guard":
-            if not isinstance(said.get("key"), str) or isinstance(said.get("index"), bool) or not isinstance(
-                    said.get("index"), (str, int)):
+        if code == 412 and said.get("kind") == "guard":
+            if not isinstance(said.get("key"), str) or not wire_version(said.get("index")):
                 raise StoreUnavailable("the guard refusal did not name its row and index")
-            raise GuardFailed(said["key"], said["index"])
+            raise GuardFailed(said["key"], int(said["index"]) if said["index"] else 0)
         if code == 409:
             raise Conflict(error or "conflict")
         if code == 403:
@@ -257,7 +261,7 @@ class ConfigstoreVariables:
             return None, 0                        # nothing could have been written under it
         got = self._call("GET", "/v1/get?" + urllib.parse.urlencode({"key": path}))
         index = got.get("index")
-        return got.get("items"), (0 if index in ("", None) else index)
+        return got.get("items"), (0 if index in ("", None) else int(index))
 
     def put(self, path: str, items: dict, cas=None, *, guard=None):
         safe_path(path)
@@ -265,13 +269,13 @@ class ConfigstoreVariables:
         check(path, items_bytes(items), self.max_bytes)
         n = self._too_long(path)
         if n:
-            raise KeyTooLong(path, n)
+            raise ValueError(f"not a key: longer than {MAX_KEY_BYTES} bytes")
         body = {"op": "put", "key": path, "items": {str(k): str(v) for k, v in items.items()},
-                "cas": "" if cas == 0 and not isinstance(cas, bool) else cas}
+                "cas": None if cas is None else ("" if cas == 0 and not isinstance(cas, bool) else str(cas))}
         guard_check(guard, self.writer, self.acl)
         if guard is not None:
-            body["guard"] = dict(guard)
-        return self._write(body)["index"]
+            body["guard"] = {"key": guard["key"], "index": str(guard["index"]) if guard["index"] else ""}
+        return int(self._write(body)["index"])
 
     def delete(self, path: str, cas=None, *, guard=None) -> None:
         safe_path(path)
@@ -279,9 +283,9 @@ class ConfigstoreVariables:
         if self._too_long(path):
             return
         guard_check(guard, self.writer, self.acl)
-        body = {"op": "delete", "key": path, "cas": "" if cas == 0 and not isinstance(cas, bool) else cas}
+        body = {"op": "delete", "key": path, "cas": None if cas is None else ("" if cas == 0 and not isinstance(cas, bool) else str(cas))}
         if guard is not None:
-            body["guard"] = dict(guard)
+            body["guard"] = {"key": guard["key"], "index": str(guard["index"]) if guard["index"] else ""}
         self._write(body)
 
     def list(self, prefix: str) -> list[str]:

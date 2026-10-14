@@ -613,7 +613,7 @@ def test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_word
     "File name too long", answered 503 "the store did not answer" with the store's local path in the reply, and a keep
     for such a camera dropped the connection. A key is at most `KEY_BYTES` here, as a file's name: longer is refused at
     the write (`KeyTooLong`, the store's limit as `TooLarge` says one: 413, in words, no path); a read finds no such row;
-    a delete removes nothing. And a `source` of 100 000 characters, which is a field, not a key, is taken in a moment
+    a delete refuses the unnameable key too. And a `source` of 100 000 characters, which is a field, not a key, is taken in a moment
     (the login hidden in it was looked for from every position: minutes of a console's thread)."""
     import time
     import urllib.error
@@ -629,7 +629,11 @@ def test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_word
     except KeyTooLong as e:
         assert isinstance(e, TooLarge) and e.limit == KEY_BYTES == 246 and "a shorter name" in str(e) and len(str(e)) < 400
     assert box.vars.get("rec/recordings/" + long) == (None, 0)
-    box.vars.delete("rec/recordings/" + long)
+    try:
+        box.vars.delete("rec/recordings/" + long)
+        raise AssertionError("delete accepted an unnameable key")
+    except KeyTooLong:
+        pass
     edge = "cam/cameras/" + "y" * (KEY_BYTES - len("vms%2Fcameras%2F"))
     box.vars.put(edge, {"id": "1"})                                       # at the limit: a row
     assert box.vars.get(edge)[0] == {"id": "1"}

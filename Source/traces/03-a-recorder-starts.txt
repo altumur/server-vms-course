@@ -22,41 +22,41 @@ POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "", "items": {
   "gen": "1",
   "server": "srv-a"
 }}
-→ 200 {"index": 1005}
+→ 200 {"index": "1005"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "delete", "key": "rec/polls/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1005}}
-→ 200 {"index": 1006}
+POST /v1/write {"op": "delete", "key": "rec/polls/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1005"}}
+→ 200 {"index": "1006"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "delete", "key": "rec/primaries/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1005}}
-→ 200 {"index": 1007}
+POST /v1/write {"op": "delete", "key": "rec/primaries/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1005"}}
+→ 200 {"index": "1007"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "delete", "key": "rec/upstream/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1005}}
-→ 200 {"index": 1008}
+POST /v1/write {"op": "delete", "key": "rec/upstream/r-srv-a-1", "cas": null, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1005"}}
+→ 200 {"index": "1008"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": 1005, "items": {
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "1005", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
   "server": "srv-a"
 }}
-→ 200 {"index": 1009}
+→ 200 {"index": "1009"}
 
 # resource on srv-a → /run/configstore/resource.sock
 GET /v1/list?prefix=platform/doors/
-→ 200 {"keys": {"platform/doors/srv-a": 1001, "platform/doors/srv-b": 1002, "platform/doors/srv-c": 1003}}
+→ 200 {"keys": {"platform/doors/srv-a": "1001", "platform/doors/srv-b": "1002", "platform/doors/srv-c": "1003"}}
 
 # resource on srv-a → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-b
-→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1002}
+→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": "1002"}
 
 # resource on srv-a → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-c
-→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": "1003"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=platform/schema
@@ -72,22 +72,22 @@ GET /v1/get?key=rec/slots/r-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1009
+  "index": "1009"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": 1009, "items": {
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "1009", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
   "server": "srv-a"
 }}
-→ 200 {"index": 1010}
+→ 200 {"index": "1010"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/list?prefix=rec/volumes/
-→ 200 {"keys": {"rec/volumes/disks-a": 1004}}
+→ 200 {"keys": {"rec/volumes/disks-a": "1004"}}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/volumes/disks-a
@@ -102,7 +102,7 @@ GET /v1/get?key=rec/volumes/disks-a
     "shrink_confirmed": "0",
     "admits": "true"
   },
-  "index": 1004
+  "index": "1004"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
@@ -117,7 +117,7 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
   "gen": "1",
   "by": "r-srv-a-1"
 }}
-→ 200 {"index": 1011}
+→ 200 {"index": "1011"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/volumes/disks-a
@@ -132,7 +132,7 @@ GET /v1/get?key=rec/volumes/disks-a
     "shrink_confirmed": "0",
     "admits": "true"
   },
-  "index": 1004
+  "index": "1004"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
@@ -149,18 +149,18 @@ GET /v1/get?key=rec/holds/disks-a
     "gen": "1",
     "by": "r-srv-a-1"
   },
-  "index": 1011
+  "index": "1011"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": 1011, "items": {
+POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "1011", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
   "by": "r-srv-a-1"
 }}
-→ 200 {"index": 1012}
+→ 200 {"index": "1012"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/volumes/disks-a
@@ -175,7 +175,7 @@ GET /v1/get?key=rec/volumes/disks-a
     "shrink_confirmed": "0",
     "admits": "true"
   },
-  "index": 1004
+  "index": "1004"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
@@ -186,7 +186,7 @@ GET /v1/get?key=objects/rec/used/disks-a
 POST /v1/write {"op": "put", "key": "objects/rec/used/disks-a", "cas": null, "items": {
   "data": "{\"url\": \"/data/srv-a/disks\", \"at\": 1757500000.0, \"by\": \"r-srv-a-1\", \"instance\": \"srv-a:4101:001005\", \"server\": \"srv-a\"}"
 }}
-→ 200 {"index": 1013}
+→ 200 {"index": "1013"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/member
@@ -205,7 +205,7 @@ GET /v1/get?key=rec/volumes/disks-a
     "shrink_confirmed": "0",
     "admits": "true"
   },
-  "index": 1004
+  "index": "1004"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
@@ -218,12 +218,12 @@ GET /v1/get?key=rec/slots/r-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/primaries/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1010}}
-→ 200 {"index": 1014}
+POST /v1/write {"op": "put", "key": "rec/primaries/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1010"}}
+→ 200 {"index": "1014"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/member
@@ -239,12 +239,12 @@ GET /v1/get?key=rec/slots/r-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/upstream/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1010}}
-→ 200 {"index": 1015}
+POST /v1/write {"op": "put", "key": "rec/upstream/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1010"}}
+→ 200 {"index": "1015"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=domain/member
@@ -260,9 +260,9 @@ GET /v1/get?key=rec/slots/r-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1010
+  "index": "1010"
 }
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/polls/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": 1010}}
-→ 200 {"index": 1016}
+POST /v1/write {"op": "put", "key": "rec/polls/r-srv-a-1", "cas": null, "items": {}, "guard": {"key": "rec/slots/r-srv-a-1", "index": "1010"}}
+→ 200 {"index": "1016"}
