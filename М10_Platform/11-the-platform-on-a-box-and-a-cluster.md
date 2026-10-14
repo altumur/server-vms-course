@@ -137,10 +137,12 @@ door:      -door -id -voters a@h:p,…: без голоса; те же соке�
            configstore_doors; все голосующие недоступны → 503 unavailable; join/leave не делает
 admin_ops: status | join [-force] | leave [id] | admit <id> | backup <файл> (0600, tmp + rename) | restore --from [-force]
            | import --from file://… [-index-base N] [-force] | recover -id -dir -peers … [-force] | rights [-groups]
-           import/restore/recover/floor — только на admin.sock лидера; status/backup/leave себя — у любого
+           import/restore/floor — только на admin.sock лидера; recover — локально на остановленном демоне (лидера нет,
+           большинства нет — Н3 «восстановить»), не через сокет; status/backup/leave себя — у любого
 floor:                                        # platform/epoch_floor {floor, generation_at}
   generation: max((floor >> 32) + 1, часов UTC с 2026-01-01); floor = generation << 32
-  when:    recover (на остановленном демоне), restore, import — до первой строки; только op: floor на admin.sock; строка не
+  when:    restore, import — до первой строки, только op: floor на admin.sock лидера; recover — локально в дампе остановленного
+           демона (сокета нет, Н3 «восстановить» шаг 1); строка не
            пишется put; только растёт; часы раньше generation_at → отказ без -force; два ввода состояния в один час —
            только вторым словом (-force)
   issue:   next_epoch = max(текущая, floor) + 1 (урок 3)
@@ -169,7 +171,7 @@ fresh_controller: впервые увиденное — только что из
 return:     ресурс тянет бакеты; воркеры берут свободные имена; имя с истёкшим слотом — только по слову контроллера (урок 3)
 presence:   ресурс говорит о процессах своей коробки: runs | gone | unlisted (урок 4); как узнаёт (замок-файл воркера
             <root>/.workers/<экземпляр>.lock + .json {sub, name, pid}, kill(pid, 0) по pid из экземпляра, pid-файл
-            RESOURCE_WORKERS) — решает реализация; нечитаемое → presence_unread, никогда «ушёл»
+            RESOURCE_WORKERS) — решает реализация; нечитаемое → unknown (слово закрытого перечня урока 4: контроллер ждёт его), никогда «ушёл»
 ```
 
 ### Н1.5 Запасные
@@ -236,7 +238,9 @@ codes:    503 «this console passes no route on to a worker» (клиента н
 ### Н1.9 Команды оператора
 
 ```yaml
-w2cctl:      secrets new | seal | rotate | status (урок 7); spec put <файл> | status [-rights] (урок 2, 6); rights -deployment <имя>
+w2cctl:      secrets new | seal | rotate | status (урок 7); spec put <файл> | status [-rights] (урок 2, 6); rights -deployment <имя>;
+             mirror on|off (строка platform/mirror, урок 8) | space -high -low | -off (строка platform/space, урок 10) — единственный
+             писатель обеих строк: admin.sock кластера, на коробке — файлы; ресурс и консоль их только читают
              (урок 6); epoch floor | next (урок 3, только стенд); tls status; domain move (М11); heartbeat
 configstore: status | join | leave | admit | backup | restore | import | recover | rights
 w2c-ca.sh:   init | issue | revoke | crl | own

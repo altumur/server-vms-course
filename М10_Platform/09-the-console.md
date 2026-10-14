@@ -121,7 +121,6 @@ gate:
     GET/HEAD                         → view (на единицу из пути или ?unit=; без единицы — любой грант)
     /marks, POST /requests           → edit на единицу тела
     DELETE /asked/*                  → admin на *
-    /servers/<s>/writes              → view на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes

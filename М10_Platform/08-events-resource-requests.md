@@ -146,7 +146,7 @@ resource:                                    # один процесс на се
   pass:      каждые 600 с: retain → usage → relieve → mirror; каждый шаг в своей попытке; pass_stalled при зависании
   space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # доли; включено, пока не выключили
   free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # для спек с requests.free, пока том > high;
-             free = used − total·low − Σ freeing из пульсов; под отметкой строка снимается; никто её не исполняет и не метит
+             free = used − total·low − Σ freeing из пульсов; при free ≤ 0 (и под отметкой low) строка снимается (ADR-0059); никто её не исполняет и не метит
   mirror:    platform/mirror {enabled, copies}; соседи — следующие copies живых серверов по имени; только закрытые бакеты;
              копия в .mirror/<сервер>/…; копия — никогда не источник, пока хозяин отвечает; PEER_FAILS 3, кусок ≤ 64 MiB,
              копия стареет на час позже оригинала
@@ -161,6 +161,9 @@ resource:                                    # один процесс на се
   unit:        <id>                          # ДОЛЖЕН (кроме free-)
   <поля тела>: по requests.schema, текстом
   valid_until: <секунды>                     # когда у спеки valid_for
+  digest:      <sha256 hex>                  # ДОЛЖЕН у всякой исполняемой просьбы (не free-*): у поданной дверью — JCS тела клиента после схемы без
+                                             # полей сервера; у поданной воркером — JCS объекта из полей тела строки как записаны (текстом), без unit,
+                                             # valid_until и штампов; воркер считает его сам при записи (Н1.5); им сравнивают повторы
   by, at, group, <about-поле>:               # по requests.stamp
   filed:                                     # у поданной воркером
 rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе у двери консоли —
@@ -183,10 +186,13 @@ holds:      раздел спеки (урок 2 Н1.2), закрытый: {table
             не помечена полем released или не прошло longest секунд; читает ресурс (урок 6 Н1.4)
 mark:       objects/<sub>/commands/<rid>      # строка-объект, создание-однажды
   begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова; digest — sha256 канонического JSON (JCS) тела клиента
-             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — в строке просьбы; им сравнивают повторы
-  answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
+             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — элемент `digest` строки просьбы (Н1.5, форма строки выше); им сравнивают повторы
+  answer:    + {outcome, action, ended_at, error (≤ 200 — ДОЛЖЕН у refused и unknown, нет у performed), late?: true}   # безусловная запись держателя (ADR-0054); жнец — по индексу
+  no_begun:  {unit, digest, outcome: expired | refused, ended_by: reaper | holder, ended_at, error (≤ 200 — ДОЛЖЕН у refused)}   # метка без begun (срок вышел, отказ до вызова):
+             # digest и unit переносятся из строки просьбы — повтор после удаления строки сравнивает digest и здесь
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
-  ended_by:  reaper                                                        # у expired/unknown от жнеца
+  ended_by:  reaper | holder                                               # кто закрыл чужую или безначальную просьбу: reaper — expired/unknown от жнеца; holder — expired/refused до вызова
+             # (no_begun) и unknown, которым другой держатель закрыл чужую begun за сроком; у answer от начавшего поля нет
   kept:      до valid_until (или конца) + max(60, ttl)
 constants:
   PERFORM_TIMEOUT: 10; PERFORM_GRACE: 0.2; REQUESTS_HOLD: 0.5; COMMANDS_PER_LOOK: 200
@@ -252,7 +258,7 @@ paths:
       requestBody: {content: {application/json: {schema: {type: object, required: [unit]}}}}
       responses:
         "202": {description: "{queued: rid}"}
-        "200": {description: "{answered}: тот же rid с тем же отпечатком уже имеет метку"}
+        "200": {description: "{answered}: тот же rid с тем же отпечатком уже имеет метку с исходом (answer или no_begun); begun без исхода — 202"}
         "400": {description: "bad unit | bad id | refused (fault too_long) | too far | bad deadline"}
         "404": {description: "no requests | no such unit"}
         "409": {description: "exists | spent — rid занят иным запросом"}
@@ -315,7 +321,8 @@ retain:  для каждого дерева: days = <sub>/retention | 365 (tree.
          копии зеркала — days + 1 ч); журнал events.removed; index.forget
 usage:   измерить тома (зонд ≤ 5 с); пульс space/volumes
 relieve: platform/space.enabled ∧ used/total > high → для спек с requests.free: need = used − total·low − Σ freeing
-         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at}; ниже low → удалить строку
+         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at} (cas, перезаписать прежнюю);
+         need ≤ 0 (всё нужное уже освобождается, ADR-0059) или ниже low → удалить строку, если есть
 mirror:  platform/mirror.enabled → соседи = следующие copies живых по имени; закрытые бакеты, которых у соседа нет
          (сумма) → PUT /mirror/<я>/<путь>; PEER_FAILS подряд → сосед пропущен на проход
 каждый шаг — своя попытка; шаг дольше PULSE_LIMIT → pass_stalled в пульсе
@@ -326,16 +333,19 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### подать просьбу (консоль, POST /<sub>/requests)
 
 ```
-1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
+1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело без valid_until — единственного поля сервера, которое клиент вправе прислать)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
    поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
-   valid_until = now + valid_for ≤ most_valid
-2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
+   valid_for ≤ most_valid (длительности, проверено загрузчиком); valid_until = now + valid_for; valid_until из тела клиента —
+   не позже now + most_valid, иначе 400 too far, и тогда он и есть срок
+2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest и у метки есть исход (answer или
+   no_begun) → 200 answered; тот же digest, но только begun без исхода (исполняется) → 202 {queued: rid}; учёт и строку не трогать;
    иной digest → 409 spent
 3. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор ждущей, учёт не меняется; иначе len(rids) ≥ per_person
    → 429; иначе rids + rid
 4. записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей); иной digest → 409 exists (учёт вернуть)
-5. перечитать метку: появилась между шагами 2 и 4 (держатель исполнил, clear снял строку) с тем же digest → удалить свою
-   строку (cas), снять rid из учёта, ответ 200 answered; иной digest → 409 spent
+5. перечитать метку: появилась после шага 2 с тем же digest и **с исходом** (держатель исполнил, clear снял строку) → удалить свою
+   строку (cas), снять rid из учёта, ответ 200 answered; тот же digest, но только begun без исхода (держатель взял мою строку) →
+   ничего не трогать, 202 {queued: rid}; иной digest → тоже удалить свою строку и снять rid из учёта (чужого не трогать: cas по своей версии), 409 spent
 6. journal → строка журнала; 202 {queued: rid}
 ```
 
@@ -345,14 +355,17 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 
 ```
 для каждой строки семьи с unit моей единицы (кроме free-*; elsewhere — не мои действия):
-  уже метка → пропустить (чужая или моя прежняя)
+  метка с исходом → пропустить (чужая или моя прежняя)
+  чужая begun без исхода: её at + PERFORM_TIMEOUT + PERFORM_GRACE позади → записать {outcome: unknown, ended_by: holder,
+    error: "begun by <instance> and never answered"} по прочитанному индексу (ADR-0054: закрывающий — по индексу; conflict →
+    перечитать, исход появился — не трогать); иначе (исполняется) → пропустить
   срок вышел → метка expired создание-однажды; дальше
-  отказ до вызова (группа переехала, эпоха чужая, срок дальше most_valid) → метка refused создание-однажды
+  отказ до вызова (группа переехала, эпоха чужая, срок дальше most_valid) → метка refused создание-однажды {…, error: причина}
   метка begun = put_new {instance, slot, unit, of?, at, digest, valid_until}; conflict → другой начал: пропустить
   вызвать действие с таймаутом PERFORM_TIMEOUT (+ PERFORM_GRACE)
     ответ → записать в метку безусловно — put без индекса (ADR-0054: слово держателя побеждает слово жнеца)
-            {outcome: performed | refused, action, ended_at, error?}; пришёл после unknown жнеца — late: true
-    нет ответа → {outcome: unknown}
+            {outcome: performed | refused, action, ended_at, error?}; пришёл после unknown (жнеца или другого держателя) — late: true
+    нет ответа → {outcome: unknown, error: "no answer in <PERFORM_TIMEOUT> s"}
   пульс: fetched += rid (консоль снимет строку)
 ```
 
@@ -363,13 +376,13 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ```
 clear:  строки, чьи rid в fetched пульсов, → удалить по cas; rid снять из учёта человека (rids − rid, cas)
 sweep:  строка с valid_until + REAP_AFTER < now или старше ttl (без срока):
-          метки нет → метка expired создание-однажды {ended_by: reaper}
-          метка begun без исхода → {outcome: unknown, ended_by: reaper} по индексу
+          метки нет → метка expired создание-однажды {ended_by: reaper, unit, digest из строки} (Н1.5 no_begun)
+          метка begun без исхода → {outcome: unknown, ended_by: reaper, error: "begun and never answered"} по индексу
         затем удалить строку по cas и снять rid из учёта человека; free-* без хозяина — по ttl
 asked:  учёт старше ttl/settle → снять
 ```
 
-**Гонки.** Два держателя одной единицы: `put_new` метки пропускает одного. Жнец против держателя, который начал в последнюю секунду: метка `begun` уже есть — жнец пишет `unknown` по индексу, держатель, получив ответ, пишет исход безусловно поверх `unknown` — побеждает держатель (ADR-0054), `late: true` у исхода после `unknown`; жнец пишет только по прочитанному индексу и слово держателя не затирает. Повтор подачи тем же rid: `cas ""` — второй получает «есть»; отпечаток равен — `answered`, иначе `spent`.
+**Гонки.** Два держателя одной единицы: `put_new` метки пропускает одного; второй держатель закрывает чужую `begun` за сроком словом `unknown` по индексу — начавший, получив поздний ответ, пишет исход безусловно поверх, `late: true`, как и после жнеца. Жнец против держателя, который начал в последнюю секунду: метка `begun` уже есть — жнец пишет `unknown` по индексу, держатель, получив ответ, пишет исход безусловно поверх `unknown` — побеждает держатель (ADR-0054), `late: true` у исхода после `unknown`; жнец пишет только по прочитанному индексу и слово держателя не затирает. Повтор подачи тем же rid: `cas ""` — второй получает «есть»; отпечаток равен — `answered`, иначе `spent`.
 
 ---
 
@@ -396,7 +409,8 @@ asked:  учёт старше ttl/settle → снять
 | бакет: часть по Range | 206 | байты | — |
 | бакет: Range вне файла | 416 | слова | ошибка клиента |
 | `/mirrored/<s>`: копий нет / нет такой копии | 404 | слова | сосед пропущен (урок 11 restore) |
-| держатель: метка уже есть | пропуск | — | другой начал |
+| держатель: метка с исходом | пропуск | — | другой закончил |
+| держатель: чужая `begun` без исхода за сроком | `unknown` по индексу, `ended_by: holder`, `error` | — | ADR-0054 |
 | держатель: нет ответа 10 с | метка `unknown` | `error` | человек решает |
 | жнец: брошена | метка `expired` / `unknown`, `ended_by: reaper` | — | — |
 
