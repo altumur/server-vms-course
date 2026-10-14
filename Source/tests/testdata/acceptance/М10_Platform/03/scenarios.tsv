@@ -1,0 +1,45 @@
+scenario	step	request	expect
+# Приёмка М10/3: дверь единиц консоли testsub (counters, id: name). Формат — README.
+01-create	1	POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "name": "c1", "start": 5, "labels": [], "revision": 1, "worker": null}
+01-create	2	@key(1) POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "revision": 1}
+01-create	3	@key(1) POST /counters {"name": "c1", "start": 6}	422 {"error": "key reused"}
+01-create	4	@nokey POST /counters {"name": "c1x", "start": 5}	400 {"error": "~Idempotency-Key"}
+02-exists	1	POST /counters {"name": "c2"}	201 {"id": "c2", "start": 0}
+02-exists	2	POST /counters {"name": "c2"}	409 {"error": "exists"}
+03-update	1	POST /counters {"name": "c3", "start": 1}	201 {"revision": 1}
+03-update	2	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
+03-update	3	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
+03-update	4	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
+04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
+04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
+04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
+04-platform-fields	4	PUT /counters/c3 {"epoch": 9}	400 {"error": "~may not set"}
+05-required	1	POST /counters {"start": 1}	400 {"error": "~needs a name"}
+05-required	2	POST /counters {"name": "", "start": 1}	400
+06-name-grammar	1	POST /counters {"name": "a/b"}	400
+06-name-grammar	2	POST /counters {"name": "a,b"}	400
+06-name-grammar	3	POST /counters {"name": "a|b"}	400
+06-name-grammar	4	POST /counters {"name": "a\"b"}	400
+06-name-grammar	5	POST /counters {"name": "."}	400
+06-name-grammar	6	POST /counters {"name": ".."}	400
+06-name-grammar	7	POST /counters {"name": "a\\b"}	400
+06-name-grammar	8	POST /counters {"name": "a.b"}	201 {"id": "a.b"}
+07-delete	1	POST /counters {"name": "c7", "start": 1}	201 {"revision": 1}
+07-delete	2	PUT /counters/c7 {"start": 2}	200 {"revision": 2}
+07-delete	3	PUT /counters/c7 {"start": 3}	200 {"revision": 3}
+07-delete	4	DELETE /counters/c7	200 {"deleted": "c7"}
+07-delete	5	DELETE /counters/c7	404 {"error": "no such unit"}
+07-delete	6	PUT /counters/c7 {"start": 4}	404 {"error": "no such unit"}
+07-delete	7	POST /counters {"name": "c7", "start": 9}	201 {"id": "c7", "start": 9, "revision": 4}
+08-types	1	POST /counters {"name": "c8", "start": "7"}	400 {"fault": "not_number"}
+08-types	2	POST /counters {"name": "c8", "start": 1.5}	400 {"fault": "not_number"}
+08-types	3	POST /counters {"name": "c8", "labels": "a"}	400
+08-types	4	POST /counters {"name": "c8", "start": true}	400 {"fault": "not_number"}
+08-types	5	POST /counters {"name": "c8", "start": 8}	201 {"start": 8}
+09-list-comma	1	POST /counters {"name": "c9", "labels": ["a,b", "c"]}	201 {"labels": ["a,b", "c"]}
+09-list-comma	2	PUT /counters/c9 {"labels": ["[x", "y"]}	200 {"labels": ["[x", "y"], "revision": 2}
+10-inherit-absent	1	POST /counters {"name": "c10"}	201 {"id": "c10", "step": "@absent", "marks": "@absent"}
+10-inherit-absent	2	PUT /counters/c10 {"step": 2}	200 {"step": 2, "revision": 2}
+11-bad-path	1	PUT /counters/c3/x {"start": 1}	404
+11-bad-path	2	PUT /counters/nosuch {"start": 1}	404 {"error": "no such unit"}
+11-bad-path	3	DELETE /counters/nosuch	404 {"error": "no such unit"}
