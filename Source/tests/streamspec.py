@@ -12,7 +12,7 @@ import os
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))       # Source/
 
-FAMILY = "domain/cam/stream-"                     # the rows of the accounts: stream-clients/, stream-accounts
+FAMILY = "domain/live/stream-accounts"
 
 
 def _yaml(name: str) -> dict:
@@ -25,13 +25,10 @@ def specs(keys: bool = True):
     from w2cplatform.spec import SubsystemSpec
     vms, live = _yaml("cam"), _yaml("live")
     if not keys:
-        d = vms["domain"]
-        d["books"] = {k: v for k, v in d["books"].items() if k != "stream-accounts"}
-        d["kept"] = [k for k in d["kept"] if k != "stream-clients/"]
-        d.pop("names", None)
-        d["keys"] = [k for k in d["keys"] if not k["id"].startswith("stream-")]
-        vms["display"]["keys"] = {k: v for k, v in vms["display"]["keys"].items() if not k.startswith("stream-")}
-        vms["secrets"]["readers"] = {r: n for r, n in vms["secrets"]["readers"].items() if not r.startswith(FAMILY)}
+        live["worker"]["reads"] = [key for key in live["worker"]["reads"]
+                                    if key != "domain/live/stream-accounts"]
+        live["domain"].pop("books", None)
+        live["domain"].pop("names", None)
         live.pop("secrets", None)
     return SubsystemSpec.from_dict(vms), SubsystemSpec.from_dict(live)
 
