@@ -190,18 +190,29 @@ def test_holder_collects_its_local_outcome_with_holder_rights_without_a_report_t
             pass
         else:
             raise AssertionError("the agent may not write the holder's queue")
+        try:
+            agent_vars.put("domain/outcomes/north", {})
+        except Forbidden:
+            pass
+        else:
+            raise AssertionError("the agent may not write the holder's outcome history")
         agent = DomainAgent("north", UnreachableDoor(), agent_vars, now=e.wall,
                             console=AgentConsole(url, e.key, e.wall), key=e.key)
         assert agent.sync() is False  # Unreachable carry cannot prevent applying its local queue.
         assert e.vars.get("testsub/counters/own")[0] is not None
         assert edit["id"] in e.pending.of("north")
-        assert json.loads(e.vars.get("domain/outcomes/north")[0][edit["id"]])["status"] == 201
+        assert json.loads(e.vars.get("domain/outcomes")[0][edit["id"]])["status"] == 201
+        assert e.vars.get("domain/outcomes/north")[0] is None
         holder_vars = e.vars.as_writer("domain", ["domain/*"])
         fed = SimpleNamespace(clusters={"north": SimpleNamespace(is_domain_holder=True, vars=UnreachableDoor())})
         PendingEdits(holder_vars, e.wall).collect(fed)
         assert e.pending.of("north") == {}
         assert e.vars.get("domain/pending")[0] is None
-        assert e.vars.get("domain/outcomes")[0] is None
+        history = e.vars.get("domain/outcomes/north")[0]
+        assert json.loads(history[edit["id"]])["status"] == 201
+        assert agent.sync() is False
+        assert e.vars.get("domain/outcomes")[0] == {}
+        assert e.vars.get("domain/outcomes/north")[0] == history
 
 
 def test_a_console_request_in_flight_or_taken_over_stays_waiting_and_exists_is_terminal():
