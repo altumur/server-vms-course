@@ -616,3 +616,15 @@ def test_resource_reads_common_retention_and_never_a_units_old_policy():
         assert r.allows("resource", "read", f"cam/{family}")
         assert not r.allows("resource", "read", f"cam/{family}/7")
         assert not r.allows("console", "write", f"cam/{family}/7")
+
+
+def test_scenario_worker_reads_only_the_exact_shared_pointer_without_mutation_rights():
+    r = rights()
+    assert r.allows("autoworker", "read", "domain/shared")
+    for key in ("domain/shared", "domain/shared/auto", "domain/shared/private", "domain/signer"):
+        assert not r.allows("autoworker", "write", key), key
+        assert not r.allows("autoworker", "delete", key), key
+        if key != "domain/shared":
+            assert not r.allows("autoworker", "read", key), key
+    for role in ("camworker", "recworker", "detworker", "liveworker"):
+        assert not r.allows(role, "read", "domain/shared"), role
