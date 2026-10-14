@@ -9,7 +9,6 @@ such a scenario in its heartbeat (`refused`, with why) and never fires it.
 """
 import json
 
-from w2cplatform.contract import requests_acl
 from w2cplatform.spec import Refused, SpecController, SubsystemSpec
 from vms.auto import ACTIONS, MAX_ACTIONS, MAX_TRIGGERS, MAX_VALID_FOR, MAX_WITHIN, Catalog, fires, refusal
 from vms.config import AUTO_SPEC
@@ -37,7 +36,7 @@ def _evaluator(box, *names):
 
     class _Quiet:
         def query(self, *a, **kw): return {"events": [], "state": "live", "truncated": False}
-    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
+    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role()),
                       box.objects, index=_Quiet(), clock=box.clock, wall=box.wall, server="srv-a",
                       resource_root=box.resource_root, env={})
 
