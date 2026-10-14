@@ -234,6 +234,7 @@ class NativeAPI:
         from w2cplatform.storemachine import check_key, check_write, wire_index, MAX_VALUE
         from w2cplatform.variables import Conflict, GuardFailed, Forbidden, KeyTooLong
         from w2cplatform.limits import TooLarge
+        from w2cplatform.configstorevars import StoreAmbiguous, StoreUnavailable
         from w2cplatform.rights import refusal
         route = urllib.parse.urlsplit(target)
         query = urllib.parse.parse_qs(route.query, keep_blank_values=True)
@@ -291,6 +292,10 @@ class NativeAPI:
             return 409, {"kind": "conflict", "index": wire_index(error.index), "error": str(error)}
         except Forbidden:
             return 403, {"kind": "forbidden"}
+        except StoreAmbiguous:
+            return 503, {"kind": "ambiguous"}
+        except StoreUnavailable:
+            return 503, {"kind": "unavailable"}
         except TooLarge as error:
             return 413, {"kind": "toolarge", "key": error.key, "size": error.size, "limit": error.limit}
         except ValueError as error:
