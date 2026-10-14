@@ -708,10 +708,15 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
                                bundle_store=east.objects, bundle_members=members, relay_members=members)
     through.door.agent = relay_agent                                   # what the cameras ask: what east keeps
     report_sync(relay_agent)
-    hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects))
+    def centre_dial(url):
+        if url in CENTRE_URLS:
+            return hosts[0].ingest
+        raise Unreachable(f"{url} is beyond the relay network")
+
+    hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects, dial=centre_dial))
     relay = hosts[-1].ingest
 
-    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall), north.objects)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north"), north.objects)
     recording_domain = RecordingDomain(books.inputs, signer,
         agents=[*agents, relay_agent], devices=list(cams.values()), recorders=hosts)
     recording_domain.collect()
@@ -725,9 +730,14 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
         for a in agents:
             report_sync(a)
 
-    domain_pass(); domain_pass()
+    domain_pass(); domain_pass(); domain_pass()
+    fwd = hosts[-1].forwarder
+    fwd.tokens.door = role_requests(east.vars, "recworker")
+
+    dialled = []
 
     def site_dial(url):
+        dialled.append(url)
         if url in RELAY_URLS:
             return relay
         raise Unreachable(f"{url} is beyond the site's network")
@@ -741,11 +751,35 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
 
     gate = cams["SN7002"].host_scenarios(next(a for a in agents if a.cluster == cams["SN7002"].name), site_dial, steady=wall)
     asker = gate.asks.executor.asker("SN7002")
-    assert [r.member for r in asker._roads("SN7003")[1]] == ["east"]
+    assert {r.member for r in asker._roads("SN7003")[1]} == {"east", "north"}
     left = gate.on_event("vehicle")
     assert [x["state"] for x in left] == ["asked"] and left[0]["ingest"] is relay
     assert ptz.pass_once([])["asks"] == [({"camera": "SN7003", "action": "preset", "arg": 3}, "performed")]
     assert asker.outcome("SN7003", left[0]["ask"], left[0]["deadline"]) == "performed"
+
+
+    # A camera with no recording still reaches a centre viewer through its home.
+    from w2cplatform.domain.placement import placed
+    assert placed(east.vars, "rec", "SN7003") is None
+    centre = hosts[0].ingest
+    fwd.pass_once()
+    assert ptz.pass_once(["before-viewer"])["pushed"] == 0
+    queue = centre.subscribe("SN7003", "viewer")
+    centre.want("SN7003", "viewer")
+    fwd.pass_once()
+    result = ptz.pass_once(["live-for-centre"])
+    assert result["pushed"] == 1, (result, fwd.state, east.vars.get(UPSTREAM_PATH)[0])
+    fwd.pass_once()
+    assert queue.drain() == ["live-for-centre"]
+    assert set(dialled) == set(RELAY_URLS)
+    centre.release("SN7003", "viewer")
+    centre.unsubscribe("SN7003", "viewer", kind="live")
+    wall.advance(LINGER + 1)
+    fwd.pass_once()
+    wall.advance(LINGER + 1)
+    assert ptz.pass_once(["after-viewer"])["pushed"] == 0
+    fwd.pass_once()
+    assert queue.drain() == []
 
 
 # -- a scenario between two relays: the road up through one's own relay, by event -------------------------
