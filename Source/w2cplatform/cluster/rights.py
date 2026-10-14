@@ -164,7 +164,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, EPOCH_FLOOR_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
-                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY,
+                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, "domain/revoked", MEMBER_MARK, KEYS_KEY,
                                        *[r + "*" if r.endswith("/") else r for r in (*s.worker_reads, *assignment_reads, *member_reads, *member_results)],
                                        *([s.domain_prefix + b for b in s.domain.merged] if s.domain else []),
                                        *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to, *grants])

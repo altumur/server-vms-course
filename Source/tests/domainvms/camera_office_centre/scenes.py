@@ -326,6 +326,8 @@ def s11_scenario(site) -> None:
              "autoworker читают свои проверенные копии. Каждый узел публикует свою дорогу без токенов.")
     with log.muted():
         for _ in range(3):
+            for camera in site.cams.values():
+                camera.publish()
             site.wall.advance(0.01)
             site.agents_pass()
             for name in ("srv", "relay-a", "relay-b"):
