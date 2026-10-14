@@ -1,0 +1,80 @@
+{
+  "id": "S03-replay",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "operation replay is submitted again",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 24,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "12-id",
+      "2",
+      "body.kind.extra"
+    ],
+    [
+      "12-id",
+      "2",
+      "status"
+    ],
+    [
+      "12-id",
+      "4",
+      "body.index.extra"
+    ],
+    [
+      "12-id",
+      "4",
+      "status"
+    ],
+    [
+      "12-id",
+      "5",
+      "body.index.extra"
+    ],
+    [
+      "12-id",
+      "5",
+      "status"
+    ],
+    [
+      "12-id",
+      "6",
+      "body.index"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:StoreMachine._write",
+  "api_function_calls": 50,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      42,
+      4,
+      0
+    ],
+    "failures": [
+      "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it",
+      "test_storemachine.py::test_a_write_repeated_with_its_id_is_answered_with_its_first_answer",
+      "test_storemachine.py::test_an_operation_id_is_answered_from_memory_only_for_its_own_write",
+      "test_storemachine.py::test_two_machines_fed_the_same_log_hold_the_same_rows_and_a_dump_carries_everything"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
