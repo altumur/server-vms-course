@@ -137,7 +137,8 @@ door:      -door -id -voters a@h:p,…: без голоса; те же соке�
            configstore_doors; все голосующие недоступны → 503 unavailable; join/leave не делает
 admin_ops: status | join [-force] | leave [id] | admit <id> | backup <файл> (0600, tmp + rename) | restore --from [-force]
            | import --from file://… [-index-base N] [-force] | recover -id -dir -peers … [-force] | rights [-groups]
-           import/restore/recover/floor — только на admin.sock лидера; status/backup/leave себя — у любого
+           import/restore/floor — только на admin.sock лидера; recover — локально на остановленном демоне (лидера нет,
+           большинства нет — Н3 «восстановить»), не через сокет; status/backup/leave себя — у любого
 floor:                                        # platform/epoch_floor {floor, generation_at}
   generation: max((floor >> 32) + 1, часов UTC с 2026-01-01); floor = generation << 32
   when:    recover (на остановленном демоне), restore, import — до первой строки; только op: floor на admin.sock; строка не
