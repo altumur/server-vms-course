@@ -1294,18 +1294,15 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
 
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------
-def test_what_the_ingests_did_not_hand_on_is_on_the_vms_domain_workers_metrics_and_the_forwarders_in_its_heartbeat():
-    """The eleventh review, a minor: an ingest's `lost` (a subscriber's full queue, a peer cut, repeats, frames far ahead)
-    and `clock_steps` were in its object and nowhere a monitor reads, and the forwarder's `dropped` and `holes` nowhere
-    at all. The VMS's worker on the domain says the ingests' on its door's `/metrics` (`stream_metrics`; the boundary's
-    «no hooks»: it was a route of the platform's domain console), every line labelled with its cluster; an object that
-    does not parse is counted and the rest are said; a door that asks for `view` asks for it here too. The forwarder's
-    are in its recorder's heartbeat (`upstream`, the product's words; ADR-0065) — no object of its own, and no line here."""
+def test_ingest_losses_and_clock_steps_are_in_polled_and_forwarder_losses_in_its_heartbeat():
+    """C7 decision 2c3c1fc3: ordinary rec/polled and upstream, auth on the platform view."""
     import urllib.error
     import urllib.request
     from w2cplatform.console import open_doors
     from w2cplatform.domain.federation import Unreachable as Gone
-    from vms.domainpart.worker import door_handler
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.api import ConsoleAPI
+    from w2cplatform.domain.federation import DomainDirectory, published
     from w2cplatform.rows import counts
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
@@ -1335,27 +1332,35 @@ def test_what_the_ingests_did_not_hand_on_is_on_the_vms_domain_workers_metrics_a
     east.objects.put("rec/polled/torn", b'{"cluster": "east", "lost": ')
     fed = Federation()
     fed.add(north); fed.add(east)
-    srv = open_doors("127.0.0.1", 0, door_handler(fed), unix_env="NO_SUCH_DOOR", say=False)
-    try:
-        text = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/metrics").read().decode()
-    finally:
-        srv.shutdown(); srv.server_close()
-    lines = text.splitlines()
+    docs = {}
+    before = sum(counts().get("member_object", {}).values())
+    for name, cluster in fed.clusters.items():
+        for key in cluster.objects.list("rec/polled/"):
+            doc = published(name, key, cluster.objects.get(key),
+                            lambda d: (dict(d.get("lost") or {}), dict(d.get("clock_steps") or {})))
+            if doc is not None:
+                docs[name, key] = doc
+    centre_doc = next(d for (name, _), d in docs.items() if name == "north")
+    relay_doc = next(d for (name, _), d in docs.items() if name == "east")
     held = fwd.dropped[SERIAL]
     assert held > 0
-    assert f'ingest_frames_lost_total{{cluster="north",ingest="{CENTRE_URLS[0]}",camera="{SERIAL}",why="repeats"}} 2' in lines, text
-    assert any(ln.startswith(f'ingest_frames_lost_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}",why="dropped"}} ')
-               and int(ln.split()[-1]) > 0 for ln in lines), text
-    assert f'ingest_clock_steps_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}"}} 2' in lines
-    assert not any(ln.startswith("forwarder_") or "# TYPE forwarder_" in ln for ln in lines), text   # not here…
-    up = _upstream(domain_pass.recorders["east"])[SERIAL]               # …but in the relay's recorder's heartbeat
+    assert centre_doc["lost"][SERIAL]["repeats"] == 2
+    assert sum(relay_doc["lost"][SERIAL]["dropped"].values()) > 0
+    assert relay_doc["clock_steps"][SERIAL] == 2
+    assert all("upstream" not in d for d in docs.values())
+    up = _upstream(domain_pass.recorders["east"])[SERIAL]
     assert up["up_dropped"] >= held and up["mode"] == "push"
-    assert sum(counts()["member_object"].values()) >= 1                 # the torn one: counted, the rest said
-    srv = open_doors("127.0.0.1", 0, door_handler(fed, verifier=lambda t: t, viewer=lambda s: s == "boris"),
+    assert sum(counts()["member_object"].values()) > before
+    assert len(docs) == 2
+    directory = DomainDirectory(fed, wall=wall)
+    console = Console(directory, ReadView(fed, wall=wall), ConsoleAPI(directory, verifier=lambda t: t),
+                      viewer=lambda subject: subject == "boris")
+    console.view.refresh()
+    srv = open_doors("127.0.0.1", 0, console.handler(),
                      unix_env="NO_SUCH_DOOR", say=False)
     try:
         def status(who=None):
-            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/metrics",
+            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/domain/cam/cameras",
                                          headers={"Authorization": f"Bearer {who}"} if who else {})
             try:
                 return urllib.request.urlopen(req).status
