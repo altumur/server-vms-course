@@ -84,3 +84,9 @@ WithMember/PeerOf, перенос отпечатков и ClientForeign окон
 - C6 asks/scenario; C6b sources-only upstream; C7 оставшийся domainpart,
   deployment и итоговая карта переноса тестовых утверждений.
 - Новые уроки М10 не берутся до C7, решение55d7e153.
+
+После полного прогона объединён main10b3a2d6. В Source изменились только
+пять acceptance-входов команды Спецификации (README01/06/10, пример YAML02,
+сценарии11); исполнявшиеся Python/JS и TSV01 не изменились. Сравнение —
+[evidence-main-merge.json](evidence-main-merge.json). Полный повтор после
+этого слияния не заявляется. Новые уроки не исправлялись.
