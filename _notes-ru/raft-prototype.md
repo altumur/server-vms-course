@@ -18,7 +18,7 @@ status: draft
 > - тесты — `Source/tests/test_storemachine.py`, `test_configstorevars.py`, `test_configstore.py` (настоящий raft; пропускается без `pysyncobj`) вместо `test_raftvars.py`;
 > - замер — `Source/tests/configstore_election.py` вместо `raft_election.py`, тем же сценарием.
 >
-> Числа ниже — замер **прототипа**, и записка оставлена как запись о нём: имена в тексте — нынешние, а где поведение прототипа отличалось от кода курса, так и сказано. Правка цикла воркера из раздела «Что менять» сделана (`vms/worker.py`, `vms/autoworker.py`, `tests/test_lease_step.py`), ручка повторяет отказ соединения в пределах `D` (пункт 2). Замер демона курса и замеры продукта на `hashicorp/raft` — в М11, урок [8](../М11_Cluster/08-pull-the-power.md), шаг 4.
+> Числа ниже — замер **прототипа**, и записка оставлена как запись о нём: имена в тексте — нынешние, а где поведение прототипа отличалось от кода курса, так и сказано. Правка цикла воркера из раздела «Что менять» сделана (`vms/worker.py`, `vms/autoworker.py`, `tests/test_lease_step.py`), ручка повторяет отказ соединения в пределах `D` (пункт 2). Замер демона курса и замеры продукта на `hashicorp/raft` — в М11, урок [М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md), шаг 4.
 > Все числа ниже измерены на одной машине (стенд описан ниже). Где число выведено из формулы, так и сказано.
 
 [← все записки](README.md)
@@ -167,6 +167,6 @@ python3 tests/configstore_election.py --timing slow --timeout 1 --kills 20
 ## Ссылки
 
 - [«Кластер без оркестратора»](without-an-orchestrator.md) — решение владельца 3 октября, открытые вопросы
-- [М10A урок 3](../М10A_Platform/03-RegisterScheme.md) — шов `open_vars` и контракт `Variables`
+- [М10/1](../М10_Platform/01-the-storage-dictionary.md) — шов `open_vars` и контракт `Variables`
 - [PySyncObj](https://github.com/bakwc/PySyncObj) — библиотека прототипа
 - [hashicorp/raft](https://github.com/hashicorp/raft) — библиотека продукта
