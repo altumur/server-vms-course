@@ -1,7 +1,7 @@
 """The gateway's RTSP door — RTSP outward (the product's `liveproc/rtsp.go`; ADR-0031, the addendum of 2026-10-07).
 
 A video wall, another VMS, an analytics server takes a camera as `rtsp://<gateway>/<cam>`, proving who it is with a
-stream client's account (`vms/streamclients.py`): Digest, and Basic too inside TLS. It plays the cameras its grants let
+cluster-owned account (`vms/live_accounts.py`): Digest, and Basic too inside TLS. It plays the cameras its grants let
 it view — the same grants, the same scopes and labels, the same lapse as a person's — and nothing else.
 
 The door is the gateway's, not the workers': the workers' fan-outs stay where they are, a camera that moves to another
@@ -19,11 +19,11 @@ RTSP is an object with five calls —
 
 — `FakeRTSPServer` below in the tests, a server with Digest on a box. The course ships no such server: on a box where
 `LIVE_RTSP_LISTEN` is set and none is given, the door says so and stays shut. Off unless `LIVE_RTSP_LISTEN` is set, and
-shut while the gateway's spec does not say it reads the accounts (`live.subsystem.yaml`, `secrets.reads`; ADR-0024).
+shut while the gateway's spec does not say it reads the accounts (`live.subsystem.yaml`, `worker.reads` and `secrets.readers`; ADR-0024).
 
 Each pass (`sync`, then `watch`):
 
-    sync    the server's accounts (`streamclients.stream_accounts`: what the agent carried, or the holder's own records),
+    sync    the server's accounts (`live_accounts.stream_accounts`: the complete unique delivered book),
             a mount for every camera a worker of this cluster holds (where its stream is now: `source(cam)`), and on
             each mount the accounts whose grants let them `view` that camera — one reading of the grants for the whole
             pass, so a grant revoked is honoured on the next one
@@ -38,7 +38,8 @@ import uuid
 from dataclasses import dataclass, field
 
 from .config import SPEC, cam_ref, row
-from . import streamclients as sc
+from .live_accounts import stream_accounts
+from .recording_publication import member
 
 log = logging.getLogger("vms.rtspdoor")
 
@@ -104,13 +105,13 @@ class FakeRTSPServer:
 
 class RTSPDoor:
     """`server`: the RTSP server (above); `source(cam) -> url | None`: where the camera's stream is now (the gateway's
-    `rtp_source`); `vars_`: this cluster's store; `cluster`: its name (the holder hands its own accounts by it);
+    `rtp_source`); `vars_`: this cluster's store (including its signed member identity);
     `journal`: the gateway's, or a callable that gives it; `gateway`: its name, or a callable; `sealer`: its ring — the
     carried accounts lie sealed with it."""
 
-    def __init__(self, server, source, vars_, cluster: str, journal=None, sealer=None, wall=time.time,
+    def __init__(self, server, source, vars_, journal=None, sealer=None, wall=time.time,
                  gateway: str = ""):
-        self.server, self.source, self.vars, self.cluster = server, source, vars_, cluster
+        self.server, self.source, self.vars = server, source, vars_
         self.journal, self.sealer, self.wall, self.gateway = journal, sealer, wall, gateway
         self.mounted: dict[str, str] = {}          # cam -> the source it is published with
         self.given: dict[str, str] = {}            # cam -> who may play it, as last handed to the server
@@ -119,10 +120,11 @@ class RTSPDoor:
     def sync(self) -> None:
         """Makes the door what the store says: the accounts carried, a mount for every camera a worker of this cluster
         holds, and on each mount the accounts its grants let view it."""
-        accounts = sc.stream_accounts(self.vars, self.cluster, self.sealer)
+        cluster = member(self.vars)
+        accounts = stream_accounts(self.vars, cluster, self.sealer) if cluster else {}
         self.server.accounts(accounts)
         names = sorted(accounts)
-        grants = self._grants()                    # once a sync, as a gate's memo lives for one request
+        grants = self._grants(cluster)             # once a sync, as a gate's memo lives for one request
         seen = set()
         prefix = SPEC.sub.config(SPEC.rows, "")
         for path in self.vars.list(prefix):
@@ -156,11 +158,11 @@ class RTSPDoor:
             del self.mounted[cam]
             self.given.pop(cam, None)
 
-    def _grants(self):
+    def _grants(self, cluster):
         """This cluster's grants, read once (`domain/grants`, carried by its agent), as a cluster's console reads them."""
         from w2cplatform.domain.agent import ClusterTrust
         from w2cplatform.domain.grants import ClusterGrants
-        g = ClusterGrants(self.cluster, now=self.wall)
+        g = ClusterGrants(cluster or "", now=self.wall)
         g.renew_from_domain(ClusterTrust(self.vars).grants())
         return g
 
@@ -206,7 +208,7 @@ class RTSPDoor:
 
 def open_rtsp(env: dict, server=None, spec=None):
     """The server the door drives, or None: the door is not asked for (`LIVE_RTSP_LISTEN` unset), or the gateway's spec
-    does not say it reads the accounts (`secrets.reads`), or there is no server to drive — each said once, here."""
+    does not declare the account book and its secret reader, or there is no server to drive — each said once, here."""
     listen = env.get("LIVE_RTSP_LISTEN", "")
     if not listen:
         return None
@@ -217,10 +219,10 @@ def open_rtsp(env: dict, server=None, spec=None):
             spec = catalog.spec(LIVE_SPEC.name)
         except ValueError:
             spec = LIVE_SPEC
-    if not sc.reads_declared(spec):
-        log.warning("LIVE_RTSP_LISTEN=%s, and %s.subsystem.yaml does not say its gateway reads %s and %s "
-                    "(secrets.reads): the RTSP door stays shut", listen, spec.name, sc.STREAM_CLIENTS_PREFIX,
-                    sc.STREAM_ACCOUNTS_KEY)
+    from .live_accounts import BOOK
+    if BOOK not in spec.worker_reads or "worker" not in spec.secret_readers.get(BOOK, ()):
+        log.warning("LIVE_RTSP_LISTEN=%s, and %s.subsystem.yaml does not declare reading %s: the RTSP door stays shut",
+                    listen, spec.name, BOOK)
         return None
     if server is None:
         log.warning("LIVE_RTSP_LISTEN=%s, and this gateway has no RTSP server to open it with: the door stays shut",
