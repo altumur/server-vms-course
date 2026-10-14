@@ -85,3 +85,120 @@ def test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_proces
         result = subprocess.run([sys.executable, str(runner), output], text=True,
                                 capture_output=True, timeout=45)
         assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_native_shared_acceptance_uses_each_real_backend_without_a_door():
+    from pathlib import Path
+    import subprocess
+    import sys
+    runner = Path(__file__).with_name("storage_acceptance.py")
+    for backend in ("file", "mem"):
+        with tempfile.TemporaryDirectory() as output:
+            result = subprocess.run([sys.executable, str(runner), output, "--backend", backend],
+                                    text=True, capture_output=True, timeout=45)
+            assert result.returncode == 0, backend + result.stdout + result.stderr
+            metadata = json.loads((Path(output) / "backend.json").read_text())
+            assert metadata["door"] is False and metadata["backend"] == backend
+            calls = json.loads((Path(output) / "api-calls.json").read_text())
+            prefix = "variables.py:FileVariables" if backend == "file" else "memvariables.py:MemVariables"
+            assert calls[prefix + ".write"] > 0 and calls[prefix + "._apply_write"] > 0
+            assert not (Path(output) / "daemon.json").exists()
+
+
+def test_receipts_and_wrappers_share_real_replay_after_guard_changes():
+    for factory in (lambda root: FileVariables(root, volatile=True), lambda root: MemVariables()):
+        with tempfile.TemporaryDirectory() as root:
+            store = factory(root)
+            writer = store.as_writer("acceptance", ["acc/*"])
+            slot = store.put("acc/slot", {"owner": "a"})
+            cmd = {"op": "put", "key": "acc/row", "items": {"v": "one"}, "cas": 0,
+                   "guard": {"key": "acc/slot", "index": slot}, "id": "a1"}
+            first = writer.write(cmd)
+            assert first["again"] is False
+            store.put("acc/slot", {"owner": "b"}, cas=slot)
+            assert store.write(cmd) == {"index": first["index"], "again": True}
+            assert writer.put("acc/row", {"v": "one"}, cas=0, guard=cmd["guard"], id="a1") == first["index"]
+            deleted = writer.delete("acc/row", cas=first["index"], id="d1")
+            assert deleted != first["index"]
+            assert store.write({"op": "delete", "key": "acc/row", "cas": first["index"], "id": "d1"}) == {"index": deleted, "again": True}
+            first["index"] = "caller changed receipt"
+            cmd["items"]["v"] = "caller changed command"
+            try:
+                store.write(cmd)
+                raise AssertionError("changed write reused an id")
+            except ValueError:
+                pass
+            assert store.get("acc/row") == (None, 0)
+
+
+def test_a_refused_id_remembers_its_original_conflict_not_the_later_row():
+    for factory in (lambda root: FileVariables(root, volatile=True), lambda root: MemVariables()):
+        with tempfile.TemporaryDirectory() as root:
+            store = factory(root)
+            first = store.put("acc/row", {"v": "one"})
+            cmd = {"op": "put", "key": "acc/row", "items": {}, "cas": 0, "id": "b1"}
+            for _ in range(2):
+                try:
+                    store.write(cmd)
+                    raise AssertionError("create-only on an existing row succeeded")
+                except Conflict as error:
+                    assert error.index == first
+                store.put("acc/row", {"v": "later"})
+
+
+def test_replay_keeps_two_minutes_and_fifty_thousand_answers(monkeypatch):
+    from w2cplatform import variables
+    clock = [0.0]
+    monkeypatch.setattr(variables.time, "monotonic", lambda: clock[0])
+    memory = variables._Replay()
+    applied = [0]
+    def apply():
+        applied[0] += 1
+        return {"index": applied[0], "again": False}
+    for n in range(50001):
+        memory.run({"id": format(n, "x")}, apply)
+    assert memory.run({"id": "0"}, apply) == {"index": 1, "again": True}
+    clock[0] = 119.999
+    memory.run({"id": "fffff"}, apply)
+    assert memory.run({"id": "0"}, apply)["again"] is True
+    clock[0] = 120.0
+    memory.run({"id": "ffffe"}, apply)
+    assert len(memory.done) == 50000
+    assert memory.run({"id": "0"}, apply)["again"] is False
+    clock[0] = 10000.0
+    assert memory.run({"id": "ffffe"}, apply)["again"] is True
+
+
+def test_file_replay_is_process_memory_and_creates_no_new_disk_records():
+    from pathlib import Path
+    import subprocess
+    import sys
+    with tempfile.TemporaryDirectory() as root:
+        store = FileVariables(root, volatile=True)
+        first = store.put("acc/row", {"v": "one"}, id="f1")
+        reopened = FileVariables(root, volatile=True)
+        assert reopened.write({"op": "put", "key": "acc/row", "items": {"v": "one"}, "id": "f1"}) == {"index": first, "again": True}
+        code = "from w2cplatform.variables import FileVariables; import sys; print(FileVariables(sys.argv[1],volatile=True).put('acc/row',{'v':'one'},id='f1'))"
+        result = subprocess.run([sys.executable, "-c", code, root], text=True, capture_output=True, timeout=15)
+        assert result.returncode == 0, result.stderr
+        assert int(result.stdout) != first
+        store.delete("acc/row")
+        assert sorted(str(p.relative_to(root)) for p in Path(root).rglob("*") if p.is_file()) == ["index", "lock"]
+
+
+def test_two_handles_retrying_one_id_apply_it_only_once():
+    import concurrent.futures
+    import threading
+    for factory in (lambda root: FileVariables(root, volatile=True), lambda root: MemVariables()):
+        with tempfile.TemporaryDirectory() as root:
+            store = factory(root)
+            handles = [store.as_writer("writer", ["acc/*"]) for _ in range(4)]
+            barrier = threading.Barrier(len(handles))
+            def write(handle):
+                barrier.wait(timeout=5)
+                return handle.write({"op": "put", "key": "acc/row", "items": {"v": "one"}, "cas": 0, "id": "c1"})
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(handles)) as pool:
+                receipts = list(pool.map(write, handles))
+            assert len({r["index"] for r in receipts}) == 1
+            assert sum(r["again"] is False for r in receipts) == 1
+            assert store.get("acc/row")[1] == receipts[0]["index"]
