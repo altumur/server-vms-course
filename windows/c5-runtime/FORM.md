@@ -86,3 +86,14 @@ C5 узкий: явный HTTP-режим коробки или TLS под од�
 Два разных CA — отказ на handshake, без обходов. Зеркало окон3/4
 ADR-0075 — общий этап после C7; cross-CA в приёмку C5 не входит.
 Полный текст решения: `decisions/inbox/2026-10-14-c5-межкластерный-tls.md`.
+
+## Approved correction cdd2c1f5
+
+Architect approved C5 after removing worker.writes from testsub2 entirely;
+door.pass:[entries] remains. The spec and two tests now forbid worker writes
+to tallies and shelves, preserving worker.requests. Final targeted checks:
+43 passed, 0 failed, 0 skipped, exit0. Initial64/2/0 retained: two obsolete
+expectations required the removed grant; console_load passed.
+X-Operator is confirmed as an outgoing console header; incoming headers
+are removed. Supersedes the pending-review/operator statuses above.
+See evidence-approved-correction.json for commands, log paths and SHA256.
