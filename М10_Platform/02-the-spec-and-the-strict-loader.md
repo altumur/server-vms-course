@@ -196,7 +196,7 @@ rules:
 |---|---|
 | `unit.id` | `numeric` или поле единицы |
 | `snapshot[]`, `requests.key`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
-| `display.options.<поле>.*` | значения `enum` этого поля; поле без `enum` — отказ |
+| `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table` | таблица из `tables:` |
 | `console.running` | метрика из `metrics[]` |
 | `about.field` | поле единицы с `fixed: true` |
@@ -351,7 +351,7 @@ components:
   загрузить(байты, файл)                                → отказ: файл не кладётся, код возврата 2
   прочитать строку и метку
   те же yaml и shell                                    → «без изменений»; метки нет или она ниже строки → довести (ниже); выход 0
-  записать строку {yaml, sha256, rev: прежний + 1} с cas по прочитанной версии
+  записать строку {yaml, shell (если страницы есть), sha256: sha256(yaml), rev: прежний + 1} с cas по прочитанной версии
                                                          → конфликт: перечитать и повторить
   довести метку: метки нет → записать {rev, sha256} строки с cas ""; есть и rev метки < rev строки → записать с cas по её версии
                                                          → конфликт: перечитать метку и повторить, пока она ниже строки; не ниже — ничего
