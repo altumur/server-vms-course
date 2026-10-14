@@ -186,6 +186,8 @@ mark:       objects/<sub>/commands/<rid>      # строка-объект, со�
   begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова; digest — sha256 канонического JSON (JCS) тела клиента
              # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — элемент `digest` строки просьбы (Н1.4); им сравнивают повторы
   answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
+  no_begun:  {unit, digest, outcome: expired | refused, ended_by: reaper | holder, ended_at}   # метка без begun (срок вышел, отказ до вызова):
+             # digest и unit переносятся из строки просьбы — повтор после удаления строки сравнивает digest и здесь
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
   ended_by:  reaper                                                        # у expired/unknown от жнеца
   kept:      до valid_until (или конца) + max(60, ttl)
@@ -327,16 +329,17 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### подать просьбу (консоль, POST /<sub>/requests)
 
 ```
-1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
+1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело без valid_until — единственного поля сервера, которое клиент вправе прислать)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
    поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
-   valid_until = now + valid_for ≤ most_valid
+   valid_for ≤ most_valid (длительности, проверено загрузчиком); valid_until = now + valid_for; valid_until из тела клиента —
+   не позже now + most_valid, иначе 400 too far, и тогда он и есть срок
 2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
    иной digest → 409 spent
 3. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор ждущей, учёт не меняется; иначе len(rids) ≥ per_person
    → 429; иначе rids + rid
 4. записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей); иной digest → 409 exists (учёт вернуть)
 5. перечитать метку: появилась между шагами 2 и 4 (держатель исполнил, clear снял строку) с тем же digest → удалить свою
-   строку (cas), снять rid из учёта, ответ 200 answered; иной digest → 409 spent
+   строку (cas), снять rid из учёта, ответ 200 answered; иной digest → тоже удалить свою строку и снять rid из учёта (чужого не трогать: cas по своей версии), 409 spent
 6. journal → строка журнала; 202 {queued: rid}
 ```
 
@@ -364,7 +367,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ```
 clear:  строки, чьи rid в fetched пульсов, → удалить по cas; rid снять из учёта человека (rids − rid, cas)
 sweep:  строка с valid_until + REAP_AFTER < now или старше ttl (без срока):
-          метки нет → метка expired создание-однажды {ended_by: reaper}
+          метки нет → метка expired создание-однажды {ended_by: reaper, unit, digest из строки} (Н1.5 no_begun)
           метка begun без исхода → {outcome: unknown, ended_by: reaper} по индексу
         затем удалить строку по cas и снять rid из учёта человека; free-* без хозяина — по ttl
 asked:  учёт старше ttl/settle → снять
