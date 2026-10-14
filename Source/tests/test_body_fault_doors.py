@@ -67,7 +67,8 @@ def test_the_idempotency_digest_reads_the_body_as_the_door_does():
 
 def test_the_stores_write_door_and_its_membership_door_refuse_a_body_that_is_no_json_with_its_fault():
     """`POST /v1/write` (`storemachine.answer`, the daemon's and a stand's) and `POST /v1/join` / `/v1/leave` (the daemon's):
-    400 `badrequest` with `fault`; nothing is submitted. Nested past what JSON reads is `not_json`, never a 500."""
+    Write has the closed М10/1 Fault; membership retains its separate parser-fault protocol.
+    Neither submits malformed JSON. Excess nesting is a refusal, never a 500."""
     from w2cplatform.configstore import StoreDaemon
     from w2cplatform.storemachine import ADMIN, Rights, answer
 
@@ -76,7 +77,8 @@ def test_the_stores_write_door_and_its_membership_door_refuse_a_body_that_is_no_
     deep = b"[" * 100_000 + b"]" * 100_000
     for raw, fault in BAD + [(deep, "not_json")]:
         code, said = answer("POST", "/v1/write", raw, ADMIN, Rights(), submit)
-        assert (code, said.get("kind"), said.get("fault")) == (400, "badrequest", fault), (raw[:20], code, said)
+        assert code == 400 and said["kind"] == "badrequest", (raw[:20], code, said)
+        assert set(said) == {"kind", "error"}
     dm = StoreDaemon(object(), node_id="solo")
     for path in ("/v1/join", "/v1/leave"):
         for raw, fault in BAD + [(deep, "not_json")]:
