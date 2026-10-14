@@ -112,7 +112,7 @@ never:                                                   # и для admin
   - write и delete platform/epoch_floor (только операция восстановления, урок 11)
 list:   имена и версии под префиксом — любой роли; значения — нет
 guard:  запись со стражем требует права read на строку-страж; страж права не расширяет (ADR-0074 доп. 3)
-admin:  всё, кроме never; peer (другой демон) — ничего своего; configstore-door — только свою platform/doors/<id>
+admin:  всё, кроме never; peer (другой демон) — ничего своего; configstore-door — только свою platform/configstore-doors/<id> (урок 11 Н1.3; не platform/doors/* ресурсов)
 ```
 
 ### Н1.4 Вывод прав из спеки
@@ -122,15 +122,15 @@ admin:  всё, кроме never; peer (другой демон) — ничег�
 | Роль | write (delete = write, если не сказано) | read сверх своих write |
 |---|---|---|
 | `console` | `<s>/<rows>/*`, `<s>/next_id`, `<s>/idem/*`, `<s>/policy`, `<s>/sweep`, `<s>/requests/*`, `<s>/asked/*` (при `requests.per_person`), `<s>/<таблица>/*` кроме таблиц из `worker.writes` (их консоль только читает — урок 10 Н1); `platform/servers/*`, `platform/drain`, `platform/decommission/*`, `platform/schema`; `door/signer`, `door/keys`; объекты `objects/<s>/commands/*` — только write (метки снимает воркер, ADR-0054) | `platform/schema`, `<s>/*` всех спек, `platform/*`, `domain/holder`; метки и доверие домена, по которым ворота проверяют людей и членов: `domain/keys`, `domain/root`, `domain/grants/*`, `domain/break-glass/*`, `domain/disabled`, `domain/users/*`, `domain/member-key`, `domain/members`, `domain/members/*`, `domain/backup` (объявленный читатель, ADR-0066 доп.) |
-| `<s>controller` | `<s>/workers/*`, `<s>/placement/*`, `<s>/slots/*`, `<s>/decommissioned/*`; `delete:<s>/<rows>/*` — только при `placement.unplaced.delete_after` (ADR-0067) | `platform/schema`, `<s>/*`, `platform/*`, спеки, на которые ссылается (`about.sub`, `near.sub`, `ref`) |
-| `<s>worker` | `<s>/epoch/*`, `<s>/slots/*`, `<s>/holds/*`; `<s>/<т>/*` по `worker.writes`; `<другая>/requests/*` по `worker.requests`; источники книг домена (М12A); свои строки-объекты по `objects.rows` | `platform/schema`, `platform/epoch_floor`, `<s>/*`, `<about.sub>/<rows>/*` (строки единиц, о которых его единицы, — не `idem`, не слоты чужой подсистемы), `platform/decommission/*`, `platform/servers/*`, `platform/doors/*` (дверь сервера чужого имени — урок 5, соперники), `domain/keys`, `domain/member` (отметка члена; у продукта имя `domain/member-key` — закрепит М12A), `door/keys`; `worker.reads` (ключ с `/` на конце — префикс); `domain/holder` при чтении чего-либо под `domain/`; `domain/holder`, `domain/member-topology`, `domain/topology` при объёме `unit` у вида токена (урок М12A); строки и метки просьб тех, кому подаёт; `domain/grants/*` при `door.routes` |
+| `<s>controller` | `<s>/workers/*`, `<s>/placement/*`, `<s>/slots/*`, `<s>/decommissioned/*`; `delete:<s>/<rows>/*` — только при `placement.unplaced.delete_after` (ADR-0067) | `platform/schema`, `<s>/*` кроме `<s>/idem/*` (заявки читает только консоль, урок 3 Н1.1), `platform/*`, спеки, на которые ссылается (`about.sub`, `near.sub`, `ref`) |
+| `<s>worker` | `<s>/epoch/*`, `<s>/slots/*`, `<s>/holds/*`; `<s>/<т>/*` по `worker.writes`; `<другая>/requests/*` по `worker.requests`; источники книг домена (М12A); свои строки-объекты по `objects.rows` | `platform/schema`, `platform/epoch_floor`, `<s>/*` кроме `<s>/idem/*`, `<about.sub>/<rows>/*` (строки единиц, о которых его единицы, — не `idem`, не слоты чужой подсистемы), `platform/decommission/*`, `platform/servers/*`, `platform/doors/*` (дверь сервера чужого имени — урок 5, соперники), `domain/keys`, `domain/member` (отметка члена; у продукта имя `domain/member-key` — закрепит М12A), `door/keys`; `worker.reads` (ключ с `/` на конце — префикс); `domain/holder` при чтении чего-либо под `domain/`; `domain/holder`, `domain/member-topology`, `domain/topology` при объёме `unit` у вида токена (урок М12A); строки и метки просьб тех, кому подаёт; `domain/grants/*` при `door.routes` |
 | `resource` | `platform/doors/*`, `<s>/requests/free-*` при `requests.free` | свои двери, `platform/schema` (раскладка хранилища до старта), `platform/mirror`, `platform/space`, таблица `holds`, строки спек с `about`, `<дерево>/retention`, `alarms_retention` |
 | `domain` | `domain/*`, `identity/*` | `platform/*`, `<s>/*` всех спек |
 | `domainconsole` | `domain/members`, `domain/topology`, `domain/placement*`, `domain/grants/*`, `domain/pending/*` | `domain/*` кроме `!domain/signer*` |
 | `domainagent` | `domain/*` минус строки держателя (signer, book-seal, placement, names, users, members, licence, stranded, grants, pending, outcomes, keepers, ldevid) минус книги, kept и worker/heartbeat каждой спеки | `*` минус секреты |
 | `<s>domain` | `domain/<s>/*` кроме `!` на каждую собранную книгу | свой префикс, `domain/keys`, `topology`, `members`, `shared`, `platform/*`, единицы; `grants` при `domain.names` |
 
-Правила генератора: роль удаляет то, что пишет (кроме меток команд у консоли); `worker.writes` ДОЛЖЕН называть строки своих единиц или объявленную таблицу, иначе спека не грузится (урок 2); секретные строки — читателям по `secrets.readers` и `secrets.reads`, прочим с досягающим правом — `!<строка>*`; генератор отказывается выдать файл, если множество читателей секрета не равно множеству тех, кто его прочтёт.
+Правила генератора: роль удаляет то, что пишет (кроме меток команд у консоли); `worker.writes` ДОЛЖЕН называть строки своих единиц или объявленную таблицу, иначе спека не грузится (урок 2); семья `<s>/idem/*` — отрицание `!` всем, кроме консоли; секретные строки — читателям по `secrets.readers` и `secrets.reads`, прочим с досягающим правом — `!<строка>*`; генератор отказывается выдать файл, если множество читателей секрета не равно множеству тех, кто его прочтёт.
 
 ### Н1.5 Ключи `rights:` спеки — граница прав людей
 
@@ -212,7 +212,7 @@ allowed(роль, действие, ключ) по Н1.3                        
 запись со стражем: allowed(роль, read, страж)                   → иначе 403
 list: без проверки — имена и версии
 в группе: проверяет принявший демон и ещё раз лидер под пересланной ролью; пересылке верят только от голосующего
-демона (с TLS — по SAN сертификата); пересланный admin при наличии файла прав — отказ
+демона группы — голосующего или двери без голоса `configstore-door` (урок 11 Н1.3), по роли в SAN сертификата; пересланный admin при наличии файла прав — отказ
 ```
 
 **Гонки.** Нет: права не меняются на ходу — новый файл = перезапуск демона.
@@ -289,8 +289,8 @@ rights --check <файл> против SPEC_DIR                          → р�
 - [ ] **М10/6-05** перечисление без права чтения — имена и версии; чтение без права — 403 — сц. 06
 - [ ] **М10/6-06** страж требует права чтения на строку-страж — сц. 07
 - [ ] **М10/6-07** вывод прав Н1.4 для console, controller, worker, resource; `delete_after` → только удаление; пересечения `slots/*` и `requests/*` и никаких других — сц. 01–04; структурный тест
-- [ ] **М10/6-08** права чтения — положительные списки из спеки; секреты — только объявленным читателям; генератор отказывает при расхождении — сц. 09; чтением
-- [ ] **М10/6-09** личность — сокет роли / имя писателя; заголовок роли не читается; пересылка только от голосующего — сц. 08; чтением
+- [ ] **М10/6-08** права чтения — положительные списки из спеки; `<s>/idem/*` — только консоль; секреты — только объявленным читателям; генератор отказывает при расхождении — сц. 09; чтением
+- [ ] **М10/6-09** личность — сокет роли / имя писателя; заголовок роли не читается; пересылка только от демона группы (голосующий или дверь без голоса) — сц. 08; чтением
 - [ ] **М10/6-10** ключи `rights:` Н1.5 исполняются консолью при правке людьми — приёмка урока 9 / М12A
 - [ ] **М10/6-11** правило адреса Н1.6: демон вне петли только с TLS; дверь процесса без комплекта — петля; условных ослаблений нет — проверяется чтением (стенд урока 11)
 - [ ] **М10/6-12** сертификат роли Н1.1 и равенство роли процессу — окна ADR-0075; проверяется чтением
