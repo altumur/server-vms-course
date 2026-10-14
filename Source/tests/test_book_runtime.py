@@ -47,7 +47,7 @@ def site(two=False):
             c.vars.put("domain/keys", keys)
             c.vars.put("domain/root", {"pub": root.public_bytes.hex()})
         north.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {"key": memberkeys[n].pub, "seal": memberkeys[n].seal_pub} for n in fed.clusters}})})
-        holder = Holder(north.vars, north.objects, signer, fed=fed,
+        holder = Holder(north.vars.as_writer("domain", ["*"]), north.objects, signer, fed=fed,
                         view=ReadView(fed, wall=wall), wall=wall, sealer=holder_ring)
         yield SimpleNamespace(fed=fed, wall=wall, north=north, holder=holder, root=root, signer=signer,
                               specs=specs, rings=rings, memberkeys=memberkeys)
@@ -630,33 +630,92 @@ def test_holder_book_show_unions_recipients_deduplicates_origins_and_projects_on
                           {"": '{"missing":[]}', "badge": '{"entries":[],"missing":["other"]}'}):
             e.north.vars.put(key + "south", malformed)
             status, body = console.book_doc(spec(show=("n",)), "counts")
-            assert status == 503
+            assert status == 200
+            assert body['badge']['entries'][0]['n'] == 7  # first origin wins, including duplicates
             assert SECRET not in json.dumps(body) and "private-url" not in json.dumps(body)
         assert console.book_doc(spec(), "undeclared")[0] == 404
 
 
 def test_holder_book_http_door_keeps_domain_view_gate_and_never_leaks_unshown_values():
     from w2cplatform.domain.console import Console
+    from w2cplatform.domain.api import ConsoleAPI
     from w2cplatform.domain.federation import DomainDirectory
-    from w2cplatform.trust.tokens import TokenError
+    from w2cplatform.domain.grants import Grant, grants_to_items
+    from w2cplatform.trust.tokens import verify
     from tests.conftest import Served
-    with site() as e:
-        shown_spec = spec(show=("n",))
-        def subject(token):
-            if not token:
-                raise TokenError("person required")
-            return token
+    with site(two=True) as e:
+        own_spec, shown_spec = spec(), spec('testsub2', show=('n',))
+        e.north.vars.put('testsub/counters/badge', own_spec.items(
+            {'id':'badge','name':'badge','labels':['floor-one']}))
+        e.fed.clusters['south'].vars.put('testsub/counters/foreign', own_spec.items(
+            {'id':'foreign','name':'foreign'}))
+        e.north.vars.put('domain/grants', grants_to_items([
+            Grant('local','view','testsub/badge',e.wall()+100),
+            Grant('wide','view',None,e.wall()+100),
+            Grant('label','view',None,e.wall()+100,('floor-one',)),
+            Grant('expired','view','testsub/badge',e.wall()-1)]))
+        e.north.vars.put('domain/grants/south', grants_to_items([
+            Grant('foreign','view','testsub/foreign',e.wall()+100)]))
         directory = DomainDirectory(e.fed)
-        con = Console(directory, ReadView(e.fed, wall=e.wall), SimpleNamespace(_subject=subject),
-                      holder_vars=e.north.vars, viewer=lambda name: name == "boss")
-        e.north.vars.put("domain/testsub/counts/south", {
-            "": '{"missing":[]}', "badge": json.dumps({"missing": [], "entries": [
-                {"member": "north", "item": "w1/a", "value": {"n": 7, "hidden": SECRET}}]})})
-        with patch.object(catalog, "_loaded", {"testsub": shown_spec}), Served(con) as call:
-            path = "/domain/testsub/books/counts"
-            assert call("GET", path)[0] == 401
-            assert call("GET", path, headers={"Authorization": "Bearer visitor"})[0] == 403
-            status, reply = call("GET", path, headers={"Authorization": "Bearer boss"})
-            assert status == 200 and reply["badge"]["entries"] == [
-                {"member": "north", "item": "w1/a", "n": 7}]
-            assert SECRET not in json.dumps(reply)
+        api = ConsoleAPI(directory, verifier=lambda t: verify(t, e.signer.tokens.keyset(),
+                            now=e.wall(), kind='person')['sub'])
+        con = Console(directory, ReadView(e.fed, wall=e.wall), api,
+                      holder_vars=e.north.vars, viewer=lambda _: False)
+        e.north.vars.put('domain/testsub2/counts/south', {
+            '': '{"missing":[]}', **{key: json.dumps({'missing': [], 'entries': [
+                {'member':'north','item':'w1/'+key,'value':{'n':7,'hidden':SECRET}}]})
+                for key in ('badge','foreign')}})
+        with patch.object(catalog, '_loaded', {'testsub':own_spec,'testsub2':shown_spec}), Served(con) as call:
+            path = '/domain/testsub2/books/counts'
+            assert call('GET', path)[0] == 401
+            def ask(who):
+                token=e.signer.tokens.issue(who,100,now=e.wall(),kind='person')
+                return call('GET',path,headers={'Authorization':'Bearer '+token})
+            for who, keys in (('local',{'','badge'}),('wide',{'','badge','foreign'}),
+                              ('label',{'','badge'}),('foreign',{''}),('expired',{''}),('no-grant',{''})):
+                status, reply = ask(who)
+                assert status == 200 and set(reply) == keys
+                assert SECRET not in json.dumps(reply)
+                if 'badge' in reply:
+                    assert reply['badge']['entries']==[{'member':'north','item':'w1/badge','n':7}]
+            # The narrow exception is this door alone; the domain's general viewer stays in force.
+            token=e.signer.tokens.issue('local',100,now=e.wall(),kind='person')
+            assert call('GET','/domain',headers={'Authorization':'Bearer '+token})[0]==403
+
+
+def test_holder_get_skips_unreadable_keys_deduplicates_first_and_never_writes():
+    from w2cplatform.domain.console import Console
+    with site() as e:
+        first={'member':'north','item':'w1/a','value':{'n':7}}
+        second={**first,'value':{'n':9}}
+        prefix='domain/testsub/counts/'
+        e.north.vars.put(prefix+'north',{'':'{"missing":["absent"]}',
+            'badge':json.dumps({'entries':[first],'missing':['absent']}),'torn':'{',
+            'bad':json.dumps({'entries':[{'member':'north'}],'missing':[]})})
+        e.north.vars.put(prefix+'south',{'':'{"missing":["other"]}',
+            'badge':json.dumps({'entries':[second,first],'missing':['other']})})
+        con=Console.__new__(Console);con.holder_vars=e.north.vars
+        before={key:e.north.vars.get(key) for key in e.north.vars.list(prefix)}
+        status,shown=con.book_doc(spec(show=('n',)),'counts')
+        assert status==200 and set(shown)=={'','badge'}
+        assert shown['badge']=={'entries':[{'member':'north','item':'w1/a','n':7}],
+                                'missing':['absent','other']}
+        assert shown['']=={'missing':['absent','other']}
+        assert {key:e.north.vars.get(key) for key in e.north.vars.list(prefix)}==before
+
+
+def test_collection_pass_removes_departed_recipient_after_members_remove():
+    from w2cplatform.domain.members import Members
+    with site() as e:
+        input_row(e,secret=False)
+        e.north.vars.put('domain/grants/south',{'badge|view|':str(e.wall()+500)})
+        publish_all(e)
+        bookruntime.collect(e.holder,e.specs[0],'counts')
+        prefix='domain/testsub/counts/'
+        assert e.north.vars.get(prefix+'south')[0] is not None
+        members=Members(e.north.vars,e.wall)
+        assert members.remove('south')
+        assert 'south' not in members.read()['members']
+        bookruntime.collect(e.holder,e.specs[0],'counts')
+        assert e.north.vars.get(prefix+'south')[0] is None
+        assert e.north.vars.get(prefix+'north')[0] is not None
