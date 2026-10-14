@@ -153,8 +153,8 @@ spec:
   domain:      # вклад в домен — М11
 closed_key_set:
   rule: на каждом уровне допустимы только ключи, которые читает платформа: на верхнем уровне и в заголовках разделов — Н1.2
-        этого урока, внутри раздела — грамматика урока-владельца (3: unit, slot, lease; 4: placement; 7: secrets; 8: events, objects,
-        requests, about, holds; 9: display, servers, console, door.routes, metrics — перечень ключей metrics[] в Н3 «/metrics»;
+        этого урока, внутри раздела — грамматика урока-владельца (3: unit, slot, lease; 4: placement; 5: heartbeat, worker.reads, worker.requests; 6: rights, worker.writes;
+        7: secrets; 8: events, objects, requests, about, holds; 9: display, servers, console, door.routes, metrics — перечень ключей metrics[] в Н3 «/metrics»;
         10: tables, snapshot; 11: door.pass; М11: domain); ключ вне
         этих перечней — отказ; сводный перечень, каким его держит реализация, сверяется с уроками чтением (решает реализация, п. 1)
   named:   # уровни, где ключи — имена автора (поля, таблицы, виды токенов, книги, виды, слова опций):
