@@ -114,8 +114,8 @@ class MemVariables:
         if cmd["op"] == "delete":
             refuse_delete(path, self.writer, self.acl)
         else:
-            self._refuse(path)
             check(path, items_bytes(cmd["items"]), self.max_bytes)
+            self._refuse(path)
         guard_check(cmd.get("guard"), self.writer, self.acl)
         with self._s.lock:
             return self._s.replay.run(cmd, lambda: self._apply_write(cmd))
