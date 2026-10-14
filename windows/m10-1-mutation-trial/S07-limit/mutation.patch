@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -109,7 +109,7 @@
+ OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
+ CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string: "" (create-only), digits, a word
+ CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
+-MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
++MAX_VALUE = 256 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
+ ADMIN = "admin"            # the root-only socket's role
+ PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
+ # A door without a vote (ADR-0070 step 5; `configstoredoor.py`), on a voter's `-api` door with a door's certificate: its
