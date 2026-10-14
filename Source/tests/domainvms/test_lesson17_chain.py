@@ -225,44 +225,136 @@ def test_the_relay_passes_on_the_recording_the_centre_named_and_says_when_its_ar
     assert centre.cams[SERIAL].ranges == {}                           # the request is over: the centre asks again later
 
 
-def test_c2_star_does_not_open_a_centre_channel_and_keeps_local_frames():
-    """C2 star gap: no centre audience or camera transport, and no acknowledged-away local frames.
-
-    Full centre push/downstream byte and range acceptance belongs to C3b
-    (ADR-0074; Architect decision in inbox 2026-10-13).
-    """
-    from vms.domainpart.ingest import Refused
+def test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_cameras_from_there():
+    """The assigned recorder remains east; its primary observation sends the one camera transport
+    to north. East calls out to pull the very same bytes, in order, without dialing camera or relay."""
+    from w2cplatform.domain.placement import placed
     from w2cplatform.trust.tokens import verify
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall, star={"east"})
-    route = pusher.entry()["channels"]["east"]
-    assert route["urls"] == RELAY_URLS and route["cluster"] == "east"
+    entry = pusher.entry()
+    assert entry["primary"] == "east" and set(entry["channels"]) == {"east"}
+    assert entry["channels"]["east"]["urls"] == CENTRE_URLS
+    assert entry["channels"]["east"]["cluster"] == "north"
+    assignment = placed(pusher.flash, "rec", SERIAL)
+    assert assignment["cluster"] == "east" and assignment["copies"] == []
     token = pusher.assigned.stream_token()
     claims = verify(token, ClusterTrust(pusher.flash).keyset(), now=wall(), kind="stream")
-    assert claims["aud"] == ["east"] and "north" not in claims["aud"]
-    try:
-        centre._check(token, SERIAL)
-    except Refused:
-        pass
-    else:
-        raise AssertionError("C2 star camera token authorized the centre")
-    cq = centre.subscribe(SERIAL, "recorder:centre")
+    assert set(claims["aud"]) == {"east", "north"} and claims["ref"] == SERIAL
+    centre._check(token, SERIAL)
     rq = relay.subscribe(SERIAL, "recorder:east")
-    frames = [{"t": wall(), "key": True, "n": 1}, {"t": wall()+0.04, "key": False, "n": 2}]
+    cq = centre.subscribe(SERIAL, "recorder:centre")
+    frames = [{"t": wall(), "key": True, "body": b"\x00\xff-star-key"},
+              {"t": wall()+0.04, "key": False, "body": b"\x80\x00-star-delta"}]
+    fwd.pass_once()                                                    # the relay's pull wants the camera at the centre
+    assert pusher.pass_once(frames)["pushed"] == len(frames)
     fwd.pass_once()
-    assert pusher.pass_once(frames)["pushed"] == 0
-    fwd.pass_once()
-    assert cq.drain() == [] and rq.drain() == []
-    assert pusher.frames.piece(None, 1 << 20)[0] == frames
-    assert pusher.sent is None and pusher.delivered == []
-    assert not any(who == "camera" and url in CENTRE_URLS for who, url in dialled)
+    assert cq.drain() == frames and rq.drain() == frames
+    pusher.pass_once([]); fwd.pass_once(); fwd.pass_once()
+    assert cq.drain() == [] and rq.drain() == []                       # repeated polls/pulls deliver no frame twice
+    assert set(pusher.assigned.channels) == {"east"}                   # no second camera cursor/transport for north
+    assert {(w, u) for w, u in dialled} == {(w, CENTRE_URLS[0]) for w in ("camera", "relay")}
 
 
-def test_c2_tree_retries_lost_push_and_star_keeps_unacknowledged_frames_locally():
-    """A tree repeats a lost push; the C2 star gap keeps frames local without delivery claims.
+def test_the_star_camera_uploads_a_named_card_range_to_the_centre_over_its_only_transport():
+    """A historical range goes to the same centre that receives live bytes; the camera's actual
+    card answers the named recording. The inaccessible relay is never dialled for that answer."""
+    import shutil
+    from tests.domain.conftest import real_card
+    from vms.worker import fake_samples
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall, star={"east"})
+    t0, t1 = wall()-100, wall()-94
+    card = real_card(t0, t1, size=64)
+    try:
+        pusher.card = card.pieces
+        fwd.pass_once(); pusher.pass_once([])                          # establish the camera/centre clock mapping
+        rid = centre.request_range(SERIAL, t0, t1, recording="1-card")
+        assert pusher.pass_once([])["uploaded"] == [(t0, t1)]
+        got = centre.result(SERIAL, rid)
+        expected = fake_samples(t0, t1, size=64)
+        assert [(s.begin, s.end, s.key, s.body) for s in got] == [
+            (s.begin, s.end, s.key, s.body) for s in expected]
+        assert centre.result(SERIAL, rid) is None and centre.cams[SERIAL].ranges == {}
+        assert set(pusher.assigned.channels) == {"east"}
+        assert {(w, u) for w, u in dialled} == {(w, CENTRE_URLS[0]) for w in ("camera", "relay")}
+        assert not relay.cams.get(SERIAL) or not relay.cams[SERIAL].ranges
+    finally:
+        card.close()
+        shutil.rmtree(card.path, ignore_errors=True)
 
-    The star's lost downstream batch/range acceptance is restored in C3b.
-    """
+
+def test_the_star_recorders_card_range_fetches_the_named_camera_recording_through_the_centre():
+    """The actual relay recorder asks through its forwarder. The centre asks the camera, and the
+    real card's named samples return to the recorder; successful and timed-out requests leave no state."""
+    from concurrent.futures import ThreadPoolExecutor
+    import shutil
+    import threading
+    from tests.domain.conftest import real_card
+    from vms.domainpart.ingest import RangeFailed, card_range
+    from vms.worker import fake_samples
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall, star={"east"})
+    rec = domain_pass.recorders["east"]
+    t0, t1 = wall()-100, wall()-94
+    card = real_card(t0, t1, size=64)
+    real_card(t0, t1, recording="2-card", size=96, card=card)             # same times; different bytes expose a wrong recording
+    pusher.card = card.pieces
+    fwd.pass_once(); pusher.pass_once([])
+    ready, requests = threading.Event(), []
+    request_range = centre.request_range
+
+    def requested(ref, start, end, recording=None):
+        rid = request_range(ref, start, end, recording)
+        requests.append((ref, start, end, recording))
+        ready.set()                                                    # the real centre request is visible before the camera polls
+        return rid
+
+    def clean(ingest):
+        cam = ingest.cams.get(SERIAL)
+        return cam is None or all(not getattr(cam, field) for field in ("ranges", "answers", "parts", "failed"))
+
+    centre.request_range = requested
+    src = {"recording": "2-card", "cam": "ref:"+SERIAL}
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(rec.card_range, src, t0, t1)
+            assert ready.wait(2.0), "the relay recorder never requested the range at the centre"
+            assert requests == [(SERIAL, t0, t1, "2-card")]
+            assert not future.done()                                  # a request is not yet the camera's answer
+            assert clean(relay)                                       # nobody waits for a poll at the inaccessible relay
+            assert pusher.pass_once([])["uploaded"] == [(t0, t1)]
+            got = future.result(timeout=3.0)
+            expected = fake_samples(t0, t1, size=96)
+            assert [(s.begin, s.end, s.key, s.body) for s in got] == [
+                (s.begin, s.end, s.key, s.body) for s in expected]
+            assert clean(centre) and clean(relay)
+
+            ready.clear()
+            short_wait = card_range(fwd, lambda source: SERIAL, wait=0.2)
+            future = pool.submit(short_wait, src, t0, t1)
+            assert ready.wait(2.0), "the retry never reached the centre"
+            try:
+                future.result(timeout=3.0)                            # deliberately no camera poll for this request
+                raise AssertionError("an unanswered centre fetch succeeded")
+            except RangeFailed as error:
+                assert "did not answer" in str(error)
+            assert requests == [(SERIAL, t0, t1, "2-card")] * 2
+            assert clean(centre) and clean(relay)                     # timeout cancels the real request and its partial answer
+        assert set(pusher.assigned.channels) == {"east"}
+        assert {(w, u) for w, u in dialled} == {(w, CENTRE_URLS[0]) for w in ("camera", "relay")}
+    finally:
+        centre.request_range = request_range
+        card.close()
+        shutil.rmtree(card.path, ignore_errors=True)
+
+
+def test_frames_the_relay_could_not_push_up_or_whose_pull_answer_was_lost_are_sent_again_not_dropped():
+    """The seventh review's rule for the camera — nothing moves until it is taken — one level up. The relay drained
+    what the camera sent and pushed it to the centre; a push that failed took those frames with it, and its
+    `Unreachable` ended the whole pass. Now they are pushed again first, and the pass goes on. In the star, the centre
+    drained what it handed the relay; an answer lost on its way down lost the frames — now the relay says which batch
+    it last got, and the centre hands the lost one over again."""
     from w2cplatform.domain.federation import Unreachable as Gone
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
@@ -285,18 +377,30 @@ def test_c2_tree_retries_lost_push_and_star_keeps_unacknowledged_frames_locally(
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall, star={"east"})
     rq = relay.subscribe(SERIAL, "recorder:east")
     cq = centre.subscribe(SERIAL, "recorder:centre")
-    frames = [{"t": wall(), "key": True, "n": 1}, {"t": wall()+0.04, "key": False, "n": 2}]
+    frames = [{"t": wall(), "key": True, "body": b"\x00-first-key"},
+              {"t": wall()+0.04, "key": False, "body": b"\xff-second-delta"}]
     fwd.pass_once()
-    assert pusher.pass_once(frames)["pushed"] == 0
-    fwd.pass_once()
+    assert pusher.pass_once(frames)["pushed"] == 2
+    pull, left = centre.pull, {"n": 1}
+
+    def lost(*a, **kw):
+        out = pull(*a, **kw)
+        if left["n"]:
+            left["n"] -= 1
+            raise Gone("the answer to the pull was lost")
+        return out
+    centre.pull = lost
+    assert "stopped answering" in fwd.pass_once()[SERIAL] and rq.drain() == []
     wall.advance(1)
-    more = {"t": wall(), "key": True, "n": 3}
-    assert pusher.pass_once([more])["pushed"] == 0
+    more = {"t": wall(), "key": True, "body": b"\x80-third-key"}
+    assert pusher.pass_once([more])["pushed"] == 1
     fwd.pass_once()
+    assert rq.drain() == [*frames, more]                               # lost batch first, then newer bytes, exactly once
+    assert cq.drain() == [*frames, more]                               # no duplicate camera push while the pull retries
+    pusher.pass_once([]); fwd.pass_once(); fwd.pass_once()
     assert rq.drain() == [] and cq.drain() == []
-    assert pusher.frames.piece(None, 1 << 20)[0] == [*frames, more]
-    assert pusher.sent is None and pusher.delivered == []
-    assert not any(who == "camera" and url in CENTRE_URLS for who, url in dialled)
+    assert set(pusher.assigned.channels) == {"east"}
+    assert {(w, u) for w, u in dialled} == {(w, CENTRE_URLS[0]) for w in ("camera", "relay")}
 
 
 # -- the eighth review ---------------------------------------------------------------------------------------------------
