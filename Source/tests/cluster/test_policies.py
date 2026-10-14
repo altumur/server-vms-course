@@ -488,8 +488,8 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     rec spec's `worker.reads` (the product's recorder reads them as `*` less its denials): the role `recworker` reads
     them, and the code reads nothing of the domain's books beyond them."""
     import tempfile
-    from vms.domainpart.chain import Forwarder
-    from vms.domainpart.ingest import should_from_snapshot
+    from vms.forwarder import Forwarder
+    from vms.ingest import should_from_snapshot
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables, Forbidden
     root = tempfile.mkdtemp()
