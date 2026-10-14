@@ -87,7 +87,8 @@ display:
   kinds:         {<вид события>: <слово>}        # слова видов подсистемы; виды платформы — словарь модуля
   keys:          {<id семьи ключей домена>: {title, about, absent?}}   # М11
   tree:
-    group_by:    <поле> — чем группировать дерево; columns: [{field, title, width}]; children: false — не вкладывать about-единицы
+    group_by:    <поле> — чем группировать дерево; nested_by: <разделитель> — значение group_by с разделителем даёт вложенные группы;
+                 columns: [{field, title, width}]; children: false — не вкладывать about-единицы
     group_title, group_hint, filter, no_group, children, contents_title, group_word, no_group_suffix, pick_note,
     new_root, new_sub, add_here, new_group_note, remove, not_in, add_to, no_others, new_group:   слова
   # display.actions — снят: модуль и оболочки его не читают (мёртвый ключ, ADR-0003)
