@@ -102,8 +102,8 @@ def test_the_trace_is_what_the_handle_sends_over_the_socket():
     assert [c.status for c in log.calls] == [200, 200, 200, 409, 200, 200, 403, 200, 200]
     ids = [b["id"] for m, p, b in d.seen if b is not None]
     assert len(ids) == 5 and all(re.fullmatch(r"[0-9a-f]{32}", i) for i in ids) and len(set(ids)) == 5
-    assert [c.answer for c in log.calls][:2] == [{"index": 1001}, {"items": {"name": "Ворота", "labels": "vlan:cctv-a"},
-                                                                    "index": 1001}]
+    assert [c.answer for c in log.calls][:2] == [{"index": "1001"}, {"items": {"name": "Ворота", "labels": "vlan:cctv-a"},
+                                                                    "index": "1001"}]
 
 
 def test_the_printed_trace_leaves_out_the_id_and_the_percent_signs_and_says_what_a_write_asks_first():
@@ -119,6 +119,6 @@ def test_the_printed_trace_leaves_out_the_id_and_the_percent_signs_and_says_what
     assert "# console on srv-a → /run/configstore/console.sock" in text
     assert 'POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": "", "items": {"name": "gate"}}' in text
     assert "GET /v1/get?key=cam/cameras/1\n" in text and "%2F" not in text and '"id"' not in text
-    assert '→ 200 {"index": 1001}' in text
+    assert '→ 200 {"index": "1001"}' in text
     assert log.calls[0].target == "/v1/write" and "id" in log.calls[0].body          # sent, not printed
     assert list(body_shown({"items": {}, "id": "x", "cas": None, "key": "k", "op": "put"})) == ["op", "key", "cas", "items"]
