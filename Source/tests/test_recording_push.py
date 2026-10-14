@@ -3,7 +3,7 @@ import json
 
 from tests.vmsconftest import Box, recorder
 from tests.test_recording_publication import fact, placement, primary_row, source_row
-from vms.domainpart.ingest import CameraPusher, Ingest, Refused
+from vms.ingest import CameraPusher, Ingest, Refused
 from vms.ingestrec import IngestRecordings, _Pushed
 from vms.obsd import Sample
 from w2cplatform.domain.placement import placed
