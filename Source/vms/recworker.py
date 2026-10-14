@@ -1245,6 +1245,7 @@ class RecWorker(VmsWorker):
         self.heartbeat(status, **{**self.platform_fields(), **self.heartbeat_fields()})
         publish_facts(self, "primaries", status)
         publish_facts(self, "upstream", status)
+        publish_facts(self, "polls", status)
 
     # What this recorder adds to the heartbeat.
     def heartbeat_extra(self) -> dict:
