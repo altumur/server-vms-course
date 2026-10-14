@@ -571,7 +571,7 @@ class Site:
         from w2cplatform.domain.carry import CarryClient
         from w2cplatform.domain.members import fingerprint
         from w2cplatform.trust.memberkey import MemberKey
-        from vms.domainpart.device import DeviceCluster
+        from vms.camera_cluster import DeviceCluster
         serial, office, reaches, base = CAMERAS[name]
         flash = FakeVariables()
         flash._log = [base]
@@ -700,7 +700,7 @@ class Site:
         ADR-0065's addition of 2026-10-08) — what the course's recorder process does NOT do yet (`vms/__main__.recorder`:
         module-design.md, open point 5), done here as the tests do it (`tests/vmsconftest.ingest_recorder`). Its `dial` is
         the stand's network: an ingest of the centre answers an office while neither is off nor the road between cut."""
-        from vms.domainpart.chain import Forwarder
+        from vms.forwarder import Forwarder
         c = self.cluster(name)
         rec = c.recorder(name)
         who = f"forwarder in r-{name}-1 on {name}"
@@ -763,8 +763,8 @@ class Site:
         knows no ingest. It checks a person's token by the centre's own key set, as a cluster's endpoint does."""
         if getattr(self, "_gateway", None) is not None:
             return self._gateway
-        from vms.domainpart.gateway import Forbidden, Gateway
-        from vms.domainpart.ingest import IngestLiveEndpoint, audience
+        from vms.gateway import Forbidden, Gateway
+        from vms.ingest import IngestLiveEndpoint, audience
         from w2cplatform.domain.agent import ClusterTrust
         from w2cplatform.trust.tokens import PERSON, TokenError, verify
         srv = self.cluster("srv")
@@ -807,7 +807,7 @@ class Site:
         (`ingest.camera_process`)."""
         from vms.card import CamRing, CardActuator, CardRecorder, declare_card
         from vms.config import REC_SPEC
-        from vms.domainpart.ingest import camera_process
+        from vms.ingest import camera_process
         from w2cplatform.spec import SpecController
         cam = self.cams[name]
         serial, office, _, _ = CAMERAS[name]
@@ -857,7 +857,7 @@ class Site:
         a NEW RAM, the door after it) and its process started again — a new ring, the card's recorder, the pusher. The
         card and its recording are on the flash and the card already: declared once, not again."""
         from vms.card import CamRing, CardActuator, CardRecorder
-        from vms.domainpart.ingest import camera_process
+        from vms.ingest import camera_process
         cam = self.cams[name]
         serial = CAMERAS[name][0]
         door = f"the flash of {name}"
