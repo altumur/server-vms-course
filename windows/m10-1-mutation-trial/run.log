@@ -1,0 +1,65 @@
+baseline start
+baseline {"valid": true, "api_failed_steps": 23, "api_killed": null, "unit_killed": null}
+S01-cas start
+S01-cas {"valid": true, "api_failed_steps": 31, "api_killed": true, "unit_killed": true}
+S02-guard start
+S02-guard {"valid": true, "api_failed_steps": 24, "api_killed": true, "unit_killed": true}
+S03-replay start
+S03-replay {"valid": true, "api_failed_steps": 24, "api_killed": true, "unit_killed": true}
+S04-id-content start
+S04-id-content {"valid": true, "api_failed_steps": 23, "api_killed": true, "unit_killed": true}
+S05-delete-version start
+S05-delete-version {"valid": true, "api_failed_steps": 24, "api_killed": true, "unit_killed": true}
+S06-read-copy start
+S06-read-copy {"valid": true, "api_failed_steps": 23, "api_killed": false, "unit_killed": true}
+S07-limit start
+S07-limit {"valid": true, "api_failed_steps": 24, "api_killed": true, "unit_killed": false}
+S08-acl start
+S08-acl {"valid": true, "api_failed_steps": 27, "api_killed": true, "unit_killed": true}
+V09-file-cas start
+V09-file-cas {"valid": true, "api_failed_steps": 23, "api_killed": false, "unit_killed": true}
+V10-guard start
+V10-guard {"valid": true, "api_failed_steps": 23, "api_killed": false, "unit_killed": true}
+V11-key start
+V11-key {"valid": true, "api_failed_steps": 25, "api_killed": true, "unit_killed": true}
+V12-file-delete-version start
+V12-file-delete-version {"valid": true, "api_failed_steps": 23, "api_killed": false, "unit_killed": false}
+{
+  "baseline": {
+    "scenarios": 22,
+    "steps": 98,
+    "passing_steps": 75,
+    "failed_steps": 23,
+    "failed_scenarios": 11,
+    "shape_layer_only_bad_steps": 54,
+    "unit": {
+      "exit": 0,
+      "totals": [
+        46,
+        0,
+        0
+      ],
+      "failures": [],
+      "import_failure": false
+    }
+  },
+  "valid_mutants": 12,
+  "invalid_mutants": 0,
+  "api": {
+    "all": 12,
+    "reachable": 9,
+    "killed": 8,
+    "reachable_survived": 1,
+    "unreachable": 3
+  },
+  "unit": {
+    "killed": 10,
+    "survived": 2
+  },
+  "joint": {
+    "killed": 11,
+    "survived": 1,
+    "survived_percent": 8.33
+  }
+}
+complete: checked-out target sources unchanged
