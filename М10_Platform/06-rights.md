@@ -169,10 +169,12 @@ paths:
   /v1/rights:
     get:
       summary: файл прав, как загружен — только admin.sock
-      responses: {"200": {description: "configstore-rights.json"}, "403": {description: не admin}}
+      responses: {"200": {description: "configstore-rights.json как загружен", content: {application/json: {}}}, "403": {description: "не admin", content: {application/json: {schema: {$ref: "#/components/schemas/Forbidden"}}}}, "503": {description: unavailable}}
   /v1/list:
     get:
       summary: урок 1; имена и версии под префиксом любой роли, без значений
+      parameters: [{name: prefix, in: query, required: false, schema: {type: string}}]
+      responses: {"200": {description: "Listing урока 1"}, "404": {description: нет маршрута}, "503": {description: unavailable}}
 components:
   schemas:
     Forbidden:
@@ -240,7 +242,8 @@ rights --check <файл> против SPEC_DIR                          → р�
 | страж на строку без права чтения | 403 | `forbidden` | то же |
 | удаление строки эпохи; удаление под `domain/` не ролью домена; запись `epoch_floor` | 403 | `forbidden` | никогда |
 | заголовок роли на сокете роли | 403 | `forbidden` | ошибка клиента |
-| пересылка не от голосующего демона; пересланный `admin` | 403 | `forbidden` | — |
+| пересылка не от демона группы (голосующего или двери без голоса); пересланный `admin` | 403 | `forbidden` | — |
+| `/v1/rights` не с admin.sock | 403 | `forbidden` | — |
 | файл прав не по форме; называет `admin`/`configstore`; роль не по грамматике | демон не стартует | лог | перегенерировать |
 | `--check`: файл не равен сгенерированному | установка отказана | ненулевой код | перегенерировать |
 | генерация: читатели секрета ≠ способные прочесть | файла нет | слова со строкой и ролями | править `secrets.readers`/`reads` |

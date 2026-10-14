@@ -226,6 +226,9 @@ paths:
         "503": {description: хранилище недоступно; ответ не запоминается}
     get:
       summary: все единицы с полями размещения — урок 9
+      responses:
+        "200": {description: "{rows: [...], configured: [...]} — форма ответа в уроке 9 Н2 /{rows}"}
+        "503": {description: хранилище недоступно}
   /{rows}/{id}:
     put:
       summary: править поля; Idempotency-Key необязателен
@@ -233,11 +236,15 @@ paths:
         "200": {description: строка после правки, revision + 1}
         "400": {description: отказ формы; fixed-поле; плохой id}
         "404": {description: нет такой единицы (нет строки или надгробие); путь длиннее одного id}
+        "409": {description: conflict (fault must_match | unique | garbled) — ссылки по живым строкам}
+        "413": {description: тело больше предела}
+        "503": {description: хранилище недоступно; ответ под ключом не запоминается}
     delete:
       summary: пометить удалённой (первый шаг)
       responses:
         "200": {description: "{deleted: <id>}"}
         "404": {description: нет такой единицы или уже удалена}
+        "503": {description: хранилище недоступно}
 components:
   schemas:
     Refusal:
@@ -250,7 +257,7 @@ components:
         fault:  {type: string, enum: [not_json, not_number, too_long, bad_url, must_match, unique, garbled]}
 ```
 
-Отдельной двери `GET /{rows}/{id}` нет: единицу читают в составе `GET /{rows}` (урок 9).
+Иной метод у `/{rows}` и `/{rows}/{id}` — `405`, путь длиннее `/{rows}/{id}` — `404` (Н4); общие коды консоли (401, 403, 408, 413, 429, 503 busy) — урок 9 Н4. Отдельной двери `GET /{rows}/{id}` нет: единицу читают в составе `GET /{rows}` (урок 9).
 
 Двери слота, эпохи и аренды — хранилище урока 1: воркер пишет и читает их сам. Нормативны проходы Н3.
 

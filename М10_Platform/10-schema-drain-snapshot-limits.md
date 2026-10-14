@@ -157,7 +157,7 @@ paths:
         "403": {description: не admin / токен консоли не достаёт platform/schema}
   /drain:
     get:  {responses: {"200": {description: "Н1.2 state"}}}
-    post: {parameters: [{name: server, in: query, required: true}], responses: {"200": {}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
+    post: {parameters: [{name: server, in: query, required: true}], responses: {"200": {description: дренаж начат; журнал drain.started}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
     delete: {responses: {"200": {description: снят; журнал drain.ended}}}
   /{rows}/{id}/{blob_field}:
     put:
@@ -171,13 +171,13 @@ paths:
     get:  {responses: {"200": {description: "{<t>: [строка без секретов, адреса с маской, held_by? , garbled?]}"}}}
     post:
       parameters: [{name: Idempotency-Key, in: header, required: true}]
-      responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {}, "403": {}, "503": {description: store unavailable}}
+      responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {description: тело больше предела}, "403": {description: нет права admin}, "503": {description: store unavailable}}
   /{table}/{name}:
     get:    {responses: {"200": {description: строка}, "404": {description: no such row}}}
-    delete: {responses: {"200": {description: "{deleted}"}, "404": {}, "503": {}}}
+    delete: {responses: {"200": {description: "{deleted}"}, "404": {description: no such row}, "503": {description: хранилище недоступно}}}
   /v1/objects/{sub}/blobs/{digest}:             # дверь ресурса, приём копии (урок 8)
     put:
-      responses: {"204": {}, "405": {description: не тело}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}, "409": {description: удалено здесь позже копии}, "408": {description: медленно}}
+      responses: {"204": {description: копия принята}, "405": {description: не тело}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}, "409": {description: удалено здесь позже копии}, "408": {description: медленно}}
 ```
 
 Иной метод у таблицы — `405` «/<t> takes GET, POST and DELETE of one row».
@@ -280,6 +280,8 @@ safe = Σ units == 0 ∧ Σ pending == 0 ∧ unsaid пуст
 | таблица: `must_match` | 409 | слова | исправить |
 | таблица: нет строки | 404 | «no such row» | — |
 | таблица: метод | 405 | «takes GET, POST and DELETE of one row» | — |
+| таблица: запись не admin; таблица воркера (`worker.writes`) | 403 | `denied` (Н1) | — |
+| копия тела без длины (дверь ресурса) | 411 | слова | сосед повторит |
 | потолки Н1.4 | по таблице | по таблице | изменить форму, не потолок |
 
 ---
