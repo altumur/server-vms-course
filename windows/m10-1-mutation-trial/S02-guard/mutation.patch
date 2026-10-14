@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -260,7 +260,7 @@
+         cas = _cas(cmd.get("cas"))
+         guard = cmd.get("guard")
+         guarded = self.rows.get(guard["key"], (None, 0))[1] if guard is not None else None
+-        if guard is not None and guard["index"] != guarded:
++        if False:
+             res = {"error": "guard", "key": guard["key"], "index": guarded}
+         elif cas is not None and cas != current:
+             res = {"conflict": True, "index": current}
