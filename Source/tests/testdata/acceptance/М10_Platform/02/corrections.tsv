@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-10-14	cases/*.subsystem.yaml, testsub2.subsystem.yaml	снят display.actions из всех случаев и из общей testsub2 (ключ снят уроком 9, загрузчик обязан отказать); ревью спецификации R4-03	all
