@@ -604,17 +604,22 @@ class FileVariables:
 
     def write(self, cmd: dict) -> dict:
         """Atomic backend receipt; память повторов живёт с процессом, never on disk."""
+        # File's own key bound applies before the common command validation and row weight.
+        if isinstance(cmd, dict) and cmd.get("op") in ("put", "delete") and isinstance(cmd.get("key"), str):
+            self._file(cmd["key"])
+            guard = cmd.get("guard")
+            if isinstance(guard, dict) and isinstance(guard.get("key"), str) and guard["key"]:
+                self._file(guard["key"])
         cmd = _native_command(cmd)
         path, op = cmd["key"], cmd["op"]
         from .rights import refusal
         if op == "delete":
             refuse_delete(path, self.writer, self.acl)
         else:
+            check(path, items_bytes(cmd["items"]), self.max_bytes)
             why = refusal(self.writer, self.acl, path)
             if why:
                 raise Forbidden(why)
-            check(path, items_bytes(cmd["items"]), self.max_bytes)
-        self._file(path)
         guard_check(cmd.get("guard"), self.writer, self.acl)
         # Same-process handles share replay memory; the existing file lock also serialises other processes.
         with self._replay.lock, self._locked():
