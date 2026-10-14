@@ -1,0 +1,9 @@
+{
+  "first": 1001,
+  "recreated": 1001,
+  "reused": true,
+  "stale_cas_accepted": true,
+  "row": {
+    "n": "late"
+  }
+}
