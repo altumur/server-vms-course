@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -211,7 +211,7 @@
+             return self._write(cmd, index)
+         if op == "get":
+             e = self.rows.get(cmd.get("key"))
+-            return {"items": dict(e[0]), "index": e[1]} if e else {"items": None, "index": 0}
++            return {"items": e[0], "index": e[1]} if e else {"items": None, "index": 0}
+         if op == "list":
+             prefix = str(cmd.get("prefix") or "")
+             return {"keys": {k: e[1] for k, e in sorted(self.rows.items()) if k.startswith(prefix)}}
