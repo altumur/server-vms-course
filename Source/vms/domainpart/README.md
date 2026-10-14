@@ -29,8 +29,6 @@ Source/
     scenario.py            L12, L16  scenarios between cameras
     chain.py               L17  the relay's forwarder and the upstream book (the relay's platform half is `w2cplatform/domain/relay.py`)
     books.py, worker.py    the books' pass, run by `python3 -m vms.domainpart` at the holder, with its own slot, heartbeat and door
-    streamclients.py       the RTSP accounts (ADR-0031): the holder's doors `/stream-clients`, the book `stream-accounts`
-                           (the rows and their reading: `vms/streamclients.py`; the gateway's RTSP door: `vms/rtspdoor.py`)
     device.py, gateway.py, cloud.py   a camera as a member; the live tee; Lesson 8's arithmetic
   tests/domain/            the platform's domain (on М11's real clusters and on testsub: `tests/test_domain_platform.py`)
   tests/domainvms/         the VMS on the domain
@@ -45,7 +43,7 @@ python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.age
 
 ## What the VMS declares (`cam.subsystem.yaml`, `domain:`)
 
-C2 is declared by `cam.domain.books.sources` and `rec.domain.books.primaries`, collected from guarded worker rows. Ordinary workers own the facts and consume their carried books. Assignment is `domain/placement/rec/<ref>` with the member copy `domain/placed/rec/<ref>`; the platform's typed route serves it. Tokens of `stream` are obtained through the agent's role door and remain in memory. This process still owns polls, asks and accounts until their ADR-0074 steps; none of it publishes C2 observations.
+C2 is declared by `cam.domain.books.sources` and `rec.domain.books.primaries`, collected from guarded worker rows. Ordinary workers own the facts and consume their carried books. Assignment is `domain/placement/rec/<ref>` with the member copy `domain/placed/rec/<ref>`; the platform's typed route serves it. Tokens of `stream` are obtained through the agent's role door and remain in memory. RTSP accounts are stored by the live gateway in its cluster and published through `live.domain.books.stream-accounts`; its doors are `/live/accounts`, passed by the cluster's console. This process still owns asks until C6 of ADR-0074; none of it publishes C2 observations or account contributions.
 
 ## What the product page shows (for «Консоль»)
 
