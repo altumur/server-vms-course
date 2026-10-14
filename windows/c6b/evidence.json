@@ -1,0 +1,66 @@
+{
+  "full_source_commit": "60e19d8c",
+  "merged_source_commit": "455ac000",
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-unit-final.log",
+      "sha256": "ed4bc631d98339b23f9db2f642a0274c2df6b7a5056df49863c85e2c37957c1a",
+      "exit": 1,
+      "counts": [
+        2082,
+        14,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-cluster-final.log",
+      "sha256": "154a90e2405cf12ad18b39624c3a50d851416f76cef091c0765b1cd6f85712ee",
+      "exit": 0,
+      "counts": [
+        118,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-domain-final.log",
+      "sha256": "0bdd6bb00dfb6749806dd884751d07954805843d7c4740f2dbd499591ededf9d",
+      "exit": 0,
+      "counts": [
+        228,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-domainvms-final.log",
+      "sha256": "c26e412403fce8032190a2ffbd9982758faabf503b0b330115b19f884dc59d9d",
+      "exit": 0,
+      "counts": [
+        164,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-merged-acl-demand-obsd.log",
+      "sha256": "67843767a2c3e033eadb1df70c696a7cdb5e807399c54f16f0bc01f3def7ae09",
+      "exit": 0,
+      "counts": [
+        112,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-poll-demand.log",
+      "sha256": "dfe69d429d028dac2d38f691bb0d6b85bfdff0adb9d77b643dffbf6a2dfd711b",
+      "exit": 0,
+      "counts": [
+        9,
+        0,
+        0
+      ]
+    }
+  ]
+}
