@@ -1,0 +1,29 @@
+# The platform's log mask (w2cplatform/secrets: Rule.MaskLog; w2cplatform.MaskText, ipint/uri.Redact): a text that
+# is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
+# credential, every name=value whose name is a secret's, and every address in it masked. No spec says it, and it is
+# not secret_in.tsv's: those are a url field's values. Read by vmsworker/vms/secret_in_test.go, as a process that
+# knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
+#
+# Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
+#   raw     the text as written
+#   masked  what a log shows of it
+#   note    why the row is here
+DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=hunter2xyz/a+b==;EndpointSuffix=core.windows.net	DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net	
+BlobEndpoint=https://acc.blob.core.windows.net/;SharedAccessSignature=sv=2021-06-08&ss=b&sig=hunter2xyz	BlobEndpoint=https://acc.blob.core.windows.net/;SharedAccessSignature=***&ss=b&sig=***	
+host k=v;apikey=zz:80:admin:	host k=v;apikey=***	a connect string: the value runs to the end — more masked, never less
+?pwd=&channel=1	?pwd=&channel=1	an empty value stays empty: not set is no secret
+?p%77d=hunter2&channel=1	?p%77d=***&channel=1	
+?p%2577d=hunter2&channel=1	?p%2577d=***&channel=1	
+/proxy?src=rtsp%3A%2F%2Fadmin%3Ahunter2%40cam&x=1	/proxy?src=***&x=1	
+/x?q=a%3Db&title=Gate%20%231	/x?q=a%3Db&title=Gate%20%231	
+{"url":"http://127.0.0.1:8091","cov":{"from":1}}	{"url":"http://127.0.0.1:8091","cov":{"from":1}}	an address in a JSON text ends at its quote
+{"url":"http://127.0.0.1","cov":{"from":1}}	{"url":"http://127.0.0.1","cov":{"from":1}}	
+dial rtsp://cam:554: connection refused	dial rtsp://cam:554: connection refused	a port followed by what closes a sentence is a number
+at rtsp://cam:554, again	at rtsp://cam:554, again	
+a \"rtsp://cam:554\" b	a \"rtsp://cam:554\" b	
+rtsp://[fe80::1]:554/live and ipint://h/Virtual/V	rtsp://[fe80::1]:554/live and ipint://h/Virtual/V	
+Authorization: Basic YWRtaW46aHVudGVyMnh5eg==	Authorization: Basic ***	a driver's RTSP client logs its request
+DESCRIBE rtsp://10.0.0.9:554/user=admin&password=hunter2xyz&channel=1&stream=0.sdp RTSP/1.0	DESCRIBE rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp RTSP/1.0	
+proxy-authorization: bearer abc.def	proxy-authorization: bearer ***	
+Authorization: Digest username="admin", response="5ccc"	Authorization: Digest username="admin", response="5ccc"	Digest's hash is left
+{"source":"driverpack://acme/u:hunter2xyz@10.0.0.5/ch/1"}	{"source":"driverpack://acme/u:***@10.0.0.5/ch/1"}	
