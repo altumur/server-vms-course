@@ -32,3 +32,14 @@ enrollment, подписанные отчёты и настоящий Holder.run
 окна3/4 ADR-0075 зеркалируются отдельным общим этапом после C7.
 Пути и SHA256 всех артефактов полного прогона —
 [evidence-integrated.json](evidence-integrated.json).
+
+## Approved correction cdd2c1f5
+
+Architect approved C5 after removing worker.writes from testsub2 entirely;
+door.pass:[entries] remains. The spec and two tests now forbid worker writes
+to tallies and shelves, preserving worker.requests. Final targeted checks:
+43 passed, 0 failed, 0 skipped, exit0. Initial64/2/0 retained: two obsolete
+expectations required the removed grant; console_load passed.
+X-Operator is confirmed as an outgoing console header; incoming headers
+are removed. Supersedes the pending-review/operator statuses above.
+See evidence-approved-correction.json for commands, log paths and SHA256.
