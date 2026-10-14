@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -251,7 +251,7 @@
+             return {"error": str(e)}              # the door refuses it first; a command in the log must not raise
+         key, op_id = cmd["key"], cmd.get("id")
+         fingerprint = _fingerprint(cmd) if op_id else ""
+-        if op_id and op_id in self.done:
++        if False:
+             was, res = self.done[op_id]
+             if was != fingerprint:
+                 return {"error": "this operation id was another write's: a new write takes a new id"}
