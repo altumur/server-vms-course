@@ -78,7 +78,7 @@ display:
   general:                   заголовок первой вкладки; только раскладка
   fields:        {<поле>: <подпись>}            # поле строки, id, phase/worker/server/revision/observed_revision, поле status
   field_help:    {<поле>: <подсказка>}
-  options:       {<поле>: {<значение enum>: <слово>}}          # только у поля с enum; значения — из enum
+  options:       {<имя>: {<значение>: <слово>}}                 # у поля с enum — значения из enum; у слова пульса из form.status[] — любые строки (подписи значений); иное — отказ (урок 2 Н1.4)
   form:          [{title, state?, placement?, fields?, note?, status?: [{field, since?, title?}]}]
                  # блоки карточки по порядку; state — бейдж состояния; placement — воркер·сервер, причина из /where;
                  # status — поля, сказанные воркером, только чтение, с «с …» по since; поле вне блоков не показывается;
@@ -225,7 +225,8 @@ paths:
   /domain/{rest}:
     parameters: [{name: rest, in: path, required: true, schema: {type: string}}]
     get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}
-  /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: "ADR-0066, М11 — формы и коды там; здесь только маршруты"}
+  # /api/held, /api/backup, /api/prepare, /api/take, /domain/move — двери переезда и копии домена: контракт и коды — М11 (ADR-0066);
+  # в этом уроке они только имена маршрутов Н1.3 (open_routes) и в закрытый список дверей консоли платформы не входят
 components:
   schemas:
     WorkerRow:
@@ -357,7 +358,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | `/domain/<rest>` к держателю: держатель не ответил / нет домена или ключей | 502 / 503 | слова | — |
 | `/where/<t>/<p>`: место не держат | 404 | `{unreachable: place@server}`, `X-Unreachable` | — |
 | `/events` без индекса ресурса | 503 | слова | — |
-| `/spec`: `display` называет не поле; `options` не у enum; `console.running` не метрика; `servers.status` платформенное поле | спека не грузится | слова (урок 2) | править спеку |
+| `/spec`: `display` называет не поле; `options` не у enum и не у слова пульса; `console.running` не метрика; `servers.status` платформенное поле | спека не грузится | слова (урок 2) | править спеку |
 
 ---
 
