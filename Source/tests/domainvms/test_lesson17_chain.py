@@ -20,13 +20,13 @@ import json
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.chain import UPSTREAM_PATH
+from vms.forwarder import UPSTREAM_PATH
 from w2cplatform.domain.relay import bundle
 from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster, Ram
+from vms.camera_cluster import DeviceCluster, Ram
 from w2cplatform.domain.federation import Federation, Unreachable
-from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import LINGER, CameraPusher, IngestLiveEndpoint, audience
+from vms.gateway import Gateway
+from vms.ingest import LINGER, CameraPusher, IngestLiveEndpoint, audience
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
@@ -201,7 +201,7 @@ def test_the_relay_passes_on_the_recording_the_centre_named_and_says_when_its_ar
     out of whichever recording of the camera it reads first; and an archive that could not read the range is said as
     RANGE FAILED, at once: the centre's copy fails and asks again, instead of waiting out its timeout on a relay
     whose pass fell over."""
-    from vms.domainpart.ingest import RangeFailed
+    from vms.ingest import RangeFailed
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
     asked = []
@@ -291,7 +291,7 @@ def test_the_star_recorders_card_range_fetches_the_named_camera_recording_throug
     import shutil
     import threading
     from tests.domain.conftest import real_card
-    from vms.domainpart.ingest import RangeFailed, card_range
+    from vms.ingest import RangeFailed, card_range
     from vms.worker import fake_samples
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall, star={"east"})
@@ -480,7 +480,7 @@ def test_the_forwarder_keeps_what_it_holds_in_seconds_and_bytes_and_says_what_it
     thirty frames waiting, fifty kept — and what it dropped was counted where nobody looked. It keeps `FORWARD_HOLD`
     seconds now, at most `FORWARD_BYTES`, cut clean to a key frame, and its recorder's heartbeat says how many frames it
     dropped past that (`upstream.<ref>.up_dropped`, the product's word)."""
-    from vms.domainpart.chain import FORWARD_HOLD
+    from vms.forwarder import FORWARD_HOLD
     host = ingest_recorder("east", RELAY_URLS[0], keys=lambda: {}, dial=lambda url: None)
     fwd = host.forwarder
     frames = [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)]   # thirty seconds at 25 frames a second
@@ -1003,7 +1003,7 @@ def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwa
     upstream result from signed recorder facts; a relay retains its established route through a torn
     observation. A fresh forwarder cannot open that route until the observation is complete again.
     A damaged ask observation never establishes fresh authority."""
-    from vms.domainpart.chain import UPSTREAM_PATH
+    from vms.forwarder import UPSTREAM_PATH
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     centre.want(SERIAL, "recorder:centre")
@@ -1021,7 +1021,7 @@ def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwa
     east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)
     assert fwd.book()[SERIAL] == before
     assert "forwarding" in fwd.pass_once()[SERIAL]
-    from vms.domainpart.chain import Forwarder
+    from vms.forwarder import Forwarder
     fresh = Forwarder("east", relay, east.vars, lambda url: centre)
     fresh.tokens.door = role_requests(east.vars, "recworker")
     assert fresh.book() == {}  # A broken observation cannot establish a new flow.
@@ -1202,7 +1202,7 @@ def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres
     ADR-0074) — not on every answer: once when the centre starts wanting the stream, then at most once a minute while
     its `have` moves (`UP_KEPT_EVERY`), at once when it goes back — and the restarted relay seeds `up_have` from it before
     its first pass."""
-    from vms.domainpart.chain import UP_KEPT_EVERY, up_key
+    from vms.forwarder import UP_KEPT_EVERY, up_key
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     rows = east.objects                                                 # the relay's store, its recorder's
@@ -1239,7 +1239,7 @@ def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres
 
 
 def test_a_centre_that_does_not_want_the_stream_drops_the_kept_word():
-    from vms.domainpart.chain import up_key
+    from vms.forwarder import up_key
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
     rows = east.objects                                                 # the relay's store, its recorder's
@@ -1260,7 +1260,7 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     camera behind the relay keep everything its card holds. A word written longer ago than a day is not said after the
     restart: dropped, counted (`up_expired`) and logged; a fresher one is said. While the relay runs, a centre silent that
     long is said no more, counted the same way — and answering again says it again."""
-    from vms.domainpart.chain import UP_KEPT_FOR, up_key
+    from vms.forwarder import UP_KEPT_FOR, up_key
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     rows = east.objects                                                 # the relay's store, its recorder's
@@ -1529,7 +1529,7 @@ def test_a_camera_taken_out_of_the_upstream_book_ends_its_loop_and_its_subscript
     in the book is forwarded again by a loop of its own."""
     import threading
     import time
-    from vms.domainpart.chain import UPSTREAM_PATH
+    from vms.forwarder import UPSTREAM_PATH
     store, centre = _FlakyStore(), _TakesAll()
     rec = ingest_recorder("east", RELAY_URLS[0], time.time, store, dial=lambda url: centre)
     local, fwd = rec.ingest, rec.forwarder
