@@ -15,7 +15,7 @@ import json
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.members import Members
 from w2cplatform.domain.shared import SharedSettings, SharedView, sign
