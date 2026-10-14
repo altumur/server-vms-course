@@ -1,0 +1,26 @@
+{
+  "source": "75247bff",
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-targeted.log",
+      "sha256": "208e7346afc756893f6e388bd9397f605fcd5eb365b162b70dee1d5d204b1ef0",
+      "exit": 0,
+      "counts": [
+        104,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-contract-final.log",
+      "sha256": "e1f49ad6f5f2ea5030ffdeb50fbb1dc9fcd25174e4376bbe03f6b578ccd7d122",
+      "exit": 0,
+      "counts": [
+        44,
+        0,
+        0
+      ]
+    }
+  ],
+  "status": "Целевые проверки; полный итоговый прогон отдельно."
+}
