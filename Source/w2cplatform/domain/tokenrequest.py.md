@@ -15,8 +15,8 @@ The agent's `CarryClient` signs the request's original bytes and route with the
 member key and the existing request signature/time mechanism. A relay verifies
 the member signature before forwarding the same bytes, path and signature. It
 cannot open the reply. The holder accepts only an admitted, unrevoked member,
-a declared grant for the role and an assignment matching `placement.caller`.
-All member links in the assignment must be admitted. The issuer derives the
+a declared grant for the role and its declared scope.
+For `placement`, the assignment must match `placement.caller` and every member link must be admitted. The issuer derives the
 subject, reference claim and audience itself; the caller supplies no target or
 claims. Audiences are member names without prefixes.
 
@@ -43,3 +43,22 @@ symlink or bind fails closed for that role, while carry and reports continue.
 `installation` derives tmpfiles and agent groups from loaded grants, using
 `cluster.rights.group`. Every request resolves its unique kind against the current
 catalogue.
+
+
+C4 adds the alternative `unit` binding, with exactly `ref_claim`,
+`target_fields: [poll_home]` and `audience_claim`. The declaring subsystem's
+`domain.ref` must be present in a unit in the caller's own accepted snapshot.
+Only the immutable body named by its accepted report pointer proves that unit;
+local objects, orphan reports and another member's units do not. Withdrawal in
+its next accepted report removes that permission. A missing or malformed report
+returns 403. Both bindings together, cross-subsystem/caller options and other
+unit targets remain refused in C4.
+
+`topology.poll_home(vars_, member, authoritative=False)` chooses `via[member]`,
+then centre, then a valid current holder. A worker's local `domain/member`
+identity chooses the original topology when it is the holder, otherwise the
+carried copy. The target member never determines where that topology is read.
+Holder services pass `authoritative=True`. Missing local identity or malformed
+holder/topology raises ValueError; an absent policy falls back to the confirmed
+holder. Issuance maps that error to 409 and refuses an unadmitted audience with
+403. Replies and token storage remain ephemeral.

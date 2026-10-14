@@ -30,7 +30,7 @@ secrets:
     door/signer: [console]
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
-worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/]}
+worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls]}
 unit:
   # the row directory `cam/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
@@ -366,7 +366,7 @@ rights:
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, priority, labels, ref, live]
 # Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
-# The remaining domain worker publishes polls, asks and stream-accounts until their own windows.
+# The remaining domain worker publishes asks and stream-accounts until their own windows.
 # Recording assignments are platform rows, read through /domain/placement. Domain names and grants
 # remain declared here; the platform carries and checks them without VMS-specific code.
 domain:
@@ -377,7 +377,6 @@ domain:
   edit: [enabled]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
-    polls: {}
     asks: {}
     stream-accounts: {}
   kept: [stream-clients/]
@@ -391,6 +390,11 @@ domain:
       claims: [aud, ref]
       grant: [camworker, recworker]
       placement: {sub: rec, caller: origin, ref_claim: ref, target_fields: [cluster, copies, star_centre], audience_claim: aud}
+    poll:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [camworker, recworker]
+      unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}
     ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
@@ -403,7 +407,6 @@ domain:
   shared: [folders, alarms]
   keys:
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
-    - {id: polls, keys: [domain/cam/polls], prefix: domain/cam/polls/}
     - {id: asks, keys: [domain/cam/asks], prefix: domain/cam/asks/}
     - {id: stream-clients, prefix: domain/cam/stream-clients/}
     - {id: stream-accounts, keys: [domain/cam/stream-accounts], prefix: domain/cam/stream-accounts/}
@@ -519,9 +522,6 @@ display:
     sources:
       title: Книги источников
       about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
-    polls:
-      title: Опросы
-      about: "Книги опросов: для толкающей камеры, которую никто не пишет, — приёмник потоков (ingest), у которого она спрашивает просьбы."
     asks:
       title: Просьбы
       about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/cam/asks/<кластер> — книга каждого кластера."

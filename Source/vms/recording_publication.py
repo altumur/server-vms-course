@@ -1,6 +1,6 @@
-"""C2/C3 facts produced by ordinary camera/recorder workers (ADR-0074).
+"""C2/C3/C4 facts produced by ordinary camera/recorder workers (ADR-0074).
 
-Recipients come only from the local assignment copied by the domain agent.
+Recipients come from the copied assignment, or the declared poll home for an unassigned camera.
 No domain issuer, remote store, persistent road or configuration write.
 """
 from __future__ import annotations
@@ -34,7 +34,8 @@ def publish_facts(worker, family, status):
         return False
     try:
         from .recording_upstream import upstream
-        items = {"sources": sources, "primaries": primaries, "upstream": upstream}[family](worker, status)
+        from .recording_polls import polls
+        items = {"sources": sources, "primaries": primaries, "upstream": upstream, "polls": polls}[family](worker, status)
         return publish(worker, family, items)
     except OSError:
         # A store outage leaves the last publication intact and never suppresses a pulse.
@@ -69,7 +70,21 @@ def sources(worker, status):
         if not own or not isinstance(ref, str) or not ref:
             continue
         assignment = placed(worker.vars, "rec", ref)
-        if assignment is None or assignment["origin"] != own:
+        if assignment is None:
+            if st.get("polls") is not True:
+                continue
+            from w2cplatform.domain.topology import poll_home, member_topology
+            try:
+                home = poll_home(worker.vars, own)
+                centre = member_topology(worker.vars, own)["centre"]
+            except PARSE_ERRORS:
+                continue
+            targets = list(dict.fromkeys([home] + ([centre] if centre else [])))
+            value = {"ref": ref, "to": targets, "polls": True, "live_url": "",
+                     "server": str(worker.server or ""), "as_of": now}
+            out[str(st["id"])] = json.dumps(source_value(value), ensure_ascii=False, allow_nan=False, sort_keys=True)
+            continue
+        if assignment["origin"] != own:
             continue
         value = {"ref": ref, "to": recipients(assignment), "live_url": str(st.get("live_url") or ""),
                  "server": str(worker.server or ""), "as_of": now}

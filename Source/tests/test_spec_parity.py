@@ -294,15 +294,26 @@ def test_unknown_token_scope_probe_does_not_manufacture_refusals_of_partial_bind
     raw = raw_spec()
     rule = raw["domain"]["tokens"]["tally"]
     del rule["placement"]
-    rule["unit"] = {"sub": "testsub", "ref": "name"}
+    rule["scenario"] = {"doc": "testsub/future"}
     try:
         SubsystemSpec.from_dict(raw)
     except ValueError:
         pass
     else:
         raise AssertionError("an unknown token scope loaded")
-    assert refused_paths(raw) == ["domain.tokens.tally.unit"]
+    assert refused_paths(raw) == ["domain.tokens.tally.scenario"]
 
+
+
+def test_unit_probe_recognizes_c4_and_names_only_unsupported_later_fields():
+    from tests.test_token_requests import raw_spec
+    raw = raw_spec()
+    rule = raw["domain"]["tokens"]["tally"]
+    del rule["placement"]
+    rule["unit"] = {"ref_claim": "ref", "target_fields": ["poll_home"], "audience_claim": "aud"}
+    assert refused_paths(raw) == []
+    rule["unit"].update(sub="testsub", caller="poll_home")
+    assert refused_paths(raw) == ["domain.tokens.tally.unit.sub", "domain.tokens.tally.unit.caller"]
 
 def test_unsupported_token_target_probe_does_not_manufacture_partial_binding_faults():
     from tests.test_token_requests import raw_spec

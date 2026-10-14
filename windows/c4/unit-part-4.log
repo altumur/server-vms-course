@@ -1,0 +1,1416 @@
+temp: /tmp/w2c-tests-25664
+test_auto_spec.py::test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitting_is ... OK
+test_auto_spec.py::test_a_scenario_is_a_row_and_its_shapes_survive_the_round_trip ... OK
+test_auto_spec.py::test_a_scenario_is_checked_against_what_the_units_are ... OK
+test_auto_spec.py::test_every_refusal_at_the_door_says_where_and_what_would_be_right ... OK
+test_auto_spec.py::test_matching_is_equality_and_nothing_else ... OK
+test_auto_spec.py::test_the_catalogue_is_the_boundary ... OK
+test_auto_spec.py::test_the_catalogue_says_what_each_unit_raises_and_can_do ... OK
+test_auto_spec.py::test_the_holder_says_what_its_device_raises_and_can_do_once ... OK
+test_auto_spec.py::test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accepts ... OK
+test_auto_spec.py::test_the_spec_says_nothing_about_doors ... OK
+test_auto_spec.py::test_two_drivers_sessions_on_one_host_are_one_device_row_named_by_the_host ... OK
+test_auto_spec.py::test_two_triggers_without_a_window_are_refused_by_the_evaluator_as_the_scenario_it_became ... OK
+test_auto_spec.py::test_what_the_platform_checks_and_what_it_does_not ... OK
+test_base_worker.py::test_a_place_follows_the_name_only_where_the_spec_says_where_it_is ... OK
+test_base_worker.py::test_a_spec_named_as_one_of_the_platforms_own_names_does_not_load ... OK
+test_base_worker.py::test_a_worker_without_its_server_says_so_in_its_heartbeat ... OK
+test_base_worker.py::test_only_the_base_says_what_a_log_is_about ... OK
+test_base_worker.py::test_the_base_writes_of_and_a_line_that_says_its_own_is_refused ... OK
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 1050 s, past the units' ceiling (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 450 s, and its lease is strict (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 450 s, and its lease is strict (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 450 s, and its lease is strict (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 450 s, and its lease is strict (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 1050 s, past the units' ceiling (the store does not answer: the store does not answer) — letting go of it
+test_base_worker.py::test_through_a_silence_a_place_is_kept_or_let_go_by_where_its_row_says_it_is ... OK
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+t-1: the hold on s-1 has not been confirmed for 450 s, and its lease is strict (the store does not answer: the store does not answer) — letting go of it
+t-1: the store did not answer for the slot (the store does not answer); still t-1
+test_base_worker.py::test_where_a_place_is_is_read_again_at_every_renewal ... OK
+test_book_access.py::test_configstore_enforces_generated_reads_and_guarded_book_writes_at_its_door ... OK
+test_book_access.py::test_generated_reads_reach_family_children_without_granting_siblings_or_writes ... OK
+test_book_access.py::test_worker_book_inputs_publish_with_generated_acl_and_atomic_slot_guard ... OK
+test_book_access.py::test_worker_reads_accept_exact_rows_and_families_but_reject_unsafe_paths ... OK
+test_boundary.py::test_the_debt_is_compared_by_count_and_a_shrink_only_lowers_it ... OK
+test_boundary.py::test_the_debt_lines_are_well_formed_and_name_a_step_of_the_plan ... OK
+test_boundary.py::test_the_dictionary_reads_words_and_identifiers_and_not_substrings ... OK
+  boundary: found {}; the debt owes {}
+test_boundary.py::test_the_platform_crosses_the_boundary_nowhere_but_where_the_debt_says_and_the_debt_only_shrinks ... OK
+test_boundary.py::test_the_testsub_spec_is_nobodys_but_the_platforms ... OK
+test_configstorevars.py::test_a_backup_restores_into_a_fresh_group_above_its_highest_version ... OK
+test_configstorevars.py::test_a_box_imported_into_a_fresh_group_keeps_its_values_and_no_version_it_handed_out_matches ... OK
+test_configstorevars.py::test_a_certificate_that_names_no_server_is_refused_and_a_join_names_a_server ... OK
+test_configstorevars.py::test_a_certificate_with_the_store_role_and_another_is_no_daemons_at_the_door_on_a_call_or_at_start ... OK
+test_configstorevars.py::test_a_daemon_dialling_another_checks_the_name_and_the_role_of_the_one_that_answers ... OK
+test_configstorevars.py::test_a_daemon_will_not_open_its_doors_unprotected ... OK
+test_configstorevars.py::test_a_door_queues_as_many_connections_as_it_serves_before_it_accepts_one ... OK
+test_configstorevars.py::test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at_every_door ... OK
+test_configstorevars.py::test_a_process_reads_platform_store_and_no_other_name ... OK
+test_configstorevars.py::test_a_raft_port_without_its_secret_is_refused_on_every_interface_but_loopback_before_it_opens ... OK
+test_configstorevars.py::test_a_refused_connection_is_tried_again_within_d ... OK
+test_configstorevars.py::test_a_revocation_is_never_lifted_by_the_list_going_missing_or_changing_unseen ... OK
+test_configstorevars.py::test_a_revoked_daemon_is_refused_at_the_api_door_and_on_its_join_and_the_door_hears_of_it_without_a_restart ... OK
+test_configstorevars.py::test_a_role_socket_lets_a_kept_alive_connection_go_once_it_has_answered ... OK
+test_configstorevars.py::test_a_role_without_the_grant_is_refused_at_its_own_socket_before_anything_is_applied ... OK
+test_configstorevars.py::test_a_write_asked_again_after_another_write_to_its_key_is_a_new_write_and_is_applied ... OK
+test_configstorevars.py::test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_and_is_applied_once ... OK
+test_configstorevars.py::test_an_answer_cut_off_by_a_dying_daemon_is_not_an_answer ... OK
+test_configstorevars.py::test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore ... OK
+test_configstorevars.py::test_an_import_is_refused_whole_into_a_group_it_could_confuse ... OK
+test_configstorevars.py::test_an_import_that_stopped_goes_on_and_a_row_heavier_than_the_store_takes_refuses_it_whole ... OK
+test_configstorevars.py::test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touches_a_row ... OK
+test_configstorevars.py::test_backup_restore_and_issue_in_any_order_never_issue_a_generation_twice ... OK
+test_configstorevars.py::test_ca_pem_is_exactly_one_ca_certificate_and_a_foreign_ca_beside_it_is_refused_not_trusted ... OK
+test_configstorevars.py::test_callers_refused_together_try_again_each_at_its_own_moment ... OK
+test_configstorevars.py::test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners ... OK
+test_configstorevars.py::test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once ... OK
+test_configstorevars.py::test_not_done_and_outcome_unknown_reach_the_caller_as_their_own_kinds ... OK
+test_configstorevars.py::test_processes_of_one_role_leave_no_connection_held_at_their_socket ... OK
+test_configstorevars.py::test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_roles_certificate ... OK
+test_configstorevars.py::test_the_api_door_serves_so_many_of_one_address_and_lets_a_stalled_handshake_go ... OK
+test_configstorevars.py::test_the_operator_commands_speak_to_the_admin_socket ... OK
+test_configstorevars.py::test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_the_installation ... OK
+test_configstorevars.py::test_the_variables_contract_holds_on_configstore_through_a_daemon_socket ... OK
+test_console_page.py::test_a_subsystem_with_a_page_beside_its_spec_is_shown_with_it_and_one_without_with_the_platforms ... OK
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_console_page.py::test_only_the_consoles_root_serves_a_page_and_a_mounted_subsystem_none ... OK
+test_console_page.py::test_the_console_module_and_its_look_are_served_by_their_version_to_anybody ... OK
+test_console_page.py::test_the_console_names_the_pages_own_script_and_this_origin_in_a_content_security_policy_and_no_other ... OK
+test_console_page.py::test_the_platforms_page_is_the_console_module_and_its_mount_and_nothing_else ... OK
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_console_page.py::test_the_servers_door_says_what_the_module_shows_of_a_servers_resource ... OK
+test_det_requests.py::test_a_camera_already_watched_by_hand_is_not_watched_twice ... OK
+test_det_requests.py::test_a_detector_ends_by_the_clock_and_one_made_by_hand_never_does ... OK
+test_det_requests.py::test_a_job_finished_for_days_is_forgotten_and_a_running_one_never_is ... OK
+2026-10-14 14:14:30,433 vms.jobs INFO detjob: scanning 7 [1757499940, 1757500060) with lpr — a scenario asked
+2026-10-14 14:14:30,449 vms.jobs INFO detjob: 7-lpr-1757499940-1757500060 widened to [1757499940, 1757500065) — a scenario asked again
+2026-10-14 14:14:30,457 vms.jobs INFO detjob 7-lpr-1757499940-1757500060: done (120 s of footage, 1 event(s))
+test_det_requests.py::test_a_job_the_worker_finished_before_it_was_widened_is_not_done ... OK
+test_det_requests.py::test_a_recording_that_stopped_does_not_keep_a_follower_for_ever ... OK
+2026-10-14 14:14:30,939 vms.jobs WARNING det: f1-0 could not be turned into work this pass: det/units/7-lpr-auto: 10 conflicts
+test_det_requests.py::test_a_request_the_store_would_not_take_stays_for_the_next_pass ... OK
+2026-10-14 14:14:30,955 vms.jobs WARNING det: f1-0 expired before it was turned into work
+test_det_requests.py::test_a_request_too_late_to_mean_anything_is_dropped ... OK
+test_det_requests.py::test_a_request_with_params_of_its_own_still_carries_the_detectors_mask_and_labels ... OK
+test_det_requests.py::test_a_scan_into_the_future_follows_the_recording_and_ends_when_the_footage_does ... OK
+2026-10-14 14:14:31,677 vms.jobs WARNING det: f1-0 refused: nothing records camera 7: a scan reads the archive, and there is none to read
+test_det_requests.py::test_a_scan_of_a_camera_nobody_records_is_refused_and_the_request_goes ... OK
+test_det_requests.py::test_a_scenario_that_asks_for_what_cannot_be_is_refused_where_it_is_written ... OK
+test_det_requests.py::test_an_interval_entirely_in_the_future_follows_and_does_not_wait_for_another_server ... OK
+test_det_requests.py::test_detect_is_a_detector_with_an_end_and_a_second_request_extends_it ... OK
+2026-10-14 14:14:31,916 vms.jobs INFO detjob: scanning 7 [1757499940, 1757500060) with lpr — a scenario asked
+2026-10-14 14:14:31,926 vms.jobs INFO detjob: 7-lpr-1757499940-1757500060 widened to [1757499940, 1757500065) — a scenario asked again
+2026-10-14 14:14:31,943 vms.jobs INFO detjob: scanning 7 [1757499945, 1757500065) with motion — a scenario asked
+2026-10-14 14:14:31,952 vms.jobs INFO detjob: scanning 7 [1757499950, 1757500070) with lpr — a scenario asked
+test_det_requests.py::test_firings_that_overlap_widen_one_job_instead_of_making_a_job_each ... OK
+2026-10-14 14:14:31,970 vms.jobs WARNING det: f1-0 expired before it was turned into work
+test_det_requests.py::test_requests_are_looked_at_far_more_often_than_they_live ... OK
+2026-10-14 14:14:31,974 vms.jobs INFO detjob: scanning 7 [1757499880, 1757500030) with lpr — a scenario asked
+test_det_requests.py::test_scan_is_a_job_around_the_moment_the_scenario_fired ... OK
+test_det_requests.py::test_the_console_runs_it_and_the_evaluator_may_file_it ... OK
+test_domain_books.py::test_a_book_is_refused_with_its_path_and_the_products_words ... OK
+2026-10-14 14:14:32,084 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:32,085 w2cplatform.rows ERROR domain/testsub/tallies#c2: the entry of a book does not parse (JSONDecodeError); left out of what the page is shown
+2026-10-14 14:14:32,088 w2cplatform.rows ERROR domain/testsub/tallies#c4: the entry of a book does not parse (not a JSON object (11 bytes)); left out of what the page is shown
+2026-10-14 14:14:32,088 w2cplatform.rows ERROR domain/testsub/tallies#c5: the entry of a book does not parse (not a JSON object (14 bytes)); left out of what the page is shown
+2026-10-14 14:14:32,091 w2cplatform.journal INFO console: access.denied {'user': 'nobody', 'capability': 'view'}
+test_domain_books.py::test_a_book_shows_the_named_fields_of_this_clusters_own_copy_each_item_to_a_viewer_of_its_unit ... OK
+test_domain_books.py::test_a_key_beside_show_is_no_key_of_a_spec ... OK
+2026-10-14 14:14:32,625 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:32,627 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_domain_books.py::test_a_shown_list_of_objects_goes_out_as_it_is_and_a_secret_inside_it_never_does ... OK
+2026-10-14 14:14:33,143 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:33,144 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:33,652 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:33,653 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_domain_books.py::test_an_open_console_shows_every_item_and_a_spec_with_a_list_shows_none ... OK
+test_domain_books.py::test_books_are_a_list_carried_or_a_map_each_book_carried_or_shown_by_its_fields ... OK
+test_doors_shut.py::test_a_door_announces_what_it_bound ... OK
+2026-10-14 14:14:34,196 vms.liveworker WARNING g-1: camera 7 is served on loopback on srv-b — not reachable from srv-1 (RTSP_HOST there)
+test_doors_shut.py::test_a_gateway_and_a_backfill_do_not_knock_on_their_own_loopback_either ... OK
+test_doors_shut.py::test_a_recorder_on_another_server_does_not_knock_on_its_own_loopback ... OK
+2026-10-14 14:14:34,238 camworker INFO w-1: start camera 1
+2026-10-14 14:14:34,240 camworker INFO w-1: playback door on 127.0.0.1:49659
+2026-10-14 14:14:34,750 camworker INFO w-1: start camera 1
+2026-10-14 14:14:34,751 camworker WARNING w-1: the door to the devices' own archives is open on 0.0.0.0; it asks for a process's capability for the camera, in a cluster in a domain (`vms/playback.py`); outside one, nobody
+2026-10-14 14:14:34,759 camworker INFO w-1: playback door on 0.0.0.0:49662
+test_doors_shut.py::test_the_door_to_a_devices_archive_binds_to_loopback_unless_it_is_opened ... OK
+2026-10-14 14:14:35,274 camworker INFO w-1: start camera 1
+2026-10-14 14:14:35,282 camworker INFO w-1: start camera 1
+test_doors_shut.py::test_the_heartbeat_says_loopback_for_a_door_bound_to_loopback ... OK
+test_event_line.py::test_a_reader_says_which_time_it_asks_in ... OK
+test_event_line.py::test_every_line_has_a_name_and_two_events_in_one_instant_are_two ... OK
+test_event_line.py::test_the_merge_knows_a_copy_by_its_name ... OK
+test_frontier.py::test_a_frontier_is_one_number_beside_the_units_events_and_a_torn_one_is_not_there ... OK
+test_guard.py::test_a_fenced_worker_does_not_publish_even_while_its_slot_row_still_names_it ... OK
+test_guard.py::test_guard_requires_read_permission_and_never_grants_target_write_permission ... OK
+test_guard.py::test_guard_wire_refusal_has_the_exact_412_body_and_does_not_become_a_cas_conflict ... OK
+test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas ... OK
+test_guard.py::test_partial_or_malformed_guard_is_refused_before_any_write ... OK
+test_guard.py::test_same_owner_renewal_refuses_the_old_guard_but_a_fresh_ownership_check_can_publish ... OK
+test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it ... OK
+test_guard.py::test_worker_rechecks_ownership_after_guard_refusal_and_never_publishes_in_grace ... OK
+2026-10-14 14:14:35,308 w2cplatform.host ERROR a: publishing failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/host.py", line 70, in step
+    fn()
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_host.py", line 71, in boom
+    raise RuntimeError("the store went away")
+RuntimeError: the store went away
+2026-10-14 14:14:35,309 w2cplatform.host ERROR b: publishing failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/host.py", line 70, in step
+    fn()
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_host.py", line 71, in boom
+    raise RuntimeError("the store went away")
+RuntimeError: the store went away
+2026-10-14 14:14:35,309 w2cplatform.host WARNING a placement: publish works again
+test_host.py::test_a_step_that_fails_every_pass_is_said_once_and_again_when_it_works ... OK
+2026-10-14 14:14:35,335 w2cplatform.journal INFO console: schema.raised {'version': 1, 'was': 1, 'user': 'anna'}
+test_host.py::test_the_console_raises_the_schema_through_its_own_grants_on_a_box_and_in_a_cluster ... OK
+2026-10-14 14:14:35,352 w2cplatform.host ERROR SPEC_DIR is not set: the platform runs from the specs it is given and from nothing else — python3 -m w2cplatform controller <sub> | resource | console   (SPEC_DIR: the directory of <sub>.subsystem.yaml)
+2026-10-14 14:14:35,415 w2cplatform.host ERROR python3 -m w2cplatform controller <sub> | resource | console   (SPEC_DIR: the directory of <sub>.subsystem.yaml)
+test_host.py::test_the_platforms_entry_point_runs_from_the_specs_it_is_given_and_from_nothing_else ... OK
+2026-10-14 14:14:35,464 w2cplatform.host INFO restore: {'pulled': 0}
+2026-10-14 14:14:35,464 w2cplatform.host INFO resource srv-9 on ('127.0.0.1', 49663)
+2026-10-14 14:14:35,963 w2cplatform.rows ERROR platform/resources/srv-9/heartbeat#space.total: the number in it does not parse (could not convert string to float: 'a lot'); read as not said
+test_host.py::test_the_platforms_resource_comes_up_heartbeats_and_says_its_tree_through_the_exported_readers ... OK
+2026-10-14 14:14:35,963 w2cplatform.host INFO restore: {}
+2026-10-14 14:14:35,964 w2cplatform.host INFO resource srv-9 on ('127.0.0.1', 0)
+2026-10-14 14:14:35,964 w2cplatform.host INFO policy: {}
+2026-10-14 14:14:35,974 w2cplatform.host INFO policy: {}
+2026-10-14 14:14:35,989 w2cplatform.host INFO policy: {}
+test_host.py::test_the_resources_policy_runs_by_its_monotonic_clock_when_the_wall_steps_back_a_day ... OK
+test_lease_step.py::test_a_pause_a_call_waits_out_costs_the_pause_and_nothing_more ... OK
+2026-10-14 14:14:36,019 w2cplatform.worker WARNING w-1: the store did not answer for the slot (no leader); still w-1
+2026-10-14 14:14:36,020 w2cplatform.worker WARNING w-1: the store confirms epoch 1 of c1 again; nothing was stopped
+2026-10-14 14:14:36,029 w2cplatform.worker WARNING w-1: the store did not answer for the slot (no leader); still w-1
+worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
+test_lease_step.py::test_the_next_lease_step_counts_from_the_start_of_the_last_and_a_step_unanswered_is_tried_again_at_the_next_look ... OK
+  (skipped: no GStreamer here — Track 2)
+test_lesson2_driverpacksrc.py::test_the_element_runs_when_gstreamer_is_present ... OK
+test_lesson2_driverpacksrc.py::test_uri_resolution_and_the_refusal ... OK
+2026-10-14 14:14:36,039 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:36,041 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:36,053 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:36,058 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '2', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:36,059 w2cplatform.console WARNING cam: the reply to k-2 was sent but not remembered under its key: [Errno 13] the store does not answer
+2026-10-14 14:14:36,065 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '2', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:36,087 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '9', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:36,093 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '3', 'user': 'operator', 'fields': 'name,source'}
+test_lesson6_controller.py::test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_another_consoles_at ... OK
+2026-10-14 14:14:36,598 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:36,602 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:36,610 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:36,615 w2cplatform.console WARNING cam: a write was not taken by the store: [Errno 13] the store does not answer
+2026-10-14 14:14:36,627 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '2', 'user': 'operator', 'fields': 'name,source'}
+test_lesson6_controller.py::test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day ... OK
+2026-10-14 14:14:37,120 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:37,122 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:37,123 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:37,134 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:37,142 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:37,145 w2cplatform.console WARNING cam: the claim on k-b was taken over by another console before the reply was kept
+2026-10-14 14:14:37,163 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '3', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:37,165 w2cplatform.console WARNING cam: the claim on k-a was taken over by another console before the reply was kept
+test_lesson6_controller.py::test_a_console_whose_claim_was_taken_over_while_it_stood_still_writes_nothing ... OK
+2026-10-14 14:14:38,166 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:38,169 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:38,170 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:38,174 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:38,177 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_lesson6_controller.py::test_a_retry_that_lands_on_another_console_is_one_camera ... OK
+2026-10-14 14:14:38,872 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:38,873 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:38,875 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'anna', 'fields': 'name,source'}
+test_lesson6_controller.py::test_an_idempotency_key_is_one_callers_for_one_body ... OK
+test_lesson6_controller.py::test_camera_lifecycle_has_no_individual_event_or_alarm_retention ... OK
+2026-10-14 14:14:39,447 camworker INFO w-1: start camera 5
+2026-10-14 14:14:39,447 camworker INFO w-1: start camera 7
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 1
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 2
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 3
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 4
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 6
+2026-10-14 14:14:39,451 camworker INFO w-2: start camera 8
+test_lesson6_controller.py::test_capacity_is_the_workers_word_not_the_controllers ... OK
+test_lesson6_controller.py::test_crud_by_cas_and_what_it_refuses ... OK
+test_lesson6_controller.py::test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing ... OK
+test_lesson6_controller.py::test_rebalance_is_explicit_budgeted_and_stops_in_the_dead_band ... OK
+2026-10-14 14:14:39,574 camworker INFO w-1: start camera 1
+2026-10-14 14:14:39,574 camworker INFO w-1: start camera 3
+2026-10-14 14:14:39,574 camworker INFO w-1: start camera 4
+2026-10-14 14:14:39,576 camworker INFO w-2: start camera 2
+2026-10-14 14:14:39,576 camworker INFO w-2: start camera 5
+2026-10-14 14:14:39,576 camworker INFO w-2: start camera 6
+test_lesson6_controller.py::test_scale_in_releases_a_slot_and_the_controller_redistributes ... OK
+2026-10-14 14:14:39,582 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:39,583 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:39,586 w2cplatform.journal INFO console: unit.created {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'name,source'}
+2026-10-14 14:14:39,608 camworker INFO w-1: start camera 1
+2026-10-14 14:14:40,090 vms.footage INFO archive read: anybody got rec/1/1757496460-1757496520 (200, 19907 bytes) from 127.0.0.1
+2026-10-14 14:14:40,090 w2cplatform.journal INFO door-r-door: archive.read {'user': 'anybody', 'media': 'rec/1/1757496460-1757496520', 'addr': '127.0.0.1', 'status': 200, 'bytes': 19907, 'target': 'rec/1', 'of': 'rec/1', 'sha256': '4a611e55e62f99d3218980d7388e0daac98d43d9962e7868f96916016cc74233', 'recording': '1'}
+2026-10-14 14:14:40,113 w2cplatform.journal INFO console: unit.changed {'sub': 'cam', 'target': '1', 'user': 'operator', 'fields': 'enabled', 'revision': 2}
+2026-10-14 14:14:40,124 w2cplatform.journal INFO console: unit.deleted {'sub': 'cam', 'target': '1', 'user': 'operator'}
+test_lesson6_controller.py::test_the_console_over_http ... OK
+2026-10-14 14:14:41,124 camworker INFO w-1: start camera 1
+2026-10-14 14:14:41,124 camworker INFO w-1: start camera 2
+2026-10-14 14:14:41,132 camworker INFO w-1: start camera 1
+2026-10-14 14:14:41,132 camworker INFO w-1: start camera 2
+test_lesson6_controller.py::test_the_failure_arithmetic ... OK
+2026-10-14 14:14:41,230 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+test_lesson6_controller.py::test_the_vms_page_is_served_at_the_consoles_root_and_none_under_rec_or_live ... OK
+test_lesson6_controller.py::test_two_controllers_agree_by_cas ... OK
+test_lock_lost.py::test_a_daemon_that_knows_the_operation_says_so_once_and_one_that_does_not_is_not_taken_for_one ... OK
+2026-10-14 14:14:41,987 recworker ERROR r-1: net is not taken: obsd on srv-a is too old to write net safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-a; volumes on its own disks are not affected
+2026-10-14 14:14:42,141 recworker INFO r-1: writing into srv-a (file:///tmp/w2c-tests-25664/vmsserver-xm15dd7x/volume) — formatted
+2026-10-14 14:14:42,386 recworker INFO r-2: writing into net (/tmp/w2c-tests-25664/net-a3p69ny_) — formatted
+2026-10-14 14:14:42,433 recworker ERROR r-1: net2 is not taken: obsd on srv-c is too old to write net2 safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-c; volumes on its own disks are not affected
+2026-10-14 14:14:42,433 recworker WARNING r-1: pinned to net2 and not writing it: obsd on srv-c is too old to write net2 safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-c; volumes on its own disks are not affected
+2026-10-14 14:14:42,434 recworker ERROR r-2: net is not taken: obsd on srv-b is too old to write net safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-b; volumes on its own disks are not affected
+2026-10-14 14:14:42,434 root WARNING r-2: obsd on srv-b is too old to write net safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-b; volumes on its own disks are not affected — stopping its recordings
+2026-10-14 14:14:42,437 recworker WARNING r-2: srv-b is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:srv-a)) — keeping it and trying again
+test_lock_lost.py::test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up ... OK
+test_lock_lost.py::test_a_writer_whose_lock_another_writer_took_is_stopped_by_the_engine_and_given_up_writing_nothing ... OK
+test_member_outcomes.py::test_equal_outcome_times_choose_the_same_fifty_ids_in_either_insertion_order ... OK
+2026-10-14 14:14:49,050 w2cplatform.sealing WARNING secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies the store reads every secret in the clear
+2026-10-14 14:14:49,055 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:49,063 w2cplatform.journal INFO console: unit.created {'sub': 'testsub', 'target': 'own', 'user': 'agent', 'fields': 'name'}
+test_member_outcomes.py::test_holder_agent_purges_its_bare_acknowledgement_without_erasing_named_history ... OK
+test_member_outcomes.py::test_holder_keeps_only_fifty_newest_outcomes_not_the_last_fifty_arrivals ... OK
+2026-10-14 14:14:49,583 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:49,586 w2cplatform.journal INFO console: unit.created {'sub': 'testsub', 'target': 'one', 'user': 'agent', 'fields': 'name'}
+2026-10-14 14:14:49,587 w2cplatform.journal INFO console: unit.created {'sub': 'testsub', 'target': 'two', 'user': 'agent', 'fields': 'name'}
+test_member_outcomes.py::test_member_agent_forgets_only_acknowledged_outcomes_and_does_not_apply_waiters_twice ... OK
+test_member_outcomes.py::test_members_have_independent_history_and_a_reused_id_replaces_its_own_result ... OK
+test_member_outcomes.py::test_more_than_fifty_settle_after_a_crash_and_cas_retry_without_losing_a_new_waiter ... OK
+2026-10-14 14:14:50,194 w2cplatform.contract ERROR testsub: w-srv-1-1 is held by machine-a:25664:12d920 (box machine-a), and a process of box machine-b (Murats-MacBook-Pro.local, server srv-1) asks for it too, for 4 s: two machines are given one name
+2026-10-14 14:14:50,202 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:50,205 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_names.py::test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_seen ... OK
+2026-10-14 14:14:50,756 w2cplatform.worker ERROR w-srv-1-1: FENCED (slot w-srv-1-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:14:50,759 w2cplatform.worker ERROR machine-a:25664:c1b728: its name testsub/w-srv-1-1 is held by machine-a:25664:e1d21c (box machine-a) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:14:50,830 w2cplatform.worker WARNING machine-a:25664:c1b728: its name testsub/w-srv-1-1 is its own again, after 1091 s of being nobody
+2026-10-14 14:14:50,830 w2cplatform.worker WARNING machine-a:25664:c1b728: gave slot w-srv-1-1 up, its units let go; going on as w-srv-1-1
+2026-10-14 14:14:50,830 w2cplatform.worker WARNING machine-a:25664:c1b728: was fenced as w-srv-1-1 (slot w-srv-1-1 is held by another instance now); rejoined as w-srv-1-1
+2026-10-14 14:14:50,830 w2cplatform.worker ERROR w-srv-1-1: FENCED (slot w-srv-1-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:14:50,830 w2cplatform.worker ERROR machine-a:25664:e1d21c: its name testsub/w-srv-1-1 is held by machine-a:25664:c1b728 (box machine-a) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+test_names.py::test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder ... OK
+2026-10-14 14:14:50,834 w2cplatform.worker ERROR w-srv-1-1: FENCED (slot w-srv-1-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:14:50,834 w2cplatform.worker ERROR machine-a:25664:340e15: its name testsub/w-srv-1-1 is held by machine-a:25664:d9e6fd (box machine-a) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:14:50,844 w2cplatform.worker WARNING machine-a:25664:340e15: its name testsub/w-srv-1-1 is its own again, after 20 s of being nobody
+2026-10-14 14:14:50,844 w2cplatform.worker WARNING machine-a:25664:340e15: gave slot w-srv-1-1 up, its units let go; going on as w-srv-1-1
+2026-10-14 14:14:50,844 w2cplatform.worker WARNING machine-a:25664:340e15: was fenced as w-srv-1-1 (slot w-srv-1-1 is held by another instance now); rejoined as w-srv-1-1
+test_names.py::test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number ... OK
+2026-10-14 14:14:50,846 w2cplatform.worker ERROR w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:14:50,847 w2cplatform.worker WARNING machine-a:25664:82a8a4: gave slot w-1 up, its units let go; going on as w-2
+2026-10-14 14:14:50,848 w2cplatform.worker WARNING machine-a:25664:82a8a4: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-2
+test_names.py::test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number ... OK
+2026-10-14 14:14:50,850 w2cplatform.journal INFO testsubworker: worker.name_taken {'sub': 'testsub', 'worker': 'w-1', 'holder': 'another'}
+2026-10-14 14:14:50,857 w2cplatform.journal INFO testsubworker: worker.name_back {'sub': 'testsub', 'worker': 'w-1'}
+test_names.py::test_a_worker_given_its_servers_resource_writes_its_journal_into_its_events_tree ... OK
+2026-10-14 14:14:51,057 recworker INFO r-1: writing into vol (/tmp/w2c-tests-25664/vmsserver-bhg5wsty/vol) — formatted
+2026-10-14 14:14:51,113 root INFO r-1: released vol on the way out
+2026-10-14 14:14:51,319 recworker INFO r-2: writing into vol (/tmp/w2c-tests-25664/vmsserver-bhg5wsty/vol)
+2026-10-14 14:14:51,326 recworker WARNING r-3: vol is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:vol)) — keeping it and trying again
+test_orderly_stop.py::test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it ... OK
+2026-10-14 14:14:51,506 recworker INFO r-1: writing into vol (/tmp/w2c-tests-25664/vmsserver-rvvg70fm/vol) — formatted
+test_orderly_stop.py::test_the_recorder_process_holds_a_token_that_can_take_a_volume ... OK
+2026-10-14 14:14:51,562 w2cplatform.spec INFO testsub: c3 is on w-1, not on w-3: somebody moved it first
+test_placement_decides.py::test_a_controllers_move_is_refused_when_the_row_has_changed ... OK
+2026-10-14 14:14:51,582 w2cplatform.contract WARNING testsub/heartbeats/w-7: heartbeat does not parse; skipped
+2026-10-14 14:14:51,582 w2cplatform.contract WARNING testsub/heartbeats/w-8: heartbeat does not parse; skipped
+2026-10-14 14:14:51,582 w2cplatform.contract WARNING testsub/heartbeats/w-9: heartbeat does not parse; skipped
+2026-10-14 14:14:51,583 w2cplatform.contract WARNING platform/resources/srv-x/heartbeat: heartbeat does not parse; skipped
+test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs ... OK
+test_placement_decides.py::test_a_move_cut_short_is_finished_from_either_side ... OK
+test_placement_decides.py::test_a_pass_cut_between_the_row_and_the_assignment_is_finished_by_the_next ... OK
+2026-10-14 14:14:51,746 w2cplatform.spec WARNING testsub: row testsub/counters/c3 does not parse (invalid literal for int() with base 10: 'three'); skipped
+test_placement_decides.py::test_a_placed_unit_whose_row_stops_parsing_holds_up_neither_placing_nor_moving ... OK
+2026-10-14 14:14:51,785 w2cplatform.spec WARNING testsub: row testsub/counters/c4 does not parse (invalid literal for int() with base 10: 'one'); skipped
+2026-10-14 14:14:51,785 w2cplatform.spec WARNING testsub: row testsub/counters/x does not parse (invalid literal for int() with base 10: 'zero'); skipped
+2026-10-14 14:14:51,794 w2cplatform.spec ERROR testsub: placement pass failed at redistribute; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 4132, in _pass_once
+    run()
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_placement_decides.py", line 205, in <lambda>
+    ctl.redistribute = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("one released slot would not parse"))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_placement_decides.py", line 205, in <genexpr>
+    ctl.redistribute = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("one released slot would not parse"))
+RuntimeError: one released slot would not parse
+test_placement_decides.py::test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each ... OK
+2026-10-14 14:14:51,906 w2cplatform.spec WARNING testsub: c3 stay on w-3 (slot w-3 released): no live worker takes it — moved when one does, asked again every pass
+2026-10-14 14:14:51,906 w2cplatform.journal INFO testsubcontroller: units.left_on_leaving {'sub': 'testsub', 'unit': 'c3', 'units': 1, 'worker': 'w-3', 'why': 'c3 stay on w-3 (slot w-3 released): no live worker has the reach and the room for it — written by nobody until one does'}
+test_placement_decides.py::test_one_unit_that_fits_nowhere_does_not_hold_the_others_of_a_released_worker ... OK
+2026-10-14 14:14:51,931 w2cplatform.spec ERROR testsub: unit c3 not placed this pass
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 4294, in ensure_placed
+    pl = self.place(r["id"], workers)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_placement_decides.py", line 98, in flaky
+    raise RuntimeError("the row does not parse")
+RuntimeError: the row does not parse
+test_placement_decides.py::test_one_unit_that_raises_does_not_stop_the_placing_of_the_rest ... OK
+2026-10-14 14:14:51,956 w2cplatform.spec ERROR testsub2: placement pass failed at ensure_placed; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 4132, in _pass_once
+    run()
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_placement_decides.py", line 132, in <lambda>
+    ctl.ensure_placed = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("the store went away mid-pass"))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_placement_decides.py", line 132, in <genexpr>
+    ctl.ensure_placed = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("the store went away mid-pass"))
+RuntimeError: the store went away mid-pass
+2026-10-14 14:14:51,963 w2cplatform.worker ERROR t-1: FENCED (slot t-1 is held by another instance now). Stopping every unit.
+test_placement_decides.py::test_the_pass_reports_on_itself_and_the_console_exports_it ... OK
+test_read_budget.py::test_a_busy_pass_decides_exactly_what_the_pass_that_read_everything_again_decided ... OK
+test_read_budget.py::test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again ... OK
+2026-10-14 14:14:52,698 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,698 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,698 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,698 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,698 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,699 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,700 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,701 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,703 vms.jobs WARNING rec: f-1-0 could not start 3-auto this pass: the store did not answer
+2026-10-14 14:14:52,704 root INFO rec: 1 recording(s) started on request
+test_read_budget.py::test_a_request_the_store_failed_is_tried_again_after_a_doubling_pause_not_every_turn ... OK
+2026-10-14 14:14:52,705 vms.jobs INFO rec: 3-auto reached its end
+2026-10-14 14:14:52,705 vms.jobs INFO rec: 5 reached its end
+test_read_budget.py::test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_anything_is_ended ... OK
+2026-10-14 14:14:52,706 vms.jobs INFO rec: 5 reached its end
+2026-10-14 14:14:52,706 vms.jobs INFO rec: 6 reached its end
+2026-10-14 14:14:52,706 vms.jobs INFO rec: 7 reached its end
+test_read_budget.py::test_an_end_this_process_writes_takes_effect_at_the_next_turn_and_one_from_the_consoles_door_by_the_next_read ... OK
+test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once ... OK
+2026-10-14 14:14:53,253 vms.jobs INFO detjob: scanning 4 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,259 vms.jobs INFO detjob: scanning 8 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,265 vms.jobs INFO detjob: scanning 12 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,270 vms.jobs INFO detjob: scanning 16 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,276 vms.jobs INFO detjob: scanning 20 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,281 vms.jobs INFO detjob: scanning 24 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,286 vms.jobs INFO detjob: scanning 28 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,291 vms.jobs INFO detjob: scanning 32 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,297 vms.jobs INFO detjob: scanning 36 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,302 vms.jobs INFO detjob: scanning 40 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,307 vms.jobs INFO detjob: scanning 1 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,312 vms.jobs INFO detjob: scanning 5 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,317 vms.jobs INFO detjob: scanning 9 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,323 vms.jobs INFO detjob: scanning 13 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,328 vms.jobs INFO detjob: scanning 17 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,334 vms.jobs INFO detjob: scanning 21 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,349 vms.jobs INFO detjob: scanning 25 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,355 vms.jobs INFO detjob: scanning 29 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,361 vms.jobs INFO detjob: scanning 33 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,367 vms.jobs INFO detjob: scanning 37 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,372 vms.jobs INFO detjob: scanning 2 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,378 vms.jobs INFO detjob: scanning 6 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,384 vms.jobs INFO detjob: scanning 10 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,389 vms.jobs INFO detjob: scanning 14 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,395 vms.jobs INFO detjob: scanning 18 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,400 vms.jobs INFO detjob: scanning 22 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,406 vms.jobs INFO detjob: scanning 26 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,412 vms.jobs INFO detjob: scanning 30 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,417 vms.jobs INFO detjob: scanning 34 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,423 vms.jobs INFO detjob: scanning 38 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,431 vms.jobs INFO detjob: scanning 3 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,437 vms.jobs INFO detjob: scanning 7 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,443 vms.jobs INFO detjob: scanning 11 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,448 vms.jobs INFO detjob: scanning 15 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,454 vms.jobs INFO detjob: scanning 19 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,459 vms.jobs INFO detjob: scanning 23 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,465 vms.jobs INFO detjob: scanning 27 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,470 vms.jobs INFO detjob: scanning 31 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,475 vms.jobs INFO detjob: scanning 35 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,481 vms.jobs INFO detjob: scanning 39 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,481 root INFO detjob: 40 scan(s) queued over footage that just arrived
+2026-10-14 14:14:53,488 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/1', 'target': 'rec/1', 'request': '1-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,488 vms.jobs INFO survey: keeping 1 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,492 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/2', 'target': 'rec/2', 'request': '2-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,492 vms.jobs INFO survey: keeping 2 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,497 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/3', 'target': 'rec/3', 'request': '3-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,497 vms.jobs INFO survey: keeping 3 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,501 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/4', 'target': 'rec/4', 'request': '4-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,501 vms.jobs INFO survey: keeping 4 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,506 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/5', 'target': 'rec/5', 'request': '5-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,506 vms.jobs INFO survey: keeping 5 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,510 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/6', 'target': 'rec/6', 'request': '6-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,511 vms.jobs INFO survey: keeping 6 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,515 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/7', 'target': 'rec/7', 'request': '7-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,515 vms.jobs INFO survey: keeping 7 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,520 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/8', 'target': 'rec/8', 'request': '8-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,520 vms.jobs INFO survey: keeping 8 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,524 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/9', 'target': 'rec/9', 'request': '9-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,524 vms.jobs INFO survey: keeping 9 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,528 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/10', 'target': 'rec/10', 'request': '10-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,528 vms.jobs INFO survey: keeping 10 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,528 root INFO survey: asked the recorder to keep 10 stretch(es)
+2026-10-14 14:14:53,564 vms.jobs INFO detjob: scanning 4 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,565 vms.jobs INFO detjob: scanning 8 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,567 vms.jobs INFO detjob: scanning 12 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,568 vms.jobs INFO detjob: scanning 16 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,570 vms.jobs INFO detjob: scanning 20 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,572 vms.jobs INFO detjob: scanning 24 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,586 vms.jobs INFO detjob: scanning 28 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,588 vms.jobs INFO detjob: scanning 32 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,590 vms.jobs INFO detjob: scanning 36 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,592 vms.jobs INFO detjob: scanning 40 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,594 vms.jobs INFO detjob: scanning 1 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,596 vms.jobs INFO detjob: scanning 5 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,598 vms.jobs INFO detjob: scanning 9 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,600 vms.jobs INFO detjob: scanning 13 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,602 vms.jobs INFO detjob: scanning 17 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,603 vms.jobs INFO detjob: scanning 21 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,605 vms.jobs INFO detjob: scanning 25 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,607 vms.jobs INFO detjob: scanning 29 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,609 vms.jobs INFO detjob: scanning 33 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,611 vms.jobs INFO detjob: scanning 37 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,612 vms.jobs INFO detjob: scanning 2 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,614 vms.jobs INFO detjob: scanning 6 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,616 vms.jobs INFO detjob: scanning 10 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,617 vms.jobs INFO detjob: scanning 14 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,619 vms.jobs INFO detjob: scanning 18 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,621 vms.jobs INFO detjob: scanning 22 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,623 vms.jobs INFO detjob: scanning 26 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,624 vms.jobs INFO detjob: scanning 30 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,626 vms.jobs INFO detjob: scanning 34 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,628 vms.jobs INFO detjob: scanning 38 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,629 vms.jobs INFO detjob: scanning 3 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,631 vms.jobs INFO detjob: scanning 7 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,633 vms.jobs INFO detjob: scanning 11 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,634 vms.jobs INFO detjob: scanning 15 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,636 vms.jobs INFO detjob: scanning 19 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,638 vms.jobs INFO detjob: scanning 23 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,640 vms.jobs INFO detjob: scanning 27 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,641 vms.jobs INFO detjob: scanning 31 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,643 vms.jobs INFO detjob: scanning 35 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,644 vms.jobs INFO detjob: scanning 39 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,645 root INFO detjob: 40 scan(s) queued over footage that just arrived
+2026-10-14 14:14:53,646 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/1', 'target': 'rec/1', 'request': '1-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,646 vms.jobs INFO survey: keeping 1 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,648 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/2', 'target': 'rec/2', 'request': '2-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,648 vms.jobs INFO survey: keeping 2 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,649 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/3', 'target': 'rec/3', 'request': '3-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,649 vms.jobs INFO survey: keeping 3 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,650 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/4', 'target': 'rec/4', 'request': '4-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,650 vms.jobs INFO survey: keeping 4 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,652 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/5', 'target': 'rec/5', 'request': '5-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,652 vms.jobs INFO survey: keeping 5 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,653 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/6', 'target': 'rec/6', 'request': '6-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,653 vms.jobs INFO survey: keeping 6 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,654 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/7', 'target': 'rec/7', 'request': '7-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,654 vms.jobs INFO survey: keeping 7 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,656 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/8', 'target': 'rec/8', 'request': '8-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,656 vms.jobs INFO survey: keeping 8 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,657 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/9', 'target': 'rec/9', 'request': '9-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,657 vms.jobs INFO survey: keeping 9 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,658 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/10', 'target': 'rec/10', 'request': '10-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,658 vms.jobs INFO survey: keeping 10 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,659 root INFO survey: asked the recorder to keep 10 stretch(es)
+2026-10-14 14:14:53,695 vms.jobs INFO detjob: scanning 4 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,697 vms.jobs INFO detjob: scanning 8 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,699 vms.jobs INFO detjob: scanning 12 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,701 vms.jobs INFO detjob: scanning 16 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,704 vms.jobs INFO detjob: scanning 20 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,706 vms.jobs INFO detjob: scanning 24 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,708 vms.jobs INFO detjob: scanning 28 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,710 vms.jobs INFO detjob: scanning 32 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,712 vms.jobs INFO detjob: scanning 36 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,714 vms.jobs INFO detjob: scanning 40 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,716 vms.jobs INFO detjob: scanning 1 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,718 vms.jobs INFO detjob: scanning 5 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,720 vms.jobs INFO detjob: scanning 9 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,722 vms.jobs INFO detjob: scanning 13 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,725 vms.jobs INFO detjob: scanning 17 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,727 vms.jobs INFO detjob: scanning 21 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,730 vms.jobs INFO detjob: scanning 25 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,732 vms.jobs INFO detjob: scanning 29 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,734 vms.jobs INFO detjob: scanning 33 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,736 vms.jobs INFO detjob: scanning 37 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,738 vms.jobs INFO detjob: scanning 2 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,741 vms.jobs INFO detjob: scanning 6 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,746 vms.jobs INFO detjob: scanning 10 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,752 vms.jobs INFO detjob: scanning 14 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,757 vms.jobs INFO detjob: scanning 18 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,760 vms.jobs INFO detjob: scanning 22 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,762 vms.jobs INFO detjob: scanning 26 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,764 vms.jobs INFO detjob: scanning 30 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,766 vms.jobs INFO detjob: scanning 34 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,768 vms.jobs INFO detjob: scanning 38 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,770 vms.jobs INFO detjob: scanning 3 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,772 vms.jobs INFO detjob: scanning 7 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,774 vms.jobs INFO detjob: scanning 11 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,776 vms.jobs INFO detjob: scanning 15 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,778 vms.jobs INFO detjob: scanning 19 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,780 vms.jobs INFO detjob: scanning 23 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,782 vms.jobs INFO detjob: scanning 27 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,784 vms.jobs INFO detjob: scanning 31 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,786 vms.jobs INFO detjob: scanning 35 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,788 vms.jobs INFO detjob: scanning 39 [1757499100, 1757499160) with motion — the footage arrived from a device
+2026-10-14 14:14:53,790 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/1', 'target': 'rec/1', 'request': '1-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,790 vms.jobs INFO survey: keeping 1 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,791 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/2', 'target': 'rec/2', 'request': '2-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,791 vms.jobs INFO survey: keeping 2 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,793 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/3', 'target': 'rec/3', 'request': '3-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,793 vms.jobs INFO survey: keeping 3 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,795 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/4', 'target': 'rec/4', 'request': '4-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,795 vms.jobs INFO survey: keeping 4 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,796 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/5', 'target': 'rec/5', 'request': '5-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,796 vms.jobs INFO survey: keeping 5 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,798 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/6', 'target': 'rec/6', 'request': '6-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,798 vms.jobs INFO survey: keeping 6 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,800 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/7', 'target': 'rec/7', 'request': '7-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,800 vms.jobs INFO survey: keeping 7 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,802 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/8', 'target': 'rec/8', 'request': '8-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,802 vms.jobs INFO survey: keeping 8 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,804 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/9', 'target': 'rec/9', 'request': '9-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,804 vms.jobs INFO survey: keeping 9 [1757499500, 1757499520) — a model liked it
+2026-10-14 14:14:53,805 w2cplatform.journal INFO reccontroller: archive.backfill.asked {'user': 'survey/10', 'target': 'rec/10', 'request': '10-1757499500-1757499520', 'sub': 'rec', 'from': '1757499500', 'to': '1757499520'}
+2026-10-14 14:14:53,806 vms.jobs INFO survey: keeping 10 [1757499500, 1757499520) — a model liked it
+test_read_budget.py::test_the_reaper_reads_each_job_detector_and_recording_once_a_turn ... OK
+2026-10-14 14:14:53,896 root INFO rec: 10 recording(s) started on request
+2026-10-14 14:14:53,927 vms.jobs INFO detjob: scanning 1 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:53,946 vms.jobs INFO detjob: scanning 2 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:53,965 vms.jobs INFO detjob: scanning 3 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:53,992 vms.jobs INFO detjob: scanning 4 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,023 vms.jobs INFO detjob: scanning 5 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,045 vms.jobs INFO detjob: scanning 6 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,064 vms.jobs INFO detjob: scanning 7 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,084 vms.jobs INFO detjob: scanning 8 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,110 vms.jobs INFO detjob: scanning 9 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,132 vms.jobs INFO detjob: scanning 10 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,132 root INFO det: 10 asked for by scenarios
+2026-10-14 14:14:54,194 root INFO rec: 10 recording(s) started on request
+2026-10-14 14:14:54,207 vms.jobs INFO detjob: scanning 1 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,215 vms.jobs INFO detjob: scanning 2 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,222 vms.jobs INFO detjob: scanning 3 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,229 vms.jobs INFO detjob: scanning 4 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,236 vms.jobs INFO detjob: scanning 5 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,242 vms.jobs INFO detjob: scanning 6 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,247 vms.jobs INFO detjob: scanning 7 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,253 vms.jobs INFO detjob: scanning 8 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,258 vms.jobs INFO detjob: scanning 9 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,264 vms.jobs INFO detjob: scanning 10 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,264 root INFO det: 10 asked for by scenarios
+2026-10-14 14:14:54,267 root INFO rec: 10 recording(s) started on request
+2026-10-14 14:14:54,274 vms.jobs INFO detjob: scanning 11 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,279 vms.jobs INFO detjob: scanning 12 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,285 vms.jobs INFO detjob: scanning 13 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,291 vms.jobs INFO detjob: scanning 14 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,296 vms.jobs INFO detjob: scanning 15 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,302 vms.jobs INFO detjob: scanning 16 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,311 vms.jobs INFO detjob: scanning 17 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,317 vms.jobs INFO detjob: scanning 18 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,322 vms.jobs INFO detjob: scanning 19 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,328 vms.jobs INFO detjob: scanning 20 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,328 root INFO det: 10 asked for by scenarios
+2026-10-14 14:14:54,330 root INFO rec: 10 recording(s) started on request
+2026-10-14 14:14:54,338 vms.jobs INFO detjob: scanning 21 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,344 vms.jobs INFO detjob: scanning 22 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,350 vms.jobs INFO detjob: scanning 23 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,356 vms.jobs INFO detjob: scanning 24 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,370 vms.jobs INFO detjob: scanning 25 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,379 vms.jobs INFO detjob: scanning 26 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,389 vms.jobs INFO detjob: scanning 27 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,397 vms.jobs INFO detjob: scanning 28 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,403 vms.jobs INFO detjob: scanning 29 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,409 vms.jobs INFO detjob: scanning 30 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,409 root INFO det: 10 asked for by scenarios
+2026-10-14 14:14:54,441 vms.jobs INFO detjob: scanning 1 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,448 vms.jobs INFO detjob: scanning 2 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,456 vms.jobs INFO detjob: scanning 3 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,463 vms.jobs INFO detjob: scanning 4 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,470 vms.jobs INFO detjob: scanning 5 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,476 vms.jobs INFO detjob: scanning 6 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,483 vms.jobs INFO detjob: scanning 7 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,489 vms.jobs INFO detjob: scanning 8 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,496 vms.jobs INFO detjob: scanning 9 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,503 vms.jobs INFO detjob: scanning 10 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,515 vms.jobs INFO detjob: scanning 11 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,522 vms.jobs INFO detjob: scanning 12 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,529 vms.jobs INFO detjob: scanning 13 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,536 vms.jobs INFO detjob: scanning 14 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,543 vms.jobs INFO detjob: scanning 15 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,550 vms.jobs INFO detjob: scanning 16 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,557 vms.jobs INFO detjob: scanning 17 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,563 vms.jobs INFO detjob: scanning 18 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,570 vms.jobs INFO detjob: scanning 19 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,577 vms.jobs INFO detjob: scanning 20 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,589 vms.jobs INFO detjob: scanning 21 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,596 vms.jobs INFO detjob: scanning 22 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,603 vms.jobs INFO detjob: scanning 23 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,610 vms.jobs INFO detjob: scanning 24 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,616 vms.jobs INFO detjob: scanning 25 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,625 vms.jobs INFO detjob: scanning 26 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,632 vms.jobs INFO detjob: scanning 27 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,639 vms.jobs INFO detjob: scanning 28 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,645 vms.jobs INFO detjob: scanning 29 [1757499940, 1757500060) with motion — a scenario asked
+2026-10-14 14:14:54,652 vms.jobs INFO detjob: scanning 30 [1757499940, 1757500060) with motion — a scenario asked
+test_read_budget.py::test_the_request_loop_reads_a_thousand_backfills_once_and_not_every_two_seconds ... OK
+2026-10-14 14:14:54,834 w2cplatform.spec WARNING cam: 4 moved from w-5 to w-10: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-1, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,835 w2cplatform.spec WARNING cam: 8 moved from w-9 to w-11: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-2, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,836 w2cplatform.spec WARNING cam: 12 moved from w-13 to w-12: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-3, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,837 w2cplatform.spec WARNING cam: 16 moved from w-17 to w-14: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-1, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,837 w2cplatform.spec WARNING cam: 20 moved from w-1 to w-15: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-2, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,838 w2cplatform.spec WARNING cam: 24 moved from w-5 to w-16: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-3, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,839 w2cplatform.spec WARNING cam: 28 moved from w-9 to w-18: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-1, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,839 w2cplatform.spec WARNING cam: 32 moved from w-13 to w-19: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-2, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,840 w2cplatform.spec WARNING cam: 36 moved from w-17 to w-2: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-1, away from r-1 on srv-0 (no room there)
+2026-10-14 14:14:54,841 w2cplatform.spec WARNING cam: 40 moved from w-1 to w-20: srv-0 no longer reaches vlan:a; most free capacity (51); on srv-3, away from r-1 on srv-0 (no room there)
+reads: the idle pass 2090, a pass moving ten off srv-0 2130
+test_read_budget.py::test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan_moves_ten_a_pass ... OK
+test_read_budget.py::test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost ... OK
+test_reconcile.py::test_a_backoff_without_a_positive_base_or_with_a_ceiling_under_it_is_refused ... OK
+test_reconcile.py::test_a_backoff_without_jitter_is_refused ... OK
+test_reconcile.py::test_a_counter_that_keeps_failing_waits_longer_each_time_and_never_past_the_ceiling ... OK
+test_reconcile.py::test_a_pass_stops_first_then_restarts_then_starts ... OK
+test_reconcile.py::test_a_restart_of_its_own_is_one_call_and_keeps_the_epoch_and_without_one_it_is_a_stop_and_a_start ... OK
+test_reconcile.py::test_a_unit_nobody_wants_loses_its_count_and_comes_back_a_new_life_while_one_still_wanted_keeps_its_count ... OK
+test_reconcile.py::test_a_unit_that_dies_after_every_start_waits_longer_and_one_that_stays_up_earns_its_count_back ... OK
+test_reconcile.py::test_a_unit_that_does_not_run_is_never_converged_whatever_its_revision ... OK
+test_reconcile.py::test_a_unit_that_held_past_max_and_then_fails_its_restart_counts_waits_longer_and_stalls ... OK
+test_reconcile.py::test_a_waiting_counter_is_not_tried_before_its_time ... OK
+test_reconcile.py::test_counters_that_failed_together_do_not_retry_together ... OK
+test_reconcile.py::test_drop_clear_reset_backoff_and_status_on_tallies ... OK
+test_reconcile.py::test_the_delay_doubles_with_each_failure_and_stops_at_the_ceiling ... OK
+test_reconcile.py::test_the_spread_stays_within_one_less_and_one_more_jitter ... OK
+test_recording_poll_push.py::test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_sending_bytes ... OK
+test_recording_poll_push.py::test_holder_move_changes_fallback_home_and_invalidates_the_old_holder_credential ... OK
+test_recording_poll_push.py::test_home_switch_forgets_previous_route_and_credential_before_new_observation_arrives ... OK
+test_recording_poll_push.py::test_ingest_refusal_forgets_the_poll_credential_and_next_pass_obtains_a_current_one ... OK
+test_recording_poll_push.py::test_late_role_reply_after_address_change_cannot_restore_superseded_ingest ... OK
+test_recording_poll_push.py::test_late_role_reply_after_complete_withdrawal_does_not_create_a_poll_route ... OK
+test_recording_poll_push.py::test_late_role_reply_after_home_switch_does_not_restore_previous_home ... OK
+test_recording_poll_push.py::test_missing_observation_opens_no_new_poll_but_established_same_scope_may_continue ... OK
+test_recording_poll_push.py::test_unassigned_poll_source_exposes_neither_address_credentials_nor_push_and_tracks_home ... OK
+test_recording_reserve.py::test_changing_bad_envelopes_does_not_restart_the_absence_grace ... OK
+test_recording_reserve.py::test_cold_reserve_waits_the_same_grace_for_absent_incomplete_and_malformed_books ... OK
+test_recording_reserve.py::test_confirmed_disabled_intent_survives_missing_or_broken_observations_until_confirmed_enabled ... OK
+test_recording_reserve.py::test_cover_started_after_grace_is_not_interrupted_by_another_lost_observation ... OK
+test_recording_reserve.py::test_covering_reserve_keeps_its_path_on_lost_observations_but_obeys_confirmed_recovery_or_stop ... OK
+test_recording_reserve.py::test_explicit_stop_remains_a_stop_after_stale_carry_and_invalid_seen_mark ... OK
+test_recording_reserve.py::test_new_assignment_does_not_inherit_an_expired_absence_timer ... OK
+test_recording_reserve.py::test_new_assignment_does_not_inherit_the_previous_disabled_intent_or_covering_decision ... OK
+2026-10-14 14:14:55,884 w2cplatform.rows ERROR a/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_report_snapshots.py::test_a_reader_pins_the_pointer_before_a_concurrent_prune_and_never_switches_generations ... OK
+test_report_snapshots.py::test_concurrent_requests_cannot_overwrite_an_accepted_body ... OK
+2026-10-14 14:14:55,891 w2cplatform.rows ERROR a/reported: the published object does not parse (report rev is a positive exact JSON integer); skipped — the rest of what the member published is read
+test_report_snapshots.py::test_corrupt_pointer_is_not_reset_and_signature_is_in_the_mark ... OK
+test_report_snapshots.py::test_crash_before_pointer_recovers_with_new_body_after_restart ... OK
+test_report_snapshots.py::test_every_publication_boundary_reads_whole_old_or_new_and_preserves_original_bytes ... OK
+2026-10-14 14:14:55,911 w2cplatform.rows ERROR bad-body/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+2026-10-14 14:14:55,911 w2cplatform.rows ERROR bad-mark/reported: the published object does not parse (Expecting value: line 1 column 1 (char 0)); skipped — the rest of what the member published is read
+2026-10-14 14:14:55,911 w2cplatform.rows ERROR missing-body/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_report_snapshots.py::test_export_omits_whole_damaged_members_and_counts_them ... OK
+2026-10-14 14:14:55,913 w2cplatform.rows ERROR a/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_report_snapshots.py::test_missing_or_corrupt_parts_are_unknown_and_never_repaired_from_other_generations ... OK
+test_report_snapshots.py::test_orphans_are_pruned_but_not_exported ... OK
+test_report_snapshots.py::test_pruning_keeps_two_generations_and_a_pinned_reader_survives_move_and_cleanup ... OK
+test_requests_r15.py::test_a_holder_keeps_a_mark_without_a_deadline_past_its_row_until_its_end_plus_ttl ... OK
+test_requests_r15.py::test_a_mark_without_a_deadline_stands_its_end_plus_the_reapers_margin_and_one_with_one_its_deadline_plus_it ... OK
+test_requests_r15.py::test_a_process_filing_meets_a_spent_ids_mark_and_a_different_request_under_a_taken_id_is_a_conflict ... OK
+2026-10-14 14:14:55,953 vms.jobs INFO rec: request door-1-0 was answered before (performed): its row goes, it is not performed again
+test_requests_r15.py::test_a_record_request_ends_in_its_mark_and_filed_again_after_its_row_went_is_not_performed_twice ... OK
+2026-10-14 14:14:55,956 vms.jobs WARNING rec: request r-1 ended performed, and its mark was not written (the store is away): its row stays for the next turn
+test_requests_r15.py::test_a_record_whose_mark_the_store_does_not_take_keeps_its_row_for_the_next_turn ... OK
+2026-10-14 14:14:55,974 vms.jobs WARNING rec: late expired before it was turned into a recording
+2026-10-14 14:14:55,974 vms.jobs WARNING rec: nothing asks to record nothing: {'action': 'record', 'cam': '7', 'minutes': '0', 'valid_until': '1757500030.0'}
+2026-10-14 14:14:55,981 w2cplatform.rows ERROR rec/requests/word: the request row does not parse (could not convert string to float: 'ten'); refused and cleared: a request nobody can read cannot be performed
+test_requests_r15.py::test_a_refused_and_an_expired_record_end_in_their_marks_with_their_reasons ... OK
+test_requests_r15.py::test_a_spent_id_whose_mark_the_store_does_not_hand_over_is_503_and_nothing_is_filed ... OK
+2026-10-14 14:14:56,009 vms.jobs INFO detjob: scanning 7 [1757499340, 1757499400) with lpr — a scenario asked
+2026-10-14 14:14:56,016 vms.jobs WARNING det: f1-2 refused: a request names a camera, a model and detect|scan: {'at': '1757500000.0', 'valid_until': '1757500030.0', 'by': 'auto/door', 'action': 'dance', 'cam': '7', 'kind': 'lpr'}
+2026-10-14 14:14:56,026 vms.jobs INFO det: request f1-0 was answered before (performed): its row goes, it is not performed again
+2026-10-14 14:14:56,027 vms.jobs INFO det: request f1-1 was answered before (performed): its row goes, it is not performed again
+test_requests_r15.py::test_detect_and_scan_end_in_their_marks_and_a_spent_id_is_not_turned_into_work_again ... OK
+2026-10-14 14:14:56,030 vms.jobs WARNING rec: asking the recorder for 9 [1757499400, 1757499460) for detjob/9-x was refused: no unit rec/9
+test_requests_r15.py::test_jobs_ask_the_recorder_by_the_familys_rules_schema_stamps_journal ... OK
+test_requests_r15.py::test_the_jobs_process_says_its_filings_in_its_own_journal ... OK
+test_requests_r15.py::test_the_recorders_look_sweeps_the_marks_the_jobs_leave_once_past_their_bound ... OK
+test_requests_r15.py::test_the_resources_free_row_is_not_answered_into_fetched_and_freeing_is_said_while_it_stands ... OK
+2026-10-14 14:14:56,057 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:56,057 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:56,060 w2cplatform.journal INFO console: tally.asked {'user': 'anna', 'target': 'testsub2/t1', 'request': 't1-2', 'sub': 'testsub2'}
+2026-10-14 14:14:56,580 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:56,581 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_requests_r15.py::test_the_same_request_at_the_door_after_its_row_was_cleared_is_answered_by_its_mark_not_performed_again ... OK
+test_review_remainder.py::test_a_clock_running_behind_is_a_number_too ... OK
+2026-10-14 14:14:57,112 camworker INFO w-1: start camera 1
+2026-10-14 14:14:57,326 camworker INFO w-1: start camera 1
+2026-10-14 14:14:57,333 w2cplatform.worker WARNING w-1: request r1 not performed — unknown: an earlier instance (Murats-MacBook-Pro.local:25664:ff355b) began it, and whether it was acted on is not known
+test_review_remainder.py::test_a_command_another_instance_began_is_not_performed_again ... OK
+2026-10-14 14:14:57,348 camworker INFO w-1: start camera 1
+2026-10-14 14:14:57,374 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:57,376 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_review_remainder.py::test_a_command_carries_a_deadline_and_a_near_one ... OK
+2026-10-14 14:14:57,881 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:57,882 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:14:58,397 w2cplatform.requests WARNING rec: request snap-0 for 1 ended unperformed 65 s past its deadline — no worker held its unit to perform it
+2026-10-14 14:14:58,399 w2cplatform.requests INFO cam: request answered was answered (performed) and its answer never reached a heartbeat: its row is cleared
+2026-10-14 14:14:58,405 w2cplatform.requests WARNING cam: request open-gate for 1 ended unperformed 65 s past its deadline — no worker held its unit to perform it
+2026-10-14 14:14:58,410 w2cplatform.requests WARNING cam: request no-deadline for 1 ended unperformed 95 s past its deadline — no worker held its unit to perform it
+test_review_remainder.py::test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted ... OK
+2026-10-14 14:14:58,426 w2cplatform.requests WARNING cam: request slow for 1 ended 65 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+test_review_remainder.py::test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_holder_went_is_not_known ... OK
+2026-10-14 14:14:58,438 camworker INFO w-1: start camera 1
+2026-10-14 14:14:58,441 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:58,442 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_review_remainder.py::test_a_command_retried_is_one_command ... OK
+2026-10-14 14:14:59,039 w2cplatform.worker WARNING w-1: camera 1 stopped: a newer epoch was issued for it
+2026-10-14 14:14:59,052 w2cplatform.worker WARNING w-2: camera 1 stopped: a newer epoch was issued for it
+test_review_remainder.py::test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once ... OK
+2026-10-14 14:14:59,075 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:14:59,075 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_review_remainder.py::test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_ask_again ... OK
+test_review_remainder.py::test_a_delete_is_a_write_and_an_epoch_is_never_deleted ... OK
+test_review_remainder.py::test_a_lost_cas_waits_a_random_moment_that_grows_and_stays_short ... OK
+test_review_remainder.py::test_a_read_starts_on_the_key_frame_before_the_moment_asked_for ... OK
+test_review_remainder.py::test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows ... OK
+2026-10-14 14:15:00,057 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:00,061 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:00,062 w2cplatform.journal INFO console: archive.volume.declared {'sub': 'rec', 'target': 'big', 'user': 'anna', 'table': 'volumes', 'fields': 'kind,name,quota_bytes,server,url'}
+2026-10-14 14:15:00,071 w2cplatform.journal INFO console: archive.volume.declared {'sub': 'rec', 'target': 'big', 'user': 'anna', 'table': 'volumes', 'fields': 'kind,name,quota_bytes,server,url', 'changed': 'quota_bytes', 'was': {'quota_bytes': 8000000000000}}
+2026-10-14 14:15:00,077 w2cplatform.journal INFO console: archive.volume.declared {'sub': 'rec', 'target': 'big', 'user': 'anna', 'table': 'volumes', 'fields': 'kind,name,quota_bytes,server,shrink_confirmed,url', 'changed': 'quota_bytes,shrink_confirmed', 'was': {'quota_bytes': 4000000000000, 'shrink_confirmed': 0}}
+test_review_remainder.py::test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_keep_is_a_number ... OK
+2026-10-14 14:15:00,588 w2cplatform.resource WARNING srv-1: rec was not asked to free 150000 bytes on default: [Errno 13] the store does not answer
+2026-10-14 14:15:00,589 w2cplatform.resource WARNING srv-1: testsub2 was not asked to free 150000 bytes on default: [Errno 13] the store does not answer
+2026-10-14 14:15:00,857 recworker INFO r-1: writing into srv-1 (file:///tmp/w2c-tests-25664/vmsserver-hb3hkkd1/volume) — formatted
+test_review_remainder.py::test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days ... OK
+test_review_remainder.py::test_a_store_whose_lock_is_held_says_busy_instead_of_waiting_for_ever ... OK
+2026-10-14 14:15:01,463 w2cplatform.contract ERROR cam: the clock that writes cam/heartbeats/w-3 is +60 s — ahead of this controller's: nothing is judged by it, but whatever reads its times reads them wrong — mend NTP on that server
+2026-10-14 14:15:01,463 w2cplatform.contract ERROR cam: the clock that writes cam/heartbeats/w-4 is -100 s — behind this controller's: nothing is judged by it, but whatever reads its times reads them wrong — mend NTP on that server
+test_review_remainder.py::test_a_writers_clock_ahead_or_behind_neither_holds_nor_drops_it_and_the_skew_is_said ... OK
+2026-10-14 14:15:01,665 recworker INFO r-1: writing into srv-1 (file:///tmp/w2c-tests-25664/vmsserver-tpjfk8p1/volume) — formatted
+test_review_remainder.py::test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it ... OK
+2026-10-14 14:15:01,985 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:01,990 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:01,991 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '7', 'user': 'anna', 'holder': 'r-1', 'routes': 'timeline,segment,keeps', 'until': 1757500120}
+test_review_remainder.py::test_the_door_to_a_recordings_footage_is_said_when_it_is_handed_out ... OK
+2026-10-14 14:15:02,659 w2cplatform.journal INFO resource: events.removed {'sub': 'cam', 'target': '7', 'buckets': 1, 'since': 1757492400.0, 'until': 1757493000.0, 'days': 1.0}
+test_review_remainder.py::test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too ... OK
+2026-10-14 14:15:03,027 vms.footage INFO archive read: anna got rec/7/1757496460-1757496520 (200, 19907 bytes) from 127.0.0.1
+2026-10-14 14:15:03,027 w2cplatform.journal INFO door-r-page: archive.read {'user': 'anna', 'media': 'rec/7/1757496460-1757496520', 'addr': '127.0.0.1', 'status': 200, 'bytes': 19907, 'target': 'rec/7', 'of': 'rec/7', 'sha256': '4a611e55e62f99d3218980d7388e0daac98d43d9962e7868f96916016cc74233', 'recording': '7'}
+2026-10-14 14:15:03,038 vms.footage INFO archive read: anna got rec/7/1757496460-1757496520 (200, 19907 bytes) from 127.0.0.1
+2026-10-14 14:15:03,038 w2cplatform.journal INFO door-r-page: archive.read {'user': 'anna', 'media': 'rec/7/1757496460-1757496520', 'addr': '127.0.0.1', 'status': 200, 'bytes': 19907, 'target': 'rec/7', 'of': 'rec/7', 'sha256': '4a611e55e62f99d3218980d7388e0daac98d43d9962e7868f96916016cc74233', 'recording': '7'}
+2026-10-14 14:15:03,049 vms.footage INFO archive read: anna got rec/7/1757496460-1757496520 (200, 19907 bytes) from 127.0.0.1
+2026-10-14 14:15:03,049 w2cplatform.journal INFO door-r-page: archive.read {'user': 'anna', 'media': 'rec/7/1757496460-1757496520', 'addr': '127.0.0.1', 'status': 200, 'bytes': 19907, 'target': 'rec/7', 'of': 'rec/7', 'sha256': '4a611e55e62f99d3218980d7388e0daac98d43d9962e7868f96916016cc74233', 'recording': '7'}
+2026-10-14 14:15:03,060 vms.footage INFO archive read: boris got rec/7/1757496460-1757496520 (200, 19907 bytes) from 127.0.0.1
+2026-10-14 14:15:03,061 w2cplatform.journal INFO door-r-page: archive.read {'user': 'boris', 'media': 'rec/7/1757496460-1757496520', 'addr': '127.0.0.1', 'status': 200, 'bytes': 19907, 'target': 'rec/7', 'of': 'rec/7', 'sha256': '4a611e55e62f99d3218980d7388e0daac98d43d9962e7868f96916016cc74233', 'recording': '7'}
+test_review_remainder.py::test_who_read_the_archive_is_an_event_and_once_a_minute ... OK
+test_run_root.py::test_a_process_the_tests_start_makes_its_temp_dirs_under_the_run_root ... OK
+test_run_root.py::test_a_root_too_long_for_a_socket_goes_under_tmp ... OK
+test_run_root.py::test_a_run_stopped_by_sigterm_removes_its_root_too ... OK
+test_run_root.py::test_a_selected_run_leaves_nothing_in_the_temp_dir_and_reaps_a_dead_runs_root ... OK
+test_run_root.py::test_sigterm_in_a_weakref_callback_cannot_swallow_exit_or_skip_cleanup ... OK
+2026-10-14 14:15:17,815 w2cplatform.spec WARNING cam: 1 gave its place on w-1 back: srv-a no longer reaches vlan:a; nothing live reaches it
+2026-10-14 14:15:17,816 w2cplatform.spec ERROR cam: spares for labels 'vlan:a' are short and none is offered: no server a spare could run on reaches vlan:a
+2026-10-14 14:15:17,816 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': 'vlan:a', 'why': 'no server a spare could run on reaches vlan:a'}
+2026-10-14 14:15:17,820 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:17,821 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_server_labels.py::test_a_camera_no_live_server_reaches_is_unplaced_with_the_reason ... OK
+2026-10-14 14:15:18,336 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+test_server_labels.py::test_a_camera_on_a_server_that_lost_its_label_moves_to_one_that_has_it_within_one_pass ... OK
+2026-10-14 14:15:18,369 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-3: srv-a no longer reaches vlan:a; most free capacity (50); on srv-c, away from r-1 on srv-b (no room there)
+2026-10-14 14:15:18,371 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-3: with 1, one source: srv-a no longer reaches vlan:a; on srv-c
+2026-10-14 14:15:18,373 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-3: with 1, one source: srv-a no longer reaches vlan:a; on srv-c
+2026-10-14 14:15:18,375 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-3: with 1, one source: srv-a no longer reaches vlan:a; on srv-c
+test_server_labels.py::test_a_group_goes_whole_to_a_worker_with_room_for_it_when_the_near_one_has_too_little ... OK
+2026-10-14 14:15:18,612 w2cplatform.spec WARNING cam: 1 and 11 more of one source stay on w-1, which no longer reaches 1: its 12 units are more than the 10 moves a pass may make — REACH_BUDGET in the controller's environment raises it — asked again every pass
+2026-10-14 14:15:18,612 w2cplatform.journal INFO camcontroller: units.over_budget {'sub': 'cam', 'unit': '1', 'units': 12, 'worker': 'w-1', 'budget': 10, 'why': "12 units of one source stay on w-1, whose server no longer reaches them: they move together, and that is more than the 10 moves a pass may make — raise REACH_BUDGET in the controller's environment"}
+2026-10-14 14:15:18,621 w2cplatform.spec WARNING cam: 13 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+2026-10-14 14:15:18,624 w2cplatform.spec WARNING cam: 14 moved from w-1 to w-2: with 13, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:18,627 w2cplatform.spec WARNING cam: 15 moved from w-1 to w-2: with 13, one source: srv-a no longer reaches vlan:a; on srv-b
+test_server_labels.py::test_a_group_is_moved_inside_the_budget_and_one_bigger_than_the_budget_waits_and_says_so ... OK
+2026-10-14 14:15:18,641 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:18,642 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:18,649 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': 'vlan:a', 'user': 'operator'}
+test_server_labels.py::test_a_labels_body_with_any_key_but_labels_is_refused_and_writes_nothing ... OK
+2026-10-14 14:15:19,177 w2cplatform.spec WARNING cam: 1 and 3 more of one source stay on w-1 (server srv-a draining): no live worker takes all of them — moved when one does, asked again every pass
+2026-10-14 14:15:19,177 w2cplatform.journal INFO camcontroller: units.left_on_leaving {'sub': 'cam', 'unit': '1', 'units': 4, 'worker': 'w-1', 'why': '1 and 3 more of one source stay on w-1 (server srv-a draining): no live worker has the reach and the room for all of them — written by nobody until one does'}
+2026-10-14 14:15:19,177 w2cplatform.spec ERROR cam: spares for labels 'vlan:a' are short and none is offered: 1 group(s) of 4 units of one source reaching vlan:a need a worker with room for all of them, and a spare says 2: raise the role's capacity, or give a worker that has the room the labels
+2026-10-14 14:15:19,177 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': 'vlan:a', 'why': "1 group(s) of 4 units of one source reaching vlan:a need a worker with room for all of them, and a spare says 2: raise the role's capacity, or give a worker that has the room the labels"}
+2026-10-14 14:15:19,185 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+test_server_labels.py::test_a_leaving_worker_hands_a_channel_group_on_whole_or_keeps_it_whole_and_says_so ... OK
+test_server_labels.py::test_a_listing_that_leaves_a_servers_row_out_moves_nothing ... OK
+test_server_labels.py::test_a_new_group_is_placed_where_every_channel_may_go ... OK
+2026-10-14 14:15:19,784 w2cplatform.spec ERROR cam: the servers' labels could not be read (the store did not answer); the last read are kept; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 2992, in read
+    listed = {k[len(prefix):] for k in self.vars.list(prefix)}
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/contract.py", line 1115, in list
+    self._listed[prefix] = list(self.real.list(prefix))
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_server_labels.py", line 746, in silent
+    raise OSError("the store did not answer")
+OSError: the store did not answer
+2026-10-14 14:15:19,791 w2cplatform.spec ERROR cam: spares for labels 'vlan:a' are short and none is offered: no server a spare could run on reaches vlan:a
+2026-10-14 14:15:19,791 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': 'vlan:a', 'why': 'no server a spare could run on reaches vlan:a'}
+2026-10-14 14:15:19,796 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:19,797 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:19,798 w2cplatform.spec ERROR cam: the servers' labels could not be read (the store did not answer); the last read are kept; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 2992, in read
+    listed = {k[len(prefix):] for k in self.vars.list(prefix)}
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/contract.py", line 1115, in list
+    self._listed[prefix] = list(self.real.list(prefix))
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_server_labels.py", line 746, in silent
+    raise OSError("the store did not answer")
+OSError: the store did not answer
+2026-10-14 14:15:20,302 w2cplatform.spec WARNING cam: server_labels works again
+test_server_labels.py::test_a_process_that_never_read_the_rows_knows_no_servers_labels ... OK
+2026-10-14 14:15:20,313 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:20,318 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:20,321 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-r', 'labels': 'vlan:r', 'user': 'operator'}
+test_server_labels.py::test_a_server_known_to_any_subsystem_takes_a_row ... OK
+test_server_labels.py::test_a_server_name_that_is_no_name_is_refused ... OK
+2026-10-14 14:15:20,842 w2cplatform.rows ERROR platform/servers/srv-a: the server's labels does not parse ('vlan b' is not a label); the server keeps the labels last read of it — if none were read, it takes no unit that needs a label — and nothing moves off it
+test_server_labels.py::test_a_servers_row_that_does_not_parse_keeps_what_was_last_read_of_it ... OK
+2026-10-14 14:15:20,856 w2cplatform.spec ERROR cam: the servers' labels could not be read (the store did not answer); the last read are kept; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 2992, in read
+    listed = {k[len(prefix):] for k in self.vars.list(prefix)}
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/contract.py", line 1115, in list
+    self._listed[prefix] = list(self.real.list(prefix))
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_server_labels.py", line 169, in silent
+    raise OSError("the store did not answer")
+OSError: the store did not answer
+2026-10-14 14:15:20,857 w2cplatform.spec ERROR cam: the servers' labels could not be read (the store did not answer); the last read are kept; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 2992, in read
+    listed = {k[len(prefix):] for k in self.vars.list(prefix)}
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_server_labels.py", line 169, in silent
+    raise OSError("the store did not answer")
+OSError: the store did not answer
+2026-10-14 14:15:20,861 w2cplatform.spec WARNING cam: server_labels works again
+2026-10-14 14:15:20,863 w2cplatform.spec WARNING cam: 1 gave its place on w-1 back: srv-a no longer reaches vlan:a; nothing live reaches it
+2026-10-14 14:15:20,863 w2cplatform.spec ERROR cam: spares for labels 'vlan:a' are short and none is offered: no server a spare could run on reaches vlan:a
+2026-10-14 14:15:20,863 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': 'vlan:a', 'why': 'no server a spare could run on reaches vlan:a'}
+test_server_labels.py::test_a_store_that_does_not_answer_moves_nothing ... OK
+2026-10-14 14:15:20,935 w2cplatform.rows ERROR platform/servers/srv-a: the server's labels does not parse ('vlan b' is not a label); the server keeps the labels last read of it — if none were read, it takes no unit that needs a label — and nothing moves off it
+2026-10-14 14:15:20,956 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:20,957 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_server_labels.py::test_a_torn_server_row_after_a_controller_restart_moves_nothing_and_takes_no_new_labelled_unit ... OK
+2026-10-14 14:15:21,630 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+2026-10-14 14:15:21,632 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (49); on srv-b
+2026-10-14 14:15:21,633 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (48); on srv-b
+2026-10-14 14:15:21,636 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (47); on srv-b
+2026-10-14 14:15:21,637 w2cplatform.spec WARNING cam: 5 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (46); on srv-b
+2026-10-14 14:15:21,639 w2cplatform.spec WARNING cam: 6 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (45); on srv-b
+2026-10-14 14:15:21,641 w2cplatform.spec WARNING cam: 7 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (44); on srv-b
+2026-10-14 14:15:21,643 w2cplatform.spec WARNING cam: 8 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (43); on srv-b
+2026-10-14 14:15:21,645 w2cplatform.spec WARNING cam: 9 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (42); on srv-b
+2026-10-14 14:15:21,648 w2cplatform.spec WARNING cam: 10 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (41); on srv-b
+2026-10-14 14:15:21,654 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:22,163 w2cplatform.spec WARNING cam: 11 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (40); on srv-b
+2026-10-14 14:15:22,165 w2cplatform.spec WARNING cam: 12 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (39); on srv-b
+2026-10-14 14:15:22,167 w2cplatform.spec WARNING cam: 13 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (38); on srv-b
+2026-10-14 14:15:22,168 w2cplatform.spec WARNING cam: 14 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (37); on srv-b
+2026-10-14 14:15:22,170 w2cplatform.spec WARNING cam: 15 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (36); on srv-b
+2026-10-14 14:15:22,172 w2cplatform.spec WARNING cam: 16 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (35); on srv-b
+2026-10-14 14:15:22,174 w2cplatform.spec WARNING cam: 17 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (34); on srv-b
+2026-10-14 14:15:22,176 w2cplatform.spec WARNING cam: 18 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (33); on srv-b
+2026-10-14 14:15:22,177 w2cplatform.spec WARNING cam: 19 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (32); on srv-b
+2026-10-14 14:15:22,179 w2cplatform.spec WARNING cam: 20 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (31); on srv-b
+2026-10-14 14:15:22,187 w2cplatform.spec WARNING cam: 21 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (30); on srv-b
+2026-10-14 14:15:22,189 w2cplatform.spec WARNING cam: 22 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (29); on srv-b
+2026-10-14 14:15:22,191 w2cplatform.spec WARNING cam: 23 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (28); on srv-b
+2026-10-14 14:15:22,192 w2cplatform.spec WARNING cam: 24 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (27); on srv-b
+2026-10-14 14:15:22,194 w2cplatform.spec WARNING cam: 25 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (26); on srv-b
+test_server_labels.py::test_at_most_ten_units_move_in_one_pass ... OK
+2026-10-14 14:15:22,206 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:22,207 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:22,211 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-b', 'labels': 'vlan:a,vlan:b', 'user': 'anna'}
+2026-10-14 14:15:22,229 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': '', 'user': 'anna'}
+2026-10-14 14:15:22,235 w2cplatform.journal INFO console: server.labels.cleared {'server': 'srv-b', 'user': 'boris'}
+test_server_labels.py::test_labels_from_the_console_override_the_nodes_and_deleting_returns_to_the_nodes ... OK
+2026-10-14 14:15:22,875 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+2026-10-14 14:15:22,888 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (49); on srv-b
+2026-10-14 14:15:22,895 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (48); on srv-b
+2026-10-14 14:15:22,902 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (47); on srv-b
+2026-10-14 14:15:22,904 w2cplatform.spec WARNING cam: 5 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (46); on srv-b
+2026-10-14 14:15:22,907 w2cplatform.spec WARNING cam: 6 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (45); on srv-b
+2026-10-14 14:15:22,908 w2cplatform.spec WARNING cam: 7 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (44); on srv-b
+2026-10-14 14:15:22,910 w2cplatform.spec WARNING cam: 8 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (43); on srv-b
+2026-10-14 14:15:22,912 w2cplatform.spec WARNING cam: 9 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (42); on srv-b
+2026-10-14 14:15:22,914 w2cplatform.spec WARNING cam: 10 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (41); on srv-b
+2026-10-14 14:15:22,922 w2cplatform.spec WARNING cam: 11 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (40); on srv-b
+2026-10-14 14:15:22,924 w2cplatform.spec WARNING cam: 12 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (39); on srv-b
+2026-10-14 14:15:22,930 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+test_server_labels.py::test_moves_for_reach_are_counted_since_the_store_was_new_and_said_in_the_log ... OK
+2026-10-14 14:15:23,437 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:23,438 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:23,945 w2cplatform.rows ERROR cam/cameras/7#labels: the unit's label does not parse ('склад' is not a label); the unit stays where it is: no server's row can say it reaches that label — write the label again in letters, digits and _ . : -
+test_server_labels.py::test_one_alphabet_for_labels_and_a_stored_label_outside_it_does_not_move_its_camera ... OK
+2026-10-14 14:15:23,968 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:23,974 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': 'vlan:b', 'user': 'admin'}
+2026-10-14 14:15:23,986 w2cplatform.journal INFO console: server.labels.cleared {'server': 'srv-a', 'user': 'admin'}
+test_server_labels.py::test_one_row_a_server_for_every_subsystem_and_the_edit_names_the_units_of_each ... OK
+2026-10-14 14:15:24,499 w2cplatform.rows ERROR platform/servers/srv-c: the server's labels does not parse (it could not be read: one key); the server keeps the labels last read of it — if none were read, it takes no unit that needs a label — and nothing moves off it
+2026-10-14 14:15:24,502 w2cplatform.spec WARNING cam: 1 moved from w-2 to w-1: srv-b no longer reaches vlan:a; most free capacity (50); on srv-a
+2026-10-14 14:15:24,508 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+test_server_labels.py::test_one_row_that_cannot_be_read_is_that_servers_alone ... OK
+2026-10-14 14:15:25,014 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:25,015 w2cplatform.journal INFO console: access.denied {'user': 'cam-admin', 'capability': 'admin'}
+2026-10-14 14:15:25,027 w2cplatform.journal INFO console: access.denied {'user': 'cam-admin', 'capability': 'admin'}
+2026-10-14 14:15:25,032 w2cplatform.journal INFO console: access.denied {'user': 'guard', 'capability': 'admin'}
+2026-10-14 14:15:25,037 w2cplatform.journal INFO console: access.denied {'user': 'guard', 'capability': 'admin'}
+2026-10-14 14:15:25,045 w2cplatform.journal INFO console: access.denied {'user': 'viewer', 'capability': 'admin'}
+2026-10-14 14:15:25,051 w2cplatform.journal INFO console: access.denied {'user': 'viewer', 'capability': 'admin'}
+2026-10-14 14:15:25,062 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': '', 'user': 'admin'}
+test_server_labels.py::test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels ... OK
+2026-10-14 14:15:25,626 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-2: srv-a no longer reaches vlan:c; most free capacity (50); on srv-b
+2026-10-14 14:15:25,628 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: with 2, one source: srv-a no longer reaches vlan:c; on srv-b
+2026-10-14 14:15:25,630 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-2: with 2, one source: srv-a no longer reaches vlan:c; on srv-b
+2026-10-14 14:15:25,632 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-2: with 2, one source: srv-a no longer reaches vlan:c; on srv-b
+2026-10-14 14:15:25,636 w2cplatform.spec WARNING cam: 3 and 3 more of one source stay on w-2, which no longer reaches 3: nothing live reaches it — asked again every pass
+2026-10-14 14:15:25,636 w2cplatform.spec ERROR cam: spares for labels 'vlan:a,vlan:c,vlan:d' are short and none is offered: no server a spare could run on reaches vlan:a,vlan:c,vlan:d
+2026-10-14 14:15:25,637 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': 'vlan:a,vlan:c,vlan:d', 'why': 'no server a spare could run on reaches vlan:a,vlan:c,vlan:d'}
+2026-10-14 14:15:25,654 w2cplatform.spec WARNING cam: 3 moved from w-2 to w-3: srv-b no longer reaches vlan:d; most free capacity (50); on srv-c
+2026-10-14 14:15:25,661 w2cplatform.spec WARNING cam: 1 moved from w-2 to w-3: with 3, one source: srv-b no longer reaches vlan:d; on srv-c
+2026-10-14 14:15:25,662 w2cplatform.spec WARNING cam: 2 moved from w-2 to w-3: with 3, one source: srv-b no longer reaches vlan:d; on srv-c
+2026-10-14 14:15:25,664 w2cplatform.spec WARNING cam: 4 moved from w-2 to w-3: with 3, one source: srv-b no longer reaches vlan:d; on srv-c
+test_server_labels.py::test_the_channels_of_one_device_move_together_or_not_at_all ... OK
+2026-10-14 14:15:25,670 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:25,671 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:25,684 w2cplatform.console WARNING the labels of server 'srv-a' were not written: [Errno 28] No space left on device: '/tmp/w2c-tests-25664/vmsserver-pknt1uys/tree/store/platform/servers/srv-a'
+test_server_labels.py::test_the_labels_route_answers_a_bad_body_a_bad_label_and_an_unknown_server_with_words ... OK
+2026-10-14 14:15:26,212 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:26,214 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:26,225 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': 'vlan:a', 'user': 'operator'}
+test_server_labels.py::test_the_page_is_told_which_cameras_an_edit_will_move ... OK
+2026-10-14 14:15:26,725 w2cplatform.spec ERROR REACH_BUDGET='lots' is not a positive whole number (invalid literal for int() with base 10: 'lots'): 10 moves a pass, the default
+2026-10-14 14:15:26,725 w2cplatform.spec ERROR REACH_BUDGET='0' is not a positive whole number (not positive): 10 moves a pass, the default
+2026-10-14 14:15:26,812 w2cplatform.spec WARNING cam: 1 and 11 more of one source stay on w-1, which no longer reaches 1: its 12 units are more than the 10 moves a pass may make — REACH_BUDGET in the controller's environment raises it — asked again every pass
+2026-10-14 14:15:26,826 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+2026-10-14 14:15:26,829 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,831 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,833 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,835 w2cplatform.spec WARNING cam: 5 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,837 w2cplatform.spec WARNING cam: 6 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,839 w2cplatform.spec WARNING cam: 7 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,841 w2cplatform.spec WARNING cam: 8 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,842 w2cplatform.spec WARNING cam: 9 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,844 w2cplatform.spec WARNING cam: 10 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,846 w2cplatform.spec WARNING cam: 11 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+2026-10-14 14:15:26,848 w2cplatform.spec WARNING cam: 12 moved from w-1 to w-2: with 1, one source: srv-a no longer reaches vlan:a; on srv-b
+test_server_labels.py::test_the_reach_budget_is_a_setting_and_a_group_left_for_it_is_an_alarm ... OK
+2026-10-14 14:15:27,006 w2cplatform.spec WARNING cam: 1 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (50); on srv-b
+2026-10-14 14:15:27,009 w2cplatform.spec WARNING cam: 2 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (49); on srv-b
+2026-10-14 14:15:27,011 w2cplatform.spec WARNING cam: 3 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (48); on srv-b
+2026-10-14 14:15:27,013 w2cplatform.spec WARNING cam: 4 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (47); on srv-b
+2026-10-14 14:15:27,014 w2cplatform.spec WARNING cam: 5 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (46); on srv-b
+2026-10-14 14:15:27,016 w2cplatform.spec WARNING cam: 6 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (45); on srv-b
+2026-10-14 14:15:27,017 w2cplatform.spec WARNING cam: 7 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (44); on srv-b
+2026-10-14 14:15:27,019 w2cplatform.spec WARNING cam: 8 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (43); on srv-b
+2026-10-14 14:15:27,021 w2cplatform.spec WARNING cam: 9 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (42); on srv-b
+2026-10-14 14:15:27,023 w2cplatform.spec WARNING cam: 10 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (41); on srv-b
+2026-10-14 14:15:27,031 w2cplatform.spec WARNING cam: 11 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (40); on srv-b
+2026-10-14 14:15:27,032 w2cplatform.spec WARNING cam: 12 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (39); on srv-b
+2026-10-14 14:15:27,035 w2cplatform.spec WARNING cam: 13 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (38); on srv-b
+2026-10-14 14:15:27,037 w2cplatform.spec WARNING cam: 14 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (37); on srv-b
+2026-10-14 14:15:27,039 w2cplatform.spec WARNING cam: 15 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (36); on srv-b
+2026-10-14 14:15:27,040 w2cplatform.spec WARNING cam: 16 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (35); on srv-b
+2026-10-14 14:15:27,042 w2cplatform.spec WARNING cam: 17 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (34); on srv-b
+2026-10-14 14:15:27,044 w2cplatform.spec WARNING cam: 18 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (33); on srv-b
+2026-10-14 14:15:27,047 w2cplatform.spec WARNING cam: 19 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (32); on srv-b
+2026-10-14 14:15:27,049 w2cplatform.spec WARNING cam: 20 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (31); on srv-b
+2026-10-14 14:15:27,070 w2cplatform.spec WARNING cam: 21 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (30); on srv-b
+2026-10-14 14:15:27,087 w2cplatform.spec WARNING cam: 22 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (29); on srv-b
+2026-10-14 14:15:27,101 w2cplatform.spec WARNING cam: 23 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (28); on srv-b
+2026-10-14 14:15:27,112 w2cplatform.spec WARNING cam: 24 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (27); on srv-b
+2026-10-14 14:15:27,115 w2cplatform.spec WARNING cam: 25 moved from w-1 to w-2: srv-a no longer reaches vlan:a; most free capacity (26); on srv-b
+test_server_labels.py::test_units_waiting_for_reach_are_counted_over_the_whole_pass ... OK
+2026-10-14 14:15:27,126 w2cplatform.worker ERROR w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:27,127 w2cplatform.worker WARNING srv-1:33:000021: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,127 w2cplatform.worker WARNING srv-1:33:000021: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,128 w2cplatform.worker WARNING srv-1:33:000021: gave slot w-1 up and no other could be claimed (could not claim a slot in 50 tries): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,128 w2cplatform.worker ERROR srv-1:33:000021: its name testsub/w-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:27,128 w2cplatform.journal INFO testsubworker: worker.name_taken {'sub': 'testsub', 'worker': 'w-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'srv-1:33:000021', 'box': 'srv-1', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:27,130 w2cplatform.worker WARNING srv-1:33:000021: its name testsub/w-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:27,130 w2cplatform.journal INFO testsubworker: worker.name_back {'sub': 'testsub', 'worker': 'w-1', 'instance': 'srv-1:33:000021', 'box': 'srv-1', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:27,130 w2cplatform.worker WARNING srv-1:33:000021: gave slot w-1 up, its units let go; going on as w-1
+2026-10-14 14:15:27,130 w2cplatform.worker WARNING srv-1:33:000021: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-1
+test_slot_fence.py::test_a_fenced_worker_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds ... OK
+2026-10-14 14:15:27,141 w2cplatform.rows ERROR testsub/slots/w-9: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:27,149 w2cplatform.rows ERROR testsub/slots/w-1: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+test_slot_fence.py::test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names ... OK
+2026-10-14 14:15:27,157 w2cplatform.worker ERROR w-1: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+test_slot_fence.py::test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name ... OK
+2026-10-14 14:15:27,162 w2cplatform.worker WARNING srv-1:36:000024: gave slot w-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,162 w2cplatform.worker WARNING srv-1:36:000024: gave slot w-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+test_slot_fence.py::test_a_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name ... OK
+2026-10-14 14:15:27,172 w2cplatform.worker WARNING srv-1:37:000025: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,175 w2cplatform.worker WARNING srv-1:37:000025: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:27,175 w2cplatform.worker ERROR srv-1:37:000025: its name testsub/w-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:27,175 w2cplatform.journal INFO testsubworker: worker.name_taken {'sub': 'testsub', 'worker': 'w-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'srv-1:37:000025', 'box': 'srv-1', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:27,177 w2cplatform.worker WARNING srv-1:37:000025: its name testsub/w-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:27,177 w2cplatform.journal INFO testsubworker: worker.name_back {'sub': 'testsub', 'worker': 'w-1', 'instance': 'srv-1:37:000025', 'box': 'srv-1', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:27,178 w2cplatform.worker WARNING srv-1:37:000025: gave slot w-1 up, its units let go; going on as w-1
+test_slot_fence.py::test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_says_nothing_under_that_name ... OK
+2026-10-14 14:15:27,182 w2cplatform.worker WARNING srv-1:38:000026: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+test_slot_fence.py::test_a_worker_with_no_slot_runs_nothing_of_the_name_it_gave_up ... OK
+2026-10-14 14:15:27,184 w2cplatform.rows ERROR testsub/slots/w-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:27,185 w2cplatform.worker WARNING srv-1:39:000027: gave slot w-1 up, its units let go; going on as w-8
+2026-10-14 14:15:27,189 w2cplatform.worker ERROR w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:27,189 w2cplatform.rows ERROR testsub/slots/w-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:27,190 w2cplatform.worker WARNING srv-1:40:000028: gave slot w-1 up, its units let go; going on as w-8
+2026-10-14 14:15:27,190 w2cplatform.worker WARNING srv-1:40:000028: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-8
+test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted ... OK
+2026-10-14 14:15:27,195 w2cplatform.worker WARNING srv-1:41:000029: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+test_slot_fence.py::test_the_stand_in_does_not_renew_for_an_instance_with_no_slot ... OK
+test_spec_flow.py::test_no_spec_writes_a_flow_collection_across_lines ... OK
+test_spec_flow.py::test_the_check_sees_a_flow_map_or_list_that_runs_on_and_passes_one_that_does_not ... OK
+test_spec_rule.py::test_a_key_no_spec_uses_is_found_by_the_walk ... OK
+test_spec_rule.py::test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_by_a_test_subsystem ... OK
+test_star_ranges.py::test_ordinary_recorder_fetches_locally_and_does_not_request_a_centre_token ... OK
+test_star_ranges.py::test_range_reply_from_a_replaced_centre_is_not_applied ... OK
+test_star_ranges.py::test_refused_range_forgets_the_token_and_a_role_outage_opens_no_new_request ... OK
+test_star_ranges.py::test_remote_range_checks_kind_audience_and_reference_before_requesting_the_camera ... OK
+2026-10-14 14:15:27,493 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,493 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,493 w2cplatform.worker WARNING t-1: the hold on net has not been confirmed for 40 s, and its lease is strict (the store does not answer: the store is away) — letting go of it
+test_strict_place.py::test_a_place_any_box_may_write_under_a_strict_lease_is_let_go_by_the_platform_when_its_hold_goes_unconfirmed ... OK
+2026-10-14 14:15:27,524 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,524 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,524 w2cplatform.worker WARNING t-1: the hold on s1 has not been confirmed for 641 s, past the units' ceiling (the store does not answer: the store is away) — letting go of it
+test_strict_place.py::test_a_place_of_this_servers_own_is_kept_through_a_silence_by_the_ceiling_counted_from_its_write_window ... OK
+2026-10-14 14:15:27,546 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,546 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+test_strict_place.py::test_a_place_under_a_lease_that_is_not_strict_is_kept_through_the_silence ... OK
+2026-10-14 14:15:27,567 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+2026-10-14 14:15:27,567 w2cplatform.worker WARNING t-1: the store did not answer for the slot (the store is away); still t-1
+test_strict_place.py::test_a_place_whose_row_names_a_server_is_kept_under_a_strict_lease ... OK
+2026-10-14 14:15:27,596 w2cplatform.worker WARNING t-1: the hold on net has not been confirmed for 50 s, and its lease is strict (another worker holds it now) — letting go of it
+test_strict_place.py::test_a_strict_place_another_worker_took_is_let_go_by_the_lease_step ... OK
+test_strict_place.py::test_a_strict_place_confirmed_late_by_a_store_that_answers_is_kept_and_its_window_runs_from_the_confirmation ... OK
+2026-10-14 14:15:27,765 w2cplatform.rows ERROR south/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+test_unit_token_requests.py::test_local_unaccepted_or_other_members_unit_never_authorizes_issuance ... OK
+test_unit_token_requests.py::test_malformed_snapshot_or_nonunit_heartbeat_never_proves_a_unit ... OK
+2026-10-14 14:15:28,339 w2cplatform.rows ERROR south/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_unit_token_requests.py::test_new_accepted_report_withdraws_a_unit_and_malformed_report_cannot_reuse_old_data ... OK
+test_unit_token_requests.py::test_poll_home_refuses_malformed_or_unconfirmed_policy_before_choosing_another_route ... OK
+test_unit_token_requests.py::test_poll_home_uses_local_location_not_target_member_and_has_no_unknown_fallback ... OK
+test_unit_token_requests.py::test_unadmitted_or_revoked_member_cannot_request_for_its_previous_report ... OK
+test_unit_token_requests.py::test_unit_binding_reads_only_home_policy_and_does_not_grant_domain_writes ... OK
+test_unit_token_requests.py::test_unit_loader_is_closed_requires_claims_grant_ref_and_exactly_one_binding ... OK
+test_unit_token_requests.py::test_unit_token_comes_from_own_accepted_snapshot_in_two_subsystems_without_assignment ... OK
+test_unit_token_requests.py::test_unit_token_tracks_authoritative_topology_and_current_holder_without_member_copy_override ... OK
+2026-10-14 14:15:28,853 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,859 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,864 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,869 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,875 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,882 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+test_upstream_runtime.py::test_assignment_or_topology_changes_invalidate_before_missing_fallback ... OK
+test_upstream_runtime.py::test_changing_urls_of_the_same_centre_preserves_unacknowledged_frames ... OK
+test_upstream_runtime.py::test_conflicting_missing_and_torn_facts_hold_only_a_working_route ... OK
+2026-10-14 14:15:28,923 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+test_upstream_runtime.py::test_daemon_outage_keeps_retry_state_and_explicit_stop_ends_subscription ... OK
+2026-10-14 14:15:28,928 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+test_upstream_runtime.py::test_explicit_poll_withdrawal_cannot_revive_after_a_missing_source ... OK
+test_upstream_runtime.py::test_late_reply_cannot_resurrect_a_forgotten_or_changed_scope ... OK
+test_upstream_runtime.py::test_metadata_and_restart_do_not_obtain_or_restore_tokens ... OK
+test_upstream_runtime.py::test_refused_carried_answer_refreshes_credential_without_changing_ask_format ... OK
+test_upstream_runtime.py::test_refused_drained_push_survives_token_outage_then_sends_every_frame ... OK
+test_upstream_runtime.py::test_refused_poll_forgets_the_token_and_retries_through_role_door ... OK
+test_upstream_runtime.py::test_refused_pull_does_not_advance_batch_or_inject_frames ... OK
+test_upstream_runtime.py::test_refused_upload_is_not_acknowledged_and_retries_with_a_current_token ... OK
+test_upstream_runtime.py::test_role_cache_refuses_malformed_or_outlived_reply ... OK
+test_upstream_runtime.py::test_role_cache_uses_steady_time_and_never_extends_a_failed_refresh ... OK
+test_upstream_runtime.py::test_scope_change_during_a_role_reply_forgets_its_orphaned_cache_immediately ... OK
+2026-10-14 14:15:28,969 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+2026-10-14 14:15:28,975 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+test_upstream_runtime.py::test_scope_changed_during_role_reply_or_held_poll_cannot_start_transport ... OK
+2026-10-14 14:15:28,985 chain INFO relay: serial is no longer in the upstream book; its stream up ended
+test_upstream_runtime.py::test_wrong_origin_empty_urls_and_unknown_topology_cannot_start_a_route ... OK
+test_vms_worker_loops.py::test_a_fast_run_starts_the_stand_in_and_it_renews_nothing ... OK
+2026-10-14 14:15:30,651 w2cplatform.worker ERROR w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:30,652 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,652 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: gave slot w-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,652 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: gave slot w-1 up and no other could be claimed (could not claim a slot in 50 tries): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,652 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:e0d43b: its name cam/w-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,653 w2cplatform.journal INFO camworker: worker.name_taken {'sub': 'cam', 'worker': 'w-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:e0d43b', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,664 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: its name cam/w-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,664 w2cplatform.journal INFO camworker: worker.name_back {'sub': 'cam', 'worker': 'w-1', 'instance': 'Murats-MacBook-Pro.local:25664:e0d43b', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,669 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: gave slot w-1 up, its units let go; going on as w-1
+2026-10-14 14:15:30,669 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e0d43b: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-1
+2026-10-14 14:15:30,674 w2cplatform.worker ERROR r-1: FENCED (slot r-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:30,675 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: gave slot r-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,675 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: gave slot r-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,675 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: gave slot r-1 up and no other could be claimed (could not claim a slot in 50 tries): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,676 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:f3d846: its name rec/r-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,676 w2cplatform.journal INFO recworker: worker.name_taken {'sub': 'rec', 'worker': 'r-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:f3d846', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,694 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: its name rec/r-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,695 w2cplatform.journal INFO recworker: worker.name_back {'sub': 'rec', 'worker': 'r-1', 'instance': 'Murats-MacBook-Pro.local:25664:f3d846', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,705 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: gave slot r-1 up, its units let go; going on as r-1
+2026-10-14 14:15:30,706 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f3d846: was fenced as r-1 (slot r-1 is held by another instance now); rejoined as r-1
+2026-10-14 14:15:30,738 w2cplatform.worker ERROR r-9: FENCED (slot r-9 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:30,738 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: gave slot r-9 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,739 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: gave slot r-9 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,740 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: gave slot r-9 up and no other could be claimed (could not claim a slot in 50 tries): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,740 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:87b217: its name rec/r-9 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,740 w2cplatform.journal INFO recworker: worker.name_taken {'sub': 'rec', 'worker': 'r-9', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:87b217', 'box': 'Murats-MacBook-Pro.local', 'server': 'cam-9', 'since': 1757500000.0}
+2026-10-14 14:15:30,750 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: its name rec/r-9 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,750 w2cplatform.journal INFO recworker: worker.name_back {'sub': 'rec', 'worker': 'r-9', 'instance': 'Murats-MacBook-Pro.local:25664:87b217', 'box': 'Murats-MacBook-Pro.local', 'server': 'cam-9', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,756 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: gave slot r-9 up, its units let go; going on as r-9
+2026-10-14 14:15:30,756 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:87b217: was fenced as r-9 (slot r-9 is held by another instance now); rejoined as r-9
+test_vms_worker_loops.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds ... OK
+2026-10-14 14:15:30,768 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:142dd9: gave slot d-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,769 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:142dd9: gave slot d-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,771 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:009d83: gave slot j-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,771 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:009d83: gave slot j-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,773 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:a2afc6: gave slot s-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,773 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:a2afc6: gave slot s-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,775 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:7dc486: gave slot g-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,775 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:7dc486: gave slot g-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,778 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:6d437e: gave slot a-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,778 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:6d437e: gave slot a-1 up and no other could be claimed (store is at schema 2; this build understands 1): nobody, taking nothing; trying again on the next step
+test_vms_worker_loops.py::test_every_kind_of_vms_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name ... OK
+2026-10-14 14:15:30,787 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:69ed3d: gave slot d-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,787 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:69ed3d: gave slot d-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,787 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:69ed3d: its name det/d-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,788 w2cplatform.journal INFO detworker: worker.name_taken {'sub': 'det', 'worker': 'd-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:69ed3d', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,799 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:69ed3d: its name det/d-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,799 w2cplatform.journal INFO detworker: worker.name_back {'sub': 'det', 'worker': 'd-1', 'instance': 'Murats-MacBook-Pro.local:25664:69ed3d', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,805 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:69ed3d: gave slot d-1 up, its units let go; going on as d-1
+2026-10-14 14:15:30,808 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:aecd28: gave slot j-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,809 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:aecd28: gave slot j-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,809 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:aecd28: its name detjob/j-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,809 w2cplatform.journal INFO detjobworker: worker.name_taken {'sub': 'detjob', 'worker': 'j-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:aecd28', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,816 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:aecd28: its name detjob/j-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,817 w2cplatform.journal INFO detjobworker: worker.name_back {'sub': 'detjob', 'worker': 'j-1', 'instance': 'Murats-MacBook-Pro.local:25664:aecd28', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,823 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:aecd28: gave slot j-1 up, its units let go; going on as j-1
+2026-10-14 14:15:30,828 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:ef0746: gave slot s-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,828 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:ef0746: gave slot s-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,828 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:ef0746: its name survey/s-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,828 w2cplatform.journal INFO surveyworker: worker.name_taken {'sub': 'survey', 'worker': 's-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:ef0746', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,837 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:ef0746: its name survey/s-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,837 w2cplatform.journal INFO surveyworker: worker.name_back {'sub': 'survey', 'worker': 's-1', 'instance': 'Murats-MacBook-Pro.local:25664:ef0746', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,843 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:ef0746: gave slot s-1 up, its units let go; going on as s-1
+2026-10-14 14:15:30,846 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:440849: gave slot g-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,846 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:440849: gave slot g-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,846 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:440849: its name live/g-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,847 w2cplatform.journal INFO liveworker: worker.name_taken {'sub': 'live', 'worker': 'g-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:440849', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,847 w2cplatform.journal ERROR liveworker: worker.name_taken could not be written to the journal
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/worker.py", line 1152, in _seek_slot
+    self._claim_slot(self.given, 50, steal=False)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/worker.py", line 403, in _claim_slot
+    raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+w2cplatform.contract._NameTaken: slot g-1 is held by somebody-else: a live holder keeps its name
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/journal.py", line 63, in say
+    return self.log.append(self.wall(), kind, cls, durable=True, **fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/events.py", line 387, in append
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  [Previous line repeated 2 more times]
+  File "<frozen os>", line 225, in makedirs
+OSError: [Errno 30] Read-only file system: '/data'
+2026-10-14 14:15:30,852 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:440849: its name live/g-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,852 w2cplatform.journal INFO liveworker: worker.name_back {'sub': 'live', 'worker': 'g-1', 'instance': 'Murats-MacBook-Pro.local:25664:440849', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,852 w2cplatform.journal ERROR liveworker: worker.name_back could not be written to the journal
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/journal.py", line 63, in say
+    return self.log.append(self.wall(), kind, cls, durable=True, **fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/events.py", line 387, in append
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  [Previous line repeated 2 more times]
+  File "<frozen os>", line 225, in makedirs
+OSError: [Errno 30] Read-only file system: '/data'
+2026-10-14 14:15:30,852 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:440849: gave slot g-1 up, its units let go; going on as g-1
+2026-10-14 14:15:30,855 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e50b9f: gave slot a-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,855 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e50b9f: gave slot a-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:30,855 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:e50b9f: its name auto/a-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,855 w2cplatform.journal INFO autoworker: worker.name_taken {'sub': 'auto', 'worker': 'a-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:e50b9f', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,865 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e50b9f: its name auto/a-1 is its own again, after 0 s of being nobody
+2026-10-14 14:15:30,866 w2cplatform.journal INFO autoworker: worker.name_back {'sub': 'auto', 'worker': 'a-1', 'instance': 'Murats-MacBook-Pro.local:25664:e50b9f', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0, 'nameless_s': 0}
+2026-10-14 14:15:30,871 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:e50b9f: gave slot a-1 up, its units let go; going on as a-1
+test_vms_worker_loops.py::test_every_kind_of_vms_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_says_nothing ... OK
+2026-10-14 14:15:30,876 w2cplatform.journal INFO camworker: worker.name_taken {'sub': 'cam', 'worker': 'w-1', 'holder': 'another'}
+2026-10-14 14:15:30,882 w2cplatform.journal INFO camworker: worker.name_back {'sub': 'cam', 'worker': 'w-1'}
+2026-10-14 14:15:30,889 w2cplatform.journal INFO liveworker: worker.name_taken {'sub': 'live', 'worker': 'g-1', 'holder': 'another'}
+2026-10-14 14:15:30,895 w2cplatform.journal INFO liveworker: worker.name_back {'sub': 'live', 'worker': 'g-1'}
+2026-10-14 14:15:30,911 w2cplatform.journal INFO autoworker: worker.name_taken {'sub': 'auto', 'worker': 'a-1', 'holder': 'another'}
+2026-10-14 14:15:30,917 w2cplatform.journal INFO autoworker: worker.name_back {'sub': 'auto', 'worker': 'a-1'}
+2026-10-14 14:15:30,924 w2cplatform.journal INFO detworker: worker.name_taken {'sub': 'det', 'worker': 'd-1', 'holder': 'another'}
+2026-10-14 14:15:30,929 w2cplatform.journal INFO detworker: worker.name_back {'sub': 'det', 'worker': 'd-1'}
+2026-10-14 14:15:30,936 w2cplatform.journal INFO detjobworker: worker.name_taken {'sub': 'detjob', 'worker': 'j-1', 'holder': 'another'}
+2026-10-14 14:15:30,941 w2cplatform.journal INFO detjobworker: worker.name_back {'sub': 'detjob', 'worker': 'j-1'}
+2026-10-14 14:15:30,948 w2cplatform.journal INFO surveyworker: worker.name_taken {'sub': 'survey', 'worker': 's-1', 'holder': 'another'}
+2026-10-14 14:15:30,954 w2cplatform.journal INFO surveyworker: worker.name_back {'sub': 'survey', 'worker': 's-1'}
+test_vms_worker_loops.py::test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive ... OK
+2026-10-14 14:15:30,989 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:624209: its name det/d-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,989 w2cplatform.journal INFO detworker: worker.name_taken {'sub': 'det', 'worker': 'd-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:624209', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:30,997 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:c0cd23: its name detjob/j-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:30,998 w2cplatform.journal INFO detjobworker: worker.name_taken {'sub': 'detjob', 'worker': 'j-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:c0cd23', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:31,006 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:1bc997: its name survey/s-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:31,007 w2cplatform.journal INFO surveyworker: worker.name_taken {'sub': 'survey', 'worker': 's-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:1bc997', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:31,014 w2cplatform.worker ERROR Murats-MacBook-Pro.local:25664:4e5d31: its name live/g-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+2026-10-14 14:15:31,014 w2cplatform.journal INFO liveworker: worker.name_taken {'sub': 'live', 'worker': 'g-1', 'holder': 'somebody-else', 'holder_box': '', 'holder_until': 1757500045.0, 'instance': 'Murats-MacBook-Pro.local:25664:4e5d31', 'box': 'Murats-MacBook-Pro.local', 'server': 'srv-1', 'since': 1757500000.0}
+2026-10-14 14:15:31,015 w2cplatform.journal ERROR liveworker: worker.name_taken could not be written to the journal
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/worker.py", line 1152, in _seek_slot
+    self._claim_slot(self.given, 50, steal=False)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/worker.py", line 403, in _claim_slot
+    raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+w2cplatform.contract._NameTaken: slot g-1 is held by somebody-else: a live holder keeps its name
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/journal.py", line 63, in say
+    return self.log.append(self.wall(), kind, cls, durable=True, **fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/events.py", line 387, in append
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 215, in makedirs
+  [Previous line repeated 2 more times]
+  File "<frozen os>", line 225, in makedirs
+OSError: [Errno 30] Read-only file system: '/data'
+test_vms_worker_loops.py::test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up ... OK
+2026-10-14 14:15:31,035 w2cplatform.worker WARNING w-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,036 w2cplatform.worker WARNING w-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,065 w2cplatform.worker WARNING w-1: step pass came back after 30 s
+2026-10-14 14:15:31,122 w2cplatform.worker WARNING d-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,127 w2cplatform.worker WARNING d-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,146 w2cplatform.worker WARNING d-1: step pass came back after 30 s
+2026-10-14 14:15:31,177 w2cplatform.worker WARNING j-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,177 w2cplatform.worker WARNING j-1: step pass has run 20 s; its last heartbeat (of 30 s ago) said again for it
+2026-10-14 14:15:31,193 w2cplatform.worker WARNING j-1: step pass came back after 30 s
+2026-10-14 14:15:31,247 w2cplatform.worker WARNING s-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,251 w2cplatform.worker WARNING s-1: step pass has run 20 s; its last heartbeat (of 30 s ago) said again for it
+2026-10-14 14:15:31,267 w2cplatform.worker WARNING s-1: step pass came back after 30 s
+2026-10-14 14:15:31,300 w2cplatform.worker WARNING g-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,300 w2cplatform.worker WARNING g-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,321 w2cplatform.worker WARNING g-1: step pass came back after 30 s
+2026-10-14 14:15:31,352 w2cplatform.worker WARNING a-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,352 w2cplatform.worker WARNING a-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,371 w2cplatform.worker WARNING a-1: step pass came back after 30 s
+test_vms_worker_loops.py::test_every_workers_loop_has_a_stand_in_for_a_pass_that_hangs ... OK
+2026-10-14 14:15:31,426 w2cplatform.worker WARNING w-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,426 w2cplatform.worker WARNING w-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,429 w2cplatform.worker WARNING w-1: step pass came back after 30 s
+2026-10-14 14:15:31,462 w2cplatform.worker WARNING d-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,463 w2cplatform.worker WARNING d-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,468 w2cplatform.worker WARNING d-1: step pass came back after 30 s
+2026-10-14 14:15:31,503 w2cplatform.worker WARNING j-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,503 w2cplatform.worker WARNING j-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,507 w2cplatform.worker WARNING j-1: step pass came back after 30 s
+2026-10-14 14:15:31,540 w2cplatform.worker WARNING s-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,541 w2cplatform.worker WARNING s-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,545 w2cplatform.worker WARNING s-1: step pass came back after 30 s
+2026-10-14 14:15:31,578 w2cplatform.worker WARNING g-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,579 w2cplatform.worker WARNING g-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,579 w2cplatform.worker WARNING g-1: step pass came back after 30 s
+2026-10-14 14:15:31,612 w2cplatform.worker WARNING a-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+2026-10-14 14:15:31,612 w2cplatform.worker WARNING a-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+2026-10-14 14:15:31,619 w2cplatform.worker WARNING a-1: step pass came back after 30 s
+test_vms_worker_loops.py::test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs ... OK
+2026-10-14 14:15:31,672 w2cplatform.rows ERROR det/slots/d-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,673 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:f52b42: gave slot d-1 up, its units let go; going on as d-8
+2026-10-14 14:15:31,676 w2cplatform.rows ERROR detjob/slots/j-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,676 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:1dae1e: gave slot j-1 up, its units let go; going on as j-8
+2026-10-14 14:15:31,679 w2cplatform.rows ERROR survey/slots/s-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,679 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:fb13f1: gave slot s-1 up, its units let go; going on as s-8
+2026-10-14 14:15:31,682 w2cplatform.rows ERROR live/slots/g-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,683 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:621624: gave slot g-1 up, its units let go; going on as g-8
+2026-10-14 14:15:31,686 w2cplatform.rows ERROR auto/slots/a-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,686 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:63ff59: gave slot a-1 up, its units let go; going on as a-8
+2026-10-14 14:15:31,690 w2cplatform.worker ERROR w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+2026-10-14 14:15:31,690 w2cplatform.rows ERROR cam/slots/w-7: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+2026-10-14 14:15:31,692 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:538380: gave slot w-1 up, its units let go; going on as w-8
+2026-10-14 14:15:31,692 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:538380: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-8
+test_vms_worker_loops.py::test_one_garbled_slot_row_leaves_no_kind_of_vms_worker_nobody_and_is_counted ... OK
+2026-10-14 14:15:31,700 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:124ebd: gave slot d-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+2026-10-14 14:15:31,701 w2cplatform.worker WARNING Murats-MacBook-Pro.local:25664:5ec081: gave slot g-1 up and no other could be claimed (the store did not answer): nobody, taking nothing; trying again on the next step
+test_vms_worker_loops.py::test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_gave_up ... OK
+test_vms_worker_loops.py::test_the_evaluators_loop_has_the_same_lease_step ... OK
+2026-10-14 14:15:31,712 w2cplatform.worker ERROR w-1: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+2026-10-14 14:15:31,826 recworker INFO r-1: writing into srv-1 (file:///tmp/w2c-tests-25664/vmsserver-6piv1upo/volume) — formatted
+2026-10-14 14:15:31,827 w2cplatform.worker ERROR r-1: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+2026-10-14 14:15:31,838 w2cplatform.worker ERROR r-9: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+test_vms_worker_loops.py::test_the_vms_holder_and_recorders_fenced_for_the_schema_stop_speaking_when_another_instance_takes_the_name ... OK
+2026-10-14 14:15:32,624 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:32,625 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:32,626 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-new', 'routes': 'timeline,segment,keeps', 'until': 1757500120}
+2026-10-14 14:15:32,635 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-old', 'routes': 'timeline,segment,keeps', 'until': 1757500120, 'place': 'old'}
+2026-10-14 14:15:32,640 w2cplatform.door INFO r-old: door refused /timeline/1: the token is for holder 'r-new' and this door is 'r-old''s: the unit is elsewhere — ask /where again
+2026-10-14 14:15:32,645 w2cplatform.door INFO r-old: door refused /timeline/2: the token is for rec/1, not rec/2
+2026-10-14 14:15:32,646 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-new', 'routes': 'timeline,segment,keeps', 'until': 1757500120}
+2026-10-14 14:15:32,659 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-new', 'routes': 'timeline,segment,keeps', 'until': 1757500120, 'place': 'new'}
+2026-10-14 14:15:32,668 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-old', 'routes': 'timeline,segment,keeps', 'until': 1757500120, 'place': 'old'}
+test_where_volume.py::test_a_recording_moved_to_another_volume_shows_what_it_left_on_the_first_at_that_volumes_holders_door ... OK
+2026-10-14 14:15:34,398 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:34,400 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:34,400 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-old', 'routes': 'timeline,segment,keeps', 'until': 1757500120, 'place': 'old'}
+2026-10-14 14:15:34,409 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-new', 'routes': 'timeline,segment,keeps', 'until': 1757500180}
+2026-10-14 14:15:34,421 w2cplatform.journal INFO console: door.issued {'sub': 'rec', 'target': '1', 'user': 'operator', 'holder': 'r-new', 'routes': 'timeline,segment,keeps', 'until': 1757500180, 'place': 'new'}
+test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn ... OK
+2026-10-14 14:15:36,234 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 14:15:36,237 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 14:15:36,238 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_where_volume.py::test_the_console_has_no_byte_routes_of_its_own ... OK
+test_writer_watch.py::test_a_quiet_camera_is_not_stalled_and_a_standing_volume_with_megabytes_waiting_is ... OK
+test_writer_watch.py::test_a_volume_that_moves_but_takes_two_thirds_is_losing ... OK
+2026-10-14 14:15:37,264 camworker INFO w-1: start camera 1
+2026-10-14 14:15:37,433 recworker INFO r-1: writing into disks (/tmp/w2c-tests-25664/disks-_9wdt5n9) — formatted
+2026-10-14 14:15:37,662 recworker INFO r-2: writing into copy (/tmp/w2c-tests-25664/copy-otwa_fry) — formatted
+2026-10-14 14:15:37,711 camworker INFO r-1: start camera 1
+2026-10-14 14:15:37,719 camworker INFO r-2: start camera 1-copy
+test_writer_watch.py::test_an_actuator_that_does_not_measure_says_nothing ... OK
+2026-10-14 14:15:37,748 camworker INFO w-1: start camera 1
+2026-10-14 14:15:37,930 recworker INFO r-1: writing into disks (/tmp/w2c-tests-25664/disks-o1p177ku) — formatted
+2026-10-14 14:15:38,151 recworker INFO r-2: writing into copy (/tmp/w2c-tests-25664/copy-zpl52ov9) — formatted
+2026-10-14 14:15:38,219 camworker INFO r-1: start camera 1
+2026-10-14 14:15:38,236 camworker INFO r-2: start camera 1-copy
+2026-10-14 14:15:38,268 recworker WARNING r-1: the writer is stalled ({'state': 'stalled', 'outstanding': 8388608, 'still': 60.0}) — reopening it
+2026-10-14 14:15:38,475 recworker WARNING r-1: disks mounted again (the writer was stalled: reopened)
+2026-10-14 14:15:38,476 recworker INFO r-1: writing into disks (/tmp/w2c-tests-25664/disks-o1p177ku)
+test_writer_watch.py::test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_console_says_it_on_the_volume ... OK
+test_writer_watch.py::test_the_writer_is_reopened_once_in_ten_minutes_however_long_it_stays_wrong ... OK
+2026-10-14 14:15:38,569 camworker INFO w-1: start camera 1
+2026-10-14 14:15:38,743 recworker INFO r-1: writing into disks (/tmp/w2c-tests-25664/disks-qlpw1afo) — formatted
+2026-10-14 14:15:38,874 recworker INFO r-2: writing into copy (/tmp/w2c-tests-25664/copy-dwvgd3tq) — formatted
+2026-10-14 14:15:38,913 camworker INFO r-1: start camera 1
+2026-10-14 14:15:38,929 camworker INFO r-2: start camera 1-copy
+2026-10-14 14:15:38,955 camworker INFO r-1: start camera 2
+2026-10-14 14:15:38,956 recworker WARNING r-1: the writer is stalled ({'state': 'stalled', 'outstanding': 4194304, 'still': 61.0}) — reopening it
+test_writer_watch.py::test_what_was_offered_stays_offered_when_a_recording_stops ... OK
+
+342 passed, 0 failed, 0 skipped

@@ -3,7 +3,6 @@ on each other. The console's pass reads (the view, `domain/view`, kept edits); t
 runs where the signer's key is: `domain.signer_service`, when it is given CLUSTERS.
 
     C2 sources/primaries are published by ordinary workers and collected by the platform.
-    polls        Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
     stream-accounts          for each cluster: the RTSP accounts its grants name, passwords sealed — where the spec
@@ -41,9 +40,8 @@ class Books:
             ("following the members", self._follow_members),
             ("following the topology", self._follow_topology),
             ("the read view's pass", c.view.refresh),
-            ("polls", lambda: len(c.publish_polls())),
             ("the shared settings", lambda: published(c.vars, self.objects)))
-        out = {k: got[k] for k in ("polls",) if got.get(k) is not None}
+        out = {}
         if "the shared settings" in got:                 # a document nobody can read writes no book of asks: the last stays
             settings = got["the shared settings"]
             more = self.steps.run(

@@ -1,0 +1,197 @@
+temp: /tmp/w2c-tests-21223
+test_policies.py::test_a_controller_deletes_a_unit_row_only_when_its_spec_says_unplaced_delete_after_and_never_writes_one ... OK
+test_policies.py::test_a_door_of_a_move_whose_store_does_not_answer_says_503_never_no_copy ... OK
+test_policies.py::test_a_key_is_exact_and_a_prefix_says_so ... OK
+test_policies.py::test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grants_and_no_other_does ... OK
+test_policies.py::test_each_role_says_its_sockets_group_in_the_products_format ... OK
+2026-10-14 13:54:46,222 recworker INFO r-srv-a-1: writing into disks-a (/tmp/w2c-tests-21223/clustervms-__0rska2/srv-a/disks) — formatted
+2026-10-14 13:54:46,225 root INFO r-srv-a-1: released disks-a on the way out
+2026-10-14 13:54:46,234 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,234 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:46,235 w2cplatform.worker ERROR w-srv-a-1: FENCED (slot w-srv-a-1 is held by another instance now). Stopping every unit.
+2026-10-14 13:54:46,236 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,236 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:46,261 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,261 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:46,261 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:46,261 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:46,263 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:46,263 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:46,263 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:46,263 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:46,275 w2cplatform.worker WARNING srv-c:4103:001007: a spare for labels '' took offer w-2
+2026-10-14 13:54:46,287 camworker INFO w-2: start camera 9
+2026-10-14 13:54:46,312 camworker INFO w-srv-c-1: start camera 1
+2026-10-14 13:54:46,423 w2cplatform.contract WARNING cam: server srv-c decommissioned (by anna): slots w-srv-c-1 released, units 2 move
+2026-10-14 13:54:46,423 w2cplatform.journal INFO camcontroller: server.decommissioned {'sub': 'cam', 'server': 'srv-c', 'by': 'anna', 'slots': 'w-srv-c-1', 'units': '2', 'holds': ''}
+2026-10-14 13:54:46,485 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,485 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:46,485 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:46,485 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:46,487 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:46,487 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:46,487 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:46,487 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:46,548 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,548 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:46,548 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:46,548 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:46,550 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:46,550 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:46,550 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:46,550 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:46,592 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:46,593 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:46,593 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:46,595 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:46,634 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:46,831 recworker INFO r-srv-a-1: writing into srv-a (file:///tmp/w2c-tests-21223/clustervms-k6f6mhsf/srv-a/volume) — formatted
+2026-10-14 13:54:47,149 recworker INFO r-srv-b-1: writing into srv-b (file:///tmp/w2c-tests-21223/clustervms-k6f6mhsf/srv-b/volume) — formatted
+2026-10-14 13:54:47,357 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:47,357 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:47,425 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:47,425 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:47,425 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:47,432 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:47,432 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:47,434 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:47,457 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:47,457 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:47,457 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:47,474 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:47,475 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:47,475 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:47,598 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:47,598 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:47,598 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:47,615 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:47,615 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:47,615 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:47,622 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:47,622 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:47,623 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:47,647 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:47,647 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:47,647 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:47,648 w2cplatform.worker WARNING w-srv-a-1: camera 1 stopped: a newer epoch was issued for it
+2026-10-14 13:54:47,648 w2cplatform.worker WARNING w-srv-a-1: camera 2 stopped: a newer epoch was issued for it
+2026-10-14 13:54:47,648 w2cplatform.worker WARNING w-srv-a-1: camera 3 stopped: a newer epoch was issued for it
+2026-10-14 13:54:47,664 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:47,664 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:47,664 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:47,670 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:47,670 w2cplatform.worker WARNING w-srv-a-1: camera 2 stopped: a newer epoch was issued for it
+2026-10-14 13:54:48,622 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:48,626 camworker INFO w-srv-a-1: playback door on 127.0.0.1:52701
+2026-10-14 13:54:48,628 w2cplatform.console INFO no door of the box's own (CONSOLE_UNIX is not set): the emergency entry has the network's turns only
+2026-10-14 13:54:48,630 w2cplatform.access WARNING this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+2026-10-14 13:54:48,638 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': 'vlan:cctv-a', 'user': 'operator'}
+2026-10-14 13:54:48,640 w2cplatform.journal INFO console: server.labels.cleared {'server': 'srv-a', 'user': 'operator'}
+2026-10-14 13:54:48,649 w2cplatform.journal INFO console: server.labels.set {'server': 'srv-a', 'labels': 'vlan:cctv-a', 'user': 'operator'}
+2026-10-14 13:54:48,695 w2cplatform.journal INFO console: server.decommission_requested {'server': 'srv-a', 'user': 'operator', 'why': 'the server burnt'}
+2026-10-14 13:54:48,698 w2cplatform.journal INFO console: server.decommission_withdrawn {'server': 'srv-a', 'user': 'operator'}
+2026-10-14 13:54:48,739 w2cplatform.journal INFO console: server.decommission_requested {'server': 'srv-a', 'user': 'operator', 'why': 'the server burnt'}
+2026-10-14 13:54:49,211 w2cplatform.contract WARNING cam: server srv-a decommissioned (by operator): slots w-srv-a-1 released, units 1 move
+2026-10-14 13:54:49,211 w2cplatform.journal INFO camcontroller: server.decommissioned {'sub': 'cam', 'server': 'srv-a', 'by': 'operator', 'slots': 'w-srv-a-1', 'units': '1', 'holds': ''}
+2026-10-14 13:54:49,213 w2cplatform.spec WARNING cam: 1 stay on w-srv-a-1 (slot w-srv-a-1 released): no live worker takes it — moved when one does, asked again every pass
+2026-10-14 13:54:49,213 w2cplatform.journal INFO camcontroller: units.left_on_leaving {'sub': 'cam', 'unit': '1', 'units': 1, 'worker': 'w-srv-a-1', 'why': '1 stay on w-srv-a-1 (slot w-srv-a-1 released): no live worker has the reach and the room for it — written by nobody until one does'}
+2026-10-14 13:54:49,213 w2cplatform.spec ERROR cam: spares for labels '' are short and none is offered: no server a spare could run on reaches every unit
+2026-10-14 13:54:49,213 w2cplatform.journal INFO camcontroller: spares.no_server {'sub': 'cam', 'labels': '', 'why': 'no server a spare could run on reaches every unit'}
+2026-10-14 13:54:49,221 w2cplatform.contract WARNING rec: server srv-a decommissioned (by operator): slots none released, units none move
+2026-10-14 13:54:49,222 w2cplatform.journal INFO reccontroller: server.decommissioned {'sub': 'rec', 'server': 'srv-a', 'by': 'operator', 'slots': '', 'units': '', 'holds': ''}
+test_policies.py::test_every_row_the_code_reads_is_granted ... OK
+test_policies.py::test_every_secret_row_of_the_shared_table_is_read_by_its_readers_and_by_nobody_else ... OK
+test_policies.py::test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there ... OK
+test_policies.py::test_every_write_the_code_makes_is_granted ... OK
+test_policies.py::test_nothing_writes_what_it_has_no_business_writing ... OK
+test_policies.py::test_resource_reads_common_retention_and_never_a_units_old_policy ... OK
+test_policies.py::test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_password_and_no_row ... OK
+test_policies.py::test_the_committed_file_is_what_the_spec_generates ... OK
+test_policies.py::test_the_console_writes_the_marks_of_requests_and_no_other_object_of_a_worker ... OK
+test_policies.py::test_the_consoles_doors_of_a_move_read_what_the_console_may ... OK
+test_policies.py::test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone ... OK
+test_policies.py::test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_epoch_on_the_real_rights ... OK
+test_policies.py::test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people ... OK
+test_policies.py::test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them ... OK
+test_policies.py::test_the_holder_reads_no_more_of_the_domain_than_its_door_asks ... OK
+test_policies.py::test_the_recorder_reads_the_books_its_ingest_and_forwarder_read ... OK
+2026-10-14 13:54:49,516 recworker INFO r-srv-a-1: writing into disks-a (/tmp/w2c-tests-21223/clustervms-ikrz3k0n/srv-a/disks) — formatted
+2026-10-14 13:54:49,519 root INFO r-srv-a-1: released disks-a on the way out
+2026-10-14 13:54:49,528 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,528 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:49,530 w2cplatform.worker ERROR w-srv-a-1: FENCED (slot w-srv-a-1 is held by another instance now). Stopping every unit.
+2026-10-14 13:54:49,530 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,530 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:49,557 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,557 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:49,557 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:49,557 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:49,559 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:49,559 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:49,559 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:49,559 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:49,574 w2cplatform.worker WARNING srv-c:4103:001007: a spare for labels '' took offer w-2
+2026-10-14 13:54:49,597 camworker INFO w-2: start camera 9
+2026-10-14 13:54:49,634 camworker INFO w-srv-c-1: start camera 1
+2026-10-14 13:54:49,724 w2cplatform.contract WARNING cam: server srv-c decommissioned (by anna): slots w-srv-c-1 released, units 2 move
+2026-10-14 13:54:49,724 w2cplatform.journal INFO camcontroller: server.decommissioned {'sub': 'cam', 'server': 'srv-c', 'by': 'anna', 'slots': 'w-srv-c-1', 'units': '2', 'holds': ''}
+2026-10-14 13:54:49,768 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,768 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:49,768 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:49,768 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:49,770 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:49,770 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:49,770 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:49,770 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:49,821 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,821 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:49,821 camworker INFO w-srv-a-1: start camera 5
+2026-10-14 13:54:49,821 camworker INFO w-srv-a-1: start camera 7
+2026-10-14 13:54:49,823 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:49,823 camworker INFO w-srv-b-1: start camera 4
+2026-10-14 13:54:49,823 camworker INFO w-srv-b-1: start camera 6
+2026-10-14 13:54:49,823 camworker INFO w-srv-b-1: start camera 8
+2026-10-14 13:54:49,859 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:49,861 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:49,861 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:49,863 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:49,889 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:50,054 recworker INFO r-srv-a-1: writing into srv-a (file:///tmp/w2c-tests-21223/clustervms-dsms1hpt/srv-a/volume) — formatted
+2026-10-14 13:54:50,323 recworker INFO r-srv-b-1: writing into srv-b (file:///tmp/w2c-tests-21223/clustervms-dsms1hpt/srv-b/volume) — formatted
+2026-10-14 13:54:50,518 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:50,518 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:50,589 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:50,589 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:50,589 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:50,595 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:50,595 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:50,597 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:50,622 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:50,622 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:50,622 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:50,638 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:50,638 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:50,638 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:50,726 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:50,726 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:50,726 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:50,741 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:50,741 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:50,741 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:50,747 w2cplatform.resource WARNING srv-b: srv-a did not answer for its objects (http://srv-a:8090 does not answer): left out of the cluster's answers, asked again in 10 s
+2026-10-14 13:54:50,747 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:50,749 w2cplatform.cluster.objectstore WARNING objects: srv-a did not answer — their objects are left out of what is read here
+2026-10-14 13:54:50,774 camworker INFO w-srv-b-1: start camera 1
+2026-10-14 13:54:50,774 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:50,774 camworker INFO w-srv-b-1: start camera 3
+2026-10-14 13:54:50,774 w2cplatform.worker WARNING w-srv-a-1: camera 1 stopped: a newer epoch was issued for it
+2026-10-14 13:54:50,775 w2cplatform.worker WARNING w-srv-a-1: camera 2 stopped: a newer epoch was issued for it
+2026-10-14 13:54:50,775 w2cplatform.worker WARNING w-srv-a-1: camera 3 stopped: a newer epoch was issued for it
+2026-10-14 13:54:50,794 camworker INFO w-srv-a-1: start camera 1
+2026-10-14 13:54:50,794 camworker INFO w-srv-a-1: start camera 2
+2026-10-14 13:54:50,794 camworker INFO w-srv-a-1: start camera 3
+2026-10-14 13:54:50,805 camworker INFO w-srv-b-1: start camera 2
+2026-10-14 13:54:50,806 w2cplatform.worker WARNING w-srv-a-1: camera 2 stopped: a newer epoch was issued for it
+test_stand.py::test_every_stored_trace_is_what_the_code_does_now ... OK
+
+22 passed, 0 failed, 0 skipped

@@ -222,12 +222,10 @@ class DeviceCluster:
                 "cameras": [{**shown, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"cam/heartbeats/{self.serial}", json.dumps(hb).encode())
         self.ram.put(f"cam/snapshot/{self.serial}", json.dumps(snap).encode())
-        from vms.recording_publication import publish, sources
-        from w2cplatform.domain.placement import placed
-        assignment = placed(self.flash, "rec", self.serial)
+        from vms.recording_publication import publish, sources, member
+        if member(self.flash) is None:
+            return
         if self.publisher is None:
-            if assignment is None:
-                return
             from vms.config import SPEC
             from w2cplatform.worker import Worker
             self.publisher = Worker(SPEC.sub, None, self.flash, self.ram,

@@ -407,7 +407,8 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     """М10's ninth review, minor: the holder's grant once covered every row that marks a member — the grants and
     `domain/break-glass/*`, the emergency password's hashes, among them — while its playback door verifies no token and
     asks only whether the cluster is in a domain (`Gate.gated`: the key set, and `domain/member` while there is none).
-    Not wider than the code: of `domain/*` the worker reads exactly those two rows."""
+    The door itself reads exactly those two rows. The role also reads its declared C2 recording books and
+    C4 poll book/home policy; these grants are checked exactly below."""
     import tempfile
     from vms.worker import FakeActuator, VmsWorker
     from w2cplatform.access import MEMBER_MARK, TRUST_KEYS
@@ -416,6 +417,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     granted = {p for p in doc()["roles"]["camworker"]["read"] if p.startswith("domain")}
     assert granted == {TRUST_KEYS, MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
                        "domain/cam/sources/*", "domain/rec/primaries/*", "domain/holder",
+                       "domain/rec/polls", "domain/rec/polls/*", "domain/member-topology", "domain/topology",
                        "domain/placed/rec/*", "domain/placement/rec/*"}, sorted(granted)
     root = tempfile.mkdtemp()
     vars_, read = FileVariables(f"{root}/vars"), []

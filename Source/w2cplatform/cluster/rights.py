@@ -153,7 +153,10 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         member_results = [r + "/*" for r in s.worker_reads if r in collected]
         member_results += [s.domain_prefix + b + "/*" for b in s.domain.merged] if s.domain else []
         member_reads = ["domain/holder"] if any(r.startswith("domain/") for r in s.worker_reads) or s.domain and s.domain.merged else []
-        if "domain/member-topology" in s.worker_reads:
+        unit_scope = s.domain and any(rule.get("unit") for rule in s.domain.tokens.values())
+        if unit_scope:
+            member_reads.extend(["domain/holder", "domain/member-topology"])
+        if "domain/member-topology" in s.worker_reads or unit_scope:
             member_reads.append("domain/topology")
         grants = [f"{GRANTS_PREFIX}*"] if s.door_routes else []
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]

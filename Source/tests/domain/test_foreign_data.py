@@ -94,7 +94,7 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     books = Books(BookInputs(north.vars, view, wall, issuer=signer.tokens), north.objects)
     for _ in range(2):
         wall.advance(5); out = books.pass_once()
-    assert out["failing"] == [] and {"polls", "asks"} <= set(out)
+    assert out["failing"] == [] and "asks" in out and "polls" not in out
     page_ = view.list()
     assert page_["clusters"][cam.name] == "unreachable" and "complete report" in page_["why"][cam.name]
     assert MEMBER_OBJECTS.counts.get(cam.name, 0) == before + 1           # once, not once per read or per pass

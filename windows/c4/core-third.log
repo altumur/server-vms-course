@@ -1,0 +1,85 @@
+temp: /tmp/w2c-tests-16412
+test_boundary.py::test_the_debt_is_compared_by_count_and_a_shrink_only_lowers_it ... OK
+test_boundary.py::test_the_debt_lines_are_well_formed_and_name_a_step_of_the_plan ... OK
+test_boundary.py::test_the_dictionary_reads_words_and_identifiers_and_not_substrings ... OK
+  boundary: found {}; the debt owes {}
+test_boundary.py::test_the_platform_crosses_the_boundary_nowhere_but_where_the_debt_says_and_the_debt_only_shrinks ... OK
+test_boundary.py::test_the_testsub_spec_is_nobodys_but_the_platforms ... OK
+test_recording_poll_push.py::test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_sending_bytes ... OK
+test_recording_poll_push.py::test_holder_move_changes_fallback_home_and_invalidates_the_old_holder_credential ... OK
+test_recording_poll_push.py::test_home_switch_forgets_previous_route_and_credential_before_new_observation_arrives ... OK
+test_recording_poll_push.py::test_ingest_refusal_forgets_the_poll_credential_and_next_pass_obtains_a_current_one ... OK
+test_recording_poll_push.py::test_late_role_reply_after_address_change_cannot_restore_superseded_ingest ... OK
+test_recording_poll_push.py::test_late_role_reply_after_complete_withdrawal_does_not_create_a_poll_route ... OK
+test_recording_poll_push.py::test_late_role_reply_after_home_switch_does_not_restore_previous_home ... OK
+test_recording_poll_push.py::test_missing_observation_opens_no_new_poll_but_established_same_scope_may_continue ... OK
+test_recording_poll_push.py::test_unassigned_poll_source_exposes_neither_address_credentials_nor_push_and_tracks_home ... OK
+test_recording_polls.py::test_home_follows_via_then_centre_then_holder_and_cannot_reuse_old_home_fact ... OK
+rec/heartbeats/a-bad-address: heartbeat does not parse; skipped
+rec/heartbeats/a-garbage: heartbeat does not parse; skipped
+rec/heartbeats/a-misnamed: heartbeat does not parse; skipped
+rec/heartbeats/a-torn: heartbeat does not parse; skipped
+test_recording_polls.py::test_publisher_elects_smallest_fresh_recorder_and_sorts_distinct_ingests ... OK
+test_recording_polls.py::test_publisher_excludes_recorded_nonpolling_missing_conflicting_and_unaddressed_sources ... OK
+test_recording_polls.py::test_publisher_reads_current_holder_sources_and_topology_instead_of_stale_copies ... OK
+test_recording_polls.py::test_reader_refuses_missing_conflicting_foreign_flat_and_secret_bearing_observations ... OK
+test_recording_polls.py::test_reader_uses_current_holder_result_and_refuses_old_copy_after_holder_move ... OK
+test_recording_polls.py::test_unassigned_polling_camera_gets_only_its_home_ingest_and_no_book_token ... OK
+test_recording_polls.py::test_worker_pulses_before_building_poll_input_and_slot_guard_rejects_replaced_writer ... OK
+test_recording_publication.py::test_camera_heartbeat_publishes_only_its_origin_and_replaced_writer_is_fenced ... OK
+test_recording_publication.py::test_centre_derives_a_receiver_without_receiving_the_camera_source_or_credentials ... OK
+test_recording_publication.py::test_pull_camera_that_polls_gets_an_ingest_address_without_requesting_push ... OK
+test_recording_publication.py::test_recorder_failure_memory_is_local_and_resets_on_source_or_assignment_change ... OK
+test_recording_publication.py::test_recorder_heartbeat_publishes_enabled_and_running_false_without_tokens_or_nulls ... OK
+test_recording_publication.py::test_recorder_primary_selection_grace_and_backfill_use_the_whole_assigned_book ... OK
+test_recording_push.py::test_corrupt_book_keeps_a_working_channel_and_covers_only_after_absence_grace ... OK
+test_recording_push.py::test_poll_only_route_answers_work_without_sending_frames_even_when_a_viewer_wants_them ... OK
+test_recording_push.py::test_pusher_uses_one_in_memory_token_and_distinct_cursors_for_primary_and_two_reserves ... OK
+test_recording_push.py::test_reserve_writers_independently_follow_primary_state_and_absence_grace ... OK
+test_recording_push.py::test_stream_receiver_accepts_only_member_list_reference_signature_and_current_token ... OK
+test_spec_parity.py::test_a_value_is_read_at_its_path_and_a_missing_key_is_absent ... OK
+test_spec_parity.py::test_every_debt_line_names_its_decision_and_the_other_sides_owner ... OK
+test_spec_parity.py::test_every_spec_of_the_product_loads_with_the_courses_loader_but_for_the_debt ... OK
+test_spec_parity.py::test_the_lists_words_are_read_as_the_products_test_does ... OK
+test_spec_parity.py::test_the_operational_names_in_the_specs_are_the_products_value_for_value ... OK
+  waiting for the product: its spec_parity_debt.txt is not true of the specs as they stand — it should strike 21 lines and is short of 0
+test_spec_parity.py::test_the_parity_debt_is_the_products_file_byte_for_byte ... OK
+test_spec_parity.py::test_the_specs_keys_are_the_products_but_for_the_debt_and_the_debt_only_shrinks ... OK
+test_spec_parity.py::test_the_walk_reads_a_spec_as_the_products_test_does ... OK
+test_spec_parity.py::test_unit_probe_recognizes_c4_and_names_only_unsupported_later_fields ... OK
+test_spec_parity.py::test_unknown_token_scope_probe_does_not_manufacture_refusals_of_partial_bindings ... OK
+test_spec_parity.py::test_unsupported_token_target_probe_does_not_manufacture_partial_binding_faults ... OK
+test_spec_rule.py::test_a_key_no_spec_uses_is_found_by_the_walk ... OK
+test_spec_rule.py::test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_by_a_test_subsystem ... OK
+test_token_requests.py::test_declared_centre_target_comes_only_from_confirmed_holder_topology ... OK
+test_token_requests.py::test_local_client_timeout_drops_late_reply_and_retry_asks_again ... OK
+test_token_requests.py::test_local_handler_refuses_network_connections_even_with_an_allowed_role ... OK
+test_token_requests.py::test_local_socket_role_is_fixed_and_failed_request_leaves_no_cached_reply ... OK
+test_token_requests.py::test_no_grant_foreign_role_ref_member_or_broken_assignment_cannot_issue ... OK
+test_token_requests.py::test_one_role_socket_resolves_kinds_of_two_subsystems_and_refuses_foreign_role ... OK
+test_token_requests.py::test_real_holder_and_relay_http_preserve_the_member_signature_and_encrypted_reply ... OK
+test_token_requests.py::test_remote_body_cannot_supply_target_claims_or_replay_reply_to_another_request ... OK
+test_token_requests.py::test_reply_expiry_is_authenticated_with_the_ciphertext ... OK
+test_token_requests.py::test_revoked_member_and_frozen_holder_do_not_issue_tokens ... OK
+test_token_requests.py::test_role_groups_match_controller_and_worker_configstore_groups ... OK
+test_token_requests.py::test_role_socket_bootstrap_and_installation_follow_loaded_grants ... OK
+token request door unavailable for role testsubworker
+test_token_requests.py::test_role_socket_startup_is_disabled_by_default_and_refuses_unsafe_real_directories ... OK
+test_token_requests.py::test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassignment ... OK
+test_token_requests.py::test_signature_covers_bytes_route_time_and_reply_is_bound_to_original_member_and_request ... OK
+test_token_requests.py::test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems ... OK
+test_token_requests.py::test_token_spec_rejects_unknown_unsafe_and_partial_bindings ... OK
+south/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+test_unit_token_requests.py::test_local_unaccepted_or_other_members_unit_never_authorizes_issuance ... OK
+test_unit_token_requests.py::test_malformed_snapshot_or_nonunit_heartbeat_never_proves_a_unit ... OK
+south/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_unit_token_requests.py::test_new_accepted_report_withdraws_a_unit_and_malformed_report_cannot_reuse_old_data ... OK
+test_unit_token_requests.py::test_poll_home_refuses_malformed_or_unconfirmed_policy_before_choosing_another_route ... OK
+test_unit_token_requests.py::test_poll_home_uses_local_location_not_target_member_and_has_no_unknown_fallback ... OK
+test_unit_token_requests.py::test_unadmitted_or_revoked_member_cannot_request_for_its_previous_report ... OK
+test_unit_token_requests.py::test_unit_binding_reads_only_home_policy_and_does_not_grant_domain_writes ... OK
+test_unit_token_requests.py::test_unit_loader_is_closed_requires_claims_grant_ref_and_exactly_one_binding ... OK
+test_unit_token_requests.py::test_unit_token_comes_from_own_accepted_snapshot_in_two_subsystems_without_assignment ... OK
+test_unit_token_requests.py::test_unit_token_tracks_authoritative_topology_and_current_holder_without_member_copy_override ... OK
+
+73 passed, 0 failed, 0 skipped
