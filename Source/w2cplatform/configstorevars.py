@@ -76,8 +76,8 @@ import urllib.parse
 import uuid
 
 from .limits import TooLarge, check
-from .storemachine import MAX_VALUE, wire_version                 # the machine and the API, no raft and no socket
-from .variables import (GuardFailed, guard_check, KEY_BYTES, STORE_SCHEME, Conflict, Forbidden, KeyTooLong, items_bytes, refuse_delete,
+from .storemachine import MAX_KEY_BYTES, MAX_VALUE, wire_version                 # the machine and the API, no raft and no socket
+from .variables import (GuardFailed, guard_check, STORE_SCHEME, Conflict, Forbidden, items_bytes, refuse_delete,
                         register_scheme, safe_path)
 
 REFUSED_WAIT = 5.0         # D: how long a refused connection to this server's daemon is tried again
@@ -197,11 +197,11 @@ class ConfigstoreVariables:
         if why:
             raise Forbidden(why)
 
-    # The same longest key `FileVariables` takes, refused the same way: a box's rows and a cluster's are one set.
+    # The wire key bound is raw UTF-8, independent of FileVariables' earlier encoded filename limit.
     @staticmethod
     def _too_long(path: str) -> int:
-        n = len(safe_path(path).replace("%", "%25").replace("/", "%2F").encode())
-        return n if n > KEY_BYTES else 0
+        n = len(safe_path(path).encode())
+        return n if n > MAX_KEY_BYTES else 0
 
     def _call(self, method: str, target: str, body: dict | None = None) -> dict:
         write = body is not None
@@ -269,7 +269,7 @@ class ConfigstoreVariables:
         check(path, items_bytes(items), self.max_bytes)
         n = self._too_long(path)
         if n:
-            raise KeyTooLong(path, n)
+            raise ValueError(f"not a key: longer than {MAX_KEY_BYTES} bytes")
         body = {"op": "put", "key": path, "items": {str(k): str(v) for k, v in items.items()},
                 "cas": None if cas is None else ("" if cas == 0 and not isinstance(cas, bool) else str(cas))}
         guard_check(guard, self.writer, self.acl)
