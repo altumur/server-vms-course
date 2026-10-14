@@ -159,6 +159,7 @@ class DeviceCluster:
         # which is how the domain checks a scenario naming it (Lesson 16, step 8). None — it has not said.
         self.can = can
         self.asks = None
+        self.ask_publisher = None
 
     # -- power ----------------------------------------------------------------------------------------
     # The order is the lesson. The epoch first, because everything the camera writes after it carries it.
@@ -166,6 +167,7 @@ class DeviceCluster:
     def boot(self, first_name: str | None = None) -> int:
         self.door_open = False
         self.asks = None
+        self.ask_publisher = None
         self.ram = Ram()                                 # what lived in RAM did not survive, and should not have
         self.epoch, _ = next_epoch(self.flash, EPOCH)
         if self.flash.get(ROW)[0] is None:
@@ -179,6 +181,7 @@ class DeviceCluster:
     def power_off(self) -> None:
         self.door_open = False
         self.asks = None
+        self.ask_publisher = None
 
     def host_scenarios(self, agent, dial, steady=time.monotonic):
         from vms.autoask_runtime import Embedded
@@ -186,7 +189,7 @@ class DeviceCluster:
         return self
 
     def on_event(self, kind, event=None):
-        if not self.door_open or self.asks is None:
+        if self.asks is None:
             return []
         return self.asks.on_event(kind, event)
 
@@ -251,6 +254,11 @@ class DeviceCluster:
         source_status = {**status, "live_url": hb["live_url"], "polls": True,
                          **({"push": True} if self.pushes else {})}
         publish(self.publisher, "sources", sources(self.publisher, [source_status]))
+        from vms.autoask_runtime import EmbeddedPublisher
+        if self.ask_publisher is None:
+            self.ask_publisher = EmbeddedPublisher(self.serial, self.flash, self.local_objects(),
+                                                  self.disk, self.wall, self.wall)
+        self.ask_publisher.publish()
 
 
 
