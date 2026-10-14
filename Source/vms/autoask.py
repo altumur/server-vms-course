@@ -22,7 +22,7 @@ def scenarios(settings):
         if isinstance(name, str) and name:
             names[name] = names.get(name, 0) + 1
     valid, refused = [], {}
-    from .domainpart.ingest import ASK_DEADLINE_MAX
+    from .ingest import ASK_DEADLINE_MAX
     for index, item in enumerate(items, 1):
         name = item.get('name') if isinstance(item, dict) else None
         named = isinstance(name, str) and bool(name)
@@ -113,7 +113,7 @@ class Executor:
                 done.append({**outcome, 'state': f'over its ceiling of {cap}/min: not asked'})
                 continue
             recent.append(now)
-            from .domainpart.ingest import Refused
+            from .ingest import Refused
             from w2cplatform.domain.federation import Unreachable
             from .recording_books import Unconfirmed
             try:
@@ -339,7 +339,7 @@ class Asker:
         return None
 
     def outcome(self, target, aid, deadline):
-        from .domainpart.ingest import ANSWER_GRACE
+        from .ingest import ANSWER_GRACE
         from .recording_books import Unconfirmed
         from w2cplatform.domain.federation import Unreachable
         try:
