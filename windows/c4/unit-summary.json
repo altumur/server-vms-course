@@ -1,0 +1,61 @@
+{
+  "code": "6d9a8a1787afd2fa4033c9db3939b64857415b85",
+  "all_modules_once": true,
+  "python_modules": 160,
+  "native_js_files": 40,
+  "python_tests": 1895,
+  "parts": [
+    {
+      "part": 1,
+      "modules": 41,
+      "totals": [
+        631,
+        0,
+        0
+      ],
+      "exit": 0,
+      "log": "unit-part-1.log"
+    },
+    {
+      "part": 2,
+      "modules": 40,
+      "totals": [
+        475,
+        0,
+        0
+      ],
+      "exit": 0,
+      "log": "unit-part-2.log"
+    },
+    {
+      "part": 3,
+      "modules": 40,
+      "totals": [
+        487,
+        0,
+        0
+      ],
+      "exit": 0,
+      "log": "unit-part-3.log"
+    },
+    {
+      "part": 4,
+      "modules": 40,
+      "totals": [
+        342,
+        0,
+        0
+      ],
+      "exit": 0,
+      "log": "unit-part-4.log"
+    }
+  ],
+  "totals": [
+    1935,
+    0,
+    0
+  ],
+  "exit": 0,
+  "runtime_digests_unchanged": true,
+  "final_source_digests_unchanged": true
+}
