@@ -58,7 +58,7 @@ def _missing(value):
     return tuple(sorted(value))
 
 
-def read(items, ref: str) -> Facts:
+def read(items, ref: str, *, value_key="ref") -> Facts:
     """Read a key with its mandatory completeness marker; errors contain no values."""
     if not isinstance(items, dict) or not isinstance(ref, str) or not ref or "" not in items:
         raise Unconfirmed("book has no completeness marker")
@@ -78,7 +78,7 @@ def read(items, ref: str) -> Facts:
             raise Unconfirmed("invalid book origin")
         member, item, value = entry["member"], entry["item"], entry["value"]
         if not isinstance(member, str) or not member or not isinstance(item, str) or not item \
-                or not isinstance(value, dict) or value.get("ref") != ref or (member, item) in seen:
+                or not isinstance(value, dict) or value.get(value_key) != ref or (member, item) in seen:
             raise Unconfirmed("invalid book observation")
         seen.add((member, item))
         entries.append(Observation(member, item, value))
