@@ -134,8 +134,8 @@ class Executor:
 BOOK = 'domain/auto/asks'
 
 
-def contribution(worker, settings):
-    """The elected ordinary auto worker advertises only this cluster's ingests."""
+def contribution(worker, settings, *, elect=True):
+    """Advertise local ingests; ordinary workers elect, an embedded process is sole."""
     import json
     from w2cplatform.contract import parse_heartbeat
     from w2cplatform.domain.memberbook import members, read as member_book
@@ -149,7 +149,7 @@ def contribution(worker, settings):
     if not own or not worker.name:
         return {}
     live, urls = [], set()
-    for sub in ('auto', 'rec'):
+    for sub in (('auto', 'rec') if elect else ('rec',)):
         for key in worker.objects.list(sub + '/heartbeats/'):
             hb = parse_heartbeat(key, worker.objects.get(key))
             if hb is None or not worker.eyes.fresh(key, hb.token, 45):
@@ -158,7 +158,7 @@ def contribution(worker, settings):
                 live.append(hb.worker)
             elif isinstance(hb.extra.get('ingest'), str) and hb.extra['ingest']:
                 urls.add(hb.extra['ingest'])
-    if not live or min(live) != worker.name or not urls:
+    if not urls or elect and (not live or min(live) != worker.name):
         return {}
     try:
         topology = member_topology(worker.vars, own)
@@ -271,6 +271,10 @@ class Asker:
             raise Unconfirmed('ask book or member identity is invalid') from None
 
     def ask(self, target, action, within):
+        return self.ask_until(target, action, self.clock() + within)
+
+    def ask_until(self, target, action, deadline):
+        """Carry an existing ask without restarting its deadline at this hop."""
         from w2cplatform.domain.agent import ClusterTrust, Untrusted
         from w2cplatform.domain.topology import member_topology
         from w2cplatform.domain.placement import placed
@@ -278,7 +282,12 @@ class Asker:
         from w2cplatform.trust.jcs import jcs
         from w2cplatform.domain.federation import Unreachable
         from .recording_books import Unconfirmed
-        deadline = self.clock() + within
+        try:
+            valid_deadline = type(deadline) in (int, float) and math.isfinite(deadline) and deadline > self.clock()
+        except OverflowError:
+            valid_deadline = False
+        if not valid_deadline:
+            raise Unconfirmed('ask deadline has passed or is invalid')
         own, facts = self._roads(target, action)
         if not facts:
             raise Unconfirmed('ask has no confirmed road')
@@ -319,6 +328,8 @@ class Asker:
             if fact.member not in claims['aud'] or fact.value.get('up') != claims.get('up'):
                 continue
             for url in fact.value['urls']:
+                if self.clock() >= deadline:
+                    raise Unconfirmed('ask deadline passed while trying its roads')
                 try:
                     ingest = self.dial(url)
                     aid = ingest.ask(token, target, action, deadline, camera_now=self.clock())
