@@ -1,283 +1,154 @@
-"""Lesson 13 — a stream from another cluster.
+"""Assigned recording observations cross clusters; work and ownership stay local."""
+import json
 
-A server's recorder recording a camera that is a cluster of its own. The recorder is unchanged in what it
-does and changed only in where it finds the camera: not in its own cluster's heartbeats, which do not
-contain it, but in a source book the domain publishes for its cluster and the cluster's agent carries home
-— so the recording goes on with the domain switched off. Data crosses between clusters; work does not.
-"""
-
-from tests.reporting import sync as report_sync
-from w2cplatform.cluster.variables import FakeVariables
-
-from w2cplatform.domain.agent import DomainAgent
-from w2cplatform.domain.api import ApiError
-from vms.domainpart.crossing import Crossings, NotResolvable, plan_backfill, resolve
+from tests.reporting import sync
+from tests.domain.conftest import Clock, make_cluster
+from tests.domainvms.recording_domain import RecordingDomain
 from vms.domainpart.device import DeviceCluster
+from vms.domainpart.inputs import BookInputs
+from vms.recording_books import primary, source
+from vms.recording_sources import NotResolvable, plan_backfill, resolve
+from w2cplatform.cluster.variables import FakeVariables
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+from w2cplatform.domain.api import ApiError
 from w2cplatform.domain.federation import Federation
-from w2cplatform.domain.uplink import member_copy
 from w2cplatform.domain.readview import ReadView
-from tests.domain.conftest import Clock, Running, make_cluster
+from w2cplatform.domain.uplink import member_copy
+from w2cplatform.trust.signer import Signer
 
 SERIAL = "SN4471"
 
 
 def _site(wall):
     fed = Federation()
-    north, north_link = make_cluster("north", domain=True)          # the domain's home
-    south, _ = make_cluster("south")                                 # a server room with a recorder
+    north, link = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
     fed.add(north); fed.add(south)
-    room = Running(south, wall)
-    room.create(201)
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
-    cam.coverage = {"from": wall() - 3600, "to": wall()}           # an hour on the card
     cam.boot()
-    fed.add(member_copy(cam.name, north.objects, wall=wall))        # the domain reads the camera's reports
-    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                            published=cam.local_objects())
-    report_sync(cam_agent)
+    fed.add(member_copy(cam.name, north.objects, wall=wall))
+    ca = DomainAgent(cam.name, north.vars, cam.flash, now=wall,
+        domain_objects=north.objects, published=cam.local_objects())
+    sa = DomainAgent("south", north.vars, south.vars, now=wall)
     view = ReadView(fed, wall=wall)
-    view.refresh()
-    crossings = Crossings(north.vars, view, wall)
-    agent = DomainAgent("south", north.vars, south.vars, now=wall)
-    return fed, north_link, south, cam, view, crossings, agent, cam_agent
+    inputs = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    books = RecordingDomain(inputs, signer, agents=[ca, sa], devices=[cam])
+    return fed, link, south, cam, books, sa, ca
 
 
-def test_the_recorder_finds_a_camera_of_another_cluster_in_its_own_clusters_book():
-    """The domain decides that south records the camera, publishes south's book from what it last read of
-    the camera's cluster, and south's agent carries it home. The recorder resolves `ref:SN4471` against
-    south's own Variables. And the camera's store is exactly as it was: nobody wrote into it."""
+def test_the_recorder_reads_a_source_from_the_assigned_origin_and_its_typed_envelope():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    writes = cam.flash.writes
-    assert crossings.record(SERIAL, on="south") == {"camera": SERIAL, "recorded_by": "south", "from": f"cam-{SERIAL}"}
-    crossings.publish()
-    report_sync(agent)
-    src = resolve(south.vars, f"ref:{SERIAL}", wall())
-    assert (src.cluster, src.live_url, src.playback_url) == (f"cam-{SERIAL}", "rtsp://10.1.0.71/live", "http://10.1.0.71/playback")
-    assert cam.flash.writes == writes                    # data will cross; nothing was written across
-    assert resolve(south.vars, "rtsp://south-cam/201", wall()) is None       # its own sources: found as always
+    _, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    got = source(south.vars.get("domain/cam/sources")[0], SERIAL)
+    assert got.member == cam.name and got.value["to"] == ["south"]
+    assert (resolve(south.vars, "ref:" + SERIAL, wall()).cluster,
+            got.value["live_url"]) == (cam.name, "rtsp://10.1.0.71/live")
+    assert resolve(south.vars, "rtsp://local/201", wall()) is None
+    assert "token" not in json.dumps(got.value)
 
 
-def test_one_camera_one_recording_cluster():
-    """A camera serves one live session and one backfill. A second cluster recording it would take them
-    from the first — so which cluster records it is the domain's decision, stored, and a second asker is
-    refused with the reason, as Lesson 1 refuses a second placement."""
+def test_assignment_validates_members_and_reassignment_has_one_authoritative_revision():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    crossings.record(SERIAL, on="south")
-    assert crossings.record(SERIAL, on="south")["recorded_by"] == "south"      # asking again is the same answer
-    for on, status in (("north", 409), (f"cam-{SERIAL}", 400)):
-        try:
-            crossings.record(SERIAL, on=on)
-            raise AssertionError(f"{on} must be refused")
-        except ApiError as e:
-            assert e.status == status
+    _, _, _, _, books, _, _ = _site(wall)
+    first = books.assign(SERIAL, "south")
+    assert books.assign(SERIAL, "south") == first
     try:
-        crossings.record("SN9999", on="south")
-        raise AssertionError("an unseen camera cannot be recorded")
+        books.assign(SERIAL, "unknown")
     except ApiError as e:
-        assert e.status == 404
+        assert e.status == 400
+    else:
+        raise AssertionError("unadmitted receiver was accepted")
+    moved = books.assign(SERIAL, "north")
+    assert moved["rev"] > first["rev"] and moved["cluster"] == "north"
 
 
-def test_the_recording_goes_on_with_the_domain_switched_off_and_says_how_old_its_address_is():
-    """The thesis, for crossings: the recorder never asks the domain, it asks its own cluster's copy. With
-    the domain gone the address is the one last carried, and its age grows — shown, never hidden."""
+def test_carried_source_survives_a_domain_outage_and_reports_its_age():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    crossings.record(SERIAL, on="south"); crossings.publish(); report_sync(agent)
-    north_link.up = False
-    wall.advance(6 * 3600)
-    assert report_sync(agent) is False
-    src = resolve(south.vars, f"ref:{SERIAL}", wall())
+    _, link, south, _, books, sa, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    link.up = False; wall.advance(6 * 3600)
+    assert sync(sa) is False
+    src = resolve(south.vars, "ref:" + SERIAL, wall())
     assert src.live_url == "rtsp://10.1.0.71/live" and src.age >= 6 * 3600
 
 
-def test_a_camera_that_moved_while_the_domain_was_off_is_found_again_when_it_is_back():
-    """The failure this design accepts, stated: a camera that changes its address while the domain is off
-    is recorded from the old address until the domain is back — the recorder sees a dead URL, reports it,
-    and has nothing better. When the domain returns, one pass and one carry and the book is right again."""
+def test_address_changes_are_visible_after_a_new_complete_signed_publication():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    crossings.record(SERIAL, on="south"); crossings.publish(); report_sync(agent)
-    north_link.up = False
-    cam.address = "10.1.0.99"; cam.publish()                         # a new lease from DHCP
-    assert resolve(south.vars, f"ref:{SERIAL}", wall()).live_url == "rtsp://10.1.0.71/live"
-    north_link.up = True
-    report_sync(cam_agent)                                                 # the camera reports its new door
-    view.refresh(); crossings.publish(); report_sync(agent)
-    assert resolve(south.vars, f"ref:{SERIAL}", wall()).live_url == "rtsp://10.1.0.99/live"
+    _, link, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    link.up = False
+    cam.address = "10.1.0.99"; cam.publish()
+    assert resolve(south.vars, "ref:" + SERIAL, wall()).live_url == "rtsp://10.1.0.71/live"
+    link.up = True; wall.advance(1); books.collect()
+    assert resolve(south.vars, "ref:" + SERIAL, wall()).live_url == "rtsp://10.1.0.99/live"
 
 
-def test_backfill_trusts_the_book_to_plan_and_the_card_to_fetch():
-    """The book says the card holds the last hour; south holds all but twenty minutes of it. That is the
-    plan. Then the device is asked, and the card — a ring — has overwritten its oldest part since the book
-    was carried: what is still there is fetched, what is not is dropped with its reason, not retried."""
+def test_card_coverage_is_a_recording_contribution_and_backfill_checks_the_actual_card():
     wall = Clock(100_000.0)
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    crossings.record(SERIAL, on="south"); crossings.publish(); report_sync(agent)
-    now = wall()
-    src = resolve(south.vars, f"ref:{SERIAL}", now)
-    ours = [(now - 3600, now - 1800), (now - 600, now)]              # a gap from −30 to −10 minutes
-    fetch, dropped = plan_backfill(src, ours, now, keep_days=30, settle=60,
-                                   ask_device=lambda: {"from": now - 1500, "to": now})
-    assert fetch == [(now - 1500, now - 600)]
-    assert dropped == [((now - 1800, now - 1500), "no longer on the card")]
+    _, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    books.observe(cam.name, [{"id": "card", "cam": "ref:" + SERIAL, "enabled": True}],
+        [{"id": "card", "phase": "running", "coverage": {
+            "from": wall() - 3600, "to": wall(), "fragments": 1}}], kind="edge")
+    books.collect()
+    src = resolve(south.vars, "ref:" + SERIAL, wall())
+    fetch, dropped = plan_backfill(src, [(wall()-3600, wall()-1800), (wall()-600, wall())],
+        wall(), 30, 60, lambda: {"from": wall()-1500, "to": wall()})
+    assert fetch == [(wall()-1500, wall()-600)]
+    assert dropped == [((wall()-1800, wall()-1500), "no longer on the card")]
 
 
-def test_a_camera_the_book_does_not_hold_is_said_by_name():
+def test_a_source_without_assignment_cannot_be_used_for_a_new_connection():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
+    _, _, south, _, books, _, _ = _site(wall)
+    books.collect()
     try:
-        resolve(south.vars, f"ref:{SERIAL}", wall())
-        raise AssertionError("nothing was carried yet")
-    except NotResolvable as e:
-        assert SERIAL in str(e) and "source book" in str(e)
-
-
-def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it():
-    """The source book the other way round. The backup on the camera's card (`when: offline`, М10B Lesson 26)
-    must know whether its primary — a recording of the SERVER ROOM's cluster — is written, and cannot look
-    there. So the domain reads the room's rec snapshot (should it be written?) and its recorders' heartbeats
-    (is it?) and writes one book per camera cluster; the camera's agent carries it home, and says in RAM when
-    it last reached the domain. The book changes when the room's recording does, and only then does it touch
-    the camera's flash."""
-    import json
-    from vms.config import REC_SPEC
-    from vms.recworker import DOMAIN_SEEN, PRIMARIES
-    from w2cplatform.contract import Heartbeat, Subsystem
-    from w2cplatform.spec import SpecController
-
-    wall = Clock()
-    fed = Federation()
-    north, _ = make_cluster("north", domain=True)
-    south, south_link = make_cluster("south")
-    fed.add(north); fed.add(south)
-    cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
-    cam.boot(); fed.add(member_copy(cam.name, north.objects, wall=wall))
-    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, seen_store=cam.local_objects(),
-                        domain_objects=north.objects, published=cam.local_objects())
-    report_sync(agent)                                                      # its first report: now the domain knows it
-    view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(north.vars, view, wall)
-    crossings.record(SERIAL, on="south")
-    rec = SpecController(REC_SPEC, south.vars, south.objects, wall=wall)
-    rec.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})              # the room's recording of the camera
-
-    def room(running: bool):                                          # the room's recorder, and its controller
-        rec.publish_snapshot()
-        st = [{"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True, "phase": "running" if running else "pending"}]
-        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
-
-    def pass_():
-        crossings.publish_primaries(); report_sync(agent)
-        items, _ = cam.flash.get(PRIMARIES)
-        return json.loads(items[SERIAL])
-
-    rec.publish_snapshot()                                            # the row, and no recorder has named it yet
-    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "enabled": True, "running": False, "starting": True}
-    # The entry at the holder, as published, in the product's shape (`PrimaryEntry`, one name on both sides): the
-    # cluster that records it (`recorded_by` — the spec's `primaries.show`), the recording, `enabled`, `running`, and
-    # `starting` only while true; the old names are gone, no alias (ADR-0003).
-    published = json.loads(crossings.publish_primaries()[cam.name][SERIAL])
-    assert published["recorded_by"] == "south" and published["recording"] == SERIAL
-    assert not {"cluster", "should", "written"} & set(published)
-    room(True)
-    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "enabled": True, "running": True}   # no `starting`
-    assert abs(json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] - wall()) < 1e-6      # freshness: in RAM
-    writes = cam.flash.writes
-    for _ in range(10):
-        wall.advance(5); room(True); pass_()
-    assert cam.flash.writes == writes                                 # ten passes, nothing on flash
-
-    room(False)
-    e = pass_()
-    assert e["running"] is False and "starting" not in e and cam.flash.writes == writes + 1   # a stop, not a start (AB)
-
-    rec.update(SERIAL, {"enabled": False}); room(False)
-    assert pass_()["enabled"] is False                                # the operator's decision: nothing to cover
-
-    rec.update(SERIAL, {"enabled": True}); room(True); pass_()
-    south_link.up = False                                             # the room does not answer the domain
-    wall.advance(5)
-    assert pass_() == {"recorded_by": "south", "recording": "", "enabled": True, "running": False}
-
-
-def test_the_book_of_primaries_says_running_at_the_first_pass_after_the_rooms_report_carries_its_recorder():
-    """The scenario «камера — офис — центр», N6: the book said `running: false` in scenes 9–12 while the office recorded
-    the camera. Not the book: the domain reads a member's recorder ONLY by the member's report (ADR-0074 — the books are
-    computed from the members' rows), and the scenario's passes of the VMS worker on the domain ran before the office's
-    agent carried its recorder's `running` up (scene 11), or not at all after it (9, 10, 12). Here the room is read by its
-    report, as the holder reads every member: its recorder writes, and the book says nothing new until the room's agent
-    reports; the first pass after that report says `running`, and the book stays so while the reports go on."""
-    import json
-    from vms.config import REC_SPEC
-    from vms.recworker import PRIMARIES
-    from w2cplatform.contract import Heartbeat, Subsystem
-    from w2cplatform.spec import SpecController
-
-    wall = Clock()
-    fed = Federation()
-    north, _ = make_cluster("north", domain=True)
-    south, _ = make_cluster("south")
-    fed.add(north); fed.add(member_copy("south", north.objects, wall=wall))       # the room: by its report
-    Running(south, wall).create(201)                                  # its VMS published: it reports from now on
-    cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
-    cam.boot(); fed.add(member_copy(cam.name, north.objects, wall=wall))
-    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                            published=cam.local_objects())
-    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
-                             published=south.objects)
-    report_sync(cam_agent); report_sync(room_agent)
-    view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(north.vars, view, wall)
-    crossings.record(SERIAL, on="south")
-    rec = SpecController(REC_SPEC, south.vars, south.objects, wall=wall)
-    rec.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
-
-    def recorder(phase: str):                                         # the room's recorder says its heartbeat
-        rec.publish_snapshot()
-        st = [{"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True, "phase": phase}]
-        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
-
-    def book():
-        crossings.publish_primaries(); report_sync(cam_agent)
-        return json.loads(cam.flash.get(PRIMARIES)[0][SERIAL])["running"]
-
-    recorder("pending"); report_sync(room_agent)
-    assert book() is False
-    wall.advance(5); recorder("running")                              # the room writes the camera now…
-    assert book() is False                                            # …and its report does not say so yet
-    report_sync(room_agent)                                                 # the room's agent reports
-    assert book() is True                                             # the first pass after it: running
-    for _ in range(6):                                                # 30 s of passes, the room reporting every 30 s
-        wall.advance(5); recorder("running")
-        if _ == 5:
-            report_sync(room_agent)
-        assert book() is True
-
-
-def test_a_recording_moves_to_another_cluster_and_the_books_follow():
-    """Feedback AN. The site is re-wired: the camera is to be recorded by north now. A second cluster is still
-    refused — but a MOVE rewrites the decision, and on the next pass south's source book loses the camera (its
-    recorder says why and stops), north's gains it. South's book is emptied, not left as it was: it has nothing
-    of another cluster any more."""
-    import json
-    wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    north = fed.domain_holder
-    crossings.record(SERIAL, on="south"); crossings.publish(); report_sync(agent)
-    try:
-        crossings.record(SERIAL, on="north")
-        raise AssertionError("a second cluster, without a move")
-    except ApiError as e:
-        assert e.status == 409
-    out = crossings.record(SERIAL, on="north", move=True)
-    assert out["recorded_by"] == "north" and out["moved_from"] == "south"
-    crossings.publish(); report_sync(agent)
-    assert south.vars.get("domain/cam/sources")[0] == {}
-    try:
-        resolve(south.vars, f"ref:{SERIAL}", wall())
-        raise AssertionError("south records it no more")
+        resolve(south.vars, "ref:" + SERIAL, wall())
     except NotResolvable:
         pass
-    assert json.loads(north.vars.get("domain/cam/sources/north")[0][SERIAL])["live_url"] == "rtsp://10.1.0.71/live"
+    else:
+        raise AssertionError("an unassigned source opened")
+
+
+def test_primary_enabled_and_running_are_explicit_observations_not_a_starting_field():
+    wall = Clock()
+    _, _, _, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    for enabled, running in ((True, False), (True, True), (False, False)):
+        books.observe("south", [{"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": enabled}],
+            [{"id": SERIAL, "phase": "running" if running else "pending"}])
+        books.collect()
+        got = primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south")
+        assert (got.value["enabled"], got.value["running"]) == (enabled, running)
+        assert "starting" not in got.value
+
+
+def test_a_publisher_change_is_not_observed_until_its_signed_report_is_collected():
+    wall = Clock()
+    _, _, _, cam, books, sa, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    row = {"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}
+    books.observe("south", [row], [{"id": SERIAL, "phase": "pending"}]); books.collect()
+    books.observe("south", [row], [{"id": SERIAL, "phase": "running"}])
+    assert not primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["running"]
+    books.collect()
+    assert primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["running"]
+
+
+def test_reassignment_withdraws_old_recipients_and_old_books_confer_no_connection_right():
+    wall = Clock()
+    fed, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    books.assign(SERIAL, "north"); books.collect()
+    assert set(south.vars.get("domain/cam/sources")[0]) == {""}
+    try:
+        resolve(south.vars, "ref:" + SERIAL, wall())
+    except NotResolvable:
+        pass
+    else:
+        raise AssertionError("former receiver still has a source")
+    row = fed.domain_holder.vars.get("domain/cam/sources/north")[0]
+    assert source(row, SERIAL).member == cam.name

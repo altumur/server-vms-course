@@ -163,13 +163,13 @@ def ask_held(console: str, timeout: float = 3.0):
 
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
-                 console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
+                 console=None, domain_objects=None, cluster_objects=None, seen_store=None,
                  published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None, alarm_waiting=None,
                  reaches=None, own_objects=None, sealer=None, key=None, follow: HolderFollower | None = None,
                  open_door=None):
-        """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
-        `current(ref) -> (id, row)` for a unit by the domain's name. Given them, the agent also applies
-        the edits the domain kept while this cluster was off. Without them it only carries them home.
+        """`console` applies explicit CRUD through this member's own signed console (ADR-0074 C2).
+        The console's durable idempotency key answers retries; the agent writes only domain rows.
+        Without a console the agent carries the waiting edits home without applying them.
 
         `domain_objects` and `cluster_objects` are Lesson 12: where the domain publishes documents, and
         this cluster's DURABLE object store, where the agent keeps the copy it verified. Given them, it
@@ -203,7 +203,7 @@ class DomainAgent:
         self.followed = ""                                 # what the last pass found of the holder
         self.sealer, self.key = sealer, key
         self.relayed: dict[str, dict] = {}                 # a relay: what the domain answered for each member it relays
-        self.console, self.current = console, current
+        self.console = console
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
         self.published, self.pages = published, pages
@@ -232,6 +232,14 @@ class DomainAgent:
         self._urgent_at: float | None = None
         self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
         self._carried_seen, self._carried_relay = None, False   # the mark the last answer carried, and whether it did
+
+    def request_token(self, sub, kind, ref, role):
+        """Called only by a handler on the authenticated role's private socket."""
+        from .carry import Refused
+        road = self.domain_vars
+        if self.key is None or not hasattr(road, "request_token"):
+            raise Refused(503, "the agent has no authenticated token request road")
+        return road.request_token(sub, kind, ref, role)
 
     # One row home, by CAS, only when what it SAYS changed: a secret in it is sealed afresh every time (a new nonce), so
     # the row as stored is compared opened — or the member's flash would be written every pass for nothing.
@@ -372,11 +380,26 @@ class DomainAgent:
             return self.domain_vars.answer_for(self.cluster, self.key)
         return answer(self.domain_vars, self.domain_objects, self.cluster, now=self.now())
 
+    def _apply_edits(self, pending):
+        import json
+        from .pending import OUTCOMES_PATH, PENDING_PATH, _load, apply_pending
+        if self.console is None:
+            return {}
+        target = OUTCOMES_PATH
+        previous = _load(self.cluster_vars.get(target)[0], target)
+        outcomes = apply_pending(_load(pending, PENDING_PATH), self.console, self.now(), previous)
+        self._carry(target, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
+                             for k, v in outcomes.items()}, clear=True)
+        return outcomes
+
     def _sync(self) -> bool:
         from .carry import CarriedObjects, CarriedVars, Refused
-        from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
+        from .pending import OUTCOMES_PATH, PENDING_PATH
+        from .memberbook import holds
         if self.follow is not None:                        # Lesson 15: where the domain is held now — asked first
             self.followed = self._step("following the holder", self._follow)
+        if holds(self.cluster_vars, self.cluster):
+            self._apply_edits(self.cluster_vars.get(PENDING_PATH + "/" + self.cluster)[0])
         try:
             got = self._answer()
         except Unreachable:
@@ -394,7 +417,9 @@ class DomainAgent:
         pending, _ = dv.get(f"{PENDING_PATH}/{self.cluster}")
         # What the domain decided for THIS cluster in the later lessons — each one more row of the same
         # kind: written by the domain under `<path>/<cluster>`, carried home to `<path>`.
-        later = [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
+        from .memberbook import holds
+        is_holder = holds(self.cluster_vars, self.cluster)
+        later = [] if is_holder else [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
         self.keys = self._carry_keys(keys)
         self._say_refused("the key set", self.keys)
         from .members import MEMBERS
@@ -402,9 +427,36 @@ class DomainAgent:
         from .topology import TOPOLOGY
         # …and the list of members, under a name of this cluster's (`term.MEMBER_LIST`): its console knows a member by it
         # when one asks for the backup copy kept here (`GET /api/backup`)
-        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
-                            (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
+        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants),
+                            *([] if is_holder else [(MEMBER_LIST, dv.get(MEMBERS)[0]), ("domain/member-topology", dv.get(TOPOLOGY)[0])]), *later):
             self._carry(path, items)
+        # Holder assignments are read-only to agents; copies have their own family on every member.
+        # The authenticated carry response is the same authority as the member list.
+        from .placement import PREFIX, COPIES_PREFIX, decode, path as placement_path
+        if not is_holder and (self.keys == "carried" or self.keys.startswith("rev ")):
+            incoming = dv.list(PREFIX)
+            for path in incoming:
+                items = dv.get(path)[0]
+                try:
+                    identity = path[len(PREFIX):].split("/")
+                    if len(identity) != 2 or placement_path(*identity) != path:
+                        raise ValueError("invalid placement identity")
+                    fresh = decode(items)
+                    target = COPIES_PREFIX + path[len(PREFIX):]
+                    old = self.cluster_vars.get(target)[0]
+                    try:
+                        previous = decode(old) if old else None
+                    except ValueError:
+                        previous = None
+                    if previous is None or fresh["rev"] > previous["rev"]:
+                        self._carry(target, items)
+                    elif fresh["rev"] == previous["rev"] and fresh != previous:
+                        self._say_refused("placement", "conflicting placement revision")
+                except ValueError:
+                    self._say_refused("placement", "invalid placement row")
+            counter = dv.get("domain/placement")[0]
+            if counter:
+                self._carry(COPIES_PREFIX.rstrip("/"), counter)
         # The emergency hash under its own name (`break_glass_row`): on the holder that row IS the domain's, and the
         # holder's own agent, which reads it as stored — sealed by the holder's ring — takes nothing: only this side
         # seals what it carried (the product's `keepPeople`), and a sealed value came from no door.
@@ -413,18 +465,10 @@ class DomainAgent:
         items, _ = dv.get(glass)
         if not any(is_sealed(v) for v in (items or {}).values() if isinstance(v, str)):
             self._carry(glass, items)
-        # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
-        # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
-        # this cluster's console and as the operator who made each one, and what happened written where the
-        # domain reads it. The agent writes `domain/*` and nothing else; the row is the console's.
-        self._carry(PENDING_PATH, pending, clear=True)
-        if self.console is not None and self.current is not None:
-            import json
-            from .pending import _load
-            entries = _load(pending if isinstance(pending, dict) else None, PENDING_PATH)   # one entry that does not parse: that unit's
-            outcomes = apply_pending(entries, self.current, self.console, self.now())
-            self._carry(OUTCOMES_PATH, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
-                                        for k, v in outcomes.items()}, clear=True)
+        # The holder applies directly above and carries no copy of its own queue.
+        if not is_holder:
+            self._carry(PENDING_PATH, pending, clear=True)
+            self._apply_edits(pending)
         # The shared settings (Lesson 12), checked against the key set this pass just carried — the member's
         # own, never one that came with the document.
         # And Lesson 15: which member holds the domain — carried like the keys, but never to a smaller term —
@@ -565,10 +609,9 @@ class DomainAgent:
     def relays(self) -> list[str]:
         """The members this cluster relays, by the domain's topology as it last carried it."""
         import json
-        from .topology import TOPOLOGY
-        items, _ = self.cluster_vars.get(TOPOLOGY)
+        from .topology import member_topology
         try:
-            via = json.loads(items["doc"]).get("via", {}) if items and items.get("doc") else {}
+            via = member_topology(self.cluster_vars, self.cluster)["via"]
         except PARSE_ERRORS:
             via = {}
         return sorted(m for m, r in via.items() if r == self.cluster)
@@ -688,7 +731,8 @@ def main() -> None:
     # this cluster's own `OBJECTS` (`w2c.env`): through the holder's door (`POST /api/member/<cluster>`), which it follows
     # with the rows; behind a relay, into the relay's objects (`RELAY_OBJECTS_URL`); on the holder's own box, into its
     # objects (`DOMAIN_OBJECTS_URL`).
-    report = os.environ.get("REPORT") == "1"
+    # Collected books require every member's signed report, including the holder.
+    report = os.environ.get("REPORT") == "1" or any(s.domain.merged for s in declared.specs())
     from w2cplatform.sealing import Sealer
     from w2cplatform.trust.memberkey import MemberKey
     from .carry import CarryClient
@@ -710,7 +754,8 @@ def main() -> None:
         domain_objects = None                            # the report and the relay's summary go through the door
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
-        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
+        domain_objects = open_store(os.environ.get("DOMAIN_OBJECTS_URL") or os.environ["OBJECTS"]) \
+            if report or os.environ.get("RELAY_MEMBERS") else None
     # Which members this relay cluster works for: the domain's topology (`domain/topology`, the operator's one record),
     # read on every pass — RELAY_MEMBERS only where there is no topology yet. RELAY=1 says this cluster is an
     # relay at all: it keeps the relay and the bundle in its own stores.
@@ -745,11 +790,20 @@ def main() -> None:
         from .relay import RelayDoor, door_handler
         open_doors(os.environ.get("RELAY_HOST", "0.0.0.0"), int(os.environ.get("RELAY_PORT", "8446")),
                    door_handler(RelayDoor(agent)), unix_env="RELAY_UNIX", say=False)
+    from .pending import AgentConsole
+    agent.console = AgentConsole(consoles_from_env().get(cluster, "http://127.0.0.1:8080"), key, agent.now)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
-    run(agent, interval, stop)
+    from .tokenrequest import open_role_doors
+    token_doors = open_role_doors(agent)
+    try:
+        run(agent, interval, stop)
+    finally:
+        for door in token_doors:
+            door.shutdown()
+            door.server_close()
 
 
 # The agent's loop. The next pass is set BEFORE the pass (the review's eighth pass, major): a pass that raised left

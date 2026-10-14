@@ -1,11 +1,50 @@
-# pending.py — Lesson 9: an edit for a cluster that is off, kept per field and applied by the member's own console
+# pending.py — очередь правок членов (ADR-0074 C2)
 
-**Role in the module.** Lesson 3 answered `503` when the owning cluster did not answer. Right for a server room in your own building; useless for a member that is one box, off for its power and edited in bulk with forty-nine others. So the domain keeps the edit — in the holder's store under `domain/pending/<cluster>`, beside the grants — and the member's agent carries it home; the member's own console applies it, as the operator who made it, grant checked then.
+Домен хранит операцию до доставки, не вызывает консоль члена напрямую.
+`domain/pending/<member>` — JSON-объект `{<id>: <JSON Edit>}` только ожидающих правок.
+Edit имеет ровно `id, what, method, path, body, key, at`: явные POST/PUT/DELETE,
+локальный путь `/<sub>/<rows>[/<id>]`, тело-объект, исходный ключ консоли,
+число секунд; what — отсортированные имена полей через запятую без значений.
+`id = e- + sha256(member + NUL + key)[:12]`. Пока правка ожидает, тот же ключ
+с иным методом, путём или телом даёт 422; повтор того же запроса не дублируется.
+Старой формы fields/old/new, слияния полей и чтения прежнего формата нет.
 
-## `class PendingEdits(domain_vars, wall)`
-One row per cluster, one item per unit by the DOMAIN's name (`ref`), each `{fields: {f: {old, new, via?, conflict?}}, rev, subject, since, refused?}`.
-- `add(cluster, ref, fields, base, subject)` — merged per field by CAS: a new field `{old: base[f], new}`; a field reported as a conflict is measured against what the unit now holds; a field already waiting keeps its `old`, takes the latest `new`, remembers the values in between (`via`). `rev` counts edits; only an outcome for the current `rev` clears anything.
-- `reconcile(cluster, outcomes)` — applied and already-there fields go, a conflict stays annotated, a refusal stays with its reason, a unit gone takes its edit with it; one outcome that does not fit is that unit's.
-- `collect(fed)` — every cluster with something waiting, its `domain/outcomes` read through its stores.
+`AgentConsole.apply` подписывает исходные байты и путь ключом собственного члена
+и вызывает только локальную консоль с прежним Idempotency-Key. Консоль проверяет
+подпись, CRUD, разрешённые поля и секреты; её `<sub>/idem/<key>` переживает
+перезапуск и гасит повтор. Исход для другой метки не заменяет повторный вызов
+консоли. Недоступность, оборванный ответ, 5xx и временный 409 «in flight»/
+«taken over» оставляют операцию в ожидании; 409 «exists» — конечный исход.
 
-## `apply_pending(entries, current, console, now)` — the member's side, run by its agent: per field, holds `new` → already; holds `old` or a `via` → applied (`console.update_unit`); anything else → conflict. The console's refusal is the grant check, recorded, not retried. No password is kept or reported: every address is said as a page says it (`secrets.hide_in_reply`).
+Outcome имеет ровно `id, status, result, error, at, what, kept_at`.
+Обязательное kept_at — точное эхо Edit.at (доп. 7 ADR-0074), а не время
+часов члена: держатель сверяет равенство и не снимает новую Edit прежним исходом. Status — целое
+(0 означает «консоль не спрошена»), at — число секунд; секреты в результате
+маскируются. `reconcile` сначала сохраняет исход в `domain/outcomes/<member>`,
+затем удаляет только соответствующую прочитанную Edit, с CAS. Сбой между записями
+повторяется безопасно; другая правка и повреждённый сосед не удаляются.
+У держателя остаётся не больше 50 последних исходов на члена, по одному на id:
+сортировка по числовому at, при равенстве — по id. Лимит применяется внутри
+CAS записи истории; принятие большой пачки снимает все завершённые ожидания.
+После завершения ключ можно вновь поставить в очередь; окончательное решение
+о повторе принимает долговечный журнал консоли, второго журнала Edit нет.
+
+Агент держателя читает свои `domain/pending/<self>` напрямую, вызывает свою
+консоль и сохраняет локальную `domain/outcomes`, как любой член. Проход держателя
+читает её и сохраняет историю в `domain/outcomes/<self>`. Ожидание снимает проход держателя
+с правами роли domain; агенту не дают запись в pending/<member>. Копия очереди
+и отчёт самому себе не нужны. Для остальных исходы читаются из принятых
+отчётов членов. Платформа не знает предметных подсистем.
+Получив подтверждённую очередь без id завершённой правки, агент забывает
+её исход; до этого повторяет исход без нового вызова консоли. Недоступный
+держатель не считается пустой подтверждённой очередью. Агент не пишет и не
+удаляет строки истории `domain/outcomes/<member>`.
+
+Старый Outcome без kept_at ожидание не снимает. Агент сохраняет уже полученный
+исход только для той же метки, иначе снова вызывает консоль со старым ключом.
+
+При новой постановке домен внутри add назначает at = max(свои секунды,
+nextafter(kept_at записанного исхода того же id, +inf)). Если читаемого исхода нет,
+использует свои часы. Это делает метки различимыми при неподвижных и откатившихся
+часах; повтор ещё ожидающей правки возвращает прежнюю at. Нового журнала нет.
+Держатель повторно маскирует result принятого исхода перед сохранением.

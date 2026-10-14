@@ -23,9 +23,9 @@ def _tokens():
     t = TokenIssuer("acme", book_seal=MemberKey.new().seal_pub)
     return t, {
         "person": t.issue("alice", 900, now=NOW, kind="person"),
-        "stream": t.issue("cam-SN5001", 900, now=NOW, aud=audience("south"), ref="SN5001", kind="stream"),
+        "stream": t.issue("cam-SN5001", 900, now=NOW, aud=["south"], ref="SN5001", kind="stream"),
         "ask": t.issue("cam-SN5002", 900, now=NOW, aud=audience("south"), ref="SN5001", by="SN5002", acts=[], kind="ask"),
-        "relay": t.issue("south", 900, now=NOW, aud=audience("north"), ref="SN5001", kind="stream"),
+        "relay": t.issue("south", 900, now=NOW, aud=["north"], ref="SN5001", kind="stream"),
     }
 
 

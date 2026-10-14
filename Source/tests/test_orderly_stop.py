@@ -54,5 +54,5 @@ def test_the_recorder_process_holds_a_token_that_can_take_a_volume():
     assert "rec/holds/*" in REC_SPEC.acl_worker_role()
     box = Box()
     volumes.write(box.vars, {"name": "vol", "kind": "local", "url": os.path.join(box.root, "vol"), "server": "srv-a", "quota_bytes": 64 << 20})
-    r = recorder(box, "r-1", "srv-a", acl=REC_SPEC.sub.acl_worker())
+    r = recorder(box, "r-1", "srv-a", acl=REC_SPEC.acl_worker_role())
     assert r.volume_pass() == "vol"

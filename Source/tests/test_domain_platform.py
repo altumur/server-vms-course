@@ -124,7 +124,7 @@ def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared()
     north.vars.put("domain/testsub/hidden", {"x": "1"})
     view = ReadView(fed, wall=wall)
     view.refresh()
-    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed)), refresh_interval=60,
                   holder_vars=north.vars)
     srv = con.serve(port=0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
@@ -169,7 +169,7 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
     view.refresh()
     from w2cplatform.domain.signer_service import Holder
     members = Members(north.vars, wall=wall, configured=lambda: ["south"], domain="north")
-    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed)), refresh_interval=60,
                   holder_objects=north.objects, holder_vars=north.vars, topology=Topology(north.vars), members=members)
     door = con.serve(port=0)
     url = f"http://127.0.0.1:{door.server_address[1]}"
@@ -473,7 +473,7 @@ def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_wi
             st, raw, _ = _call_raw(base, "GET", "/domain/at/gone/testsub/where/g1")
             assert st == 502 and json.loads(raw)["error"] == "gone's console did not answer", raw
             assert mnt.root.journal.lines == [("domain.forwarded", {"cluster": "gone", "path": "/domain/at/gone/testsub/where/g1",
-                                                                    "user": "operator", "status": 502})]
+                                                                    "user": "operator", "status": 502})], mnt.root.journal.lines
             # a real member's console: `/testsub/where/s1` is its root's `/where/s1` (дополнение п. 3); a hop onwards
             # from it is refused there
             with _Env("CLUSTERS", f"north,south={there_url}"):
@@ -826,7 +826,7 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
     threading.Thread(target=sdoor.serve_forever, daemon=True).start()
     view = ReadView(fed, wall=wall)
     view.refresh()
-    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed)), refresh_interval=60,
                   holder_vars=north.vars, signer_url=f"http://127.0.0.1:{sdoor.server_address[1]}")
     assert not any(hasattr(con, k) for k in ("signer", "issuer", "tokens", "sealer_key"))   # nothing to sign with
     door = con.serve(port=0)
@@ -993,11 +993,13 @@ def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load
 
 def test_the_spec_reads_a_kept_family_of_subjects_their_grant_and_the_fields_an_edit_carries():
     """ADR-0031's declarations, as testsub writes them: `kept: [ledger, badges/]` (a family by its `/`), `names:
-    {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]` — and a token kind says no grant."""
+    {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]`; ADR-0074 adds a role grant for requesting a token, not bearer rights."""
     d = spec().domain
     assert d.kept == ("ledger", "badges/") and d.tables == ("ledger",)
     assert d.names == {"badges/": {"exclusive_with": "domain/users", "grant": "view"}}
-    assert d.tokens["tally"] == {"lifetime": 600.0, "claims": ("counter",)}
+    assert d.tokens["tally"] == {"lifetime": 600.0, "claims": ("counter", "aud"), "grant": ("testsubworker",),
+        "placement": {"sub": "testsub", "caller": "origin", "ref_claim": "counter",
+                      "target_fields": ("cluster", "copies"), "audience_claim": "aud"}}
     assert d.edit == ("start", "labels")
 
 
@@ -1072,7 +1074,7 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     """`names.badges/.grant: view` — the grants of a cluster or of the domain may give a badge `view` and nothing wider:
     `edit` or `admin` to it is refused (`GrantTooWide`) and nothing is written, whoever writes the grants; a person of
     the same rows is granted anything. A badge made under a name already granted wider is refused too. A token kind
-    declares no grant, and a tally token carries none: what its subject may do is the grants'."""
+    may grant a role permission to request it, but a tally token carries no rights: subjects use the domain grants."""
     from w2cplatform.domain.agent import DomainPublisher
     from w2cplatform.domain.declared import GrantTooWide, guarded
     from w2cplatform.domain.declared import token_kinds
@@ -1099,12 +1101,13 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     t = TokenIssuer("acme")
     p = verify(DeclaredIssuer(t, token_kinds()).issue("tally", "south", now=1000.0, counter="s1"), t.keyset(),
                now=1000.0, kind="tally")
-    assert "grant" not in p and "tally" in token_kinds() and "grant" not in token_kinds()["tally"]
+    assert "grant" not in p and "role" not in p and "placement" not in p
+    assert token_kinds()["tally"]["grant"] == ("testsubworker",)
 
 def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_through():
     """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /domain/testsub/counters/
     <ref>`) reaches the member with those fields; one with any other (`step` here) is a 400 naming it and the list, and
-    the member is not asked. An edit that names no subsystem has no list to be held to: the member's console decides."""
+    the member is not asked. An edit without a subsystem is refused; accepted edits are queued."""
     import urllib.error
     import urllib.request
     from w2cplatform.domain.api import ApiError, ConsoleAPI
@@ -1112,21 +1115,20 @@ def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_
     from w2cplatform.domain.federation import DomainDirectory
     from w2cplatform.domain.readview import ReadView
     fed, wall = site()
-    asked = []
-
-    class Member:
-        def update_unit(self, unit, fields, subject):
-            asked.append((unit, dict(fields)))
-            return {"revision": 2}
-    api = ConsoleAPI(DomainDirectory(fed), lambda c: Member())
-    assert api.update_unit("s1", {"start": 9, "labels": ["a"]}, "k-1", sub="testsub")["cluster"] == "south"
-    try:
-        api.update_unit("s1", {"start": 9, "step": 2}, "k-2", sub="testsub")
-        raise AssertionError("an undeclared field went through the domain")
-    except ApiError as e:
-        assert e.status == 400 and e.detail.startswith("step:") and "domain.edit" in e.detail, e
-    api.update_unit("s1", {"step": 2}, "k-3")
-    assert asked == [("s1", {"start": 9, "labels": ["a"]}), ("s1", {"step": 2})]
+    from w2cplatform.domain.pending import PendingEdits
+    pending = PendingEdits(fed.domain_holder.vars, wall)
+    fed.domain_holder.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {} for n in fed.clusters}})})
+    api = ConsoleAPI(DomainDirectory(fed), pending=pending)
+    first = api.update_unit("s1", {"start": 9, "labels": ["a"]}, "k-1", sub="testsub")
+    assert first["cluster"] == "south"
+    assert pending.of("south")[first["kept"]]["body"] == {"start": 9, "labels": ["a"]}
+    for sub in ("testsub", None):
+        try:
+            api.update_unit("s1", {"start": 9, "step": 2}, "k-2", sub=sub)
+            raise AssertionError("an undeclared field or unnamed subsystem went through the domain")
+        except ApiError as e:
+            assert e.status == 400
+    assert len(pending.of("south")) == 1
     view = ReadView(fed, wall=wall)
     view.refresh()
     con = Console(DomainDirectory(fed), view, api, refresh_interval=60)
@@ -1143,8 +1145,9 @@ def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_
     try:
         st, body = put("/domain/testsub/counters/n1", {"labels": ["b"], "name": "renamed"}, "k-4")
         assert st == 400 and body["detail"].startswith("name:"), body
-        assert put("/domain/testsub/counters/n1", {"labels": ["b"]}, "k-5")[0] == 200
-        assert asked[-1] == ("n1", {"labels": ["b"]}) and len(asked) == 3
+        st, body = put("/domain/testsub/counters/n1", {"labels": ["b"]}, "k-5")
+        assert st == 202, body
+        assert pending.of("north")[body["kept"]]["body"] == {"labels": ["b"]}
     finally:
         con.stop(srv)
 
@@ -1177,7 +1180,7 @@ def test_a_refusal_is_409_when_it_depends_on_rows_that_exist_and_400_when_the_re
     anna = signer.tokens.issue("anna", 900, now=wall(), kind=PERSON)
     st, out = h.people("POST", "users", anna, {"name": "bob", "password": "a long password"})
     assert st == 409 and "domain/testsub/badges/bob" in out["detail"], out
-    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda c: None),
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed)),
                   refresh_interval=60, holder_vars=north.vars)
     door = con.serve(port=0)
     base = f"http://127.0.0.1:{door.server_address[1]}"
@@ -1250,7 +1253,7 @@ def _moving_site(root=None):
                     wall=wall)
     srv = open_doors("127.0.0.1", 0, holder.handler(), unix_env="DW_NO_SUCH_SOCKET", say=False)
     signer_url = f"http://127.0.0.1:{srv.server_address[1]}"
-    con = Console(DomainDirectory(mine), ReadView(mine, wall=wall), ConsoleAPI(DomainDirectory(mine), lambda c: None),
+    con = Console(DomainDirectory(mine), ReadView(mine, wall=wall), ConsoleAPI(DomainDirectory(mine)),
                   refresh_interval=60, holder_vars=south.vars, signer_url=signer_url)
     door = con.serve(port=0)
 

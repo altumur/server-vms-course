@@ -1,9 +1,9 @@
-// Домен глазами VMS на странице курса — из вида держателя домена (/domain: его units и tables): под членом его камеры и
-// архивы (addTreeNodes), карточки камеры и архива (addCard: имя в домене, номер, воркер, сервер, «пишет кластер» из
-// таблицы cam/crossings), блок члена «Камеры» и «Архивы» без платформенных частей (addBlock), на «Обзоре» домена —
-// «Пересечения». Только чтение: правки домена идут его дверью, курс не отдаёт их консоли — страница туда не пишет.
-// Фикстура — ответ курсового /domain (ReadView.doc, форма продукта): члены списком, единицы по подсистемам, пересечения
-// — его tables.
+// Домен глазами VMS на странице курса: камеры и архивы членов из /domain, назначения записи из /domain/placement.
+// Карточки камеры и архива показывают имя в домене, номер, воркер, сервер и назначенный кластер записи;
+// блоки членов показывают «Камеры» и «Архивы», обзор домена — «Назначения записи».
+// Просмотр не отправляет правки. Действия записи и резерва меняют назначение и ставят CRUD записи в очередь
+// через двери домена; отказ удаления прежней записи не останавливает создание новой.
+// Фикстуры — вид домена с units и members, записи назначения и ответы очереди правок.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -22,7 +22,8 @@ b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:["srv","office","nort
   units:{cam:[u("cam","office","1",{ref:"SN-A",name:"door a"}),u("cam","office","2",{ref:"SN-B",name:"door b",worker_state:"stale"}),
               u("cam","north","1",{ref:"SN-C",name:"gate",worker_state:"configured"}),u("cam","north","2",{ref:"SN-D",name:"yard"})],
          rec:[u("rec","office","1")]},
-  tables:{"cam/crossings":{"SN-C":"office"}},causes:[]};
+  tables:{},causes:[]};
+b.FIX["/domain/placement"]={rev:1,records:{"rec/SN-C":{cluster:"office",origin:"north",copies:[],reason:"operator",at:1,rev:1}}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 await b.ready(700);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(50);
@@ -50,8 +51,38 @@ out.blockRowOpensCard=pc.selected()==="dc:office/1";
 // обзор домена: пересечения
 pc.select("domain");await b.ready(60);
 const dom=main().querySelector('.pc-block[data-block="cam"]');
-out.crossings=!!dom&&/Пересечения/.test(dom.textContent)&&/gate · north/.test(dom.textContent)&&/office/.test(dom.textContent);
+out.assignments=!!dom&&/Назначения записи/.test(dom.textContent)&&/gate · north/.test(dom.textContent)&&/office/.test(dom.textContent);
 out.readOnly=!w.__calls.some(x=>/^\/domain/.test(x.path));
+// A move is ordered: read -> assign -> attempt old deletion -> queue new creation.
+// A failed old deletion must not stop creation; a reserve preserves the primary.
+pc.select("dc:north/1");await b.ready(40);
+let assignment={cluster:"office",origin:"north",copies:["north","srv"],rev:1},requests=[];
+pc.dialog=async()=>({cluster:"north",days:"7",home:"network"});
+pc.api=async(method,path,body)=>{
+  requests.push({method,path,body});
+  if(method==="GET"&&path==="/domain/placement/rec/SN-C")return assignment;
+  if(method==="GET"&&path==="/domain/placement")return{rev:2,records:{"rec/SN-C":assignment}};
+  if(method==="PUT"){assignment={...body,rev:2};return assignment}
+  if(method==="DELETE"){const e=new Error("old member unavailable");e.status=503;throw e}
+  return{kept:"e-queue",cluster:body.cluster,what:Object.keys(body).filter(k=>k!=="cluster")};
+};
+main().querySelector('[data-act="domainRecord"]').click();await b.ready(60);
+out.moveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,DELETE,POST,GET";
+out.moveBody=JSON.stringify(requests[1].body)===JSON.stringify({cluster:"north",origin:"north",copies:["srv"]});
+const create=requests.find(x=>x.method==="POST");
+out.queuedRecording=create.path==="/domain/rec/recordings"&&JSON.stringify(create.body)===JSON.stringify({cluster:"north",name:"SN-C",cam:"ref:SN-C",retention_days:7,home:"network"});
+out.deleteTargetsOld=requests[2].path==="/domain/rec/recordings/SN-C?cluster=office";
+requests=[];pc.dialog=async()=>({cluster:"srv",days:"2",home:""});
+main().querySelector('[data-act="domainBackup"]').click();await b.ready(60);
+out.reserveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,POST,GET";
+out.reservePreservesPrimary=requests[1].body.cluster==="north"&&JSON.stringify(requests[1].body.copies)==='["srv"]';
+requests=[];pc.dialog=async()=>({cluster:"north",days:"2",home:""});
+main().querySelector('[data-act="domainBackup"]').click();await b.ready(60);
+out.samePrimaryRefused=requests.length===1&&requests[0].method==="GET";
+requests=[];pc.api=async()=>{const e=new Error("assignment unavailable");e.status=503;throw e};
+let prompted=false;pc.dialog=async()=>{prompted=true;return null};
+main().querySelector('[data-act="domainRecord"]').click();await b.ready(40);
+out.unavailableCannotCreate=!prompted;
 out.errors=errs;
 b.report(out,["errors"]);
 try{fs.unlinkSync(TMP)}catch(e){}

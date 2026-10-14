@@ -176,21 +176,17 @@ class Holder:
             out["member_list"] = self.members.read()
             out["knocking"] = self.members.knocking(self.objects)
         if self.pending is not None:
-            # the edits kept for a cluster that is off (Lesson 9): waiting, or refused by the member — the course keeps
-            # a member's outcome on the entry it answers, so `outcomes` are the refused ones
+            from .pending import OUTCOMES_PATH, _load
             out["pending"], out["outcomes"] = {}, {}
-            for name, c in self.fed.clusters.items():
-                if c.is_domain_holder:
-                    continue
+            for name in self.fed.clusters:
                 entries = self.pending.of(name)
-                waiting = [{"what": ref, "id": ref, "rev": e.get("rev"), "fields": sorted(e.get("fields") or {})}
-                           for ref, e in entries.items() if not e.get("refused")]
-                refused = [{"what": ref, "id": ref, "status": 409, "error": e["refused"]}
-                           for ref, e in entries.items() if e.get("refused")]
+                done = _load(self.vars.get(OUTCOMES_PATH + "/" + name)[0], OUTCOMES_PATH + "/" + name)
+                waiting = [{"id": identity, "what": entry["what"], "method": entry["method"], "path": entry["path"]}
+                           for identity, entry in entries.items()]
                 if waiting:
                     out["pending"][name] = waiting
-                if refused:
-                    out["outcomes"][name] = refused
+                if done:
+                    out["outcomes"][name] = list(done.values())
         if self.term is not None:
             out["term"] = self.term_view()
         out["pass_failures"] = {**self.loop.said(), "by_step": dict(self.loop.by_step)}
@@ -840,6 +836,27 @@ class Holder:
                 path = self.path.split("?", 1)[0]
                 if path.startswith(("/api/member/", "/api/relay/")) and holder.carry_door is not None:
                     return self._report(path)
+                if path.startswith("/api/tokens/") and holder.carry_door is not None:
+                    from .carry import Refused
+                    from .tokenrequest import MAX_REQUEST
+                    from w2cplatform.trust.memberkey import AGENT_HEADER
+                    if not read_body(self, MAX_REQUEST):
+                        return
+                    raw = self.rfile.read(int(self.headers["Content-Length"]))
+                    parts = path[len("/api/tokens/"):].split("/")
+                    if len(parts) != 3:
+                        return self._send(400, {"detail": "invalid token request route"})
+                    refused = holder.refusal()
+                    if refused:
+                        return self._send(*refused)
+                    try:
+                        from . import declared
+                        from w2cplatform.trust.tokens import DeclaredIssuer
+                        issuer = DeclaredIssuer(holder.signer.tokens, declared.token_kinds())
+                        got = holder.carry_door.token(*parts, raw, self.headers.get(AGENT_HEADER, ""), issuer=issuer)
+                    except Refused as e:
+                        return self._send(e.status, {"detail": e.detail})
+                    return self._send(200, got)
                 body = self._body()
                 if body is None:
                     return

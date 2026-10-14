@@ -32,7 +32,7 @@ from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
 from vms import streamclients as sc
 from vms.domainpart.books import Books
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.streamclients import ConsoleDoor, StreamClientDoors, new_stream_client
 from vms.domainpart.worker import door_handler
 from tests.domain.conftest import Clock, make_cluster
@@ -87,7 +87,7 @@ class Site:
         self.agents = {n: DomainAgent(n, CarryClient(door, n, keys[n], wall), getattr(self, n[-1]).vars, now=wall,
                                       sealer=self.rings[n], key=keys[n]) for n in ("srv-a", "srv-c")}
         self.agents["srv-b"] = DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects, sealer=self.rings["srv-b"])
-        self.crossings = Crossings(b.vars, ReadView(fed, wall=wall), wall, issuer=self.signer.tokens,
+        self.crossings = BookInputs(b.vars, ReadView(fed, wall=wall), wall, issuer=self.signer.tokens,
                                    sealer=self.rings["srv-b"])
         self.books = Books(self.crossings, b.objects)
         self.ids = IdentityStore(self.signer, b.vars, b.objects, now=wall, sealer=self.rings["srv-b"])
@@ -96,7 +96,7 @@ class Site:
         may = lambda cap: (lambda s: domain_may(b.vars, s, cap, wall()))         # noqa: E731
         self.signer_srv = _signer_stub(self.ids)
         self.console = Console(DomainDirectory(fed), ReadView(fed, wall=wall),
-                               ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
+                               ConsoleAPI(DomainDirectory(fed), verifier=lambda t: t),
                                refresh_interval=60, admin=may("admin"), viewer=may("view"), holder_vars=b.vars,
                                signer_url=f"http://127.0.0.1:{self.signer_srv.server_address[1]}")
         self.console_srv = self.console.serve(port=0)

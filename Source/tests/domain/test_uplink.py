@@ -7,6 +7,7 @@ edit and what became of it, the delivery of shared settings, the alarms, the boo
 the reports, and a member's silence is the age of its last one.
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
 import tempfile
@@ -44,7 +45,7 @@ def _site(wall, n=2, nets=None):
         cards[d.name] = Card("cam", tempfile.mkdtemp(prefix="card-"))
         fed.add(member_copy(d.name, north.objects, d.reaches, wall=wall))
         devices[d.name] = d
-        agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d, current=d.current,
+        agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=device_console(d),
                                      domain_objects=north.objects, cluster_objects=d.disk,
                                      published=d.local_objects(),
                                      pages=lambda d=d: pages(cards[d.name], wall()))
@@ -122,12 +123,13 @@ def test_an_edit_for_a_camera_the_domain_cannot_reach_is_kept_carried_applied_an
     def no_door(name):
         raise Unreachable(f"{name} is reached only by its own agent")
 
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), no_door, verifier=lambda t: t, pending=pending,
+    admit_fixtures(north.vars, fed.clusters)
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda t: t, pending=pending,
                      last_known=view.last_known)
-    out = api.update_unit("SN0", {"name": "main-gate"}, idempotency_key="k1", token="anna")
-    assert out["pending"] and d.row()["name"] == "gate-0"                     # kept, not applied
+    out = api.update_unit("SN0", {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")
+    assert out["kept"] and d.row().get("enabled", True) is True                     # kept, not applied
     report_sync(agents[d.name])                                                      # the camera's next pass
-    assert d.row()["name"] == "main-gate"
+    assert d.row()["enabled"] is False
     pending.collect(fed)                                                       # from the report, not the camera
     assert pending.of(d.name) == {}
 

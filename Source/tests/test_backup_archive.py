@@ -356,12 +356,19 @@ def _camera_cluster():
     box, card, ring, act, _ = _camera()
     card.ring_film = lambda seconds: _film_on(box, ring, act, seconds)
 
-    def carry(enabled=True, running=True, seen=True, starting=False):   # what the camera's agent does on a pass
-        book = {"SN1": json.dumps({"recorded_by": "room", "recording": "SN1", "enabled": enabled, "running": running,
-                                   **({"starting": True} if starting else {})}, sort_keys=True)}
-        have, idx = box.vars.get("domain/cam/primaries")
+    box.vars.put("domain/member", {"cluster": "camera"})
+    box.vars.put("domain/placed/rec/SN1", {"cluster": "room", "origin": "camera", "copies": "[]",
+        "at": str(box.wall()), "reason": "operator", "rev": "1"})
+
+    def carry(enabled=True, running=True, seen=True, missing=False):
+        value = {"ref": "SN1", "recording": "SN1", "role": "primary", "enabled": enabled,
+                 "running": running, "to": ["camera", "room"]}
+        absent = ["room"] if missing else []
+        book = {"": json.dumps({"missing": absent}), "SN1": json.dumps({"entries": [] if missing else [
+            {"member": "room", "item": "r-1/SN1", "value": value}], "missing": absent}, sort_keys=True)}
+        have, idx = box.vars.get("domain/rec/primaries")
         if have != book:
-            box.vars.put("domain/cam/primaries", book, cas=idx)
+            box.vars.put("domain/rec/primaries", book, cas=idx)
         if seen:
             box.objects.put("domain/seen", json.dumps({"ts": box.wall()}).encode())
     return box, card, next(r for r in card.rows if r["id"] == "1-card"), carry
@@ -389,11 +396,12 @@ def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_ag
     carries home, the card holds while the room writes, covers when the room stops (after the same grace),
     covers when the book cannot be vouched for, and never covers an operator's decision."""
     box, card, row, carry = _camera_cluster()
-    assert not card.primary_needs_cover(row)                  # no book: a camera alone, nothing to stand in for
+    carry(missing=True)
+    assert not card.primary_needs_cover(row)                  # a missing observation has bounded grace
 
-    carry(running=False, starting=True)
+    carry(running=False, missing=True)
     assert not card.primary_needs_cover(row)                  # a recording starting: not yet
-    box.wall.advance(card.START_GRACE + 1); carry(running=False, starting=True)
+    box.wall.advance(card.START_GRACE + 1); carry(running=False, missing=True)
     assert card.primary_needs_cover(row)                      # …it took longer than a start takes
     carry(running=True)
     assert not card.primary_needs_cover(row)                  # the room writes it
@@ -417,12 +425,12 @@ def test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not()
     recording does, and freshness goes to the object store — RAM on a camera."""
     box, card, row, carry = _camera_cluster()
     carry()
-    _, idx = box.vars.get("domain/cam/primaries")
+    _, idx = box.vars.get("domain/rec/primaries")
     for _ in range(20):
         box.wall.advance(5); carry()
-    assert box.vars.get("domain/cam/primaries")[1] == idx         # twenty passes, no write
+    assert box.vars.get("domain/rec/primaries")[1] == idx         # twenty passes, no write
     carry(running=False)
-    assert box.vars.get("domain/cam/primaries")[1] != idx         # the room stopped: one write
+    assert box.vars.get("domain/rec/primaries")[1] != idx         # the room stopped: one write
 
 
 def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
@@ -434,7 +442,7 @@ def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
     box, card, row, carry = _camera_cluster()
     carry(running=True)
     assert not card.primary_needs_cover(row)
-    carry(running=False, starting=False)
+    carry(running=False, missing=False)
     assert card.primary_needs_cover(row)                      # no grace for a stop
     carry(enabled=False, running=False)
     assert not card.primary_needs_cover(row)                  # a decision is still never covered
@@ -448,19 +456,20 @@ def test_a_card_with_no_book_holds_and_says_nobody_is_known_to_write_its_primary
     was known to write. It says what the gate found now. A running entry holds the card and names who writes it; an
     entry that stopped releases it, and the reason goes with it."""
     box, card, row, carry = _camera_cluster()
+    carry(missing=True)
     card.reconcile_once(); card.gate_pass()
     st = next(s for s in card.status() if s["id"] == "1-card")
     assert card.holding["1-card"] is True and st["phase"] == "standby", st
-    assert "no primary recording of this camera is known" in st["why"] and "being written" not in st["why"], st
+    assert "has not been observed" in st["why"] and "being written" not in st["why"], st
     carry(running=True)
     card.gate_pass()
     st = next(s for s in card.status() if s["id"] == "1-card")
     assert card.holding["1-card"] is True and st["phase"] == "standby", st
-    assert st["why"].startswith("the primary recording SN1 in room is being written"), st
-    carry(running=False, starting=False)
+    assert st["why"].startswith("the assigned primary is being written"), st
+    carry(running=False, missing=False)
     assert ("1-card", "released") in card.gate_pass()
     assert card.holding["1-card"] is False
-    assert card.gate_why["1-card"] == "the primary recording SN1 in room is not being written"
+    assert card.gate_why["1-card"] == "the assigned primary is not being written"
 
 
 def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_name():
@@ -472,7 +481,7 @@ def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_nam
     backup = {**row, "id": "SN1-copy", "cam": "ref:SN1"}
     carry(running=True)
     assert card.carried_primary(backup, box.wall()) is False       # the first server writes it
-    carry(running=False, starting=False)
+    carry(running=False, missing=False)
     assert card.carried_primary(backup, box.wall()) is True        # it stopped: cover, at once
 
 
@@ -486,7 +495,7 @@ def test_what_the_stream_says_comes_before_the_book():
     card.stream_says = lambda r: True                         # …but the stream is not being taken
     assert card.primary_needs_cover(row)
     card.stream_says = lambda r: False
-    carry(running=False, starting=False)
+    carry(running=False, missing=False)
     assert not card.primary_needs_cover(row)                  # the stream is taken: the book's word is older
     card.stream_says = lambda r: None
     assert card.primary_needs_cover(row)                      # it cannot say: the book decides

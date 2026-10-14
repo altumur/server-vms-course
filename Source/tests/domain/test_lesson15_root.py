@@ -7,6 +7,7 @@ holder: the root is in the recovery file, and signs the key set, the holder reco
 certificate. The holder keeps what signs every minute; a theft is answered by a move that drops those keys.
 """
 
+from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
 
@@ -59,7 +60,7 @@ def _site(wall, n=4):
 
 def _agent(fed, devices, name, holder, wall):
     d = devices[name]
-    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=d.local_console(), current=d.current,
+    return DomainAgent(name, fed.clusters[holder].vars, d.flash, now=wall, console=device_console(d),
                        domain_objects=devices[holder].disk_door(), cluster_objects=d.disk, published=d.local_objects())
 
 

@@ -83,7 +83,7 @@ class DomainPartWorker:
 # `verifier(token) -> subject` and `viewer(subject) -> bool`: a person's token and a `view` on the domain, as the
 # domain's own door asks them (`w2cplatform.domain.grants.domain_may`); not given, the door is open. A request that
 # changes something asks `admin(subject)` instead — view to look, admin to change, as the domain's own door does.
-def door_handler(fed, crossings=None, verifier=None, viewer=None, admin=None, clients=None):
+def door_handler(fed, inputs=None, verifier=None, viewer=None, admin=None, clients=None):
     from http.server import BaseHTTPRequestHandler
     from urllib.parse import urlsplit
 
@@ -130,9 +130,9 @@ def door_handler(fed, crossings=None, verifier=None, viewer=None, admin=None, cl
             if path == "/metrics":
                 from .ingest import stream_metrics
                 return self._send(200, "\n".join(stream_metrics(fed)) + "\n", text=True)
-            if path == "/catalog" and crossings is not None:
+            if path == "/catalog" and inputs is not None:
                 from .scenario import catalog
-                return self._send(200, catalog(crossings))
+                return self._send(200, catalog(inputs))
             self._send(404, {"detail": "no such route"})
 
         def _change(self, method: str):
@@ -177,7 +177,7 @@ def main() -> None:
     from w2cplatform.domain.uplink import _CopyObjects
 
     from .books import Books
-    from .crossing import Crossings
+    from .inputs import BookInputs
 
     fed = federation_from_env()
     holder = fed.domain_holder
@@ -185,7 +185,7 @@ def main() -> None:
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
     star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
     issuer = TokenDoor(os.environ.get("SIGNER_TOKENS_UNIX", "/run/w2c-signer/tokens.sock"))
-    books = Books(Crossings(holder.vars, view, issuer=issuer, centre=os.environ.get("CENTRE") or None, star=star,
+    books = Books(BookInputs(holder.vars, view, issuer=issuer, centre=os.environ.get("CENTRE") or None, star=star,
                             topology=Topology(holder.vars)), holder.objects,
                   members=Members(holder.vars, configured=lambda: configured, domain=holder.name))
     worker = DomainPartWorker(books, holder.vars, holder.objects)
@@ -220,7 +220,7 @@ def main() -> None:
     clients = StreamClientDoors(holder.vars, sealer=ring(), console=ConsoleDoor(os.environ.get("DOMAIN_CONSOLE_URL", "")))
     from w2cplatform.console import open_doors
     open_doors(os.environ.get("DOMAINPART_HOST", "0.0.0.0"), int(os.environ.get("DOMAINPART_PORT", "8096")),
-               door_handler(fed, books.crossings, verifier if os.environ.get("AUTH", "1") == "1" else None, viewer,
+               door_handler(fed, books.inputs, verifier if os.environ.get("AUTH", "1") == "1" else None, viewer,
                             admin, clients),
                unix_env="DOMAINPART_UNIX", say=False)
     every = float(os.environ.get("BOOKS_EVERY", "5"))

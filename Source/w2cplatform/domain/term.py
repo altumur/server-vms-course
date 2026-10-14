@@ -93,8 +93,10 @@ BACKUP_TAKEN, BACKUP_REFUSED = "domain/backup-taken", "domain/backup-refused"
 # backup — their secrets SEALED UNDER THE BACKUP KEY (`Signer.backup_key`, HMAC of the root's key and a revision; the
 # product's r23-seal), not under the holder's ring, which no other holder has, and never in the clear: a member chosen to
 # keep a copy reads no hash of it. The signer's own keys are not in the backup, ever.
-PLATFORM_EXPORTED = ("domain/book-seal", "domain/pending/", "domain/grants/", "domain/shared", "domain/topology", "domain/members",
-                     "domain/placement", "domain/licence", "domain/break-glass/", "domain/users/", "domain/names/")
+# A completed Outcome retains the last kept_at for this id: a new holder must
+# not assign it again when its clock is coarse or has moved back (ADR-0074 доп. 7).
+PLATFORM_EXPORTED = ("domain/book-seal", "domain/pending/", "domain/outcomes/", "domain/grants/", "domain/shared", "domain/topology",
+                     "domain/members", "domain/placement", "domain/licence", "domain/break-glass/", "domain/users/", "domain/names/")
 
 
 def exported() -> tuple[str, ...]:
@@ -1179,15 +1181,16 @@ def handover(holder: DomainHolder, to: str, objects_of, carry_to, take,
 # What an old holder that came back holds and the new term does not: every exported item that differs from
 # the state the new holder was restored from. For a person to look at — never applied by anyone on its own.
 #
-# A kept edit counts only as an EDIT: its `rev` moved, or the new term has none for that unit. An entry that
-# differs only because a report closed fields of it, or annotated a conflict or a refusal, is not stranded —
-# the new term will carry the same edit and the member will say "already" (see `GuardedPending`).
+# An explicit queued Edit is immutable: a report removes it and stores an Outcome.
+# Removing an Edit is not stranded. Any remaining Edit that differs is a new operation.
 def stranded(old_vars, restored_state: dict, signer=None) -> list:
     """Compared by what the rows SAY: the old holder's under its ring, the restored state's under the backup key."""
     from .carry import open_row
-    from .pending import PENDING_PATH
+    from .pending import OUTCOMES_PATH
     out = []
     for prefix in exported():
+        if prefix == OUTCOMES_PATH + "/":
+            continue                                     # member news, recoverable by replay, not an operator's edit
         for path in old_vars.list(prefix):
             items, _ = old_vars.get(path)
             theirs = restored_state.get(path, {})
@@ -1197,12 +1200,6 @@ def stranded(old_vars, restored_state: dict, signer=None) -> list:
             for k, v in (items or {}).items():
                 if theirs.get(k) == v:
                     continue
-                if path.startswith(PENDING_PATH + "/") and k in theirs:
-                    try:
-                        if json.loads(v).get("rev") == json.loads(theirs[k]).get("rev"):
-                            continue                     # the same edit, closed further here: not the operator's
-                    except PARSE_ERRORS:
-                        pass
                 # The list is a plain row the operator reads: a secret that differs is NAMED, its value never copied
                 # out of the ring it was opened from.
                 out.append([path, k, "<secret: differs>" if is_secret_field(k) else v])

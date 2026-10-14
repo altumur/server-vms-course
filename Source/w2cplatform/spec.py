@@ -800,7 +800,11 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
     if name in [str(x) for x in worker.get("requests") or []]:
         raise ValueError(f"spec {name}: worker.requests names {name!r}, which is the spec itself — a worker performs its "
                          f"own units' work, it files to others")
-    bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
+    bad = [x for x in worker.get("reads") or []
+           if not isinstance(x, str)
+           or not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+/?", x)
+           or any(part in (".", "..") for part in x.rstrip("/").split("/"))
+           or "*" in x[:-1]]
     if bad:
         raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {_q(str(bad[0]))}")
     return tuple(map(str, worker.get("writes") or ())), tuple(map(str, worker.get("reads") or ())), \
@@ -909,6 +913,7 @@ class BookMerge:
 #   tables    the kept rows the domain's door serves read-only at `/domain/<sub>/<table>`
 #   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
 #             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`).
+#             An ordinary member worker additionally needs grant and the closed placement binding (ADR-0074).
 #             A token carries no rights: what its subject may do is the grants'
 #   edit      the fields of a unit the domain's door lets into an edit of a member's row: any other is refused there by
 #             the spec, before the member is asked. Not said: the member's console decides
@@ -992,7 +997,7 @@ class DomainSection:
             if not isinstance(kind, str) or not _DOMAIN_NAME.match(kind) or kind == "person":
                 raise ValueError(f"{where}.tokens: {kind!r} is not a kind a subsystem may declare ('person' is the "
                                  f"platform's)")
-            if not isinstance(t, dict) or set(t) - {"lifetime", "claims"}:
+            if not isinstance(t, dict) or set(t) - {"lifetime", "claims", "grant", "placement"}:
                 raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...]}} — a token "
                                  f"carries no rights")
             life = t.get("lifetime")
@@ -1003,6 +1008,26 @@ class DomainSection:
                                                        for c in claims):
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
+            if "grant" in t or "placement" in t:
+                grant, binding = t.get("grant"), t.get("placement")
+                fields = {"sub", "caller", "ref_claim", "target_fields", "audience_claim"}
+                links = {"cluster", "origin", "copies"}
+                if not isinstance(grant, list) or not grant or any(
+                        not isinstance(r, str) or not re.fullmatch(r"[a-z][a-z0-9_-]*", r) for r in grant) \
+                        or len(set(grant)) != len(grant):
+                    raise ValueError(f"{where}.tokens.{kind}.grant is a nonempty list of distinct roles")
+                if not isinstance(binding, dict) or set(binding) != fields \
+                        or not isinstance(binding["sub"], str) or not _DOMAIN_NAME.fullmatch(binding["sub"]) \
+                        or not isinstance(binding["caller"], str) or binding["caller"] not in links \
+                        or not isinstance(binding["ref_claim"], str) or binding["ref_claim"] not in claims \
+                        or not isinstance(binding["audience_claim"], str) or binding["audience_claim"] not in claims \
+                        or binding["ref_claim"] == binding["audience_claim"]:
+                    raise ValueError(f"{where}.tokens.{kind}.placement is a closed assignment binding")
+                targets = binding["target_fields"]
+                if not isinstance(targets, list) or not targets or any(
+                        not isinstance(f, str) or f not in links for f in targets) or len(set(targets)) != len(targets):
+                    raise ValueError(f"{where}.tokens.{kind}.placement.target_fields names distinct assignment fields")
+                sec.tokens[kind].update(grant=tuple(grant), placement={**binding, "target_fields": tuple(targets)})
         sec.keys = cls._families(spec, d.get("keys"), where)
         sec.shared, sec.documents = cls._shared(d.get("shared"), where)
         sec.edit = names("edit")
@@ -2182,11 +2207,14 @@ class SubsystemSpec:
         return out
 
     # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
-    # says it writes (`worker.writes`), and the request rows of the subsystems it files to (`worker.requests`).
+    # says it writes (`worker.writes`), its declared book inputs (`domain.books.*.from`), and the request rows of
+    # the subsystems it files to (`worker.requests`).
     def acl_worker_role(self) -> list[str]:
         from .contract import requests_acl
+        inputs = [rule.source + "*" if rule.source.endswith("/") else rule.source
+                  for rule in self.domain.merged.values()] if self.domain else []
         return (self.sub.acl_worker() + [self.sub.config(t, "*") for t in self.worker_writes]
-                + requests_acl(*self.worker_requests))
+                + requests_acl(*self.worker_requests) + list(dict.fromkeys(inputs)))
 
     # Placement: `<name>/workers/*`, `<name>/placement/*`, `<name>/slots/*` — never a unit's row. The
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the

@@ -1835,7 +1835,10 @@ class VmsWorker(Worker):
                 asks.append((("coverage", id(dev), str(cam["id"])), dev, lambda dev=dev, cid=cam["id"]: dev.coverage(cid)))
         self._heard = self._ask_devices(asks)
         try:
-            super().heartbeat_once()
+            from .recording_publication import publish_facts
+            status = self.status()
+            self.heartbeat(status, **{**self.platform_fields(), **self.heartbeat_fields()})
+            publish_facts(self, "sources", status)
         finally:
             self._heard = None
 

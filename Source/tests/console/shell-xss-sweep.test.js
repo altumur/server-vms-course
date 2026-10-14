@@ -37,9 +37,10 @@ b.FIX["/domain"]={holder:"srv",url:"http://srv/"+P,as_of:1,age:1,complete:false,
   units:{cam:[{sub:"cam",id:"1",cluster:p("cam"),unit:"1",ref:p("ref2"),name:P,server:P,worker:P,phase:P,state:P,age:1,view:{name:P,enabled:true},worker_state:P,as_of:P},
               {sub:"cam",id:P,cluster:p("m"),unit:P,ref:P,name:P,state:"live",age:1,view:{name:P},worker_state:"live"},{sub:"cam",id:"2",cluster:p("m"),unit:"2",ref:p("r3"),name:P,state:P,view:{[P]:P}}],
          rec:[{sub:"rec",id:p("rec"),cluster:p("cam"),unit:p("rec"),name:P,worker:P,server:P,phase:P,state:"stale",worker_state:"stale",as_of:P}]},
-  tables:{"cam/crossings":{[p("ref2")]:P,[P]:P}},
+  tables:{},
   topology:{rev:1,centre:"srv",star:[],via:{[p("cam")]:p("m")},by:P},knocking:[{name:p("kn"),times:P,last:1,fingerprint:P}],member_list:{rev:1,members:{[p("m")]:{how:P,since:1}}},
   term:{term:P,record:{holder:"srv"},backup_holders:[p("m")],backup:{term:P,rev:P},copies:{[p("m")]:{term:P,rev:P},[p("cam")]:{garbled:P}}}};
+b.FIX["/domain/placement"]={rev:1,records:{["rec/"+p("ref2")]:{cluster:P,origin:P,copies:[P],reason:P,at:1,rev:1}}};
 b.FIX["/domain/alarms"]={events:[{kind:P,member:p("m"),of:"cam/1",t:1,subsystem:P,unit:P,alive_via:P}],complete:false,sentence:P};
 b.FIX["/api/held"]={cluster:"srv",holder:{holder:P,term:P,url:P},term:P,keys:{current:P},backup:{term:P,rev:P}};
 b.FIX["/domain/keys"]={vars:[{key:"domain/"+P,fields:[P,"pub"],public:{pub:P},index:P},{key:"domain/w/"+P,withheld:P}],objects:[{key:"domain/members/"+P,size:1,age:P}],error:P};

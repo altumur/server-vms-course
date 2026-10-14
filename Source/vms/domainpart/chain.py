@@ -73,11 +73,11 @@ def retry_wait(period: float) -> float:
 # centre none of whose recorders heard lately says an ingest keeps the road each entry already names — tokens are still
 # re-issued on it; one torn heartbeat raised out of the whole pass once, and a day later every relay's token to push up
 # had run out. A centre that does not answer: nothing is written.
-def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
+def publish_upstream(inputs, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
     from .ingest import BOOKS, _an_object, audience, ingest_urls
-    now, books = crossings.wall(), {}
-    c = crossings.view.fed.clusters.get(centre)
-    if c is None or crossings.issuer is None:
+    now, books = inputs.wall(), {}
+    c = inputs.view.fed.clusters.get(centre)
+    if c is None or inputs.issuer is None:
         return {}
     try:
         urls = ingest_urls(centre, c.objects, now) or None       # none said: each entry keeps the road it names
@@ -86,12 +86,12 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
     # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
     # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
     # a viewer in the centre, whose want the relay's forwarder carries down like any other.
-    polled = {ref: crossings._poll_home(home) for ref, home in crossings.unrecorded().items()}
-    for ref, on in [*crossings.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
+    polled = {ref: inputs._poll_home(home) for ref, home in inputs.unrecorded().items()}
+    for ref, on in [*inputs.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
         if on == centre:
             continue
         mode = "pull" if on in star else "push"
-        have, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
+        have, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
         raw_old = (have or {}).get(ref)
         old = BOOKS.read(f"{UPSTREAM_PATH}/{on}/{ref}", lambda: _an_object(json.loads(raw_old)), {}) if raw_old else {}
         road = urls if urls is not None else old.get("urls")
@@ -102,17 +102,17 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
         except PARSE_ERRORS:
             fresh = False
         if old.get("urls") == road and old.get("mode") == mode and fresh \
-                and kid_of(str(old.get("token_secret", ""))) == crossings.issuer.kid:
+                and kid_of(str(old.get("token_secret", ""))) == inputs.issuer.kid:
             entry = old
         else:
             entry = {"urls": road, "mode": mode, "until": now + lifetime,
-                     "token_secret": crossings.issuer.issue("stream", on, now=now, aud=audience(centre), ref=ref)}
+                     "token_secret": inputs.issuer.issue("stream", on, now=now, aud=[centre], ref=ref)}
         books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
     for on, book in books.items():
         path = f"{UPSTREAM_PATH}/{on}"
-        have, idx = crossings.vars.get(path)
+        have, idx = inputs.vars.get(path)
         if have != book:
-            crossings.vars.put(path, book, cas=idx)
+            inputs.vars.put(path, book, cas=idx)
     return books
 
 

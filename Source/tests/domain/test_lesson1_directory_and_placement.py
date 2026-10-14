@@ -90,7 +90,8 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
 def test_placement_is_by_reachability_then_headroom():
     fed, _ = make_domain({"north": ("vlan:a", "vlan:b"), "south": ("vlan:b",), "cloud": ("vlan:c",)}, "north")
     head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: cam_headroom
-    p = ClusterPlacer(fed, headroom=lambda c: head[c], clock=lambda: 1234.0)
+    admit(fed)
+    p = ClusterPlacer(fed, sub="cam", headroom=lambda c: head[c], clock=lambda: 1234.0)
     a = p.place(UnitSite(1, "vlan:a"))
     assert a.cluster == "north" and "only cluster reaching vlan:a" in a.reason        # capacity elsewhere is irrelevant
     b = p.place(UnitSite(2, "vlan:b"))
@@ -99,7 +100,7 @@ def test_placement_is_by_reachability_then_headroom():
         p.place(UnitSite(3, "vlan:z")); raise AssertionError("must refuse")
     except Refused as e:
         assert "no cluster in the domain reaches vlan:z" in str(e)                    # never "cluster X is full"
-    stored, _ = fed.domain_holder.vars.get("domain/placement/2")
+    stored, _ = fed.domain_holder.vars.get("domain/placement/cam/2")
     assert stored["cluster"] == "south" and stored["at"] == "1234.0" and stored["reason"]   # stored, with a reason and a time
     assert p.place(UnitSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
 
@@ -109,7 +110,8 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     reachability; south's controller picked the worker by capacity and labels."""
     fed, _ = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     wall = Clock(); s = Running(fed.clusters["south"], wall, workers=(("w-0", "srv-9"), ("w-1", "srv-10")))
-    p = ClusterPlacer(fed)
+    admit(fed)
+    p = ClusterPlacer(fed, sub="cam")
     pl = p.place(UnitSite(7, "vlan:b"))
     assert pl.cluster == "south"
     (cid,) = s.create(7, labels=["vlan:b"])                                           # the domain console forwards the create to south, with ref 7
@@ -117,7 +119,7 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     assert where.worker in ("w-0", "w-1") and "reaching vlan:b" in where.reason and "on srv-" in where.reason
     a = DomainDirectory(fed).where(7)
     assert a.cluster == "south" and a.worker == where.worker                          # the snapshot carried the cluster's decision up
-    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/7"]  # the domain stored its level, nothing about workers
+    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/cam/7"]  # the domain stored its level, nothing about workers
 
 
 def test_two_placers_racing_agree_by_cas():
@@ -125,7 +127,8 @@ def test_two_placers_racing_agree_by_cas():
     results = []
     def race(seed):
         head = {"north": 10.0 + seed, "south": 10.0 + (1 - seed)}      # each placer would pick a different cluster
-        p = ClusterPlacer(fed, headroom=lambda c: head[c])
+        admit(fed)
+        p = ClusterPlacer(fed, sub="cam", headroom=lambda c: head[c])
         for cam in range(1, 41):
             results.append((cam, p.place(UnitSite(cam, "vlan:a")).cluster))
     ts = [threading.Thread(target=race, args=(i,)) for i in range(2)]
@@ -139,7 +142,8 @@ def test_two_placers_racing_agree_by_cas():
 
 def test_a_dead_cluster_is_not_a_trigger():
     fed, links = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
-    p = ClusterPlacer(fed)
+    admit(fed)
+    p = ClusterPlacer(fed, sub="cam")
     assert p.place(UnitSite(7, "vlan:b")).cluster == "south"
     links["south"].up = False
     assert p.place(UnitSite(7, "vlan:b")).cluster == "south"     # already placed: untouched, not re-placed
@@ -159,3 +163,10 @@ def test_exactly_one_domain_holder_is_designated():
         fed.domain_holder; raise AssertionError("must raise")
     except RuntimeError as e:
         assert "exactly one domain holder" in str(e)
+
+
+def admit(fed):
+    from w2cplatform.domain.members import Members
+    members = Members(fed.domain_holder.vars, configured=lambda: list(fed.clusters), domain=fed.domain_holder.name)
+    members.settle()
+    members.list_holder(fed.domain_holder.name, None, None)

@@ -107,7 +107,7 @@ def _signer(fed, north, signer, wall, wrote: list, journal=None) -> Holder:
 
 def _console(fed, north, wall, wrote: list, signer_url=None, journal=None) -> Console:
     f, v, o = _as(fed, north, wrote, wall)
-    return Console(DomainDirectory(f), ReadView(f, wall=wall), ConsoleAPI(DomainDirectory(f), lambda n: None,
+    return Console(DomainDirectory(f), ReadView(f, wall=wall), ConsoleAPI(DomainDirectory(f),
                    verifier=lambda t: t), refresh_interval=60, holder_objects=o, holder_vars=v,
                    members=Members(v, wall, domain="north", journal=journal), topology=Topology(v),
                    pending=PendingEdits(v, wall), signer_url=signer_url, journal=journal,
@@ -212,7 +212,7 @@ def test_a_handover_is_the_signers_and_the_console_only_hands_it_on():
                                            _take(fed, devices, to, offline, wall), wall),
                wall=wall)
     srv, signer_url = _serve(h)
-    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None),
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed)),
                   refresh_interval=60, holder_vars=holder.vars, signer_url=signer_url)
     door = con.serve(port=0)
     base = f"http://127.0.0.1:{door.server_address[1]}"

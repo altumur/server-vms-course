@@ -151,13 +151,15 @@ def obsd_volume(session, size: int = 64 << 20, max_block: int = 4 << 20, optimal
 # A recorder on the box, with a session of its own on the test daemon, a small volume and a small block: what
 # every test that records builds. Its volume, unless one is declared, is `file://<box.root>/volume`.
 TEST_QUOTA, TEST_BLOCK, TEST_READ = 64 << 20, 4 << 20, 512 << 10
-REC_ACL = ["rec/epoch/*", "rec/slots/*", "rec/holds/*"]
+def rec_acl():
+    from vms.config import REC_SPEC
+    return REC_SPEC.acl_worker_role()
 
 
 def recorder(box, name: str = "r-1", server: str = "srv-1", actuator=None, acl=None, **kw):
     from vms.recworker import RecWorker
     from vms.worker import FakeActuator
-    vars_ = box.vars.as_writer(f"recworker-{name}", acl or REC_ACL) if acl is not False else box.vars
+    vars_ = box.vars.as_writer(f"recworker-{name}", acl or rec_acl()) if acl is not False else box.vars
     kw.setdefault("env", {})
     kw.setdefault("default_quota", TEST_QUOTA)
     if kw.get("obsd") is None:

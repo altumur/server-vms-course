@@ -20,7 +20,7 @@ from w2cplatform.domain.api import ApiError, ConsoleAPI
 from vms.domainpart.books import Books
 from w2cplatform.domain.relay import Relay
 from w2cplatform.domain.console import Console
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from vms.domainpart.ingest import CameraPusher
@@ -48,7 +48,8 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
               for c in (north, south)]
     for a in agents:
         report_sync(a)
-    placer = ClusterPlacer(fed, clock=wall)
+    admit(fed)
+    placer = ClusterPlacer(fed, sub="cam", clock=wall)
     assert placer.place(UnitSite(1, "vlan:b")).cluster == "south"
     seen["south"] = ["vlan:b", "vlan:c"]
     assert agents[1].say_reaches() and not agents[1].say_reaches()   # written when it changes, and only then
@@ -111,15 +112,15 @@ def test_the_passes_follow_the_topology_without_a_restart():
     through = Relay(relay, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
-    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
 
     topo.edit(lambda d: d.update(centre="north", via={cam.name: "east"}), base_rev=0, known=set(fed.clusters))
     report_sync(relay)                                                      # east relays for the camera: the topology says so
     report_sync(cam_agent); report_sync(relay)                                    # the camera reports into east; east bundles it up
     out = books.pass_once()
     assert out["moved"] == [cam.name] and fed.clusters[cam.name].via == "east"
-    assert books.crossings.centre == "north"                           # from the topology, not from an argument
-    assert [r["ref"] for r in books.crossings.view.list()["rows"] if r["cluster"] == cam.name] == ["SN8002"]
+    assert books.inputs.centre == "north"                           # from the topology, not from an argument
+    assert [r["ref"] for r in books.inputs.view.list()["rows"] if r["cluster"] == cam.name] == ["SN8002"]
     report_sync(relay); report_sync(cam_agent)                                    # the books, relayed down
     pusher = CameraPusher("SN8002", cam.flash, lambda url: None, clock=wall)
     assert pusher.entry()["cluster"] == "east" and pusher.entry()["ingest"]["urls"] == RELAY_URLS
@@ -134,7 +135,7 @@ def test_the_operator_edits_the_topology_in_the_domain_console():
     east, _ = make_cluster("east")
     fed.add(north); fed.add(east)
     view = ReadView(fed, wall=lambda: 1000.0)
-    api = ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda token: token)
+    api = ConsoleAPI(DomainDirectory(fed), verifier=lambda token: token)
     con = Console(DomainDirectory(fed), view, api, refresh_interval=0.05, topology=Topology(north.vars),
                   admin=lambda subject: subject == "anna")
     srv = con.serve(port=0)
@@ -278,106 +279,54 @@ def test_a_lower_member_timestamp_is_refused_even_after_a_change_of_road():
     assert not view.list()["complete"]                                     # and it is not silent
 
 
-def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
-    """Nobody sets pull or push by hand. The room and the camera each say what they see. No network in common:
-    the room could not reach the camera's door, so the source book says the camera pushes — `ingest://`. The room
-    is cabled onto the camera's VLAN: the book says the recorder pulls — the camera's RTSP. A camera that says it
-    pushes whatever happens (a mobile uplink) pushes. The book says why, each time."""
+def test_sources_do_not_infer_push_from_topology_or_network_reachability():
+    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
+    from vms.recording_books import source
     wall = Clock()
-    fed = Federation()
-    north, _ = make_cluster("north", domain=True)
-    south, _ = make_cluster("south")
-    fed.add(north); fed.add(south)
-    cam = DeviceCluster("SN8010", FakeVariables(), wall=wall, address="10.2.0.5")
-    cam.boot()
-    fed.add(member_copy(cam.name, north.objects, wall=wall))
-    cam_nets, room_nets = ["vlan:cams"], ["vlan:servers"]
-    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                            published=cam.local_objects(), reaches=lambda: cam_nets)
-    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
-    view = ReadView(fed, wall=wall)
-    crossings = Crossings(north.vars, view, wall)
-    report_sync(cam_agent); view.refresh()
-    crossings.record("SN8010", on="south")
-
-    def book():
-        cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/cam/sources/south")[0]["SN8010"])
-
-    e = book()
-    assert (e["push"], e["live_url"]) == (True, "ingest://south/SN8010") and "sees none" in e["road"]
-    room_nets.append("vlan:cams")                                      # the room is cabled onto the cameras' VLAN
-    e = book()
-    assert (e["push"], e["live_url"]) == (False, "rtsp://10.2.0.5/live") and "sees vlan:cams" in e["road"]
-    cam.pushes = True                                                  # a camera on a mobile uplink: always
-    e = book()
-    assert e["push"] is True and e["road"] == "the camera says it pushes"
+    _, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    assert "push" not in source(south.vars.get("domain/cam/sources")[0], SERIAL).value
+    cam.pushes = True
+    books.collect()
+    assert source(south.vars.get("domain/cam/sources")[0], SERIAL).value["push"] is True
 
 
-def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remembers_why():
-    """The networks say the room sees the cameras' VLAN, so the book sends the recorder to pull. A firewall says
-    otherwise: the recorder cannot reach the camera and says so in its heartbeat. The domain has the camera
-    push — and remembers it, because pushing, the recorder no longer pulls and has nothing more to say; without
-    the memory the next pass would send it back. The room is re-cabled (its networks change): the memory is
-    forgotten and the networks decide again."""
-    from w2cplatform.contract import Heartbeat, Subsystem
+def test_recorder_pull_failure_is_local_and_never_changes_the_origin_source():
+    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
+    from vms.recording_books import source, primary
     wall = Clock()
-    fed = Federation()
-    north, _ = make_cluster("north", domain=True)
-    south, _ = make_cluster("south")
-    fed.add(north); fed.add(south)
-    cam = DeviceCluster("SN8011", FakeVariables(), wall=wall, address="10.2.0.6")
-    cam.boot()
-    fed.add(member_copy(cam.name, north.objects, wall=wall))
-    room_nets = ["vlan:servers", "vlan:cams"]
-    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                            published=cam.local_objects(), reaches=lambda: ["vlan:cams"])
-    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
-    view = ReadView(fed, wall=wall)
-    crossings = Crossings(north.vars, view, wall)
-    report_sync(cam_agent); view.refresh()
-    crossings.record("SN8011", on="south")
-
-    def recorder(unreachable: bool):
-        st = [{"id": "SN8011", "cam": "ref:SN8011", "phase": "pending" if unreachable else "running",
-               **({"source_unreachable": True, "why": "source unreachable: connection refused"} if unreachable else {})}]
-        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
-
-    def book():
-        cam.publish(); report_sync(cam_agent); report_sync(room_agent); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/cam/sources/south")[0]["SN8011"])
-
-    assert book()["push"] is False                                     # the networks say: pull
-    recorder(unreachable=True)
-    e = book()
-    assert e["push"] is True and "could not reach the camera (source unreachable: connection refused)" in e["road"]
-    recorder(unreachable=False)                                        # pushing now, the recorder has nothing to say
-    wall.advance(30)
-    assert book()["push"] is True                                      # …and the camera keeps pushing
-    room_nets.append("vlan:new")                                       # the room is re-cabled
-    e = book()
-    assert e["push"] is False and "the recorder pulls" in e["road"]    # decided again, by the networks
+    _, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south"); books.collect()
+    row = {"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}
+    books.observe("south", [row], [{"id": SERIAL, "phase": "pending", "source_unreachable": True}], ingest="http://south/ingest")
+    books.collect()
+    assert "push" not in source(south.vars.get("domain/cam/sources")[0], SERIAL).value
+    assert primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["push"] is True
+    books.observe("south", [row], [{"id": SERIAL, "phase": "running"}], ingest="http://south/ingest")
+    books.collect()
+    assert primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["push"] is True
+    cam.address = "10.1.0.99"; books.collect()
+    books.observe("south", [row], [{"id": SERIAL, "phase": "running"}], ingest="http://south/ingest")
+    books.collect()
+    assert "push" not in primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value
 
 
-
-def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
-    """Feedback AO. A camera of a server cluster that does not run the platform holds no poll: it has nothing to
-    push with. However far apart the networks, the book says the recorder pulls it, and why."""
-    from tests.domain.conftest import snapshot
+def test_unconfirmed_source_does_not_start_a_stream_from_network_guesses():
+    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
+    from vms.recording_sources import NotResolvable, resolve
     wall = Clock()
-    fed = Federation()
-    north, _ = make_cluster("north", domain=True)
-    south, _ = make_cluster("south")
-    west, _ = make_cluster("west", reaches=("vlan:west",))
-    for c in (north, south, west):
-        fed.add(c)
-    snapshot(west, {"DOOR8": ("w-0", "srv-9")}, ts=wall())
-    west.objects.put("cam/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-9",
-        "status": [{"id": 1, "ref": "DOOR8", "phase": "running"}], "live_url": "rtsp://10.9.0.8/live"}).encode())
-    report_sync(DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: ["vlan:south"], own_objects=south.objects))
-    view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(north.vars, view, wall)
-    crossings.record("DOOR8", on="south")
-    crossings.publish()
-    e = json.loads(north.vars.get("domain/cam/sources/south")[0]["DOOR8"])
-    assert (e["push"], e["live_url"]) == (False, "rtsp://10.9.0.8/live") and "not a member camera" in e["road"]
+    _, _, south, cam, books, _, _ = _site(wall)
+    books.assign(SERIAL, "south")
+    try:
+        resolve(south.vars, "ref:"+SERIAL, wall())
+    except NotResolvable:
+        pass
+    else:
+        raise AssertionError("an unconfirmed source was selected")
+
+
+def admit(fed):
+    from w2cplatform.domain.members import Members
+    members = Members(fed.domain_holder.vars, configured=lambda: list(fed.clusters), domain=fed.domain_holder.name)
+    members.settle()
+    members.list_holder(fed.domain_holder.name, None, None)

@@ -264,6 +264,10 @@ def refused_paths(d: dict) -> list[str]:
     d = copy.deepcopy(d)
     for p in out:
         _drop(d, p.split("."))
+    # A token scope and its grant form one declaration. Removing an unknown scope
+    # from the probe must not manufacture a second refusal of its now unbound grant.
+    for kind in {p.split(".")[2] for p in out if p.startswith("domain.tokens.")}:
+        d.get("domain", {}).get("tokens", {}).pop(kind, None)
     for _ in range(32):
         try:
             SubsystemSpec.from_dict(copy.deepcopy(d))
@@ -275,9 +279,36 @@ def refused_paths(d: dict) -> list[str]:
                 m = re.match(r"(.*)", f"{f.group(1) or 'unit'}.fields.{f.group(2)}.{f.group(3)}")
             if not m or m.group(1) in out:
                 return out + [f"(refused: {e})"]
-            out.append(m.group(1))
-            _drop(d, m.group(1).split("."))
+            refused = m.group(1)
+            out.append(refused)
+            if refused.startswith("domain.tokens.") and len(refused.split(".")) >= 3:
+                d.get("domain", {}).get("tokens", {}).pop(refused.split(".")[2], None)
+            else:
+                _drop(d, refused.split("."))
     return out
+
+
+def test_unknown_token_scope_probe_does_not_manufacture_refusals_of_partial_bindings():
+    from tests.test_token_requests import raw_spec
+    from w2cplatform.spec import SubsystemSpec
+    raw = raw_spec()
+    rule = raw["domain"]["tokens"]["tally"]
+    del rule["placement"]
+    rule["unit"] = {"sub": "testsub", "ref": "name"}
+    try:
+        SubsystemSpec.from_dict(raw)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown token scope loaded")
+    assert refused_paths(raw) == ["domain.tokens.tally.unit"]
+
+
+def test_unsupported_token_target_probe_does_not_manufacture_partial_binding_faults():
+    from tests.test_token_requests import raw_spec
+    raw = raw_spec()
+    raw["domain"]["tokens"]["tally"]["placement"]["target_fields"] = ["future_target"]
+    assert refused_paths(raw) == ["domain.tokens.tally.placement.target_fields"]
 
 
 def _drop(x, parts: list[str]) -> None:

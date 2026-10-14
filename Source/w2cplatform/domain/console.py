@@ -71,7 +71,7 @@ import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlsplit, unquote
 
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.variables import Conflict, Forbidden
@@ -264,22 +264,6 @@ class Console:
             raise ApiError(409, str(e)) from None
         return {"cluster": cluster, "lines": len(grants)}
 
-    def keep_again(self, member: str, body: dict, by: str | None) -> dict:
-        """`POST /domain/pending/<member> {ref, fields: {<field>: {old?, new}}}`: an edit an old holder held and the
-        new term did not have, kept again here by a person (Lesson 15) — an ordinary kept edit from now on."""
-        if self.pending is None:
-            raise ApiError(404, "this domain keeps no edits for members that are off")
-        ref, fields = body.get("ref"), body.get("fields")
-        if not isinstance(ref, str) or not ref or not isinstance(fields, dict) or not fields or \
-                not all(isinstance(v, dict) and "new" in v for v in fields.values()):
-            raise ApiError(400, "an edit kept again: {ref, fields: {<field>: {old, new}}}")
-        self.api._refuse_secrets({f: v["new"] for f, v in fields.items()})
-        e = self.pending.add(member, ref, {f: v["new"] for f, v in fields.items()},
-                             {f: v.get("old") for f, v in fields.items()}, by)
-        if self.journal is not None:
-            self.journal.say("domain.pending.kept", user=by or "?", target=f"{member}/{ref}", fields=",".join(sorted(fields)))
-        return {"pending": True, "cluster": member, "ref": ref, "rev": e["rev"]}
-
     # What the signer says of the holder (`/api/holder`), asked by this process as a process. The console refuses
     # early with it; the signer checks again in each of its operations (ADR-0032).
     def ask_signer(self, method: str, route: str, body: bytes | None = None, token: str | None = None,
@@ -357,10 +341,23 @@ class Console:
             entry = json.loads(item["value"])
         except (TypeError, ValueError):
             return 400, {"detail": f"{item['path']}#{item['key']} does not read as a kept edit"}
+        from .pending import validate_edit
+        try:
+            validate_edit(entry)
+        except (TypeError, ValueError, KeyError):
+            return 400, {"detail": "the stranded item is not an explicit member CRUD Edit"}
         member = str(item["path"])[len(PENDING_PATH) + 1:]
-        headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {token}"} if token else {})}
-        req = urllib.request.Request(f"{there.rstrip('/')}/domain/pending/{member}", method="POST", headers=headers,
-                                     data=json.dumps({"ref": item["key"], "fields": entry.get("fields") or {}}).encode())
+        from urllib.parse import urlencode
+        fields = dict(entry["body"])
+        route = "/domain" + entry["path"]
+        if entry["method"] == "POST":
+            fields["cluster"] = member
+        else:
+            route += "?" + urlencode({"cluster": member})
+        headers = {"Content-Type": "application/json", "Idempotency-Key": entry["key"],
+                   **({"Authorization": f"Bearer {token}"} if token else {})}
+        req = urllib.request.Request(there.rstrip("/") + route, method=entry["method"], headers=headers,
+                                     data=json.dumps(fields).encode())
         try:
             with urllib.request.urlopen(req, timeout=5.0) as r:
                 return r.status, json.loads(r.read() or b"{}")
@@ -503,6 +500,23 @@ class Console:
                                                                      int(q.get("size", 50)), q.get("cluster"), sub=sub))
                         items, _ = console.holder_vars.get(declared.table(sub, name)) if console.holder_vars is not None else (None, 0)
                         return self._send(200, dict(items or {}))
+                    if u.path == "/domain/placement" or u.path.startswith("/domain/placement/"):
+                        from .placement import overview, read, path
+                        if console.holder_vars is None:
+                            return self._send(404, {"detail": "no holder store"})
+                        if u.path == "/domain/placement":
+                            return self._send(200, overview(console.holder_vars))
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        try:
+                            if len(parts) != 2:
+                                raise ValueError()
+                            sub, ref = parts[0], unquote(parts[1])
+                            declared.catalog.spec(sub)
+                            path(sub, ref)
+                        except (ValueError, KeyError):
+                            return self._send(400, {"detail": "invalid placement identity"})
+                        result = read(console.holder_vars, sub, ref)
+                        return self._send(200, result) if result is not None else self._send(404, {"detail": "no assignment"})
                     if u.path == "/domain":
                         return self._send(*console.view_doc())
                     if u.path == "/domain/alarms":
@@ -549,14 +563,68 @@ class Console:
             def do_PUT(self):
                 self._answered(self._do_PUT)
 
+            def _queued(self, method, u):
+                parts = u.path.split("/")
+                if len(parts) not in (4, 5) or parts[:2] != ["", "domain"]:
+                    return False
+                spec = declared.spec(parts[2])
+                if spec is None or not spec.rows or parts[3] != spec.rows:
+                    return False
+                if (method == "POST") != (len(parts) == 4):
+                    self._send(404, {"detail": "no such unit route"}); return True
+                try:
+                    if self._steered():
+                        return True
+                    self._admin("domain unit operations are")
+                    if self._early():
+                        return True
+                    key = self.headers.get("Idempotency-Key")
+                    if not key:
+                        raise ApiError(400, "Idempotency-Key header is required")
+                    body = self._body()
+                    if body is None:
+                        return True
+                    cluster = body.pop("cluster", None) if method == "POST" else parse_qs(u.query).get("cluster", [None])[0]
+                    unit = parts[4] if len(parts) == 5 else None
+                    if not cluster and unit is not None:
+                        cluster, unit = console.api.resolve_unit(spec.name, unit)
+                    resp = console.api.queue(method, spec.name, spec.rows, unit, body, key, cluster, self._token())
+                    self._send(202, resp)
+                except ApiError as err:
+                    self._send(err.status, {"detail": err.detail})
+                return True
+
             def _do_PUT(self):
                 u = urlsplit(self.path)
+                if self._queued("PUT", u):
+                    return
                 if self._steered():
                     return
                 route = console.signer_route(u.path, "PUT")
                 if route is not None:
                     return self._early() or self._to_signer("PUT", route)
                 try:
+                    if u.path.startswith("/domain/placement/") and console.holder_vars is not None:
+                        subject = self._admin("placement is")
+                        if console.admin is None or subject is None:
+                            raise ApiError(403, "placement needs an authenticated domain admin")
+                        if self._early():
+                            return
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        if len(parts) != 2:
+                            return self._send(400, {"detail": "placement needs subsystem and reference"})
+                        from w2cplatform import catalog
+                        from .placement import assign
+                        try:
+                            catalog.spec(parts[0])
+                            body = self._body()
+                            if body is not None:
+                                self._send(200, assign(console.holder_vars, parts[0], unquote(parts[1]), body))
+                        except (ValueError, KeyError):
+                            return self._send(400, {"detail": "invalid placement identity"})
+                        except Conflict:
+                            return self._send(409, {"detail": "placement changed during this request"})
+                        return
                     if u.path == "/domain/topology" and console.topology is not None:
                         return self._topology()
                     if u.path.startswith("/domain/grants/") and console.holder_vars is not None:
@@ -592,6 +660,8 @@ class Console:
 
             def _do_POST(self):
                 u = urlsplit(self.path)
+                if self._queued("POST", u):
+                    return
                 if u.path in ("/session", "/session/break-glass"):
                     return self._session("POST")
                 if self._steered():
@@ -607,14 +677,6 @@ class Console:
                         body = self._body()
                         if body is not None:
                             self._send(*console.stranded_apply(body, self._token()))
-                        return
-                    if u.path.startswith("/domain/pending/") and len(u.path) > len("/domain/pending/"):
-                        subject = self._admin("kept edits are")
-                        if self._early():
-                            return
-                        body = self._body()
-                        if body is not None:
-                            self._send(202, console.keep_again(u.path[len("/domain/pending/"):], body, subject))
                         return
                     if not (u.path == "/domain/members" and console.members is not None):
                         return self._send(404, {"detail": "no such route"})
@@ -638,6 +700,8 @@ class Console:
 
             def _do_DELETE(self):
                 u = urlsplit(self.path)
+                if self._queued("DELETE", u):
+                    return
                 if u.path == "/session":
                     return self._session("DELETE")
                 if self._steered():
@@ -645,6 +709,27 @@ class Console:
                 route = console.signer_route(u.path, "DELETE")
                 if route is not None:
                     return self._early() or self._to_signer("DELETE", route)
+                if u.path.startswith("/domain/placement/") and console.holder_vars is not None:
+                    from .placement import remove, path
+                    try:
+                        subject = self._admin("placement is")
+                        if console.admin is None or subject is None:
+                            raise ApiError(403, "placement needs an authenticated domain admin")
+                        if self._early():
+                            return
+                        parts = u.path[len("/domain/placement/"):].split("/")
+                        if len(parts) != 2:
+                            return self._send(400, {"detail": "placement needs subsystem and reference"})
+                        sub, ref = parts[0], unquote(parts[1])
+                        declared.catalog.spec(sub)
+                        path(sub, ref)
+                        return self._send(200, remove(console.holder_vars, sub, ref))
+                    except ApiError as e:
+                        return self._send(e.status, {"detail": e.detail})
+                    except (ValueError, KeyError):
+                        return self._send(400, {"detail": "invalid placement identity"})
+                    except Conflict:
+                        return self._send(409, {"detail": "placement changed during this request"})
                 if not (u.path.startswith("/domain/members/") and console.members is not None):
                     return self._send(404, {"detail": "no such route"})
                 name = u.path.rsplit("/", 1)[1]
@@ -851,7 +936,7 @@ def main() -> None:
     auth = os.environ.get("AUTH", "1") == "1"
     from .pending import PendingEdits
     pending = PendingEdits(fed.domain_holder.vars)
-    api = ConsoleAPI(directory, consoles, verifier=(lambda t: person(t)["sub"]) if auth else None,
+    api = ConsoleAPI(directory, verifier=(lambda t: person(t)["sub"]) if auth else None,
                      pending=pending, last_known=view.last_known)
     from .topology import Topology
 

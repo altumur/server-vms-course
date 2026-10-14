@@ -120,18 +120,18 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1008
+  "index": 1010
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1008, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1014, "items": {
   "holder": "srv-a:4102:001006",
   "until": "1757500045.0",
   "released": "false",
   "gen": "2",
   "server": "srv-a"
 }}
-→ 200 {"index": 1012}
+→ 200 {"index": 1016}
 ```
 
 `gen: 2` — новое поколение имени. Первый в это время продолжает работать и на следующем шаге аренд читает свой слот:
@@ -147,7 +147,7 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "2",
     "server": "srv-a"
   },
-  "index": 1012
+  "index": 1016
 }
 ```
 
@@ -158,7 +158,7 @@ GET /v1/get?key=cam/slots/w-srv-a-1
 ```
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "1,2", "rev": "1"}, "index": 1009}
+→ 200 {"items": {"units": "1,2", "rev": "1"}, "index": 1011}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=platform/epoch_floor
@@ -166,11 +166,11 @@ GET /v1/get?key=platform/epoch_floor
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/1
-→ 200 {"items": {"epoch": "1"}, "index": 1010}
+→ 200 {"items": {"epoch": "1"}, "index": 1012}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
-→ 200 {"index": 1013}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1012, "items": {"epoch": "2"}}
+→ 200 {"index": 1017}
 ```
 
 Первое чтение — порог под всеми эпохами группы (`platform/epoch_floor`, ADR-0070): его поднимают только `recover` и `restore`, и эпоха берётся выше него; у группы, которую никто не восстанавливал, его нет. Эпоха единицы 1 стала 2. Это **второй** барьер. Даже если первый по какой-то причине не заметил потерю слота — завис между продлениями, — его эпоха 1 устарела: при следующем продлении аренды на единицу он увидит эпоху 2 и остановит её. А всё, что он успел записать, лежит под эпохой 1 и помечено как запись отсечённого писателя (урок 9). Двое писать одну единицу не могут: сначала их разводит слот, потом эпоха. Тест — `test_two_processes_with_one_name_resolve_at_the_cas`.
@@ -405,14 +405,14 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": "", "items": {
   "offer": "",
   "offered_at": "1757500000.0"
 }}
-→ 200 {"index": 1048}
+→ 200 {"index": 1056}
 ```
 
 `"offer": ""` — пустой набор меток: единица ни о чём не просит. Скрипт на `srv-c` видит `cam_workers_needed{labels=""} 1` и поднимает `vms-camworker-spare@1` с `SPARE_FOR=` в его файле. Запасной берёт предложение — по CAS на ту версию, что прочитал:
 
 ```
 # camworker spare on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1048, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1056, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500045.0",
   "released": "false",
@@ -422,7 +422,7 @@ POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1048, "items": {
   "taken_at": "1757500000.0",
   "server": "srv-c"
 }}
-→ 200 {"index": 1049}
+→ 200 {"index": 1060}
 ```
 
 `offer` и `offered_at` остались — по ним контроллер ещё 90 секунд считает этот слот «воркером в пути» и не просит второго; `taken_at` — когда взяли. На следующем проходе контроллер видит нового воркера по его heartbeat и ставит на него единицу 9 — две записи, размещение с причиной и назначение:
@@ -435,11 +435,11 @@ POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1050}
+→ 200 {"index": 1061}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": "", "items": {"units": "9", "rev": "1"}}
-→ 200 {"index": 1051}
+→ 200 {"index": 1062}
 ```
 
 Причина написана для человека и говорит всё, что контроллер знал: выбран воркер с наибольшей свободной ёмкостью из трёх, он на `srv-c`, и ресурс этого сервера жив. Воркер читает своё назначение и берёт эпоху единицы:
@@ -447,7 +447,7 @@ POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": "", "items": {"uni
 ```
 # camworker spare on srv-c → /run/configstore/camworker.sock
 POST /v1/write {"op": "put", "key": "cam/epoch/9", "cas": "", "items": {"epoch": "1"}}
-→ 200 {"index": 1052}
+→ 200 {"index": 1063}
 ```
 
 Контроллер **разместил** девятую единицу, когда появился воркер. Он посчитал недостачу и оставил предложение, но процесса не запускал и не знал, кто и где его запустит, — он прочитал heartbeat.
@@ -456,30 +456,30 @@ POST /v1/write {"op": "put", "key": "cam/epoch/9", "cas": "", "items": {"epoch":
 
 ```
 # camworker spare on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1049, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-2", "cas": 1059, "items": {
   "holder": "srv-c:4103:001007",
   "until": "1757500000.0",
   "released": "true",
   "gen": "1"
 }}
-→ 200 {"index": 1053}
+→ 200 {"index": 1064}
 ```
 
 `released: true` и `until` — сейчас. Это и есть сданный бейдж. Контроллер на следующем проходе видит отпущенный слот и переносит его единицы туда, где есть место (оператор перед этим удалил единицы 1 и 2, освободив место на `w-srv-a-1`):
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": 1050, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": 1061, "items": {
   "worker": "w-srv-a-1",
   "reason": "slot w-2 released; most free capacity (1); on srv-a",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1060}
+→ 200 {"index": 1071}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1051, "items": {"units": "", "rev": "2"}}
-→ 200 {"index": 1061}
+POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1062, "items": {"units": "", "rev": "2"}}
+→ 200 {"index": 1072}
 ```
 
 Единица 9 получает новое размещение с причиной «слот w-2 отпущен», назначение `w-2` пустеет, и единица появляется в назначении `w-srv-a-1`. Каждая запись — по CAS: второй контроллер, если он есть, не сделает ту же перестановку дважды (урок 10).
@@ -490,8 +490,8 @@ POST /v1/write {"op": "put", "key": "cam/workers/w-2", "cas": 1051, "items": {"u
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1048}
-→ 200 {"index": 1055}
+POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1056}
+→ 200 {"index": 1062}
 ```
 
 По CAS — потому что запасной мог взять его между чтением и удалением. Тогда его запись сдвинула версию, удаление получает `409`, и взятое предложение остаётся тому, кто взял (`test_an_offer_not_needed_any_more_is_removed_by_the_controller`).
@@ -511,7 +511,7 @@ GET /v1/get?key=cam/slots/w-srv-c-1
     "gen": "1",
     "server": "srv-c"
   },
-  "index": 1006
+  "index": 1008
 }
 ```
 
@@ -521,18 +521,18 @@ GET /v1/get?key=cam/slots/w-srv-c-1
 
 ```
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1006, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1013, "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "false",
   "gen": "2",
   "server": "srv-c"
 }}
-→ 200 {"index": 1010}
+→ 200 {"index": 1015}
 
 # camworker w-srv-c-1 on srv-c → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-c-1
-→ 200 {"items": {"units": "1", "rev": "1"}, "index": 1008}
+→ 200 {"items": {"units": "1", "rev": "1"}, "index": 1011}
 ```
 
 Назначение на месте: единица 1 ждала своего воркера — и дождалась. Перезапуск не переписал ни одной строки конфигурации. Это центральная мысль модуля: **единица назначена воркеру `w-srv-c-1` в хранилище, а не процессу и не серверу**, поэтому новый процесс читает то же назначение из того же хранилища.
@@ -569,16 +569,16 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
   "at": "1757500100.0",
   "why": "srv-c burnt"
 }}
-→ 200 {"index": 1016}
+→ 200 {"index": 1022}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1009, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1013, "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500045.0",
   "released": "true",
   "gen": "1"
 }}
-→ 200 {"index": 1017}
+→ 200 {"index": 1023}
 ```
 
 Консоль написала строку о сервере, а не слот. Слот пишет контроллер, и его CAS стоит на той строке, которую он только что проверил. Дальше в той же трассе единица 2 уезжает на `w-srv-b-1` с причиной `slot w-srv-c-1 released; most free capacity (49); on srv-b`. На srv-c больше ничего не размещается, и процессу на нём не дают слот, пока оператор не вернёт его (`DELETE /servers/srv-c/decommission`) — именно об этом спрашивает каждый воркер при старте (урок 1, шаг 6). Места, которые держал воркер (`<sub>/holds/*`, у VMS — тома `rec/holds/*`), освобождение слота не отпускает, и консоль их называет. Подробно — в М10A, урок 7, шаг 7. Права на эту строку — в уроке 5.

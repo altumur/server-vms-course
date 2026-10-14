@@ -1,34 +1,18 @@
-"""Lesson 3 — the API, and what it refuses.
+"""ADR-0074 C2: the domain queues explicit CRUD for admitted members.
 
-The domain console's write API is a façade: an edit goes to the directory
-("where is unit 7"), then to the OWNING CLUSTER's console — the one in
-front of that cluster's controller, the only writer of its `<sub>/*` — and
-that cluster's grants decide. The domain console owns nothing and never
-writes a unit row on its own account; a create goes to the cluster the
-placement service chose, and that cluster's controller places it on a
-worker (М11 Lesson 10). The domain never names a worker or a server.
-
-    idempotency keys    a retried PUT is the same PUT, not a second edit
-    what it refuses     a client may not set placement at either level (cluster, worker, server), nor what
-                        a worker observes (phase, observed_revision) or takes (epoch)
-    positions/reasons   the read model's `phase` and `position` are passed through untouched
-    authentication      Lesson 3 ships it unauthenticated and says so; Lesson 4 adds `verifier`
+The domain never writes a member's unit or invokes its console directly. The
+member's agent carries the Edit and calls its own signed console, retaining the
+original idempotency key. Authentication and declared domain.edit are checked
+before persistence; owned fields and credentials are refused.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Protocol
+from typing import Callable
 
 from .federation import DomainDirectory, Unreachable
 
 FORBIDDEN_FIELDS = ("cluster", "worker", "server", "placement", "epoch", "observed_revision", "phase", "revision")
-
-
-class ClusterConsole(Protocol):
-    """What the domain can ask of a cluster's console (М11 Lesson 10): the same
-    two writes its controller offers, with the caller's subject for its grants."""
-    def update_unit(self, unit, fields: dict, subject: str | None) -> dict: ...
-    def create_unit(self, fields: dict, subject: str | None) -> dict: ...
 
 
 @dataclass
@@ -64,19 +48,15 @@ def said(reply):
 
 
 class ConsoleAPI:
-    def __init__(self, directory: DomainDirectory, consoles: Callable[[str], ClusterConsole],
+    def __init__(self, directory: DomainDirectory,
                  verifier: Callable[[str], str] | None = None, pending=None, last_known=None):
-        """`consoles(cluster)` finds that cluster's console — its address, in
-        production; a dict in tests. `verifier(token) -> subject` is Lesson 4;
-        None means unauthenticated, and the API says so on every response.
+        """The queue is mandatory for writes. `last_known` resolves an offline unit.
 
-        `pending` and `last_known` are Lesson 9: somewhere to keep an edit for a cluster
-        that is off (`PendingEdits`), and what the domain last saw of the unit
-        (`ReadView.last_known`). Without them the API answers as Lesson 3 did — 503,
-        could not look — rather than pretend to keep an edit it has nowhere to put."""
-        self.directory, self.consoles, self.verifier = directory, consoles, verifier
+        `verifier(token)` authenticates the person before persistence; the console
+        separately requires domain admin. This API never contacts a member console.
+        """
+        self.directory, self.verifier = directory, verifier
         self.pending, self.last_known = pending, last_known
-        self._seen: dict[str, dict] = {}                      # idempotency key -> response
 
     def _subject(self, token: str | None) -> str | None:
         if self.verifier is None:
@@ -116,13 +96,12 @@ class ConsoleAPI:
     # any field the member's console takes). `domain.edit` of the unit's spec names the fields an edit through the domain
     # may carry; any other is refused here, before the member is asked or the edit is kept, in words that name the
     # fields and the list — and a spec that names none lets nothing through (ADR-0012: no default that passes).
-    # The subsystem is the route's (`sub`: the door always names it); a call in process that names none — the lessons'
-    # own façade — is not held to a list.
+    # The subsystem is the route's (`sub`: the door always names it).
     @staticmethod
     def _refuse_undeclared(sub: str | None, fields: dict) -> None:
         from .declared import edit_fields
         if not sub:
-            return
+            raise ApiError(400, "the subsystem must be named")
         allowed = edit_fields(sub)
         if not allowed:
             raise ApiError(400, f"{sub}'s spec declares no domain.edit: the domain's door lets no field of its units "
@@ -132,75 +111,81 @@ class ConsoleAPI:
             raise ApiError(400, f"{', '.join(bad)}: not the domain's to edit — {sub}'s spec lets an edit through the "
                                 f"domain carry {', '.join(allowed)} (domain.edit)")
 
-    def update_unit(self, ref, fields: dict, idempotency_key: str, token: str | None = None,
-                    sub: str | None = None) -> dict:
-        """`sub`: the subsystem the door's route named (`/domain/<sub>/<rows>/<ref>`), whose spec's `domain.edit` the
-        edit is held to."""
-        if idempotency_key in self._seen:
-            return self._seen[idempotency_key]                # the same PUT, not a second edit
-        self._refuse_placement(fields)
-        self._refuse_secrets(fields)
-        self._refuse_undeclared(sub, fields)
-        subject = self._subject(token)
-        ans = self.directory.where(ref)
-        if not ans.found:
-            kept = self._keep(ref, fields, subject, ans)
-            if kept is not None:
-                self._seen[idempotency_key] = kept
-                return kept
-            raise ApiError(404 if ans.complete else 503, ans.sentence())
+    def queue(self, method, sub, rows, unit, body, key, cluster, token=None):
+        """Every domain CRUD operation is durable before the member's agent applies it."""
+        from . import declared
+        from .members import Members
+        spec = declared.spec(sub)
+        if not spec or spec.rows != rows or not spec.rows:
+            raise ApiError(404, "no such unit route")
+        if not key:
+            raise ApiError(400, "Idempotency-Key header is required")
+        if not isinstance(body, dict):
+            raise ApiError(400, "the body must be an object")
+        self._subject(token)
+        self._refuse_placement(body)
+        self._refuse_secrets(body)
+        if method == "PUT":
+            self._refuse_undeclared(sub, body)
+        if method == "POST" and spec.domain and spec.domain.ref and not body.get(spec.domain.ref):
+            raise ApiError(400, "the spec's domain.ref field is required")
+        if self.pending is None:
+            raise ApiError(503, "this domain has no durable edit queue")
+        members = Members(self.pending.vars).read()["members"]
+        if cluster not in members:
+            raise ApiError(404, "the target cluster is not an admitted member")
+        path = "/" + sub + "/" + rows + ("/" + str(unit) if unit is not None else "")
         try:
-            result = self.consoles(ans.cluster).update_unit(ref, fields, subject)
-        except Unreachable:
-            # It answered the directory and not the edit — gone between the two, or, with a directory
-            # answered from memory (Lesson 11), gone since the last pass. Either way the owner is known,
-            # and silent: the same case as Lesson 9's.
-            kept = self._keep_for(ans.cluster, ref, fields, subject)
-            if kept is None:
-                raise ApiError(503, f"{ans.cluster} did not answer the edit")
-            self._seen[idempotency_key] = kept
-            return kept
-        resp = {"unit": ref, "cluster": ans.cluster, "worker": ans.worker, "result": said(result),
-                "authenticated": self.verifier is not None}
-        self._seen[idempotency_key] = resp
-        return resp
+            entry = self.pending.add(cluster, method, path, body, key)
+        except ValueError as err:
+            raise ApiError(400, str(err)) from None
+        return {"kept": entry["id"], "cluster": cluster, "what": entry["what"],
+                "note": "kept; the member's agent applies it through its own console"}
 
-    # Lesson 9. The unit was not found because its cluster did not answer — and the domain knows which cluster
-    # that was, from what it last saw. Keep the edit for it instead of refusing: per field, against the value
-    # last seen. Only then, though: a unit missing from a cluster that DID answer is gone, not waiting, and
-    # a complete answer that found nothing is a 404. Accepted is not applied, and the response says which.
-    def _keep(self, ref, fields: dict, subject: str | None, ans) -> dict | None:
-        if self.pending is None or self.last_known is None or ans.complete:
-            return None
-        known = self.last_known(ref)
-        if known is None or known[0] not in ans.unreachable:
-            return None
-        return self._keep_for(known[0], ref, fields, subject)
+    def resolve_unit(self, sub, ref):
+        """Resolve a domain reference to its member's local id, with no guessed owner."""
+        from . import declared
+        from .federation import ref_of
+        spec = declared.spec(sub) if sub else None
+        if spec is None:
+            raise ApiError(400, "the subsystem must be named")
+        if self.directory is None or not spec.domain or not spec.domain.ref:
+            raise ApiError(400, "cluster is required for a unit without a domain reference")
+        answer = self.directory.where(ref)
+        if getattr(answer, "contested", None):
+            raise ApiError(409, "more than one member reports this domain reference")
+        known = self.last_known(ref) if self.last_known is not None else None
+        row = None
+        if answer.found:
+            cluster = answer.cluster
+            if getattr(answer, "sub", None) not in (None, sub):
+                raise ApiError(404, "the reported unit belongs to another subsystem")
+            if callable(getattr(self.directory, "scan", None)):
+                scan, _ = self.directory.scan()
+                row = next((u for u in scan.get(cluster, {}).get("units", [])
+                            if u.get("sub") == sub and ref_of(u) == str(ref)), None)
+            elif known and known[0] == cluster:
+                row = known[1]
+        elif known and known[0] in answer.unreachable:
+            cluster, row = known
+        else:
+            raise ApiError(404 if answer.complete else 503, "the owning member is unknown")
+        if row is None or row.get("sub") != sub or ref_of(row) != str(ref) or row.get("id") is None:
+            raise ApiError(503, "the member's local unit identity is unknown")
+        try:
+            local_id = spec.parse_id(row["id"])
+        except (TypeError, ValueError, OverflowError):
+            raise ApiError(503, "the member's local unit identity is unreadable") from None
+        return cluster, local_id
 
-    def _keep_for(self, cluster: str, ref, fields: dict, subject: str | None) -> dict | None:
-        if self.pending is None or self.last_known is None:
-            return None
-        known = self.last_known(ref)
-        if known is None or known[0] != cluster:
-            return None
-        row = known[1]
-        entry = self.pending.add(cluster, ref, fields, row, subject)
-        return {"unit": ref, "cluster": cluster, "pending": True, "fields": entry["fields"],
-                "detail": f"{cluster} is not answering; the edit is kept and will be applied when it is back",
-                "authenticated": self.verifier is not None}
+    def update_unit(self, ref, fields, idempotency_key, token=None, sub=None):
+        from . import declared
+        cluster, local_id = self.resolve_unit(sub, ref)
+        return self.queue("PUT", sub, declared.spec(sub).rows, local_id, fields, idempotency_key, cluster, token)
 
-    def create_unit(self, fields: dict, cluster: str, idempotency_key: str, token: str | None = None) -> dict:
-        """`cluster` comes from the placement service's stored decision, which
-        the console reads and forwards — it does not choose. The worker is the
-        cluster controller's decision, returned, never sent."""
-        if idempotency_key in self._seen:
-            return self._seen[idempotency_key]
-        self._refuse_placement(fields)
-        # The same refusals as an edit's (the product's cross-check of the twelfth review): a create is not kept,
-        # but it passes the domain's door, its journal and its idempotency copy — a password is set in the cluster.
-        self._refuse_secrets(fields)
-        subject = self._subject(token)
-        result = self.consoles(cluster).create_unit(fields, subject)
-        resp = {"cluster": cluster, "result": said(result), "authenticated": self.verifier is not None}
-        self._seen[idempotency_key] = resp
-        return resp
+    def create_unit(self, fields, cluster, idempotency_key, token=None, sub=None):
+        from . import declared
+        spec = declared.spec(sub) if sub else None
+        if spec is None:
+            raise ApiError(400, "the subsystem must be named")
+        return self.queue("POST", sub, spec.rows, None, fields, idempotency_key, cluster, token)

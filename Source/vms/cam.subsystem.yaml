@@ -30,7 +30,7 @@ secrets:
     door/signer: [console]
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
-worker: {writes: [devices]}
+worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/]}
 unit:
   # the row directory `cam/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
@@ -371,7 +371,7 @@ snapshot: [name, source, enabled, priority, labels, ref, live]
 # where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
 # ingest a camera nobody records polls (polls), a relay's road to the centre (upstream), and whom a camera may ask to act
 # (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
-# records which camera of another (crossings, served at `/domain/cam/crossings`) and the cameras sent to push (roads). The
+# recording assignments are platform rows, read through `/domain/placement`. The
 # tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
 # another, issued by the domain's signer with these claims only.
 domain:
@@ -380,15 +380,23 @@ domain:
   # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
   # folders, labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]
-  books: {sources: {}, primaries: {show: [recorded_by, recording, backups]}, polls: {}, asks: {}, upstream: {}, stream-accounts: {}}
-  kept: [crossings, roads, stream-clients/]
-  tables: [crossings]
+  books:
+    sources: {from: cam/sources/, key: ref, pick: unique, to: to}
+    polls: {}
+    upstream: {}
+    asks: {}
+    stream-accounts: {}
+  kept: [stream-clients/]
   # The RTSP accounts are subjects of the domain's grants (ADR-0031, the platform carries it out): no person of the
   # domain under an account's name, and no grant to an account wider than view.
   names:
     stream-clients/: {exclusive_with: domain/users, grant: view}
   tokens:
-    stream: {lifetime: 86400, claims: [aud, ref]}
+    stream:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [camworker, recworker]
+      placement: {sub: rec, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
     ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
@@ -400,12 +408,9 @@ domain:
   # (added to the camera's own).
   shared: [folders, alarms]
   keys:
-    - {id: roads, keys: [domain/cam/roads]}
-    - {id: crossings, keys: [domain/cam/crossings]}
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
-    - {id: primaries, keys: [domain/cam/primaries], prefix: domain/cam/primaries/}
-    - {id: polls, keys: [domain/cam/polls], prefix: domain/cam/polls/}
     - {id: upstream, keys: [domain/cam/upstream], prefix: domain/cam/upstream/}
+    - {id: polls, keys: [domain/cam/polls], prefix: domain/cam/polls/}
     - {id: asks, keys: [domain/cam/asks], prefix: domain/cam/asks/}
     - {id: stream-clients, prefix: domain/cam/stream-clients/}
     - {id: stream-accounts, keys: [domain/cam/stream-accounts], prefix: domain/cam/stream-accounts/}
@@ -518,19 +523,9 @@ display:
     new_group_note: "Папка создана — добавьте в неё камеру, иначе она не сохранится"
   # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
   keys:
-    roads:
-      title: Дороги
-      about: "Память дорог: камеры, которые домен перевёл на «камера толкает», потому что регистратор не смог забрать поток сам. Запись забывается, когда меняются сети сторон или кластер, который пишет камеру."
-      absent: "Записи нет: помнить нечего — все дороги решены по сетям сторон, и ни один регистратор не пожаловался, что не может забрать поток."
-    crossings:
-      title: Пересечения
-      about: Для камеры другого кластера — кластер, который её пишет.
     sources:
       title: Книги источников
       about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
-    primaries:
-      title: Основные записи
-      about: Для кластера камер — какой кластер пишет его камеры, идёт ли запись и куда толкать. По этой книге решает резервная запись «когда основной недоступен».
     polls:
       title: Опросы
       about: "Книги опросов: для толкающей камеры, которую никто не пишет, — приёмник потоков (ingest), у которого она спрашивает просьбы."

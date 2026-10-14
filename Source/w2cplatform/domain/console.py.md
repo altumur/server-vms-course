@@ -14,8 +14,9 @@ One set of paths (the console module's contract, §10a): every human route under
 - `GET /domain/alarms?since=&until=` — `alarms_doc`: `DomainAlarms.list`, read; the week is the signer's pass's to keep.
 - `GET /domain/backup` — `backup_doc`: for each `domain/keepers/<member>` the pointer and what the member's last report says it took (its `domain/backup-taken`), and the signer's term; 503 with why when the store does not give the pointers (`term.keepers`, `StoreUnread`) — never «nobody keeps it».
 - `GET /domain/grants`, `PUT /domain/grants/<cluster> {lines}` — `grants_doc`, `set_grants`: lines `{subject, cap, scope, until}`, `scope` `*`, `unit:<sub>/<id>` or `labels:a,b`; the domain's own (`domain`) never lapse and keep an admin (`set_domain_grants`), a cluster's lapse at `until` (default a grant's lifetime from now); a journal line each.
-- `POST /domain/pending/<member> {ref, fields}` — `keep_again`: an edit an old holder held, kept again (202).
-- `POST /domain/stranded/apply {path, key}` — `stranded_apply`: on a replaced holder, a kept edit it alone held sent to the new holder's console (`deposed_by.url` → its signer's `/api/holder` → `console`) as `POST /domain/pending/<member>`; anything else is made again by hand.
+- Explicit POST/PUT/DELETE `/domain/<sub>/<rows>[/<id>]` queue member CRUD (202), with Idempotency-Key; POST names cluster, other operations may name it in the query.
+- `stranded_apply` resubmits the original method/path/body/key through that same door; no old pending endpoint or field format.
+- `POST /domain/stranded/apply {path, key}` — `stranded_apply`: on a replaced holder, a kept edit it alone held sent to the new holder's console (`deposed_by.url` → its signer's `/api/holder` → `console`) through its original CRUD route/method/body and Idempotency-Key (POST names cluster; PUT/DELETE use the cluster query); anything else is made again by hand.
 - `GET|POST|DELETE /session` — the door in by the domain's key set (`person`): the platform's shapes, `login_url: "/api/login"`, a token set as an `HttpOnly` cookie; no emergency entry (`/session/break-glass` is 404 — that is a cluster's).
 - `GET /spec` — `{name: "", rows: null}`; `GET /mounts` — `{root: "", mounts: {<sub>: console.describe(spec)}}`.
 - `GET /domain/<sub>/<rows>?q=&page=&size=&cluster=`, `PUT /domain/<sub>/<rows>/<ref>` (Idempotency-Key; 202 when kept), `GET /domain/<sub>/<table>`, `GET /domain/causes`, `GET /domain/where/<ref>`, `GET|POST /domain/members` (`{name, fingerprint?}`: admitted by the key its report presents, `Members.accept`), `DELETE /domain/members/<name>`, `GET|PUT /domain/topology`, `GET /healthz`.
@@ -26,3 +27,13 @@ One set of paths (the console module's contract, §10a): every human route under
 Its pass, every step in a try of its own (`steps.Steps`), READS: following the members, following the topology, the read view's pass — in memory, for the routes that list units and say where they are. `health()` is `/healthz`: passes, failing steps, and what others wrote that does not parse (`GARBLED_SHOWN`).
 
 ## `main()` — `CLUSTERS`/`DOMAIN_HOLDER` (`runtime.federation_from_env`), `AUTH`, `REFRESH_INTERVAL`, `CONSOLE_HOST`/`CONSOLE_PORT`, `SIGNER_HOST`/`SIGNER_PORT`, `LOST_AFTER`; no `SECRETS_KEY`. The domain's own grants decide who may look and change (`grants.domain_may`); its journal is role `domainconsole` (`runtime.events_said`).
+
+## C2 route ownership (ADR-0074)
+
+An explicit cluster query names a member-local unit id. Without it, PUT/DELETE
+resolve the subsystem's domain reference to the current owner and local id.
+A complete current absence is 404; disputed ownership is 409; only silence of
+the last known owner permits its previous row to be used. Another subsystem's
+row or silence of an unrelated member never supplies a target. The accepted
+operation is always queued before its member applies it; the domain opens no
+connection to a member's console.

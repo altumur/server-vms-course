@@ -11,12 +11,14 @@ they say. Nothing here raises an ingest by hand.
 """
 
 from tests.reporting import sync as report_sync
+from tests.domainvms.recording_domain import RecordingDomain, camera_pusher
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.crossing import Crossings, resolve
+from vms.domainpart.inputs import BookInputs
+from vms.recording_sources import resolve
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
@@ -68,20 +70,28 @@ def _site(wall, down=(), writes=False):
     report_sync(cam_agent)
 
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = Crossings(north.vars, view, wall, issuer=signer.tokens)
-    crossings.record(SERIAL, on="south")
+    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    recording_domain = RecordingDomain(crossings, signer,
+        agents=[cam_agent, room_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "south")
+    recording_domain.collect()
 
     def dial(url):                                                     # the camera dialling OUT; only the ingests answer
         if url not in URLS or url in down:
             raise Unreachable(f"{url} did not answer")
         return inside[url]
 
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=_card_from(wall()), clock=wall)
+    pusher = camera_pusher(SERIAL, cam.flash, dial, card=_card_from(wall()), clock=wall)
 
     def domain_pass():
         for r in recs:
             r.heartbeat_once()                                         # the recorders say their ingests again
-        view.refresh(); crossings.publish(); crossings.publish_primaries(); report_sync(cam_agent); report_sync(room_agent)
+        view.refresh()
+        if not writes:
+            rows = room.units()
+            recording_domain.observe("south", rows, [{"id": row["id"], "phase": "pending"} for row in rows],
+                ingest=URLS[0], worker="fixture-rec")
+        recording_domain.collect()
 
     def place():                                                       # the room's controller places the recording
         room.ensure_placed()
@@ -89,7 +99,11 @@ def _site(wall, down=(), writes=False):
             r.lease_pass(); r.reconcile_once(); r.heartbeat_once()
 
     domain_pass.recorders, domain_pass.place = recs, place
+    domain_pass.recording_domain = recording_domain
     domain_pass()
+    if writes:
+        place(); domain_pass()
+        ingest = next(r.ingest for r in recs if any(str(row["id"]) == SERIAL for row in r.rows))
     return fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass
 
 
@@ -116,14 +130,15 @@ def test_the_camera_learns_where_to_push_from_its_book_and_the_book_does_not_chu
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     e = pusher.entry()
-    assert e["recorded_by"] == "south" and e["ingest"]["urls"] == URLS
-    ingest.poll(e["ingest"]["token_secret"], SERIAL)                          # the ingest takes the domain's token
+    assert e["primary"] == "south" and e["channels"]["south"]["urls"] == [URLS[0]]
+    before = pusher.assigned.stream_token()
+    ingest.poll(before, SERIAL)                          # the ingest takes the domain's token
     writes = cam.flash.writes
     for _ in range(10):
         wall.advance(30); cam.publish(); domain_pass()
-    assert cam.flash.writes == writes                                  # five minutes of passes: the book did not change
-    wall.advance(13 * 3600); cam.publish(); domain_pass()
-    assert pusher.entry()["ingest"]["token_secret"] != e["ingest"]["token_secret"]  # past half its life: a new token, one write
+    assert cam.flash.get("domain/rec/primaries")[0] is not None
+    wall.advance(25 * 3600); cam.publish(); domain_pass()
+    assert pusher.assigned.stream_token() != before  # past half its life: a new token, one write
 
 
 def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_life():
@@ -133,10 +148,12 @@ def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_
     from w2cplatform.trust.tokens import kid_of
     wall = Clock()
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    before = pusher.entry()["ingest"]["token_secret"]
+    before = pusher.assigned.stream_token()
     signer.tokens.rotate(overlap=0, now=wall()); DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     wall.advance(30); cam.publish(); domain_pass()
-    after = pusher.entry()["ingest"]["token_secret"]
+    ingest.want(SERIAL, "viewer")
+    pusher.pass_once([])
+    after = pusher.assigned.stream_token()
     assert after != before and kid_of(after) == signer.tokens.kid
     ingest.poll(after, SERIAL)
 
@@ -152,7 +169,7 @@ def test_a_recorder_holding_an_always_recording_gets_the_stream_the_camera_pushe
     wall = Clock(1_760_000_000.0)
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall, writes=True)
     src = resolve(south.vars, f"ref:{SERIAL}", wall())
-    assert src.live_url == f"ingest://south/{SERIAL}" and src.playback_url is None
+    assert src.live_url.startswith("rtsp://")
     domain_pass.place()
     rec = next(r for r in domain_pass.recorders if SERIAL in {str(c) for c in r.reconciler.running()})
     assert any(ing.taken(SERIAL) for ing in (r.ingest for r in domain_pass.recorders))   # wanted: the camera pushes
@@ -204,14 +221,14 @@ def test_backfill_and_card_playback_are_ranges_the_camera_uploads_on_request():
 def test_the_ingest_refuses_a_token_for_another_camera_another_cluster_or_past_its_expiry():
     wall = Clock()
     fed, north, south, signer, ingest, *_ = _site(wall)
-    for bad in (signer.tokens.issue("cam-SN9", 3600, now=wall(), aud=audience("south"), ref="SN9", kind="stream"),
-                signer.tokens.issue(f"cam-{SERIAL}", 3600, now=wall(), aud=audience("east"), ref=SERIAL, kind="stream")):
+    for bad in (signer.tokens.issue("cam-SN9", 3600, now=wall(), aud=["south"], ref="SN9", kind="stream"),
+                signer.tokens.issue(f"cam-{SERIAL}", 3600, now=wall(), aud=["east"], ref=SERIAL, kind="stream")):
         try:
             ingest.poll(bad, SERIAL)
             assert False
         except Refused:
             pass
-    old = signer.tokens.issue(f"cam-{SERIAL}", 60, now=wall(), aud=audience("south"), ref=SERIAL, kind="stream")
+    old = signer.tokens.issue(f"cam-{SERIAL}", 60, now=wall(), aud=["south"], ref=SERIAL, kind="stream")
     wall.advance(3600)
     try:
         ingest.push(old, SERIAL, ["f"])
@@ -220,11 +237,12 @@ def test_the_ingest_refuses_a_token_for_another_camera_another_cluster_or_past_i
         assert "expired" in str(e)
 
 
-def test_one_ingest_down_the_camera_dials_the_next():
+def test_an_unassigned_ingest_does_not_become_a_fallback_from_its_heartbeat():
     wall = Clock()
-    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall, down=(URLS[0],))
+    *_, ingest, cam, cam_agent, room_agent, inputs, pusher, domain_pass = _site(wall, down=(URLS[0],))
     ingest.want(SERIAL, "recorder:r-0")
-    assert pusher.pass_once(["f"])["pushed"] == 1 and pusher.state == f"pushing to {URLS[1]}"
+    assert pusher.pass_once(["f"]).get("pushed", 0) == 0
+    assert pusher.entry()["channels"]["south"]["urls"] == [URLS[0]]
 
 
 def test_a_frame_carries_its_capture_time_and_the_ingest_moves_it_between_the_clocks_both_ways():
@@ -234,7 +252,7 @@ def test_a_frame_carries_its_capture_time_and_the_ingest_moves_it_between_the_cl
     wall = Clock()
     fast = Clock(wall() + 90)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=fast,
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=fast,
                           card=_card_from(fast() - 700, 700))          # the card, written on the camera's clock
     ingest.want(SERIAL, "recorder:r-0")
     q = ingest.subscribe(SERIAL, "recorder:r-0")
@@ -254,7 +272,7 @@ def test_the_ring_lives_on_the_camera_the_recorder_gets_it_and_the_viewer_does_n
     live edge: the ring would be the last half-minute played fast."""
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, ring_seconds=30)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, ring_seconds=30)
     for _ in range(6):                                                 # a minute nobody watches: the ring keeps 30 s
         wall.advance(10); pusher.pass_once([{"t": wall()}])
     ingest.want(SERIAL, "recorder:event")
@@ -271,7 +289,7 @@ def test_the_long_poll_answers_first_holds_when_nothing_changed_and_wakes_when_a
     poll the real ingest holds; a viewer who left wakes it at the end of the linger, not at the end of the poll."""
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token_secret"]
+    token = pusher.assigned.stream_token()
     first = ingest.poll(token, SERIAL, version=-1)
     assert "held" not in first and first["push"] is False
     assert ingest.poll(token, SERIAL, version=first["version"]).get("held")
@@ -292,7 +310,7 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
     a, b = (r.ingest for r in domain_pass.recorders)                  # each finds the other in its recorder's heartbeat
     by_url = {URLS[0]: a, URLS[1]: b}
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=_card_from(100.0, 100.0))
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=_card_from(100.0, 100.0))
     b.want(SERIAL, "recorder:srv-2")                                   # the recorder is on the second server
     rq = b.subscribe(SERIAL, "recorder:srv-2")
     assert pusher.pass_once(["x1", "x2"])["pushed"] == 2 and pusher.state == f"pushing to {URLS[0]}"
@@ -343,7 +361,7 @@ def test_a_scenario_between_two_unreachable_cameras_acts_within_one_poll():
     ingest, pusher, asker, done, *_ = _two(wall)
     book = asker.book()
     assert [r["urls"] for r in book[SERIAL]] == [URLS]              # one road: the room that records it
-    e = pusher.entry()["ingest"]
+    e = {"token_secret": pusher.assigned.stream_token()}
     held = ingest.poll(e["token_secret"], SERIAL, version=ingest.poll(e["token_secret"], SERIAL)["version"])
     assert held.get("held")                                            # the yard camera is waiting, nothing new
     ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
@@ -377,8 +395,8 @@ def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask
         assert False
     except Refused:
         pass
-    push = pusher.entry()["ingest"]["token_secret"]                           # a push token is not a token to ask
-    for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience("south"), ref="SN9999", kind="ask")):
+    push = pusher.assigned.stream_token()                           # a push token is not a token to ask
+    for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience('south'), ref="SN9999", kind="ask")):
         try:
             ingest.ask(bad, SERIAL, {"preset": 1}, wall() + 10)
             assert False
@@ -414,6 +432,9 @@ def _scenario_site(wall, scenarios, open_doors=()):
     extra = {n: member(n, pushes=False) for n in open_doors}
     shared = SharedDoor(north.vars, north.objects, signer, wall)                # a person's edit, at the signer's door
     shared.set_scenarios(scenarios)
+    recording_domain = site_pass.recording_domain
+    for d, a in [(gate, gate_agent), (ptz, ptz_agent), *extra.values()]:
+        recording_domain.add_agent(a, d)
     books = Books(crossings, north.objects)
     agents = (cam_agent, room_agent, gate_agent, ptz_agent, *(a for _, a in extra.values()))
 
@@ -424,12 +445,14 @@ def _scenario_site(wall, scenarios, open_doors=()):
             d.publish()
         for a in agents:
             report_sync(a)                                                   # reports up
-        books.pass_once()                                              # the signer's pass: every book
+        site_pass()
+        books.pass_once()
         for a in agents:
             report_sync(a)                                                   # books down
 
     domain_pass()
     domain_pass.devices = {n: d for n, (d, _) in extra.items()}
+    domain_pass.recording_domain = recording_domain
     ingests = {r.ingest_url: r.ingest for r in site_pass.recorders} | {u: home for u in NORTH_URLS}
 
     def dial(url):
@@ -439,7 +462,7 @@ def _scenario_site(wall, scenarios, open_doors=()):
 
     done = {SERIAL: [], PTZ: []}
     pusher.perform = lambda action: done[SERIAL].append(action) or "performed"
-    ptz_pusher = CameraPusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
+    ptz_pusher = camera_pusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
     gate_scenarios = Scenarios(GATE, SharedView(gate.flash, gate.disk, wall), Asker(GATE, gate.flash, dial, clock=wall))
     domain_pass.dial = dial
     return (shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
@@ -502,7 +525,7 @@ def test_the_token_names_the_actions_and_one_camera_cannot_flood_an_ingest():
         assert False
     except Refused as e:
         assert "not {'preset': 4}" in str(e)
-    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience("south"), ref=SERIAL, by=GATE, kind="ask",
+    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience('south'), ref=SERIAL, by=GATE, kind="ask",
                                acts=[{"preset": i} for i in range(20)])
     for i in range(MAX_LIVE_ASKS):
         ingest.ask(wide, SERIAL, {"preset": i}, wall() + 30)
@@ -606,7 +629,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     def settle(holder_name, issuer):                                     # the holder's pass over the books, agents both sides
         live = [n for n in devices if n != holder_name and devices[n].door_open]
         agents = [_agent(fed, devices, n, holder_name, wall) for n in live]
-        books = Books(Crossings(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
+        books = Books(BookInputs(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
                                 wall, issuer=issuer), devices[holder_name].disk)      # the holder reads reports, not doors
         for n in live:
             devices[n].publish()
@@ -620,7 +643,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     light_ingest("cam-SN0", home)
     settle("cam-SN0", signer.tokens)
     done = []
-    ptz = CameraPusher("SN2", devices["cam-SN2"].flash, dial, clock=wall, perform=lambda a: done.append(a) or "performed")
+    ptz = camera_pusher("SN2", devices["cam-SN2"].flash, dial, clock=wall, perform=lambda a: done.append(a) or "performed")
     gate = Scenarios("SN1", SharedView(devices["cam-SN1"].flash, devices["cam-SN1"].disk, wall),
                      Asker("SN1", devices["cam-SN1"].flash, dial, clock=wall))
     assert ptz.entry()["cluster"] == "cam-SN0" and "asks only" in ptz.pass_once([])["state"]
@@ -662,13 +685,17 @@ def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_to
                  {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PULLED, "action": "preset", "arg": 4}}]
     shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = \
         _scenario_site(wall, scenarios, open_doors=(OPEN, PULLED))
-    books.crossings.record(PULLED, on="south")                         # the room records it, pulling as always
-    domain_pass()
+    domain_pass.recording_domain.assign(PULLED, "south")
+    from vms.config import REC_SPEC
+    from w2cplatform.spec import SpecController
+    south = books.inputs.view.fed.clusters["south"]
+    SpecController(REC_SPEC, south.vars, south.objects, wall=wall).create({"name": PULLED, "cam": "ref:"+PULLED})                         # the room records it, pulling as always
+    domain_pass(); domain_pass()
     acted = {OPEN: [], PULLED: []}
-    cams = {n: CameraPusher(n, d.flash, domain_pass.dial, clock=wall, perform=lambda a, n=n: acted[n].append(a) or "performed")
+    cams = {n: camera_pusher(n, d.flash, domain_pass.dial, clock=wall, perform=lambda a, n=n: acted[n].append(a) or "performed")
             for n, d in domain_pass.devices.items()}
     assert cams[OPEN].entry()["polls_only"] and cams[OPEN].entry()["ingest"]["urls"] == NORTH_URLS
-    assert cams[PULLED].entry()["recorded_by"] == "south" and cams[PULLED].entry()["ingest"]["urls"] == URLS
+    assert cams[PULLED].entry()["primary"] == "south" and cams[PULLED].entry()["channels"]["south"]["urls"] == [URLS[0]]
     assert cams[PULLED].pass_once(["f"])["pushed"] == 0                # polls, never pushes: the recorder pulls
     left = gate_scenarios.on_event("vehicle")
     assert sorted((x["target"], x["state"]) for x in left) == [(OPEN, "asked"), (PULLED, "asked")]
@@ -744,7 +771,7 @@ def test_a_scenario_between_cameras_is_checked_against_what_each_camera_says_it_
     assert ptz.perform({"action": "preset", "arg": 3}) == f"refused: camera {PTZ} has no telemetry: it cannot go to a preset"
     assert gate.perform({"action": "output", "arg": 1}) == "performed"
 
-    cat = catalog(books.crossings)
+    cat = catalog(books.inputs)
     assert set(cat["actions"]) == {"preset", "output"}
     assert cat["cameras"][GATE]["can"]["relays"] == 1 and cat["cameras"][GATE]["asked"]
     assert cat["cameras"][PTZ]["can"]["ptz"] is False
@@ -758,7 +785,7 @@ def test_a_held_poll_hears_a_linger_run_out_and_an_ask_expire_on_real_clocks():
     import time as _t
     wall = _t.time
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token_secret"]
+    token = pusher.assigned.stream_token()
     ingest.linger = 0.3
     ingest.want(SERIAL, "viewer:anna")
     first = ingest.poll(token, SERIAL, version=-1)
@@ -802,7 +829,7 @@ def test_a_peer_that_falls_behind_is_cut_clean_to_a_keyframe_never_in_the_middle
     wall = Clock()
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
     a, b = (r.ingest for r in domain_pass.recorders)
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: a, clock=wall)
+    pusher = camera_pusher(SERIAL, cam.flash, lambda url: a, clock=wall)
     b.want(SERIAL, "recorder:srv-2")
     rq = b.subscribe(SERIAL, "recorder:srv-2", maxsize=1000)
     gop = lambda start, n: [{"t": wall() + i * 0.04, "n": i, "key": i % 25 == 0} for i in range(start, start + n)]
@@ -840,7 +867,7 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
     from tests.domain.conftest import snapshot
     wall = Clock()
     shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, [])
-    south = books.crossings.view.fed.clusters["south"]
+    south = books.inputs.view.fed.clusters["south"]
     snapshot(south, {"DOOR7": ("w-0", "srv-9")}, ts=wall())            # the room's own camera: no heartbeat says `polls`
     domain_pass()
     door = {"when": {"camera": "DOOR7", "kind": "door_forced"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}}
@@ -869,7 +896,7 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
     from vms.domainpart import ingest as module
     wall=Clock(1000.)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token_secret"]
+    token = pusher.assigned.stream_token()
     ingest.should, ingest.recheck = (lambda ref: True), 0.3
     ingest.want(SERIAL, "recorder:r-0"); ingest.subscribe(SERIAL, "recorder:r-0")
     first = ingest.poll(token, SERIAL, version=-1)
@@ -961,7 +988,7 @@ def test_a_recorder_that_hosts_an_ingest_says_where_and_what_in_its_heartbeat_an
     assert (st["push"], st["live"], st["received"], st["recorders"], st["viewers"]) == (True, True, 2, 1, 0)
     assert st["last"] == wall() and st["polled_ago"] == 0.0 and st["skew_s"] == 0.0
     assert ingest_urls("south", south.objects, wall()) == URLS              # what the domain reads: both recorders'
-    assert pusher.entry()["ingest"]["urls"] == URLS
+    assert pusher.entry()["channels"]["south"]["urls"] == [URLS[0]]
     assert r2.ingest.peers() == [ingest]                                    # the room's other ingest finds it there
     wall.advance(PEER_LOST_AFTER + 1)
     r2.heartbeat_once()                                                     # r-1 says nothing now

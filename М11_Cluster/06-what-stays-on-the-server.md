@@ -59,7 +59,7 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
   "source": "driverpack://file/1.mp4",
   …
 }}
-→ 200 {"index": 1011}
+→ 200 {"index": 1017}
 ```
 
 Консоль ответила оператору только после того, как `configstore` ответил ей, а он отвечает, когда запись легла в журнал большинства. Правка уже на двух живых серверах и в журнале, который `srv-a` догонит, когда вернётся.
@@ -68,21 +68,21 @@ POST /v1/write {"op": "put", "key": "cam/cameras/1", "cas": 1005, "items": {
 
 ```
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1008, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": 1014, "items": {
   "worker": "w-srv-b-1",
   "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
   "at": "1757500113.0",
   "rev": "2"
 }}
-→ 200 {"index": 1021}
+→ 200 {"index": 1030}
 ```
 
 `w-srv-b-1` читает назначение и строку единицы и берёт эпоху — следующую:
 
 ```
 # camworker w-srv-b-1 on srv-b → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
-→ 200 {"index": 1024}
+POST /v1/write {"op": "put", "key": "cam/epoch/1", "cas": 1016, "items": {"epoch": "2"}}
+→ 200 {"index": 1033}
 ```
 
 Последняя строка трассы:
@@ -170,7 +170,7 @@ GET /v1/objects/cam/heartbeats/w-srv-a-1?scope=cluster
 POST /v1/write {"op": "put", "key": "objects/cam/commands/r-17", "cas": "", "items": {
   "data": "{\"instance\": \"srv-a:4101:001005\"}"
 }}
-→ 200 {"index": 1005}
+→ 200 {"index": 1008}
 ```
 
 Какие ключи такие, говорит спека подсистемы, а не платформа: `objects: {rows: [commands/*]}` у VMS (`objects.rows`, `catalog.object_rows`, `objectstore.is_row`). `put_new` на ключ, который ни одна спека строкой не назвала, — `ValueError` со словами «спека подсистемы называет его в `objects.rows`»: создать-только-раз на файлах — это два объекта под одним именем. Тот же список даёт и права на эти строки (урок 5). Тест: `test_a_command_mark_is_a_row_and_conflicts_across_the_cluster` — второй `put_new` с другого сервера проигрывает.

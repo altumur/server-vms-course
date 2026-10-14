@@ -5,6 +5,7 @@ the holder seals the books' stream tokens at rest, its door seals them to each m
 sealed with its own ring — and the camera still pushes, its token opened at the last moment."""
 
 from tests.reporting import sync as report_sync
+from tests.domainvms.recording_domain import RecordingDomain, camera_pusher
 import json
 import os
 import re
@@ -20,10 +21,10 @@ from w2cplatform.domain.readview import ReadView
 from w2cplatform.domain.uplink import member_copy
 from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
-from vms.domainpart.crossing import Crossings
+from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster
 from vms.domainpart.ingest import CameraPusher
-from vms.domainpart.keys import PRIMARIES_PATH, SOURCES_PATH
+from vms.recording_books import PRIMARIES_PATH, SOURCES_PATH
 from tests.domain.conftest import Clock, make_cluster
 from tests.vmsconftest import ingest_recorder
 
@@ -70,7 +71,12 @@ def _site(wall):
                             domain_objects=b.objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             sealer=rings["cam"], key=keys[cam.name])
     view = ReadView(fed, wall=wall)
-    crossings = Crossings(b.vars, view, wall, issuer=signer.tokens, sealer=rings["srv-b"])
+    crossings = BookInputs(b.vars, view, wall, issuer=signer.tokens, sealer=rings["srv-b"])
+
+    recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
+    recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
+    recording_domain.collect()
+    row = {"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}
 
     def domain_pass():
         for r in hosts.values():
@@ -78,8 +84,9 @@ def _site(wall):
         cam.publish(); report_sync(cam_agent)
         for x in agents.values():
             report_sync(x)
-        view.refresh(); crossings.record(SERIAL, on="srv-a") if not crossings.all() else None
-        crossings.publish(); crossings.publish_primaries()
+        view.refresh()
+        recording_domain.observe("srv-a", [row], [{"id": SERIAL, "phase": "running"}], ingest=A_URLS[0])
+        recording_domain.collect()
         for x in agents.values():
             report_sync(x)
         report_sync(cam_agent)
@@ -91,7 +98,7 @@ def _site(wall):
         raise Unreachable(f"{url} did not answer")
     q = ing["srv-a"].subscribe(SERIAL, "recorder:srv-a", maxsize=1000)
     ing["srv-a"].want(SERIAL, "recorder:srv-a")
-    pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
+    pusher = camera_pusher(SERIAL, cam.flash, dial, clock=wall, ring_seconds=30)
     pusher.sealer = rings["cam"]
     domain_pass(); domain_pass()
     return fed, a, b, cam, door, keys, rings, pusher, q, signer
@@ -118,7 +125,7 @@ def test_nothing_is_open_in_any_store_of_three_clusters_and_the_camera_still_pus
         for key in objects.list(""):
             assert not JWS.search((objects.get(key) or b"").decode("utf-8", "replace")), (name, key)
     assert b.vars.get(f"{PRIMARIES_PATH}/{cam.name}")[0] and cam.flash.get(PRIMARIES_PATH)[0]
-    assert pusher.entry()["ingest"]["token_secret"].count(".") == 2
+    assert pusher.assigned.stream_token().count(".") == 2
     for _ in range(3):
         wall.advance(1)
         pusher.pass_once([{"t": wall(), "key": True}])
@@ -134,7 +141,7 @@ def test_a_member_gets_only_its_own_rows_through_the_door():
         got = CarryClient(door, me, keys[me], wall)._ask()
         assert not [p for p in got["rows"] if p.endswith(f"/{other}")], me
         assert "domain/signer" not in got["rows"]
-    assert a.vars.get(SOURCES_PATH)[0] and not a.vars.get(PRIMARIES_PATH)[0]
+    assert a.vars.get(SOURCES_PATH)[0] and a.vars.get(PRIMARIES_PATH)[0]
     assert cam.flash.get(PRIMARIES_PATH)[0] and "domain/signer" not in cam.flash.list("domain/")
 
 
@@ -153,7 +160,8 @@ def test_the_relay_gives_a_camera_only_its_own():
     assert report_sync(relay) and set(relay.relayed) == {cam.name}
     assert not a.vars.list("relay/")
     got = Relay(relay).vars.answer_for(cam.name, keys[cam.name])
-    assert json.loads(got["rows"][f"{PRIMARIES_PATH}/{cam.name}"][SERIAL])["ingest"]["token_secret"].count(".") == 2
+    assert "token_secret" not in json.dumps(got["rows"][f"{PRIMARIES_PATH}/{cam.name}"])
+    assert json.loads(got["rows"][f"{PRIMARIES_PATH}/{cam.name}"][SERIAL])["entries"][0]["value"]["ingest"] == A_URLS
     try:
         Relay(relay).door.carry(cam.name, wall(), keys["srv-a"].seal_pub,
                                 keys["srv-a"].sign(request_message(cam.name, wall(), keys["srv-a"].seal_pub)))
@@ -174,7 +182,7 @@ def test_a_members_agent_neither_reads_nor_writes_the_signers_key():
     r = Rights({"domainagent": agent})
     for action in ("read", "write", "delete"):
         assert not r.allows("domainagent", action, "domain/signer"), action
-    for key in (f"{PRIMARIES_PATH}/cam-SN1", f"{SOURCES_PATH}/srv-a", "domain/cam/crossings", "domain/members"):
+    for key in (f"{PRIMARIES_PATH}/cam-SN1", f"{SOURCES_PATH}/srv-a", "domain/placement/rec/SN1", "domain/members"):
         assert not r.allows("domainagent", "write", key), key
     assert r.allows("domainagent", "write", PRIMARIES_PATH) and r.allows("domainagent", "write", "domain/member-key")
     box = FileVariables(tempfile.mkdtemp(prefix="acl-"), "domainagent", {"domainagent": agent["write"]}, volatile=True)
@@ -191,16 +199,17 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
     recording member, in the camera — falls into one; so does every path the worker's code names (each book at the
     holder and carried home, each kept row, the worker's slot); and every family has its words."""
     from vms.config import SPEC
-    from vms.domainpart import chain, crossing, ingest, keys, worker
+    from vms.domainpart import chain, inputs, ingest, keys, worker
     wall = Clock(1000.0)
     fed, a, b, cam, door, member_keys, rings, pusher, q, signer = _site(wall)
     written = [k for store in (b.vars, a.vars, cam.flash) for k in store.list(SPEC.domain_prefix)]
     assert written
-    named = [getattr(m, n) for m in (keys, worker, crossing, chain, ingest) for n in dir(m)
-             if (n.endswith("_PATH") or n in ("CROSSINGS", "ROADS", "SLOT")) and isinstance(getattr(m, n), str)
+    named = [getattr(m, n) for m in (keys, worker, inputs, chain, ingest) for n in dir(m)
+             if (n.endswith("_PATH") or n in ("SLOT",)) and isinstance(getattr(m, n), str)
              and getattr(m, n).startswith(SPEC.domain_prefix)]
     named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
-    assert keys.UPSTREAM_PATH in named and keys.ASKS_PATH in named and worker.SLOT in named
+    assert chain.UPSTREAM_PATH == "domain/cam/upstream"
+    assert keys.ASKS_PATH in named and worker.SLOT in named
     stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
     assert not stray, f"keys in no declared family: {stray}"
     assert sorted(SPEC.display["keys"]) == sorted(f["id"] for f in SPEC.domain.keys)

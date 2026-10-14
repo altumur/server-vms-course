@@ -123,7 +123,7 @@ def _action(then: dict) -> dict:
     return {k: v for k, v in then.items() if k not in ("camera", "within")}
 
 
-def refusals(settings: dict, crossings) -> list[str]:
+def refusals(settings: dict, inputs) -> list[str]:
     """Scenarios that could never act, each with its reason — said on every pass over the books (feedback AL: an
     operator is told, not left with a scenario that silently never fires). Not when the document is written: the
     signer that signs it asks no subsystem's code (ADR-0032), and checks a scenario's shape by its schema alone.
@@ -140,24 +140,24 @@ def refusals(settings: dict, crossings) -> list[str]:
         a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
         if not a or not b or a == b:
             continue
-        if crossings.view.last_known(a) is None:
+        if inputs.view.last_known(a) is None:
             out.append(f"camera {a} (trigger) is not known to the domain: its events are read in its own cluster, "
                        f"and no member cluster of this domain has reported it")
-        if crossings.polled_at(b) is None:
+        if inputs.polled_at(b) is None:
             out.append(f"camera {b} (target) polls nothing: an ask travels on the poll a member camera holds open "
                        f"to an ingest, and {b} is not a member camera of this domain, or has never reported")
         # …and what each end says it can (Lesson 16, step 8). The trigger's word counts only for a camera of ours:
         # a server cluster's camera is read over its cluster's merged log, where the detectors on it write too,
         # and its holder's `can` knows the device, not the detectors.
         kind, action = str(sc.get("when", {}).get("kind", "")), _action(sc.get("then", {}))
-        can_a = crossings.can_of(a) if a in crossings.members() else None
+        can_a = inputs.can_of(a) if a in inputs.members() else None
         if can_a is not None and kind not in can_a.get("events", []):
             out.append(f"camera {a} (trigger) does not raise {kind!r} — it raises {', '.join(can_a.get('events', []))}")
         try:
             _within(sc.get("then", {}))
         except PARSE_ERRORS as e:
             out.append(f"the scenario from {a} to {b}: {e}")
-        can_b = crossings.can_of(b)
+        can_b = inputs.can_of(b)
         why = (misfit(f"camera {b} (target)", can_b, action) if can_b is not None else
                None if str(action.get("action", "")) in ACTIONS else misfit(f"camera {b} (target)", {}, action))
         if why:
@@ -165,35 +165,35 @@ def refusals(settings: dict, crossings) -> list[str]:
     return list(dict.fromkeys(out))
 
 
-def unchecked(settings: dict, crossings) -> list[str]:
+def unchecked(settings: dict, inputs) -> list[str]:
     """What the domain accepted without being able to vouch for it: an end that has not said what it raises or
     can do. Said on every pass, like a refusal — and gone the pass after the camera describes itself."""
-    out, members = [], crossings.members()
+    out, members = [], inputs.members()
     for sc in _scenarios(settings):
         a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
         if not a or not b or a == b:
             continue
         kind, action = str(sc.get("when", {}).get("kind", "")), _action(sc.get("then", {}))
-        if a in members and crossings.can_of(a) is None:
+        if a in members and inputs.can_of(a) is None:
             out.append(f"camera {a} (trigger) has not said what it raises: {kind!r} is not checked")
-        elif a not in members and crossings.view.last_known(a) is not None:
+        elif a not in members and inputs.view.last_known(a) is not None:
             out.append(f"camera {a} (trigger) is read over its cluster's merged log: {kind!r} is not checked here")
-        if crossings.polled_at(b) is not None and crossings.can_of(b) is None:
+        if inputs.polled_at(b) is not None and inputs.can_of(b) is None:
             out.append(f"camera {b} (target) has not said what it can do: {action.get('action')!r} is not checked")
     return list(dict.fromkeys(out))
 
 
-def catalog(crossings) -> dict:
+def catalog(inputs) -> dict:
     """What a form needs to offer a scenario between cameras: what one camera may ask another, and per camera
     the domain knows — its cluster, what it said it raises and can do (`can`, None if it has not), and whether it
     can be asked at all (it holds a poll)."""
     cams = {}
-    for cluster, rows in sorted(crossings.view.configured.items()):
+    for cluster, rows in sorted(inputs.view.configured.items()):
         for row in rows:
             ref = str(row.get("ref", ""))
             if ref:
-                cams[ref] = {"cluster": cluster, "name": row.get("name", ref), "can": crossings.can_of(ref),
-                             "asked": crossings.polled_at(ref) is not None}
+                cams[ref] = {"cluster": cluster, "name": row.get("name", ref), "can": inputs.can_of(ref),
+                             "asked": inputs.polled_at(ref) is not None}
     return {"actions": dict(ACTIONS), "cameras": cams}
 
 

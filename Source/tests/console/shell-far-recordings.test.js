@@ -1,5 +1,5 @@
 // Записи камеры в других кластерах домена (ADR-0061): консоль кластера камеры узнаёт их из книги, которую несёт её
-// кластер (GET /domain/cam/books/primaries — recorded_by, recording и backups [{cluster, recording}]; ADR-0010,
+// кластер (GET /domain/rec/books/primaries — recorded_by, recording и backups [{cluster, recording}]; ADR-0010,
 // дополнение 2026-10-06), у члена и у держателя одинаково — вид домена для этого не читается; и спрашивает дверь записи у консоли
 // того кластера через себя: GET /domain/at/<кластер>/rec/where/<запись>. Кусок — с двери держателя напрямую, мимо
 // обеих консолей. Отказ того кластера — словами: 403 «на … вас не знают», 502 «консоль … не видна по сети».
@@ -22,9 +22,14 @@ b.FIX["/rec/volumes"]={volumes:[{name:"card",kind:"backup",server:"cam-demo",hel
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 // член: вида домена нет (404), книга primaries — кто пишет камеры
-b.FIX["/domain/cam/books/primaries"]={"SN-DEMO":{recorded_by:"relay-b",recording:"SN-DEMO"},"SN-X":{recorded_by:"relay-x",recording:"SN-X"},"SN-Y":{recorded_by:"relay-y",recording:"SN-Y"},"SN-OWN":{recorded_by:"cam-demo",recording:"SN-OWN"},"SN-Z":{recorded_by:"relay-z",recording:"SN-Z"},
-  // резервы — списком: каждый своей строкой; свой кластер и нечитаемый элемент не спрашиваются через /domain/at
-  "SN-BK":{recorded_by:"relay-b",recording:"SN-BK",backups:[{cluster:"relay-k",recording:"SN-BK-b"},{cluster:"cam-demo",recording:"6-card"},"x",{cluster:"relay-k"}]}};
+const observation=(member,recording,role="primary")=>({member,item:"r1/"+recording,recording,role,running:true});
+const book=(...entries)=>({entries,missing:[]});
+b.FIX["/domain/rec/books/primaries"]={"":{missing:[]},
+  "SN-DEMO":book(observation("relay-b","SN-DEMO")),"SN-X":book(observation("relay-x","SN-X")),
+  "SN-Y":book(observation("relay-y","SN-Y")),"SN-OWN":book(observation("cam-demo","SN-OWN")),
+  "SN-Z":book(observation("relay-z","SN-Z")),
+  "SN-BK":book(observation("relay-b","SN-BK"),observation("relay-k","SN-BK-b","backup"),
+                 observation("cam-demo","6-card","card"),"x",{member:"relay-k",role:"backup"})};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 const calls=[];
@@ -50,7 +55,7 @@ await w.eval("loadTimeline('1')");await b.ready(80);
 const sp=V().spans;
 out.farRecordingOnTheTimeline=sp.some(s=>s.recording==="SN-DEMO"&&s.where==="/domain/at/relay-b/rec/where/SN-DEMO"&&Math.round(s.start-now)===-600);
 out.askedThroughThisConsole=calls.some(([u])=>u==="/domain/at/relay-b/rec/where/SN-DEMO")&&calls.some(([u,a])=>u.startsWith("http://relay-b:9101/timeline/SN-DEMO")&&a==="Bearer RB");
-out.primariesFromTheBook=calls.some(([u])=>u==="/domain/cam/books/primaries");
+out.primariesFromTheBook=calls.some(([u])=>u==="/domain/rec/books/primaries");
 // кусок — с двери держателя relay-b напрямую
 const url=await w.eval(`(()=>{const s=V.spans.find(x=>x.recording==="SN-DEMO");return segmentURL(s,{start:s.start,end:s.start+5})})()`);
 out.pieceFromTheHoldersDoor=/^http:\/\/relay-b:9101\/segment\/SN-DEMO\/e4\//.test(String(url||""));

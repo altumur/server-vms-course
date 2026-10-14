@@ -114,3 +114,37 @@ def test_a_run_stopped_by_sigterm_removes_its_root_too():
     out, _ = p.communicate(timeout=120)
     assert p.returncode == 128 + signal.SIGTERM, (p.returncode, "".join(lines) + out[-2000:])
     assert os.listdir(base) == [], os.listdir(base)
+
+
+def test_sigterm_in_a_weakref_callback_cannot_swallow_exit_or_skip_cleanup():
+    """A weakref callback swallows SystemExit, so the signal handler must finish after all registered cleanup."""
+    base = _base("bw")
+    marker = os.path.join(base, "cleanup")
+    script = r'''
+import atexit, os, signal, sys, weakref
+from tests import runroot
+root = runroot.enter()
+print(root, flush=True)
+def cleanup():
+    with open(sys.argv[1], "w") as out:
+        out.write("root still present" if os.path.isdir(root) else "root removed too early")
+atexit.register(cleanup)
+class Item:
+    pass
+def collected(ref):
+    print("weakref callback", flush=True)
+    os.kill(os.getpid(), signal.SIGTERM)
+item = Item()
+reference = weakref.ref(item, collected)
+del item
+print("survived signal", flush=True)
+'''
+    child = subprocess.run([sys.executable, "-c", script, marker], cwd=SOURCE,
+                           env=dict(os.environ, TMPDIR=base), capture_output=True, text=True, timeout=120)
+    assert child.returncode == 128 + signal.SIGTERM, (child.returncode, child.stdout, child.stderr)
+    assert "weakref callback" in child.stdout and "survived signal" not in child.stdout
+    with open(marker) as saved:
+        assert saved.read() == "root still present"          # later cleanup runs before runroot's registered leave
+    root = child.stdout.splitlines()[0]
+    assert os.path.dirname(root) == base and not os.path.lexists(root)
+    assert os.listdir(base) == ["cleanup"], os.listdir(base)

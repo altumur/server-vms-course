@@ -55,6 +55,8 @@ def site(two=False):
 
 def input_row(env, member="north", sub="testsub", *, secret=True, **fields):
     source = f"{sub}/counts/w1"
+    from w2cplatform.contract import Slot
+    env.fed.clusters[member].vars.put(f"{sub}/slots/w1", Slot("w1", "book-test-owner", env.wall() + 1000, False, 1).to_items())
     value = {"name": "badge", "to": "south", "n": 7, **fields}
     if secret:
         value["nested"] = [{"token_secret": SECRET}]
@@ -66,6 +68,114 @@ def input_row(env, member="north", sub="testsub", *, secret=True, **fields):
 def publish_all(env):
     for name, c in env.fed.clusters.items():
         report(name, c.vars, c.objects, env.north.objects, env.wall(), key=env.memberkeys[name], sealer=env.rings[name])
+
+
+def test_released_expired_or_absent_input_slot_is_empty_not_a_missing_member():
+    from w2cplatform.contract import Slot
+    for sub in ("testsub", "testsub2"):
+        with site(two=True) as e:
+            s = next(s for s in e.specs if s.name == sub)
+            path = input_row(e, sub=sub, secret=False)
+            e.north.vars.put("domain/grants/south", {"badge|view|": str(e.wall() + 500)})
+            publish_all(e)
+            assert "badge" in bookruntime.collect(e.holder, s, "counts").rows["south"]
+            for state in (Slot("w1", "owner", e.wall() + 50, True, 1),
+                          Slot("w1", "owner", e.wall(), False, 1),
+                          Slot("w1", "", e.wall() + 50, False, 1), None):
+                if state is None:
+                    e.north.vars.delete(f"{sub}/slots/w1")
+                else:
+                    e.north.vars.put(f"{sub}/slots/w1", state.to_items())
+                e.wall.advance(1)
+                publish_all(e)
+                got = bookruntime.collect(e.holder, s, "counts")
+                assert "badge" not in got.rows["south"] and "north" not in got.missing
+                assert e.north.vars.get(path)[0] is not None  # omission does not delete another process's row
+
+
+def test_report_omits_input_when_slot_is_released_during_its_read():
+    from .test_book_names import raises
+    with site() as e:
+        path = input_row(e, secret=False)
+        e.north.vars.put("domain/grants/south", {"badge|view|": str(e.wall() + 500)})
+        original = e.north.vars.get
+        def released(key):
+            got = original(key)
+            if key == path:
+                slot = original("testsub/slots/w1")[0]
+                slot["released"] = "true"
+                e.north.vars.put("testsub/slots/w1", slot)
+            return got
+        with patch.object(e.north.vars, "get", side_effect=released):
+            pub = publication("north", e.north.vars, e.north.objects, e.wall(), key=e.memberkeys["north"])
+        assert path not in pub["rows"]
+        # An unreadable slot does not become an empty complete report.
+        with patch.object(e.north.vars, "get", side_effect=OSError("slot store unavailable")):
+            raises(OSError, lambda: publication("north", e.north.vars, e.north.objects, e.wall()))
+
+
+def test_new_slot_owner_clears_all_its_input_families_but_not_other_writers():
+    from w2cplatform.worker import Worker
+    from w2cplatform.spec import BookMerge
+    from w2cplatform.variables import GuardFailed
+    for sub in ("testsub", "testsub2"):
+        with site(two=True) as e:
+            s = next(s for s in e.specs if s.name == sub)
+            s.domain.merged["other"] = BookMerge(f"{sub}/other/", "name", "unique", "to")
+            def worker():
+                return Worker(s.sub, None, e.north.vars, e.north.objects, wall=e.wall, clock=e.wall, spec=s)
+            old = worker(); old.claim_slot("w-9")
+            for prefix in ("counts", "other"):
+                old.put_under_slot(f"{sub}/{prefix}/w-9", {"i": "old"})
+                e.north.vars.put(f"{sub}/{prefix}/w-8", {"i": "neighbour"})
+            new = worker(); new.claim_slot("w-9")
+            for prefix in ("counts", "other"):
+                assert e.north.vars.get(f"{sub}/{prefix}/w-9")[0] is None
+                assert e.north.vars.get(f"{sub}/{prefix}/w-8")[0] == {"i": "neighbour"}
+            raises(GuardFailed, lambda: old.put_under_slot(f"{sub}/counts/w-9", {"i": "late"}))
+            new.put_under_slot(f"{sub}/counts/w-9", {"i": "new"})
+            assert e.north.vars.get(f"{sub}/counts/w-9")[0] == {"i": "new"}
+
+
+def test_slot_cleanup_cannot_erase_the_next_owner_after_a_takeover_race():
+    from w2cplatform.worker import Worker
+    from w2cplatform.variables import GuardFailed
+    with site() as e:
+        s = e.specs[0]
+        first = Worker(s.sub, None, e.north.vars, e.north.objects, wall=e.wall, clock=e.wall, spec=s)
+        original = e.north.vars.delete
+        def takeover(path, cas=None, *, guard=None):
+            next_owner = Worker(s.sub, None, e.north.vars, e.north.objects, wall=e.wall, clock=e.wall, spec=s)
+            with patch.object(e.north.vars, "delete", side_effect=original):
+                next_owner.claim_slot("w-9")
+            next_owner.put_under_slot(path, {"i": "next"})
+            return original(path, cas=cas, guard=guard)
+        with patch.object(e.north.vars, "delete", side_effect=takeover):
+            raises(GuardFailed, lambda: first.claim_slot("w-9"))
+        assert e.north.vars.get("testsub/counts/w-9")[0] == {"i": "next"}
+
+
+def test_agent_cannot_publish_predecessor_input_between_slot_claim_and_cleanup():
+    from w2cplatform.worker import Worker
+    with site() as e:
+        s = e.specs[0]
+        old = Worker(s.sub, None, e.north.vars, e.north.objects, wall=e.wall, clock=e.wall, spec=s)
+        old.claim_slot("w-9")
+        path = "testsub/counts/w-9"
+        old.put_under_slot(path, {"i": "old"})
+        original = e.north.vars.delete
+        seen = []
+        def during_claim(key, cas=None, *, guard=None):
+            if key == path:
+                assert e.north.vars.get("testsub/slots/w-9")[0]["released"] == "true"
+                pub = publication("north", e.north.vars, e.north.objects, e.wall(), key=e.memberkeys["north"])
+                seen.append(path not in pub["rows"])
+            return original(key, cas=cas, guard=guard)
+        new = Worker(s.sub, None, e.north.vars, e.north.objects, wall=e.wall, clock=e.wall, spec=s)
+        with patch.object(e.north.vars, "delete", side_effect=during_claim):
+            new.claim_slot("w-9")
+        assert seen == [True] and e.north.vars.get(path)[0] is None
+        assert e.north.vars.get("testsub/slots/w-9")[0]["released"] == "false"
 
 
 def test_keyset_requires_public_receive_key_and_root_signature_covers_it():
@@ -443,7 +553,7 @@ def test_book_show_projects_value_fields_preserves_origin_and_never_shows_hidden
         console._visible = lambda h: None
         status, shown = console.book_route(None, "GET", spec(show=("n", "nested")), "counts")
         assert status == 200 and shown[""] == {"missing": []}
-        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "value": {"n": 7, "nested": [{}]}}],
+        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "n": 7, "nested": [{}]}],
                                   "missing": []}
         assert SECRET not in json.dumps(shown) and "token_secret" not in json.dumps(shown)
         assert "hidden-nonsecret-value" not in json.dumps(shown) and "enc:v1:" not in json.dumps(shown)
@@ -469,3 +579,26 @@ def test_knocking_member_report_is_not_a_contribution_or_missing():
         e.north.vars.put("domain/members", {"doc": "damaged"})
         got = bookruntime.collect(e.holder, e.specs[0], "counts")
         assert not got.subjects and not got.rows and got.missing == ()
+
+
+def test_collected_book_is_visible_by_ref_of_another_spec_without_global_view():
+    from w2cplatform.console import SpecConsole
+    with site(two=True) as e:
+        owner, publisher = e.specs
+        publisher.domain.ref = ""
+        publisher.domain.show["counts"] = ("n", "member", "item")
+        con = SpecConsole.__new__(SpecConsole)
+        con.ctl = SimpleNamespace(vars=e.north.vars)
+        con.units = {owner.name: SimpleNamespace(spec=owner, ctl=SimpleNamespace(units=lambda: [
+            {"id": "counter", "name": "badge"}, {"id": "other", "name": "hidden"}]))}
+        con._visible = lambda _: lambda unit, labels, of=None: unit == owner.ref("counter")
+        marker = json.dumps({"missing": []})
+        entry = {"member": "north", "item": "w1/i", "value": {"name": "badge", "n": 7,
+                 "member": "forged", "item": "forged", "token_secret": SECRET}}
+        e.north.vars.put("domain/testsub2/counts", {"": marker,
+            "badge": json.dumps({"entries": [entry], "missing": []}),
+            "hidden": json.dumps({"entries": [entry], "missing": []})})
+        status, shown = con.book_route(None, "GET", publisher, "counts")
+        assert status == 200 and set(shown) == {"", "badge"}
+        assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "n": 7}], "missing": []}
+        assert SECRET not in json.dumps(shown) and "forged" not in json.dumps(shown)

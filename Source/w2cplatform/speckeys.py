@@ -83,7 +83,10 @@ KEYS = {
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
     "domain.books", "domain.books.*.show", "domain.books.*.from", "domain.books.*.key",
     "domain.books.*.pick", "domain.books.*.to", "domain.kept", "domain.tables",   # carried or collected books (ADR-0074)
-    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
+    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.tokens.*.grant",
+    "domain.tokens.*.placement.sub", "domain.tokens.*.placement.caller",
+    "domain.tokens.*.placement.ref_claim", "domain.tokens.*.placement.target_fields",
+    "domain.tokens.*.placement.audience_claim", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",
     "domain.edit",

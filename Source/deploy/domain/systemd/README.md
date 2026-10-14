@@ -20,3 +20,31 @@ other unit names it. Rights: the configstore's file
 `deploy/cluster/systemd/w2c-cluster.sysusers`. The console's groups are its socket's, `w2c-store` and `w2c-events` — not
 the ring's, not the tokens socket's — and the key file and the signer's sockets are `InaccessiblePaths=` for it. mTLS
 names when the doors get them: `domain.<server>`, `domainconsole.<server>`, `domainagent.<server>`.
+
+
+## Role token doors (ADR-0074)
+
+The member agent binds one Unix door per role granted by the loaded token specs.
+Before enabling these specs, provision the directories and the agent's groups
+from that same catalogue. Run from Source with the deployment's SPEC_DIR (vms in
+this course) and TOKEN_REQUESTS_DIR=/run/w2c-token-requests:
+
+```sh
+python3 -m w2cplatform.domain.tokenrequest tmpfiles
+python3 -m w2cplatform.domain.tokenrequest groups
+```
+
+Append the first output to the installed domain tmpfiles configuration, apply it
+with systemd-tmpfiles as root; install the second output as a domainagent service
+drop-in, reload systemd and restart the agent. Run this after every grant change.
+The base is root:root 0755; each role directory is root:<derived role group> 2770,
+and its socket 0660. Workers join only their existing role group. The agent joins
+all generated groups. The generator uses cluster.rights.group and loaded specs;
+there is no list of subsystem roles in platform code. Worker and agent must see
+the same directory (mount it into a container without changing uid/gid).
+
+Unconfigured or unsafe directories disable that role's issuance and report the
+failure; there is no fallback to the holder's token socket. A deployment with
+User=w2c must preserve root ownership of the role directories: a directory owned
+by w2c does not separate processes with the same uid. Token kind determines the
+subsystem, while the socket fixes the role; the request body contains only ref.

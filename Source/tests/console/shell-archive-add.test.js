@@ -2,7 +2,7 @@
 // retention_days} через console.api. Из блока «Архивы сервера» и шапки карточки сервера (addBlock, addAction), из меню
 // строки сервера и тома (addMenu), с карточки тома и со вкладки «Архив» камеры. В выборе — только тома этого сервера
 // (и сетевые) и только камеры, которых там ещё нет; имя — номер камеры, а если оно занято, <номер>-<том>; негодный
-// срок не уходит. Двери домена (/domain/crossings) курс не отдаёт — страница туда не ходит.
+// срок не уходит. Этот локальный сценарий не вызывает двери домена.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");

@@ -268,17 +268,37 @@ def test_restore_beats_under_the_same_pulse_as_the_pass():
     """Reproduced: a replaced disk, 2000 buckets pulled at 50 ms each — 100 s without a heartbeat, the resource silent to
     the index and the console while its door answered. `restore` beats as `pass_` does, a mark per bucket pulled."""
     from w2cplatform.events import Bucket
-    from w2cplatform.resource import Resource, resources_seen
+    from w2cplatform.resource import Resource, resources_seen, heartbeat_key
     box = Box()
     seen = []
+    beat_seen = threading.Event()
+    put_object = box.objects.put
+
+    def put(key, data, *args, **kwargs):
+        result = put_object(key, data, *args, **kwargs)
+        if key == heartbeat_key("srv-1") and json.loads(data)["ts"] == box.wall():
+            beat_seen.set()
+        return result
+    box.objects.put = put
 
     class Peer:
         def mirrored(self, url, server):
             return [Bucket("cam", "7", 1, i * 600.0, (i + 1) * 600.0, f"cam/7/1/{i}.events.jsonl", 1) for i in range(6)]
 
         def get(self, url, server, path):
+            beat_seen.clear()
             box.wall.advance(30); box.clock.advance(30)                # 6 × 30 s: well past `lost_after`
-            time.sleep(0.06)
+            # Wait for the actual pulse publication while this peer pull is blocked:
+            # advancing the fake clocks does not schedule the pulse's thread.
+            deadline = time.monotonic() + 2.0
+            while True:
+                left = deadline - time.monotonic()
+                assert left > 0 and beat_seen.wait(left), "restore did not publish its pulse while the peer pull waited"
+                beat_seen.clear()
+                # The Event may belong to the clock before advance: only the
+                # heartbeat actually stored under the current clock is evidence.
+                if resources_seen(box.objects)["srv-1"]["ts"] == box.wall():
+                    break
             seen.append(resources_seen(box.objects)["srv-1"]["ts"] == box.wall())
             return b'{"ts": 1}\n'
 
@@ -495,19 +515,23 @@ def test_a_sweep_list_entry_that_is_no_digest_stops_no_reclaiming():
 def test_a_book_of_primaries_nobody_can_read_makes_the_backup_record():
     """`carried_primary` parsed the book's entry and the agent's mark bare, inside `enrich` — inside the reconciler's
     loop: every start after that backup, every stop, the gate and the writer's pass were skipped. A book nobody can read
-    is a book nobody can vouch for, and then the backup records, as for one that is old."""
+    is a book nobody can vouch for; a cold reserve records after the same observation grace as for an absent book."""
     from tests.vmsconftest import recorder
     from vms.recworker import DOMAIN_SEEN, PRIMARIES
-    box = Box()
-    r = recorder(box)
-    box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
-    box.vars.put(PRIMARIES, {"SN1": '{"enabled": tru'})
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
-    box.vars.put(PRIMARIES, {"SN1": json.dumps({"enabled": True, "running": True})})
+    from tests.test_backup_archive import _camera_cluster
+    box, r, row, carry = _camera_cluster()
+    carry()
+    box.vars.put(PRIMARIES, {"SN1": '{"entries": ['})
+    assert r.carried_primary(row, box.wall()) is False
+    box.wall.advance(r.START_GRACE - 0.001)
+    assert r.carried_primary(row, box.wall()) is False
+    box.wall.advance(0.001)
+    assert r.carried_primary(row, box.wall()) is True
+    carry()
     box.objects.put(DOMAIN_SEEN, b'{"ts": "now"}')
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
+    assert r.carried_primary(row, box.wall()) is True
     box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
-    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is False   # mended: read as it says
+    assert r.carried_primary(row, box.wall()) is False
     _forget_garbled()
 
 

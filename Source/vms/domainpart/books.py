@@ -2,10 +2,9 @@
 on each other. The console's pass reads (the view, `domain/view`, kept edits); this one mints tokens, so it
 runs where the signer's key is: `domain.signer_service`, when it is given CLUSTERS.
 
-    sources      Lesson 13   for each recording cluster: where its cameras of other clusters were last seen
-    primaries    Lesson 13   for each camera cluster: who records it, whether written, and where to push (16)
+    C2 sources/primaries are published by ordinary workers and collected by the platform.
+    upstream     Lesson 17   for each relay: the centre ingest and stream token, until C3
     polls        Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
-    upstream     Lesson 17   for each relay: the centre's ingest, per camera, when there is a centre
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
     stream-accounts          for each cluster: the RTSP accounts its grants name, passwords sealed — where the spec
@@ -33,23 +32,21 @@ log = logging.getLogger("domain.books")
 
 
 class Books:
-    def __init__(self, crossings, domain_objects, members=None):
+    def __init__(self, inputs, domain_objects, members=None):
         """`members`: the domain's list of members (`domain/members.py`) — followed first, every pass."""
-        self.crossings, self.objects, self.members = crossings, domain_objects, members
+        self.inputs, self.objects, self.members = inputs, domain_objects, members
         self.steps = Steps("the pass over the books", log=log)
 
     def pass_once(self) -> dict[str, int]:
-        c = self.crossings
+        c = self.inputs
         got = self.steps.run(
             ("following the members", self._follow_members),
             ("following the topology", self._follow_topology),
             ("the read view's pass", c.view.refresh),
-            ("sources", lambda: len(c.publish())),
-            ("primaries", lambda: len(c.publish_primaries())),
             ("polls", lambda: len(c.publish_polls())),
             ("upstream", lambda: len(publish_upstream(c, c.centre, star=c.star)) if c.centre else None),
             ("the shared settings", lambda: published(c.vars, self.objects)))
-        out = {k: got[k] for k in ("sources", "primaries", "polls", "upstream") if got.get(k) is not None}
+        out = {k: got[k] for k in ("polls", "upstream") if got.get(k) is not None}
         if "the shared settings" in got:                 # a document nobody can read writes no book of asks: the last stays
             settings = got["the shared settings"]
             more = self.steps.run(
@@ -74,11 +71,11 @@ class Books:
         if self.members is None:                         # who the members are: the record, not the configuration
             return {"joined": [], "left": []}
         from w2cplatform.domain.members import apply as follow_members
-        c = self.crossings
+        c = self.inputs
         return follow_members(c.view.fed, self.members, self.objects, c.topology, wall=c.wall)
 
     def _follow_topology(self) -> list:
-        c = self.crossings
+        c = self.inputs
         if c.topology is None:                           # a member moved behind a relay, or out: read it the new way
             return []
         from w2cplatform.domain.topology import apply

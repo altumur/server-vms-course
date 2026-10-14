@@ -1,14 +1,29 @@
-# api.py — Lesson 3: the domain's write façade, and what it refuses
+# api.py — домен сохраняет операции членов (ADR-0074 C2)
 
-**Role in the module.** An edit goes to the directory ("where is unit 7"), then to the OWNING CLUSTER's console — the only writer of its rows — and that cluster's grants decide. The domain owns nothing and never writes a unit row on its own account; a create goes to the cluster the placement service chose, and that cluster's controller places it on a worker. The domain never names a worker or a server.
+Дверь домена авторизует человека до сохранения и принимает явные операции
+POST/PUT/DELETE. Создание обязательно называет cluster; у спеки с domain.ref
+обязательно его поле. Ключ Idempotency-Key обязателен. Цель — только принятый
+член; держатель тоже член и всегда получает очередь, не прямой вызов.
 
-## Names
-- `FORBIDDEN_FIELDS` — placement (cluster, worker, server, placement), what a worker observes or takes (epoch, observed_revision, phase), and the controller's revision: refused at either level.
-- `class ClusterConsole(Protocol)` — `update_unit(ref, fields, subject)`, `create_unit(fields, subject)`.
-- `class ApiError(status, detail)`.
-- `refuse_addresses(fields)` — an address with a credential in it, at any depth, refused in the cluster's words (`secrets.refusal_within`), the field named and never the value.
-- `said(reply)` — a member's reply masked as a page masks a row before the domain hands it on or keeps it.
+ConsoleAPI.queue проверяет путь загруженной спеки и её unit.rows, поля размещения,
+секреты и URL с паролями (включая вложенные объекты/массивы), для PUT — domain.edit.
+Возвращает `202 {kept, cluster, what, note}`; what — имена полей через запятую.
+Одинаковый ключ ожидающей правки с другим содержимым даёт 422, без ключа — 400,
+неизвестный член — 404, отсутствующая очередь — 503. Ответ не утверждает, что
+единица уже создана/обновлена; результат консоли приходит как Outcome.
 
-## `class ConsoleAPI(directory, consoles, verifier=None, pending=None, last_known=None)`
-- `update_unit(ref, fields, idempotency_key, token=None, sub=None)` — the same key is the same PUT; placement and secret fields refused (a password is set in the unit's own cluster: the domain keeps, backs up and relays its edits); with `sub` (the route's subsystem) whose spec says `domain.edit`, any other field refused 400 naming the fields and the list, before the member is asked or the edit kept (ADR-0031; no `edit` — the member's console decides); found → forwarded; not found because its cluster is silent and the domain last saw it there → KEPT (`pending.PendingEdits`, Lesson 9) and 202; not found in a complete answer → 404; incomplete → 503.
-- `create_unit(fields, cluster, idempotency_key, token=None)` — to the cluster the placement chose; the same refusals.
+update_unit по доменному ref разрешает члена и его локальный id из каталога или
+последнего вида. Не подставляет доменный ref вместо числового id члена. Подсистема
+обязательна: обновление без имени не обходит domain.edit. create_unit — явный POST;
+«создать обновлением» нет. Секреты задаются в консоли собственного кластера.
+
+Агент члена выполняет сохранённую операцию через собственную подписанную консоль,
+с прежним ключом. Маскирование результата — said; `pending.py` хранит исход и
+снимает ожидание. Предыдущая форма fields{old,new}, слияние полей, пересылка
+человеческого subject и прямой вызов консоли из домена отсутствуют.
+
+Неявный владелец берётся из текущего каталога вместе с локальным id. Полная
+текущая пустота — 404, спор владельцев — 409; last_known допустим только при
+недоступности именно прежнего владельца. Нельзя выбрать старого владельца из-за
+молчания другого кластера или подставить строку иной подсистемы. Прежний callback
+consoles удалён из конструктора и всех вызывающих мест.

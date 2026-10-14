@@ -42,7 +42,7 @@ def test_the_domains_console_refuses_a_body_that_is_no_json_with_its_fault():
     fed, devices, root, holder, agents, _ = _site(wall)
     set_domain_grants(holder.vars, [Grant("anna", "admin", None, 0.0)], wall())
     may = lambda cap: (lambda s: domain_may(holder.vars, s, cap, wall()))         # noqa: E731
-    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None,
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed),
                   verifier=lambda t: t), refresh_interval=60, members=Members(holder.vars, wall),
                   admin=may("admin"), viewer=may("view"), holder_objects=devices["cam-SN0"].disk_door())
     srv = con.serve(port=0)

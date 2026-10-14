@@ -589,19 +589,21 @@ class TracedVars:
         self._rec("GET", f"/v1/list?prefix={prefix}", None, 200, {"keys": keys})
         return keys
 
-    def put(self, path, items, cas=None):
+    def put(self, path, items, cas=None, *, guard=None):
         from w2cplatform.variables import Conflict
         body = {"op": "put", "key": path, "cas": "" if cas is None else cas, "items": items}
+        if guard is not None:
+            body["guard"] = guard
         try:
-            idx = self.inner.put(path, items, cas)
+            idx = self.inner.put(path, items, cas, guard=guard)
         except Conflict as e:
             self._rec("POST", "/v1/write", body, 409, {"error": str(e)})
             raise
         self._rec("POST", "/v1/write", body, 200, {"index": idx})
         return idx
 
-    def delete(self, path, cas=None):
-        idx = self.inner.delete(path, cas) if cas is not None else self.inner.delete(path)
+    def delete(self, path, cas=None, *, guard=None):
+        idx = self.inner.delete(path, cas, guard=guard)
         self._rec("POST", "/v1/write", {"op": "delete", "key": path}, 200, {"index": idx})
         return idx
 

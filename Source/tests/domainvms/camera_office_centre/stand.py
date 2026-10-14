@@ -25,6 +25,7 @@ this process and printed as the product's request, marked (`tracing.TracedIngest
 """
 from __future__ import annotations
 
+from tests.member_console import device_console, admit_fixtures
 import json
 import os
 import tempfile
@@ -409,7 +410,7 @@ class Site:
         def consoles(cluster: str):
             raise Unreachable(f"{cluster} is reached only by its own agent; the edit waits for its next pass")
         pending = PendingEdits(fed.domain_holder.vars, self.wall)
-        api = ConsoleAPI(directory, consoles, verifier=lambda t: person(t)["sub"], pending=pending,
+        api = ConsoleAPI(directory, verifier=lambda t: person(t)["sub"], pending=pending,
                          last_known=view.last_known)
         hv, ho = fed.domain_holder.vars, fed.domain_holder.objects
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
@@ -444,7 +445,7 @@ class Site:
         from w2cplatform.domain.topology import Topology
         from w2cplatform.domain.uplink import _CopyObjects
         from vms.domainpart.books import Books
-        from vms.domainpart.crossing import Crossings
+        from vms.domainpart.inputs import BookInputs
         from vms.domainpart.worker import DomainPartWorker
         srv = self.cluster("srv")
         who = "camdomain on srv"
@@ -455,9 +456,9 @@ class Site:
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         issuer = TokenDoor(self.tokens_socket, transport=self.log.transport_http(
             who, "the signer's token socket /run/w2c-signer/tokens.sock", unix_transport(self.tokens_socket)))
-        self.crossings = Crossings(holder.vars, view, wall=self.wall, issuer=issuer, topology=Topology(holder.vars),
+        self.inputs = BookInputs(holder.vars, view, wall=self.wall, issuer=issuer, topology=Topology(holder.vars),
                                    sealer=self.ring("srv"))
-        books = Books(self.crossings, holder.objects,
+        books = Books(self.inputs, holder.objects,
                       members=Members(holder.vars, wall=self.wall, configured=lambda: configured, domain="srv"))
         self.domainpart = DomainPartWorker(books, holder.vars, holder.objects, instance="srv:1201:0004b1", wall=self.wall)
 
@@ -471,7 +472,7 @@ class Site:
 
     # -- the agents ---------------------------------------------------------------------------------------------------------
     def holder_agent(self):
-        """`agent.main` on srv: `DOMAIN_CONFIG_URL` — the holder's own agent reads its own store, no door, no report — and
+        """`agent.main` on srv: `DOMAIN_CONFIG_URL` — the holder's own agent reads its own store and sends the same signed report as every member — and
         `CLUSTERS` with the consoles it follows the holder by, as every member's agent (N12): the record of a larger term
         it carries home is how the holder learns it was replaced, and from then on it carries through the new door."""
         from w2cplatform.domain.agent import DomainAgent, HolderFollower, ask_held
@@ -490,6 +491,8 @@ class Site:
             return ask_held(self.doors[f"console {n}"])
         named = [e.split("=", 1)[0] for e in self.clusters_line().split(",") if "=" in e]   # `consoles_from_env`
         agent = DomainAgent("srv", srv.door("domainagent", who), own, now=self.wall,
+                            domain_objects=srv.objects_on("srv", own, who),
+                            published=srv.objects_on("srv", own, who),
                             reaches=lambda: CLUSTERS["srv"][0].split(","), own_objects=srv.objects_on("srv", own, who),
                             sealer=sealer, key=key, follow=HolderFollower({n: (lambda n=n: ask(n)) for n in named}),
                             open_door=lambda rec: (CarryClient(rec["url"], "srv", key, wall=self.wall), None)
@@ -586,7 +589,7 @@ class Site:
                                f"у продукта POST /api/member/{name} в дверь ретранслятора ({office}:{PORTS['relay door']})",
                                site=self, box=office)
         agent = DomainAgent(name, CarryClient(self.doors[f"relay door {office}"], name, key, wall=self.wall), own,
-                            now=self.wall, console=cam.local_console(), current=cam.current,
+                            now=self.wall, console=device_console(cam),
                             domain_objects=relay_objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             cluster_objects=cam.disk, pages=lambda: pages(Card("rec", cam.events), self.wall()),
                             alarm_waiting=Card("rec", cam.events).waiting,
@@ -765,6 +768,23 @@ class Site:
         return self._gateway
 
     # -- a camera boots ------------------------------------------------------------------------------------------------------
+    def role_requests(self, name, role="camworker"):
+        """The worker's real private socket; the member key stays in the agent."""
+        from w2cplatform.console import Bounds, UnixConsoleServer
+        from w2cplatform.domain.tokenrequest import WorkerTokenDoor, local_handler
+        key = (name, role)
+        doors = getattr(self, "_role_token_doors", None)
+        if doors is None:
+            self._role_token_doors = doors = {}
+        if key not in doors:
+            import tempfile
+            import threading
+            path = os.path.join(tempfile.mkdtemp(prefix="role-token-"), "tokens.sock")
+            server = UnixConsoleServer(path, local_handler(self.agents[name], role), Bounds())
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            doors[key] = WorkerTokenDoor(path)
+        return doors[key]
+
     def boot(self, name: str, card_bytes: int = 64 << 20) -> None:
         """The camera's process at its start, as the course builds it (`tests/domainvms/test_lesson16_card._camera_process`;
         the product's `vmscam`): the boot (`DeviceCluster.boot`: epoch, row, publish, door), its card declared as a volume
@@ -814,7 +834,7 @@ class Site:
                                         f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
         pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec,
-                                perform=cam.perform)
+                                perform=cam.perform, token_requests=self.role_requests(name))
         pusher.sealer = self.ring(name)
         cam.ring, cam.act, cam.rec, cam.pusher, cam.frames, cam.started = ring, act, rec, pusher, 0, self.wall()
 
@@ -842,7 +862,7 @@ class Site:
         old = cam.pusher
         dial = old.dial
         pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec,
-                                perform=cam.perform)
+                                perform=cam.perform, token_requests=self.role_requests(name))
         pusher.sealer = self.ring(name)
         cam.ring, cam.act, cam.rec, cam.pusher, cam.frames, cam.started = ring, act, rec, pusher, 0, self.wall()
 

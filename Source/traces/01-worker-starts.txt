@@ -18,11 +18,25 @@ GET /v1/get?key=cam/slots/w-srv-a-1
 POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
-  "released": "false",
+  "released": "true",
   "gen": "1",
   "server": "srv-a"
 }}
 → 200 {"index": 1004}
+
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "delete", "key": "cam/sources/w-srv-a-1", "cas": null, "guard": {"key": "cam/slots/w-srv-a-1", "index": 1004}}
+→ 200 {"index": 1005}
+
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1004, "items": {
+  "holder": "srv-a:4101:001005",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1",
+  "server": "srv-a"
+}}
+→ 200 {"index": 1006}
 
 # resource on srv-a → /run/configstore/resource.sock
 GET /v1/list?prefix=platform/doors/
@@ -35,3 +49,24 @@ GET /v1/get?key=platform/doors/srv-b
 # resource on srv-a → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-c
 → 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
+
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=domain/member
+→ 200 {"items": null, "index": ""}
+
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+GET /v1/get?key=cam/slots/w-srv-a-1
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101:001005",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1006
+}
+
+# camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
+POST /v1/write {"op": "put", "key": "cam/sources/w-srv-a-1", "cas": null, "items": {}, "guard": {"key": "cam/slots/w-srv-a-1", "index": 1006}}
+→ 200 {"index": 1007}

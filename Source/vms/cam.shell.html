@@ -54,12 +54,12 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
   auto spec's `then` accepts (`RACTIONS`, held to the spec by `tests/test_auto_spec.py`), the last firings.
 - The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
   — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
-  `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Пересечения» (`cam/crossings`).
+  `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Назначения записи» (`domain/placement/rec/`).
 - `addMenu("unit")` — «Смотреть видео», «Архив».
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks` (writes through `pc.api`), `/domain/cam/books/primaries`; the holders' doors from
+`/events`, `/marks` (writes through `pc.api`), `/domain/rec/books/primaries`; the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
@@ -138,25 +138,25 @@ pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.do
 const camById=id=>(UNITS.cam||[]).find(u=>String(u.id)===String(id))||null;
 const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"камера "+id};
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
-// The camera's recordings in the other clusters of the domain (ADR-0061): {cluster, id, home, backup} — read at their
-// cluster's console through this one (GET /domain/at/<cluster>/rec/where/…, `member_forward`), the bytes from the
-// holder's door. Where this console learns them: the book of primaries its own cluster carries (ADR-0010, 2026-10-06),
-// the same at a member and at the holder — GET /domain/cam/books/primaries: {<ref>: {recorded_by, recording, backups:
-// [{cluster, recording}]}}, the fields the spec lets show, never its tokens. The domain's state is not read for this.
-let PRIMARIES=null;
+// C2 observations shown by the receiving console: provenance and declared show fields only.
+let PRIMARIES=null,PLACEMENTS=null,assignmentHost=null;
 pc.on("refresh",async d=>{
   if(!(d&&"domain" in d))return;
-  try{const r=await fetch("/domain/cam/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
+  const get=async path=>{try{const r=await fetch(path);return r.ok?await r.json():null}catch(e){return null}};
+  [PRIMARIES,PLACEMENTS]=await Promise.all([get("/domain/rec/books/primaries"),get("/domain/placement")]);
+  if(assignmentHost&&assignmentHost.isConnected)renderAssignments(assignmentHost);
 });
 function farRecsOfCam(id){
-  const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref];if(!p)return[];
-  // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
+  const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref],marker=PRIMARIES&&PRIMARIES[""];
+  if(!p||!marker||!Array.isArray(marker.missing)||!Array.isArray(p.entries)||!Array.isArray(p.missing))return[];
   const own=new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
-  const add=(cluster,rec,backup)=>{if(!cluster||!rec)return;const k=cluster+"|"+rec;
-    if(own.has(String(rec))||seen.has(k))return;seen.add(k);
-    out.push({id:String(rec),cluster:String(cluster),home:"",backup,cam:String(id)})};
-  add(p.recorded_by,p.recording,false);
-  for(const x of Array.isArray(p.backups)?p.backups:[])if(x&&typeof x==="object")add(x.cluster,x.recording,true);
+  for(const e of p.entries){
+    if(!e||typeof e.member!=="string"||!e.member||typeof e.item!=="string"||!e.item||
+       typeof e.recording!=="string"||!e.recording||!["primary","backup","card"].includes(e.role)||
+       typeof e.running!=="boolean"||p.missing.includes(e.member))continue;
+    const key=e.member+"|"+e.recording;if(own.has(e.recording)||seen.has(key))continue;seen.add(key);
+    out.push({id:e.recording,cluster:e.member,home:"",backup:e.role!=="primary",cam:String(id)});
+  }
   return out;
 }
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
@@ -1103,15 +1103,14 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 
 // ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
 // The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
-// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`cam/crossings`:
+// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`domain/placement/rec/`:
 // for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
-// keys); this is the rest: a member's cameras and archives in the tree, their cards, the crossings. Read only: the
-// domain's edits go through its own door, not this console.
+// keys); this is the rest: a member's cameras and archives in the tree, their cards, recording assignments. Edits use the domain console's placement and queued CRUD routes.
 const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};
 const domUnits=(sub,cluster)=>((((domView&&domView.units)||{})[sub])||[]).filter(u=>cluster==null||u.cluster===cluster);
 const domKey=u=>u.cluster+"/"+u.unit;
 const domFind=(sub,key)=>domUnits(sub).find(u=>domKey(u)===key)||null;
-const crossings=()=>((domView&&domView.tables)||{})["cam/crossings"]||{};
+const assignments=()=>Object.fromEntries(Object.entries((PLACEMENTS&&PLACEMENTS.records)||{}).filter(([key])=>key.startsWith("rec/")).map(([key,row])=>[key.slice(4),row]));
 const domDot=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return[st[1]==="off"?"var(--rd)":st[1]==="wait"?"#f0c36a":"var(--gn)",st[0]]};
 const domBadge=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return`<span class="bd ${st[1]}">${esc(st[0])}</span>`};
 // a member's cameras, then its archives (the recordings it writes); a member of one camera stands as its camera, its
@@ -1123,16 +1122,50 @@ pc.addTreeNodes("member",ref=>{
   if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
   return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
 });
+async function domainRecording(camera,backup=false){
+  const ref=camera.ref;
+  if(!ref){pc.toast("Для записи нужно имя камеры в домене");return}
+  const route="/domain/placement/rec/"+encodeURIComponent(ref);
+  let old=null;
+  try{old=await pc.api("GET",route)}catch(e){if(e.status!==404){pc.toast("Назначение недоступно: "+e.message);return}}
+  if(backup&&!old){pc.toast("Сначала назначьте основную запись");return}
+  const members=((domView&&domView.members)||[]).filter(m=>!m.left&&!m.refused&&(!backup||m.name!==old.cluster));
+  if(!members.length){pc.toast("Нет кластера для этой записи");return}
+  const v=await pc.dialog(backup?"Резервная запись":"Основная запись",[
+    {name:"cluster",label:"Кластер",value:old&&!backup?old.cluster:"",options:members.map(m=>[m.name,m.name])},
+    {name:"days",label:"Хранить, дней",value:"30"},
+    {name:"home",label:"Том (необязательно)",value:""}],backup?"Добавить резерв":"Назначить и создать");
+  if(!v)return;
+  const days=Number(v.days);
+  if(!Number.isInteger(days)||days<1){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
+  if(!members.some(m=>m.name===v.cluster)||backup&&v.cluster===old.cluster){pc.toast("Выберите другой кластер для резерва");return}
+  const copies=backup?[...new Set([...(old.copies||[]),v.cluster])]:(old&&old.copies||[]).filter(n=>n!==v.cluster);
+  let removal="";
+  try{
+    await pc.api("PUT",route,{cluster:backup?old.cluster:v.cluster,origin:camera.cluster,copies});
+    if(!backup&&old&&old.cluster!==v.cluster){
+      try{await pc.api("DELETE","/domain/rec/recordings/"+encodeURIComponent(ref)+"?cluster="+encodeURIComponent(old.cluster))}
+      catch(e){removal=" Предыдущую запись удалить не удалось: "+e.message}
+    }
+    let queued=false;
+    try{const out=await pc.api("POST","/domain/rec/recordings",{cluster:v.cluster,name:ref,cam:"ref:"+ref,
+      retention_days:days,...(v.home?{home:v.home}:{})});queued=!!out.kept}
+    catch(e){if(e.status!==409)throw e}
+    PLACEMENTS=await pc.api("GET","/domain/placement");
+    if(assignmentHost)renderAssignments(assignmentHost);
+    pc.toast((queued?"Назначение сохранено; создание записи ожидает применения в ":"Запись назначена в ")+v.cluster+"."+removal);
+  }catch(e){pc.toast("Отказано: "+e.message+removal)}
+}
 function domCamCard(host,key){
   const u=domFind("cam",key);
   if(!u){host.innerHTML=`<h1>Нет такой камеры</h1>`;return}
-  const by=u.ref?crossings()[u.ref]:"";
+  const by=u.ref?((assignments()[u.ref]||{}).cluster||""):"";
   host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>${esc(u.name||u.ref||u.unit)}</h1>
     <p class="sub pc-hdsub">камера ${esc(u.ref||"—")} кластера ${esc(u.cluster)}</p>`+
     card("Камера",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${esc(u.as_of||"")}</span>
-      <div class="g" style="margin-top:10px">${fldRo("Имя в домене (ref)",u.ref||"—")}${fldRo("Номер в кластере",u.unit)}${fldRo("Воркер",u.worker||"—")}${fldRo("Сервер",u.server||"—")}${fldRo("Пишет кластер",by||"—")}</div>`)+
+      <div class="g" style="margin-top:10px">${fldRo("Имя в домене (ref)",u.ref||"—")}${fldRo("Номер в кластере",u.unit)}${fldRo("Воркер",u.worker||"—")}${fldRo("Сервер",u.server||"—")}${fldRo("Пишет кластер",by||"—")}</div>${u.ref?`<div class="vrow"><button type="button" class="btn s" data-act="domainRecord">Назначить запись</button><button type="button" class="btn s" data-act="domainBackup">Добавить резерв</button></div>`:""}`)+
     card("Записи кластера",domUnits("rec",u.cluster).map(a=>`<div class="it" data-act="arc" data-key="${esc(domKey(a))}"><span>${pc.icon("storage")}</span><span>${esc(a.name||a.unit)}<small>${esc(a.worker||"—")} · ${esc(a.server||"—")}</small></span>${domBadge(a)}</div>`).join("")||`<p class="sub">Кластер не пишет ни одной записи — по последнему ответу.</p>`);
-  wire(host,{arc:el=>pc.select("da:"+el.dataset.key)});
+  wire(host,{arc:el=>pc.select("da:"+el.dataset.key),domainRecord:()=>domainRecording(u),domainBackup:()=>domainRecording(u,true)});
 }
 function domArcCard(host,key){
   const u=domFind("rec",key);
@@ -1147,19 +1180,20 @@ pc.addCard("dc",(host,ref)=>domCamCard(host,ref.slice(3)));
 pc.addCard("da",(host,ref)=>domArcCard(host,ref.slice(3)));
 // the member's VMS part only: its cameras and its archives; the cluster itself — networks, leaving — is the module's
 pc.addBlock("member",{id:"cam",render:(host,ref)=>{
-  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="cam"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="cam"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="cam"&&u.ref&&crossings()[u.ref]?" · пишет кластер "+esc(crossings()[u.ref]):""}</small></span>${domBadge(u)}</div>`;
+  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="cam"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="cam"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="cam"&&u.ref&&(assignments()[u.ref]||{}).cluster?" · пишет кластер "+esc((assignments()[u.ref]||{}).cluster):""}</small></span>${domBadge(u)}</div>`;
   host.innerHTML=card("Камеры",domUnits("cam",name).map(row).join("")||`<p class="sub">Камер нет — по последнему ответу кластера.</p>`)+
     card("Архивы",domUnits("rec",name).map(row).join("")||`<p class="sub">Записей нет — по последнему ответу кластера.</p>`);
   wire(host,{go:el=>pc.select(el.dataset.ref)});
 }});
-// on the domain's overview: the crossings — a camera of one cluster recorded by another
-pc.addBlock("domain",{id:"cam",render:host=>{
-  const x=Object.entries(crossings());
+// Operator assignments are read from the platform's typed route.
+function renderAssignments(host){
   if(!domView){host.innerHTML="";return}
-  const nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
-  host.innerHTML=card("Пересечения",x.length?`<table><tr><th>Камера</th><th>Пишет кластер</th></tr>${x.map(([ref,cl])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(cl)}</td></tr>`).join("")}</table>`
-    :`<p class="sub">Пересечений нет: каждую камеру пишет её собственный кластер.</p>`);
-}});
+  if(!PLACEMENTS){host.innerHTML=card("Назначения записи",`<p class="sub">Назначения сейчас недоступны.</p>`);return}
+  const rows=Object.entries(assignments()),nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
+  host.innerHTML=card("Назначения записи",rows.length?`<table><tr><th>Камера</th><th>Основной</th><th>Резервы</th></tr>${rows.map(([ref,row])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(row.cluster)}</td><td>${esc((row.copies||[]).join(", ")||"—")}</td></tr>`).join("")}</table>`
+    :`<p class="sub">Назначений нет.</p>`);
+}
+pc.addBlock("domain",{id:"cam",render:host=>{assignmentHost=host;renderAssignments(host)}});
 
 // The camera's menu: watch it, its archive (the tabs above).
 pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>{pc.select(ref);goTab("vid")}},...(recOn?[{label:"Архив",run:()=>{pc.select(ref);goTab("rec")}}]:[])]:[]);

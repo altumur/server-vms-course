@@ -5,7 +5,7 @@ not its state: which member reaches the domain only through a relay (`via`), whi
 to and take their members' data from the centre (`star`), and which cluster is the centre. They lived in the
 environment of three different jobs (`name=report@relay`, RELAY_MEMBERS, CENTRE/STAR). Now they live here,
 in the domain holder, edited by CAS and checked when written — and every pass reads them from here: the
-books (`Crossings`), the relay's copying down and its bundle (its agent), the domain's copy of each member (`apply`).
+books, the relay's copying down and its bundle (its agent), the domain's copy of each member (`apply`).
 
 What a cluster CAN observe — the networks it sees — is not here: it says that itself (`federation.REACHES`).
 
@@ -107,3 +107,19 @@ def apply(fed, topology: Topology, domain_objects, lost_after: float = 45.0, wal
                                              wall=wall or time.time, via=want)
             moved.append(name)
     return moved
+
+
+def member_topology(vars_, member):
+    """The topology at the current holder or its carried member copy (ADR-0074)."""
+    from .memberbook import holds
+    key = TOPOLOGY if holds(vars_, member) else "domain/member-topology"
+    items, _ = vars_.get(key)
+    doc = json.loads(items["doc"]) if items and items.get("doc") else {}
+    if not isinstance(doc, dict):
+        raise ValueError("invalid topology")
+    result = {"rev": doc.get("rev", 0), "centre": doc.get("centre"),
+              "star": doc.get("star", []), "via": doc.get("via", {})}
+    if type(result["rev"]) is not int or result["rev"] < 0 or not isinstance(result["star"], list) or not isinstance(result["via"], dict) \
+            or refusals(result):
+        raise ValueError("invalid topology")
+    return result

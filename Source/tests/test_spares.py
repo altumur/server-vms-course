@@ -100,11 +100,11 @@ def test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_wait
         def __getattr__(self, name):
             return getattr(box.vars, name)
 
-        def put(self, key, items, cas=None):
+        def put(self, key, items, cas=None, *, guard=None):
             if key.startswith("cam/slots/") and not self.waited:
                 self.waited = True
                 both_read.wait(5)
-            return box.vars.put(key, items, cas=cas)
+            return box.vars.put(key, items, cas=cas, guard=guard)
 
     spares = [None, None]
 
