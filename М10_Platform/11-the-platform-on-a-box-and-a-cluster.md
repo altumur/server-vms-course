@@ -130,7 +130,7 @@ leader_wait: 5 с от потери лидера (не на запрос) → 50
 sockets:   admin.sock 0600 (root; всё кроме never урока 6; не пересылается); <роль>.sock 0660 группа роли;
            заголовок роли на сокете роли → 403; пересылке лидеру верят только от голосующего демона
 door:      -door -id -voters a@h:p,…: без голоса; те же сокеты и права; к лидеру или любому голосующему (попытка 2 с, запас 1 с);
-           состав группы — каждые 5 с; строка platform/doors/configstore/<id> {seen_at} каждые 30 с; считается в
+           состав группы — каждые 5 с; строка platform/configstore-doors/<id> {seen_at} каждые 30 с (не под platform/doors/ — там двери серверов, урок 4); считается в
            configstore_doors; все голосующие недоступны → 503 unavailable; join/leave не делает
 admin_ops: status | join [-force] | leave [id] | admit <id> | backup <файл> (0600, tmp + rename) | restore --from [-force]
            | import --from file://… [-index-base N] [-force] | recover -id -dir -peers … [-force] | rights [-groups]
