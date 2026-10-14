@@ -31,7 +31,7 @@
     "reason": "product pause; exact secret reader platform list is course-first"
   },
   "product_changed": false,
-  "merged": false,
+  "merged": true,
   "previous_full_snapshot": {
     "source_commit": "47967d2e83ad97db8c47d0826373094c0a637e33",
     "source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6-final-source.json",
@@ -116,5 +116,6 @@
       }
     ]
   },
-  "approval": "01b13f8b; implementation e7dac1a9, extra test-only wording 8a6b3ee3"
+  "approval": "01b13f8b; implementation e7dac1a9, extra test-only wording 8a6b3ee3",
+  "merge_commit": "d6ef95cd"
 }
