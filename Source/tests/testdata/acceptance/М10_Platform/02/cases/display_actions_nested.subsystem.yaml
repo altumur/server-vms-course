@@ -23,6 +23,7 @@ requests:
 snapshot: [name, start]
 display:
   unit: counter
+  actions: {pulse: {x: 1}}
   units: counters
   fields: {name: Name, start: Start}
   options:

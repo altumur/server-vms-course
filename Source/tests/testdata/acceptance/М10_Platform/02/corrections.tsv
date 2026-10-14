@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-14	cases/*.subsystem.yaml, testsub2.subsystem.yaml	снят display.actions из всех случаев и из общей testsub2 (ключ снят уроком 9, загрузчик обязан отказать); ревью спецификации R4-03	all
+2026-10-14	cases/display_actions_nested.subsystem.yaml	строка display.actions возвращена: случай отрицательный, снятый ключ и есть причина refused (излишне снято при R4-03); находка «Сборки»	all
