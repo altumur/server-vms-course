@@ -115,7 +115,8 @@ platform_readers:                            # общая таблица platfor
   domain/member-key:   [domainagent, console, domain]
   domain/backup:       [console, domain, domainagent]
   door/signer:         []                    # читателя называет спека (cam: [console])
-rule:      самый длинный совпавший префикс решает; строка без читателя не читается никем, кроме admin;
+rule:      ключ с `/` на конце — префикс, без него — точный ключ (`domain/backup` не закрывает `domain/backups/*`);
+           самый длинный совпавший решает; строка без читателя не читается никем, кроме admin;
            файл прав не генерируется, если читатели ≠ способные прочесть (урок 6)
 ```
 

@@ -33,10 +33,10 @@ scenario	step	request	expect
 06-list-without-read	2	@as testsub2worker GET /v1/list?prefix=testsub/idem/	200 {"keys": {"testsub/idem/k6": "$v"}}
 06-list-without-read	3	GET /v1/get?key=testsub/idem/k6	403
 06-list-without-read	4	@as testsub2worker GET /v1/get?key=door/signer	403
-07-guard-needs-read	1	@as testsubworker POST /v1/write {"id":"g1","op":"put","key":"testsub/slots/w-7","items":{"holder":"box:1:bbbbbb","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
-07-guard-needs-read	2	POST /v1/write {"id":"g2","op":"put","key":"testsub/holds/p7","items":{"holder":"box:1:bbbbbb","until":"9999999999","released":"false","gen":"1","by":"w-7"},"guard":{"key":"testsub/slots/w-7","index":"$s"}}	200
-07-guard-needs-read	3	@as testsub2worker POST /v1/write {"id":"g3","op":"put","key":"testsub2/holds/p7","items":{"holder":"box:1:cccccc","until":"9999999999","released":"false","gen":"1","by":"t-1"},"guard":{"key":"testsub/idem/k6","index":""}}	403
-08-role-header	1	@as testsubworker @header X-Configstore-Role: console POST /v1/write {"id":"h1","op":"put","key":"testsub/counters/c8","items":{"id":"c8","revision":"1","name":"c8"}}	403
+07-guard-needs-read	1	@as testsubworker POST /v1/write {"id":"a7","op":"put","key":"testsub/slots/w-7","items":{"holder":"box:1:bbbbbb","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
+07-guard-needs-read	2	POST /v1/write {"id":"a8","op":"put","key":"testsub/holds/p7","items":{"holder":"box:1:bbbbbb","until":"9999999999","released":"false","gen":"1","by":"w-7"},"guard":{"key":"testsub/slots/w-7","index":"$s"}}	200
+07-guard-needs-read	3	@as testsub2worker POST /v1/write {"id":"a9","op":"put","key":"testsub2/holds/p7","items":{"holder":"box:1:cccccc","until":"9999999999","released":"false","gen":"1","by":"t-1"},"guard":{"key":"testsub/idem/k6","index":""}}	403
+08-role-header	1	@as testsubworker @header X-Configstore-Role: console POST /v1/write {"id":"b9","op":"put","key":"testsub/counters/c8","items":{"id":"c8","revision":"1","name":"c8"}}	403
 09-secret-readers	1	@as console GET /v1/get?key=door/signer	200
 09-secret-readers	2	@as testsubworker GET /v1/get?key=door/signer	403
 09-secret-readers	3	@as testsubcontroller GET /v1/get?key=door/signer	403
