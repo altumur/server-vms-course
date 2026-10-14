@@ -373,7 +373,7 @@ display:
 # it by the member it is (its stream token's subject), so the domain matches a silent member by its own name.
 domain:
   books:
-    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role]}
+    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
     upstream: {from: rec/upstream/, key: ref, pick: unique, to: to}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
   tokens:
