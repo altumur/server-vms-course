@@ -184,12 +184,12 @@ holds:      раздел спеки (урок 2 Н1.2), закрытый: {table
             не помечена полем released или не прошло longest секунд; читает ресурс (урок 6 Н1.4)
 mark:       objects/<sub>/commands/<rid>      # строка-объект, создание-однажды
   begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова; digest — sha256 канонического JSON (JCS) тела клиента
-             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — элемент `digest` строки просьбы (Н1.4); им сравнивают повторы
+             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — элемент `digest` строки просьбы (Н1.5, форма строки выше); им сравнивают повторы
   answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
   no_begun:  {unit, digest, outcome: expired | refused, ended_by: reaper | holder, ended_at}   # метка без begun (срок вышел, отказ до вызова):
              # digest и unit переносятся из строки просьбы — повтор после удаления строки сравнивает digest и здесь
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
-  ended_by:  reaper                                                        # у expired/unknown от жнеца
+  ended_by:  reaper | holder                                               # reaper — у expired/unknown, поставленных жнецом; holder — у expired/refused, поставленных держателем до вызова (no_begun); у answer с исходом держателя поля нет
   kept:      до valid_until (или конца) + max(60, ttl)
 constants:
   PERFORM_TIMEOUT: 10; PERFORM_GRACE: 0.2; REQUESTS_HOLD: 0.5; COMMANDS_PER_LOOK: 200
@@ -333,7 +333,8 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
    поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
    valid_for ≤ most_valid (длительности, проверено загрузчиком); valid_until = now + valid_for; valid_until из тела клиента —
    не позже now + most_valid, иначе 400 too far, и тогда он и есть срок
-2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
+2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest и у метки есть исход (answer или
+   no_begun) → 200 answered; тот же digest, но только begun без исхода (исполняется) → 202 {queued: rid}; учёт и строку не трогать;
    иной digest → 409 spent
 3. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор ждущей, учёт не меняется; иначе len(rids) ≥ per_person
    → 429; иначе rids + rid
