@@ -200,17 +200,17 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
     holder and carried home, each kept row, the worker's slot); and every family has its words."""
     from vms.config import SPEC
     from vms import forwarder as chain, ingest
-    from vms.domainpart import inputs, keys, worker
+    from vms import recording_sources, recording_publication
     wall = Clock(1000.0)
     fed, a, b, cam, door, member_keys, rings, pusher, q, signer = _site(wall)
     written = [k for store in (b.vars, a.vars, cam.flash) for k in store.list(SPEC.domain_prefix)]
     assert written
-    named = [getattr(m, n) for m in (keys, worker, inputs, chain, ingest) for n in dir(m)
+    named = [getattr(m, n) for m in (recording_sources, recording_publication, chain, ingest) for n in dir(m)
              if (n.endswith("_PATH") or n in ("SLOT",)) and isinstance(getattr(m, n), str)
              and getattr(m, n).startswith(SPEC.domain_prefix)]
     named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
     assert chain.UPSTREAM_PATH == "domain/rec/upstream"
-    assert not hasattr(keys, "ASKS_PATH") and not hasattr(worker, "SLOT")
+    assert set(SPEC.domain.books) == {"sources"} and not SPEC.domain.kept
     stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
     assert not stray, f"keys in no declared family: {stray}"
     assert sorted(SPEC.display["keys"]) == sorted(f["id"] for f in SPEC.domain.keys)
