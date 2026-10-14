@@ -63,45 +63,52 @@ def members(vars_, member):
 
 
 def aggregate(vars_, key):
-    """Union recipient rows at the holder, deduplicating by immutable observation origin.
+    """The holder displays every recipient row; the collection pass owns membership.
 
-    Conflicting observations or a torn envelope cannot become a plausible display.
-    A recipient's absent row adds no facts; missing markers remain conservative.
+    First observation of an origin wins, unreadable keys are skipped. This door
+    neither adjudicates collection conflicts nor writes while serving a GET.
     """
     from .booknames import _parse
-    from w2cplatform.trust.jcs import jcs
+    from w2cplatform.rows import PARSE_ERRORS
     missing, values = set(), {}
-    for path in vars_.list(key + "/"):
-        if "/" in path[len(key) + 1:]:
+    for path in sorted(vars_.list(key + '/')):
+        if '/' in path[len(key) + 1:]:
             continue
-        items, _ = vars_.get(path)
-        if not isinstance(items, dict) or "" not in items:
-            raise ValueError("collected book has no marker")
-        marker = _parse(items[""])
-        if not isinstance(marker, dict) or set(marker) != {"missing"}:
-            raise ValueError("invalid collected book marker")
-        absent = marker["missing"]
-        if not isinstance(absent, list) or any(not isinstance(n, str) or not n for n in absent):
-            raise ValueError("invalid collected book missing members")
-        missing.update(absent)
-        for item, raw in items.items():
-            if item == "":
+        try:
+            items, _ = vars_.get(path)
+            if not isinstance(items, dict):
                 continue
-            envelope = _parse(raw)
-            if not isinstance(envelope, dict) or set(envelope) != {"entries", "missing"}                     or envelope["missing"] != absent or not isinstance(envelope["entries"], list):
-                raise ValueError("inconsistent collected book envelope")
+        except PARSE_ERRORS:
+            continue
+        for item, raw in sorted(items.items()):
+            try:
+                envelope = _parse(raw)
+                if not isinstance(envelope, dict):
+                    raise ValueError('invalid book object')
+                absent = envelope.get('missing')
+                if not isinstance(absent, list) or any(not isinstance(n, str) or not n for n in absent):
+                    raise ValueError('invalid missing members')
+                if item == '':
+                    if set(envelope) != {'missing'}:
+                        raise ValueError('invalid book marker')
+                    missing.update(absent)
+                    continue
+                if set(envelope) != {'entries', 'missing'} or not isinstance(envelope['entries'], list):
+                    raise ValueError('invalid book envelope')
+                entries = envelope['entries']
+                for entry in entries:
+                    if (not isinstance(entry, dict) or set(entry) != {'member', 'item', 'value'} or
+                            any(not isinstance(entry[f], str) or not entry[f] for f in ('member', 'item')) or
+                            not isinstance(entry['value'], dict)):
+                        raise ValueError('invalid book origin')
+            except PARSE_ERRORS:
+                continue
+            missing.update(absent)
             bucket = values.setdefault(item, {})
-            local = set()
-            for entry in envelope["entries"]:
-                if not isinstance(entry, dict) or set(entry) != {"member", "item", "value"}                         or any(not isinstance(entry[f], str) or not entry[f] for f in ("member", "item"))                         or not isinstance(entry["value"], dict):
-                    raise ValueError("invalid collected book origin")
-                origin = entry["member"], entry["item"]
-                if origin in local or origin in bucket and jcs(bucket[origin]) != jcs(entry):
-                    raise ValueError("conflicting collected book origin")
-                local.add(origin)
-                bucket[origin] = entry
-    marker = {"missing": sorted(missing)}
-    out = {"": json.dumps(marker)}
-    out.update({item: json.dumps({"entries": [bucket[k] for k in sorted(bucket)], **marker})
+            for entry in entries:
+                bucket.setdefault((entry['member'], entry['item']), entry)
+    marker = {'missing': sorted(missing)}
+    out = {'': json.dumps(marker)}
+    out.update({item: json.dumps({'entries': [bucket[k] for k in sorted(bucket)], **marker})
                 for item, bucket in sorted(values.items())})
     return out
