@@ -174,6 +174,7 @@ paths:
     get:  {responses: {"200": {description: "{<t>: [строка без секретов, адреса с маской, held_by? , garbled?]}"}}}
     post:
       parameters: [{name: Idempotency-Key, in: header, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, description: поля таблицы по Н1 (ключ обязателен; типы и умолчания — tables.<t>.fields)}}}}
       responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {description: тело больше предела}, "403": {description: нет права admin}, "503": {description: store unavailable}}
   /{table}/{name}:
     parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: name, in: path, required: true, schema: {type: string}}]
@@ -324,7 +325,7 @@ safe = Σ units == 0 ∧ Σ pending == 0 ∧ unsaid пуст
 ## Чеклист готовности
 
 - [ ] **М10/10-01** строка схемы, проверка при старте и при продлении слота, подъём только оператором, вверх, при всех живых ≥ N — сц. 01; стенд урока 11
-- [ ] **М10/10-02** `/schema` GET/PUT по Н2, журнал `schema.raised` — сц. 01 (400 на не целое); откат положительной версии — 409, проверяется чтением (стенд со сборкой схемы 1 выше поднять не может)
+- [ ] **М10/10-02** `/schema` GET/PUT по Н2 — сц. 01 (400 на не целое); журнал `schema.raised` — проверяется чтением (дерево журнала `audit` — приёмка урока 8, здесь события не читаются); откат положительной версии — 409, проверяется чтением (стенд со сборкой схемы 1 выше поднять не может)
 - [ ] **М10/10-03** дренаж: `safe` по Н1.2, `pending_unsaid` делает небезопасным, `would_strand` — проба — сц. 02; рекордер — чтением
 - [ ] **М10/10-04** снимок: шарды по воркеру, содержимое Н1.3, пустые шарды, `unplaced`, маска, после прохода — сц. 03; чтением
 - [ ] **М10/10-05** возраст снимка по часам читателя, `-1`, опережение — чтением
