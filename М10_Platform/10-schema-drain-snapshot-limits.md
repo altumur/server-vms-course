@@ -131,7 +131,8 @@ tables:                                   # спека (форма — урок 
     journal:  {written: <вид>, deleted: <вид>}    # умолчание <t>.written / <t>.deleted
   list_form:  tables: [<t>] — только имя семьи для прав консоли; дверей нет
 names:      не rows, policy, slots, holds, epoch, idem, requests, asked, servers, decommissioned; не CONSOLE_ROUTES
-rows:       <sub>/<t>/<имя>; писатель — консоль (и worker.writes воркера, урок 6); секреты запечатаны (урок 7)
+rows:       <sub>/<t>/<имя>; писатель — консоль; таблица из worker.writes (урок 6) — таблица воркера: он пишет строку целиком с cas,
+            консоль только читает (GET с полями), POST/PUT/DELETE → 403 denied «written by its worker»; секреты запечатаны (урок 7)
 held_by:    у таблицы мест (placement.places.table) GET дописывает held_by: <воркер> | null
 rights:     чтение view, запись admin, ниже — по rights.routes; rights.unit_of фильтрует строки и гранты (урок 6)
 ```
