@@ -73,7 +73,7 @@ box_instance = runtime.instance_on_box
 
 
 # What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13): the VMS's book
-# under the prefix the platform gives it (`vms.domainpart.keys`); and where the agent says when it last reached the
+# under the prefix the platform gives it (`w2cplatform.domain.memberbook`); and where the agent says when it last reached the
 # domain — the platform's own mark (`w2cplatform.domain.agent.DOMAIN_SEEN`). The recorder reads; the agent writes.
 from w2cplatform.domain.memberbook import read as member_book
 
