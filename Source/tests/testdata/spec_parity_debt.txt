@@ -16,6 +16,4 @@ product-only cam.subsystem.yaml unit.fields.weight.type   # ADR-0078 «прод�
 product-only cam.subsystem.yaml unit.fields.weight.default   # ADR-0078 «продукт»: вес единицы под placement — курс зеркалит задачей — «Сборка»
 product-only rec.subsystem.yaml metrics[put_timeouts_total]   # ADR-0077 «продукт»: puts past the archive writer's budget (storagewrapper.PutMediaTimeout), counted as drops — the course counts none — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[peer_url]   # ADR-0075 «продукт»: дверь рекордера между процессами (окно 2) — курс её не держит — «Сборка»
-product-only rec.subsystem.yaml unit.fields.retention_days.minimum   # ADR-0074 «продукт»: окно C7 — дверь домена проверяет значения правки: retention_days не меньше дня — курс догоняет — «Сборка»
-product-only rec.subsystem.yaml unit.fields.retention_days.schema   # ADR-0074 «продукт»: окно C7 — дверь домена проверяет значения правки: retention_days не меньше дня — курс догоняет — «Сборка»
 course-only auto.subsystem.yaml worker.reads[domain/shared]   # ADR-0074 «курс»: точный указатель общего документа по 934a1bc5 — «Сборка»
