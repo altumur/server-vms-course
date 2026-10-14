@@ -60,3 +60,48 @@ def members(vars_, member):
         return tuple(sorted(doc["members"]))
     except PARSE_ERRORS:
         raise ValueError("the domain has no complete roster") from None
+
+
+def aggregate(vars_, key):
+    """Union recipient rows at the holder, deduplicating by immutable observation origin.
+
+    Conflicting observations or a torn envelope cannot become a plausible display.
+    A recipient's absent row adds no facts; missing markers remain conservative.
+    """
+    from .booknames import _parse
+    from w2cplatform.trust.jcs import jcs
+    missing, values = set(), {}
+    for path in vars_.list(key + "/"):
+        if "/" in path[len(key) + 1:]:
+            continue
+        items, _ = vars_.get(path)
+        if not isinstance(items, dict) or "" not in items:
+            raise ValueError("collected book has no marker")
+        marker = _parse(items[""])
+        if not isinstance(marker, dict) or set(marker) != {"missing"}:
+            raise ValueError("invalid collected book marker")
+        absent = marker["missing"]
+        if not isinstance(absent, list) or any(not isinstance(n, str) or not n for n in absent):
+            raise ValueError("invalid collected book missing members")
+        missing.update(absent)
+        for item, raw in items.items():
+            if item == "":
+                continue
+            envelope = _parse(raw)
+            if not isinstance(envelope, dict) or set(envelope) != {"entries", "missing"}                     or envelope["missing"] != absent or not isinstance(envelope["entries"], list):
+                raise ValueError("inconsistent collected book envelope")
+            bucket = values.setdefault(item, {})
+            local = set()
+            for entry in envelope["entries"]:
+                if not isinstance(entry, dict) or set(entry) != {"member", "item", "value"}                         or any(not isinstance(entry[f], str) or not entry[f] for f in ("member", "item"))                         or not isinstance(entry["value"], dict):
+                    raise ValueError("invalid collected book origin")
+                origin = entry["member"], entry["item"]
+                if origin in local or origin in bucket and jcs(bucket[origin]) != jcs(entry):
+                    raise ValueError("conflicting collected book origin")
+                local.add(origin)
+                bucket[origin] = entry
+    marker = {"missing": sorted(missing)}
+    out = {"": json.dumps(marker)}
+    out.update({item: json.dumps({"entries": [bucket[k] for k in sorted(bucket)], **marker})
+                for item, bucket in sorted(values.items())})
+    return out
