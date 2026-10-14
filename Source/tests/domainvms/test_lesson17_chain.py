@@ -1066,8 +1066,8 @@ def _restarted(east, wall, objects=None, dial=_gone):
 def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres_have():
     """The product first (`upkept.go`): the centre's `have` was in the relay's memory alone, and a relay restarted while the
     centre was unreachable told the camera its own `have` — the card let go of what the centre does not have. The
-    forwarder writes the centre's word down in a row of the relay's store (`rec/ingest/up/<ref>.json`, the product's key
-    and shape) — not on every answer: once when the centre starts wanting the stream, then at most once a minute while
+    forwarder writes the confirmed centre's name and word down in the relay's store (`rec/ingest/up/<ref>.json`,
+    ADR-0074) — not on every answer: once when the centre starts wanting the stream, then at most once a minute while
     its `have` moves (`UP_KEPT_EVERY`), at once when it goes back — and the restarted relay seeds `up_have` from it before
     its first pass."""
     from vms.domainpart.chain import UP_KEPT_EVERY, up_key
@@ -1079,7 +1079,7 @@ def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres
     centre.written = lambda ref: written[0]
     fwd.pass_once()
     row = json.loads(rows.get(up_key(SERIAL)))
-    assert row == {"v": 1, "have": int(written[0] * 1000), "heard": int(wall() * 1000)}, row
+    assert row == {"v": 2, "centre": "north", "have": int(written[0] * 1000), "heard": int(wall() * 1000)}, row
     for _ in range(30):                                                 # half a minute of `have` moving on: not written
         wall.advance(1.0); written[0] += 1.0
         fwd.pass_once()
@@ -1135,7 +1135,8 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     wall.advance(3 * UP_KEPT_FOR)
 
     def kept(age, have):
-        rows.put(up_key(SERIAL), json.dumps({"v": 1, "have": have, "heard": int((wall() - age) * 1000)}).encode())
+        rows.put(up_key(SERIAL), json.dumps({"v": 2, "centre": "north", "have": have,
+                                           "heard": int((wall() - age) * 1000)}).encode())
 
     kept(UP_KEPT_FOR + 1, 5_000)
     host = _restarted(east, wall)

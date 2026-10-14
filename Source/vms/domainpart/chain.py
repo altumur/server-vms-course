@@ -83,8 +83,8 @@ FORWARD_FRAMES = 300
 # was unreachable said nothing of it, and the camera took what the relay records as delivered — its card let go of what
 # the centre does not have. So the forwarder writes the centre's word down per camera in a ROW of this cluster's store
 # (`rec/ingest/up/<ref>.json`, rec.subsystem.yaml `objects.rows`: every recorder of the cluster reads the store, the next
-# writer may be on another box), `{"v": 1, "have": <archive ms, this relay's clock>, "every": <s>, "heard": <unix ms>}` —
-# `have` and `every` left out when there is none (the course's centre says no step: `every` is never written) — and the
+# writer may be on another box), `{"v": 2, "centre": <member>, "have": <archive ms>, "heard": <unix ms>}` —
+# `have` left out when there is none. Only the confirmed current centre's word can be restored (ADR-0074). The
 # restarted relay seeds `up_have` from it before its first pass. Not on every answer (one a second): when the centre
 # starts wanting the stream, when its `have` goes back, at most once per `UP_KEPT_EVERY` while it moves on, once per
 # `UP_KEPT_REFRESH` while it stands (so `heard` ages right after a restart). A centre that does not want the stream drops
@@ -115,12 +115,14 @@ def keep_ups(objects) -> tuple:
             objects.put(up_key(ref), data)
         except OSError as err:
             log.warning("forwarder: the centre's word on %s could not be kept; a restart of this relay forgets it: %s", ref, err)
+            raise
 
     def drop_up(ref):
         try:
             objects.delete(up_key(ref))
         except OSError as err:
             log.warning("forwarder: the centre's word on %s kept for a restart could not be dropped: %s", ref, err)
+            raise
     return load_up, save_up, drop_up
 
 
@@ -395,36 +397,52 @@ class Forwarder:
             except OSError as err:
                 self._failed(ref, f"reading the centre's word on {ref} kept for a restart", err)
                 continue
-            self._up_read.add(ref)
             if raw is None:
+                self._up_read.add(ref)
                 continue
             try:
                 k = json.loads(raw)
+                if not isinstance(k, dict) or set(k) not in ({"v", "centre", "heard"}, {"v", "centre", "heard", "have"}) \
+                        or type(k["v"]) is not int or k["v"] != 2 \
+                        or not isinstance(k["centre"], str) or not k["centre"] \
+                        or k["centre"] != e["_route"]["policy"][2] \
+                        or type(k["heard"]) is not int or k["heard"] <= 0 \
+                        or ("have" in k and (type(k["have"]) is not int or k["have"] < 0)):
+                    raise ValueError("invalid acknowledgement form or a different centre")
                 heard = finite(k["heard"]) / 1000.0
-                have = None if k.get("have") is None else finite(k["have"]) / 1000.0
-                if k.get("v") != 1 or heard <= 0:
-                    raise ValueError(f"v {k.get('v')!r}, heard {k.get('heard')!r}")
+                have = finite(k["have"]) / 1000.0 if "have" in k else None
             except PARSE_ERRORS as err:
                 log.warning("%s: the centre's word on %s kept for a restart does not read; dropped: %s", self.name, ref, err)
-                if self.drop_up is not None:
-                    self.drop_up(ref)
+                self._discard_up(ref)
                 continue
             silent = self.local.wall() - heard
             if silent > UP_KEPT_FOR:
-                self.up_expired[ref] = self.up_expired.get(ref, 0) + 1
                 log.warning("%s: the centre wanted %s and has said nothing for %.0f s, longer than it is kept (%.0f s); the "
                             "camera's card goes by this relay's word again", self.name, ref, silent, UP_KEPT_FOR)
-                if self.drop_up is not None:
-                    self.drop_up(ref)
+                if self._discard_up(ref):
+                    self.up_expired[ref] = self.up_expired.get(ref, 0) + 1
                 continue
+            if not self._current_route(ref, e["_route"]):
+                continue                                       # a held object read must not restore a withdrawn scope
+            self._up_read.add(ref)
             if have is not None:
                 self.local.up_have[ref] = have
             self.heard[ref] = heard
             self._up_kept[ref] = {"on": True, "have": None if have is None else round(have * 1000), "at": heard,
-                                  "seen": False}
+                                  "seen": False, "centre": k["centre"]}
             log.info("%s: the centre's word on %s, kept from before: up_have %s until the centre answers", self.name, ref, have)
 
-    def _keep_up(self, ref: str, push: bool, up: float | None) -> None:
+    def _discard_up(self, ref: str) -> bool:
+        try:
+            if self.drop_up is not None:
+                self.drop_up(ref)
+        except OSError as err:
+            self._failed(ref, f"dropping the centre's word on {ref} kept for a restart", err)
+            return False
+        self._up_read.add(ref)
+        return True
+
+    def _keep_up(self, ref: str, push: bool, up: float | None, centre: str) -> None:
         """Writes the centre's word down as it answered, when it changed enough to: the first answer that wants the
         stream, a `have` gone back at once, one moved on at most once per `UP_KEPT_EVERY`, one standing still once per
         `UP_KEPT_REFRESH`; an answer that does not want it drops the row (once — and the first answer of this process
@@ -442,12 +460,13 @@ class Forwarder:
         k["seen"] = True
         have = None if up is None else int(up * 1000)               # down to the ms: the card keeps more, never less
         since = now - k["at"]
-        if k["on"] and (have or 0) >= (k["have"] or 0) and (have == k["have"] or since < UP_KEPT_EVERY) \
+        if k["on"] and k.get("centre") == centre \
+                and (have or 0) >= (k["have"] or 0) and (have == k["have"] or since < UP_KEPT_EVERY) \
                 and since < UP_KEPT_REFRESH:
             return
-        row = {"v": 1, **({"have": have} if have else {}), "heard": int(now * 1000)}
+        row = {"v": 2, "centre": centre, **({"have": have} if have else {}), "heard": int(now * 1000)}
         self.save_up(ref, json.dumps(row, separators=(",", ":")).encode())
-        k.update(on=True, have=have, at=now)
+        k.update(on=True, have=have, at=now, centre=centre)
         self.up_writes[ref] = self.up_writes.get(ref, 0) + 1
 
     def _silent(self, ref: str) -> None:
@@ -503,7 +522,7 @@ class Forwarder:
             self.local.up_have.pop(ref, None)
         else:
             self.local.up_have[ref] = up
-        self._keep_up(ref, bool(work["push"]), up)                # …and kept across a restart of this relay (`UP_KEPT`)
+        self._keep_up(ref, bool(work["push"]), up, e["_route"]["policy"][2])  # kept with the answering centre's identity
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
             q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up, maxsize=FORWARD_FRAMES))
