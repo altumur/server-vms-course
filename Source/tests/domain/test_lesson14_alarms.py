@@ -14,9 +14,9 @@ import tempfile
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent
-from vms.domainpart.ingest import POLLED
+from vms.ingest import POLLED
 from w2cplatform.domain.alarms import AlarmHistory, Card, DomainAlarms, ReportedDoor, pages, reported_doors
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
@@ -271,7 +271,7 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     from w2cplatform.domain.relay import Relay
     from w2cplatform.domain.topology import Topology
     from w2cplatform.domain.uplink import member_copy
-    from vms.domainpart.device import DeviceCluster
+    from vms.camera_cluster import DeviceCluster
     from tests.domain.conftest import Clock, make_cluster
     wall = Clock(NOW)
     fed = Federation()
