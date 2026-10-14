@@ -14,10 +14,12 @@ from w2cplatform.trust.memberkey import MemberKey, sign_request
 
 
 class SignedConsole:
-    def __init__(self, spec, vars_, objects, wall):
+    def __init__(self, spec, vars_, objects, wall, sealer=None):
         self.wall = wall
-        self.key = MemberKey.load_or_make(vars_)
-        self.console = SpecConsole(SpecController(spec, vars_, objects, wall=wall), wall=wall)
+        self.key = MemberKey.load_or_make(vars_, sealer)
+        ctl = SpecController(spec, vars_, objects, wall=wall)
+        ctl.sealer = sealer
+        self.console = SpecConsole(ctl, wall=wall)
 
     def apply(self, entry):
         raw = json.dumps(entry["body"], ensure_ascii=False, sort_keys=True).encode()
@@ -34,10 +36,10 @@ class SignedConsole:
         return replies[-1]
 
 
-def device_console(device):
+def device_console(device, sealer=None):
     """A pinned-device fixture supplies its stores and published view to the generic console."""
     from vms.config import SPEC
-    signed = SignedConsole(SPEC, device.flash, device.ram, device.wall)
+    signed = SignedConsole(SPEC, device.flash, device.ram, device.wall, sealer)
     class DeviceConsole:
         def apply(self, entry):
             response = signed.apply(entry)
