@@ -175,10 +175,13 @@ spec:                                        # requests: (форма — уро�
   journal:     вид строки журнала
   elsewhere:   действия, которые исполняет другой процесс (жнец их не трогает)
   free:        принимает просьбы ресурса освободить место
-ledger:     <sub>/asked/<sha256(имя)[:16]> {asks, by, at}   # учёт человека, cas; писатель и читатель — консоль (ADR-0060)
+ledger:     <sub>/asked/<sha256(имя)[:16]> {rids: [<rid>…], by, at}   # учёт человека: список неотвеченных rid, cas; писатель и читатель — консоль (ADR-0060)
+holds:      раздел спеки (урок 2 Н1.2), закрытый: {table, unit, since, until, longest, released} — таблица удержаний: строка таблицы
+            называет единицу (поле unit) и окно [since, until] (поля), бакеты единицы в окне не убираются по сроку, пока строка
+            не помечена полем released или не прошло longest секунд; читает ресурс (урок 6 Н1.4)
 mark:       objects/<sub>/commands/<rid>      # строка-объект, создание-однажды
   begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова
-  answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # запись по индексу
+  answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
   ended_by:  reaper                                                        # у expired/unknown от жнеца
   kept:      до valid_until (или конца) + max(60, ttl)
@@ -200,10 +203,12 @@ paths:
       parameters: [{name: prefix, in: query}, {name: scope, in: query, schema: {enum: [local, cluster]}}]
       responses: {"200": {description: "{server, objects: {key: {written, server, size}}, missing?: [server]}"}, "400": {description: scope или prefix не по форме}, "503": {description: листинг не удался}}
   /v1/objects/{key}:
+    parameters: [{name: key, in: path, required: true, schema: {type: string}}]
     get:
       responses: {"200": {description: "байты; заголовки X-Written, X-Server, X-Missing"}, "403": {description: семья не выдаётся дверью или строка-объект}, "404": {description: ни у кого нет}, "503": {description: копия не читается}}
     put:    {description: только blobs — урок 10, responses: {"204": {description: копия принята}, "405": {description: не семья blobs}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}}}
   /buckets/{sub}/{unit}:
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: unit, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: строки JSON по бакету}, "404": {description: нет такого бакета}, "403": {description: не своя подсистема}}}
   /events:                                   # ресурс и консоль (консоль — слияние)
     get:
@@ -214,7 +219,7 @@ paths:
         - {name: subsystem, in: query, schema: {type: string}}
         - {name: unit, in: query, schema: {type: string}, description: "<sub>/<id>, не голый id"}
         - {name: limit, in: query, schema: {type: integer}}
-        - {name: keep, in: query, schema: {type: string, enum: [all, alarms]}}
+        - {name: keep, in: query, schema: {type: string, enum: [newest, oldest]}}
         - {name: class, in: query, schema: {type: string}}
         - {name: by, in: query, schema: {type: string}}
       responses:
@@ -224,9 +229,16 @@ paths:
   /events/wait:
     get:    {parameters: [{name: want, in: query}, {name: timeout, in: query, schema: {type: integer}}, {name: since, in: query}, {name: client, in: query}], description: долгий опрос новых строк, responses: {"200": {description: "{events, state} — по таймауту пусто"}, "400": {description: want или since не по форме}, "503": {description: busy | индекса нет}}}
   /events/{path}:
+    parameters: [{name: path, in: path, required: true, schema: {type: string}}]
     get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
   /mirror/{server}/{path}:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     put:    {responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
+  /mirrored/{server}:                        # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
+    get:    {responses: {"200": {description: "{copies: [{path, written, size, sum}]}"}, "404": {description: копий этого сервера нет}}}
+  /mirrored/{server}/{path}:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
+    get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
   /marks:                                    # консоль
     post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
   /{sub}/requests:                           # консоль
@@ -242,6 +254,7 @@ paths:
         "429": {description: "too many — per_person; учёт не читается"}
         "503": {description: "busy | store unavailable"}
   /{sub}/asked/{sha16}:
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
     delete: {description: снять учёт человека, responses: {"200": {description: "{cleared: true}"}, "404": {description: учёта нет}}}
 ```
 
@@ -310,9 +323,11 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ```
 1. Idempotency-Key, тело — объект с unit; схема; rid = r-<sha16(Idempotency-Key)> при ключе (повтор находит ту же строку),
    иначе случайный; valid_until = now + valid_for ≤ most_valid
-2. per_person: учёт <sub>/asked/<sha16> по cas: asks ≥ per_person → 429; иначе asks + 1
-3. записать строку cas ""; есть: тот же digest и метки нет → 202 {queued: rid} (повтор ждущей просьбы); метка с тем же
-   digest → 200 answered; иной digest → 409 spent | exists (учёт вернуть)
+2. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор, учёт не меняется; иначе len(rids) ≥ per_person → 429;
+   иначе rids + rid
+3. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, строку не создавать;
+   иной digest → 409 spent. Иначе записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей);
+   иной digest → 409 exists (учёт вернуть)
 4. journal → строка журнала; 202 {queued: rid}
 ```
 
@@ -338,11 +353,11 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### жнец (консоль): каждые 2 с — снять отвеченные; каждые 30 с — закрыть брошенные
 
 ```
-clear:  строки, чьи rid в fetched пульсов, → удалить по cas
+clear:  строки, чьи rid в fetched пульсов, → удалить по cas; rid снять из учёта человека (rids − rid, cas)
 sweep:  строка с valid_until + REAP_AFTER < now или старше ttl (без срока):
           метки нет → метка expired создание-однажды {ended_by: reaper}
           метка begun без исхода → {outcome: unknown, ended_by: reaper} по индексу
-        затем удалить строку по cas; free-* без хозяина — по ttl
+        затем удалить строку по cas и снять rid из учёта человека; free-* без хозяина — по ttl
 asked:  учёт старше ttl/settle → снять
 ```
 
@@ -370,6 +385,9 @@ asked:  учёт старше ttl/settle → снять
 | просьба: rid занят иным запросом | 409 | `spent` \| `exists` | новый rid |
 | просьба: учёт человека полон; учёт не читается | 429 | слова | подождать |
 | нет пути; метод не из Н2 (например, GET /{sub}/requests) | 404 / 405 | слова | ошибка клиента |
+| бакет: часть по Range | 206 | байты | — |
+| бакет: Range вне файла | 416 | слова | ошибка клиента |
+| `/mirrored/<s>`: копий нет / нет такой копии | 404 | слова | сосед пропущен (урок 11 restore) |
 | держатель: метка уже есть | пропуск | — | другой начал |
 | держатель: нет ответа 10 с | метка `unknown` | `error` | человек решает |
 | жнец: брошена | метка `expired` / `unknown`, `ended_by: reaper` | — | — |

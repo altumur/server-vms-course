@@ -149,9 +149,9 @@ paths:
     get:
       responses: {"200": {description: "{version: <int> | null, understood, builds: [<build>], can_raise_to, schema_unknown?, processes: {<sub>/<w> | <server>: {schema, build, ts, live}}}"}}
     put:
-      parameters: [{name: version, in: query, required: true}]
+      parameters: [{name: version, in: query, required: true, schema: {type: integer, minimum: 1}}]
       responses:
-        "200": {description: поднято; журнал schema.raised {version, was, user}}
+        "200": {description: "поднято; журнал schema.raised {version, was, user}"}
         "400": {description: a version is a number}
         "409": {description: "still running: <имена> — at schema N | schema does not go back: have -> version | row does not parse"}
         "403": {description: не admin / токен консоли не достаёт platform/schema}
@@ -160,6 +160,7 @@ paths:
     post: {parameters: [{name: server, in: query, required: true}], responses: {"200": {description: дренаж начат; журнал drain.started}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
     delete: {responses: {"200": {description: снят; журнал drain.ended}}}
   /{rows}/{id}/{blob_field}:
+    parameters: [{name: rows, in: path, required: true, schema: {type: string}}, {name: id, in: path, required: true, schema: {type: string}}, {name: blob_field, in: path, required: true, schema: {type: string}}]
     put:
       requestBody: {content: {application/octet-stream: {}}}
       responses:
@@ -168,11 +169,13 @@ paths:
         "413": {description: "больше 32 МиБ; или больше потолка хранилища — «a blob is what an object store is for»"}
         "503": {description: "this console takes so many blobs at once; Retry-After"}
   /{table}:
+    parameters: [{name: table, in: path, required: true, schema: {type: string}}]
     get:  {responses: {"200": {description: "{<t>: [строка без секретов, адреса с маской, held_by? , garbled?]}"}}}
     post:
       parameters: [{name: Idempotency-Key, in: header, required: true}]
       responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {description: тело больше предела}, "403": {description: нет права admin}, "503": {description: store unavailable}}
   /{table}/{name}:
+    parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: name, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: строка}, "404": {description: no such row}}}
     delete: {responses: {"200": {description: "{deleted}"}, "404": {description: no such row}, "503": {description: хранилище недоступно}}}
   /v1/objects/{sub}/blobs/{digest}:             # дверь ресурса, приём копии (урок 8)
@@ -189,7 +192,7 @@ paths:
 ### поднять_схему(N) — консоль, admin
 
 ```
-1. N — число                                                     → иначе 400
+1. N — целое ≥ 1 (Н1)                                            → иначе 400 «a version is a whole number from 1»
 2. строка platform/schema: не число → 409 «mend the row first»; have > N → 409 «does not go back»
 3. живые процессы (пульсы < 45 с): любой со schema < N или неизвестной → 409 «still running: …»
 4. записать {version: N, at} с cas; журнал schema.raised
@@ -307,10 +310,10 @@ safe = Σ units == 0 ∧ Σ pending == 0 ∧ unsaid пуст
 
 Реализация обязана назвать в своём описании:
 
-1. **предел тела консоли** (≥ 1 МиБ) и число одновременных тел;
+1. **предел тела консоли** (≥ 1 МиБ); одновременных тел — ровно два (Н1.4), выбора нет;
 2. **хранилище объектов и его потолок** (`OBJECTS` URI, `max_bytes`), где лежат надгробия;
 3. **состояние уборки в строке** сверх `{at, digests}` и порядок «снять список — удалить»;
-4. **как публикуется снимок** при отказе хранилища (лог раз на серию) и период;
+4. **как публикуется снимок** при отказе хранилища (лог раз на серию); период — после каждого прохода (Н1), выбора нет;
 5. **ночной порядок обновления** (дренаж → остановка → возврат → следующий; подъём схемы последним) — урок 11.
 
 ---
