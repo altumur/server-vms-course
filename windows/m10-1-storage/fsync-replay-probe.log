@@ -1,2 +1,0 @@
-{"first_error": "injected directory fsync failure after row rename", "visible_after_error": [{"v": "one"}, 1001]}
-{"same_id_retry": {"index": 1002, "again": false}, "visible_after_retry": [{"v": "one"}, 1002]}
