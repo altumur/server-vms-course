@@ -7,7 +7,7 @@ import tempfile
 import threading
 
 from tests.vmsconftest import Box
-from vms.domainpart.ingest import CameraPusher, Ingest, audience
+from vms.domainpart.ingest import CameraPusher, Ingest
 from vms.recording_books import Unconfirmed
 from vms.recording_publication import sources
 from w2cplatform.domain.topology import poll_home
@@ -108,8 +108,8 @@ def test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_
     ing = site.ingests["relay"]
     ing.want("serial", "viewer")
     queue = ing.subscribe("serial", "viewer")
-    action = {"preset": 3}
-    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=audience("relay"),
+    action = {"camera": "serial", "action": "preset", "arg": 3}
+    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=["relay"],
                               ref="serial", acts=[action])
     aid = ing.ask(token, "serial", action, site.box.wall()+30)
     with site.role_door() as door:
