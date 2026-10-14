@@ -14,7 +14,7 @@ heartbeat (`ingest`), and what the forwarder carried and lost is in the relay's 
 
 from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
-from tests.domainvms.recording_domain import RecordingDomain, camera_pusher, role_requests
+from tests.domainvms.recording_domain import RecordingDomain, RecordingInputs, camera_pusher, role_requests
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -22,7 +22,6 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
 from vms.forwarder import UPSTREAM_PATH
 from w2cplatform.domain.relay import bundle
-from vms.domainpart.inputs import BookInputs
 from vms.camera_cluster import DeviceCluster, Ram
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.gateway import Gateway
@@ -58,7 +57,7 @@ def _chain(wall, star=frozenset()):
     cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(north.vars, view, wall, centre="north", star=star)
+    crossings = RecordingInputs(north.vars, view, wall, centre="north", star=star)
     recording_domain = RecordingDomain(crossings, signer, agents=[cam_agent, relay_agent], devices=[cam])
     recording_domain.assign(SERIAL, "east")
     recording_domain.collect()
@@ -615,7 +614,7 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     view.refresh(); pending.collect(fed)
     assert pending.of(cam.name) == {}                                  # the outcome came up in the bundle
 
-    crossings = BookInputs(north.vars, view, wall)
+    crossings = RecordingInputs(north.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer, agents=[relay_agent, cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "east")
     recording_domain.collect(); recording_domain.collect()
@@ -682,7 +681,6 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     relay, neither recorded. A scenario ties them. The book of polls must send the PTZ camera to its RELAY's
     ingest — the centre's, or the domain holder's, is exactly what it cannot reach, and a scenario inside one
     site would never act. The gate camera's book of asks names the same relay; the ask goes there and back."""
-    from vms.domainpart.books import Books
     from w2cplatform.domain.relay import Relay
     from tests.domain.conftest import SharedDoor
 
@@ -716,8 +714,8 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects, dial=centre_dial))
     relay = hosts[-1].ingest
 
-    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north"), north.objects)
-    recording_domain = RecordingDomain(books.inputs, signer,
+    inputs = RecordingInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north")
+    recording_domain = RecordingDomain(inputs, signer,
         agents=[*agents, relay_agent], devices=list(cams.values()), recorders=hosts)
     recording_domain.collect()
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
@@ -725,7 +723,6 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
 
     def domain_pass():
         recording_domain.collect()
-        books.pass_once()
         report_sync(relay_agent)                                            # the new books relayed down
         for a in agents:
             report_sync(a)
@@ -789,7 +786,6 @@ GATE7, PTZ7, YARD7 = "SN7102", "SN7103", "SN7104"    # the gate and a PTZ at an 
 
 
 def _two_relays(wall):
-    from vms.domainpart.books import Books
     from w2cplatform.domain.relay import Relay
     from tests.domain.conftest import SharedDoor
 
@@ -833,7 +829,7 @@ def _two_relays(wall):
         through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
         report_sync(o)
-    inputs = BookInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north")
+    inputs = RecordingInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north")
     recording_domain = RecordingDomain(inputs, signer, agents=[*agents, *relays], devices=cams.values())
     from w2cplatform.domain.carry import CarryClient
     north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "north", "star": [],
@@ -845,7 +841,6 @@ def _two_relays(wall):
         for ref in refs:
             recording_domain.assign(ref, relay)
         hosts[relay].forwarder.tokens.door = role_requests(hosts[relay].vars, "recworker")
-    books = Books(inputs, north.objects)
 
     def domain_pass():
         for h in hosts.values():
@@ -862,7 +857,6 @@ def _two_relays(wall):
                 [{"id": ref, "phase": "running"} for ref in refs], ingest=ing[relay].urls[0])
         recording_domain.collect(); recording_domain.collect()
         inputs.view.refresh()
-        books.pass_once()
         for o in relays:
             report_sync(o)
         for a in agents:
