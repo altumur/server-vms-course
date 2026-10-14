@@ -1416,7 +1416,7 @@ def test_nothing_writes_where_the_ingest_or_the_forwarder_used_to_announce_itsel
     losses) are gone without a migration — no writer, no reader, no spec line (`domain.reports[ingest]`,
     `objects.door[forwarded/*]`). A chain that pushes and pulls, its recorders beating, leaves neither in any store."""
     from vms.config import REC_SPEC
-    from vms.domainpart import chain, ingest
+    from vms import forwarder as chain, ingest
     assert REC_SPEC.domain.reports == ("polled/",) and "forwarded/*" not in REC_SPEC.object_door
     assert not hasattr(ingest, "INGEST") and not hasattr(ingest, "FORWARDED")
     assert not hasattr(ingest.Ingest, "announce") and not hasattr(chain.Forwarder, "publish")
