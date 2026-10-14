@@ -183,6 +183,7 @@ commands:  вид command / command.failed — слово и заметка мо
 ```yaml
 openapi: 3.1.0
 info: {title: М10/9 двери консоли, version: "1"}
+x-every-operation-responses: [401, 403, 404, 405, 408, 413, 429, 503]   # закрытый список общих ответов каждой операции (components.responses.Common, Н4); у операций не повторяются
 paths:
   /:                 {get: {description: "оболочка root или console.html; CSP", responses: {"200": {description: text/html}, "404": {description: у смонтированной подсистемы — is mounted}}}}
   /index.html:       {get: {description: то же, responses: {"200": {description: text/html}, "404": {description: is mounted}}}}
@@ -191,14 +192,18 @@ paths:
   /healthz:          {get: {responses: {"200": {description: "{ok: true}"}}}}
   /spec:             {get: {responses: {"200": {description: "SpecView (урок 2 Н2)"}}}}
   /mounts:           {get: {responses: {"200": {description: "{root, mounts: {<sub>: SpecView}}"}}}}
-  /{rows}:           {get: {responses: {"200": {description: "{rows: [единица пульса + worker, server, age, worker_state], configured: [строки, маска]} — по view"}}}}
+  /{rows}:
+    parameters: [{name: rows, in: path, required: true, schema: {type: string}}]
+    get: {responses: {"200": {description: "{rows: [единица пульса + worker, server, age, worker_state], configured: [строки, маска]} — по view"}}}
   /where/{id}:
+    parameters: [{name: id, in: path, required: true, schema: {type: string}}]
     get:
       responses:
         "200": {description: "{worker, server, reason, directory, scans, door?: {url, token, expires, routes}}; door — по view на единицу"}
         "404": {description: "{reason} — не размещена"}
         "400": {description: not an id}
   /where/{table}/{place}:
+    parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: place, in: path, required: true, schema: {type: string}}]
     get: {parameters: [{name: unit, in: query, required: true}], responses: {"200": {description: "{worker, place, server, door}"}, "404": {description: "no such place | {unreachable: place@server} + X-Unreachable"}}}
   /resources:        {get: {responses: {"200": {description: "{<server>: пульс ресурса + state: live | silent}"}}}}
   /servers:
@@ -212,7 +217,9 @@ paths:
   /unplaceable:      {get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}}
   /metrics:          {get: {responses: {"200": {description: "text/plain; ряды Н3"}}}}
   /session:          {get: {responses: {"200": {description: "Н1.3: {who, grants, …}"}, "401": {description: не личность}}}, post: {responses: {"200": {description: вход}, "400": {description: у открытой консоли}, "429": {description: аварийный вход — предел}}}}
-  /domain/{rest}:    {get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}}
+  /domain/{rest}:
+    parameters: [{name: rest, in: path, required: true, schema: {type: string}}]
+    get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}
   /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: "ADR-0066, М11 — формы и коды там; здесь только маршруты"}
 components:
   schemas:
@@ -220,11 +227,22 @@ components:
       type: object
       required: [worker, load, capacity, labels, state, idle_by_policy, hung, name_conflict]
       properties:
-        worker: {type: string}; load: {type: integer}; capacity: {type: integer}; labels: {type: array}
-        place: {type: string}; state: {enum: [live, stale]}; idle_by_policy: {type: boolean}
-        released: {type: boolean}; slot_until: {type: [number, "null"]}; slot_garbled: {type: boolean}; holds: {type: array}
-        hung: {type: boolean}; hung_since: {type: number}; hung_why: {type: string}
-        presence_unknown: {type: [string, "null"]}; name_conflict: {type: boolean}
+        worker: {type: string}
+        load: {type: integer}
+        capacity: {type: integer}
+        labels: {type: array, items: {type: string}}
+        place: {type: string}
+        state: {type: string, enum: [live, stale]}
+        idle_by_policy: {type: boolean}
+        released: {type: boolean}
+        slot_until: {type: [number, "null"]}
+        slot_garbled: {type: boolean}
+        holds: {type: array, items: {type: string}}
+        hung: {type: boolean}
+        hung_since: {type: number}
+        hung_why: {type: string}
+        presence_unknown: {type: [string, "null"]}
+        name_conflict: {type: boolean}
         status: {type: object, description: значения servers.status как есть}
     Denied:
       type: object
@@ -260,7 +278,7 @@ components:
    X-User = доказанное имя для журнала
 ```
 
-**Гонки.** Два запроса одной сессии разом — независимы; запись и чтение одной строки — `cas` (урок 3); смена спеки между запросами — `rev` в ответе `/spec`, модуль перечитывает.
+**Гонки.** Два запроса одной сессии разом — независимы; запись и чтение одной строки — `cas` (урок 3); смена спеки — консоль останавливается с кодом 0 и перезапускается (урок 2), `SpecView` ревизии не несёт; модуль видит обрыв и перезагружает страницу.
 
 ### /servers — картина для человека
 
@@ -331,6 +349,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | тело: chunked / больше / медленно / коротко | 400 / 413 / 408 / 400 | слова | ошибка клиента |
 | полоса занята | 503 | `busy`, `Retry-After: 1` | повторить |
 | `/where`: не размещена / не id | 404 / 400 | `{reason}` / слова | — |
+| `/domain/<rest>` к держателю: держатель не ответил / нет домена или ключей | 502 / 503 | слова | — |
 | `/where/<t>/<p>`: место не держат | 404 | `{unreachable: place@server}`, `X-Unreachable` | — |
 | `/events` без индекса ресурса | 503 | слова | — |
 | `/spec`: `display` называет не поле; `options` не у enum; `console.running` не метрика; `servers.status` платформенное поле | спека не грузится | слова (урок 2) | править спеку |
