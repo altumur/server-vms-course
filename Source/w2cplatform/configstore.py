@@ -836,7 +836,8 @@ def _door(daemon: "StoreDaemon", role_of):
             if code >= 400 and "kind" not in body and not (code == 412 and body.get("error") == "guard"):
                 # read_body's errors use detail; ADR-0074's guard refusal has its own exact wire body.
                 body = {"kind": {408: "timeout", 413: "toolarge"}.get(code, "badrequest"),
-                        "error": str(body.get("detail") or body.get("error") or "")}
+                        "error": str(body.get("detail") or body.get("error") or ""),
+                        **({"limit": MAX_VALUE} if code == 413 else {})}
             raw = json.dumps(body).encode()
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
@@ -1524,7 +1525,7 @@ def backup_rows(src) -> dict:
         if items is not None:
             rows[key] = {"items": items, "index": index}
     s = src.status()
-    highest = max([int(s.get("index_base", 0)) + int(s.get("applied", 0))] + [r["index"] for r in rows.values()])
+    highest = max([int(s.get("index_base", 0)) + int(s.get("applied", 0))] + [int(r["index"]) for r in rows.values()])
     return {"configstore_backup": 1, "highest": highest, "rows": rows}
 
 
