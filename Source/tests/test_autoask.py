@@ -378,7 +378,7 @@ def test_outcome_distinguishes_restart_unreadable_and_unreachable_after_grace():
             e.ingest.ask_outcome=unavailable
         assert e.asker.outcome('B','id',e.box.wall()) is None
         assert e.asker.outcome('B','id',0)==expected
-    for value in ('performed','refused: camera cannot do this'):
+    for value in ('performed','refused: camera cannot do this','expired'):
         e=road_fixture();e.ingest.ask_outcome=lambda *a:value
         assert e.asker.outcome('B','id',e.box.wall())==value
 
@@ -425,3 +425,11 @@ def test_multiple_asks_of_one_scenario_are_all_followed():
     assert observed==['one','two'] and len(ex.pending)==2
     doc.items=[];ex.refresh()
     assert not ex.pending and ex.heartbeat()=={}
+
+
+def test_asked_is_the_send_timestamp_even_when_camera_wall_clock_starts_at_zero():
+    ex,doc,clock,calls=executor([item()])
+    requester=SimpleNamespace(sent=0,ask=lambda *a:(object(),'id'))
+    ex.asker=lambda _:requester
+    ex.on_event('A','motion')
+    assert ex.heartbeat()=={'a-to-b':{'asked':0}}
