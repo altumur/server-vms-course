@@ -11,13 +11,12 @@ they say. Nothing here raises an ingest by hand.
 """
 
 from tests.reporting import sync as report_sync
-from tests.domainvms.recording_domain import RecordingDomain, camera_pusher, role_requests
+from tests.domainvms.recording_domain import RecordingDomain, RecordingInputs, camera_pusher, role_requests
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.inputs import BookInputs
 from vms.recording_sources import resolve
 from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
@@ -71,7 +70,7 @@ def _site(wall, down=(), writes=False):
     report_sync(cam_agent)
 
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(north.vars, view, wall)
+    crossings = RecordingInputs(north.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer,
         agents=[cam_agent, room_agent], devices=[cam], recorders=recs)
     recording_domain.assign(SERIAL, "south")
@@ -421,7 +420,6 @@ NORTH_URLS = ["srt://ingest.north:9000"]
 
 
 def _scenario_site(wall, scenarios, open_doors=()):
-    from vms.domainpart.books import Books
     from tests.domain.conftest import SharedDoor
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, site_pass = _site(wall)
     home_rec = ingest_recorder("north", NORTH_URLS[0], wall, north.vars, north.objects)   # the domain's holder: every camera reaches it
@@ -443,7 +441,6 @@ def _scenario_site(wall, scenarios, open_doors=()):
     recording_domain.add_recorder(home_rec)
     for d, a in [(gate, gate_agent), (ptz, ptz_agent), *extra.values()]:
         recording_domain.add_agent(a, d)
-    books = Books(crossings, north.objects)
     agents = (cam_agent, room_agent, gate_agent, ptz_agent, *(a for _, a in extra.values()))
 
     def domain_pass():
@@ -454,7 +451,6 @@ def _scenario_site(wall, scenarios, open_doors=()):
         for a in agents:
             report_sync(a)                                                   # reports up
         site_pass()
-        books.pass_once()
         for a in agents:
             report_sync(a)                                                   # books down
 
@@ -475,7 +471,7 @@ def _scenario_site(wall, scenarios, open_doors=()):
     ptz_pusher = camera_pusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
     gate_scenarios = gate.host_scenarios(gate_agent, dial, steady=wall)
     domain_pass.dial = dial
-    return (shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
+    return (shared, recording_domain, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
 
 
 SCENARIOS = [{"name": "test_lesson16_nobody_reaches-1", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
@@ -602,7 +598,6 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     The operator moves the domain to SN3; its first pass over the books names its own ingest, the agents carry the
     books home, and the same scenario acts again. The shared document comes back with the domain, from a
     member's copy: the book of asks is built from its scenarios."""
-    from vms.domainpart.books import Books
     from w2cplatform.domain.term import DomainHolder, move_domain
     from w2cplatform.domain.reports import pinned
     import math
@@ -646,16 +641,14 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     def settle(holder_name, current_signer):                             # the holder's pass over the books, agents both sides
         live = [n for n in devices if n != holder_name and devices[n].door_open]
         agents = [_agent(fed, devices, n, holder_name, wall) for n in live]
-        books = Books(BookInputs(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
-                                wall), devices[holder_name].disk)
-        publication = RecordingDomain(books.inputs, current_signer, agents=agents,
+        inputs = RecordingInputs(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall), wall)
+        publication = RecordingDomain(inputs, current_signer, agents=agents,
             devices=[devices[n] for n in [holder_name, *live]], recorders=[recs[holder_name]],
             domain_objects=devices[holder_name].disk)
         # Topology and holder arrive first; then sources, the home's ordinary
         # poll publication and its signed report travel through the same passes.
         for _ in range(4):
             publication.collect()
-            books.pass_once()
             for a in agents:
                 report_sync(a)
         return agents
@@ -737,76 +730,54 @@ def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_to
 
 
 def test_a_scenario_on_a_camera_that_polls_nothing_is_taken_by_the_door_and_named_on_every_pass():
-    """A serial nobody has seen, or a server cluster's camera that does not run the platform, holds no poll and
-    can never be asked. The signer's door checks what a scenario may BE — `auto`'s schema — and nothing of what it
-    means (ADR-0032: the signer asks no subsystem's code): a scenario with no `kind` is refused there, 400, nothing
-    written; one whose target polls nothing is taken, and named on every pass over the books, never skipped in
-    silence."""
+    """C7 decision 1d92ecd8: shape at SharedDoor, a missing road at the event."""
     from w2cplatform.domain.api import ApiError
     wall = Clock()
-    shared, books, domain_pass, *_ = _scenario_site(wall, SCENARIOS)
+    shared, publication, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, executor, done = _scenario_site(wall, SCENARIOS)
     rev = shared.current()[0]["rev"]
     try:
-        shared.set_scenarios(shared.scenarios() + [{"name": "test_lesson16_nobody_reaches-6", "when": {"camera": GATE}, "then": {"camera": PTZ, "action": "preset"}}])
+        shared.set_scenarios(shared.scenarios() + [{"name": "missing-kind", "when": {"camera": GATE}, "then": {"camera": PTZ, "action": "preset"}}])
         assert False
     except ApiError as e:
         assert e.status == 400 and "kind" in e.detail, e.detail
-    assert shared.current()[0]["rev"] == rev                           # nothing written
-    stranger = {"name": "test_lesson16_nobody_reaches-7", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": "SN9999", "action": "preset", "arg": 1}}
-    shared.set_scenarios(shared.scenarios() + [stranger])              # its shape is right: what it means is the pass's
-    out = books.pass_once()
-    assert len(out["refused"]) == 1 and "SN9999 (target) polls nothing" in out["refused"][0]
-    assert books.pass_once()["refused"] == out["refused"]               # every pass
+    assert shared.current()[0]["rev"] == rev
+    stranger = {"name": "unknown-target", "when": {"camera": GATE, "kind": "unknown"},
+                "then": {"camera": "SN9999", "action": "preset", "arg": 1}}
+    shared.set_scenarios([stranger])
+    assert shared.scenarios() == [stranger]
+    domain_pass()
+    assert executor.asks.executor.refresh() == [stranger]
+    assert executor.asks.heartbeat() == {}
+    for _ in range(2):
+        [out] = executor.on_event("unknown")
+        assert out["state"] == "the book of asks names no door for SN9999: not asked"
+        assert out["target"] == "SN9999"
+        assert done == {SERIAL: [], PTZ: []}
 
 
 def test_a_scenario_between_cameras_is_checked_against_what_each_camera_says_it_can():
-    """Only a camera knows that it raises `vehicle` and has five presets, and it says so in its heartbeat
-    (`can`), the shape М10B's holder writes for a device (Lesson 25). The domain checks the document against it
-    when it is written: a kind the gate camera does not raise, a preset the yard camera does not have, an action
-    one camera cannot ask another — named by the VMS's pass over the books, with what would be right; the signer that
-    took the document checked its shape alone. A camera that has not said is named on every pass; when it describes
-    itself, the same scenario is refused on the next pass if it no longer fits — and the camera refuses the ask by
-    the same rule. The form is built from `catalog`."""
-    from vms.domainpart.scenario import catalog
+    """C7 decision 1d92ecd8: target capabilities are checked by the real camera."""
     wall = Clock()
-    shared, books, domain_pass, gate, ptz, *_ = _scenario_site(wall, SCENARIOS[:1])
-    out = books.pass_once()
-    assert out["refused"] == [] and out["unchecked"] == [
-        f"camera {GATE} (trigger) has not said what it raises: 'vehicle' is not checked",
-        f"camera {PTZ} (target) has not said what it can do: 'preset' is not checked"]
-
-    gate.can = {"events": ["command", "command.failed", "silent", "vehicle"], "rays": 0, "relays": 1,
-                "ptz": False, "presets": 0}
-    ptz.can = {"events": ["command", "command.failed", "motion", "silent"], "rays": 0, "relays": 0,
-               "ptz": True, "presets": 5}
-    domain_pass()
-    assert books.pass_once()["unchecked"] == []                        # both have said: nothing left unvouched
-    base = shared.scenarios()
-    for bad, why in (({"name": "test_lesson16_nobody_reaches-8", "when": {"camera": GATE, "kind": "vehicel"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
-                      f"camera {GATE} (trigger) does not raise 'vehicel' — it raises command, command.failed, silent, vehicle"),
-                     ({"name": "test_lesson16_nobody_reaches-9", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 9}},
-                      f"camera {PTZ} (target) has 5 preset(s), not 9"),
-                     ({"name": "test_lesson16_nobody_reaches-10", "when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "preset", "arg": 1}},
-                      f"camera {GATE} (target) has no telemetry: it cannot go to a preset"),
-                     ({"name": "test_lesson16_nobody_reaches-11", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "reboot"}},
-                      f"camera {PTZ} (target) cannot be asked 'reboot': one camera asks another for preset or output")):
-        shared.set_scenarios(base + [bad])                             # the door takes it: its shape is right
-        refused = books.pass_once()["refused"]
-        assert any(why in r for r in refused), (why, refused)          # the pass names what it cannot do
-    shared.set_scenarios(base + [
-        {"name": "test_lesson16_nobody_reaches-12", "when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "output", "arg": 1}}])
-    assert books.pass_once()["refused"] == []                          # the gate's relay: it has one
-
-    ptz.can = {**ptz.can, "ptz": False, "presets": 0}                  # the yard camera replaced by a fixed one
-    domain_pass()
-    assert books.pass_once()["refused"] == [f"camera {PTZ} (target) has no telemetry: it cannot go to a preset"]
+    gate = DeviceCluster(GATE, FakeVariables(), wall=wall, pushes=True)
+    ptz = DeviceCluster(PTZ, FakeVariables(), wall=wall, pushes=True)
+    gate.boot(); ptz.boot()
+    gate.can = {"events": ["vehicle"], "relays": 1, "ptz": False, "presets": 0}
+    ptz.can = {"events": ["motion"], "relays": 0, "ptz": True, "presets": 5}
+    assert ptz.perform({"action": "preset", "arg": 3}) == "performed"
+    assert ptz.perform({"action": "preset", "arg": 9}) == f"refused: camera {PTZ} has 5 preset(s), not 9"
+    assert gate.perform({"action": "preset", "arg": 1}) == f"refused: camera {GATE} has no telemetry: it cannot go to a preset"
+    assert "cannot be asked 'reboot'" in ptz.perform({"action": "reboot"})
+    assert "cannot be asked ''" in ptz.perform({})
+    assert gate.perform({"action": "output", "arg": 1}) == "performed"
+    assert "has 1 relay(s), not port 2" in gate.perform({"action": "output", "arg": 2})
+    assert "has no relays" in ptz.perform({"action": "output", "arg": 1})
+    ptz.can = {**ptz.can, "ptz": False, "presets": 0}
     assert ptz.perform({"action": "preset", "arg": 3}) == f"refused: camera {PTZ} has no telemetry: it cannot go to a preset"
     assert gate.perform({"action": "output", "arg": 1}) == "performed"
-
-    cat = catalog(books.inputs)
-    assert set(cat["actions"]) == {"preset", "output"}
-    assert cat["cameras"][GATE]["can"]["relays"] == 1 and cat["cameras"][GATE]["asked"]
-    assert cat["cameras"][PTZ]["can"]["ptz"] is False
+    ptz.can = {**ptz.can, "ptz": True, "presets": 5}
+    assert ptz.perform({"action": "preset", "arg": 3}) == "performed"
+    assert "has 5 preset(s), not 0" in ptz.perform({"action": "preset", "arg": 0})
+    assert "has 5 preset(s), not ²" in ptz.perform({"action": "preset", "arg": "²"})
 
 
 # -- feedback AH, AI, AJ, AK --------------------------------------------------------------------------------
@@ -893,8 +864,8 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
     """A door contact wired to the room's recorder: a camera of the server cluster, without the platform. It holds
     no poll, so nobody can ask it — but its events are read in its own cluster, over the cluster's merged event
     log, and the domain knows it from the room's snapshot. So it can TRIGGER: the book of asks goes to the room,
-    whose automation asks on the camera's behalf. A trigger nobody has reported is named on every pass over the
-    books, and so is a target that polls nothing."""
+    whose automation asks on the camera's behalf. The ordinary autoworker reads the trigger event locally;
+    a camera without a poll receives no action."""
     from w2cplatform.eventdatabase import MergedIndex
     from vms.config import SPEC
     from tests.test_autoworker import ev
@@ -906,15 +877,10 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
     domain_pass()
     door = {"name": "test_lesson16_nobody_reaches-13", "when": {"camera": "DOOR7", "kind": "door_forced"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}}
     shared.set_scenarios([door])
-    assert books.pass_once()["refused"] == []                          # a trigger the room reported: nothing to say
-    for bad, why in (({"name": "test_lesson16_nobody_reaches-14", "when": {"camera": "DOOR9", "kind": "x"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
-                      "DOOR9 (trigger) is not known to the domain"),
-                     ({"name": "test_lesson16_nobody_reaches-15", "when": {"camera": GATE, "kind": "x"}, "then": {"camera": "DOOR7", "action": "preset", "arg": 1}},
-                      "DOOR7 (target) polls nothing")):
-        shared.set_scenarios([door, bad])
-        refused = books.pass_once()["refused"]
-        assert any(why in r for r in refused), (why, refused)
-    shared.set_scenarios([door])
+    assert shared.scenarios() == [door]
+    domain_pass()
+    assert gate_scenarios.on_event("door_forced") == []
+    assert done == {SERIAL: [], PTZ: []}
     domain_pass()                                                      # the book of asks, carried to the ROOM
     room = domain_pass.recording_domain.auto_workers["south"]
     south.vars.put("cam/cameras/7", SPEC.items({"id": 7, "ref": "DOOR7", "enabled": True}))
