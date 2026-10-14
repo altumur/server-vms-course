@@ -92,7 +92,7 @@ class AssignedPush:
         return self.token
 
     def pass_once(self, entry, loose, wait):
-        from .domainpart.ingest import CameraPusher, Refused as StreamRefused
+        from .ingest import CameraPusher, Refused as StreamRefused
         p = self.pusher
         try:
             token = self.stream_token() if entry["channels"] else None
