@@ -1577,6 +1577,29 @@ def _labels(row: dict | None) -> list:
 _DEFAULT_WORKER_CLIENT = object()
 
 
+def book_units(vars_):
+    """Book keys match domain refs of this store's units, across loaded specs."""
+    from . import catalog
+    from .spec import SpecController
+    controllers = {s.name: SpecController(s, vars_, None) for s in catalog.specs() if s.rows}
+    rows = {name: {str(row['id']): row for row in ctl.units()}
+            for name, ctl in controllers.items()}
+    result = {}
+    for name, ctl in controllers.items():
+        schema = ctl.spec
+        if not schema.domain.ref:
+            continue
+        for uid, row in rows[name].items():
+            ref = row.get('id') if schema.domain.ref == 'id' else row.get(schema.domain.ref)
+            if ref in (None, ''):
+                continue
+            of = schema.of_row(row) or None
+            target = parse_ref(of) if of else None
+            labels = _labels(rows.get(target[0], {}).get(str(target[1]))) if target else _labels(row)
+            result.setdefault(str(ref), []).append((schema.ref(uid), labels, of))
+    return result
+
+
 def project_book(items, s, book, *, every=True, sees=None, units=None):
     """Project declared fields, preserving origins and hiding secret fields at every depth."""
     show = s.domain.show[book]
