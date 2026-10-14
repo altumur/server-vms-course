@@ -41,7 +41,7 @@ def bind_requests(vars_, client):
 
 
 def camera_pusher(serial, flash, dial, **kw):
-    from vms.domainpart.ingest import CameraPusher
+    from vms.ingest import CameraPusher
     kw.setdefault("token_requests", role_requests(flash))
     return CameraPusher(serial, flash, dial, **kw)
 
