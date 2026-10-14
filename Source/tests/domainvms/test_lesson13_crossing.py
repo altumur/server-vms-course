@@ -4,7 +4,7 @@ import json
 from tests.reporting import sync
 from tests.domain.conftest import Clock, make_cluster
 from tests.domainvms.recording_domain import RecordingDomain
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from vms.domainpart.inputs import BookInputs
 from vms.recording_books import primary, source
 from vms.recording_sources import NotResolvable, plan_backfill, resolve
