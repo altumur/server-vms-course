@@ -1067,7 +1067,8 @@ def test_torn_ask_target_refuses_new_authority_without_stopping_another_target()
     raises(Unconfirmed, lambda: asker._roads(YARD7))
     assert asker._roads(PTZ7)[1]
     left = {x["target"]: x for x in gate.on_event("vehicle")}
-    assert left[YARD7]["state"] == "not asked" and left[PTZ7]["state"] == "asked"
+    own = gate.flash.get('domain/member')[0]['cluster']
+    assert left[YARD7]["state"] == f"no token at {own}: the ask authority could not be confirmed" and left[PTZ7]["state"] == "asked"
     assert ptz.pass_once([])["asks"] == [({"camera": PTZ7, "action": "preset", "arg": 1}, "performed")]
     assert YARD7 not in ing["east"].cams
 

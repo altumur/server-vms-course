@@ -1,30 +1,32 @@
 {
-  "full_source_commit": "60e19d8c",
-  "merged_source_commit": "455ac000",
+  "source_commit": "b9947a21641b49c565085758583e2998e7b5ac5c",
+  "source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-source.json",
+  "manifest_sha256": "9fac846e7e2301acbf5a942925f779dcecb1b2e8fedbbc46fa3166bb55068dfe",
+  "source_unchanged_files": 1017,
   "checks": [
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-unit-final.log",
-      "sha256": "ed4bc631d98339b23f9db2f642a0274c2df6b7a5056df49863c85e2c37957c1a",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-unit.log",
+      "sha256": "a5a7321fd36e14f5f2c78bab17b392195562ec79966490153297ca11673c0adc",
       "exit": 1,
       "counts": [
-        2082,
-        14,
+        2095,
+        1,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-cluster-final.log",
-      "sha256": "154a90e2405cf12ad18b39624c3a50d851416f76cef091c0765b1cd6f85712ee",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-cluster.log",
+      "sha256": "f306fa1ed2bd6a136f5771049099ff781b6e7b1eb319c5d5ab864f88e68a6233",
       "exit": 0,
       "counts": [
-        118,
+        119,
         0,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-domain-final.log",
-      "sha256": "0bdd6bb00dfb6749806dd884751d07954805843d7c4740f2dbd499591ededf9d",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-domain.log",
+      "sha256": "fd0cf9dbfb9749722efb2f098d8b3a404ee798a4d67909884b9f1d3ceb07c2ee",
       "exit": 0,
       "counts": [
         228,
@@ -33,34 +35,18 @@
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-domainvms-final.log",
-      "sha256": "c26e412403fce8032190a2ffbd9982758faabf503b0b330115b19f884dc59d9d",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-final-domainvms.log",
+      "sha256": "bd66c24b885fdead235963f7f3a3b7b778e210313713105bc0154e4a0be264df",
       "exit": 0,
       "counts": [
-        164,
-        0,
-        0
-      ]
-    },
-    {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-merged-acl-demand-obsd.log",
-      "sha256": "67843767a2c3e033eadb1df70c696a7cdb5e807399c54f16f0bc01f3def7ae09",
-      "exit": 0,
-      "counts": [
-        112,
-        0,
-        0
-      ]
-    },
-    {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6b-poll-demand.log",
-      "sha256": "dfe69d429d028dac2d38f691bb0d6b85bfdff0adb9d77b643dffbf6a2dfd711b",
-      "exit": 0,
-      "counts": [
-        9,
+        165,
         0,
         0
       ]
     }
-  ]
+  ],
+  "expected_unit_failure": "platform_lists product parity: accepted 5acd45a2",
+  "finding": "fe5d0965: inherited missing per-scenario asks status; snapshot is not ready to merge",
+  "product_changed": false,
+  "merged": false
 }

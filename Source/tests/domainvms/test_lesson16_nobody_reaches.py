@@ -560,7 +560,7 @@ def test_twenty_events_in_a_minute_are_six_asks_and_identical_live_asks_are_one(
     for target in (PTZ, SERIAL):
         mine = [x for x in seen if x["target"] == target]
         assert sum(x["state"] == "asked" for x in mine) == 6
-        assert sum(x["state"].startswith("over its ceiling of 6/min") for x in mine) == 14
+        assert sum(x["state"].startswith("over its ceiling of 6 a minute") for x in mine) == 14
     assert len({x["ask"] for x in seen if x["target"] == PTZ and "ask" in x}) == 1       # within 30 s: one ask
     assert len({x["ask"] for x in seen if x["target"] == SERIAL and "ask" in x}) == 2    # within 10 s: two
 
@@ -580,7 +580,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
     assert pusher.pass_once([])["asks"] == [] and done == []
     assert asker.outcome(SERIAL, aid, deadline) is None                # not yet: it may still come
     wall.advance(10 + ANSWER_GRACE + 1)
-    assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
+    assert asker.outcome(SERIAL, aid, deadline).startswith("lost:")
 
     ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     pusher.pass_once([])
@@ -670,7 +670,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     devices["cam-SN0"].power_off()                                     # the domain camera is gone
     wall.advance(15)
     [x] = gate.on_event("vehicle")
-    assert x["state"] == "no ingest answered: not asked"               # stopped, with the rest of the domain
+    assert x["state"] == "no ingest answered"               # stopped, with the rest of the domain
 
     new, report = move_domain(fed, "cam-SN3", offline, "acme", _objects(devices), wall)
     assert report["shared_from"] == "cam-SN3"                          # the document, from the new holder's own copy
@@ -821,7 +821,7 @@ def test_an_ask_to_a_camera_that_never_polls_again_expires_and_is_then_forgotten
         asker.ask(SERIAL, preset(SERIAL, 9), within=1)
         wall.advance(2)
     wall.advance(REMEMBER)
-    assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
+    assert asker.outcome(SERIAL, aid, deadline).startswith("lost:")
 
 
 def test_a_peer_that_falls_behind_is_cut_clean_to_a_keyframe_never_in_the_middle_of_a_gop():
@@ -857,7 +857,7 @@ def test_a_suppression_summary_asks_nothing_and_the_deadline_counts_from_the_eve
     assert gate_scenarios.on_event("vehicle", {"ts": wall() - 15, "repeats": 12}) == []
     late = {x["target"]: x for x in gate_scenarios.on_event("vehicle", {"ts": wall() - 25})}
     assert late[PTZ]["state"] == "asked" and late[PTZ]["deadline"] == wall() + 5      # 30 s from the event
-    assert late[SERIAL]["state"] == "seen after its deadline: not asked"            # its within is 10 s
+    assert late[SERIAL]["state"] == "an event seen after its scenario's deadline: not asked"            # its within is 10 s
 
 
 def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():

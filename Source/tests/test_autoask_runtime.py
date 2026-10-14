@@ -21,6 +21,7 @@ def shared(e, items):
 
 def site():
     e=road_fixture()
+    e.ingest.ask=lambda *a,**kw:'ask-id'
     shared(e,[item()])
     e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'A','enabled':True}))
     index=_Log([ev(e.box.wall()-1,'cam','1','motion')])
@@ -39,7 +40,8 @@ def test_unassigned_worker_executes_local_trigger_and_rereads_no_event_twice():
     assert ('cam','motion','1') in w.wants()
     assert s.index.asked[-1]['unit']=='cam/1'
     w.reconcile_once()
-    assert len(e.dialled)==1
+    assert len(e.calls)==1 and len(e.dialled)==2
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{'asked':e.box.wall()}}
 
 
 def test_nonlocal_disabled_and_fenced_trigger_events_are_not_asks():
@@ -70,7 +72,7 @@ def test_only_elected_worker_runs_shared_scenarios_and_slot_loss_cannot_dial():
     e.door.request=reply_after_loss
     s.worker.reconcile_once()
     assert e.calls==[('ask','B','A')] and not e.dialled
-    assert s.worker.heartbeat_fields()['asks']['refused']=={'a-to-b':'ask transport or authority refused'}
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{'last':'no token at camera: the ask authority could not be confirmed'}}
 
 
 def test_invalid_and_partial_windows_are_said_without_leaking_settings():
@@ -82,15 +84,18 @@ def test_invalid_and_partial_windows_are_said_without_leaking_settings():
     query=s.index.query
     s.index.query=lambda *a,**kw:{**query(*a,**kw),'truncated':True}
     s.worker.reconcile_once()
-    assert s.worker.heartbeat_fields()['asks']=={'refused':{'a-to-b':'trigger event window is incomplete'}}
-    assert not e.calls
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{'holding':{'cam/1':'trigger event window is incomplete'}}}
+    s.index.query=query
+    s.worker.reconcile_once()
+    assert 'holding' not in s.worker.heartbeat_fields()['asks']['a-to-b']
+    assert e.calls==[('ask','B','A')]
 
 
 def test_duplicate_local_identity_and_unverified_shared_document_cannot_run():
     s=site();e=s.e
     e.box.vars.put('cam/cameras/2',SPEC.items({'id':2,'ref':'A','enabled':True}))
     s.worker.reconcile_once()
-    assert s.worker.heartbeat_fields()['asks']=={'refused':{'a-to-b':'trigger identity is not unique locally'}}
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{'holding':{'cam/A':'trigger identity is not unique locally'}}}
     assert not e.calls
     e.box.vars.delete('cam/cameras/2')
     pointer,_=e.box.vars.get('domain/shared')
@@ -102,6 +107,7 @@ def test_duplicate_local_identity_and_unverified_shared_document_cannot_run():
 def test_embedded_device_calls_agent_as_autoworker_without_an_auto_worker():
     from vms.camera_cluster import DeviceCluster
     e=road_fixture();shared(e,[item()])
+    e.ingest.ask=lambda *a,**kw:'ask-id'
     device=DeviceCluster('A',e.box.vars,wall=e.box.wall,disk=e.box.objects)
     device.boot()
     requests=[]
@@ -169,3 +175,55 @@ def test_embedded_publisher_needs_a_live_ingest_and_obeys_slot_fencing():
     publisher.publish()
     assert e.box.vars.get('auto/asks/A') == before
     assert publisher.worker.writing_allowed is False
+
+
+def test_actual_worker_pulse_document_refusals_are_separate_from_missing_roads():
+    s=site();e=s.e
+    shared(e,[item('duplicate'),item('duplicate')])
+    s.worker.reconcile_once();s.worker.heartbeat_once()
+    pulse=json.loads(e.box.objects.get('auto/heartbeats/a-1'))['asks']
+    assert pulse=={'refused':{'#1':'name is repeated','#2':'name is repeated'}}
+    shared(e,[item()]);e.publish({**e.value,'by':['not-A']})
+    s.worker.reconcile_once();s.worker.heartbeat_once()
+    pulse=json.loads(e.box.objects.get('auto/heartbeats/a-1'))['asks']
+    assert pulse=={'a-to-b':{'last':'the book of asks names no door for B: not asked'}}
+    assert not e.calls
+
+
+def test_worker_follows_outcome_on_next_pass_without_another_event():
+    s=site();e=s.e
+    s.worker.reconcile_once()
+    e.ingest.ask_outcome=lambda *a:'refused: the camera is offline'
+    s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{
+        'asked':e.box.wall(),'last':'refused: the camera is offline'}}
+    assert len(e.calls)==1
+    shared(e,[]);s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={}
+
+
+def test_runtime_pulse_contains_no_foreign_trigger_and_disabled_local_camera_has_why():
+    s=site();e=s.e
+    foreign=item('foreign');foreign['when']['camera']='elsewhere'
+    shared(e,[item(),foreign])
+    e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'A','enabled':False}))
+    s.worker.reconcile_once()
+    assert s.worker.heartbeat_fields()['asks']=={'a-to-b':{'why':'no camera A in this cluster'}}
+    e.box.vars.put('cam/cameras/1',SPEC.items({'id':1,'ref':'A','enabled':True}))
+    s.worker.reconcile_once()
+    assert 'why' not in s.worker.heartbeat_fields()['asks']['a-to-b']
+
+
+def test_embedded_heartbeat_observes_settle_without_more_camera_events():
+    from vms.autoask_runtime import Embedded
+    e=road_fixture();shared(e,[item()])
+    e.ingest.ask=lambda *a,**kw:'id'
+    def request(*args):
+        return {**e.door.request('ask','B','A'),'request_id':args[-1]}
+    embedded=Embedded('A',e.box.vars,e.box.objects,SimpleNamespace(request_token=request),
+        e.dial,e.box.wall,e.box.clock)
+    embedded.on_event('motion')
+    e.ingest.ask_outcome=lambda *a:'performed'
+    assert embedded.heartbeat()=={'a-to-b':{'asked':e.box.wall(),'last':'performed'}}
+    shared(e,[])
+    assert embedded.heartbeat()=={}
