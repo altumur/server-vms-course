@@ -1,9 +1,11 @@
 """Shared cross-cluster scenarios executed where their trigger events originate."""
 from __future__ import annotations
 
+import copy
 import math
 
 from w2cplatform.rows import PARSE_ERRORS
+from .recording_books import Unconfirmed
 
 VALID = 30.0
 RATE = 6
@@ -62,6 +64,16 @@ def scenarios(settings):
     return valid, refused
 
 
+class NoAskRoad(Unconfirmed):
+    """A complete book names no eligible door for this action."""
+
+
+class NoAskToken(Unconfirmed):
+    def __init__(self, member):
+        self.member = member
+        super().__init__('a current role token could not be obtained')
+
+
 class Executor:
     """A cluster event reader or an embedded executor uses the same logic.
 
@@ -74,20 +86,55 @@ class Executor:
         self.refused = {}
         self.fired = {}
         self._valid = []
+        self.status = {}
+        self.pending = {}
 
     def refresh(self):
         valid, self.refused = scenarios(self.shared.settings())
         present = {item['name'] for item in valid}
         for gone in set(self.fired) - present:
             self.fired.pop(gone, None)
+        for gone in set(self.status) - present:
+            self.status.pop(gone, None)
+            self.pending = {key:value for key,value in self.pending.items() if key[0] != gone}
         self._valid = valid
         return valid
 
+    def local(self, cameras):
+        """Only locally owned triggers have runtime state, including disabled cameras."""
+        present = {item['name'] for item in self._valid if item['when']['camera'] in cameras}
+        for gone in set(self.status) - present:
+            self.status.pop(gone, None)
+            self.pending = {key:value for key,value in self.pending.items() if key[0] != gone}
+        for name in present:
+            self.status.setdefault(name, {})
+
+    def settle(self):
+        from .domainpart.ingest import Refused
+        from w2cplatform.domain.federation import Unreachable
+        for key, (asker, target, aid, deadline) in list(self.pending.items()):
+            name = key[0]
+            try:
+                out = asker.outcome(target, aid, deadline)
+            except (Refused, Unconfirmed, Unreachable, OSError, *PARSE_ERRORS):
+                # The real Asker bounds unavailable outcomes by deadline + grace.
+                from .domainpart.ingest import ANSWER_GRACE
+                out = 'lost: the ingest does not answer' if self.clock() > deadline + ANSWER_GRACE else None
+            if out is not None:
+                self.status[name]['last'] = out
+                del self.pending[key]
+
     def heartbeat(self):
-        return {'refused': dict(self.refused)} if self.refused else {}
+        result = copy.deepcopy(self.status)
+        if self.refused:
+            result['refused'] = dict(self.refused)
+        return result
 
     def on_event(self, serial, kind, event=None, *, refresh=True):
         valid = self.refresh() if refresh else self._valid
+        if refresh:
+            self.local({str(serial)})
+            self.settle()
         if event and event.get('repeats'):
             return []
         now = self.clock()
@@ -103,30 +150,60 @@ class Executor:
             if when['camera'] != str(serial) or when['kind'] != kind or then['camera'] == str(serial):
                 continue
             target, within = then['camera'], then.get('within', VALID)
+            name = item['name']
+            state = self.status.setdefault(name, {})
+            state.pop('why', None)
             outcome = {'target': target, 'action': then}
+            def note(text):
+                state['last'] = text
+                done.append({**outcome, 'state': text})
             if at + within <= now:
-                done.append({**outcome, 'state': 'seen after its deadline: not asked'})
+                note("an event seen after its scenario's deadline: not asked")
                 continue
             name, cap = item['name'], item.get('rate_per_minute') or RATE
             recent = self.fired[name] = [t for t in self.fired.get(name, []) if now - t < 60.0]
             if len(recent) >= cap:
-                done.append({**outcome, 'state': f'over its ceiling of {cap}/min: not asked'})
+                note(f'over its ceiling of {cap} a minute: not asked')
                 continue
             recent.append(now)
             from .domainpart.ingest import Refused
             from w2cplatform.domain.federation import Unreachable
             from .recording_books import Unconfirmed
+            asker = None
             try:
-                left = self.asker(str(serial)).ask(target, then, at + within - now)
-            except (Refused, Unreachable, Unconfirmed, OSError):
-                # Refusals must not serialize tokens, URLs or arbitrary action contents into the pulse.
-                self.refused[name] = 'ask transport or authority refused'
-                done.append({**outcome, 'state': 'not asked'})
+                asker = self.asker(str(serial))
+                left = asker.ask(target, then, at + within - now)
+            except NoAskRoad:
+                note(f'the book of asks names no door for {target}: not asked')
                 continue
+            except NoAskToken as why:
+                note(f'no token at {why.member}: {why}')
+                continue
+            except Refused as why:
+                note(f'refused: {why}')
+                continue
+            except (Unreachable, OSError):
+                note('no ingest answered')
+                continue
+            except Unconfirmed:
+                # Internal authority diagnostics can contain arbitrary transport data.
+                from .recording_publication import member
+                own = member(asker.flash) if isinstance(asker, Asker) else 'this cluster'
+                note(f'no token at {own}: the ask authority could not be confirmed')
+                continue
+            finally:
+                if asker is not None and getattr(asker, 'sent', None) is not None:
+                    state['asked'] = asker.sent
             if left is None:
-                done.append({**outcome, 'state': 'no ingest answered: not asked'})
+                note('no ingest answered')
             else:
                 ingest, aid = left
+                state['asked'] = getattr(asker, 'sent', None) or self.clock()
+                if isinstance(aid, str) and aid:
+                    state.pop('last', None)
+                    self.pending[name, aid] = asker, target, aid, at + within
+                else:
+                    state['last'] = "asked; the ingest's answer does not read, so its outcome is not followed"
                 done.append({**outcome, 'state': 'asked', 'ingest': ingest, 'ask': aid, 'deadline': at + within})
         return done
 
@@ -256,6 +333,7 @@ class Asker:
         from .role_tokens import RoleTokens
         self.serial, self.flash, self.dial = str(serial), flash, dial
         self.clock = clock or time.time
+        self.sent = None
         self.tokens = tokens if tokens is not None else RoleTokens('autoworker', env=env)
 
     def _roads(self, target, action=None):
@@ -288,9 +366,10 @@ class Asker:
             valid_deadline = False
         if not valid_deadline:
             raise Unconfirmed('ask deadline has passed or is invalid')
+        self.sent = None
         own, facts = self._roads(target, action)
         if not facts:
-            raise Unconfirmed('ask has no confirmed road')
+            raise NoAskRoad('ask has no confirmed road')
         def current_scope(member, observations):
             return (member, jcs(action),
                     jcs([{'member': f.member, 'item': f.item, 'value': f.value} for f in observations]),
@@ -299,7 +378,10 @@ class Asker:
             scope = current_scope(own, facts)
         except PARSE_ERRORS:
             raise Unconfirmed('ask topology or assignment is invalid') from None
-        token = self.tokens.get('ask', target, scope, by=self.serial)
+        try:
+            token = self.tokens.get('ask', target, scope, by=self.serial)
+        except (Unconfirmed, OSError):
+            raise NoAskToken(own) from None
         try:
             current, latest = self._roads(target, action)
             if current_scope(current, latest) != scope:
@@ -332,9 +414,16 @@ class Asker:
                     raise Unconfirmed('ask deadline passed while trying its roads')
                 try:
                     ingest = self.dial(url)
+                    self.sent = self.clock()
                     aid = ingest.ask(token, target, action, deadline, camera_now=self.clock())
                     return ingest, aid
-                except Unreachable:
+                except Unconfirmed:
+                    raise
+                except PARSE_ERRORS:
+                    if self.sent is None:
+                        raise Unconfirmed('ask door could not be read') from None
+                    return ingest, None
+                except (Unreachable, OSError):
                     continue
         return None
 
@@ -346,14 +435,25 @@ class Asker:
             _, facts = self._roads(target)
         except Unconfirmed:
             facts = ()
+        received, unread = False, False
         for fact in facts:
             for url in fact.value['urls']:
                 try:
                     out = self.dial(url).ask_outcome(target, aid)
-                except Unreachable:
+                    received = True
+                except (Unreachable, OSError):
                     continue
-                if out is not None:
+                except (Unconfirmed, *PARSE_ERRORS):
+                    unread = True
+                    continue
+                if isinstance(out, str) and (out == 'performed' or out.startswith('refused: ')):
                     return out
+                if out is not None:
+                    unread = True
         if self.clock() > deadline + ANSWER_GRACE:
-            return 'unknown: no ingest knows this ask'
+            if unread:
+                return "lost: the ingest's answer does not read"
+            if received or not facts:
+                return 'lost: no ingest knows this ask — it restarted, or the ask never arrived'
+            return 'lost: the ingest does not answer'
         return None
