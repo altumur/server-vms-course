@@ -12,7 +12,7 @@ from w2cplatform.doors import numeric
 from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 from w2cplatform.domain.federation import Unreachable
-from .ingest import ASK_DEADLINE_MAX, Refused
+from vms.ingest import ASK_DEADLINE_MAX, Refused
 
 VALID = 30.0
 RATE = 6                               # asks per scenario per minute, the product's default
