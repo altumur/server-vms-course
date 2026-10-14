@@ -70,11 +70,13 @@ def test_token_spec_rejects_unknown_unsafe_and_partial_bindings():
         centre = copy.deepcopy(raw)
         centre["domain"]["tokens"]["tally"]["placement"]["target_fields"] = ["centre"]
         assert SubsystemSpec.from_dict(centre).domain.tokens["tally"]["placement"]["target_fields"] == ("centre",)
+        centre["domain"]["tokens"]["tally"]["placement"]["target_fields"] = ["star_centre"]
+        assert SubsystemSpec.from_dict(centre).domain.tokens["tally"]["placement"]["target_fields"] == ("star_centre",)
         for change in (dict(grant=[]), dict(grant=["x", "x"]), dict(grant="worker"), dict(placement=None), dict(audience_prefix="prefix")):
             broken = copy.deepcopy(raw); broken["domain"]["tokens"]["tally"].update(change)
             raises(ValueError, lambda: SubsystemSpec.from_dict(broken))
         for change in ({"caller": "unit"}, {"target_fields": []}, {"target_fields": ["origin", "origin"]},
-                       {"target_fields": ["when"]}, {"target_fields": ["star_centre"]}, {"ref_claim": "undeclared"}, {"audience_claim": "ref"}, {"extra": "unsafe"}):
+                       {"target_fields": ["when"]}, {"ref_claim": "undeclared"}, {"audience_claim": "ref"}, {"extra": "unsafe"}):
             broken = copy.deepcopy(raw); broken["domain"]["tokens"]["tally"]["placement"].update(change)
             raises(ValueError, lambda: SubsystemSpec.from_dict(broken))
         for key in ("grant", "placement"):
@@ -96,6 +98,24 @@ def test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassign
             assert verify(new["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["south"]
 
 
+
+
+def test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems():
+    with issuing(two=True) as e:
+        for sub, kind in (("testsub", "tally"), ("testsub2", "tally2")):
+            rule = catalog.spec(sub).domain.tokens[kind]
+            rule["placement"] = {**rule["placement"], "target_fields": ("cluster", "copies", "star_centre")}
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": "north", "star": ["south"], "via": {}})})
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "south", "copies": []}, e.wall)
+            got = client(e).request_token(sub, kind, "badge", f"{sub}worker")
+            assert verify(got["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["north", "south"]
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "north", "origin": "south", "copies": ["south"]}, e.wall)
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "elsewhere", "star": ["south"], "via": {}})})
+            got = client(e).request_token(sub, kind, "badge", f"{sub}worker")
+            assert verify(got["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["north", "south"]
+            placement.assign(e.north.vars, sub, "badge", {"cluster": "south", "origin": "south", "copies": []}, e.wall)
+            e.north.vars.put("domain/topology", {"doc": json.dumps({"rev": 3, "centre": None, "star": ["south"], "via": {}})})
+            assert raises(Refused, lambda: client(e).request_token(sub, kind, "badge", f"{sub}worker")).status == 409
 
 
 def test_declared_centre_target_comes_only_from_confirmed_holder_topology():
