@@ -380,6 +380,33 @@ class Forwarder:
                 self._silent(ref)
         return dict(self.state)
 
+    def fetch_range(self, ref: str, t0: float, t1: float, wait: float | None = None,
+                    recording: str | None = None) -> list:
+        """The star's card range goes through the same confirmed centre as its stream."""
+        from w2cplatform.domain.topology import member_topology
+        from .ingest import RangeFailed
+        try:
+            topology = member_topology(self.vars, self.name)
+            if self.name not in topology["star"]:
+                return self.local.fetch_range(ref, t0, t1, wait, recording)
+            if topology["rev"] <= 0:
+                raise RangeFailed("range topology is not confirmed")
+            entry = self.book().get(ref)
+            if entry is None or entry["mode"] != "pull" or not self._usable(ref, entry):
+                raise RangeFailed("the star's range has no confirmed upstream credential")
+            centre = self._centre(entry)
+            if centre is None:
+                raise RangeFailed("no centre ingest answered the range")
+            frames = centre.fetch(entry["token_secret"], ref, t0, t1, wait, recording)
+            if not self._usable(ref, entry):
+                raise RangeFailed("the upstream scope changed while reading the range")
+            return frames
+        except StreamRefused as err:
+            self._refused(ref)
+            raise RangeFailed(str(err)) from None
+        except (ValueError, TypeError, KeyError) as err:
+            raise RangeFailed("the range has no confirmed upstream scope") from err
+
     # -- the centre's word, kept (`UP_KEPT`) ------------------------------------------------------------------
     def restore_up(self, book: dict | None = None) -> None:
         """Seeds `Ingest.up_have` from the word an earlier process of this relay kept, for every push camera of the book
