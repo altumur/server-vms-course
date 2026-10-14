@@ -127,6 +127,7 @@ paths:
           description: строка; отсутствующая — items null, index ""
           content: {application/json: {schema: {$ref: "#/components/schemas/Row"}}}
         "400": {$ref: "#/components/responses/BadKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/list:
@@ -138,6 +139,7 @@ paths:
         "200":
           description: каждый ключ с данным префиксом и его версия; ключи — в порядке байтов
           content: {application/json: {schema: {$ref: "#/components/schemas/Listing"}}}
+        "404": {$ref: "#/components/responses/NoRoute"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/write:
     post:
@@ -150,6 +152,7 @@ paths:
           description: сделано; again — ответ прежнего применения записи с этим id
           content: {application/json: {schema: {$ref: "#/components/schemas/Written"}}}
         "400": {$ref: "#/components/responses/BadRequestOrKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "409": {$ref: "#/components/responses/Conflict"}
         "412": {$ref: "#/components/responses/Guard"}
@@ -163,7 +166,7 @@ components:
       properties:
         items: {type: [object, "null"], additionalProperties: {type: string}}
         index: {type: string}
-        unreadable: {type: boolean}   # строка есть, но не читается (повреждена на носителе): items null, index — её настоящая версия; put с cas по этой версии заменяет её; у группы не бывает (М10/1-23)
+        unreadable: {type: boolean}   # строка есть, но не читается (повреждена на носителе): items null, index — её настоящая версия; put с cas по этой версии заменяет её; у группы не бывает (М10/1-18)
     Listing:
       type: object
       required: [keys]
@@ -206,6 +209,7 @@ components:
     Guard:         {description: "kind guard",    content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
     TooLarge:      {description: "kind toolarge", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
     Unavailable:   {description: "kind unavailable", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    NoRoute: {description: "нет маршрута — kind badrequest (Н4, сц. 17)", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
     UnavailableOrAmbiguous: {description: "kind unavailable или ambiguous", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
 ```
 
@@ -361,7 +365,7 @@ index := новая версия                              # удаление
 2. **как выдаётся версия**: счётчик в файле, индекс журнала плюс основание группы — лишь бы не повторялась; с какого числа начинается;
 3. **раскладку на диске** и **барьеры долговечности** (запись доходит до носителя до публикации; удаление переживает потерю питания); режим без барьеров допустим только по явному слову окружения;
 4. **предел длины ключа** реализации на файлах, если он меньше 1024;
-5. **как хранилище, которое может прочитать свою строку не полностью** (повреждённый файл), сообщает об этом: форма ответа — норма (Н2 `Row.unreadable`, М10/1-23); здесь — как реализация обнаруживает порчу и что пишет в лог;
+5. **как хранилище, которое может прочитать свою строку не полностью** (повреждённый файл), сообщает об этом: форма ответа — норма (Н2 `Row.unreadable`, М10/1-18); здесь — как реализация обнаруживает порчу и что пишет в лог;
 6. **срок и объём памяти повторов** сверх минимума Н3;
 7. **срок ожидания лидера** перед `unavailable` и как дверь отличает «не добавлено в журнал» от «неизвестно».
 
@@ -390,8 +394,8 @@ index := новая версия                              # удаление
 - [ ] **М10/1-19** клиенту СЛЕДУЕТ ставить `id` на каждую запись — проверяется чтением клиентов платформы (уроки 3–5)
 - [ ] **М10/1-20** префиксу перечисления СЛЕДУЕТ кончаться на `/` — проверяется чтением
 - [ ] **М10/1-21** реализации без двери СЛЕДУЕТ гонять сценарии и через свой API, отображая отказы на коды Н4 — проверяется чтением (её описание)
-
-Разрешения со словом МОЖЕТ (меньший предел ключа у файлов, хранилище без двери на коробке) id не имеют: они ничего не требуют.
+- [ ] **М10/1-22** реализация на файлах МОЖЕТ отказать ключу короче 1024 байт по пределу имени файла; свой предел названа в её описании — проверяется чтением описания реализации
+- [ ] **М10/1-23** хранилище на коробке МОЖЕТ открываться в процессе без двери; семантика та же, приёмка — через дверь и через свой API (М10/1-21) — проверяется чтением описания реализации
 
 ## Соответствие прежним урокам
 
