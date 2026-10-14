@@ -9,7 +9,9 @@ name: live
 # The slot a worker of this subsystem makes, `g-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: g, name_env: LIVE_NAME}
-worker: {writes: [streams]}   # a gateway deletes the fan-out it holds once nobody has watched it for `grace`
+worker: {writes: [streams, accounts], reads: [domain/live/stream-accounts, domain/member-list]}
+# Cluster-owned accounts are served only by the gateway, never by generic table CRUD.
+tables: [accounts]
 about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
   rows: streams                      # live/streams/<cam>
@@ -34,10 +36,17 @@ placement:
 # beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is
 # read, as the product says it.)
 lease: {unconfirmed_max: off}
-# The VMS's secret rows its gateway reads (cam.subsystem.yaml, secrets.readers): the RTSP accounts it takes its
-# clients' passwords and its own records from.
+# C5: local credentials, published contribution, and delivered book have distinct readers.
 secrets:
-  reads: [domain/cam/stream-clients/, domain/cam/stream-accounts]
+  readers:
+    live/accounts/: [worker]
+    live/stream-accounts/: [worker, domainagent]
+    domain/live/stream-accounts: [worker, domainagent, domain]
+domain:
+  books:
+    stream-accounts: {from: live/stream-accounts/, key: name, pick: unique, to: to}
+  names:
+    stream-accounts/: {exclusive_with: domain/users, grant: view}
 snapshot: [cam, labels]
 # Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
 # console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).
@@ -46,7 +55,9 @@ rights:
 # The gateway's door, opened to a page itself (the owner's decision 1: the bytes — here the offer and the stream — go
 # gateway ↔ browser): `POST /whep/<cam>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
 # `GET /live/where/<cam>` hands it out.
-door: {routes: [whep]}
+door:
+  routes: [whep]
+  pass: [accounts]
 metrics:
   - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
