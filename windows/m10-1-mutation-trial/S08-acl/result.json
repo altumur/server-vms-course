@@ -1,0 +1,119 @@
+{
+  "id": "S08-acl",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "role ACL is bypassed",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 27,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "21-rights",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "21-rights",
+      "1",
+      "body.index.extra"
+    ],
+    [
+      "21-rights",
+      "1",
+      "body.items.extra"
+    ],
+    [
+      "21-rights",
+      "1",
+      "body.kind"
+    ],
+    [
+      "21-rights",
+      "1",
+      "status"
+    ],
+    [
+      "21-rights",
+      "2",
+      "body.index.extra"
+    ],
+    [
+      "21-rights",
+      "2",
+      "body.kind"
+    ],
+    [
+      "21-rights",
+      "2",
+      "status"
+    ],
+    [
+      "21-rights",
+      "3",
+      "body.index.extra"
+    ],
+    [
+      "21-rights",
+      "3",
+      "body.kind"
+    ],
+    [
+      "21-rights",
+      "3",
+      "status"
+    ],
+    [
+      "21-rights",
+      "4",
+      "body.index.extra"
+    ],
+    [
+      "21-rights",
+      "4",
+      "body.key.extra"
+    ],
+    [
+      "21-rights",
+      "4",
+      "body.kind"
+    ],
+    [
+      "21-rights",
+      "4",
+      "status"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:Rights.allows",
+  "api_function_calls": 83,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      39,
+      7,
+      0
+    ],
+    "failures": [
+      "test_guard.py::test_guard_requires_read_permission_and_never_grants_target_write_permission",
+      "test_storemachine.py::test_a_denial_wins_over_every_grant_wherever_it_stands",
+      "test_storemachine.py::test_a_list_names_every_key_to_every_role_and_a_value_is_read_by_the_right_to_read_alone",
+      "test_storemachine.py::test_a_role_without_the_grant_is_refused_before_anything_is_submitted",
+      "test_storemachine.py::test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it",
+      "test_storemachine.py::test_rights_grant_by_role_action_and_prefix",
+      "test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
