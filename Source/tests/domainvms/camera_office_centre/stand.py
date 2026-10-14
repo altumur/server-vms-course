@@ -1,7 +1,7 @@
 """The stand of the camera–office–centre notes: the platform's first MVP configuration, run on the course's code.
 
     srv        the centre: holds the domain — the signer (`signer_service`), the domain's console, the holder's own
-               agent, the VMS's worker on the domain (`vms.domainpart`) with the signer's token socket — and a recorder
+               agent — and a recorder
                of its own with an ingest (`r-srv-1`), for the copy of an important camera and for the viewer
     relay-a    office A: a recorder with an ingest and the forwarder (`r-relay-a-1`), the volume `disk`, the agent with
                the relay's door; behind it the cameras cam-a (SN-A) and cam-a2 (SN-A2)
@@ -16,8 +16,7 @@ the committed rights file, a resource with its objects — of ONE server named a
 store's index from its own base (srv 1000, relay-a 2000, relay-b 3000, relay-b2 7000). A camera's flash is a
 `FakeVariables` from its own base (cam-a 4000, cam-a2 5000, cam-b 6000).
 
-Every process is built as its entry point builds it (`signer_service.main`, `console.main`, `agent.main`,
-`vms.domainpart.worker.main`), with the stand's stores instead of the sockets the environment would name, and its doors
+Every process is built as its entry point builds it (`signer_service.main`, `console.main`, `agent.main`), with the stand's stores instead of the sockets the environment would name, and its doors
 opened on loopback (`open_doors`) — real HTTP. Nothing runs in the background: each pass is called by the scenario, so a
 trace reads the same on every run. Where the course has no wire — the camera and the office's ingest, the office's
 forwarder and the centre's ingest, a member's report into the objects of the holder or of its relay — the call is made in
@@ -457,35 +456,9 @@ class Site:
         c._steps(("following the members", c._follow_members), ("following the topology", c._follow_topology),
                  ("the read view's pass", c.view.refresh))
 
-    def start_domainpart(self) -> None:
-        """`vms.domainpart.worker.main` on srv: the VMS's books, by the role `camdomain`, its tokens asked of the signer's
-        socket (`TokenDoor`) — the key stays the signer's."""
-        from w2cplatform.configstorevars import unix_transport
-        from w2cplatform.domain.members import Members
-        from w2cplatform.domain.readview import ReadView
-        from w2cplatform.domain.topology import Topology
-        from w2cplatform.domain.uplink import _CopyObjects
-        from vms.domainpart.books import Books
-        from vms.domainpart.inputs import BookInputs
-        from vms.domainpart.worker import DomainPartWorker
-        srv = self.cluster("srv")
-        who = "camdomain on srv"
-        v = srv.door("camdomain", who)
-        fed = self.federation(v, srv.objects_on("srv", v, who))
-        holder = fed.domain_holder
-        view = ReadView(fed, lost_after=45.0, wall=self.wall)
-        configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
-        self.inputs = BookInputs(holder.vars, view, wall=self.wall, topology=Topology(holder.vars),
-                                   sealer=self.ring("srv"))
-        books = Books(self.inputs, holder.objects,
-                      members=Members(holder.vars, wall=self.wall, configured=lambda: configured, domain="srv"))
-        self.domainpart = DomainPartWorker(books, holder.vars, holder.objects, instance="srv:1201:0004b1", wall=self.wall)
-
     def domain_pass(self) -> None:
-        """The holder's passes, in the order the units run them: the signer's, the VMS's books, the console's reader."""
+        """The holder collects signed contributions; the console follows the platform view."""
         self.holder.run_pass()
-        if getattr(self, "domainpart", None) is not None:
-            self.domainpart.pass_once()
         if getattr(self, "console", None) is not None:
             self.console_pass()
 
@@ -775,7 +748,7 @@ class Site:
 
     def gateway(self):
         """The viewer's side in the centre: the course's MODEL of a live gateway over the centre's ingest
-        (`domainpart.gateway.Gateway` + `ingest.IngestLiveEndpoint`) — the course's WHEP gateway (`vms/liveworker.py`)
+        (`vms.gateway.Gateway` + `ingest.IngestLiveEndpoint`) — the course's WHEP gateway (`vms/liveworker.py`)
         knows no ingest. It checks a person's token by the centre's own key set, as a cluster's endpoint does."""
         if getattr(self, "_gateway", None) is not None:
             return self._gateway
