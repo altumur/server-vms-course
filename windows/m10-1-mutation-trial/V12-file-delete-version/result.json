@@ -1,0 +1,39 @@
+{
+  "id": "V12-file-delete-version",
+  "valid": true,
+  "target": "variables.py",
+  "description": "file deletion resets the version counter",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 23,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [],
+  "api_killed": false,
+  "api_target_function": "variables.py:FileVariables.delete",
+  "api_function_calls": 0,
+  "api_target_reached": false,
+  "api_coverage": "not reached by LocalBackend; confirmed by api-calls.json",
+  "unit": {
+    "exit": 0,
+    "totals": [
+      46,
+      0,
+      0
+    ],
+    "failures": [],
+    "import_failure": false
+  },
+  "unit_killed": false
+}
