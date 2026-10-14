@@ -1,0 +1,9 @@
+# Приёмка М10/10 — схема, дренаж, снимок, тела, таблицы
+
+Сценарии урока [М10/10](../../../../../../М10_Platform/10-schema-drain-snapshot-limits.md) (ADR-0080): двери консоли `testsub` (root) и `testsub2` (смонтирована, `console2 …` — её двери `/testsub2/…`), контроллер и ресурс `srv-a` по директивам (`@start controller`, `@start resource`), дверь ресурса (`resource …`), хранилище (`store …`); без воркеров и домена. Формат — README уроков 5 и 8 (`@until`, `@sleep`, подмножество полей, `@absent`, `~`, `$имя`, `@any`, `@big(N)` из урока 1 — строка из N байт `x` внутри JSON-строки). Дополнительно: тело `@raw <текст>` — отправить текст как `application/octet-stream`; `@header` в `expect` — как в уроке 9.
+
+Перед сценариями раннер создаёт счётчик `c1` в `testsub` (для `of` у `tallies`).
+
+## corrections.tsv
+
+Журнал исправлений ИИ (ADR-0080 доп. 1): `date`, `sample`, `fix`, `languages`.

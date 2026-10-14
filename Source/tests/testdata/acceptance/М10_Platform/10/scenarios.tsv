@@ -1,0 +1,36 @@
+scenario	step	request	expect
+# Приёмка М10/10: консоль testsub (root) и testsub2, контроллер и ресурс по директивам, без воркеров. Формат — README.
+01-schema	1	console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "builds": "@any"}
+01-schema	2	console PUT /schema?version=abc	400 {"error": "~a version is a number"}
+01-schema	3	console PUT /schema?version=0	409 {"error": "~does not go back"}
+01-schema	4	console PUT /schema?version=1	200 {"version": 1}
+02-drain-strand	1	console POST /counters {"name": "d1", "start": 1}	201
+02-drain-strand	2	console POST /drain?server=srv-a	2xx
+02-drain-strand	3	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}
+02-drain-strand	4	console POST /drain?server=srv-b	409
+02-drain-strand	5	console DELETE /drain	2xx
+02-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": "@absent"}
+03-snapshot	1	@start controller	ok
+03-snapshot	2	@start resource	ok
+03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
+03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@any", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
+03-snapshot	5	console GET /metrics	200 ~testsub_snapshot_age_seconds
+04-blob	1	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
+04-blob	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
+04-blob	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
+04-blob	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "$d", "revision": "2"}}
+04-blob	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 3}
+04-blob	6	console2 PUT /tallies/t1/nosuch @raw x	404
+04-blob	7	console2 PUT /tallies/nosuch/mask @raw x	404
+05-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long"}
+05-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
+05-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413
+06-tables	1	console2 POST /shelves {"zone": "z1"}	400
+06-tables	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "zone": "z1", "kind": "plain", "admits": true}}
+06-tables	3	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "zone": "z1", "held_by": null}]}
+06-tables	4	console2 GET /shelves/sh1	200 {"name": "sh1", "kind": "plain"}
+06-tables	5	console2 PATCH /shelves/sh1 {"zone": "z2"}	405
+06-tables	6	console2 POST /shelves {"name": "a/b", "zone": "z1"}	400
+06-tables	7	console2 DELETE /shelves/sh1	200 {"deleted": "sh1"}
+06-tables	8	console2 GET /shelves/sh1	404
+06-tables	9	console2 DELETE /shelves/sh1	404
