@@ -123,3 +123,45 @@ def member_topology(vars_, member):
             or refusals(result):
         raise ValueError("invalid topology")
     return result
+
+
+def poll_home(vars_, member, *, authoritative=False):
+    """The member's poll home: its relay, the centre, or the confirmed holder.
+
+    A worker selects the topology by its local identity, independently of the
+    member whose home is asked. Holder services explicitly read authoritative
+    topology; a stale member copy never overrides it. Unknown policy is an error.
+    """
+    from w2cplatform.canonical import parse_json
+    from w2cplatform.rows import PARSE_ERRORS
+    def name(value):
+        return isinstance(value, str) and bool(value) and not any(ord(ch) < 33 for ch in value)
+    try:
+        if not name(member):
+            raise ValueError()
+        record, _ = vars_.get("domain/holder")
+        holder = parse_json(record["doc"]) if record else None
+        if not isinstance(holder, dict) or not name(holder.get("holder")) \
+                or type(holder.get("term")) is not int or holder["term"] <= 0:
+            raise ValueError()
+        here = holder["holder"]
+        if not authoritative:
+            local, _ = vars_.get("domain/member")
+            if not isinstance(local, dict) or not name(local.get("cluster")):
+                raise ValueError()
+            here = local["cluster"]
+        key = TOPOLOGY if authoritative or here == holder["holder"] else "domain/member-topology"
+        items, _ = vars_.get(key)
+        doc = parse_json(items["doc"]) if items is not None else {}
+        if not isinstance(doc, dict):
+            raise ValueError()
+        rev, centre, star, via = doc.get("rev", 0), doc.get("centre"), doc.get("star", []), doc.get("via", {})
+        if type(rev) is not int or rev < 0 or centre is not None and not name(centre) \
+                or not isinstance(star, list) or any(not name(n) for n in star) or len(set(star)) != len(star) \
+                or not isinstance(via, dict) or any(not name(m) or not name(r) for m, r in via.items()) \
+                or rev == 0 and (centre is not None or star or via) \
+                or refusals({"centre": centre, "star": star, "via": via}, domain=holder["holder"]):
+            raise ValueError()
+        return via.get(member) or centre or holder["holder"]
+    except PARSE_ERRORS:
+        raise ValueError("poll home needs a confirmed holder and valid topology") from None
