@@ -78,11 +78,11 @@ def test_a_write_repeated_with_its_id_is_answered_with_its_first_answer():
     i = _put(m, "testsub/slots/w-2", {"holder": "a"}, cas=0)["index"]
     first = _put(m, "testsub/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1")
     j = _put(m, "testsub/slots/w-2", {"holder": "b"}, cas=first["index"])["index"]
-    assert _put(m, "testsub/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1") == first
+    assert _put(m, "testsub/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1") == {**first, "again": True}
     assert m.apply({"op": "get", "key": "testsub/slots/w-2"}) == {"items": {"holder": "b"}, "index": j}
     lost = _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2")
     assert lost["conflict"]
-    assert _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2") == lost, "a remembered conflict wrote"
+    assert _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2") == {**lost, "again": True}, "a remembered conflict wrote"
     assert _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i)["conflict"], "a NEW write against an old version passed"
 
 
@@ -92,21 +92,21 @@ def test_an_operation_id_is_answered_from_memory_only_for_its_own_write():
     was never made. Now the id answers only its own write (`_fingerprint`); under another write it is refused and
     nothing is applied — on every member alike, since the refusal is a function of the command."""
     m = StoreMachine()
-    first = _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="op-1")
-    _put(m, "testsub/servers/srv-b", {"state": "off"}, op_id="op-2")
+    first = _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="a1")
+    _put(m, "testsub/servers/srv-b", {"state": "off"}, op_id="a2")
     applied = m.applied
-    for other in ({"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "off"}, "cas": None, "id": "op-1"},
+    for other in ({"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "off"}, "cas": None, "id": "a1"},
                   {"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "on"}, "cas": first["index"],
-                   "id": "op-1"},
-                  {"op": "delete", "key": "testsub/servers/srv-b", "cas": None, "id": "op-1"},
-                  {"op": "put", "key": "testsub/servers/srv-c", "items": {"state": "on"}, "cas": None, "id": "op-1"}):
+                   "id": "a1"},
+                  {"op": "delete", "key": "testsub/servers/srv-b", "cas": None, "id": "a1"},
+                  {"op": "put", "key": "testsub/servers/srv-c", "items": {"state": "on"}, "cas": None, "id": "a1"}):
         assert "error" in m.apply(other), other
     assert m.rows["testsub/servers/srv-b"][0] == {"state": "off"} and "testsub/servers/srv-c" not in m.rows
     assert m.applied == applied + 4
-    assert _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="op-1") == first      # its own write: from memory
+    assert _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="a1") == {**first, "again": True}      # its own write: from memory
     sub, r = _Submit(m), Rights.parse(RIGHTS)
     code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "x"},
-                                                     "id": "op-1"}), ADMIN, r, sub)
+                                                     "id": "a1"}), ADMIN, r, sub)
     assert code == 400 and "another write" in said["error"], said
 
 
@@ -136,14 +136,18 @@ def test_what_a_write_names_is_bounded_and_never_said_back():
     for cmd in ({"op": "delete", "key": "testsub/x", "cas": None, "id": big},
                 {"op": "put", "key": "testsub/x", "items": {}, "cas": big, "id": "op-1"}):
         assert "error" in m.apply(cmd) and len(m.done) == 0 and m.rows == {}
-    for cas in (None, "", 0, 1003, "1003", "torn", True):                           # what the platform sends
+    for cas in (None, "", "1003"):                           # what the platform sends
         code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/y", "items": {}, "cas": cas,
                                                          "id": "0123456789abcdef0123456789abcdef"}), ADMIN, r,
                             _Submit(StoreMachine()))
         assert code in (200, 409), (cas, code, said)
+    for cas in (0, 1003, True, "007", "-1", "1" * 21):
+        code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/y", "items": {}, "cas": cas}),
+                            ADMIN, r, _Submit(StoreMachine()))
+        assert code == 400 and said["kind"] == "badrequest", (cas, code, said)
     code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/y", "items": {}, "cas": "torn"}), ADMIN,
                         r, _Submit(StoreMachine()))
-    assert code == 409 and "torn" not in said["error"]
+    assert code == 400 and said["kind"] == "badrequest" and "torn" not in said["error"]
 
 
 def test_the_operation_memory_forgets_the_oldest_first(monkeypatch):
@@ -181,7 +185,7 @@ def test_two_machines_fed_the_same_log_hold_the_same_rows_and_a_dump_carries_eve
     three = pickle.loads(pickle.dumps(one))
     nxt = {"op": "put", "key": "b", "items": {"y": 3}, "cas": 103, "id": "4"}
     assert three.apply(nxt, 7) == one.apply(nxt, 7)
-    assert three.apply(log[2], 8) == {"index": 103}, "a dump forgot the ids it had answered"
+    assert three.apply(log[2], 8) == {"index": 103, "again": True}, "a dump forgot the ids it had answered"
 
 
 def test_what_the_machine_hands_out_is_a_copy():
@@ -324,10 +328,10 @@ def test_a_subsystems_worker_on_the_domain_removes_rows_of_its_own_prefix_and_no
 def test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words():
     sub, r = _Submit(), Rights.parse(RIGHTS)
     assert answer("GET", "/v1/get?key=testsub/x", b"", ADMIN, r, sub) == (200, {"items": None, "index": ""})
-    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": 1}, "cas": ""}),
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": "1"}, "cas": ""}),
                         ADMIN, r, sub)
-    assert code == 200 and isinstance(body["index"], int)
-    code, again = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": 2}, "cas": ""}),
+    assert code == 200 and isinstance(body["index"], str)
+    code, again = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": "2"}, "cas": ""}),
                          ADMIN, r, sub)
     assert (code, again["kind"], again["index"]) == (409, "conflict", body["index"])
     n = len(sub.calls)
@@ -343,7 +347,7 @@ def test_not_done_and_outcome_unknown_are_two_answers():
     """503 `unavailable` — no leader took it, NOT done; 503 `ambiguous` — a leader took it and went, it may yet be
     applied. The handle raises `StoreUnavailable` and `StoreAmbiguous` for them, both `OSError`s."""
     r = Rights.parse(RIGHTS)
-    body = _write({"op": "put", "key": "testsub/x", "items": {}, "cas": None, "id": "op-1"})
+    body = _write({"op": "put", "key": "testsub/x", "items": {}, "cas": None, "id": "a1"})
     code, said = answer("POST", "/v1/write", body, ADMIN, r, _Submit(raises=Unavailable("no leader")))
     assert (code, said["kind"]) == (503, "unavailable")
     code, said = answer("POST", "/v1/write", body, ADMIN, r, _Submit(raises=Ambiguous("leader went")))
