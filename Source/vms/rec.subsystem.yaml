@@ -64,7 +64,7 @@ unit:
   fields:
     name:           {type: string, required: true}   # which recording this is: its key, its epoch, its streams
     cam:            {type: string, required: true, fixed: true}   # WHOSE footage it holds — the VMS camera id
-    retention_days: {type: int,    default: 30}      # media: how far back its door shows it — a ceiling, the ring decides what is there
+    retention_days: {type: int,    default: 30, minimum: 1, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
     # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say).
