@@ -180,6 +180,17 @@
     "domain/keys",
     "domain/member",
     "door/keys",
+    "domain/auto/asks",
+    "domain/cam/sources",
+    "domain/member-list",
+    "domain/member-topology",
+    "domain/placed/rec/*",
+    "domain/placement/rec/*",
+    "domain/holder",
+    "domain/topology",
+    "domain/members",
+    "domain/auto/asks/*",
+    "domain/cam/sources/*",
     "cam/requests/*",
     "objects/cam/commands/*",
     "rec/requests/*",
@@ -193,7 +204,8 @@
     "auto/holds/*",
     "cam/requests/*",
     "det/requests/*",
-    "rec/requests/*"
+    "rec/requests/*",
+    "auto/asks/*"
    ],
    "delete": [
     "auto/epoch/*",
@@ -201,7 +213,8 @@
     "auto/holds/*",
     "cam/requests/*",
     "det/requests/*",
-    "rec/requests/*"
+    "rec/requests/*",
+    "auto/asks/*"
    ]
   },
   "camcontroller": {
@@ -463,12 +476,13 @@
     "domain/placed/rec/*",
     "domain/member-topology",
     "domain/rec/upstream",
-    "domain/cam/asks",
+    "domain/auto/asks",
     "domain/placement/rec/*",
     "domain/holder",
     "domain/topology",
     "domain/cam/sources/*",
     "domain/rec/upstream/*",
+    "domain/auto/asks/*",
     "domain/rec/polls/*",
     "domain/rec/primaries/*",
     "domain/rec/polls",
@@ -698,7 +712,9 @@
     "!domain/outcomes/*",
     "!domain/keepers/*",
     "!domain/ldevid/*",
-    "!domain/cam/asks/*",
+    "!domain/auto/asks/*",
+    "!domain/auto/worker",
+    "!domain/auto/heartbeat",
     "!domain/cam/sources/*",
     "!domain/cam/worker",
     "!domain/cam/heartbeat",
@@ -726,7 +742,9 @@
     "!domain/outcomes/*",
     "!domain/keepers/*",
     "!domain/ldevid/*",
-    "!domain/cam/asks/*",
+    "!domain/auto/asks/*",
+    "!domain/auto/worker",
+    "!domain/auto/heartbeat",
     "!domain/cam/sources/*",
     "!domain/cam/worker",
     "!domain/cam/heartbeat",
@@ -738,6 +756,36 @@
     "!domain/rec/upstream/*",
     "!domain/rec/worker",
     "!domain/rec/heartbeat"
+   ]
+  },
+  "autodomain": {
+   "group": "vms-autodomain",
+   "read": [
+    "platform/schema",
+    "domain/auto/*",
+    "domain/keys",
+    "domain/topology",
+    "domain/members",
+    "domain/shared",
+    "platform/*",
+    "auto/*",
+    "cam/*",
+    "det/*",
+    "detjob/*",
+    "live/*",
+    "rec/*",
+    "survey/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
+    "!rec/asked/*"
+   ],
+   "write": [
+    "domain/auto/*",
+    "!domain/auto/asks/*"
+   ],
+   "delete": [
+    "domain/auto/*",
+    "!domain/auto/asks/*"
    ]
   },
   "camdomain": {
