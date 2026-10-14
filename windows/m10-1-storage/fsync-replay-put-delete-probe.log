@@ -1,4 +1,0 @@
-{"op": "put", "first_error": "OSError", "visible_after_error": [{"v": "one"}, 1001]}
-{"op": "put", "same_id_retry": {"index": 1002, "again": false}, "visible_after_retry": [{"v": "one"}, 1002]}
-{"op": "delete", "first_error": "OSError", "visible_after_error": [null, 0]}
-{"op": "delete", "same_id_retry_error": "Conflict", "index": 0, "visible_after_retry": [null, 0]}
