@@ -381,9 +381,9 @@ class CarryClient:
                 for p, i in got.get("rows", {}).items()}
         return {**got, "rows": rows}
 
-    def request_token(self, sub, kind, ref, role):
+    def request_token(self, sub, kind, ref, role, by=None, request_id=None):
         from .tokenrequest import request
-        return request(self, sub, kind, ref, role)
+        return request(self, sub, kind, ref, role, by, request_id)
 
     def carry_for(self, member: str) -> dict:
         return self._ask(member)
