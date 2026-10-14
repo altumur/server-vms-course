@@ -2107,7 +2107,7 @@ def test_the_pieces_of_a_clock_not_set_go_when_it_is_set_as_its_line_relabels_th
 
 def test_final_range_piece_between_reads_does_not_restore_the_initial_deadline(monkeypatch):
     from types import SimpleNamespace
-    from vms.domainpart import ingest as module
+    from vms import ingest as module
     now=[0.0]
     monkeypatch.setattr(module,'time',SimpleNamespace(monotonic=lambda:now[0]))
     receiver=module.Ingest('south',[],lambda:None,wall=lambda:1000.)
