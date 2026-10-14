@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/variables.py
++++ b/Source/w2cplatform/variables.py
+@@ -144,7 +144,7 @@
+     """Called only inside the same atomic operation as the target write."""
+     if guard is not None:
+         index = current(guard["key"])
+-        if guard["index"] != index:
++        if False:
+             raise GuardFailed(guard["key"], index)
+ 
+ 
