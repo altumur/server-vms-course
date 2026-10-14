@@ -20,7 +20,7 @@ from types import SimpleNamespace
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-from vms.domainpart.inputs import BookInputs
+from tests.domainvms.recording_domain import RecordingInputs
 from vms.recording_sources import plan_takeback, resolve
 from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
@@ -71,7 +71,7 @@ def _office(wall):
                             published=cam.local_objects(), seen_store=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(b.vars, view, wall)
+    crossings = RecordingInputs(b.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
     recording_domain.collect()
@@ -378,7 +378,7 @@ def _written_office(wall):
                             published=cam.local_objects(), seen_store=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(b.vars, view, wall)
+    crossings = RecordingInputs(b.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
     recording_domain.collect()
