@@ -77,9 +77,8 @@ Source/
                                RTSP fan-out (live_url) per camera, N webrtcbin peers behind it, WHEP (POST /whep/<cam>, DELETE /whep/session/<id>), demand-created and demand-deleted units
     config.py                  the schema's Python view over the spec: row() and items()
     jobs.py                    the VMS's housekeeping: the requests turned into work and the finished work into closed rows
-    domainpart/                М12B  the VMS's part on the domain's holder (vms/domainpart/README.md)
     __main__.py                python3 -m vms worker | recorder | gateway | detworker | detjobworker | surveyworker | autoworker — the
-                               VMS's workers — and jobs | domainpart. Every controller, the resource and the console are the
+                               VMS's workers — and jobs. Every controller, the resource and the console are the
                                platform's (`python3 -m w2cplatform …`, the boundary's step 6): the VMS has no process of its own
                                beside its workers and these two
   gstvms/                      Track 2 — needs GStreamer
@@ -108,7 +107,7 @@ Source/
                                .agent`, the holder's tools `w2cplatform.domain.members | grants | breakglass`; the operator's
                                tool `python3 -m w2cplatform.w2cctl`
   deploy/cluster/, deploy/domain/   М11's units and installer (`w2c-run.sh <program>` runs every one of them), the domain's
-                               units (М12A, `vms-domainpart.service` М12B) and its image
+                               platform units and its image
   traces/                      М11's stand's traces, quoted by its lessons (python3 tests/cluster/stand.py --write)
 ```
 
