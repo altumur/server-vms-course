@@ -301,6 +301,12 @@ class Site:
         # Name exclusivity needs an actual collected generation before the first
         # operator write. Configured but never reporting peers remain missing
         # through the ordinary report grace; no name index is seeded by the stand.
+        from vms.config import SPEC
+        from w2cplatform.spec import SpecController
+        agent = self.holder_agent()
+        SpecController(SPEC, agent.cluster_vars, agent.published,
+                       wall=self.wall, cluster="srv").publish_snapshot()
+        self.sync("srv")
         self.holder.run_pass()
         self.wall.advance(46)
         self.holder.run_pass()
@@ -377,7 +383,16 @@ class Site:
         holder.members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box)
         holder.topology, holder.pending = Topology(hv), PendingEdits(hv, self.wall)
         holder.alarms = DomainAlarms(fed, reported_doors(fed, ho, 45.0), lost_after=45.0, history=AlarmHistory(ho))
+        # The local agent owns its member key before the signer claims its term.
+        # Settle configured external members first, so claim adds the holder as
+        # how:holder rather than encountering an unkeyed configuration row.
+        from w2cplatform.trust.memberkey import MemberKey
+        own = self.cluster(box).door("domainagent", f"domainagent on {box}")
+        MemberKey.load_or_make(own, self.ring(box))
+        holder.members.settle()
         holder.term = term_of(fed, signer, ho, holder.signer_url)
+        if holder.term is not None:
+            assert holder.members.read()["members"][box]["how"] == "holder"
         if holder.term is not None and not signer.chain:
             holder.hand_to = lambda to: move_by_handover(holder, to, DOMAIN, signer)
 
