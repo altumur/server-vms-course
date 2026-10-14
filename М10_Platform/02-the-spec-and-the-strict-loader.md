@@ -195,7 +195,8 @@ rules:
 | Ключ | Называет |
 |---|---|
 | `unit.id` | `numeric` или поле единицы |
-| `snapshot[]`, `requests.key`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
+| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
+| `requests.key` | свойства `requests.schema.properties` — поля тела просьбы (урок 8): `{имя}`, `{имя:int}`; имя вне схемы — отказ; поля единицы здесь ни при чём |
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table` | таблица из `tables:` |
 | `console.running` | метрика из `metrics[]` |
@@ -380,7 +381,7 @@ components:
 | ссылка Н1.4 на необъявленное | `refused:reference` | отказ с источником, путём и именем | править файл |
 | ссылка на другую спеку каталога не разрешается | `refused:catalogue` | отказ с источником и путём при загрузке каталога | положить недостающую спеку или править эту |
 | старт: строки `platform/spec/<sub>` нет; sha256 не совпадает; строка отказана | не старт | код выхода 2, без перезапуска; строка лога с источником и путём | установщик кладёт верную спеку |
-| смена: метка `rev` не та, что запомнена, или метки нет (у работающего) | остановка | код выхода 0, строка лога «спека сменилась, перезапуск» | ничего: супервизор; без метки при следующем старте — «не старт» |
+| смена: метка с `rev` выше запомненной или метки нет (у работающего); метка ниже запомненной — не смена, ждать (установщик доводит) | остановка | код выхода 0, строка лога «спека сменилась, перезапуск» | ничего: супервизор; без метки при следующем старте — «не старт» |
 | `GET /spec` | 200 | у работающей консоли всегда 200 (без загруженной спеки консоль не стартует); нет маршрута, не тот метод и общие коды — консоль, урок 9 Н4 | — |
 | `spec put` отказанного файла | не положено | код возврата 2, отказ на stderr | править файл |
 

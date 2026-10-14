@@ -75,7 +75,7 @@ object:
   ops:       операции объектов сводятся к словарю урока 1 и его отказам: put_new — «записать, если нет» (conflict, когда есть);
              get_at — чтение с индексом объекта; put_at — запись по прочитанному индексу (иной индекс → conflict, как cas строки);
              put_durable — запись тела целиком с барьером долговечности до публикации (строка ссылается на тело только после
-             ответа — урок 10); append — дописать строку события в открытый бакет (только его писатель, Н1.2); иных атомарностей нет
+             ответа — урок 10); delete_at — удаление по прочитанному индексу (иной индекс → conflict, объект не тронут — урок 10, уборка); append — дописать строку события в открытый бакет (только его писатель, Н1.2); иных атомарностей нет
   door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/*, */heartbeats/*, */contenders/*, */snapshot/*,
              */controller/*, */blobs/*) и objects.door спеки; иное — 403
   disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога
@@ -142,10 +142,12 @@ resource:                                    # один процесс на се
     {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]},
      workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, …}
   door_row:  platform/doors/<server> {url, since, at}; at — каждые 15 с (урок 4)
+            не писать дверь, пока стоит platform/decommission/<мой сервер> (урок 4 «вывести_сервер»; консоль её удалила)
   lost_after: 45                              # по смене на часах читателя
   pass:      каждые 600 с: retain → usage → relieve → mirror; каждый шаг в своей попытке; pass_stalled при зависании
   space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # доли; включено, пока не выключили
-  free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # для спек с requests.free, пока том > high;
+  free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # своя форма (ADR-0059): пишет и перезаписывает с cas только
+             ресурс, не создание-однажды, без unit/digest/схемы семьи; для спек с requests.free, пока том > high;
              free = used − total·low − Σ freeing из пульсов; при free ≤ 0 (и под отметкой low) строка снимается (ADR-0059); никто её не исполняет и не метит
   mirror:    platform/mirror {enabled, copies}; соседи — следующие copies живых серверов по имени; только закрытые бакеты;
              копия в .mirror/<сервер>/…; копия — никогда не источник, пока хозяин отвечает; PEER_FAILS 3, кусок ≤ 64 MiB,
@@ -157,15 +159,17 @@ resource:                                    # один процесс на се
 ### Н1.5 Просьба
 
 ```yaml
-<sub>/requests/<rid>:                        # строка; создание-однажды; писатель — консоль (дверь) или воркер (worker.requests)
-  unit:        <id>                          # ДОЛЖЕН (кроме free-)
+<sub>/requests/<rid>:                        # строка; создание-однажды; писатель — консоль (дверь) или воркер (worker.requests);
+                                             # free-<server>-<volume> — не эта форма: её пишет и перезаписывает ресурс (free_ask, Н1.4; ADR-0059),
+                                             # без unit, digest и requests.schema
+  unit:        <id>                          # ДОЛЖЕН; у просьбы ресурса (ADR-0059, free_ask) отсутствует — по этому их и различают, не по имени
   <поля тела>: по requests.schema, текстом
   valid_until: <секунды>                     # когда у спеки valid_for
-  digest:      <sha256 hex>                  # ДОЛЖЕН у всякой исполняемой просьбы (не free-*): у поданной дверью — JCS тела клиента после схемы без
+  digest:      <sha256 hex>                  # ДОЛЖЕН у всякой исполняемой просьбы (не у просьбы ресурса): у поданной дверью — JCS тела клиента после схемы без
                                              # полей сервера; у поданной воркером — JCS объекта из полей тела строки как записаны (текстом), без unit,
                                              # valid_until и штампов; воркер считает его сам при записи (Н1.5); им сравнивают повторы
   by, at, group, <about-поле>:               # по requests.stamp
-  filed:                                     # у поданной воркером
+  filed:       <экземпляр воркера>           # ДОЛЖЕН у поданной воркером (worker.requests) — кто подал; у поданной дверью отсутствует
 rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе у двери консоли —
             r-<sha16(Idempotency-Key)> (заголовок обязателен, Н2); случайный — только у просьбы, которую воркер пишет сам (worker.requests, урок 5)
 spec:                                        # requests: (форма — урок 2)
@@ -242,7 +246,7 @@ paths:
     get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
   /mirror/{server}/{path}:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
-    put:    {responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
+    put:    {requestBody: {required: true, content: {application/octet-stream: {schema: {type: string, format: binary}}}}, parameters: [{name: X-Sum, in: header, required: true, schema: {type: string}, description: sha256 тела}], responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
   /mirrored/{server}:  # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
     parameters: [{name: server, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: "{copies: [{path, written, size, sum}]}"}, "404": {description: копий этого сервера нет}}}
@@ -250,7 +254,7 @@ paths:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
   /marks:                                    # консоль
-    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
+    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", requestBody: {required: true, content: {application/json: {schema: {type: object, required: [unit], properties: {unit: {type: string}, note: {type: string, maxLength: 200}}}}}}, responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
   /{sub}/requests:  # консоль
     parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
     post:
@@ -321,8 +325,9 @@ retain:  для каждого дерева: days = <sub>/retention | 365 (tree.
          копии зеркала — days + 1 ч); журнал events.removed; index.forget
 usage:   измерить тома (зонд ≤ 5 с); пульс space/volumes
 relieve: platform/space.enabled ∧ used/total > high → для спек с requests.free: need = used − total·low − Σ freeing
-         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at} (cas, перезаписать прежнюю);
-         need ≤ 0 (всё нужное уже освобождается, ADR-0059) или ниже low → удалить строку, если есть
+         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at}: cas "" или cas по версии строки СВОЕЙ формы
+         (без unit); под этим ключом строка с unit — обычная просьба (ADR-0060) → не трогать, журнал free_ask.key_taken, пропустить;
+         need ≤ 0 (всё нужное уже освобождается, ADR-0059) или ниже low → удалить строку своей формы, если есть (чужую — нет)
 mirror:  platform/mirror.enabled → соседи = следующие copies живых по имени; закрытые бакеты, которых у соседа нет
          (сумма) → PUT /mirror/<я>/<путь>; PEER_FAILS подряд → сосед пропущен на проход
 каждый шаг — своя попытка; шаг дольше PULSE_LIMIT → pass_stalled в пульсе
@@ -354,7 +359,8 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### взгляд держателя (воркер, на проходе; ≤ REQUESTS_HOLD, ≤ COMMANDS_PER_LOOK)
 
 ```
-для каждой строки семьи с unit моей единицы (кроме free-*; elsewhere — не мои действия):
+для каждой строки семьи с unit моей единицы (просьбы ресурса — строки без unit с {free, volume, server} — не рассматриваются; имя
+  free-* само по себе ничего не значит, ADR-0060; elsewhere — не мои действия):
   метка с исходом → пропустить (чужая или моя прежняя)
   чужая begun без исхода: её at + PERFORM_TIMEOUT + PERFORM_GRACE позади → записать {outcome: unknown, ended_by: holder,
     error: "begun by <instance> and never answered"} по прочитанному индексу (ADR-0054: закрывающий — по индексу; conflict →
@@ -378,7 +384,7 @@ clear:  строки, чьи rid в fetched пульсов, → удалить �
 sweep:  строка с valid_until + REAP_AFTER < now или старше ttl (без срока):
           метки нет → метка expired создание-однажды {ended_by: reaper, unit, digest из строки} (Н1.5 no_begun)
           метка begun без исхода → {outcome: unknown, ended_by: reaper, error: "begun and never answered"} по индексу
-        затем удалить строку по cas и снять rid из учёта человека; free-* без хозяина — по ttl
+        затем удалить строку по cas и снять rid из учёта человека; просьбы ресурса (строки без unit) без хозяина — по ttl
 asked:  учёт старше ttl/settle → снять
 ```
 
@@ -461,7 +467,7 @@ asked:  учёт старше ttl/settle → снять
 - [ ] **М10/8-10** ресурс Н1.4: пульс 10 с, строка двери, проход 600 с в порядке Н3, `pass_stalled` — чтением
 - [ ] **М10/8-11** отметки диска долями, просьба `free-*` по формуле, снятие под отметкой, никто не исполняет и не метит; ресурс сам ничего не удаляет кроме бакетов — чтением
 - [ ] **М10/8-12** зеркало: соседи по имени, закрытые бакеты, копия не источник, пределы — чтением
-- [ ] **М10/8-13** просьба Н1.5: строка создание-однажды, ключи спеки и их отказы при загрузке, дверь и коды — сц. 04–06
+- [ ] **М10/8-13** `filed` у подачи воркером и его отсутствие у подачи дверью — проверяется чтением (в приёмке урока 8 воркер просьб не подаёт); просьба Н1.5: строка создание-однажды, ключи спеки и их отказы при загрузке, дверь и коды — сц. 04–06
 - [ ] **М10/8-14** держатель: метка `begun` до вызова `put_new`, исход в метку безусловной записью (ADR-0054), `unknown` по таймауту, `late`, бюджеты — сц. 05; чтением
 - [ ] **М10/8-15** жнец: `clear` по `fetched`, `sweep` после срока + 60 / ttl, метка перед удалением, `ended_by: reaper` — сц. 04
 - [ ] **М10/8-16** учёт человека `asked/` по `cas`, 429, снятие по ttl/settle — чтением
