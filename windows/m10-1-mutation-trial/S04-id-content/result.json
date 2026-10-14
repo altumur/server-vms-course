@@ -1,0 +1,63 @@
+{
+  "id": "S04-id-content",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "operation id accepts different content",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 23,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "12-id",
+      "4",
+      "body.index.extra"
+    ],
+    [
+      "12-id",
+      "4",
+      "status"
+    ],
+    [
+      "12-id",
+      "5",
+      "body.index.extra"
+    ],
+    [
+      "12-id",
+      "5",
+      "status"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:StoreMachine._write",
+  "api_function_calls": 50,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      44,
+      2,
+      0
+    ],
+    "failures": [
+      "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it",
+      "test_storemachine.py::test_an_operation_id_is_answered_from_memory_only_for_its_own_write"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
