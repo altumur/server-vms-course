@@ -43,6 +43,7 @@ g vms-liveworker -
 g w2c-surveycontroller -
 g vms-surveyworker -
 g vms-recdomain -
+g vms-livedomain -
 g vms-camdomain   -
 g vms-camdomaintokens -
 m configstore w2c-resource
@@ -67,3 +68,4 @@ m configstore vms-surveyworker
 m configstore vms-camdomain
 
 m configstore vms-recdomain
+m configstore vms-livedomain
