@@ -1,0 +1,66 @@
+[
+  {
+    "file": "Source/tests/domainvms/test_lesson17_chain.py",
+    "commit": "f702203cb97626ca0c67f6d426b43ec698d348cb"
+  },
+  {
+    "file": "Source/tests/test_token_requests.py",
+    "commit": "910f7735cae8a600b0c6f2ebbc9d9f3b74732809"
+  },
+  {
+    "file": "Source/tests/testdata/spec_load_debt.txt",
+    "commit": "3c9bf23012d0a52d6deabe4b0a5160a0cec67c29"
+  },
+  {
+    "file": "Source/tests/testdata/spec_parity_debt.txt",
+    "commit": "3ae76dd4e576d1d959be14229595dcea66639536"
+  },
+  {
+    "file": "Source/vms/cam.subsystem.yaml",
+    "commit": "b1e413ee6040fa29cd61cbcfdfa40cdd1b725f4f"
+  },
+  {
+    "file": "Source/vms/domainpart/chain.py",
+    "commit": "47654bf0db4c8092ef17d234aaeda768b0906a41"
+  },
+  {
+    "file": "Source/vms/domainpart/ingest.py",
+    "commit": "2ef7fa9f50f08d2a549f4c506b5b5db8b00f8002"
+  },
+  {
+    "file": "Source/vms/recording_books.py",
+    "commit": "117dd22e07535ba61bbfb4b06bc2efd4c55c00d1"
+  },
+  {
+    "file": "Source/vms/recording_publication.py",
+    "commit": "332694d5d6c09fb8084b3004412ec861ceec2e91"
+  },
+  {
+    "file": "Source/vms/recording_push.py",
+    "commit": "6ede46c806db0e2503c663f74f206d91fcd552eb"
+  },
+  {
+    "file": "Source/vms/recworker.py",
+    "commit": "108ae35d7721e9f3e85e4c23adc843a246eede39"
+  },
+  {
+    "file": "Source/w2cplatform/domain/tokenrequest.py",
+    "commit": "3ef8cde753cdb15bc0fdb58396902799021600ee"
+  },
+  {
+    "file": "Source/w2cplatform/domain/tokenrequest.py.md",
+    "commit": "791d653a9c200fec0a765ac84cdf20fd78402583"
+  },
+  {
+    "file": "Source/w2cplatform/spec.py",
+    "commit": "2d95facfb4c9a159166b17e7b0a2a0911583521c"
+  },
+  {
+    "file": "Source/tests/test_recording_star.py",
+    "commit": "f962f3b0873582ad18829b2e5bf63493a9e3d2bd"
+  },
+  {
+    "file": "Source/tests/test_star_ranges.py",
+    "commit": "344dea43a9587d24e8ba7b2cc839ab381fd2d3da"
+  }
+]
