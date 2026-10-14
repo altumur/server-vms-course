@@ -225,7 +225,7 @@ def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_e
     from tests.domain.conftest import Clock, make_cluster
     r = rights()
     assert sorted(doc()["roles"]["domainagent"]["read"]) == sorted(
-        ["*", "!domain/book-seal*", "!domain/signer*", "!domain/users/*", "!domain/cam/stream-clients/*", "!door/signer*", "!rec/asked/*"])
+        ["*", "!domain/book-seal*", "!domain/signer*", "!domain/users/*", "!live/accounts/*", "!door/signer*", "!rec/asked/*"])
 
     class AsAgent:                       # the daemon: every name listed to every role, a get as the file says
         def __init__(self, inner):
@@ -470,11 +470,14 @@ def test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grant
     assert {"liveworker", "recworker"} <= with_door
     for s in SPECS:
         assert r.allows(f"{s.name}worker", "read", "domain/grants/room-a") == (f"{s.name}worker" in with_door), s.name
-    assert not r.allows("domainconsole", "read", "domain/cam/stream-clients/wall1")
-    assert not r.allows("domainconsole", "read", "domain/cam/stream-accounts")
-    assert not r.allows("domainagent", "read", "domain/cam/stream-clients/wall1")
-    assert r.allows("domainagent", "read", "domain/cam/stream-accounts")
-    assert r.allows("domain", "read", "domain/cam/stream-clients/wall1")              # the signer backs up domain.kept
+    assert not r.allows("domainconsole", "read", "live/accounts/wall1")
+    assert not r.allows("domainconsole", "read", "domain/live/stream-accounts")
+    assert not r.allows("domainagent", "read", "live/accounts/wall1")
+    assert r.allows("domainagent", "read", "live/stream-accounts/g-1")
+    assert r.allows("domainagent", "read", "domain/live/stream-accounts")
+    assert not r.allows("domain", "read", "live/accounts/wall1")
+    assert r.allows("domain", "read", "domain/live/stream-accounts/srv-a")
+    assert r.allows("liveworker", "read", "live/accounts/wall1")
 
 
 def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
