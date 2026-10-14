@@ -1,0 +1,147 @@
+{
+  "base": "9844eae7db8257049ff2a7864d7101baedae1834",
+  "code": "6d9a8a1787afd2fa4033c9db3939b64857415b85",
+  "source_tree": "ce218c621e34c4442c8662421ee7c2a8588ccddc",
+  "files": [
+    {
+      "path": "Source/deploy/cluster/configstore-rights.json",
+      "commit": "5f1e213f1965c593d1ff886b4aaa5abd7154c870"
+    },
+    {
+      "path": "Source/tests/cluster/test_policies.py",
+      "commit": "978108f9f9acdfadd5faf2f2c81b26afeb48f1be"
+    },
+    {
+      "path": "Source/tests/domain/test_foreign_data.py",
+      "commit": "49855159745165ffd8950e442c885b06079f7907"
+    },
+    {
+      "path": "Source/tests/domain/test_topology.py",
+      "commit": "8d689803dce31bff5d90c7a97a31414432ae98a6"
+    },
+    {
+      "path": "Source/tests/domainvms/recording_domain.py",
+      "commit": "dcf9c79022ec3165854a9f032a728abe57ec02c8"
+    },
+    {
+      "path": "Source/tests/domainvms/test_lesson16_nobody_reaches.py",
+      "commit": "acd4190bb0bfa40ef45cc2d4767db51ccd6f5dfe"
+    },
+    {
+      "path": "Source/tests/domainvms/test_lesson17_chain.py",
+      "commit": "f736572acb65566d8bfdf2534beb7d00b1fe23d6"
+    },
+    {
+      "path": "Source/tests/test_boundary.py",
+      "commit": "487bc80a40790739a17ab144cfb9a70d0a4f83dd"
+    },
+    {
+      "path": "Source/tests/test_recording_poll_push.py",
+      "commit": "4c79bbbd89bff4f0c6a95d1efbd4c37f8f60ab48"
+    },
+    {
+      "path": "Source/tests/test_recording_polls.py",
+      "commit": "e275c40168f446c49854ecb04536840c4154d2dc"
+    },
+    {
+      "path": "Source/tests/test_spec_parity.py",
+      "commit": "16f0620629ae133caaf29fecf3d643e812bc0438"
+    },
+    {
+      "path": "Source/tests/test_spec_rule.py",
+      "commit": "4b34574192b80a586d106a480053e1a7fad12455"
+    },
+    {
+      "path": "Source/tests/test_unit_token_requests.py",
+      "commit": "aa2a87975acaf6dbbcee79a2fd8415ce3c17d479"
+    },
+    {
+      "path": "Source/tests/testdata/spec_load_debt.txt",
+      "commit": "486d61e76c4346fd061cddd4b909f9498509f7ec"
+    },
+    {
+      "path": "Source/tests/testdata/spec_parity_debt.txt",
+      "commit": "8ad55c05afcd35b3556e8ab5cff5d93519a47e5d"
+    },
+    {
+      "path": "Source/tests/testdata/testsub.subsystem.yaml",
+      "commit": "4f7d990dd2bb1919d57f33a696780bf79f55d260"
+    },
+    {
+      "path": "Source/traces/03-a-recorder-starts.txt",
+      "commit": "fd1b672a17b3e06fc23e4d49fd3b701defe75d1f"
+    },
+    {
+      "path": "Source/vms/cam.subsystem.yaml",
+      "commit": "bceed10b47cd8197e5efa1ac3b40fb32215a4b05"
+    },
+    {
+      "path": "Source/vms/domainpart/books.py",
+      "commit": "64d80ff194e1338c28c852f3cd9774272643b0d4"
+    },
+    {
+      "path": "Source/vms/domainpart/device.py",
+      "commit": "4e40a773e39b5da5091f0c3ec6aaad3a6a7c8a97"
+    },
+    {
+      "path": "Source/vms/domainpart/ingest.py",
+      "commit": "371e4a7b02f027de978646c69d3617c28729d68b"
+    },
+    {
+      "path": "Source/vms/domainpart/inputs.py",
+      "commit": "7ccc5e7b34743ea4185b385d76d78ed094447d74"
+    },
+    {
+      "path": "Source/vms/domainpart/keys.py",
+      "commit": "b6fd21ceb8f1e34434b283095d843e5a6c8cc208"
+    },
+    {
+      "path": "Source/vms/rec.subsystem.yaml",
+      "commit": "67d16c4cb0f0e19e01292870fbcfe92941486bd8"
+    },
+    {
+      "path": "Source/vms/recording_poll_push.py",
+      "commit": "933f6c6671871ff31e186f066772710c4e1a08c7"
+    },
+    {
+      "path": "Source/vms/recording_polls.py",
+      "commit": "a62ab4b615ac5773ded69c30e0cda054e555e7ba"
+    },
+    {
+      "path": "Source/vms/recording_publication.py",
+      "commit": "33ab563f8543110ff3e8cb65134622635ee7e5a4"
+    },
+    {
+      "path": "Source/vms/recworker.py",
+      "commit": "8174d531e7e82de6b4f343a2422fbae15d1520ef"
+    },
+    {
+      "path": "Source/w2cplatform/cluster/rights.py",
+      "commit": "b8bb25d9bef8386a6eab992021d58e13904cee25"
+    },
+    {
+      "path": "Source/w2cplatform/domain/tokenrequest.py",
+      "commit": "5763417e7a9aeae179afcef3661d415c2b918adf"
+    },
+    {
+      "path": "Source/w2cplatform/domain/tokenrequest.py.md",
+      "commit": "63f008d468cf4f34189cbb6f950a6f69e3186ac7"
+    },
+    {
+      "path": "Source/w2cplatform/domain/topology.py",
+      "commit": "cee820cf2b6b65c5d0355f2a670721b4cdcb79e2"
+    },
+    {
+      "path": "Source/w2cplatform/spec.py",
+      "commit": "24ec65bd77a6078c4fdbaba714e74b5dcffee2fc"
+    },
+    {
+      "path": "Source/w2cplatform/speckeys.py",
+      "commit": "4a96c70ef12d7e22b27fef4670b16533cd9c7432"
+    },
+    {
+      "path": "М11_Cluster/03-units-on-every-server.md",
+      "commit": "6d9a8a1787afd2fa4033c9db3939b64857415b85"
+    }
+  ]
+}
