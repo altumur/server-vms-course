@@ -1908,9 +1908,9 @@ class CameraPusher:
         self.rtt: float | None = None
         # The ranges it was told, by road, and how many moves of its line it had followed when it was first told each.
         self._told: dict[str, tuple[str, int]] = {}
-        from ..recording_push import AssignedPush
+        from .recording_push import AssignedPush
         self.assigned = AssignedPush(self, token_requests, role=role, env=env, clock=steady or base)
-        from ..recording_poll_push import PollPush
+        from .recording_poll_push import PollPush
         self.polling = PollPush(self, token_requests, role=role, env=env, clock=steady or base)
         self._channel_entry = None
 
@@ -2542,7 +2542,7 @@ class CameraPusher:
             self.seen = self.frames.newest()
 
     def _pass(self, loose: list, wait: float) -> dict:
-        from ..recording_books import Unconfirmed
+        from .recording_books import Unconfirmed
         try:
             entry = self.entry()
         except (Unconfirmed, ValueError):
@@ -2643,8 +2643,8 @@ def should_from_snapshot(objects, wall=time.time, sources=None):
 
     def should(ref) -> bool | None:
         if sources is not None:
-            from ..recording_books import Unconfirmed, read, recording_value
-            from ..recording_publication import member
+            from .recording_books import Unconfirmed, read, recording_value
+            from .recording_publication import member
             from w2cplatform.domain.placement import placed
             try:
                 assignment, own = placed(sources, "rec", str(ref)), member(sources)
