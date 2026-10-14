@@ -138,3 +138,39 @@ class Embedded:
 
     def heartbeat(self):
         return self.executor.heartbeat()
+
+
+class EmbeddedPublisher:
+    """The camera process publishes the same facts only when it is a path node.
+
+    A generic slot guards report capture and writes, without an auto heartbeat,
+    election, scenario unit or second evaluator.
+    """
+    def __init__(self, serial, vars_, objects, shared_objects, wall, steady):
+        from w2cplatform.worker import Worker
+        from .config import AUTO_SPEC
+        self.worker = Worker(AUTO_SPEC.sub, None, vars_, objects, spec=AUTO_SPEC,
+                             wall=wall, clock=steady)
+        self.name = str(serial)
+        self.shared = SharedView(vars_, shared_objects, wall)
+
+    def publish(self):
+        from .recording_publication import publish
+        worker = self.worker
+        if not worker.writing_allowed:
+            return
+        # A name is needed to form facts; no slot or row is written before this
+        # cluster actually has a local ingest on an authorized path.
+        worker.name = self.name
+        try:
+            items = contribution(worker, self.shared.settings(), elect=False)
+            if not items and worker.slot is None:
+                return
+            if worker.slot is None:
+                worker.claim_slot(self.name)
+            if not worker.renew_slot():
+                worker.writing_allowed = False
+                return
+            publish(worker, 'asks', items)
+        except (OSError, *PARSE_ERRORS):
+            log.warning('%s: embedded ask contribution unavailable', self.name)
