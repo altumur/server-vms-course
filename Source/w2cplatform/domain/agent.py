@@ -380,12 +380,12 @@ class DomainAgent:
             return self.domain_vars.answer_for(self.cluster, self.key)
         return answer(self.domain_vars, self.domain_objects, self.cluster, now=self.now())
 
-    def _apply_edits(self, pending, holder=False):
+    def _apply_edits(self, pending):
         import json
         from .pending import OUTCOMES_PATH, PENDING_PATH, _load, apply_pending
         if self.console is None:
             return {}
-        target = OUTCOMES_PATH + "/" + self.cluster if holder else OUTCOMES_PATH
+        target = OUTCOMES_PATH
         previous = _load(self.cluster_vars.get(target)[0], target)
         outcomes = apply_pending(_load(pending, PENDING_PATH), self.console, self.now(), previous)
         self._carry(target, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
@@ -399,7 +399,7 @@ class DomainAgent:
         if self.follow is not None:                        # Lesson 15: where the domain is held now — asked first
             self.followed = self._step("following the holder", self._follow)
         if holds(self.cluster_vars, self.cluster):
-            self._apply_edits(self.cluster_vars.get(PENDING_PATH + "/" + self.cluster)[0], holder=True)
+            self._apply_edits(self.cluster_vars.get(PENDING_PATH + "/" + self.cluster)[0])
         try:
             got = self._answer()
         except Unreachable:
