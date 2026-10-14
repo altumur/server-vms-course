@@ -1,0 +1,24 @@
+{
+  "source_commit": "c8072e1a69deca820476677ff0da2920c0185112",
+  "manifest": "/Users/murat/w2c/course-book-merge-evidence/c7-asks-corrected-source.json",
+  "manifest_sha256": "ba2b51efd838eabe3546efc84bd4c3f04dfe0af84a53ce3762a16f15ef11f53e",
+  "unchanged_source_files": 1010,
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-asks-corrected-domainvms.log",
+      "sha256": "fe30a6f0e3e40516223e878674bf2699a40ccb2d8cdffd71b7cceb62caafcbd5",
+      "exit": 0,
+      "counts": [
+        166,
+        0,
+        0
+      ]
+    }
+  ],
+  "delta_from_full_unit": "Only one domainvms expectation corrected: asks == {unknown-target: {}}; approved54edcfdb.",
+  "approval": "54edcfdb",
+  "source_vms_and_deploy_domainpart_grep": [],
+  "mapped_tests": 485,
+  "assert_nodes_before": 1999,
+  "assert_nodes_after": 2013
+}
