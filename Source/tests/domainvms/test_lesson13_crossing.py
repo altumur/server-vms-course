@@ -33,7 +33,7 @@ def _site(wall):
         domain_objects=north.objects, published=cam.local_objects())
     sa = DomainAgent("south", north.vars, south.vars, now=wall)
     view = ReadView(fed, wall=wall)
-    inputs = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    inputs = BookInputs(north.vars, view, wall)
     books = RecordingDomain(inputs, signer, agents=[ca, sa], devices=[cam])
     return fed, link, south, cam, books, sa, ca
 
