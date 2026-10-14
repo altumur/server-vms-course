@@ -36,7 +36,7 @@ def issue(door, issuer, member, sub, kind, body, signature):
     me = door._member_key(member, path, body, signature)
     try:
         request = parse_json(body)
-        if not isinstance(request, dict) or set(request) != {"request_id", "role", "ref"} \
+        if not isinstance(request, dict) or (set(request) - {"request_id", "role", "ref", "by"} or {"request_id", "role", "ref"} - set(request)) \
                 or any(not isinstance(request[k], str) or not request[k] for k in request):
             raise ValueError()
         # The ref is a row identity; malformed identities never reach storage.
@@ -45,12 +45,19 @@ def issue(door, issuer, member, sub, kind, body, signature):
         raise Refused(400, "token request takes request_id, role and ref") from None
     spec = declared.spec(sub)
     rule = spec.domain.tokens.get(kind) if spec and spec.domain else None
-    if not rule or request["role"] not in rule.get("grant", ()) or not (rule.get("placement") or rule.get("unit")):
+    if not rule or request["role"] not in rule.get("grant", ()) or not (rule.get("placement") or rule.get("unit") or rule.get("scenario")):
         raise Refused(403, "role has no token request grant")
     if issuer is None or not me.get("seal"):
         raise Refused(503, "token issuer or member sealing key is unavailable")
+    if ("by" in request) != bool(rule.get("scenario")):
+        raise Refused(400, "by is required only for scenario scope")
     with MUTATIONS:
-        if rule.get("unit"):
+        if rule.get("scenario"):
+            from .scenarioscope import claims as scenario_claims
+            binding = rule["scenario"]
+            extra = scenario_claims(door, spec, member, request["ref"], request["by"], binding)
+            targets = extra.pop(binding["audience_claim"])
+        elif rule.get("unit"):
             binding = rule["unit"]
             targets = _unit_targets(door, spec, member, request["ref"])
         else:
@@ -91,6 +98,8 @@ def issue(door, issuer, member, sub, kind, body, signature):
                 raise Refused(403, "assignment has no admitted token audience")
         now = door.wall()
         claims = {binding["ref_claim"]: request["ref"], binding["audience_claim"]: targets}
+        if rule.get("scenario"):
+            claims.update(extra)
         token = issuer.issue(kind, member, now=now, **claims)
         exp = now + issuer.lifetime(kind)
         return {"request_id": request["request_id"],
@@ -138,11 +147,11 @@ def pass_on(client, member, sub, kind, body, signature):
     return client.door.token(member, sub, kind, body, signature)
 
 
-def request(client, sub, kind, ref, role):
+def request(client, sub, kind, ref, role, by=None, request_id=None):
     from w2cplatform.trust.memberkey import sign_request
     path = route(client.cluster, sub, kind)
-    request_id = uuid.uuid4().hex
-    body = publication_bytes({"request_id": request_id, "role": role, "ref": ref})
+    request_id = request_id or uuid.uuid4().hex
+    body = publication_bytes({"request_id": request_id, "role": role, "ref": ref, **({"by": by} if by is not None else {})})
     signature = sign_request(client.key, "POST", path, body, client.wall())
     got = pass_on(client, client.cluster, sub, kind, body, signature)
     try:
@@ -165,7 +174,7 @@ def grants():
     declared.token_kinds()
     return {kind: (spec.name, tuple(rule.get("grant", ())))
             for spec in declared.specs() for kind, rule in spec.domain.tokens.items()
-            if rule.get("grant") and (rule.get("placement") or rule.get("unit"))}
+            if rule.get("grant") and (rule.get("placement") or rule.get("unit") or rule.get("scenario"))}
 
 
 def owner(kind, role):
@@ -289,10 +298,12 @@ def local_handler(agent, role):
                 return
             try:
                 body = parse_json(self.rfile.read(int(self.headers["Content-Length"])))
-                if not isinstance(body, dict) or set(body) != {"ref"} or not isinstance(body["ref"], str) or not body["ref"]:
-                    raise Refused(400, "local token request takes ref only")
+                if not isinstance(body, dict) or set(body) - {"request_id", "ref", "by"} \
+                        or {"request_id", "ref"} - set(body) \
+                        or any(not isinstance(v, str) or not v for v in body.values()):
+                    raise Refused(400, "local token request takes request_id, ref and optional by")
                 sub = owner(parts[2], role)
-                result = agent.request_token(sub, parts[2], body["ref"], role)
+                result = agent.request_token(sub, parts[2], body["ref"], role, body.get("by"), body["request_id"])
                 self._send(200, result)
             except Refused as e:
                 self._send(e.status, {"detail": e.detail})
@@ -319,16 +330,18 @@ class WorkerTokenDoor:
         directory = env.get("TOKEN_REQUESTS_DIR")
         return cls(socket_path(directory, role)) if directory else None
 
-    def request(self, kind, ref):
+    def request(self, kind, ref, by=None):
         route("local", "local", kind)
-        raw = publication_bytes({"ref": ref})
+        request_id = uuid.uuid4().hex
+        raw = publication_bytes({"request_id": request_id, "ref": ref, **({"by": by} if by is not None else {})})
         code, body = self.call("POST", f"/tokens/{kind}", raw,
                               {"Content-Type": "application/json"}, self.timeout)
         if code != 200:
             raise Refused(code, "local token request was refused")
         try:
             result = parse_json(body)
-            if not isinstance(result, dict) or set(result) != {"request_id", "token", "exp"}:
+            if not isinstance(result, dict) or set(result) != {"request_id", "token", "exp"} \
+                    or result["request_id"] != request_id:
                 raise ValueError()
             return result
         except (ValueError, TypeError):
