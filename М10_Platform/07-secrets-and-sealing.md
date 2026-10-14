@@ -110,12 +110,17 @@ roles:     [console, controller, worker, domain, domainagent, resource, domainco
 platform_readers:                            # общая таблица platform_lists.tsv
   domain/break-glass/: [console, domain, domainagent]
   domain/signer:       [domain]
+  domain/signer-pending: [domain]           # точное имя, не покрыто `domain/signer`
   domain/book-seal:    [domain]
   domain/users/:       [domain]
   domain/member-key:   [domainagent, console, domain]
   domain/backup:       [console, domain, domainagent]
+  domain/backup-taken: [console, domain, domainagent]   # семья копии: три точных имени и префикс, читатели те же, что у backup
+  domain/backup-doc:   [console, domain, domainagent]
+  domain/backups/:     [console, domain, domainagent]
   door/signer:         []                    # читателя называет спека (cam: [console])
-rule:      ключ с `/` на конце — префикс, без него — точный ключ (`domain/backup` не закрывает `domain/backups/*`);
+rule:      ключ с `/` на конце — префикс, без него — точный ключ (`domain/backup` не закрывает `domain/backups/*` — потому они названы отдельно);
+           книга домена у члена — точное имя `domain/<sub>/<книга>`, её строки по кластерам у держателя — префикс `domain/<sub>/<книга>/` (спека называет оба);
            самый длинный совпавший решает; строка без читателя не читается никем, кроме admin;
            файл прав не генерируется, если читатели ≠ способные прочесть (урок 6)
 ```
