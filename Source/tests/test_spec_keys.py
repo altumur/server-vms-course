@@ -377,7 +377,7 @@ def test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_fam
     its DECLARED tables — a family whose form the spec says (`{key, fields}`) and whose rows a write goes through
     (`tables.write_row`). The course took any family under `<sub>/`: `writes: [finds]` with no `finds` declared was
     a token writing undeclared rows. Unknown families remain refused; C5 permits explicitly
-    named tables without console CRUD. testsub2 writes its tallies; shelves remain console-owned."""
+    named tables without console CRUD. testsub2 declares no worker-written family."""
     shelf = {"tables": {"shelves": {"key": "name", "fields": {"name": {"type": "string", "required": True}}}}}
     assert _spec(worker={"writes": ["items"]}).acl_worker_role()[-1] == "probe/items/*"      # its units' rows
     assert _spec(worker={"writes": ["shelves"]}, **shelf).acl_worker_role()[-1] == "probe/shelves/*"
@@ -387,7 +387,10 @@ def test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_fam
              "worker.writes names finds — no such row family")
     assert "probe/notes/*" in _spec(worker={"writes": ["notes"]}, tables=["notes"]).acl_worker_role()
     two = SubsystemSpec.from_dict(_testsub2())
-    assert two.worker_writes == ("tallies",) and "testsub2/tallies/*" in two.acl_worker_role()
+    assert two.worker_writes == ()
+    from w2cplatform.rights import allowed
+    for key in ("testsub2/tallies/t1", "testsub2/shelves/s1"):
+        assert not allowed(two.acl_worker_role(), key)
 
 
 def test_group_by_and_spread_by_name_a_field_of_the_row_in_every_form():
