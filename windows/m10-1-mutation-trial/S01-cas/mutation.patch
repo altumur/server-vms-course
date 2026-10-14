@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -262,7 +262,7 @@
+         guarded = self.rows.get(guard["key"], (None, 0))[1] if guard is not None else None
+         if guard is not None and guard["index"] != guarded:
+             res = {"error": "guard", "key": guard["key"], "index": guarded}
+-        elif cas is not None and cas != current:
++        elif False:
+             res = {"conflict": True, "index": current}
+         elif cmd["op"] == "put" and items_bytes(cmd.get("items") or {}) > MAX_VALUE:
+             res = {"toolarge": items_bytes(cmd["items"])}      # the door refuses it first; the log must agree anyway
