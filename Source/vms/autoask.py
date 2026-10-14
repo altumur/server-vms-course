@@ -4,9 +4,15 @@ from __future__ import annotations
 import math
 
 from w2cplatform.rows import PARSE_ERRORS
+from .recording_books import Unconfirmed
 
 VALID = 30.0
 RATE = 6
+
+
+class NoAskRoad(Unconfirmed):
+    """The verified ask book has no road for this target."""
+
 
 
 def scenarios(settings):
@@ -118,6 +124,9 @@ class Executor:
             from .recording_books import Unconfirmed
             try:
                 left = self.asker(str(serial)).ask(target, then, at + within - now)
+            except NoAskRoad:
+                done.append({**outcome, 'state': f'the book of asks names no door for {target}: not asked'})
+                continue
             except (Refused, Unreachable, Unconfirmed, OSError):
                 # Refusals must not serialize tokens, URLs or arbitrary action contents into the pulse.
                 self.refused[name] = 'ask transport or authority refused'
@@ -290,7 +299,7 @@ class Asker:
             raise Unconfirmed('ask deadline has passed or is invalid')
         own, facts = self._roads(target, action)
         if not facts:
-            raise Unconfirmed('ask has no confirmed road')
+            raise NoAskRoad('ask has no confirmed road')
         def current_scope(member, observations):
             return (member, jcs(action),
                     jcs([{'member': f.member, 'item': f.item, 'value': f.value} for f in observations]),
