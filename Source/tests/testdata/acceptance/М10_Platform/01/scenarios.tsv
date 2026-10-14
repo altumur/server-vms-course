@@ -78,3 +78,22 @@
 17-routes	3	GET /v1/nothing	404 {"kind":"badrequest"}
 17-routes	4	POST /v1/get	404 {"kind":"badrequest"}
 18-no-echo	1	POST /v1/write {"op":"put","key":"acc/18-no-echo/c1","items":{"n":"1"},"cas":"424242424242"}	409 {"kind":"conflict","index":"","error":"!contains 424242424242"}
+19-key-too-long	1	GET /v1/get?key=acc/19-key-too-long/@big(1100)	400 {"kind":"badkey"}
+19-key-too-long	2	POST /v1/write {"op":"put","key":"acc/19-key-too-long/@big(1100)","items":{}}	400 {"kind":"badkey"}
+19-key-too-long	3	POST /v1/write {"op":"put","key":"acc/19-key-too-long/c1","items":{},"guard":{"key":"acc/19-key-too-long/@big(1100)","index":""}}	400 {"kind":"badrequest"}
+20-guard-forms	1	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"","index":""}}	400 {"kind":"badrequest"}
+20-guard-forms	2	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"/acc/20-guard-forms/s","index":""}}	400 {"kind":"badkey"}
+20-guard-forms	3	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/../s","index":""}}	400 {"kind":"badkey"}
+20-guard-forms	4	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":"abc"}}	400 {"kind":"badrequest"}
+20-guard-forms	5	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":"007"}}	400 {"kind":"badrequest"}
+20-guard-forms	6	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":7}}	400 {"kind":"badrequest"}
+20-guard-forms	7	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":"","extra":1}}	400 {"kind":"badrequest"}
+20-guard-forms	8	GET /v1/get?key=acc/20-guard-forms/c1	200 {"items":null,"index":""}
+21-rights	1	GET /v1/get?key=other/21-rights/c1	403 {"kind":"forbidden"}
+21-rights	2	POST /v1/write {"op":"put","key":"other/21-rights/c1","items":{"n":"1"}}	403 {"kind":"forbidden"}
+21-rights	3	POST /v1/write {"op":"delete","key":"other/21-rights/c1"}	403 {"kind":"forbidden"}
+21-rights	4	POST /v1/write {"op":"put","key":"acc/21-rights/c1","items":{"n":"1"},"guard":{"key":"other/21-rights/s","index":""}}	403 {"kind":"forbidden"}
+21-rights	5	GET /v1/get?key=acc/21-rights/c1	200 {"items":null,"index":""}
+21-rights	6	GET /v1/list?prefix=other/21-rights/	200 {"keys":{}}
+22-body-edge	1	POST /v1/write {"op":"put","key":"acc/22-body-edge/c1","items":{"blob":"@big(4194304)"}}	413 {"kind":"toolarge","limit":524288}
+22-body-edge	2	GET /v1/get?key=acc/22-body-edge/c1	200 {"items":null,"index":""}
