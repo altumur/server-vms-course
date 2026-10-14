@@ -1,8 +1,8 @@
 # Source — the course's code, one root: the platform, the VMS, the cluster, the domain
 
-The lessons of five modules as one runnable package — 78 of them: М10A_Platform 21, М10B_ServerVMS 28, М11_Cluster 10,
+The lessons of four modules as one runnable package — 58 of them: М10_Platform 11 (the former М10A_Platform 21 and М11_Cluster 10, deleted 2026-10-14, ADR-0080), М10B_ServerVMS 28,
 М12A_Domain 15, М12B_DomainVMS 4 (М13_Observability and М14_VendorVMS have a design, `module-design.md`, and no lessons
-yet). On one box (М10A, М10B): no scheduler, no KVS, no database: two stores on disk, a controller that is the only writer, a worker that is DriverPack and holds the camera, a recorder that is the only writer of footage, into volumes of ObjectStorage through the host's `obsd` — and three more subsystems through the same platform, which proves it knows nothing about video.
+yet). On one box (М10, М10B): no scheduler, no KVS, no database: two stores on disk, a controller that is the only writer, a worker that is DriverPack and holds the camera, a recorder that is the only writer of footage, into volumes of ObjectStorage through the host's `obsd` — and three more subsystems through the same platform, which proves it knows nothing about video.
 
 ```
 Source/

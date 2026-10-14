@@ -10,7 +10,7 @@
 
 ## Что нужно знать заранее
 
-- **[М10A, урок 18](../М10A_Platform/18-Secrets.md)** — правило суффикса, маскирование, отказ снимку, тип `url`, `secret_in` и `mask_text` (шаг 5), `bound_to`.
+- **[М10/7](../М10_Platform/07-secrets-and-sealing.md)** — правило суффикса, маскирование, отказ снимку, тип `url`, `secret_in` и `mask_text` (шаг 5), `bound_to`.
 - **[М10B, урок 5](05-driverpacksrc.md)** — `driverpacksrc` и `driverpack://file/<name>`.
 - **[М10B, урок 9](09-actuators-and-the-fan-out.md)** — актуатор: `Gst.parse_launch(DESC)` и что такое строка запуска.
 - **[М10B, урок 2](02-the-reconcile-loop.md)** — ревизия строки и то, что новая ревизия перезапускает конвейер.
