@@ -1,6 +1,6 @@
 """Lesson 8 — the bandwidth arithmetic before the demo, and a worker that
 cannot tell where it runs."""
-from vms.domainpart.cloud import worker_stanza, recommend, render_three_ways, storage_tb, tb_per_day
+from vms.cloud import worker_stanza, recommend, render_three_ways, storage_tb, tb_per_day
 
 
 def test_fifty_cameras_at_four_megabit():
