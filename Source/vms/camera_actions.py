@@ -10,7 +10,7 @@ ACTIONS = {"preset": "the preset's number", "output": "the relay's port"}
 
 def misfit(who: str, can: dict, action: dict) -> str | None:
     """Why a camera that described itself as `can` cannot do `action` ({action, arg}) — None when it can. The
-    domain says it when the scenario is written, the camera when the ask arrives (`DeviceCluster.perform`)."""
+    camera checks its capabilities when the ask arrives (`DeviceCluster.perform`)."""
     name, arg = str(action.get("action", "")), str(action.get("arg", ""))
     if name == "preset":
         n = _count(can, "presets")
