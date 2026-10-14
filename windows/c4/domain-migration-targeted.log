@@ -1,0 +1,87 @@
+temp: /tmp/w2c-tests-21214
+secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies the store reads every secret in the clear
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+east/cam/snapshot#inf: the published object does not parse (not a unit's id: inf); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_camera_id_of_1e400_in_a_members_copy_freezes_no_list_and_no_view_of_the_domain ... OK
+camera/cam/heartbeats/SN1: the published object does not parse (not a list of names); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_camera_that_says_who_takes_its_stream_as_a_string_is_not_read_as_its_letters ... OK
+test_foreign_data.py::test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+domain/keys: the trust row does not parse (a key set requires book_seal, a 32-byte X25519 public key); a door that reads it answers 503 until the domain's agent writes it again
+domain/revoked: the trust row does not parse (an entry's expiry is not a number: kept revoked, with no end); a door that reads it answers 503 until the domain's agent writes it again
+east: the key set refused: the domain's key set does not parse (a key set requires book_seal, a 32-byte X25519 public key); holding the one carried before
+test_foreign_data.py::test_a_cluster_whose_trust_rows_do_not_parse_answers_503_with_why_and_its_agent_mends_them ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_member_behind_a_relay_whose_bundle_is_torn_is_read_by_its_own_report_when_it_has_one ... OK
+testsub-a/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_member_over_its_relay_share_is_refused_without_discarding_other_members ... OK
+cam-X/p/alarms#line: the published object does not parse (a line is not an object); skipped — the rest of what the member published is read
+cam-X/reported: the published object does not parse (1e999 is past what a JSON number holds here); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_member_page_with_a_bad_line_or_a_report_mark_past_any_number_stops_no_list ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_name_that_is_not_a_string_stops_no_search_and_a_camera_claimed_twice_is_contested ... OK
+domain/grants/domain#acme|ivan|view|: the grant does not parse (too many values to unpack (expected 3)); not a grant — the other grants of the row are read
+domain/grants/domain#anna|view|: the grant does not parse ('nan' is not a finite number); not a grant — the other grants of the row are read
+domain/grants#x|y|z|w: the grant does not parse (too many values to unpack (expected 3)); not a grant — the other grants of the row are read
+domain/grants#bob|edit|7: the grant does not parse (a grant's scope is unit:<sub>/<id>, labels:… or nothing, not '7'); not a grant — the other grants of the row are read
+test_foreign_data.py::test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no_door ... OK
+test_foreign_data.py::test_a_preset_or_a_port_in_digits_that_are_not_ascii_is_a_misfit_and_not_a_value_error ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+cam-SN7001/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_report_whose_body_is_not_an_object_is_unknown ... OK
+domain/revoked does not parse (the revocation list is not an object holding a string): the signer starts with no revocations; tokens revoked before now are honoured again until they expire — revoke them again
+test_foreign_data.py::test_a_signer_whose_key_row_does_not_parse_does_not_start_and_does_not_make_new_keys ... OK
+test_foreign_data.py::test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and_not_a_500 ... OK
+relay/relay/domain/seen: the published object does not parse (Expecting value: line 1 column 7 (char 6)); skipped — the rest of what the member published is read
+east: the agent's pass failed; trying again in 30 s
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/domain/agent.py", line 821, in run
+    ok = agent.sync()
+         ^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/domain/test_foreign_data.py", line 313, in sync
+    raise ValueError("a torn mark")
+ValueError: a torn mark
+test_foreign_data.py::test_a_torn_age_mark_of_a_relay_is_written_whole_again_and_a_failing_agent_pass_does_not_spin ... OK
+cam-SN7001/reported: the published object does not parse (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)); skipped — the rest of what the member published is read
+test_foreign_data.py::test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_is_answered_and_its_books_written ... OK
+test_foreign_data.py::test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are_bounded_without_crowding_out_another ... OK
+test_foreign_data.py::test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_the_ceiling_holds ... OK
+domain/grants/domain#say"hi|view|: the grant does not parse (a user's name may not hold '"': 'say"hi' — stored before the rule; left out of the row as it is written again: create the user under an allowed name and grant again); not a grant — the other grants of the row are read
+domain/grants/domain#old"admin|admin|: the grant does not parse (a user's name may not hold '"': 'old"admin' — stored before the rule; left out of the row as it is written again: create the user under an allowed name and grant again); not a grant — the other grants of the row are read
+domain/grants/south#say"hi|view|unit:cam/7: the grant does not parse (a user's name may not hold '"': 'say"hi' — stored before the rule; left out of the row as it is written again: create the user under an allowed name and grant again); not a grant — the other grants of the row are read
+test_foreign_data.py::test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_still_refused ... OK
+book input rec/polls/r-ingest omitted: no live local slot
+book input rec/primaries/r-ingest omitted: no live local slot
+book input rec/upstream/r-ingest omitted: no live local slot
+test_foreign_data.py::test_invalid_input_does_not_publish_a_partial_report_and_working_flow_survives ... OK
+k: the deep row does not parse (maximum recursion depth exceeded while decoding a JSON array from a unicode string); test
+east/cam/heartbeats/w-9: the published object does not parse (maximum recursion depth exceeded while decoding a JSON array from a unicode string); skipped — the rest of what the member published is read
+east/cam/snapshot/w-9: the published object does not parse (maximum recursion depth exceeded while decoding a JSON array from a unicode string); skipped — the rest of what the member published is read
+test_foreign_data.py::test_json_nested_too_deep_is_a_garbled_object_and_not_a_frozen_view ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+east/cam/heartbeats/w-1: the published object does not parse (a worker's name is a non-empty string, not list); skipped — the rest of what the member published is read
+test_foreign_data.py::test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_whole_member_unreachable ... OK
+cam-A/domain/outcomes#e-5ffecd960a2a: the published object does not parse (Expecting value: line 1 column 1 (char 0)); skipped — the rest of what the member published is read
+domain/pending/cam-A#9: the published object does not parse (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)); skipped — the rest of what the member published is read
+test_foreign_data.py::test_one_members_unparsable_outcome_leaves_the_other_members_edits_reconciled ... OK
+cam-SN7001/reported: the published object does not parse (the JSON object must be str, bytes or bytearray, not NoneType); skipped — the rest of what the member published is read
+east/cam/heartbeats/w-0#seven: the published object does not parse (invalid literal for int() with base 10: 'seven'); skipped — the rest of what the member published is read
+test_foreign_data.py::test_one_status_entry_that_is_not_numbers_stops_no_shadow_report ... OK
+domain/users/eve: the user record does not parse (could not convert string to float: 'yesterday'); left out of the published identity set and of federated logins — the others are read
+test_foreign_data.py::test_one_users_record_that_does_not_parse_stops_neither_the_publication_nor_a_federated_login ... OK
+domain/pending#SN7001: the published object does not parse (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)); skipped — the rest of what the member published is read
+domain/pending#other: the published object does not parse (invalid Edit fields); skipped — the rest of what the member published is read
+cam-SN7001: the holder record refused: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+cam-SN7001: the shared settings refused: the pointer names shared/rev-1 and there is no such object
+test_foreign_data.py::test_the_agents_pass_goes_on_past_a_row_of_the_domain_that_does_not_parse_and_leaves_its_report ... OK
+test_foreign_data.py::test_the_signers_loop_runs_each_step_and_says_the_one_that_failed_once ... OK
+test_lesson10_cluster_of_one.py::test_a_day_of_heartbeats_costs_the_flash_nothing ... OK
+test_lesson10_cluster_of_one.py::test_a_kept_edit_reaches_a_real_camera_when_it_boots ... OK
+test_lesson10_cluster_of_one.py::test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_address ... OK
+test_lesson10_cluster_of_one.py::test_an_edit_from_the_domain_is_the_cameras_own_console_deciding ... OK
+test_lesson10_cluster_of_one.py::test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there ... OK
+test_lesson10_cluster_of_one.py::test_the_domain_reads_a_camera_the_way_it_reads_a_server_room ... OK
+test_lesson10_cluster_of_one.py::test_the_door_opens_after_the_first_publish_not_before ... OK
+test_lesson10_cluster_of_one.py::test_the_epoch_grows_on_every_boot_and_the_archive_path_carries_it ... OK
+
+34 passed, 0 failed, 0 skipped
