@@ -1,5 +1,5 @@
 # console on srv-a → /run/configstore/console.sock
-POST /v1/write {"op": "put", "key": "cam/cameras/3", "cas": 1009, "items": {
+POST /v1/write {"op": "put", "key": "cam/cameras/3", "cas": "1009", "items": {
   "id": "3",
   "revision": "1",
   "name": "cam-3",
@@ -15,23 +15,23 @@ POST /v1/write {"op": "put", "key": "cam/cameras/3", "cas": 1009, "items": {
   "kind": "video",
   "deleted": "true"
 }}
-→ 200 {"index": 1057}
+→ 200 {"index": "1057"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1041, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "1041", "items": {
   "units": "1,5,7",
   "rev": "5"
 }}
-→ 200 {"index": 1058}
+→ 200 {"index": "1058"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": 1032, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "1032", "items": {
   "worker": "",
   "reason": "deleted",
   "at": "1757500000.0",
   "rev": "2"
 }}
-→ 200 {"index": 1059}
+→ 200 {"index": "1059"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
@@ -40,17 +40,17 @@ POST /v1/write {"op": "put", "key": "cam/placement/9", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1060}
+→ 200 {"index": "1060"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": 1058, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "1058", "items": {
   "units": "1,5,7,9",
   "rev": "6"
 }}
-→ 200 {"index": 1061}
+→ 200 {"index": "1061"}
 
 # camcontroller on srv-b → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": 1056}
-→ 200 {"index": 1062}
+POST /v1/write {"op": "delete", "key": "cam/slots/w-2", "cas": "1056"}
+→ 200 {"index": "1062"}
 
 # … and 44 GET requests, omitted
