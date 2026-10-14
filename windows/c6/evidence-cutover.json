@@ -1,0 +1,115 @@
+{
+  "source_full_run": "4304c4fe",
+  "current_code": "51e7ca4e",
+  "full_source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-repaired-source.json",
+  "full_source_unchanged_files": 1017,
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-unit-repaired.log",
+      "sha256": "d17cd266d91e9cc258ce48158228fcf2be688b9ef979ae8e0a1eee94a86a5740",
+      "exit": 1,
+      "counts": [
+        2076,
+        15,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-cluster-repaired.log",
+      "sha256": "02a1aa0a9e2c4ed21b2744af687a421837b7deb0dc076eecaacf0efdc3846a98",
+      "exit": 0,
+      "counts": [
+        117,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-domain-repaired.log",
+      "sha256": "c2f305a41c72ba8f9269252e186357010307c6ef7937b7018e97f69c7107f991",
+      "exit": 0,
+      "counts": [
+        228,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-domainvms-repaired.log",
+      "sha256": "5ca9e7617be6a6060b797d1d64253929bf8dfcab6a92ebd23340555401cd33d9",
+      "exit": 0,
+      "counts": [
+        164,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-shared-rights.log",
+      "sha256": "f0113612b1c934b5c38fdf79fbcade43d8335cf2cc139bb11fd25146d0b490bd",
+      "exit": 0,
+      "counts": [
+        22,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-shared-runtime.log",
+      "sha256": "23bc5ce061b6cb16cead8de389f4aa4d750bec9b84a019955805b54f8394e493",
+      "exit": 0,
+      "counts": [
+        33,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-poll-ask-contract.log",
+      "sha256": "1afc0aef82894603eb43512986025a89b34eee266355990025215249edf22426",
+      "exit": 0,
+      "counts": [
+        9,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-long-poll-repaired.log",
+      "sha256": "3c418ab3ea1946f73147f8c0d64b4c4a754f98a06bba135450fdc3cea957f70f",
+      "exit": 0,
+      "counts": [
+        52,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-worker-loops-repaired.log",
+      "sha256": "f43274e6e1d0ddba0bb3c061c44cbe2b1d8b0a4ab9cf5e52bb8fc904f65ad1e3",
+      "exit": 0,
+      "counts": [
+        51,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-holder-members-acceptance.log",
+      "sha256": "3f9756a9008b77013e3da7f330d14b3e10d6b433eb59d3c5fde40dfd3a4d23c9",
+      "exit": 0,
+      "counts": [
+        12,
+        0,
+        0
+      ]
+    }
+  ],
+  "status": "not complete: holder excluded from Members; decision requested in main 551beda7",
+  "stand_after_9ea7193f": {
+    "path": "/Users/murat/w2c/course-book-merge-evidence/c6-stand-holder-report.log",
+    "sha256": "0669db5c23fcf21cd5a3400be0a1bf94caff1457dfd5a30c0286475e2dddad2a",
+    "exit": 1,
+    "remaining": "recworker may not read domain/revoked; decision requested in 737b6296"
+  }
+}

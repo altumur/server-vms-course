@@ -262,7 +262,7 @@ paths:
   /v1/join:     {post: {description: "вступление сервера, названного в сертификате; только -api, mTLS", responses: {"200": {description: принят}, "403": {description: вышедший без admit}, "409": {description: "refused: чётность (без -force) или размер сверх объявленного"}, "503": {description: unavailable}}}}
   /v1/leave:    {post: {description: "выход; за себя — любой член; за другого — admin.sock лидера", responses: {"200": {description: вышел}, "403": {description: за другого не с admin.sock лидера}, "503": {description: unavailable}}}}
   /v1/rights:   {get: {description: "файл прав — admin (урок 6)", responses: {"200": {description: configstore-rights.json}, "403": {description: не admin}}}}
-  /v1/write:    {post: {description: "урок 1; {op: floor, floor} — только admin, только вверх", responses: {"200": {description: урок 1 Written}, "400": {description: урок 1}, "403": {description: floor не admin}, "409": {description: floor вниз | урок 1 conflict}, "412": {description: урок 1 guard}, "503": {description: unavailable | ambiguous}}}}
+  /v1/write:    {post: {description: "урок 1; {op: floor, floor} — только admin, только вверх", requestBody: {required: true, content: {application/json: {schema: {oneOf: [{$ref: "урок 1 Cmd"}, {type: object, required: [op, floor], additionalProperties: false, properties: {op: {const: floor}, floor: {type: integer, minimum: 0}}}]}}}}, responses: {"200": {description: урок 1 Written}, "400": {description: урок 1}, "403": {description: floor не admin}, "409": {description: floor вниз | урок 1 conflict}, "412": {description: урок 1 guard}, "503": {description: unavailable | ambiguous}}}}
   /metrics:     {get: {description: "configstore_* (Н1.3)", responses: {"200": {description: text/plain}}}}
 ```
 

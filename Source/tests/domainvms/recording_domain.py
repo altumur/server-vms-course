@@ -54,10 +54,6 @@ class RecordingDomain:
         self.holder_cluster = inputs.view.fed.domain_holder
         self.vars = next((d.flash for d in devices if d.name == self.holder_cluster.name), self.holder_cluster.vars)
         self.objects = self.holder_cluster.objects if domain_objects is None else domain_objects
-        from w2cplatform.trust.documents import sign
-        if self.vars.get("domain/holder")[0] is None:
-            self.vars.put("domain/holder", {"doc": json.dumps(sign({"term": 1,
-                "holder": self.holder_cluster.name, "at": self.wall()}, signer.tokens))})
         self.agents, self.devices = list(agents), list(devices)
         self.recorders = []
         self.publishers = {}
@@ -82,11 +78,22 @@ class RecordingDomain:
             key = (local_agent.key if local_agent and local_agent.key is not None else
                    MemberKey.load_or_make(vars_, local_agent.sealer if local_agent else None))
             self.keys[name] = key
-            roster[name] = {"key": key.pub, "seal": key.seal_pub}
+            if name != self.holder_cluster.name:
+                roster[name] = {**roster.get(name, {}), "key": key.pub, "seal": key.seal_pub}
             vars_.put("domain/member", {"cluster": name})
             client = CarryClient(self.door, name, key, self.wall)
             bind_requests(vars_, client)
         self.vars.put("domain/members", {"doc": json.dumps({"rev": previous["rev"] + 1, "members": roster})})
+        # Membership of the holder is established only by taking its term.
+        from w2cplatform.domain.term import DomainHolder
+        have = self.vars.get("domain/holder")[0]
+        record = json.loads(have["doc"]) if have else None
+        term = DomainHolder(inputs.view.fed, self.holder_cluster.name, signer,
+                            int(record["term"]) if record else 1, wall=self.wall,
+                            objects=self.objects, record=record)
+        term.claim()
+        self.holder.term = term
+        assert self.holder_cluster.name in json.loads(self.vars.get("domain/members")[0]["doc"])["members"]
         if (inputs.centre or any(c.via for c in inputs.view.fed.clusters.values())) and self.vars.get("domain/topology")[0] is None:
             self.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": inputs.centre,
                 "star": sorted(inputs.star), "via": {n: c.via for n, c in inputs.view.fed.clusters.items() if c.via}})})

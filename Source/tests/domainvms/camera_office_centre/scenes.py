@@ -326,11 +326,14 @@ def s11_scenario(site) -> None:
              "autoworker читают свои проверенные копии. Каждый узел публикует свою дорогу без токенов.")
     with log.muted():
         for _ in range(3):
+            site.wall.advance(0.01)
             site.agents_pass()
             for name in ("srv", "relay-a", "relay-b"):
                 site.rec_pass(name)
+            site.wall.advance(0.01)
             site.agents_pass()
             site.domain_pass()
+        site.wall.advance(0.01)
         site.agents_pass()
     log.note("Событие на cam-a2: машина. Камера оставляет запрос у приёмника своего офиса (в курсе — вызов\n"
              "DeviceCluster.on_event; у продукта — событие прошивки GET /api/v1/events → запрос POST /ingest/SN-B/ask).")
