@@ -24,7 +24,7 @@ def scenarios(settings):
         if isinstance(name, str) and name:
             names[name] = names.get(name, 0) + 1
     valid, refused = [], {}
-    from .domainpart.ingest import ASK_DEADLINE_MAX
+    from .ingest import ASK_DEADLINE_MAX
     for index, item in enumerate(items, 1):
         name = item.get('name') if isinstance(item, dict) else None
         named = isinstance(name, str) and bool(name)
@@ -110,7 +110,7 @@ class Executor:
             self.status.setdefault(name, {})
 
     def settle(self):
-        from .domainpart.ingest import Refused
+        from .ingest import Refused
         from w2cplatform.domain.federation import Unreachable
         for key, (asker, target, aid, deadline) in list(self.pending.items()):
             name = key[0]
@@ -118,7 +118,7 @@ class Executor:
                 out = asker.outcome(target, aid, deadline)
             except (Refused, Unconfirmed, Unreachable, OSError, *PARSE_ERRORS):
                 # The real Asker bounds unavailable outcomes by deadline + grace.
-                from .domainpart.ingest import ANSWER_GRACE
+                from .ingest import ANSWER_GRACE
                 out = 'lost: the ingest does not answer' if self.clock() > deadline + ANSWER_GRACE else None
             if out is not None:
                 self.status[name]['last'] = out
@@ -166,7 +166,7 @@ class Executor:
                 note(f'over its ceiling of {cap} a minute: not asked')
                 continue
             recent.append(now)
-            from .domainpart.ingest import Refused
+            from .ingest import Refused
             from w2cplatform.domain.federation import Unreachable
             from .recording_books import Unconfirmed
             asker = None
@@ -429,7 +429,7 @@ class Asker:
         return None
 
     def outcome(self, target, aid, deadline):
-        from .domainpart.ingest import ANSWER_GRACE
+        from .ingest import ANSWER_GRACE
         from .recording_books import Unconfirmed
         from w2cplatform.domain.federation import Unreachable
         try:

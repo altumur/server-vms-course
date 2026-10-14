@@ -306,7 +306,7 @@ def ingest_recorder(cluster: str, url: str, wall=None, vars_=None, objects=None,
     written from the ingest (`vms.ingestrec`; М12B урок 3, the scenario's finding O6)."""
     import time
     from w2cplatform.cluster.variables import FakeVariables
-    from vms.domainpart.device import Ram
+    from vms.camera_cluster import Ram
     from vms.recworker import RecWorker
     writes = {}
     if volume is not None:

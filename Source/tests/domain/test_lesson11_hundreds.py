@@ -12,7 +12,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from tests.member_console import admit_fixtures, device_console
 from w2cplatform.domain.api import ConsoleAPI
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.readview import ReadView
@@ -206,7 +206,7 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
     the domain pays instead is writes: every report rewrites what changed — the heartbeat and the snapshot
     shard, both stamped with the time — and the `reported` mark."""
     from w2cplatform.domain.agent import DomainAgent
-    from vms.domainpart.device import Ram
+    from vms.camera_cluster import Ram
     from w2cplatform.domain.uplink import member_copy
     wall = Clock()
     north, _ = make_cluster("north", domain=True)

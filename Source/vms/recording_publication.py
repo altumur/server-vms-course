@@ -142,6 +142,9 @@ def primaries(worker, status):
         value = {"ref": ref, "recording": key, "role": role,
                  "enabled": bool(row.get("enabled") and (not row.get("until") or finite(row["until"]) > worker.wall())),
                  "running": st.get("phase") == "running", "to": recipients(assignment, include_origin=True)}
+        for field in ("retention_days", "when", "home"):
+            if field in row and row[field] is not None:
+                value[field] = row[field]
         coverage = st.get("coverage")
         if coverage is None and hasattr(worker, "our_coverage"):
             spans = worker.our_coverage(row["id"])

@@ -10,7 +10,7 @@ from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
 from w2cplatform.domain.federation import DomainDirectory
-from vms.domainpart.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
+from vms.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
 from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, Running, heartbeat, make_domain, snapshot
 
@@ -394,9 +394,8 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
     monitors' lane in code, and their deploy set none of it. Their units name the unix sockets — each in the unit's
     own runtime directory, 0700 — and the monitors (the box's loopback; the site adds its scrapers' addresses, never a
-    network). The tokens' socket is in a directory made at boot, setgid to the tokens socket's own group — derived by
-    the platform's rule (`rights.tokens_group`: `vms-camdomaintokens`), never the worker's store role group: the socket
-    takes that group, and the worker opens it and nothing else of the box does."""
+    network). Workers ask their role doors; the deployment has no separate subsystem tokens socket.
+    The generic group rule remains available for explicitly declared deployments."""
     import os
     from w2cplatform.domain.rights import tokens_group
     u = _units()
@@ -408,24 +407,24 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     for door in (console, signer):
         assert door["env"]["CONSOLE_MONITORS"].split(",")[0] == "127.0.0.1"
         assert "/" not in door["env"]["CONSOLE_MONITORS"]                       # an address, not a network
-    assert signer["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
-    assert "SIGNER_TOKENS_UNIX" not in u["vms-domainpart"]["env"]
+    assert "SIGNER_TOKENS_UNIX" not in console["env"]
+    assert "SIGNER_TOKENS_UNIX" not in signer["env"]
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tmpfiles = open(os.path.join(here, "deploy", "domain", "systemd", "w2c-domain.tmpfiles")).read()
-    group = tokens_group("cam", "vms")
-    assert group == "vms-camdomaintokens"
-    assert f"d /run/w2c-signer 2750 w2c {group} -" in tmpfiles
-    assert group not in u["vms-domainpart"]["SupplementaryGroups"][0].split()
-    assert group not in signer["SupplementaryGroups"][0].split()                # the directory gives the group, not the signer
+    group = tokens_group("testsub", "test")
+    assert group == "test-testsubdomaintokens"
+    assert "/run/w2c-signer" not in tmpfiles
+    assert all(group not in " ".join(unit.get("SupplementaryGroups", [])).split() for unit in u.values())
+    assert group not in signer["SupplementaryGroups"][0].split()
 
 
-def test_the_unused_signer_tokens_group_has_no_deployed_reader_after_c6():
-    """C6 removes the last domainpart issuer: no deployed process joins its token socket group."""
+def test_role_requests_need_no_subsystem_tokens_socket_in_the_deployment():
+    """No deployed process opens a subsystem tokens socket: it asks its role door."""
     import json
     import os
     from tests.cluster.test_recorder_job import unit
     from w2cplatform.domain.rights import tokens_group
-    group = tokens_group("cam", "vms")
+    group = tokens_group("testsub", "test")
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     deploy = os.path.join(here, "deploy")
     joined = []
@@ -444,7 +443,7 @@ def test_the_unused_signer_tokens_group_has_no_deployed_reader_after_c6():
     roles = json.load(open(os.path.join(deploy, "cluster", "configstore-rights.json")))["roles"]
     assert group not in {r["group"] for r in roles.values()}                  # no role group of the store
     sysusers = open(os.path.join(deploy, "cluster", "systemd", "w2c-cluster.sysusers"), encoding="utf-8").read()
-    assert f"\ng {group} " in sysusers                                        # the group exists on the server
+    assert f"\ng {group} " not in sysusers                                        # no unused group is installed
 
 
 def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
@@ -462,8 +461,7 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
               json.load(open(os.path.join(here, "deploy", "cluster", "configstore-rights.json")))["roles"].items()}
     want = {"w2c-domain": ("domain", "signer", "w2c", "-m w2cplatform.domain.signer_service"),
             "w2c-domain-console": ("domainconsole", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
-            "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent"),
-            "vms-domainpart": ("camdomain", "vms domainpart", "vms", "-m vms domainpart")}
+            "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent")}
     u = _units()
     assert sorted(u) == sorted(want)
     d = tempfile.mkdtemp(prefix="run-")
@@ -505,7 +503,7 @@ def test_the_domains_units_name_stores_that_open():
     platform = _env_lines(os.path.join(here, "deploy", "cluster", "systemd", "w2c.env.example"))
     objects = tempfile.mkdtemp(prefix="objects-")
     u = _units()
-    for name in ("w2c-domain-console", "vms-domainpart"):
+    for name in ("w2c-domain-console", "w2c-domain"):
         env = {"CLUSTERS": site["CLUSTERS"], "DOMAIN_HOLDER": site["DOMAIN_HOLDER"],
                "PLATFORM_STORE": u[name]["env"]["PLATFORM_STORE"],
                "OBJECTS": platform["OBJECTS"].replace("/data/platform/objects", objects)}
@@ -551,8 +549,8 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     own = re.search(r'"(configstore:///run/configstore/\w+\.sock)"', inspect.getsource(signer_service.main)).group(1)
     units = _units()
     assert units["w2c-domain"]["env"]["PLATFORM_STORE"] == own                           # the unit says the signer's default
-    books = units["vms-domainpart"]["env"]["PLATFORM_STORE"]
-    assert books == "configstore:///run/configstore/camdomain.sock"                     # the books: the VMS worker's role
+    console = units["w2c-domain-console"]["env"]["PLATFORM_STORE"]
+    assert console == "configstore:///run/configstore/domainconsole.sock"
     d = tempfile.mkdtemp(prefix="cs")                                  # a socket's path is short: the run's root is
     daemon = StoreDaemon(LocalBackend("north", 1000), node_id="north", sockets=d, rights=rights)
     try:
@@ -565,7 +563,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         ids.create_local("ann", "a long enough password", ["admin"])
         assert ids.login("ann", "a long enough password") and ids.publish(force=True)
         with pytest.raises(Forbidden):
-            open_vars(books.replace("/run/configstore", d)).put("domain/cam/sources/north", {"book": "{}"})
+            open_vars(console.replace("/run/configstore", d)).put("domain/cam/sources/north", {"book": "{}"})
         vars_.put("domain/cam/sources/north", {"": '{"missing": []}'})
         assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
         agent = open_vars(f"configstore://{d}/domainagent.sock")

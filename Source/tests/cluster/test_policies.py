@@ -158,12 +158,20 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
                         ("read", "identity/pointer"), ("write", "domain/placement/rec/ref"), ("read", "cam/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
-    for role in ("domainagent", "domainconsole", "camdomain", "console", "camworker"):
+    for role in ("domainagent", "domainconsole", "console", "camworker"):
         for action in ("read", "write", "delete"):
             assert not r.allows(role, action, "domain/signer"), (role, action)
     assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants")
     assert not r.allows("domainagent", "write", "domain/grants/north") and "member" not in r.roles
-    assert r.allows("camdomain", "write", "domain/cam/primaries/cam-SN1") and not r.allows("camdomain", "write", "domain/keys")
+    assert all(s.name + "domain" not in r.roles for s in SPECS)
+    from tests.catalog_fixture import isolated_catalog
+    from w2cplatform.spec import SubsystemSpec
+    with isolated_catalog():
+        spec = SubsystemSpec.load(os.path.join(HERE, "tests", "testdata", "testsub.subsystem.yaml"))
+        generic = Rights(roles([spec], "test"))
+        assert generic.allows("testsubdomain", "write", "domain/testsub/ledger")
+        assert not generic.allows("testsubdomain", "write", "domain/keys")
+        assert not generic.allows("testsubdomain", "read", "domain/signer")
     assert not r.allows("domain", "write", "cam/cameras/7")
 
 
@@ -488,8 +496,8 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     rec spec's `worker.reads` (the product's recorder reads them as `*` less its denials): the role `recworker` reads
     them, and the code reads nothing of the domain's books beyond them."""
     import tempfile
-    from vms.domainpart.chain import Forwarder
-    from vms.domainpart.ingest import should_from_snapshot
+    from vms.forwarder import Forwarder
+    from vms.ingest import should_from_snapshot
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables, Forbidden
     root = tempfile.mkdtemp()

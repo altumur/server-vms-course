@@ -324,7 +324,7 @@ reported» остаётся только для члена без единого
 - Процесс регистратора курса приёмник не поднимает (`vms/__main__.recorder`): регистратор с приёмником и передатчиком
   собран как в тестах (`RecWorker.host_ingest`).
 - Процесса камеры нет: камера собрана из `DeviceCluster`, `CardRecorder`, `CameraPusher` и агента, как в тестах урока 17.
-- Шлюз центра — модель (`domainpart/gateway.py`).
+- Шлюз центра — модель (`vms/gateway.py`).
 - Провода у приёмника нет: вызовы `Ingest` печатаются маршрутами продукта.
 - Первый человек домена — вызовы `IdentityStore.create_local` и `grants.set_domain_grants` (у продукта `domain user add`,
   `domain grant`); корень и файл восстановления — `DomainRoot(...).recovery()` (у продукта `domain install`).

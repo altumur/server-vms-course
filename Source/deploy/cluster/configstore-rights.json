@@ -721,19 +721,11 @@
     "!domain/keepers/*",
     "!domain/ldevid/*",
     "!domain/auto/asks/*",
-    "!domain/auto/worker",
-    "!domain/auto/heartbeat",
     "!domain/cam/sources/*",
-    "!domain/cam/worker",
-    "!domain/cam/heartbeat",
     "!domain/live/stream-accounts/*",
-    "!domain/live/worker",
-    "!domain/live/heartbeat",
     "!domain/rec/polls/*",
     "!domain/rec/primaries/*",
-    "!domain/rec/upstream/*",
-    "!domain/rec/worker",
-    "!domain/rec/heartbeat"
+    "!domain/rec/upstream/*"
    ],
    "delete": [
     "domain/*",
@@ -751,144 +743,8 @@
     "!domain/keepers/*",
     "!domain/ldevid/*",
     "!domain/auto/asks/*",
-    "!domain/auto/worker",
-    "!domain/auto/heartbeat",
     "!domain/cam/sources/*",
-    "!domain/cam/worker",
-    "!domain/cam/heartbeat",
     "!domain/live/stream-accounts/*",
-    "!domain/live/worker",
-    "!domain/live/heartbeat",
-    "!domain/rec/polls/*",
-    "!domain/rec/primaries/*",
-    "!domain/rec/upstream/*",
-    "!domain/rec/worker",
-    "!domain/rec/heartbeat"
-   ]
-  },
-  "autodomain": {
-   "group": "vms-autodomain",
-   "read": [
-    "platform/schema",
-    "domain/auto/*",
-    "domain/keys",
-    "domain/topology",
-    "domain/members",
-    "domain/shared",
-    "platform/*",
-    "auto/*",
-    "cam/*",
-    "det/*",
-    "detjob/*",
-    "live/*",
-    "rec/*",
-    "survey/*",
-    "!live/accounts/*",
-    "!live/stream-accounts/*",
-    "!rec/asked/*"
-   ],
-   "write": [
-    "domain/auto/*",
-    "!domain/auto/asks/*"
-   ],
-   "delete": [
-    "domain/auto/*",
-    "!domain/auto/asks/*"
-   ]
-  },
-  "camdomain": {
-   "group": "vms-camdomain",
-   "read": [
-    "platform/schema",
-    "domain/cam/*",
-    "domain/keys",
-    "domain/topology",
-    "domain/members",
-    "domain/shared",
-    "platform/*",
-    "auto/*",
-    "cam/*",
-    "det/*",
-    "detjob/*",
-    "live/*",
-    "rec/*",
-    "survey/*",
-    "!live/accounts/*",
-    "!live/stream-accounts/*",
-    "!rec/asked/*"
-   ],
-   "write": [
-    "domain/cam/*",
-    "!domain/cam/sources/*"
-   ],
-   "delete": [
-    "domain/cam/*",
-    "!domain/cam/sources/*"
-   ]
-  },
-  "livedomain": {
-   "group": "vms-livedomain",
-   "read": [
-    "platform/schema",
-    "domain/live/*",
-    "domain/keys",
-    "domain/topology",
-    "domain/members",
-    "domain/shared",
-    "platform/*",
-    "auto/*",
-    "cam/*",
-    "det/*",
-    "detjob/*",
-    "live/*",
-    "rec/*",
-    "survey/*",
-    "domain/grants/*",
-    "domain/names/live/*",
-    "!domain/live/stream-accounts",
-    "!domain/live/stream-accounts/*",
-    "!live/accounts/*",
-    "!live/stream-accounts/*",
-    "!rec/asked/*"
-   ],
-   "write": [
-    "domain/live/*",
-    "!domain/live/stream-accounts/*"
-   ],
-   "delete": [
-    "domain/live/*",
-    "!domain/live/stream-accounts/*"
-   ]
-  },
-  "recdomain": {
-   "group": "vms-recdomain",
-   "read": [
-    "platform/schema",
-    "domain/rec/*",
-    "domain/keys",
-    "domain/topology",
-    "domain/members",
-    "domain/shared",
-    "platform/*",
-    "auto/*",
-    "cam/*",
-    "det/*",
-    "detjob/*",
-    "live/*",
-    "rec/*",
-    "survey/*",
-    "!live/accounts/*",
-    "!live/stream-accounts/*",
-    "!rec/asked/*"
-   ],
-   "write": [
-    "domain/rec/*",
-    "!domain/rec/polls/*",
-    "!domain/rec/primaries/*",
-    "!domain/rec/upstream/*"
-   ],
-   "delete": [
-    "domain/rec/*",
     "!domain/rec/polls/*",
     "!domain/rec/primaries/*",
     "!domain/rec/upstream/*"

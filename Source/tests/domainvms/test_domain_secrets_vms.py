@@ -21,9 +21,9 @@ from w2cplatform.domain.readview import ReadView
 from w2cplatform.domain.uplink import member_copy
 from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
-from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster
-from vms.domainpart.ingest import CameraPusher
+from tests.domainvms.recording_domain import RecordingInputs
+from vms.camera_cluster import DeviceCluster
+from vms.ingest import CameraPusher
 from vms.recording_books import PRIMARIES_PATH, SOURCES_PATH
 from tests.domain.conftest import Clock, make_cluster
 from tests.vmsconftest import ingest_recorder
@@ -71,7 +71,7 @@ def _site(wall):
                             domain_objects=b.objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             sealer=rings["cam"], key=keys[cam.name])
     view = ReadView(fed, wall=wall)
-    crossings = BookInputs(b.vars, view, wall, sealer=rings["srv-b"])
+    crossings = RecordingInputs(b.vars, view, wall, sealer=rings["srv-b"])
 
     recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
@@ -199,17 +199,18 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
     recording member, in the camera — falls into one; so does every path the worker's code names (each book at the
     holder and carried home, each kept row, the worker's slot); and every family has its words."""
     from vms.config import SPEC
-    from vms.domainpart import chain, inputs, ingest, keys, worker
+    from vms import forwarder as chain, ingest
+    from vms import recording_sources, recording_publication
     wall = Clock(1000.0)
     fed, a, b, cam, door, member_keys, rings, pusher, q, signer = _site(wall)
     written = [k for store in (b.vars, a.vars, cam.flash) for k in store.list(SPEC.domain_prefix)]
     assert written
-    named = [getattr(m, n) for m in (keys, worker, inputs, chain, ingest) for n in dir(m)
+    named = [getattr(m, n) for m in (recording_sources, recording_publication, chain, ingest) for n in dir(m)
              if (n.endswith("_PATH") or n in ("SLOT",)) and isinstance(getattr(m, n), str)
              and getattr(m, n).startswith(SPEC.domain_prefix)]
     named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
     assert chain.UPSTREAM_PATH == "domain/rec/upstream"
-    assert not hasattr(keys, "ASKS_PATH") and not hasattr(worker, "SLOT")
+    assert set(SPEC.domain.books) == {"sources"} and not SPEC.domain.kept
     stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
     assert not stray, f"keys in no declared family: {stray}"
     assert sorted(SPEC.display["keys"]) == sorted(f["id"] for f in SPEC.domain.keys)

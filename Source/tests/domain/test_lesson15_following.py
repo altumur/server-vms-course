@@ -171,7 +171,7 @@ def _door_site(wall):
     from w2cplatform.domain.term import install
     from w2cplatform.trust.memberkey import MemberKey
     from w2cplatform.trust.signer import DomainRoot
-    from vms.domainpart.device import DeviceCluster
+    from vms.camera_cluster import DeviceCluster
     fed, devices, keys = Federation(), {}, {}
     for i in range(4):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)

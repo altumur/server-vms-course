@@ -4,8 +4,8 @@ import threading
 
 from tests.conftest import Clock
 from tests.vmsconftest import Box
-from vms.domainpart.chain import Forwarder
-from vms.domainpart.ingest import Ingest, Refused
+from vms.forwarder import Forwarder
+from vms.ingest import Ingest, Refused
 from vms.recording_books import Unconfirmed
 from vms.role_tokens import RoleTokens
 from w2cplatform.trust.tokens import TokenIssuer

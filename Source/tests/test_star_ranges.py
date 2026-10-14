@@ -1,6 +1,6 @@
 """C3b range credentials and delayed responses obey the current upstream scope."""
 from tests.test_upstream_runtime import fixture, topology, upstream
-from vms.domainpart.ingest import Ingest, RangeFailed, Refused
+from vms.ingest import Ingest, RangeFailed, Refused
 from w2cplatform.trust.tokens import TokenIssuer
 
 

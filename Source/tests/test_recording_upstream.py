@@ -121,8 +121,8 @@ def test_centre_publishes_unassigned_polling_source_to_its_exact_home_and_withdr
 
 
 def test_unassigned_source_opens_centre_ingest_and_forwarder_follows_exact_home():
-    from vms.domainpart.chain import Forwarder
-    from vms.domainpart.ingest import Ingest
+    from vms.forwarder import Forwarder
+    from vms.ingest import Ingest
     from vms.recording_books import Unconfirmed
     from tests.test_book_names import raises
     box, worker = publisher_fixture()

@@ -60,3 +60,55 @@ def members(vars_, member):
         return tuple(sorted(doc["members"]))
     except PARSE_ERRORS:
         raise ValueError("the domain has no complete roster") from None
+
+
+def aggregate(vars_, key):
+    """The holder displays every recipient row; the collection pass owns membership.
+
+    First observation of an origin wins, unreadable keys are skipped. This door
+    neither adjudicates collection conflicts nor writes while serving a GET.
+    """
+    from .booknames import _parse
+    from w2cplatform.rows import PARSE_ERRORS
+    missing, values = set(), {}
+    for path in sorted(vars_.list(key + '/')):
+        if '/' in path[len(key) + 1:]:
+            continue
+        try:
+            items, _ = vars_.get(path)
+            if not isinstance(items, dict):
+                continue
+        except PARSE_ERRORS:
+            continue
+        for item, raw in sorted(items.items()):
+            try:
+                envelope = _parse(raw)
+                if not isinstance(envelope, dict):
+                    raise ValueError('invalid book object')
+                absent = envelope.get('missing')
+                if not isinstance(absent, list) or any(not isinstance(n, str) or not n for n in absent):
+                    raise ValueError('invalid missing members')
+                if item == '':
+                    if set(envelope) != {'missing'}:
+                        raise ValueError('invalid book marker')
+                    missing.update(absent)
+                    continue
+                if set(envelope) != {'entries', 'missing'} or not isinstance(envelope['entries'], list):
+                    raise ValueError('invalid book envelope')
+                entries = envelope['entries']
+                for entry in entries:
+                    if (not isinstance(entry, dict) or set(entry) != {'member', 'item', 'value'} or
+                            any(not isinstance(entry[f], str) or not entry[f] for f in ('member', 'item')) or
+                            not isinstance(entry['value'], dict)):
+                        raise ValueError('invalid book origin')
+            except PARSE_ERRORS:
+                continue
+            missing.update(absent)
+            bucket = values.setdefault(item, {})
+            for entry in entries:
+                bucket.setdefault((entry['member'], entry['item']), entry)
+    marker = {'missing': sorted(missing)}
+    out = {'': json.dumps(marker)}
+    out.update({item: json.dumps({'entries': [bucket[k] for k in sorted(bucket)], **marker})
+                for item, bucket in sorted(values.items())})
+    return out

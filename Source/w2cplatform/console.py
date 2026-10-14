@@ -1577,6 +1577,75 @@ def _labels(row: dict | None) -> list:
 _DEFAULT_WORKER_CLIENT = object()
 
 
+def book_units(vars_):
+    """Book keys match domain refs of this store's units, across loaded specs."""
+    from . import catalog
+    from .spec import SpecController
+    controllers = {s.name: SpecController(s, vars_, None) for s in catalog.specs() if s.rows}
+    rows = {name: {str(row['id']): row for row in ctl.units()}
+            for name, ctl in controllers.items()}
+    result = {}
+    for name, ctl in controllers.items():
+        schema = ctl.spec
+        if not schema.domain.ref:
+            continue
+        for uid, row in rows[name].items():
+            ref = row.get('id') if schema.domain.ref == 'id' else row.get(schema.domain.ref)
+            if ref in (None, ''):
+                continue
+            of = schema.of_row(row) or None
+            target = parse_ref(of) if of else None
+            labels = _labels(rows.get(target[0], {}).get(str(target[1]))) if target else _labels(row)
+            result.setdefault(str(ref), []).append((schema.ref(uid), labels, of))
+    return result
+
+
+def project_book(items, s, book, *, every=True, sees=None, units=None):
+    """Project declared fields, preserving origins and hiding secret fields at every depth."""
+    show = s.domain.show[book]
+    key = f"{s.domain_prefix}{book}"
+    units = units or {}
+    out = {}
+    for item, raw in sorted((items or {}).items()):
+        if is_secret_field(item):
+            continue
+        marker = book in s.domain.merged and item == ""
+        if not marker and not every and not any(sees(*target) for target in units.get(item, ())):
+            continue
+        try:
+            entry = json.loads(raw)
+            if not isinstance(entry, dict):
+                raise TypeError(f"not a JSON object ({len(str(raw))} bytes)")
+            if book in s.domain.merged:
+                from .domain.booknames import _parse
+                entry = _parse(raw)
+                missing = entry.get("missing")
+                if not isinstance(missing, list) or any(not isinstance(m, str) or not m for m in missing):
+                    raise TypeError("invalid collected book missing list")
+                if item == "":
+                    if set(entry) != {"missing"}:
+                        raise TypeError("invalid collected book marker")
+                    shown = {"missing": missing}
+                else:
+                    if set(entry) != {"entries", "missing"} or not isinstance(entry["entries"], list):
+                        raise TypeError("invalid collected book envelope")
+                    values = []
+                    for e in entry["entries"]:
+                        if (not isinstance(e, dict) or set(e) != {"member", "item", "value"} or
+                                any(not isinstance(e[f], str) or not e[f] for f in ("member", "item")) or
+                                not isinstance(e["value"], dict)):
+                            raise TypeError("invalid collected book entry")
+                        values.append({**{f: _without_secrets(e["value"][f]) for f in show if f in e["value"]},
+                                       "member": e["member"], "item": e["item"]})
+                    shown = {"entries": values, "missing": missing}
+        except PARSE_ERRORS as e:                    # what it holds is not said: an entry carries tokens
+            BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
+            continue
+        BOOK_ENTRIES.parsed(f"{key}#{item}")
+        out[item] = shown if book in s.domain.merged else {f: _without_secrets(entry[f]) for f in show if f in entry}
+    return 200, out
+
+
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
     holding the console's token."""
@@ -1723,45 +1792,7 @@ class SpecConsole:
                         units.setdefault(ref, []).append(target)
         except OSError as e:
             return 503, {"error": "the store did not answer", "detail": no_paths(e)}
-        out = {}
-        for item, raw in sorted((items or {}).items()):
-            if is_secret_field(item):
-                continue
-            marker = book in s.domain.merged and item == ""
-            if not marker and not every and not any(sees(*target) for target in units.get(item, ())):
-                continue
-            try:
-                entry = json.loads(raw)
-                if not isinstance(entry, dict):
-                    raise TypeError(f"not a JSON object ({len(str(raw))} bytes)")
-                if book in s.domain.merged:
-                    from .domain.booknames import _parse
-                    entry = _parse(raw)
-                    missing = entry.get("missing")
-                    if not isinstance(missing, list) or any(not isinstance(m, str) or not m for m in missing):
-                        raise TypeError("invalid collected book missing list")
-                    if item == "":
-                        if set(entry) != {"missing"}:
-                            raise TypeError("invalid collected book marker")
-                        shown = {"missing": missing}
-                    else:
-                        if set(entry) != {"entries", "missing"} or not isinstance(entry["entries"], list):
-                            raise TypeError("invalid collected book envelope")
-                        values = []
-                        for e in entry["entries"]:
-                            if (not isinstance(e, dict) or set(e) != {"member", "item", "value"} or
-                                    any(not isinstance(e[f], str) or not e[f] for f in ("member", "item")) or
-                                    not isinstance(e["value"], dict)):
-                                raise TypeError("invalid collected book entry")
-                            values.append({**{f: _without_secrets(e["value"][f]) for f in show if f in e["value"]},
-                                           "member": e["member"], "item": e["item"]})
-                        shown = {"entries": values, "missing": missing}
-            except PARSE_ERRORS as e:                    # what it holds is not said: an entry carries tokens
-                BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
-                continue
-            BOOK_ENTRIES.parsed(f"{key}#{item}")
-            out[item] = shown if book in s.domain.merged else {f: _without_secrets(entry[f]) for f in show if f in entry}
-        return 200, out
+        return project_book(items, s, book, every=every, sees=sees, units=units)
 
     # This cluster's units of `s` by their `domain.ref` (`id`: the id itself), each as a grant is asked about it
     # (`target_of_row`: its labels, the unit it is about) — for a book whose items are keyed by the ref. A subsystem this

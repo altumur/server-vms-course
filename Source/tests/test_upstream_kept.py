@@ -2,8 +2,8 @@
 import json
 
 from tests.test_upstream_runtime import fixture, placement, source, topology, upstream
-from vms.domainpart.chain import Forwarder, UP_KEPT_FOR, keep_ups, up_key
-from vms.domainpart.ingest import Ingest
+from vms.forwarder import Forwarder, UP_KEPT_FOR, keep_ups, up_key
+from vms.ingest import Ingest
 
 
 def saved(box, **over):

@@ -69,7 +69,7 @@ def recommend(cameras: int, mbit_per_camera: float, uplink_mbit: float, retentio
 def _worker_jobspec() -> str:
     """М11's worker job as the appendix «форма поставки» writes it — deploy/cluster/nomad/camworker.nomad.hcl: a rented
     cluster is where an orchestrator is justified, and М11's own servers run the same worker from a systemd unit."""
-    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))     # the code root
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))     # the code root
     with open(os.path.join(here, "deploy", "cluster", "nomad", "camworker.nomad.hcl"), encoding="utf-8") as f:
         return f.read()
 

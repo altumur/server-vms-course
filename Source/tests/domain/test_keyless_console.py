@@ -306,7 +306,7 @@ def test_a_knocking_member_is_admitted_by_the_key_its_report_presents():
     """The agent's report mark carries the keys it presents; the console names the knocking member with that key's
     fingerprint, and a person who compared it admits the member BY it — its row then holds the key, as one the
     registrar admitted. A fingerprint that is not the presented key's is refused: somebody else knocks under the name."""
-    from vms.domainpart.device import DeviceCluster
+    from vms.camera_cluster import DeviceCluster
     from w2cplatform.cluster.variables import FakeVariables
     from w2cplatform.domain.agent import DomainAgent
     from w2cplatform.trust.memberkey import MemberKey

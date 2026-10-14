@@ -336,7 +336,7 @@ def test_the_resources_free_row_is_not_answered_into_fetched_and_freeing_is_said
     nor marks it; the row is the resource's to write and to take away."""
     import time
     from vms.config import REC_SPEC
-    from vms.domainpart.device import Ram
+    from vms.camera_cluster import Ram
     from vms.recworker import RecWorker
     from w2cplatform.cluster.variables import FakeVariables
     vars_, objects = FakeVariables(), Ram()

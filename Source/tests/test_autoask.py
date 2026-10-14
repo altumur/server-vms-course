@@ -393,7 +393,7 @@ def test_unreadable_ask_ack_is_not_followed_and_does_not_leak_to_pulse():
 
 
 def test_product_words_for_deadline_ceiling_no_answer_token_and_ingest_refusal():
-    from vms.domainpart.ingest import Refused
+    from vms.ingest import Refused
     from vms.autoask import NoAskToken
     ex,doc,clock,calls=executor([item(rate_per_minute=1)])
     ex.on_event('A','motion',{'ts':89})

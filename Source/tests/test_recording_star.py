@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from tests.vmsconftest import Box
 from tests.test_recording_publication import fact, placement, primary_row
-from vms.domainpart.ingest import CameraPusher, Ingest
+from vms.ingest import CameraPusher, Ingest
 from vms.recording_books import Unconfirmed, recording_value
 from vms.recording_publication import primaries
 from w2cplatform.trust.tokens import TokenIssuer

@@ -4,8 +4,8 @@ import json
 from tests.reporting import sync
 from tests.domain.conftest import Clock, make_cluster
 from tests.domainvms.recording_domain import RecordingDomain
-from vms.domainpart.device import DeviceCluster
-from vms.domainpart.inputs import BookInputs
+from vms.camera_cluster import DeviceCluster
+from tests.domainvms.recording_domain import RecordingInputs
 from vms.recording_books import primary, source
 from vms.recording_sources import NotResolvable, plan_backfill, resolve
 from w2cplatform.cluster.variables import FakeVariables
@@ -33,7 +33,7 @@ def _site(wall):
         domain_objects=north.objects, published=cam.local_objects())
     sa = DomainAgent("south", north.vars, south.vars, now=wall)
     view = ReadView(fed, wall=wall)
-    inputs = BookInputs(north.vars, view, wall)
+    inputs = RecordingInputs(north.vars, view, wall)
     books = RecordingDomain(inputs, signer, agents=[ca, sa], devices=[cam])
     return fed, link, south, cam, books, sa, ca
 

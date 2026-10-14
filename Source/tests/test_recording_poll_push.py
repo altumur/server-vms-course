@@ -7,7 +7,7 @@ import tempfile
 import threading
 
 from tests.vmsconftest import Box
-from vms.domainpart.ingest import CameraPusher, Ingest, LINGER
+from vms.ingest import CameraPusher, Ingest, LINGER
 from vms.recording_books import Unconfirmed
 from vms.recording_publication import sources
 from w2cplatform.domain.topology import poll_home

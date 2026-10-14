@@ -1,6 +1,6 @@
 """C5 cluster account CRUD -> signed member reports -> generic unique book -> agent carry -> RTSP.
 
-There are no holder-owned stream-client rows or old domainpart publishers here. RTSP uses its existing adapter fake;
+Stream-client rows are published by ordinary member workers. RTSP uses its existing adapter fake;
 HTTP account operations, domain human tokens, slot publications, member signatures, collection and secret carry are real.
 """
 import contextlib

@@ -19,18 +19,15 @@ def s01_founding(site) -> None:
              "(в курсе — вызовы IdentityStore.create_local и grants.set_domain_grants через роль domain; у продукта\n"
              "`domain user add`, `domain grant --cluster domain`, stand.sh setup).")
     site.first_admin("anna")
-    log.note("Консоль домена (console.main) и воркер VMS на домене (vms.domainpart) стартуют; агент держателя тоже.")
+    log.note("Консоль домена (console.main) и агент держателя стартуют.")
     site.start_domain_console()
-    site.start_domainpart()
     site.holder_agent()
     site.cluster_console("srv")
     log.note("Первый проход подписывающего (Holder.run_pass); его объекты — файлы на srv — тоже в трассе.")
     log.objects = True
     site.holder.run_pass()
     log.objects = False
-    log.note("Первый проход воркера VMS на домене: слот domain/cam/worker, книги — пусто.")
-    site.domainpart.pass_once()
-    log.note("Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL), отчёта не пишет.")
+    log.note("Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL) и передаёт подписанный отчёт.")
     site.sync("srv")
 
 
@@ -218,8 +215,8 @@ def s07_who_records(site) -> None:
         if status != 200:
             raise RuntimeError(f"assignment refused: {status} {got}")
     log.note("Проход держателя: sources и primaries из отчётов; токен потока запрашивает камера через дверь своей роли.\n"
-             "Остальные книги пока ведёт процесс VMS на домене.")
-    site.domainpart.pass_once()
+             "Все книги собирает платформа из подписанных вкладов членов.")
+    site.holder.run_pass()
 
 
 def s08_books_home(site) -> None:
@@ -252,12 +249,12 @@ def s09_stream_flows(site) -> None:
         rec.heartbeat_once()
     site.say_heartbeat("relay-a")
     # N6: the domain hears the office's recorder only by the office's report — the book says `running` at the first pass
-    # of the VMS worker on the domain after relay-a's agent carried this heartbeat up, not before (ADR-0074).
-    log.note("Агент relay-a несёт отчёт с этим биением (свёрнуто); проход воркера VMS на домене видит запись SN-A идущей:\n"
+    # of the holder after relay-a's agent carried this heartbeat up, not before (ADR-0074).
+    log.note("Агент relay-a несёт отчёт с этим биением (свёрнуто); проход держателя видит запись SN-A идущей:\n"
              "книга основных cam-a — running. Раньше отчёта офиса домен этого не знает: книги — из отчётов членов.")
     with log.muted():
         site.sync("relay-a")
-    site.domainpart.pass_once()
+    site.holder.run_pass()
     log.note("Агенты relay-a и cam-a несут новую книгу домой (свёрнуто): копия на флеше cam-a тоже говорит running.")
     with log.muted():
         site.sync("relay-a")
@@ -274,10 +271,10 @@ def s09_stream_flows(site) -> None:
 
 
 def s10_watching(site) -> None:
-    from vms.domainpart.ingest import LINGER
+    from vms.ingest import LINGER
     log = site.log
     site.wall.advance(5)
-    log.note("Сцена 10. Борис смотрит SN-A из центра. Шлюз в центре — модель курса (domainpart/gateway.py поверх\n"
+    log.note("Сцена 10. Борис смотрит SN-A из центра. Шлюз в центре — модель курса (vms/gateway.py поверх\n"
              "приёмника srv); у продукта — RTSP-раздача приёмника rtsp://srv/ingest/SN-A и WHEP (VMS_LIVE_HTTP). Открыть\n"
              "раздачу — значит захотеть поток: желание идёт вниз (центр → офис → камера), поток вверх.")
     site.login("boris")
@@ -542,8 +539,12 @@ def f04_centre_off(site) -> None:
     log.note("Отказ 4. Центр srv выключен на шесть часов. Запись идёт по книгам и ключу потока, который камеры и офисы\n"
              "уже несут; нового входа нет; книги стареют.")
     site.login("anna")
-    entry = site.cams["cam-a"].pusher.entry()
-    until = float(entry["ingest"]["until"])
+    from w2cplatform.domain.agent import ClusterTrust
+    from w2cplatform.trust.tokens import verify
+    cam = site.cams["cam-a"]
+    trust = ClusterTrust(cam.flash_store)
+    token = cam.pusher.assigned.stream_token()
+    until = verify(token, trust.keyset(), trust.revoked(), now=site.wall(), kind="stream")["exp"]
     log.note(f"Токен потока cam-a действует до {until:.0f} — ещё {until - site.wall():.0f} с от выключения.")
     site.off("srv")
     log.note("srv выключен. Анна стучится в консоль домена; агент relay-a — в дверь подписывающего:")
@@ -556,8 +557,8 @@ def f04_centre_off(site) -> None:
     site.wall.advance(1)
     out = site.camera_step("cam-a")
     log.note(f"толкатель cam-a: {out.get('state')}; токен действует ещё {until - site.wall():.0f} с")
-    log.note(f"На исходе суток токена ({until:.0f}) приёмник откажет камере: новый токен выдаёт только держатель, на\n"
-             "проходе книг после половины срока токена.")
+    log.note(f"На исходе суток токена ({until:.0f}) приёмник откажет камере: новый токен выдаёт только держатель\n"
+             "по запросу камеры через дверь её роли.")
     site.on("srv")
     log.note("srv включён: проходы держателя, книги, агенты.")
     site.domain_pass()
@@ -668,17 +669,14 @@ def f09_backup_office(site) -> None:
         r.reconcile_once(); r.heartbeat_once()
         site.tick(60, offices=("relay-a", "relay-b", "relay-b2"), agents_every=15)
     log.note("Проход книг: у SN-A теперь резерв — в книге основных cam-a второй путь (backup) к приёмнику relay-b2.")
-    site.domainpart.pass_once()
+    site.holder.run_pass()
     site.sync("relay-a")
     site.sync("cam-a")
     from vms.recording_books import PRIMARIES_PATH
-    from vms.domainpart.keys import opened
-    items = opened(site.cams["cam-a"].flash_store.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, site.ring("cam-a"))
-    entry = json.loads((items or {}).get("SN-A", "{}"))
-    for road in ("ingest", "backup"):
-        if isinstance(entry.get(road), dict):
-            entry[road] = {k: v for k, v in entry[road].items() if k != "token_secret"}
-    log.note("книга основных cam-a, SN-A (токены опущены): " + json.dumps(entry, ensure_ascii=False))
+    from w2cplatform.domain.memberbook import read
+    items = read(site.cams["cam-a"].flash_store, PRIMARIES_PATH, "cam-a")
+    entry = json.loads(items["SN-A"])["entries"]
+    log.note("книга основных cam-a, SN-A: " + json.dumps(entry, ensure_ascii=False))
     log.note("relay-a выключен.")
     site.off("relay-a")
     site.wall.advance(1)

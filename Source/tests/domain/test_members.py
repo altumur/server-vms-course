@@ -15,10 +15,8 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent
 from w2cplatform.domain.api import ConsoleAPI
-from vms.domainpart.books import Books
 from w2cplatform.domain.console import Console
-from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster, member_name
+from vms.camera_cluster import DeviceCluster, member_name
 from w2cplatform.trust.enroll import Manufacturer, Pledge, Registrar
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.members import Members, apply
@@ -45,26 +43,32 @@ def _enroll(reg, vendor, serial, nonce="n1"):
 
 
 def test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads():
-    """Zero-touch enrollment of SN9001. The registrar writes the admission into the domain's list of members; the
-    domain's next pass adds the camera — read from its reports — and it is on the list the console shows. The
-    domain's configuration never named it."""
-    wall = Clock(1000.0)
-    fed, north, signer, members = _domain(wall)
-    vendor = Manufacturer("vendor", now=wall)
-    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
-                    cluster_of=member_name)
-    _enroll(reg, vendor, "SN9001")
-    assert members.names() == ["cam-SN9001"] and members.read()["members"]["cam-SN9001"]["how"] == "voucher"
-
-    cam = DeviceCluster("SN9001", FakeVariables(), wall=wall)
-    cam.boot()
-    report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
-                published=cam.local_objects()))
-    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall), north.objects, members=members)
-    out = books.pass_once()
-    assert out["members"] == {"joined": ["cam-SN9001"], "left": []}
-    assert [r["ref"] for r in books.inputs.view.list()["rows"]] == ["SN9001"]
-    assert books.pass_once()["members"] == {"joined": [], "left": []}          # followed once
+    """Admission is followed by the platform without a subsystem domain worker."""
+    from pathlib import Path
+    from tests.catalog_fixture import isolated_catalog
+    from w2cplatform.spec import SubsystemSpec, SpecController
+    path = Path(__file__).parents[1] / "testdata/testsub.subsystem.yaml"
+    with isolated_catalog(path):
+        spec = SubsystemSpec.load(path)
+        wall = Clock(1000.0)
+        fed, north, signer, members = _domain(wall)
+        vendor = Manufacturer("vendor", now=wall)
+        reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public,
+                        now=wall, members=members, cluster_of=lambda serial: "member-" + serial)
+        _enroll(reg, vendor, "SN9001")
+        assert members.names() == ["member-SN9001"] and members.read()["members"]["member-SN9001"]["how"] == "voucher"
+        member, _ = make_cluster("member-SN9001")
+        ctl = SpecController(spec, member.vars, member.objects, wall=wall, cluster=member.name)
+        ctl.create({"name": "SN9001", "start": 1})
+        ctl.publish_snapshot()
+        report_sync(DomainAgent(member.name, north.vars, member.vars, now=wall,
+                    domain_objects=north.objects, published=member.objects))
+        joined = apply(fed, members, north.objects, wall=wall)
+        view = ReadView(fed, wall=wall)
+        view.refresh()
+        assert joined == {"joined": ["member-SN9001"], "left": []}
+        assert [r["ref"] for r in view.list()["rows"]] == ["SN9001"]
+        assert apply(fed, members, north.objects, wall=wall) == {"joined": [], "left": []}
 
 
 def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():

@@ -7,18 +7,16 @@ a credential (`SECRETS_KEY=%d/platform.key`); the domain's console loads none (A
 
 | unit | verb | role socket | user | where |
 |---|---|---|---|---|
-| `w2c-domain.service` | `signer` | `domain` | w2c | the holder: the keys and the holder's pass; /api/login, /api/carry/<member>, the five operations on 8445, the tokens socket |
+| `w2c-domain.service` | `signer` | `domain` | w2c | the holder: the keys and the holder's pass; /api/login, /api/carry/<member>, the five operations on 8445 |
 | `w2c-domain-console.service` | `domainconsole` | `domainconsole` | w2c | the holder: 8444, no key (the cluster's console keeps 8080) |
 | `w2c-domainagent.service` | `domainagent` | `domainagent` | w2c | every server |
-| `vms-domainpart.service` | `vms domainpart` | `camdomain` | vms | the holder: temporary VMS console diagnostics, 8096 |
 
-`w2c-domain.tmpfiles` makes the tokens socket's directory (2750 w2c:vms-camdomaintokens): the tokens socket's own group
-(ADR-0031, `<deployment>-<sub>domaintokens`), with no deployed readers after C6 — no `m` line in the sysusers or unit joins it. Rights: the configstore's file
-(`deploy/cluster/configstore-rights.json`, the domain roles from `w2cplatform/domain/rights.py`): `domain`,
-`domainconsole` (no `domain/signer*`, read or write), `domainagent` (with `!` denials), `camdomain`. Groups:
-`deploy/cluster/systemd/w2c-cluster.sysusers`. The console's groups are its socket's, `w2c-store` and `w2c-events` — not
-the ring's, not the tokens socket's — and the key file and the signer's sockets are `InaccessiblePaths=` for it. mTLS
-names when the doors get them: `domain.<server>`, `domainconsole.<server>`, `domainagent.<server>`.
+Runtime directories belong to their units (`RuntimeDirectory=`, mode 0700).
+Workers request credentials through the member agent's role doors. Rights come
+from `deploy/cluster/configstore-rights.json`: `domain`, `domainconsole` and
+`domainagent`. The console holds no signer's key. Groups are provisioned by
+`deploy/cluster/systemd/w2c-cluster.sysusers`.
+
 
 
 ## Role token doors (ADR-0074)

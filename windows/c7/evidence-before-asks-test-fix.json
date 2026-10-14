@@ -1,0 +1,18 @@
+{
+  "snapshot": "f145f82439f0aca22482247ee75f17863f431fff",
+  "manifest": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-source.json",
+  "manifest_sha256": "c5fe4fb6228edd32d23463049df34795b63d8e563e759a285f4043e3ab758ccf",
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-domainvms.log",
+      "sha256": "4c46e5f2cbe17d87f9ff553acf08036acbbf4dd64c7c1003e4b7bd5bbe1ff497",
+      "exit": 1,
+      "counts": [
+        165,
+        1,
+        0
+      ]
+    }
+  ],
+  "failure": "Stale asks == {} expectation; accepted correction by 54edcfdb; not a passing run."
+}

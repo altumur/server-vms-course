@@ -346,7 +346,7 @@ def _module_file(mod: str) -> str | None:
     return None
 
 
-# `vms.x`, `vms.domainpart.worker:main` — a dotted module path or a `module:function` (an entry point); not a file
+# `vms.x`, `vms.recworker:main` — a dotted module path or a `module:function` (an entry point); not a file
 # name (`vms.subsystem.yaml`) and not the bare word, which is a subsystem's NAME and a word of the dictionary.
 _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(?<!\.yaml)(?<!\.yml)(?<!\.json)(?<!\.py)"
                       % "|".join(SUBSYSTEM_PACKAGES))
@@ -354,7 +354,7 @@ _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(
 
 def _imports(path: str) -> list[tuple[int, str]]:
     """`(line, module)` for every import in a file — at the top, inside a function, or a module of a subsystem named
-    in a string (`"vms.x"`, `"vms.domainpart.worker:main"`: what `importlib` would import). Relative imports are
+    in a string (`"vms.x"`, `"vms.recworker:main"`: what `importlib` would import). Relative imports are
     resolved against the file's package."""
     src = open(path, encoding="utf-8").read()
     tree = ast.parse(src, path)
@@ -373,7 +373,7 @@ def _imports(path: str) -> list[tuple[int, str]]:
             out += [(node.lineno, f"{mod}.{a.name}") for a in node.names if _module_file(f"{mod}.{a.name}")]
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _BY_NAME.match(node.value):
             # a module named in a string — `importlib.import_module(name)` of a default like
-            # `"vms.domainpart.worker:main"` — is an import that happens at run time
+            # `"vms.recworker:main"` — is an import that happens at run time
             out.append((node.lineno, node.value.partition(":")[0]))
     return out
 

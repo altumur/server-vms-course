@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Run the VMS-on-the-domain suite without pytest (the appliance image has none):
     python3 tests/domainvms/run.py [test_module …]       # from Source/; no names: every module
-Discovers test_* functions in tests/domainvms/test_*.py — the VMS's part on the platform's domain (`vms/domainpart`:
-streams across clusters, cameras nobody reaches, relays and a centre, scenarios between cameras) — and runs them as
+Discovers test_* functions in tests/domainvms/test_*.py — the VMS's part on the platform's domain (streams across clusters, cameras nobody reaches, relays and a centre, scenarios between cameras) — and runs them as
 `tests/domain/run.py` runs the platform's domain tests, whose shims and fixtures (`tests/domain/conftest.py`) it shares."""
 from __future__ import annotations
 

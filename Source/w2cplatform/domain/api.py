@@ -127,6 +127,26 @@ class ConsoleAPI:
         self._refuse_secrets(body)
         if method == "PUT":
             self._refuse_undeclared(sub, body)
+        if method != "DELETE":
+            from w2cplatform.spec import Refused
+            from w2cplatform.rows import PARSE_ERRORS
+            from w2cplatform.schema import check, Invalid
+            try:
+                spec.refuse(body)
+                for name, value in body.items():
+                    field = spec.fields[name]
+                    kind = {"int": "integer", "float": "number", "bool": "boolean",
+                            "list": "array", "json": None}.get(field.type, "string")
+                    if kind:
+                        check({"type": kind}, value, name)
+                    if field.required and value in (None, "", []):
+                        raise Refused(f"{name} is required")
+                    if method == "PUT" and field.fixed:
+                        raise Refused(f"{name} is fixed at creation")
+                if method == "POST":
+                    spec.new_row(unit or "new", body)
+            except (Refused, Invalid, *PARSE_ERRORS):
+                raise ApiError(400, "unit fields do not satisfy their spec") from None
         if method == "POST" and spec.domain and spec.domain.ref and not body.get(spec.domain.ref):
             raise ApiError(400, "the spec's domain.ref field is required")
         if self.pending is None:

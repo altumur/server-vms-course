@@ -62,13 +62,21 @@ def test_an_existing_unit_is_a_console_conflict_outcome_not_an_early_domain_refu
 
 def test_a_person_can_correct_a_refused_operation_with_a_new_key():
     with site() as e, console(e) as url:
-        bad = _queue(e, {"name": "unit", "unknown_field": 1}, "bad", "POST")
+        # The shape is valid, but the unit is not there on the member yet.
+        bad = _queue(e, {"start": 7}, "bad", "PUT")
         agent = _agent(e, url); agent.sync(); _collect(e)
-        assert _load(e.vars.get("domain/outcomes/north")[0], "outcomes")[bad["kept"]]["status"] == 400
+        assert _load(e.vars.get("domain/outcomes/north")[0], "outcomes")[bad["kept"]]["status"] == 404
         good = _queue(e, {"name": "unit"}, "fixed", "POST")
         agent.sync(); _collect(e)
         assert _load(e.vars.get("domain/outcomes/north")[0], "outcomes")[good["kept"]]["status"] == 201
         assert e.pending.of("north") == {}
+
+
+def test_an_unknown_field_is_refused_before_the_operation_is_kept():
+    with site() as e:
+        raises(400, lambda: _queue(e, {"name": "unit", "unknown_field": 1}, "bad", "POST"))
+        assert e.pending.of("north") == {}
+        assert e.vars.get("testsub/counters/unit")[0] is None
 
 
 def test_edits_made_while_it_is_off_keep_independent_operations():

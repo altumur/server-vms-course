@@ -18,7 +18,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.alarms import Card, DomainAlarms, ReportedDoor, pages
 from w2cplatform.domain.api import ConsoleAPI
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import Grant
 from w2cplatform.domain.pending import PendingEdits

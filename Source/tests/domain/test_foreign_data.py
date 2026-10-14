@@ -16,14 +16,12 @@ import time
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
-from vms.domainpart.books import Books
 from w2cplatform.domain.relay import MEMBER_SHARE, Relay, bundle, say_seen, RELAY_SEEN
-from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
 from w2cplatform.domain.identity import IdentityStore
-from vms.domainpart.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Refused, audience
+from vms.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Refused, audience
 from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.pending import OUTCOMES_PATH, PendingEdits
 from w2cplatform.domain.readview import ReadView
@@ -69,37 +67,55 @@ class _Console:
 
 
 def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_is_answered_and_its_books_written():
-    """The blocker of part 4, reproduced: a torn `domain/members/<relay>/bundle` raised `JSONDecodeError` out of every
-    read of a member behind that relay — `DomainDirectory.where` scans every cluster, so `/domain/where` and every edit
-    through the domain failed for EVERY camera of the domain, and the pass over the books raised (the signer's loop
-    swallowed it; stream tokens stopped being re-issued). Now the bundle is read through the members' reader: the
-    members behind the relay did not answer — named, with why, counted once — and the rest is answered and written."""
+    """A broken relayed report cannot freeze another member's read, edit or books."""
+    from pathlib import Path
+    from w2cplatform.spec import SubsystemSpec, SpecController
+    from w2cplatform.domain.signer_service import Holder
     from w2cplatform.domain.api import ConsoleAPI
-    wall = Clock(10_000.0)
-    fed, north, east, cam, signer, _ = _relay_domain(wall)
-    view = ReadView(fed, wall=wall); view.refresh()
-    assert view.list()["complete"]
-    north.objects.put(base(cam.name) + 'reported', b'{')
-    before = MEMBER_OBJECTS.counts.get(cam.name, 0)
-
-    d = DomainDirectory(fed, wall=wall)
-    a = d.where("101")                                                  # a camera of north: raised before
-    assert a.found and a.cluster == "north" and a.unreachable == [cam.name]
-    console = _Console()
-    pending = PendingEdits(north.vars, wall)
-    north.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {} for n in fed.clusters}})})
-    api = ConsoleAPI(d, pending=pending)
-    reply = api.queue("PUT", "cam", "cameras", "101", {"enabled": False}, "k1", "north")
-    assert reply["cluster"] == "north" and not console.edits
-    assert pending.of("north")[reply["kept"]]["body"] == {"enabled": False}
-
-    books = Books(BookInputs(north.vars, view, wall), north.objects)
-    for _ in range(2):
-        wall.advance(5); out = books.pass_once()
-    assert out["failing"] == [] and {"refused", "unchecked"} <= out.keys() and not {"asks", "polls"} & out.keys()
-    page_ = view.list()
-    assert page_["clusters"][cam.name] == "unreachable" and "complete report" in page_["why"][cam.name]
-    assert MEMBER_OBJECTS.counts.get(cam.name, 0) == before + 1           # once, not once per read or per pass
+    data = Path(__file__).parents[1] / "testdata"
+    with isolated_catalog(data / "testsub.subsystem.yaml", data / "testsub2.subsystem.yaml"):
+        spec = SubsystemSpec.load(data / "testsub.subsystem.yaml")
+        wall = Clock(10_000.0)
+        fed = Federation()
+        north, _ = make_cluster("north", domain=True)
+        east, _ = make_cluster("east")
+        member, _ = make_cluster("member")
+        fed.add(north); fed.add(east)
+        fed.add(member_copy(member.name, north.objects, wall=wall, via="east"))
+        for c, name in ((north, "101"), (east, "201"), (member, "701")):
+            ctl = SpecController(spec, c.vars, c.objects, wall=wall, cluster=c.name)
+            ctl.create({"name": name, "start": 1})
+            ctl.publish_snapshot()
+        signer = Signer("acme", north.vars, now=wall)
+        DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+        relay = DomainAgent("east", north.vars, east.vars, now=wall,
+            domain_objects=north.objects, bundle_store=east.objects,
+            bundle_members=[member.name], relay_members=[member.name])
+        through = Relay(relay, east.objects)
+        agent = DomainAgent(member.name, through.vars, member.vars, now=wall,
+            domain_objects=through.objects, published=member.objects)
+        report_sync(relay); report_sync(agent); report_sync(relay)
+        view = ReadView(fed, wall=wall); view.refresh()
+        assert view.list()["complete"]
+        north.objects.put(base(member.name) + "reported", b"{")
+        before = MEMBER_OBJECTS.counts.get(member.name, 0)
+        directory = DomainDirectory(fed, wall=wall)
+        found = directory.where("101")
+        assert found.found and found.cluster == "north" and found.unreachable == [member.name]
+        console = _Console()
+        pending = PendingEdits(north.vars, wall)
+        north.vars.put("domain/members", {"doc": json.dumps({"rev": 1, "members": {n: {} for n in fed.clusters}})})
+        api = ConsoleAPI(directory, pending=pending)
+        reply = api.queue("PUT", "testsub", "counters", "101", {"start": 7}, "k1", "north")
+        assert reply["cluster"] == "north" and not console.edits
+        assert pending.of("north")[reply["kept"]]["body"] == {"start": 7}
+        holder = Holder(north.vars, north.objects, signer, fed=fed, view=view, wall=wall)
+        for _ in range(2):
+            wall.advance(5); out = holder.run_pass()
+        assert not holder.loop.failing and {"collecting testsub2/notes", "collecting testsub2/rolls"} <= out.keys()
+        page_ = view.list()
+        assert page_["clusters"][member.name] == "unreachable" and "complete report" in page_["why"][member.name]
+        assert MEMBER_OBJECTS.counts.get(member.name, 0) == before + 1
 
 
 def test_a_report_whose_body_is_not_an_object_is_unknown():
@@ -455,7 +471,7 @@ def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said
     """`int(can.get("presets"))` on "five" and `can_a['events']` on a description that is not one raised out of the
     pass over the books — every camera's books with it. A description that is not one says nothing: the camera
     reads as one that has not said, and `misfit` reads a count that is a word as none."""
-    from vms.domainpart.scenario import misfit
+    from vms.camera_actions import misfit
     assert misfit("cam", {"ptz": True, "presets": "five"}, {"action": "preset", "arg": 3}) is None
     assert misfit("cam", {"relays": "two"}, {"action": "output", "arg": 1}) == "cam has no relays"
 
@@ -600,7 +616,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     `REMEMBER`, and every ask swept all of them: 27.5 s of the ingest's CPU. A deadline that has passed is refused now;
     an asker that lets its asks run out as fast as it may keeps at most `OUTCOMES_KEPT` outcomes at a camera, the
     oldest forgotten first; and another asker's outcome is not pushed out by it."""
-    from vms.domainpart.ingest import OUTCOMES_KEPT
+    from vms.ingest import OUTCOMES_KEPT
     wall = Clock(10_000.0)
     south, _ = make_cluster("south")
     signer = Signer("acme", south.vars, now=wall)
@@ -631,7 +647,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
 def test_a_preset_or_a_port_in_digits_that_are_not_ascii_is_a_misfit_and_not_a_value_error():
     """The tenth pass's sweep of `isdigit` then `int` (М10B's `vms/auto.py` had it too): `"²".isdigit()` is true and
     `int("²")` raised out of `misfit` — out of the domain's check of the scenario being written. By `doors.numeric`."""
-    from vms.domainpart.scenario import misfit
+    from vms.camera_actions import misfit
     for arg in ("²", "١", "７"):
         assert misfit("cam", {"relays": 2}, {"action": "output", "arg": arg}) == f"cam has 2 relay(s), not port {arg}"
         assert misfit("cam", {"ptz": True, "presets": 4}, {"action": "preset", "arg": arg}) == f"cam has 4 preset(s), not {arg}"

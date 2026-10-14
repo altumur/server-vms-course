@@ -163,3 +163,28 @@ def test_centre_derives_a_receiver_without_receiving_the_camera_source_or_creden
     assert rec.source("ref:serial") == ("centre", "ingest://centre/serial")
     box.vars.put("domain/member-topology", {"doc": json.dumps({"rev": 2, "centre": "other", "star": [], "via": {}})})
     assert rec.source("ref:serial") is None
+
+
+def test_primary_book_carries_applied_recording_settings_not_pending_edits():
+    box = Box()
+    placement(box, "main")
+    source_row(box)
+    rec = recorder(box)
+    rec.rows = [{"id": "recording", "cam": "ref:serial", "enabled": True,
+                 "retention_days": 17, "when": "offline", "home": "volume-applied"}]
+    box.vars.put("domain/pending/main", {"unapplied": json.dumps({"retention_days": 90})})
+    status = [{"id": "recording", "phase": "running",
+               "coverage": {"from": 10, "to": 20, "fragments": 2}}]
+    value = json.loads(publication.primaries(rec, status)["recording"])
+    assert value["retention_days"] == 17
+    assert value["when"] == "offline" and value["home"] == "volume-applied"
+    assert value["coverage"] == {"from": 10, "to": 20, "fragments": 2}
+    assert value["role"] == "primary" and value["running"] is True
+    for field, bad in (("retention_days", True), ("retention_days", 0),
+                       ("retention_days", 1.5), ("when", "unknown"), ("home", {})):
+        try:
+            books.recording_value({**value, field: bad})
+        except books.Unconfirmed:
+            pass
+        else:
+            raise AssertionError(field)

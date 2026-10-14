@@ -45,9 +45,8 @@ def test_the_units_run_the_entrypoints_the_package_has():
     from w2cplatform import host
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
     assert entrypoints == {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker",
-                           "jobs", "domainpart"}
-    # `domainpart` is the domain holder's, not a box's: its unit is `deploy/domain/systemd/vms-domainpart.service`
-    assert "w2c-run.sh vms domainpart" in open(os.path.join(HERE, "deploy", "domain", "systemd", "vms-domainpart.service")).read()
+                           "jobs"}
+    assert all(callable(getattr(m, verb)) for verb in entrypoints)
     # every subsystem's controller is an instance of the platform's one template (ADR 0023): `w2c-controller@<sub>`
     platform = {"w2c-controller@.container": "%i"}
     assert {f[:-len(".subsystem.yaml")] for f in os.listdir(os.path.join(HERE, "vms")) if f.endswith(".subsystem.yaml")} \

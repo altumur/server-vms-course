@@ -1,8 +1,8 @@
 """C6 real ingest/relay path: raw actions, role authority and original deadline."""
 from tests.test_autoask import item, road_fixture
 from tests.test_book_names import raises
-from vms.domainpart.chain import Forwarder
-from vms.domainpart.ingest import Ingest, Refused, ANSWER_GRACE
+from vms.forwarder import Forwarder
+from vms.ingest import Ingest, Refused, ANSWER_GRACE
 from vms.role_tokens import RoleTokens
 from w2cplatform.domain.federation import Unreachable
 

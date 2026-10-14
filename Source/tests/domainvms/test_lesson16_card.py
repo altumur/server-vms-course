@@ -18,7 +18,7 @@ import time
 import tracemalloc
 
 from w2cplatform.domain.federation import Unreachable
-from vms.domainpart.ingest import (ANSWER_KEPT, LANDED_KEPT, POLL_ROUND, UPLINK_FLOOR, CameraPusher, RangeFailed, card_range,
+from vms.ingest import (ANSWER_KEPT, LANDED_KEPT, POLL_ROUND, UPLINK_FLOOR, CameraPusher, RangeFailed, card_range,
                                    piece_wait)
 from tests.domainvms.recording_domain import camera_pusher, role_requests
 from tests.domain.conftest import Clock, real_card
@@ -416,7 +416,7 @@ def test_with_one_upload_in_twenty_lost_and_one_answer_in_twenty_lost_every_rang
     (`Ingest.upload`), and a pass whose upload did not get through ends there — `Unreachable` is caught per range,
     never out of the pass. Ten ranges of five pieces each: every one lands whole."""
     import random
-    from vms.domainpart.ingest import Unreachable as Gone
+    from vms.ingest import Unreachable as Gone
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = real_card(wall() - 1000, wall(), step=0.2, size=50_000)    # 2 Mbit/s: twenty seconds are five pieces
@@ -539,7 +539,7 @@ def _gate(ring, act, pusher, wall, row):
     its release and its hold again — over the camera's real ring and card writer, told by the pusher (`edge_gate`,
     `edge_resumes`). The book (`carried_primary`) says the primary is written: only the stream can open the card."""
     from types import SimpleNamespace
-    from vms.domainpart.ingest import edge_gate, edge_resumes
+    from vms.ingest import edge_gate, edge_resumes
     from vms.card import CardRecorder
     from vms.recworker import RecWorker
 
@@ -909,7 +909,7 @@ def _camera_process(wall, vars_, objects, root, flash, dial):
     """The camera's process as the course builds it: its ring, its card's recorder (`CardRecorder`, the card a volume of
     the camera's own cluster) and its pusher — tied in the one call a camera's process makes (`camera_process`)."""
     import os
-    from vms.domainpart.ingest import camera_process
+    from vms.ingest import camera_process
     from vms.card import CamRing, CardActuator, CardRecorder
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
@@ -1311,7 +1311,7 @@ def test_a_range_being_answered_when_the_cameras_clock_is_set_fails_and_lands_wh
     cluster's clock by the new offset. A move of the line fails every range under way (`CameraPusher._follow`): the
     server hears RANGE FAILED, asks again, and the range lands whole, every frame where it was captured."""
     import shutil
-    from vms.domainpart.ingest import RangeFailed
+    from vms.ingest import RangeFailed
     from vms.obsd import unix_s
     wall = Clock(1_780_000_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
@@ -1593,7 +1593,7 @@ def test_a_long_poll_held_at_the_ingest_is_not_a_request_that_travelled_and_tell
     the request's travel: a range asked 7 s into the hold was told by 5.0 (a provisional rise), 12 s in by 10.02; the
     camera's clock is the cluster's, the right offset is 0. The clock is measured as the poll arrives, once now: a range
     asked during a hold of 7 s is told by the offset held, and the hold moved nothing."""
-    from vms.domainpart.ingest import CLOCK_STEP
+    from vms.ingest import CLOCK_STEP
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     token = pusher.assigned.stream_token()
@@ -1909,7 +1909,7 @@ def test_a_step_of_this_clusters_clock_inside_the_cameras_round_trip_is_taken_an
     5.5 provisionally and confirmed by the next requests, the small one after `OFFSET_RISE`, the provisional rise whose
     road grew under it after `OFFSET_RISE` (not at once: that one is a small rise) — and a plateau, whose round trip grew
     by all of the rise, is still nothing."""
-    from vms.domainpart.ingest import CLOCK_STEP, OFFSET_RISE
+    from vms.ingest import CLOCK_STEP, OFFSET_RISE
 
     def world():
         wall = Clock(100_000.0)
@@ -1972,7 +1972,7 @@ def test_the_ranges_a_camera_could_not_read_are_remembered_to_a_bound_and_all_of
     """The thirteenth review, a minor: `failed_ranges` kept every range the camera answered RANGE FAILED — about 144 a day
     for one hole while a camera's clock stays unset (asked again every ten minutes), for as long as the process lives. The
     last `FAILED_KEPT` are kept, with why, and every one is counted (`ranges_failed`)."""
-    from vms.domainpart.ingest import FAILED_KEPT
+    from vms.ingest import FAILED_KEPT
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     pusher = camera_pusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card: every range fails
@@ -1993,7 +1993,7 @@ def _kept_world(wall):
     """A camera that polls the site's ingest, its pieces of the offset kept in the cluster's store (`keep_clocks`) — in
     its ROWS, as the cluster's store keeps a key the rec spec names in `objects.rows` (`ClusterObjectStore`, through
     `VariablesObjectStore`; the test's store of files has no rows of its own)."""
-    from vms.domainpart.ingest import clock_key, keep_clocks
+    from vms.ingest import clock_key, keep_clocks
     from w2cplatform.cluster.objectstore import VariablesObjectStore, is_row
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     assert is_row(clock_key(SERIAL))                                   # the rec spec's `objects.rows`: ingest/clock/*
@@ -2021,7 +2021,7 @@ def test_a_step_of_the_cameras_clock_keeps_its_hole_on_the_old_clock_at_this_ing
     `rec/ingest/clock/<ref>.json` (`keep_clocks`). An ingest with nothing kept begins with the camera's first word, and
     told the hole a step away, as before. A range after the step is on the new clock everywhere."""
     import json
-    from vms.domainpart.ingest import CLOCK_KEPT, keep_clocks
+    from vms.ingest import CLOCK_KEPT, keep_clocks
     for step in (30.0, -30.0):
         for case in ("this ingest", "restarted", "another", "nothing kept"):
             wall = Clock(1_780_000_000.0)
@@ -2056,7 +2056,7 @@ def test_the_newest_pieces_of_a_cameras_offset_are_kept_and_bytes_that_do_not_pa
     next ingest goes on from them; a range from before the oldest is told by it — it holds whatever came before. A row
     that does not parse, or of another version, is nothing kept: the ingest begins with the camera's first word."""
     import json
-    from vms.domainpart.ingest import CLOCK_KEPT, CLOCK_PIECES_KEPT, keep_clocks
+    from vms.ingest import CLOCK_KEPT, CLOCK_PIECES_KEPT, keep_clocks
     wall = Clock(1_780_000_000.0)
     rows, ingest, token = _kept_world(wall)
     for i in range(CLOCK_PIECES_KEPT + 8):                                 # forty steps forward, each held firm first
@@ -2087,7 +2087,7 @@ def test_the_pieces_of_a_clock_not_set_go_when_it_is_set_as_its_line_relabels_th
     by the set clock. Their pieces go (`Ingest._set_clock`): a range of it is told by the set offset — while a step of
     this cluster's clock, a rise nobody took back, keeps its piece (above)."""
     import json
-    from vms.domainpart.ingest import CLOCK_KEPT
+    from vms.ingest import CLOCK_KEPT
     for case in ("adrift", "1970"):
         wall = Clock(1_780_000_000.0)
         rows, ingest, token = _kept_world(wall)
@@ -2107,7 +2107,7 @@ def test_the_pieces_of_a_clock_not_set_go_when_it_is_set_as_its_line_relabels_th
 
 def test_final_range_piece_between_reads_does_not_restore_the_initial_deadline(monkeypatch):
     from types import SimpleNamespace
-    from vms.domainpart import ingest as module
+    from vms import ingest as module
     now=[0.0]
     monkeypatch.setattr(module,'time',SimpleNamespace(monotonic=lambda:now[0]))
     receiver=module.Ingest('south',[],lambda:None,wall=lambda:1000.)
