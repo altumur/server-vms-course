@@ -290,6 +290,8 @@ TTL 120 с, в токене user, unit, holder, routes только чтения
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
   snapshot_ahead_shards; audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
+metrics[]:  закрытый перечень ключей элемента (загрузчик урока 2 отказывает иным): name, type, from, agg, equals, when, default,
+            live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
 платформы, один раз (root): w2c_resources_live; w2c_resource_heartbeats_garbled; w2c_resource_full{server};
   w2c_resource_short_bytes{server}; w2c_resource_waits*; w2c_resource_rows_garbled; w2c_resource_restore_*; w2c_resource_mirror_*;
   w2c_requests_expired_total{sub}; w2c_requests_unknown_total{sub}
@@ -362,13 +364,13 @@ TTL 120 с, в токене user, unit, holder, routes только чтения
 - [ ] **М10/9-03** `display`, `servers.show/status`, `console.running` — слова по Н1.2; `display.actions` снят; `/spec` отдаёт `display` как написано — сц. 02; урок 2
 - [ ] **М10/9-04** сторожевая Н1.3: порядок, `need` по пути до тела, `X-User` никогда, открыта только с петли, закрыта при потере доверия, `{detail, error: denied}`, журнал — сц. 03; стенд М12A
 - [ ] **М10/9-05** `/session` с `grants` — чтением (стенд М12A); модуль `may` по ним
-- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — jsdom-тест контракта
-- [ ] **М10/9-07** контракт оболочки Н1.5: `api` с одним ключом и повторами, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — jsdom
+- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется чтением: тест контракта модуля (`Source/tests/console/`, jsdom; предмет — вызовы и их порядок); причина — модуль один у всех реализаций, двери порядок загрузки не показывают
+- [ ] **М10/9-07** контракт оболочки Н1.5: `api` с одним ключом и повторами, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери)
 - [ ] **М10/9-08** `/servers` и `WorkerRow` по Н2/Н3 — сц. 04; стенд урока 5
 - [ ] **М10/9-09** `/where`: 404 с `reason`, `door` только по view, токен Ed25519 120 с, журнал `door.issued` — сц. 04; стенд М10B
 - [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, ADR-0055 — сц. 05
 - [ ] **М10/9-11** общие коды Н4, полосы, пределы тела — сц. 06; чтением
-- [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — тест границы
+- [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — проверяется чтением: тест границы реализации (список маршрутов консоли против слов потока и архива); причина — отсутствие маршрута запросом не показать
 
 ## Соответствие прежним урокам
 
