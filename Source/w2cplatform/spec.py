@@ -1025,7 +1025,7 @@ class DomainSection:
                     raise ValueError(f"{where}.tokens.{kind}.placement is a closed assignment binding")
                 targets = binding["target_fields"]
                 if not isinstance(targets, list) or not targets or any(
-                        not isinstance(f, str) or f not in links | {"centre"} for f in targets) or len(set(targets)) != len(targets):
+                        not isinstance(f, str) or f not in links | {"centre", "star_centre"} for f in targets) or len(set(targets)) != len(targets):
                     raise ValueError(f"{where}.tokens.{kind}.placement.target_fields names distinct assignment fields")
                 sec.tokens[kind].update(grant=tuple(grant), placement={**binding, "target_fields": tuple(targets)})
         sec.keys = cls._families(spec, d.get("keys"), where)
