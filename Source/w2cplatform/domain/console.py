@@ -154,6 +154,21 @@ class Console:
             from .topology import apply
             apply(self.view.fed, self.topology, self.holder_objects)
 
+    def book_doc(self, spec, book):
+        from w2cplatform.console import project_book
+        from .memberbook import aggregate
+        from w2cplatform.rows import PARSE_ERRORS
+        if not spec.domain.show.get(book):
+            return 404, {"error": "no such book shown"}
+        if self.holder_vars is None:
+            return 404, {"error": "no holder store"}
+        key = f"{spec.domain_prefix}{book}"
+        try:
+            items = aggregate(self.holder_vars, key) if book in spec.domain.merged else self.holder_vars.get(key)[0]
+            return project_book(items, spec, book)
+        except (OSError, *PARSE_ERRORS):
+            return 503, {"error": "collected book is unavailable or inconsistent"}
+
     def shared_view(self) -> dict:
         """`GET /domain/shared`: the document the signer signed last (read from the store, no key), which members hold
         it, and what each spec declares shared with the field's type — `{doc, delivery, declared}`; a document a spec
@@ -492,6 +507,10 @@ class Console:
                     route = console.signer_route(u.path, "GET")
                     if route is not None and route.startswith("/api/people/"):
                         return self._to_signer("GET", route)            # the people's rows are opened where the ring is
+                    from w2cplatform.console import book_path
+                    shown_book = book_path(u.path)
+                    if shown_book is not None:
+                        return self._send(*console.book_doc(*shown_book))
                     declared_route = console.route(u.path)
                     if declared_route is not None:
                         kind, sub, name = declared_route
