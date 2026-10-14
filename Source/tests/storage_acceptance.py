@@ -16,6 +16,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 
 SOURCE = Path(__file__).resolve().parents[1]
 SHARED = SOURCE / "tests/testdata/acceptance/М10_Platform/01/scenarios.tsv"
@@ -146,6 +147,42 @@ def shape(body):
     return bad
 
 
+def steps(call):
+    records, bindings, previous = [], {}, None
+    for number, fields in enumerate(csv.reader(SHARED.read_text().splitlines(), delimiter="\t"), 1):
+        if not fields or fields[0].startswith("#"):
+            continue
+        scenario, step, operation, expected = fields
+        if scenario != previous:
+            bindings, previous = {}, scenario
+        record = {"scenario": scenario, "step": step, "line": number,
+                  "operation": operation, "failures": [], "shape": []}
+        try:
+            if operation.startswith("ASSERT "):
+                names = re.findall(r"\$([A-Za-z][A-Za-z0-9_]*)", operation)
+                values = [bindings[n] for n in names]
+                if any(a == b for i, a in enumerate(values) for b in values[i+1:]):
+                    record["failures"].append({"facet": "assert.distinct", "values": values})
+            else:
+                expanded = substitute(operation, bindings)
+                method, target, *rest = expanded.split(" ", 2)
+                raw = rest[0].encode() if rest else b""
+                status, body = call(method, target, raw)
+                wanted_status, wanted_body = expected.split(" ", 1)
+                record.update(status=status, body=small(body))
+                if status != int(wanted_status):
+                    record["failures"].append({"facet": "status", "expected": int(wanted_status), "actual": status})
+                for facet, want, got in compare(json.loads(wanted_body), body, bindings):
+                    record["failures"].append({"facet": facet, "expected": small(want), "actual": small(got)})
+                record["shape"] = shape(body)
+        except KeyError as error:
+            record["blocked"] = "unbound variable " + str(error)
+        except Exception as error:
+            record["transport_error"] = type(error).__name__ + ": " + str(error)
+        records.append(record)
+    return records
+
+
 def scenarios(source, output):
     records, bindings, previous = [], {}, None
     with tempfile.TemporaryDirectory(prefix="m10-api-", dir="/tmp") as directory:
@@ -169,37 +206,7 @@ def scenarios(source, output):
                 ready = json.loads(process.stdout.readline())
                 assert ready["ready"] and ready["pid"] != os.getpid()
                 save(output / "daemon.json", ready)
-                for number, fields in enumerate(csv.reader(SHARED.read_text().splitlines(), delimiter="\t"), 1):
-                    if not fields or fields[0].startswith("#"):
-                        continue
-                    scenario, step, operation, expected = fields
-                    if scenario != previous:
-                        bindings, previous = {}, scenario
-                    record = {"scenario": scenario, "step": step, "line": number,
-                              "operation": operation, "failures": [], "shape": []}
-                    try:
-                        if operation.startswith("ASSERT "):
-                            names = re.findall(r"\$([A-Za-z][A-Za-z0-9_]*)", operation)
-                            values = [bindings[n] for n in names]
-                            if any(a == b for i, a in enumerate(values) for b in values[i+1:]):
-                                record["failures"].append({"facet": "assert.distinct", "values": values})
-                        else:
-                            expanded = substitute(operation, bindings)
-                            method, target, *rest = expanded.split(" ", 2)
-                            raw = rest[0].encode() if rest else b""
-                            status, body = request(path, method, target, raw)
-                            wanted_status, wanted_body = expected.split(" ", 1)
-                            record.update(status=status, body=small(body))
-                            if status != int(wanted_status):
-                                record["failures"].append({"facet": "status", "expected": int(wanted_status), "actual": status})
-                            for facet, want, got in compare(json.loads(wanted_body), body, bindings):
-                                record["failures"].append({"facet": facet, "expected": small(want), "actual": small(got)})
-                            record["shape"] = shape(body)
-                    except KeyError as error:
-                        record["blocked"] = "unbound variable " + str(error)
-                    except Exception as error:
-                        record["transport_error"] = type(error).__name__ + ": " + str(error)
-                    records.append(record)
+                records = steps(lambda method, target, raw: request(path, method, target, raw))
             finally:
                 if process.poll() is None:
                     process.terminate()
@@ -213,9 +220,107 @@ def scenarios(source, output):
     return records
 
 
+class NativeAPI:
+    """Translate notation and Fault envelopes, never CAS/guard/replay decisions.
+
+    The native handle has a writer ACL; reads use that same platform evaluator.
+    No answer(), StoreMachine or HTTP door is involved in this executor.
+    """
+    def __init__(self, store):
+        self.store = store
+
+    def request(self, method, target, raw):
+        from w2cplatform.canonical import parse_json
+        from w2cplatform.storemachine import check_key, check_write, wire_index, MAX_VALUE
+        from w2cplatform.variables import Conflict, GuardFailed, Forbidden
+        from w2cplatform.limits import TooLarge
+        from w2cplatform.rights import refusal
+        route = urllib.parse.urlsplit(target)
+        query = urllib.parse.parse_qs(route.query, keep_blank_values=True)
+        def version(value):
+            return int(value) if value else 0
+        try:
+            if method == "GET" and route.path == "/v1/get":
+                key = check_key(query.get("key", [""])[0])
+                if refusal(self.store.writer, self.store.acl, key, "read"):
+                    raise Forbidden("read refused")
+                items, index = self.store.get(key)
+                return 200, {"items": items, "index": wire_index(index)}
+            if method == "GET" and route.path == "/v1/list":
+                prefix = query.get("prefix", [""])[0]
+                keys = {k: wire_index(self.store.get(k)[1]) for k in self.store.list(prefix)
+                        if not refusal(self.store.writer, self.store.acl, k, "read")}
+                return 200, {"keys": keys}
+            if method != "POST" or route.path != "/v1/write":
+                return 404, {"kind": "badrequest"}
+            # Only the notation's body bound, not a row/CAS/replay rule.
+            if len(raw) > 6 * MAX_VALUE + (64 << 10):
+                return 413, {"kind": "toolarge", "limit": MAX_VALUE}
+            try:
+                cmd = parse_json(raw)
+            except ValueError:
+                return 400, {"kind": "badrequest"}
+            if not isinstance(cmd, dict) or cmd.get("op") not in ("put", "delete"):
+                return 400, {"kind": "badrequest"}
+            check_key(cmd.get("key"))
+            guard = cmd.get("guard")
+            if isinstance(guard, dict) and isinstance(guard.get("key"), str) and guard["key"]:
+                check_key(guard["key"])
+            try:
+                check_write(cmd, wire=True)
+            except ValueError:
+                return 400, {"kind": "badrequest"}
+            # Native API versions are opaque native values. This is representation conversion only.
+            if cmd.get("cas") is not None:
+                cmd["cas"] = version(cmd["cas"])
+            if guard is not None:
+                cmd["guard"] = {"key": guard["key"], "index": version(guard["index"])}
+            try:
+                receipt = self.store.write(cmd)
+            except ValueError as error:
+                return 400, {"kind": "badrequest", "error": str(error)}
+            return 200, {"index": wire_index(receipt["index"]), **({"again": True} if receipt["again"] else {})}
+        except GuardFailed as error:
+            return 412, {"kind": "guard", "key": error.key, "index": wire_index(error.index)}
+        except Conflict as error:
+            return 409, {"kind": "conflict", "index": wire_index(error.index), "error": str(error)}
+        except Forbidden:
+            return 403, {"kind": "forbidden"}
+        except TooLarge as error:
+            return 413, {"kind": "toolarge", "key": error.key, "size": error.size, "limit": error.limit}
+        except ValueError as error:
+            return 400, {"kind": "badkey", "error": str(error)}
+
+
+def native_scenarios(backend, output):
+    from w2cplatform.variables import FileVariables
+    from w2cplatform.memvariables import MemVariables
+    called = {}
+    def trace(frame, event, arg):
+        if event == "call" and Path(frame.f_code.co_filename).name in ("variables.py", "memvariables.py"):
+            key = Path(frame.f_code.co_filename).name + ":" + frame.f_code.co_qualname
+            called[key] = called.get(key, 0) + 1
+        return None
+    with tempfile.TemporaryDirectory(prefix="m10-native-") as root:
+        store = FileVariables(root, max_bytes=524288, volatile=True) if backend == "file" else MemVariables(max_bytes=524288)
+        handle = store.as_writer("acceptance", ["acc/*"])
+        old_trace = sys.gettrace()
+        sys.settrace(trace)
+        try:
+            records = steps(NativeAPI(handle).request)
+        finally:
+            sys.settrace(old_trace)
+        save(output / "api-calls.json", called)
+        save(output / "backend.json", {"backend": backend, "pid": os.getpid(), "door": False,
+                                      "disk_files": sorted(str(p.relative_to(root)) for p in Path(root).rglob("*") if p.is_file())})
+    save(output / "api.json", records)
+    return records
+
+
 def main():
     args = argparse.ArgumentParser()
     args.add_argument("output", nargs="?", type=Path)
+    args.add_argument("--backend", choices=("http", "file", "mem"), default="http")
     args.add_argument("--daemon", action="store_true")
     args.add_argument("--source", type=Path, default=SOURCE)
     args.add_argument("--directory", type=Path)
@@ -227,7 +332,8 @@ def main():
     if a.output is None:
         args.error("output directory required")
     a.output.mkdir(parents=True, exist_ok=True)
-    records = scenarios(a.source, a.output)
+    sys.path.insert(0, str(a.source))
+    records = scenarios(a.source, a.output) if a.backend == "http" else native_scenarios(a.backend, a.output)
     bad = [r for r in records if r["failures"] or r.get("shape") or r.get("blocked") or r.get("transport_error")]
     print(f"{len(records)-len(bad)}/{len(records)} shared steps passed; {len(bad)} failed")
     for row in bad:
