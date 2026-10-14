@@ -202,24 +202,33 @@ paths:
   /v1/objects/{key}:
     get:
       responses: {"200": {description: "байты; заголовки X-Written, X-Server, X-Missing"}, "403": {description: семья не выдаётся дверью или строка-объект}, "404": {description: ни у кого нет}, "503": {description: копия не читается}}
-    put:    {description: только blobs — урок 10}
+    put:    {description: только blobs — урок 10, responses: {"204": {description: копия принята}, "405": {description: не семья blobs}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}}}
   /buckets/{sub}/{unit}:
-    get:    {responses: {"200": {description: строки JSON по бакету}}}
+    get:    {responses: {"200": {description: строки JSON по бакету}, "404": {description: нет такого бакета}, "403": {description: не своя подсистема}}}
   /events:                                   # ресурс и консоль (консоль — слияние)
     get:
-      parameters: [from, to, kind, subsystem, unit, limit, keep, class, by]
+      parameters:
+        - {name: from, in: query, schema: {type: number}}
+        - {name: to, in: query, schema: {type: number}}
+        - {name: kind, in: query, schema: {type: string}}
+        - {name: subsystem, in: query, schema: {type: string}}
+        - {name: unit, in: query, schema: {type: string}, description: "<sub>/<id>, не голый id"}
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: keep, in: query, schema: {type: string, enum: [all, alarms]}}
+        - {name: class, in: query, schema: {type: string}}
+        - {name: by, in: query, schema: {type: string}}
       responses:
         "200": {description: "{events: [row], state, truncated} (+ complete, incomplete у консоли)"}
         "400": {description: "keep/class/by не из слов; unit — голый id; limit не число"}
         "503": {description: "busy: N queries already being answered (Retry-After: 1) | this resource runs no event index"}
   /events/wait:
-    get:    {parameters: [want, timeout, since, client], description: долгий опрос новых строк}
+    get:    {parameters: [{name: want, in: query}, {name: timeout, in: query, schema: {type: integer}}, {name: since, in: query}, {name: client, in: query}], description: долгий опрос новых строк, responses: {"200": {description: "{events, state} — по таймауту пусто"}, "400": {description: want или since не по форме}, "503": {description: busy | индекса нет}}}
   /events/{path}:
-    get:    {description: файл бакета потоком; Range}
+    get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
   /mirror/{server}/{path}:
     put:    {responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
   /marks:                                    # консоль
-    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit"}
+    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
   /{sub}/requests:                           # консоль
     post:
       parameters: [{name: Idempotency-Key, in: header, required: true}]
@@ -233,7 +242,7 @@ paths:
         "429": {description: "too many — per_person; учёт не читается"}
         "503": {description: "busy | store unavailable"}
   /{sub}/asked/{sha16}:
-    delete: {description: снять учёт человека}
+    delete: {description: снять учёт человека, responses: {"200": {description: "{cleared: true}"}, "404": {description: учёта нет}}}
 ```
 
 ---
@@ -360,6 +369,7 @@ asked:  учёт старше ttl/settle → снять
 | просьба: спека без requests; единицы нет | 404 | слова | — |
 | просьба: rid занят иным запросом | 409 | `spent` \| `exists` | новый rid |
 | просьба: учёт человека полон; учёт не читается | 429 | слова | подождать |
+| нет пути; метод не из Н2 (например, GET /{sub}/requests) | 404 / 405 | слова | ошибка клиента |
 | держатель: метка уже есть | пропуск | — | другой начал |
 | держатель: нет ответа 10 с | метка `unknown` | `error` | человек решает |
 | жнец: брошена | метка `expired` / `unknown`, `ended_by: reaper` | — | — |
