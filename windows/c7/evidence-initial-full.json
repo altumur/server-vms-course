@@ -1,0 +1,49 @@
+{
+  "snapshot": "f02631a2aa9e05072e7764ebc0d21fd5d8702dd9",
+  "unchanged_source_files": 1010,
+  "manifest": "/Users/murat/w2c/course-book-merge-evidence/c7-final-source.json",
+  "manifest_sha256": "0f686018d37abaf836ebd39594a593bb819f306eaf73711d0e79d84366925583",
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-final-unit.log",
+      "sha256": "45376be66a8a55f7f79c10f7e7005af2e521f6f38e7ff553ee05a6e970fa9c33",
+      "exit": 1,
+      "counts": [
+        2099,
+        1,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-final-cluster.log",
+      "sha256": "81179d43980dfe4e3a3a7a0100441786b84461a22751bd68fc2780c45e9509d5",
+      "exit": 0,
+      "counts": [
+        119,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-final-domain.log",
+      "sha256": "e913b3500f4ba2edc44c71bc5a036e0569025f2bc6271538ecac079a245cd9bb",
+      "exit": 0,
+      "counts": [
+        228,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-final-domainvms.log",
+      "sha256": "3fbfba919e756c521691f5981b46838417c5b2c34c701afdfdde2f18f0c70d8c",
+      "exit": 0,
+      "counts": [
+        166,
+        0,
+        0
+      ]
+    }
+  ],
+  "status": "Первый полный снимок до поправки asks C6 и решений 59738974/77d82f9d; не итог приёмки нового кода."
+}
