@@ -60,6 +60,7 @@ class WorkerScenarios:
         if not valid or not elected(worker):
             return []
         local = {}
+        cameras = set()
         duplicate = set()
         for key in worker.vars.list(SPEC.sub.config(SPEC.rows, '')):
             raw, _ = worker.vars.get(key)
@@ -67,19 +68,30 @@ class WorkerScenarios:
                 continue
             row = SPEC.row(raw)
             ref = str(row.get(SPEC.domain.ref) or '')
+            if ref:
+                cameras.add(ref)
             if ref and row.get('enabled', True):
                 if ref in local:
                     duplicate.add(ref)
                 local[ref] = str(row['id'])
+        self.executor.local(cameras)
+        self.executor.settle()
         needed = {}
         for item in valid:
             ref, kind = item['when']['camera'], item['when']['kind']
+            state = self.executor.status.get(item['name'])
+            if state is None:
+                continue
             if ref in duplicate:
-                self.executor.refused[item['name']] = 'trigger identity is not unique locally'
+                state['holding'] = {'cam/'+ref: 'trigger identity is not unique locally'}
             elif ref in local:
+                state.pop('why', None)
                 key = ref, kind
                 needed[key] = max(needed.get(key, 0), item['then'].get('within', VALID))
                 self.watched.add(('cam', kind, local[ref]))
+            else:
+                state['why'] = f'no camera {ref} in this cluster'
+                state.pop('holding', None)
         self.seen = {key: until for key, until in self.seen.items() if until > now}
         result = []
         for (ref, kind), within in sorted(needed.items()):
@@ -88,8 +100,14 @@ class WorkerScenarios:
             if answer.get('truncated') or answer.get('incomplete'):
                 for item in valid:
                     if item['when'] == {'camera':ref,'kind':kind}:
-                        self.executor.refused[item['name']] = 'trigger event window is incomplete'
+                        holes = answer.get('incomplete')
+                        self.executor.status[item['name']]['holding'] = (
+                            dict(holes) if isinstance(holes, dict) and holes else
+                            {'cam/'+local[ref]: 'trigger event window is incomplete'})
                 continue
+            for item in valid:
+                if item['when'] == {'camera':ref, 'kind':kind}:
+                    self.executor.status[item['name']].pop('holding', None)
             for event in answer.get('events', []):
                 if event.get('fenced') or event.get('epoch_is') not in (None, 'current'):
                     continue
@@ -137,6 +155,9 @@ class Embedded:
         return self.executor.on_event(self.serial,kind,event)
 
     def heartbeat(self):
+        self.executor.refresh()
+        self.executor.local({self.serial})
+        self.executor.settle()
         return self.executor.heartbeat()
 
 
