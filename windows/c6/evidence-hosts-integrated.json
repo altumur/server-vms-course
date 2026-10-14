@@ -1,0 +1,19 @@
+{
+  "stage": "C6 connected executor hosts + receipt clock + exact reader rules; not final runtime cutover",
+  "head": "6b2d44e439abf30cf226b19ab5c60c5a25cda1fc",
+  "exit": 0,
+  "passed_failed_skipped": [
+    126,
+    0,
+    0
+  ],
+  "cwd": "Source",
+  "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/exe/obsd W2C_PRODUCT_DIR=/Users/murat/w2c/vmssubsystem /Users/murat/w2c/vms-nightly/venv/bin/python -u tests/run.py test_shared_view test_autoask_runtime test_autoask test_ask_token_time test_autoworker test_scenario_token_requests test_token_requests test_ask_role_tokens test_recording_poll_push test_spec_parity test_secret_read_patterns",
+  "log": "/Users/murat/w2c/course-book-merge-evidence/c6-hosts-time-rights-integrated.log",
+  "sha256": "6c26aa912c4bf49b5c209e92c1f3bff846666ec4cb526b717cbcc49f9ff2b04d",
+  "limits": [
+    "Real relay/ingest/spec cutover and transfer of DomainVMS acceptance tests are pending.",
+    "Exact reader correction full suites and product-table parity failure are recorded separately in evidence-secret-readers.json.",
+    "Earlier host full unit is running against a separate unchanged Source snapshot; this record is not its result."
+  ]
+}
