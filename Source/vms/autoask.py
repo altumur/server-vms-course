@@ -198,7 +198,8 @@ class Executor:
                 note('no ingest answered')
             else:
                 ingest, aid = left
-                state['asked'] = getattr(asker, 'sent', None) or self.clock()
+                sent = getattr(asker, 'sent', None)
+                state['asked'] = self.clock() if sent is None else sent
                 if isinstance(aid, str) and aid:
                     state.pop('last', None)
                     self.pending[name, aid] = asker, target, aid, at + within
@@ -446,7 +447,7 @@ class Asker:
                 except (Unconfirmed, *PARSE_ERRORS):
                     unread = True
                     continue
-                if isinstance(out, str) and (out == 'performed' or out.startswith('refused: ')):
+                if isinstance(out, str) and out:
                     return out
                 if out is not None:
                     unread = True
