@@ -1,358 +1,321 @@
-"""The RTSP accounts at the holder — the VMS worker's doors on the domain and the book `stream-accounts` (the product's
-`vms/domainpart/streamclients.go` and `publishAccounts`; ADR-0031, the addendum of 2026-10-07; ADR-0024 for who reads the
-secrets, ADR-0010 for the books and the kept rows).
+"""C5 cluster account CRUD -> signed member reports -> generic unique book -> agent carry -> RTSP.
 
-A domain of three: srv-b holds it, srv-a and srv-c are members, each with its own ring and admitted with its own key, each
-agent carrying through the holder's door. The domain's console is the real one (the people's routes handed to a signer
-that answers the list of people from the holder's identity store); the worker's door is the real one, with tokens that
-name their person. The declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
-
-from tests.reporting import sync as report_sync
+There are no holder-owned stream-client rows or old domainpart publishers here. RTSP uses its existing adapter fake;
+HTTP account operations, domain human tokens, slot publications, member signatures, collection and secret carry are real.
+"""
+import contextlib
+import http.client
 import json
 import os
 import tempfile
 import threading
-import urllib.error
-import urllib.request
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import patch
 
-from w2cplatform.console import open_doors
+from tests.reporting import sync as report_sync
+from tests.test_book_runtime import site as book_site
+from vms.config import SPEC, LIVE_SPEC, REC_SPEC, AUTO_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC
+from vms.liveworker import LiveWorker
+from vms.live_accounts import ACCOUNTS, BOOK, stream_accounts
+from vms.rtspdoor import FakeRTSPServer, RTSPDoor
+from w2cplatform import catalog
+from w2cplatform.console import Mount, SpecConsole, door_server
+from w2cplatform.domain import booknames, bookruntime
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-from w2cplatform.domain.api import ApiError, ConsoleAPI
+from w2cplatform.domain.api import ConsoleAPI
 from w2cplatform.domain.carry import CarryClient, HolderDoor
 from w2cplatform.domain.console import Console
-from w2cplatform.domain.declared import GrantTooWide, NameTaken, guarded
-from w2cplatform.domain.federation import DomainDirectory, Federation
+from w2cplatform.domain.declared import guarded
+from w2cplatform.domain.federation import DomainDirectory
 from w2cplatform.domain.grants import Grant, domain_may, grants_from_items, set_domain_grants
 from w2cplatform.domain.identity import IdentityStore
 from w2cplatform.domain.members import Members
-from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.reports import pinned
+from w2cplatform.domain.term import DomainHolder
 from w2cplatform.sealing import is_sealed
-from w2cplatform.trust.memberkey import MemberKey
-from w2cplatform.trust.signer import Signer
-from vms import streamclients as sc
-from vms.domainpart.books import Books
-from vms.domainpart.inputs import BookInputs
-from vms.domainpart.streamclients import ConsoleDoor, StreamClientDoors, new_stream_client
-from vms.domainpart.worker import door_handler
-from tests.domain.conftest import Clock, make_cluster
-from tests.streamspec import declared, undeclared
+from w2cplatform.spec import SpecController
+from w2cplatform.trust.documents import sign
+from w2cplatform.trust.tokens import PERSON, verify
+from w2cplatform.variables import Forbidden
 
 
-def ring():
-    from w2cplatform.sealing import Sealer, new_key_file
-    path = os.path.join(tempfile.mkdtemp(prefix="ring-"), "platform.key")
-    new_key_file(path)
-    return Sealer.from_file(path)
-
-
-def _signer_stub(ids):
-    """The signer's people's door, as far as these doors ask it: the list of people (`GET /api/people/users`), and no
-    term (`/api/holder` 404: no write waits for one)."""
-    class H(BaseHTTPRequestHandler):
-        def do_GET(self):
-            if self.path == "/api/people/users":
-                body, status = {"users": [{"name": u.id} for u in ids.users()]}, 200
-            else:
-                body, status = {"detail": "no such route"}, 404
-            raw = json.dumps(body).encode()
-            self.send_response(status); self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(raw))); self.end_headers(); self.wfile.write(raw)
-
-        def log_message(self, *a):
-            pass
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    return srv
+def request(srv, method, path, token=None, body=None):
+    conn = http.client.HTTPConnection('127.0.0.1', srv.server_port, timeout=4)
+    headers = {'Content-Type': 'application/json'}
+    if token:
+        headers['Authorization'] = 'Bearer '+token
+    try:
+        conn.request(method, path, None if body is None else json.dumps(body).encode(), headers)
+        reply = conn.getresponse()
+        return reply.status, json.loads(reply.read() or b'{}')
+    finally:
+        conn.close()
 
 
 class Site:
-    def __init__(self):
-        self.wall = wall = Clock(1000.0)
-        self.fed = fed = Federation()
-        self.b, _ = make_cluster("srv-b", domain=True)
-        self.a, _ = make_cluster("srv-a")
-        self.c, _ = make_cluster("srv-c")
-        for x in (self.a, self.b, self.c):
-            fed.add(x)
-        self.rings = {n: ring() for n in ("srv-a", "srv-b", "srv-c")}
-        b = self.b
-        self.signer = Signer("acme", b.vars, now=wall, sealer=self.rings["srv-b"])
-        DomainPublisher(b.vars).publish_keys(self.signer.tokens.keyset())
-        keys = {n: MemberKey.new() for n in ("srv-a", "srv-c")}
-        members = Members(b.vars, wall, domain="srv-b")
-        for n, k in keys.items():
-            members.add(n, "voucher", key=k.pub, seal=k.seal_pub)
-        door = HolderDoor(b.vars, b.objects, self.rings["srv-b"], wall)
-        self.agents = {n: DomainAgent(n, CarryClient(door, n, keys[n], wall), getattr(self, n[-1]).vars, now=wall,
-                                      sealer=self.rings[n], key=keys[n]) for n in ("srv-a", "srv-c")}
-        self.agents["srv-b"] = DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects, sealer=self.rings["srv-b"])
-        self.crossings = BookInputs(b.vars, ReadView(fed, wall=wall), wall, issuer=self.signer.tokens,
-                                   sealer=self.rings["srv-b"])
-        self.books = Books(self.crossings, b.objects)
-        self.ids = IdentityStore(self.signer, b.vars, b.objects, now=wall, sealer=self.rings["srv-b"])
-        self.ids.create_local("anna", "a-long-password", [])
-        set_domain_grants(b.vars, [Grant("anna", "admin", None, 0.0), Grant("boris", "view", None, 0.0)], wall())
-        may = lambda cap: (lambda s: domain_may(b.vars, s, cap, wall()))         # noqa: E731
-        self.signer_srv = _signer_stub(self.ids)
-        self.console = Console(DomainDirectory(fed), ReadView(fed, wall=wall),
-                               ConsoleAPI(DomainDirectory(fed), verifier=lambda t: t),
-                               refresh_interval=60, admin=may("admin"), viewer=may("view"), holder_vars=b.vars,
-                               signer_url=f"http://127.0.0.1:{self.signer_srv.server_address[1]}")
-        self.console_srv = self.console.serve(port=0)
-        # the worker on the domain writes and removes in its own prefix by its role (`camdomain`, ADR-0021's addition)
-        self.doors = StreamClientDoors(guarded(b.vars.as_writer("camdomain")), sealer=self.rings["srv-b"], wall=wall,
-                                       console=ConsoleDoor(f"http://127.0.0.1:{self.console_srv.server_address[1]}"))
-        self.door = open_doors("127.0.0.1", 0, door_handler(fed, None, verifier=lambda t: t, viewer=may("view"),
-                                                             admin=may("admin"), clients=self.doors),
-                               unix_env="NO_SUCH_DOOR", say=False)
-        self.base = f"http://127.0.0.1:{self.door.server_address[1]}"
+    def __init__(self, env):
+        self.e, self.wall, self.servers = env, env.wall, []
+        self.north, self.south = env.fed.clusters['north'], env.fed.clusters['south']
+        # All processes of the holder cluster use that cluster's ring, including its gateway.
+        env.rings['north'] = env.holder.sealer
+        for name, cluster in env.fed.clusters.items():
+            env.memberkeys[name].save(cluster.vars, env.rings[name])
+        self.north.vars.as_writer('domain', ['domain/*']).delete('domain/members')
+        roster = Members(self.north.vars, self.wall, domain='north')
+        assert roster.add('south', 'voucher', key=env.memberkeys['south'].pub, seal=env.memberkeys['south'].seal_pub)
+        record = sign({'term': 1, 'holder': 'north', 'at': self.wall()}, env.root)
+        term = DomainHolder(env.fed, 'north', env.signer, 1, self.wall, objects=self.north.objects, record=record)
+        term.claim()
+        env.holder.term = term
+        assert set(roster.read()['members']) == {'north', 'south'}
+        door = HolderDoor(self.north.vars, self.north.objects, env.holder.sealer, self.wall)
+        self.agents = {
+            name: DomainAgent(name, CarryClient(door, name, env.memberkeys[name], self.wall), cluster.vars,
+                              now=self.wall, sealer=env.rings[name], key=env.memberkeys[name],
+                              published=cluster.objects, seen_store=cluster.objects)
+            for name, cluster in env.fed.clusters.items()}
+        self.gateways, self.gateway_doors, self.cameras, self.rtsp, self.rtsp_doors = {}, {}, {}, {}, {}
+        self.local_consoles = {}
+        self.controllers = {name: SpecController(SPEC, cluster.vars, cluster.objects, wall=self.wall, cluster=name)
+                            for name, cluster in env.fed.clusters.items()}
+        for ctl in self.controllers.values():
+            ctl.publish_snapshot()
+        self._agents()
+        # A complete initial index comes from accepted empty member reports, never from a hand-written flat book.
+        bookruntime.collect(env.holder, LIVE_SPEC, 'stream-accounts')
+        assert booknames.complete(self.north.vars, 'live', 'stream-accounts') == {}
+        self.ids = IdentityStore(env.signer, self.north.vars, self.north.objects, now=self.wall, sealer=env.holder.sealer)
+        self.ids.create_local('anna', 'a-long-password', [])
+        self.ids.create_local('boris', 'a-long-password', [])
+        set_domain_grants(self.north.vars, [Grant('anna', 'admin', None, 0), Grant('boris', 'view', None, 0)], self.wall())
+        env.holder.ids = self.ids
+        self.tokens = {name: env.signer.tokens.issue(name, 900, now=self.wall(), kind=PERSON) for name in ('anna', 'boris')}
+        for name in env.fed.clusters:
+            DomainPublisher(self.north.vars).publish_grants(name, self.people())
+        self._agents()
+        signer_door = self.serve(env.holder.handler())
+        subject = lambda token: verify(token, env.signer.tokens.keyset(), set(), now=self.wall(), kind=PERSON)['sub']
+        self.console = Console(DomainDirectory(env.fed), env.holder.view,
+                               ConsoleAPI(DomainDirectory(env.fed), verifier=subject),
+                               admin=lambda who: domain_may(self.north.vars, who, 'admin', self.wall()),
+                               viewer=lambda who: domain_may(self.north.vars, who, 'view', self.wall()),
+                               holder_vars=self.north.vars, holder_objects=self.north.objects,
+                               signer_url=f'http://127.0.0.1:{signer_door.server_port}')
+        self.domain_door = self.serve(self.console.handler())
+        env.holder.console_url = f'http://127.0.0.1:{self.domain_door.server_port}'
+        env.holder.view.refresh()
+        env.holder.publish_view()
+        for name, cluster in env.fed.clusters.items():
+            ctl = self.controllers[name]
+            cam = ctl.create({'name': 'camera '+name, 'ref': '7', 'source': 'driverpack://file/7.mp4'})
+            self.cameras[name] = str(cam['id'])
+            local_console = Mount(SpecConsole(ctl, wall=self.wall))
+            local_door = local_console.serve('127.0.0.1', 0)
+            self.servers.append(local_door)
+            self.local_consoles[name] = f"http://127.0.0.1:{local_door.server_port}"
+            root = tempfile.mkdtemp(prefix='c5-gateway-'+name+'-')
+            gateway = LiveWorker('g-1', cluster.vars, cluster.objects, clock=self.wall, wall=self.wall,
+                                 resource_root=root, env={'CONSOLE_URL': f'http://127.0.0.1:{local_door.server_port}',
+                                                         'W2C_TLS_DIR': os.path.join(root, 'no-kit')})
+            gateway.sealer = gateway.account_doors.accounts.sealer = env.rings[name]
+            gateway_door = gateway.serve('127.0.0.1', 0)
+            self.servers.append(gateway_door)
+            self.gateways[name], self.gateway_doors[name] = gateway, gateway_door
+            rtsp = FakeRTSPServer()
+            self.rtsp[name] = rtsp
+            self.rtsp_doors[name] = RTSPDoor(rtsp, lambda cam: 'rtsp://camera-source/'+cam,
+                                             cluster.vars, sealer=env.rings[name], wall=self.wall)
+        self.carry()
 
-    def call(self, method: str, path: str, who: str | None = "anna", body=None):
-        req = urllib.request.Request(self.base + path, method=method,
-                                     data=json.dumps(body).encode() if body is not None else None,
-                                     headers={"Authorization": f"Bearer {who}"} if who else {})
-        try:
-            with urllib.request.urlopen(req) as r:
-                return r.status, json.loads(r.read() or b"{}")
-        except urllib.error.HTTPError as e:
-            return e.code, json.loads(e.read() or b"{}")
+    def serve(self, handler):
+        srv = door_server(('127.0.0.1', 0), handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.servers.append(srv)
+        return srv
 
-    def grant(self, cluster: str, *lines):
-        DomainPublisher(self.b.vars).publish_grants(cluster, [Grant(s, cap, None, self.wall() + 86400) for s, cap in lines])
+    def people(self):
+        return [Grant('anna', 'admin', None, self.wall()+3600), Grant('boris', 'view', None, self.wall()+3600)]
+
+    def _agents(self):
+        for agent in self.agents.values():
+            assert report_sync(agent), (agent.cluster, agent.keys, agent.reported)
+            assert agent.reported == 'reported through the door', (agent.cluster, agent.reported)
 
     def carry(self):
-        self.books.pass_once()
-        for x in self.agents.values():
-            report_sync(x)
+        self.wall.advance(1)
+        for gateway in self.gateways.values():
+            gateway.heartbeat_once()
+        self._agents()
+        got = bookruntime.collect(self.e.holder, LIVE_SPEC, 'stream-accounts')
+        assert got.missing == (), got
+        self._agents()
+        for rtsp in self.rtsp_doors.values():
+            rtsp.sync()
+        return got
+
+    def call(self, method, path='/live/accounts', *, cluster='north', who='anna', body=None):
+        return request(self.gateway_doors[cluster], method, path, self.tokens.get(who), body)
+
+    def domain(self, method, path, body=None, who='anna'):
+        return request(self.domain_door, method, path, self.tokens.get(who), body)
+
+    def grants(self, cluster, *names):
+        lines = [{'subject': g.subject, 'cap': g.capability, 'scope': '*', 'until': g.valid_until} for g in self.people()]
+        lines += [{'subject': name, 'cap': 'view', 'scope': 'unit:cam/'+self.cameras[cluster], 'until': self.wall()+3600}
+                  for name in names]
+        status, answer = self.domain('PUT', '/domain/grants/'+cluster, {'lines': lines})
+        assert status == 200, (status, answer)
+
+    def denied_play(self, member, name, password):
+        try:
+            self.rtsp[member].play(name, password, self.cameras[member])
+        except PermissionError:
+            return
+        raise AssertionError('RTSP accepted an account/password that should no longer authorize play')
 
     def close(self):
-        self.console.stop(self.console_srv)
-        for srv in (self.door, self.signer_srv):
-            srv.shutdown(); srv.server_close()
+        for srv in reversed(self.servers):
+            srv.shutdown()
+            srv.server_close()
 
 
-def _site():
-    return Site()
-
-
-def test_a_client_is_made_its_password_shown_once_and_sealed_in_the_store():
-    """`POST /stream-clients {name}`: the password is in the answer, and nowhere else in the clear — not in the list,
-    not in the holder's row (sealed with the holder's ring, bound to the row). A new password is another one; the list
-    shows the name, never a password. Looking needs `view` on the domain, making needs `admin`."""
-    with declared():
-        s = _site()
-        try:
-            status, made = s.call("POST", "/stream-clients", body={"name": "wall1"})
-            assert status == 200 and made["client"] == "wall1" and len(made["password"]) == 32, (status, made)
-            row, _ = s.b.vars.get("domain/cam/stream-clients/wall1")
-            assert is_sealed(row["password_secret"]) and made["password"] not in json.dumps(row)
-            assert json.loads(row["doc"])["name"] == "wall1" and json.loads(row["doc"])["by"] == "anna"
-            status, listed = s.call("GET", "/stream-clients", "boris")
-            assert status == 200 and listed == {"clients": [json.loads(row["doc"])]}
-            assert made["password"] not in json.dumps(listed)
-            status, again = s.call("POST", "/stream-clients/wall1/password")
-            assert status == 200 and again["client"] == "wall1" and again["password"] != made["password"]
-            assert sc.read_stream_client(s.b.vars, "wall1", s.rings["srv-b"])[1] == again["password"]
-            assert sc.read_stream_client(s.b.vars, "wall1")[1] == ""          # sealed, and no ring here: no password
-            assert s.call("POST", "/stream-clients", "boris", {"name": "wall2"})[0] == 403
-            assert s.call("POST", "/stream-clients", None, {"name": "wall2"})[0] == 401
-            assert s.call("POST", "/stream-clients/nobody/password")[0] == 404
-            assert s.call("PUT", "/stream-clients", body={})[0] == 405
-        finally:
-            s.close()
-
-
-def test_a_name_a_person_holds_is_refused_409_and_a_person_is_not_made_under_a_clients_name():
-    """One name space, the grants' subjects (ADR-0031). The door asks the domain console whether a person holds the
-    name, as the person who asked — 409; a client of that name already — 409; a name that is no name — 400. Without
-    the console asked, the holder's store refuses it all the same (`domain.names`, the platform's guard). And the other
-    way round: a person under a client's name is the platform's refusal."""
-    with declared():
-        s = _site()
-        try:
-            status, said = s.call("POST", "/stream-clients", body={"name": "anna"})
-            assert status == 409 and said == {"error": "refused", "detail": "there is a user anna already"}, said
-            assert s.b.vars.get("domain/cam/stream-clients/anna")[0] is None
-            assert s.call("POST", "/stream-clients", body={"name": "wall1"})[0] == 200
-            status, said = s.call("POST", "/stream-clients", body={"name": "wall1"})
-            assert status == 409 and said["detail"] == "there is a stream client wall1 already"
-            for bad in ("a|b", "", "x/y", "break-glass", 'say"hi'):
-                status, said = s.call("POST", "/stream-clients", body={"name": bad})
-                assert status == 400 and said["detail"] == f"{json.dumps(bad)} is not a client's name", (bad, said)
+@contextlib.contextmanager
+def site():
+    with book_site() as env:
+        specs = (SPEC, LIVE_SPEC, REC_SPEC, AUTO_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC)
+        with patch.object(catalog, '_loaded', {s.name: s for s in specs}), patch.object(catalog, '_derived', {}):
+            s = Site(env)
             try:
-                new_stream_client(guarded(s.b.vars), None, "anna", "tool", s.wall(), s.rings["srv-b"])
-                raise AssertionError("the holder's store lets a client be written under a person's name")
-            except ApiError as e:
-                assert e.status == 409 and "anna" in e.detail
-            try:
-                s.ids.create_local("wall1", "a-long-password", [])
-                raise AssertionError("a person was made under a client's name")
-            except NameTaken:
-                pass
-            try:
-                s.grant("srv-a", ("wall1", "edit"))
-                raise AssertionError("a client was granted more than view")
-            except GrantTooWide:
-                pass
-        finally:
-            s.close()
+                with patch.dict(os.environ, {'CLUSTERS': ','.join(name+'='+url for name, url in s.local_consoles.items()),
+                                             'W2C_TLS_DIR': tempfile.mkdtemp(prefix='c5-no-console-kit-'),
+                                             'W2C_ROLE': 'console'}):
+                    yield s
+            finally:
+                s.close()
 
 
-def test_the_book_of_a_cluster_carries_only_the_clients_its_grants_name_and_no_disabled_one():
-    """The books' pass writes `stream-accounts/<cluster>` for every cluster: the clients a line of ITS grants names,
-    none disabled — sealed at the holder with its ring; the agent carries it home sealed to the member's key, and keeps
-    it sealed with the member's ring as `domain/cam/stream-accounts`, which the member opens with its own ring alone."""
-    with declared():
-        s = _site()
-        try:
-            pw = {n: s.call("POST", "/stream-clients", body={"name": n})[1]["password"] for n in ("wall1", "wall2", "wall3")}
-            s.grant("srv-a", ("wall1", "view"), ("wall2", "view"), ("anna", "admin"))
-            s.grant("srv-c", ("wall3", "view"))
-            assert s.call("PUT", "/stream-clients/wall2", body={"disabled": True}) == (200, {"client": "wall2", "disabled": True})
-            assert s.call("PUT", "/stream-clients/wall2", body={})[0] == 400
-            assert s.call("PUT", "/stream-clients/nobody", body={"disabled": True})[0] == 404
-            s.carry()
-            assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {"wall1": pw["wall1"]}
-            assert sc.stream_accounts(s.c.vars, "srv-c", s.rings["srv-c"]) == {"wall3": pw["wall3"]}
-            # the holder hands its own from its records (it holds the keys), and it granted nobody here
-            assert sc.stream_accounts(s.b.vars, "srv-b", s.rings["srv-b"]) == {}
-            for store, path in ((s.b.vars, "domain/cam/stream-accounts/srv-a"), (s.a.vars, "domain/cam/stream-accounts")):
-                items, _ = store.get(path)
-                assert is_sealed(items["accounts_secret"]) and pw["wall1"] not in json.dumps(items), path
-            assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-c"]) == {}     # another ring opens nothing
-            # on again: carried with the next pass
-            assert s.call("PUT", "/stream-clients/wall2", body={"disabled": False})[0] == 200
-            s.carry()
-            assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {"wall1": pw["wall1"], "wall2": pw["wall2"]}
-            # a new password reaches the member with its agent's next pass, and the old one is gone
-            new = s.call("POST", "/stream-clients/wall1/password")[1]["password"]
-            s.carry()
-            assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"])["wall1"] == new != pw["wall1"]
-        finally:
-            s.close()
+def test_cluster_http_crud_is_published_signed_carried_sealed_and_rtsp_observes_disable_and_password_reset():
+    with site() as s:
+        assert s.call('POST', body={'name': 'wall'}, who='boris')[0] == 403
+        assert s.call('POST', body={'name': 'wall'}, who=None)[0] == 401
+        status, created = s.call('POST', body={'name': 'wall'})
+        assert status == 200 and set(created) == {'account', 'password'}, (status, created)
+        password = created['password']
+        row = s.north.vars.get(ACCOUNTS+'wall')[0]
+        assert is_sealed(row['password_secret']) and password not in json.dumps(row)
+        assert s.call('GET', who='boris')[1]['accounts'][0]['by'] == 'anna'
+        s.grants('south', 'wall')
+        s.carry()
+        signed = pinned('north', s.north.objects)
+        assert signed.mark['signature'] and password not in signed.raw.decode()
+        assert password not in json.dumps(s.north.vars.get(BOOK+'/south')[0])
+        assert password not in json.dumps(s.south.vars.get(BOOK)[0])
+        assert stream_accounts(s.south.vars, 'south', s.e.rings['north']) == {}
+        assert s.rtsp['south'].play('wall', password, s.cameras['south'])
+        status, reset = s.call('POST', '/live/accounts/wall/password')
+        assert status == 200 and reset['password'] != password
+        s.carry()
+        s.denied_play('south', 'wall', password)
+        assert s.rtsp['south'].play('wall', reset['password'], s.cameras['south'])
+        assert s.call('PUT', '/live/accounts/wall', body={'disabled': True}) == (200, {'account': 'wall', 'disabled': True})
+        s.carry()
+        s.denied_play('south', 'wall', reset['password'])
+        assert s.call('PUT', '/live/accounts/wall', body={'disabled': False})[0] == 200
+        s.carry()
+        assert s.rtsp['south'].play('wall', reset['password'], s.cameras['south'])
 
 
-def test_deleting_a_client_drops_every_grant_that_names_it_through_the_domain_console():
-    """`DELETE /stream-clients/<name>`: its grants go first, through the domain console's door as the person who asked
-    (`PUT /domain/grants/<cluster>`: the grants are the domain's to write), then its row; the next books carry it to
-    nobody."""
-    with declared():
-        s = _site()
-        try:
-            pw = {n: s.call("POST", "/stream-clients", body={"name": n})[1]["password"] for n in ("wall1", "wall2")}
-            s.grant("srv-a", ("wall1", "view"), ("wall2", "view"))
-            s.grant("srv-c", ("wall1", "view"))
-            s.carry()
-            assert set(sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"])) == {"wall1", "wall2"}
-            assert s.call("DELETE", "/stream-clients/wall1", "boris")[0] == 403
-            status, said = s.call("DELETE", "/stream-clients/wall1")
-            assert status == 200 and said == {"client": "wall1", "deleted": True, "grants_changed": ["srv-a", "srv-c"]}, said
-            subjects = lambda c: {g.subject for g in grants_from_items(s.b.vars.get(f"domain/grants/{c}")[0])}   # noqa: E731
-            assert subjects("srv-a") == {"wall2"} and subjects("srv-c") == set()
-            assert domain_may(s.b.vars, "anna", "admin", s.wall())               # the domain's own grants untouched
-            assert sc.read_stream_client(s.b.vars, "wall1", s.rings["srv-b"]) == (None, "")
-            assert s.b.vars.get("domain/cam/stream-clients/wall1")[0] is None    # its row removed, not marked (ADR-0021)
-            assert [c.name for c in sc.stream_clients(s.b.vars)] == ["wall2"]
-            s.carry()
-            assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {"wall2": pw["wall2"]}
-            assert sc.stream_accounts(s.c.vars, "srv-c", s.rings["srv-c"]) == {}
-            assert s.call("DELETE", "/stream-clients/wall1")[0] == 404
-            s.ids.create_local("wall1", "a-long-password", [])                 # the name is free again
-        finally:
-            s.close()
+def test_grant_revocation_and_delete_use_domain_console_then_remove_carried_rtsp_access_and_release_the_name():
+    with site() as s:
+        password = s.call('POST', body={'name': 'wall'})[1]['password']
+        s.grants('south', 'wall')
+        s.carry()
+        assert s.rtsp['south'].play('wall', password, s.cameras['south'])
+        s.grants('south')
+        s._agents()  # final delivery rechecks current grants even before the next collection
+        s.rtsp_doors['south'].sync()
+        s.denied_play('south', 'wall', password)
+        s.grants('south', 'wall')
+        s.carry()
+        assert s.rtsp['south'].play('wall', password, s.cameras['south'])
+        assert s.call('DELETE', '/live/accounts/wall', who='boris')[0] == 403
+        status, removed = s.call('DELETE', '/live/accounts/wall')
+        assert (status, removed) == (200, {'account': 'wall', 'deleted': True, 'grants_changed': ['south']})
+        assert all(g.subject != 'wall' for g in grants_from_items(s.north.vars.get('domain/grants/south')[0]))
+        assert domain_may(s.north.vars, 'anna', 'admin', s.wall())
+        assert s.north.vars.get(ACCOUNTS+'wall')[0] is None
+        s.carry()
+        s.denied_play('south', 'wall', password)
+        assert 'wall' not in booknames.complete(s.north.vars, 'live', 'stream-accounts')
+        assert s.domain('POST', '/domain/users', {'name': 'wall', 'password': 'a-long-password', 'roles': []})[0] == 200
 
 
-def test_nothing_declared_nothing_made_and_nothing_carried():
-    """The accounts' declarations taken out of the course's specs: the doors are not there (404), the pass writes no book
-    (`stream-accounts` is not in what it returns), and a member reads no account."""
-    with undeclared():
-        _nothing_declared()
-
-
-def _nothing_declared():
-    s = _site()
-    try:
-        assert s.call("GET", "/stream-clients")[0] == 404
-        assert s.call("POST", "/stream-clients", body={"name": "wall1"})[0] == 404
-        s.grant("srv-a", ("wall1", "view"))
-        out = s.books.pass_once()
-        assert "stream-accounts" not in out
-        assert s.b.vars.list("domain/cam/stream-accounts") == []
-        assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {}
-    finally:
-        s.close()
-
-
-
-class _AsDaemon:
-    """The holder's store as its daemon answers `role` under the committed rights file (`storemachine.answer`): a get
-    the role may not read is `Forbidden`, a write it may not make too; a listing names every key (ADR-0021's addition
-    of 2026-10-10)."""
-
-    def __init__(self, role: str, inner):
+class AsDaemon:
+    """Exercise the committed domainconsole role, whose name-index reads grant no account secret reads."""
+    def __init__(self, inner):
         from w2cplatform.storemachine import Rights
-        here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.role, self.inner = role, inner
-        self.r = Rights.load(os.path.join(here, "deploy", "cluster", "configstore-rights.json"))
+        import w2cplatform
+        self.inner = inner
+        source = os.path.dirname(os.path.dirname(w2cplatform.__file__))
+        self.rights = Rights.load(os.path.join(source, 'deploy', 'cluster', 'configstore-rights.json'))
 
-    def _may(self, action, key):
-        from w2cplatform.variables import Forbidden
-        if not self.r.allows(self.role, action, key):
-            raise Forbidden(f"{self.role} may not {action} {key}")
+    def check(self, action, path):
+        if not self.rights.allows('domainconsole', action, path):
+            raise Forbidden('domainconsole may not '+action+' '+path)
 
     def get(self, path):
-        self._may("read", path)
+        self.check('read', path)
         return self.inner.get(path)
 
-    def put(self, path, items, cas=None):
-        self._may("write", path)
-        return self.inner.put(path, items, cas)
+    def put(self, path, items, cas=None, **kwargs):
+        self.check('write', path)
+        return self.inner.put(path, items, cas, **kwargs)
 
-    def delete(self, path, cas=None):
-        self._may("delete", path)
-        return self.inner.delete(path, cas)
+    def delete(self, path, cas=None, **kwargs):
+        self.check('delete', path)
+        return self.inner.delete(path, cas, **kwargs)
 
     def list(self, prefix):
         return self.inner.list(prefix)
 
 
-def test_the_domain_console_grants_admin_and_edit_and_checks_an_accounts_name_by_its_key_alone():
-    """The three-site run, F1 (ADR-0021's addition of 2026-10-10): the domain's console, under its own role
-    (`domainconsole`, which does not read the RTSP accounts), wrote no grant of `admin` or `edit` — the name check read
-    `domain/cam/stream-clients/<subject>` and the store refused it. The name is checked by its key, listed (as the
-    product's `subjectsOf`): a person is granted `admin`, an account anything above `view` is refused in words (400), and
-    once the account is deleted — its row removed — the name is a person's to be granted again."""
-    with declared():
-        s = _site()
+def test_collected_name_index_guards_users_and_grant_ceiling_without_reading_secret_accounts():
+    with site() as s:
+        assert s.call('POST', body={'name': 'anna'})[0] == 409
+        assert s.call('POST', body={'name': 'wall'})[0] == 200
+        s.carry()
+        console_vars = AsDaemon(s.north.vars)
         try:
-            s.call("POST", "/stream-clients", body={"name": "wall1"})
-            s.console.holder_vars = guarded(_AsDaemon("domainconsole", s.b.vars))
-            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
-                                         {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"},
-                                                    {"subject": "wall1", "cap": "view", "scope": "*"}]})
-            assert status == 200, said
-            status, said = _console_call(s, "PUT", "/domain/grants/domain",
-                                         {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"},
-                                                    {"subject": "boris", "cap": "edit", "scope": "*"}]})
-            assert status == 200, said
-            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
-                                         {"lines": [{"subject": "wall1", "cap": "edit", "scope": "*"}]})
-            assert status == 400 and "wall1" in said["detail"] and "view" in said["detail"], (status, said)
-            assert s.call("DELETE", "/stream-clients/wall1")[0] == 200
-            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
-                                         {"lines": [{"subject": "wall1", "cap": "edit", "scope": "*"}]})
-            assert status == 200, said                                   # the name is free: a person may take it
-        finally:
-            s.close()
+            console_vars.get(ACCOUNTS+'wall')
+        except Forbidden:
+            pass
+        else:
+            raise AssertionError('committed domainconsole role can read the local account password')
+        s.console.holder_vars = guarded(console_vars)
+        index = booknames.complete(s.north.vars, 'live', 'stream-accounts')
+        assert index['wall'] == ('north',)
+        assert 'password' not in json.dumps(s.north.vars.get('domain/names/live/stream-accounts')[0])
+        assert s.domain('POST', '/domain/users', {'name': 'wall', 'password': 'a-long-password', 'roles': []})[0] == 409
+        status, answer = s.domain('PUT', '/domain/grants/south', {'lines': [{'subject': 'wall', 'cap': 'edit', 'scope': '*'}]})
+        assert status == 400 and 'view' in answer['detail'], (status, answer)
+        assert s.domain('PUT', '/domain/grants/south', {'lines': [{'subject': 'anna', 'cap': 'admin', 'scope': '*'}]})[0] == 200
 
 
-def _console_call(s, method, path, body, who="anna"):
-    base = f"http://127.0.0.1:{s.console_srv.server_address[1]}"
-    req = urllib.request.Request(base + path, method=method, data=json.dumps(body).encode(),
-                                 headers={"Authorization": f"Bearer {who}", "Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req) as r:
-            return r.status, json.loads(r.read() or b"{}")
-    except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read() or b"{}")
+def test_two_cluster_creators_can_race_but_unique_collection_delivers_neither_and_indexes_both_owners():
+    with site() as s:
+        # No report containing the first new account has reached the holder before the second local create.
+        status, north = s.call('POST', cluster='north', body={'name': 'shared'})
+        assert status == 200, (status, north)
+        status, south = s.call('POST', cluster='south', body={'name': 'shared'})
+        assert status == 200, (status, south)
+        assert north['password'] != south['password']
+        s.grants('north', 'shared')
+        s.grants('south', 'shared')
+        s.carry()
+        assert booknames.complete(s.north.vars, 'live', 'stream-accounts')['shared'] == ('north', 'south')
+        for member, password in (('north', north['password']), ('south', south['password'])):
+            cluster = s.e.fed.clusters[member]
+            assert stream_accounts(cluster.vars, member, s.e.rings[member]) == {}
+            s.denied_play(member, 'shared', password)
+        assert s.domain('POST', '/domain/users', {'name': 'shared', 'password': 'a-long-password', 'roles': []})[0] == 409
+        status, answer = s.domain('PUT', '/domain/grants/south', {'lines': [{'subject': 'shared', 'cap': 'edit', 'scope': '*'}]})
+        assert status == 400 and 'view' in answer['detail'], (status, answer)
