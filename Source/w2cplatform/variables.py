@@ -431,12 +431,17 @@ class FileVariables:
                 n = int(raw)
             except ValueError:
                 raise Corrupt(f"{self.index_file} does not hold a number ({raw[:20]!r}): refusing to number again from 1000")
+        if n < 1000:
+            raise Corrupt(f"{self.index_file} is below the initial counter: refusing to reuse versions")
         n += 1
         tmp = self.index_file + ".tmp"
         with open(tmp, "w") as f:
             f.write(str(n))
             self._durable(f)
         os.replace(tmp, self.index_file)
+        # The reservation must survive before a row replacement/removal can.
+        if not self.volatile:
+            durable_dir(self.root)
         return n
 
     # The barriers. A row written with `write` + `rename` and nothing else is in the page cache: after a power
@@ -529,11 +534,13 @@ class FileVariables:
             current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
+            # Reserve before removing the last row: a missing/corrupt counter
+            # must refuse deletion, never restart numbering in an empty store.
+            self._next_index()
             try:
                 os.remove(self._file(path))
             except FileNotFoundError:
                 pass
-            self._next_index()
             self._durable_dirs()                    # the removal, too, survives the power going (the review's second pass)
 
     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
