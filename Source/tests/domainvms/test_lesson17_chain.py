@@ -20,7 +20,7 @@ import json
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.chain import UPSTREAM_PATH, publish_upstream
+from vms.domainpart.chain import UPSTREAM_PATH
 from w2cplatform.domain.relay import bundle
 from vms.domainpart.inputs import BookInputs
 from vms.domainpart.device import DeviceCluster, Ram
@@ -82,6 +82,7 @@ def _chain(wall, star=frozenset()):
                                     archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)}
     centre, relay, fwd = recs["north"].ingest, recs["east"].ingest, recs["east"].forwarder
     from tests.domainvms.recording_domain import role_requests
+    fwd.tokens.door = role_requests(east.vars)
     at.update(centre=centre, relay=relay)
     pusher = camera_pusher(SERIAL, cam.flash, dial_from("camera", {"relay"} if not star else set()), clock=wall)
 
@@ -93,7 +94,6 @@ def _chain(wall, star=frozenset()):
             [{"id": SERIAL, "phase": "running"}], ingest=RELAY_URLS[0])
         recording_domain.collect()
         recording_domain.collect()
-        publish_upstream(crossings, "north", star=star)
         report_sync(cam_agent); report_sync(relay_agent)
 
     domain_pass.inputs, domain_pass.recorders = crossings, recs
@@ -109,11 +109,26 @@ def _upstream(rec) -> dict:
 
 
 def _in_book(rec, ref, mode="push") -> None:
-    """Camera `ref` in the upstream book the relay's agent carried (`domain/upstream`), as the domain writes it."""
-    from vms.domainpart.keys import UPSTREAM_PATH
-    items, idx = rec.vars.get(UPSTREAM_PATH)
-    rec.vars.put(UPSTREAM_PATH, {**(items or {}), ref: json.dumps({"urls": CENTRE_URLS, "mode": mode, "token_secret": "t",
-                                                                  "until": 1e12})}, cas=idx)
+    """Explicit C3 fixture observations; credentials are requested and kept in memory."""
+    from types import SimpleNamespace
+    from w2cplatform.trust.tokens import TokenIssuer
+    own, now = rec.ingest.cluster, rec.wall()
+    rec.vars.put("domain/member", {"cluster": own})
+    rec.vars.put("domain/placed/rec/"+ref, {"cluster": own, "origin": "camera", "copies": "[]",
+        "reason": "operator", "at": str(now), "rev": "1"})
+    rec.vars.put("domain/member-topology", {"doc": json.dumps({"rev": 1, "centre": "north",
+        "star": [own] if mode == "pull" else [], "via": {}})})
+    def add(path, member, value):
+        items, idx = rec.vars.get(path)
+        row = {**(items or {}), "": json.dumps({"missing": []}), ref: json.dumps({
+            "entries": [{"member": member, "item": "w1/"+ref, "value": value}], "missing": []})}
+        rec.vars.put(path, row, cas=idx)
+    add("domain/cam/sources", "camera", {"ref": ref, "to": [own], "live_url": "rtsp://camera/live",
+        "server": "camera", "as_of": now, "polls": True})
+    add(UPSTREAM_PATH, "north", {"ref": ref, "to": [own], "urls": CENTRE_URLS})
+    issuer = TokenIssuer("fixture")
+    rec.forwarder.tokens.door = SimpleNamespace(request=lambda kind, name: {"request_id": "fixture",
+        "exp": rec.wall()+86400, "token": issuer.issue(own, 86400, now=rec.wall(), kind=kind, ref=name, aud=["north"])})
 
 
 def test_a_viewer_in_the_centre_the_want_travels_down_and_the_stream_up():
@@ -300,6 +315,7 @@ def test_a_centre_that_restarts_in_the_middle_of_a_pull_with_two_answers_lost_ha
     at = {"centre": centre()}
     host = ingest_recorder("east", RELAY_URLS[0], keys=lambda: {}, dial=lambda url: at["centre"], needs=lambda ref: True)
     relay, fwd = host.ingest, host.forwarder
+    _in_book(host, "7", mode="pull")                                   # confirmed route; transport alone is under test
     rq = relay.subscribe("7", "recorder:east", maxsize=1000)
 
     def pull(t, lost=False):
@@ -312,7 +328,7 @@ def test_a_centre_that_restarts_in_the_middle_of_a_pull_with_two_answers_lost_ha
                 raise Unreachable("the answer to the pull was lost")
             ing.pull = answer_lost
         try:
-            fwd._pull(ing, "7", {"token_secret": "t"})
+            fwd._pull(ing, "7", fwd.book()["7"])
         except Unreachable:
             pass
         ing.pull = real
@@ -688,6 +704,7 @@ def _two_relays(wall):
     for relay, refs in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
         for ref in refs:
             recording_domain.assign(ref, relay)
+        hosts[relay].forwarder.tokens.door = role_requests(hosts[relay].vars)
     books = Books(inputs, north.objects)
 
     def domain_pass():
@@ -836,31 +853,34 @@ def test_a_relay_that_lost_the_centre_tries_again_each_camera_at_its_own_moment(
 
 
 def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwards_on():
-    """The eighth review's siblings, left in this module by the М12 pass: where the centre takes streams and the
-    upstream book's own entries (`publish_upstream`), and the books the relay's agent carried (`Forwarder._vars`,
-    `asks_book`) were read bare — one torn document raised out of the whole pass: no token to push up re-issued, or no
-    camera of the relay forwarded. The centre's ingest is said in its recorder's heartbeat now (ADR-0065, its addition):
-    a torn heartbeat says no ingest, and each entry keeps the road it names; a torn entry of the domain's book is issued
-    anew; a torn entry the relay carried is the one it read last — each counted once (`BOOKS`)."""
-    from vms.domainpart.keys import UPSTREAM_PATH
+    """A malformed unrelated heartbeat does not hide a working centre. The holder rebuilds a torn
+    upstream result from signed recorder facts; a relay retains its established route through a torn
+    observation. A fresh forwarder cannot open that route until the observation is complete again.
+    Remaining legacy asks still isolate malformed entries and retain the last good one."""
+    from vms.domainpart.chain import UPSTREAM_PATH
     from vms.domainpart.keys import ASKS_PATH
     from vms.domainpart.ingest import BOOKS
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
-    north.objects.put("rec/heartbeats/r-1", b'{"worker": "r-1", "ts": ')  # the centre's recorder's heartbeat, half written
-    books = publish_upstream(domain_pass.inputs, "north", lifetime=1.0)   # (a lifetime that asks for a new token)
-    assert json.loads(books["east"][SERIAL])["urls"] == CENTRE_URLS       # re-issued, on the road the entry named
-    domain_pass.recorders["north"].heartbeat_once()                       # …and said again whole
-    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
-    north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)   # the book's own entry, torn
-    books = publish_upstream(domain_pass.inputs, "north")
-    assert json.loads(books["east"][SERIAL])["token_secret"] and f"{UPSTREAM_PATH}/east/{SERIAL}" in BOOKS.bad
-    before = fwd.book()[SERIAL]
-    items, idx = east.vars.get(UPSTREAM_PATH)
-    east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)   # what the relay carried, torn
-    assert fwd.book()[SERIAL] == before and f"{UPSTREAM_PATH}/{SERIAL}" in BOOKS.bad
     centre.want(SERIAL, "recorder:centre")
-    assert "forwarding" in fwd.pass_once()[SERIAL]                        # the relay forwards on, by the entry read last
+    fwd.pass_once()  # Establish a flow before losing the report.
+    before = fwd.book()[SERIAL]
+    north.objects.put("rec/heartbeats/torn", b'{"worker": "torn", "ts": ')
+    domain_pass()
+    assert fwd.book()[SERIAL] == before
+    # The holder repairs its result from signed worker facts, never reissues a book token.
+    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
+    north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)
+    domain_pass.recording_domain.collect()
+    assert fwd.book()[SERIAL] == before
+    items, idx = east.vars.get(UPSTREAM_PATH)
+    east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)
+    assert fwd.book()[SERIAL] == before
+    assert "forwarding" in fwd.pass_once()[SERIAL]
+    from vms.domainpart.chain import Forwarder
+    fresh = Forwarder("east", relay, east.vars, lambda url: centre)
+    fresh.tokens.door = role_requests(east.vars)
+    assert fresh.book() == {}  # A broken observation cannot establish a new flow.
     road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token_secret": "t"}]})
     east.vars.put(ASKS_PATH, {"a|b": road, "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
     assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
@@ -977,7 +997,7 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
                 raise Unreachable("the answer to the pull was lost")
             ing.pull = answer_lost
         try:
-            fwd._pull(ing, "7", {"token_secret": "t"})
+            fwd._pull(ing, "7", fwd.book()["7"])
         except Unreachable:
             pass
         ing.pull = real
@@ -1135,6 +1155,7 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     assert now.up_expired == {SERIAL: 1}                                # counted once
 
     now.dial = fwd.dial                                                 # the centre answers again: its word is said again
+    now.tokens.door = role_requests(east.vars)
     for recorder in domain_pass.recorders.values():
         recorder.claim_slot(recorder.name)
     domain_pass()                                                       # three days on: the stream token issued anew
@@ -1385,8 +1406,8 @@ def test_a_camera_taken_out_of_the_upstream_book_ends_its_loop_and_its_subscript
         fwd.serve(stop, period=0.05, stream_every=0.01)
         assert _until(lambda: SERIAL in fwd.queues and _alive(f"fwd-{SERIAL}"))
         assert fwd.up in local.tees[(SERIAL, "live")].subscribers
-        items, idx = store.get(UPSTREAM_PATH)
-        store.put(UPSTREAM_PATH, {k: v for k, v in items.items() if k != SERIAL}, cas=idx)
+        # Explicit withdrawal ends a working flow; a lost report preserves it.
+        store.as_writer("domainagent").delete("domain/placed/rec/" + SERIAL)
         assert _until(lambda: not _alive(f"fwd-{SERIAL}"))
         assert SERIAL not in fwd.queues and SERIAL not in fwd.state
         assert fwd.up not in local.tees[(SERIAL, "live")].subscribers   # its subscription let go…
