@@ -1,0 +1,13 @@
+# Приёмка М10/8 — события, ресурс, просьбы (стенд)
+
+Сценарии урока [М10/8](../../../../../../М10_Platform/08-events-resource-requests.md) (ADR-0080) на стенде урока 5: хранилище, консоль `testsub`, контроллер `testsub`, **ресурс сервера `srv-a`**, воркер `testsub` по директиве. Двери: `console …` (консоль `testsub`; `Idempotency-Key` ставит раннер у `POST`, в том числе у `/testsub/requests`), `resource …` (дверь ресурса `srv-a`), `store …` (хранилище, роль с чтением `objects/testsub/` и `testsub/`).
+
+## scenarios.tsv
+
+Формат и директивы — README уроков 3 и 5 (`@start`, `@until`, `@sleep`, `@key`, подмножество полей, `@absent`, `~содержит`, `$имя`, `@any`, коды `2xx`/`4xx`). Дополнительно: `$rid` связывается из ответа `202 {queued: …}` и подставляется в путь ключа (`objects/testsub/commands/$rid`).
+
+Стенд начинается с пустого хранилища; `platform/mirror` и `platform/space` не заданы. Сценарий 04 ждёт около двух минут (срок просьбы `valid_for: 30` у `testsub` плюс 60 с жнеца).
+
+## corrections.tsv
+
+Журнал исправлений ИИ (ADR-0080 доп. 1): `date`, `sample`, `fix`, `languages`.
