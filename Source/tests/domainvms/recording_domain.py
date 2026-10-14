@@ -181,6 +181,11 @@ class RecordingDomain:
             recorder.heartbeat_once()
         self._reports()
         got["polls"] = bookruntime.collect(self.holder, REC_SPEC, "polls")
+        # The fixture runs the holder for every declared book, including names.
+        for spec in declared.specs():
+            for book in spec.domain.merged:
+                if book not in got:
+                    got[book] = bookruntime.collect(self.holder, spec, book)
         for agent in self.agents:
             try:
                 sync(agent)
