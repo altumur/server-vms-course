@@ -13,7 +13,7 @@ from w2cplatform.cluster.variables import Conflict, FakeVariables
 from w2cplatform.variables import items_bytes
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.uplink import member_copy
 from w2cplatform.domain.shared import OBJECT, POINTER, SharedSettings, SharedView, sign
