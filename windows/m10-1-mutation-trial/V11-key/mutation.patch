@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/variables.py
++++ b/Source/w2cplatform/variables.py
+@@ -117,7 +117,7 @@
+ # for `testsub2/rows/*` reaches `testsub/counters/7`. Refused loudly, never repaired: a caller that meant
+ # `testsub/b` should say `testsub/b`.
+ def safe_path(path: str) -> str:
+-    if not path or path.startswith("/") or ".." in path.split("/"):
++    if not path or path.startswith("/"):
+         raise ValueError(f"not a key: {path!r}")
+     return path
+ 
