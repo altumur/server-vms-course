@@ -35,7 +35,7 @@ def _workers(box):
     from vms.liveworker import LiveWorker
     from vms.surveyworker import SurveyWorker
     common = dict(clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": "gpu"})
-    live_vars = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
+    live_vars = box.vars.as_writer("liveworker", LIVE_SPEC.acl_worker_role())
     return [DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects,
                       resource_root=box.resource_root, **common),
             DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
