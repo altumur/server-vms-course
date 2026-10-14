@@ -13,12 +13,10 @@ recording and live the same way, because they are the same stream.
                  cameras push, keyed by the domain's name for the camera, and hands each to whoever in its
                  cluster wants it: the recorder, to write; the gateway, to show. The fan-out that lived on the
                  camera's worker (М10B Lesson 9) moves off the camera, into the cluster that consumes it
-    where        the camera learns where to push from its book of primaries (Lesson 13, point V): the domain
-                 adds the recording cluster's ingest addresses and a STREAM TOKEN. The token is the domain
-                 signer's, like every token in this module (Lesson 4): audience the ingest of that cluster,
-                 for that camera, with an expiry. The ingest checks it with the key set its own agent
-                 carried — no secret is shared, and none is invented. The domain re-issues it only past its
-                 half-life, so the book on the camera's flash changes a few times a day, not every pass
+    where        assigned cameras read the complete book of primaries (C2/C3b), unassigned cameras
+                 read the complete poll-home book (C4). Recorder workers publish the addresses;
+                 neither book carries credentials. The camera obtains its own stream or poll token
+                 through the local role door; the signer derives the audience from confirmed policy.
     when         the camera keeps ONE long poll open to the ingest — "is there work for me?" — and pushes
                  while anybody wants the stream: a recorder holding an always-recording (it wants it for
                  ever, so the camera pushes for ever), a recorder inside an event's window, a viewer. The
@@ -565,7 +563,7 @@ class Ingest:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
         try:
             p = verify(token, ks, self.revoked(), now=self.wall())
-            if p.get("kind") not in ("stream", "upstream"):
+            if p.get("kind") not in ("stream", "upstream", "poll"):
                 raise Refused("stream token refused: wrong kind")
         except TokenError as e:
             raise Refused(f"stream token refused: {e}")
@@ -1911,6 +1909,8 @@ class CameraPusher:
         self._told: dict[str, tuple[str, int]] = {}
         from ..recording_push import AssignedPush
         self.assigned = AssignedPush(self, token_requests, role=role, env=env, clock=steady or base)
+        from ..recording_poll_push import PollPush
+        self.polling = PollPush(self, token_requests, role=role, env=env, clock=steady or base)
         self._channel_entry = None
 
 
@@ -1974,18 +1974,9 @@ class CameraPusher:
             return self._channel_entry
         entry = self.assigned.entry()
         if entry is not None:
+            self.polling.clear()
             return entry
-        # Poll-only cameras keep their separate declared book until C4.
-        from .keys import POLLS_PATH, opened
-        items = opened(self.flash.get(POLLS_PATH)[0], POLLS_PATH, self.sealer)
-        raw = (items or {}).get(self.serial)
-        if not raw:
-            return None
-        def polls(value):
-            road = {k: value[k] for k in ("urls", "token_secret", "until")}
-            _a_road(road)
-            return {"cluster": str(value["cluster"]), "polls_only": True, "ingest": road}
-        return BOOKS.read(f"{POLLS_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
+        return self.polling.entry()
 
     def behind(self) -> float:
         """How far the stream it pushes is behind the newest frame, in seconds: catching up after a break."""
@@ -2554,18 +2545,31 @@ class CameraPusher:
         try:
             entry = self.entry()
         except (Unconfirmed, ValueError):
+            if self.assigned.scope is None:
+                self.pushing, self._card = None, None
+                self.state = "ERROR: poll destination is not confirmed"
+                return {"state": self.state}
             self.assigned.observe_absence()
             routes = {name: channel._route for name, channel in self.assigned.channels.items()
                       if channel.pushing is not None}
             entry = {"channels": routes, "primary": self.assigned.scope[1] if self.assigned.scope else ""}
         if entry is not None and "channels" in entry:
             return self.assigned.pass_once(entry, loose, wait)
-        return self._channel_pass(loose, wait)
+        self._channel_entry = entry
+        try:
+            return self._channel_pass(loose, wait)
+        except Refused:
+            self.polling.clear()
+            self.pushing, self._card = None, None
+            self.state = "the poll receiver refused this token; requesting a current token"
+            return {"state": self.state}
+        finally:
+            self._channel_entry = None
 
     def _channel_pass(self, loose: list, wait: float) -> dict:
         entry = self.entry()
         if not entry or not entry.get("ingest"):
-            self.state = "no poll destination yet"
+            self.state = "ERROR: no poll destination yet"
             return {"state": self.state}
         ing, work, url = self._poll(entry["ingest"], "primary", 0.0 if self.busy() else wait)
         pushed, uploaded, performed, road = 0, [], [], None
