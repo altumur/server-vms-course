@@ -163,6 +163,23 @@ def test_corrupt_policy_refuses_before_token_request_and_is_nonsecret_in_pulse()
         assert not e.calls and not e.dialled
 
 
+def test_role_request_time_never_extends_the_event_deadline():
+    for delay in (2,8):
+        e=road_fixture();request=e.door.request;start=e.box.wall()
+        def delayed(kind,ref,by):
+            reply=request(kind,ref,by)
+            e.box.wall.advance(delay)
+            return reply
+        e.door.request=delayed
+        if delay==8:
+            raises(Unconfirmed,lambda:e.asker.ask('B',item()['then'],7))
+            assert not e.dialled
+        else:
+            _,result=e.asker.ask('B',item()['then'],7)
+            assert result[1][-1]==start+7
+            assert result[2]['camera_now']==start+delay
+
+
 def test_partial_flat_or_unaddressed_books_never_request_a_token():
     for mode in ('partial','flat','recipient','trigger','action'):
         e=road_fixture()
