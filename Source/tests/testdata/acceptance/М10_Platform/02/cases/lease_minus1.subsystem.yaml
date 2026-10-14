@@ -1,0 +1,35 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int,    default: 0}
+    kind:   {type: string, enum: [a, b], default: a}
+    labels: {type: list}
+placement:
+  capacity:   {from: capacity, default: 4}
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+requests:
+  schema:
+    type: object
+    required: [unit, add]
+    additionalProperties: false
+    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
+  valid_for: 30
+  most_valid: 600
+snapshot: [name, start]
+display:
+  unit: counter
+  units: counters
+  fields: {name: Name, start: Start}
+  options:
+    kind: {a: Alpha, b: Beta}
+  form:
+    - title: Main
+      fields: [name, start, kind]
+      status:
+        - {field: seen, title: Seen}
+lease: {unconfirmed_max: -1}
