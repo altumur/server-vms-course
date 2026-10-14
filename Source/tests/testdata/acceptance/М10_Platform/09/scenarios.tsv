@@ -1,0 +1,28 @@
+scenario	step	request	expect
+# Приёмка М10/9: двери консоли testsub (root) без воркеров и домена; testsub2 смонтирована. Формат — README.
+01-page-and-module	1	GET /	200 ~PlatformConsole.mount
+01-page-and-module	2	GET /	200 @header Content-Security-Policy: ~script-src
+01-page-and-module	3	GET /platform/console.js?v=1	200 ~PlatformConsole
+01-page-and-module	4	GET /platform/console.css?v=1	200
+01-page-and-module	5	GET /platform/console.js?v=2	404 {"error": "no such version"}
+01-page-and-module	6	GET /healthz	200 {"ok": true}
+02-spec-and-mounts	1	GET /spec	200 {"name": "testsub", "rows": "counters", "id": "name", "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live", "metrics": {"prefix": "testsub", "running": "counters_running"}, "display": {"keys": {"tallies": {"title": "tallies"}}}}
+02-spec-and-mounts	2	GET /mounts	200 {"root": "testsub", "mounts": {"testsub2": {"name": "testsub2", "rows": "tallies"}}}
+02-spec-and-mounts	3	GET /testsub2/spec	200 {"name": "testsub2", "rows": "tallies", "id": "name"}
+03-open-session	1	GET /session	200 {"open": true}
+03-open-session	2	POST /session {"token": "x"}	400
+04-servers-where	1	GET /servers	200 {"policy": {"servers": "shared"}, "servers": {}}
+04-servers-where	2	GET /unplaceable	200 []
+04-servers-where	3	POST /counters {"name": "c4", "start": 1}	201
+04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
+04-servers-where	5	GET /where/no/such	404
+04-servers-where	6	GET /resources	200 {}
+05-metrics	1	GET /metrics	200 ~testsub_workers_live 0
+05-metrics	2	GET /metrics	200 ~testsub_units_unplaced
+05-metrics	3	GET /metrics	200 ~testsub_counters_running
+05-metrics	4	GET /metrics	200 ~w2c_resources_live
+06-refusals	1	GET /nosuch	404 {"error": "no such path"}
+06-refusals	2	PATCH /counters	405 {"error": "method"}
+06-refusals	3	GET /counters/c4/x	404
+06-refusals	4	GET /testsub2/	404
+06-refusals	5	GET /testsub2/index.html	404
