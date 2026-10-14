@@ -1,0 +1,124 @@
+{
+  "id": "S02-guard",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "lost slot guard ignored",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 24,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "09-guard",
+      "4",
+      "body.index"
+    ],
+    [
+      "09-guard",
+      "4",
+      "body.key"
+    ],
+    [
+      "09-guard",
+      "4",
+      "status"
+    ],
+    [
+      "09-guard",
+      "5",
+      "body.index"
+    ],
+    [
+      "09-guard",
+      "5",
+      "body.items.v"
+    ],
+    [
+      "09-guard",
+      "6",
+      "body.index"
+    ],
+    [
+      "09-guard",
+      "6",
+      "body.key"
+    ],
+    [
+      "09-guard",
+      "6",
+      "status"
+    ],
+    [
+      "10-guard-absent",
+      "3",
+      "body.index"
+    ],
+    [
+      "10-guard-absent",
+      "3",
+      "body.key"
+    ],
+    [
+      "10-guard-absent",
+      "3",
+      "status"
+    ],
+    [
+      "11-guard-before-cas",
+      "4",
+      "body.index"
+    ],
+    [
+      "11-guard-before-cas",
+      "4",
+      "body.key"
+    ],
+    [
+      "11-guard-before-cas",
+      "4",
+      "status"
+    ],
+    [
+      "20-guard-forms",
+      "8",
+      "body.index"
+    ],
+    [
+      "20-guard-forms",
+      "8",
+      "body.items"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:StoreMachine._write",
+  "api_function_calls": 50,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      43,
+      3,
+      0
+    ],
+    "failures": [
+      "test_guard.py::test_guard_wire_refusal_has_the_exact_412_body_and_does_not_become_a_cas_conflict",
+      "test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas",
+      "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
