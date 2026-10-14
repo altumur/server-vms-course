@@ -223,7 +223,7 @@ def scenarios(source, output):
 class NativeAPI:
     """Translate notation and Fault envelopes, never CAS/guard/replay decisions.
 
-    The native handle has a writer ACL; reads use that same platform evaluator.
+    The native handle has a writer ACL; get uses that evaluator, list needs no read permission.
     No answer(), StoreMachine or HTTP door is involved in this executor.
     """
     def __init__(self, store):
@@ -232,7 +232,7 @@ class NativeAPI:
     def request(self, method, target, raw):
         from w2cplatform.canonical import parse_json
         from w2cplatform.storemachine import check_key, check_write, wire_index, MAX_VALUE
-        from w2cplatform.variables import Conflict, GuardFailed, Forbidden
+        from w2cplatform.variables import Conflict, GuardFailed, Forbidden, KeyTooLong
         from w2cplatform.limits import TooLarge
         from w2cplatform.rights import refusal
         route = urllib.parse.urlsplit(target)
@@ -248,8 +248,11 @@ class NativeAPI:
                 return 200, {"items": items, "index": wire_index(index)}
             if method == "GET" and route.path == "/v1/list":
                 prefix = query.get("prefix", [""])[0]
-                keys = {k: wire_index(self.store.get(k)[1]) for k in self.store.list(prefix)
-                        if not refusal(self.store.writer, self.store.acl, k, "read")}
+                keys = {}
+                for key in self.store.list(prefix):
+                    _, index = self.store.get(key)
+                    if index != 0:                 # a row deleted after list may be omitted, never given an absent version
+                        keys[key] = wire_index(index)
                 return 200, {"keys": keys}
             if method != "POST" or route.path != "/v1/write":
                 return 404, {"kind": "badrequest"}
@@ -277,6 +280,8 @@ class NativeAPI:
                 cmd["guard"] = {"key": guard["key"], "index": version(guard["index"])}
             try:
                 receipt = self.store.write(cmd)
+            except KeyTooLong as error:
+                return 400, {"kind": "badkey", "error": str(error)}
             except ValueError as error:
                 return 400, {"kind": "badrequest", "error": str(error)}
             return 200, {"index": wire_index(receipt["index"]), **({"again": True} if receipt["again"] else {})}
