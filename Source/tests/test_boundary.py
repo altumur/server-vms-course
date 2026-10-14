@@ -67,6 +67,7 @@ PLATFORM_TESTS = (
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
     "tests/storage_acceptance.py", "tests/test_storage_m10.py",
+    "tests/catalog_fixture.py", "tests/test_catalog_fixture.py",
     # a mechanism of the platform as the subject, on testsub and testsub2
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
     "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
@@ -77,7 +78,9 @@ PLATFORM_TESTS = (
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
     "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
     "tests/test_heartbeat_owner.py", "tests/test_frontier.py", "tests/testdata/testsub2.subsystem.yaml",
-    "tests/test_spec_rule.py", "tests/test_token_requests.py", "tests/test_unit_token_requests.py",
+    "tests/test_spec_rule.py", "tests/test_token_requests.py", "tests/test_unit_token_requests.py", "tests/test_member_roster.py",
+    "tests/test_worker_pass.py", "tests/test_worker_writes.py", "tests/test_role_client.py",
+    "tests/test_member_domain_forward.py",
     "tests/test_where_place.py", "tests/test_place_follows.py", "tests/test_base_worker.py", "tests/test_reconcile.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
@@ -804,7 +807,7 @@ def _piece_two_specs():
     specs = [SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), f)) for f in ("testsub.subsystem.yaml",
                                                                                      "testsub2.subsystem.yaml")]
     roles = rights.roles(specs, "probe")
-    assert "testsub2/shelves/*" in roles["testsub2worker"]["write"] and {"testsub/*", "testsub/counters"} <= set(roles["testsub2worker"]["read"])
+    assert "testsub2/tallies/*" in roles["testsub2worker"]["write"] and {"testsub/*", "testsub/counters"} <= set(roles["testsub2worker"]["read"])
     assert "testsub/requests/*" in roles["testsub2worker"]["write"]                         # `worker.requests`
 
 
