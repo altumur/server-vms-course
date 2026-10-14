@@ -1,7 +1,7 @@
 """The VMS names collector protects bootstrap writes until all members report."""
 
 def test_a_fresh_holder_requires_complete_signed_reports_before_its_first_grant():
-    from vms.domainpart.device import DeviceCluster
+    from vms.camera_cluster import DeviceCluster
     from w2cplatform.cluster.variables import FakeVariables
     from w2cplatform.domain import booknames, declared
     from w2cplatform.domain.agent import DomainPublisher
