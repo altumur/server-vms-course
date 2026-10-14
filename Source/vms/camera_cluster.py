@@ -196,7 +196,7 @@ class DeviceCluster:
     # An ask from another camera, done — or refused by the SAME description the domain checked the scenario
     # against when it was written (`scenario.misfit`). One rule in two places would drift; here it cannot.
     def perform(self, action: dict) -> str:
-        from .scenario import misfit
+        from .domainpart.scenario import misfit
         why = misfit(f"camera {self.serial}", self.can, action) if self.can is not None else None
         return f"refused: {why}" if why else "performed"
 
