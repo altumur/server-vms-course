@@ -1,0 +1,978 @@
+[
+  {
+    "id": "baseline",
+    "valid": true,
+    "target": null,
+    "description": "unmodified course",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [],
+    "api_killed": null,
+    "api_target_function": null,
+    "api_function_calls": 0,
+    "api_target_reached": null,
+    "api_coverage": "not reached by LocalBackend; confirmed by api-calls.json",
+    "unit": {
+      "exit": 0,
+      "totals": [
+        46,
+        0,
+        0
+      ],
+      "failures": [],
+      "import_failure": false
+    },
+    "unit_killed": null
+  },
+  {
+    "id": "S01-cas",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "stale CAS accepted",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 31,
+    "api_failed_scenarios": [
+      "02-create-once",
+      "04-stale-cas",
+      "06-delete",
+      "07-no-reuse",
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "18-no-echo",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "02-create-once",
+        "2",
+        "body.index"
+      ],
+      [
+        "02-create-once",
+        "2",
+        "body.kind"
+      ],
+      [
+        "02-create-once",
+        "2",
+        "status"
+      ],
+      [
+        "02-create-once",
+        "3",
+        "body.index"
+      ],
+      [
+        "02-create-once",
+        "3",
+        "body.items.name"
+      ],
+      [
+        "04-stale-cas",
+        "3",
+        "body.index"
+      ],
+      [
+        "04-stale-cas",
+        "3",
+        "body.kind"
+      ],
+      [
+        "04-stale-cas",
+        "3",
+        "status"
+      ],
+      [
+        "04-stale-cas",
+        "4",
+        "body.index"
+      ],
+      [
+        "04-stale-cas",
+        "4",
+        "body.items.n"
+      ],
+      [
+        "06-delete",
+        "2",
+        "body.index"
+      ],
+      [
+        "06-delete",
+        "2",
+        "body.kind"
+      ],
+      [
+        "06-delete",
+        "2",
+        "status"
+      ],
+      [
+        "06-delete",
+        "6",
+        "body.index"
+      ],
+      [
+        "06-delete",
+        "6",
+        "body.kind"
+      ],
+      [
+        "06-delete",
+        "6",
+        "status"
+      ],
+      [
+        "07-no-reuse",
+        "4",
+        "body.index"
+      ],
+      [
+        "07-no-reuse",
+        "4",
+        "body.kind"
+      ],
+      [
+        "07-no-reuse",
+        "4",
+        "status"
+      ],
+      [
+        "18-no-echo",
+        "1",
+        "body.error"
+      ],
+      [
+        "18-no-echo",
+        "1",
+        "body.index"
+      ],
+      [
+        "18-no-echo",
+        "1",
+        "body.kind"
+      ],
+      [
+        "18-no-echo",
+        "1",
+        "status"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:StoreMachine._write",
+    "api_function_calls": 50,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        37,
+        9,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas",
+        "test_storemachine.py::test_a_version_is_the_log_index_above_the_base_and_is_never_handed_out_twice",
+        "test_storemachine.py::test_a_version_this_store_never_handed_out_conflicts",
+        "test_storemachine.py::test_a_write_repeated_with_its_id_is_answered_with_its_first_answer",
+        "test_storemachine.py::test_an_absent_key_reads_as_nothing_and_create_only_takes_it_once",
+        "test_storemachine.py::test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words",
+        "test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract",
+        "test_storemachine.py::test_the_variables_contract_holds_on_the_machine_through_the_handle_and_the_api",
+        "test_storemachine.py::test_what_a_write_names_is_bounded_and_never_said_back"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S02-guard",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "lost slot guard ignored",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 24,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "09-guard",
+        "4",
+        "body.index"
+      ],
+      [
+        "09-guard",
+        "4",
+        "body.key"
+      ],
+      [
+        "09-guard",
+        "4",
+        "status"
+      ],
+      [
+        "09-guard",
+        "5",
+        "body.index"
+      ],
+      [
+        "09-guard",
+        "5",
+        "body.items.v"
+      ],
+      [
+        "09-guard",
+        "6",
+        "body.index"
+      ],
+      [
+        "09-guard",
+        "6",
+        "body.key"
+      ],
+      [
+        "09-guard",
+        "6",
+        "status"
+      ],
+      [
+        "10-guard-absent",
+        "3",
+        "body.index"
+      ],
+      [
+        "10-guard-absent",
+        "3",
+        "body.key"
+      ],
+      [
+        "10-guard-absent",
+        "3",
+        "status"
+      ],
+      [
+        "11-guard-before-cas",
+        "4",
+        "body.index"
+      ],
+      [
+        "11-guard-before-cas",
+        "4",
+        "body.key"
+      ],
+      [
+        "11-guard-before-cas",
+        "4",
+        "status"
+      ],
+      [
+        "20-guard-forms",
+        "8",
+        "body.index"
+      ],
+      [
+        "20-guard-forms",
+        "8",
+        "body.items"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:StoreMachine._write",
+    "api_function_calls": 50,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        43,
+        3,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_guard_wire_refusal_has_the_exact_412_body_and_does_not_become_a_cas_conflict",
+        "test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas",
+        "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S03-replay",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "operation replay is submitted again",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 24,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "12-id",
+        "2",
+        "body.kind.extra"
+      ],
+      [
+        "12-id",
+        "2",
+        "status"
+      ],
+      [
+        "12-id",
+        "4",
+        "body.index.extra"
+      ],
+      [
+        "12-id",
+        "4",
+        "status"
+      ],
+      [
+        "12-id",
+        "5",
+        "body.index.extra"
+      ],
+      [
+        "12-id",
+        "5",
+        "status"
+      ],
+      [
+        "12-id",
+        "6",
+        "body.index"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:StoreMachine._write",
+    "api_function_calls": 50,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        42,
+        4,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it",
+        "test_storemachine.py::test_a_write_repeated_with_its_id_is_answered_with_its_first_answer",
+        "test_storemachine.py::test_an_operation_id_is_answered_from_memory_only_for_its_own_write",
+        "test_storemachine.py::test_two_machines_fed_the_same_log_hold_the_same_rows_and_a_dump_carries_everything"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S04-id-content",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "operation id accepts different content",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "12-id",
+        "4",
+        "body.index.extra"
+      ],
+      [
+        "12-id",
+        "4",
+        "status"
+      ],
+      [
+        "12-id",
+        "5",
+        "body.index.extra"
+      ],
+      [
+        "12-id",
+        "5",
+        "status"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:StoreMachine._write",
+    "api_function_calls": 50,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        44,
+        2,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_unknown_answer_reuses_the_same_guarded_write_and_never_reapplies_it",
+        "test_storemachine.py::test_an_operation_id_is_answered_from_memory_only_for_its_own_write"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S05-delete-version",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "delete returns the old version",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 24,
+    "api_failed_scenarios": [
+      "07-no-reuse",
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "07-no-reuse",
+        "5",
+        "assert.distinct"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:StoreMachine._write",
+    "api_function_calls": 50,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        45,
+        1,
+        0
+      ],
+      "failures": [
+        "test_storemachine.py::test_a_version_is_the_log_index_above_the_base_and_is_never_handed_out_twice"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S06-read-copy",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "read shares the machine's mutable row",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [],
+    "api_killed": false,
+    "api_target_function": "storemachine.py:StoreMachine.apply",
+    "api_function_calls": 69,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        45,
+        1,
+        0
+      ],
+      "failures": [
+        "test_storemachine.py::test_what_the_machine_hands_out_is_a_copy"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "S07-limit",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "ceiling silently halved",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 24,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "15-too-large",
+        "1",
+        "body.limit"
+      ],
+      [
+        "15-too-large",
+        "3",
+        "body.index"
+      ],
+      [
+        "15-too-large",
+        "3",
+        "body.kind.extra"
+      ],
+      [
+        "15-too-large",
+        "3",
+        "body.limit.extra"
+      ],
+      [
+        "15-too-large",
+        "3",
+        "body.size.extra"
+      ],
+      [
+        "15-too-large",
+        "3",
+        "status"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:<module>",
+    "api_function_calls": 1,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 0,
+      "totals": [
+        46,
+        0,
+        0
+      ],
+      "failures": [],
+      "import_failure": false
+    },
+    "unit_killed": false
+  },
+  {
+    "id": "S08-acl",
+    "valid": true,
+    "target": "storemachine.py",
+    "description": "role ACL is bypassed",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 27,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "21-rights",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "21-rights",
+        "1",
+        "body.index.extra"
+      ],
+      [
+        "21-rights",
+        "1",
+        "body.items.extra"
+      ],
+      [
+        "21-rights",
+        "1",
+        "body.kind"
+      ],
+      [
+        "21-rights",
+        "1",
+        "status"
+      ],
+      [
+        "21-rights",
+        "2",
+        "body.index.extra"
+      ],
+      [
+        "21-rights",
+        "2",
+        "body.kind"
+      ],
+      [
+        "21-rights",
+        "2",
+        "status"
+      ],
+      [
+        "21-rights",
+        "3",
+        "body.index.extra"
+      ],
+      [
+        "21-rights",
+        "3",
+        "body.kind"
+      ],
+      [
+        "21-rights",
+        "3",
+        "status"
+      ],
+      [
+        "21-rights",
+        "4",
+        "body.index.extra"
+      ],
+      [
+        "21-rights",
+        "4",
+        "body.key.extra"
+      ],
+      [
+        "21-rights",
+        "4",
+        "body.kind"
+      ],
+      [
+        "21-rights",
+        "4",
+        "status"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "storemachine.py:Rights.allows",
+    "api_function_calls": 83,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        39,
+        7,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_guard_requires_read_permission_and_never_grants_target_write_permission",
+        "test_storemachine.py::test_a_denial_wins_over_every_grant_wherever_it_stands",
+        "test_storemachine.py::test_a_list_names_every_key_to_every_role_and_a_value_is_read_by_the_right_to_read_alone",
+        "test_storemachine.py::test_a_role_without_the_grant_is_refused_before_anything_is_submitted",
+        "test_storemachine.py::test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it",
+        "test_storemachine.py::test_rights_grant_by_role_action_and_prefix",
+        "test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "V09-file-cas",
+    "valid": true,
+    "target": "variables.py",
+    "description": "FileVariables.put ignores CAS",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [],
+    "api_killed": false,
+    "api_target_function": "variables.py:FileVariables.put",
+    "api_function_calls": 0,
+    "api_target_reached": false,
+    "api_coverage": "not reached by LocalBackend; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        43,
+        3,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas",
+        "test_variables_contract.py::test_a_stale_cas_is_refused_not_applied",
+        "test_variables_contract.py::test_cas_lets_exactly_one_racer_through"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "V10-guard",
+    "valid": true,
+    "target": "variables.py",
+    "description": "in-process guard ignores lost ownership",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [],
+    "api_killed": false,
+    "api_target_function": "variables.py:guard_match",
+    "api_function_calls": 0,
+    "api_target_reached": false,
+    "api_coverage": "not reached by LocalBackend; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        43,
+        3,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_late_owner_cannot_put_or_delete_even_with_current_target_cas",
+        "test_guard.py::test_same_owner_renewal_refuses_the_old_guard_but_a_fresh_ownership_check_can_publish",
+        "test_guard.py::test_worker_rechecks_ownership_after_guard_refusal_and_never_publishes_in_grace"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "V11-key",
+    "valid": true,
+    "target": "variables.py",
+    "description": "traversal segments accepted as keys",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 25,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "13-bad-key",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [
+      [
+        "13-bad-key",
+        "3",
+        "body.index.extra"
+      ],
+      [
+        "13-bad-key",
+        "3",
+        "body.items.extra"
+      ],
+      [
+        "13-bad-key",
+        "3",
+        "body.kind"
+      ],
+      [
+        "13-bad-key",
+        "3",
+        "status"
+      ],
+      [
+        "13-bad-key",
+        "4",
+        "body.index.extra"
+      ],
+      [
+        "13-bad-key",
+        "4",
+        "body.kind"
+      ],
+      [
+        "13-bad-key",
+        "4",
+        "status"
+      ],
+      [
+        "20-guard-forms",
+        "3",
+        "body.index.extra"
+      ],
+      [
+        "20-guard-forms",
+        "3",
+        "body.key.extra"
+      ],
+      [
+        "20-guard-forms",
+        "3",
+        "status"
+      ]
+    ],
+    "api_killed": true,
+    "api_target_function": "variables.py:safe_path",
+    "api_function_calls": 185,
+    "api_target_reached": true,
+    "api_coverage": "reached; confirmed by api-calls.json",
+    "unit": {
+      "exit": 1,
+      "totals": [
+        41,
+        5,
+        0
+      ],
+      "failures": [
+        "test_guard.py::test_partial_or_malformed_guard_is_refused_before_any_write",
+        "test_storemachine.py::test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words",
+        "test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract",
+        "test_storemachine.py::test_the_variables_contract_holds_on_the_machine_through_the_handle_and_the_api",
+        "test_variables_contract.py::test_a_key_has_one_spelling"
+      ],
+      "import_failure": false
+    },
+    "unit_killed": true
+  },
+  {
+    "id": "V12-file-delete-version",
+    "valid": true,
+    "target": "variables.py",
+    "description": "file deletion resets the version counter",
+    "api_scenarios": 22,
+    "api_steps": 98,
+    "api_failed_steps": 23,
+    "api_failed_scenarios": [
+      "09-guard",
+      "10-guard-absent",
+      "11-guard-before-cas",
+      "12-id",
+      "14-bad-forms",
+      "15-too-large",
+      "16-items",
+      "17-routes",
+      "19-key-too-long",
+      "20-guard-forms",
+      "22-body-edge"
+    ],
+    "api_new_facets": [],
+    "api_killed": false,
+    "api_target_function": "variables.py:FileVariables.delete",
+    "api_function_calls": 0,
+    "api_target_reached": false,
+    "api_coverage": "not reached by LocalBackend; confirmed by api-calls.json",
+    "unit": {
+      "exit": 0,
+      "totals": [
+        46,
+        0,
+        0
+      ],
+      "failures": [],
+      "import_failure": false
+    },
+    "unit_killed": false
+  }
+]
