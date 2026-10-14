@@ -1,4 +1,4 @@
-"""Inputs for the books not yet transferred in ADR-0074 (polls, upstream, asks, accounts).
+"""Inputs for the books not yet transferred in ADR-0074 (polls, asks, accounts).
 
 C2 observations are published by ordinary workers. The only assignment source is
 platform placement; this service neither places recordings nor publishes C2 books.
