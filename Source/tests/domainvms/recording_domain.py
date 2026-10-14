@@ -46,6 +46,28 @@ def camera_pusher(serial, flash, dial, **kw):
     return CameraPusher(serial, flash, dial, **kw)
 
 
+class RecordingInputs:
+    """Local stores and the platform view supplied by a recording scenario."""
+    def __init__(self, vars_, view, wall, *, sealer=None, centre=None,
+                 star=frozenset(), topology=None):
+        self.vars, self.view, self.wall, self.sealer = vars_, view, wall, sealer
+        self._centre, self._star, self.topology = centre, frozenset(star), topology
+
+    def _topology(self):
+        doc = self.topology.read() if self.topology is not None else None
+        return doc if doc and doc["rev"] else None
+
+    @property
+    def centre(self):
+        doc = self._topology()
+        return doc["centre"] if doc else self._centre
+
+    @property
+    def star(self):
+        doc = self._topology()
+        return frozenset(doc["star"]) if doc else self._star
+
+
 class RecordingDomain:
     def __init__(self, inputs, signer, *, agents=(), devices=(), recorders=(), domain_objects=None):
         self.inputs, self.signer = inputs, signer
@@ -60,10 +82,10 @@ class RecordingDomain:
         self.auto_workers = {}
         self.report_at = {}
         self.keys = {}
-        self.door = HolderDoor(self.vars, self.objects, sealer=getattr(inputs.vars, "sealer", None), wall=self.wall,
+        self.door = HolderDoor(self.vars, self.objects, sealer=inputs.sealer, wall=self.wall,
             token_issuer=DeclaredIssuer(signer.tokens, declared.token_kinds()))
         self.holder = SimpleNamespace(vars=self.vars, objects=self.objects,
-            wall=self.wall, view=inputs.view, term=None, signer=signer, sealer=getattr(inputs.vars, "sealer", None))
+            wall=self.wall, view=inputs.view, term=None, signer=signer, sealer=inputs.sealer)
         stores = {d.name: d.flash for d in self.devices}
         stores.update({a.cluster: a.cluster_vars for a in self.agents})
         for name, cluster in inputs.view.fed.clusters.items():
