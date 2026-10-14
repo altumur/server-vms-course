@@ -10,7 +10,7 @@ from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
 from w2cplatform.domain.federation import DomainDirectory
-from vms.domainpart.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
+from vms.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
 from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, Running, heartbeat, make_domain, snapshot
 
