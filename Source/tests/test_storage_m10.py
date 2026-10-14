@@ -2,6 +2,8 @@
 import os
 import tempfile
 import json
+from contextlib import ExitStack
+from unittest.mock import patch
 from w2cplatform.variables import FileVariables, Conflict, Corrupt
 from w2cplatform.memvariables import MemVariables
 from w2cplatform.storemachine import StoreMachine, Rights, answer
@@ -301,3 +303,144 @@ def test_key_validation_precedes_weight_and_weight_precedes_write_acl():
             cmd['guard'] = {'key': 'acc/../guard', 'index': ''}
             code, body = call('POST', '/v1/write', json.dumps(cmd).encode())
             assert code == 400 and body['kind'] == 'badkey'
+
+
+def test_published_put_and_delete_retry_original_receipts_after_guard_and_cas_change(monkeypatch):
+    from w2cplatform import variables
+    from w2cplatform.configstorevars import StoreAmbiguous
+    for kind in ('file', 'mem'):
+        for operation in ('put', 'delete'):
+            with tempfile.TemporaryDirectory() as root:
+                store = FileVariables(root, volatile=False) if kind == 'file' else MemVariables()
+                slot = store.put('acc/slot', {'owner': 'a'})
+                at = store.put('acc/row', {'v': 'old'})
+                cmd = {'op': operation, 'key': 'acc/row', 'cas': at, 'id': 'abc',
+                       'guard': {'key': 'acc/slot', 'index': slot}}
+                if operation == 'put':
+                    cmd['items'] = {'v': 'one'}
+                original, calls, failed = variables.durable_dir, [], [False]
+                def late(path):
+                    calls.append(path)
+                    if path == store.dir and not failed[0]:
+                        failed[0] = True
+                        raise OSError('after publication')
+                    original(path)
+                with ExitStack() as patches:
+                    patches.enter_context(patch.object(variables, 'durable_dir', late))
+                    if kind == 'file':
+                        try:
+                            store.write(cmd)
+                            raise AssertionError('unconfirmed durability reported success')
+                        except StoreAmbiguous:
+                            pass
+                        assert store.get('acc/row')[0] == ({'v': 'one'} if operation == 'put' else None)
+                        with open(store.index_file) as f:
+                            published = int(f.read())
+                    else:
+                        published = store.write(cmd)['index']
+                    later = store.put('acc/row', {'v': 'later'})
+                    store.put('acc/slot', {'owner': 'b'})
+                    retrying = FileVariables(root, volatile=True) if kind == 'file' else store.as_writer('reader', ['acc/*'])
+                    assert retrying.write(cmd) == {'index': published, 'again': True}
+                    assert store.get('acc/row') == ({'v': 'later'}, later)
+                    if kind == 'file':
+                        assert calls.count(store.dir) == 4
+                    else:
+                        assert calls == []
+
+
+def test_repeated_barrier_failure_stays_ambiguous_and_retries_only_missing_barriers(monkeypatch):
+    from w2cplatform import variables
+    from tests.storage_acceptance import NativeAPI
+    for kind in ('file', 'mem'):
+        with tempfile.TemporaryDirectory() as root:
+            store = FileVariables(root, volatile=False) if kind == 'file' else MemVariables()
+            api = NativeAPI(store)
+            cmd = {'op': 'put', 'key': 'acc/row', 'items': {'v': 'one'}, 'id': 'abc'}
+            original, calls, failures = variables.durable_dir, [], [2]
+            def barrier(path):
+                calls.append(path)
+                if path == root and store.get('acc/row')[0] is not None and failures[0]:
+                    failures[0] -= 1
+                    raise OSError('late root barrier')
+                original(path)
+            with ExitStack() as patches:
+                patches.enter_context(patch.object(variables, 'durable_dir', barrier))
+                raw = json.dumps(cmd).encode()
+                if kind == 'file':
+                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous'})
+                    at = store.get('acc/row')[1]
+                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous'})
+                    assert store.get('acc/row')[1] == at
+                    assert api.request('POST', '/v1/write', raw) == (200, {'index': str(at), 'again': True})
+                    assert calls == [root, store.dir, root, root, root]
+                else:
+                    code, receipt = api.request('POST', '/v1/write', raw)
+                    assert code == 200
+                    assert api.request('POST', '/v1/write', raw) == (200, {**receipt, 'again': True})
+                    assert calls == []
+
+
+def test_failure_before_publication_does_not_register_a_phantom_receipt(monkeypatch):
+    from w2cplatform import variables
+    for kind in ('file', 'mem'):
+        with tempfile.TemporaryDirectory() as root:
+            store = FileVariables(root, volatile=False) if kind == 'file' else MemVariables()
+            cmd = {'op': 'put', 'key': 'acc/row', 'items': {'v': 'one'}, 'id': 'abc'}
+            with ExitStack() as patches:
+                if kind == 'file':
+                    original = variables.os.replace
+                    def replace(source, target):
+                        if target == store._file('acc/row'):
+                            raise OSError('before row rename')
+                        return original(source, target)
+                    patches.enter_context(patch.object(variables.os, 'replace', replace))
+                else:
+                    def apply(cmd):
+                        raise OSError('before memory publication')
+                    patches.enter_context(patch.object(store, '_apply_write', apply))
+                try:
+                    store.write(cmd)
+                    raise AssertionError('prepublication failure was swallowed')
+                except OSError:
+                    pass
+                assert store.get('acc/row') == (None, 0)
+            receipt = store.write(cmd)
+            assert receipt['again'] is False
+            assert store.get('acc/row') == ({'v': 'one'}, receipt['index'])
+            assert store.write(cmd) == {**receipt, 'again': True}
+
+
+def test_pending_replay_checks_payload_and_callers_permissions_before_finishing(monkeypatch):
+    from w2cplatform import variables
+    from tests.storage_acceptance import NativeAPI
+    for kind in ('file', 'mem'):
+        with tempfile.TemporaryDirectory() as root:
+            store = FileVariables(root, volatile=False) if kind == 'file' else MemVariables()
+            slot = store.put('acc/slot', {})
+            cmd = {'op': 'put', 'key': 'acc/row', 'items': {'v': 'one'}, 'id': 'abc',
+                   'guard': {'key': 'acc/slot', 'index': str(slot)}}
+            original, calls, broken = variables.durable_dir, [], [True]
+            def barrier(path):
+                calls.append(path)
+                if path == store.dir and broken[0]:
+                    raise OSError('unconfirmed row')
+                original(path)
+            with ExitStack() as patches:
+                patches.enter_context(patch.object(variables, 'durable_dir', barrier))
+                api = NativeAPI(store)
+                raw = json.dumps(cmd).encode()
+                code, body = api.request('POST', '/v1/write', raw)
+                assert code == (503 if kind == 'file' else 200)
+                count = len(calls)
+                changed = {**cmd, 'items': {'v': 'changed'}}
+                assert api.request('POST', '/v1/write', json.dumps(changed).encode())[0] == 400
+                forbidden = NativeAPI(store.as_writer('denied', []))
+                assert forbidden.request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden'})
+                handle = store.as_writer('limited', {'limited': {'write': ['acc/row'], 'read': []}})
+                assert NativeAPI(handle).request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden'})
+                assert len(calls) == count
+                broken[0] = False
+                code, receipt = api.request('POST', '/v1/write', raw)
+                assert code == 200 and receipt['again'] is True
+                assert receipt['index'] == str(store.get('acc/row')[1])
