@@ -383,7 +383,7 @@ clear:  строки, чьи rid в fetched пульсов, → удалить �
 sweep:  строка с valid_until + REAP_AFTER < now или старше ttl (без срока):
           метки нет → метка expired создание-однажды {ended_by: reaper, unit, digest из строки} (Н1.5 no_begun)
           метка begun без исхода → {outcome: unknown, ended_by: reaper, error: "begun and never answered"} по индексу
-        затем удалить строку по cas и снять rid из учёта человека; free-* без хозяина — по ttl
+        затем удалить строку по cas и снять rid из учёта человека; просьбы ресурса (строки без unit) без хозяина — по ttl
 asked:  учёт старше ttl/settle → снять
 ```
 
