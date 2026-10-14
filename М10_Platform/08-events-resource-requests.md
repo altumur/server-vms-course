@@ -161,6 +161,7 @@ resource:                                    # один процесс на се
   unit:        <id>                          # ДОЛЖЕН (кроме free-)
   <поля тела>: по requests.schema, текстом
   valid_until: <секунды>                     # когда у спеки valid_for
+  digest:      <sha256 hex>                  # ДОЛЖЕН у поданной дверью: JCS тела клиента после схемы, без полей сервера (Н1.5); им сравнивают повторы
   by, at, group, <about-поле>:               # по requests.stamp
   filed:                                     # у поданной воркером
 rid:        ≤ 200 байт UTF-8; без / \ " ' и управляющих; по requests.key — шаблон {поле}; иначе у двери консоли —
@@ -183,7 +184,7 @@ holds:      раздел спеки (урок 2 Н1.2), закрытый: {table
             не помечена полем released или не прошло longest секунд; читает ресурс (урок 6 Н1.4)
 mark:       objects/<sub>/commands/<rid>      # строка-объект, создание-однажды
   begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова; digest — sha256 канонического JSON (JCS) тела клиента
-             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — в строке просьбы; им сравнивают повторы
+             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — элемент `digest` строки просьбы (Н1.4); им сравнивают повторы
   answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
   ended_by:  reaper                                                        # у expired/unknown от жнеца
