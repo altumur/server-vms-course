@@ -12,7 +12,7 @@ from w2cplatform.domain.placement import PREFIX, decode
 class BookInputs:
     def __init__(self, domain_vars, view, wall=time.time, sealer=None,
                  centre: str | None = None, star=frozenset(), topology=None):
-        self.vars, self.view, self.wall = domain_vars, view, wall
+        self.vars, self.view, self.wall, self.sealer = domain_vars, view, wall, sealer
         # The holder's store as the books see it: what they read, opened; what they write, sealed (`keys.OpenedVars`).
         from .keys import OpenedVars
         if not isinstance(domain_vars, OpenedVars):
