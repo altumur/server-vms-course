@@ -27,9 +27,9 @@
 - **Уроки [6](06-objectstorage-the-engine.md)–[8](08-visibility-retention-timeline.md)** — движок: том, блок, последовательность, поток; читатель видит только закрытые блоки; кольцо.
 - **[Урок 10](10-recworker.md)** — регистратор, `place_by: volume`, `home` как предпочтение.
 - **[Урок 26](26-a-backup-archive-of-our-own.md)** — резервная запись, `when: offline`, дверь архива.
-- **[М10A, урок 7](../М10A_Platform/07-Slot-and-Runtime.md)**, шаг 11 — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
-- **[М10A, урок 11](../М10A_Platform/11-SpecController-placement.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
-- **[М10A, урок 18](../М10A_Platform/18-Secrets.md)** — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
+- **[М10/3](../М10_Platform/03-units-slots-epochs-lease.md)**, шаг 11 — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
+- **[М10/4](../М10_Platform/04-the-controller-and-placement.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
+- **[М10/7](../М10_Platform/07-secrets-and-sealing.md)** — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
 
 ## Чему вы научитесь
 
@@ -680,4 +680,4 @@ def backups(vars_) -> set[str]:
 
 ## Что дальше
 
-Двери, через которые страница собирает шкалу из всех томов, — [урок 12](12-the-vms-console.md) и [урок 24](24-an-interval-in-the-browser.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы разных серверов, и шкала собирается через двери мест — [урок 28](28-vms-on-the-cluster.md); платформа кластера — [М11](../М11_Cluster/README.md).
+Двери, через которые страница собирает шкалу из всех томов, — [урок 12](12-the-vms-console.md) и [урок 24](24-an-interval-in-the-browser.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы разных серверов, и шкала собирается через двери мест — [урок 28](28-vms-on-the-cluster.md); платформа кластера — [М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md).
