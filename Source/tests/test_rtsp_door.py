@@ -3,7 +3,7 @@ addendum of 2026-10-07; ADR-0024: the gateway reads the accounts because its spe
 
 One box: a VMS worker holding two cameras, a live gateway with the door over `FakeRTSPServer` (what speaks RTSP is
 pluggable, as the WebRTC peer is). What the cluster's agent would have carried is written as it lies: the accounts this
-cluster is granted, sealed with the cluster's ring (`domain/cam/stream-accounts`), and its grants (`domain/grants`). The
+cluster is granted, sealed with the cluster's ring (`domain/live/stream-accounts`), and its grants (`domain/grants`). The
 declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
 import json
 import os
@@ -17,7 +17,8 @@ from vms.config import LIVE_SPEC, SPEC
 from vms.controller import VmsController
 from vms.liveworker import LiveWorker
 from vms.rtspdoor import FakeRTSPServer, RTSPDoor
-from vms.streamclients import STREAM_ACCOUNTS_KEY
+from vms.live_accounts import BOOK
+from tests.test_live_accounts import book
 from vms.worker import FakeActuator, VmsWorker
 from tests.streamspec import declared, undeclared
 from tests.vmsconftest import Box
@@ -50,13 +51,18 @@ def _box():
 def _carried(vars_, key_path, accounts: dict, grants: list):
     """What the agent leaves in the cluster's store: the accounts sealed with its ring, and the grants."""
     ring = Sealer.from_file(key_path)
-    vars_.put(STREAM_ACCOUNTS_KEY, seal_row(ring, {"accounts_secret": json.dumps(accounts)}, STREAM_ACCOUNTS_KEY))
+    vars_.put("domain/member", {"cluster": "room-a"})
+    vars_.put("domain/holder", {"doc": json.dumps({"holder": "holder", "term": 1})})
+    rows = {"": json.dumps({"missing": []})}
+    for name, password in accounts.items():
+        rows.update({name: book(name, password, to=["room-a"])[name]})
+    vars_.put(BOOK, seal_row(ring, rows, BOOK))
     _, idx = vars_.get("domain/grants")
     vars_.put("domain/grants", grants_to_items(grants), cas=idx)
 
 
 def _gateway(box, env, server):
-    v = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
+    v = box.vars.as_writer("liveworker", LIVE_SPEC.acl_worker_role())
     return LiveWorker("g-1", v, box.objects, clock=box.clock, wall=box.wall, server="srv-1",
                       env={"LABELS": "", "CLUSTER": "room-a", **env}, resource_root=box.resource_root, rtsp_server=server)
 
@@ -133,11 +139,13 @@ def test_a_grant_on_labels_mounts_the_cameras_that_carry_them_and_a_camera_nobod
     v = FakeVariables()
     v.put("cam/cameras/7", {"id": "7", "name": "lobby", "source": "driverpack://acme/10.0.0.77/ch/1", "labels": "lobby,floor0"})
     v.put("cam/cameras/8", {"id": "8", "name": "yard", "source": "driverpack://acme/10.0.0.78/ch/1"})
-    v.put(STREAM_ACCOUNTS_KEY, {"accounts_secret": json.dumps({"wall1": PW["wall1"]})})
+    v.put("domain/member", {"cluster": "room-a"})
+    v.put("domain/holder", {"doc": json.dumps({"holder": "holder", "term": 1})})
+    v.put(BOOK, book("wall1", PW["wall1"], to=["room-a"]))
     v.put("domain/grants", grants_to_items([Grant("wall1", "view", None, 2000.0, ("lobby",))]))
     up = {"7": "rtsp://srv-1:8554/7", "8": "rtsp://srv-1:8554/8"}
     srv = FakeRTSPServer()
-    door = RTSPDoor(srv, up.get, v, "room-a", wall=lambda: 1000.0)
+    door = RTSPDoor(srv, up.get, v, wall=lambda: 1000.0)
     door.sync()
     assert srv.roles_ == {"7": ["wall1"], "8": []}
     del up["7"]
