@@ -238,7 +238,9 @@ codes:    503 «this console passes no route on to a worker» (клиента н
 ### Н1.9 Команды оператора
 
 ```yaml
-w2cctl:      secrets new | seal | rotate | status (урок 7); spec put <файл> | status [-rights] (урок 2, 6); rights -deployment <имя>
+w2cctl:      secrets new | seal | rotate | status (урок 7); spec put <файл> | status [-rights] (урок 2, 6); rights -deployment <имя>;
+             mirror on|off (строка platform/mirror, урок 8) | space -high -low | -off (строка platform/space, урок 10) — единственный
+             писатель обеих строк: admin.sock кластера, на коробке — файлы; ресурс и консоль их только читают
              (урок 6); epoch floor | next (урок 3, только стенд); tls status; domain move (М11); heartbeat
 configstore: status | join | leave | admit | backup | restore | import | recover | rights
 w2c-ca.sh:   init | issue | revoke | crl | own
