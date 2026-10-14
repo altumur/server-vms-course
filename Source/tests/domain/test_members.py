@@ -18,7 +18,7 @@ from w2cplatform.domain.api import ConsoleAPI
 from vms.domainpart.books import Books
 from w2cplatform.domain.console import Console
 from vms.domainpart.inputs import BookInputs
-from vms.domainpart.device import DeviceCluster, member_name
+from vms.camera_cluster import DeviceCluster, member_name
 from w2cplatform.trust.enroll import Manufacturer, Pledge, Registrar
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.members import Members, apply
