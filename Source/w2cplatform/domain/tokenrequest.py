@@ -1,4 +1,4 @@
-"""ADR-0074: ephemeral token requests; scope comes only from holder assignments."""
+"""ADR-0074: ephemeral token requests scoped by assignments or accepted unit reports."""
 from __future__ import annotations
 
 import json
@@ -45,52 +45,89 @@ def issue(door, issuer, member, sub, kind, body, signature):
         raise Refused(400, "token request takes request_id, role and ref") from None
     spec = declared.spec(sub)
     rule = spec.domain.tokens.get(kind) if spec and spec.domain else None
-    if not rule or request["role"] not in rule.get("grant", ()) or not rule.get("placement"):
+    if not rule or request["role"] not in rule.get("grant", ()) or not (rule.get("placement") or rule.get("unit")):
         raise Refused(403, "role has no token request grant")
     if issuer is None or not me.get("seal"):
         raise Refused(503, "token issuer or member sealing key is unavailable")
-    binding = rule["placement"]
     with MUTATIONS:
-        try:
-            row = placement.read(door.vars, binding["sub"], request["ref"])
-        except ValueError:
-            raise Refused(403, "assignment is unreadable") from None
-        if not row:
-            raise Refused(403, "token request has no assignment")
-        def values(field):
-            if field in ("centre", "star_centre"):
-                from .topology import TOPOLOGY, refusals
-                try:
-                    items, _ = door.vars.get(TOPOLOGY)
-                    topology = parse_json(items["doc"]) if items and items.get("doc") else {}
-                    if field == "star_centre" and not items:
-                        return []                         # no configured topology grants no additional audience
-                    if not isinstance(topology, dict) or type(topology.get("rev")) is not int \
-                            or topology["rev"] <= 0 or not isinstance(topology.get("star", []), list) \
-                            or not isinstance(topology.get("via", {}), dict) or refusals(topology):
-                        raise ValueError("invalid confirmed topology")
-                except PARSE_ERRORS:
-                    raise Refused(409, "topology has no confirmed centre") from None
-                if field == "star_centre" and row["cluster"] not in topology.get("star", []):
-                    return []
-                if not isinstance(topology.get("centre"), str) or not topology["centre"]:
-                    raise Refused(409, "topology has no confirmed centre")
-                return [topology["centre"]]
-            v = row[field]
-            return v if isinstance(v, list) else ([v] if v else [])
-        links = values("cluster") + values("origin") + values("copies")
-        admitted = Members(door.vars).read()["members"]
-        if any(n not in admitted for n in links) or member not in values(binding["caller"]):
-            raise Refused(403, "token request is outside assignment scope")
-        targets = sorted({n for f in binding["target_fields"] for n in values(f)})
-        if not targets or any(n not in admitted for n in targets):
-            raise Refused(403, "assignment has no admitted token audience")
+        if rule.get("unit"):
+            binding = rule["unit"]
+            targets = _unit_targets(door, spec, member, request["ref"])
+        else:
+            binding = rule["placement"]
+            try:
+                row = placement.read(door.vars, binding["sub"], request["ref"])
+            except ValueError:
+                raise Refused(403, "assignment is unreadable") from None
+            if not row:
+                raise Refused(403, "token request has no assignment")
+            def values(field):
+                if field in ("centre", "star_centre"):
+                    from .topology import TOPOLOGY, refusals
+                    try:
+                        items, _ = door.vars.get(TOPOLOGY)
+                        topology = parse_json(items["doc"]) if items and items.get("doc") else {}
+                        if field == "star_centre" and not items:
+                            return []                         # no configured topology grants no additional audience
+                        if not isinstance(topology, dict) or type(topology.get("rev")) is not int \
+                                or topology["rev"] <= 0 or not isinstance(topology.get("star", []), list) \
+                                or not isinstance(topology.get("via", {}), dict) or refusals(topology):
+                            raise ValueError("invalid confirmed topology")
+                    except PARSE_ERRORS:
+                        raise Refused(409, "topology has no confirmed centre") from None
+                    if field == "star_centre" and row["cluster"] not in topology.get("star", []):
+                        return []
+                    if not isinstance(topology.get("centre"), str) or not topology["centre"]:
+                        raise Refused(409, "topology has no confirmed centre")
+                    return [topology["centre"]]
+                v = row[field]
+                return v if isinstance(v, list) else ([v] if v else [])
+            links = values("cluster") + values("origin") + values("copies")
+            admitted = Members(door.vars).read()["members"]
+            if any(n not in admitted for n in links) or member not in values(binding["caller"]):
+                raise Refused(403, "token request is outside assignment scope")
+            targets = sorted({n for f in binding["target_fields"] for n in values(f)})
+            if not targets or any(n not in admitted for n in targets):
+                raise Refused(403, "assignment has no admitted token audience")
         now = door.wall()
         claims = {binding["ref_claim"]: request["ref"], binding["audience_claim"]: targets}
         token = issuer.issue(kind, member, now=now, **claims)
         exp = now + issuer.lifetime(kind)
         return {"request_id": request["request_id"],
                 "token": seal_to(me["seal"], "token", token, context(path, request["request_id"], exp)), "exp": exp}
+
+
+def _unit_targets(door, spec, member, ref):
+    from .federation import Unreachable, _a_shard
+    from .reports import pinned
+    from .members import Members
+    from .topology import poll_home
+    if not spec.domain.ref or door.objects is None:
+        raise Refused(403, "unit scope has no accepted unit report")
+    try:
+        objects = pinned(member, door.objects).document()["objects"]
+        found = False
+        for key, shard in objects.items():
+            if not key.startswith(spec.name + "/snapshot/"):
+                continue
+            if not isinstance(shard, dict) or not isinstance(shard.get(spec.rows), list):
+                raise ValueError()
+            _a_shard(shard, spec.rows)
+            for row in shard[spec.rows]:
+                value = row.get(spec.domain.ref)
+                if type(value) in (str, int) and str(value) == ref:
+                    found = True
+        if not found:
+            raise Refused(403, "the member does not report this unit")
+    except (Unreachable, *PARSE_ERRORS):
+        raise Refused(403, "unit scope has no complete accepted unit report") from None
+    try:
+        target = poll_home(door.vars, member, authoritative=True)
+    except ValueError:
+        raise Refused(409, "unit scope has no confirmed poll home") from None
+    if target not in Members(door.vars).read()["members"]:
+        raise Refused(403, "unit scope has no admitted token audience")
+    return [target]
 
 
 def pass_on(client, member, sub, kind, body, signature):
@@ -128,7 +165,7 @@ def grants():
     declared.token_kinds()
     return {kind: (spec.name, tuple(rule.get("grant", ())))
             for spec in declared.specs() for kind, rule in spec.domain.tokens.items()
-            if rule.get("grant") and rule.get("placement")}
+            if rule.get("grant") and (rule.get("placement") or rule.get("unit"))}
 
 
 def owner(kind, role):
