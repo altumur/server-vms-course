@@ -13,6 +13,20 @@ from .api import ApiError, said
 from .federation import MEMBER_OBJECTS, Unreachable
 
 PENDING_PATH, OUTCOMES_PATH = "domain/pending", "domain/outcomes"
+OUTCOMES_LIMIT = 50
+
+
+def _outcome_order(item):
+    from w2cplatform.rows import finite
+    identity, raw = item
+    try:
+        at = json.loads(raw)["at"]
+        if type(at) not in (int, float):
+            raise ValueError("invalid outcome time")
+        at = finite(at)
+    except PARSE_ERRORS:
+        at = -math.inf
+    return at, identity
 
 
 def _transient(status, result):
@@ -145,7 +159,8 @@ class PendingEdits:
             return
         for _ in range(20):
             items, idx = self.vars.get(target)
-            fresh = {**(items or {}), **accepted}
+            fresh = dict(sorted({**(items or {}), **accepted}.items(),
+                                key=_outcome_order, reverse=True)[:OUTCOMES_LIMIT])
             try:
                 if fresh != (items or {}):
                     self.vars.put(target, fresh, cas=idx)
@@ -170,7 +185,7 @@ class PendingEdits:
             try:
                 # The agent writes only its Outcome; the holder's role owns settlement.
                 # Its own agent needs no report or carry connection back to itself.
-                path = OUTCOMES_PATH + "/" + member if cluster.is_domain_holder else OUTCOMES_PATH
+                path = OUTCOMES_PATH
                 source = self.vars if cluster.is_domain_holder else cluster.vars
                 self.reconcile(member, _load(source.get(path)[0], member + "/" + path))
             except Unreachable:
@@ -180,7 +195,8 @@ class PendingEdits:
 def apply_pending(entries, console, now, previous=None):
     # The member console remembers idempotency. A completed key can be queued
     # again; a previous Outcome must not suppress the new request.
-    outcomes = {k: v for k, v in (previous or {}).items() if k not in entries}
+    # Absence from this confirmed pending snapshot acknowledges the outcome.
+    outcomes = {}
     for identity, entry in entries.items():
         try:
             validate_edit(entry)
