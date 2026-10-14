@@ -1,0 +1,1435 @@
+temp: /tmp/w2c-tests-25663
+r-1: srv-1 is away at open (obsd is not answering: /tmp/w2c-tests-25663/tmpcv2kf8vu/obsd.sock: [Errno 2] No such file or directory) — keeping it and trying again
+test_archive_outage.py::test_a_daemon_that_is_not_there_does_not_stop_the_recorder ... OK
+r-1: srv-1 is away at open (obsd is not answering: no answer in 0.05 s) — keeping it and trying again
+test_archive_outage.py::test_a_daemon_that_says_nothing_does_not_stop_the_recorder_living ... OK
+test_archive_outage.py::test_a_fetch_from_a_slow_card_does_not_hold_the_pass ... OK
+test_archive_outage.py::test_a_silent_daemon_costs_a_pass_one_wait_and_not_one_per_question ... OK
+r-1: srv-1 is away at open (obsd is not answering: /tmp/w2c-tests-25663/tmp1v2njdgr/obsd.sock: [Errno 2] No such file or directory) — keeping it and trying again
+test_archive_outage.py::test_backfill_waits_while_the_volume_is_taking_nothing ... OK
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+ERROR:root:r-1: backfill failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3101, in fetch
+    self.backfill(self.backfill_budget)
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_archive_outage.py", line 115, in something_nobody_anticipated
+    raise RuntimeError("backfill fell over")
+RuntimeError: backfill fell over
+test_archive_outage.py::test_no_failure_in_the_work_can_stop_the_recorder_living ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting disk-a on the next pass
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 5] the store does not answer); still writing into disk-a
+WARNING:recworker:r-1: disk-a mounted again (obsd stopped answering)
+WARNING:recworker:r-1: obsd stopped answering — remounting net on the next pass
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 5] the store does not answer); still writing into net
+WARNING:recworker:r-1: net mounted again (obsd stopped answering)
+WARNING:recworker:r-1: obsd stopped answering — remounting net on the next pass
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 5] the store does not answer); still writing into net
+test_archive_outage.py::test_the_engine_lost_while_the_store_is_silent_is_mounted_again_by_the_last_rows ... OK
+test_archive_outage.py::test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_its_flush ... OK
+WARNING:recworker:r-1: srv-1 is away at open (obsd is not answering: /tmp/w2c-tests-25663/tmp8pi1tcq6/obsd.sock: [Errno 2] No such file or directory) — keeping it and trying again
+test_archive_outage.py::test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over ... OK
+test_backup_archive.py::test_a_backup_door_that_failed_a_range_is_not_asked_again_at_once ... OK
+test_backup_archive.py::test_a_backup_fetches_from_nobody ... OK
+test_backup_archive.py::test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_name ... OK
+test_backup_archive.py::test_a_backup_volume_holds_its_own_recordings_and_nothing_else ... OK
+test_backup_archive.py::test_a_backup_volume_is_a_box_or_an_address ... OK
+WARNING:recworker:r-1: the primary of 1-card is not being written — recording from 60 s ago
+test_backup_archive.py::test_a_break_the_book_reports_is_written_at_once_not_deferred ... OK
+test_backup_archive.py::test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_agent_carries ... OK
+WARNING:recworker:r-1: 1-card stopped during a break — the ring held in memory is written to the card first
+test_backup_archive.py::test_a_card_stopped_during_a_break_writes_what_it_held ... OK
+WARNING:recworker:r-1: the primary of 1-card is not being written — recording from 0 s ago
+test_backup_archive.py::test_a_card_with_no_book_holds_and_says_nobody_is_known_to_write_its_primary ... OK
+WARNING:recworker:r-1: the primary of 1-card is not being written — recording from 76 s ago
+test_backup_archive.py::test_a_long_break_releases_the_ring_from_before_the_break ... OK
+test_backup_archive.py::test_a_primary_switched_off_never_releases_the_ring ... OK
+test_backup_archive.py::test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits ... OK
+WARNING:recworker:r-2: the primary of 1-copy is not being written — recording from 60 s ago
+test_backup_archive.py::test_a_primary_whose_server_dies_is_covered_from_before_it_died ... OK
+test_backup_archive.py::test_a_recorder_says_how_far_it_wrote ... OK
+test_backup_archive.py::test_a_recorder_says_when_it_cannot_reach_its_source ... OK
+WARNING:recworker:r-2: the primary of 1-copy is not being written — recording from 60 s ago
+test_backup_archive.py::test_a_released_backup_writes_the_seconds_before_anybody_noticed ... OK
+test_backup_archive.py::test_a_short_break_of_a_pushed_stream_never_touches_the_card ... OK
+test_backup_archive.py::test_an_offline_backup_runs_on_hold_and_writes_nothing ... OK
+test_backup_archive.py::test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision ... OK
+WARNING:recworker:r-1: 1-card stopped during a break — the ring held in memory is written to the card first
+test_backup_archive.py::test_an_orderly_stop_writes_the_rings_held_through_a_break ... OK
+WARNING:recworker:r-2: the primary of 1-copy is not being written — recording from 60 s ago
+test_backup_archive.py::test_the_backup_goes_back_on_hold_a_minute_after_the_primary_is_back ... OK
+test_backup_archive.py::test_the_backups_volume_decides_what_is_copied_not_its_summary ... OK
+test_backup_archive.py::test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not ... OK
+test_backup_archive.py::test_the_camera_stands_beside_the_backup_recording ... OK
+test_backup_archive.py::test_the_primary_closes_its_gap_from_the_backup_recording ... OK
+test_backup_archive.py::test_what_the_stream_says_comes_before_the_book ... OK
+WARNING:recworker:r-1: the primary of 1-card is not being written — recording from 60 s ago
+test_backup_archive.py::test_where_nobody_can_continue_the_stream_the_card_writes_at_once ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_body_fault_doors.py::test_null_at_the_top_of_a_json_field_is_no_field_and_null_inside_a_document_is_a_value ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_body_fault_doors.py::test_the_consoles_doors_refuse_a_body_that_is_no_json_with_its_fault ... OK
+test_body_fault_doors.py::test_the_idempotency_digest_reads_the_body_as_the_door_does ... OK
+test_body_fault_doors.py::test_the_stores_write_door_and_its_membership_door_refuse_a_body_that_is_no_json_with_its_fault ... OK
+test_book_runtime.py::test_actual_backup_and_move_preserve_receive_seed_and_stolen_move_rotates_it ... OK
+WARNING:w2cplatform.domain.uplink:book input testsub/counts/w-9 omitted: no live local slot
+test_book_runtime.py::test_agent_cannot_publish_predecessor_input_between_slot_claim_and_cleanup ... OK
+test_book_runtime.py::test_agent_uses_only_a_verified_signed_receive_key_and_requires_the_member_ring ... OK
+test_book_runtime.py::test_all_books_in_a_pass_pin_one_generation_and_publish_names_only_if_declared ... OK
+test_book_runtime.py::test_authenticated_plaintext_resembling_ciphertext_and_empty_secrets_are_resealed ... OK
+test_book_runtime.py::test_bad_incoming_secret_is_missing_never_delivered_and_diagnostics_hold_no_values ... OK
+ERROR:w2cplatform.rows:domain/testsub/counts#bad: the entry of a book does not parse (invalid collected book entry); left out of what the page is shown
+test_book_runtime.py::test_book_show_projects_value_fields_preserves_origin_and_never_shows_hidden_or_secret_data ... OK
+test_book_runtime.py::test_collected_book_is_visible_by_ref_of_another_spec_without_global_view ... OK
+test_book_runtime.py::test_direct_and_relay_doors_preserve_ciphertext_and_require_authenticated_origin ... OK
+test_book_runtime.py::test_holder_pass_delivers_only_addressed_granted_entries_and_reseals_each_boundary ... OK
+test_book_runtime.py::test_holder_without_ring_refuses_secrets_and_can_deliver_a_nonsecret_book ... OK
+test_book_runtime.py::test_interrupted_rotation_does_not_retain_old_seed_or_rewrite_reports_and_can_be_recovered ... OK
+test_book_runtime.py::test_keyset_requires_public_receive_key_and_root_signature_covers_it ... OK
+ERROR:w2cplatform.rows:domain/members: the published object does not parse (Expecting value: line 1 column 1 (char 0)); skipped — the rest of what the member published is read
+test_book_runtime.py::test_knocking_member_report_is_not_a_contribution_or_missing ... OK
+test_book_runtime.py::test_new_slot_owner_clears_all_its_input_families_but_not_other_writers ... OK
+test_book_runtime.py::test_planned_move_refuses_a_backup_with_a_receive_key_retired_by_rotation ... OK
+test_book_runtime.py::test_publication_includes_declared_inputs_and_seals_before_signing_for_both_subsystems ... OK
+test_book_runtime.py::test_receive_seed_is_only_read_and_written_by_the_domain_role ... OK
+test_book_runtime.py::test_receive_seed_is_sealed_and_missing_or_corrupt_seed_never_regenerates ... OK
+WARNING:w2cplatform.domain.uplink:book input testsub/counts/w1 omitted: no live local slot
+WARNING:w2cplatform.domain.uplink:book input testsub2/counts/w1 omitted: no live local slot
+test_book_runtime.py::test_released_expired_or_absent_input_slot_is_empty_not_a_missing_member ... OK
+test_book_runtime.py::test_report_omits_input_when_slot_is_released_during_its_read ... OK
+test_book_runtime.py::test_rotation_by_another_root_is_refused_without_changing_seed_or_keyset ... OK
+test_book_runtime.py::test_rotation_changes_signed_revision_and_old_reports_stay_missing_until_republication ... OK
+test_book_runtime.py::test_slot_cleanup_cannot_erase_the_next_owner_after_a_takeover_race ... OK
+test_book_runtime.py::test_unchanged_secret_book_does_not_rewrite_results_or_names ... OK
+test_book_runtime.py::test_withdrawal_lost_report_and_holder_restart_release_names_without_reusing_old_values ... OK
+test_configstore.py::test_a_daemon_joins_only_as_its_own_server_and_no_join_leaves_a_voter_nobody_runs ... OK
+test_configstore.py::test_a_group_is_declared_one_three_or_five_and_a_join_that_makes_it_even_or_larger_is_refused_without_force ... OK
+test_configstore.py::test_a_group_without_a_majority_does_not_answer_and_does_not_refuse ... OK
+test_configstore.py::test_a_join_is_refused_without_a_daemons_certificate ... OK
+test_configstore.py::test_a_join_under_another_spelling_of_a_members_raft_address_is_refused ... OK
+test_configstore.py::test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_refused ... OK
+test_configstore.py::test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a_group_of_one ... OK
+test_configstore.py::test_a_member_restarted_on_its_journal_comes_back_with_its_rows ... OK
+test_configstore.py::test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nobody ... OK
+test_configstore.py::test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before ... OK
+test_configstore.py::test_a_role_socket_on_a_follower_refuses_before_anything_is_forwarded ... OK
+test_configstore.py::test_a_server_that_joins_a_running_group_gets_its_data ... OK
+test_configstore.py::test_a_write_retried_with_its_id_after_its_first_copy_landed_is_applied_once ... OK
+test_configstore.py::test_an_epoch_of_the_generation_after_a_recover_reads_as_a_number_in_every_name ... OK
+test_configstore.py::test_cas_conflicts_across_servers ... OK
+test_configstore.py::test_every_door_says_its_raft_on_metrics_in_the_products_words ... OK
+test_configstore.py::test_the_leader_killed_the_group_keeps_writing ... OK
+test_configstore.py::test_the_platforms_cas_loops_run_on_configstore_unchanged ... OK
+test_configstore.py::test_the_variables_contract_holds_on_a_configstore_group_of_one ... OK
+test_configstore.py::test_the_variables_contract_holds_on_a_configstore_group_of_three ... OK
+test_console_module.py::test_every_debt_line_of_the_console_module_names_its_decision_and_the_other_sides_owner ... OK
+test_console_module.py::test_the_course_copy_of_the_console_module_is_the_products_but_for_the_debt ... OK
+test_det_mask_restart.py::test_changing_the_blob_moves_the_revision_and_the_reconciler_restarts ... OK
+WARNING:root:r-1: recording 7 holds 0.0 day(s) and was promised 7: the ring of srv-a has closed
+WARNING:root:r-1: recording 7 holds 0.0 day(s) and was promised 7: the ring of srv-a has closed
+test_disk_full.py::test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_not ... OK
+test_disk_full.py::test_bytes_still_being_freed_are_not_asked_for_again_and_bytes_freed_are_not_counted_twice ... OK
+test_disk_full.py::test_the_watermark_is_on_until_somebody_turns_it_off ... OK
+test_disk_full.py::test_what_could_not_be_freed_is_a_number_anybody_can_read ... OK
+test_doors.py::test_a_name_is_one_segment_and_a_path_is_relative ... OK
+test_doors.py::test_a_range_is_cut_to_the_file_and_never_the_clients_number ... OK
+test_doors.py::test_the_resources_doors_name_nothing_outside_the_tree ... OK
+test_epoch_refused.py::test_a_command_argument_longer_than_a_word_is_that_commands_refusal_and_never_reaches_the_driver ... OK
+ERROR:w2cplatform.worker:w-1: request a-1 not performed: the epoch of 1 could not be taken (cam/epoch/1 says 'four': an epoch is a whole number)
+test_epoch_refused.py::test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_other_devices_are_commanded ... OK
+test_epoch_refused.py::test_a_command_whose_deadline_does_not_parse_is_refused_alone ... OK
+WARNING:w2cplatform.worker:w-1: request a-1 not performed — unknown: an earlier instance (?) began it, and whether it was acted on is not known
+test_epoch_refused.py::test_a_command_whose_mark_is_nested_past_jsons_depth_is_that_commands_and_the_others_are_performed ... OK
+ERROR:autoworker:a-1: a-door not evaluated: its epoch could not be taken: auto/epoch/a-door says 'four': an epoch is a whole number
+test_epoch_refused.py::test_the_evaluator_refuses_one_scenario_and_decides_the_next ... OK
+ERROR:vms.liveworker:g-1: camera 7 not subscribed: its epoch could not be taken: live/epoch/7 says 'four': an epoch is a whole number
+ERROR:vms.liveworker:g-1: camera 7 not subscribed: its epoch could not be taken: live/epoch/7 says 'four': an epoch is a whole number
+test_epoch_refused.py::test_the_gateway_refuses_one_camera_and_subscribes_the_next ... OK
+ERROR:camworker:w-1: camera 3 not started: its epoch could not be taken (cam/epoch/3 says 'four': an epoch is a whole number)
+ERROR:camworker:w-1: camera 3 not started: its epoch could not be taken (cam/epoch/3 says 'four': an epoch is a whole number)
+ERROR:camworker:w-1: camera 3 not started: its epoch could not be taken (cam/epoch/3 says 'four': an epoch is a whole number)
+test_epoch_refused.py::test_the_holder_refuses_one_camera_and_starts_and_stops_the_others ... OK
+ERROR:camworker:r-1: camera 1 not started: its epoch could not be taken (rec/epoch/1 says 'four': an epoch is a whole number)
+test_epoch_refused.py::test_the_recorder_refuses_one_recording_and_starts_the_next ... OK
+ERROR:recworker:r-1: request 1-a refused: from='yesterday' to='1757470300.0' is not a range
+test_epoch_refused.py::test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next ... OK
+ERROR:vms.detjobworker:scan 7-lpr-1: its epoch was not taken: detjob/epoch/7-lpr-1 says 'four': an epoch is a whole number
+test_epoch_refused.py::test_the_scan_refuses_one_job_and_the_next_one_moves ... OK
+test_fmp4.py::test_a_key_frame_is_one_a_player_may_start_at ... OK
+test_fmp4.py::test_a_sample_is_length_prefixed_and_carries_no_parameter_sets ... OK
+test_fmp4.py::test_an_interval_without_parameter_sets_is_refused_rather_than_written ... OK
+test_fmp4.py::test_every_fragment_says_where_it_belongs_without_the_ones_before_it ... OK
+test_fmp4.py::test_start_codes_of_both_lengths_and_the_zeroes_before_them ... OK
+test_fmp4.py::test_the_data_offset_points_at_the_first_byte_of_the_mdat ... OK
+test_fmp4.py::test_the_parameter_sets_come_out_of_the_stream_and_go_into_avcc ... OK
+test_group_of_table.py::test_every_address_of_the_table_is_in_the_group_and_has_the_fault_the_table_says ... OK
+test_group_of_table.py::test_the_vms_and_testsub2_read_the_table_alike_where_they_declare_the_same_words ... OK
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 2 not started: no epoch for it (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 2 not started: no epoch for it (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 2 not started: no epoch for it (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 2 not started: no epoch for it (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store confirms epoch 1 of 1 again; nothing was stopped
+test_holders_through_a_silent_store.py::test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word ... OK
+WARNING:w2cplatform.worker:w-1: camera 1 stopped: a newer epoch was issued for it
+WARNING:camworker:w-1: the store did not answer (503 for cam/workers/w-1); going on with the last assignment read
+WARNING:camworker:w-1: camera 1 not started: no epoch for it (w-1: its assignment did not answer, and 1 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:camworker:w-1: camera 2 restarted under the epoch it holds (1): no new one now (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+test_holders_through_a_silent_store.py::test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_when_the_assignment_read_failed ... OK
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:vms.recording_publication:w-1: control facts unavailable for sources
+WARNING:w2cplatform.worker:w-1: the store confirms epoch 1 of 1 again; nothing was stopped
+WARNING:w2cplatform.worker:w-1: the store confirms epoch 1 of 2 again; nothing was stopped
+test_holders_through_a_silent_store.py::test_a_holder_says_in_its_status_and_metrics_how_long_it_has_recorded_unconfirmed ... OK
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:w2cplatform.worker:w-1: the store did not answer for the requests ([Errno 13] the store does not answer)
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 1 restarted under the epoch it holds (1): no new one now (w-1: its assignment did not answer, and 1 may be another's now: no new epoch for it until the assignment is read again)
+test_holders_through_a_silent_store.py::test_a_pipeline_that_fell_while_the_store_is_away_comes_back_under_the_epoch_it_holds ... OK
+WARNING:recworker:r-1: the store did not answer for camera 1's holder ([Errno 13] the store does not answer): its last source shm:///run/vms/1.shm stands
+WARNING:camworker:r-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:recworker:r-1: the request marks were not swept ([Errno 13] the store does not answer)
+WARNING:recworker:r-1: the resource's ask to free bytes on srv-1 was not read ([Errno 13] the store does not answer)
+WARNING:root:r-1: the store did not answer for the requests ([Errno 13] the store does not answer)
+ERROR:root:r-1: copying keeps failed
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3369, in run
+    self.keep_pass()
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 246, in run
+    return fn(self, *a, **kw)
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3385, in keep_pass
+    return self.keep_side_pass(now)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/recworker.py", line 3575, in keep_side_pass
+    declared = keeps.declared(self.vars, unread)  # unread is not "none": a silent store raises, and nothing changes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/vms/keeps.py", line 307, in declared
+    for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_store_outage.py", line 36, in call
+    raise PermissionError(13, "the store does not answer")
+PermissionError: [Errno 13] the store does not answer
+WARNING:camworker:r-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:r-1: camera 1-main restarted under the epoch it holds (1): no new one now (r-1: its assignment did not answer, and 1-main may be another's now: no new epoch for it until the assignment is read again)
+WARNING:recworker:r-1: the store did not answer for camera 1's holder ([Errno 13] the store does not answer): its last source shm:///run/vms/1.shm stands
+test_holders_through_a_silent_store.py::test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last ... OK
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the hold on vol has not been confirmed for 40 s, and its lease is strict (the store does not answer: [Errno 13] the store does not answer) — stopping its recordings
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into nothing
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into nothing
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into nothing
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into nothing
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into nothing
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+WARNING:w2cplatform.worker:r-1: the store did not answer for the slot ([Errno 13] the store does not answer); still r-1
+WARNING:root:r-1: the store did not answer for the volumes ([Errno 13] the store does not answer); still writing into vol
+test_holders_through_a_silent_store.py::test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go ... OK
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:w2cplatform.worker:w-1: camera 1 stopped: unconfirmed for longer than its ceiling (60 s)
+WARNING:w2cplatform.worker:w-1: camera 2 stopped: unconfirmed for longer than its ceiling (60 s)
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:camworker:w-1: camera 1 not started: no epoch for it (w-1: its assignment did not answer, and 1 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:camworker:w-1: camera 2 not started: no epoch for it (w-1: its assignment did not answer, and 2 may be another's now: no new epoch for it until the assignment is read again)
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+WARNING:w2cplatform.worker:w-1: the store did not answer for the slot ([Errno 13] the store does not answer); still w-1
+WARNING:w2cplatform.worker:w-1: camera 1 stopped: the store did not confirm the lease in time
+WARNING:w2cplatform.worker:w-1: camera 2 stopped: the store did not confirm the lease in time
+WARNING:camworker:w-1: the store did not answer ([Errno 13] the store does not answer); going on with the last assignment read
+test_holders_through_a_silent_store.py::test_the_holders_unconfirmed_max_is_its_specs_and_off_stops_data_at_the_leases_end ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+test_keeps.py::test_a_closed_incidents_ring_whose_oldest_footage_is_kept_says_that_keep_is_at_risk ... OK
+ERROR:w2cplatform.worker:r-keep: the row of 7 does not parse ('id'); passed by until it does
+test_keeps.py::test_a_copy_that_no_longer_hashes_to_its_seal_is_broken ... OK
+ERROR:root:r-keep: keep 7-1757498200-1757498800 is 600 s short of what it names, for 300 s: no door that answers from here has them
+test_keeps.py::test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_none ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_a_garbled_keep_is_shown_as_it_holds ... OK
+ERROR:w2cplatform.rows:rec/keeps/7-bad: the keep row does not parse (could not convert string to float: 'yesterday'); its camera is kept as far as its interval reads, units of no one camera are not held by it, and nothing is copied for it, until it is mended
+ERROR:w2cplatform.rows:rec/keeps/9-bad: the keep row does not parse (could not convert string to float: 'yesterday'); its camera is kept as far as its interval reads, units of no one camera are not held by it, and nothing is copied for it, until it is mended
+test_keeps.py::test_a_garbled_keep_over_a_recording_this_volume_holds_is_said_garbled_on_its_side ... OK
+ERROR:w2cplatform.rows:rec/keeps/7-bad: the keep row does not parse (could not convert string to float: 'yesterday'); its camera is kept as far as its interval reads, units of no one camera are not held by it, and nothing is copied for it, until it is mended
+WARNING:recworker:r-keep: keep 7-1757498200-1757498800 cannot be verified, the store did not answer: [Errno 13] the store does not answer
+WARNING:recworker:r-keep: keep 7-1757498200-1757498800 cannot be verified, the store did not answer: [Errno 13] Permission denied: '/var/lib/w2c/vars/rec/keeps'
+test_keeps.py::test_a_keep_cannot_be_verified_where_no_incident_archive_is_served_nor_when_its_interval_is_garbled ... OK
+test_keeps.py::test_a_keep_holds_a_recording_whose_row_is_gone_and_one_made_after_it ... OK
+test_keeps.py::test_a_keep_holds_every_subsystems_events_about_its_camera ... OK
+test_keeps.py::test_a_keep_is_copied_into_the_incidents_volume_and_outlives_the_recordings_ring ... OK
+ERROR:w2cplatform.worker:r-keep: the row of 7 does not parse ('id'); passed by until it does
+test_keeps.py::test_a_keep_lifted_and_made_again_is_not_sealed_by_the_old_seal_and_a_seal_of_no_keep_goes ... OK
+ERROR:root:r-keep: keep 7-1757498200-1757498800 is 600 s short of what it names, for 300 s: no door that answers from here has them
+test_keeps.py::test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm ... OK
+ERROR:w2cplatform.worker:r-keep: the row of 7 does not parse ('id'); passed by until it does
+ERROR:root:r-keep: 300 s of keep 7-1757498200-1757498800 (7) are gone from evidence: its ring took them
+test_keeps.py::test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_pass_seals_it_anew ... OK
+ERROR:root:r-keep: keep 7-bad of camera 7 has not been readable for 60 min: its camera's footage is held as far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift it and set it again
+ERROR:root:r-keep: keep 7-bad of camera 7 has not been readable for 1501 min: its camera's footage is held as far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift it and set it again
+ERROR:w2cplatform.rows:rec/keeps/7-bad: the keep row does not parse (could not convert string to float: 'yesterday'); its camera is kept as far as its interval reads, units of no one camera are not held by it, and nothing is copied for it, until it is mended
+ERROR:root:r-keep: keep 7-bad of camera 7 has not been readable for 60 min: its camera's footage is held as far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift it and set it again
+test_keeps.py::test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_again_once_a_day ... OK
+ERROR:w2cplatform.rows:rec/keeps/7-1757498200-1757498800: the keep row does not parse (could not convert string to float: 'yesterday'); its camera is kept as far as its interval reads, units of no one camera are not held by it, and nothing is copied for it, until it is mended
+test_keeps.py::test_a_keep_whose_interval_does_not_read_keeps_what_was_taken_whole ... OK
+test_keeps.py::test_a_keeps_row_is_stamped_made_at_when_made_and_carries_it_through_every_write ... OK
+ERROR:w2cplatform.worker:r-keep: the row of 7 does not parse ('id'); passed by until it does
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy ... OK
+test_keeps.py::test_a_record_of_another_format_of_the_volume_is_not_taken ... OK
+test_keeps.py::test_a_recording_never_copied_is_pending_and_the_keep_unknown ... OK
+ERROR:root:r-keep: keep 7-1757498200-1757498800 is 600 s short of what it names, for 300 s: no door that answers from here has them
+test_keeps.py::test_a_recording_that_moved_is_not_said_to_be_missing_from_its_source_by_its_new_holder ... OK
+test_keeps.py::test_a_recording_with_no_footage_in_an_interval_that_is_over_is_empty_not_pending ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7-x) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7-x) are gone from evidence: its ring took them
+test_keeps.py::test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_every_recording_of_a_keep ... OK
+test_keeps.py::test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not_short_of_the_rest ... OK
+test_keeps.py::test_a_volume_formatted_again_under_the_running_recorder_forgets_what_the_old_one_took ... OK
+test_keeps.py::test_an_incidents_volume_is_a_place_for_evidence_and_never_one_to_record_into ... OK
+test_keeps.py::test_keeps_that_cannot_be_read_prune_nothing_of_what_was_taken ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+test_keeps.py::test_kept_footage_the_incidents_ring_took_is_an_alarm ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+test_keeps.py::test_kept_footage_the_incidents_ring_wrote_over_is_in_the_heartbeat_with_its_seconds_every_pass ... OK
+ERROR:root:r-src: 300 s of keep 7-1757498800-1757499100 (7) are gone from disks before the incidents archive had them
+test_keeps.py::test_kept_footage_the_recordings_ring_took_before_any_copy_is_lost_and_an_alarm ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+test_keeps.py::test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_an_alarm ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_nobody_writes_a_seal_through_a_door ... OK
+test_keeps.py::test_not_being_able_to_read_the_keeps_is_not_there_are_none ... OK
+test_keeps.py::test_nothing_lost_and_nothing_at_risk_is_not_said ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_servers_shows_the_incidents_recorders_keeps_lost_and_at_risk_as_they_are ... OK
+test_keeps.py::test_shortening_common_days_does_not_erase_the_events_somebody_marked ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_the_console_sets_a_keep_lists_it_and_lifts_it ... OK
+ERROR:w2cplatform.worker:r-keep: the row of 7 does not parse ('id'); passed by until it does
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_keeps.py::test_the_door_lets_in_a_keeps_check_only_with_a_token_for_that_recording_and_the_keeps_route ... OK
+test_keeps.py::test_the_list_of_keeps_is_what_the_caller_may_see ... OK
+test_keeps.py::test_the_record_of_what_was_taken_is_in_the_products_bytes ... OK
+test_keeps.py::test_the_recorder_seals_only_a_whole_copy_of_a_keep_that_reads_and_only_once ... OK
+test_keeps.py::test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remembered ... OK
+test_keeps.py::test_the_recordings_recorder_says_its_side_of_a_keep_here_at_risk_pushing_pushed ... OK
+ERROR:root:r-keep: 300 s of keep 7-1757498800-1757499100 (7) are gone from evidence: its ring took them
+ERROR:root:r-keep: 150 s of keep 7-1757499200-1757499500 (7) are gone from evidence: its ring took them
+test_keeps.py::test_what_an_incidents_volume_took_outlives_its_recorder_and_its_box ... OK
+test_keeps.py::test_what_was_taken_is_written_down_as_large_as_what_is_kept ... OK
+ERROR:w2cplatform.worker:w-1: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+WARNING:w2cplatform.worker:srv-1:1:000001: gave slot w-1 up, its units let go; going on as w-2
+WARNING:w2cplatform.worker:srv-1:1:000001: was fenced as w-1 (store is at schema 2; this build understands 1); rejoined as w-2
+test_lesson1_platform.py::test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin ... OK
+test_lesson1_platform.py::test_a_named_unit_deleted_comes_back_under_its_name ... OK
+WARNING:w2cplatform.contract:platform/schema does not parse (invalid literal for int() with base 10: 'one'); schema 1, as last read, stands
+WARNING:w2cplatform.contract:platform/schema does not parse (invalid literal for int() with base 10: 'one'); schema 1, as last read, stands
+test_lesson1_platform.py::test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_starts_nobody_new ... OK
+test_lesson1_platform.py::test_a_subscriber_is_not_handed_a_holder_that_has_gone_silent ... OK
+ERROR:w2cplatform.worker:w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+WARNING:w2cplatform.contract:platform/schema does not parse (invalid literal for int() with base 10: 'one'); schema 1, as last read, stands
+WARNING:w2cplatform.contract:platform/schema does not parse (invalid literal for int() with base 10: 'one'); schema 1, as last read, stands
+WARNING:w2cplatform.worker:srv-1:5:000005: gave slot w-1 up, its units let go; going on as w-2
+WARNING:w2cplatform.worker:srv-1:5:000005: was fenced as w-1 (slot w-1 is held by another instance now); rejoined as w-2
+ERROR:w2cplatform.worker:w-2: FENCED (store is at schema 2; this build understands 1). Stopping every unit.
+WARNING:w2cplatform.worker:srv-1:5:000005: gave slot w-2 up, its units let go; going on as w-3
+WARNING:w2cplatform.worker:srv-1:5:000005: was fenced as w-2 (store is at schema 2; this build understands 1); rejoined as w-3
+test_lesson1_platform.py::test_a_worker_fenced_for_its_slot_rejoins_over_a_garbled_schema_row_and_one_fenced_for_the_schema_does_not ... OK
+test_lesson1_platform.py::test_a_worker_that_released_its_slot_stops_receiving_units ... OK
+test_lesson1_platform.py::test_controller_and_worker_bases_speak_only_the_contract ... OK
+test_lesson1_platform.py::test_epoch_issuer_never_reuses_a_number ... OK
+test_lesson1_platform.py::test_identity_by_claim_is_a_platform_piece ... OK
+test_lesson1_platform.py::test_lease_on_a_monotonic_clock ... OK
+test_lesson1_platform.py::test_one_writer_per_prefix ... OK
+test_lesson1_platform.py::test_space_does_not_average_across_volumes ... OK
+test_lesson1_platform.py::test_the_config_store_survives_a_restart_and_refuses_a_stale_cas ... OK
+test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems ... OK
+test_lesson1_platform.py::test_the_resource_is_a_platform_job_that_mirrors_any_subsystems_buckets ... OK
+test_lesson1_platform.py::test_the_schema_is_raised_after_the_upgrade_and_never_during_it ... OK
+test_lesson1_platform.py::test_the_tree_is_walked_once_a_pass_and_never_on_a_heartbeat ... OK
+test_lesson1_platform.py::test_the_watermark_asks_and_never_deletes ... OK
+test_lesson1_platform.py::test_two_processes_one_cas_winner ... OK
+test_lesson1_platform.py::test_which_volume_holds_a_unit_is_the_directory_and_not_a_map ... OK
+test_lesson5_recorder.py::test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_out ... OK
+test_lesson5_recorder.py::test_a_recording_started_twice_writes_two_streams_and_overwrites_nothing ... OK
+test_lesson5_recorder.py::test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someone_does ... OK
+test_limits.py::test_a_row_that_does_not_fit_is_a_413_to_the_person_who_typed_it ... OK
+test_limits.py::test_a_store_with_no_ceiling_still_answers_the_question ... OK
+test_limits.py::test_an_oversized_shard_says_how_many_units_that_was ... OK
+test_limits.py::test_the_object_store_refuses_over_its_ceiling_and_keeps_what_was_there ... OK
+test_limits.py::test_the_size_a_store_charges_is_keys_and_values ... OK
+WARNING:w2cplatform.sealing:secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies the store reads every secret in the clear
+test_member_edits.py::test_a_busy_member_console_keeps_the_edit_waiting_for_its_next_pass ... OK
+test_member_edits.py::test_a_console_request_in_flight_or_taken_over_stays_waiting_and_exists_is_terminal ... OK
+test_member_edits.py::test_a_marker_that_cannot_grow_to_another_finite_number_is_not_persisted ... OK
+test_member_edits.py::test_a_reused_key_with_a_new_operation_after_the_backup_is_stranded_exactly ... OK
+test_member_edits.py::test_a_stranded_edit_is_resubmitted_as_the_original_crud_with_the_same_key ... OK
+test_member_edits.py::test_agent_signature_opens_only_unit_crud_and_preserves_subsystem_prefix_and_replay ... OK
+test_member_edits.py::test_an_old_outcome_cannot_settle_a_reused_key_before_the_new_member_pass ... OK
+ERROR:w2cplatform.rows:north/domain/outcomes#e-f2771844993d: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+test_member_edits.py::test_an_outcome_without_kept_at_is_refused_without_a_compatibility_reader ... OK
+ERROR:w2cplatform.rows:north/domain/outcomes#e-98f5fc41b3c9: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+test_member_edits.py::test_bad_outcome_does_not_close_a_waiting_edit_and_zero_status_has_the_declared_type ... OK
+test_member_edits.py::test_console_restart_replays_its_persistent_key_and_refuses_a_changed_body ... OK
+test_member_edits.py::test_domain_backup_restore_keeps_completed_outcomes_and_distinct_markers_after_a_move ... OK
+test_member_edits.py::test_domain_http_queues_all_three_operations_and_refuses_missing_key_before_storage ... OK
+test_member_edits.py::test_holder_agent_applies_its_own_queued_edit_only_through_the_signed_console ... OK
+test_member_edits.py::test_holder_collects_its_local_outcome_with_holder_rights_without_a_report_to_itself ... OK
+test_member_edits.py::test_holder_masks_a_secret_result_even_in_an_authenticated_member_report ... OK
+test_member_edits.py::test_member_and_holder_crud_are_queued_and_restart_keeps_the_original_key ... OK
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (nan is not a finite number); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (inf is not a finite number); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (1000000000000000000000000000000000000000 is not a finite number); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+ERROR:w2cplatform.rows:domain/outcomes/north#e-7b0d2c64c633: the published object does not parse (invalid Outcome); skipped — the rest of what the member published is read
+test_member_edits.py::test_no_readable_saved_outcome_uses_only_the_domains_own_seconds ... OK
+test_member_edits.py::test_refusals_happen_before_keep_and_no_secret_value_enters_a_reply ... OK
+ERROR:w2cplatform.rows:domain/pending/north#torn: the published object does not parse (Expecting property name enclosed in double quotes: line 1 column 2 (char 1)); skipped — the rest of what the member published is read
+test_member_edits.py::test_restart_between_outcome_write_and_queue_removal_preserves_the_result_and_other_edits ... OK
+test_member_edits.py::test_restarted_domain_gives_a_reused_key_a_distinct_marker_at_equal_or_reversed_clocks ... OK
+test_member_edits.py::test_unreachable_waits_existing_unit_is_a_409_outcome_and_replay_does_not_apply_again ... OK
+test_memvariables.py::test_a_named_store_is_shared_and_a_bare_one_is_private ... OK
+test_memvariables.py::test_an_index_is_never_reused_inside_one_store ... OK
+test_memvariables.py::test_the_acl_is_the_handles_and_as_writer_touches_nobody_elses ... OK
+test_memvariables.py::test_the_memory_backend_passes_the_whole_contract_suite ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_one_bad_element.py::test_a_body_sent_in_chunks_is_refused_in_words_and_not_read_as_an_empty_one ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_one_bad_element.py::test_a_body_that_is_no_json_object_is_refused_on_every_write_route ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.door:g-1: this door is OPEN — no door key in the store (door/keys), so whoever reaches it is let in
+test_one_bad_element.py::test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_labels_and_an_offer_that_is_no_text_too ... OK
+test_one_bad_element.py::test_a_bucket_line_nested_past_jsons_depth_does_not_stop_the_watch ... OK
+test_one_bad_element.py::test_a_bucket_line_nested_past_jsons_depth_or_with_no_time_is_that_lines_for_every_reader_of_a_bucket ... OK
+WARNING:w2cplatform.console:domain/view does not parse (Expecting value: line 1 column 8 (char 7)): the domain's view is not shown
+WARNING:w2cplatform.console:domain/view does not parse (the view is a map, not list): the domain's view is not shown
+WARNING:w2cplatform.console:domain/view does not parse (inf is not a finite number): the domain's view is not shown
+WARNING:w2cplatform.console:domain/view does not parse (maximum recursion depth exceeded while decoding a JSON array from a unicode string): the domain's view is not shown
+test_one_bad_element.py::test_a_domain_view_that_does_not_read_is_said_and_not_a_500 ... OK
+test_one_bad_element.py::test_a_frontier_or_a_waiting_file_that_does_not_read_is_not_there ... OK
+WARNING:w2cplatform.contract:cam/heartbeats/w-2: heartbeat does not parse; skipped
+WARNING:w2cplatform.contract:cam/heartbeats/w-3: heartbeat does not parse; skipped
+WARNING:w2cplatform.contract:cam/heartbeats/w-4: heartbeat does not parse; skipped
+WARNING:w2cplatform.contract:cam/heartbeats/w-5: heartbeat does not parse; skipped
+WARNING:w2cplatform.contract:platform/resources/srv-x/heartbeat: heartbeat does not parse; skipped
+WARNING:w2cplatform.contract:platform/resources/srv-y/heartbeat: heartbeat does not parse; skipped
+test_one_bad_element.py::test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no_route_falls ... OK
+ERROR:w2cplatform.rows:cam/heartbeats/w-1#coverage: the number in it does not parse (could not convert string to float: 'x'); read as not said
+test_one_bad_element.py::test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_or_the_segment ... OK
+ERROR:w2cplatform.rows:rec/1#archive.keep.copied: the number in it does not parse (1000000000000000000000000000000000000000 is not a finite number); read as not said
+test_one_bad_element.py::test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines ... OK
+ERROR:w2cplatform.rows:cam/1#occurred: the number in it does not parse (1000000000000000000000000000000000000000 is not a finite number); read as not said
+ERROR:camworker:w-1: a device posted an event that cannot be written (ValueError: `class` is the traffic class and travels as `cls=`, not as a field — two spellings of one thing drift, and the drift is invisible in the file); dropped — the other events are written
+ERROR:camworker:w-1: a device posted an event that cannot be written (TypeError: Object of type set is not JSON serializable); dropped — the other events are written
+test_one_bad_element.py::test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_goes_on ... OK
+ERROR:recworker:r-1: request 1-a refused: from='10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' to='1757470300.0' is not a range
+test_one_bad_element.py::test_a_moment_of_four_hundred_digits_in_a_request_is_that_requests_in_the_holder_and_the_recorder ... OK
+WARNING:w2cplatform.spec:cam: placement row cam/placement/1 does not parse beyond its worker ({'worker': 'w-1', 'reason': 'most free capacity (50) among 1 worker(s); on srv-a, whose resource is unknown', 'at': '1757500000.0', 'rev': 'Infinity'}); read as placed on w-1
+test_one_bad_element.py::test_a_placement_row_counting_past_any_number_still_says_where_its_unit_is ... OK
+WARNING:w2cplatform.resource:srv-1: restore left 10 buckets with peers: tried again in 10 s
+test_one_bad_element.py::test_a_restore_whose_listing_skipped_lines_asks_that_peer_again ... OK
+ERROR:w2cplatform.worker:a-1: the row of a-door does not parse (maximum recursion depth exceeded while decoding a JSON array from a unicode string); passed by until it does
+test_one_bad_element.py::test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_evaluator ... OK
+test_one_bad_element.py::test_a_source_that_does_not_parse_costs_its_camera_not_drain_unplaceable_or_the_catalogue ... OK
+ERROR:w2cplatform.rows:cam/cameras/2#unplaceable: the unit's row does not parse ('<' not supported between instances of 'str' and 'int'); it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is mended; the other units are judged
+ERROR:w2cplatform.spec:cam: unit 2 not placed this pass
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 4294, in ensure_placed
+    pl = self.place(r["id"], workers)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 4004, in place
+    pool = self.eligible(row, self._pool(workers))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 3493, in eligible
+    out = [w for w in out if self.server_of(w) not in self.servers_taken(row)]
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_one_bad_element.py", line 628, in taken
+    raise TypeError("'<' not supported between instances of 'str' and 'int'")
+TypeError: '<' not supported between instances of 'str' and 'int'
+ERROR:w2cplatform.rows:cam/cameras/2#would_strand: the unit's row does not parse ('<' not supported between instances of 'str' and 'int'); it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is mended; the other units are judged
+test_one_bad_element.py::test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged ... OK
+test_one_bad_element.py::test_a_value_of_a_list_field_with_a_comma_is_refused_and_the_joined_string_is_taken ... OK
+test_one_bad_element.py::test_an_engine_answer_this_build_cannot_read_is_a_wrong_volume_and_not_a_crash ... OK
+test_one_bad_element.py::test_channel_of_reads_any_value_as_channel_key_and_device_of_do ... OK
+ERROR:w2cplatform.worker:j-1: the row of 7-lpr-1 does not parse (invalid literal for int() with base 10: 'Infinity'); passed by until it does
+test_one_bad_element.py::test_infinity_in_a_rows_integer_stops_no_workers_pass_and_no_lease ... OK
+WARNING:w2cplatform.console:platform/schema does not parse (invalid literal for int() with base 10: 'two'): /schema says so
+test_one_bad_element.py::test_schema_lists_a_process_whose_schema_does_not_read_and_raises_past_nobody ... OK
+WARNING:card:r-1: the camera's stream is said here and what the server has not got is not: the card lets go of its oldest first, whether the server has it or not (tie the pusher to this recorder in one call)
+ERROR:w2cplatform.rows:rec/r-1/stream#failed_s: the number in it does not parse (nan is not a finite number); read as not said
+WARNING:card:r-1: 4.0 s of the camera's footage reached neither the server nor stayed on the card (the card's budget let go of them before the server had them) — they are on no copy: a larger card, a lower bitrate or a faster uplink
+test_one_bad_element.py::test_the_pushers_seconds_that_are_no_number_cost_the_card_neither_its_pass_nor_its_episode ... OK
+test_one_bad_element.py::test_the_resources_are_said_once_per_console_under_the_platforms_name ... OK
+test_one_bad_element.py::test_two_controllers_in_one_pass_do_not_read_each_others_memo ... OK
+test_place_follows.py::test_a_place_follows_the_name_only_from_where_its_row_says_it_is ... OK
+test_place_follows.py::test_a_place_of_a_spec_that_names_no_server_field_waits_and_follows_the_name_from_no_box ... OK
+test_place_follows.py::test_a_place_whose_row_does_not_read_waits_and_the_claim_raises_nothing ... OK
+test_portability.py::test_the_disk_probe_answers_without_statvfs ... OK
+test_portability.py::test_the_lock_is_one_seam_and_the_caller_does_not_branch ... OK
+test_portability.py::test_the_platform_imports_on_a_box_without_the_unix_modules ... OK
+WARNING:root:r-1: the hold on net has not been confirmed for 51 s, and its lease is strict (another worker holds it now) — stopping its recordings
+ERROR:recworker:r-1: volume net may be another server's by now (its hold was not confirmed in time): this recorder stops writing it and gives its writer up without writing anything more
+ERROR:recworker:r-1: 30 s of recording 1 are lost (1757499940–1757499970): the writer had taken them and not yet written them when volume net was given up. A backup recording or the camera's own archive may still hold them — ask for a backfill of that stretch
+test_rec_volume.py::test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: the writer of srv-1 did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+test_rec_volume.py::test_a_close_that_waits_on_the_leases_thread_waits_one_call_and_not_thirty_seconds ... OK
+WARNING:recworker:r-1: obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead — remounting srv-1 on the next pass
+WARNING:recworker:r-1: srv-1 mounted again (obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead)
+test_rec_volume.py::test_a_daemon_restarted_between_two_samples_is_a_remount_and_the_recording_goes_on ... OK
+test_rec_volume.py::test_a_daemon_restarted_under_the_same_pid_does_not_get_the_dead_ones_closed_handles_either ... OK
+WARNING:recworker:r-1: obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead — remounting srv-1 on the next pass
+WARNING:recworker:r-1: srv-1 mounted again (obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead)
+test_rec_volume.py::test_a_daemon_that_crashed_is_a_remount_once_its_lock_is_stale ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: the writer of srv-1 did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+test_rec_volume.py::test_a_daemon_that_froze_between_two_samples_is_a_remount_and_the_recording_goes_on ... OK
+WARNING:recworker:r-1: a range of 1 fetched for a volume or a lease this recorder no longer holds is dropped
+WARNING:recworker:r-1: a range of 1 fetched for a volume or a lease this recorder no longer holds is dropped
+test_rec_volume.py::test_a_fetched_range_lands_under_its_lease_into_the_volume_it_was_fetched_for_and_landing_is_what_landed ... OK
+WARNING:recworker:r-1: obsd does not answer (no answer in 1 s)
+WARNING:recworker:r-1: obsd stopped answering — remounting net on the next pass
+ERROR:recworker:r-1: obsd on srv-1 has not answered for 304 s, so nothing is being recorded into net: this recorder gives the volume up, and a server whose obsd answers takes it. Check obsd on srv-1; this recorder tries net again in 10 minutes
+WARNING:root:r-1: obsd on srv-1 has not answered for 304 s, so nothing is being recorded into net: this recorder gives the volume up, and a server whose obsd answers takes it. Check obsd on srv-1; this recorder tries net again in 10 minutes — stopping its recordings
+ERROR:recworker:r-1: up to 30 s of recording 1 are lost (1757499940–1757499970): the writer had taken them and not yet written them when volume net was given up. A backup recording or the camera's own archive may still hold them — ask for a backfill of that stretch
+WARNING:recworker:r-1: the writer of net did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 is away at open (obsd is not answering: no answer in 1 s) — keeping it and trying again
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+test_rec_volume.py::test_a_frozen_daemon_under_a_network_volume_costs_a_pass_one_wait_and_the_volume_goes_to_a_box_that_answers ... OK
+test_rec_volume.py::test_a_late_handle_of_the_dead_session_does_not_cost_the_new_one_its_generation ... OK
+WARNING:recworker:r-1: srv-1 is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:srv-1)) — keeping it and trying again
+WARNING:recworker:r-1: srv-1 is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:srv-1)) — keeping it and trying again
+WARNING:recworker:r-1: srv-1 is ALREADY_LOCKED by a writer of our own owner rec:srv-1 for 10 s: an orphan of this session — its session is left for the daemon to detach, and a new one picks the writer up
+test_rec_volume.py::test_a_lock_under_our_owner_held_by_another_process_is_not_this_sessions_orphan ... OK
+test_rec_volume.py::test_a_long_range_is_fetched_from_a_backup_a_minute_at_a_time_and_lands_whole ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: the mount of srv-1 was not answered: the writer the daemon made is an orphan — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+test_rec_volume.py::test_a_mount_whose_answer_was_lost_leaves_its_session_and_the_next_one_picks_the_writer_up ... OK
+WARNING:recworker:r-1: net is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:net)) — keeping it and trying again
+ERROR:recworker:r-1: net has been in use by another writer for 10 minutes although this recorder holds it, so nothing is being recorded into it. A recorder on another server may be stuck with net still open: check obsd and the recorders on the other servers. This recorder lets net go and tries it again in 10 minutes
+WARNING:root:r-1: net has been in use by another writer for 10 minutes although this recorder holds it, so nothing is being recorded into it. A recorder on another server may be stuck with net still open: check obsd and the recorders on the other servers. This recorder lets net go and tries it again in 10 minutes — stopping its recordings
+test_rec_volume.py::test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_go_with_an_alarm ... OK
+WARNING:recworker:r-1: obsd does not answer (/nonexistent/obsd.sock: [Errno 2] No such file or directory)
+WARNING:recworker:r-1: obsd stopped answering — remounting net on the next pass
+ERROR:recworker:r-1: obsd on srv-1 has not answered for 304 s, so nothing is being recorded into net: this recorder gives the volume up, and a server whose obsd answers takes it. Check obsd on srv-1; this recorder tries net again in 10 minutes
+WARNING:root:r-1: obsd on srv-1 has not answered for 304 s, so nothing is being recorded into net: this recorder gives the volume up, and a server whose obsd answers takes it. Check obsd on srv-1; this recorder tries net again in 10 minutes — stopping its recordings
+WARNING:recworker:r-1: the writer of net did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 is away at open (obsd is not answering: /nonexistent/obsd.sock: [Errno 2] No such file or directory) — keeping it and trying again
+test_rec_volume.py::test_a_network_volume_is_given_up_when_this_hosts_obsd_has_answered_nothing_for_five_minutes ... OK
+WARNING:recworker:r-1: net is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:net)) — keeping it and trying again
+test_rec_volume.py::test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_on_another ... OK
+test_rec_volume.py::test_a_new_quota_is_a_write_into_the_volume_and_goes_under_the_same_fence ... OK
+test_rec_volume.py::test_a_pinned_network_volume_is_held_and_a_free_recorder_on_another_box_does_not_take_it ... OK
+WARNING:root:r-1: the engine says the lock of net is another writer's — stopping its recordings
+ERROR:recworker:r-1: volume net may be another server's by now (the engine found its lock taken): this recorder stops writing it and gives its writer up without writing anything more
+ERROR:recworker:r-1: 30 s of recording 1 are lost (1757499940–1757499970): the writer had taken them and not yet written them when volume net was given up. A backup recording or the camera's own archive may still hold them — ask for a backfill of that stretch
+WARNING:recworker:r-1: net mounted again (another writer took net)
+test_rec_volume.py::test_a_pinned_network_volume_whose_lock_another_writer_took_is_a_volume_error_counted_said_and_mounted_again ... OK
+test_rec_volume.py::test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left ... OK
+WARNING:recworker:r-1: srv-1 is away at open (obsd is not answering: /nonexistent/obsd.sock: [Errno 2] No such file or directory) — keeping it and trying again
+test_rec_volume.py::test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place ... OK
+test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+test_rec_volume.py::test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost ... OK
+WARNING:recworker:r-1: 1 refused a fetched group at 1757496440: SEQUENCE_TOO_LARGE
+WARNING:recworker:r-1: 1 lost a fetched sequence before 1757497460
+test_rec_volume.py::test_a_refused_group_ends_its_sequence_and_a_lost_sequence_is_not_landed ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: the writer of srv-1 did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+test_rec_volume.py::test_a_remount_on_a_frozen_daemon_costs_the_pass_one_call_and_not_three ... OK
+test_rec_volume.py::test_a_restart_of_the_daemon_first_met_by_a_close_does_not_leave_the_closed_list_to_the_next_daemon ... OK
+test_rec_volume.py::test_a_sample_that_races_its_writers_own_close_is_not_the_engine_lost ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: the writer of srv-1 did not close (the daemon did not answer) — its session is left for the daemon to detach, and a new one picks the writer up
+WARNING:recworker:r-1: srv-1 mounted again (obsd stopped answering)
+test_rec_volume.py::test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_mounts_again ... OK
+WARNING:root:r-1: test: an orderly hand-over — stopping its recordings
+ERROR:w2cplatform.worker:r-1: FENCED (slot r-1 is held by another instance now). Stopping every unit.
+ERROR:w2cplatform.worker:Murats-MacBook-Pro.local:25663:9edf4f: its name rec/r-1 is held by box-b:7:a2a2a2 (box box-b) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+test_rec_volume.py::test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_network_volume_from_a_frozen_one ... OK
+WARNING:recworker:r-1: pinned to net and not writing it: net is being written by r-1: this recorder is pinned to it and starts writing it once r-1 lets it go or stops
+WARNING:root:r-1: test: an orderly hand-over — stopping its recordings
+test_rec_volume.py::test_a_second_instance_pinned_to_the_same_network_volume_on_another_box_waits_for_the_hold ... OK
+WARNING:recworker:r-1: srv-1 is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:srv-1)) — keeping it and trying again
+WARNING:recworker:r-1: srv-1 is ALREADY_LOCKED by a writer of our own owner rec:srv-1 for 10 s: an orphan of this session — its session is left for the daemon to detach, and a new one picks the writer up
+test_rec_volume.py::test_a_volume_locked_by_our_own_owner_longer_than_a_linger_is_an_orphan_of_this_session ... OK
+test_rec_volume.py::test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole ... OK
+WARNING:recworker:r-1: obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead — remounting srv-1 on the next pass
+WARNING:recworker:r-1: srv-1 mounted again (obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead)
+WARNING:recworker:r-1: obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead — remounting srv-1 on the next pass
+WARNING:recworker:r-1: srv-1 mounted again (obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every handle is dead)
+test_rec_volume.py::test_after_a_second_restart_of_the_daemon_a_lost_session_is_not_taken_for_a_closed_handle ... OK
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+WARNING:recworker:r-1: obsd stopped answering — remounting srv-1 on the next pass
+test_rec_volume.py::test_an_engine_gone_at_the_finish_of_a_fetched_range_does_not_take_the_pass_with_it ... OK
+test_rec_volume.py::test_an_unclean_volume_is_recovered_only_under_a_hold_confirmed_this_second ... OK
+test_rec_volume.py::test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_write_window ... OK
+test_rec_volume.py::test_footage_fetched_into_a_gap_goes_into_the_backfill_stream_and_waits_to_be_seen ... OK
+WARNING:root:r-1: test: hand it over — stopping its recordings
+test_rec_volume.py::test_leaving_a_volume_closes_its_writer_before_the_hold_goes ... OK
+WARNING:recworker:r-1: net is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:net)) — keeping it and trying again
+WARNING:recworker:r-1: net is busy at open (VOLUME_MOUNT_RW: ALREADY_LOCKED — the volume is written by another session (rec:net)) — keeping it and trying again
+test_rec_volume.py::test_one_busy_pass_and_then_a_network_down_for_ten_minutes_lets_no_volume_go_and_the_recorder_writes_when_it_is_back ... OK
+test_rec_volume.py::test_readers_do_not_close_each_other_in_the_middle_of_a_read ... OK
+WARNING:w2cplatform.door:r-1: this door is OPEN — no door key in the store (door/keys), so whoever reaches it is let in
+test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames ... OK
+test_rec_volume.py::test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname ... OK
+test_rec_volume.py::test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_ring_frees_nothing ... OK
+WARNING:recworker:r-1: obsd does not answer (/nonexistent/obsd.sock: [Errno 2] No such file or directory)
+WARNING:recworker:r-1: net is away at open (obsd is not answering: no answer to a ping) — keeping it and trying again
+WARNING:w2cplatform.worker:r-1: step pass has run 30 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:r-1: step pass came back after 30 s
+test_rec_volume.py::test_the_stand_in_renews_no_hold_while_the_pass_has_found_the_engine_silent ... OK
+test_recording_books.py::test_collector_delivers_facts_before_a_stream_runs_and_a_stranger_gets_no_addresses ... OK
+test_recording_books.py::test_missing_primary_does_not_choose_a_running_reserve_and_absent_key_is_not_running ... OK
+test_recording_books.py::test_old_flat_books_torn_markers_and_malformed_values_are_refused_without_payloads ... OK
+test_recording_books.py::test_primary_card_and_backup_on_one_member_are_not_order_based ... OK
+test_recording_books.py::test_primary_is_the_placed_recording_in_every_entry_order_with_two_reserves ... OK
+test_recording_books.py::test_recorder_state_is_boolean_and_duplicate_recording_origins_do_not_pick_a_winner ... OK
+test_recording_books.py::test_source_requires_one_complete_observation_and_keeps_authenticated_origin ... OK
+test_recording_push.py::test_corrupt_book_keeps_a_working_channel_and_covers_only_after_absence_grace ... OK
+test_recording_push.py::test_poll_only_route_answers_work_without_sending_frames_even_when_a_viewer_wants_them ... OK
+test_recording_push.py::test_pusher_uses_one_in_memory_token_and_distinct_cursors_for_primary_and_two_reserves ... OK
+test_recording_push.py::test_reserve_writers_independently_follow_primary_state_and_absence_grace ... OK
+test_recording_push.py::test_stream_receiver_accepts_only_member_list_reference_signature_and_current_token ... OK
+test_report_runtime.py::test_freshness_survives_reader_restart_and_relay_replay ... OK
+test_report_runtime.py::test_knocking_pins_identity_time_and_count_to_one_generation ... OK
+test_report_runtime.py::test_malformed_publication_is_refused_before_any_generation_is_written ... OK
+test_report_runtime.py::test_one_pass_pins_generation_and_next_pass_reads_new_generation ... OK
+ERROR:w2cplatform.rows:north/reported: the published object does not parse (report body absent or corrupt); skipped — the rest of what the member published is read
+WARNING:w2cplatform.domain.term:backup revision 1 omitted 1 incomplete member reports: north
+test_report_runtime.py::test_real_backup_and_move_skip_a_broken_observation_but_keep_domain_state ... OK
+test_report_runtime.py::test_real_holder_backup_and_move_preserve_accepted_bytes_and_replay_boundary ... OK
+test_report_runtime.py::test_relay_checks_member_signature_and_holder_checks_topology_and_keeps_nested_bytes ... OK
+test_report_runtime.py::test_relay_http_ingress_is_signed_and_preserves_publication_bytes ... OK
+test_report_runtime.py::test_signed_direct_ingress_keeps_original_bytes_and_replay_does_not_refresh ... OK
+test_requests_body_table.py::test_a_json_field_is_written_in_the_canonical_form_of_its_value_and_a_string_is_a_document_that_is_a_string ... OK
+test_requests_body_table.py::test_a_json_value_in_a_row_has_one_text_compact_sorted_and_its_numbers_by_the_rule ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_requests_body_table.py::test_a_refused_body_value_says_its_kind_as_the_shared_table_names_it ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_requests_body_table.py::test_a_request_is_named_by_its_fields_text_and_an_int_of_its_key_in_exactly_its_digits ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_requests_body_table.py::test_every_body_value_of_the_shared_table_is_written_into_the_row_as_the_table_says ... OK
+test_requests_body_table.py::test_the_shared_table_is_the_products_byte_for_byte_when_the_product_keeps_one ... OK
+test_retire.py::test_a_predicate_that_retires_nothing_is_refused_at_load ... OK
+test_retire.py::test_a_subsystem_that_never_ends_is_untouched ... OK
+test_retire.py::test_finished_work_is_not_placed ... OK
+test_retire.py::test_finished_work_is_not_the_clusters_fault ... OK
+test_retire.py::test_the_budget_a_finished_job_held_comes_back ... OK
+test_retire.py::test_the_reason_says_which_end_it_came_to ... OK
+test_retire.py::test_the_whole_cycle_does_not_start_finished_work_over ... OK
+test_rtsp_door.py::test_a_grant_on_labels_mounts_the_cameras_that_carry_them_and_a_camera_nobody_holds_is_unmounted ... OK
+test_rtsp_door.py::test_a_mount_per_camera_and_on_it_only_the_accounts_whose_grants_let_them_view_it ... OK
+test_rtsp_door.py::test_a_play_and_its_end_are_lines_in_the_gateways_journal ... OK
+test_rtsp_door.py::test_a_revoked_grant_is_honoured_on_the_next_sync_and_a_lapsed_one_too ... OK
+WARNING:vms.rtspdoor:LIVE_RTSP_LISTEN=127.0.0.1:8554, and live.subsystem.yaml does not say its gateway reads domain/cam/stream-clients/ and domain/cam/stream-accounts (secrets.reads): the RTSP door stays shut
+WARNING:vms.rtspdoor:LIVE_RTSP_LISTEN=127.0.0.1:8554, and this gateway has no RTSP server to open it with: the door stays shut
+test_rtsp_door.py::test_the_door_is_off_unless_asked_for_declared_and_given_a_server ... OK
+test_secret_in_table.py::test_every_address_of_the_shared_table_is_masked_and_refused_as_the_table_says ... OK
+test_secret_in_table.py::test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says ... OK
+test_secret_in_table.py::test_the_platforms_log_lines_go_through_the_mask ... OK
+test_secret_in_table.py::test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_being_edited ... OK
+test_secret_in_table.py::test_the_shared_table_is_the_products_byte_for_byte_when_the_product_keeps_one ... OK
+test_secret_in_table.py::test_the_tables_reader_asks_each_row_of_the_field_it_names_and_an_unknown_name_is_the_rows_error ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; whether its process runs on srv-1 cannot be told — left to the process and its supervisor — its units are written by nobody until it is judged, or the operator decommissions its server
+test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_units ... OK
+test_slot_fate.py::test_a_dead_process_on_a_server_that_answers_has_its_units_moved_and_keeps_its_name ... OK
+test_slot_fate.py::test_a_dead_process_on_a_server_that_answers_moves_when_its_slot_runs_out_and_a_silent_server_waits_out_the_margin ... OK
+ERROR:w2cplatform.rows:testsub/slots/w-1: the slot row does not parse (could not convert string to float: 'later'); skipped — nobody claims it until it is mended
+test_slot_fate.py::test_a_garbled_slot_row_nobody_touches_for_a_term_can_be_claimed_again ... OK
+ERROR:w2cplatform.rows:testsub/slots/w-1: the slot row does not parse (could not convert string to float: 'torn'); skipped — nobody claims it until it is mended
+test_slot_fate.py::test_a_garbled_slot_row_of_a_hung_worker_is_not_taken_when_it_stands_still ... OK
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.console:server srv-1 was not decommissioned (asked by anna): srv-1 answers: its resource was heard 0 s ago — take the server out of service and switch it off first (this process started watching 0 s ago, and a silence is told once nothing has changed for 45 s by its own clock — ask again in 46 s)
+test_slot_fate.py::test_a_hung_worker_on_a_server_that_answers_keeps_its_units_and_no_second_holder_is_made ... OK
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+ERROR:w2cplatform.contract:testsub: w-1 hung for longer than 900 s: its units move anyway
+test_slot_fate.py::test_a_hung_worker_past_HUNG_MOVE_AFTER_has_its_units_moved_with_an_alarm ... OK
+test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin ... OK
+WARNING:w2cplatform.contract:platform/resources/srv-1/heartbeat: heartbeat does not parse; skipped
+test_slot_fate.py::test_a_resource_heartbeat_that_does_not_parse_is_a_silent_server_not_an_unknown_one ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 still writes to the store, but its heartbeat cannot be read here — whether the process runs cannot be told: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+test_slot_fate.py::test_a_resource_whose_door_cannot_be_reached_is_not_a_silent_server ... OK
+ERROR:w2cplatform.resource:srv-1: the pass has made no progress for 200 s — longer than 4 × lost_after: the resource beats on (its workers are judged by what runs, not by its pass), and says pass_stuck
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+test_slot_fate.py::test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.console:server srv-1 was not decommissioned (asked by anna): srv-1 answers: its resource was heard 0 s ago — take the server out of service and switch it off first (this process started watching 0 s ago, and a silence is told once nothing has changed for 45 s by its own clock — ask again in 46 s)
+WARNING:w2cplatform.console:server srv-1 was not decommissioned (asked by operator): srv-1 answers: w-1 holds its name for another 46 s — stop it and switch the server off first
+WARNING:w2cplatform.console:server srv-1 was not decommissioned (asked by operator): srv-1 answers: w-1 stopped renewing its name 5 s ago; what it started may still be writing for 41 s more — stop it and switch the server off first
+WARNING:w2cplatform.contract:testsub: server srv-1 decommissioned (by anna): slots w-1 released, units c1, c3 move
+test_slot_fate.py::test_a_server_is_decommissioned_only_once_it_is_silent_and_then_never_placed_on_until_it_is_brought_back ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_slot_fate.py::test_a_server_whose_resource_was_never_heard_is_decommissioned_with_a_warning ... OK
+test_slot_fate.py::test_a_silent_server_moves_its_workers_units ... OK
+ERROR:w2cplatform.rows:testsub/slots/w-1: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+ERROR:w2cplatform.rows:testsub/slots/w-1: the slot row does not parse (could not convert string to float: 'soon'); skipped — nobody claims it until it is mended
+test_slot_fate.py::test_a_slot_row_that_does_not_parse_moves_only_on_two_words_and_is_never_released ... OK
+ERROR:w2cplatform.rows:testsub/slots/w-9: the slot row does not parse ('Infinity' is not a finite number); skipped — nobody claims it until it is mended
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_slot_fate.py::test_a_slot_until_infinity_is_that_slots_trouble_alone ... OK
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 3600 s; look at srv-1
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+ERROR:w2cplatform.contract:testsub: w-1 hung for longer than 60 s: its units move anyway
+test_slot_fate.py::test_a_spare_and_the_console_judge_a_hung_worker_by_the_controllers_limit_not_their_own ... OK
+test_slot_fate.py::test_a_spare_does_not_take_the_name_of_a_hung_worker_and_takes_a_dead_ones ... OK
+test_slot_fate.py::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone ... OK
+ERROR:w2cplatform.resource:srv-1: volume:default did not answer in 0.2 s: its last look stands, and the heartbeat goes on without it — the disk behind it does not answer
+ERROR:w2cplatform.resource:srv-2: presence did not answer in 5 s: its last look stands, and the heartbeat goes on without it — the disk behind it does not answer
+ERROR:w2cplatform.resource:srv-1: presence did not answer in 0.2 s: its last look stands, and the heartbeat goes on without it — the disk behind it does not answer
+WARNING:w2cplatform.resource:srv-1: volume:default answers again
+WARNING:w2cplatform.resource:srv-1: presence answers again
+test_slot_fate.py::test_a_volume_or_a_tree_that_does_not_answer_does_not_hold_the_resources_heartbeat ... OK
+ERROR:w2cplatform.contract:testsub: the clock that writes testsub/heartbeats/w-1 is +3600 s — ahead of this controller's: nothing is judged by it, but whatever reads its times reads them wrong — mend NTP on that server
+ERROR:w2cplatform.contract:testsub: the clock that writes testsub/heartbeats/w-1 is +3600 s — ahead of this controller's: nothing is judged by it, but whatever reads its times reads them wrong — mend NTP on that server
+test_slot_fate.py::test_a_worker_clock_ahead_does_not_hold_its_units_without_limit ... OK
+WARNING:w2cplatform.contract:testsub: slot w-1 released: srv-1 does not run w-1 any more: its resource answers and lists it nowhere
+test_slot_fate.py::test_a_worker_its_server_does_not_list_at_all_has_its_slot_released_journalled_and_counted ... OK
+ERROR:w2cplatform.worker:w-1: what it is called could not be written beside its lock ([Errno 28] No space left on device): until it is, its silence is not taken for its end — tried again with every heartbeat
+ERROR:w2cplatform.contract:testsub: w-1 is silent, and could not write its name beside its lock on srv-1: what the resource there says of it cannot be taken for its end: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+WARNING:w2cplatform.worker:w-1: what it is called is written beside its lock again
+test_slot_fate.py::test_a_worker_that_cannot_write_its_name_beside_its_lock_says_so_and_tries_again ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; whether its process runs on srv-1 cannot be told — left to the process and its supervisor — its units are written by nobody until it is judged, or the operator decommissions its server
+test_slot_fate.py::test_a_worker_that_could_not_register_keeps_its_name_while_its_fate_is_wait ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; whether its process runs on srv-1 cannot be told — left to the process and its supervisor — its units are written by nobody until it is judged, or the operator decommissions its server
+ERROR:w2cplatform.contract:testsub: w-1 is silent; whether its process runs on srv-1 cannot be told — left to the process and its supervisor — its units are written by nobody until it is judged, or the operator decommissions its server
+test_slot_fate.py::test_an_older_resource_or_an_unregistered_worker_is_judged_as_before ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 still writes to the store, but its heartbeat cannot be read here — whether the process runs cannot be told: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+WARNING:w2cplatform.contract:testsub: w-1 can be judged again
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 still writes to the store, but its heartbeat cannot be read here — whether the process runs cannot be told, for 955 s past its slot's end, longer than 900 s: its units move anyway
+ERROR:w2cplatform.worker:w-1: what it is called could not be written beside its lock ([Errno 28] No space left on device): until it is, its silence is not taken for its end — tried again with every heartbeat
+ERROR:w2cplatform.contract:testsub: w-1 is silent, and could not write its name beside its lock on srv-1: what the resource there says of it cannot be taken for its end: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+WARNING:w2cplatform.contract:testsub: w-1 can be judged again
+ERROR:w2cplatform.contract:testsub: w-1 is silent, and could not write its name beside its lock on srv-1: what the resource there says of it cannot be taken for its end, for 955 s past its slot's end, longer than 900 s: its units move anyway
+test_slot_fate.py::test_an_unsure_worker_keeps_its_units_and_name_until_HUNG_MOVE_AFTER_then_they_move_with_an_alarm ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 still writes to the store, but its heartbeat cannot be read here — whether the process runs cannot be told: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+WARNING:w2cplatform.contract:testsub: w-1 can be judged again
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 still writes to the store, but its heartbeat cannot be read here — whether the process runs cannot be told, for 955 s past its slot's end, longer than 900 s: its units move anyway
+test_slot_fate.py::test_an_unsure_worker_whose_fate_cannot_be_asked_past_the_limit_keeps_its_name ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.console:server srv-1 was not decommissioned (asked by anna): srv-1 answers: its resource was heard 0 s ago — take the server out of service and switch it off first (this process started watching 0 s ago, and a silence is told once nothing has changed for 45 s by its own clock — ask again in 46 s)
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+ERROR:w2cplatform.contract:testsub: w-1 hung for longer than 900 s: its units move anyway
+test_slot_fate.py::test_the_decommission_door_reads_its_body_as_every_door_and_a_refusal_is_journalled ... OK
+test_slot_fate.py::test_the_resource_says_which_workers_are_placed_and_which_run ... OK
+test_slot_fate.py::test_the_resources_pulse_during_a_long_pass_says_who_runs_now ... OK
+ERROR:w2cplatform.contract:testsub: hung
+ERROR:w2cplatform.contract:testsub: wait — its units are written by nobody until it is judged, or the operator decommissions its server
+WARNING:w2cplatform.contract:testsub: w-1 is not hung any more
+WARNING:w2cplatform.contract:testsub: w-1 can be judged again
+ERROR:w2cplatform.contract:testsub: w-1 hung for longer than 900 s: its units move anyway
+ERROR:w2cplatform.contract:testsub: unsure_moved
+WARNING:w2cplatform.contract:testsub: slot w-1 released: release
+test_slot_fate.py::test_the_rule_lives_in_one_place ... OK
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 cannot read the registrations of its workers (/tmp/w2c-tests-25663/w2c-zydj7n41/tree/.workers does not list: Permission denied) — whether its process runs cannot be told: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+ERROR:w2cplatform.contract:testsub: w-1 is silent; the resource on srv-1 cannot read 1 of the registrations of its workers — whether its process runs cannot be told: its units stay, for up to 900 s — its units are written by nobody until it is judged, or the operator decommissions its server
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+ERROR:w2cplatform.contract:testsub: w-1 neither renews its name nor heartbeats, but its process runs on srv-1: hung, or cut off from the store — its units stay, so they get no second writer, for up to 900 s; look at srv-1
+test_slot_fate.py::test_what_the_resource_cannot_read_of_its_workers_is_not_taken_for_their_end ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_a_declared_table_is_written_listed_and_deleted_by_the_console_and_each_write_is_a_line ... OK
+test_spec_declarations.py::test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it_ends ... OK
+test_spec_declarations.py::test_a_fields_shape_is_a_json_schema_in_the_spec_and_the_door_says_where_it_does_not_fit ... OK
+test_spec_declarations.py::test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_declares_where_its_host_stands ... OK
+test_spec_declarations.py::test_a_hold_let_go_by_its_released_field_holds_nothing_and_the_field_is_the_tables ... OK
+ERROR:w2cplatform.rows:bin/heartbeats/l-3#belt.state@belt: the number in it does not parse ('jammed' is none of values (ok, slow, true)); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/l-1#b.lane@lane: the number in it does not parse ('sideways' is none of values (fast, slow)); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/l-4#belt.state: the number in it does not parse (True is not a number); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/l-3#belt.state@belt: the number in it does not parse ('jammed' is none of values (ok, slow, true)); read as not said
+test_spec_declarations.py::test_a_label_with_values_writes_a_word_of_the_set_and_counts_a_word_outside_it_garbled ... OK
+test_spec_declarations.py::test_a_metric_number_is_printed_by_its_value_and_not_by_how_the_heartbeat_spelled_it ... OK
+test_spec_declarations.py::test_a_new_door_key_is_made_in_the_store_by_the_verb_and_the_old_half_stays ... OK
+ERROR:w2cplatform.spec:bin: the places of bays could not be read (store away); no unit leaves a place for its `admits` until they are; tried again on every pass, said again when it works
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 3700, in admitting_none
+    rows = self.table_rows(self.spec.affinity["table"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 3566, in table_rows
+    return self._per_pass(prefix, read, "table", rows=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/contract.py", line 1227, in _per_pass
+    return store.memo(prefix, read, name) if isinstance(store, _PassStore) else read()
+                                                                                ^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/spec.py", line 3558, in read
+    for key in self.vars.list(prefix):
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_spec_declarations.py", line 1214, in <lambda>
+    vars_.list = lambda p, *a, **kw: (_ for _ in ()).throw(OSError("store away")) if p == "bin/bays/" else real_list(p, *a, **kw)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_spec_declarations.py", line 1214, in <genexpr>
+    vars_.list = lambda p, *a, **kw: (_ for _ in ()).throw(OSError("store away")) if p == "bin/bays/" else real_list(p, *a, **kw)
+OSError: store away
+WARNING:w2cplatform.spec:bin: admitting_none works again
+test_spec_declarations.py::test_a_place_that_stops_admitting_gives_up_the_units_of_its_live_worker ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_its_schema_and_deadline ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_a_row_points_only_at_what_agrees_with_it_and_a_unique_value_is_one_units ... OK
+ERROR:w2cplatform.rows:bin/heartbeats/w-3#belt.motor.amps: the number in it does not parse (True is not a number); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/w-6#belt.state: the number in it does not parse (None is not a number); read as not said
+test_spec_declarations.py::test_a_servers_status_field_is_a_path_into_the_heartbeats_maps ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+ERROR:w2cplatform.rows:bin/heartbeats/w-2#keeps: the number in it does not parse (True is not a number); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/w-2#lost: the number in it does not parse (None is not a number); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/w-2#piles: the number in it does not parse ('many' is not a number); read as not said
+ERROR:w2cplatform.rows:bin/heartbeats/w-3#keeps: the number in it does not parse (None is not a number); read as not said
+test_spec_declarations.py::test_a_servers_status_map_or_list_goes_on_the_row_whole_and_of_names_a_table_of_the_spec ... OK
+test_spec_declarations.py::test_a_spec_whose_neighbour_the_catalogue_lacks_is_refused_where_the_catalogue_is_whole ... OK
+test_spec_declarations.py::test_a_strict_row_binds_its_units_to_its_place_and_a_place_that_admits_nobody_takes_none ... OK
+ERROR:w2cplatform.rows:bin/heartbeats/w-1#b.depth: the number in it does not parse (could not convert string to float: 'deep'); read as not said
+test_spec_declarations.py::test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats ... OK
+test_spec_declarations.py::test_a_table_or_rows_named_like_a_route_of_the_console_is_refused_at_load_and_the_routes_are_the_dispatchs ... OK
+test_spec_declarations.py::test_a_url_fields_schemes_are_a_closed_dictionary_read_alike_by_its_refusal_and_its_group ... OK
+test_spec_declarations.py::test_an_address_has_one_spelling_by_rfc_3986_and_nothing_a_scheme_means ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.requests:shed: request served-196 for drill ended unperformed 60 s past its deadline — no worker held its unit to perform it
+WARNING:w2cplatform.requests:shed: request bare for drill ended unperformed 61 s past its deadline — no worker held its unit to perform it
+test_spec_declarations.py::test_how_far_a_deadline_may_be_is_declared_with_valid_for_and_the_door_and_the_reaper_read_that_number ... OK
+test_spec_declarations.py::test_how_long_a_request_stands_is_declared_and_a_spec_that_does_not_say_it_does_not_load ... OK
+test_spec_declarations.py::test_of_several_followed_units_the_one_the_spec_prefers_is_stood_beside ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+ERROR:w2cplatform.rows:bin/heartbeats/w-4#stuck: the number in it does not parse ('many' is not a number); read as not said
+test_spec_declarations.py::test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_as_the_heartbeat_wrote_them ... OK
+test_spec_declarations.py::test_the_catalogue_is_closed_and_nothing_registers_a_rule ... OK
+test_spec_declarations.py::test_the_console_is_the_platforms_built_from_a_directory_of_specs_and_the_deployment_says_what_is_at_the_root ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.requests:bin: request r1 for a ended unperformed standing past its ttl (100 s) — no worker held its unit to perform it
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_the_ledger_and_the_reaper_both_end_a_request_at_the_declared_ttl_and_ttl_0_ends_none_by_age ... OK
+test_spec_declarations.py::test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its_answer ... OK
+test_spec_declarations.py::test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_the_units_a_row_names ... OK
+ERROR:w2cplatform.rows:shelf/pins/q: the holding row does not parse (a/b do not both read as unix seconds); holds its unit as far as its stretch reads, until it is mended
+ERROR:w2cplatform.rows:label/tags/torn: the unit's row does not parse (torn); its unit is held by every hold that reads, as a unit of nobody's, until it is mended
+test_spec_declarations.py::test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_about_it ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_holder_has_one ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_spec_declarations.py::test_who_holds_a_row_is_said_by_the_table_of_places_and_not_by_the_affinity_table ... OK
+/Users/murat/w2c/wt-course-c4-polls/Source/tests/test_spec_re2.py:111: FutureWarning: Possible nested set at position 1
+  assert re.compile(pattern)                       # Python reads it, and says nothing
+/Users/murat/w2c/wt-course-c4-polls/Source/w2cplatform/secrets.py:289: FutureWarning: Possible nested set at position 1
+  re.compile(str(entry["regex"]))            # Python's words first, for what it cannot read at all
+test_spec_re2.py::test_a_pattern_go_does_not_compile_is_refused_at_load_with_its_path_and_its_construct_wherever_it_stands ... OK
+test_spec_re2.py::test_a_pattern_is_read_as_go_reads_it_ascii_classes_and_dollar_the_end_of_the_text ... OK
+test_spec_re2.py::test_an_escaped_look_alike_and_plain_re2_load_everywhere ... OK
+test_spec_re2.py::test_every_spec_of_the_course_loads_and_writes_only_re2 ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 240 s
+WARNING:w2cplatform.worker:w-1: step pump has run 5 s; standing in for it — leases and slot renewed, for up to 300 s
+ERROR:w2cplatform.worker:w-1: step pump has run 65 s, and the loop has not renewed clear of a hung step for 305 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+WARNING:w2cplatform.worker:w-1: step pump came back after 120 s
+test_stand_in.py::test_STAND_IN_FOR_counts_from_the_loops_last_renewal_and_a_new_step_does_not_start_it_again ... OK
+WARNING:w2cplatform.worker:w-1: step lease has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step lease came back after 280 s
+WARNING:w2cplatform.worker:w-1: step lease has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+ERROR:w2cplatform.worker:w-1: step lease has run 25 s, and the loop has not renewed clear of a hung step for 305 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+WARNING:w2cplatform.worker:w-1: step lease came back after 280 s
+ERROR:w2cplatform.worker:w-1: step lease has run 15 s, and the loop has not renewed clear of a hung step for 575 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+ERROR:w2cplatform.worker:w-1: step lease has run 15 s, and the loop has not renewed clear of a hung step for 855 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+ERROR:w2cplatform.worker:w-1: step lease has run 15 s, and the loop has not renewed clear of a hung step for 1135 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+ERROR:w2cplatform.worker:w-1: step lease has run 15 s, and the loop has not renewed clear of a hung step for 1415 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+WARNING:w2cplatform.worker:w-1: step pass has run 60 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 60 s
+test_stand_in.py::test_STAND_IN_FOR_is_not_started_again_by_a_renewal_inside_the_step_that_then_hangs ... OK
+test_stand_in.py::test_a_fast_loop_starts_the_stand_in_and_it_renews_nothing ... OK
+ERROR:w2cplatform.worker:w-1: FENCED (the store's schema is 2; this build understands 1). Stopping every unit.
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 25 s
+WARNING:w2cplatform.worker:w-1: counter c1 stopped: a newer epoch was issued for it
+test_stand_in.py::test_a_fenced_worker_is_not_revived_by_the_stand_in ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 14 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass has run 14 s; its last heartbeat (of 14 s ago) said again for it
+WARNING:w2cplatform.worker:w-1: step pass came back after 60 s
+test_stand_in.py::test_a_hung_step_does_not_make_the_holder_look_dead_and_the_heartbeat_says_whose_words_it_repeats ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 15 s
+test_stand_in.py::test_a_lease_the_loop_released_is_renewed_by_nobody ... OK
+test_stand_in.py::test_a_normal_fast_loop_never_calls_the_stand_in ... OK
+test_stand_in.py::test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once ... OK
+ERROR:w2cplatform.worker:w-1: step pass has run 15 s and slot w-1 is not this instance's now: not standing in
+test_stand_in.py::test_a_slot_row_another_instance_took_is_not_written_over_by_the_stand_in ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 60 s
+test_stand_in.py::test_a_step_stuck_longer_than_half_the_lease_keeps_its_leases_and_its_slot_row ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+ERROR:w2cplatform.worker:w-1: step pass has run 305 s, and the loop has not renewed clear of a hung step for 305 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+WARNING:w2cplatform.worker:w-1: step pass came back after 1306 s
+ERROR:w2cplatform.worker:w-1: FENCED (slot w-1 is held by another instance now). Stopping every unit.
+test_stand_in.py::test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 15 s; standing in for it — leases and slot renewed, for up to 300 s
+ERROR:w2cplatform.worker:w-1: step pass has run 305 s, and the loop has not renewed clear of a hung step for 305 s; no longer standing in for it (STAND_IN_FOR 300 s): its units go
+WARNING:w2cplatform.worker:w-1: step pass came back after 305 s
+test_stand_in.py::test_a_step_that_comes_back_after_its_units_went_takes_no_epoch_from_their_new_holder ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 3 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass came back after 3 s
+test_stand_in.py::test_a_step_that_starts_late_in_the_lease_is_stood_in_for_before_the_lease_ends ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+WARNING:w2cplatform.worker:w-1: step pass came back after 30 s
+test_stand_in.py::test_the_loop_has_a_stand_in_for_a_pass_that_hangs ... OK
+ERROR:w2cplatform.worker:srv-1:139:00008b: its name testsub/w-1 is held by somebody-else (box not said) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
+test_stand_in.py::test_the_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up ... OK
+WARNING:w2cplatform.worker:w-1: step pass has run 20 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step pass has run 20 s; its last heartbeat (of 20 s ago) said again for it
+WARNING:w2cplatform.worker:w-1: step pass came back after 30 s
+test_stand_in.py::test_the_loops_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs ... OK
+WARNING:w2cplatform.worker:t-1: step pass has run 30 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:t-1: step pass came back after 40 s
+test_stand_in.py::test_the_stand_in_does_not_hold_the_place_for_a_step_on_a_silent_engine_and_says_what_it_renewed ... OK
+WARNING:w2cplatform.worker:t-1: step pass has run 30 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:t-1: step pass came back after 40 s
+test_stand_in.py::test_the_stand_in_renews_the_place_only_while_it_is_this_instances ... OK
+WARNING:w2cplatform.worker:w-1: step heartbeat has run 14 s; standing in for it — leases and slot renewed, for up to 300 s
+WARNING:w2cplatform.worker:w-1: step heartbeat came back after 14 s
+ERROR:w2cplatform.worker:w-1: step pass has run 15 s and slot w-1 is not this instance's now: not standing in
+test_stand_in.py::test_the_stand_in_says_no_heartbeat_over_a_fresh_one_nor_under_a_name_another_instance_took ... OK
+test_stand_in.py::test_two_renewals_in_flight_never_move_a_lease_backwards ... OK
+test_storemachine.py::test_a_denial_wins_over_every_grant_wherever_it_stands ... OK
+test_storemachine.py::test_a_list_names_every_key_to_every_role_and_a_value_is_read_by_the_right_to_read_alone ... OK
+test_storemachine.py::test_a_rights_file_that_is_not_the_format_is_refused_whole ... OK
+test_storemachine.py::test_a_role_without_the_grant_is_refused_before_anything_is_submitted ... OK
+test_storemachine.py::test_a_row_heavier_than_the_store_takes_is_refused_at_the_door_and_by_the_machine ... OK
+test_storemachine.py::test_a_subsystems_worker_on_the_domain_removes_rows_of_its_own_prefix_and_nothing_else_of_the_domain ... OK
+test_storemachine.py::test_a_version_is_the_log_index_above_the_base_and_is_never_handed_out_twice ... OK
+test_storemachine.py::test_a_version_this_store_never_handed_out_conflicts ... OK
+test_storemachine.py::test_a_write_repeated_with_its_id_is_answered_with_its_first_answer ... OK
+test_storemachine.py::test_an_absent_key_reads_as_nothing_and_create_only_takes_it_once ... OK
+test_storemachine.py::test_an_operation_id_is_answered_from_memory_only_for_its_own_write ... OK
+test_storemachine.py::test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it ... OK
+test_storemachine.py::test_each_role_says_its_sockets_group_and_the_daemon_takes_it ... OK
+test_storemachine.py::test_nobody_deletes_an_epoch_and_only_the_domains_roles_delete_domain_rows ... OK
+test_storemachine.py::test_not_done_and_outcome_unknown_are_two_answers ... OK
+test_storemachine.py::test_rights_grant_by_role_action_and_prefix ... OK
+test_storemachine.py::test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words ... OK
+test_storemachine.py::test_the_base_is_fixed_once_a_row_is_written ... OK
+test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract ... OK
+test_storemachine.py::test_the_operation_memory_forgets_the_oldest_first ... OK
+test_storemachine.py::test_the_variables_contract_holds_on_the_machine_through_the_handle_and_the_api ... OK
+test_storemachine.py::test_two_machines_fed_the_same_log_hold_the_same_rows_and_a_dump_carries_everything ... OK
+test_storemachine.py::test_what_a_write_names_is_bounded_and_never_said_back ... OK
+test_storemachine.py::test_what_the_machine_hands_out_is_a_copy ... OK
+test_token_requests.py::test_declared_centre_target_comes_only_from_confirmed_holder_topology ... OK
+test_token_requests.py::test_local_client_timeout_drops_late_reply_and_retry_asks_again ... OK
+test_token_requests.py::test_local_handler_refuses_network_connections_even_with_an_allowed_role ... OK
+test_token_requests.py::test_local_socket_role_is_fixed_and_failed_request_leaves_no_cached_reply ... OK
+test_token_requests.py::test_no_grant_foreign_role_ref_member_or_broken_assignment_cannot_issue ... OK
+test_token_requests.py::test_one_role_socket_resolves_kinds_of_two_subsystems_and_refuses_foreign_role ... OK
+test_token_requests.py::test_real_holder_and_relay_http_preserve_the_member_signature_and_encrypted_reply ... OK
+test_token_requests.py::test_remote_body_cannot_supply_target_claims_or_replay_reply_to_another_request ... OK
+test_token_requests.py::test_reply_expiry_is_authenticated_with_the_ciphertext ... OK
+test_token_requests.py::test_revoked_member_and_frozen_holder_do_not_issue_tokens ... OK
+test_token_requests.py::test_role_groups_match_controller_and_worker_configstore_groups ... OK
+test_token_requests.py::test_role_socket_bootstrap_and_installation_follow_loaded_grants ... OK
+ERROR:w2cplatform.domain.tokenrequest:token request door unavailable for role testsubworker
+test_token_requests.py::test_role_socket_startup_is_disabled_by_default_and_refuses_unsafe_real_directories ... OK
+test_token_requests.py::test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassignment ... OK
+test_token_requests.py::test_signature_covers_bytes_route_time_and_reply_is_bound_to_original_member_and_request ... OK
+test_token_requests.py::test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems ... OK
+test_token_requests.py::test_token_spec_rejects_unknown_unsafe_and_partial_bindings ... OK
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_a_held_store_read_cannot_restore_have_after_the_confirmed_centre_changed ... OK
+WARNING:chain:forwarder: the centre's word on serial could not be kept; a restart of this relay forgets it: store unavailable
+test_upstream_kept.py::test_failed_persistence_does_not_mark_the_acknowledgement_as_durably_saved ... OK
+test_upstream_kept.py::test_first_reply_of_a_changed_centre_is_persisted_before_the_usual_write_period ... OK
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:relay: the centre wanted serial and has said nothing for 1757500000 s, longer than it is kept (86400 s); the camera's card goes by this relay's word again
+WARNING:chain:relay: the centre wanted serial and has said nothing for 86401 s, longer than it is kept (86400 s); the camera's card goes by this relay's word again
+test_upstream_kept.py::test_previous_version_malformed_and_expired_acknowledgements_never_restore_have ... OK
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_restart_after_centre_change_rejects_old_have_and_fresh_reply_names_new_centre ... OK
+test_upstream_kept.py::test_saved_acknowledgement_names_its_centre_and_restores_without_a_token_request ... OK
+WARNING:chain:relay: reading the centre's word on serial kept for a restart failed (OSError: store unavailable); counted (1 so far), tried again in about a period
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+WARNING:chain:forwarder: the centre's word on serial kept for a restart could not be dropped: store unavailable
+WARNING:chain:relay: dropping the centre's word on serial kept for a restart failed (OSError: store unavailable); counted (1 so far), tried again in about a period
+WARNING:chain:relay: the centre's word on serial kept for a restart does not read; dropped: invalid acknowledgement form or a different centre
+test_upstream_kept.py::test_store_read_or_discard_failure_is_retried_without_restoring_a_foreign_have ... OK
+test_upstream_kept.py::test_unconfirmed_topology_assignment_or_withdrawn_polls_cannot_restore_have ... OK
+ERROR:camworker:w-1: camera 1 not started: cred_secret is sealed and this process has no key (SECRETS_KEY)
+test_vms_secrets.py::test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status ... OK
+ERROR:camworker:w-1: camera 1 not started: cred_secret looks sealed and is not: `enc:v1:<kid>:<nonce>:<ciphertext>` has 1 parts
+test_vms_secrets.py::test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_the_door ... OK
+test_vms_secrets.py::test_the_shipped_secrets_are_bound_to_their_addresses ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+ERROR:camworker:w-1: camera 1 not started: cred_secret is sealed and this process has no key (SECRETS_KEY)
+test_vms_secrets.py::test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_only ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_where_place.py::test_a_place_nobody_holds_is_said_with_its_server_in_the_unreachable_header ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_where_place.py::test_a_places_door_is_asked_with_the_rights_of_the_unit_it_is_for ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_where_place.py::test_a_places_holder_is_found_and_its_door_opens_for_the_unit_asked_and_that_holder_alone ... OK
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+WARNING:w2cplatform.access:this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+test_where_place.py::test_the_root_answers_under_its_own_name_as_at_its_root_and_another_name_is_no_route ... OK
+test_worker_spec.py::test_a_line_written_through_observe_carries_of_as_every_other_line_does ... OK
+test_worker_spec.py::test_a_request_mark_says_what_its_unit_is_about ... OK
+test_worker_spec.py::test_a_subsystem_that_still_says_of_is_refused ... OK
+test_worker_spec.py::test_a_worker_without_a_spec_does_not_start ... OK
+test_worker_spec.py::test_every_worker_key_is_executed_by_the_base_with_no_line_of_subsystem_code ... OK
+test_worker_spec.py::test_the_base_stamps_of_on_every_line_of_a_unit_from_the_spec_and_the_row ... OK
+
+487 passed, 0 failed, 0 skipped
