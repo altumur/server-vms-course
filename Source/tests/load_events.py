@@ -194,7 +194,7 @@ def part3(box, rs: dict, now: float, scenarios: int) -> dict:
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
                    wall=time.time).assign("a-1", names)
     res = {}
-    w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec")),
+    w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role()),
                    box.objects, index=MergedIndex(box.objects), wall=time.time, server="srv-a",
                    resource_root=os.path.join(box.root, "auto"), env={})
     res["pass_first"], _ = timed(w.reconcile_once)

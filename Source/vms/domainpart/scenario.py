@@ -1,35 +1,8 @@
-"""Lesson 12, step 7, and Lesson 16, step 8 — scenarios between cameras, end to end.
+"""Camera capability catalogue and remaining console diagnostics until C7.
 
-A scenario lives in the shared document (Lesson 12), as `auto`'s document there — `settings.shared.auto.scenarios`,
-declared in `auto.subsystem.yaml` (`domain.shared`) with the schema the signer checks it by:
-
-    {"when": {"camera": "SN2", "kind": "motion"},
-     "then": {"camera": "SN5", "action": "preset", "arg": 3, "within": 10}}
-
-Two sides read it. The DOMAIN turns each scenario that ties one camera to ANOTHER into a right to ask — the
-book of asks (`publish_asks`), built on the domain's pass (`domain/books.py`). The CAMERA whose event it is
-reads its own verified copy of the document and, on that event, leaves the ask at an ingest its book names
-(`Asker`). A scenario whose action is on the same camera is that camera's own automation (М10B Lesson 25)
-and is not an ask.
-
-    within      the ask's deadline, seconds from the event; the default is the product's `valid_until` of a
-                request — 30 s. After it the ask dies, answered "expired"
-    rate_per_minute  the ceiling, as the product's automation has it (default 6): a scenario that fires more
-                often than that in a minute does not ask — a gust through the leaves is one preset, not twenty.
-                Kept in the camera's memory; a reboot forgets it, as the product's does
-    enabled     false: the scenario is kept and does nothing
-
-The action a scenario names is what the domain writes into the token to ask (`acts`): the ingest refuses any
-other, so a camera — or whoever holds its token — can ask for preset 3 and nothing else.
-
-What each camera raises and can be asked to do is its own word — `can` in its heartbeat (М10B Lesson 25: the
-holder of a device is the one that knows it). The VMS's domain worker checks every scenario against it on each
-pass over the books (`refusals`): the trigger must raise the kind, the target must be able to do the action — one
-that cannot is named on every pass, and the camera refuses its ask by the same rule (`misfit`). The signer checks
-only what a scenario may BE (the schema): the
-platform asks no subsystem's code when the document is written. A camera that has not said is named on every pass
-(`unchecked`), and the page builds its form from `catalog`, so an operator picks a kind the gate camera raises and a
-preset the yard camera has.
+Shared named scenarios are executed by vms.autoask in the trigger's cluster.
+Only the signer derives role-token claims from accepted scenario settings;
+this module neither publishes roads nor executes events.
 """
 from __future__ import annotations
 
@@ -195,74 +168,3 @@ def catalog(inputs) -> dict:
                 cams[ref] = {"cluster": cluster, "name": row.get("name", ref), "can": inputs.can_of(ref),
                              "asked": inputs.polled_at(ref) is not None}
     return {"actions": dict(ACTIONS), "cameras": cams}
-
-
-def pairs(settings: dict) -> list[dict]:
-    """What the domain's book of asks is built from: every (trigger camera, target camera) a scenario ties, with
-    the actions the scenarios between them name."""
-    out: dict[tuple, list] = {}
-    for sc in _scenarios(settings):
-        a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
-        if a and b and a != b:
-            acts = out.setdefault((a, b), [])
-            if _action(sc["then"]) not in acts:
-                acts.append(_action(sc["then"]))
-    return [{"trigger": a, "target": b, "actions": acts} for (a, b), acts in out.items()]
-
-
-class Scenarios:
-    """The trigger's side — the camera itself, or, for a server cluster's camera, that cluster's automation, with
-    the cluster's copy of the document and of the book of asks. `shared` is a `SharedView` — the document its
-    agent took and verified; `asker` an `Asker`. `on_event(kind, event)` is called where the camera's analytics raise an event — a hook on the event
-    itself, which is why the road is milliseconds. A scenario that reads the merged event log instead (the
-    product's automation) adds the log's tail interval: seconds (feedback AK).
-
-    `event`: the row, when there is one. `ts` — when it happened: the deadline counts from THAT, not from when
-    the event became visible, and one seen after its deadline asks nothing. `repeats` — the summary a storm's
-    suppression writes when its window closes (М10A Lesson 12): it reports on a first row that already fired,
-    and firing on it would act twice for one lasting event."""
-
-    def __init__(self, serial: str, shared, asker):
-        self.serial, self.shared, self.asker = str(serial), shared, asker
-        self.fired: dict[str, list[float]] = {}                   # per scenario: when it asked in the last minute
-
-    def on_event(self, kind: str, event: dict | None = None) -> list[dict]:
-        done, now = [], self.asker.clock()
-        if event and event.get("repeats"):
-            return []                                             # a suppression summary: not an event (AK)
-        at = float(event["ts"]) if event and event.get("ts") is not None else now
-        for sc in _scenarios(self.shared.settings()):
-            when, then = sc.get("when", {}), dict(sc.get("then", {}))
-            if str(when.get("camera")) != self.serial or when.get("kind") != kind:
-                continue
-            target = str(then.pop("camera", ""))
-            if not target or target == self.serial:
-                continue                                          # its own automation, not an ask
-            try:                                                  # past the schema, a `within` out of range is that
-                within = _within(then)                            # scenario's trouble, said, not the event's
-                then.pop("within", None)
-                cap = int(sc.get("rate_per_minute") or RATE)
-            except PARSE_ERRORS as e:
-                done.append({"target": target, "action": then, "state": f"not asked: {e}"})
-                continue
-            if at + within <= now:
-                done.append({"target": target, "action": then, "state": "seen after its deadline: not asked"})
-                continue
-            key = json.dumps(sc, sort_keys=True)
-            recent = self.fired[key] = [t for t in self.fired.get(key, []) if now - t < 60.0]
-            if len(recent) >= cap:
-                done.append({"target": target, "action": then, "state": f"over its ceiling of {cap}/min: not asked"})
-                continue
-            recent.append(now)
-            try:
-                left = self.asker.ask(target, then, at + within - now)
-            except (Refused, Unreachable) as e:
-                done.append({"target": target, "action": then, "state": f"not asked: {e}"})
-                continue
-            if left is None:
-                done.append({"target": target, "action": then, "state": "no ingest answered: not asked"})
-            else:
-                ing, aid = left
-                done.append({"target": target, "action": then, "state": "asked", "ingest": ing, "ask": aid,
-                             "deadline": at + within})
-        return done

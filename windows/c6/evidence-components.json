@@ -1,0 +1,215 @@
+{
+  "stage": "C6 component checkpoint; not runtime acceptance; not merged",
+  "python": "/Users/murat/w2c/vms-nightly/venv/bin/python",
+  "cwd": "/Users/murat/w2c/wt-course-c6-runtime/Source",
+  "env": {
+    "OBSD_BIN": "/Users/murat/w2c/vms-nightly/exe/obsd",
+    "W2C_PRODUCT_DIR": "/Users/murat/w2c/vmssubsystem"
+  },
+  "results": [
+    {
+      "suite": "unit-part-1",
+      "argv": [
+        "tests/run.py",
+        "@c6-components-unit-part-1.modules.json"
+      ],
+      "exit": 0,
+      "counts": [
+        1085,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-1.log",
+      "sha256": "083c7c90d82c10f8cf8d4636b6dd96515a2a698d567e7538d0569484c4b8a2d4",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-1.exit"
+    },
+    {
+      "suite": "unit-part-2",
+      "argv": [
+        "tests/run.py",
+        "@c6-components-unit-part-2.modules.json"
+      ],
+      "exit": 1,
+      "counts": [
+        923,
+        4,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-2.log",
+      "sha256": "60610b3c071aec9d80840d4c8f1e2c89a68e99ad665ada7372f3acab4214c0e0",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-2.exit"
+    },
+    {
+      "suite": "cluster",
+      "argv": [
+        "tests/cluster/run.py"
+      ],
+      "exit": 0,
+      "counts": [
+        117,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-cluster.log",
+      "sha256": "c40da12f3bf083c2950932eb945fac6f4e9f54984c59ba5b89c44642b3920e9b",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-cluster.exit"
+    },
+    {
+      "suite": "domain",
+      "argv": [
+        "tests/domain/run.py"
+      ],
+      "exit": 0,
+      "counts": [
+        228,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-domain.log",
+      "sha256": "411ca9ac760a4ac858f3bc24f4098e64029e678a5073ba0de807b9843848f455",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-domain.exit"
+    },
+    {
+      "suite": "domainvms",
+      "argv": [
+        "tests/domainvms/run.py"
+      ],
+      "exit": 0,
+      "counts": [
+        164,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-domainvms.log",
+      "sha256": "a5505e2fe9082b93fe227969304e7935c6d3a5b6891847bb324ad5334d92c25c",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-domainvms.exit"
+    },
+    {
+      "suite": "js",
+      "argv": [
+        "tests/run.py",
+        "console"
+      ],
+      "exit": 0,
+      "counts": [
+        42,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-js.log",
+      "sha256": "99e94cdb6d3a272494541ed7a667f33f3c4c67abd248ff3aeb00b3cf637416aa",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-js.exit"
+    },
+    {
+      "suite": "corrections",
+      "argv": [
+        "tests/run.py",
+        "test_autoask",
+        "test_recording_poll_push",
+        "test_rec_volume",
+        "test_spec_flow",
+        "test_spec_parity",
+        "test_base_worker",
+        "test_book_merge",
+        "test_ask_role_tokens",
+        "test_scenario_token_requests",
+        "test_domain_secrets"
+      ],
+      "exit": 0,
+      "counts": [
+        131,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-corrections.log",
+      "sha256": "f25d977764f3665d7c91adf63933cd58a6144c72d1a7a1be66972595acff96d5",
+      "exit_path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-corrections.exit"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-source-before.json",
+      "sha256": "0a5b419b1647d40fe42f50d9236cae7afefba45b5f989570a668fbd7ae1a2515"
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-source-final.json",
+      "sha256": "b6370140e37195a60917678c2528f4028f05a2c58048f43833afe9483f76744f"
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-source-corrected.json",
+      "sha256": "12aefb1e1bad02cd8c8d94ab2d2afd52a7412aa5430a46fa9ef093346bc5486b"
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-1.modules.json",
+      "sha256": "31ec755ed3788a3209a7cc7e7ec656ac43d777f9c62452a95cee1fa12fb6c821"
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit-part-2.modules.json",
+      "sha256": "104339ad8988d79397707fc0d4cfa476028cded1122820bc0422cea167c99f33"
+    }
+  ],
+  "initial_unsplit_unit": {
+    "log": "/Users/murat/w2c/course-book-merge-evidence/c6-components-unit.log",
+    "sha256": "3f79913c245bf9b745f6796d05f29cb82a657665c6e787d0c24eede7c2508e0f",
+    "exit": 143,
+    "status": "stopped after fixture failures; not a complete run"
+  },
+  "unit_source_frozen": {
+    "files": 1011,
+    "unchanged_before_unit_part1_exit": true
+  },
+  "changes_before_split_unit": [
+    "tests/test_book_merge.py",
+    "tests/test_base_worker.py"
+  ],
+  "changes_after_full_suites": [
+    "tests/test_autoask.py",
+    "tests/test_recording_poll_push.py",
+    "tests/testdata/acceptance/М10_Platform/02/cases/about_field_not_fixed_nowitness.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/capacity_default_float.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/capacity_default_string.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/capacity_default_true.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/dead_band_word.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/default_map_string.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/display_events_word.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/door_routes_dup.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/enum_on_list.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/hb_worker.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/inherit_map_string.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/objects_rows_heartbeats.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/required_true_string.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/required_yes.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/requires_nothing.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/rows_servers.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/rows_where.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/secrets_reader_domainconsole.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/servers_both.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/slot_prefix_digit.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/slot_prefix_long.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/status_worker.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_events_shadow.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_field_fixed.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_field_inherit.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_marks.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_metrics_shadow.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/table_servers.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/tie_break_random.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/type_text.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/unit_id_nosuch.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/cases/worker_reads_bare.subsystem.yaml",
+    "tests/testdata/acceptance/М10_Platform/02/corrections.tsv",
+    "tests/testdata/acceptance/М10_Platform/05/README.md",
+    "tests/testdata/acceptance/М10_Platform/07/README.md",
+    "tests/testdata/acceptance/М10_Platform/08/README.md",
+    "tests/testdata/acceptance/М10_Platform/10/corrections.tsv",
+    "tests/testdata/acceptance/М10_Platform/10/scenarios.tsv",
+    "tests/testdata/acceptance/М10_Platform/11/README.md",
+    "tests/testdata/spec_load_debt.txt",
+    "tests/testdata/spec_parity_debt.txt",
+    "tests/testdata/testsub2.subsystem.yaml",
+    "tests/vmsconftest.py",
+    "vms/autoask.py",
+    "vms/live.subsystem.yaml"
+  ],
+  "interpretation": "Cluster, Domain, DomainVMS and JS passed before corrections. Split Python unit: part1 green; part2 four failures, all affected modules rerun green (131). This is not a full green run on the corrected source and not C6 runtime acceptance. Final runtime cutover requires full suites again. The corrected rerun adds one malformed-policy refusal test. Module lists are argv expansions, not runner @ syntax."
+}

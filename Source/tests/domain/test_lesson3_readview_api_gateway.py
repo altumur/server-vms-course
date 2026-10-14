@@ -408,22 +408,19 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     for door in (console, signer):
         assert door["env"]["CONSOLE_MONITORS"].split(",")[0] == "127.0.0.1"
         assert "/" not in door["env"]["CONSOLE_MONITORS"]                       # an address, not a network
-    assert signer["env"]["SIGNER_TOKENS_UNIX"] == u["vms-domainpart"]["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
+    assert signer["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
+    assert "SIGNER_TOKENS_UNIX" not in u["vms-domainpart"]["env"]
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tmpfiles = open(os.path.join(here, "deploy", "domain", "systemd", "w2c-domain.tmpfiles")).read()
     group = tokens_group("cam", "vms")
     assert group == "vms-camdomaintokens"
     assert f"d /run/w2c-signer 2750 w2c {group} -" in tmpfiles
-    assert group in u["vms-domainpart"]["SupplementaryGroups"][0].split()
+    assert group not in u["vms-domainpart"]["SupplementaryGroups"][0].split()
     assert group not in signer["SupplementaryGroups"][0].split()                # the directory gives the group, not the signer
 
 
-def test_the_tokens_socket_has_a_group_of_its_own_with_one_member_the_subsystems_domain_worker():
-    """ADR-0031: the group of the signer's tokens socket is its own — `<deployment>-<sub>domaintokens`, derived by the
-    platform's rule — and it has exactly ONE member: the VMS's domain worker, by its unit's `SupplementaryGroups=`. No
-    other unit anywhere in the deploy names it, no sysusers line makes anyone a member (not configstore, which is in
-    every store role group, not `vms`, the user every VMS worker runs as), and it is no role group of the store's rights
-    file: «only the token reader reads the tokens socket» does not hang on who joins a role group."""
+def test_the_unused_signer_tokens_group_has_no_deployed_reader_after_c6():
+    """C6 removes the last domainpart issuer: no deployed process joins its token socket group."""
     import json
     import os
     from tests.cluster.test_recorder_job import unit
@@ -443,7 +440,7 @@ def test_the_tokens_socket_has_a_group_of_its_own_with_one_member_the_subsystems
                 for line in open(path, encoding="utf-8"):
                     parts = line.split()
                     assert not (parts[:1] == ["m"] and group in parts), (n, line)   # nobody made a member by name
-    assert joined == ["vms-domainpart.service"], joined
+    assert joined == [], joined
     roles = json.load(open(os.path.join(deploy, "cluster", "configstore-rights.json")))["roles"]
     assert group not in {r["group"] for r in roles.values()}                  # no role group of the store
     sysusers = open(os.path.join(deploy, "cluster", "systemd", "w2c-cluster.sysusers"), encoding="utf-8").read()

@@ -158,12 +158,16 @@ class DeviceCluster:
         # `rays`, `relays`, `ptz`, `presets`. Only the camera knows it, and it says so in its heartbeat (`can`),
         # which is how the domain checks a scenario naming it (Lesson 16, step 8). None — it has not said.
         self.can = can
+        self.asks = None
+        self.ask_publisher = None
 
     # -- power ----------------------------------------------------------------------------------------
     # The order is the lesson. The epoch first, because everything the camera writes after it carries it.
     # The row, if this is the first boot ever. The publish. And only then the door.
     def boot(self, first_name: str | None = None) -> int:
         self.door_open = False
+        self.asks = None
+        self.ask_publisher = None
         self.ram = Ram()                                 # what lived in RAM did not survive, and should not have
         self.epoch, _ = next_epoch(self.flash, EPOCH)
         if self.flash.get(ROW)[0] is None:
@@ -176,6 +180,18 @@ class DeviceCluster:
 
     def power_off(self) -> None:
         self.door_open = False
+        self.asks = None
+        self.ask_publisher = None
+
+    def host_scenarios(self, agent, dial, steady=time.monotonic):
+        from vms.autoask_runtime import Embedded
+        self.asks = Embedded(self.serial, self.flash, self.disk, agent, dial, self.wall, steady)
+        return self
+
+    def on_event(self, kind, event=None):
+        if self.asks is None:
+            return []
+        return self.asks.on_event(kind, event)
 
     # An ask from another camera, done — or refused by the SAME description the domain checked the scenario
     # against when it was written (`scenario.misfit`). One rule in two places would drift; here it cannot.
@@ -212,7 +228,8 @@ class DeviceCluster:
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",
               "coverage": self.coverage, **({"push": True} if self.pushes else {}),
               "polls": True,                                     # Lesson 16, step 8: a member camera keeps a poll open
-              "taken_by": sorted(self.taken_by)}
+              "taken_by": sorted(self.taken_by),
+              **({"asks": self.asks.heartbeat()} if self.asks is not None else {})}
         # The row as a snapshot may carry it (vmsserver's eleventh review, blocker 4, and the product's cross-check): an
         # edit through this camera's door takes any field, and a `*_secret`, or an address with `?pwd=…`, went into the
         # domain's directory. No secret field, and an address with no credential in it (`mask_secrets`), as a cluster's.
@@ -237,6 +254,11 @@ class DeviceCluster:
         source_status = {**status, "live_url": hb["live_url"], "polls": True,
                          **({"push": True} if self.pushes else {})}
         publish(self.publisher, "sources", sources(self.publisher, [source_status]))
+        from vms.autoask_runtime import EmbeddedPublisher
+        if self.ask_publisher is None:
+            self.ask_publisher = EmbeddedPublisher(self.serial, self.flash, self.local_objects(),
+                                                  self.disk, self.wall, self.wall)
+        self.ask_publisher.publish()
 
 
 

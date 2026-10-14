@@ -416,7 +416,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables
     granted = {p for p in doc()["roles"]["camworker"]["read"] if p.startswith("domain")}
-    assert granted == {TRUST_KEYS, MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
+    assert granted == {TRUST_KEYS, "domain/revoked", MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
                        "domain/cam/sources/*", "domain/rec/primaries/*", "domain/holder",
                        "domain/rec/polls", "domain/rec/polls/*", "domain/member-topology", "domain/topology",
                        "domain/placed/rec/*", "domain/placement/rec/*"}, sorted(granted)
@@ -506,13 +506,18 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     objects = FsObjectStore(f"{root}/objects")
     fw = Forwarder("relay-a", Local(), AsRecorder(), dial=lambda url: None, objects=objects)
     fw.book()
-    fw.asks_book()
+    from vms.autoask import Asker
+    from vms.recording_books import Unconfirmed
+    try:
+        Asker("SN-A", AsRecorder(), lambda _: None)._roads("SN-A")
+    except Unconfirmed:
+        pass  # No complete generation was carried; the role must still be able to read it.
     should_from_snapshot(objects, sources=AsRecorder())("SN-A")
     from types import SimpleNamespace
     from vms.recworker import Look
     Look(SimpleNamespace(vars=AsRecorder())).sources()  # The recorder resolves pulls from sources.
-    books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/"))}
-    assert books == {"domain/rec/upstream", "domain/cam/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
+    books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/", "domain/auto/"))}
+    assert books == {"domain/rec/upstream", "domain/auto/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
     own_books = {f"domain/{REC_SPEC.name}/{book}" for book in REC_SPEC.domain.books}
     assert set(REC_SPEC.worker_reads) | own_books >= books, REC_SPEC.worker_reads
 
@@ -611,3 +616,27 @@ def test_resource_reads_common_retention_and_never_a_units_old_policy():
         assert r.allows("resource", "read", f"cam/{family}")
         assert not r.allows("resource", "read", f"cam/{family}/7")
         assert not r.allows("console", "write", f"cam/{family}/7")
+
+
+def test_scenario_worker_reads_only_the_exact_shared_pointer_without_mutation_rights():
+    r = rights()
+    assert r.allows("autoworker", "read", "domain/shared")
+    for key in ("domain/shared", "domain/shared/auto", "domain/shared/private", "domain/signer"):
+        assert not r.allows("autoworker", "write", key), key
+        assert not r.allows("autoworker", "delete", key), key
+        if key != "domain/shared":
+            assert not r.allows("autoworker", "read", key), key
+    for role in ("camworker", "recworker", "detworker", "liveworker"):
+        assert not r.allows(role, "read", "domain/shared"), role
+
+
+def test_each_worker_reads_only_the_exact_revocations_document_without_mutation():
+    r = rights()
+    for spec in SPECS:
+        role = spec.name + "worker"
+        assert r.allows(role, "read", "domain/revoked"), role
+        for key in ("domain/revoked", "domain/revoked/child", "domain/private"):
+            assert not r.allows(role, "write", key), (role, key)
+            assert not r.allows(role, "delete", key), (role, key)
+            if key != "domain/revoked":
+                assert not r.allows(role, "read", key), (role, key)

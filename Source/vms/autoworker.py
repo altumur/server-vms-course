@@ -101,7 +101,8 @@ class AutoWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
-                 resource_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
+                 resource_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None,
+                 ask_dial=None, token_requests=None):
         env = dict(os.environ if env is None else env)
         super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self.claim_at_start(name, env)   # a spare: an offer
@@ -111,6 +112,13 @@ class AutoWorker(Worker):
         # The same reader the console uses, for the same reason: a scenario watches what an operator would
         # see on the timeline. One merge, one definition of "the events of the last minute".
         self.index = index or MergedIndex(objects, wall=wall)
+        from .autoask_runtime import WorkerScenarios
+        from .role_tokens import RoleTokens
+        from w2cplatform.domain.federation import Unreachable
+        def unreachable(url):
+            raise Unreachable('the evaluator has no ingest transport')
+        self.domain_scenarios = WorkerScenarios(self, ask_dial or unreachable,
+            RoleTokens('autoworker', token_requests, env, clock))
         # What the units say and do — the same check the console made when the scenario was written, made
         # again every pass, because the answer can change after it: a camera replaced by one without a
         # telemetry, a detector deleted, a device finally held and describing itself for the first time.
@@ -163,6 +171,7 @@ class AutoWorker(Worker):
         now = self.wall() if now is None else now
         started = self.clock()
         acted: list[str] = []
+        self.domain_scenarios.step(now)
         units = sorted(self.assignment().units)
         # A SCENARIO THAT WENT AWAY IS LET GO (the product's cross-check, after the twelfth review). Its epoch and lease
         # stayed: renewed for a scenario another evaluator decided, and when it came back the pass decided under the
@@ -310,7 +319,7 @@ class AutoWorker(Worker):
     # on `/metrics` (`auto_wants_folded`).
     def wants(self) -> list[tuple[str, str, str]]:
         from w2cplatform.longpoll import WANTS_MAX, fold
-        out, folded = fold(self._watched)
+        out, folded = fold(self._watched | self.domain_scenarios.watched)
         if folded != self.wants_folded:
             if folded:
                 log.warning("%s: its triggers watch %d (subsystem, kind, unit), more than the %d one request names: %s",
@@ -589,7 +598,12 @@ class AutoWorker(Worker):
     # latency, its passes and the long poll.
     def heartbeat_fields(self) -> dict:
         return {"filed": self.filed, "late": self.late, "suppressed": self.suppressed, "latency": self.latency,
-                "pass_failures": self.pass_failures, **self.pass_stats, **self.long_poll_stats()}
+                "pass_failures": self.pass_failures, **self.pass_stats, **self.long_poll_stats(),
+                "asks": self.domain_scenarios.executor.heartbeat()}
+
+    def heartbeat_once(self) -> None:
+        super().heartbeat_once()
+        self.domain_scenarios.publish()
 
     # The long poll, counted since this process started — and nothing at all when it is off: requests it opened at
     # the resources (`waits`), those answered "changed" (`woken`), passes begun early for them (`early_passes`),

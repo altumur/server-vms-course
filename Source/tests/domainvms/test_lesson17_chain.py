@@ -58,7 +58,7 @@ def _chain(wall, star=frozenset()):
     cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
     report_sync(cam_agent)
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens, centre="north", star=star)
+    crossings = BookInputs(north.vars, view, wall, centre="north", star=star)
     recording_domain = RecordingDomain(crossings, signer, agents=[cam_agent, relay_agent], devices=[cam])
     recording_domain.assign(SERIAL, "east")
     recording_domain.collect()
@@ -82,7 +82,7 @@ def _chain(wall, star=frozenset()):
                                     archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)}
     centre, relay, fwd = recs["north"].ingest, recs["east"].ingest, recs["east"].forwarder
     from tests.domainvms.recording_domain import role_requests
-    fwd.tokens.door = role_requests(east.vars)
+    fwd.tokens.door = role_requests(east.vars, "recworker")
     at.update(centre=centre, relay=relay)
     pusher = camera_pusher(SERIAL, cam.flash, dial_from("camera", {"relay"} if not star else set()), clock=wall)
 
@@ -615,7 +615,7 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     view.refresh(); pending.collect(fed)
     assert pending.of(cam.name) == {}                                  # the outcome came up in the bundle
 
-    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    crossings = BookInputs(north.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer, agents=[relay_agent, cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "east")
     recording_domain.collect(); recording_domain.collect()
@@ -639,7 +639,7 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_c
     to the yard camera — the relay that records it, then the centre the relay forwards it to. The relay's
     ingest does not answer, so the ask is left at the centre; the relay's forwarder, polling the centre, carries
     it down to the camera's poll, and the outcome back up."""
-    from vms.domainpart.ingest import Asker, publish_asks
+    from tests.domain.conftest import SharedDoor
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
@@ -651,25 +651,30 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_c
     crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
     gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                              published=gate.local_objects())
-    report_sync(gate_agent)
-    crossings.view.refresh()
-    publish_asks(crossings, [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}])
-    report_sync(gate_agent)
+    domain_pass.recording_domain.add_agent(gate_agent, gate)
+    domain_pass()
+    action = {"camera": SERIAL, "action": "preset", "arg": 3}
+    signer = domain_pass.recording_domain.signer
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
+        {"name": "other-site-to-yard", "when": {"camera": "SN7002", "kind": "vehicle"}, "then": action}])
+    domain_pass(); domain_pass()
 
     def gate_dial(url):
         if url in CENTRE_URLS:
             return centre
         raise Unreachable(f"{url} did not answer the gate camera")
 
-    asker = Asker("SN7002", gate.flash, gate_dial, clock=wall)
-    assert [r["urls"] for r in asker.book()[SERIAL]] == [RELAY_URLS, CENTRE_URLS]
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    gate.host_scenarios(gate_agent, gate_dial, steady=wall)
+    asker = gate.asks.executor.asker("SN7002")
+    assert {r.member for r in asker._roads(SERIAL)[1]} == {"east", "north"}
+    [left] = gate.on_event("vehicle")
+    ing, aid = left["ingest"], left["ask"]
     assert ing is centre and centre.ask_outcome(SERIAL, aid) is None
     fwd.pass_once()                                                    # down to the relay's ingest
-    assert pusher.pass_once([])["asks"] == [({"preset": 3}, "performed")] and done == [{"preset": 3}]
+    assert pusher.pass_once([])["asks"] == [(action, "performed")] and done == [action]
     fwd.pass_once()                                                    # the outcome, up
     assert centre.ask_outcome(SERIAL, aid) == "performed"
-    assert done == [{"preset": 3}]                                     # carried twice, done once
+    assert done == [action]                                     # carried twice, done once
 
 
 def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_relay():
@@ -679,9 +684,6 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     site would never act. The gate camera's book of asks names the same relay; the ask goes there and back."""
     from vms.domainpart.books import Books
     from w2cplatform.domain.relay import Relay
-    from vms.domainpart.ingest import Asker
-    from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedView
     from tests.domain.conftest import SharedDoor
 
     wall = Clock()
@@ -709,12 +711,12 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects))
     relay = hosts[-1].ingest
 
-    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall), north.objects)
     recording_domain = RecordingDomain(books.inputs, signer,
         agents=[*agents, relay_agent], devices=list(cams.values()), recorders=hosts)
     recording_domain.collect()
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
-        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
+        {"name": "test_lesson17_chain-1", "when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
 
     def domain_pass():
         recording_domain.collect()
@@ -737,11 +739,12 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     assert e["polls_only"] and e["cluster"] == "east" and e["ingest"]["urls"] == RELAY_URLS
     assert "asks only" in ptz.pass_once([])["state"]                   # it reached its poll
 
-    asker = Asker("SN7002", cams["SN7002"].flash, site_dial, clock=wall)
-    assert [r["cluster"] for r in asker.book()["SN7003"]] == ["east"]
-    left = Scenarios("SN7002", SharedView(cams["SN7002"].flash, cams["SN7002"].disk, wall), asker).on_event("vehicle")
+    gate = cams["SN7002"].host_scenarios(next(a for a in agents if a.cluster == cams["SN7002"].name), site_dial, steady=wall)
+    asker = gate.asks.executor.asker("SN7002")
+    assert [r.member for r in asker._roads("SN7003")[1]] == ["east"]
+    left = gate.on_event("vehicle")
     assert [x["state"] for x in left] == ["asked"] and left[0]["ingest"] is relay
-    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert ptz.pass_once([])["asks"] == [({"camera": "SN7003", "action": "preset", "arg": 3}, "performed")]
     assert asker.outcome("SN7003", left[0]["ask"], left[0]["deadline"]) == "performed"
 
 
@@ -754,9 +757,6 @@ GATE7, PTZ7, YARD7 = "SN7102", "SN7103", "SN7104"    # the gate and a PTZ at an 
 def _two_relays(wall):
     from vms.domainpart.books import Books
     from w2cplatform.domain.relay import Relay
-    from vms.domainpart.ingest import Asker
-    from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedView
     from tests.domain.conftest import SharedDoor
 
     fed = Federation()
@@ -799,7 +799,7 @@ def _two_relays(wall):
         through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
         report_sync(o)
-    inputs = BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north")
+    inputs = BookInputs(north.vars, ReadView(fed, wall=wall), wall, centre="north")
     recording_domain = RecordingDomain(inputs, signer, agents=[*agents, *relays], devices=cams.values())
     from w2cplatform.domain.carry import CarryClient
     north.vars.put("domain/topology", {"doc": json.dumps({"rev": 2, "centre": "north", "star": [],
@@ -810,7 +810,7 @@ def _two_relays(wall):
     for relay, refs in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
         for ref in refs:
             recording_domain.assign(ref, relay)
-        hosts[relay].forwarder.tokens.door = role_requests(hosts[relay].vars)
+        hosts[relay].forwarder.tokens.door = role_requests(hosts[relay].vars, "recworker")
     books = Books(inputs, north.objects)
 
     def domain_pass():
@@ -836,8 +836,8 @@ def _two_relays(wall):
 
     domain_pass()                     # complete names before the operator writes
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
-        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
-        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
+        {"name": "test_lesson17_chain-2", "when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
+        {"name": "test_lesson17_chain-3", "when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
     domain_pass(); domain_pass()
     fwd = {"east": hosts["east"].forwarder, "west": hosts["west"].forwarder}
     done = {PTZ7: [], YARD7: []}
@@ -845,8 +845,9 @@ def _two_relays(wall):
                        perform=lambda a: done[PTZ7].append(a) or "performed")
     yard = camera_pusher(YARD7, cams[YARD7].flash, reach(WEST_URLS, "site"), clock=wall,
                         perform=lambda a: done[YARD7].append(a) or "performed")
-    gate = Scenarios(GATE7, SharedView(cams[GATE7].flash, cams[GATE7].disk, wall),
-                     Asker(GATE7, cams[GATE7].flash, reach(EAST_URLS, "site"), clock=wall))
+    gate = cams[GATE7].host_scenarios(next(a for a in agents if a.cluster == cams[GATE7].name),
+                                    reach(EAST_URLS, "site"), steady=wall)
+    gate.recording_domain = recording_domain
     return ing, fwd, ptz, yard, gate, done, centre_up
 
 
@@ -857,27 +858,28 @@ def test_an_ask_to_another_relay_goes_up_through_ones_own_and_an_ask_inside_the_
     token for that pair, the west forwarder carries it down, and the outcome comes back hop by hop."""
     wall = Clock()
     ing, fwd, ptz, yard, gate, done, _ = _two_relays(wall)
-    book = gate.asker.book()
-    assert [(r["cluster"], r.get("up")) for r in book[PTZ7]] == [("east", None)]      # inside: direct
-    assert [(r["cluster"], r.get("up")) for r in book[YARD7]] == [("east", "north")]  # across: up through its own
-    assert list(fwd["east"].asks_book()) == [f"{YARD7}|{GATE7}"]                     # the relay may carry that pair
+    asker = gate.asks.executor.asker(GATE7)
+    assert [(r.member, r.value.get("up")) for r in asker._roads(PTZ7)[1]] == [("east", None), ("north", None)]      # token selects the directly reachable home
+    assert [(r.member, r.value.get("up")) for r in asker._roads(YARD7)[1]] == [("east", "north"), ("north", None), ("west", None)]  # token selects its relay and upward hop
+    from vms.autoask import Asker
+    assert Asker(GATE7, fwd["east"].vars, lambda _: None)._roads(YARD7)[1]                     # the relay may carry that pair
     assert YARD7 in fwd["west"].book()                                 # the centre has a road down to the yard
 
     left = {x["target"]: x for x in gate.on_event("vehicle")}
     assert {t: (x["state"], x["ingest"]) for t, x in left.items()} == {PTZ7: ("asked", ing["east"]), YARD7: ("asked", ing["east"])}
-    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 1}, "performed")]
+    assert ptz.pass_once([])["asks"] == [({"camera": PTZ7, "action": "preset", "arg": 1}, "performed")]
     assert PTZ7 not in ing["north"].cams                               # the centre never heard of the PTZ's ask
 
     assert fwd["east"].woken.is_set()                                  # the ask woke the east forwarder
     assert list(fwd["east"].lift().values()) == ["up"]
     fwd["west"].pass_once()                                            # the centre answers west's poll: down it goes
-    assert yard.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert yard.pass_once([])["asks"] == [({"camera": YARD7, "action": "preset", "arg": 3}, "performed")]
     assert fwd["west"].woken.is_set()                                  # the yard's answer woke the west forwarder
     fwd["west"].lift()                                                 # …which answers the centre
     assert list(fwd["east"].lift().values()) == ["performed"]          # …and east takes the outcome back down
     x = left[YARD7]
-    assert gate.asker.outcome(YARD7, x["ask"], x["deadline"]) == "performed"
-    assert done == {PTZ7: [{"action": "preset", "arg": 1}], YARD7: [{"action": "preset", "arg": 3}]}
+    assert gate.asks.executor.asker(GATE7).outcome(YARD7, x["ask"], x["deadline"]) == "performed"
+    assert done == {PTZ7: [{"camera": PTZ7, "action": "preset", "arg": 1}], YARD7: [{"camera": YARD7, "action": "preset", "arg": 3}]}
 
 
 def test_an_ask_going_up_dies_at_its_deadline_on_the_way_and_is_not_kept():
@@ -891,7 +893,7 @@ def test_an_ask_going_up_dies_at_its_deadline_on_the_way_and_is_not_kept():
     wall.advance(31)
     centre_up["on"] = True
     fwd["east"].lift()
-    assert gate.asker.outcome(YARD7, x["ask"], x["deadline"]) == "expired"
+    assert gate.asks.executor.asker(GATE7).outcome(YARD7, x["ask"], x["deadline"]) == "expired"
     assert YARD7 not in ing["north"].cams and done[YARD7] == []
 
 
@@ -917,14 +919,14 @@ def test_by_event_the_whole_road_takes_milliseconds_while_every_timer_is_a_secon
         x = next(x for x in gate.on_event("vehicle") if x["target"] == YARD7)
         out = None
         while out is None and _t.monotonic() - t0 < 3.0:
-            out = gate.asker.outcome(YARD7, x["ask"], x["deadline"])
+            out = gate.asks.executor.asker(GATE7).outcome(YARD7, x["ask"], x["deadline"])
             _t.sleep(0.005)
         took = _t.monotonic() - t0
     finally:
         stop.set()
         for t in threads + [cam]:
             t.join(timeout=2.0)
-    assert out == "performed" and done[YARD7] == [{"action": "preset", "arg": 3}]
+    assert out == "performed" and done[YARD7] == [{"camera": YARD7, "action": "preset", "arg": 3}]
     assert took < 0.5, f"took {took:.3f} s: something waited for a timer"
 
 
@@ -966,10 +968,8 @@ def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwa
     """A malformed unrelated heartbeat does not hide a working centre. The holder rebuilds a torn
     upstream result from signed recorder facts; a relay retains its established route through a torn
     observation. A fresh forwarder cannot open that route until the observation is complete again.
-    Remaining legacy asks still isolate malformed entries and retain the last good one."""
+    A damaged ask observation never establishes fresh authority."""
     from vms.domainpart.chain import UPSTREAM_PATH
-    from vms.domainpart.keys import ASKS_PATH
-    from vms.domainpart.ingest import BOOKS
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     centre.want(SERIAL, "recorder:centre")
@@ -989,71 +989,60 @@ def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwa
     assert "forwarding" in fwd.pass_once()[SERIAL]
     from vms.domainpart.chain import Forwarder
     fresh = Forwarder("east", relay, east.vars, lambda url: centre)
-    fresh.tokens.door = role_requests(east.vars)
+    fresh.tokens.door = role_requests(east.vars, "recworker")
     assert fresh.book() == {}  # A broken observation cannot establish a new flow.
-    road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token_secret": "t"}]})
-    east.vars.put(ASKS_PATH, {"a|b": road, "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
-    assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
-    east.vars.put(ASKS_PATH, {"a|b": "[", "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
-    assert fwd.asks_book() == {"a|b": json.loads(road)}                   # torn now: the one read last
+    from vms.autoask import Asker, BOOK
+    from vms.recording_books import Unconfirmed
+    from tests.test_book_names import raises
+    east.vars.put(BOOK, {"": '{"missing":[]}', SERIAL: "{"})
+    raises(Unconfirmed, lambda: Asker("SN7002", east.vars, lambda _: centre)._roads(SERIAL))
+    assert fwd.book()[SERIAL] == before  # No damaged ask book interrupts the established stream.
 
 
-def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other_scenarios_asks():
-    """vmsserver's eleventh review, a major — a run: `publish_asks` read the entries of the upstream book and of the book
-    of asks bare, and `upstream/east[SN7001] = "{"` — the entry the test above tears — raised out of it for every
-    scenario: no camera's right to ask was issued again. Each entry is read through `BOOKS` now: a torn entry of the
-    book of asks is issued anew, a torn upstream entry is "not pushed up" — counted, and every scenario is served. A
-    scenario that is not an object is skipped and counted (`SCENARIOS`), and both show on the console's `/healthz`."""
-    from vms.domainpart.chain import UPSTREAM_PATH
-    from vms.domainpart.keys import ASKS_PATH
-    from vms.domainpart.ingest import BOOKS, publish_asks
-    from vms.domainpart.scenario import SCENARIOS, pairs
+def test_holder_rebuilds_torn_ask_results_from_current_signed_contributions():
+    from vms.autoask import BOOK
     wall = Clock()
-    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
-    gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
-    gate.boot()
-    crossings = domain_pass.inputs
-    crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
-    report_sync(DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
-                published=gate.local_objects()))
-    crossings.view.refresh()
-    scenarios = [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}]
-    home = crossings.view.last_known("SN7002")[0]
-    assert json.loads(publish_asks(crossings, scenarios)[home][SERIAL])["roads"]
-    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
-    north.vars.put(f"{UPSTREAM_PATH}/east", {**(items or {}), SERIAL: "{"}, cas=idx)      # the upstream entry, torn
-    items, idx = north.vars.get(f"{ASKS_PATH}/{home}")
-    north.vars.put(f"{ASKS_PATH}/{home}", {**items, SERIAL: '{"roads": [{"cluster": "east", "until": "'}, cas=idx)
-    books = publish_asks(crossings, scenarios)
-    roads = json.loads(books[home][SERIAL])["roads"]
-    assert roads and all(r["token_secret"] for r in roads)                     # issued anew
-    assert f"{ASKS_PATH}/{home}/{SERIAL}" in BOOKS.bad
-    # a document from before the schema, or one the store tore: read past, each bad scenario counted where it stands
-    settings = {"shared": {"auto": {"scenarios": [7, {"when": [], "then": {}},
-                {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}}}
-    assert [(p["trigger"], p["target"]) for p in pairs(settings)] == [("SN7002", SERIAL)]
-    assert {"settings/shared/auto/scenarios/0", "settings/shared/auto/scenarios/1"} <= SCENARIOS.bad
-    from vms.domainpart.worker import GARBLED_SHOWN               # said in the VMS's domain worker's heartbeat
-    assert {"book_entry", "scenario"} <= set(GARBLED_SHOWN)
+    ing, fwd, ptz, yard, gate, done, _ = _two_relays(wall)
+    vars_ = gate.flash
+    # The relay's carried book and the holder's result are separate generations.
+    east = fwd["east"].vars
+    own = vars_.get("domain/member")[0]["cluster"]
+    # Rebuild through the actual signed-report fixture used by the scenario.
+    # The fixture is returned on the same relay host, rather than synthesizing a book.
+    publication = gate.recording_domain
+    holder_vars = publication.vars
+    result = f"{BOOK}/{own}"
+    good = holder_vars.get(result)[0]
+    holder_vars.put(result, {**good, YARD7: "{"})
+    publication.collect()
+    assert holder_vars.get(result)[0] == good
+    # Tearing upstream output does not stop new asks: their authority comes from
+    # current placement and scenario settings, not a previously issued road token.
+    holder_vars.put(f"{UPSTREAM_PATH}/east", {YARD7: "{"})
+    publication.collect()
+    left = {x["target"]: x for x in gate.on_event("vehicle")}
+    assert all(x["state"] == "asked" for x in left.values())
+    assert ptz.pass_once([])["asks"] == [({"camera": PTZ7, "action": "preset", "arg": 1}, "performed")]
+    assert "token" not in json.dumps(holder_vars.get(result)[0])
 
 
-def test_a_torn_entry_of_the_book_a_camera_carried_home_stops_no_ask_to_another_target():
-    """vmsserver's eleventh review, the camera's half of the `publish_asks` major: `Asker.book` read the book whole with
-    bare `json.loads`, and one torn `domain/cam/asks` entry raised out of it — no ask to any target. Each entry is read
-    through `BOOKS`: a torn one is the entry read last of it (or none), counted once; the other targets are asked."""
-    from vms.domainpart.keys import ASKS_PATH
-    from vms.domainpart.ingest import BOOKS, Asker
-    flash = FakeVariables()
-    road = json.dumps({"roads": [{"urls": RELAY_URLS, "token_secret": "t"}]})
-    flash.put(ASKS_PATH, {"SN-a": road, "SN-b": road})
-    asker = Asker("SN7002", flash, lambda url: (_ for _ in ()).throw(Unreachable(url)), clock=Clock())
-    assert set(asker.book()) == {"SN-a", "SN-b"}
-    items, idx = flash.get(ASKS_PATH)
-    flash.put(ASKS_PATH, {**items, "SN-a": '{"roads": [{"urls": ', "SN-c": "[1]"}, cas=idx)
-    book = asker.book()
-    assert book["SN-a"] == json.loads(road)["roads"] and book["SN-b"] and "SN-c" not in book   # read last; none
-    assert {f"{ASKS_PATH}/SN7002/SN-a", f"{ASKS_PATH}/SN7002/SN-c"} <= BOOKS.bad
-    assert asker.ask("SN-b", {"preset": 3}, within=10) is None        # asked: no ingest answered, nothing raised
+def test_torn_ask_target_refuses_new_authority_without_stopping_another_target():
+    from vms.autoask import BOOK
+    from vms.recording_books import Unconfirmed
+    from tests.test_book_names import raises
+    wall = Clock()
+    ing, fwd, ptz, yard, gate, done, _ = _two_relays(wall)
+    asker = gate.asks.executor.asker(GATE7)
+    assert asker._roads(YARD7)[1]  # Previously readable authority is not cached across damage.
+    good = gate.flash.get(BOOK)[0]
+    gate.flash.put(BOOK, {**good, YARD7: '{"entries":['})
+    raises(Unconfirmed, lambda: asker._roads(YARD7))
+    assert asker._roads(PTZ7)[1]
+    left = {x["target"]: x for x in gate.on_event("vehicle")}
+    own = gate.flash.get('domain/member')[0]['cluster']
+    assert left[YARD7]["state"] == f"no token at {own}: the ask authority could not be confirmed" and left[PTZ7]["state"] == "asked"
+    assert ptz.pass_once([])["asks"] == [({"camera": PTZ7, "action": "preset", "arg": 1}, "performed")]
+    assert YARD7 not in ing["east"].cams
 
 
 def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address():
@@ -1266,7 +1255,7 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     assert now.up_expired == {SERIAL: 1}                                # counted once
 
     now.dial = fwd.dial                                                 # the centre answers again: its word is said again
-    now.tokens.door = role_requests(east.vars)
+    now.tokens.door = role_requests(east.vars, "recworker")
     for recorder in domain_pass.recorders.values():
         recorder.claim_slot(recorder.name)
     domain_pass()                                                       # three days on: the stream token issued anew

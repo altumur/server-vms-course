@@ -302,5 +302,6 @@ def test_a_spec_named_as_one_of_the_platforms_own_names_does_not_load():
             f.write(text.replace("\nname: testsub2\n", f"\nname: {name}\n", 1))
         _refused(lambda: SubsystemSpec.load(path), f"`{name}` is a name of the platform's own")
     from w2cplatform import specyaml
-    other = specyaml.loads(text.replace("\nname: testsub2\n", "\nname: testsub3\n", 1))
+    # Rename the complete local contract, including collection paths and roles.
+    other = specyaml.loads(text.replace("testsub2", "testsub3"))
     assert SubsystemSpec.from_dict(other).name == "testsub3"     # (from a dict: nobody's catalogue, the run's specs stay)

@@ -138,6 +138,7 @@ class Site:
         self.servers: dict = {}                     # …its server
         self.who_at: dict[str, str] = {}            # …and who its requests are made as
         self.agents: dict = {}
+        self.auto_workers: dict = {}
         self.recorders: dict = {}
         self.consoles: dict = {}
         self.ingests: dict = {}                     # cluster → its recorder's Ingest
@@ -297,6 +298,18 @@ class Site:
         srv = self.cluster("srv")
         v = srv.door("domain", "operator on srv")
         signer = Signer(DOMAIN, v, sealer=self.ring("srv"))
+        # Name exclusivity needs an actual collected generation before the first
+        # operator write. Configured but never reporting peers remain missing
+        # through the ordinary report grace; no name index is seeded by the stand.
+        from vms.config import SPEC
+        from w2cplatform.spec import SpecController
+        agent = self.holder_agent()
+        SpecController(SPEC, agent.cluster_vars, agent.published,
+                       wall=self.wall, cluster="srv").publish_snapshot()
+        self.sync("srv")
+        self.holder.run_pass()
+        self.wall.advance(46)
+        self.holder.run_pass()
         IdentityStore(signer, v, srv.objects_on("srv", v), sealer=self.ring("srv"), now=self.wall).create_local(
             who, password, [], by="operator")
         set_domain_grants(v, [Grant(who, "admin", None, 0.0)], self.wall(), by="operator")
@@ -370,7 +383,16 @@ class Site:
         holder.members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box)
         holder.topology, holder.pending = Topology(hv), PendingEdits(hv, self.wall)
         holder.alarms = DomainAlarms(fed, reported_doors(fed, ho, 45.0), lost_after=45.0, history=AlarmHistory(ho))
+        # The local agent owns its member key before the signer claims its term.
+        # Settle configured external members first, so claim adds the holder as
+        # how:holder rather than encountering an unkeyed configuration row.
+        from w2cplatform.trust.memberkey import MemberKey
+        own = self.cluster(box).door("domainagent", f"domainagent on {box}")
+        MemberKey.load_or_make(own, self.ring(box))
+        holder.members.settle()
         holder.term = term_of(fed, signer, ho, holder.signer_url)
+        if holder.term is not None:
+            assert holder.members.read()["members"][box]["how"] == "holder"
         if holder.term is not None and not signer.chain:
             holder.hand_to = lambda to: move_by_handover(holder, to, DOMAIN, signer)
 
@@ -441,7 +463,6 @@ class Site:
         from w2cplatform.configstorevars import unix_transport
         from w2cplatform.domain.members import Members
         from w2cplatform.domain.readview import ReadView
-        from w2cplatform.domain.tokendoor import TokenDoor
         from w2cplatform.domain.topology import Topology
         from w2cplatform.domain.uplink import _CopyObjects
         from vms.domainpart.books import Books
@@ -454,9 +475,7 @@ class Site:
         holder = fed.domain_holder
         view = ReadView(fed, lost_after=45.0, wall=self.wall)
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
-        issuer = TokenDoor(self.tokens_socket, transport=self.log.transport_http(
-            who, "the signer's token socket /run/w2c-signer/tokens.sock", unix_transport(self.tokens_socket)))
-        self.inputs = BookInputs(holder.vars, view, wall=self.wall, issuer=issuer, topology=Topology(holder.vars),
+        self.inputs = BookInputs(holder.vars, view, wall=self.wall, topology=Topology(holder.vars),
                                    sealer=self.ring("srv"))
         books = Books(self.inputs, holder.objects,
                       members=Members(holder.vars, wall=self.wall, configured=lambda: configured, domain="srv"))
@@ -589,7 +608,7 @@ class Site:
                                f"у продукта POST /api/member/{name} в дверь ретранслятора ({office}:{PORTS['relay door']})",
                                site=self, box=office)
         agent = DomainAgent(name, CarryClient(self.doors[f"relay door {office}"], name, key, wall=self.wall), own,
-                            now=self.wall, console=device_console(cam),
+                            now=self.wall, console=device_console(cam, sealer),
                             domain_objects=relay_objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             cluster_objects=cam.disk, pages=lambda: pages(Card("rec", cam.events), self.wall()),
                             alarm_waiting=Card("rec", cam.events).waiting,
@@ -601,7 +620,8 @@ class Site:
     def sync(self, name: str) -> bool:
         """One pass of `name`'s agent — its requests made as it."""
         with self.log.acting(f"domainagent on {name}"):
-            return self.agents[name].sync()
+            from tests.reporting import sync
+            return sync(self.agents[name])
 
     def agents_pass(self, names=None) -> None:
         """The agents' passes in the order a member behind a relay needs: offices, cameras, offices again, the holder's."""
@@ -704,7 +724,7 @@ class Site:
         def dial(url):
             from w2cplatform.domain.federation import Unreachable
             for there, ing in self.ingests.items():
-                if self.ingest_url(there) == url and there != name:
+                if self.ingest_url(there) == url:
                     if there in self.down or name in self.down or (name, there) in self.cut:
                         raise Unreachable(f"{url} did not answer {name}")
                     return TracedIngest(self.log, ing, who, f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
@@ -712,8 +732,13 @@ class Site:
         rec.host_ingest(name, self.ingest_url(name), dial=dial)
         if rec.forwarder is not None:
             rec.forwarder.tokens.door = self.role_requests(name, "recworker")
-            rec.forwarder.sealer = self.ring(name)             # the books its agent carried, opened with this box's ring
         self.recorders[name], self.ingests[name] = rec, rec.ingest
+        from vms.autoworker import AutoWorker
+        auto_vars = c.door("autoworker", f"autoworker on {name}")
+        self.auto_workers[name] = AutoWorker(f"a-{name}-1", auto_vars,
+            c.objects_on(name, auto_vars, f"autoworker on {name}"),
+            wall=self.wall, clock=self.clock, server=name, env={},
+            ask_dial=dial, token_requests=self.role_requests(name, "autoworker"))
         return rec
 
     def rec_pass(self, name: str) -> None:
@@ -725,6 +750,10 @@ class Site:
             rec.volume_pass()
             rec.reconcile_once()
             rec.heartbeat_once()
+        auto = self.auto_workers[name]
+        auto.renew_slot()
+        auto.reconcile_once()
+        auto.heartbeat_once()
 
     def say_heartbeat(self, name: str, fields=("ingest", "ingest_streams", "upstream", "volume")) -> None:
         """What a recorder says of itself in its heartbeat (an object on its server), as a line of the scenario's: the
@@ -868,12 +897,7 @@ class Site:
         cam.ring, cam.act, cam.rec, cam.pusher, cam.frames, cam.started = ring, act, rec, pusher, 0, self.wall()
 
     def scenarios(self, name: str):
-        """The camera's side of a scenario between cameras (`domainpart.scenario.Scenarios`): the shared document its
-        agent took (`SharedView` of its flash and its durable objects) and its `Asker` over its book of asks. In the
-        course an event is a call (`on_event`); in the product the firmware's event stream (`GET /api/v1/events`)."""
-        from vms.domainpart.ingest import Asker
-        from vms.domainpart.scenario import Scenarios
-        from w2cplatform.domain.shared import SharedView
+        """The camera's embedded executor reads verified settings and requests its role token."""
         cam = self.cams[name]
         serial = CAMERAS[name][0]
         door = f"the flash of {name}"
@@ -887,10 +911,7 @@ class Site:
                     return TracedIngest(self.log, ing, f"asker on {name} ({serial})",
                                         f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
-        flash = TracedVars(self.log, cam.flash_store, f"automation on {name}", door)
-        asker = Asker(serial, flash, dial, clock=self.wall)
-        asker.sealer = self.ring(name)
-        return Scenarios(serial, SharedView(flash, cam.disk, self.wall), asker)
+        return cam.host_scenarios(self.agents[name], dial, steady=self.wall)
 
     def sense(self, name: str) -> None:
         """The camera's sensor up to now: ten frames a second into its ring, a key frame every two seconds, each stamped by

@@ -71,7 +71,7 @@ def _site(wall):
                             domain_objects=b.objects, published=cam.local_objects(), seen_store=cam.local_objects(),
                             sealer=rings["cam"], key=keys[cam.name])
     view = ReadView(fed, wall=wall)
-    crossings = BookInputs(b.vars, view, wall, issuer=signer.tokens, sealer=rings["srv-b"])
+    crossings = BookInputs(b.vars, view, wall, sealer=rings["srv-b"])
 
     recording_domain = RecordingDomain(crossings, signer, agents=[*agents.values(), cam_agent], devices=[cam])
     recording_domain.assign(SERIAL, "srv-a", copies=["srv-b"])
@@ -209,7 +209,7 @@ def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_dec
              and getattr(m, n).startswith(SPEC.domain_prefix)]
     named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
     assert chain.UPSTREAM_PATH == "domain/rec/upstream"
-    assert keys.ASKS_PATH in named and worker.SLOT in named
+    assert not hasattr(keys, "ASKS_PATH") and not hasattr(worker, "SLOT")
     stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
     assert not stray, f"keys in no declared family: {stray}"
     assert sorted(SPEC.display["keys"]) == sorted(f["id"] for f in SPEC.domain.keys)

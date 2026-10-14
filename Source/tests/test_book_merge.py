@@ -15,6 +15,9 @@ def spec(sub="testsub", **overrides):
     rule = {"from": f"{sub}/counts/", "key": "ref", "pick": "all", "to": "to"}
     rule.update(overrides)
     raw["domain"]["books"] = {"counts": rule}
+    # This test installs a different book set; names attached to the removed
+    # fixture books do not belong to this synthetic collection contract.
+    raw["domain"].pop("names", None)
     return SubsystemSpec.from_dict(raw)
 
 

@@ -1,19 +1,8 @@
-"""python3 -m vms.domainpart — the VMS's worker on the domain: the books' pass at the holder.
+"""Temporary domain-side console diagnostics, removed with ADR-0074 C7.
 
-The books the VMS writes for each member — sources, primaries, poll, upstream, asks (`keys.py`, `domain.books` of
-`cam.subsystem.yaml`) — were a pass of the platform's signer until the boundary's «no hooks»: the platform knew which
-books, in which order, and what was in them. Now they are this process's: it runs at the holder, reads the members by
-the platform's read view, writes `domain/cam/…` with its own role's rights, and asks the signer for the tokens the books
-carry over the signer's own socket (`w2cplatform.domain.tokendoor`) — the key stays the signer's. The platform's agent
-carries each member's books home as it carries any row a spec declares, without reading them.
-
-    its slot        `domain/cam/worker` in the holder's store: {instance, at}, taken by CAS — one pass at a time; a
-                    second instance waits until the first has been silent `SLOT_LOST` seconds
-    its heartbeat   `domain/cam/heartbeat` in the holder's object store: {ts, instance, passes, failing, step_failures}
-
-Environment: `CLUSTERS` and `DOMAIN_HOLDER` as the domain's console reads them (`w2cplatform.domain.runtime`);
-`SIGNER_TOKENS_UNIX` — the signer's socket; `CENTRE`, `STAR` only where the
-operator's topology says nothing; `BOOKS_EVERY` (5 s), `LOST_AFTER` (45 s).
+Sources, primaries, polls, upstream and asks are ordinary member publications.
+This reader issues no tokens and has no writer slot or signer socket. Its
+remaining console diagnostics use the accepted member view and shared settings.
 """
 from __future__ import annotations
 
@@ -25,15 +14,11 @@ import socket
 import threading
 import time
 
-from w2cplatform.variables import Conflict
-
 from .keys import SPEC
 
 log = logging.getLogger("vms.domainpart")
 
-SLOT = SPEC.domain_prefix + "worker"
 HEARTBEAT = SPEC.domain_prefix + "heartbeat"
-SLOT_LOST = 45.0
 # What others wrote that its passes read and could not, counted (`w2cplatform.rows`) and said in its heartbeat: the
 # entries of the books and the scenarios of the shared settings (the eleventh review's sibling: counted and shown nowhere).
 GARBLED_SHOWN = ("book_entry", "scenario")
@@ -45,21 +30,7 @@ class DomainPartWorker:
         self.instance = instance or f"{socket.gethostname()}-{os.getpid()}"
         self.passes = 0
 
-    def claim(self) -> bool:
-        """The slot: ours, or nobody's for `SLOT_LOST` seconds — then taken by CAS. False: another instance holds it."""
-        items, idx = self.vars.get(SLOT)
-        now = self.wall()
-        if items and items.get("instance") != self.instance and now - float(items.get("at", 0)) < SLOT_LOST:
-            return False
-        try:
-            self.vars.put(SLOT, {"instance": self.instance, "at": now}, cas=idx)
-        except Conflict:
-            return False
-        return True
-
-    def pass_once(self) -> dict | None:
-        if not self.claim():
-            return None
+    def pass_once(self) -> dict:
         out = self.books.pass_once()
         self.passes += 1
         from w2cplatform.rows import counts
@@ -137,7 +108,6 @@ def main() -> None:
     from w2cplatform.domain.members import Members
     from w2cplatform.domain.readview import ReadView
     from w2cplatform.domain.runtime import federation_from_env
-    from w2cplatform.domain.tokendoor import TokenDoor
     from w2cplatform.domain.topology import Topology
     from w2cplatform.domain.uplink import _CopyObjects
 
@@ -149,8 +119,7 @@ def main() -> None:
     view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
     star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
-    issuer = TokenDoor(os.environ.get("SIGNER_TOKENS_UNIX", "/run/w2c-signer/tokens.sock"))
-    books = Books(BookInputs(holder.vars, view, issuer=issuer, centre=os.environ.get("CENTRE") or None, star=star,
+    books = Books(BookInputs(holder.vars, view, centre=os.environ.get("CENTRE") or None, star=star,
                             topology=Topology(holder.vars)), holder.objects,
                   members=Members(holder.vars, configured=lambda: configured, domain=holder.name))
     worker = DomainPartWorker(books, holder.vars, holder.objects)

@@ -78,7 +78,7 @@ PLATFORM_TESTS = (
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
     "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
     "tests/test_heartbeat_owner.py", "tests/test_frontier.py", "tests/testdata/testsub2.subsystem.yaml",
-    "tests/test_spec_rule.py", "tests/test_token_requests.py", "tests/test_unit_token_requests.py", "tests/test_member_roster.py",
+    "tests/test_spec_rule.py", "tests/test_token_requests.py", "tests/test_unit_token_requests.py", "tests/test_scenario_token_requests.py", "tests/test_member_roster.py",
     "tests/test_worker_pass.py", "tests/test_worker_writes.py", "tests/test_role_client.py",
     "tests/test_member_domain_forward.py",
     "tests/test_where_place.py", "tests/test_place_follows.py", "tests/test_base_worker.py", "tests/test_reconcile.py",

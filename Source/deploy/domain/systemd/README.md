@@ -10,11 +10,10 @@ a credential (`SECRETS_KEY=%d/platform.key`); the domain's console loads none (A
 | `w2c-domain.service` | `signer` | `domain` | w2c | the holder: the keys and the holder's pass; /api/login, /api/carry/<member>, the five operations on 8445, the tokens socket |
 | `w2c-domain-console.service` | `domainconsole` | `domainconsole` | w2c | the holder: 8444, no key (the cluster's console keeps 8080) |
 | `w2c-domainagent.service` | `domainagent` | `domainagent` | w2c | every server |
-| `vms-domainpart.service` | `vms domainpart` | `camdomain` | vms | the holder: the VMS's books, 8096 |
+| `vms-domainpart.service` | `vms domainpart` | `camdomain` | vms | the holder: temporary VMS console diagnostics, 8096 |
 
 `w2c-domain.tmpfiles` makes the tokens socket's directory (2750 w2c:vms-camdomaintokens): the tokens socket's own group
-(ADR-0031, `<deployment>-<sub>domaintokens`), whose one member is `vms-domainpart` — no `m` line in the sysusers, no
-other unit names it. Rights: the configstore's file
+(ADR-0031, `<deployment>-<sub>domaintokens`), with no deployed readers after C6 — no `m` line in the sysusers or unit joins it. Rights: the configstore's file
 (`deploy/cluster/configstore-rights.json`, the domain roles from `w2cplatform/domain/rights.py`): `domain`,
 `domainconsole` (no `domain/signer*`, read or write), `domainagent` (with `!` denials), `camdomain`. Groups:
 `deploy/cluster/systemd/w2c-cluster.sysusers`. The console's groups are its socket's, `w2c-store` and `w2c-events` — not

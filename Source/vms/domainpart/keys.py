@@ -1,10 +1,4 @@
-"""Where the VMS's rows of the domain lie: under the prefix the platform gives the `vms` subsystem (`domain/cam/…`,
-`SubsystemSpec.domain_prefix`), by the names its spec declares (`domain.books`). Nothing here names a
-row the spec does not: a book renamed in the spec and not here fails at import, not in a member's store.
-
-    books (one per member at the holder, `<book>/<member>`; carried home to the member as `<book>`)
-        ASKS_PATH        for each camera a scenario makes a trigger: whom it may ask, by which roads (Lesson 16)
-"""
+"""Secret opening helpers for the remaining VMS domain console diagnostics."""
 from __future__ import annotations
 
 import os
@@ -69,6 +63,3 @@ class OpenedVars:
 
     def __getattr__(self, name):
         return getattr(self.inner, name)
-
-
-ASKS_PATH = _book("asks")

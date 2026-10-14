@@ -399,3 +399,20 @@ def test_revoked_member_and_frozen_holder_do_not_issue_tokens():
         with serving(ConsoleServer(("127.0.0.1", 0), e.holder.handler())) as srv:
             remote = client(e, door=f"http://127.0.0.1:{srv.server_port}")
             assert raises(Refused, lambda: remote.request_token("testsub", "tally", "badge", "testsubworker")).status == 503
+
+
+def test_embedded_agent_uses_authenticated_relay_link_for_role_requests():
+    from w2cplatform.domain.relay import RelayLink
+    with issuing() as e:
+        placement.assign(e.north.vars, "testsub", "badge", {"cluster": "north", "origin": "south"}, e.wall)
+        relay_agent = SimpleNamespace(domain_vars=client(e, "north"), now=e.wall,
+            relayed={"south": {"key": e.memberkeys["south"].pub}})
+        relay = RelayDoor(relay_agent)
+        agent = DomainAgent("south", RelayLink(relay), e.fed.clusters["south"].vars,
+                            now=e.wall, key=e.memberkeys["south"])
+        got = agent.request_token("testsub", "tally", "badge", "testsubworker", request_id="embedded")
+        assert got["request_id"] == "embedded"
+        assert verify(got["token"], e.signer.tokens.keyset(), now=e.wall())["aud"] == ["north"]
+        # The relay still verifies the original member signature, not its own identity.
+        relay_agent.relayed["south"]["key"] = e.memberkeys["north"].pub
+        assert raises(Refused, lambda: agent.request_token("testsub", "tally", "badge", "testsubworker")).status == 401

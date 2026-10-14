@@ -24,17 +24,20 @@ from w2cplatform.worker import Worker
 _doors = WeakKeyDictionary()
 
 
-def role_requests(vars_):
-    return _doors.get(vars_)
+def role_requests(vars_, role=None):
+    door = _doors.get(vars_)
+    if role is None or door is None:
+        return door
+    return SimpleNamespace(request=lambda kind, ref, by=None: door.request(kind, ref, by, role))
 
 
 def bind_requests(vars_, client):
     # The camera keeps the same local role door when its agent follows a new
     # holder. Existing pushers must see that road rather than a captured old one.
     door = _doors.setdefault(vars_, SimpleNamespace())
-    door.request = lambda kind, ref: client.request_token(
+    door.request = lambda kind, ref, by=None, role=None: client.request_token(
         "rec" if kind == "upstream" else "cam", kind, ref,
-        "recworker" if kind == "upstream" else "camworker")
+        role or ("recworker" if kind == "upstream" else "camworker"), by)
 
 
 def camera_pusher(serial, flash, dial, **kw):
@@ -51,13 +54,10 @@ class RecordingDomain:
         self.holder_cluster = inputs.view.fed.domain_holder
         self.vars = next((d.flash for d in devices if d.name == self.holder_cluster.name), self.holder_cluster.vars)
         self.objects = self.holder_cluster.objects if domain_objects is None else domain_objects
-        from w2cplatform.trust.documents import sign
-        if self.vars.get("domain/holder")[0] is None:
-            self.vars.put("domain/holder", {"doc": json.dumps(sign({"term": 1,
-                "holder": self.holder_cluster.name, "at": self.wall()}, signer.tokens))})
         self.agents, self.devices = list(agents), list(devices)
         self.recorders = []
         self.publishers = {}
+        self.auto_workers = {}
         self.report_at = {}
         self.keys = {}
         self.door = HolderDoor(self.vars, self.objects, sealer=getattr(inputs.vars, "sealer", None), wall=self.wall,
@@ -78,16 +78,30 @@ class RecordingDomain:
             key = (local_agent.key if local_agent and local_agent.key is not None else
                    MemberKey.load_or_make(vars_, local_agent.sealer if local_agent else None))
             self.keys[name] = key
-            roster[name] = {"key": key.pub, "seal": key.seal_pub}
+            if name != self.holder_cluster.name:
+                roster[name] = {**roster.get(name, {}), "key": key.pub, "seal": key.seal_pub}
             vars_.put("domain/member", {"cluster": name})
             client = CarryClient(self.door, name, key, self.wall)
             bind_requests(vars_, client)
         self.vars.put("domain/members", {"doc": json.dumps({"rev": previous["rev"] + 1, "members": roster})})
+        # Membership of the holder is established only by taking its term.
+        from w2cplatform.domain.term import DomainHolder
+        have = self.vars.get("domain/holder")[0]
+        record = json.loads(have["doc"]) if have else None
+        term = DomainHolder(inputs.view.fed, self.holder_cluster.name, signer,
+                            int(record["term"]) if record else 1, wall=self.wall,
+                            objects=self.objects, record=record)
+        term.claim()
+        self.holder.term = term
+        assert self.holder_cluster.name in json.loads(self.vars.get("domain/members")[0]["doc"])["members"]
         if (inputs.centre or any(c.via for c in inputs.view.fed.clusters.values())) and self.vars.get("domain/topology")[0] is None:
             self.vars.put("domain/topology", {"doc": json.dumps({"rev": 1, "centre": inputs.centre,
                 "star": sorted(inputs.star), "via": {n: c.via for n, c in inputs.view.fed.clusters.items() if c.via}})})
         for agent in self.agents:
             agent.key = self.keys[agent.cluster]
+            if agent.cluster_objects is None:
+                agent.cluster_objects = next((d.disk for d in self.devices if d.name == agent.cluster),
+                    inputs.view.fed.clusters[agent.cluster].objects)
             if not hasattr(agent.domain_vars, "answer_for"):
                 agent.domain_vars = CarryClient(self.door, agent.cluster, agent.key, self.wall)
             if agent.domain_objects is None and not hasattr(agent.domain_vars, "publish"):
@@ -109,6 +123,8 @@ class RecordingDomain:
 
     def add_agent(self, agent, device=None):
         self.agents.append(agent)
+        if agent.cluster_objects is None:
+            agent.cluster_objects = device.disk if device is not None else self.inputs.view.fed.clusters[agent.cluster].objects
         self.stores[agent.cluster] = agent.cluster_vars
         key = MemberKey.load_or_make(agent.cluster_vars, agent.sealer)
         self.keys[agent.cluster] = key
@@ -181,6 +197,26 @@ class RecordingDomain:
             recorder.heartbeat_once()
         self._reports()
         got["polls"] = bookruntime.collect(self.holder, REC_SPEC, "polls")
+        # Scenarios travel as signed settings; the ordinary auto worker of each
+        # path node publishes its own observations under its slot. A camera path
+        # node publishes through its embedded publisher in DeviceCluster.publish.
+        from vms.autoworker import AutoWorker
+        camera_members = {d.name for d in self.devices}
+        for name, cluster in self.inputs.view.fed.clusters.items():
+            if name not in self.stores or name in camera_members or isinstance(cluster.objects, _CopyObjects):
+                continue
+            worker = self.auto_workers.get(name)
+            if worker is None:
+                worker = AutoWorker('a-fixture', self.stores[name], cluster.objects,
+                    wall=self.wall, clock=self.wall, env={}, token_requests=role_requests(self.stores[name], 'autoworker'))
+                worker.claim_slot(worker.name)
+                self.auto_workers[name] = worker
+            try:
+                worker.renew_slot()
+                worker.heartbeat_once()
+            except Unreachable:
+                pass  # this local process cannot reach its cluster store either
+        self._reports()
         # The fixture runs the holder for every declared book, including names.
         for spec in declared.specs():
             for book in spec.domain.merged:

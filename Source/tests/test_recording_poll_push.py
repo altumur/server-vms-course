@@ -7,7 +7,7 @@ import tempfile
 import threading
 
 from tests.vmsconftest import Box
-from vms.domainpart.ingest import CameraPusher, Ingest, audience
+from vms.domainpart.ingest import CameraPusher, Ingest
 from vms.recording_books import Unconfirmed
 from vms.recording_publication import sources
 from w2cplatform.domain.topology import poll_home
@@ -41,11 +41,12 @@ class Site:
                 "urls": urls or ["http://"+home+"/ingest"]}}]})
         self.box.vars.put("domain/rec/polls", row)
 
-    def request_token(self, sub, kind, ref, role):
+    def request_token(self, sub, kind, ref, role, by=None, request_id=None):
+        assert by is None
         home = poll_home(self.box.vars, "camera")
         self.requests.append((sub, kind, ref, role, home))
         token = self.issuer.issue("camera", 86400, now=self.box.wall(), kind=kind, ref=ref, aud=[home])
-        reply = {"request_id": "local-poll", "token": token, "exp": self.box.wall()+86400}
+        reply = {"request_id": request_id or "local-poll", "token": token, "exp": self.box.wall()+86400}
         if self.before_reply:
             self.before_reply()
         return reply
@@ -107,8 +108,8 @@ def test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_
     ing = site.ingests["relay"]
     ing.want("serial", "viewer")
     queue = ing.subscribe("serial", "viewer")
-    action = {"preset": 3}
-    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=audience("relay"),
+    action = {"camera": "serial", "action": "preset", "arg": 3}
+    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=["relay"],
                               ref="serial", acts=[action])
     aid = ing.ask(token, "serial", action, site.box.wall()+30)
     with site.role_door() as door:

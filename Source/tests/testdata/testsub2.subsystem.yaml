@@ -139,7 +139,54 @@ events:
 snapshot: [name, of, mode, step]
 # what a member reports to the domain beside its heartbeats and snapshot, and who says when a tally was last heard of:
 # `testsub2/seen/*`, naming each member it heard of by the field that carries the member's name — `of`, fixed
-domain: {reports: [counts/], witness: {report: seen, member_field: of}}
+domain:
+  ref: name
+  reports: [counts/]
+  witness: {report: seen, member_field: of}
+  books:
+    notes: {from: testsub2/notes/, key: ref, pick: unique, to: to}
+    rolls: {from: testsub2/rolls/, key: ref, pick: all, to: to}
+  names:
+    notes/: {exclusive_with: domain/users, grant: view}
+  tokens:
+    feed:
+      lifetime: 600
+      claims: [aud, ref]
+      grant: [testsub2worker]
+      placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
+    tally2:
+      lifetime: 60
+      claims: [ref, by, acts, up, aud]
+      grant: [testsub2worker]
+      scenario:
+        doc: testsub2
+        items: rules
+        name: name
+        enabled: enabled
+        trigger: when.item
+        target: then.item
+        act: then
+        placement: testsub
+        ref_claim: ref
+        trigger_claim: by
+        acts_claim: acts
+        up_claim: up
+        audience_claim: aud
+  shared:
+    - name: rules
+      type: json
+      schema:
+        type: array
+        maxItems: 1000
+        items:
+          type: object
+          required: [name, when, then]
+          additionalProperties: false
+          properties:
+            name: {type: string, minLength: 1}
+            enabled: {type: boolean}
+            when: {type: object}
+            then: {type: object}
 metrics:
   # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
   # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).

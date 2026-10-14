@@ -308,7 +308,7 @@ def s10_watching(site) -> None:
     site.say_heartbeat("relay-a", fields=("upstream",))
 
 
-SCENARIO = {"when": {"camera": "SN-A2", "kind": "vehicle"},
+SCENARIO = {"name": "a-to-b", "when": {"camera": "SN-A2", "kind": "vehicle"},
             "then": {"camera": "SN-B", "action": "preset", "arg": 3, "within": 10}}
 
 
@@ -322,20 +322,27 @@ def s11_scenario(site) -> None:
     rev = int((shared.get("doc") or {}).get("rev", 0)) if isinstance(shared, dict) else 0
     site.ask("anna", "PUT", "domain console", "/domain/shared",
              {"base_rev": rev, "shared": {"auto": {"scenarios": [SCENARIO]}}})
-    log.note("Проход держателя: воркер VMS на домене строит книгу запросов — cam-a2 может спросить cam-b, дорогой через\n"
-             "свой офис relay-a и вверх, в центр (up: srv); relay-a получает право нести эту пару; токены «ask».")
-    site.holder.run_pass()
-    site.domainpart.pass_once()
-    log.note("Агенты несут книги и документ домой: relay-a — свою книгу запросов и книги cam-a2, cam-a2 — документ и книгу.")
-    site.sync("relay-a")
-    site.sync("cam-a2")
+    log.note("Агенты доставляют подписанный документ узлам пути; встроенный исполнитель камеры и обычные\n"
+             "autoworker читают свои проверенные копии. Каждый узел публикует свою дорогу без токенов.")
     with log.muted():
+        for _ in range(3):
+            for camera in site.cams.values():
+                camera.publish()
+            site.wall.advance(0.01)
+            site.agents_pass()
+            for name in ("srv", "relay-a", "relay-b"):
+                site.rec_pass(name)
+            site.wall.advance(0.01)
+            site.agents_pass()
+            site.domain_pass()
+        site.wall.advance(0.01)
         site.agents_pass()
     log.note("Событие на cam-a2: машина. Камера оставляет запрос у приёмника своего офиса (в курсе — вызов\n"
-             "Scenarios.on_event; у продукта — событие прошивки GET /api/v1/events → запрос POST /ingest/SN-B/ask).")
+             "DeviceCluster.on_event; у продукта — событие прошивки GET /api/v1/events → запрос POST /ingest/SN-B/ask).")
     sc = site.scenarios("cam-a2")
     with log.acting("automation on cam-a2"):
         left = sc.on_event("vehicle")
+    assert [x["state"] for x in left] == ["asked"], left
     log.note("→ " + json.dumps([{k: v for k, v in x.items() if k != "ingest"} for x in left], ensure_ascii=False))
     log.note("Передатчик relay-a, разбуженный запросом, несёт его в центр.")
     with log.acting("forwarder in r-relay-a-1 on relay-a"):
@@ -355,7 +362,8 @@ def s11_scenario(site) -> None:
     x = next((x for x in left if x.get("target") == "SN-B"), None)
     if x and x.get("ask"):
         with log.acting("automation on cam-a2"):
-            outcome = sc.asker.outcome("SN-B", x["ask"], x["deadline"])
+            outcome = sc.asks.executor.asker("SN-A2").outcome("SN-B", x["ask"], x["deadline"])
+        assert outcome == "performed", outcome
         log.note(f"cam-a2 читает исход своего запроса: {outcome}")
 
 

@@ -93,10 +93,10 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     assert reply["cluster"] == "north" and not console.edits
     assert pending.of("north")[reply["kept"]]["body"] == {"enabled": False}
 
-    books = Books(BookInputs(north.vars, view, wall, issuer=signer.tokens), north.objects)
+    books = Books(BookInputs(north.vars, view, wall), north.objects)
     for _ in range(2):
         wall.advance(5); out = books.pass_once()
-    assert out["failing"] == [] and "asks" in out and "polls" not in out
+    assert out["failing"] == [] and {"refused", "unchecked"} <= out.keys() and not {"asks", "polls"} & out.keys()
     page_ = view.list()
     assert page_["clusters"][cam.name] == "unreachable" and "complete report" in page_["why"][cam.name]
     assert MEMBER_OBJECTS.counts.get(cam.name, 0) == before + 1           # once, not once per read or per pass
@@ -237,8 +237,8 @@ def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_th
     signer = Signer("acme", south.vars, now=wall)
     DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
     ing = ingest_recorder("south", "srt://south:9000", wall, keys=lambda: ClusterTrust(south.vars).keyset()).ingest
-    acts = [{"action": "preset", "arg": i} for i in range(40)]
-    token = signer.tokens.issue("cam-GATE", 3600, now=wall(), aud=audience("south"), ref="SN5", by="GATE", acts=acts, kind="ask")
+    acts = [{"camera": "SN5", "action": "preset", "arg": i} for i in range(40)]
+    token = signer.tokens.issue("cam-GATE", 3600, now=wall(), aud=["south"], ref="SN5", by="GATE", acts=acts, kind="ask")
     for deadline, camera_now in ((float("nan"), None), (float("inf"), None), ("soon", None),
                                  (wall() + ASK_DEADLINE_MAX + 60, None), (wall() + 10, float("nan"))):
         for i in range(3):
@@ -606,10 +606,10 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     signer = Signer("acme", south.vars, now=wall)
     DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
     ing = ingest_recorder("south", "srt://south:9000", wall, keys=lambda: ClusterTrust(south.vars).keyset()).ingest
-    acts = [{"action": "preset", "arg": i} for i in range(MAX_LIVE_ASKS)]
+    acts = [{"camera": "SN5", "action": "preset", "arg": i} for i in range(MAX_LIVE_ASKS)]
 
     def token(by):
-        return signer.tokens.issue(f"cam-{by}", 3600, now=wall(), aud=audience("south"), ref="SN5", by=by, acts=acts,
+        return signer.tokens.issue(f"cam-{by}", 3600, now=wall(), aud=["south"], ref="SN5", by=by, acts=acts,
                                    kind="ask")
     flood, other = token("GATE"), token("YARD")
     for deadline in (wall() - 1, wall()):

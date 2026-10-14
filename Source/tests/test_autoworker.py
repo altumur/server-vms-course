@@ -68,7 +68,7 @@ DOOR = {"name": "door-on-badge",
 def _worker(box, log, name="a-1"):
     """With the token a scenario evaluator actually gets: its own prefix, plus
     the one family of somebody else's it may write."""
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec"))
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role())
     return AutoWorker(name, vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
                       server="srv-a", resource_root=box.resource_root, env={})
 
@@ -122,7 +122,7 @@ def test_an_actions_values_are_filed_in_the_bases_one_text_not_pythons():
                          {"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 2.5,
                           "params": {"thr": 0.5}}])
     _assigned(box, "door-on-badge")
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec", "det"))
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role())
     w = AutoWorker("a-1", vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
                    server="srv-a", resource_root=box.resource_root, env={})
     assert w.reconcile_once() == ["door-on-badge"]
@@ -271,7 +271,7 @@ def test_the_token_reaches_requests_and_nothing_else():
     to give: `requests` cannot change configuration, cannot place anything and
     cannot outlive the row it writes."""
     box = Box()
-    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec"))
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role())
     vars_.put("cam/requests/x", {"unit": "12", "action": "output"})           # allowed
     vars_.put("rec/requests/y", {"unit": "7", "action": "record"})            # allowed
     for forbidden in ("cam/cameras/12", "rec/recordings/7", "cam/placement/12", "auto/scenarios/x"):

@@ -364,7 +364,7 @@ rights:
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, priority, labels, ref, live]
 # Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
-# The remaining domain worker publishes asks until its own window.
+# Ordinary autoworkers publish asks; role credentials are requested by each caller (C6).
 # Recording assignments are platform rows, read through /domain/placement. Domain names and grants
 # remain declared here; the platform carries and checks them without VMS-specific code.
 domain:
@@ -375,7 +375,6 @@ domain:
   edit: [enabled]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
-    asks: {}
   tokens:
     stream:
       lifetime: 86400
@@ -387,7 +386,11 @@ domain:
       claims: [aud, ref]
       grant: [camworker, recworker]
       unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}
-    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
+    ask:
+      lifetime: 86400
+      claims: [aud, ref, by, acts, up]
+      grant: [autoworker, recworker]
+      scenario: {doc: auto, items: scenarios, name: name, enabled: enabled, trigger: when.camera, target: then.camera, act: then, placement: rec, ref_claim: ref, trigger_claim: by, acts_claim: acts, up_claim: up, audience_claim: aud}
   # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
   # book's entry carries its token sealed, `token_secret`, the domain's signer's (`tokens:` above; ADR-0010, its addition
@@ -399,8 +402,6 @@ domain:
   shared: [folders, alarms]
   keys:
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
-    - {id: asks, keys: [domain/cam/asks], prefix: domain/cam/asks/}
-    - {id: worker, keys: [domain/cam/worker]}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:
@@ -512,13 +513,6 @@ display:
     sources:
       title: Книги источников
       about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
-    asks:
-      title: Просьбы
-      about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/cam/asks/<кластер> — книга каждого кластера."
-    worker:
-      title: Воркер книг
-      about: Слот воркера VMS на домене — кто сейчас пишет книги (экземпляр и время).
-      absent: "Записи нет: воркер книг ещё не запускался на держателе домена."
 
 console:
   # the name of the running gauge, one of `metrics:` above (`cam_cameras_running <n>`: status entries in phase

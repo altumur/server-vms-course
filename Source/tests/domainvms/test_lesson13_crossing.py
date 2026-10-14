@@ -33,7 +33,7 @@ def _site(wall):
         domain_objects=north.objects, published=cam.local_objects())
     sa = DomainAgent("south", north.vars, south.vars, now=wall)
     view = ReadView(fed, wall=wall)
-    inputs = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    inputs = BookInputs(north.vars, view, wall)
     books = RecordingDomain(inputs, signer, agents=[ca, sa], devices=[cam])
     return fed, link, south, cam, books, sa, ca
 
@@ -152,3 +152,28 @@ def test_reassignment_withdraws_old_recipients_and_old_books_confer_no_connectio
         raise AssertionError("former receiver still has a source")
     row = fed.domain_holder.vars.get("domain/cam/sources/north")[0]
     assert source(row, SERIAL).member == cam.name
+
+
+def test_the_fixture_holder_claims_its_term_and_keeps_its_own_member_key():
+    from w2cplatform.domain.members import Members
+    from w2cplatform.domain.term import read_holder
+    from w2cplatform.trust.memberkey import MemberKey
+    wall = Clock()
+    fed, _, _, _, books, _, _ = _site(wall)
+    holder = fed.domain_holder
+    members = Members(holder.vars)
+    before = members.read()
+    mine = before["members"][holder.name]
+    key = MemberKey.load_or_make(holder.vars)
+    assert books.holder.term is not None
+    assert mine["how"] == "holder" and (mine["key"], mine["seal"]) == (key.pub, key.seal_pub)
+    assert read_holder(holder.vars, books.signer.tokens.keyset(), wall())["holder"] == holder.name
+    books.holder.term.claim()
+    assert members.read() == before
+    members.remove("south")
+    books.holder.term.claim()
+    assert "south" not in members.read()["members"]
+    assert members.read()["members"][holder.name] == mine
+    holder.vars.put("domain/holder", {"doc": json.dumps({"term": 999, "holder": "forged"})})
+    assert read_holder(holder.vars, books.signer.tokens.keyset(), wall()) is None
+    assert members.read()["members"][holder.name] == mine and "forged" not in members.names()

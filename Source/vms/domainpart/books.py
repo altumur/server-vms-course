@@ -1,24 +1,14 @@
-"""The domain's pass over the books — one place that writes every per-cluster book, in the order they depend
-on each other. The console's pass reads (the view, `domain/view`, kept edits); this one mints tokens, so it
-runs where the signer's key is: `domain.signer_service`, when it is given CLUSTERS.
+"""Remaining domain-side console diagnostics until ADR-0074 C7.
 
-    C2 sources/primaries are published by ordinary workers and collected by the platform.
-    asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
-                             ask, by which roads — built last, because it reads what the others decided
-
-EACH BOOK IS A STEP OF ITS OWN (the review's eighth pass; the seventh left "the steps of `Books.pass_once`" open).
-The pass was one call for everything: a member's object that raised in the first read stopped all five books, and
-the stream tokens and the tokens to ask that they carry are re-issued only here — within a day every camera of the
-domain was refused at its ingest. Now each step runs in `Steps`: one that raises is logged once until it works
-again, counted, and named in what the pass returns (`failing`); its book is the one written last, which is what a
-book is for; and the steps after it run. A step that reads what another decided reads the books as they are.
+All books are collected by the platform from signed member reports. This pass
+only follows membership/topology and computes scenario diagnostics for the
+remaining console endpoints; it issues no token and writes no book.
 """
 from __future__ import annotations
 
 import logging
 
-from .ingest import publish_asks
-from .scenario import pairs, refusals, unchecked
+from .scenario import refusals, unchecked
 from w2cplatform.domain.shared import published
 from w2cplatform.domain.steps import Steps
 
@@ -39,10 +29,9 @@ class Books:
             ("the read view's pass", c.view.refresh),
             ("the shared settings", lambda: published(c.vars, self.objects)))
         out = {}
-        if "the shared settings" in got:                 # a document nobody can read writes no book of asks: the last stays
+        if "the shared settings" in got:                 # unreadable settings cannot produce fresh diagnostics
             settings = got["the shared settings"]
             more = self.steps.run(
-                ("asks", lambda: len(publish_asks(c, pairs(settings)))),
                 # What a scenario means is checked here, not where the document is signed (the signer asks no
                 # subsystem's code, ADR-0032) — and a camera can leave the domain afterwards: such a scenario is SAID,
                 # every pass, never skipped in silence.
