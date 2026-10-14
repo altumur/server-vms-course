@@ -33,7 +33,9 @@
     "door/signer",
     "door/keys",
     "domain/backup*",
-    "domain/member-key*"
+    "domain/member-key*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*"
    ],
    "write": [
     "auto/scenarios/*",
@@ -52,7 +54,6 @@
     "cam/policy",
     "cam/sweep",
     "cam/requests/*",
-    "cam/devices/*",
     "det/units/*",
     "det/next_id",
     "det/idem/*",
@@ -109,7 +110,6 @@
     "cam/policy",
     "cam/sweep",
     "cam/requests/*",
-    "cam/devices/*",
     "det/units/*",
     "det/next_id",
     "det/idem/*",
@@ -368,7 +368,9 @@
     "platform/schema",
     "live/*",
     "cam/*",
-    "platform/*"
+    "platform/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*"
    ],
    "write": [
     "live/workers/*",
@@ -396,21 +398,28 @@
     "domain/keys",
     "domain/member",
     "door/keys",
-    "domain/cam/stream-clients/*",
-    "domain/cam/stream-accounts",
+    "domain/live/stream-accounts",
+    "domain/member-list",
+    "domain/holder",
+    "domain/members",
+    "domain/live/stream-accounts/*",
     "domain/grants/*"
    ],
    "write": [
     "live/epoch/*",
     "live/slots/*",
     "live/holds/*",
-    "live/streams/*"
+    "live/streams/*",
+    "live/accounts/*",
+    "live/stream-accounts/*"
    ],
    "delete": [
     "live/epoch/*",
     "live/slots/*",
     "live/holds/*",
-    "live/streams/*"
+    "live/streams/*",
+    "live/accounts/*",
+    "live/stream-accounts/*"
    ]
   },
   "reccontroller": {
@@ -601,6 +610,8 @@
     "live/*",
     "rec/*",
     "survey/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -629,10 +640,11 @@
     "!domain/backup*",
     "!domain/book-seal*",
     "!domain/break-glass/*",
-    "!domain/cam/stream-accounts*",
-    "!domain/cam/stream-clients/*",
+    "!domain/live/stream-accounts*",
     "!domain/member-key*",
     "!domain/users/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -655,10 +667,10 @@
    "read": [
     "*",
     "!domain/book-seal*",
-    "!domain/cam/stream-clients/*",
     "!domain/signer*",
     "!domain/users/*",
     "!door/signer*",
+    "!live/accounts/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -678,10 +690,11 @@
     "!domain/ldevid/*",
     "!domain/cam/asks/*",
     "!domain/cam/sources/*",
-    "!domain/cam/stream-accounts/*",
-    "!domain/cam/stream-clients/*",
     "!domain/cam/worker",
     "!domain/cam/heartbeat",
+    "!domain/live/stream-accounts/*",
+    "!domain/live/worker",
+    "!domain/live/heartbeat",
     "!domain/rec/polls/*",
     "!domain/rec/primaries/*",
     "!domain/rec/upstream/*",
@@ -705,10 +718,11 @@
     "!domain/ldevid/*",
     "!domain/cam/asks/*",
     "!domain/cam/sources/*",
-    "!domain/cam/stream-accounts/*",
-    "!domain/cam/stream-clients/*",
     "!domain/cam/worker",
     "!domain/cam/heartbeat",
+    "!domain/live/stream-accounts/*",
+    "!domain/live/worker",
+    "!domain/live/heartbeat",
     "!domain/rec/polls/*",
     "!domain/rec/primaries/*",
     "!domain/rec/upstream/*",
@@ -733,7 +747,8 @@
     "live/*",
     "rec/*",
     "survey/*",
-    "domain/grants/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
     "!rec/asked/*"
    ],
    "write": [
@@ -743,6 +758,39 @@
    "delete": [
     "domain/cam/*",
     "!domain/cam/sources/*"
+   ]
+  },
+  "livedomain": {
+   "group": "vms-livedomain",
+   "read": [
+    "platform/schema",
+    "domain/live/*",
+    "domain/keys",
+    "domain/topology",
+    "domain/members",
+    "domain/shared",
+    "platform/*",
+    "auto/*",
+    "cam/*",
+    "det/*",
+    "detjob/*",
+    "live/*",
+    "rec/*",
+    "survey/*",
+    "domain/grants/*",
+    "domain/names/live/*",
+    "!domain/live/stream-accounts*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
+    "!rec/asked/*"
+   ],
+   "write": [
+    "domain/live/*",
+    "!domain/live/stream-accounts/*"
+   ],
+   "delete": [
+    "domain/live/*",
+    "!domain/live/stream-accounts/*"
    ]
   },
   "recdomain": {
@@ -762,6 +810,8 @@
     "live/*",
     "rec/*",
     "survey/*",
+    "!live/accounts/*",
+    "!live/stream-accounts/*",
     "!rec/asked/*"
    ],
    "write": [
