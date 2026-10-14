@@ -75,7 +75,7 @@ object:
   ops:       операции объектов сводятся к словарю урока 1 и его отказам: put_new — «записать, если нет» (conflict, когда есть);
              get_at — чтение с индексом объекта; put_at — запись по прочитанному индексу (иной индекс → conflict, как cas строки);
              put_durable — запись тела целиком с барьером долговечности до публикации (строка ссылается на тело только после
-             ответа — урок 10); append — дописать строку события в открытый бакет (только его писатель, Н1.2); иных атомарностей нет
+             ответа — урок 10); delete_at — удаление по прочитанному индексу (иной индекс → conflict, объект не тронут — урок 10, уборка); append — дописать строку события в открытый бакет (только его писатель, Н1.2); иных атомарностей нет
   door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/*, */heartbeats/*, */contenders/*, */snapshot/*,
              */controller/*, */blobs/*) и objects.door спеки; иное — 403
   disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога
@@ -246,7 +246,7 @@ paths:
     get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
   /mirror/{server}/{path}:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
-    put:    {responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
+    put:    {requestBody: {required: true, content: {application/octet-stream: {schema: {type: string, format: binary}}}}, parameters: [{name: X-Sum, in: header, required: true, schema: {type: string}, description: sha256 тела}], responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
   /mirrored/{server}:  # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
     parameters: [{name: server, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: "{copies: [{path, written, size, sum}]}"}, "404": {description: копий этого сервера нет}}}
@@ -254,7 +254,7 @@ paths:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
   /marks:                                    # консоль
-    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
+    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", requestBody: {required: true, content: {application/json: {schema: {type: object, required: [unit], properties: {unit: {type: string}, note: {type: string, maxLength: 200}}}}}}, responses: {"200": {description: "{written: true}"}, "400": {description: unit не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
   /{sub}/requests:  # консоль
     parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
     post:
@@ -325,8 +325,9 @@ retain:  для каждого дерева: days = <sub>/retention | 365 (tree.
          копии зеркала — days + 1 ч); журнал events.removed; index.forget
 usage:   измерить тома (зонд ≤ 5 с); пульс space/volumes
 relieve: platform/space.enabled ∧ used/total > high → для спек с requests.free: need = used − total·low − Σ freeing
-         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at} (cas, перезаписать прежнюю);
-         need ≤ 0 (всё нужное уже освобождается, ADR-0059) или ниже low → удалить строку, если есть
+         need > 0 → записать free-<server>-<volume> {free: need, volume, server, at}: cas "" или cas по версии строки СВОЕЙ формы
+         (без unit); под этим ключом строка с unit — обычная просьба (ADR-0060) → не трогать, журнал free_ask.key_taken, пропустить;
+         need ≤ 0 (всё нужное уже освобождается, ADR-0059) или ниже low → удалить строку своей формы, если есть (чужую — нет)
 mirror:  platform/mirror.enabled → соседи = следующие copies живых по имени; закрытые бакеты, которых у соседа нет
          (сумма) → PUT /mirror/<я>/<путь>; PEER_FAILS подряд → сосед пропущен на проход
 каждый шаг — своя попытка; шаг дольше PULSE_LIMIT → pass_stalled в пульсе
