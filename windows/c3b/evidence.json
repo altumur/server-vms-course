@@ -1,0 +1,98 @@
+{
+  "source_head": "344dea43a9587d24e8ba7b2cc839ab381fd2d3da",
+  "source_inputs": {
+    "base": "ee717a8a89e481fdeda2967943e76ae025cf021b",
+    "source": {
+      "Source/tests/domainvms/test_lesson17_chain.py": "714e042bf484247007ac2ab6501ef0243aa0c1da89c7015b5eb58b8c114fa7da",
+      "Source/tests/test_token_requests.py": "ceaa3eed817b0f6561c4262bb36a3dc61cea69c7f42aa4b5e98ab8bcb8c28242",
+      "Source/tests/testdata/spec_load_debt.txt": "8ff74d8fa41c359f50f3d0ae4134c0ba2d5fd04e845acfe7b85d711365214dc8",
+      "Source/tests/testdata/spec_parity_debt.txt": "1bbca501eab48d0b7d421a1050b843b39739572a119c1341fc13a24e8b28ebda",
+      "Source/vms/cam.subsystem.yaml": "8d571347843fdf56103a23892069fcef447e1828400e570774e44d837195c3d7",
+      "Source/vms/domainpart/chain.py": "07d38ebd3dffc390162349ea11f781badd6957d542c97ad9f49ab8ef1bdaefc0",
+      "Source/vms/domainpart/ingest.py": "73d4fc2a7b24326d597afd43ad230c8c0d93773a7835864344af643abb529579",
+      "Source/vms/recording_books.py": "1e30c991ca4008e37a5310c2c05912f934490321b837b2a085adf3f24c78cdb7",
+      "Source/vms/recording_publication.py": "15c8bcc0cc9f2235ef8de3a1bdda943546dde49b276abf35e1a92a3980e14203",
+      "Source/vms/recording_push.py": "003e6664fa04a087a767bab7406d6ba470972bc704aaff4e680f25266d396ae4",
+      "Source/vms/recworker.py": "8ee11ad696040c48d311d429f28b1571dd52a5a5aa05c92bd9c225ab2548c9a4",
+      "Source/w2cplatform/domain/tokenrequest.py": "d440497d21fc6f243e950e88de68a3d91e951ad81fc7872047d0337a6327b7ae",
+      "Source/w2cplatform/domain/tokenrequest.py.md": "607d84e671c57b86c97447c1b2baae84a2c6fc55c9ab8a03fa12b3dabdc9e625",
+      "Source/w2cplatform/spec.py": "95778e88c7f0040b264ec594a724b349241368f20c5860c825b561d44544c297",
+      "Source/tests/test_recording_star.py": "2e27e717dc1e40d9dd66ec0b1d93ff902dc8e66d384e479a32a56c67df31ef10",
+      "Source/tests/test_star_ranges.py": "82feb4d0e731c991bed3b66ae2c82df19d225f863dbd0f9914e779a0080c3778"
+    }
+  },
+  "runs": [
+    {
+      "path": "windows/c3b/c3b-star-tests-baseline-red.log",
+      "sha256": "8893b923a1fdbb147f7aa7a803eba838f7919fd0f89fb3c4fb5e3948433a80d1",
+      "exit": 1,
+      "last_line": "0 passed, 3 failed"
+    },
+    {
+      "path": "windows/c3b/c3b-star-tests-relay-fetch-static.log",
+      "sha256": "1ff0aed29ac754e66350d906d9debca85f053f89658a1dcf9a7c2b5efe99f1ec",
+      "exit": null,
+      "last_line": "Runtime required: RecWorker.host_ingest installs card_range using ref_of(self.vars,src); Forwarder.fetch_range, Ingest.fetch as authorized. Runtime not available in this C3 baseline; execution remains pending parent integration."
+    },
+    {
+      "path": "windows/c3b/c3b-star-unit-baseline.log",
+      "sha256": "b925a52367b6dc50084478c6fc55d2a094ba591c4b8988e656887d3d5bf31464",
+      "exit": null,
+      "last_line": "2 passed, 5 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/cluster-full.log",
+      "sha256": "3d94f1d132fda9e40138b454d8a4ca1ae243b76b9dc321cc39baff3ac826cc57",
+      "exit": 0,
+      "last_line": "121 passed, 0 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/core-first.log",
+      "sha256": "a699b59e05d36b143fdc36296e73f9cdd559f5ccb3734f44241eef69982f380d",
+      "exit": 1,
+      "last_line": "57 passed, 3 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/core-second.log",
+      "sha256": "ffb8c0d1f88aefce569cb30a42f8d97fd84b47c1c0548822a233633825ca767d",
+      "exit": 1,
+      "last_line": "74 passed, 1 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/domain-full.log",
+      "sha256": "d068a8c3d0f3659752a60bead424fba72241840ce5ae163d87c56656d3a2dd2d",
+      "exit": 0,
+      "last_line": "228 passed, 0 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/domainvms-first.log",
+      "sha256": "f1de74ac76aeab883010c23d20f4f01067d5dd9ed312742b9c5a5a20386ebefb",
+      "exit": 1,
+      "last_line": "73 passed, 93 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/domainvms-full.log",
+      "sha256": "5e536386d911345bd4e452be50f74cc7d862b56695202ba13c4149e8ead2b432",
+      "exit": 0,
+      "last_line": "166 passed, 0 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/domainvms-second.log",
+      "sha256": "96508a7853d0ac0c700d4c5556e501830045d3a88287f0e99981df984a1d980e",
+      "exit": 0,
+      "last_line": "166 passed, 0 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/ranges-token.log",
+      "sha256": "9d6af38d50f301b076f76d43a9a49b22851226cc8ed2f638ddeeee13f68088a0",
+      "exit": 0,
+      "last_line": "21 passed, 0 failed, 0 skipped"
+    },
+    {
+      "path": "windows/c3b/unit-full.log",
+      "sha256": "0e0f7e2fd86eebe018d05810950d5d9c61e1d0a7dd4c5927f7b8fb02cc6dc5f0",
+      "exit": 0,
+      "last_line": "1907 passed, 0 failed, 0 skipped"
+    }
+  ]
+}
