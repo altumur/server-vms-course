@@ -237,6 +237,10 @@ class DomainAgent:
         """Called only by a handler on the authenticated role's private socket."""
         from .carry import Refused
         road = self.domain_vars
+        from .relay import RelayLink
+        if self.key is not None and isinstance(road, RelayLink):
+            from .carry import CarryClient
+            road = CarryClient(road.door, self.cluster, self.key, self.now)
         if self.key is None or not hasattr(road, "request_token"):
             raise Refused(503, "the agent has no authenticated token request road")
         return road.request_token(sub, kind, ref, role, by, request_id)
