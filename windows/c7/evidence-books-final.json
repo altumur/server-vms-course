@@ -1,0 +1,40 @@
+{
+  "snapshot": "f145f82439f0aca22482247ee75f17863f431fff",
+  "manifest": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-source.json",
+  "manifest_sha256": "c5fe4fb6228edd32d23463049df34795b63d8e563e759a285f4043e3ab758ccf",
+  "unchanged_source_files": 1010,
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-unit.log",
+      "sha256": "71908ff2c5507f6c4df305a3ca44cd66e639db3dc92efc39986bc5ece28e8680",
+      "exit": 1,
+      "counts": [
+        2111,
+        1,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-cluster.log",
+      "sha256": "f72b790a6310c8ca3008c2d3a5de805e611b3f08ddd00a98259e1443e709cded",
+      "exit": 0,
+      "counts": [
+        119,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-books-final-domain.log",
+      "sha256": "644cfe113ab2e9449125105d177b84fcbd144c414d4d20f26c093f859ef987cf",
+      "exit": 0,
+      "counts": [
+        228,
+        0,
+        0
+      ]
+    }
+  ],
+  "expected_unit_failure": "platform_lists product pause,5acd45a2",
+  "status": "Full frozen Source before one approved domainvms expectation correction; domainvms separately."
+}
