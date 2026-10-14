@@ -1,0 +1,97 @@
+{
+  "id": "V11-key",
+  "valid": true,
+  "target": "variables.py",
+  "description": "traversal segments accepted as keys",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 25,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "13-bad-key",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "13-bad-key",
+      "3",
+      "body.index.extra"
+    ],
+    [
+      "13-bad-key",
+      "3",
+      "body.items.extra"
+    ],
+    [
+      "13-bad-key",
+      "3",
+      "body.kind"
+    ],
+    [
+      "13-bad-key",
+      "3",
+      "status"
+    ],
+    [
+      "13-bad-key",
+      "4",
+      "body.index.extra"
+    ],
+    [
+      "13-bad-key",
+      "4",
+      "body.kind"
+    ],
+    [
+      "13-bad-key",
+      "4",
+      "status"
+    ],
+    [
+      "20-guard-forms",
+      "3",
+      "body.index.extra"
+    ],
+    [
+      "20-guard-forms",
+      "3",
+      "body.key.extra"
+    ],
+    [
+      "20-guard-forms",
+      "3",
+      "status"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "variables.py:safe_path",
+  "api_function_calls": 185,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      41,
+      5,
+      0
+    ],
+    "failures": [
+      "test_guard.py::test_partial_or_malformed_guard_is_refused_before_any_write",
+      "test_storemachine.py::test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words",
+      "test_storemachine.py::test_the_handle_maps_the_wire_back_to_the_contract",
+      "test_storemachine.py::test_the_variables_contract_holds_on_the_machine_through_the_handle_and_the_api",
+      "test_variables_contract.py::test_a_key_has_one_spelling"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
