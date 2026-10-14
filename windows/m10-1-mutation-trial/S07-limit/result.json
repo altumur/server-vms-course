@@ -1,0 +1,70 @@
+{
+  "id": "S07-limit",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "ceiling silently halved",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 24,
+  "api_failed_scenarios": [
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "15-too-large",
+      "1",
+      "body.limit"
+    ],
+    [
+      "15-too-large",
+      "3",
+      "body.index"
+    ],
+    [
+      "15-too-large",
+      "3",
+      "body.kind.extra"
+    ],
+    [
+      "15-too-large",
+      "3",
+      "body.limit.extra"
+    ],
+    [
+      "15-too-large",
+      "3",
+      "body.size.extra"
+    ],
+    [
+      "15-too-large",
+      "3",
+      "status"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:<module>",
+  "api_function_calls": 1,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 0,
+    "totals": [
+      46,
+      0,
+      0
+    ],
+    "failures": [],
+    "import_failure": false
+  },
+  "unit_killed": false
+}
