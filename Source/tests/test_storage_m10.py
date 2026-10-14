@@ -202,3 +202,102 @@ def test_two_handles_retrying_one_id_apply_it_only_once():
             assert len({r["index"] for r in receipts}) == 1
             assert sum(r["again"] is False for r in receipts) == 1
             assert store.get("acc/row")[1] == receipts[0]["index"]
+
+
+def test_native_list_names_foreign_rows_and_omits_a_concurrent_delete(monkeypatch):
+    from tests.storage_acceptance import NativeAPI
+    for factory in (lambda root: FileVariables(root, volatile=True), lambda root: MemVariables()):
+        with tempfile.TemporaryDirectory() as root:
+            store = factory(root)
+            version = store.put('other/row', {'secret': 'hidden'})
+            handle = store.as_writer('acceptance', ['acc/*'])
+            api = NativeAPI(handle)
+            assert api.request('GET', '/v1/get?key=other/row', b'')[0] == 403
+            assert api.request('GET', '/v1/list?prefix=other/', b'') == (200, {'keys': {'other/row': str(version)}})
+            original_list = handle.list
+            def delete_after_list(prefix):
+                names = original_list(prefix)
+                for key in names:
+                    store.delete(key)
+                return names
+            monkeypatch.setattr(handle, 'list', delete_after_list)
+            assert api.request('GET', '/v1/list?prefix=other/', b'') == (200, {'keys': {}})
+
+
+def test_memory_accepts_300_byte_keys_and_a_1024_byte_utf8_guard_not_a_file_limit():
+    store = MemVariables()
+    key = 'acc/' + 'k' * 296
+    guard_key = 'acc/' + 'я' * 510
+    assert len(key.encode()) == 300 and len(guard_key.encode()) == 1024
+    guard_index = store.put(guard_key, {})
+    version = store.put(key, {'v': 'one'}, guard={'key': guard_key, 'index': guard_index})
+    assert store.get(key) == ({'v': 'one'}, version)
+    for cmd in ({'op': 'put', 'key': guard_key + 'x', 'items': {}},
+                {'op': 'put', 'key': key, 'items': {}, 'guard': {'key': guard_key + 'x', 'index': 0}}):
+        try:
+            store.write(cmd)
+            raise AssertionError('key beyond 1024 raw bytes accepted')
+        except ValueError:
+            pass
+    from tests.storage_acceptance import NativeAPI
+    api = NativeAPI(store.as_writer('acceptance', ['acc/*']))
+    assert api.request('GET', '/v1/get?key=' + key, b'') == (200, {'items': {'v': 'one'}, 'index': str(version)})
+
+
+def test_the_wire_client_roundtrips_300_and_1024_byte_keys_and_guard_over_unix_http():
+    from tests.test_configstorevars import Daemon, url
+    from w2cplatform.variables import open_vars
+    with Daemon() as daemon:
+        store = open_vars(url(daemon.dir))
+        key = 'acc/' + 'k' * 296
+        guard_key = 'acc/' + 'я' * 510
+        at = store.put(guard_key, {})
+        version = store.put(key, {'v': 'one'}, guard={'key': guard_key, 'index': at})
+        assert store.get(key) == ({'v': 'one'}, version)
+        assert store.get(guard_key) == ({}, at)
+        assert store.list(key) == [key]        # prefix itself longer than File's bound
+        for path, guard in ((guard_key + 'x', None), (key, {'key': guard_key + 'x', 'index': at})):
+            try:
+                store.put(path, {}, guard=guard)
+                raise AssertionError('wire key beyond 1024 raw bytes accepted')
+            except ValueError:
+                pass
+        assert store.get(key) == ({'v': 'one'}, version)
+
+
+def test_file_retains_its_encoded_filename_limit_for_target_and_guard():
+    from w2cplatform.variables import KeyTooLong
+    with tempfile.TemporaryDirectory() as root:
+        store = FileVariables(root, volatile=True)
+        long_key = 'acc/' + 'k' * 296
+        for cmd in ({'op': 'put', 'key': long_key, 'items': {}},
+                    {'op': 'delete', 'key': long_key},
+                    {'op': 'put', 'key': 'acc/row', 'items': {}, 'guard': {'key': long_key, 'index': 0}}):
+            try:
+                store.write(cmd)
+                raise AssertionError('File accepted an encoded filename beyond its own limit')
+            except KeyTooLong as error:
+                assert error.limit == 246
+        assert store.get('acc/row') == (None, 0)
+
+
+def test_key_validation_precedes_weight_and_weight_precedes_write_acl():
+    from tests.storage_acceptance import NativeAPI
+    from w2cplatform.storemachine import Rights
+    machine = StoreMachine()
+    rights = Rights.parse({'roles': {'acceptance': {'read': ['acc/*'], 'write': ['acc/*'], 'delete': ['acc/*']}}})
+    calls = [lambda method, target, raw: answer(method, target, raw, 'acceptance', rights, machine.apply)]
+    with tempfile.TemporaryDirectory() as root:
+        stores = (FileVariables(root, max_bytes=524288, volatile=True), MemVariables(max_bytes=524288))
+        calls += [NativeAPI(store.as_writer('acceptance', ['acc/*'])).request for store in stores]
+        for call in calls:
+            cmd = {'op': 'put', 'key': 'other/row', 'items': {'blob': 'x' * 524288}}
+            code, body = call('POST', '/v1/write', json.dumps(cmd).encode())
+            assert code == 413 and body['kind'] == 'toolarge' and body['limit'] == 524288
+            cmd['key'] = 'other/../row'
+            code, body = call('POST', '/v1/write', json.dumps(cmd).encode())
+            assert code == 400 and body['kind'] == 'badkey'
+            cmd['key'] = 'other/row'
+            cmd['guard'] = {'key': 'acc/../guard', 'index': ''}
+            code, body = call('POST', '/v1/write', json.dumps(cmd).encode())
+            assert code == 400 and body['kind'] == 'badkey'
