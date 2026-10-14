@@ -1387,9 +1387,9 @@ class RecWorker(VmsWorker):
     def host_ingest(self, cluster: str, url: str | None = None, dial=None, keys=None, archive=None, needs=None):
         from w2cplatform.domain.agent import ClusterTrust
         from w2cplatform.domain.federation import Unreachable
-        from vms.domainpart.chain import Forwarder
+        from vms.forwarder import Forwarder
         from w2cplatform.domain.tokenrequest import WorkerTokenDoor
-        from vms.domainpart.ingest import (Ingest, heartbeat_peers, keep_clocks, should_from_snapshot,
+        from vms.ingest import (Ingest, heartbeat_peers, keep_clocks, should_from_snapshot,
                                            written_from_heartbeats)
         url = url or (self.archive_url + "/ingest" if self.archive_url else "")
         if not url:
@@ -1411,7 +1411,7 @@ class RecWorker(VmsWorker):
         self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
                                    objects=self.objects)
         self.forwarder.tokens.door = WorkerTokenDoor.from_env("recworker", self._token_requests_env)
-        from .domainpart.ingest import card_range
+        from .ingest import card_range
         from .recording_publication import ref_of
         self.card_range = card_range(self.forwarder, lambda src: ref_of(self.vars, src))
         return ing
