@@ -1,0 +1,98 @@
+{
+  "source_final_snapshot": "f02631a2",
+  "checks": [
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-contract-final-preflight.log",
+      "sha256": "0d43e21a84359c9cd226a1038aceeec4c2756d1c7c0a9561bf95ea89b42fadde",
+      "exit": 0,
+      "counts": [
+        44,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-roles-without-domain-worker-final.log",
+      "sha256": "054579d7543e007fe642c629c8ef0f36cc2f4294854470f51676ea4d88ca611a",
+      "exit": 0,
+      "counts": [
+        23,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-deploy-entrypoint.log",
+      "sha256": "3699886d5291c21faaa2e263502170d82bd54630f12474dcbf85dcf322e0e8a5",
+      "exit": 0,
+      "counts": [
+        28,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-deployed-domain-units-final.log",
+      "sha256": "b14b0f077ba1d40ef81ccc64d0716eb120862978867f18dcca14431336162170",
+      "exit": 0,
+      "counts": [
+        21,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-secret-key-families.log",
+      "sha256": "a39e07420361aae4424aab3004e8870c982476c0bfe7108de2bc6d580159caf3",
+      "exit": 0,
+      "counts": [
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-scenarios-no-domainpart-final.log",
+      "sha256": "716dd7018280fc3a75a39bb482f4ebac5623dbd04eda5b85e79f58c62b24f0a0",
+      "exit": 0,
+      "counts": [
+        31,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-ingest-stats-without-domain-door.log",
+      "sha256": "1449c4e5944c601d4419027b8ce91e99f5bffe92c3a423462e0f2cef43cd32b7",
+      "exit": 0,
+      "counts": [
+        35,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-no-road-diagnostics.log",
+      "sha256": "355171d2ba57355a03fcaad167c295d1dc0d8a2e7a09f0929316a19e82c1fa66",
+      "exit": 0,
+      "counts": [
+        18,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-stand-no-domainpart.log",
+      "sha256": "88ac5650da127b74cae9e0640b77c2a6521efc61b14a5c835cd6e98f5237a7a8",
+      "exit": 0,
+      "counts": null
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c7-stand-f04-role-token.log",
+      "sha256": "6ca23b5439578d0647d6033d3d58efade483e3d925bba00f3a4fa78c92767702",
+      "exit": 0,
+      "counts": null
+    }
+  ],
+  "full_runs": "in progress; separate evidence after exit"
+}
