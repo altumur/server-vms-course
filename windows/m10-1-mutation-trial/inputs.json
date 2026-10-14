@@ -1,0 +1,14 @@
+{
+  "base": "ce7f1a83507ba1859587c526d8609470e2ba1b65",
+  "python": "3.12.15 (main, Sep 30 2026, 22:04:19) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "scenario_sha256": "bf1927f361c7a6149dddd93cde18ef2f9376103de60cd5ba13a7d9dfa759b919",
+  "unit_modules": [
+    "test_variables_contract",
+    "test_storemachine",
+    "test_guard"
+  ],
+  "targets": {
+    "variables.py": "f04282a543835098af166d4e97bcf43d84498c83118bbfbdc29c1875da9ebc6e",
+    "storemachine.py": "ec605b546497154ea1b19ccb7278bd6d33f36fe86716cc221fc70681f556c64c"
+  }
+}
