@@ -8,13 +8,13 @@
 
 Консоль — единственное место, где платформа и подсистема встречаются перед человеком, и единственное, где легче всего нарушить границу: «добавим в консоль вкладку с архивом». Поэтому консоль собрана из трёх частей с разными хозяевами (ADR-0005, решение «композиция консоли»). **Процесс консоли** — платформа: он читает каталог спек и отвечает дверями, которые одинаковы для счётчиков `testsub` и камер; слова для человека он берёт из `display` спеки и не читает их смысла. **Модуль консоли** — платформа, один файл `console.js` у курса и продукта байт в байт: он знает только слова спеки и платформенные двери, и у него есть закрытый список того, что он может позвать. **Оболочка** — подсистема: страница `<sub>.shell.html`, которая монтирует модуль и добавляет свои вкладки и карточки вызовами библиотеки, не хуками (ADR-0002); за байтами потока и архива она идёт к держателю единицы по двери из `/where`, мимо консоли (ADR-0015).
 
-Второе, что держит консоль, — сторожевая. Консоль не выдаёт личности: человека удостоверяет домен (М12A), консоль получает токен, спрашивает у домена, кто это и что ему дано, и перед **каждой** дверью решает, достаточно ли гранта — на единицу, на метки или на весь кластер. Порядок «сначала путь, потом тело» не случаен: что дверь требует, известно до чтения тела, и тело лишнего не читается.
+Второе, что держит консоль, — сторожевая. Консоль не выдаёт личности: человека удостоверяет домен (М11), консоль получает токен, спрашивает у домена, кто это и что ему дано, и перед **каждой** дверью решает, достаточно ли гранта — на единицу, на метки или на весь кластер. Порядок «сначала путь, потом тело» не случаен: что дверь требует, известно до чтения тела, и тело лишнего не читается.
 
 ## Цели и не-цели
 
 **Решает:** три части консоли и их хозяев; страницу и модуль: откуда берётся оболочка, версия модуля, минимальная страница; двери консоли платформы — закрытый список с кодами; сторожевую: личность, порядок проверки, что требует каждая дверь, тела отказов, правило адреса без домена, аварийный вход (форма); ключи `display`, `servers.show`, `servers.status`, `console.running` — что значит каждое слово для модуля; `/spec` и `/mounts`; `/servers` и `/where`; `/metrics` — имена платформенных рядов; контракт модуля: монтирование, объекты, события, `api` с одним ключом, `may`, что модуль зовёт и чего не зовёт; что оболочка добавляет и чего не делает; приёмку дверями без воркеров.
 
-**Не решает** (отправлено): дверь единиц, идемпотентность — урок 3; двери контроллера (`/policy`, `/drain`, метки, вывод) — урок 4; `/events`, `/marks`, `/requests` — урок 8; `rights:` спеки — урок 6; люди, гранты, токены, вход, аварийный пароль по смыслу — М12A; домен в консоли (`/domain/*`, `/api/held`, `/api/backup`, переезд) — М12A и ADR-0066; `/schema`, снимок, таблицы, блобы — урок 10; установка, `CONSOLE_ROOT`, адреса, юниты — урок 11; оболочка VMS и её вкладки — М10B.
+**Не решает** (отправлено): дверь единиц, идемпотентность — урок 3; двери контроллера (`/policy`, `/drain`, метки, вывод) — урок 4; `/events`, `/marks`, `/requests` — урок 8; `rights:` спеки — урок 6; люди, гранты, токены, вход, аварийный пароль по смыслу — М11; домен в консоли (`/domain/*`, `/api/held`, `/api/backup`, переезд) — М11 и ADR-0066; `/schema`, снимок, таблицы, блобы — урок 10; установка, `CONSOLE_ROOT`, адреса, юниты — урок 11; оболочка VMS и её вкладки — М12A.
 
 ## Что нужно знать заранее
 
@@ -85,7 +85,7 @@ display:
                  # без form — один блок со всеми полями
   events:        false — у модуля нет вкладки журнала единицы
   kinds:         {<вид события>: <слово>}        # слова видов подсистемы; виды платформы — словарь модуля
-  keys:          {<id семьи ключей домена>: {title, about, absent?}}   # М12A
+  keys:          {<id семьи ключей домена>: {title, about, absent?}}   # М11
   tree:
     group_by:    <поле> — чем группировать дерево; columns: [{field, title, width}]; children: false — не вкладывать about-единицы
     group_title, group_hint, filter, no_group, children, contents_title, group_word, no_group_suffix, pick_note,
@@ -110,7 +110,7 @@ gate:
   shut:     ключи были или след домена есть, а проверить нечем / хранилище не ответило → 503, не открыта
   identity: # по порядку
     1. кука аварийного входа w2c_glass (сессия в памяти, 15 мин)
-    2. X-Agent-Signature — агент домена: только двери единиц (урок М12A)
+    2. X-Agent-Signature — агент домена: только двери единиц (урок М11)
     3. Authorization: Bearer <токен> | кука w2c_token → домен: {user, until, grants}
     4. отладочная личность ADR-0050 — только с петли
     5. иначе 401
@@ -136,7 +136,7 @@ session:
   GET  /session  → {open, login_url, user?, until?, via?, debug?, grants?: [{cap, scope}]}   # grants — чтобы may() решал локально
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; POST /session/break-glass {who, why, password} → кука w2c_glass; 429 по пределу
-  login_url: дверь домена /api/login (М12A); консоль токенов людей не выдаёт
+  login_url: дверь домена /api/login (М11); консоль токенов людей не выдаёт
 ```
 
 ### Н1.4 Что зовёт модуль — закрытый список
@@ -146,7 +146,7 @@ reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<
          /where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema, /events, /metrics
          (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub>
 writes:  POST/PUT/DELETE /<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
-         POST/DELETE /servers/<s>/decommission, /domain/* (М12A), POST/DELETE /session, /session/break-glass, login_url
+         POST/DELETE /servers/<s>/decommission, /domain/* (М11), POST/DELETE /session, /session/break-glass, login_url
 never:   /requests, /api/backup, /resources, /<sub>/<table> вне show, двери держателей (door из where — только оболочке)
 order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> → /drain → /schema
          → /domain (+ /domain/alarms) → /api/held → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
@@ -184,10 +184,10 @@ commands:  вид command / command.failed — слово и заметка мо
 openapi: 3.1.0
 info: {title: М10/9 двери консоли, version: "1"}
 paths:
-  /:                 {get: {description: "оболочка root или console.html; у смонтированной — 404; CSP"}}
-  /index.html:       {get: {description: то же}}
-  /platform/console.js:  {get: {parameters: [{name: v, in: query}], responses: {"200": {}, "404": {description: no such version}}}}
-  /platform/console.css: {get: {description: то же}}
+  /:                 {get: {description: "оболочка root или console.html; CSP", responses: {"200": {description: text/html}, "404": {description: у смонтированной подсистемы — is mounted}}}}
+  /index.html:       {get: {description: то же, responses: {"200": {description: text/html}, "404": {description: is mounted}}}}
+  /platform/console.js:  {get: {parameters: [{name: v, in: query, schema: {type: string}}], responses: {"200": {description: text/javascript; версия модуля}, "404": {description: no such version}}}}
+  /platform/console.css: {get: {description: то же, responses: {"200": {description: text/css}, "404": {description: no such version}}}}
   /healthz:          {get: {responses: {"200": {description: "{ok: true}"}}}}
   /spec:             {get: {responses: {"200": {description: "SpecView (урок 2 Н2)"}}}}
   /mounts:           {get: {responses: {"200": {description: "{root, mounts: {<sub>: SpecView}}"}}}}
@@ -211,9 +211,9 @@ paths:
             requires_resource, placeable, why, workers: [WorkerRow]}}, status?: [servers.status]}
   /unplaceable:      {get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}}
   /metrics:          {get: {responses: {"200": {description: "text/plain; ряды Н3"}}}}
-  /session:          {description: Н1.3}
-  /domain/{rest}:    {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М12A)"}
-  /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: ADR-0066, М12A}
+  /session:          {get: {responses: {"200": {description: "Н1.3: {who, grants, …}"}, "401": {description: не личность}}}, post: {responses: {"200": {description: вход}, "400": {description: у открытой консоли}, "429": {description: аварийный вход — предел}}}}
+  /domain/{rest}:    {get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}}
+  /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: "ADR-0066, М11 — формы и коды там; здесь только маршруты"}
 components:
   schemas:
     WorkerRow:
@@ -233,6 +233,11 @@ components:
     NoRoute:
       type: object
       properties: {detail: {const: no such route}, error: {const: no such path}}
+  responses:
+    Common:
+      description: >-
+        общие ответы каждой операции консоли, не повторяемые у операций: 401 не личность, 403 нет гранта / нет домена не с петли,
+        404 NoRoute, 405 метод, 408/413 тело медленно/велико, 429 предел входа, 503 busy или ключи без доверия (Н4)
 ```
 
 Общие коды: неизвестный путь — `404 NoRoute`; неверный метод — `405 {detail: method, error: method}`; `/<rows>/<id>/<ещё>` — 404 «a unit's path names one unit»; полоса занята — `503 busy`, `Retry-After: 1`; `/session`, `/healthz` — резервная полоса; `/metrics`, `/healthz` — полоса монитора.
@@ -255,6 +260,8 @@ components:
    X-User = доказанное имя для журнала
 ```
 
+**Гонки.** Два запроса одной сессии разом — независимы; запись и чтение одной строки — `cas` (урок 3); смена спеки между запросами — `rev` в ответе `/spec`, модуль перечитывает.
+
 ### /servers — картина для человека
 
 ```
@@ -268,6 +275,8 @@ components:
 неизвестный сервер — "?"; реестра машин нет
 ```
 
+**Гонки.** Нет: чтение снимка пульсов и строк; пульс, пришедший во время сборки, — в следующем ответе.
+
 ### /where/<id>
 
 ```
@@ -276,6 +285,8 @@ components:
 TTL 120 с, в токене user, unit, holder, routes только чтения), expires, routes}; token выдаётся по view на единицу,
 каждая выдача — журнал door.issued; directory — где единицу видят (5 с кэш), scans
 ```
+
+**Гонки.** Переезд единицы во время ответа: строка размещения читается раз, ответ называет воркера на этот момент, `door` — из его пульса на тот же момент.
 
 ### /metrics — текст
 
@@ -290,6 +301,8 @@ TTL 120 с, в токене user, unit, holder, routes только чтения
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
   snapshot_ahead_shards; audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
+metrics[]:  закрытый перечень ключей элемента (загрузчик урока 2 отказывает иным): name, type, from, agg, equals, when, default,
+            live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
 платформы, один раз (root): w2c_resources_live; w2c_resource_heartbeats_garbled; w2c_resource_full{server};
   w2c_resource_short_bytes{server}; w2c_resource_waits*; w2c_resource_rows_garbled; w2c_resource_restore_*; w2c_resource_mirror_*;
   w2c_requests_expired_total{sub}; w2c_requests_unknown_total{sub}
@@ -337,7 +350,7 @@ TTL 120 с, в токене user, unit, holder, routes только чтения
 | 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live` | Н3 |
 | 06 | отказы: неизвестный путь 404 `no such path`; метод 405; `/counters/c1/x` 404; смонтированная `/testsub2/` 404 | Н4 |
 
-Проверяются чтением и структурно: модуль — jsdom-тесты контракта (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен) — один набор у обеих сторон на одном `console.js`; сторожевая с доменом (401/403/503, порядок, CSP) — стенд М12A; `/where` с дверью — стенд М10B; `servers.status`/`show` — стенд рекордера; правило адреса без домена — стенд урока 11.
+Проверяются чтением и структурно: модуль — jsdom-тесты контракта (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен) — один набор у обеих сторон на одном `console.js`; сторожевая с доменом (401/403/503, порядок, CSP) — стенд М11; `/where` с дверью — стенд М12A; `servers.status`/`show` — стенд рекордера; правило адреса без домена — стенд урока 11.
 
 ---
 
@@ -360,15 +373,15 @@ TTL 120 с, в токене user, unit, holder, routes только чтения
 - [ ] **М10/9-01** три части и хозяева; страница — три строки; модуль один код у всех (структурный тест байт в байт); версия без совместимости назад — сц. 01
 - [ ] **М10/9-02** оболочка только у root; смонтированные без страницы; `/mounts` — сц. 01, 02, 06
 - [ ] **М10/9-03** `display`, `servers.show/status`, `console.running` — слова по Н1.2; `display.actions` снят; `/spec` отдаёт `display` как написано — сц. 02; урок 2
-- [ ] **М10/9-04** сторожевая Н1.3: порядок, `need` по пути до тела, `X-User` никогда, открыта только с петли, закрыта при потере доверия, `{detail, error: denied}`, журнал — сц. 03; стенд М12A
-- [ ] **М10/9-05** `/session` с `grants` — чтением (стенд М12A); модуль `may` по ним
-- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — jsdom-тест контракта
-- [ ] **М10/9-07** контракт оболочки Н1.5: `api` с одним ключом и повторами, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — jsdom
+- [ ] **М10/9-04** сторожевая Н1.3: порядок, `need` по пути до тела, `X-User` никогда, открыта только с петли, закрыта при потере доверия, `{detail, error: denied}`, журнал — сц. 03; стенд М11
+- [ ] **М10/9-05** `/session` с `grants` — чтением (стенд М11); модуль `may` по ним
+- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется чтением: тест контракта модуля (`Source/tests/console/`, jsdom; предмет — вызовы и их порядок); причина — модуль один у всех реализаций, двери порядок загрузки не показывают
+- [ ] **М10/9-07** контракт оболочки Н1.5: `api` с одним ключом и повторами, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери)
 - [ ] **М10/9-08** `/servers` и `WorkerRow` по Н2/Н3 — сц. 04; стенд урока 5
-- [ ] **М10/9-09** `/where`: 404 с `reason`, `door` только по view, токен Ed25519 120 с, журнал `door.issued` — сц. 04; стенд М10B
+- [ ] **М10/9-09** `/where`: 404 с `reason`, `door` только по view, токен Ed25519 120 с, журнал `door.issued` — сц. 04; стенд М12A
 - [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, ADR-0055 — сц. 05
 - [ ] **М10/9-11** общие коды Н4, полосы, пределы тела — сц. 06; чтением
-- [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — тест границы
+- [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — проверяется чтением: тест границы реализации (список маршрутов консоли против слов потока и архива); причина — отсутствие маршрута запросом не показать
 
 ## Соответствие прежним урокам
 

@@ -20,4 +20,4 @@ scenario	step	request	expect
 05-power-pull	1	@manual выдернуть питание сервера с воркером и единицами; через ≤ 90 с единицы у живых воркеров под новыми эпохами; архив на томе остаётся; открытый бакет событий потерян, закрытые у соседей	manual
 05-power-pull	2	@manual вернуть сервер: демон вступает сам (member.json), ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад	manual
 06-recover	1	@manual остановить большинство; configstore recover -id -dir -peers на оставшемся; platform/epoch_floor вырос на поколение; эпохи после восстановления не повторяют выданных	manual
-07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ; дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
+07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ (размер сверх объявленного не берёт и -force); дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
