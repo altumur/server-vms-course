@@ -1,5 +1,7 @@
 # spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).
 # A line goes when both sides have the key, or neither; a new difference is not written here but made good.
+course-only live.subsystem.yaml secrets.readers.domain/live/stream-accounts/[domainagent]   # ADR-0074 «курс»: явный префикс книг у держателя по 19eb2766 — «Сборка»
+course-only live.subsystem.yaml secrets.readers.domain/live/stream-accounts/[domain]   # ADR-0074 «курс»: явный префикс книг у держателя по 19eb2766 — «Сборка»
 course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are not in the product — «Сборка»
 course-only cam.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only cam.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
