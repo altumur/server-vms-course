@@ -16,7 +16,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
-from vms.domainpart.device import DeviceCluster
+from vms.camera_cluster import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory
 from w2cplatform.domain.grants import DOMAIN_GRANTS, Grant, LastAdmin, domain_may, set_domain_grants
 from w2cplatform.domain.members import Members
