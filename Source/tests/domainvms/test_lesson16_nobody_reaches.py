@@ -431,7 +431,6 @@ def _scenario_site(wall, scenarios, open_doors=()):
     ptz, ptz_agent = member(PTZ)
     extra = {n: member(n, pushes=False) for n in open_doors}
     shared = SharedDoor(north.vars, north.objects, signer, wall)                # a person's edit, at the signer's door
-    shared.set_scenarios(scenarios)
     recording_domain = site_pass.recording_domain
     recording_domain.add_recorder(home_rec)
     for d, a in [(gate, gate_agent), (ptz, ptz_agent), *extra.values()]:
@@ -451,6 +450,8 @@ def _scenario_site(wall, scenarios, open_doors=()):
         for a in agents:
             report_sync(a)                                                   # books down
 
+    domain_pass()                     # complete books before the first operator grant
+    shared.set_scenarios(scenarios)
     domain_pass()
     domain_pass.devices = {n: d for n, (d, _) in extra.items()}
     domain_pass.recording_domain = recording_domain
@@ -615,6 +616,9 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     DomainPublisher(home).publish_keys(signer.tokens.keyset())
     holder = DomainHolder(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
     holder.claim()
+    from tests.domain.books_fixture import initial_books
+    initial_books(fed, signer, wall, {n: (d.flash, d.local_objects()) for n, d in devices.items()},
+                  objects=devices["cam-SN0"].disk)
     SharedDoor(home, devices["cam-SN0"].disk_door(), signer, wall).set_scenarios([
         {"when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}])
 

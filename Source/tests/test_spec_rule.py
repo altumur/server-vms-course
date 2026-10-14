@@ -41,7 +41,7 @@ TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "
 IMPLEMENTED = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads", "worker.requests",
     "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "lease.unconfirmed_max",
-    "snapshot", "door.routes",
+    "snapshot", "door.routes", "door.pass",
     "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *{f"unit.fields.*.{k}" for k in FIELD},
     "tables.*.key", *{f"tables.*.fields.*.{k}" for k in TABLE_FIELD}, "tables.*.schema", "tables.*.stamp",

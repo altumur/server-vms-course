@@ -8,6 +8,7 @@ the reports, and a member's silence is the age of its last one.
 """
 
 from tests.member_console import device_console, admit_fixtures
+from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
 import json
 import tempfile
@@ -113,8 +114,10 @@ def test_an_edit_for_a_camera_the_domain_cannot_reach_is_kept_carried_applied_an
     carries it home on its next pass, its console applies it as the operator — and the outcome goes up in the
     same pass's report, where the domain collects it."""
     wall = Clock(NOW)
-    fed, north, _, devices, agents, _ = _site(wall, n=1)
+    fed, north, fed_signer, devices, agents, _ = _site(wall, n=1)
     d = devices["cam-SN0"]
+    initial_books(fed, fed_signer, wall, {"north": (north.vars, north.objects),
+                  **{n: (d.flash, d.local_objects()) for n, d in devices.items()}})
     DomainPublisher(north.vars).publish_grants(d.name, [Grant("anna", "edit", None, wall() + 3600)])
     _pass(agents)
     view = ReadView(fed, wall=wall); view.refresh()

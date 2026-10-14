@@ -5,6 +5,8 @@ lists the counters at the route the spec's row name makes, carries home the book
 them, issues only the token kinds the spec declares, and backs up what the spec keeps."""
 from __future__ import annotations
 
+from tests.catalog_fixture import isolated_catalog
+
 import json
 import os
 import sys
@@ -77,6 +79,7 @@ def site(wall=None):
     return fed, wall
 
 
+@isolated_catalog()
 def test_the_directory_finds_a_unit_across_clusters_by_the_field_its_spec_names():
     """`domain.ref: name` — a counter is found by its name in whichever cluster holds it, with the worker and server the
     snapshot says; a name nowhere is said to be nowhere, and a silent cluster makes the answer incomplete."""
@@ -90,6 +93,7 @@ def test_the_directory_finds_a_unit_across_clusters_by_the_field_its_spec_names(
     assert sorted(held["north"][next(iter(held["north"]))]) == ["n1", "n2"] and not down
 
 
+@isolated_catalog()
 def test_the_read_view_lists_a_subsystems_units_and_the_shared_view_shows_the_fields_its_spec_declares():
     """The list of a subsystem of the directory, by its own row name; the shared view (`domain/view`) carries each
     unit's platform fields and the fields `domain.view` names — `start` here — and the tables `domain.tables` serves."""
@@ -109,6 +113,7 @@ def test_the_read_view_lists_a_subsystems_units_and_the_shared_view_shows_the_fi
     assert shown["tables"] == {"testsub/ledger": {"n1": "counted"}}
 
 
+@isolated_catalog()
 def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared():
     """`/domain/<sub>/<rows>` is the read view of a subsystem of the directory; `/domain/<sub>/<table>` a row its spec keeps
     and serves; a table no spec declares, or another subsystem's name, is no route."""
@@ -144,6 +149,7 @@ def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared()
         con.stop(srv)
 
 
+@isolated_catalog()
 def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_them_on_unrewritten():
     """One set of paths (the console module's contract, §10a): the domain's door answers `GET /domain` — the view in the
     product's shape, members a list with the holder among them, the topology, who knocks, where the door is —,
@@ -237,6 +243,7 @@ class _Store:
         return self.rows.get(k), 7
 
 
+@isolated_catalog()
 def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_objects_body():
     """`GET /domain/keys` — identifiers only («Архитектор», 2026-10-06). The leak it closes: a book row whose field holds
     a document with `token_secret` in it (as a dict, or as JSON text), a `door.key`-style field holding a stream
@@ -265,6 +272,7 @@ def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_object
                              "age": 10.0}]
 
 
+@isolated_catalog()
 def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_private_one():
     """The one exception: the trust the domain publishes on purpose — the key set (signed by the root, Lesson 15, and
     the plain form of Lessons 4–7), the root a member pinned, a member's public keys, a cluster's identity certificate.
@@ -409,6 +417,7 @@ def _at_site():
     return fed, wall, mnt, srv, f"http://127.0.0.1:{srv.server_address[1]}", member, clusters
 
 
+@isolated_catalog()
 def test_a_where_asked_at_this_console_goes_to_the_members_console_with_the_token_once_and_comes_back_as_it_came():
     """ADR-0061: `GET /domain/at/south/testsub/where/s1` is `GET <south's console>/testsub/where/s1` — whether testsub is
     the root there is south's console's to know (дополнение п. 3) — and `…/testsub2/where/shelves/s9?unit=…` is
@@ -443,6 +452,7 @@ def test_a_where_asked_at_this_console_goes_to_the_members_console_with_the_toke
         srv.shutdown(); srv.server_close(); member.stop()
 
 
+@isolated_catalog()
 def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_with_a_console_and_only_once():
     """Refused before dialing, each in words (ADR-0061): not `GET`, not a `where`, a spec this process does not know, a
     table that is not the spec's places — 404 «not a route handed to a member»; a cluster off the carried list, and this
@@ -485,6 +495,7 @@ def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_wi
         srv.shutdown(); srv.server_close(); member.stop(); there.shutdown(); there.server_close()
 
 
+@isolated_catalog()
 def test_the_holders_cluster_is_a_member_for_a_hop_by_its_verified_record_and_a_forged_one_names_nobody():
     """The holder is on no list of members (`Members`): it is one for a hop by the carried record `domain/holder` as THIS
     cluster's key set verifies it (ADR-0061, дополнение, 1). The record north's agent carried names hq — the hop to hq
@@ -520,6 +531,7 @@ def test_the_holders_cluster_is_a_member_for_a_hop_by_its_verified_record_and_a_
         srv.shutdown(); srv.server_close(); member.stop()
 
 
+@isolated_catalog()
 def test_an_answer_over_one_mib_is_502_on_both_forwardings_and_nothing_of_it_is_passed():
     """A reply longer than 1 MiB (ADR-0061, дополнение, 2) — from a member's console and from the holder's door alike —
     is 502 «answer too large» in a few words, and none of its bytes reach the page."""
@@ -537,6 +549,7 @@ def test_an_answer_over_one_mib_is_502_on_both_forwardings_and_nothing_of_it_is_
         srv.shutdown(); srv.server_close(); member.stop()
 
 
+@isolated_catalog()
 def test_the_forwarding_console_asks_only_who_is_calling_and_the_members_gate_decides():
     """The gate here asks who is calling — no token: 401, nothing dialed; a person granted one unit of this cluster and
     nothing wider is somebody, and the hop is made: what they may see there is south's gate's to say (ADR-0061, 6)."""
@@ -567,6 +580,7 @@ def test_the_forwarding_console_asks_only_who_is_calling_and_the_members_gate_de
         srv.shutdown(); srv.server_close(); member.stop()
 
 
+@isolated_catalog()
 def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_not():
     """The holder keeps a book for each member under `domain/<sub>/<book>/<member>`; the member's agent carries its own
     home as `domain/<sub>/<book>`, as it is. A row of the domain's prefix no spec declares is not carried."""
@@ -585,6 +599,7 @@ def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_n
     assert south.vars.get("domain/testsub/secret-plan")[0] is None
 
 
+@isolated_catalog()
 def test_the_signer_issues_only_the_kinds_of_token_a_spec_declares_with_their_claims():
     """`domain.tokens: {tally: {lifetime: 600, claims: [counter]}}` — a tally token says its kind, lives 600 s and names a
     counter; a person's token, an undeclared kind or a claim the spec did not name is refused, and the door that takes
@@ -611,6 +626,7 @@ def test_the_signer_issues_only_the_kinds_of_token_a_spec_declares_with_their_cl
         pass
 
 
+@isolated_catalog()
 def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
     """`domain.kept: [ledger, badges/]` — the holder's backup carries `domain/testsub/ledger` with what the domain
     decided, and every row of the family `badges/` (`domain/testsub/badges/<name>`); the member chosen to keep it
@@ -645,6 +661,7 @@ def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
     assert south.vars.get("domain/testsub/badges/silver")[0] == {"since": "2"}
 
 
+@isolated_catalog()
 def test_a_member_publishes_the_copy_it_took_as_backup_taken_and_nothing_under_the_old_name():
     """What a member publishes of the backup copy it took — `{rev, term, sha256}` and the document beside it — is
     `domain/backup-taken`, the product's name (one name on both sides, «Архитектор» 2026-10-06; ADR 0003: no alias).
@@ -679,6 +696,7 @@ def test_a_member_publishes_the_copy_it_took_as_backup_taken_and_nothing_under_t
     assert copies(holder, ["south"]) == {"south": {"term": 1, "rev": int(pointer["rev"])}}
 
 
+@isolated_catalog()
 def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_loads():
     """The section is read at load, and refused whole for a field the snapshot does not carry, a table that is not
     kept, a kind the platform owns, a claim the token itself writes, or a key it does not know — and for a family served
@@ -711,6 +729,7 @@ def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_
             pass
 
 
+@isolated_catalog()
 def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name_one():
     """`domain.keys` — the subsystem's key families of the domain, for a page's «keys» tab: the composition only, every
     key under the subsystem's own prefix; the words are `display.keys`, merged by id on the page. The reader takes it,
@@ -768,6 +787,7 @@ def _shared_site():
     return shared, agent, ctl, SpecConsole(ctl, wall=wall)
 
 
+@isolated_catalog()
 def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_which_checks_and_signs_it():
     """ADR-0032: the signer performs the edit whole — a person of the domain with `admin` on it, the revision the edit
     was made against, the specs' declarations — and signs the document itself; the domain's console has no key, serves
@@ -860,6 +880,7 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
         sdoor.server_close()
 
 
+@isolated_catalog()
 def test_a_shared_field_takes_the_domains_value_where_the_unit_set_none_and_a_union_adds_to_its_own():
     """`domain.shared: [step, marks]` — the domain holds a value for each; the platform resolves them (no subsystem's
     route): a counter that set no step takes the domain's, one that did keeps its own, and nobody above means the
@@ -882,6 +903,7 @@ def test_a_shared_field_takes_the_domains_value_where_the_unit_set_none_and_a_un
     assert con.shared_route("testsub", {"unit": "nobody"})[0] == 404
 
 
+@isolated_catalog()
 def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared_one_is_refused():
     """The door answers the fields `domain.shared` names and nothing else — not `start`, not `labels`, whatever the
     document holds; a subsystem that shares nothing is a 404; and the document never takes a field nobody declared,
@@ -920,6 +942,7 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
             pass
 
 
+@isolated_catalog()
 def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signers_one_operation():
     """ADR-0010/0032: `domain.shared` carries a document of type `json` with a schema — testsub's `rounds`, no counter's
     field. The signer's `shared` is one operation over whatever the specs declare: the document is checked by its
@@ -964,6 +987,7 @@ def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signe
     ast.parse(src)
 
 
+@isolated_catalog()
 def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load():
     """`{name, type: json, schema}` and nothing else: another type, no schema, a schema with a word the platform does not
     read, a name that is a field of the unit (a document is no unit's), a secret's name, or one name twice — refused."""
@@ -991,6 +1015,7 @@ def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load
         pass
 
 
+@isolated_catalog()
 def test_the_spec_reads_a_kept_family_of_subjects_their_grant_and_the_fields_an_edit_carries():
     """ADR-0031's declarations, as testsub writes them: `kept: [ledger, badges/]` (a family by its `/`), `names:
     {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]`; ADR-0074 adds a role grant for requesting a token, not bearer rights."""
@@ -1012,6 +1037,7 @@ def _refused(write, cls, names):
     raise AssertionError(f"taken, though it meets {names}")
 
 
+@isolated_catalog()
 def test_a_subject_of_a_family_and_a_person_never_share_a_name_whichever_is_written_second():
     """`names.badges/.exclusive_with: domain/users` — the platform asks it of every write through its guard: a badge
     under a person's name is refused naming the person's row (`domain/users/<name>`, the product's name), a
@@ -1070,6 +1096,7 @@ def test_a_subject_of_a_family_and_a_person_never_share_a_name_whichever_is_writ
     assert refusal(worker, "domain/testsub/badges/nobody", {"since": "1"}) is None   # no key listed: nobody, no read asked
 
 
+@isolated_catalog()
 def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_carries_no_rights():
     """`names.badges/.grant: view` — the grants of a cluster or of the domain may give a badge `view` and nothing wider:
     `edit` or `admin` to it is refused (`GrantTooWide`) and nothing is written, whoever writes the grants; a person of
@@ -1104,6 +1131,7 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     assert "grant" not in p and "role" not in p and "placement" not in p
     assert token_kinds()["tally"]["grant"] == ("testsubworker",)
 
+@isolated_catalog()
 def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_through():
     """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /domain/testsub/counters/
     <ref>`) reaches the member with those fields; one with any other (`step` here) is a 400 naming it and the list, and
@@ -1152,6 +1180,7 @@ def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_
         con.stop(srv)
 
 
+@isolated_catalog()
 def test_a_refusal_is_409_when_it_depends_on_rows_that_exist_and_400_when_the_request_is_wrong_by_the_spec():
     """The architect's rule for the codes, at the doors: a person under the name of a subject of a family (testsub's
     badge `bob`) is a conflict with a row that exists — 409 at the signer's people; a grant to the badge wider than
@@ -1263,6 +1292,7 @@ def _moving_site(root=None):
     return north_holder, south, holder, con, signer_url, f"http://127.0.0.1:{door.server_address[1]}", lines, wall, stop
 
 
+@isolated_catalog()
 def test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_checked_by_the_recovery_file():
     """ADR-0032's fifth operation: north is gone, and the operator moves the domain onto south — at SOUTH's door,
     `POST /domain/move {recovery}` (`w2cctl domain move` calls that door; there is no second road), handed to south's
@@ -1302,6 +1332,7 @@ def test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_che
         stop()
 
 
+@isolated_catalog()
 def test_a_move_at_a_clusters_console_is_handed_to_this_boxs_signer_never_to_the_holder_that_is_gone():
     """ADR-0066: the domain moves where its file is brought — at the cluster console of the box that takes it,
     `POST /domain/move` is handed to THIS box's signer (`SIGNER_URL`, its `/api/move`) by the console's one `forward`,
@@ -1331,6 +1362,7 @@ def test_a_move_at_a_clusters_console_is_handed_to_this_boxs_signer_never_to_the
         stop()
 
 
+@isolated_catalog()
 def test_after_a_theft_the_move_through_the_door_drops_the_old_keys_and_a_wrong_root_is_refused():
     """Lesson 15, step 9, through the door: the root is off the holder, north is stolen, and the operator moves the
     domain onto south with the root's recovery file, saying so (`stolen`). Another root's file is 403 — no member holds
@@ -1448,6 +1480,7 @@ def _member_signer(fed, wall, consoles=None):
     return holder, srv, f"http://127.0.0.1:{srv.server_address[1]}"
 
 
+@isolated_catalog()
 def test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prepare_to_the_holder_alone():
     """south's console, to processes: `/api/held` to anybody — exactly `{cluster, holder, term, keys, backup: {term, rev}}`,
     the record and the key set south holds, signed, and which backup copy it keeps (term and rev), never its content;
@@ -1496,6 +1529,7 @@ def test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prep
             s.server_close()
 
 
+@isolated_catalog()
 def test_a_planned_handover_over_the_doors_is_taken_by_the_target_onto_its_own_store():
     """north hands the domain to south over the doors alone (`asked_to_take`): south's console hands prepare and take
     to south's signer, which checks north's signature and grant, opens north's keys with the key it prepared, reads
@@ -1551,6 +1585,7 @@ def test_a_planned_handover_over_the_doors_is_taken_by_the_target_onto_its_own_s
 
 
 # -- the witness: a member matched by its own name, the field that carries it declared ---------------------------------
+@isolated_catalog()
 def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spec_must_declare_it_fixed():
     """`domain.witness: {report, member_field}` — testsub2's `{report: seen, member_field: of}`: the witness objects are
     `testsub2/seen/*`, and the field is the unit's, declared `fixed: true` (ADR-0010). A spec whose witness names no

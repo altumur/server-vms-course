@@ -137,6 +137,7 @@ import os
 import re
 import socket
 import socketserver
+import ssl
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -908,6 +909,9 @@ class Bounded:
         addr, local = self.peer_of(request, client_address)
         lane = self.bounds.take(addr, local)
         if lane is None:
+            if getattr(self, "tls_context", None) is not None:
+                _close(request)                        # no handshake yet: a TLS peer cannot read a plaintext 503
+                return
             body = json.dumps({"error": "busy", "detail": "this door serves as many connections as it serves at once, "
                                                           "and so many to one address (CONSOLE_CONNECTIONS, "
                                                           "CONSOLE_PER_ADDRESS) — retry"}).encode()
@@ -956,10 +960,37 @@ class Bounded:
 
 
 class ConsoleServer(Bounded, ThreadingHTTPServer):
-    def __init__(self, addr, handler, limit: int | None = None, bounds: Bounds | None = None):
+    def __init__(self, addr, handler, limit: int | None = None, bounds: Bounds | None = None, tls_context=None):
         self.bounds, self.lanes = bounds or Bounds(limit), {}
+        self.tls_context = tls_context
         self.unix = None                                 # the box's own door beside this one, when there is one
         super().__init__(addr, handler)
+
+    def finish_request(self, request, client_address):
+        if self.tls_context is None:
+            return super().finish_request(request, client_address)
+        request.settimeout(CONSOLE_HEADER_TIMEOUT)
+        conn = None
+        try:
+            conn = self.tls_context.get().wrap_socket(request, server_side=True)
+            peer = conn.getpeercert()
+            if peer:
+                from .tls import certificate_role
+                certificate_role(peer)
+        except (OSError, ValueError):
+            if conn is not None:
+                conn.close()
+            return
+        try:
+            self.RequestHandlerClass(conn, client_address, self)
+        finally:
+            # wrap_socket detached the request that socketserver later shuts down. Finish writes on the live TLS
+            # socket first, so an unread refused request body cannot reset a reply already sent to the client.
+            try:
+                conn.shutdown(socket.SHUT_WR)
+            except OSError:
+                pass
+            conn.close()
 
     def shutdown(self):
         super().shutdown()
@@ -1097,8 +1128,10 @@ DOOR_CONNECTIONS = 64
 DOOR_PER_ADDRESS = 32
 
 
-def door_server(addr, handler, limit: int = DOOR_CONNECTIONS, per_address: int = DOOR_PER_ADDRESS) -> ConsoleServer:
-    return ConsoleServer(addr, handler, bounds=Bounds(limit, per_address, reserve=0, box=0, monitor=0, monitors=()))
+def door_server(addr, handler, limit: int = DOOR_CONNECTIONS, per_address: int = DOOR_PER_ADDRESS,
+                *, tls_context=None) -> ConsoleServer:
+    return ConsoleServer(addr, handler, bounds=Bounds(limit, per_address, reserve=0, box=0, monitor=0, monitors=()),
+                         tls_context=tls_context)
 
 
 # WHAT A DOOR STREAMS, IT WRITES IN PIECES, TO A CLIENT THAT TAKES THEM (the review's sixth pass, major). The holder's
@@ -1541,13 +1574,21 @@ def _labels(row: dict | None) -> list:
     return [str(x) for x in v] if isinstance(v, (list, tuple)) else []
 
 
+_DEFAULT_WORKER_CLIENT = object()
+
+
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
     holding the console's token."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
+                 wall=None, lost_after: float = 45.0, per_minute: float = 0.0,
+                 worker_client=_DEFAULT_WORKER_CLIENT):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
+        if worker_client is _DEFAULT_WORKER_CLIENT:
+            from .tls import RoleClient
+            worker_client = RoleClient.from_env(required_role="console")
+        self.worker_client = worker_client
         self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
         # This incarnation's name in the ONE form every instance name has, `box:pid:rnd` (`runtime.instance_on_box`;
         # ADR 0003, the review's fourteenth pass, minor 27: it was `host:pid`, a second format `box_of` read beside it).
@@ -2994,6 +3035,8 @@ class SpecConsole:
     # `/<table>[/<name>]` (`tables.py`): the list as this caller may see it, one row, a row written whole, a row deleted.
     def _table_route(self, h, method: str, table: str, name: str | None) -> None:
         ctl, user = self.ctl, h.headers.get("X-User", "operator")
+        if table in self.spec.worker_writes and method in ("POST", "PUT", "DELETE"):
+            return h._send(403, {"error": "denied", "detail": "written by its worker"})
         t = self.spec.table_specs[table]
         if method == "GET":
             rows = ctl.table_rows_shown(table)
@@ -3261,12 +3304,53 @@ class SpecConsole:
         except (OSError, Forbidden):
             return h._send(503, {"detail": "the local member key or store is unavailable"})
 
+    def worker_forward(self, h, method: str, path: str) -> None:
+        """A declared unitless route: prove the person, then ask one fresh worker of this subsystem."""
+        try:
+            self.gate.caller(h.headers)
+            self.gate.admit(h.headers, "view" if method == "GET" else "admin")
+        except Denied as e:
+            h.close_connection = True
+            return h._send(e.status, {"error": "denied", "detail": e.why})
+        if self.worker_client is None:
+            return h._send(503, {"error": "no worker client"})
+        candidates = [(name, hb.extra["url"]) for name, hb in
+                      sorted(holders(self.ctl.objects, self.spec.name, self.wall(), self.lost_after,
+                                     eyes=self.ctl.eyes).items())
+                      if isinstance(hb.extra.get("url"), str) and hb.extra["url"].strip()]
+        if not candidates:
+            return h._send(503, {"error": "no live worker with a door"})
+        if not read_body(h, 1 << 20):
+            return
+        body = h.rfile.read(int(h.headers.get("Content-Length") or 0))
+        headers = {k: h.headers[k] for k in ("Content-Type", "Idempotency-Key") if h.headers.get(k)}
+        headers["X-Operator"] = "console"
+        token = token_of(h.headers)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        query = urlsplit(h.path).query
+        to = candidates[0][1].rstrip("/") + "/" + self.spec.name + path + ("?" + query if query else "")
+        try:
+            status, raw, reply_headers = self.worker_client.request(
+                method, to, body, headers, role=self.spec.name + "worker")
+        except (OSError, ValueError) as e:
+            return h._send(502, {"error": "the worker did not answer", "detail": str(e)})
+        if len(raw) > (1 << 20):
+            return h._send(502, {"error": "worker answer too large"})
+        h.send_response(status)
+        h.send_header("Content-Type", "application/json")
+        h.send_header("Content-Length", str(len(raw)))
+        h.end_headers()
+        h.wfile.write(raw)
+
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
         if h.headers.get("X-Agent-Signature") is not None:
             return self.agent_edit(h, method, path)
+        if path.split("/")[1] in spec.door_pass:
+            return self.worker_forward(h, method, path)
         rows_path = "/" + spec.rows
         if path in ("/session", "/session/break-glass"):  # the door in: anybody's, so its body is a token or a password
             if not self.read_body(h, SESSION_BODY):
@@ -3290,6 +3374,10 @@ class SpecConsole:
         if path not in OPEN_ROUTES:                     # the gate: open while this cluster has no key set, shut when it cannot check
             try:
                 self.gate.caller(h.headers)              # who is calling: from the headers, before a byte of the body
+                table = path.strip("/").split("/")[0]
+                if table in spec.table_specs and table in spec.worker_writes and method in ("POST", "PUT", "DELETE"):
+                    h.close_connection = True
+                    return h._send(403, {"error": "denied", "detail": "written by its worker"})
                 if in_body:
                     self.gate.admit(h.headers, "view")   # any grant here at all
                     asked.add(("view", None))
@@ -3905,8 +3993,45 @@ class Mount:
             or book_path(path) is not None                # a book of this cluster's own copy (`book_route`), any method
 
     def domain_forward(self, h, method: str, path: str, query: str) -> None:
+        person_route = (method == "GET" and path in ("/domain/users", "/domain/grants")) or (
+            method == "PUT" and path.startswith("/domain/grants/") and
+            len(path.split("/")) == 4 and bool(path.rsplit("/", 1)[1]))
+
+        def refuse(status, error, detail):
+            if method != "GET":
+                h.close_connection = True
+            return h._send(status, {"error": error, "detail": detail})
+
         st, view = domain_view(self.root.ctl.objects, self.root.wall(), self.root.lost_after)
         url = str(view.get("url") or "") if st == 200 else ""
+        if not url and person_route:
+            if h.headers.get(self.VIA) is not None:
+                return refuse(400, "one hop", "a request for the holder's people or grants is handed on once, never on again")
+            from .domain.agent import ClusterTrust, Untrusted
+            from .domain.runtime import consoles_from_env
+            from .domain.term import read_holder
+
+            here = self.root.ctl.cluster or ""
+            try:
+                keys = ClusterTrust(self.root.ctl.vars).keyset()
+                record = read_holder(self.root.ctl.vars, keys, self.root.wall()) if keys is not None else None
+            except (Untrusted, OSError, *PARSE_ERRORS) as e:
+                return refuse(503, "the holder does not read", f"this cluster cannot verify its holder record: {e}")
+            if record is None:
+                return refuse(503, "the holder does not read", "this cluster has no verified holder record and key set")
+            cluster = record["holder"]
+            if cluster == here:
+                return refuse(503, "no domain here", "this cluster holds the domain but its door is not known")
+            try:
+                at = consoles_from_env().get(cluster)
+            except SystemExit as e:
+                return refuse(503, "CLUSTERS does not read", str(e))
+            if not at:
+                return refuse(404, "no console known", f"no console of {cluster} is known here (CLUSTERS)")
+            status = self.forward(h, method, at + path, query, 5.0, via=here, who=f"{cluster}'s console", role="console")
+            self.root.journal.say("domain.forwarded", cluster=cluster, path=path,
+                                  user=h.headers.get("X-User", "operator"), status=status)
+            return
         if not url:
             return h._send(404, {"error": "no domain here", "detail": "this cluster is not the domain's, or the "
                                                                        "domain has not run: its door is not known"})
@@ -3927,7 +4052,7 @@ class Mount:
     FORWARD_MAX = 1 << 20
 
     def forward(self, h, method: str, to: str, query: str, timeout: float, via: str | None = None,
-                who: str = "the domain", keep: tuple = ()) -> int | None:
+                who: str = "the domain", keep: tuple = (), role: str | None = None) -> int | None:
         import urllib.error
         import urllib.request
 
@@ -3949,8 +4074,16 @@ class Mount:
         req = urllib.request.Request(to + (f"?{query}" if query else ""), data=body or None, headers=headers,
                                      method=method)
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                status, raw, missing = r.status, r.read(self.FORWARD_MAX + 1), r.headers.get("X-Unreachable")
+            if role is not None:
+                from .tls import RoleClient, TLS_DIR
+                client = RoleClient(os.environ.get("W2C_TLS_DIR") or TLS_DIR, os.environ.get("W2C_ROLE"),
+                                    timeout=timeout, required_role="console")
+                status, raw, reply_headers = client.request(method, to + (f"?{query}" if query else ""),
+                                                            body, headers, role=role)
+                missing = next((v for k, v in reply_headers.items() if k.lower() == "x-unreachable"), None)
+            else:
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    status, raw, missing = r.status, r.read(self.FORWARD_MAX + 1), r.headers.get("X-Unreachable")
         except urllib.error.HTTPError as e:
             status, raw, missing = e.code, e.read(self.FORWARD_MAX + 1), e.headers.get("X-Unreachable")
         except (OSError, ValueError) as e:

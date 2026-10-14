@@ -1,0 +1,27 @@
+{
+  "merge_commit": "bfc9b4f7b481d0ed9b6ebc83436cb40b738f7d88",
+  "changed_source_files": {
+    "Source/tests/testdata/acceptance/М10_Platform/06/README.md": {
+      "tested": "7eefd475d4a3f8e8caf141da47601a0f09931617bc92fc6ede2640d18eba4ea6",
+      "merged": "865f368fb369a3a48bdb5bc24c45ab51eb81b542785e20732a71f26d8db12ff9"
+    },
+    "Source/tests/testdata/acceptance/М10_Platform/01/README.md": {
+      "tested": "429aedcabea37694f682c2a61d8f538c3812971d2c4d8a3d940aebd4267cf6f1",
+      "merged": "5a1de56a277275048d430d25a05851954a1216a2a5c8e057ab4baf32fdd7f2ec"
+    },
+    "Source/tests/testdata/acceptance/М10_Platform/11/scenarios.tsv": {
+      "tested": "875102be96532ed9b383fe3f70ce1d2afa4c17e9486310c7a6e9a7ea87a41133",
+      "merged": "ea1040898bd465cae639450508f52e611de5c63d2bbe621c115972a0a7d5f37e"
+    },
+    "Source/tests/testdata/acceptance/М10_Platform/02/cases/bound_to_string.subsystem.yaml": {
+      "tested": "d28fb5e5c46d7b681f287ca0540e21d476f798dea1f7410900fb4532148d3960",
+      "merged": "d7129da396f1e860e2275be1140d1e68ea4baa498e4908c8e1fc0afb269d82e0"
+    },
+    "Source/tests/testdata/acceptance/М10_Platform/10/README.md": {
+      "tested": "835c9650683759465eb9bc31a681dddcd5e833d544b353ebf1e9c43a2716ab09",
+      "merged": "5d45dc45aab3a1ae2ff77e16ac75db4e7a5fa8d2d635149ee1ce40bb12788ace"
+    }
+  },
+  "runtime_and_test_modules_unchanged": true,
+  "note": "Only incoming Specification acceptance documentation, lesson2 YAML specimen and lesson11 scenarios changed. Executed runtime/test modules and storage01 scenarios.tsv unchanged. No full rerun claimed after merge."
+}

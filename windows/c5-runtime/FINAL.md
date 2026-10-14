@@ -1,0 +1,103 @@
+# C5 — подключение учёток к runtime
+
+Статус: полный combined прогон зелёный; C5 подготовлен к итоговому чтению
+и не влит. База — main03b68b8a с разрешённым М10/1.
+Продукт, работающий стенд и новые уроки не менялись.
+
+## Поведение и граница
+
+Учётки долговечны в `live/accounts/<name>`, пароль запечатан ключом кластера.
+Шлюз после пульса под slot guard публикует вклад `live/stream-accounts/<worker>`;
+один издатель — наименьший живой шлюз. Generic bookruntime собирает книгу,
+индекс имён и доставку с отсечением по гранту. RTSP читает новый MemberBook,
+проверяя текущие гранты. Старые `cam` учётки, streamclients и их доменные
+двери удалены без алиаса или переноса данных.
+
+Accounts доступны через свою консоль и дверь шлюза, с исходным human token.
+В TLS-режиме шлюз отдельно требует сертификат роли console. Обратные
+проверки людей и снятие грантов идут только через собственную консоль;
+для users/grants у консоли члена добавлен узкий переход к консоли текущего
+подтверждённого держателя, с защитой от повторного перехода и redirect.
+
+Платформа получила общий role TLS client, строгий загрузчик door.pass,
+прокси к наименьшему живому воркеру с дверью и чтение объектных таблиц
+воркера без второго писателя. Console CRUD такой таблицы отвечает403 до
+чтения тела. Devices сохраняет поля и identity. Списочная accounts не получает
+общий CRUD. Новых полевых ACL, хуков или совместимости нет.
+
+TLS включается комплектом, а не URL. Без комплекта шлюз слушает только
+loopback HTTP. Полный комплект проверяет CA, CRL, точную роль, DNS/CN;
+HTTPS без комплекта и несовпадающий режим закрываются без downgrade.
+Файл revoked допускает только CRL и загружается из тех же проверенных байтов.
+Ранний отказ не теряет JSON-тело при закрытии TLS с непрочитанным запросом.
+
+Страница использует только новые account/accounts ответы, показывает метаданные
+и отдельно однократный пароль, очищает его при уходе/повторном показе и
+игнорирует запоздавшие ответы. Пароль не попадает в модель страницы или storage.
+
+## Проверки и доказательства
+
+Полный комбинированный прогон:
+`/Users/murat/w2c/course-book-merge-evidence/c5-runtime-integrated/`.
+Раннер — [run_full_checks.py](run_full_checks.py), Source и разбиение unit
+записаны до старта всех шести jobs; группы unit непересекающиеся и полные.
+Unit:955/0/0 +1028/0/0 Python и42/0/0 JS, всего2025/0/0.
+Cluster117/0/0, Domain228/0/0, DomainVMS164/0/0. Все шесть exit0.
+После завершения проверены все1006 SHA256 Source: изменений во время прогона нет.
+Пути/хеши исходных логов и команд — [evidence-integrated.json](evidence-integrated.json).
+Целевой combined набор101/0/0, exit0:
+`/Users/murat/w2c/course-book-merge-evidence/c5-integrated-target.log`.
+
+Тесты проходят настоящий HTTP/TLS, реальные роли и отзыв, настоящий PERSON JWT,
+подписанные отчёты, holder collect, CarryClient/DomainAgent, консоли члена и
+держателя, RTSP, обновление пароля, disable, revoke, delete и конфликт unique.
+Один HTTP/TLS unit стенд использует отдельную простую проверку токена для
+изоляции gate; end-to-end DomainVMS использует настоящий подписант.
+
+Первый красный standalone прогон и74 хеша сохранены в
+`/Users/murat/w2c/course-book-merge-evidence/c5-runtime-standalone/`.
+Он не выдаётся за приёмку. Пять отказов generic domain_platform и один
+domain_secrets устранены явным каталогом теста; отдельный where отказ — той же
+изоляцией каталога. Domain50 и DomainVMS17 — настоящим начальным сборщиком,
+enrollment и подписанными отчётами. Cluster1 — двумя строками sysusers.
+Slot-fate1 — проверкой метрики до освобождения зависшего прохода:32/0/0 и
+отдельная10-кратная проба зелёные. Отсутствующий, повреждённый или неполный
+индекс имён по-прежнему запрещает расширение грантов.
+
+## Граница TLS C5
+
+Решение10b3a2d6 приняло узкий C5: новый fallback users/grants поддерживает
+явный HTTP-режим коробки без комплекта либо один установочный CA.
+Независимая проба двух CA воспроизводит отказ502 до HTTP handler;
+это проверка безопасного отказа, не приёмка межкластерного TLS.
+Проба `/Users/murat/w2c/course-book-merge-evidence/c5-role-loader-cross-ca-probe.log`,
+SHA256 `b7eb7d819d0a446f52a625d59a3eab6f57d5ef0685307ff3e2f66bdef4995362`.
+WithMember/PeerOf, перенос отпечатков и ClientForeign окон3/4 ADR-0075
+остаются отдельным общим этапом после C7. Нет downgrade, CERT_NONE,
+системных корней, дописывания чужого CA или частного accounts-loader.
+
+## Отложенное
+
+- Итоговое чтение платформенного diff Архитектором и разрешение слияния C5.
+- Служебный X-Operator: входящий `2026-10-14-c5-operator-pass.md` без решения;
+  входящие X-User/X-Operator снимаются, X-Operator синтезируется консолью.
+- C6 asks/scenario; C6b sources-only upstream; C7 оставшийся domainpart,
+  deployment и итоговая карта переноса тестовых утверждений.
+- Новые уроки М10 не берутся до C7, решение55d7e153.
+
+После полного прогона объединён main10b3a2d6. В Source изменились только
+пять acceptance-входов команды Спецификации (README01/06/10, пример YAML02,
+сценарии11); исполнявшиеся Python/JS и TSV01 не изменились. Сравнение —
+[evidence-main-merge.json](evidence-main-merge.json). Полный повтор после
+этого слияния не заявляется. Новые уроки не исправлялись.
+
+## Approved correction cdd2c1f5
+
+Architect approved C5 after removing worker.writes from testsub2 entirely;
+door.pass:[entries] remains. The spec and two tests now forbid worker writes
+to tallies and shelves, preserving worker.requests. Final targeted checks:
+43 passed, 0 failed, 0 skipped, exit0. Initial64/2/0 retained: two obsolete
+expectations required the removed grant; console_load passed.
+X-Operator is confirmed as an outgoing console header; incoming headers
+are removed. Supersedes the pending-review/operator statuses above.
+See evidence-approved-correction.json for commands, log paths and SHA256.

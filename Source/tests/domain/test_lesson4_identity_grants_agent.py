@@ -3,6 +3,8 @@ worker; the agent carries keys, revocations and the cluster's grants and
 nothing else; grants are cluster-local with expiry; the revocation window
 is stated then measured; break-glass is one account, audited."""
 
+from tests.catalog_fixture import isolated_catalog
+
 from tests.reporting import sync as report_sync
 import json
 
@@ -22,6 +24,7 @@ def _domain(clk):
     return fed, links, dc, signer
 
 
+@isolated_catalog()
 def test_login_ends_in_a_token_naming_the_subject_and_nothing_else():
     clk = Clock(1000.0)
     fed, _, dc, signer = _domain(clk)
@@ -45,6 +48,7 @@ def test_login_ends_in_a_token_naming_the_subject_and_nothing_else():
         pass
 
 
+@isolated_catalog()
 def test_nothing_about_a_user_reaches_a_worker_only_trust_does():
     clk = Clock(1000.0)
     fed, links, dc, signer = _domain(clk)
@@ -107,6 +111,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     assert report_sync(agent) and south.vars.get(MEMBER_PATH)[0] and south.vars.get(KEYS_PATH)[0]   # both back on the next pass
 
 
+@isolated_catalog()
 def test_domain_down_clusters_keep_verifying_nobody_new_logs_in():
     clk = Clock(1000.0)
     fed, links, dc, signer = _domain(clk)
@@ -155,6 +160,7 @@ def test_revocation_travels_by_the_agent_and_rotation_overlaps():
         pass                                                               # overlap over: the old key is retired
 
 
+@isolated_catalog()
 def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocation_mechanism():
     clk = Clock(1000.0)
     fed, links, dc, signer = _domain(clk)
@@ -194,6 +200,7 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     assert g.may("alice", "view", 12) and not g.may("alice", "edit", 7)
 
 
+@isolated_catalog()
 def test_identity_publishes_object_first_then_pointer_and_restores_elsewhere():
     clk = Clock(1000.0)
     fed, links, dc, signer = _domain(clk)
@@ -246,6 +253,7 @@ def test_break_glass_is_one_account_audited_and_alarmed():
     bg.rotate("new-pw"); assert bg.used_since_rotation == 0
 
 
+@isolated_catalog()
 def test_who_changed_the_people_the_grants_and_the_members_is_a_line_in_the_holders_journal():
     """Feedback CL. A record held who edited it last, and the history was lost. Every change to a person, to the
     domain's grants and to the list of members is a line of the `audit` family on the holder's resource, as the

@@ -1,0 +1,34 @@
+{
+  "decision": "cdd2c1f5",
+  "command": [
+    "/Users/murat/w2c/vms-nightly/venv/bin/python",
+    "tests/run.py",
+    "test_boundary",
+    "test_worker_writes",
+    "test_worker_pass",
+    "test_spec_rule",
+    "test_spec_keys",
+    "test_console_load",
+    "test_group_of_table"
+  ],
+  "log": "/Users/murat/w2c/course-book-merge-evidence/c5-approved-testsub2.log",
+  "log_sha256": "9832a2dbd79bc8727109d8b8e8395584fb5340d9b6789e531294bae6353d7462",
+  "exit": 1,
+  "testsub2_sha256": "fc0bbda6f088440ca1fadcb3c2e51fab2b64d75d6d71d3d180a35b883131cbe8",
+  "initial_run_note": "64 passed,2 failed: boundary and spec_keys expected removed worker write grant; corrected both to forbid tallies/shelves writes. All console_load checks passed.",
+  "final": {
+    "command": [
+      "/Users/murat/w2c/vms-nightly/venv/bin/python",
+      "tests/run.py",
+      "test_boundary",
+      "test_worker_writes",
+      "test_worker_pass",
+      "test_spec_rule",
+      "test_spec_keys",
+      "test_group_of_table"
+    ],
+    "log": "/Users/murat/w2c/course-book-merge-evidence/c5-approved-testsub2-fixed.log",
+    "log_sha256": "6c50f8c7539a48df43804573637fafbb7a10065332836d5beca179570a8e07a4",
+    "exit": 0
+  }
+}

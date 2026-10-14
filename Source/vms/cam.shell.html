@@ -56,10 +56,12 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
   — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
   `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Назначения записи» (`domain/placement/rec/`).
 - `addMenu("unit")` — «Смотреть видео», «Архив».
+- «Учётки потоков» в разделе прав — `addTreeNodes("access")` и `addCard`: свои `/live/accounts`, пароль только
+  ответом создания или смены, без хранения в состоянии страницы.
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks` (writes through `pc.api`), `/domain/rec/books/primaries`; the holders' doors from
+`/events`, `/marks`, `/live/accounts` (writes through `pc.api`), `/domain/rec/books/primaries`; the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
@@ -1194,6 +1196,93 @@ function renderAssignments(host){
     :`<p class="sub">Назначений нет.</p>`);
 }
 pc.addBlock("domain",{id:"cam",render:host=>{assignmentHost=host;renderAssignments(host)}});
+
+// Cluster-owned RTSP accounts (ADR-0074 C5): the console passes these requests to its live gateway.
+// No credentials are cached with the metadata. A password lives only in the result input's value property:
+// the module's HTML snapshots, browser storage and subsequent list responses cannot restore it.
+let accountView=0,accountPassword=null;
+function forgetAccountPassword(){
+  if(accountPassword){accountPassword.value="";accountPassword.closest(".vms-account-secret").remove();accountPassword=null}
+}
+pc.on("select",()=>forgetAccountPassword());
+new MutationObserver(()=>{if(accountPassword&&!accountPassword.isConnected)forgetAccountPassword()})
+  .observe(document.querySelector(".pc-main"),{childList:true,subtree:true});
+pc.addTreeNodes("access",()=>[{ref:"streamaccounts:local",label:"Учётки потоков",icon:"sec_access"}]);
+pc.addCard("streamaccounts",host=>{
+  forgetAccountPassword();
+  const view=++accountView,live=()=>view===accountView&&host.isConnected&&pc.selected()==="streamaccounts:local";
+  let rows=[],loading=false,busy=false,error="",draft="";
+  const failure=e=>(e.status?String(e.status)+": ":"")+(e.message||String(e));
+  function draw(){
+    if(!live())return;
+    forgetAccountPassword();
+    const admin=pc.may("admin","domain"),disabled=busy||loading?" disabled":"";
+    host.innerHTML=`<h1>Учётки потоков</h1><div class="vms-accounts">
+      <p class="sub">Учётки этого кластера для внешних потребителей видео. Доступ к камерам задают гранты.</p>
+      <button type="button" data-account="reload"${disabled}>Обновить</button>
+      ${loading?`<p role="status">Загрузка учёток…</p>`:""}
+      ${error?`<p class="bad" role="alert">${esc(error)}</p>`:""}
+      ${admin?`<form class="vms-account-create"><label>Имя <input name="name" value="${esc(draft)}" autocomplete="off" required${disabled}></label>
+        <button type="submit"${disabled}>Создать учётку</button></form>`:""}
+      <div class="vms-account-result"></div>
+      ${!loading&&!error&&!rows.length?`<p>Учёток нет.</p>`:""}
+      <table><thead><tr><th>Имя</th><th>Состояние</th><th>Изменена</th><th>Кем</th><th></th></tr></thead><tbody>
+      ${rows.map((row,i)=>`<tr><td>${esc(row.name)}</td><td>${row.disabled?"Отключена":"Включена"}</td>
+        <td>${esc(row.at?fmtDayTime(row.at):"—")}</td><td>${esc(row.by||"—")}</td><td>${admin?
+          `<button type="button" data-account="password" data-row="${i}"${disabled}>Новый пароль</button>
+           <button type="button" data-account="toggle" data-row="${i}"${disabled}>${row.disabled?"Включить":"Отключить"}</button>
+           <button type="button" data-account="delete" data-row="${i}"${disabled}>Удалить</button>`:""}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    host.querySelector('[data-account="reload"]').onclick=()=>load();
+    const form=host.querySelector(".vms-account-create");
+    if(form){
+      form.elements.name.oninput=e=>{draft=e.target.value};
+      form.onsubmit=e=>{e.preventDefault();const name=form.elements.name.value.trim();if(name)change("POST","/live/accounts",{name},true)};
+    }
+    host.querySelectorAll("[data-row]").forEach(button=>{button.onclick=()=>{
+      const row=rows[Number(button.dataset.row)],path="/live/accounts/"+encodeURIComponent(row.name);
+      if(button.dataset.account==="password")change("POST",path+"/password",undefined,true);
+      else if(button.dataset.account==="toggle")change("PUT",path,{disabled:!row.disabled});
+      else if(pc.confirm("Удалить учётку «"+row.name+"»?","Её гранты также будут сняты."))change("DELETE",path);
+    }});
+  }
+  async function load(){
+    if(!live())return;
+    loading=true;error="";draw();
+    try{
+      const result=await pc.api("GET","/live/accounts");
+      if(!live())return;
+      if(!result||!Array.isArray(result.accounts))throw new Error("Шлюз не вернул список учёток");
+      rows=result.accounts.filter(row=>row&&typeof row.name==="string").map(row=>({name:row.name,
+        disabled:row.disabled===true,at:typeof row.at==="number"&&Number.isFinite(row.at)?row.at:0,
+        by:typeof row.by==="string"?row.by:""}));
+    }catch(e){if(live()){rows=[];error=failure(e)}}
+    finally{if(live()){loading=false;draw()}}
+  }
+  async function change(method,path,body,password=false){
+    if(!live()||busy||loading)return;
+    busy=true;error="";draw();
+    let answer;
+    try{
+      answer=await pc.api(method,path,body);
+      if(!live())return;
+      if(password&&(!answer||typeof answer.account!=="string"||typeof answer.password!=="string"||!answer.password))
+        throw new Error("Шлюз не вернул пароль; запросите новый пароль");
+      if(method==="POST"&&path==="/live/accounts")draft="";
+      await load();
+    }catch(e){if(live())error=failure(e);answer=null}
+    finally{if(live()){busy=false;draw()}}
+    if(password&&answer&&live()){
+      const result=host.querySelector(".vms-account-result");
+      result.innerHTML=`<div class="vms-account-secret"><p>Пароль учётки <strong>${esc(answer.account)}</strong> показан один раз. Сохраните его сейчас.</p>
+        <input class="vms-account-password" aria-label="Новый пароль учётки" readonly autocomplete="off">
+        <button type="button">Скрыть пароль</button></div>`;
+      accountPassword=result.querySelector("input");accountPassword.value=answer.password;
+      result.querySelector("button").onclick=forgetAccountPassword;
+    }
+  }
+  load();
+});
 
 // The camera's menu: watch it, its archive (the tabs above).
 pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>{pc.select(ref);goTab("vid")}},...(recOn?[{label:"Архив",run:()=>{pc.select(ref);goTab("rec")}}]:[])]:[]);

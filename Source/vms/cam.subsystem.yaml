@@ -25,8 +25,6 @@ lease: {unconfirmed_max: forever}
 # (`w2cplatform/cluster/rights.py`, `check_secrets`).
 secrets:
   readers:
-    domain/cam/stream-clients/: [domainpart, domain]
-    domain/cam/stream-accounts: [domainagent, domainpart, domain]
     door/signer: [console]
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
@@ -366,7 +364,7 @@ rights:
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, priority, labels, ref, live]
 # Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
-# The remaining domain worker publishes asks and stream-accounts until their own windows.
+# The remaining domain worker publishes asks until its own window.
 # Recording assignments are platform rows, read through /domain/placement. Domain names and grants
 # remain declared here; the platform carries and checks them without VMS-specific code.
 domain:
@@ -378,12 +376,6 @@ domain:
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
     asks: {}
-    stream-accounts: {}
-  kept: [stream-clients/]
-  # The RTSP accounts are subjects of the domain's grants (ADR-0031, the platform carries it out): no person of the
-  # domain under an account's name, and no grant to an account wider than view.
-  names:
-    stream-clients/: {exclusive_with: domain/users, grant: view}
   tokens:
     stream:
       lifetime: 86400
@@ -408,8 +400,6 @@ domain:
   keys:
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
     - {id: asks, keys: [domain/cam/asks], prefix: domain/cam/asks/}
-    - {id: stream-clients, prefix: domain/cam/stream-clients/}
-    - {id: stream-accounts, keys: [domain/cam/stream-accounts], prefix: domain/cam/stream-accounts/}
     - {id: worker, keys: [domain/cam/worker]}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
@@ -525,12 +515,6 @@ display:
     asks:
       title: Просьбы
       about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/cam/asks/<кластер> — книга каждого кластера."
-    stream-clients:
-      title: Учётки RTSP
-      about: "Учётные записи RTSP наружу (видеостена, другая VMS): имя и пароль, у держателя домена."
-    stream-accounts:
-      title: Учётки RTSP кластеров
-      about: "Какие учётки RTSP выданы кластеру — по его грантам; пароли запечатаны. domain/cam/stream-accounts/<кластер> — у держателя, domain/cam/stream-accounts — унесённая агентом."
     worker:
       title: Воркер книг
       about: Слот воркера VMS на домене — кто сейчас пишет книги (экземпляр и время).

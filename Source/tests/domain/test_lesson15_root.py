@@ -8,6 +8,7 @@ certificate. The holder keeps what signs every minute; a theft is answered by a 
 """
 
 from tests.member_console import device_console, admit_fixtures
+from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
 import json
 
@@ -42,19 +43,28 @@ def _site(wall, n=4):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
         d.boot()
         devices[d.name] = d
-        fed.add(d.cluster(domain=i == 0))
+        if i == 0:
+            fed.add(d.cluster(domain=True))  # the other members are admitted by voucher below
     root = DomainRoot(DOMAIN, now=wall)
+    from w2cplatform.trust.memberkey import MemberKey
+    MemberKey.load_or_make(devices["cam-SN0"].flash)
     holder = install(fed, "cam-SN0", DOMAIN, root, wall=wall, objects=devices["cam-SN0"].disk)
+    for name, device in devices.items():
+        if name != "cam-SN0":
+            fed.add(device.cluster())
     members = Members(holder.vars, wall)
     ldevids = {}
     for name in devices:
-        device_keys[name] = Ed25519PrivateKey.generate()
+        device_keys[name] = MemberKey.load_or_make(devices[name].flash).signing
         if name != "cam-SN0":
-            members.add(name, "voucher", serial=name[4:], key=_pub_hex(device_keys[name]))
+            members.add(name, "voucher", serial=name[4:], key=_pub_hex(device_keys[name]),
+                        seal=MemberKey.load_or_make(devices[name].flash).seal_pub)
         ldevids[name] = holder.signer.issue(name[4:], "ldevid", device_keys[name].public_key())
     agents = {name: _agent(fed, devices, name, "cam-SN0", wall) for name in devices if name != "cam-SN0"}
     for a in agents.values():
         report_sync(a)
+    initial_books(fed, holder.signer, wall, {n: (d.flash, d.local_objects()) for n, d in devices.items()},
+                  objects=devices["cam-SN0"].disk)
     return fed, devices, root, holder, agents, ldevids
 
 

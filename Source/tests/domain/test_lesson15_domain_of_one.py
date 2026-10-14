@@ -11,6 +11,7 @@ being replaced steps down instead of splitting the site in two.
 """
 
 from tests.member_console import device_console, admit_fixtures
+from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
 import json
 
@@ -46,10 +47,14 @@ def _site(wall, n=4):
     signer = Signer(DOMAIN, home, now=wall)
     offline = signer.backup()                            # Lesson 7: the key, kept beyond the holder
     DomainPublisher(home).publish_keys(signer.tokens.keyset())
+    holder = DomainHolder(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
+    from w2cplatform.trust.memberkey import MemberKey
+    MemberKey.load_or_make(devices["cam-SN0"].flash)
+    holder.claim()
+    initial_books(fed, signer, wall, {n: (d.flash, d.local_objects()) for n, d in devices.items()},
+                  objects=devices["cam-SN0"].disk)
     for name in devices:
         DomainPublisher(home).publish_grants(name, [Grant("anna", "edit", None, wall() + 30 * 86400)])
-    holder = DomainHolder(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
-    holder.claim()
     agents = {name: _agent(fed, devices, name, "cam-SN0", wall) for name in devices if name != "cam-SN0"}
     for a in agents.values():
         report_sync(a)
@@ -373,7 +378,10 @@ def test_a_move_keeps_topology_members_and_recording_assignments():
                   "reason": "operator", "at": str(wall()), "rev": "1"}
     holder.vars.put("domain/topology", topology)
     holder.vars.put("domain/placement/rec/SN3", assignment)
-    assert holder.vars.get("domain/members")[0] is None                   # never written: configuration only
+    # Exercise the separate configuration-only backup precondition. The ordinary
+    # C5 fixture now settles admission before allowing its first grants.
+    devices["cam-SN0"].flash.inner.as_writer("domain", ["domain/*"]).delete("domain/members")
+    assert holder.vars.get("domain/members")[0] is None                   # configuration only
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); report_sync(agents["cam-SN1"])
     assert Members(holder.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the backup wrote it first
     devices["cam-SN0"].power_off()

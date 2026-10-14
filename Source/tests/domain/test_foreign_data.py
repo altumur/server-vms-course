@@ -4,6 +4,8 @@ pass, part 4: the relay's bundle, `RecursionError`, kept edits, grants, asks, th
 a name that is a number; and the open rest of the seventh: the trust readers, the agent's pass, the books' steps,
 `identity.users`, the signer's start)."""
 
+from tests.catalog_fixture import isolated_catalog
+
 from tests.member_console import device_console, admit_fixtures
 from tests.reporting import sync as report_sync
 import json
@@ -185,6 +187,7 @@ def test_one_members_unparsable_outcome_leaves_the_other_members_edits_reconcile
     assert north.vars.get("domain/pending/cam-A")[0]["9"] == "{torn"                # not dropped by a write about camera 2
 
 
+@isolated_catalog()
 def test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no_door():
     """`|` in a user's name split a grant into four: every grant of the row went with it, the domain's door answered
     500 to everyone, the admin included, and the command that mends grants raised the same way. The coordinator's
@@ -392,6 +395,7 @@ def test_the_agents_pass_goes_on_past_a_row_of_the_domain_that_does_not_parse_an
     assert json.loads(north.objects.get(base(cam.name) + "reported"))["rev"] == before + 1
 
 
+@isolated_catalog()
 def test_one_users_record_that_does_not_parse_stops_neither_the_publication_nor_a_federated_login():
     """`identity.users` (the seventh review left it open): one torn user record raised out of `users()` — the
     identity set was never published again, and no federated user could log in. That record is skipped, counted;
@@ -525,6 +529,7 @@ def test_a_camera_that_says_who_takes_its_stream_as_a_string_is_not_read_as_its_
     assert camera_taken(Door(["srv-b"]), "SN1", "srv-b") is False and camera_taken(Door(["srv-a"]), "SN1", "srv-b") is True
 
 
+@isolated_catalog()
 def test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_still_refused():
     """A grant to `say"hi`, written before `"` was refused, read as a grant and was carried into every rewrite of its row,
     which raised: revoking `mallory` (deleting the user) was refused, and the command that mends the grants failed the
