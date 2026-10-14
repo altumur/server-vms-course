@@ -53,7 +53,7 @@ lease: {unconfirmed_max: forever}
 # primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
 # source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
 # denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
-worker: {reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/cam/upstream, domain/cam/asks], requests: [cam]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+worker: {reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/cam/asks], requests: [cam]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -374,6 +374,13 @@ display:
 domain:
   books:
     primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role]}
+    upstream: {from: rec/upstream/, key: ref, pick: unique, to: to}
+  tokens:
+    upstream:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [recworker]
+      placement: {sub: rec, caller: cluster, ref_claim: ref, target_fields: [centre], audience_claim: aud}
   reports: [polled/]
   witness: {report: polled, member_field: cam}
   # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of

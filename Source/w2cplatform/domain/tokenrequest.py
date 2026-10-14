@@ -5,6 +5,7 @@ import json
 import uuid
 
 from w2cplatform.canonical import parse_json
+from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.trust.memberkey import NotMine, seal_to
 from .carry import Refused, _http_post, publication_bytes
 
@@ -57,6 +58,19 @@ def issue(door, issuer, member, sub, kind, body, signature):
         if not row:
             raise Refused(403, "token request has no assignment")
         def values(field):
+            if field == "centre":
+                from .topology import TOPOLOGY, refusals
+                try:
+                    items, _ = door.vars.get(TOPOLOGY)
+                    topology = parse_json(items["doc"]) if items and items.get("doc") else {}
+                    if not isinstance(topology, dict) or type(topology.get("rev")) is not int \
+                            or topology["rev"] <= 0 or not isinstance(topology.get("centre"), str) \
+                            or not topology["centre"] or not isinstance(topology.get("star", []), list) \
+                            or not isinstance(topology.get("via", {}), dict) or refusals(topology):
+                        raise ValueError("invalid confirmed topology")
+                except PARSE_ERRORS:
+                    raise Refused(409, "topology has no confirmed centre") from None
+                return [topology["centre"]]
             v = row[field]
             return v if isinstance(v, list) else ([v] if v else [])
         links = values("cluster") + values("origin") + values("copies")

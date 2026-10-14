@@ -506,7 +506,7 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     from vms.recworker import Look
     Look(SimpleNamespace(vars=AsRecorder())).sources()  # The recorder resolves pulls from sources.
     books = {p for p in read if p.startswith(("domain/cam/", "domain/rec/"))}
-    assert books == {"domain/cam/upstream", "domain/cam/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
+    assert books == {"domain/rec/upstream", "domain/cam/asks", "domain/cam/sources", "domain/rec/primaries"}, sorted(books)
     own_books = {f"domain/{REC_SPEC.name}/{book}" for book in REC_SPEC.domain.books}
     assert set(REC_SPEC.worker_reads) | own_books >= books, REC_SPEC.worker_reads
 

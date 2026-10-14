@@ -711,6 +711,7 @@ class Site:
             raise Unreachable(f"{url} did not answer {name}")
         rec.host_ingest(name, self.ingest_url(name), dial=dial)
         if rec.forwarder is not None:
+            rec.forwarder.tokens.door = self.role_requests(name, "recworker")
             rec.forwarder.sealer = self.ring(name)             # the books its agent carried, opened with this box's ring
         self.recorders[name], self.ingests[name] = rec, rec.ingest
         return rec

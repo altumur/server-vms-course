@@ -365,15 +365,10 @@ rights:
 # No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, priority, labels, ref, live]
-# The VMS on the domain (the boundary's «no hooks»; DOMAIN-PLATFORM.md): what the platform's domain reads and moves for
-# it, under `domain/cam/…`, without knowing what any of it means. A camera is found across clusters by its `ref`, and the
-# shared view shows its name. The books the VMS's domain worker writes at the holder for each member (`vms/domainpart`):
-# where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
-# ingest a camera nobody records polls (polls), a relay's road to the centre (upstream), and whom a camera may ask to act
-# (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
-# recording assignments are platform rows, read through `/domain/placement`. The
-# tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
-# another, issued by the domain's signer with these claims only.
+# Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
+# The remaining domain worker publishes polls, asks and stream-accounts until their own windows.
+# Recording assignments are platform rows, read through /domain/placement. Domain names and grants
+# remain declared here; the platform carries and checks them without VMS-specific code.
 domain:
   ref: ref
   view: [name, enabled]   # what the holder knows of a camera: its name, and whether it is on (domain.edit)
@@ -383,7 +378,6 @@ domain:
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
     polls: {}
-    upstream: {}
     asks: {}
     stream-accounts: {}
   kept: [stream-clients/]
@@ -409,7 +403,6 @@ domain:
   shared: [folders, alarms]
   keys:
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
-    - {id: upstream, keys: [domain/cam/upstream], prefix: domain/cam/upstream/}
     - {id: polls, keys: [domain/cam/polls], prefix: domain/cam/polls/}
     - {id: asks, keys: [domain/cam/asks], prefix: domain/cam/asks/}
     - {id: stream-clients, prefix: domain/cam/stream-clients/}
@@ -529,9 +522,6 @@ display:
     polls:
       title: Опросы
       about: "Книги опросов: для толкающей камеры, которую никто не пишет, — приёмник потоков (ingest), у которого она спрашивает просьбы."
-    upstream:
-      title: Цепочка ретрансляторов
-      about: Для каждой камеры, которую ретранслятор пишет или только опрашивает, — приёмник центра и ключ ретранслятора там.
     asks:
       title: Просьбы
       about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/cam/asks/<кластер> — книга каждого кластера."

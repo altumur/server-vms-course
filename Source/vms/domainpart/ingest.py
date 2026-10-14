@@ -564,7 +564,9 @@ class Ingest:
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
         try:
-            p = verify(token, ks, self.revoked(), now=self.wall(), kind="stream")
+            p = verify(token, ks, self.revoked(), now=self.wall())
+            if p.get("kind") not in ("stream", "upstream"):
+                raise Refused("stream token refused: wrong kind")
         except TokenError as e:
             raise Refused(f"stream token refused: {e}")
         recipients = p.get("aud")
@@ -2903,7 +2905,7 @@ def _urls(v: dict) -> None:
 # ref B, "actions": [...]}], from the shared settings (Lesson 12, `scenario.pairs`). A target nobody records
 # polls the poll home (`BookInputs.polled_at`).
 def publish_asks(inputs, scenarios: list[dict], lifetime: float = 86400.0) -> dict[str, dict]:
-    from .keys import UPSTREAM_PATH
+    from .chain import UPSTREAM_PATH
     now, books = inputs.wall(), {}
 
     # Where another cluster takes streams: what its recorders say in their heartbeats (`ingest_urls`; ADR-0065, its
@@ -2943,13 +2945,14 @@ def publish_asks(inputs, scenarios: list[dict], lifetime: float = 86400.0) -> di
             return out
         return BOOKS.read(key, parse, {}) if raw else {}
 
-    def upstream_of(key: str, raw) -> dict:
-        def parse():
-            v = _an_object(json.loads(raw))
-            if v.get("mode") == "push":
-                _urls(v)                                     # a road up is its addresses
-            return v
-        return BOOKS.read(key, parse, {}) if raw else {}
+    def upstream_of(key, items, ref):
+        from vms.recording_books import Unconfirmed
+        from vms.recording_upstream import confirmed
+        try:
+            value = confirmed(items, key, ref, inputs.centre).value
+            return {"mode": "pull" if key in inputs.star else "push", "urls": value["urls"]}
+        except PARSE_ERRORS:
+            return {}
 
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
@@ -2962,7 +2965,7 @@ def publish_asks(inputs, scenarios: list[dict], lifetime: float = 86400.0) -> di
         have, _ = inputs.vars.get(f"{ASKS_PATH}/{home}")
         old = roads_of(f"{ASKS_PATH}/{home}/{b}", (have or {}).get(b))
         up, _ = inputs.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = upstream_of(f"{UPSTREAM_PATH}/{on}/{b}", (up or {}).get(b))
+        above = upstream_of(on, up, b)
         if via and on != via:
             # The target is in another relay. The only road this camera has is its own relay, marked UP; the
             # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
