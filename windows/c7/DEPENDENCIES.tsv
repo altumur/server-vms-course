@@ -1,0 +1,4 @@
+symbol	before	after	consumer	fate
+ASK_DEADLINE_MAX	vms/domainpart/ingest.py	vms/ingest.py	vms/autoask.py::scenarios	(в) живой предел срока просьбы; 8ec05506
+Refused	vms/domainpart/ingest.py	vms/ingest.py	vms/autoask.py::Executor	(в) живой отказ ingest при просьбе; 8ec05506
+ANSWER_GRACE	vms/domainpart/ingest.py	vms/ingest.py	vms/autoask.py::Asker.outcome	(в) живой предел ожидания исхода; 8ec05506
