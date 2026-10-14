@@ -704,15 +704,11 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
     books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
+    recording_domain = RecordingDomain(books.inputs, signer,
+        agents=[*agents, relay_agent], devices=list(cams.values()), recorders=hosts)
 
     def domain_pass():
-        for h in hosts:
-            h.heartbeat_once()
-        for d in cams.values():
-            d.publish()
-        for a in agents:
-            report_sync(a)                                                   # reports into the relay
-        report_sync(relay_agent)                                            # up in the bundle, and down the relay
+        recording_domain.collect()
         books.pass_once()
         report_sync(relay_agent)                                            # the new books relayed down
         for a in agents:
