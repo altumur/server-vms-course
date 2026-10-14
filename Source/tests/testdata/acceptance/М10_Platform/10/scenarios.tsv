@@ -1,8 +1,8 @@
 scenario	step	request	expect
 # Приёмка М10/10: консоль testsub (root) и testsub2, контроллер и ресурс по директивам, без воркеров. Формат — README.
 01-schema	1	console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "builds": "@any"}
-01-schema	2	console PUT /schema?version=abc	400 {"error": "~a version is a number"}
-01-schema	3	console PUT /schema?version=0	409 {"error": "~does not go back"}
+01-schema	2	console PUT /schema?version=abc	400 {"error": "~a whole number from 1"}
+01-schema	3	console PUT /schema?version=0	400 {"error": "~a whole number from 1"}
 01-schema	4	console PUT /schema?version=1	200 {"version": 1}
 02-drain-strand	1	console POST /counters {"name": "d1", "start": 1}	201
 02-drain-strand	2	console POST /drain?server=srv-a	2xx
