@@ -1,7 +1,0 @@
-{
-  "Source/tests/testdata/acceptance/М10_Platform/01/scenarios.tsv": "bf1927f361c7a6149dddd93cde18ef2f9376103de60cd5ba13a7d9dfa759b919",
-  "Source/tests/testdata/acceptance/М10_Platform/01/README.md": "429aedcabea37694f682c2a61d8f538c3812971d2c4d8a3d940aebd4267cf6f1",
-  "М10_Platform/01-the-storage-dictionary.md": "1ec297c139edbae38b7a085cd8afb60a9967b58d5646715fa696d28a8039f39e",
-  "decisions/inbox/2026-10-14-м10-api-повторы.md": "2605dc00536b09286bd915755e2dddf7ba2aea1df397ca5f2898cd286b3a9b9a",
-  "decisions/inbox/2026-10-14-м10-id-после-ошибки-fsync.md": "ac0ffc2cb6ce3fc9327de9d2c7661a510174cc77ade936bc6de3e999c4536fe6"
-}
