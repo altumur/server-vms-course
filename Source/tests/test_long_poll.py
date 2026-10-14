@@ -91,7 +91,7 @@ def _evaluator(box, cid, index=None):
         {"name": "door", "when": [{"sub": "cam", "kind": "io.input", "unit": str(cid)}], "within": 0,
          "then": [{"sub": "cam", "action": "output", "unit": str(cid), "port": 2, "pulse_ms": 500}], "rate_per_minute": 600})
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
-    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("cam", "rec", "det")),
+    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.acl_worker_role()),
                       box.objects, index=index or MergedIndex(box.objects, wall=box.wall), clock=box.clock, wall=box.wall,
                       server="srv-a", resource_root=box.resource_root, env={})
 
