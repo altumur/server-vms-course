@@ -602,3 +602,61 @@ def test_collected_book_is_visible_by_ref_of_another_spec_without_global_view():
         assert status == 200 and set(shown) == {"", "badge"}
         assert shown["badge"] == {"entries": [{"member": "north", "item": "w1/i", "n": 7}], "missing": []}
         assert SECRET not in json.dumps(shown) and "forged" not in json.dumps(shown)
+
+
+def test_holder_book_show_unions_recipients_deduplicates_origins_and_projects_only_declared_fields():
+    from w2cplatform.domain.console import Console
+    with site() as e:
+        key = "domain/testsub/counts/"
+        def row(entries, missing=()):
+            return {"": json.dumps({"missing": list(missing)}),
+                    "badge": json.dumps({"entries": entries, "missing": list(missing)})}
+        a = {"member": "north", "item": "w1/a", "value": {"n": 7, "hidden": "private-url",
+             "nested": [{"token_secret": SECRET, "public": "kept"}]}}
+        b = {"member": "south", "item": "w2/b", "value": {"n": 9}}
+        e.north.vars.put(key + "north", row([a]))
+        e.north.vars.put(key + "south", row([a, b], missing=["absent"]))
+        console = Console.__new__(Console)
+        console.holder_vars = e.north.vars
+        code, shown = console.book_doc(spec(show=("n", "nested")), "counts")
+        assert code == 200
+        assert shown["badge"] == {"entries": [
+            {"member": "north", "item": "w1/a", "n": 7, "nested": [{"public": "kept"}]},
+            {"member": "south", "item": "w2/b", "n": 9}], "missing": ["absent"]}
+        assert shown[""] == {"missing": ["absent"]}
+        assert SECRET not in json.dumps(shown) and "private-url" not in json.dumps(shown)
+        for malformed in (row([a, a]), row([{**a, "value": {"n": 8}}]),
+                          {"badge": json.dumps({"entries": [a], "missing": []})},
+                          {"": '{"missing":[]}', "badge": '{"entries":[],"missing":["other"]}'}):
+            e.north.vars.put(key + "south", malformed)
+            status, body = console.book_doc(spec(show=("n",)), "counts")
+            assert status == 503
+            assert SECRET not in json.dumps(body) and "private-url" not in json.dumps(body)
+        assert console.book_doc(spec(), "undeclared")[0] == 404
+
+
+def test_holder_book_http_door_keeps_domain_view_gate_and_never_leaks_unshown_values():
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.federation import DomainDirectory
+    from w2cplatform.trust.tokens import TokenError
+    from tests.conftest import Served
+    with site() as e:
+        shown_spec = spec(show=("n",))
+        def subject(token):
+            if not token:
+                raise TokenError("person required")
+            return token
+        directory = DomainDirectory(e.fed)
+        con = Console(directory, ReadView(e.fed, wall=e.wall), SimpleNamespace(_subject=subject),
+                      holder_vars=e.north.vars, viewer=lambda name: name == "boss")
+        e.north.vars.put("domain/testsub/counts/south", {
+            "": '{"missing":[]}', "badge": json.dumps({"missing": [], "entries": [
+                {"member": "north", "item": "w1/a", "value": {"n": 7, "hidden": SECRET}}]})})
+        with patch.object(catalog, "_loaded", {"testsub": shown_spec}), Served(con) as call:
+            path = "/domain/testsub/books/counts"
+            assert call("GET", path)[0] == 401
+            assert call("GET", path, headers={"Authorization": "Bearer visitor"})[0] == 403
+            status, reply = call("GET", path, headers={"Authorization": "Bearer boss"})
+            assert status == 200 and reply["badge"]["entries"] == [
+                {"member": "north", "item": "w1/a", "n": 7}]
+            assert SECRET not in json.dumps(reply)
