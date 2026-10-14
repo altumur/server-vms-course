@@ -9,6 +9,7 @@ site that reads its door, and for the domain that reads its report.
 """
 
 from tests.member_console import device_console, admit_fixtures
+from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
 from w2cplatform.cluster.variables import FakeVariables
 
@@ -43,6 +44,12 @@ def _domain(wall, *serials):
                                 domain_objects=north.objects, published=d.local_objects())
         report_sync(agents[s])
         devices[s] = d
+    from w2cplatform.trust.signer import Signer
+    signer = Signer("acme", north.vars, now=wall)
+    initial_books(fed, signer, wall, {"north": (north.vars, north.objects),
+                  **{d.name: (d.flash, d.local_objects()) for d in devices.values()}})
+    for agent in agents.values():
+        report_sync(agent)                # initial copies settle before the quiet-day measurement
     return fed, room, devices, agents
 
 
@@ -116,7 +123,7 @@ def test_a_day_of_heartbeats_costs_the_flash_nothing():
         d.publish()
         if i % 3 == 0:
             report_sync(agent)                                 # and the agent every 30 s
-    assert after_boot == 3                               # epoch, unit row and member identity
+    assert after_boot == 3 + 6                           # epoch, unit, identity; roster and five initial book copies
     assert d.flash.writes - after_boot == 1              # the grants, once, when they arrived — and nothing else
 
 
@@ -129,7 +136,9 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
     report_sync(DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall))
-    assert d.flash.list("") == ["cam/cameras/1", "cam/epoch/1", "domain/grants", "domain/member-key"]
+    assert d.flash.list("") == ["cam/cameras/1", "cam/epoch/1", "domain/cam/sources", "domain/grants",
+                                "domain/live/stream-accounts", "domain/member-key", "domain/member-list",
+                                "domain/rec/polls", "domain/rec/primaries", "domain/rec/upstream"]
 
 
 def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
