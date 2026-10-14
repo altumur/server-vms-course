@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "scenarios": 22,
+    "steps": 98,
+    "passing_steps": 75,
+    "failed_steps": 23,
+    "failed_scenarios": 11,
+    "shape_layer_only_bad_steps": 54,
+    "unit": {
+      "exit": 0,
+      "totals": [
+        46,
+        0,
+        0
+      ],
+      "failures": [],
+      "import_failure": false
+    }
+  },
+  "valid_mutants": 12,
+  "invalid_mutants": 0,
+  "api": {
+    "all": 12,
+    "reachable": 9,
+    "killed": 8,
+    "reachable_survived": 1,
+    "unreachable": 3
+  },
+  "unit": {
+    "killed": 10,
+    "survived": 2
+  },
+  "joint": {
+    "killed": 11,
+    "survived": 1,
+    "survived_percent": 8.33
+  }
+}
