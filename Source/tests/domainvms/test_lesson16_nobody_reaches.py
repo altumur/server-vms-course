@@ -938,7 +938,7 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
     """Coverage is rechecked without a notification, at recheck rather than the poll deadline.
     Controlled waiting tests the actual deadline instead of the host's scheduling latency."""
     from types import SimpleNamespace
-    from vms.domainpart import ingest as module
+    from vms import ingest as module
     wall=Clock(1000.)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     token = pusher.assigned.stream_token()
