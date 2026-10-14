@@ -7,7 +7,7 @@ import tempfile
 import threading
 
 from tests.vmsconftest import Box
-from vms.domainpart.ingest import CameraPusher, Ingest, audience
+from vms.domainpart.ingest import CameraPusher, Ingest, LINGER
 from vms.recording_books import Unconfirmed
 from vms.recording_publication import sources
 from w2cplatform.domain.topology import poll_home
@@ -103,13 +103,11 @@ def test_unassigned_poll_source_exposes_neither_address_credentials_nor_push_and
     assert sources(worker, [{"id": "1", "ref": "serial", "live_url": "private", "push": True}]) == {}
 
 
-def test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_sending_bytes():
+def test_camera_polls_and_answers_asks_then_pushes_only_while_a_viewer_wants_bytes():
     site = Site()
     ing = site.ingests["relay"]
-    ing.want("serial", "viewer")
-    queue = ing.subscribe("serial", "viewer")
-    action = {"preset": 3}
-    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=audience("relay"),
+    action = {"camera": "serial", "action": "preset", "arg": 3}
+    token = site.issuer.issue("gate", 60, now=site.box.wall(), kind="ask", aud=["relay"],
                               ref="serial", acts=[action])
     aid = ing.ask(token, "serial", action, site.box.wall()+30)
     with site.role_door() as door:
@@ -117,7 +115,7 @@ def test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_
         frames = [{"t": site.box.wall(), "key": True, "body": b"private-video-bytes"}]
         result = pusher.pass_once(frames)
         assert result["pushed"] == 0 and result["asks"] == [(action, "performed")]
-        assert queue.drain() == [] and pusher.sent is None and pusher.delivered == []
+        assert pusher.sent is None and pusher.delivered == []
         assert pusher.frames.piece(None, 1 << 20)[0] == frames
         assert ing.ask_outcome("serial", aid) == "performed"
         pusher.pass_once([])
@@ -125,6 +123,23 @@ def test_camera_requests_poll_through_real_role_socket_and_answers_asks_without_
         assert claims(site, pusher.entry())["aud"] == ["relay"]
         assert site.dials and set(site.dials) == {"http://relay/ingest"}
         assert "token_secret" not in json.dumps({key: site.box.vars.get(key)[0] for key in site.box.vars.list("")})
+        queue = ing.subscribe("serial", "viewer")
+        ing.want("serial", "viewer")
+        site.box.wall.advance(1)
+        site.box.clock.advance(1)
+        live = [{"t": site.box.wall(), "key": True, "body": b"viewer-video-bytes"}]
+        result = pusher.pass_once(live)
+        assert result["pushed"] >= len(live), result
+        assert any(frame["body"] == b"viewer-video-bytes" for frame in queue.drain())
+        ing.release("serial", "viewer")
+        ing.unsubscribe("serial", "viewer", kind="live")
+        site.box.wall.advance(LINGER + 1)
+        site.box.clock.advance(LINGER + 1)
+        later = [{"t": site.box.wall(), "key": True, "body": b"after-viewer-left"}]
+        assert pusher.pass_once(later)["pushed"] == 0
+        assert pusher.pushing is None
+        assert claims(site, pusher.entry())["aud"] == ["relay"]
+
 
 
 def test_home_switch_forgets_previous_route_and_credential_before_new_observation_arrives():
