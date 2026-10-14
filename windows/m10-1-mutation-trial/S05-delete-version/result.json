@@ -1,0 +1,48 @@
+{
+  "id": "S05-delete-version",
+  "valid": true,
+  "target": "storemachine.py",
+  "description": "delete returns the old version",
+  "api_scenarios": 22,
+  "api_steps": 98,
+  "api_failed_steps": 24,
+  "api_failed_scenarios": [
+    "07-no-reuse",
+    "09-guard",
+    "10-guard-absent",
+    "11-guard-before-cas",
+    "12-id",
+    "14-bad-forms",
+    "15-too-large",
+    "16-items",
+    "17-routes",
+    "19-key-too-long",
+    "20-guard-forms",
+    "22-body-edge"
+  ],
+  "api_new_facets": [
+    [
+      "07-no-reuse",
+      "5",
+      "assert.distinct"
+    ]
+  ],
+  "api_killed": true,
+  "api_target_function": "storemachine.py:StoreMachine._write",
+  "api_function_calls": 50,
+  "api_target_reached": true,
+  "api_coverage": "reached; confirmed by api-calls.json",
+  "unit": {
+    "exit": 1,
+    "totals": [
+      45,
+      1,
+      0
+    ],
+    "failures": [
+      "test_storemachine.py::test_a_version_is_the_log_index_above_the_base_and_is_never_handed_out_twice"
+    ],
+    "import_failure": false
+  },
+  "unit_killed": true
+}
