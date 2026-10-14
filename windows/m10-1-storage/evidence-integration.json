@@ -1,0 +1,49 @@
+{
+  "decision": "9a4fb347",
+  "approved_branch": "30e743a849a9c2758c7e423f212c3e8ab0c8b058",
+  "source_checkpoint": "13ca0880472e850f8f76219aab1a377ec06ada09",
+  "merge": "e010f5525710b95a4c5456d42005ca1989c8fd86",
+  "registration_commit": "3182ee9217535b7db676899d320a01f707fedf78",
+  "source_delta_after_tested_checkpoint": [
+    "Source/tests/test_boundary.py: register tests/storage_acceptance.py and tests/test_storage_m10.py"
+  ],
+  "complete_suites_record": "evidence-final.json (1956 unit+JS,117 Cluster,228 Domain,166 DomainVMS; all exit0)",
+  "integration_checks": [
+    {
+      "name": "boundary",
+      "passed": 26,
+      "failed": 0,
+      "exit": 0,
+      "log": "/Users/murat/w2c/course-book-merge-evidence/m10-integration-boundary.log",
+      "sha256": "6a5a79bfea95d9cfcb750e226fdac33ff0d3cefe5abb2e4104219e3112df6117"
+    },
+    {
+      "name": "http",
+      "passed": 98,
+      "failed": 0,
+      "exit": 0,
+      "log": "/Users/murat/w2c/course-book-merge-evidence/m10-integration-http.log",
+      "sha256": "24f1c7a00f7adc86f9605920fc57312459ca2de89e6c4b5660de0eba7b783e7c"
+    },
+    {
+      "name": "file",
+      "passed": 98,
+      "failed": 0,
+      "exit": 0,
+      "log": "/Users/murat/w2c/course-book-merge-evidence/m10-integration-file.log",
+      "sha256": "24f1c7a00f7adc86f9605920fc57312459ca2de89e6c4b5660de0eba7b783e7c"
+    },
+    {
+      "name": "mem",
+      "passed": 98,
+      "failed": 0,
+      "exit": 0,
+      "log": "/Users/murat/w2c/course-book-merge-evidence/m10-integration-mem.log",
+      "sha256": "24f1c7a00f7adc86f9605920fc57312459ca2de89e6c4b5660de0eba7b783e7c"
+    }
+  ],
+  "command_prefix": "OBSD_BIN=/Users/murat/w2c/vms-nightly/exe/obsd /Users/murat/w2c/vms-nightly/venv/bin/python",
+  "unit_command": "tests/run.py test_boundary test_storage_m10",
+  "acceptance_command": "tests/storage_acceptance.py /Users/murat/w2c/course-book-merge-evidence/m10-integration-<backend> --backend <backend>",
+  "M10_until_C7": "No further M10 lesson work per 55d7e153"
+}
