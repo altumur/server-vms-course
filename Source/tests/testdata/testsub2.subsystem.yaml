@@ -207,7 +207,6 @@ display:
   events: false                       # the card has no journal tab of the module's
   field_help: {of: счётчик, shelf: полка, lane: "полоса, по которой воркер ведёт счёт"}
   kinds: {tally.tick: тик}
-  actions: {add: прибавить}
   tree:
     group_by: zone
     nested_by: "/"

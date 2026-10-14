@@ -144,6 +144,7 @@ rights:     чтение view, запись admin, ниже — по rights.rout
 ```yaml
 openapi: 3.1.0
 info: {title: М10/10 двери схемы, дренажа, тел и таблиц, version: "1"}
+x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
 paths:
   /schema:
     get:
@@ -152,12 +153,12 @@ paths:
       parameters: [{name: version, in: query, required: true, schema: {type: integer, minimum: 1}}]
       responses:
         "200": {description: "поднято; журнал schema.raised {version, was, user}"}
-        "400": {description: a version is a number}
+        "400": {description: "a version is a whole number from 1"}
         "409": {description: "still running: <имена> — at schema N | schema does not go back: have -> version | row does not parse"}
         "403": {description: не admin / токен консоли не достаёт platform/schema}
   /drain:
     get:  {responses: {"200": {description: "Н1.2 state"}}}
-    post: {parameters: [{name: server, in: query, required: true}], responses: {"200": {description: дренаж начат; журнал drain.started}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
+    post: {parameters: [{name: server, in: query, required: true, schema: {type: string}}], responses: {"200": {description: дренаж начат; журнал drain.started}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
     delete: {responses: {"200": {description: снят; журнал drain.ended}}}
   /{rows}/{id}/{blob_field}:
     parameters: [{name: rows, in: path, required: true, schema: {type: string}}, {name: id, in: path, required: true, schema: {type: string}}, {name: blob_field, in: path, required: true, schema: {type: string}}]
@@ -172,13 +173,14 @@ paths:
     parameters: [{name: table, in: path, required: true, schema: {type: string}}]
     get:  {responses: {"200": {description: "{<t>: [строка без секретов, адреса с маской, held_by? , garbled?]}"}}}
     post:
-      parameters: [{name: Idempotency-Key, in: header, required: true}]
+      parameters: [{name: Idempotency-Key, in: header, required: true, schema: {type: string}}]
       responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {description: тело больше предела}, "403": {description: нет права admin}, "503": {description: store unavailable}}
   /{table}/{name}:
     parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: name, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: строка}, "404": {description: no such row}}}
     delete: {responses: {"200": {description: "{deleted}"}, "404": {description: no such row}, "503": {description: хранилище недоступно}}}
-  /v1/objects/{sub}/blobs/{digest}:             # дверь ресурса, приём копии (урок 8)
+  /v1/objects/{sub}/blobs/{digest}:  # дверь ресурса, приём копии (урок 8)
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: digest, in: path, required: true, schema: {type: string}}]
     put:
       responses: {"204": {description: копия принята}, "405": {description: не тело}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}, "409": {description: удалено здесь позже копии}, "408": {description: медленно}}
 ```
@@ -271,7 +273,7 @@ safe = Σ units == 0 ∧ Σ pending == 0 ∧ unsaid пуст
 
 | Причина | Код / исход | Тело | Что делает вызывающий |
 |---|---|---|---|
-| схема: версия не число | 400 | «a version is a number» | ошибка клиента |
+| схема: версия не целое ≥ 1 (не число, дробь, 0, отрицательное) | 400 | «a version is a whole number from 1» | ошибка клиента |
 | схема: назад; строка не число; живой процесс ниже | 409 | слова с именами | дождаться обновления |
 | старт: хранилище на схеме выше сборки; строка не число | не стартовать | лог | обновить сборку / починить строку |
 | дренаж: без сервера; второй сервер | 400 / 409 | слова | — |

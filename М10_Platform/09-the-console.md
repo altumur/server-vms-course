@@ -183,7 +183,7 @@ commands:  вид command / command.failed — слово и заметка мо
 ```yaml
 openapi: 3.1.0
 info: {title: М10/9 двери консоли, version: "1"}
-x-every-operation-responses: [401, 403, 404, 405, 408, 413, 429, 503]   # закрытый список общих ответов каждой операции (components.responses.Common, Н4); у операций не повторяются
+x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # закрытый список общих ответов каждой операции (components.responses.Common, Н4: 400 — тело chunked/коротко); у операций не повторяются
 paths:
   /:                 {get: {description: "оболочка root или console.html; CSP", responses: {"200": {description: text/html}, "404": {description: у смонтированной подсистемы — is mounted}}}}
   /index.html:       {get: {description: то же, responses: {"200": {description: text/html}, "404": {description: is mounted}}}}
@@ -204,7 +204,7 @@ paths:
         "400": {description: not an id}
   /where/{table}/{place}:
     parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: place, in: path, required: true, schema: {type: string}}]
-    get: {parameters: [{name: unit, in: query, required: true}], responses: {"200": {description: "{worker, place, server, door}"}, "404": {description: "no such place | {unreachable: place@server} + X-Unreachable"}}}
+    get: {parameters: [{name: unit, in: query, required: true, schema: {type: string}}], responses: {"200": {description: "{worker, place, server, door}"}, "404": {description: "no such place | {unreachable: place@server} + X-Unreachable"}}}
   /resources:        {get: {responses: {"200": {description: "{<server>: пульс ресурса + state: live | silent}"}}}}
   /servers:
     get:
@@ -216,7 +216,12 @@ paths:
             requires_resource, placeable, why, workers: [WorkerRow]}}, status?: [servers.status]}
   /unplaceable:      {get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}}
   /metrics:          {get: {responses: {"200": {description: "text/plain; ряды Н3"}}}}
-  /session:          {get: {responses: {"200": {description: "Н1.3: {who, grants, …}"}, "401": {description: не личность}}}, post: {responses: {"200": {description: вход}, "400": {description: у открытой консоли}, "429": {description: аварийный вход — предел}}}}
+  /session:
+    get: {responses: {"200": {description: "Н1.3: {open, login_url, user?, until?, via?, debug?, grants?}"}, "401": {description: не личность}}}
+    post: {requestBody: {content: {application/json: {schema: {type: object, required: [token], properties: {token: {type: string}}}}}}, responses: {"200": {description: "{user, until} + кука w2c_token"}, "400": {description: у открытой консоли}, "401": {description: токен не принят}}}
+    delete: {responses: {"200": {description: "{out: true}; кука снята"}}}
+  /session/break-glass:
+    post: {requestBody: {content: {application/json: {schema: {type: object, required: [who, why, password], properties: {who: {type: string}, why: {type: string}, password: {type: string}}}}}}, responses: {"200": {description: "кука w2c_glass; журнал"}, "403": {description: пароль не тот}, "429": {description: предел попыток, Retry-After}}}
   /domain/{rest}:
     parameters: [{name: rest, in: path, required: true, schema: {type: string}}]
     get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}
@@ -254,7 +259,7 @@ components:
   responses:
     Common:
       description: >-
-        общие ответы каждой операции консоли, не повторяемые у операций: 401 не личность, 403 нет гранта / нет домена не с петли,
+        общие ответы каждой операции консоли, не повторяемые у операций: 400 тело chunked/коротко, 401 не личность, 403 нет гранта / нет домена не с петли,
         404 NoRoute, 405 метод, 408/413 тело медленно/велико, 429 предел входа, 503 busy или ключи без доверия (Н4)
 ```
 

@@ -427,8 +427,6 @@ display:
     lane: полоса, по которой воркер ведёт счёт
   kinds:
     tally.tick: тик
-  actions:
-    add: прибавить
   tree:
     group_by: zone
     nested_by: /
