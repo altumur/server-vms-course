@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-10-14	Н2 и сц. 04/06 выдумали двери /drain с телом и /decommission/<s>; общий модуль консоли (console.js) зовёт POST /drain?server=, читает draining, POST /servers/<s>/decommission	Н2 и сценарии приведены к console.js; правило: двери консоли — те, что зовёт общий модуль	go
