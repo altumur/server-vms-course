@@ -2,6 +2,15 @@
 
 Source: ADR-0074, form C6 and accepted corrections. C6b/C7 are separate windows.
 
+## Latest correction: main 0239252b (2026-10-14)
+
+The committed decision in `decisions/inbox/2026-10-14-cam-спека-отстаёт-от-продукта.md`
+supersedes the older temporary `cam.books.asks: {}` exception quoted below:
+scenario scope and removal of `cam.books.asks` and the old `asks`/`worker` keys
+belong to C6. No cam spec sync before parity is restored. Weight/placement.weight,
+events.suppress, driver_budget_* and console wording are one separate cam parity
+window after C7; they are not part of this runtime change or a new M10 task.
+
 **Форма C6 продукта (2026-10-13, «Сборка», принята; байты ключей для зеркала курса).** Факты: событий между
 кластерами нет, кластеры пересекает только просьба. (1) *Исполнитель* — `autoworker` кластера триггера (п. 2 решения):
 читает `domain/shared/auto` → `scenarios` из проверенной копии кластера, исполняет сценарии, чей триггер — камера
