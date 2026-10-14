@@ -8,6 +8,7 @@ console (`console.Console`) reads: the members and their publications from the s
 the view the signer publishes; it writes what a person decides with no key, and hands the rest to the signer as it
 came."""
 
+from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
 import ast
 import json
@@ -78,6 +79,8 @@ def _domain():
     fed, north, devices, cards, agents, report, reported = _site(wall)
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    initial_books(fed, signer, wall, {"north": (north.vars, north.objects),
+                  **{n: (d.flash, d.local_objects()) for n, d in devices.items()}})
     set_domain_grants(north.vars, [Grant("anna", "admin", None, 0.0), Grant("boris", "view", None, 0.0)], wall())
     return wall, fed, north, devices, cards, report, signer
 
@@ -341,7 +344,7 @@ def test_the_stores_no_is_answered_403_in_words_never_a_dropped_connection():
 
         def put(self, key, *a, **kw):
             if key.startswith("domain/grants/"):
-                raise Forbidden("domainconsole may not read domain/cam/stream-clients/anna")
+                raise Forbidden("domainconsole may not read domain/testsub/badges/anna")
             return self.inner.put(key, *a, **kw)
 
         def list(self, prefix):
@@ -357,7 +360,7 @@ def test_the_stores_no_is_answered_403_in_words_never_a_dropped_connection():
     try:
         st, said = _call(base, "PUT", "/domain/grants/cam-SN1",
                          {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}]}, "anna")
-        assert st == 403 and "stream-clients/anna" in said["detail"] and "domainconsole" in said["detail"], (st, said)
+        assert st == 403 and "badges/anna" in said["detail"] and "domainconsole" in said["detail"], (st, said)
         st, said = _call(base, "GET", "/domain/grants", None, "anna")
         assert st == 403 and "domainconsole may not read domain/grants" in said["detail"], (st, said)
     finally:
