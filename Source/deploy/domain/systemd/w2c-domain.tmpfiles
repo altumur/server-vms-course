@@ -1,6 +1,1 @@
-# /usr/lib/tmpfiles.d/w2c-domain.conf — the directory of the signer's tokens socket, on the server that holds the domain.
-# setgid to the tokens socket's own group (ADR-0031: `<deployment>-<sub>domaintokens`, `domain.rights.tokens_group`): the
-# socket the signer (w2c) makes there is 0660 and takes that group. No deployed unit joins it after C6.
-# The directory gives access to no store role group (configstore is in every store role group). The
-# signer's other door and the console's are their units' own `RuntimeDirectory=` (0700).
-d /run/w2c-signer 2750 w2c vms-camdomaintokens -
+# Runtime directories are made by their units (RuntimeDirectory=, mode 0700).
