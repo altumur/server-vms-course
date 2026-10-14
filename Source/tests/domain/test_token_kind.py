@@ -10,7 +10,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.access import ClusterAccess
 from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH
 from w2cplatform.domain.grants import ClusterAuthoriser, ClusterGrants, Grant, grants_to_items
-from vms.domainpart.ingest import Refused, audience
+from vms.ingest import Refused, audience
 from tests.vmsconftest import ingest_recorder
 from w2cplatform.trust.tokens import TokenIssuer, WrongKind, kind_of, verify
 from w2cplatform.access import Denied
