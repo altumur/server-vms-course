@@ -80,7 +80,7 @@
 18-no-echo	1	POST /v1/write {"op":"put","key":"acc/18-no-echo/c1","items":{"n":"1"},"cas":"424242424242"}	409 {"kind":"conflict","index":"","error":"!contains 424242424242"}
 19-key-too-long	1	GET /v1/get?key=acc/19-key-too-long/@big(1100)	400 {"kind":"badkey"}
 19-key-too-long	2	POST /v1/write {"op":"put","key":"acc/19-key-too-long/@big(1100)","items":{}}	400 {"kind":"badkey"}
-19-key-too-long	3	POST /v1/write {"op":"put","key":"acc/19-key-too-long/c1","items":{},"guard":{"key":"acc/19-key-too-long/@big(1100)","index":""}}	400 {"kind":"badrequest"}
+19-key-too-long	3	POST /v1/write {"op":"put","key":"acc/19-key-too-long/c1","items":{},"guard":{"key":"acc/19-key-too-long/@big(1100)","index":""}}	400 {"kind":"badkey"}
 20-guard-forms	1	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"","index":""}}	400 {"kind":"badrequest"}
 20-guard-forms	2	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"/acc/20-guard-forms/s","index":""}}	400 {"kind":"badkey"}
 20-guard-forms	3	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/../s","index":""}}	400 {"kind":"badkey"}
