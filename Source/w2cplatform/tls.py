@@ -86,11 +86,15 @@ from __future__ import annotations
 import base64
 import binascii
 import hashlib
+import http.client
+import ipaddress
 import os
 import re
 import ssl
 import sys
+import tempfile
 import threading
+from urllib.parse import urlsplit
 
 from .runtime import ETC
 
@@ -99,24 +103,90 @@ ROLE_URI = "urn:w2c:role:"
 
 
 class Bundle:
-    """The files of one server's TLS directory, by the names above."""
+    """ADR-0075 role bundle. An explicit role never reads the old store layout.
 
-    def __init__(self, directory: str, name: str = "server"):
+    The omitted role is the store's existing API; its server-side migration belongs to the store's TLS window.
+    """
+
+    def __init__(self, directory: str, role: str | None = None):
+        if role is not None and (not isinstance(role, str) or not re.fullmatch(r"[a-z][a-z0-9_-]*", role)):
+            raise ValueError("TLS role is a nonempty process role")
         self.dir = directory
+        self.role = role
         self.ca = os.path.join(directory, "ca.pem")
-        self.cert = os.path.join(directory, f"{name}.pem")
-        self.key = os.path.join(directory, f"{name}.key")
+        leaf = os.path.join(directory, role) if role is not None else directory
+        self.cert = os.path.join(leaf, "server.pem")
+        self.key = os.path.join(leaf, "server.key")
         self.raft_secret = os.path.join(directory, "raft.secret")
-        self.crl = os.path.join(directory, "crl.pem")
+        self.crl = os.path.join(directory, "revoked" if role is not None else "crl.pem")
 
     def missing(self) -> list[str]:
         return [p for p in (self.ca, self.cert, self.key, self.crl) if not os.path.exists(p)]
+
+    def _role_context(self, side, *, client_optional: bool = False) -> ssl.SSLContext:
+        if self.role is None:
+            raise ValueError("a client role is required")
+        if self.missing():
+            raise FileNotFoundError("TLS role files missing: " + ", ".join(self.missing()))
+        cert = ssl._ssl._test_decode_cert(self.cert)
+        role_certificate(cert, self.role)
+        ctx = ssl.SSLContext(side)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        ctx.load_cert_chain(self.cert, self.key)
+        ctx.load_verify_locations(cadata=_installation_ca(self.ca))
+        # OpenSSL's file loader accepts certificates as well as CRLs. Load only the bytes we checked, so an
+        # appended foreign CA (or an atomic replacement of revoked after the check) never enlarges trust.
+        with tempfile.NamedTemporaryFile() as revocations:
+            revocations.write(_revocations_only(self.crl))
+            revocations.flush()
+            ctx.load_verify_locations(revocations.name)
+        ctx.verify_flags |= ssl.VERIFY_CRL_CHECK_LEAF
+        ctx.verify_mode = ssl.CERT_OPTIONAL if client_optional else ssl.CERT_REQUIRED
+        if side == ssl.PROTOCOL_TLS_CLIENT:
+            ctx.check_hostname = True
+            ctx.hostname_checks_common_name = False
+        return ctx
+
+    def client_context(self) -> ssl.SSLContext:
+        return self._role_context(ssl.PROTOCOL_TLS_CLIENT)
+
+    def server_context(self, *, client_optional: bool = False) -> ssl.SSLContext:
+        """For a mixed human/process door, optional certificates are checked; each process route proves its role."""
+        return self._role_context(ssl.PROTOCOL_TLS_SERVER, client_optional=client_optional)
+
+
+def _store_bundle(directory: str, name: str = "server") -> Bundle:
+    """Existing store API, not a fallback accepted by the role client."""
+    bundle = Bundle(directory)
+    bundle.cert = os.path.join(directory, f"{name}.pem")
+    bundle.key = os.path.join(directory, f"{name}.key")
+    return bundle
+
+
+_PEM_CRL = re.compile(br"-----BEGIN X509 CRL-----\s*(.*?)\s*-----END X509 CRL-----", re.S)
+
+
+def _revocations_only(path: str) -> bytes:
+    """Only CRL PEM blocks and whitespace; ca.pem is the sole source of trusted certificates."""
+    with open(path, "rb") as source:
+        raw = source.read()
+    blocks = _PEM_CRL.findall(raw)
+    if not blocks or _PEM_CRL.sub(b"", raw).strip():
+        raise ValueError(f"{path} must contain only X509 CRL PEM blocks, never certificates or other data")
+    checked = []
+    for block in blocks:
+        try:
+            der = base64.b64decode(b"".join(block.split()), validate=True)
+        except (binascii.Error, ValueError):
+            raise ValueError(f"{path}: its CRL PEM block is not base64") from None
+        checked.append(b"-----BEGIN X509 CRL-----\n" + base64.encodebytes(der) + b"-----END X509 CRL-----\n")
+    return b"".join(checked)
 
 
 # Both sides alike: our certificate, the peer's REQUIRED, signed by our CA — the one certificate of `ca.pem` — and not
 # on its revocation list.
 def _context(directory: str, name: str, side) -> ssl.SSLContext:
-    b = Bundle(directory, name)
+    b = _store_bundle(directory, name)
     if b.missing():
         raise FileNotFoundError(f"TLS files missing: {', '.join(b.missing())} (made by deploy/w2c-ca.sh; a bundle "
                                 f"from before the revocation list gets its crl.pem from `w2c-ca.sh crl`)")
@@ -151,13 +221,17 @@ class ServerContext:
     with the file, not with a restart. `get()` per connection: one small file read and hashed. A list that went
     missing or does not load leaves the door the list it holds (the notes: never lifted by accident)."""
 
-    def __init__(self, directory: str, name: str = "server"):
+    def __init__(self, directory: str, name: str = "server", *, role: str | None = None,
+                 client_optional: bool = False):
         self.directory, self.name = directory, name
-        self.crl = Bundle(directory, name).crl
+        bundle = Bundle(directory, role) if role is not None else _store_bundle(directory, name)
+        self.crl = bundle.crl
+        self._build = (lambda: bundle.server_context(client_optional=client_optional)) if role is not None else \
+            (lambda: server_context(directory, name))
         self.lock = threading.Lock()
         self.said = ""                               # the last trouble with the list, said once on stderr
         self.seen = self._digest()
-        self.ctx = server_context(directory, name)   # missing or unloadable at start: no door
+        self.ctx = self._build()                    # missing or unloadable at start: no door
 
     # The list's content, not its inode, size or mtime: a list rewritten in place with the same three is another list.
     def _digest(self) -> str | None:
@@ -175,12 +249,12 @@ class ServerContext:
             try:
                 if digest is None:
                     raise FileNotFoundError(f"{self.crl} is missing")
-                ctx = server_context(self.directory, self.name)
+                ctx = self._build()
             except (OSError, ssl.SSLError, ValueError) as e:
                 if str(e) != self.said:
                     self.said = str(e)
-                    print(f"configstore: the revocation list {self.crl} could not be read ({e}); the door goes on "
-                          f"with the list it read before, revocations and all — copy crl.pem there again",
+                    print(f"TLS: the revocation list {self.crl} could not be read ({e}); the door goes on "
+                          f"with the list it read before, revocations and all — copy its current list there again",
                           file=sys.stderr, flush=True)
                 return self.ctx                      # not taken as seen: the next caller reads the file again
             self.ctx, self.seen, self.said = ctx, digest, ""
@@ -295,12 +369,12 @@ def _sole_refusal(roles: set[str]) -> str:
 def own_roles(directory: str, name: str = "server") -> set[str]:
     """The roles of our own certificate in `directory`, read as a peer reads them."""
     # `_test_decode_cert` is the `ssl` module's own reading of a PEM file into `getpeercert()`'s form (CPython's).
-    return peer_roles(ssl._ssl._test_decode_cert(Bundle(directory, name).cert))
+    return peer_roles(ssl._ssl._test_decode_cert(_store_bundle(directory, name).cert))
 
 
 def own_server(directory: str, name: str = "server") -> str:
     """The server our own certificate in `directory` names, read as a peer reads it."""
-    return peer_server(ssl._ssl._test_decode_cert(Bundle(directory, name).cert))
+    return peer_server(ssl._ssl._test_decode_cert(_store_bundle(directory, name).cert))
 
 
 def require_role(sock, role: str) -> dict:
@@ -315,3 +389,142 @@ def require_role(sock, role: str) -> dict:
         who = ", ".join(sorted(roles)) or "no role"
         raise PermissionError(f"the peer's certificate is for {who} of {peer_server(cert) or 'no server'}, not {role}")
     return cert
+
+
+def role_certificate(cert: dict | None, role: str, host: str | None = None) -> dict:
+    """A role-kit certificate has one role URI, one DNS name and their exact CN; no CN fallback."""
+    cert = cert or {}
+    sans = cert.get("subjectAltName", ())
+    uris = [value for kind, value in sans if kind == "URI"]
+    names = [value for kind, value in sans if kind == "DNS"]
+    cns = [value for rdn in cert.get("subject", ()) for key, value in rdn if key == "commonName"]
+    if uris != [ROLE_URI + role] or len(names) != 1 or not names[0] or cns != [role + "." + names[0]]:
+        raise ValueError(f"TLS certificate must name exactly role {role}, its DNS server and their CN")
+    if host is not None and names[0].lower() != host.lower():
+        raise ValueError(f"TLS certificate DNS {names[0]!r} is not address host {host!r}")
+    return cert
+
+
+def certificate_role(cert: dict | None) -> str:
+    """Validate a presented process certificate without imposing a route's role allowlist."""
+    uris = [value for kind, value in (cert or {}).get("subjectAltName", ()) if kind == "URI"]
+    if len(uris) != 1 or not uris[0].startswith(ROLE_URI):
+        raise ValueError("TLS certificate must name exactly one process role")
+    role = uris[0][len(ROLE_URI):]
+    if not re.fullmatch(r"[a-z][a-z0-9_-]*", role):
+        raise ValueError("TLS certificate has an invalid process role")
+    role_certificate(cert, role)
+    return role
+
+
+class _RoleConnection(http.client.HTTPSConnection):
+    def __init__(self, host: str, port: int | None, bundle: Bundle, role: str, timeout: float):
+        self.expected_role = role
+        super().__init__(host, port, timeout=timeout, context=bundle.client_context())
+
+    def connect(self):
+        try:
+            super().connect()
+            role_certificate(self.sock.getpeercert(), self.expected_role, self.host)
+        except Exception:
+            self.close()
+            raise
+
+
+class RoleClient:
+    """One request over the role kit, or explicit HTTP in a box without TLS. Never follows redirects."""
+
+    MAX_REPLY = 1 << 20
+
+    def __init__(self, directory: str | None, role: str | None, *, timeout: float = 10.0,
+                 required_role: str | None = None):
+        self.directory, self.role, self.timeout, self.required_role = directory, role, timeout, required_role
+
+    @classmethod
+    def from_env(cls, *, required_role: str | None = None):
+        return cls(os.environ.get("W2C_TLS_DIR") or TLS_DIR, os.environ.get("W2C_ROLE"), required_role=required_role)
+
+    def request(self, method: str, url: str, body: bytes, headers: dict, *, role: str):
+        address = urlsplit(url)
+        if address.scheme not in ("http", "https") or not address.hostname or address.username is not None \
+                or address.password is not None or address.fragment:
+            raise ValueError("worker address is an HTTP URL without credentials or fragment")
+        if address.scheme == "https":
+            try:
+                ipaddress.ip_address(address.hostname)
+            except ValueError:
+                pass
+            else:
+                raise ValueError("TLS address must use a DNS name, not an IP")
+            if not self.directory or not self.role:
+                raise ValueError("https requires W2C_ROLE and its TLS role bundle")
+            if self.required_role is not None and self.role != self.required_role:
+                raise ValueError(f"this client requires role {self.required_role}, not {self.role}")
+            conn = _RoleConnection(address.hostname, address.port, Bundle(self.directory, self.role), role, self.timeout)
+        else:
+            # The URL explicitly chooses box HTTP; a failed HTTPS exchange never reaches this branch.
+            conn = http.client.HTTPConnection(address.hostname, address.port, timeout=self.timeout)
+        try:
+            conn.request(method, (address.path or "/") + ("?" + address.query if address.query else ""),
+                         body=body, headers=headers)
+            reply = conn.getresponse()
+            raw = reply.read(self.MAX_REPLY + 1)
+            if len(raw) > self.MAX_REPLY:
+                raise ValueError("worker answer too large")
+            return reply.status, raw, dict(reply.getheaders())
+        except http.client.HTTPException as error:
+            raise OSError(f"worker HTTP exchange failed: {error}") from error
+        finally:
+            conn.close()
+
+
+def worker_door(sub: str, host: str, port: int, handler, *, env, url: str = ""):
+    """Bind one worker's mixed human/process door; its role kit chooses TLS. The caller starts the server."""
+    from .console import door_server
+
+    def loopback(name):
+        if name == "localhost":
+            return True
+        try:
+            return ipaddress.ip_address(name).is_loopback
+        except ValueError:
+            return False
+
+    role = sub + "worker"
+    configured_role = env.get("W2C_ROLE") or ""
+    if configured_role and configured_role != role:
+        raise ValueError(f"worker {sub} requires W2C_ROLE={role}, not {configured_role}")
+    bundle = Bundle(env.get("W2C_TLS_DIR") or TLS_DIR, role)
+    has_leaf = any(os.path.lexists(path) for path in (bundle.cert, bundle.key))
+    context = None
+    if has_leaf:
+        if configured_role != role:
+            raise ValueError(f"a worker TLS role bundle requires W2C_ROLE={role}")
+        context = ServerContext(bundle.dir, role=role, client_optional=True)
+    elif not loopback(host):
+        raise ValueError("a worker without its TLS role bundle binds only loopback")
+    mode = "https" if context is not None else "http"
+    name = host
+    if context is not None:
+        cert = role_certificate(ssl._ssl._test_decode_cert(bundle.cert), role)
+        name = next(value for kind, value in cert["subjectAltName"] if kind == "DNS")
+    if url:
+        address = urlsplit(url)
+        if address.scheme != mode or not address.hostname or address.username is not None \
+                or address.password is not None or address.query or address.fragment:
+            raise ValueError(f"the advertised worker URL must agree with its {mode} door mode")
+        if context is not None:
+            try:
+                ipaddress.ip_address(address.hostname)
+            except ValueError:
+                pass
+            else:
+                raise ValueError("TLS worker URL must use a DNS name, not an IP")
+            role_certificate(cert, role, address.hostname)
+        # Ask the parser for the port before binding: a malformed advertised address starts no listener.
+        address.port
+    server = door_server((host, port), handler, tls_context=context)
+    if not url:
+        advertised = "[" + name + "]" if ":" in name else name
+        url = f"{mode}://{advertised}:{server.server_port}"
+    return server, url
