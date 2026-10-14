@@ -184,10 +184,10 @@ commands:  вид command / command.failed — слово и заметка мо
 openapi: 3.1.0
 info: {title: М10/9 двери консоли, version: "1"}
 paths:
-  /:                 {get: {description: "оболочка root или console.html; у смонтированной — 404; CSP"}}
-  /index.html:       {get: {description: то же}}
-  /platform/console.js:  {get: {parameters: [{name: v, in: query}], responses: {"200": {}, "404": {description: no such version}}}}
-  /platform/console.css: {get: {description: то же}}
+  /:                 {get: {description: "оболочка root или console.html; CSP", responses: {"200": {description: text/html}, "404": {description: у смонтированной подсистемы — is mounted}}}}
+  /index.html:       {get: {description: то же, responses: {"200": {description: text/html}, "404": {description: is mounted}}}}
+  /platform/console.js:  {get: {parameters: [{name: v, in: query, schema: {type: string}}], responses: {"200": {description: text/javascript; версия модуля}, "404": {description: no such version}}}}
+  /platform/console.css: {get: {description: то же, responses: {"200": {description: text/css}, "404": {description: no such version}}}}
   /healthz:          {get: {responses: {"200": {description: "{ok: true}"}}}}
   /spec:             {get: {responses: {"200": {description: "SpecView (урок 2 Н2)"}}}}
   /mounts:           {get: {responses: {"200": {description: "{root, mounts: {<sub>: SpecView}}"}}}}
@@ -211,9 +211,9 @@ paths:
             requires_resource, placeable, why, workers: [WorkerRow]}}, status?: [servers.status]}
   /unplaceable:      {get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}}
   /metrics:          {get: {responses: {"200": {description: "text/plain; ряды Н3"}}}}
-  /session:          {description: Н1.3}
-  /domain/{rest}:    {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)"}
-  /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: ADR-0066, М11}
+  /session:          {get: {responses: {"200": {description: "Н1.3: {who, grants, …}"}, "401": {description: не личность}}}, post: {responses: {"200": {description: вход}, "400": {description: у открытой консоли}, "429": {description: аварийный вход — предел}}}}
+  /domain/{rest}:    {get: {description: "локально: /domain, /domain/keys, /domain/shared/<sub>, /domain/<sub>/books/<b>; иное — к держателю с Bearer и X-Operator: console (М11)", responses: {"200": {description: по маршруту}, "502": {description: держатель не ответил}, "503": {description: нет домена или ключей}}}}
+  /api/held, /api/backup, /api/prepare, /api/take, /domain/move: {description: "ADR-0066, М11 — формы и коды там; здесь только маршруты"}
 components:
   schemas:
     WorkerRow:
@@ -233,6 +233,11 @@ components:
     NoRoute:
       type: object
       properties: {detail: {const: no such route}, error: {const: no such path}}
+  responses:
+    Common:
+      description: >-
+        общие ответы каждой операции консоли, не повторяемые у операций: 401 не личность, 403 нет гранта / нет домена не с петли,
+        404 NoRoute, 405 метод, 408/413 тело медленно/велико, 429 предел входа, 503 busy или ключи без доверия (Н4)
 ```
 
 Общие коды: неизвестный путь — `404 NoRoute`; неверный метод — `405 {detail: method, error: method}`; `/<rows>/<id>/<ещё>` — 404 «a unit's path names one unit»; полоса занята — `503 busy`, `Retry-After: 1`; `/session`, `/healthz` — резервная полоса; `/metrics`, `/healthz` — полоса монитора.
