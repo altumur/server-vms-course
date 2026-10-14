@@ -7,7 +7,7 @@
 # the image a CLUSTER's own console runs from once that cluster is in a domain: the console's gate
 # (w2cplatform/access.py) loads the platform's `w2cplatform.domain.access` to check a token, and М11's image has not
 # the library it verifies a signature with. The domain's code is the platform's (`w2cplatform/domain`, `trust`), already
-# in the image; the VMS's part on the domain is `vms/domainpart`, in it too.
+# in the image; ordinary VMS workers publish the rows the platform collects.
 FROM localhost/clustervms:latest
 RUN apt-get update && apt-get install -y --no-install-recommends python3-cryptography && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
