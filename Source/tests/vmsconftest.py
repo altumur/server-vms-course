@@ -87,6 +87,7 @@ class ObsdDaemon:
             raise RuntimeError(f"{binary} is an obsd without WRITER_ABANDON (the engine's patch 07): " + OBSD_HINT)
 
     def _start(self) -> None:
+        import socket
         import subprocess
         import time
         env = dict(os.environ, OBSD_WRITER_GRACE_S=str(OBSD_GRACE_S), OBSD_SESSION_LINGER_MS=str(OBSD_LINGER_MS),
@@ -94,9 +95,18 @@ class ObsdDaemon:
         self.log = open(os.path.join(self.dir, "obsd.log"), "a")
         self.proc = subprocess.Popen([self.binary, "--socket", self.socket], env=env, stdout=self.log, stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 10
-        while not os.path.exists(self.socket):
+        while True:
             if self.proc.poll() is not None or time.monotonic() > deadline:
                 raise RuntimeError(f"obsd did not start: see {self.log.name}")
+            # bind creates the path before listen accepts clients, including after a restart.
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as probe:
+                probe.settimeout(0.1)
+                try:
+                    probe.connect(self.socket)
+                except OSError:
+                    pass
+                else:
+                    return
             time.sleep(0.05)
 
     def stop(self) -> None:
