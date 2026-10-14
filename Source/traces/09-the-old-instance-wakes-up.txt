@@ -12,38 +12,38 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1012
+  "index": "1012"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": 1012, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-a-1", "cas": "1012", "items": {
   "holder": "srv-a:4101:001005",
   "until": "1757500138.0",
   "released": "false",
   "gen": "1",
   "server": "srv-a"
 }}
-→ 200 {"index": 1053}
+→ 200 {"index": "1053"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/1
-→ 200 {"items": {"epoch": "2"}, "index": 1049}
+→ 200 {"items": {"epoch": "2"}, "index": "1049"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/2
-→ 200 {"items": {"epoch": "2"}, "index": 1050}
+→ 200 {"items": {"epoch": "2"}, "index": "1050"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/epoch/3
-→ 200 {"items": {"epoch": "2"}, "index": 1051}
+→ 200 {"items": {"epoch": "2"}, "index": "1051"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "", "rev": "6"}, "index": 1047}
+→ 200 {"items": {"units": "", "rev": "6"}, "index": "1047"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=cam/workers/w-srv-a-1
-→ 200 {"items": {"units": "", "rev": "6"}, "index": 1047}
+→ 200 {"items": {"units": "", "rev": "6"}, "index": "1047"}
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
 GET /v1/get?key=domain/member
@@ -59,11 +59,11 @@ GET /v1/get?key=cam/slots/w-srv-a-1
     "gen": "1",
     "server": "srv-a"
   },
-  "index": 1053
+  "index": "1053"
 }
 
 # camworker w-srv-a-1 on srv-a → /run/configstore/camworker.sock
-POST /v1/write {"op": "put", "key": "cam/sources/w-srv-a-1", "cas": null, "items": {}, "guard": {"key": "cam/slots/w-srv-a-1", "index": 1053}}
-→ 200 {"index": 1054}
+POST /v1/write {"op": "put", "key": "cam/sources/w-srv-a-1", "cas": null, "items": {}, "guard": {"key": "cam/slots/w-srv-a-1", "index": "1053"}}
+→ 200 {"index": "1054"}
 
 # a.lease_pass() lost ['1', '2', '3']; running []; its assignment now []; its name is still its own: w-srv-a-1
