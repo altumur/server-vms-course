@@ -1402,6 +1402,9 @@ class RecWorker(VmsWorker):
         self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
                                    objects=self.objects)
         self.forwarder.tokens.door = WorkerTokenDoor.from_env("recworker", self._token_requests_env)
+        from .domainpart.ingest import card_range
+        from .recording_publication import ref_of
+        self.card_range = card_range(self.forwarder, lambda src: ref_of(self.vars, src))
         return ing
 
     def ingest_fields(self) -> dict:
