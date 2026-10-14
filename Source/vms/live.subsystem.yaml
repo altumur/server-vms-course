@@ -41,7 +41,8 @@ secrets:
   readers:
     live/accounts/: [worker]
     live/stream-accounts/: [worker, domainagent]
-    domain/live/stream-accounts: [worker, domainagent, domain]
+    domain/live/stream-accounts: [worker, domainagent, domain]     # member's carried book (exact name)
+    domain/live/stream-accounts/: [domainagent, domain]          # holder's per-member books (prefix)
 domain:
   books:
     stream-accounts: {from: live/stream-accounts/, key: name, pick: unique, to: to}
