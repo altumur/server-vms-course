@@ -12,6 +12,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from tests.catalog_fixture import isolated_catalog
 from tests.test_domain_platform import Clock, site, spec  # noqa: E402
 
 TALLIES = "domain/testsub/tallies"
@@ -171,6 +172,7 @@ def test_the_signers_keys_lie_sealed_and_a_token_key_rotation_survives_a_restart
         pass
 
 
+@isolated_catalog()
 def test_the_backup_carries_the_people_and_the_emergency_hashes_under_the_backup_key_and_a_move_opens_them():
     """The keepers of a backup copy read no hash of it: the people (`domain/users/*`) and every emergency hash are in
     it sealed under the backup key, HMAC of the root's key — and a move by the recovery file derives that key again,
