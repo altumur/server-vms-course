@@ -154,8 +154,8 @@ class Console:
             from .topology import apply
             apply(self.view.fed, self.topology, self.holder_objects)
 
-    def book_doc(self, spec, book):
-        from w2cplatform.console import project_book
+    def book_doc(self, spec, book, subject=None):
+        from w2cplatform.console import project_book, book_units
         from .memberbook import aggregate
         from w2cplatform.rows import PARSE_ERRORS
         if not spec.domain.show.get(book):
@@ -165,7 +165,17 @@ class Console:
         key = f"{spec.domain_prefix}{book}"
         try:
             items = aggregate(self.holder_vars, key) if book in spec.domain.merged else self.holder_vars.get(key)[0]
-            return project_book(items, spec, book)
+            every, sees, units = True, None, {}
+            if subject is not None:
+                from .access import ClusterAccess
+                from w2cplatform.access import may_on
+                access = ClusterAccess(self.holder_vars, wall=self.view.wall)
+                payload = {'sub': subject}
+                sees = lambda unit, labels, of=None: may_on(access, payload, 'view', unit, labels, of)
+                every = sees('*', [])
+                if not every:
+                    units = book_units(self.holder_vars)
+            return project_book(items, spec, book, every=every, sees=sees, units=units)
         except (OSError, *PARSE_ERRORS):
             return 503, {"error": "collected book is unavailable or inconsistent"}
 
@@ -500,6 +510,10 @@ class Console:
                         return
                     if u.path in MODULE_ROUTES:
                         return send_module(self, u.path, q)
+                    from w2cplatform.console import book_path
+                    shown_book = book_path(u.path)
+                    if shown_book is not None:
+                        return self._send(*console.book_doc(*shown_book, subject=self._who()))
                     if console.viewer is not None and (u.path.startswith("/domain") or u.path in ("/spec", "/mounts")):
                         subject = self._who()
                         if subject is not None and not console.viewer(subject):
@@ -507,10 +521,6 @@ class Console:
                     route = console.signer_route(u.path, "GET")
                     if route is not None and route.startswith("/api/people/"):
                         return self._to_signer("GET", route)            # the people's rows are opened where the ring is
-                    from w2cplatform.console import book_path
-                    shown_book = book_path(u.path)
-                    if shown_book is not None:
-                        return self._send(*console.book_doc(*shown_book))
                     declared_route = console.route(u.path)
                     if declared_route is not None:
                         kind, sub, name = declared_route
