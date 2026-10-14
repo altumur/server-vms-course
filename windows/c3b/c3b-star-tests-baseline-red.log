@@ -1,0 +1,23 @@
+secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies the store reads every secret in the clear
+test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_cameras_from_there FAIL
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "/Users/murat/w2c/wt-course-c3b-star-tests/Source/tests/domainvms/test_lesson17_chain.py", line 237, in test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_cameras_from_there
+    assert entry["channels"]["east"]["urls"] == CENTRE_URLS
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+test_the_star_camera_uploads_a_named_card_range_to_the_centre_over_its_only_transport FAIL
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "/Users/murat/w2c/wt-course-c3b-star-tests/Source/tests/domainvms/test_lesson17_chain.py", line 273, in test_the_star_camera_uploads_a_named_card_range_to_the_centre_over_its_only_transport
+    assert pusher.pass_once([])["uploaded"] == [(t0, t1)]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+test_frames_the_relay_could_not_push_up_or_whose_pull_answer_was_lost_are_sent_again_not_dropped FAIL
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "/Users/murat/w2c/wt-course-c3b-star-tests/Source/tests/domainvms/test_lesson17_chain.py", line 318, in test_frames_the_relay_could_not_push_up_or_whose_pull_answer_was_lost_are_sent_again_not_dropped
+    assert pusher.pass_once(frames)["pushed"] == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+0 passed, 3 failed
