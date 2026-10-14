@@ -5,11 +5,11 @@ POST /v1/write {"op": "put", "key": "cam/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1024}
+→ 200 {"index": "1024"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
-→ 200 {"index": 1025}
+→ 200 {"index": "1025"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "", "items": {
@@ -18,11 +18,11 @@ POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1026}
+→ 200 {"index": "1026"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "", "items": {"units": "2", "rev": "1"}}
-→ 200 {"index": 1027}
+→ 200 {"index": "1027"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
@@ -31,13 +31,13 @@ POST /v1/write {"op": "put", "key": "cam/placement/3", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 200 {"index": 1028}
+→ 200 {"index": "1028"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1027, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "1027", "items": {
   "units": "2,3",
   "rev": "2"
 }}
-→ 200 {"index": 1029}
+→ 200 {"index": "1029"}
 
 # unplaceable() = [{'id': 4, 'labels': ['vlan:cctv-x'], 'workers_live': 3}]
