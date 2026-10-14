@@ -45,6 +45,11 @@ domain:
   names:
     badges/: {exclusive_with: domain/users, grant: view}
   tokens:
+    probe:
+      lifetime: 60
+      claims: [ref, aud]
+      grant: [testsubworker]
+      unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}
     tally:
       lifetime: 600
       claims: [counter, aud]
