@@ -1,0 +1,23 @@
+scenario	step	request	expect
+# Приёмка М10/11: стенд с ресурсом и учения (@manual). Формат — README.
+01-resource-door	1	@start resource	ok
+01-resource-door	2	@until 20 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@any", "at": "$a1"}}
+01-resource-door	3	@sleep 20	ok
+01-resource-door	4	store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "$a2"}}
+01-resource-door	5	ASSERT $a1 != $a2	ok
+01-resource-door	6	console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
+01-resource-door	7	console GET /metrics	200 ~w2c_resources_live 1
+02-resource-silent	1	@start resource	ok
+02-resource-silent	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
+02-resource-silent	3	@sigkill resource	ok
+02-resource-silent	4	@until 90 console GET /servers	200 {"servers": {"srv-a": {"resource": "silent"}}}
+02-resource-silent	5	console GET /metrics	200 ~w2c_resources_live 0
+03-schema-processes	1	@start resource	ok
+03-schema-processes	2	@start controller	ok
+03-schema-processes	3	@until 30 console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "processes": {"srv-a": {"schema": 1, "build": "@any", "live": true}}}
+04-store-metrics	1	store GET /metrics	200 ~configstore_raft_term
+04-store-metrics	2	store GET /metrics	200 ~configstore_voters_expected
+05-power-pull	1	@manual выдернуть питание сервера с воркером и единицами; через ≤ 90 с единицы у живых воркеров под новыми эпохами; архив на томе остаётся; открытый бакет событий потерян, закрытые у соседей	manual
+05-power-pull	2	@manual вернуть сервер: демон вступает сам (member.json), ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад	manual
+06-recover	1	@manual остановить большинство; configstore recover -id -dir -peers на оставшемся; platform/epoch_floor вырос на поколение; эпохи после восстановления не повторяют выданных	manual
+07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ; дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/doors/configstore/<id> с seen_at	manual
