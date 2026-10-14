@@ -1769,47 +1769,6 @@ DELIVERED_SEAM = 0.25                  # two pieces this close are one stretch: 
 UPLINK_FREE = 2.0
 
 
-# WHAT THE INGESTS DID NOT HAND ON, ON `/metrics` (the eleventh review, a minor). An ingest's `lost` — a subscriber's
-# queue that overflowed, a peer cut, repeats, frames far past the stream — and its `clock_steps` were in the object it
-# leaves in its cluster's store (`publish_polled`) and nowhere a monitor reads. The domain's console, which reads every
-# member's store already (`alarms.DomainAlarms.alive_at`), says them on its `/metrics` — one place for the whole domain,
-# every line labelled with its cluster. Each object goes through the members' one reader (`published`): one that does not
-# parse is counted and logged there, and the rest are said; a member that does not answer is left out of this scrape.
-# Counters since that process began: a restart starts them again, as a Prometheus counter's reset. A relay's forwarder
-# says what it carried and lost in its recorder's heartbeat (`upstream`, the product's words it counts; ADR-0065) — not
-# an object of its own, and not here.
-def stream_metrics(fed) -> list[str]:
-    from w2cplatform.console import label
-    from w2cplatform.rows import number
-    from w2cplatform.domain.federation import published
-    lost, steps = [], []
-    for name, c in list(fed.clusters.items()):
-        try:
-            polled = [(k, c.objects.get(k)) for k in c.objects.list(POLLED + "/")]
-        except Unreachable:
-            continue
-        for key, raw in polled:
-            d = published(name, key, raw, lambda d: (dict(d.get("lost") or {}), dict(d.get("clock_steps") or {})))
-            if d is None:
-                continue
-            at = f'cluster="{label(name)}",ingest="{label(d.get("ingest", key.rsplit("/", 1)[-1]))}"'
-            for ref, e in sorted(dict(d.get("lost") or {}).items()):
-                e = e if isinstance(e, dict) else {}
-
-                def n(field, v, ref=ref):
-                    return number(f"{name}/{key}#lost.{ref}.{field}", v, int)
-
-                def total(field):                        # `dropped` by subscriber, `peers` by peer: summed
-                    by = e.get(field)
-                    return sum(n(field, v) for v in by.values()) if isinstance(by, dict) else n(field, by)
-                by = {"dropped": total("dropped"), "peers": total("peers"), "repeats": n("repeats", e.get("repeats")),
-                      "ahead": n("ahead", e.get("ahead"))}
-                lost += [f'ingest_frames_lost_total{{{at},camera="{label(ref)}",why="{why}"}} {v}' for why, v in by.items()]
-            steps += [f'ingest_clock_steps_total{{{at},camera="{label(ref)}"}} {number(f"{name}/{key}#clock_steps.{ref}", v, int)}'
-                      for ref, v in sorted(dict(d.get("clock_steps") or {}).items())]
-    return ["# TYPE ingest_frames_lost_total counter"] + lost + ["# TYPE ingest_clock_steps_total counter"] + steps
-
-
 class CameraPusher:
     sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
 
