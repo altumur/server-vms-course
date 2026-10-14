@@ -233,13 +233,13 @@ class DomainAgent:
         self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
         self._carried_seen, self._carried_relay = None, False   # the mark the last answer carried, and whether it did
 
-    def request_token(self, sub, kind, ref, role):
+    def request_token(self, sub, kind, ref, role, by=None, request_id=None):
         """Called only by a handler on the authenticated role's private socket."""
         from .carry import Refused
         road = self.domain_vars
         if self.key is None or not hasattr(road, "request_token"):
             raise Refused(503, "the agent has no authenticated token request road")
-        return road.request_token(sub, kind, ref, role)
+        return road.request_token(sub, kind, ref, role, by, request_id)
 
     # One row home, by CAS, only when what it SAYS changed: a secret in it is sealed afresh every time (a new nonce), so
     # the row as stored is compared opened — or the member's flash would be written every pass for nothing.
