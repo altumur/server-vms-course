@@ -45,6 +45,8 @@ def executor(items):
     calls=[]
     class Asker:
         def __init__(self,by):self.by=by
+        def outcome(self,target,aid,deadline):
+            return None
         def ask(self,target,action,within):
             calls.append((self.by,target,action,within))
             return 'ingest','id'
@@ -79,11 +81,12 @@ def test_refusals_describe_current_pass_and_clear_after_document_fix():
     assert ex.heartbeat()=={'refused':{'a-to-b':'invalid enabled flag'}}
     doc.items=[item()]
     ex.on_event('A','motion')
-    assert ex.heartbeat()=={}
+    assert ex.heartbeat()=={'a-to-b':{'asked':100}}
     def refused(_):raise Unconfirmed('must-not-leak-token-or-body')
     ex.asker=refused
     ex.on_event('A','motion')
-    assert ex.heartbeat()=={'refused':{'a-to-b':'ask transport or authority refused'}}
+    assert ex.heartbeat()['a-to-b']['last']=='no token at this cluster: the ask authority could not be confirmed'
+    assert 'refused' not in ex.heartbeat()
     assert 'must-not-leak' not in str(ex.heartbeat())
 
 
@@ -95,7 +98,8 @@ def test_one_worker_pass_accumulates_refusals_across_events_until_refresh():
     ex.refresh()
     ex.on_event('A','motion',refresh=False)
     ex.on_event('C','motion',refresh=False)
-    assert set(ex.heartbeat()['refused'])=={'first','second'}
+    assert set(ex.heartbeat())=={'first','second'}
+    assert all(v['last'].startswith('no token at ') for v in ex.heartbeat().values())
     doc.items=[];ex.refresh()
     assert ex.heartbeat()=={}
 
@@ -158,8 +162,8 @@ def test_corrupt_policy_refuses_before_token_request_and_is_nonsecret_in_pulse()
         e.box.vars.put(key,value)
         raises(Unconfirmed,lambda:e.asker.ask('B',item()['then'],7))
         ex=Executor(SimpleNamespace(settings=lambda:settings([item()])),lambda _:e.asker,e.box.wall)
-        assert ex.on_event('A','motion')[0]['state']=='not asked'
-        assert ex.heartbeat()=={'refused':{'a-to-b':'ask transport or authority refused'}}
+        assert ex.on_event('A','motion')[0]['state'].startswith('no token at ')
+        assert ex.heartbeat()=={'a-to-b':{'last':'no token at camera: the ask authority could not be confirmed'}}
         assert not e.calls and not e.dialled
 
 
@@ -236,7 +240,7 @@ def test_absent_trust_fails_closed_and_outcome_has_bounded_wait():
     raises(Unconfirmed,lambda:e.asker.ask('B',item()['then'],7))
     assert not e.dialled
     assert e.asker.outcome('B','id',e.box.wall()) is None
-    assert e.asker.outcome('B','id',0).startswith('unknown:')
+    assert e.asker.outcome('B','id',0).startswith('lost:')
 
 
 def publisher_fixture(own='home', *, assigned=True, star=()):
@@ -334,3 +338,90 @@ def test_untrusted_signed_or_revoked_token_cannot_start_transport():
         raises(OSError if mode == 'unreadable' else Unconfirmed,
                lambda:e.asker.ask('B',item()['then'],7))
         assert not e.dialled
+
+
+def test_runtime_status_settles_without_new_events_and_drops_removed_scenarios():
+    ex,doc,clock,calls=executor([item()])
+    observed=[]
+    answers=[None,'performed']
+    class Requester:
+        def ask(self,*args):return object(),'id'
+        def outcome(self,*args):
+            observed.append(args)
+            return answers.pop(0)
+    ex.asker=lambda _:Requester()
+    ex.on_event('A','motion')
+    pulse=ex.heartbeat()
+    assert pulse=={'a-to-b':{'asked':100}}
+    assert isinstance(pulse['a-to-b']['asked'],(float,int))
+    json.dumps(pulse)  # no live ingest, token or raw action escapes
+    ex.settle();assert 'last' not in ex.heartbeat()['a-to-b']
+    ex.settle();assert ex.heartbeat()['a-to-b']['last']=='performed'
+    assert observed==[('B','id',110),('B','id',110)] and not ex.pending
+    pulse['a-to-b']['last']='mutated'
+    assert ex.heartbeat()['a-to-b']['last']=='performed'
+    doc.items=[];ex.refresh()
+    assert ex.heartbeat()=={} and not ex.pending
+
+
+def test_outcome_distinguishes_restart_unreadable_and_unreachable_after_grace():
+    from w2cplatform.domain.federation import Unreachable
+    for mode,expected in (
+        ('missing','lost: no ingest knows this ask — it restarted, or the ask never arrived'),
+        ('unread',"lost: the ingest's answer does not read"),
+        ('offline','lost: the ingest does not answer'),
+    ):
+        e=road_fixture()
+        if mode=='unread':e.ingest.ask_outcome=lambda *a:{'private':'wrong shape'}
+        if mode=='offline':
+            def unavailable(*a):raise Unreachable('private-url')
+            e.ingest.ask_outcome=unavailable
+        assert e.asker.outcome('B','id',e.box.wall()) is None
+        assert e.asker.outcome('B','id',0)==expected
+    for value in ('performed','refused: camera cannot do this'):
+        e=road_fixture();e.ingest.ask_outcome=lambda *a:value
+        assert e.asker.outcome('B','id',e.box.wall())==value
+
+
+def test_unreadable_ask_ack_is_not_followed_and_does_not_leak_to_pulse():
+    ex,doc,clock,calls=executor([item()])
+    ex.asker=lambda _:SimpleNamespace(ask=lambda *a:(object(),{'private':'token'}))
+    ex.on_event('A','motion')
+    assert ex.heartbeat()=={'a-to-b':{'asked':100,'last':
+        "asked; the ingest's answer does not read, so its outcome is not followed"}}
+    assert not ex.pending
+
+
+def test_product_words_for_deadline_ceiling_no_answer_token_and_ingest_refusal():
+    from vms.domainpart.ingest import Refused
+    from vms.autoask import NoAskToken
+    ex,doc,clock,calls=executor([item(rate_per_minute=1)])
+    ex.on_event('A','motion',{'ts':89})
+    assert ex.heartbeat()['a-to-b']['last']=="an event seen after its scenario's deadline: not asked"
+    ex.on_event('A','motion');ex.on_event('A','motion')
+    assert ex.heartbeat()['a-to-b']['last']=='over its ceiling of 1 a minute: not asked'
+    for error,expected in ((None,'no ingest answered'),
+        (NoAskToken('office'),'no token at office: a current role token could not be obtained'),
+        (Refused('the complete action is not authorized'),'refused: the complete action is not authorized')):
+        ex,doc,clock,calls=executor([item()])
+        def request(*a):
+            if error:raise error
+            return None
+        ex.asker=lambda _:SimpleNamespace(ask=request)
+        ex.on_event('A','motion')
+        assert ex.heartbeat()=={'a-to-b':{'last':expected}}
+
+
+def test_multiple_asks_of_one_scenario_are_all_followed():
+    ex,doc,clock,calls=executor([item()]);ids=iter(['one','two']);observed=[]
+    class Requester:
+        def ask(self,*a):return object(),next(ids)
+        def outcome(self,target,aid,deadline):
+            observed.append(aid)
+            return None
+    ex.asker=lambda _:Requester()
+    ex.on_event('A','motion');ex.on_event('A','motion')
+    observed.clear();ex.settle()
+    assert observed==['one','two'] and len(ex.pending)==2
+    doc.items=[];ex.refresh()
+    assert not ex.pending and ex.heartbeat()=={}

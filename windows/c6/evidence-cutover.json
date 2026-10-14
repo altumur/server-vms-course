@@ -1,32 +1,32 @@
 {
-  "source_full_run": "4304c4fe",
-  "current_code": "51e7ca4e",
-  "full_source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-repaired-source.json",
-  "full_source_unchanged_files": 1017,
+  "source_commit": "47967d2e83ad97db8c47d0826373094c0a637e33",
+  "source_manifest": "/Users/murat/w2c/course-book-merge-evidence/c6-final-source.json",
+  "source_manifest_sha256": "67b604c6025921c643848dba5d56a4f4a6f2784503bc19557315b81fdbd822c9",
+  "source_unchanged_files": 1017,
   "checks": [
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-unit-repaired.log",
-      "sha256": "d17cd266d91e9cc258ce48158228fcf2be688b9ef979ae8e0a1eee94a86a5740",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-final-unit.log",
+      "sha256": "3de3c123ac26280c49aeef6ab8060c0d76ca71f0739d62ec545398af574db1fb",
       "exit": 1,
       "counts": [
-        2076,
-        15,
+        2090,
+        1,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-cluster-repaired.log",
-      "sha256": "02a1aa0a9e2c4ed21b2744af687a421837b7deb0dc076eecaacf0efdc3846a98",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-final-cluster.log",
+      "sha256": "2aa5b675ec48a15ae664f5100e416d2c98527bc3a8c69befef2e74511ee0e2ee",
       "exit": 0,
       "counts": [
-        117,
+        119,
         0,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-domain-repaired.log",
-      "sha256": "c2f305a41c72ba8f9269252e186357010307c6ef7937b7018e97f69c7107f991",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-final-domain.log",
+      "sha256": "eb88073218f98e9f017bdb442e6a74206fdb3e7e5e727869dcecb494365c19f6",
       "exit": 0,
       "counts": [
         228,
@@ -35,61 +35,31 @@
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-cutover-domainvms-repaired.log",
-      "sha256": "5ca9e7617be6a6060b797d1d64253929bf8dfcab6a92ebd23340555401cd33d9",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-final-domainvms.log",
+      "sha256": "822b7ba32f92b8ed6f41189823e6e3b8a8479d7eac0c035d98e149c46d628bb3",
       "exit": 0,
       "counts": [
-        164,
+        165,
         0,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-shared-rights.log",
-      "sha256": "f0113612b1c934b5c38fdf79fbcade43d8335cf2cc139bb11fd25146d0b490bd",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-revocations-policies-final.log",
+      "sha256": "3675804045802f2ad2e7b7a4e923e0ece25569afe5203277999077ec1124fe0a",
       "exit": 0,
       "counts": [
-        22,
+        23,
         0,
         0
       ]
     },
     {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-shared-runtime.log",
-      "sha256": "23bc5ce061b6cb16cead8de389f4aa4d750bec9b84a019955805b54f8394e493",
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-revoked-unavailable-tokens.log",
+      "sha256": "62734db2703738c0a479f90d367e0f43eec802df148a7ee79e2b2c374f9ebb39",
       "exit": 0,
       "counts": [
-        33,
-        0,
-        0
-      ]
-    },
-    {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-poll-ask-contract.log",
-      "sha256": "1afc0aef82894603eb43512986025a89b34eee266355990025215249edf22426",
-      "exit": 0,
-      "counts": [
-        9,
-        0,
-        0
-      ]
-    },
-    {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-long-poll-repaired.log",
-      "sha256": "3c418ab3ea1946f73147f8c0d64b4c4a754f98a06bba135450fdc3cea957f70f",
-      "exit": 0,
-      "counts": [
-        52,
-        0,
-        0
-      ]
-    },
-    {
-      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-worker-loops-repaired.log",
-      "sha256": "f43274e6e1d0ddba0bb3c061c44cbe2b1d8b0a4ab9cf5e52bb8fc904f65ad1e3",
-      "exit": 0,
-      "counts": [
-        51,
+        18,
         0,
         0
       ]
@@ -103,13 +73,19 @@
         0,
         0
       ]
+    },
+    {
+      "path": "/Users/murat/w2c/course-book-merge-evidence/c6-stand-camera-publish.log",
+      "sha256": "594b90306b19d8f8b99a20a290893f373b7c13a4b506816219da34f43b51f11d",
+      "exit": 0,
+      "counts": null
     }
   ],
-  "status": "not complete: holder excluded from Members; decision requested in main 551beda7",
-  "stand_after_9ea7193f": {
-    "path": "/Users/murat/w2c/course-book-merge-evidence/c6-stand-holder-report.log",
-    "sha256": "0669db5c23fcf21cd5a3400be0a1bf94caff1457dfd5a30c0286475e2dddad2a",
-    "exit": 1,
-    "remaining": "recworker may not read domain/revoked; decision requested in 737b6296"
-  }
+  "expected_failure": {
+    "test": "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
+    "decision": "5acd45a2",
+    "reason": "product pause; exact secret reader platform list is course-first"
+  },
+  "product_changed": false,
+  "merged": false
 }
