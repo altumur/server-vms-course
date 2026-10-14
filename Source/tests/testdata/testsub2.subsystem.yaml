@@ -7,7 +7,7 @@
 # beside the worker that holds its counter (`near`), and a person may ask its holder to add to it (`requests`).
 name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
-worker: {writes: [tallies], reads: [testsub/counters], requests: [testsub]}
+worker: {reads: [testsub/counters], requests: [testsub]}
 # its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
 # files its resource's door gives out (`resource.door_readable`)
 objects: {rows: [marks/*], door: [tickets/*]}
