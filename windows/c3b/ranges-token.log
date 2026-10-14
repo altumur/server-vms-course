@@ -1,0 +1,25 @@
+temp: /tmp/w2c-tests-75259
+test_star_ranges.py::test_ordinary_recorder_fetches_locally_and_does_not_request_a_centre_token ... OK
+test_star_ranges.py::test_range_reply_from_a_replaced_centre_is_not_applied ... OK
+test_star_ranges.py::test_refused_range_forgets_the_token_and_a_role_outage_opens_no_new_request ... OK
+test_star_ranges.py::test_remote_range_checks_kind_audience_and_reference_before_requesting_the_camera ... OK
+test_token_requests.py::test_declared_centre_target_comes_only_from_confirmed_holder_topology ... OK
+test_token_requests.py::test_local_client_timeout_drops_late_reply_and_retry_asks_again ... OK
+test_token_requests.py::test_local_handler_refuses_network_connections_even_with_an_allowed_role ... OK
+test_token_requests.py::test_local_socket_role_is_fixed_and_failed_request_leaves_no_cached_reply ... OK
+test_token_requests.py::test_no_grant_foreign_role_ref_member_or_broken_assignment_cannot_issue ... OK
+test_token_requests.py::test_one_role_socket_resolves_kinds_of_two_subsystems_and_refuses_foreign_role ... OK
+test_token_requests.py::test_real_holder_and_relay_http_preserve_the_member_signature_and_encrypted_reply ... OK
+test_token_requests.py::test_remote_body_cannot_supply_target_claims_or_replay_reply_to_another_request ... OK
+test_token_requests.py::test_reply_expiry_is_authenticated_with_the_ciphertext ... OK
+test_token_requests.py::test_revoked_member_and_frozen_holder_do_not_issue_tokens ... OK
+test_token_requests.py::test_role_groups_match_controller_and_worker_configstore_groups ... OK
+test_token_requests.py::test_role_socket_bootstrap_and_installation_follow_loaded_grants ... OK
+token request door unavailable for role testsubworker
+test_token_requests.py::test_role_socket_startup_is_disabled_by_default_and_refuses_unsafe_real_directories ... OK
+test_token_requests.py::test_scope_comes_from_assignment_in_two_subsystems_and_changes_with_reassignment ... OK
+test_token_requests.py::test_signature_covers_bytes_route_time_and_reply_is_bound_to_original_member_and_request ... OK
+test_token_requests.py::test_star_centre_scope_depends_on_primary_not_a_copy_in_two_subsystems ... OK
+test_token_requests.py::test_token_spec_rejects_unknown_unsafe_and_partial_bindings ... OK
+
+21 passed, 0 failed, 0 skipped
