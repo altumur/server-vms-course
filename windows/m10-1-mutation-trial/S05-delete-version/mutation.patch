@@ -1,0 +1,11 @@
+--- a/Source/w2cplatform/storemachine.py
++++ b/Source/w2cplatform/storemachine.py
+@@ -274,7 +274,7 @@
+         else:
+             self.rows.pop(key, None)
+             self.wrote = True
+-            res = {"index": self.version(index)}
++            res = {"index": current}
+         if op_id:
+             self.done[op_id] = (fingerprint, dict(res))
+             while len(self.done) > OP_MEMORY:
