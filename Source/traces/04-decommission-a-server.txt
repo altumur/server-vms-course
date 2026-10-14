@@ -4,17 +4,17 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
   "at": "1757500100.0",
   "why": "srv-c burnt"
 }}
-→ 200 {"index": 1022}
+→ 200 {"index": "1022"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": 1013, "items": {
+POST /v1/write {"op": "put", "key": "cam/slots/w-srv-c-1", "cas": "1013", "items": {
   "holder": "srv-c:4102:001006",
   "until": "1757500045.0",
   "released": "true",
   "gen": "1",
   "server": "srv-c"
 }}
-→ 200 {"index": 1023}
+→ 200 {"index": "1023"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
 POST /v1/write {"op": "put", "key": "cam/decommissioned/srv-c", "cas": null, "items": {
@@ -24,26 +24,29 @@ POST /v1/write {"op": "put", "key": "cam/decommissioned/srv-c", "cas": null, "it
   "units": "2",
   "holds": ""
 }}
-→ 200 {"index": 1024}
+→ 200 {"index": "1024"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": 1018, "items": {
+POST /v1/write {"op": "put", "key": "cam/placement/2", "cas": "1018", "items": {
   "worker": "w-srv-b-1",
   "reason": "slot w-srv-c-1 released; most free capacity (49); on srv-b",
   "at": "1757500100.0",
   "rev": "2"
 }}
-→ 200 {"index": 1025}
+→ 200 {"index": "1025"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-c-1", "cas": 1019, "items": {"units": "", "rev": "2"}}
-→ 200 {"index": 1026}
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-c-1", "cas": "1019", "items": {
+  "units": "",
+  "rev": "2"
+}}
+→ 200 {"index": "1026"}
 
 # camcontroller on srv-a → /run/configstore/camcontroller.sock
-POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": 1017, "items": {
+POST /v1/write {"op": "put", "key": "cam/workers/w-srv-b-1", "cas": "1017", "items": {
   "units": "1,2",
   "rev": "2"
 }}
-→ 200 {"index": 1027}
+→ 200 {"index": "1027"}
 
 # … and 51 GET requests, omitted
