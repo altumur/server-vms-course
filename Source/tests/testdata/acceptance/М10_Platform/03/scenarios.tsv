@@ -36,8 +36,9 @@ scenario	step	request	expect
 08-types	3	POST /counters {"name": "c8", "labels": "a"}	400
 08-types	4	POST /counters {"name": "c8", "start": true}	400 {"fault": "not_number"}
 08-types	5	POST /counters {"name": "c8", "start": 8}	201 {"start": 8}
-09-list-comma	1	POST /counters {"name": "c9", "labels": ["a,b", "c"]}	201 {"labels": ["a,b", "c"]}
-09-list-comma	2	PUT /counters/c9 {"labels": ["[x", "y"]}	200 {"labels": ["[x", "y"], "revision": 2}
+09-list-comma	1	POST /counters {"name": "c9", "marks": ["a,b", "c"]}	201 {"marks": ["a,b", "c"]}
+09-list-comma	2	PUT /counters/c9 {"marks": ["[x", "y"]}	200 {"marks": ["[x", "y"], "revision": 2}
+09-list-comma	3	POST /counters {"name": "c9b", "labels": ["a,b"]}	400
 10-inherit-absent	1	POST /counters {"name": "c10"}	201 {"id": "c10", "step": "@absent", "marks": "@absent"}
 10-inherit-absent	2	PUT /counters/c10 {"step": 2}	200 {"step": 2, "revision": 2}
 11-bad-path	1	PUT /counters/c3/x {"start": 1}	404
