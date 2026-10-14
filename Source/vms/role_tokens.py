@@ -17,8 +17,8 @@ class RoleTokens:
         self._scopes = {}
         self._lock = threading.Lock()
 
-    def get(self, kind, ref, scope):
-        key, now = (kind, ref), self.clock()
+    def get(self, kind, ref, scope, by=None):
+        key, now = ((kind, ref, by) if by is not None else (kind, ref)), self.clock()
         with self._lock:
             current = self._scopes.get(key)
             if current is None or current[0] != scope:
@@ -30,7 +30,7 @@ class RoleTokens:
         try:
             if self.door is None:
                 raise OSError("role door unavailable")
-            reply = self.door.request(kind, ref)
+            reply = self.door.request(kind, ref, by) if by is not None else self.door.request(kind, ref)
             token = reply["token"]
             if not isinstance(token, str):
                 raise ValueError()
@@ -51,9 +51,9 @@ class RoleTokens:
             self.cached[key] = scope, token, now + lifetime - 10
         return token
 
-    def forget(self, kind, ref, scope=None):
+    def forget(self, kind, ref, scope=None, by=None):
         with self._lock:
-            key = kind, ref
+            key = (kind, ref, by) if by is not None else (kind, ref)
             current = self._scopes.get(key)
             if scope is not None and current is not None and current[0] != scope:
                 return
