@@ -747,7 +747,7 @@ def test_a_scenario_on_a_camera_that_polls_nothing_is_taken_by_the_door_and_name
     assert shared.scenarios() == [stranger]
     domain_pass()
     assert executor.asks.executor.refresh() == [stranger]
-    assert executor.asks.heartbeat() == {}
+    assert executor.asks.heartbeat() == {"unknown-target": {}}
     for _ in range(2):
         [out] = executor.on_event("unknown")
         assert out["state"] == "the book of asks names no door for SN9999: not asked"
