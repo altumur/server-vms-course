@@ -10,23 +10,13 @@ from w2cplatform.domain.placement import PREFIX, decode
 
 
 class BookInputs:
-    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float | None = None, sealer=None,
+    def __init__(self, domain_vars, view, wall=time.time, sealer=None,
                  centre: str | None = None, star=frozenset(), topology=None):
-        """`issuer` is Lesson 16: the domain signer's token issuer. Only asks still carry issued tokens."""
         self.vars, self.view, self.wall = domain_vars, view, wall
-        # The tokens its books carry are of the kinds the spec declares (`domain.tokens`), issued by the domain's signer:
-        # an issuer that is the signer's own (a test's, the holder's process) is asked through the declaration too.
-        if issuer is not None and not hasattr(issuer, "lifetime"):
-            from w2cplatform.domain.declared import token_kinds
-            from w2cplatform.trust.tokens import DeclaredIssuer
-            issuer = DeclaredIssuer(issuer, token_kinds())
-        self.issuer = issuer
         # The holder's store as the books see it: what they read, opened; what they write, sealed (`keys.OpenedVars`).
         from .keys import OpenedVars
         if not isinstance(domain_vars, OpenedVars):
             self.vars = OpenedVars(domain_vars, sealer)
-        self.token_lifetime = token_lifetime if token_lifetime is not None else (
-            issuer.lifetime("stream") if issuer is not None else 86400.0)
         # Lesson 17: the monitoring centre, and the recording clusters that cannot be pushed to — their cameras
         # push to the centre instead, and the cluster pulls its streams from there.
         # Given explicitly they stand; otherwise the operator's topology says (`domain/topology.py`), read on
