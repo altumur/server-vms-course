@@ -15,6 +15,12 @@ All member links in the assignment must be admitted. The issuer derives the
 subject, reference claim and audience itself; the caller supplies no target or
 claims. Audiences are member names without prefixes.
 
+The C3 target `centre` is read from the holder's authoritative `domain/topology`,
+never its carried `domain/member-topology`. It requires a confirmed positive
+revision and a valid centre: absent or malformed topology returns 409; an
+unadmitted centre returns 403. A subsequent request uses the current topology.
+Other target names stay closed; `star_centre` belongs to the separate C3b window.
+
 The remote reply has `request_id`, `token` and `exp`. The token is sealed to the
 member's admitted box key with AAD bound to the original route, request id and
 expiry (JCS). A changed expiry or id cannot be used with the old ciphertext.
@@ -31,5 +37,4 @@ role directories are root:role-group 2770, sockets 0660. Unsafe owner, mode, gro
 symlink or bind fails closed for that role, while carry and reports continue.
 `installation` derives tmpfiles and agent groups from loaded grants, using
 `cluster.rights.group`. Every request resolves its unique kind against the current
-catalogue. Publisher, consumer and spec switch remain unfinished; this branch
-must not be merged on its own.
+catalogue.
