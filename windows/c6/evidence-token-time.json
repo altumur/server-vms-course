@@ -1,0 +1,27 @@
+{
+  "stage": "C6 role receipt time; component checkpoint, not final runtime cutover",
+  "head": "7e55b46244e83184a9b521de41ab04ab714e06c1",
+  "decision": "d13efef8",
+  "tests": [
+    {
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/exe/obsd /Users/murat/w2c/vms-nightly/venv/bin/python -u tests/run.py test_ask_token_time test_autoask test_ask_role_tokens test_recording_poll_push test_recording_push",
+      "cwd": "Source",
+      "exit": 0,
+      "passed_failed_skipped": [
+        40,
+        0,
+        0
+      ],
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-token-time-checked.log",
+      "sha256": "eb1da0f12a17697528fe3818a2c08494a8707cb943f1fbdd16bf5c2bb00a0556"
+    },
+    {
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python windows/c6/probes/camera_clock.py",
+      "cwd": ".",
+      "exit": 0,
+      "passed_failed_skipped": null,
+      "log": "/Users/murat/w2c/course-book-merge-evidence/c6-token-time-probe.log",
+      "sha256": "3b5ba077d84bc8364a89b96fedf69ba54d77c338a9e7d82382eb74aaea3f2f84"
+    }
+  ]
+}
