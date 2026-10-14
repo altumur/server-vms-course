@@ -1,4 +1,4 @@
-"""C2 facts produced by ordinary camera/recorder workers (ADR-0074).
+"""C2/C3 facts produced by ordinary camera/recorder workers (ADR-0074).
 
 Recipients come only from the local assignment copied by the domain agent.
 No domain issuer, remote store, persistent road or configuration write.
@@ -33,7 +33,8 @@ def publish_facts(worker, family, status):
     if not worker.name:
         return False
     try:
-        items = {"sources": sources, "primaries": primaries}[family](worker, status)
+        from .recording_upstream import upstream
+        items = {"sources": sources, "primaries": primaries, "upstream": upstream}[family](worker, status)
         return publish(worker, family, items)
     except OSError:
         # A store outage leaves the last publication intact and never suppresses a pulse.
