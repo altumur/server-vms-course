@@ -113,7 +113,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
     through = Relay(relay, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
-    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
+    books = Books(BookInputs(north.vars, ReadView(fed, wall=wall), wall, topology=topo), north.objects)
     from tests.domainvms.recording_domain import RecordingDomain, camera_pusher
     publication = RecordingDomain(books.inputs, signer,
         agents=[cam_agent, relay], devices=[cam], recorders=recorders)
