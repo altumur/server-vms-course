@@ -95,10 +95,14 @@ SECRET_MASK = "***"
 PLATFORM_SECRET_READERS: dict[str, tuple[str, ...]] = {
     "domain/break-glass/": ("console", "domain", "domainagent"),
     "domain/signer": ("domain",),
+    "domain/signer-pending": ("domain",),
     "domain/book-seal": ("domain",),
     "domain/users/": ("domain",),
     "domain/member-key": ("domainagent", "console", "domain"),
     "domain/backup": ("console", "domain", "domainagent"),
+    "domain/backup-taken": ("console", "domain", "domainagent"),
+    "domain/backup-doc": ("console", "domain", "domainagent"),
+    "domain/backups/": ("console", "domain", "domainagent"),
     "door/signer": (),            # nobody here: a spec of a subsystem with doors names its console (`secrets.readers`)
 }
 

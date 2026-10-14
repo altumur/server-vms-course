@@ -60,26 +60,32 @@ def agent_denials(specs=None) -> list[str]:
 # and 2026-10-07 for the specs' rows, as the product's generator does): the platform's own rows from
 # `secrets.PLATFORM_SECRET_READERS` (`tests/testdata/platform_lists.tsv`, the product's bytes), a spec's from its
 # `secrets.readers` and `secrets.reads` (`secrets.secret_readers`). For each such row a role is either among its readers —
-# and is given it, `<row>*`, where its other grants do not reach it — or is not, and is denied it, `!<row>*`: a prefix's
-# rows, and a row's own family of books (a book `<book>` and `<book>/<cluster>`) with it. The emergency hash
+# and is given its declared pattern where its other grants do not reach it — or is not, and is denied that pattern.
+# Only a name ending in `/` declares a prefix (`<prefix>*`); every other name is exact, without implied descendants.
+# The emergency hash
 # keeps its name on the member (`domain/break-glass/<cluster>`, ADR-0003): no bare path goes with its prefix any more.
 # No hand list of secret rows stands in any role: a role's reads are what it needs, and this decides the secrets in them.
 def secret_reads(role: str, readers: dict[str, set], read: list[str]) -> list[str]:
     """The patterns `role` gets for the secret rows `readers` names (`secrets.secret_readers`), beside its `read`: a
     grant where it is a reader and `read` does not reach the row, a denial where it is not and a grant of `read` reaches
     any row under it (a denial nothing reaches would deny nothing: the course's roles read by grants, not `*`)."""
-    from w2cplatform.rights import allowed
+    from w2cplatform.rights import allowed, hit
 
-    def reaches(prefix: str) -> bool:
+    def reaches(row: str) -> bool:
         grants = [p for p in read if not p.startswith("!")]
-        return any(p[:-1].startswith(prefix) or prefix.startswith(p[:-1]) if p.endswith("*") else p.startswith(prefix)
+        if not row.endswith("/"):
+            return any(hit(p, row) for p in grants)
+        return any(p[:-1].startswith(row) or row.startswith(p[:-1]) if p.endswith("*") else p.startswith(row)
                    for p in grants)
     out = []
     for row, names in sorted(readers.items()):
+        pattern = row + "*" if row.endswith("/") else row
         if role in names:
-            out += [] if allowed(read, row + "_" if row.endswith("/") else row) else [f"{row}*"]
+            covered = (any(p.endswith("*") and not p.startswith("!") and row.startswith(p[:-1]) for p in read)
+                       if row.endswith("/") else allowed(read, row))
+            out += [] if covered else [pattern]
         else:
-            out += [f"!{row}*"] if reaches(row) else []
+            out += [f"!{pattern}"] if reaches(row) else []
     return out
 
 

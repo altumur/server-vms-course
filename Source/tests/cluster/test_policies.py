@@ -225,7 +225,8 @@ def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_e
     from tests.domain.conftest import Clock, make_cluster
     r = rights()
     assert sorted(doc()["roles"]["domainagent"]["read"]) == sorted(
-        ["*", "!domain/book-seal*", "!domain/signer*", "!domain/users/*", "!live/accounts/*", "!door/signer*", "!rec/asked/*"])
+        ["*", "!domain/book-seal", "!domain/signer", "!domain/signer-pending", "!domain/users/*",
+         "!live/accounts/*", "!door/signer", "!rec/asked/*"])
 
     class AsAgent:                       # the daemon: every name listed to every role, a get as the file says
         def __init__(self, inner):
