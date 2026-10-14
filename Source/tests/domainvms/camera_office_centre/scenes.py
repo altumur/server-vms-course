@@ -539,8 +539,12 @@ def f04_centre_off(site) -> None:
     log.note("Отказ 4. Центр srv выключен на шесть часов. Запись идёт по книгам и ключу потока, который камеры и офисы\n"
              "уже несут; нового входа нет; книги стареют.")
     site.login("anna")
-    entry = site.cams["cam-a"].pusher.entry()
-    until = float(entry["ingest"]["until"])
+    from w2cplatform.domain.agent import ClusterTrust
+    from w2cplatform.trust.tokens import verify
+    cam = site.cams["cam-a"]
+    trust = ClusterTrust(cam.flash_store)
+    token = cam.pusher.assigned.stream_token()
+    until = verify(token, trust.keyset(), trust.revoked(), now=site.wall(), kind="stream")["exp"]
     log.note(f"Токен потока cam-a действует до {until:.0f} — ещё {until - site.wall():.0f} с от выключения.")
     site.off("srv")
     log.note("srv выключен. Анна стучится в консоль домена; агент relay-a — в дверь подписывающего:")
@@ -553,8 +557,8 @@ def f04_centre_off(site) -> None:
     site.wall.advance(1)
     out = site.camera_step("cam-a")
     log.note(f"толкатель cam-a: {out.get('state')}; токен действует ещё {until - site.wall():.0f} с")
-    log.note(f"На исходе суток токена ({until:.0f}) приёмник откажет камере: новый токен выдаёт только держатель, на\n"
-             "проходе книг после половины срока токена.")
+    log.note(f"На исходе суток токена ({until:.0f}) приёмник откажет камере: новый токен выдаёт только держатель\n"
+             "по запросу камеры через дверь её роли.")
     site.on("srv")
     log.note("srv включён: проходы держателя, книги, агенты.")
     site.domain_pass()
