@@ -141,7 +141,8 @@ admin_ops: status | join [-force] | leave [id] | admit <id> | backup <файл> 
            большинства нет — Н3 «восстановить»), не через сокет; status/backup/leave себя — у любого
 floor:                                        # platform/epoch_floor {floor, generation_at}
   generation: max((floor >> 32) + 1, часов UTC с 2026-01-01); floor = generation << 32
-  when:    recover (на остановленном демоне), restore, import — до первой строки; только op: floor на admin.sock; строка не
+  when:    restore, import — до первой строки, только op: floor на admin.sock лидера; recover — локально в дампе остановленного
+           демона (сокета нет, Н3 «восстановить» шаг 1); строка не
            пишется put; только растёт; часы раньше generation_at → отказ без -force; два ввода состояния в один час —
            только вторым словом (-force)
   issue:   next_epoch = max(текущая, floor) + 1 (урок 3)
