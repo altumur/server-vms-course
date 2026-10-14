@@ -1001,14 +1001,14 @@ def test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved()
                 time.sleep(0.01)                                             # waited for, not slept for (a loaded run)
             fates[t] = (site.fate(), ctl.resource_state("srv-1"))
         stuck = resources_seen(box.objects)["srv-1"].get("pass_stuck")
+        from w2cplatform.console import SpecConsole
+        text = SpecConsole(ctl, wall=box.wall).metrics_text()                    # …and on `/metrics`
+        assert 'w2c_resource_pass_stuck_seconds{server="srv-1"} ' in text and \
+            'w2c_resource_pass_stuck_seconds{server="srv-1"} 0' not in text
     finally:
         release.set(); passing.join(5)
     assert all(f == ("hung", "live") for t, f in fates.items() if t >= 100), fates
     assert stuck and stuck > res.PULSE_LIMIT * res.lost_after
-    from w2cplatform.console import SpecConsole
-    text = SpecConsole(ctl, wall=box.wall).metrics_text()                    # …and on `/metrics`
-    assert 'w2c_resource_pass_stuck_seconds{server="srv-1"} ' in text and \
-        'w2c_resource_pass_stuck_seconds{server="srv-1"} 0' not in text
     ctl.pass_once()
     assert sorted(ctl.assignment("w-1").units) == site.on_w1                 # nothing moved: no second writer
 
