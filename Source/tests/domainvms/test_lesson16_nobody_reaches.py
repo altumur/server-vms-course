@@ -11,7 +11,7 @@ they say. Nothing here raises an ingest by hand.
 """
 
 from tests.reporting import sync as report_sync
-from tests.domainvms.recording_domain import RecordingDomain, camera_pusher
+from tests.domainvms.recording_domain import RecordingDomain, camera_pusher, role_requests
 import json
 
 from w2cplatform.cluster.variables import FakeVariables
@@ -21,6 +21,7 @@ from vms.domainpart.inputs import BookInputs
 from vms.recording_sources import resolve
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
+from vms.recording_books import Unconfirmed
 from vms.domainpart.gateway import Gateway
 from vms.domainpart.ingest import LINGER, CameraPusher, IngestLiveEndpoint, Refused, audience
 from w2cplatform.domain.readview import ReadView
@@ -70,7 +71,7 @@ def _site(wall, down=(), writes=False):
     report_sync(cam_agent)
 
     view = ReadView(fed, wall=wall); view.refresh()
-    crossings = BookInputs(north.vars, view, wall, issuer=signer.tokens)
+    crossings = BookInputs(north.vars, view, wall)
     recording_domain = RecordingDomain(crossings, signer,
         agents=[cam_agent, room_agent], devices=[cam], recorders=recs)
     recording_domain.assign(SERIAL, "south")
@@ -324,33 +325,43 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
 GATE = "SN5002"                                                        # the gate camera: its event asks the yard camera
 
 
+def preset(target, number):
+    return {"camera": target, "action": "preset", "arg": number}
+
+
 def _two(wall):
-    from vms.domainpart.ingest import Asker, publish_asks
-    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    from vms.autoask import Asker
+    from vms.role_tokens import RoleTokens
+    from tests.domain.conftest import SharedDoor
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, inputs, pusher, domain_pass = _site(wall)
     gate = DeviceCluster(GATE, FakeVariables(), wall=wall, pushes=True)
     gate.boot(); gate.door_open = False
     fed.add(member_copy(gate.name, north.objects, wall=wall))
     gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
                              published=gate.local_objects())
-    report_sync(gate_agent)
+    domain_pass.recording_domain.add_agent(gate_agent, gate)
+    domain_pass()
     done = []
 
     def perform(action):
-        if action.get("preset") not in (1, 2, 3):
-            return f"refused: no preset {action.get('preset')}"
+        if action.get("arg") not in (1, 2, 3):
+            return f"refused: no preset {action.get('arg')}"
         done.append(action)
         return "performed"
 
     pusher.perform = perform
-    scenarios = [{"trigger": GATE, "target": SERIAL, "actions": [{"preset": 3}, {"preset": 9}]}]
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
+        {"name": f"gate-preset-{n}", "when": {"camera": GATE, "kind": "vehicle"},
+         "then": preset(SERIAL, n)} for n in (3, 9)])
 
     def asks_pass():
-        domain_pass(); publish_asks(crossings, scenarios); report_sync(gate_agent)
+        domain_pass(); report_sync(gate_agent)
 
     asks_pass()
+    tokens = RoleTokens('autoworker', role_requests(gate.flash, 'autoworker'), clock=wall)
     asker = Asker(GATE, gate.flash, lambda url: ingest if url in URLS else (_ for _ in ()).throw(Unreachable(url)),
-                  clock=wall)
-    return ingest, pusher, asker, done, asks_pass, signer, crossings, north
+                  tokens=tokens, clock=wall)
+    return ingest, pusher, asker, done, asks_pass, signer, inputs, north
 
 
 def test_a_scenario_between_two_unreachable_cameras_acts_within_one_poll():
@@ -359,16 +370,16 @@ def test_a_scenario_between_two_unreachable_cameras_acts_within_one_poll():
     ask wakes the yard camera's held poll: done on the next answer, not on an agent's pass."""
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
-    book = asker.book()
-    assert [r["urls"] for r in book[SERIAL]] == [URLS]              # one road: the room that records it
+    _, facts = asker._roads(SERIAL)
+    assert [r.value["urls"] for r in facts] == [URLS]              # one road: the room that records it
     e = {"token_secret": pusher.assigned.stream_token()}
     held = ingest.poll(e["token_secret"], SERIAL, version=ingest.poll(e["token_secret"], SERIAL)["version"])
     assert held.get("held")                                            # the yard camera is waiting, nothing new
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     woken = ingest.poll(e["token_secret"], SERIAL, version=held["version"])
-    assert not woken.get("held") and [a["action"] for a in woken["asks"].values()] == [{"preset": 3}]
+    assert not woken.get("held") and [a["action"] for a in woken["asks"].values()] == [preset(SERIAL, 3)]
     out = pusher.pass_once([])
-    assert out["asks"] == [({"preset": 3}, "performed")] and done == [{"preset": 3}]
+    assert out["asks"] == [(preset(SERIAL, 3), "performed")] and done == [preset(SERIAL, 3)]
     assert ing.ask_outcome(SERIAL, aid) == "performed"
     assert pusher.pass_once([])["asks"] == []                          # done once
 
@@ -378,7 +389,7 @@ def test_an_ask_dies_at_its_deadline_and_a_camera_that_was_off_never_does_it_lat
     ten seconds" — when it polls again there is nothing, and the gate camera reads "expired"."""
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     wall.advance(60)                                                   # the yard camera was off
     assert pusher.pass_once([])["asks"] == [] and done == []
     assert ing.ask_outcome(SERIAL, aid) == "expired"
@@ -387,18 +398,18 @@ def test_an_ask_dies_at_its_deadline_and_a_camera_that_was_off_never_does_it_lat
 def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask():
     wall = Clock()
     ingest, pusher, asker, done, asks_pass, signer, crossings, north = _two(wall)
-    ing, aid = asker.ask(SERIAL, {"preset": 9}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 9), within=10)
     pusher.pass_once([])
     assert ing.ask_outcome(SERIAL, aid) == "refused: no preset 9" and done == []
     try:
-        asker.ask("SN9999", {"preset": 1}, within=10)                  # no scenario ties them: no book entry
+        asker.ask("SN9999", preset(SERIAL, 1), within=10)                  # no scenario ties them: no book entry
         assert False
-    except Refused:
+    except Unconfirmed:
         pass
     push = pusher.assigned.stream_token()                           # a push token is not a token to ask
     for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience('south'), ref="SN9999", kind="ask")):
         try:
-            ingest.ask(bad, SERIAL, {"preset": 1}, wall() + 10)
+            ingest.ask(bad, SERIAL, preset(SERIAL, 1), wall() + 10)
             assert False
         except Refused:
             pass
@@ -411,9 +422,6 @@ NORTH_URLS = ["srt://ingest.north:9000"]
 
 def _scenario_site(wall, scenarios, open_doors=()):
     from vms.domainpart.books import Books
-    from vms.domainpart.ingest import Asker
-    from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedView
     from tests.domain.conftest import SharedDoor
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, site_pass = _site(wall)
     home_rec = ingest_recorder("north", NORTH_URLS[0], wall, north.vars, north.objects)   # the domain's holder: every camera reaches it
@@ -465,13 +473,13 @@ def _scenario_site(wall, scenarios, open_doors=()):
     done = {SERIAL: [], PTZ: []}
     pusher.perform = lambda action: done[SERIAL].append(action) or "performed"
     ptz_pusher = camera_pusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
-    gate_scenarios = Scenarios(GATE, SharedView(gate.flash, gate.disk, wall), Asker(GATE, gate.flash, dial, clock=wall))
+    gate_scenarios = gate.host_scenarios(gate_agent, dial, steady=wall)
     domain_pass.dial = dial
     return (shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
 
 
-SCENARIOS = [{"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
-             {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": SERIAL, "action": "preset", "arg": 1, "within": 10}}]
+SCENARIOS = [{"name": "test_lesson16_nobody_reaches-1", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+             {"name": "test_lesson16_nobody_reaches-2", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": SERIAL, "action": "preset", "arg": 1, "within": 10}}]
 
 
 def test_a_scenario_in_the_shared_document_acts_on_two_cameras_one_recorded_and_one_not():
@@ -487,9 +495,9 @@ def test_a_scenario_in_the_shared_document_acts_on_two_cameras_one_recorded_and_
     assert gate_scenarios.on_event("motion") == []                    # no scenario for that event
     left = gate_scenarios.on_event("vehicle")
     assert [(x["target"], x["state"]) for x in left] == [(PTZ, "asked"), (SERIAL, "asked")]
-    assert ptz_pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
-    assert pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 1}, "performed")]
-    assert done == {PTZ: [{"action": "preset", "arg": 3}], SERIAL: [{"action": "preset", "arg": 1}]}
+    assert ptz_pusher.pass_once([])["asks"] == [(SCENARIOS[0]["then"], "performed")]
+    assert pusher.pass_once([])["asks"] == [(SCENARIOS[1]["then"], "performed")]
+    assert done == {PTZ: [SCENARIOS[0]["then"]], SERIAL: [SCENARIOS[1]["then"]]}
     by_target = {x["target"]: x for x in left}
     assert by_target[PTZ]["ingest"] is home and home.ask_outcome(PTZ, by_target[PTZ]["ask"]) == "performed"
     assert ingest.ask_outcome(SERIAL, by_target[SERIAL]["ask"]) == "performed"
@@ -499,7 +507,7 @@ def test_the_books_do_not_churn_and_a_scenario_taken_out_takes_the_right_with_it
     wall = Clock()
     shared, books, domain_pass, gate, ptz, *_rest, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
     def carried():
-        return [(d.flash.get("domain/rec/polls"), d.flash.get("domain/cam/asks")) for d in (gate, ptz)]
+        return [(d.flash.get("domain/rec/polls"), d.flash.get("domain/auto/asks")) for d in (gate, ptz)]
     before = carried()
     for _ in range(10):
         wall.advance(30); domain_pass()
@@ -508,11 +516,12 @@ def test_the_books_do_not_churn_and_a_scenario_taken_out_takes_the_right_with_it
     shared.set_scenarios([])
     domain_pass()
     assert gate_scenarios.on_event("vehicle") == []                   # the document no longer says so…
-    assert gate_scenarios.asker.book() == {}                           # …and the book no longer lets it
+    asker = gate.asks.executor.asker(GATE)
+    assert asker._roads(PTZ)[1] == ()                           # …and the book no longer lets it
     try:
-        gate_scenarios.asker.ask(PTZ, {"action": "preset", "arg": 3}, within=10)
+        asker.ask(PTZ, SCENARIOS[0]["then"], within=10)
         assert False
-    except Refused:
+    except Unconfirmed:
         pass
 
 
@@ -525,16 +534,16 @@ def test_the_token_names_the_actions_and_one_camera_cannot_flood_an_ingest():
     wall = Clock()
     ingest, pusher, asker, done, asks_pass, signer, crossings, north = _two(wall)
     try:
-        asker.ask(SERIAL, {"preset": 4}, within=10)
+        asker.ask(SERIAL, preset(SERIAL, 4), within=10)
         assert False
-    except Refused as e:
-        assert "not {'preset': 4}" in str(e)
-    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience('south'), ref=SERIAL, by=GATE, kind="ask",
-                               acts=[{"preset": i} for i in range(20)])
+    except Unconfirmed as e:
+        assert "no confirmed road" in str(e)
+    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=['south'], ref=SERIAL, by=GATE, kind="ask",
+                               acts=[preset(SERIAL, i) for i in range(20)])
     for i in range(MAX_LIVE_ASKS):
-        ingest.ask(wide, SERIAL, {"preset": i}, wall() + 30)
+        ingest.ask(wide, SERIAL, preset(SERIAL, i), wall() + 30)
     try:
-        ingest.ask(wide, SERIAL, {"preset": 19}, wall() + 30)
+        ingest.ask(wide, SERIAL, preset(SERIAL, 19), wall() + 30)
         assert False
     except Refused as e:
         assert "ceiling" in str(e)
@@ -568,7 +577,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
     from vms.domainpart.ingest import ANSWER_GRACE, REMEMBER
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     deadline = wall() + 10
     fresh = ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest   # the same address, a new process
     asker.dial = pusher.dial = lambda url: fresh
@@ -577,7 +586,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
     wall.advance(10 + ANSWER_GRACE + 1)
     assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
 
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     pusher.pass_once([])
     assert asker.outcome(SERIAL, aid, wall() + 10) == "performed"
     wall.advance(REMEMBER + 1)
@@ -594,9 +603,6 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     books home, and the same scenario acts again. The shared document comes back with the domain, from a
     member's copy: the book of asks is built from its scenarios."""
     from vms.domainpart.books import Books
-    from vms.domainpart.ingest import Asker
-    from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedView
     from w2cplatform.domain.term import DomainHolder, move_domain
     from w2cplatform.domain.reports import pinned
     import math
@@ -620,7 +626,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     initial_books(fed, signer, wall, {n: (d.flash, d.local_objects()) for n, d in devices.items()},
                   objects=devices["cam-SN0"].disk)
     SharedDoor(home, devices["cam-SN0"].disk_door(), signer, wall).set_scenarios([
-        {"when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}])
+        {"name": "test_lesson16_nobody_reaches-3", "when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}])
 
     urls, ingests, recs = {"cam-SN0": ["srt://sn0.site:9000"], "cam-SN3": ["srt://sn3.site:9000"]}, {}, {}
 
@@ -641,28 +647,29 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
         live = [n for n in devices if n != holder_name and devices[n].door_open]
         agents = [_agent(fed, devices, n, holder_name, wall) for n in live]
         books = Books(BookInputs(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
-                                wall, issuer=current_signer.tokens), devices[holder_name].disk)
+                                wall), devices[holder_name].disk)
         publication = RecordingDomain(books.inputs, current_signer, agents=agents,
             devices=[devices[n] for n in [holder_name, *live]], recorders=[recs[holder_name]],
             domain_objects=devices[holder_name].disk)
         # Topology and holder arrive first; then sources, the home's ordinary
         # poll publication and its signed report travel through the same passes.
-        for _ in range(2):
+        for _ in range(4):
             publication.collect()
             books.pass_once()
             for a in agents:
                 report_sync(a)
+        return agents
 
     light_ingest("cam-SN0", home)
-    settle("cam-SN0", signer)
+    agents = settle("cam-SN0", signer)
     done = []
     ptz = camera_pusher("SN2", devices["cam-SN2"].flash, dial, clock=wall, perform=lambda a: done.append(a) or "performed")
-    gate = Scenarios("SN1", SharedView(devices["cam-SN1"].flash, devices["cam-SN1"].disk, wall),
-                     Asker("SN1", devices["cam-SN1"].flash, dial, clock=wall))
+    gate = devices["cam-SN1"].host_scenarios(next(a for a in agents if a.cluster == "cam-SN1"), dial, steady=wall)
+    action = {"camera": "SN2", "action": "preset", "arg": 3}
     assert ptz.entry()["cluster"] == "cam-SN0" and "asks only" in ptz.pass_once([])["state"]
     [x] = gate.on_event("vehicle")
     assert x["state"] == "asked" and x["ingest"] is ingests["cam-SN0"]
-    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert ptz.pass_once([])["asks"] == [(action, "performed")]
 
     holder.backup(["cam-SN1", "cam-SN3"], devices["cam-SN0"].disk_door())
     for n in ("cam-SN1", "cam-SN3"):
@@ -675,7 +682,8 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     new, report = move_domain(fed, "cam-SN3", offline, "acme", _objects(devices), wall)
     assert report["shared_from"] == "cam-SN3"                          # the document, from the new holder's own copy
     light_ingest("cam-SN3", new.vars)
-    settle("cam-SN3", new.signer)
+    agents = settle("cam-SN3", new.signer)
+    gate.host_scenarios(next(a for a in agents if a.cluster == "cam-SN1"), dial, steady=wall)
     # The dead old home's accepted publication remains fresh for report grace.
     # pick:unique refuses conflicting old/new polls; no old home or guessed new
     # route is used during this observed availability delay after the move.
@@ -685,12 +693,13 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     assert len(dialled) == before
     old_received = pinned("cam-SN0", devices["cam-SN3"].disk).mark["received_at"]
     wall.advance(math.nextafter(old_received + 45.0, math.inf) - wall())
-    settle("cam-SN3", new.signer)
-    assert ptz.entry()["cluster"] == "cam-SN3" and [r["cluster"] for r in gate.asker.book()["SN2"]] == ["cam-SN3"]
+    agents = settle("cam-SN3", new.signer)
+    gate.host_scenarios(next(a for a in agents if a.cluster == "cam-SN1"), dial, steady=wall)
+    assert ptz.entry()["cluster"] == "cam-SN3" and [r.member for r in gate.asks.executor.asker("SN1")._roads("SN2")[1]] == ["cam-SN3"]
     wall.advance(15)
     [x] = gate.on_event("vehicle")
     assert x["state"] == "asked" and x["ingest"] is ingests["cam-SN3"]
-    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert ptz.pass_once([])["asks"] == [(action, "performed")]
     assert len(done) == 2
 
 
@@ -704,8 +713,8 @@ def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_to
     records polls the poll home; one the room records by PULLING its stream polls the room's ingest and is never
     told to push — the recorder does not subscribe there. Both act on the gate camera's event."""
     wall = Clock()
-    scenarios = [{"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": OPEN, "action": "preset", "arg": 2}},
-                 {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PULLED, "action": "preset", "arg": 4}}]
+    scenarios = [{"name": "test_lesson16_nobody_reaches-4", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": OPEN, "action": "preset", "arg": 2}},
+                 {"name": "test_lesson16_nobody_reaches-5", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PULLED, "action": "preset", "arg": 4}}]
     shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = \
         _scenario_site(wall, scenarios, open_doors=(OPEN, PULLED))
     domain_pass.recording_domain.assign(PULLED, "south")
@@ -724,7 +733,7 @@ def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_to
     assert sorted((x["target"], x["state"]) for x in left) == [(OPEN, "asked"), (PULLED, "asked")]
     for n in (OPEN, PULLED):
         cams[n].pass_once([])
-    assert acted == {OPEN: [{"action": "preset", "arg": 2}], PULLED: [{"action": "preset", "arg": 4}]}
+    assert acted == {OPEN: [scenarios[0]["then"]], PULLED: [scenarios[1]["then"]]}
 
 
 def test_a_scenario_on_a_camera_that_polls_nothing_is_taken_by_the_door_and_named_on_every_pass():
@@ -738,12 +747,12 @@ def test_a_scenario_on_a_camera_that_polls_nothing_is_taken_by_the_door_and_name
     shared, books, domain_pass, *_ = _scenario_site(wall, SCENARIOS)
     rev = shared.current()[0]["rev"]
     try:
-        shared.set_scenarios(shared.scenarios() + [{"when": {"camera": GATE}, "then": {"camera": PTZ, "action": "preset"}}])
+        shared.set_scenarios(shared.scenarios() + [{"name": "test_lesson16_nobody_reaches-6", "when": {"camera": GATE}, "then": {"camera": PTZ, "action": "preset"}}])
         assert False
     except ApiError as e:
         assert e.status == 400 and "kind" in e.detail, e.detail
     assert shared.current()[0]["rev"] == rev                           # nothing written
-    stranger = {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": "SN9999", "action": "preset", "arg": 1}}
+    stranger = {"name": "test_lesson16_nobody_reaches-7", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": "SN9999", "action": "preset", "arg": 1}}
     shared.set_scenarios(shared.scenarios() + [stranger])              # its shape is right: what it means is the pass's
     out = books.pass_once()
     assert len(out["refused"]) == 1 and "SN9999 (target) polls nothing" in out["refused"][0]
@@ -773,19 +782,19 @@ def test_a_scenario_between_cameras_is_checked_against_what_each_camera_says_it_
     domain_pass()
     assert books.pass_once()["unchecked"] == []                        # both have said: nothing left unvouched
     base = shared.scenarios()
-    for bad, why in (({"when": {"camera": GATE, "kind": "vehicel"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+    for bad, why in (({"name": "test_lesson16_nobody_reaches-8", "when": {"camera": GATE, "kind": "vehicel"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
                       f"camera {GATE} (trigger) does not raise 'vehicel' — it raises command, command.failed, silent, vehicle"),
-                     ({"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 9}},
+                     ({"name": "test_lesson16_nobody_reaches-9", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 9}},
                       f"camera {PTZ} (target) has 5 preset(s), not 9"),
-                     ({"when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "preset", "arg": 1}},
+                     ({"name": "test_lesson16_nobody_reaches-10", "when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "preset", "arg": 1}},
                       f"camera {GATE} (target) has no telemetry: it cannot go to a preset"),
-                     ({"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "reboot"}},
+                     ({"name": "test_lesson16_nobody_reaches-11", "when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "reboot"}},
                       f"camera {PTZ} (target) cannot be asked 'reboot': one camera asks another for preset or output")):
         shared.set_scenarios(base + [bad])                             # the door takes it: its shape is right
         refused = books.pass_once()["refused"]
         assert any(why in r for r in refused), (why, refused)          # the pass names what it cannot do
     shared.set_scenarios(base + [
-        {"when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "output", "arg": 1}}])
+        {"name": "test_lesson16_nobody_reaches-12", "when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "output", "arg": 1}}])
     assert books.pass_once()["refused"] == []                          # the gate's relay: it has one
 
     ptz.can = {**ptz.can, "ptz": False, "presets": 0}                  # the yard camera replaced by a fixed one
@@ -832,13 +841,13 @@ def test_an_ask_to_a_camera_that_never_polls_again_expires_and_is_then_forgotten
     from vms.domainpart.ingest import MAX_LIVE_ASKS, REMEMBER
     wall = Clock()
     ingest, pusher, asker, done, *_ = _two(wall)
-    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    ing, aid = asker.ask(SERIAL, preset(SERIAL, 3), within=10)
     deadline = wall() + 10
     wall.advance(60)                                                   # and the yard camera never comes back
     assert asker.outcome(SERIAL, aid, deadline) == "expired"
     assert ingest._cam(SERIAL).asks == {}
     for _ in range(MAX_LIVE_ASKS + 4):                                 # the ceiling counts the living only
-        asker.ask(SERIAL, {"preset": 9}, within=1)
+        asker.ask(SERIAL, preset(SERIAL, 9), within=1)
         wall.advance(2)
     wall.advance(REMEMBER)
     assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
@@ -886,29 +895,42 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
     log, and the domain knows it from the room's snapshot. So it can TRIGGER: the book of asks goes to the room,
     whose automation asks on the camera's behalf. A trigger nobody has reported is named on every pass over the
     books, and so is a target that polls nothing."""
-    from vms.domainpart.ingest import Asker
+    from w2cplatform.eventdatabase import MergedIndex
+    from vms.config import SPEC
+    from tests.test_autoworker import ev
     from tests.domain.conftest import snapshot
     wall = Clock()
     shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, [])
     south = books.inputs.view.fed.clusters["south"]
     snapshot(south, {"DOOR7": ("w-0", "srv-9")}, ts=wall())            # the room's own camera: no heartbeat says `polls`
     domain_pass()
-    door = {"when": {"camera": "DOOR7", "kind": "door_forced"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}}
+    door = {"name": "test_lesson16_nobody_reaches-13", "when": {"camera": "DOOR7", "kind": "door_forced"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}}
     shared.set_scenarios([door])
     assert books.pass_once()["refused"] == []                          # a trigger the room reported: nothing to say
-    for bad, why in (({"when": {"camera": "DOOR9", "kind": "x"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+    for bad, why in (({"name": "test_lesson16_nobody_reaches-14", "when": {"camera": "DOOR9", "kind": "x"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
                       "DOOR9 (trigger) is not known to the domain"),
-                     ({"when": {"camera": GATE, "kind": "x"}, "then": {"camera": "DOOR7", "action": "preset", "arg": 1}},
+                     ({"name": "test_lesson16_nobody_reaches-15", "when": {"camera": GATE, "kind": "x"}, "then": {"camera": "DOOR7", "action": "preset", "arg": 1}},
                       "DOOR7 (target) polls nothing")):
         shared.set_scenarios([door, bad])
         refused = books.pass_once()["refused"]
         assert any(why in r for r in refused), (why, refused)
     shared.set_scenarios([door])
     domain_pass()                                                      # the book of asks, carried to the ROOM
-    room = Asker("DOOR7", south.vars, domain_pass.dial, clock=wall)    # the room's automation, for its camera
-    ing, aid = room.ask(PTZ, {"action": "preset", "arg": 3}, within=30)
-    assert ptz_pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
-    assert room.outcome(PTZ, aid, wall() + 30) == "performed"
+    room = domain_pass.recording_domain.auto_workers["south"]
+    south.vars.put("cam/cameras/7", SPEC.items({"id": 7, "ref": "DOOR7", "enabled": True}))
+    event = ev(wall()-1, "cam", 7, "door_forced")
+    south.objects.put("platform/resources/srv-9/heartbeat", json.dumps(
+        {"server": "srv-9", "ts": wall(), "url": "http://srv-9"}).encode())
+    room.index = MergedIndex(south.objects, wall=wall, clock=wall,
+        fetch=lambda url, params: {"events": [event], "truncated": False, "state": "live"})
+    room.domain_scenarios.dial = domain_pass.dial
+    room.reconcile_once()
+    assert len(home.cams[PTZ].asks) == 1
+    room.reconcile_once()
+    assert len(home.cams[PTZ].asks) == 1
+    aid = next(iter(home.cams[PTZ].asks))
+    assert ptz_pusher.pass_once([])["asks"] == [(door["then"], "performed")]
+    assert room.domain_scenarios.executor.asker("DOOR7").outcome(PTZ, aid, wall()+30) == "performed"
 
 
 
