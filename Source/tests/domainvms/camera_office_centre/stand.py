@@ -620,7 +620,8 @@ class Site:
     def sync(self, name: str) -> bool:
         """One pass of `name`'s agent — its requests made as it."""
         with self.log.acting(f"domainagent on {name}"):
-            return self.agents[name].sync()
+            from tests.reporting import sync
+            return sync(self.agents[name])
 
     def agents_pass(self, names=None) -> None:
         """The agents' passes in the order a member behind a relay needs: offices, cameras, offices again, the holder's."""

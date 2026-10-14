@@ -416,7 +416,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables
     granted = {p for p in doc()["roles"]["camworker"]["read"] if p.startswith("domain")}
-    assert granted == {TRUST_KEYS, MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
+    assert granted == {TRUST_KEYS, "domain/revoked", MEMBER_MARK, "domain/cam/sources", "domain/rec/primaries",
                        "domain/cam/sources/*", "domain/rec/primaries/*", "domain/holder",
                        "domain/rec/polls", "domain/rec/polls/*", "domain/member-topology", "domain/topology",
                        "domain/placed/rec/*", "domain/placement/rec/*"}, sorted(granted)
@@ -628,3 +628,15 @@ def test_scenario_worker_reads_only_the_exact_shared_pointer_without_mutation_ri
             assert not r.allows("autoworker", "read", key), key
     for role in ("camworker", "recworker", "detworker", "liveworker"):
         assert not r.allows(role, "read", "domain/shared"), role
+
+
+def test_each_worker_reads_only_the_exact_revocations_document_without_mutation():
+    r = rights()
+    for spec in SPECS:
+        role = spec.name + "worker"
+        assert r.allows(role, "read", "domain/revoked"), role
+        for key in ("domain/revoked", "domain/revoked/child", "domain/private"):
+            assert not r.allows(role, "write", key), (role, key)
+            assert not r.allows(role, "delete", key), (role, key)
+            if key != "domain/revoked":
+                assert not r.allows(role, "read", key), (role, key)

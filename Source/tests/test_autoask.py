@@ -309,11 +309,18 @@ def test_unassigned_target_has_centre_and_relay_roads_and_star_moves_home():
 
 def test_untrusted_signed_or_revoked_token_cannot_start_transport():
     from w2cplatform.trust.tokens import verify
-    for mode in ('signature','kind','revoked'):
+    for mode in ('signature','kind','revoked','unreadable'):
         e=road_fixture()
         if mode=='signature':
             e.box.vars.put('domain/keys',{'current':'wrong','book_seal':e.issuer.book_seal})
         elif mode=='kind':e.claims['kind']='pull'
+        elif mode=='unreadable':
+            get = e.box.vars.get
+            def unavailable(path):
+                if path == 'domain/revoked':
+                    raise OSError('revocations store did not answer')
+                return get(path)
+            e.box.vars.get = unavailable
         else:
             original=e.door.request
             def revoked(kind,ref,by):
@@ -324,5 +331,6 @@ def test_untrusted_signed_or_revoked_token_cannot_start_transport():
                 e.box.vars.put('domain/revoked',revocations.to_items())
                 return reply
             e.door.request=revoked
-        raises(Unconfirmed,lambda:e.asker.ask('B',item()['then'],7))
+        raises(OSError if mode == 'unreadable' else Unconfirmed,
+               lambda:e.asker.ask('B',item()['then'],7))
         assert not e.dialled
