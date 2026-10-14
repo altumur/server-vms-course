@@ -174,9 +174,8 @@ console:
 # Automation on the domain: the scenarios BETWEEN cameras of different members (М12B) — "a vehicle at the gate camera:
 # the yard camera to preset 3" — are no unit of a cluster: the domain holds them whole, in its shared settings, as a
 # document of this spec (`settings.shared.auto.scenarios`), and signs them like any shared field (ADR-0032). What one may
-# BE is the schema below, checked where it is signed; what it may MEAN — that the gate camera raises `vehicle`, that the
-# yard camera has a third preset — is the VMS's domain worker's to say on its pass (`vms/domainpart/scenario.py`), never
-# fired when it does not fit.
+# BE is the schema below, checked where it is signed. The ordinary autoworker reads local trigger events;
+# the target camera checks its own capabilities when the ask arrives (ADR-0074 C7).
 domain:
   books:
     asks: {from: auto/asks/, key: target, pick: all, to: to}
