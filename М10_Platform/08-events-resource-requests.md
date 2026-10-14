@@ -182,7 +182,8 @@ holds:      раздел спеки (урок 2 Н1.2), закрытый: {table
             называет единицу (поле unit) и окно [since, until] (поля), бакеты единицы в окне не убираются по сроку, пока строка
             не помечена полем released или не прошло longest секунд; читает ресурс (урок 6 Н1.4)
 mark:       objects/<sub>/commands/<rid>      # строка-объект, создание-однажды
-  begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова
+  begun:     {instance, slot, unit, of?, at, digest, valid_until?}        # до вызова; digest — sha256 канонического JSON (JCS) тела клиента
+             # после проверки схемы, без полей сервера (rid, at, by, valid_until); тот же digest — в строке просьбы; им сравнивают повторы
   answer:    + {outcome, action, ended_at, error? (≤ 200), late?: true}   # безусловная запись держателя поверх метки (ADR-0054); жнец — по индексу
   outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
   ended_by:  reaper                                                        # у expired/unknown от жнеца
@@ -325,7 +326,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### подать просьбу (консоль, POST /<sub>/requests)
 
 ```
-1. Idempotency-Key, тело — объект с unit; схема; rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
+1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
    поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
    valid_until = now + valid_for ≤ most_valid
 2. метка objects/<sub>/commands/<rid> уже есть (строка могла уйти по clear): тот же digest → 200 answered, учёт и строку не трогать;
@@ -333,7 +334,9 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 3. per_person: учёт <sub>/asked/<sha16> по cas: rid уже в rids → повтор ждущей, учёт не меняется; иначе len(rids) ≥ per_person
    → 429; иначе rids + rid
 4. записать строку cas ""; есть: тот же digest → 202 {queued: rid} (повтор ждущей); иной digest → 409 exists (учёт вернуть)
-5. journal → строка журнала; 202 {queued: rid}
+5. перечитать метку: появилась между шагами 2 и 4 (держатель исполнил, clear снял строку) с тем же digest → удалить свою
+   строку (cas), снять rid из учёта, ответ 200 answered; иной digest → 409 spent
+6. journal → строка журнала; 202 {queued: rid}
 ```
 
 **Гонки.** Две подачи с одним `Idempotency-Key`: `rid` один, `cas ""` пропускает одну, вторая отвечает 202 той же просьбой (шаг 3); с разными ключами одной единице — две просьбы, держатель исполняет по порядку меток; подача против жнеца — новая строка до срока жнецу не видна.
