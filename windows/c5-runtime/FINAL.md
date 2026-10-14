@@ -90,3 +90,14 @@ WithMember/PeerOf, перенос отпечатков и ClientForeign окон
 сценарии11); исполнявшиеся Python/JS и TSV01 не изменились. Сравнение —
 [evidence-main-merge.json](evidence-main-merge.json). Полный повтор после
 этого слияния не заявляется. Новые уроки не исправлялись.
+
+## Approved correction cdd2c1f5
+
+Architect approved C5 after removing worker.writes from testsub2 entirely;
+door.pass:[entries] remains. The spec and two tests now forbid worker writes
+to tallies and shelves, preserving worker.requests. Final targeted checks:
+43 passed, 0 failed, 0 skipped, exit0. Initial64/2/0 retained: two obsolete
+expectations required the removed grant; console_load passed.
+X-Operator is confirmed as an outgoing console header; incoming headers
+are removed. Supersedes the pending-review/operator statuses above.
+See evidence-approved-correction.json for commands, log paths and SHA256.
