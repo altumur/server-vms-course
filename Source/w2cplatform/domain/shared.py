@@ -249,12 +249,30 @@ class SharedView:
         self.vars, self.objects, self.wall = member_vars, member_objects, wall
 
     def document(self) -> dict | None:
-        raw = self.objects.get(OBJECT)
-        if raw is None:
-            return None
         from .agent import ClusterTrust, Untrusted
+        from .memberbook import holds
+        from w2cplatform.canonical import parse_json
         try:
-            return verify(json.loads(raw), ClusterTrust(self.vars).keyset(), self.wall())
+            pointer, _ = self.vars.get(POINTER)
+            if not pointer:
+                return None
+            member, _ = self.vars.get("domain/member")
+            own = (member or {}).get("cluster")
+            holder = bool(own) and holds(self.vars, own)
+            # The holder's pointer names its published object. Its carried copy,
+            # left from before a move, cannot stand in for that generation.
+            key = pointer["object"] if holder else OBJECT
+            if not holder and "object" in pointer:
+                return None
+            raw = self.objects.get(key)
+            if raw is None or hashlib.sha256(raw).hexdigest() != pointer["sha256"]:
+                return None
+            doc = verify(parse_json(raw), ClusterTrust(self.vars).keyset(), self.wall())
+            if type(doc.get("rev")) is not int or type(doc.get("term")) is not int \
+                    or doc["rev"] <= 0 or doc["term"] <= 0 \
+                    or _order(doc) != (int(pointer["term"]), int(pointer["rev"])):
+                return None
+            return doc
         except (NotTaken, Untrusted, *PARSE_ERRORS):
             return None                                  # nothing this member can check: no document, as unverified
 
