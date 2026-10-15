@@ -1,41 +1,812 @@
 openapi: 3.1.0
-info: {title: М10/4 двери контроллера, version: "1"}
-x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
+info:
+  title: M10/4 controller console doors
+  version: '1'
+  description: 'Normative shapes: 04-the-controller-and-placement.norms.md N2. /drain and /servers/... are console-root
+    routes; /policy, /unplaceable and /where belong to the selected subsystem. State, grants and dynamic id kind
+    require semantic checks.'
 paths:
   /policy:
-    get:  {responses: {"200": {description: "{servers: shared | distinct}"}}}
-    put:
-      requestBody: {content: {application/json: {schema: {type: object, required: [servers], properties: {servers: {enum: [shared, distinct]}}}}}}
-      responses: {"200": {description: записано, журнал policy.changed}, "400": {description: иное слово или ключ}}
-  /drain:
-    get:  {responses: {"200": {description: "{draining: <сервер> | \"\", safe: bool, subsystems: {<sub>: {draining, …}}}"}}}
-    post:
-      parameters: [{name: server, in: query, required: true, schema: {type: string}}]
-      responses: {"200": {description: дренаж начат}, "409": {description: "<s> is already draining; one server at a time"}}
-    delete: {responses: {"200": {description: дренаж снят}}}
-  /servers/{server}/labels:
-    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
     get:
-      parameters: [{name: labels, in: query, schema: {type: string}, description: "метки через запятую — проба без записи"}]
-      responses: {"200": {description: "{would_move: [<id>…]} — что переедет"}}
-    put:
-      requestBody: {content: {application/json: {schema: {type: object, required: [labels], properties: {labels: {type: array, items: {$ref: "#/components/schemas/label"}}}}}}}
-      responses: {"200": {description: "строка меток записана; {would_move?}"}, "400": {description: не список строк; метка не по азбуке}, "404": {description: сервер не известен}}
-    delete: {responses: {"200": {description: строка снята, действуют метки узла}}}
-  /servers/{server}/decommission:
-    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
-    post:
-      requestBody: {content: {application/json: {schema: {type: object, properties: {why: {type: string}, gone: {type: boolean}}}}}}
+      summary: Effective policy
       responses:
-        "202": {description: "запрос записан; контроллер исполнит проходом; {warning?} — ресурс никогда не слышали"}
-        "409": {description: "{error: server answers, server, may_confirm_gone}: сервер отвечает — ресурс, воркер или слот слышны менее LOST_AFTER назад"}
-        "404": {description: сервер не известен}
-    delete: {responses: {"200": {description: запрос отозван, отметка контроллера снята}}}
+        '200':
+          description: Effective policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    put:
+      summary: Write policy
+      responses:
+        '200':
+          description: Write policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Policy'
+  /drain:
+    get:
+      summary: Drain snapshot; lesson 10 N1.2
+      responses:
+        '200':
+          description: Drain snapshot; lesson 10 N1.2
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrainState'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    post:
+      summary: Start one-server drain
+      responses:
+        '200':
+          description: Start one-server drain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Draining'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '409':
+          description: Another server is already draining
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
+      parameters:
+      - name: server
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Server'
+    delete:
+      summary: Cancel drain
+      responses:
+        '200':
+          description: Cancel drain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Draining'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /servers/{server}/labels:
+    parameters:
+    - name: server
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Server'
+    get:
+      summary: Probe effective or proposed labels, without writing
+      responses:
+        '200':
+          description: Probe effective or proposed labels, without writing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelProbe'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Unknown server, or no such route. N4.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      parameters:
+      - name: labels
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
+          not:
+            pattern: '[^A-Za-z0-9_.:,\-]'
+    put:
+      summary: Write cluster-wide server labels
+      responses:
+        '200':
+          description: Write cluster-wide server labels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelsWritten'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Unknown server, or no such route. N4.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelsInput'
+    delete:
+      summary: Remove override and use node labels
+      responses:
+        '200':
+          description: Remove override and use node labels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Unknown server, or no such route. N4.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /servers/{server}/decommission:
+    parameters:
+    - name: server
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Server'
+    post:
+      summary: Record decommission request
+      responses:
+        '202':
+          description: Record decommission request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecommissionAccepted'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Unknown server, or no such route. N4.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '409':
+          description: Server answers, or gone confirmation is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerAnswers'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecommissionInput'
+    delete:
+      summary: Withdraw decommission request
+      responses:
+        '200':
+          description: Withdraw decommission request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Unknown server, or no such route. N4.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /unplaceable:
-    get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}
+    get:
+      summary: Units without an eligible worker
+      responses:
+        '200':
+          description: Units without an eligible worker
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unplaceable'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /where/{id}:
-    parameters: [{name: id, in: path, required: true, schema: {type: string}}]
-    get: {responses: {"200": {description: "{worker, server, …}"}, "404": {description: "{reason}: не размещена"}}}
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UnitId'
+    get:
+      summary: Placement and optional holder door
+      responses:
+        '200':
+          description: Placement and optional holder door
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Where'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: No placement, or no such route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotPlaced'
+                - $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
 components:
   schemas:
-    label: {type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9_.:\\-]{0,63}$"}   # одна азбука у меток единицы, сервера и узла
+    ConsoleRefusal:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+      description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
+    Denied:
+      allOf:
+      - $ref: '#/components/schemas/ConsoleRefusal'
+      - properties:
+          error:
+            const: denied
+    NoRoute:
+      allOf:
+      - $ref: '#/components/schemas/ConsoleRefusal'
+      - properties:
+          detail:
+            const: no such route
+          error:
+            const: no such path
+    Method:
+      allOf:
+      - $ref: '#/components/schemas/ConsoleRefusal'
+      - properties:
+          detail:
+            const: method
+          error:
+            const: method
+    Unavailable:
+      allOf:
+      - $ref: '#/components/schemas/ConsoleRefusal'
+      - properties:
+          error:
+            enum:
+            - busy
+            - denied
+            - unavailable
+    UnitId:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - enum:
+          - .
+          - ..
+        - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+      description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
+        Unicode-категории.'
+    Label:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: ^[A-Za-z0-9]
+      not:
+        pattern: '[^A-Za-z0-9_.:-]'
+    Server:
+      type: string
+      minLength: 1
+      not:
+        pattern: '[/\\]'
+    UnitRef:
+      type: string
+      pattern: ^[a-z][a-z0-9_-]{0,31}/[^/]+$
+      not:
+        anyOf:
+        - pattern: ^[^/]+/\.{1,2}$
+        - pattern: '[\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+    Policy:
+      type: object
+      required:
+      - servers
+      additionalProperties: false
+      properties:
+        servers:
+          type: string
+          enum:
+          - shared
+          - distinct
+    Draining:
+      type: object
+      required:
+      - draining
+      additionalProperties: false
+      properties:
+        draining:
+          type: string
+    Empty:
+      type: object
+      required: []
+      additionalProperties: false
+      properties: {}
+    LabelsInput:
+      type: object
+      required:
+      - labels
+      additionalProperties: false
+      properties:
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+    LabelProbe:
+      type: object
+      required:
+      - would_move
+      additionalProperties: false
+      properties:
+        would_move:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitRef'
+    LabelsWritten:
+      type: object
+      required:
+      - will_move
+      additionalProperties: false
+      properties:
+        will_move:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitRef'
+    DecommissionInput:
+      type: object
+      required: []
+      additionalProperties: false
+      properties:
+        why:
+          type: string
+        gone:
+          type: boolean
+    DecommissionAccepted:
+      type: object
+      required: []
+      additionalProperties: false
+      properties:
+        warning:
+          type: string
+          minLength: 1
+    ServerAnswers:
+      type: object
+      required:
+      - detail
+      - error
+      - server
+      - may_confirm_gone
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: server answers
+        server:
+          $ref: '#/components/schemas/Server'
+        may_confirm_gone:
+          type: boolean
+    NotPlaced:
+      type: object
+      required:
+      - reason
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+    Unplaceable:
+      type: object
+      required:
+      - id
+      - labels
+      - workers_live
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/UnitId'
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        workers_live:
+          type: integer
+          minimum: 0
+        why:
+          type: string
+          minLength: 1
+    Door:
+      type: object
+      required:
+      - url
+      - token
+      - expires
+      - routes
+      additionalProperties: false
+      properties:
+        url:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+        expires:
+          type: number
+        routes:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    Where:
+      type: object
+      required:
+      - worker
+      - server
+      - reason
+      - directory
+      - scans
+      additionalProperties: false
+      properties:
+        worker:
+          type: string
+          minLength: 1
+        server:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+        directory:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+        scans:
+          type: integer
+          minimum: 0
+        door:
+          $ref: '#/components/schemas/Door'
+    SubsystemDrain:
+      type: object
+      required:
+      - draining
+      - subsystem
+      - workers
+      - units
+      - pending_writes
+      - would_strand
+      - safe
+      additionalProperties: false
+      properties:
+        draining:
+          type: string
+        subsystem:
+          type: string
+          minLength: 1
+        workers:
+          type: integer
+          minimum: 0
+        units:
+          type: integer
+          minimum: 0
+        pending_writes:
+          type: integer
+          minimum: 0
+        would_strand:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitId'
+        safe:
+          type: boolean
+        pending_unsaid:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    DrainState:
+      type: object
+      required:
+      - draining
+      - safe
+      - would_strand
+      - subsystems
+      additionalProperties: false
+      properties:
+        draining:
+          type: string
+        safe:
+          type: boolean
+        would_strand:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/UnitId'
+        subsystems:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SubsystemDrain'
+  responses:
+    BadBody:
+      description: Invalid request form or body transport; lessons 4 and 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsoleRefusal'
+    Unauthenticated:
+      description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Denied'
+    Denied:
+      description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Denied'
+    NoRoute:
+      description: No route; lesson 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NoRoute'
+    Method:
+      description: Method not supported by this path; lesson 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Method'
+    SlowBody:
+      description: Тело читается слишком медленно; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsoleRefusal'
+    LargeBody:
+      description: Тело больше предела консоли; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsoleRefusal'
+    RateLimited:
+      description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.
+      headers:
+        Retry-After:
+          description: Срок повтора по правилу предела входа.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsoleRefusal'
+    Unavailable:
+      description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+        confirmed. Read state before retrying a mutation.'
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema:
+            type: string
+            const: '1'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unavailable'
