@@ -162,6 +162,14 @@ components:
                               "\n## Чеклист готовности\nNo items yet.\n")
         self.assert_cli(1, "no normative checklist ids")
 
+    def test_checklist_ends_at_same_or_higher_heading(self):
+        original = self.norms.read_text()
+        for heading in ["# Appendix", "Appendix\n========", "## Appendix"]:
+            with self.subTest(heading=heading):
+                self.norms.write_text(original.replace("## Чеклист готовности\n",
+                                      "## Чеклист готовности\nNo items.\n\n" + heading + "\n"))
+                self.assert_cli(1, "no normative checklist ids")
+
     def test_unfilled_template(self):
         self.lesson.write_text("# {{TITLE}}\n")
         self.assertTrue(self.check().errors)
