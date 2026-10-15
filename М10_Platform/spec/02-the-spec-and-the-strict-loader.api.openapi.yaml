@@ -38,7 +38,7 @@ components:
             additionalProperties: false
             properties:
               name: {type: string}
-              type: {type: string}
+              type: {type: string, enum: [string, int, float, bool, list, json, url, blob]}
               default: {}
               required: {type: boolean}
               fixed: {type: boolean}
