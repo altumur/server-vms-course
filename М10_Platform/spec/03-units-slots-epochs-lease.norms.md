@@ -42,7 +42,7 @@ platform rows:
 objects:                               # объекты, не строки (урок 5, 8, 10)
   <sub>/heartbeats/<имя>, <sub>/contenders/<имя>/<коробка>, <sub>/snapshot/*, <sub>/controller/pass,
   <sub>/blobs/<дайджест>, <sub>/commands/<id>
-reserved_table_names:   [<rows>, policy, slots, holds, epoch, idem, requests, asked, servers, decommissioned, controller]
+reserved_table_names:   [<rows>, next_id, policy, slots, holds, epoch, idem, placement, workers, requests, asked, sweep, servers, decommissioned, controller]
 ```
 
 `controller` не может быть именем unit.rows или таблицы подсистемы: этот префикс содержит
