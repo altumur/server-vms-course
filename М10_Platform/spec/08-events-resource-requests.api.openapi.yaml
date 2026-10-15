@@ -1,0 +1,63 @@
+openapi: 3.1.0
+info: {title: М10/8 двери ресурса и просьб, version: "1"}
+paths:
+  /v1/objects:                               # ресурс
+    get:
+      parameters: [{name: prefix, in: query, schema: {type: string}}, {name: scope, in: query, schema: {enum: [local, cluster]}}]
+      responses: {"200": {description: "{server, objects: {key: {written, server, size}}, missing?: [server]}"}, "400": {description: scope или prefix не по форме}, "503": {description: листинг не удался}}
+  /v1/objects/{key}:
+    parameters: [{name: key, in: path, required: true, schema: {type: string}}]
+    get:
+      responses: {"200": {description: "байты; заголовки X-Written, X-Server, X-Missing"}, "403": {description: семья не выдаётся дверью или строка-объект}, "404": {description: ни у кого нет}, "503": {description: копия не читается}}
+    put:    {description: "только blobs — приём копии тела; владелец двери и полный список кодов — урок 10 Н2", responses: {"204": {description: копия принята (остальные коды — урок 10)}}}
+  /buckets/{sub}/{unit}:
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: unit, in: path, required: true, schema: {type: string}}]
+    get:    {responses: {"200": {description: строки JSON по бакету}, "404": {description: нет такого бакета}, "403": {description: не своя подсистема}}}
+  /events:                                   # ресурс и консоль (консоль — слияние)
+    get:
+      parameters:
+        - {name: from, in: query, schema: {type: number}}
+        - {name: to, in: query, schema: {type: number}}
+        - {name: kind, in: query, schema: {type: string}}
+        - {name: subsystem, in: query, schema: {type: string}}
+        - {name: unit, in: query, schema: {type: string}, description: "<sub>/<id>, не голый id"}
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: keep, in: query, schema: {type: string, enum: [newest, oldest]}}
+        - {name: class, in: query, schema: {type: string}}
+        - {name: by, in: query, schema: {type: string}}
+      responses:
+        "200": {description: "{events: [row], state, truncated} (+ complete, incomplete у консоли)"}
+        "400": {description: "keep/class/by не из слов; unit — голый id; limit не число"}
+        "503": {description: "busy: N queries already being answered (Retry-After: 1) | this resource runs no event index"}
+  /events/wait:
+    get:    {parameters: [{name: want, in: query, schema: {type: string}}, {name: timeout, in: query, schema: {type: integer}}, {name: since, in: query, schema: {type: string}}, {name: client, in: query, schema: {type: string}}], description: долгий опрос новых строк, responses: {"200": {description: "{events, state} — по таймауту пусто"}, "400": {description: want или since не по форме}, "503": {description: busy | индекса нет}}}
+  /events/{path}:
+    parameters: [{name: path, in: path, required: true, schema: {type: string}}]
+    get:    {description: файл бакета потоком; Range, responses: {"200": {description: байты бакета}, "206": {description: часть по Range}, "404": {description: нет такого бакета}, "416": {description: Range вне файла}}}
+  /mirror/{server}/{path}:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
+    put:    {requestBody: {required: true, content: {application/octet-stream: {schema: {type: string, format: binary}}}}, parameters: [{name: X-Sum, in: header, required: true, schema: {type: string}, description: sha256 тела}], responses: {"204": {description: копия принята}, "400": {description: нет или плохая сумма}, "413": {description: "> 64 MiB"}, "408": {description: тело пришло слишком медленно}, "422": {description: тело не совпало с суммой}}}
+  /mirrored/{server}:  # ресурс: что у меня лежит копиями бакетов сервера (restore — урок 11)
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
+    get:    {responses: {"200": {description: "{copies: [{path, written, size, sum}]}"}, "404": {description: копий этого сервера нет}}}
+  /mirrored/{server}/{path}:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
+    get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
+  /marks:                                    # консоль
+    post:   {description: "отметка оператора: {unit, note} → строка kind mark в console/<экземпляр>/e1 с of = unit", requestBody: {required: true, content: {application/json: {schema: {type: object, required: [unit], properties: {unit: {type: string}, note: {type: string}}}}}}, responses: {"200": {description: "{written: true}"}, "400": {description: unit отсутствует или не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
+  /{sub}/requests:  # консоль
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
+    post:
+      parameters: [{name: Idempotency-Key, in: header, required: true, schema: {type: string}}]
+      requestBody: {content: {application/json: {schema: {type: object, required: [unit]}}}}
+      responses:
+        "202": {description: "{queued: rid}"}
+        "200": {description: "{answered}: тот же rid с тем же отпечатком уже имеет метку с исходом (answer или no_begun); begun без исхода — 202"}
+        "400": {description: "bad unit | bad id | refused (fault too_long) | too far | bad deadline"}
+        "404": {description: "no requests | no such unit"}
+        "409": {description: "exists | spent — rid занят иным запросом"}
+        "429": {description: "too many — per_person; учёт не читается"}
+        "503": {description: "busy | store unavailable"}
+  /{sub}/asked/{sha16}:
+    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: sha16, in: path, required: true, schema: {type: string}}]
+    delete: {description: снять учёт человека, responses: {"200": {description: "{cleared: true}"}, "404": {description: учёта нет}}}
