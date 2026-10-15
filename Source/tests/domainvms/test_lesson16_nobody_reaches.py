@@ -26,7 +26,8 @@ from vms.ingest import LINGER, CameraPusher, IngestLiveEndpoint, Refused, audien
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
-from tests.domain.conftest import Clock, make_cluster, real_card
+from tests.domain.conftest import Clock, make_cluster
+from tests.vmsconftest import real_card
 from tests.vmsconftest import ingest_recorder
 
 SERIAL = "SN5001"
