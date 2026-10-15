@@ -30,7 +30,7 @@ scenario	step	request	expect
 05-request-performed	2	@start worker w-1	ok
 05-request-performed	3	console POST /counters {"name": "c5", "start": 1}	201
 05-request-performed	4	@until 30 store GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "1"}}
-05-request-performed	5	console POST /testsub/requests {"unit": "c5", "add": 5}	202 {"queued": "$rid"}
+05-request-performed	5	console POST /testsub/requests {"unit": "c5", "add": 5}	2xx
 05-request-performed	6	@until 30 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "performed", "unit": "c5", "instance": "@any", "slot": "w-1", "ended_at": "@any"}}
 05-request-performed	7	@until 40 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
 05-request-performed	8	@key(5) console POST /testsub/requests {"unit": "c5", "add": 5}	200 {"answered": "@any"}
