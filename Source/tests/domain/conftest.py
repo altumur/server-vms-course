@@ -10,30 +10,24 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Source/
 
-from vms.controller import VmsController  # noqa: E402
 from w2cplatform.cluster.objectstore import FsObjectStore  # noqa: E402
-from w2cplatform.cluster.variables import FakeVariables  # noqa: E402
-from vms.worker import VmsWorker  # noqa: E402
+from w2cplatform.cluster.variables import FakeVariables, Conflict  # noqa: E402
+from w2cplatform.epoch import next_epoch  # noqa: E402
 from w2cplatform.domain.federation import Cluster, Federation, Unreachable  # noqa: E402
-from vms.worker import FakeActuator  # noqa: E402
+
+
+def _ensure_camera_spec():
+    """Load the public sample contract for camera-as-member fixtures without importing its implementation."""
+    from pathlib import Path
+    from w2cplatform import catalog
+    if "cam" not in catalog.specs():
+        catalog.load_dir(Path(__file__).parents[2] / "vms")
 
 
 class Clock:
     def __init__(self, t=1000.0): self.t = t
     def __call__(self): return self.t
     def advance(self, s): self.t += s
-
-
-def real_card(t0: float, t1: float, recording: str = "1-card", step: float = 1.0, size: int = 256, card=None):
-    """A REAL card — `vms.card.CardBuffer`, the camera's buffer of segment files, no engine — holding `[t0, t1)` of
-    `recording`: a frame every `step` seconds of `size` bytes, a key frame every two seconds. Its reader for a pusher
-    is `card.pieces` (the sixth review: the tests of the card ran on fakes that returned what no card returns)."""
-    from vms.card import CardBuffer
-    from vms.worker import fake_samples
-    card = card or CardBuffer(tempfile.mkdtemp(prefix="card-"))
-    for s in fake_samples(t0, t1, step=step, gop=2.0, size=size):
-        card.append(f"{recording}/e1", s)
-    return card
 
 
 class Link:
@@ -83,45 +77,167 @@ def make_domain(spec: dict[str, tuple], domain_holder: str) -> tuple[Federation,
 
 
 class Running:
-    """A cluster with М11's real controller and workers running on it: what
-    the domain sees is exactly what they publish — the snapshot and the
-    heartbeats — and nothing else."""
-
+    """A generic testsub controller and worker, with no subsystem implementation involved."""
     def __init__(self, cluster: Cluster, wall: Clock, workers=(("w-0", "srv-1"),), capacity: int = 50):
+        from w2cplatform.spec import SpecController
+        from tests.conftest import CounterWorker, testsub
+        from w2cplatform import catalog
         self.c, self.wall = cluster, wall
-        self.ctl = VmsController(cluster.vars, cluster.objects, capacity=capacity, wall=wall, cluster=cluster.name)
-        self.workers: dict[str, VmsWorker] = {}
-        self.alloc = 0
+        self.spec = testsub()
+        catalog.register(self.spec)
+        self.ctl = SpecController(self.spec, cluster.vars, cluster.objects, wall=wall, cluster=cluster.name)
+        self.workers = {}
         for name, server in workers:
-            self.add_worker(name, server, capacity)
+            worker = CounterWorker(cluster.vars, cluster.objects, name=name, server=server, capacity=capacity,
+                                   wall=wall, clock=wall)
+            worker.heartbeat_once()
+            self.workers[name] = worker
 
-    def add_worker(self, name: str, server: str, capacity: int = 50) -> VmsWorker:
-        self.alloc += 1
-        env = {"SLOT_INDEX": name.split("-")[1], "SERVER_NAME": server, "INSTANCE_ID": f"{self.c.name}-alloc-{self.alloc}",
-               "LABELS": ",".join(sorted(self.c.reaches))}
-        w = VmsWorker(None, self.c.vars, self.c.objects, FakeActuator(), env=env, clock=self.wall, wall=self.wall, capacity=capacity)
-        w.heartbeat_once()
-        self.workers[name] = w
-        return w
-
-    def create(self, *refs, **fields) -> list[int]:
-        """Cameras the domain forwarded (by ref); the cluster's controller places them
-        on its workers; then everybody heartbeats and the snapshot goes out."""
-        ids = []
+    def create(self, *refs, **fields):
+        out = []
         for ref in refs:
-            r = self.ctl.create_camera({"name": f"cam{ref}", "source": f"driverpack://file/{ref}.mp4", "ref": str(ref), **fields})
-            ids.append(r["id"])
-        self.ctl.ensure_placed()
+            row = self.ctl.create({"name": str(ref), "start": 1, "labels": [], **fields})
+            out.append(row["name"])
         self.tick()
-        return ids
+        return out
 
-    def tick(self) -> None:
-        for w in self.workers.values():
-            w.reconcile_once(); w.heartbeat_once()
+    def tick(self):
+        self.ctl.ensure_placed()
+        for worker in self.workers.values():
+            worker.reconcile_once()
+            worker.heartbeat_once()
         self.ctl.publish_snapshot()
 
 
+class DomainTestsub2:
+    """Generic domain-member stand for the platform's second fixture subsystem.
+
+    It uses only the platform's spec/controller and public snapshot format. Its tally can be named in generic
+    domain/book tests without a VMS schema or implementation participating in the process.
+    """
+    def __init__(self, cluster: Cluster, wall: Clock):
+        from tests.conftest import testsub2
+        from w2cplatform import catalog
+        from w2cplatform.spec import SpecController
+        self.cluster, self.wall = cluster, wall
+        self.spec = testsub2()
+        catalog.register(self.spec)
+        self.ctl = SpecController(self.spec, cluster.vars, cluster.objects, wall=wall, cluster=cluster.name)
+
+    def create(self, name: str, of: str, **fields):
+        return self.ctl.create({"name": name, "of": str(of), **fields})
+
+    def publish(self):
+        self.ctl.publish_snapshot()
+
+
+class Flash:
+    """A counting wrapper around the platform variables used by an embedded-member fixture."""
+    def __init__(self, inner): self.inner, self.writes = inner, 0
+    def get(self, path): return self.inner.get(path)
+    def list(self, prefix): return self.inner.list(prefix)
+    def put(self, path, items, cas=None, *, guard=None):
+        out = self.inner.put(path, items, cas, guard=guard); self.writes += 1; return out
+    def delete(self, path, cas=None, *, guard=None):
+        out = self.inner.delete(path, cas, guard=guard); self.writes += 1; return out
+
+
+class Ram:
+    """Thread-safe volatile object store used by the embedded-member fixture."""
+    def __init__(self): self._d = {}
+    def put(self, key, data): self._d[key] = bytes(data)
+    def get(self, key): return self._d.get(key)
+    def list(self, prefix): return sorted(k for k in self._d if k.startswith(prefix))
+    def delete(self, key): return self._d.pop(key, None) is not None
+
+
+class _Door:
+    def __init__(self, device, store_of): self.device, self.store_of = device, store_of
+    def _open(self):
+        if not self.device.door_open: raise Unreachable(f"{self.device.name} did not answer")
+        return self.store_of()
+    def get(self, *a): return self._open().get(*a)
+    def put(self, *a, **kw): return self._open().put(*a, **kw)
+    def list(self, *a): return self._open().list(*a)
+    def delete(self, *a, **kw): return self._open().delete(*a, **kw)
+
+
+class _Local:
+    def __init__(self, device): self.device = device
+    def get(self, key): return self.device.ram.get(key)
+    def list(self, prefix): return self.device.ram.list(prefix)
+    def put(self, key, data): return self.device.ram.put(key, data)
+
+
+class _LocalConsole:
+    def __init__(self, device): self.device = device
+    def update_unit(self, unit, fields, subject=None): return self.device._update(unit, fields, subject)
+
+
+class EmbeddedMember:
+    """Generic, in-process one-unit platform member fixture for domain tests.
+
+    It writes the public snapshot and heartbeat shapes directly. It does not load a subsystem spec, worker or
+    controller; tests of those belong beside the subsystem under tests/domainvms.
+    """
+    ROW, EPOCH = "cam/cameras/1", "cam/epoch/1"
+    def __init__(self, serial, flash_vars, wall, name=None, reaches=(), address=None, disk=None, pushes=False, can=None):
+        _ensure_camera_spec()
+        self.serial = str(serial); self.name = name or f"cam-{self.serial}"
+        self.flash, self.ram, self.wall = Flash(flash_vars), Ram(), wall
+        self.disk = disk or Ram(); self.reaches = frozenset(reaches); self.address = address or f"{self.name}.local"
+        self.epoch = self.boots = 0; self.door_open = False; self.pushes = pushes; self.can = can
+        self.coverage = None; self.taken_by = set()
+    def row(self):
+        items, _ = self.flash.get(self.ROW)
+        if not items: return {}
+        from w2cplatform import catalog
+        spec = catalog.spec("cam")
+        return {k: v for k, v in spec.row(items).items() if k in items} if spec else dict(items)
+    def boot(self, first_name=None):
+        self.door_open = False; self.ram = Ram()
+        self.epoch, _ = next_epoch(self.flash, self.EPOCH)
+        if self.flash.get(self.ROW)[0] is None:
+            self.flash.put(self.ROW, {"id": 1, "ref": self.serial, "name": first_name or self.serial, "revision": 1}, cas=0)
+        self.boots += 1; self.publish(); self.door_open = True
+        return self.epoch
+    def power_off(self): self.door_open = False
+    def publish(self):
+        row = self.row(); now = self.wall(); rev = int(row.get("revision", 1))
+        status = {"id": 1, "ref": self.serial, "name": row.get("name", ""), "enabled": True,
+                  "phase": "running", "position": "converged", "revision": rev,
+                  "observed_revision": rev, "epoch": self.epoch}
+        hb = {"worker": self.serial, "ts": now, "server": self.serial, "instance": f"{self.name}-boot-{self.boots}",
+              "capacity": 1, "headroom": 0, "status": [status], "polls": True, "taken_by": sorted(self.taken_by)}
+        self.ram.put(f"cam/heartbeats/{self.serial}", json.dumps(hb).encode())
+        self.ram.put(f"cam/snapshot/{self.serial}", json.dumps({"cluster": self.name, "worker": self.serial, "ts": now,
+                    "cameras": [{**row, "worker": self.serial, "server": self.serial}]}).encode())
+    def cluster(self, domain=False): return Cluster(self.name, _Door(self, lambda: self.flash), _Door(self, lambda: self.ram), self.reaches, domain)
+    def local_objects(self): return _Local(self)
+    def disk_door(self): return _Door(self, lambda: self.disk)
+    def local_console(self): return _LocalConsole(self)
+    def update_unit(self, unit, fields, subject=None):
+        if not self.door_open: raise Unreachable(f"{self.name} did not answer")
+        return self._update(unit, fields, subject)
+    def _update(self, unit, fields, subject=None):
+        if str(unit) not in ("1", self.serial): raise RuntimeError("unit not found")
+        from w2cplatform.domain.api import refuse_addresses
+        refuse_addresses(fields)
+        for _ in range(10):
+            items, idx = self.flash.get(self.ROW); row = dict(items or {}); row.update(fields)
+            row["revision"] = int(row.get("revision", 1)) + 1
+            try: self.flash.put(self.ROW, row, cas=idx); break
+            except Conflict: continue
+        else: raise RuntimeError("row changed repeatedly")
+        self.publish(); return {"revision": row["revision"]}
+    def current(self, ref): return (1, self.row()) if str(ref) == self.serial else None
+    def rec_prefix(self): return f"rec/{self.serial}/e{self.epoch}/"
+
+
+def member_name(serial): return f"cam-{serial}"
+
 def snapshot(cluster: Cluster, cameras: dict[int, tuple[str, str]], ts: float) -> None:
+    _ensure_camera_spec()
     """A cluster's snapshot written by hand — ONE OBJECT PER WORKER, which is the
     shape М10's controller publishes: {camera: (worker, server)}."""
     shards: dict[str, list] = {}
@@ -135,7 +251,8 @@ def snapshot(cluster: Cluster, cameras: dict[int, tuple[str, str]], ts: float) -
 
 def heartbeat(cluster: Cluster, worker: str, cams: list[int], ts: float, server: str = "srv-1", epoch: int = 1,
               revision: int = 1, observed: int | None = None, phase: str = "running") -> None:
-    """What М10's worker writes: its status per camera."""
+    _ensure_camera_spec()
+    """What the generic domain test fixture publishes in the platform's heartbeat shape."""
     cluster.objects.put(f"cam/heartbeats/{worker}", json.dumps({
         "worker": worker, "ts": ts, "server": server, "instance": f"{worker}-i", "capacity": 50, "headroom": 50 - len(cams),
         "status": [{"id": c, "name": f"cam{c}", "enabled": True, "phase": phase, "position": "converged",
