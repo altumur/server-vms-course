@@ -1,4 +1,4 @@
-# М10/1 — дверь хранилища строк: HTTP-контракт. Семантика операций — norms.md Н3, отказы — Н4; транспорт — Н2.
+# М10/1 — дверь хранилища строк: HTTP-контракт. Семантика операций — 01-storage.norms.md Н3, отказы — Н4; транспорт — Н2.
 openapi: 3.1.0
 info: {title: Дверь хранилища строк, version: "1"}
 paths:
@@ -63,13 +63,20 @@ components:
       properties:
         op: {type: string, enum: [put, delete]}
         key: {type: string}
-        items: {type: object, additionalProperties: {type: string}}  # у put обязателен (МОЖЕТ быть пустым); у delete не читается: прислать — не отказ
         cas: {type: [string, "null"]}                                 # см. Н1
         guard:
           type: object
           required: [key, index]
           properties: {key: {type: string}, index: {type: string}}
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+      oneOf:
+        - properties:
+            op: {const: put}
+            items: {type: object, additionalProperties: {type: string}}
+          required: [items]  # у put обязателен; МОЖЕТ быть пустым объектом
+        - properties:
+            op: {const: delete}
+            items: {}  # у delete не читается: любое JSON-значение или отсутствие — не отказ
     Written:
       type: object
       required: [index]

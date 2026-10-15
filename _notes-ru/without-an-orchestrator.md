@@ -204,9 +204,9 @@ status: draft
 - [«Что будет вместо Nomad Variables, если нас поставят в Kubernetes»](instead-of-nomad-variables.md) — переезд между оркестраторами, части про метки узла и про `Lease`
 - [`КАМЕРЫ-НА-ПЛАТФОРМЕ.md`](../КАМЕРЫ-НА-ПЛАТФОРМЕ.md) — камера как кластер из одного, книги домена
 - [М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md) — «три или пять, никогда два», два сервера как два кластера из одного
-- [М10/1](../М10_Platform/01-storage/lecture.md) — хранилище становится реплицируемым: группа из одного, вступление, API и отказы
+- [М10/1](../М10_Platform/01-storage.md) — хранилище становится реплицируемым: группа из одного, вступление, API и отказы
 - [М10/8](../М10_Platform/08-events-resource-requests.md) — объекты как файлы на каждом сервере
 - [«Оркестратор как форма поставки»](orchestrator-as-a-delivery-form.md) — пять случаев, приложение `deploy/nomad/`, лицензия Nomad
 - [М12 урок 16](../М12B_DomainVMS/03-a-camera-nobody-can-reach.md), шаг 9 — резерв на втором сервере, один поток
-- [М10/1](../М10_Platform/01-storage/lecture.md) — шов хранилища по схеме URL
+- [М10/1](../М10_Platform/01-storage.md) — шов хранилища по схеме URL
 - [hashicorp/raft](https://github.com/hashicorp/raft) — библиотека консенсуса

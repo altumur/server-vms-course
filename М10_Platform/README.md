@@ -4,7 +4,7 @@
 
 | № | Урок | Состояние |
 |---|---|---|
-| 1 | [Словарь операций хранилища](01-storage/lecture.md) — лекция; [нормы](01-storage/spec/norms.md), [дверь](01-storage/spec/api.openapi.yaml), [инструкция реализации](01-storage/spec/README.md) | образец новой формы (ADR-0080 доп. 2026-10-15) |
+| 1 | [Словарь операций хранилища](01-storage.md) — лекция; [нормы](spec/01-storage.norms.md), [дверь](spec/01-storage.api.openapi.yaml), [инструкция реализации](spec/01-storage.README.md) | образец новой формы (ADR-0080 доп. 2026-10-15) |
 | 2 | [Спека подсистемы и строгий загрузчик](02-the-spec-and-the-strict-loader.md) | в main (2026-10-14) |
 | 3 | [Единицы, строки, слоты, аренда](03-units-slots-epochs-lease.md) | в main (2026-10-14) |
 | 4 | [Контроллер и размещение](04-the-controller-and-placement.md) | в main (2026-10-14) |
