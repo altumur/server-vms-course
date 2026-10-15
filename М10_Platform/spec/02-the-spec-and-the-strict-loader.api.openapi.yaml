@@ -6,13 +6,20 @@ paths:
     get:
       summary: форма подсистемы, какой её загрузила консоль; слова display — как написаны
       responses:
-        "404": {description: "нет маршрута — консоль, урок 9 Н4"}
-        "405": {description: метод не GET}
         "200":
-          description: форма подсистемы, какой её загрузила консоль (SpecView); у работающей консоли — всегда
+          description: Форма подсистемы, какой её загрузила консоль; ревизии в ответе нет.
           content:
             application/json:
               schema: {$ref: "#/components/schemas/SpecView"}
+        "400": {$ref: "#/components/responses/BadBody"}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Denied"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "405": {$ref: "#/components/responses/Method"}
+        "408": {$ref: "#/components/responses/SlowBody"}
+        "413": {$ref: "#/components/responses/LargeBody"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
 components:
   schemas:
     SpecView:
@@ -39,7 +46,13 @@ components:
               enum: {type: array, items: {type: [string, boolean]}}
               inherit: {}
               merge: {type: string}
-        about: {type: object}                  # {sub, field}, когда объявлен
+        about:
+          type: object
+          required: [sub, field]
+          additionalProperties: false
+          properties:
+            sub: {type: string}
+            field: {type: string}
         display: {type: object}                # как написано в спеке, без чтения
         servers: {type: object}                # {show, status}, когда объявлены
         door: {type: object}                   # {routes}, когда объявлены
@@ -48,6 +61,91 @@ components:
         metrics:
           type: object
           required: [prefix, running]
+          additionalProperties: false
           properties: {prefix: {type: string}, running: {type: string}}
         running_gauge: {type: string}          # <name>_<console.running>
         workers_gauge: {type: string}          # <name>_workers_live
+    ConsoleRefusal:
+      type: object
+      required: [detail, error]
+      additionalProperties: false
+      properties:
+        detail: {type: string}
+        error: {type: string}
+      description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
+    Denied:
+      allOf:
+        - $ref: "#/components/schemas/ConsoleRefusal"
+        - properties:
+            error: {const: denied}
+    NoRoute:
+      allOf:
+        - $ref: "#/components/schemas/ConsoleRefusal"
+        - properties:
+            detail: {const: no such route}
+            error: {const: no such path}
+    Method:
+      allOf:
+        - $ref: "#/components/schemas/ConsoleRefusal"
+        - properties:
+            detail: {const: method}
+            error: {const: method}
+    Unavailable:
+      allOf:
+        - $ref: "#/components/schemas/ConsoleRefusal"
+        - properties:
+            error: {enum: [busy, denied]}
+  responses:
+    BadBody:
+      description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ConsoleRefusal"}
+    Unauthenticated:
+      description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Denied"}
+    Denied:
+      description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Denied"}
+    NoRoute:
+      description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/NoRoute"}
+    Method:
+      description: Метод не GET.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Method"}
+    SlowBody:
+      description: Тело читается слишком медленно; урок 9 Н4.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ConsoleRefusal"}
+    LargeBody:
+      description: Тело больше предела консоли; урок 9 Н4.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ConsoleRefusal"}
+    RateLimited:
+      description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.
+      headers:
+        Retry-After:
+          description: Срок повтора по правилу предела входа.
+          schema: {type: string}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ConsoleRefusal"}
+    Unavailable:
+      description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9).
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema: {type: string, const: "1"}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Unavailable"}
