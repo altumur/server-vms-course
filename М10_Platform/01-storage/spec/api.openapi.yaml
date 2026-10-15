@@ -1,0 +1,98 @@
+# М10/1 — дверь хранилища строк: HTTP-контракт. Семантика операций — norms.md Н3, отказы — Н4; транспорт — Н2.
+openapi: 3.1.0
+info: {title: Дверь хранилища строк, version: "1"}
+paths:
+  /v1/get:
+    get:
+      summary: прочитать
+      parameters:
+        - {name: key, in: query, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: строка; отсутствующая — items null, index ""
+          content: {application/json: {schema: {$ref: "#/components/schemas/Row"}}}
+        "400": {$ref: "#/components/responses/BadKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /v1/list:
+    get:
+      summary: перечислить
+      parameters:
+        - {name: prefix, in: query, required: false, schema: {type: string}}
+      responses:
+        "200":
+          description: каждый ключ с данным префиксом и его версия; ключи — в порядке байтов
+          content: {application/json: {schema: {$ref: "#/components/schemas/Listing"}}}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /v1/write:
+    post:
+      summary: записать или удалить
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: "#/components/schemas/Cmd"}}}
+      responses:
+        "200":
+          description: сделано; again — ответ прежнего применения записи с этим id
+          content: {application/json: {schema: {$ref: "#/components/schemas/Written"}}}
+        "400": {$ref: "#/components/responses/BadRequestOrKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+        "412": {$ref: "#/components/responses/Guard"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "503": {$ref: "#/components/responses/UnavailableOrAmbiguous"}
+components:
+  schemas:
+    Row:
+      type: object
+      required: [items, index]
+      properties:
+        items: {type: [object, "null"], additionalProperties: {type: string}}
+        index: {type: string}
+        unreadable: {type: boolean}   # строка есть, но не читается (повреждена на носителе): items null, index — её настоящая версия; put с cas по этой версии заменяет её; у группы не бывает (М10/1-18)
+    Listing:
+      type: object
+      required: [keys]
+      properties:
+        keys: {type: object, additionalProperties: {type: string}}   # ключ → версия
+    Cmd:
+      type: object
+      required: [op, key]
+      properties:
+        op: {type: string, enum: [put, delete]}
+        key: {type: string}
+        items: {type: object, additionalProperties: {type: string}}  # у put обязателен (МОЖЕТ быть пустым); у delete не читается: прислать — не отказ
+        cas: {type: [string, "null"]}                                 # см. Н1
+        guard:
+          type: object
+          required: [key, index]
+          properties: {key: {type: string}, index: {type: string}}
+        id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+    Written:
+      type: object
+      required: [index]
+      properties:
+        index: {type: string}
+        again: {type: boolean}
+    Fault:
+      type: object
+      required: [kind, error]
+      properties:
+        kind: {type: string, enum: [badkey, badrequest, forbidden, conflict, guard, toolarge, unavailable, ambiguous]}
+        error: {type: string}        # для человека; не цитирует присланного, кроме ключа
+        key: {type: string}          # guard — строка-страж; toolarge — ключ
+        index: {type: string}        # conflict — версия строки сейчас; guard — версия стража сейчас ("" — нет)
+        size: {type: integer}        # toolarge
+        limit: {type: integer}       # toolarge
+  responses:
+    BadKey:        {description: "kind badkey",  content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    BadRequestOrKey: {description: "kind badrequest или badkey", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    Forbidden:     {description: "kind forbidden (урок 6)", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    Conflict:      {description: "kind conflict", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    Guard:         {description: "kind guard",    content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    TooLarge:      {description: "kind toolarge", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    Unavailable:   {description: "kind unavailable", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    NoRoute: {description: "нет маршрута — kind badrequest (Н4, сц. 17)", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
+    UnavailableOrAmbiguous: {description: "kind unavailable или ambiguous", content: {application/json: {schema: {$ref: "#/components/schemas/Fault"}}}}
