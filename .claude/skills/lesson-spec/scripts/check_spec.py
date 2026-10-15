@@ -139,6 +139,12 @@ def markdown_links(tokens):
     for token in tokens:
         if token.type == "link_open":
             yield token.attrGet("href")
+        elif token.type == "image":
+            yield token.attrGet("src")
+            # Children form the alt text, not independently rendered links or HTML.
+            continue
+        elif token.type in {"html_inline", "html_block"}:
+            raise ValueError("unsupported raw HTML; local links/resources need a separate check")
         if token.children:
             yield from markdown_links(token.children)
 
@@ -149,13 +155,27 @@ def validate(document):
 
 
 def pointer(document, ref):
-    if not isinstance(ref, str) or not (ref == "#" or ref.startswith("#/")):
+    if not isinstance(ref, str) or not ref.startswith("#"):
         raise ValueError(f"external or unsupported reference {ref!r}; not checked offline")
+    encoded = ref[1:]
+    if re.search(r"%(?![0-9a-fA-F]{2})", encoded):
+        raise ValueError("invalid percent escape in JSON Pointer URI fragment")
+    fragment = unquote(encoded, encoding="utf-8", errors="strict")
+    if fragment and not fragment.startswith("/"):
+        raise ValueError(f"unsupported reference {ref!r}; expected root JSON Pointer")
     value = document
-    fragment = unquote(ref[1:])
     for part in fragment.split("/")[1:]:
+        if re.search(r"~(?![01])", part):
+            raise ValueError(f"invalid JSON Pointer escape in token {part!r}")
         part = part.replace("~1", "/").replace("~0", "~")
-        value = value[int(part)] if isinstance(value, list) else value[part]
+        if isinstance(value, list):
+            if not re.fullmatch(r"0|[1-9][0-9]*", part):
+                raise ValueError(f"invalid JSON Pointer array index {part!r}")
+            value = value[int(part)]
+        elif isinstance(value, dict):
+            value = value[part]
+        else:
+            raise ValueError(f"JSON Pointer cannot traverse a scalar at token {part!r}")
     return value
 
 
@@ -182,15 +202,18 @@ class Check:
     def markdown(self, path, text):
         if re.search(r"\{\{.*?\}\}", text, re.S):
             self.error(path, "unfilled template marker {{...}}")
-        for target in markdown_links(MarkdownIt("commonmark").parse(text)):
-            url = urlsplit(target)
-            if url.scheme or url.netloc or not url.path:
-                continue
-            if url.path.startswith("/"):
-                self.error(path, f"absolute local link is not portable: {target}")
-            elif not (path.parent / unquote(url.path)).exists():
-                self.error(path, f"missing link target: {target}")
-            self.stats["local_links"] += 1
+        try:
+            for target in markdown_links(MarkdownIt("commonmark").parse(text)):
+                url = urlsplit(target)
+                if url.scheme or url.netloc or not url.path:
+                    continue
+                if url.path.startswith("/"):
+                    self.error(path, f"absolute local link is not portable: {target}")
+                elif not (path.parent / unquote(url.path)).exists():
+                    self.error(path, f"missing link target: {target}")
+                self.stats["local_links"] += 1
+        except ValueError as exc:
+            self.error(path, str(exc))
 
     def openapi(self, path):
         text = self.read(path)
