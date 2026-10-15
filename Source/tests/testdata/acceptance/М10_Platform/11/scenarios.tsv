@@ -17,7 +17,7 @@ scenario	step	request	expect
 03-schema-processes	3	@until 30 console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "processes": {"srv-a": {"schema": 1, "build": "@any", "live": true}}}
 04-store-metrics	1	store GET /metrics	200 ~configstore_raft_term
 04-store-metrics	2	store GET /metrics	200 ~configstore_voters_expected
-05-power-pull	1	@manual выдернуть питание сервера с воркером и единицами; через ≤ 90 с единицы у живых воркеров под новыми эпохами; архив на томе остаётся; открытый бакет событий потерян, закрытые у соседей	manual
-05-power-pull	2	@manual вернуть сервер: демон вступает сам (member.json), ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад	manual
-06-recover	1	@manual остановить большинство; configstore recover -id -dir -peers на оставшемся; platform/epoch_floor вырос на поколение; эпохи после восстановления не повторяют выданных	manual
+05-power-pull	1	@manual на тестовом кластере с заранее наблюдёнными пульсами, исправным хранилищем и свободной ёмкостью выдернуть питание сервера; проверить перенос по допускам М10/4 (ориентир 90 с + проход, не общий deadline), новую эпоху, сохранность архива на томе; у соседей только подтверждённые зеркальные копии	manual
+05-power-pull	2	@manual вернуть сервер: демон рестартует по member.json без повторного join, ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад	manual
+06-recover	1	@manual на отдельном тестовом кластере остановить/отсечь все прежние демоны и писателей; сохранить исходные каталоги; подтвердить upper; одним оператором выполнить recover на остановленном демоне; новый floor выше upper, старые узлы отсечены, новые эпохи не повторяются; при неизвестном upper/неполной изоляции отказ, в том числе с force	manual
 07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ (размер сверх объявленного не берёт и -force); дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
