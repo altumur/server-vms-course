@@ -1,0 +1,54 @@
+{
+  "task": "ADR-0074 confirmation: Source/tests/domain does not import VMS",
+  "base": "dcf2509c",
+  "branch": "codex/course-adr74-confirm-tests-domain",
+  "tests": {
+    "unit": {
+      "log": "/tmp/adr74-unit-final.log",
+      "sha256": "df5c4b4550dd0e448d2913138ba640c309658016fa5c606236cda5deb3596757",
+      "result": "2050 passed, 1 failed, 2 skipped; the only failure is the expected platform_lists byte-parity test; console skipped because jsdom is unavailable"
+    },
+    "domain": {
+      "log": "/tmp/adr74-domain-final.log",
+      "sha256": "ed88cd7b55336e6aa165b69178ccf321532654ebce98d9970028e540deaaa23b",
+      "result": "190 passed, 0 failed, 0 skipped"
+    },
+    "domainvms": {
+      "log": "/tmp/adr74-domainvms-final3.log",
+      "sha256": "190fe631cb5d54d2be9873f07687d0bc2f258ea205f931d8ab7995d9d4f5e77b",
+      "result": "206 passed, 0 failed, 0 skipped"
+    },
+    "boundary": {
+      "log": "/tmp/adr74-boundary-final.log",
+      "sha256": "9f536a8e65174005a146ec9e659b65ea6091ae6a227bd1c424acd418b778a349",
+      "result": "6 passed, 0 failed, 0 skipped; includes tests_domain_does_not_import_vms"
+    }
+  },
+  "boundary": {
+    "forbidden_imports_in": "Source/tests/domain/*.py",
+    "patterns": [
+      "from vms",
+      "import vms",
+      "from tests.vmsconftest",
+      "import tests.vmsconftest"
+    ],
+    "grep_result": "no matches",
+    "automated_test": "tests/test_boundary.py::test_tests_domain_does_not_import_vms"
+  },
+  "coverage_table": {
+    "path": "windows/adr74-confirm/TESTS.tsv",
+    "rows": 192,
+    "assert_nodes_before": 742,
+    "assert_nodes_after": 742,
+    "ast_validation_errors": 0,
+    "sha256": "b937d83b8ff537adc1135810fbe332debac436fb1bd59e84576ba861a64a8bc8"
+  },
+  "repository_checks": {
+    "git_diff_check": "passed",
+    "changed_product_or_platform_runtime_files": 0
+  },
+  "runtime": {
+    "python": "3.12.15",
+    "obsd": "/Users/murat/w2c/vms-nightly/build/obsd/build/obsd"
+  }
+}
