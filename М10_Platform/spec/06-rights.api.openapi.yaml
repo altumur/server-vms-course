@@ -1,0 +1,20 @@
+openapi: 3.1.0
+info: {title: М10/6 двери прав, version: "1"}
+paths:
+  /v1/rights:
+    get:
+      summary: файл прав, как загружен — только admin.sock
+      responses: {"200": {description: "configstore-rights.json как загружен", content: {application/json: {}}}, "403": {description: "не admin", content: {application/json: {schema: {$ref: "#/components/schemas/Forbidden"}}}}, "503": {description: unavailable}}
+  /v1/list:
+    get:
+      summary: урок 1; имена и версии под префиксом любой роли, без значений
+      parameters: [{name: prefix, in: query, required: false, schema: {type: string}}]
+      responses: {"200": {description: "Listing урока 1"}, "404": {description: нет маршрута}, "503": {description: unavailable}}
+components:
+  schemas:
+    Forbidden:
+      type: object
+      required: [kind, error]
+      properties:
+        kind:  {const: forbidden}
+        error: {type: string}             # "<роль> may not <read|write|delete> <ключ>" (+ имя файла прав — решает реализация)
