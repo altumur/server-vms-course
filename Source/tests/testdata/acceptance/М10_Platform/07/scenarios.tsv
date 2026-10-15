@@ -4,6 +4,7 @@ scenario	step	request	expect
 01-sealed	2	@key(1) console POST /tallies {"name": "t1", "of": "c1", "feed": "https://hub.example/a", "feed_user": "admin", "feed_secret": "hunter2"}	201 {"feed_secret": "***"}
 01-sealed	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"feed_secret": "~enc:v2:", "feed_user": "admin"}}
 01-sealed	4	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}]}
+01-sealed	5	@key(1) console POST /tallies {"name": "t1", "of": "c1", "feed": "https://hub.example/a", "feed_user": "admin", "feed_secret": "bravo"}	422 {"error": "key reused"}
 02-mask-and-envelope-in	1	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "***"}	400 {"error": "~mask"}
 02-mask-and-envelope-in	2	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "•••"}	400
 02-mask-and-envelope-in	3	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "enc:v2:k1:AAAA:BBBB"}	400 {"error": "~sealed"}
