@@ -153,6 +153,8 @@ components:
       description: >-
         Один непустой сегмент, кроме '..', не больше 200 UTF-8-байт (Н3).
         maxLength считает символы и не заменяет отдельную проверку байтов.
+        Предел полного ключа с префиксом проверяется отдельно по М10/1 Н1;
+        определённый отказ хранилища badkey преобразуется по М10/3 Н3–Н4.
     WorkerName:
       type: string
       pattern: '^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$'
@@ -295,7 +297,7 @@ components:
             error: {enum: [store unavailable, busy, denied]}
   responses:
     BadRead:
-      description: Общий отказ транспорта или пути без проверки полей записи; detail и error, без fault.
+      description: Общий отказ транспорта или пути, включая badkey полного ключа хранилища; detail и error, без fault.
       content:
         application/json:
           schema: {$ref: "#/components/schemas/TextRefusal"}
@@ -303,6 +305,7 @@ components:
       description: >-
         Отказ формы по Н4; порядок Н3. Также общий отказ чтения тела консоли:
         chunked или короткое тело (урок 9). Причины без fault передают detail и error.
+        Отказ полного ключа хранилища — error badkey без fault; завершение POST по Н3.
       content:
         application/json:
           schema: {$ref: "#/components/schemas/FormRefusal"}
