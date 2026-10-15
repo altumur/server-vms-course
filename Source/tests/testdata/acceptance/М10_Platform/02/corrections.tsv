@@ -2,3 +2,4 @@ date	sample	fix	languages
 2026-10-14	cases/*.subsystem.yaml, testsub2.subsystem.yaml	снят display.actions из всех случаев и из общей testsub2 (ключ снят уроком 9, загрузчик обязан отказать); ревью спецификации R4-03	all
 2026-10-14	cases/display_actions_nested.subsystem.yaml	строка display.actions возвращена: случай отрицательный, снятый ключ и есть причина refused (излишне снято при R4-03); находка «Сборки»	all
 2026-10-15	02/cases/blob_required	новый случай: blob с required: true — отказ загрузки (создать единицу с таким полем через двери невозможно); ревью спецификации (Codex) R14-01	all
+2026-10-15	02/cases/blob_default, blob_inherit	новые случаи: blob с default или inherit — отказ загрузки (дайджест мимо двери байтов); ревью спецификации (Kimi) R15-01	all

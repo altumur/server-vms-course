@@ -8,6 +8,8 @@ about_field_not_fixed_nowitness	refused
 anchor_alias_display_keys	refused
 anchor_merge_key	refused
 base	ok
+blob_default	refused
+blob_inherit	refused
 blob_required	refused
 block_scalar_hides_lease	ok
 block_scalar_hides_tail	refused
