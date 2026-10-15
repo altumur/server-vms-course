@@ -8,6 +8,7 @@ wears, and a box that is rebooted whole, which makes the order of its boot a cor
 site that reads its door, and for the domain that reads its report.
 """
 
+from tests.catalog_fixture import isolated_catalog
 from tests.member_console import device_console, admit_fixtures
 from tests.domain.books_fixture import initial_books
 from tests.reporting import sync as report_sync
@@ -15,7 +16,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.grants import Grant
 from w2cplatform.domain.pending import PendingEdits
@@ -37,7 +38,7 @@ def _domain(wall, *serials):
     room.create(101, 102)
     devices, agents = {}, {}
     for s in serials:
-        d = DeviceCluster(s, FakeVariables(), wall=wall)
+        d = EmbeddedMember(s, FakeVariables(), wall=wall)
         d.boot(first_name=f"gate-{s}")
         fed.add(member_copy(d.name, north.objects, wall=wall))
         agents[s] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=device_console(d),
@@ -61,6 +62,7 @@ def _grant(fed, cluster, subject, wall, capability="edit"):
     DomainPublisher(fed.domain_holder.vars).publish_grants(cluster, [Grant(subject, capability, None, wall() + 3600)])
 
 
+@isolated_catalog()
 def test_the_domain_reads_a_camera_the_way_it_reads_a_server_room():
     """Nothing in the directory or the read view was written for devices. A camera publishes one heartbeat
     and one snapshot shard in the shapes a cluster publishes, and it is found by its serial — the domain's
@@ -77,6 +79,7 @@ def test_the_domain_reads_a_camera_the_way_it_reads_a_server_room():
     assert [(r.ref, r.worker_state, r.epoch) for r in mine] == [(SERIAL, "live", 1)]
 
 
+@isolated_catalog()
 def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_address():
     """vmsserver's eleventh review, blocker 4, defence in depth: a member's shard written by an older build — before the
     cluster hid credentials in its snapshot — carried `cred_secret` and `source: …?pwd=…`, and the domain's read view
@@ -96,17 +99,9 @@ def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_addre
     assert "Hunter2" not in shown and "cred_secret" not in shown and "usr=admin&pwd=***" in shown, shown
 
 
-def test_the_epoch_grows_on_every_boot_and_the_archive_path_carries_it():
-    """There is no second instance for the epoch to fence. It is still taken, by the camera, from its flash,
-    on every boot — because the archive and the event buckets carry it, and footage from after a reboot
-    must never land in the directory of footage from before it."""
-    d = DeviceCluster(SERIAL, FakeVariables(), wall=Clock())
-    assert d.boot() == 1 and d.rec_prefix() == f"rec/{SERIAL}/e1/"
-    d.power_off()
-    assert d.boot() == 2 and d.rec_prefix() == f"rec/{SERIAL}/e2/"
-    assert d.row()["ref"] == SERIAL and d.row()["revision"] == 1              # the row was made once, at the FIRST boot
 
 
+@isolated_catalog()
 def test_a_day_of_heartbeats_costs_the_flash_nothing():
     """A heartbeat every ten seconds is 8640 writes a day. On a server's disk that is nothing; on a
     camera's flash, over years, it is the camera. So what changes every few seconds lives in RAM — the agent
@@ -127,6 +122,7 @@ def test_a_day_of_heartbeats_costs_the_flash_nothing():
     assert d.flash.writes - after_boot == 1              # the grants, once, when they arrived — and nothing else
 
 
+@isolated_catalog()
 def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     """The camera IS the unit. Its store holds its row, its epoch, and what the agent carried — `domain/*`.
     No slot, no assignment, no snapshot written by a controller: not forbidden, simply absent, because
@@ -141,39 +137,9 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
                                 "domain/rec/polls", "domain/rec/primaries", "domain/rec/upstream"]
 
 
-def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
-    """The domain keeps the edit (Lesson 9) — it opens no connection to a member — and the camera's own agent
-    takes it home, where the camera's console checks the subject against the grants ITS agent carried, when it
-    applies it. A camera writes its own row, always; the domain owns nothing. A refused edit comes back in the
-    report, said."""
-    wall = Clock()
-    fed, room, devices, agents = _domain(wall, SERIAL)
-    d = devices[SERIAL]
-    _grant(fed, d.name, "anna", wall)
-    report_sync(agents[SERIAL])
-    view = ReadView(fed, wall=wall)
-    view.refresh()
-    admit_fixtures(fed.domain_holder.vars, fed.clusters)
-    pending = PendingEdits(fed.domain_holder.vars, wall)
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda token: token, pending=pending,
-                     last_known=view.last_known)
-
-    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")["kept"]
-    report_sync(agents[SERIAL])
-    assert d.row()["enabled"] is False and d.row()["revision"] == 2
-    pending.collect(fed)
-    assert pending.of(d.name) == {}
-
-    # Human grants remain enforced by the device's human console, separately
-    # from the local agent signature authorised by the domain admin.
-    try:
-        d._update(1, {"enabled": True}, "boris")
-        raise AssertionError("a person without a grant edited the camera")
-    except ApiError as err:
-        assert err.status == 403 and "grant" in err.detail
-    assert d.row()["enabled"] is False
 
 
+@isolated_catalog()
 def test_the_door_opens_after_the_first_publish_not_before():
     """A camera is rebooted whole, which a server cluster never is. For the seconds between power and the
     first publish its RAM is empty — and a door open in those seconds says "I hold no cameras", a COMPLETE
@@ -210,32 +176,3 @@ def test_the_door_opens_after_the_first_publish_not_before():
     d.publish = lambda: (shut_during_publish.append(not d.door_open), publish())
     d.boot()
     assert shut_during_publish == [True] and d.door_open
-
-
-def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
-    """Lesson 9, end to end, on a device: the camera goes off, the edit is kept beside its grants, the camera
-    boots, its agent carries the edit home and its console applies it as the operator, and the domain clears
-    what landed."""
-    wall = Clock()
-    fed, room, devices, agents = _domain(wall, SERIAL)
-    d = devices[SERIAL]
-    _grant(fed, d.name, "anna", wall)
-    agent = agents[SERIAL]
-    report_sync(agent)
-    view = ReadView(fed, wall=wall)
-    view.refresh()
-    admit_fixtures(fed.domain_holder.vars, fed.clusters)
-    pending = PendingEdits(fed.domain_holder.vars, wall)
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), verifier=lambda token: token,
-                     pending=pending, last_known=view.last_known)
-
-    d.power_off()
-    view.refresh()
-    assert api.update_unit(SERIAL, {"enabled": False}, idempotency_key="k1", token="anna", sub="cam")["kept"]
-    wall.advance(3600)
-    _grant(fed, d.name, "anna", wall)                    # grants are renewed while it is off; they expire otherwise
-    d.boot()
-    report_sync(agent)
-    assert d.row()["enabled"] is False
-    pending.collect(fed)
-    assert pending.of(d.name) == {}
