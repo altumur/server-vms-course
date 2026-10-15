@@ -26,6 +26,7 @@
 07-no-reuse	3	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"1"},"cas":""}	200 {"index":"$c"}
 07-no-reuse	4	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"2"},"cas":"$a"}	409 {"kind":"conflict","index":"$c"}
 07-no-reuse	5	ASSERT $a != $b $c	
+# 08-list: в шагах 4–6 сравниваются значения и порядок имён в keys по README; b намеренно записан раньше a.
 08-list	1	POST /v1/write {"op":"put","key":"acc/08-list/k/b","items":{"n":"b"}}	200 {"index":"$b"}
 08-list	2	POST /v1/write {"op":"put","key":"acc/08-list/k/a","items":{"n":"a"}}	200 {"index":"$a"}
 08-list	3	POST /v1/write {"op":"put","key":"acc/08-list/kk","items":{"n":"x"}}	200 {"index":"$x"}
