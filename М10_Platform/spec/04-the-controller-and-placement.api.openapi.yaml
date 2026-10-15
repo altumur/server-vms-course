@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info: {title: М10/4 двери контроллера, version: "1"}
+x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
+paths:
+  /policy:
+    get:  {responses: {"200": {description: "{servers: shared | distinct}"}}}
+    put:
+      requestBody: {content: {application/json: {schema: {type: object, required: [servers], properties: {servers: {enum: [shared, distinct]}}}}}}
+      responses: {"200": {description: записано, журнал policy.changed}, "400": {description: иное слово или ключ}}
+  /drain:
+    get:  {responses: {"200": {description: "{draining: <сервер> | \"\", safe: bool, subsystems: {<sub>: {draining, …}}}"}}}
+    post:
+      parameters: [{name: server, in: query, required: true, schema: {type: string}}]
+      responses: {"200": {description: дренаж начат}, "409": {description: "<s> is already draining; one server at a time"}}
+    delete: {responses: {"200": {description: дренаж снят}}}
+  /servers/{server}/labels:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
+    get:
+      parameters: [{name: labels, in: query, schema: {type: string}, description: "метки через запятую — проба без записи"}]
+      responses: {"200": {description: "{would_move: [<id>…]} — что переедет"}}
+    put:
+      requestBody: {content: {application/json: {schema: {type: object, required: [labels], properties: {labels: {type: array, items: {$ref: "#/components/schemas/label"}}}}}}}
+      responses: {"200": {description: "строка меток записана; {would_move?}"}, "400": {description: не список строк; метка не по азбуке}, "404": {description: сервер не известен}}
+    delete: {responses: {"200": {description: строка снята, действуют метки узла}}}
+  /servers/{server}/decommission:
+    parameters: [{name: server, in: path, required: true, schema: {type: string}}]
+    post:
+      requestBody: {content: {application/json: {schema: {type: object, properties: {why: {type: string}, gone: {type: boolean}}}}}}
+      responses:
+        "202": {description: "запрос записан; контроллер исполнит проходом; {warning?} — ресурс никогда не слышали"}
+        "409": {description: "{error: server answers, server, may_confirm_gone}: сервер отвечает — ресурс, воркер или слот слышны менее LOST_AFTER назад"}
+        "404": {description: сервер не известен}
+    delete: {responses: {"200": {description: запрос отозван, отметка контроллера снята}}}
+  /unplaceable:
+    get: {responses: {"200": {description: "[{id, labels, workers_live, why?}]"}}}
+  /where/{id}:
+    parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+    get: {responses: {"200": {description: "{worker, server, …}"}, "404": {description: "{reason}: не размещена"}}}
+components:
+  schemas:
+    label: {type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9_.:\\-]{0,63}$"}   # одна азбука у меток единицы, сервера и узла
