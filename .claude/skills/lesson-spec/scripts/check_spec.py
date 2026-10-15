@@ -2,7 +2,7 @@
 """Read-only structural checks for the published lecture + shared spec layout.
 
 No product imports, execution of acceptance requests, or network reference loading.
-Requires PyYAML and openapi-spec-validator; invocation and limits: validation.md.
+Requires PyYAML, openapi-spec-validator and markdown-it-py; see validation.md.
 """
 
 import argparse
@@ -15,7 +15,9 @@ from urllib.parse import unquote, urlsplit
 
 try:
     import yaml
-    from openapi_spec_validator import validate
+    from jsonschema_path import SchemaPath
+    from markdown_it import MarkdownIt
+    from openapi_spec_validator import OpenAPIV31SpecValidator
 except ImportError as exc:
     raise SystemExit(f"Missing dependency: {exc}. See references/validation.md")
 
@@ -53,16 +55,97 @@ def strict_json(text):
     return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
 
 
-def references(node):
-    if isinstance(node, dict):
-        for key, value in node.items():
-            if key == "$ref":
-                yield value
-            else:
-                yield from references(value)
-    elif isinstance(node, list):
-        for value in node:
-            yield from references(value)
+# Each edge names an OpenAPI object, a map (*) or a sequence ([]) of such objects.
+# Raw application data (example, Example.value, default, enum, const, etc.) has no edge.
+OBJECT_EDGES = {
+    "document": {"paths": "paths", "webhooks": "*path", "components": "components"},
+    "components": {
+        "schemas": "*schema", "responses": "*response", "parameters": "*parameter",
+        "examples": "*example", "requestBodies": "*body", "headers": "*parameter",
+        "securitySchemes": "*security", "links": "*link", "callbacks": "*callback",
+        "pathItems": "*path",
+    },
+    "path": {**{method: "operation" for method in
+                ("get", "put", "post", "delete", "options", "head", "patch", "trace")},
+             "parameters": "[]parameter"},
+    "operation": {"parameters": "[]parameter", "requestBody": "body",
+                  "responses": "responses", "callbacks": "*callback"},
+    "parameter": {"schema": "schema", "examples": "*example", "content": "*media"},
+    "body": {"content": "*media"},
+    "response": {"headers": "*parameter", "content": "*media", "links": "*link"},
+    "media": {"schema": "schema", "examples": "*example", "encoding": "*encoding"},
+    "encoding": {"headers": "*parameter"},
+    "schema": {
+        **{key: "*schema" for key in ("properties", "patternProperties", "$defs", "dependentSchemas")},
+        **{key: "schema" for key in ("items", "contains", "additionalProperties", "propertyNames",
+                                    "unevaluatedProperties", "unevaluatedItems", "not", "if", "then",
+                                    "else", "contentSchema")},
+        **{key: "[]schema" for key in ("allOf", "anyOf", "oneOf", "prefixItems")},
+    },
+}
+REFERENCE_OBJECTS = {"schema", "path", "response", "parameter", "body", "example", "security", "link", "callback"}
+
+
+def references(document):
+    """Walk reference-bearing positions, including local targets, without interpreting payloads."""
+    seen = set()
+
+    def walk(node, kind):
+        if not isinstance(node, (dict, list)) or (id(node), kind) in seen:
+            return
+        seen.add((id(node), kind))
+        if kind.startswith("[]"):
+            if isinstance(node, list):
+                for value in node:
+                    yield from walk(value, kind[2:])
+            return
+        if not isinstance(node, dict):
+            return
+        if kind.startswith("*"):
+            for value in node.values():
+                yield from walk(value, kind[1:])
+            return
+        if kind == "schema":
+            # These alter reference resolution; never claim root-pointer validation for them.
+            for keyword in ("$id", "$dynamicRef", "$recursiveRef"):
+                if keyword in node:
+                    raise ValueError(f"unsupported schema keyword {keyword}; needs resolver-specific check")
+            if "$schema" in node and node["$schema"] not in {
+                "https://spec.openapis.org/oas/3.1/dialect/base", "https://json-schema.org/draft/2020-12/schema"
+            }:
+                raise ValueError("unsupported schema dialect; needs dialect-specific check")
+        if kind in REFERENCE_OBJECTS and "$ref" in node:
+            ref = node["$ref"]
+            # Resolve before yielding or calling the library, including targets in extensions.
+            try:
+                target = pointer(document, ref)
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ValueError(f"unresolved/unsupported $ref {ref!r}: {exc}") from exc
+            yield ref
+            yield from walk(target, kind)
+        if kind in {"paths", "responses", "callback"}:
+            child = {"paths": "path", "responses": "response", "callback": "path"}[kind]
+            for key, value in node.items():
+                if isinstance(key, str) and not key.startswith("x-") and key != "$ref":
+                    yield from walk(value, child)
+        else:
+            for key, child in OBJECT_EDGES.get(kind, {}).items():
+                yield from walk(node.get(key), child)
+
+    yield from walk(document, "document")
+
+
+def markdown_links(tokens):
+    for token in tokens:
+        if token.type == "link_open":
+            yield token.attrGet("href")
+        if token.children:
+            yield from markdown_links(token.children)
+
+
+def validate(document):
+    # Defense in depth: the dependency must not fetch anything even if its traversal changes.
+    OpenAPIV31SpecValidator(SchemaPath.from_dict(document, handlers={})).validate()
 
 
 def pointer(document, ref):
@@ -97,11 +180,10 @@ class Check:
             return None
 
     def markdown(self, path, text):
-        if re.search(r"\{\{[^\n]*?\}\}", text):
+        if re.search(r"\{\{.*?\}\}", text, re.S):
             self.error(path, "unfilled template marker {{...}}")
-        plain = re.sub(r"^\s*(```|~~~).*?^\s*\1\s*$", "", text, flags=re.M | re.S)
-        for target in re.findall(r"(?<!!)\[[^\]\n]+\]\(([^\s)]+)(?:\s+[^)]*)?\)", plain):
-            url = urlsplit(target.strip("<>"))
+        for target in markdown_links(MarkdownIt("commonmark").parse(text)):
+            url = urlsplit(target)
             if url.scheme or url.netloc or not url.path:
                 continue
             if url.path.startswith("/"):
@@ -124,13 +206,12 @@ class Check:
                 raise ValueError("expected OpenAPI 3.1.x")
             if not isinstance(doc.get("paths"), dict) or not doc["paths"]:
                 raise ValueError("no HTTP paths: unfinished contract or layout decision needed")
-            # Resolve every ref before invoking the library: it cannot fetch an external one.
-            for ref in references(doc):
-                try:
-                    pointer(doc, ref)
-                except (KeyError, IndexError, TypeError, ValueError) as exc:
-                    raise ValueError(f"unresolved/unsupported $ref {ref!r}: {exc}") from exc
-                self.stats["local_refs"] += 1
+            if doc.get("jsonSchemaDialect", "https://spec.openapis.org/oas/3.1/dialect/base") not in {
+                "https://spec.openapis.org/oas/3.1/dialect/base", "https://json-schema.org/draft/2020-12/schema"
+            }:
+                raise ValueError("unsupported schema dialect; needs dialect-specific check")
+            # Check actual reference positions, not similarly named fields in application data.
+            self.stats["local_refs"] += sum(1 for _ in references(doc))
             validate(doc)
             self.stats["openapi"] += 1
         except Exception as exc:
@@ -200,9 +281,18 @@ class Check:
             if case in verdicts or result not in {"ok", "refused"} or invalid_name:
                 self.error(path, f"line {line}: duplicate/invalid case or verdict")
             verdicts[case] = result
-        actual = {p.name.removesuffix(".subsystem.yaml") for p in (path.parent / "cases").glob("*.subsystem.yaml")}
-        if actual != set(verdicts):
-            self.error(path, f"cases/verdicts differ: missing={sorted(set(verdicts)-actual)}, unlisted={sorted(actual-set(verdicts))}")
+        cases = path.parent / "cases"
+        expected = {f"{case}.subsystem.yaml" for case in verdicts}
+        try:
+            entries = list(cases.iterdir())
+            actual = {p.name for p in entries}
+            if actual != expected:
+                self.error(path, f"cases/verdicts differ: missing={sorted(expected-actual)}, unlisted={sorted(actual-expected)}")
+            for entry in entries:
+                if not entry.is_file():
+                    self.error(entry, "acceptance case must be a file")
+        except OSError as exc:
+            self.error(cases, str(exc))
         self.stats["verdicts"] += len(verdicts)
         if not verdicts:
             self.error(path, "empty verdicts table")
@@ -252,6 +342,15 @@ class Check:
         if text is not None:
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
+        supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "cases"}
+        try:
+            for entry in acceptance.iterdir():
+                if entry.name not in supported:
+                    self.error(entry, "unsupported acceptance entry; add a format-specific check")
+                elif entry.name != "cases" and not entry.is_file():
+                    self.error(entry, "acceptance table/document must be a file")
+        except OSError as exc:
+            self.error(acceptance, str(exc))
         formats = 0
         if (acceptance / "scenarios.tsv").exists():
             self.scenarios(acceptance / "scenarios.tsv")
@@ -263,6 +362,8 @@ class Check:
             formats += 1
         elif (acceptance / "diagnostics.tsv").exists():
             self.error(acceptance, "diagnostics.tsv without verdicts.tsv")
+        if (acceptance / "cases").exists() and not (acceptance / "verdicts.tsv").is_file():
+            self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
         self.stats["lessons"] += 1
