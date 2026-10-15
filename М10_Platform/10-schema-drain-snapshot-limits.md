@@ -123,7 +123,7 @@ sweep:    <sub>/sweep {at, digests}  — писатель консоль; раз
 ```yaml
 tables:                                   # спека (форма — урок 2)
   <t>:
-    key:      <поле> | "{поле}-{поле:int}"      # имя строки из полей
+    key:      <поле> | "{поле}-{поле:int}"      # имя строки из полей; {:int} — целая часть числа (урок 2 Н1.4, requests.key)
     fields:   {<поле>: {type, required, enum, default, schema, ref, must_match, bound_to, credentials, secret_in, schemes}}
               # без fixed, inherit, merge, unique (урок 2)
     schema:   JSON Schema на всю строку
