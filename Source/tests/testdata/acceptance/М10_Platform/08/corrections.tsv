@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-15	08/scenarios.tsv: 03-operator-mark	поле отметки — note (как в Н2 и у консоли), не text; добавлен отказ 400 без unit; ревью спецификации (Codex) R12-02	all
+2026-10-15	08/scenarios.tsv: 03-operator-mark	шаг 6: лишнее поле отметки принимается и не читается (М10/8-17); ревью спецификации (Codex) R14-03	all
