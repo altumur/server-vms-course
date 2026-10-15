@@ -1809,6 +1809,7 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
     holder = w.serve_playback("127.0.0.1", 0)
     rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1", name="r-1",
                                                        objects=box.objects, vars=box.vars, resource_root=None, eyes=None,
+                                                       metrics_text=lambda: "",
                                                        _visible_from=lambda *a: None, _kept_of=lambda *a: None,
                                                        _held_since=lambda *a: None), "127.0.0.1", 0)
     res = serve_resource(platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
