@@ -171,10 +171,10 @@ def _door_site(wall):
     from w2cplatform.domain.term import install
     from w2cplatform.trust.memberkey import MemberKey
     from w2cplatform.trust.signer import DomainRoot
-    from vms.camera_cluster import DeviceCluster
+    from tests.domain.conftest import EmbeddedMember
     fed, devices, keys = Federation(), {}, {}
     for i in range(4):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall)
         d.boot()
         devices[d.name] = d
         fed.add(d.cluster(domain=i == 0))
