@@ -1603,3 +1603,7 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
     for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total", "forwarder_errors_total",
                  "ingest_absurd_frames_total", "ingest_ahead_losses_total", "ingest_repeats_dropped_total"):
         assert f"# TYPE rec_{name} counter" in lines
+    process_metrics = rec.metrics_text().splitlines()
+    for line in ("rec_ingest_repeats_dropped 5", "rec_ingest_absurd_frames 4",
+                 f"rec_ingest_ahead_losses {st['ahead_losses']}"):
+        assert line in process_metrics
