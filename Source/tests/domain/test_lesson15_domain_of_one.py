@@ -19,7 +19,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.grants import Grant
 from w2cplatform.domain.pending import PendingEdits, edit_id
@@ -39,7 +39,7 @@ DOMAIN = "acme"
 def _site(wall, n=4):
     fed, devices = Federation(), {}
     for i in range(n):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall)
         d.boot()
         devices[d.name] = d
         fed.add(d.cluster(domain=i == 0))
