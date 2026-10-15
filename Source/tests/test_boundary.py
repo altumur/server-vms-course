@@ -1026,6 +1026,27 @@ def test_the_testsub_spec_is_nobodys_but_the_platforms():
     assert spec.name == "testsub" and set(spec.fields) >= {"name", "start", "labels"}
 
 
+def test_tests_domain_does_not_import_vms():
+    """Platform-domain tests must use platform fixtures; VMS checks belong in tests/domainvms.
+
+    `_imports` includes imports inside functions and dotted module names passed as strings, so this guards both
+    ordinary imports and deferred imports without keeping a debt allowance for the old coupling.
+    """
+    domain = os.path.join(HERE, "domain")
+    findings = []
+    for name in sorted(os.listdir(domain)):
+        if not name.endswith(".py"):
+            continue
+        path = os.path.join(domain, name)
+        findings.extend(
+            (name, line, module) for line, module in _imports(path)
+            if module in ("vms", "tests.vmsconftest")
+            or module.startswith("vms.")
+            or module.startswith("tests.vmsconftest.")
+        )
+    assert findings == [], "tests/domain imports VMS code; move subsystem checks to tests/domainvms: " + repr(findings)
+
+
 def _main(argv):
     if argv[:1] == ["--shrink"]:
         os.environ["W2C_BOUNDARY_SHRINK"] = "1"
