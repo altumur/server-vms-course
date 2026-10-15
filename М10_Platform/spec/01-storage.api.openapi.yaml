@@ -6,7 +6,7 @@ paths:
     get:
       summary: прочитать
       parameters:
-        - {name: key, in: query, required: true, schema: {type: string}}
+        - {name: key, in: query, required: true, schema: {$ref: "#/components/schemas/Key"}}
       responses:
         "200":
           description: строка; отсутствующая — items null, index ""
@@ -29,6 +29,10 @@ paths:
   /v1/write:
     post:
       summary: записать или удалить
+      description: >-
+        Н2 норм: предел чтения тела задаётся отдельно от потолка строки; при его
+        превышении до разбора JSON — 413 toolarge, limit равен пределу тела в байтах.
+        В приёмке предел тела 1048576, потолок строки 524288 байт.
       requestBody:
         required: true
         content: {application/json: {schema: {$ref: "#/components/schemas/Cmd"}}}
@@ -45,6 +49,17 @@ paths:
         "503": {$ref: "#/components/responses/UnavailableOrAmbiguous"}
 components:
   schemas:
+    Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+          - pattern: '^/'
+          - pattern: '(^|/)\.\.(/|(?![\s\S]))'
+      description: >-
+        Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..;
+        ..foo допустим. Предел 1024 байта UTF-8 и меньший файловый предел
+        проверяются отдельно; maxLength не выражает число байтов.
     Row:
       type: object
       required: [items, index]
@@ -62,14 +77,14 @@ components:
       required: [op, key]
       properties:
         op: {type: string, enum: [put, delete]}
-        key: {type: string}
+        key: {$ref: "#/components/schemas/Key"}
         cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
         guard:
           type: object
           required: [key, index]
           additionalProperties: false
           properties:
-            key: {type: string, minLength: 1}
+            key: {$ref: "#/components/schemas/Key"}
             index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
       oneOf:
