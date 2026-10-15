@@ -79,14 +79,24 @@ components:
               type: string
         display:
           type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonValue'
         servers:
           type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonValue'
         door:
           type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonValue'
         places:
           type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonValue'
         domain:
           type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonValue'
         metrics:
           type: object
           required:
@@ -102,6 +112,19 @@ components:
           type: string
         workers_gauge:
           type: string
+    JsonValue:
+      description: JSON value from a loaded spec. Numeric bounds apply recursively, including opaque sections.
+      anyOf:
+      - type: ['null', boolean, string]
+      - type: number
+        minimum: -1.7976931348623157e+308
+        maximum: 1.7976931348623157e+308
+      - type: array
+        items:
+          $ref: '#/components/schemas/JsonValue'
+      - type: object
+        additionalProperties:
+          $ref: '#/components/schemas/JsonValue'
     ConsoleRefusal:
       type: object
       required:
@@ -268,8 +291,10 @@ components:
       - properties:
           type:
             const: json
-          default: {}
-          inherit: {}
+          default:
+            $ref: '#/components/schemas/JsonValue'
+          inherit:
+            $ref: '#/components/schemas/JsonValue'
         not:
           required:
           - enum
