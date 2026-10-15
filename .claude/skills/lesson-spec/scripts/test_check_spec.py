@@ -121,6 +121,47 @@ components:
         self.norms.write_text(self.norms.read_text() + "- [ ] **М12A/1-01** Another\n")
         self.assertTrue(self.check().errors)
 
+    def test_code_cannot_supply_required_heading(self):
+        original = self.norms.read_text()
+        for fake in ["```markdown\n## Н4 Section\n```", "    ## Н4 Section",
+                     "> ## Н4 Section", "`## Н4 Section`"]:
+            with self.subTest(fake=fake):
+                self.norms.write_text(original.replace("## Н4 Section", fake))
+                self.assert_cli(1, "expected Н0–Н5")
+
+    def test_entire_norms_in_example_are_not_structure(self):
+        original = self.norms.read_text()
+        for fake in ["```markdown\n" + original + "\n```\n",
+                     "\n".join("    " + line for line in original.splitlines()),
+                     "\n".join("> " + line for line in original.splitlines())]:
+            with self.subTest(fake=fake[:20]):
+                self.norms.write_text(fake)
+                self.assert_cli(1, "no normative checklist ids")
+
+    def test_checklist_id_must_be_real_list_and_strong_text(self):
+        original = self.norms.read_text()
+        item = "- [ ] **М12A/1-01** Example — проверяется чтением"
+        for fake in ["```markdown\n" + item + "\n```", "    " + item,
+                     "- `[ ] **М12A/1-01**` Example", "[ ] **М12A/1-01** Example",
+                     "> " + item]:
+            with self.subTest(fake=fake):
+                self.norms.write_text(original.replace(item, fake))
+                self.assert_cli(1, "no normative checklist ids")
+
+    def test_markdown_structure_accepts_rendered_variants_and_ignores_examples(self):
+        original = self.norms.read_text()
+        self.norms.write_text(original.replace("## Н4 Section", "Н4 Section\n----------")
+                              .replace("- [ ] **", "* [x] __").replace("-01**", "-01__") +
+                              "\n```markdown\n## Н4 Section\n- [ ] **М12A/1-01** Fake duplicate\n```\n")
+        self.assert_cli(0)
+        self.assertEqual(self.check().stats["norm_ids"], 1)
+
+    def test_checklist_ids_outside_its_section_do_not_supply_checklist(self):
+        original = self.norms.read_text()
+        self.norms.write_text(original.replace("## Чеклист готовности\n", "") +
+                              "\n## Чеклист готовности\nNo items yet.\n")
+        self.assert_cli(1, "no normative checklist ids")
+
     def test_unfilled_template(self):
         self.lesson.write_text("# {{TITLE}}\n")
         self.assertTrue(self.check().errors)
