@@ -1,43 +1,1391 @@
 openapi: 3.1.0
-info: {title: М10/10 двери схемы, дренажа, тел и таблиц, version: "1"}
-x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
+info:
+  title: М10/10 — схема, дренаж, тела и таблицы
+  version: '1'
 paths:
+  /drain:
+    get:
+      summary: Drain snapshot; lesson 10 N1.2
+      responses:
+        '200':
+          description: Drain snapshot; lesson 10 N1.2
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M4_DrainState'
+        '400':
+          $ref: '#/components/responses/M4_BadBody'
+        '401':
+          $ref: '#/components/responses/M4_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M4_Denied'
+        '404':
+          $ref: '#/components/responses/M4_NoRoute'
+        '405':
+          $ref: '#/components/responses/M4_Method'
+        '408':
+          $ref: '#/components/responses/M4_SlowBody'
+        '413':
+          $ref: '#/components/responses/M4_LargeBody'
+        '429':
+          $ref: '#/components/responses/M4_RateLimited'
+        '503':
+          $ref: '#/components/responses/M4_Unavailable'
+    post:
+      summary: Start one-server drain
+      responses:
+        '200':
+          description: Start one-server drain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M4_DrainStarted'
+        '400':
+          $ref: '#/components/responses/M4_BadBody'
+        '401':
+          $ref: '#/components/responses/M4_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M4_Denied'
+        '404':
+          $ref: '#/components/responses/M4_NoRoute'
+        '405':
+          $ref: '#/components/responses/M4_Method'
+        '408':
+          $ref: '#/components/responses/M4_SlowBody'
+        '413':
+          $ref: '#/components/responses/M4_LargeBody'
+        '429':
+          $ref: '#/components/responses/M4_RateLimited'
+        '503':
+          $ref: '#/components/responses/M4_Unavailable'
+        '409':
+          description: Another server is already draining
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M4_ConsoleRefusal'
+      parameters:
+      - name: server
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/M4_Server'
+    delete:
+      summary: Cancel drain
+      responses:
+        '200':
+          description: Cancel drain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M4_DrainCleared'
+        '400':
+          $ref: '#/components/responses/M4_BadBody'
+        '401':
+          $ref: '#/components/responses/M4_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M4_Denied'
+        '404':
+          $ref: '#/components/responses/M4_NoRoute'
+        '405':
+          $ref: '#/components/responses/M4_Method'
+        '408':
+          $ref: '#/components/responses/M4_SlowBody'
+        '413':
+          $ref: '#/components/responses/M4_LargeBody'
+        '429':
+          $ref: '#/components/responses/M4_RateLimited'
+        '503':
+          $ref: '#/components/responses/M4_Unavailable'
+    head:
+      summary: 'HEAD: Drain snapshot; lesson 10 N1.2'
+      responses:
+        '200':
+          description: Drain snapshot; lesson 10 N1.2; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9.; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
+            не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
+            тела
+        '404':
+          description: No route; lesson 9.; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not
+            be confirmed. Read state before retrying a mutation.; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /schema:
     get:
-      responses: {"200": {description: "{version: <int> | null, understood, builds: [<build>], can_raise_to, schema_unknown?, processes: {<sub>/<w> | <server>: {schema, build, ts, live}}}"}}
-    put:
-      parameters: [{name: version, in: query, required: true, schema: {type: integer, minimum: 1}}]
+      summary: Наблюдаемая схема и возможности сборок
       responses:
-        "200": {description: "поднято; журнал schema.raised {version, was, user}"}
-        "400": {description: "a version is a whole number from 1"}
-        "409": {description: "still running: <имена> — at schema N | schema does not go back: have -> version | row does not parse"}
-        "403": {description: не admin / токен консоли не достаёт platform/schema}
-  /drain:
-    get:  {responses: {"200": {description: "Н1.2 state"}}}
-    post: {parameters: [{name: server, in: query, required: true, schema: {type: string}}], responses: {"200": {description: дренаж начат; журнал drain.started}, "400": {description: a drain names a server}, "409": {description: "<s> is already draining; one server at a time"}}}
-    delete: {responses: {"200": {description: снят; журнал drain.ended}}}
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          $ref: '#/components/responses/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaState'
+    put:
+      summary: Поднять схему в окне обслуживания
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          $ref: '#/components/responses/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaRaised'
+        '409':
+          description: Откат, неизвестная схема, несовместимая сборка или конфликт CAS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M3_TextRefusal'
+      parameters:
+      - name: version
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^[1-9][0-9]*(?![\s\S])
+    head:
+      summary: 'HEAD: Наблюдаемая схема и возможности сборок'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
+            содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
+            не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
+            тела
+        '404':
+          description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
   /{rows}/{id}/{blob_field}:
-    parameters: [{name: rows, in: path, required: true, schema: {type: string}}, {name: id, in: path, required: true, schema: {type: string}}, {name: blob_field, in: path, required: true, schema: {type: string}}]
+    parameters:
+    - name: rows
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M3_UnitId'
+    - name: blob_field
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
     put:
-      requestBody: {content: {application/octet-stream: {}}}
+      summary: Записать байты blob и затем ссылку строки
       responses:
-        "200": {description: "{…строка, <поле>: sha256-…, bytes}"}
-        "404": {description: "not a blob field | no such unit"}
-        "413": {description: "больше 32 МиБ; или больше потолка хранилища — «a blob is what an object store is for»"}
-        "503": {description: "this console takes so many blobs at once; Retry-After"}
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Нет пути, единицы, поля или строки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlobWritten'
+        '409':
+          description: Строка изменилась; повтор начинается с её чтения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M3_TextRefusal'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      parameters:
+      - name: Content-Length
+        in: header
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 33554432
   /{table}:
-    parameters: [{name: table, in: path, required: true, schema: {type: string}}]
-    get:  {responses: {"200": {description: "{<t>: [строка без секретов, адреса с маской, held_by? , garbled?]}"}}}
+    parameters:
+    - name: table
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    get:
+      summary: Список строк таблицы без секретов
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Нет пути, единицы, поля или строки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableList'
     post:
-      parameters: [{name: Idempotency-Key, in: header, required: true, schema: {type: string}}]
-      requestBody: {required: true, content: {application/json: {schema: {type: object, description: поля таблицы по Н1 (ключ обязателен; типы и умолчания — tables.<t>.fields)}}}}
-      responses: {"201": {description: "{row}"}, "400": {description: "ключ не заполнен / needs / имя не путь / схема"}, "409": {description: must_match}, "413": {description: тело больше предела}, "403": {description: нет права admin}, "503": {description: store unavailable}}
+      summary: Записать полную строку таблицы
+      responses:
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M3_TextRefusal'
+                - $ref: '#/components/schemas/M3_FormRefusal'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Нет пути, единицы, поля или строки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '201':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableWritten'
+        '409':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/M3_ReferenceConflict'
+                - $ref: '#/components/schemas/M3_TextRefusal'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/M3_ClientFields'
+    head:
+      summary: 'HEAD: Список строк таблицы без секретов'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
+            содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
+            не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
+            тела
+        '404':
+          description: Нет пути, единицы, поля или строки; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
   /{table}/{name}:
-    parameters: [{name: table, in: path, required: true, schema: {type: string}}, {name: name, in: path, required: true, schema: {type: string}}]
-    get:    {responses: {"200": {description: строка}, "404": {description: no such row}}}
-    delete: {responses: {"200": {description: "{deleted}"}, "404": {description: no such row}, "503": {description: хранилище недоступно}}}
-  /v1/objects/{sub}/blobs/{digest}:  # дверь ресурса, приём копии (урок 8)
-    parameters: [{name: sub, in: path, required: true, schema: {type: string}}, {name: digest, in: path, required: true, schema: {type: string}}]
+    parameters:
+    - name: table
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: name
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M3_UnitId'
+    get:
+      summary: Прочитать одну строку таблицы
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Нет пути, единицы, поля или строки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableRow'
+    delete:
+      summary: Удалить строку таблицы
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Нет пути, единицы, поля или строки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableDeleted'
+        '409':
+          description: Конфликт CAS или ссылок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M3_TextRefusal'
+    head:
+      summary: 'HEAD: Прочитать одну строку таблицы'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
+            содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
+            не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
+            тела
+        '404':
+          description: Нет пути, единицы, поля или строки; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
+  /v1/objects/{sub}/blobs/{digest}:
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: digest
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^sha256-[0-9a-f]{64}(?![\s\S])
     put:
-      requestBody: {required: true, content: {application/octet-stream: {schema: {type: string, format: binary}}}}
-      responses: {"204": {description: копия принята}, "405": {description: не тело}, "411": {description: без длины}, "413": {description: "> 64 МиБ"}, "422": {description: байты не хэшируются в имя}, "409": {description: удалено здесь позже копии}, "408": {description: медленно}}
+      summary: 'Дверь ресурса: принять полную копию blob'
+      parameters:
+      - name: Content-Length
+        in: header
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 67108864
+      - name: X-Written
+        in: header
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9]+(?:\.[0-9]+)?(?![\s\S])
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '400':
+          description: Неверный путь, framing или чтение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '404':
+          description: Нет пути
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '405':
+          description: Метод/семья не допускает PUT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '408':
+          description: Медленное тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '409':
+          description: Надгробие новее копии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '411':
+          description: Нет длины
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '413':
+          description: Больше предела
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '422':
+          description: Байты не соответствуют digest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '503':
+          description: Хранилище недоступно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M8_ResourceError'
+        '403':
+          description: Недопустимая роль/семья
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M8_ResourceError'
+                - $ref: '#/components/schemas/M8_ResourceDenied'
+        '204':
+          description: Целая копия принята; тела ответа нет
+components:
+  schemas:
+    M3_Unit:
+      type: object
+      required:
+      - id
+      - revision
+      properties:
+        id:
+          $ref: '#/components/schemas/M3_UnitId'
+        revision:
+          type: integer
+          minimum: 1
+      patternProperties:
+        _secret$:
+          type: string
+          enum:
+          - ''
+          - '***'
+      additionalProperties: true
+      description: 'Типизированная строка единицы. Остальные поля задаёт unit.fields: int/float — JSON-числа, bool
+        — булево, list — массив, json — JSON-значение, string/url/blob — строки; секрет пустой или маска урока 7.
+        Отсутствующий inherit и json null не добавляются в ответ. Открытый набор имён поддерживает произвольную
+        спеку, а не разрешает чужие поля.'
+    M3_UnitId:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - enum:
+          - .
+          - ..
+        - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+      description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
+        Unicode-категории.'
+    M3_ClientFields:
+      type: object
+      propertyNames:
+        not:
+          enum:
+          - id
+          - revision
+          - worker
+          - placement
+          - epoch
+          - phase
+          - observed_revision
+      additionalProperties: true
+      description: Только поля unit.fields; дополнительные имена здесь нужны для произвольной спеки, но неизвестное
+        ей поле отказывается. Типы, required, enum, url, blob, json и fixed/inherit проверяются по Н1 и в порядке
+        Н3, а не одним валидатором общей схемы. PUT содержит изменяемые поля; пустой или null секрет сохраняет прежний
+        (урок 7).
+    M3_TextRefusal:
+      allOf:
+      - $ref: '#/components/schemas/M3_Refusal'
+      - not:
+          required:
+          - fault
+    M3_Refusal:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+        fault:
+          type: string
+          enum:
+          - not_json
+          - not_number
+          - too_long
+          - bad_url
+          - must_match
+          - unique
+          - garbled
+    M3_FormRefusal:
+      allOf:
+      - $ref: '#/components/schemas/M3_Refusal'
+      - properties:
+          fault:
+            enum:
+            - not_json
+            - not_number
+            - too_long
+            - bad_url
+    M3_ReferenceConflict:
+      allOf:
+      - $ref: '#/components/schemas/M3_Refusal'
+      - required:
+        - fault
+        properties:
+          error:
+            const: conflict
+          fault:
+            enum:
+            - must_match
+            - unique
+            - garbled
+    M2_JsonValue:
+      description: JSON value from a loaded spec. Numeric bounds apply recursively, including opaque sections.
+      anyOf:
+      - type:
+        - 'null'
+        - boolean
+        - string
+      - type: number
+        minimum: -1.7976931348623157e+308
+        maximum: 1.7976931348623157e+308
+      - type: array
+        items:
+          $ref: '#/components/schemas/M2_JsonValue'
+      - type: object
+        additionalProperties:
+          $ref: '#/components/schemas/M2_JsonValue'
+    M4_SubsystemName:
+      description: Имя загружаемой подсистемы по М10/2 Н1.2.
+      type: string
+      minLength: 1
+      maxLength: 32
+      pattern: ^[a-z]
+      not:
+        anyOf:
+        - pattern: '[^a-z0-9_-]'
+        - enum:
+          - platform
+          - domain
+          - console
+          - audit
+    M4_Server:
+      type: string
+      minLength: 1
+      not:
+        pattern: '[/\\]'
+    M8_Sha256:
+      type: string
+      pattern: ^[0-9a-f]{64}(?![\s\S])
+    M8_ResourceError:
+      type: object
+      required:
+      - error
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          minLength: 1
+    M8_ResourceDenied:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+          minLength: 1
+        error:
+          const: refused
+        role:
+          type: string
+          minLength: 1
+    ProcessBuild:
+      type: object
+      required:
+      - schema
+      - build
+      - ts
+      - live
+      additionalProperties: false
+      properties:
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        build:
+          type: string
+        ts:
+          type: number
+        live:
+          type: boolean
+    SchemaState:
+      type: object
+      required:
+      - version
+      - understood
+      - builds
+      - can_raise_to
+      - processes
+      additionalProperties: false
+      properties:
+        version:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        understood:
+          type: integer
+          minimum: 1
+        builds:
+          type: array
+          items:
+            type: string
+        can_raise_to:
+          type: integer
+          minimum: 0
+        schema_unknown:
+          type: boolean
+        processes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProcessBuild'
+          propertyNames:
+            type: string
+            minLength: 1
+    SchemaRaised:
+      type: object
+      required:
+      - version
+      additionalProperties: false
+      properties:
+        version:
+          type: integer
+          minimum: 1
+    M4_DrainState:
+      type: object
+      required:
+      - draining
+      - safe
+      - would_strand
+      - subsystems
+      additionalProperties: false
+      properties:
+        draining:
+          $ref: '#/components/schemas/M4_ServerOrEmpty'
+        safe:
+          type: boolean
+        would_strand:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/M4_SubsystemName'
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/M4_UnitId'
+        subsystems:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/M4_SubsystemName'
+          additionalProperties:
+            $ref: '#/components/schemas/M4_SubsystemDrain'
+    M4_ServerOrEmpty:
+      anyOf:
+      - $ref: '#/components/schemas/M4_Server'
+      - const: ''
+    M4_UnitId:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - enum:
+          - .
+          - ..
+        - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+      description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
+        Unicode-категории.'
+    M4_SubsystemDrain:
+      type: object
+      required:
+      - draining
+      - subsystem
+      - workers
+      - units
+      - pending_writes
+      - would_strand
+      - safe
+      additionalProperties: false
+      properties:
+        draining:
+          $ref: '#/components/schemas/M4_ServerOrEmpty'
+        subsystem:
+          $ref: '#/components/schemas/M4_SubsystemName'
+        workers:
+          type: integer
+          minimum: 0
+        units:
+          type: integer
+          minimum: 0
+        pending_writes:
+          type: integer
+          minimum: 0
+        would_strand:
+          type: array
+          items:
+            $ref: '#/components/schemas/M4_UnitId'
+        safe:
+          type: boolean
+        pending_unsaid:
+          type: array
+          items:
+            $ref: '#/components/schemas/M4_WorkerName'
+    M4_WorkerName:
+      type: string
+      pattern: ^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$
+      not:
+        pattern: '[^a-z0-9-]'
+      description: 'Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных
+        латинских букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранной спеки
+        проверяется отдельно.'
+    M4_ConsoleRefusal:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+      description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
+    M4_Denied:
+      allOf:
+      - $ref: '#/components/schemas/M4_ConsoleRefusal'
+      - properties:
+          error:
+            const: denied
+    M4_NoRoute:
+      allOf:
+      - $ref: '#/components/schemas/M4_ConsoleRefusal'
+      - properties:
+          detail:
+            const: no such route
+          error:
+            const: no such path
+    M4_Method:
+      allOf:
+      - $ref: '#/components/schemas/M4_ConsoleRefusal'
+      - properties:
+          detail:
+            const: method
+          error:
+            const: method
+    M4_Unavailable:
+      allOf:
+      - $ref: '#/components/schemas/M4_ConsoleRefusal'
+      - properties:
+          error:
+            enum:
+            - busy
+            - denied
+            - unavailable
+    M4_DrainStarted:
+      type: object
+      required:
+      - draining
+      additionalProperties: false
+      properties:
+        draining:
+          $ref: '#/components/schemas/M4_Server'
+    M4_DrainCleared:
+      type: object
+      required:
+      - draining
+      additionalProperties: false
+      properties:
+        draining:
+          const: ''
+    BlobWritten:
+      allOf:
+      - $ref: '#/components/schemas/M3_Unit'
+      - type: object
+        required:
+        - bytes
+        properties:
+          bytes:
+            type: integer
+            minimum: 0
+    SecretFreeValue:
+      anyOf:
+      - type:
+        - 'null'
+        - boolean
+        - number
+        - string
+      - type: array
+        items:
+          $ref: '#/components/schemas/SecretFreeValue'
+      - type: object
+        propertyNames:
+          not:
+            pattern: _secret(?![\s\S])
+        additionalProperties:
+          $ref: '#/components/schemas/SecretFreeValue'
+    TableRow:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          $ref: '#/components/schemas/M3_UnitId'
+        held_by:
+          anyOf:
+          - $ref: '#/components/schemas/M4_WorkerName'
+          - type: 'null'
+        garbled:
+          type: boolean
+      propertyNames:
+        not:
+          pattern: _secret(?![\s\S])
+      additionalProperties:
+        $ref: '#/components/schemas/SecretFreeValue'
+      description: Поля объявленной таблицы и stamp проверяются по её спеке; секретные поля исключены на любой глубине.
+        garbled=true означает только диагностическую строку name/garbled.
+      allOf:
+      - if:
+          required:
+          - garbled
+          properties:
+            garbled:
+              const: true
+        then:
+          maxProperties: 2
+    TableList:
+      type: object
+      minProperties: 1
+      maxProperties: 1
+      propertyNames:
+        $ref: '#/components/schemas/M4_SubsystemName'
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/TableRow'
+      description: Единственное имя свойства равно table в пути.
+    TableWritten:
+      type: object
+      required:
+      - row
+      additionalProperties: false
+      properties:
+        row:
+          $ref: '#/components/schemas/TableRow'
+    TableDeleted:
+      type: object
+      required:
+      - deleted
+      additionalProperties: false
+      properties:
+        deleted:
+          $ref: '#/components/schemas/M3_UnitId'
+    SnapshotUnit:
+      type: object
+      required:
+      - id
+      - revision
+      - worker
+      - server
+      properties:
+        id:
+          $ref: '#/components/schemas/M3_UnitId'
+        revision:
+          type: integer
+          minimum: 1
+        worker:
+          anyOf:
+          - $ref: '#/components/schemas/M4_WorkerName'
+          - type: 'null'
+        server:
+          anyOf:
+          - $ref: '#/components/schemas/M4_Server'
+          - type: 'null'
+      propertyNames:
+        not:
+          pattern: _secret(?![\s\S])
+      additionalProperties:
+        $ref: '#/components/schemas/SecretFreeValue'
+      description: Дополнительные поля — ровно snapshot по спеке, без blob; адреса маскированы.
+    SnapshotShard:
+      type: object
+      required:
+      - cluster
+      - worker
+      - ts
+      properties:
+        cluster:
+          type: string
+        worker:
+          anyOf:
+          - $ref: '#/components/schemas/M4_WorkerName'
+          - type: 'null'
+        ts:
+          type: number
+      minProperties: 4
+      maxProperties: 4
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/SnapshotUnit'
+      description: Четвёртое свойство — имя rows из спеки. Отдельный шард, без транзакции нескольких шардов.
+    M2_ConsoleRefusal:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+      description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
+    M2_Denied:
+      allOf:
+      - $ref: '#/components/schemas/M2_ConsoleRefusal'
+      - properties:
+          error:
+            const: denied
+    M2_NoRoute:
+      allOf:
+      - $ref: '#/components/schemas/M2_ConsoleRefusal'
+      - properties:
+          detail:
+            const: no such route
+          error:
+            const: no such path
+    M2_Method:
+      allOf:
+      - $ref: '#/components/schemas/M2_ConsoleRefusal'
+      - properties:
+          detail:
+            const: method
+          error:
+            const: method
+  responses:
+    M4_BadBody:
+      description: Invalid request form or body transport; lessons 4 and 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_ConsoleRefusal'
+    M4_Unauthenticated:
+      description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_Denied'
+    M4_Denied:
+      description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_Denied'
+    M4_NoRoute:
+      description: No route; lesson 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_NoRoute'
+    M4_Method:
+      description: Method not supported by this path; lesson 9.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_Method'
+    M4_SlowBody:
+      description: Тело читается слишком медленно; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_ConsoleRefusal'
+    M4_LargeBody:
+      description: Тело больше предела консоли; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_ConsoleRefusal'
+    M4_RateLimited:
+      description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.
+      headers:
+        Retry-After:
+          description: Срок повтора по правилу предела входа.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_ConsoleRefusal'
+    M4_Unavailable:
+      description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+        confirmed. Read state before retrying a mutation.'
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema:
+            type: string
+            const: '1'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M4_Unavailable'
+    M2_BadBody:
+      description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_ConsoleRefusal'
+    M2_Unauthenticated:
+      description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_Denied'
+    M2_Denied:
+      description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_Denied'
+    M2_NoRoute:
+      description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_NoRoute'
+    M2_Method:
+      description: Метод не GET.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_Method'
+    M2_SlowBody:
+      description: Тело читается слишком медленно; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_ConsoleRefusal'
+    M2_LargeBody:
+      description: Тело больше предела консоли; урок 9 Н4.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_ConsoleRefusal'
+    M2_RateLimited:
+      description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.
+      headers:
+        Retry-After:
+          description: Срок повтора по правилу предела входа.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M2_ConsoleRefusal'
+x-mounting: 'Консоль: /schema и /drain общие, пути единиц и таблиц — root либо /<sub>. /v1/objects — отдельная дверь
+  ресурса; общие отказы консоли к ней не применяются.'
+x-byte-limits: JSON console >= 1048576 bytes; blob PUT 33554432; resource copy 67108864. Размер проверяется по фактически
+  прочитанным байтам и заголовку, не maxLength строки. Chunked консоли — 400; blob без Content-Length — 400.
