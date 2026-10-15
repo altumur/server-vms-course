@@ -1,0 +1,45 @@
+openapi: 3.1.0
+info: {title: М10/11 двери демона хранилища, version: "1"}
+paths:
+  /v1/status:   {get: {description: "члены группы, лидер, срок, индексы; у любого члена", responses: {"200": {description: "{members, leader, term, index}"}, "503": {description: unavailable}}}}
+  /v1/join:     {post: {description: "вступление сервера, названного в сертификате; только -api, mTLS", responses: {"200": {description: принят}, "403": {description: вышедший без admit}, "409": {description: "refused: чётность (без -force) или размер сверх объявленного"}, "503": {description: unavailable}}}}
+  /v1/leave:    {post: {description: "выход; за себя — любой член; за другого — admin.sock лидера", responses: {"200": {description: вышел}, "403": {description: за другого не с admin.sock лидера}, "503": {description: unavailable}}}}
+  /v1/rights:   {get: {description: "файл прав — admin (урок 6)", responses: {"200": {description: configstore-rights.json}, "403": {description: не admin}}}}
+  /v1/write:    {post: {description: "урок 1; {op: floor, floor} — только admin, только вверх", requestBody: {required: true, content: {application/json: {schema: {oneOf: [{$ref: "#/components/schemas/Cmd"}, {type: object, required: [op, floor], additionalProperties: false, properties: {op: {const: floor}, floor: {type: integer, minimum: 0}}}]}}}}, responses: {"200": {description: урок 1 Written}, "400": {description: урок 1}, "403": {description: floor не admin}, "409": {description: floor вниз | урок 1 conflict}, "412": {description: урок 1 guard}, "503": {description: unavailable | ambiguous}}}}
+  /metrics:     {get: {description: "configstore_* (Н1.3)", responses: {"200": {description: text/plain}}}}
+components:
+  schemas:   # Key и Cmd — дословно из М10_Platform/spec/01-storage.api.openapi.yaml; повтор для самостоятельного документа
+    Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+          - pattern: '^/'
+          - pattern: '(^|/)\.\.(/|(?![\s\S]))'
+      description: >-
+        Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..;
+        ..foo допустим. Предел 1024 байта UTF-8 и меньший файловый предел
+        проверяются отдельно; maxLength не выражает число байтов.
+    Cmd:
+      type: object
+      required: [op, key]
+      properties:
+        op: {type: string, enum: [put, delete]}
+        key: {$ref: "#/components/schemas/Key"}
+        cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
+        guard:
+          type: object
+          required: [key, index]
+          additionalProperties: false
+          properties:
+            key: {$ref: "#/components/schemas/Key"}
+            index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
+        id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+      oneOf:
+        - properties:
+            op: {const: put}
+            items: {type: object, additionalProperties: {type: string}}
+          required: [items]  # у put обязателен; МОЖЕТ быть пустым объектом
+        - properties:
+            op: {const: delete}
+            items: {}  # у delete не читается: любое JSON-значение или отсутствие — не отказ
