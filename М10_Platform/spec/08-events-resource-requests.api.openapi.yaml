@@ -111,6 +111,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
+        '413':
+          description: Выбранное тело больше 64 МиБ; до успешных заголовков, без усечения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceError'
       parameters:
       - name: scope
         in: query
@@ -652,7 +658,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TextError'
         '429':
-          description: Учёт полон либо не читается
+          description: Учёт полон либо успешно прочитанная строка учёта повреждена; недоступное чтение — 503
           content:
             application/json:
               schema:
