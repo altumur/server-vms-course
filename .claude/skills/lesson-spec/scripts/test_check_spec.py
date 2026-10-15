@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import yaml
 
-from check_spec import Check, references
+from check_spec import Check, pointer, references
 
 
 class CheckSpecTests(unittest.TestCase):
@@ -55,6 +55,17 @@ components:
         result = Check(self.root)
         result.lesson(self.lesson)
         return result
+
+    def cli(self):
+        return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
+                               "--root", str(self.root), str(self.lesson)], capture_output=True, text=True)
+
+    def assert_cli(self, code, message=None):
+        result = self.cli()
+        self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+        self.assertIn("PASS" if code == 0 else "FAIL", result.stdout)
+        if message:
+            self.assertIn(message, result.stdout)
 
     def replace(self, path, before, after):
         text = path.read_text()
@@ -145,10 +156,74 @@ components:
 
     def test_cli_fails_for_broken_reference_link(self):
         self.lesson.write_text("[Norms][canon]\n\n[canon]: spec/missing.md\n")
-        result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
-                                 "--root", str(self.root), str(self.lesson)], capture_output=True, text=True)
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn("missing link target", result.stdout)
+        self.assert_cli(1, "missing link target")
+
+    def test_cli_pointer_array_indices(self):
+        doc = yaml.safe_load(self.api.read_text())
+        doc["components"]["schemas"]["List"] = {"prefixItems": [{"type": "string"}, {"type": "integer"}]}
+        for index in ["0", "1", "2", "-1", "01", "+1", " 1", "1 ", "1_0", "\u0661", "-", ""]:
+            with self.subTest(index=index):
+                doc["components"]["schemas"]["Example"] = {
+                    "$ref": "#/components/schemas/List/prefixItems/" + index}
+                self.write_api(doc)
+                self.assert_cli(0 if index in {"0", "1"} else 1)
+
+    def test_cli_pointer_escape_sequences(self):
+        doc = yaml.safe_load(self.api.read_text())
+        doc.update({"x-target~2": {"type": "object"}, "x-target~": {"type": "string"},
+                    "x-target/child": {"type": "integer"}})
+        for ref, valid in [("#/x-target~2", False), ("#/x-target~", False),
+                           ("#/x-target~02", True), ("#/x-target~0", True), ("#/x-target~1child", True)]:
+            with self.subTest(ref=ref):
+                doc["components"]["schemas"]["Example"] = {"$ref": ref}
+                self.write_api(doc)
+                self.assert_cli(0 if valid else 1)
+
+    def test_pointer_uri_decoding_and_object_tokens(self):
+        doc = {"": "empty", "a/b": "slash", "~1": "tilde", "01": "zero", "-1": "minus",
+               "%": "percent", "%FF": "literal percent", "\ufffd": "replacement", "\u044f": "utf8"}
+        for ref, expected in [("#/", "empty"), ("#/a~1b", "slash"), ("#/~01", "tilde"),
+                              ("#/01", "zero"), ("#/-1", "minus"), ("#/%25", "percent"),
+                              ("#/%25FF", "literal percent"), ("#/%D1%8F", "utf8"), ("#%2F01", "zero")]:
+            with self.subTest(ref=ref):
+                self.assertEqual(pointer(doc, ref), expected)
+        self.assertIs(pointer(doc, "#"), doc)
+        for ref in ["#/%", "#/%FF", "#/%D1", "#/~", "#/~2", "#anchor", "#/01/0"]:
+            with self.subTest(ref=ref), self.assertRaises((ValueError, KeyError, TypeError)):
+                pointer(doc, ref)
+
+    def test_cli_markdown_images_all_forms(self):
+        (self.spec / "diagram.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        for use in ["![Diagram]({target})", "![Diagram][image]\n\n[image]: {target}",
+                    "![image][]\n\n[image]: {target}", "![image]\n\n[image]: {target}"]:
+            for target, valid in [("spec/diagram.svg", True), ("spec/missing.svg", False)]:
+                with self.subTest(use=use, target=target):
+                    self.lesson.write_text("# Example\n" + use.format(target=target) + "\n")
+                    self.assert_cli(0 if valid else 1)
+
+    def test_cli_raw_html_is_explicitly_unsupported(self):
+        for html in ['<a href="spec/missing.norms.md">Norms</a>',
+                     '<a href="spec/01-example.norms.md">Norms</a>',
+                     '<img src="spec/missing.svg">', '<div>text</div>',
+                     '<!-- comment -->']:
+            with self.subTest(html=html):
+                self.lesson.write_text("# Example\n" + html + "\n")
+                self.assert_cli(1, "unsupported raw HTML")
+
+    def test_html_and_images_in_code_are_examples(self):
+        self.lesson.write_text('''# Example
+`<a href="missing.md">not a link</a>`
+`![not an image](missing.svg)`
+```html
+<img src="missing.svg">
+```
+''')
+        self.assert_cli(0)
+
+    def test_image_alt_is_not_independent_link_or_html(self):
+        (self.spec / "diagram.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        self.lesson.write_text('![Caption [text](missing.md) <b>text</b>](spec/diagram.svg)\n')
+        self.assert_cli(0)
 
     def test_unknown_acceptance_alongside_supported(self):
         (self.acceptance / "assertions.tsv").write_text("id\tassertion\nextra\tunknown\n")
