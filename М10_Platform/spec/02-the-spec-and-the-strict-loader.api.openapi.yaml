@@ -211,8 +211,12 @@ components:
             anyOf:
             - type: 'null'
             - type: integer
+              minimum: -9007199254740991
+              maximum: 9007199254740991
           inherit:
             type: integer
+            minimum: -9007199254740991
+            maximum: 9007199254740991
         not:
           required:
           - enum
@@ -223,8 +227,12 @@ components:
             anyOf:
             - type: 'null'
             - type: number
+              minimum: -1.7976931348623157e+308
+              maximum: 1.7976931348623157e+308
           inherit:
             type: number
+            minimum: -1.7976931348623157e+308
+            maximum: 1.7976931348623157e+308
         not:
           required:
           - enum
