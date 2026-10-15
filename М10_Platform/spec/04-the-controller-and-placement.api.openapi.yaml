@@ -103,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Draining'
+                $ref: '#/components/schemas/DrainStarted'
         '400':
           $ref: '#/components/responses/BadBody'
         '401':
@@ -142,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Draining'
+                $ref: '#/components/schemas/DrainCleared'
         '400':
           $ref: '#/components/responses/BadBody'
         '401':
@@ -524,14 +524,22 @@ components:
           enum:
           - shared
           - distinct
-    Draining:
+    DrainStarted:
       type: object
       required:
       - draining
       additionalProperties: false
       properties:
         draining:
-          type: string
+          $ref: '#/components/schemas/Server'
+    DrainCleared:
+      type: object
+      required:
+      - draining
+      additionalProperties: false
+      properties:
+        draining:
+          const: ''
     Empty:
       type: object
       required: []
