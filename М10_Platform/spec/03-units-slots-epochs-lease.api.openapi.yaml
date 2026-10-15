@@ -146,9 +146,12 @@ components:
       type: string
       minLength: 1
       maxLength: 200
-      pattern: '^[^/]+$'
+      not:
+        anyOf:
+          - const: '..'
+          - pattern: '/'
       description: >-
-        Один непустой сегмент, не больше 200 UTF-8-байт (Н3).
+        Один непустой сегмент, кроме '..', не больше 200 UTF-8-байт (Н3).
         maxLength считает символы и не заменяет отдельную проверку байтов.
     UnitId:
       type: string
