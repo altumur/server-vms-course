@@ -16,7 +16,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory
 from w2cplatform.domain.grants import DOMAIN_GRANTS, Grant, LastAdmin, domain_may, set_domain_grants
 from w2cplatform.domain.members import Members
@@ -184,7 +184,7 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
             except ApiError as err:
                 assert err.status == 400 and err.detail.startswith("source") and not leaks(err.detail), err.detail
             assert not leaks([e.vars.get(path)[0] for path in e.vars.list("")])
-        d = DeviceCluster("SN1", FakeVariables(), wall=Clock())
+        d = EmbeddedMember("SN1", FakeVariables(), wall=Clock())
         d.boot()
         try:
             d._update(1, {"source": value}, None)
