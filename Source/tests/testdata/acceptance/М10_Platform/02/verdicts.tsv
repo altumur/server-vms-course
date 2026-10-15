@@ -1,6 +1,6 @@
 # Приёмка урока М10/2 «Спека подсистемы и строгий загрузчик» (ADR-0080): вердикты загрузчика.
 # Строка: case<TAB>verdict. case — файл cases/<case>.subsystem.yaml, загруженный один, как спека подсистемы;
-# verdict — ok (грузится) или refused (отказ, называющий файл и путь ключа). Правила — нормы урока (Н1, Н4);
+# verdict — ok (грузится) или refused (отказ, называющий файл); диагностика — diagnostics.tsv и чтением по Н5. Правила — Н1, Н4;
 # здесь только таблица. Происхождение: таблица spec_verdicts.tsv (ревью 14 и 15, вердикты «Архитектора», 2026-10-06),
 # перенесена сюда 2026-10-14 с восемью новыми случаями (имя, обязательный ключ, пустой документ, snapshot, default+inherit).
 # Загрузчик, отвечающий иначе, — красный тест, не находка ревью.
@@ -11,6 +11,7 @@ base	ok
 blob_default	refused
 blob_inherit	refused
 blob_required	refused
+blob_required_false	ok
 block_scalar_hides_lease	ok
 block_scalar_hides_tail	refused
 bom_utf8	refused
@@ -147,6 +148,7 @@ unknown_depth2	refused
 unknown_depth3	refused
 unknown_depth4	refused
 unknown_in_lease	refused
+unknown_multiple	refused
 unplaced_delete_after_about_its_id	ok
 unplaced_delete_after_fixed_field	refused
 worker_reads_bare	refused
