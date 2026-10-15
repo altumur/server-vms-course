@@ -1,20 +1,179 @@
+# Копии Key, Version, Listing и отказов — из контракта М10/1; автор проверяет их равенство.
 openapi: 3.1.0
-info: {title: М10/6 двери прав, version: "1"}
+info:
+  title: М10/6 — права хранилища
+  version: '1'
+  description: Нормы — 06-rights.norms.md. Личность задаётся сокетом или доверенной пересылкой; параметр запроса
+    не выдаёт права. Остальные операции хранилища принадлежат М10/1.
 paths:
   /v1/rights:
     get:
-      summary: файл прав, как загружен — только admin.sock
-      responses: {"200": {description: "configstore-rights.json как загружен", content: {application/json: {}}}, "403": {description: "не admin", content: {application/json: {schema: {$ref: "#/components/schemas/Forbidden"}}}}, "503": {description: unavailable}}
+      summary: Загруженный файл прав; только admin.sock
+      responses:
+        '200':
+          description: Полный загруженный объект JSON; без оболочки и добавочных полей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RightsFile'
+        '403':
+          description: Не admin либо попытка подмены роли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Файл прав не загружен или нет маршрута.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Хранилище недоступно.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailableFault'
   /v1/list:
     get:
-      summary: урок 1; имена и версии под префиксом любой роли, без значений
-      parameters: [{name: prefix, in: query, required: false, schema: {type: string}}]
-      responses: {"200": {description: "Listing урока 1"}, "404": {description: нет маршрута}, "503": {description: unavailable}}
+      summary: Имена и версии под префиксом; право read не требуется
+      parameters:
+      - name: prefix
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 'Listing М10/1: все имена и версии под префиксом, без значений; порядок по UTF-8-байтам.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '403':
+          description: Подмена роли или недоверенная пересылка; отсутствие права read само по себе не причина отказа
+            list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Нет маршрута.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Хранилище недоступно.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailableFault'
 components:
   schemas:
-    Forbidden:
+    Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - pattern: ^/
+        - pattern: (^|/)\.\.(/|(?![\s\S]))
+      description: 'Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..; ..foo допустим. Предел
+        1024 байта UTF-8 и меньший файловый предел проверяются отдельно; maxLength не выражает число байтов.'
+    Version:
+      type: string
+      pattern: ^(?:0|[1-9][0-9]{0,19})(?![\s\S])
+      description: Непустая версия по Н1; сравнивается вызывающим только на равенство.
+    Listing:
       type: object
-      required: [kind, error]
+      required:
+      - keys
+      additionalProperties: false
       properties:
-        kind:  {const: forbidden}
-        error: {type: string}             # "<роль> may not <read|write|delete> <ключ>" (+ имя файла прав — решает реализация)
+        keys:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/Key'
+          additionalProperties:
+            $ref: '#/components/schemas/Version'
+      description: Порядок имён keys — по UTF-8-байтам; JSON Schema порядок объекта не проверяет.
+    ForbiddenFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: forbidden
+        error:
+          type: string
+    BadRequestFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: badrequest
+        error:
+          type: string
+    UnavailableFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: unavailable
+        error:
+          type: string
+    RoleName:
+      type: string
+      pattern: ^[a-z][a-z0-9_-]{0,63}(?![\s\S])
+      not:
+        enum:
+        - admin
+        - configstore
+        - configstore-door
+    RoleRights:
+      type: object
+      additionalProperties: false
+      required:
+      - group
+      - read
+      - write
+      properties:
+        group:
+          type: string
+          minLength: 1
+        read:
+          type: array
+          items:
+            type: string
+        write:
+          type: array
+          items:
+            type: string
+        delete:
+          type: array
+          items:
+            type: string
+      description: Если delete отсутствует, действует write; явный пустой delete запрещает удаление. Образцы и отрицания
+        — Н1.2/Н1.3. Генератор выводит delete явно.
+    RightsFile:
+      type: object
+      additionalProperties: false
+      required:
+      - roles
+      properties:
+        roles:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/RoleName'
+          additionalProperties:
+            $ref: '#/components/schemas/RoleRights'
+      description: Загруженный configstore-rights.json. Совпадение с генератором, группами и читателями — смысловая
+        проверка Н1/Н3, не JSON Schema.
