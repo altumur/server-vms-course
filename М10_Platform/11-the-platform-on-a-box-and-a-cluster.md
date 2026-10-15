@@ -265,20 +265,27 @@ paths:
   /v1/write:    {post: {description: "урок 1; {op: floor, floor} — только admin, только вверх", requestBody: {required: true, content: {application/json: {schema: {oneOf: [{$ref: "#/components/schemas/Cmd"}, {type: object, required: [op, floor], additionalProperties: false, properties: {op: {const: floor}, floor: {type: integer, minimum: 0}}}]}}}}, responses: {"200": {description: урок 1 Written}, "400": {description: урок 1}, "403": {description: floor не admin}, "409": {description: floor вниз | урок 1 conflict}, "412": {description: урок 1 guard}, "503": {description: unavailable | ambiguous}}}}
   /metrics:     {get: {description: "configstore_* (Н1.3)", responses: {"200": {description: text/plain}}}}
 components:
-  schemas:   # Cmd — дословно схема урока 1 Н2 (источник там; здесь повтор, чтобы документ разрешался сам)
+  schemas:   # Cmd — дословно из М10_Platform/spec/01-storage.api.openapi.yaml; повтор для самостоятельного документа
     Cmd:
       type: object
       required: [op, key]
       properties:
         op: {type: string, enum: [put, delete]}
         key: {type: string}
-        items: {type: object, additionalProperties: {type: string}}  # у put обязателен (МОЖЕТ быть пустым), у delete отсутствует
         cas: {type: [string, "null"]}                                 # см. Н1
         guard:
           type: object
           required: [key, index]
           properties: {key: {type: string}, index: {type: string}}
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+      oneOf:
+        - properties:
+            op: {const: put}
+            items: {type: object, additionalProperties: {type: string}}
+          required: [items]  # у put обязателен; МОЖЕТ быть пустым объектом
+        - properties:
+            op: {const: delete}
+            items: {}  # у delete не читается: любое JSON-значение или отсутствие — не отказ
 ```
 
 Двери ресурса — урок 8 (`/mirrored/<server>` для `restore`); консоли — уроки 9, 10.
