@@ -245,6 +245,8 @@ class Check:
         headings, ids, stack = [], [], []
         section = None
         for pos, token in enumerate(tokens):
+            if token.type == "heading_open" and token.tag == "h1" and token.level == 0:
+                section = None
             if token.type == "heading_open" and token.tag == "h2" and token.level == 0:
                 inline = tokens[pos + 1]
                 section = "".join(child.content for child in inline.children or []
