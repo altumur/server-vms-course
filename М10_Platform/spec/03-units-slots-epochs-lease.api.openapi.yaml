@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/UnitList"}
-        "400": {$ref: "#/components/responses/BadRequest"}
+        "400": {$ref: "#/components/responses/BadRead"}
         "401": {$ref: "#/components/responses/Unauthenticated"}
         "403": {$ref: "#/components/responses/Denied"}
         "404": {$ref: "#/components/responses/NotFound"}
@@ -124,7 +124,7 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/DeletedUnit"}
-        "400": {$ref: "#/components/responses/BadRequest"}
+        "400": {$ref: "#/components/responses/BadRead"}
         "401": {$ref: "#/components/responses/Unauthenticated"}
         "403": {$ref: "#/components/responses/Denied"}
         "404": {$ref: "#/components/responses/NotFound"}
@@ -153,9 +153,14 @@ components:
     UnitId:
       type: string
       minLength: 1
+      not:
+        anyOf:
+          - enum: [".", ".."]
+          - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: >-
-        id как строка по Н1.3; numeric — десятичное целое от 1,
-        named — значение поля с грамматикой Н1.3. Unicode-категории проверяются отдельно.
+        Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки.
+        numeric дополнительно требует десятичное целое от 1;
+        named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
     ClientFields:
       type: object
       propertyNames:
@@ -277,6 +282,11 @@ components:
         - properties:
             error: {enum: [store unavailable, busy, denied]}
   responses:
+    BadRead:
+      description: Общий отказ транспорта или пути без проверки полей записи; detail и error, без fault.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TextRefusal"}
     BadRequest:
       description: >-
         Отказ формы по Н4; порядок Н3. Также общий отказ чтения тела консоли:
