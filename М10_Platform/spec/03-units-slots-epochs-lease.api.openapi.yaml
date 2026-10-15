@@ -153,6 +153,15 @@ components:
       description: >-
         Один непустой сегмент, кроме '..', не больше 200 UTF-8-байт (Н3).
         maxLength считает символы и не заменяет отдельную проверку байтов.
+    WorkerName:
+      type: string
+      pattern: '^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$'
+      not:
+        pattern: '[^a-z0-9-]'
+      description: >-
+        Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой
+        суффикс из строчных латинских букв/цифр с одиночными дефисами между частями.
+        Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
     UnitId:
       type: string
       minLength: 1
@@ -224,7 +233,7 @@ components:
         epoch: {type: integer, minimum: 1}
         revision: {type: integer, minimum: 1}
         observed_revision: {type: integer, minimum: 0}
-        worker: {type: string}
+        worker: {$ref: "#/components/schemas/WorkerName"}
         server: {type: string}
         age: {type: number}
         worker_state: {type: string}
