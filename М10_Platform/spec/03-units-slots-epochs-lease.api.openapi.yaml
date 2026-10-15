@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info: {title: М10/3 дверь единиц, version: "1"}
+x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
+paths:
+  /{rows}:
+    parameters: [{name: rows, in: path, required: true, schema: {type: string}}]
+    post:
+      summary: создать единицу; идемпотентно по заголовку
+      parameters:
+        - {name: Idempotency-Key, in: header, required: true, schema: {type: string, maxLength: 200}}
+      requestBody: {content: {application/json: {schema: {type: object}}}}   # поля спеки, без platform_fields
+      responses:
+        "201": {description: создано (или тот же ответ на повтор ключа); тело — строка (значения по типам, секреты маской) + worker: null}
+        "400": {description: нет заголовка / ключ не один сегмент / тело не объект / отказ формы (Н4)}
+        "409": {description: exists | conflict (fault must_match | unique | garbled) | in flight}
+        "413": {description: тело больше предела}
+        "422": {description: key reused — тот же ключ с другим запросом}
+        "503": {description: хранилище недоступно; ответ не запоминается}
+    get:
+      summary: все единицы с полями размещения — урок 9
+      responses:
+        "200": {description: "{rows: [...], configured: [...]} — форма ответа в уроке 9 Н2 /{rows}"}
+        "503": {description: хранилище недоступно}
+  /{rows}/{id}:
+    parameters: [{name: rows, in: path, required: true, schema: {type: string}}, {name: id, in: path, required: true, schema: {type: string}}]
+    put:
+      summary: править поля; Idempotency-Key необязателен
+      requestBody: {required: true, content: {application/json: {schema: {type: object, description: поля спеки, без platform_fields; секрет пустой — прежний}}}}
+      responses:
+        "200": {description: строка после правки, revision + 1}
+        "400": {description: отказ формы; fixed-поле; плохой id}
+        "404": {description: нет такой единицы (нет строки или надгробие); путь длиннее одного id}
+        "409": {description: conflict (fault must_match | unique | garbled) — ссылки по живым строкам}
+        "413": {description: тело больше предела}
+        "503": {description: хранилище недоступно; ответ под ключом не запоминается}
+    delete:
+      summary: пометить удалённой (первый шаг)
+      responses:
+        "200": {description: "{deleted: <id>}"}
+        "404": {description: нет такой единицы или уже удалена}
+        "503": {description: хранилище недоступно}
+components:
+  schemas:
+    Refusal:
+      type: object
+      required: [detail, error]
+      additionalProperties: false
+      properties:
+        detail: {type: string}
+        error:  {type: string}             # слово или текст; слова: exists, conflict, no such unit, key reused, in flight, taken over
+        fault:  {type: string, enum: [not_json, not_number, too_long, bad_url, must_match, unique, garbled]}
