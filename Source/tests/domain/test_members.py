@@ -16,7 +16,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import DomainAgent
 from w2cplatform.domain.api import ConsoleAPI
 from w2cplatform.domain.console import Console
-from vms.camera_cluster import DeviceCluster, member_name
+from tests.domain.conftest import EmbeddedMember, member_name
 from w2cplatform.trust.enroll import Manufacturer, Pledge, Registrar
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.members import Members, apply
@@ -78,7 +78,7 @@ def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():
     reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
                     cluster_of=member_name)
     _enroll(reg, vendor, "SN9002")
-    cam = DeviceCluster("SN9002", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN9002", FakeVariables(), wall=wall)
     cam.boot()
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
                 published=cam.local_objects()))
@@ -102,7 +102,7 @@ def test_a_member_that_leaves_leaves_the_running_views_list_in_the_same_pass():
     reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
                     cluster_of=member_name)
     _enroll(reg, vendor, "SN9012")
-    cam = DeviceCluster("SN9012", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN9012", FakeVariables(), wall=wall)
     cam.boot()
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
                 published=cam.local_objects()))
@@ -189,7 +189,7 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
     fed, north, signer, _ = _domain(wall)
     members = Members(north.vars, wall=wall, domain="north")
     members.add("cam-SN9001", "voucher", serial="SN9001")
-    cam = DeviceCluster("SN9007", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN9007", FakeVariables(), wall=wall)
     cam.boot()
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()))
     assert apply(fed, members, north.objects, wall=wall)["joined"] == ["cam-SN9001"] and "cam-SN9007" not in fed.clusters
