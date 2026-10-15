@@ -449,7 +449,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/M3_ClientFields'
+              $ref: '#/components/schemas/TableInput'
     head:
       summary: 'HEAD: Список строк таблицы без секретов'
       responses:
@@ -1110,6 +1110,7 @@ components:
           bytes:
             type: integer
             minimum: 0
+      description: Полная Unit и число принятых байтов. Спека с blob и объявленным unit.fields.bytes отвергается при загрузке по Н1.5.
     SecretFreeValue:
       anyOf:
       - type:
@@ -1166,6 +1167,15 @@ components:
         items:
           $ref: '#/components/schemas/TableRow'
       description: Единственное имя свойства равно table в пути.
+    TableInput:
+      type: object
+      propertyNames:
+        not:
+          enum:
+          - held_by
+          - garbled
+      additionalProperties: true
+      description: Только объявленные поля этой таблицы; типы, required, enum, schema и ключ проверяются динамически по спеке. id/revision/worker/placement/epoch/phase/observed_revision допустимы при объявлении. Поле name допускается только у key=name с типом string.
     TableWritten:
       type: object
       required:
@@ -1208,7 +1218,7 @@ components:
           pattern: _secret(?![\s\S])
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
-      description: Дополнительные поля — ровно snapshot по спеке, без blob; адреса маскированы.
+      description: Дополнительные поля — ровно snapshot по спеке, без blob/секретов/авторского server; server здесь вычисляется платформой. Адреса маскированы.
     SnapshotShard:
       type: object
       required:
@@ -1230,7 +1240,7 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/SnapshotUnit'
-      description: Четвёртое свойство — имя rows из спеки. Отдельный шард, без транзакции нескольких шардов.
+      description: Четвёртое свойство — имя rows из спеки; cluster/worker/ts как rows отвергаются загрузчиком. Отдельный шард, без транзакции нескольких шардов.
     M2_ConsoleRefusal:
       type: object
       required:
