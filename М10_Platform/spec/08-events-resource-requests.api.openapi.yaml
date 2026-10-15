@@ -1053,6 +1053,7 @@ components:
         state:
           const: live
         truncated:
+          description: Число подходящих уникальных по id строк, не вошедших в локальный limit после дедупликации.
           type: integer
           minimum: 0
         partial:
@@ -1075,6 +1076,7 @@ components:
           type: string
           pattern: ^live(?:; [^;\r\n]+ (?:unreachable|from mirror))*(?![\s\S])
         truncated:
+          description: Сумма локальных truncated плюс пропуски общей обрезки после дедупликации кандидатов; копии могут учитываться по нескольким источникам, это не точное число разных пропущенных событий.
           type: integer
           minimum: 0
         partial:
