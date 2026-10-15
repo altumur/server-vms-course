@@ -53,7 +53,7 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/KeyReused"}
         "429": {$ref: "#/components/responses/RateLimited"}
-        "503": {$ref: "#/components/responses/Unavailable"}
+        "503": {$ref: "#/components/responses/WriteUnavailable"}
     get:
       summary: все единицы и конфигурация, доступные по view — урок 9
       responses:
@@ -115,7 +115,7 @@ paths:
               schema: {$ref: "#/components/schemas/ReferenceConflict"}
         "413": {$ref: "#/components/responses/LargeBody"}
         "429": {$ref: "#/components/responses/RateLimited"}
-        "503": {$ref: "#/components/responses/Unavailable"}
+        "503": {$ref: "#/components/responses/WriteUnavailable"}
     delete:
       summary: пометить удалённой без изменения revision
       responses:
@@ -290,6 +290,13 @@ components:
         - properties:
             detail: {const: method}
             error: {const: method}
+    SealingUnavailable:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            error: {const: unavailable}
+            detail: {const: "the sealing key is set and does not read"}
+      description: Кольцо секретов задано, но не читается; только запись с секретами, М10/7 Н2/Н4.
     Unavailable:
       allOf:
         - $ref: "#/components/schemas/TextRefusal"
@@ -363,3 +370,17 @@ components:
       content:
         application/json:
           schema: {$ref: "#/components/schemas/Unavailable"}
+    WriteUnavailable:
+      description: >-
+        Общий 503 по Unavailable либо заданное, но нечитаемое кольцо секретов по М10/7.
+        Ответ 5xx как done не сохраняется; состояние pending — по М10/3 Н3.
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; для ошибки кольца не требуется.
+          schema: {type: string, const: "1"}
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Unavailable"
+              - $ref: "#/components/schemas/SealingUnavailable"
