@@ -482,6 +482,15 @@ components:
             - busy
             - denied
             - unavailable
+    WorkerName:
+      type: string
+      pattern: '^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$'
+      not:
+        pattern: '[^a-z0-9-]'
+      description: >-
+        Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой
+        суффикс из строчных латинских букв/цифр с одиночными дефисами между частями.
+        Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
     UnitId:
       type: string
       minLength: 1
@@ -686,8 +695,7 @@ components:
       additionalProperties: false
       properties:
         worker:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/WorkerName'
         server:
           type:
           - string
@@ -697,10 +705,9 @@ components:
           type: string
           minLength: 1
         directory:
-          type:
-          - string
-          - 'null'
-          minLength: 1
+          anyOf:
+          - $ref: '#/components/schemas/WorkerName'
+          - type: 'null'
         scans:
           type: integer
           minimum: 0
@@ -740,8 +747,7 @@ components:
         pending_unsaid:
           type: array
           items:
-            type: string
-            minLength: 1
+            $ref: '#/components/schemas/WorkerName'
     DrainState:
       type: object
       required:
