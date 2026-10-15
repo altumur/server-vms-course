@@ -166,6 +166,14 @@ HTTP-контракт — [`02-the-spec-and-the-strict-loader.api.openapi.yaml`]
 
 Ревизии спеки в ответе нет: консоль, прочитавшая другую ревизию, уже не работает (Н3 «Смена спеки»).
 
+Успех имеет форму `SpecView`; общие отказы консоли — JSON-объект ровно с `detail` и `error`
+(оба строки), без диагностических полей загрузчика и без `kind` хранилища. Для неизвестного маршрута
+это `404 {detail: "no such route", error: "no such path"}`, для неверного метода —
+`405 {detail: "method", error: "method"}`. Остальные общие коды, условия и заголовки —
+[урок 9, Н4](../09-the-console.md#н4-отказы); они явно перечислены в контракте рядом с `200`.
+Это отказы транспорта и сторожевой, а не попытка загрузить спеку запросом `GET /spec`.
+У открытых путей действуют исключения сторожевой Н1.3 урока 9; список кодов не делает их закрытыми.
+
 ---
 
 ## Н3 Проход
@@ -271,14 +279,14 @@ HTTP-контракт — [`02-the-spec-and-the-strict-loader.api.openapi.yaml`]
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
-| `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
+| `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan` | скаляры: слова, числа, пределы | Н1.1 |
 | `unknown_depth1..4`, `unknown_multiple`, `unknown_in_lease`, `requests_unknown_key`, `requests_unknown_stamp`, `display_unknown_section`, `display_form_unknown_key`, `display_tree_*_unknown`, `dup_block_hides_unknown` | закрытый набор ключей на каждом уровне; `diagnostics.tsv` проверяет путь и полноту списка неизвестных ключей | Н1.2 |
 | `name_missing`, `name_reserved_platform`, `name_with_slash`, `name_uppercase` | имя: обязательно, грамматика, зарезервированные | Н1.2 |
 | `capacity_default_*`, `requires_nothing`, `servers_both`, `tie_break_random`, `dead_band_word`, `slot_prefix_*`, `status_worker`, `hb_worker` | значения: обязательный ключ, закрытые перечни, типы | Н1.2, Н1.3 |
 | `lease_*` (остальные), `lease_empty_map`, `lease_absent`, `snapshot_said_nothing`, `unplaced_delete_after_*`, `delete_after_with_about`, `about_field_not_fixed_nowitness` | ослабляющие ключи: одно написание, сказанный ключ говорит, условия `delete_after` | Н1.2 |
 | `type_text`, `required_*`, `default_map_string`, `default_and_inherit`, `inherit_map*`, `json_default_map`, `enum_*`, `table_field_*`, `table_marks`, `bound_to_string`, `blob_required`, `blob_required_false`, `blob_default`, `blob_inherit` | грамматика поля | Н1.3 |
-| `fields_*`, `group_by_unknown_field`, `spread_by_*`, `snapshot_unknown_field`, `requests_key_*`, `retire_when_unknown_field`, `display_field*`, `display_options_*`, `display_fields_platform_key_*`, `rows_*`, `table_*_shadow`, `table_servers`, `objects_rows_heartbeats`, `door_routes_dup`, `worker_requests_itself`, `worker_reads_bare`, `secrets_reader_domainconsole`, `display_*` (остальные) | ссылки между ключами; слова консоли — строки; платформенные имена | Н1.4, Н1.2 |
+| `unit_id_*`, `fields_*`, `group_by_unknown_field`, `spread_by_*`, `snapshot_unknown_field`, `requests_key_*`, `requests_stamp_group_without_group_by`, `retire_when_unknown_field`, `display_field*`, `display_options_*`, `display_fields_platform_key_*`, `rows_*`, `table_*_shadow`, `table_servers`, `objects_rows_heartbeats`, `door_routes_dup`, `worker_requests_itself`, `worker_reads_bare`, `secrets_reader_domainconsole`, `display_*` (остальные) | ссылки между ключами, включая unit.id и групповую метку просьбы; слова консоли — строки; платформенные имена | Н1.4, Н1.2 |
 
 Проверяются чтением (одним файлом не воспроизводятся): отказ каталога (`refused:catalogue`); строка и метка спеки в хранилище, старт без строки и при несовпадении sha256, остановка при смене метки — стенд урока 11; форма `GET /spec` — сценарии двери в уроке 9.
 
@@ -322,7 +330,7 @@ HTTP-контракт — [`02-the-spec-and-the-strict-loader.api.openapi.yaml`]
 - [ ] **М10/2-04** `name` обязателен, по грамматике, не зарезервирован — сц. `name_*`
 - [ ] **М10/2-05** `placement.capacity.default` обязателен и целый ≥ 0; слова закрытых перечней — сц. `capacity_default_*`, `requires_nothing`, `servers_both`, `tie_break_random`
 - [ ] **М10/2-06** грамматика поля Н1.3: типы, булевы `required`/`fixed`, одно из `default`/`inherit`, `enum`, поле таблицы без `fixed`/`inherit`/`merge`/`unique`, `blob` без `required: true`, `default` и `inherit`; `required: false` у `blob` допустим — группа 7 (`blob_required`, `blob_required_false`, `blob_default`, `blob_inherit`)
-- [ ] **М10/2-07** ссылки Н1.4 разрешаются при загрузке: поле, таблица, метрика, маршрут, своя подсистема в `worker.requests` — группа 8
+- [ ] **М10/2-07** ссылки Н1.4 разрешаются при загрузке: поле, таблица, метрика, маршрут, своя подсистема в `worker.requests` — группа 8, включая `unit_id_nosuch`, `unit_id_numeric`, `requests_stamp_group_without_group_by`
 - [ ] **М10/2-08** ослабляющие ключи не имеют ослабляющих умолчаний и пишутся одним способом: `lease.unconfirmed_max`, `unplaced.delete_after`, `places.server_field`; сказанный ключ без значения — отказ — группа 6
 - [ ] **М10/2-09** непрозрачные уровни Н1.2 не читаются, именованные — любые имена; слова `display` — строки, его разделы закрыты — сц. `display_*`, `json_default_map`, `inherit_map`
 - [ ] **М10/2-10** отказ один на файл, в словах, с источником; частичной загрузки нет; порядок текст → имя → ключи → значения — все `refused`; порядок и диагностика вне `diagnostics.tsv` проверяются чтением по Н5
