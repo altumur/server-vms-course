@@ -14,7 +14,8 @@ from w2cplatform.console import Heartbeat
 from w2cplatform.domain.federation import Unreachable
 from vms.ingest import CameraPusher, written_from_heartbeats
 from tests.domainvms.recording_domain import camera_pusher
-from tests.domain.conftest import Clock, real_card
+from tests.domain.conftest import Clock
+from tests.vmsconftest import real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site
 from tests.vmsconftest import ingest_recorder
 
