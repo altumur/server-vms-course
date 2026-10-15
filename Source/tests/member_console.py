@@ -38,8 +38,13 @@ class SignedConsole:
 
 def device_console(device, sealer=None):
     """A pinned-device fixture supplies its stores and published view to the generic console."""
-    from vms.config import SPEC
-    signed = SignedConsole(SPEC, device.flash, device.ram, device.wall, sealer)
+    from pathlib import Path
+    from w2cplatform import catalog
+    spec = catalog.spec("cam")
+    if spec is None:
+        catalog.load_dir(Path(__file__).parents[1] / "vms")
+        spec = catalog.spec("cam")
+    signed = SignedConsole(spec, device.flash, device.ram, device.wall, sealer)
     class DeviceConsole:
         def apply(self, entry):
             response = signed.apply(entry)
