@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-14	11/scenarios.tsv: 07-group-size	ключ двери без голоса platform/doors/configstore/<id> → platform/configstore-doors/<id> (Н1 урока 11; под platform/doors/ — двери серверов); опись продукта («Сборка»)	go
+2026-10-16	11/README и сценарии	05/06 manual: условные сроки, только подтверждённые зеркала, restart без join, изоляция/upper перед recover; печать не PASS	all
