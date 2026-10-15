@@ -397,7 +397,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
+                anyOf:
                 - $ref: '#/components/schemas/M3_TextRefusal'
                 - $ref: '#/components/schemas/M3_FormRefusal'
         '401':
