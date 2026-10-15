@@ -12,9 +12,10 @@ scenario	step	request	expect
 02-events-query	5	resource GET /events?unit=testsub/c1	200 {"events": [], "state": "live", "truncated": 0}
 02-events-query	6	console GET /events?unit=testsub/c1	200 {"events": [], "state": "~live"}
 03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
-03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "text": "checked"}	2xx
+03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
 03-operator-mark	4	resource GET /events?unit=testsub/c3	200 {"events": [{"kind": "mark", "of": "testsub/c3"}]}
+03-operator-mark	5	console POST /marks {"note": "no unit"}	400
 04-request-reaped	1	console POST /counters {"name": "c4", "start": 1}	201
 04-request-reaped	2	console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
 04-request-reaped	3	@key(2) console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
