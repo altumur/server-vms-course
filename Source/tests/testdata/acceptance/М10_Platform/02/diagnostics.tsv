@@ -1,0 +1,4 @@
+# case	paths	lines
+dup_top_key_name	[["name"]]	[36]
+unknown_depth4	[["unit","fields","name","requried"]]	[]
+unknown_multiple	[["unknown_top"],["placement","capcity"],["unit","fields","name","requried"]]	[]
