@@ -254,7 +254,7 @@ paths:
     parameters: [{name: server, in: path, required: true, schema: {type: string}}, {name: path, in: path, required: true, schema: {type: string}}]
     get:    {responses: {"200": {description: байты копии, заголовок X-Sum}, "404": {description: нет такой копии}}}
   /marks:                                    # консоль
-    post:   {description: "отметка оператора: {unit, …} → строка kind mark в console/<экземпляр>/e1 с of = unit", requestBody: {required: true, content: {application/json: {schema: {type: object, required: [unit], properties: {unit: {type: string}, note: {type: string}}}}}}, responses: {"200": {description: "{written: true}"}, "400": {description: unit отсутствует или не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
+    post:   {description: "отметка оператора: {unit, note} → строка kind mark в console/<экземпляр>/e1 с of = unit", requestBody: {required: true, content: {application/json: {schema: {type: object, required: [unit], properties: {unit: {type: string}, note: {type: string}}}}}}, responses: {"200": {description: "{written: true}"}, "400": {description: unit отсутствует или не единица; тело не объект}, "403": {description: нет гранта на единицу}}}
   /{sub}/requests:  # консоль
     parameters: [{name: sub, in: path, required: true, schema: {type: string}}]
     post:
@@ -340,7 +340,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ### подать просьбу (консоль, POST /<sub>/requests)
 
 ```
-1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело без valid_until — единственного поля сервера, которое клиент вправе прислать)); rid: по requests.key — шаблон {поле} из тела (детерминированный: одинаковые
+1. Idempotency-Key (нет → 400, Н4); тело — объект с unit; схема; digest = sha256(JCS(тело без valid_until — единственного поля сервера, которое клиент вправе прислать)); rid: по requests.key — шаблон {поле} из тела ({поле:int} — целая часть числа, урок 2 Н1.4; не число → 400; детерминированный: одинаковые
    поля — один rid, создание-однажды); иначе r-<sha16(Idempotency-Key)> — заголовок у двери обязателен, иной ветки нет (случайный rid — у воркера, пишущего строку сам);
    valid_for ≤ most_valid (длительности, проверено загрузчиком); valid_until = now + valid_for; valid_until из тела клиента —
    не позже now + most_valid, иначе 400 too far, и тогда он и есть срок
@@ -409,7 +409,8 @@ asked:  учёт старше ttl/settle → снять
 | запрос: индекса нет | 503 | слова | — |
 | зеркало: сумма нет/плохая; > 64 MiB; медленно; тело ≠ сумма | 400 / 413 / 408 / 422 | — | сосед повторит |
 | retention: days не число или ≤ 0 | ничего не убрано | `retention_garbled` в пульсе | починить строку |
-| просьба: нет заголовка; unit нет/плохой; rid плохой; тело по схеме; срок дальше most_valid | 400 | слова, `fault: too_long` у тела | ошибка клиента |
+| отметка: unit отсутствует или не единица; тело не объект | 400 | слова | ошибка клиента |
+| просьба: нет заголовка; unit нет/плохой; rid плохой; тело по схеме; поле шаблона `{поле:int}` не число; срок дальше most_valid | 400 | слова, `fault: too_long` у тела | ошибка клиента |
 | просьба: спека без requests; единицы нет | 404 | слова | — |
 | просьба: rid занят иным запросом | 409 | `spent` \| `exists` | новый rid |
 | просьба: учёт человека полон; учёт не читается | 429 | слова | подождать |
@@ -473,7 +474,7 @@ asked:  учёт старше ttl/settle → снять
 - [ ] **М10/8-14** держатель: метка `begun` до вызова `put_new`, исход в метку безусловной записью (ADR-0054), `unknown` по таймауту, `late`, бюджеты — сц. 05; чтением
 - [ ] **М10/8-15** жнец: `clear` по `fetched`, `sweep` после срока + 60 / ttl, метка перед удалением, `ended_by: reaper` — сц. 04
 - [ ] **М10/8-16** учёт человека `asked/` по `cas`, 429, снятие по ttl/settle — чтением
-- [ ] **М10/8-17** форма `POST /marks` Н2: тело `{unit, note}`, `unit` обязателен и единица (иначе 400), `note` — строка без предела (как у продукта), лишнее не принимается — сц. 03
+- [ ] **М10/8-17** форма `POST /marks` Н2: тело `{unit, note}`, `unit` обязателен и единица (иначе 400), `note` — строка без предела; лишние поля не отказ — не читаются (как у продукта) — сц. 03
 
 ## Соответствие прежним урокам
 
