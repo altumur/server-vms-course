@@ -265,20 +265,31 @@ paths:
   /v1/write:    {post: {description: "урок 1; {op: floor, floor} — только admin, только вверх", requestBody: {required: true, content: {application/json: {schema: {oneOf: [{$ref: "#/components/schemas/Cmd"}, {type: object, required: [op, floor], additionalProperties: false, properties: {op: {const: floor}, floor: {type: integer, minimum: 0}}}]}}}}, responses: {"200": {description: урок 1 Written}, "400": {description: урок 1}, "403": {description: floor не admin}, "409": {description: floor вниз | урок 1 conflict}, "412": {description: урок 1 guard}, "503": {description: unavailable | ambiguous}}}}
   /metrics:     {get: {description: "configstore_* (Н1.3)", responses: {"200": {description: text/plain}}}}
 components:
-  schemas:   # Cmd — дословно из М10_Platform/spec/01-storage.api.openapi.yaml; повтор для самостоятельного документа
+  schemas:   # Key и Cmd — дословно из М10_Platform/spec/01-storage.api.openapi.yaml; повтор для самостоятельного документа
+    Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+          - pattern: '^/'
+          - pattern: '(^|/)\.\.(/|(?![\s\S]))'
+      description: >-
+        Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..;
+        ..foo допустим. Предел 1024 байта UTF-8 и меньший файловый предел
+        проверяются отдельно; maxLength не выражает число байтов.
     Cmd:
       type: object
       required: [op, key]
       properties:
         op: {type: string, enum: [put, delete]}
-        key: {type: string}
+        key: {$ref: "#/components/schemas/Key"}
         cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
         guard:
           type: object
           required: [key, index]
           additionalProperties: false
           properties:
-            key: {type: string, minLength: 1}
+            key: {$ref: "#/components/schemas/Key"}
             index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
       oneOf:
