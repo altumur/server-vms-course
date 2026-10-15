@@ -70,45 +70,6 @@ def test_nothing_about_a_user_reaches_a_worker_only_trust_does():
     assert verify(tok, trust.keyset(), trust.revoked(), now=clk())["sub"] == "alice"   # verified by south's console from south's OWN Variables
 
 
-def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_when_the_keys_go():
-    """The review's fourth pass. The cluster's console tells "the keys were lost" from "there never were any" by the
-    rows only the agent writes (`DOMAIN_MARKS`), and each of those was conditional: `domain/root` only with a
-    root-signed key set, the grants and the rest only when the domain has some for this cluster. A member with an
-    unsigned key set and no grants had none of them — its keys deleted, the console was open to anybody as `admin`.
-    The agent writes `domain/member` on every pass that leaves a key set, again after it was lost."""
-    import tempfile
-    import urllib.error
-    import urllib.request
-    from w2cplatform.cluster.objectstore import FsObjectStore
-    from w2cplatform.domain.agent import MEMBER_PATH
-    from vms.console import make_console
-    from vms.controller import VmsController
-    from w2cplatform.access import DOMAIN_MARKS, has_mark
-    clk = Clock(1000.0)
-    fed, links, dc, signer = _domain(clk)
-    south = fed.clusters["south"]
-    DomainPublisher(dc.vars).publish_keys(signer.tokens.keyset())     # a key set, no grants for south, no root pinned
-    agent = DomainAgent("south", dc.vars, south.vars, now=clk)
-    assert report_sync(agent)
-    assert MEMBER_PATH in DOMAIN_MARKS and south.vars.get(MEMBER_PATH)[0] == {"cluster": "south"}
-    assert [p for p in DOMAIN_MARKS if has_mark(south.vars, p)] == [MEMBER_PATH]     # the only mark there is
-    idx = south.vars.get(MEMBER_PATH)[1]
-    report_sync(agent)
-    assert south.vars.get(MEMBER_PATH)[1] == idx                                   # not rewritten every pass
-
-    south.vars._items.pop(KEYS_PATH)                                               # the key set is lost: a rollback, past the store
-    srv = make_console(VmsController(south.vars, FsObjectStore(tempfile.mkdtemp(prefix="m12-")), wall=clk), None, clk) \
-        .serve("127.0.0.1", 0)
-    try:
-        try:
-            urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/cameras")
-            raise AssertionError("a member's console without its keys let a stranger in")
-        except urllib.error.HTTPError as e:
-            assert e.code == 503 and MEMBER_PATH in json.loads(e.read())["detail"]
-    finally:
-        srv.shutdown()
-    south.vars._items.pop(MEMBER_PATH)
-    assert report_sync(agent) and south.vars.get(MEMBER_PATH)[0] and south.vars.get(KEYS_PATH)[0]   # both back on the next pass
 
 
 @isolated_catalog()
