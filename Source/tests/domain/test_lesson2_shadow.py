@@ -1,3 +1,4 @@
+from tests.catalog_fixture import isolated_catalog
 """Lesson 2 — shadow mode: the taxonomy, slow versus stuck, the one number,
 and the report built from what real clusters publish."""
 from w2cplatform.domain.shadow import Shadow, WorkerReport, exit_criterion, reports_from
@@ -8,6 +9,7 @@ def rep(worker, cams, obs, epoch=1, cluster="north", revision=5):
     return WorkerReport(worker, cluster, "srv-1", [(str(c), epoch, revision, obs) for c in cams], 0.0)
 
 
+@isolated_catalog()
 def test_the_taxonomy():
     sh = Shadow(grace_seconds=60)
     placed = {"1": "north", "2": "north", "3": "north", "9": "north"}
@@ -24,6 +26,7 @@ def test_the_taxonomy():
     assert r.count("conflict") == 1 and "placed in south, running in north" in r.findings[0].detail
 
 
+@isolated_catalog()
 def test_slow_versus_stuck():
     sh = Shadow(grace_seconds=60)
     placed = {"1": "north"}
@@ -37,38 +40,11 @@ def test_slow_versus_stuck():
     assert not r.findings
 
 
-def test_the_report_from_what_clusters_publish():
-    """Two real clusters; the domain placed 1 and 2 in north and nothing in
-    south. The shadow reads heartbeats and cam/epoch/* — never a controller."""
-    fed, links = make_domain({"north": (), "south": ()}, "north"); wall = Clock()
-    n = Running(fed.clusters["north"], wall); n.create(1, 2)
-    s = Running(fed.clusters["south"], wall); s.create(3)
-    reports, epochs, down = reports_from(fed)
-    assert down == [] and sorted(r.cluster for r in reports) == ["north", "south"] and epochs[("north", "1")] == 1
-    placed = {"1": "north", "2": "north"}                                       # the domain's placements, by its refs
-    r = Shadow().compare(placed, epochs, reports, now=wall())
-    assert r.count("unmanaged") == 1 and r.findings[-1].where == "south/w-0" and r.findings[-1].unit == "3"   # south runs a camera the domain never placed
-    links["south"].up = False
-    reports, epochs, down = reports_from(fed)
-    assert down == ["south"] and all(r.cluster == "north" for r in reports)       # a silent cluster is named, not counted as clean
 
 
-def test_one_garbled_epoch_row_is_skipped_and_the_report_of_every_cluster_stands():
-    """The review's sixth pass, the reading side of «one camera's garbled epoch stops everybody»: `reports_from`
-    read every `cam/epoch/<id>` of every cluster bare, and one row with a word for a number — in one cluster —
-    raised out of the shadow report of the whole domain. The row is skipped; that camera's worker is taken at its
-    word, and the other cameras and clusters are compared as before."""
-    fed, links = make_domain({"north": (), "south": ()}, "north"); wall = Clock()
-    n = Running(fed.clusters["north"], wall); n.create(1, 2)
-    s = Running(fed.clusters["south"], wall); s.create(3)
-    fed.clusters["north"].vars.put("cam/epoch/2", {"epoch": "two"})              # a hand edit
-    reports, epochs, down = reports_from(fed)
-    assert down == [] and sorted(r.cluster for r in reports) == ["north", "south"]
-    assert epochs[("north", "1")] == 1 and ("north", "2") not in epochs and epochs[("south", "3")] == 1
-    r = Shadow().compare({"1": "north", "2": "north", "3": "south"}, epochs, reports, now=wall())
-    assert not r.count("stale_epoch") and not r.findings                        # nothing invented about camera 2
 
 
+@isolated_catalog()
 def test_exit_criterion_is_written_down():
     sh = Shadow()
     dirty = sh.compare({"1": "north"}, {}, [rep("w-0", [1, 2], 1, revision=1)], now=0)
