@@ -185,7 +185,7 @@ field:
 rules:
   - default и inherit на одном поле — отказ
   - поле таблицы с fixed, inherit, merge или unique — отказ
-  - blob с required: true — отказ (дайджест приходит дверью байтов после создания единицы, урок 10; при создании поле всегда "")
+  - blob с required: true, с default или с inherit — отказ (дайджест приходит дверью байтов после создания единицы, урок 10; при создании поле всегда ""; умолчание или наследование писали бы дайджест в строку мимо неё)
   - имя поля — ключ YAML; значение поля в строке хранилища — урок 3
 ```
 
@@ -392,7 +392,7 @@ components:
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 146 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (19) или `refused` (127). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл; СЛЕДУЕТ прогнать те же файлы через `spec put`.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 149 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (19) или `refused` (130). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл; СЛЕДУЕТ прогнать те же файлы через `spec put`.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -402,7 +402,7 @@ components:
 | `name_missing`, `name_reserved_platform`, `name_with_slash`, `name_uppercase` | имя: обязательно, грамматика, зарезервированные | Н1.2 |
 | `capacity_default_*`, `requires_nothing`, `servers_both`, `tie_break_random`, `dead_band_word`, `slot_prefix_*`, `status_worker`, `hb_worker` | значения: обязательный ключ, закрытые перечни, типы | Н1.2, Н1.3 |
 | `lease_*` (остальные), `lease_empty_map`, `lease_absent`, `snapshot_said_nothing`, `unplaced_delete_after_*`, `delete_after_with_about`, `about_field_not_fixed_nowitness` | ослабляющие ключи: одно написание, сказанный ключ говорит, условия `delete_after` | Н1.2 |
-| `type_text`, `required_*`, `default_map_string`, `default_and_inherit`, `inherit_map*`, `json_default_map`, `enum_*`, `table_field_*`, `table_marks`, `bound_to_string` | грамматика поля | Н1.3 |
+| `type_text`, `required_*`, `default_map_string`, `default_and_inherit`, `inherit_map*`, `json_default_map`, `enum_*`, `table_field_*`, `table_marks`, `bound_to_string`, `blob_required`, `blob_default`, `blob_inherit` | грамматика поля | Н1.3 |
 | `fields_*`, `group_by_unknown_field`, `spread_by_*`, `snapshot_unknown_field`, `requests_key_*`, `retire_when_unknown_field`, `display_field*`, `display_options_*`, `display_fields_platform_key_*`, `rows_*`, `table_*_shadow`, `table_servers`, `objects_rows_heartbeats`, `door_routes_dup`, `worker_requests_itself`, `worker_reads_bare`, `secrets_reader_domainconsole`, `display_*` (остальные) | ссылки между ключами; слова консоли — строки; платформенные имена | Н1.4, Н1.2 |
 
 Проверяются чтением (одним файлом не воспроизводятся): отказ каталога (`refused:catalogue`); строка и метка спеки в хранилище, старт без строки и при несовпадении sha256, остановка при смене метки — стенд урока 11; форма `GET /spec` — сценарии двери в уроке 9.
@@ -432,7 +432,7 @@ components:
 - [ ] **М10/2-03** закрытый набор ключей на каждом уровне; незнакомый — отказ с путём; списка игнорируемых и предупреждений нет — группа 3
 - [ ] **М10/2-04** `name` обязателен, по грамматике, не зарезервирован — сц. `name_*`
 - [ ] **М10/2-05** `placement.capacity.default` обязателен и целый ≥ 0; слова закрытых перечней — сц. `capacity_default_*`, `requires_nothing`, `servers_both`, `tie_break_random`
-- [ ] **М10/2-06** грамматика поля Н1.3: типы, булевы `required`/`fixed`, одно из `default`/`inherit`, `enum`, поле таблицы без `fixed`/`inherit`/`merge`/`unique`, `blob` без `required` — группа 7 (`blob_required`)
+- [ ] **М10/2-06** грамматика поля Н1.3: типы, булевы `required`/`fixed`, одно из `default`/`inherit`, `enum`, поле таблицы без `fixed`/`inherit`/`merge`/`unique`, `blob` без `required`/`default`/`inherit` — группа 7 (`blob_required`, `blob_default`, `blob_inherit`)
 - [ ] **М10/2-07** ссылки Н1.4 разрешаются при загрузке: поле, таблица, метрика, маршрут, своя подсистема в `worker.requests` — группа 8
 - [ ] **М10/2-08** ослабляющие ключи не имеют ослабляющих умолчаний и пишутся одним способом: `lease.unconfirmed_max`, `unplaced.delete_after`, `places.server_field`; сказанный ключ без значения — отказ — группа 6
 - [ ] **М10/2-09** непрозрачные уровни Н1.2 не читаются, именованные — любые имена; слова `display` — строки, его разделы закрыты — сц. `display_*`, `json_default_map`, `inherit_map`
