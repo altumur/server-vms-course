@@ -2836,6 +2836,7 @@ class RecWorker(VmsWorker):
         page = footage_routes(self.objects, self.vars, self.wall, journal, keeper, self.eyes)
         # …and a keep's seal, checked here where its copy is (`verify_keep`), when rec's spec opens `keeps` at the door
         sealed = keeps_route(keeper, lambda kid, rec, who: self.verify_keep(kid, rec, who, journal), REC_SPEC.door_routes)
+        metrics_text = self.metrics_text
 
         class H(Deadlined, BaseHTTPRequestHandler):
             # A socket that reads nothing is let go (`CONSOLE_TIMEOUT`, the timeout of every door a page reaches — the
@@ -2846,6 +2847,9 @@ class RecWorker(VmsWorker):
                 pass
 
             def do_GET(self):
+                if self.path == "/metrics":
+                    return send_route(self, (200, metrics_text().encode(),
+                                             "text/plain; version=0.0.4; charset=utf-8"))
                 if self.path.startswith(("/timeline/", "/segment/")):     # a page's (`door: {routes}`), with its token
                     u = urlsplit(self.path)
                     got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
@@ -4213,10 +4217,21 @@ class RecWorker(VmsWorker):
         from w2cplatform.console import label
         keeps = "".join(f'rec_keep_missing_seconds{{keep="{label(kid)}"}} {e.get("missing", 0)}\n'
                         for kid, e in sorted(self.keep_state.items()))
+        ingest = ""
+        if self.ingest is not None:
+            # These are the process sums corresponding to the recorder metrics the course also keeps per camera.
+            # Other product rec_ingest counters have no matching course measurement and are intentionally absent.
+            rows = list(self.ingest.stats().values())
+            for metric, field in (("repeats_dropped", "repeats_dropped"),
+                                  ("absurd_frames", "absurd_frames"),
+                                  ("ahead_losses", "ahead_losses")):
+                total = sum(int(row.get(field, 0)) for row in rows)
+                ingest += f"# TYPE rec_ingest_{metric} counter\nrec_ingest_{metric} {total}\n"
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.running())}\n"
                 f"# TYPE rec_volume_wait gauge\nrec_volume_wait {1 if self.volume_wait else 0}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
                 f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"
+                + ingest
                 + (f"# TYPE rec_keep_missing_seconds gauge\n{keeps}" if keeps else ""))
 
 
