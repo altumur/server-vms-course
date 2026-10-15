@@ -1,0 +1,53 @@
+# М10/2 — HTTP-дверь спеки. Процедура загрузки и её отказы — 02-the-spec-and-the-strict-loader.norms.md, Н2–Н4.
+openapi: 3.1.0
+info: {title: М10/2 дверь спеки, version: "1"}
+paths:
+  /spec:
+    get:
+      summary: форма подсистемы, какой её загрузила консоль; слова display — как написаны
+      responses:
+        "404": {description: "нет маршрута — консоль, урок 9 Н4"}
+        "405": {description: метод не GET}
+        "200":
+          description: форма подсистемы, какой её загрузила консоль (SpecView); у работающей консоли — всегда
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SpecView"}
+components:
+  schemas:
+    SpecView:
+      type: object
+      required: [name, rows, id, fields, metrics, running_gauge, workers_gauge]
+      additionalProperties: false
+      properties:
+        name: {type: string}
+        rows: {type: string}
+        id: {type: string}                     # numeric или имя поля
+        fields:
+          type: array
+          items:
+            type: object
+            required: [name, type, default, required]
+            additionalProperties: false
+            properties:
+              name: {type: string}
+              type: {type: string}
+              default: {}
+              required: {type: boolean}
+              fixed: {type: boolean}
+              bound_to: {type: array, items: {type: string}}   # одно поле в спеке — список из одного (урок 7)
+              enum: {type: array, items: {type: [string, boolean]}}
+              inherit: {}
+              merge: {type: string}
+        about: {type: object}                  # {sub, field}, когда объявлен
+        display: {type: object}                # как написано в спеке, без чтения
+        servers: {type: object}                # {show, status}, когда объявлены
+        door: {type: object}                   # {routes}, когда объявлены
+        places: {type: object}                 # {table}, когда объявлена
+        domain: {type: object}                 # {keys, shared, edit, view}, когда объявлен
+        metrics:
+          type: object
+          required: [prefix, running]
+          properties: {prefix: {type: string}, running: {type: string}}
+        running_gauge: {type: string}          # <name>_<console.running>
+        workers_gauge: {type: string}          # <name>_workers_live
