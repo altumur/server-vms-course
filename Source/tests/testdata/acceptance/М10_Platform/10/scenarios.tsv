@@ -9,7 +9,7 @@ scenario	step	request	expect
 02-drain-strand	3	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}
 02-drain-strand	4	console POST /drain?server=srv-b	409
 02-drain-strand	5	console DELETE /drain	2xx
-02-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": "@absent"}
+02-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": {}}
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
