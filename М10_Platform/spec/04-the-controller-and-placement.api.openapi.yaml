@@ -506,13 +506,28 @@ components:
       minLength: 1
       not:
         pattern: '[/\\]'
+    ServerOrEmpty:
+      anyOf:
+      - $ref: '#/components/schemas/Server'
+      - const: ''
     UnitRef:
       type: string
       pattern: ^[a-z][a-z0-9_-]{0,31}/[^/]+$
       not:
         anyOf:
+        - pattern: ^(platform|domain|console|audit)/
         - pattern: ^[^/]+/\.{1,2}$
         - pattern: '[\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+    SubsystemName:
+      description: Имя загружаемой подсистемы по М10/2 Н1.2.
+      type: string
+      minLength: 1
+      maxLength: 32
+      pattern: ^[a-z]
+      not:
+        anyOf:
+        - pattern: '[^a-z0-9_-]'
+        - enum: [platform, domain, console, audit]
     Policy:
       type: object
       required:
@@ -704,10 +719,9 @@ components:
       additionalProperties: false
       properties:
         draining:
-          type: string
+          $ref: '#/components/schemas/ServerOrEmpty'
         subsystem:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/SubsystemName'
         workers:
           type: integer
           minimum: 0
@@ -738,17 +752,21 @@ components:
       additionalProperties: false
       properties:
         draining:
-          type: string
+          $ref: '#/components/schemas/ServerOrEmpty'
         safe:
           type: boolean
         would_strand:
           type: object
+          propertyNames:
+            $ref: '#/components/schemas/SubsystemName'
           additionalProperties:
             type: array
             items:
               $ref: '#/components/schemas/UnitId'
         subsystems:
           type: object
+          propertyNames:
+            $ref: '#/components/schemas/SubsystemName'
           additionalProperties:
             $ref: '#/components/schemas/SubsystemDrain'
   responses:
