@@ -1,51 +1,340 @@
+# Нормы: 03-units-slots-epochs-lease.norms.md, Н1–Н4.
+# Состав unit.fields задаёт загруженная спека; состояние, права и байтовые пределы проверяются отдельно.
 openapi: 3.1.0
-info: {title: М10/3 дверь единиц, version: "1"}
-x-every-operation-responses: [400, 401, 403, 404, 405, 408, 413, 429, 503]   # общие ответы каждой операции (урок 9 Н4: тело, личность, грант, путь, метод, медленно/велико, предел входа, полоса); у операций не повторяются
+info:
+  title: М10/3 дверь единиц
+  version: "1"
+  description: >-
+    Пути относительно консоли выбранной подсистемы; rows равен unit.rows.
+    GET списка принадлежит уроку 9, формы строк — этому уроку.
+    Общие ответы консоли из урока 9 перечислены у каждой операции явно.
 paths:
   /{rows}:
-    parameters: [{name: rows, in: path, required: true, schema: {type: string}}]
+    parameters:
+      - $ref: "#/components/parameters/Rows"
     post:
-      summary: создать единицу; идемпотентно по заголовку
+      summary: создать единицу; повтор по ключу возвращает прежний ответ
       parameters:
-        - {name: Idempotency-Key, in: header, required: true, schema: {type: string, maxLength: 200}}
-      requestBody: {content: {application/json: {schema: {type: object}}}}   # поля спеки, без platform_fields
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {$ref: "#/components/schemas/IdempotencyKey"}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ClientFields"}
       responses:
-        "201": {description: создано (или тот же ответ на повтор ключа); тело — строка (значения по типам, секреты маской) + worker: null}
-        "400": {description: нет заголовка / ключ не один сегмент / тело не объект / отказ формы (Н4)}
-        "409": {description: exists | conflict (fault must_match | unique | garbled) | in flight}
-        "413": {description: тело больше предела}
-        "422": {description: key reused — тот же ключ с другим запросом}
-        "503": {description: хранилище недоступно; ответ не запоминается}
+        "201":
+          description: >-
+            Создано или прежний ответ завершённой заявки. Поля по типам спеки,
+            секреты маской; worker всегда null, включая повтор.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CreatedUnit"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Denied"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "405": {$ref: "#/components/responses/Method"}
+        "408": {$ref: "#/components/responses/SlowBody"}
+        "409":
+          description: Имя занято, нарушена ссылка либо заявка другой консоли ещё в работе.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CreateBusy"
+                  - $ref: "#/components/schemas/ReferenceConflict"
+        "413": {$ref: "#/components/responses/LargeBody"}
+        "422":
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/KeyReused"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
     get:
-      summary: все единицы с полями размещения — урок 9
+      summary: все единицы и конфигурация, доступные по view — урок 9
       responses:
-        "200": {description: "{rows: [...], configured: [...]} — форма ответа в уроке 9 Н2 /{rows}"}
-        "503": {description: хранилище недоступно}
+        "200":
+          description: >-
+            rows — единицы из пульсов с данными воркера;
+            configured — строки конфигурации с масками секретов.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/UnitList"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Denied"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "405": {$ref: "#/components/responses/Method"}
+        "408": {$ref: "#/components/responses/SlowBody"}
+        "413": {$ref: "#/components/responses/LargeBody"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
   /{rows}/{id}:
-    parameters: [{name: rows, in: path, required: true, schema: {type: string}}, {name: id, in: path, required: true, schema: {type: string}}]
+    parameters:
+      - $ref: "#/components/parameters/Rows"
+      - name: id
+        in: path
+        required: true
+        schema: {$ref: "#/components/schemas/UnitId"}
+        description: >-
+          Ровно один id; грамматика зависит от unit.id (Н1.3).
+          Путь длиннее одного id — 404; неверный именованный id — 400.
     put:
-      summary: править поля; Idempotency-Key необязателен
-      requestBody: {required: true, content: {application/json: {schema: {type: object, description: поля спеки, без platform_fields; секрет пустой — прежний}}}}
+      summary: править поля; revision растёт при каждой успешной правке
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: {$ref: "#/components/schemas/IdempotencyKey"}
+          description: Необязателен; обязательный ключ и проход повторов POST описаны в Н3.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ClientFields"}
       responses:
-        "200": {description: строка после правки, revision + 1}
-        "400": {description: отказ формы; fixed-поле; плохой id}
-        "404": {description: нет такой единицы (нет строки или надгробие); путь длиннее одного id}
-        "409": {description: conflict (fault must_match | unique | garbled) — ссылки по живым строкам}
-        "413": {description: тело больше предела}
-        "503": {description: хранилище недоступно; ответ под ключом не запоминается}
+        "200":
+          description: Строка после правки; значения по типам спеки, секреты маской, revision увеличен.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Unit"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Denied"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "405": {$ref: "#/components/responses/Method"}
+        "408": {$ref: "#/components/responses/SlowBody"}
+        "409":
+          description: Ссылки по живым строкам; конфликт cas перечитывается внутри прохода.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReferenceConflict"}
+        "413": {$ref: "#/components/responses/LargeBody"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
     delete:
-      summary: пометить удалённой (первый шаг)
+      summary: пометить удалённой без изменения revision
       responses:
-        "200": {description: "{deleted: <id>}"}
-        "404": {description: нет такой единицы или уже удалена}
-        "503": {description: хранилище недоступно}
+        "200":
+          description: Идентификатор помеченной единицы; повторное удаление — 404.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/DeletedUnit"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Denied"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "405": {$ref: "#/components/responses/Method"}
+        "408": {$ref: "#/components/responses/SlowBody"}
+        "413": {$ref: "#/components/responses/LargeBody"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
 components:
+  parameters:
+    Rows:
+      name: rows
+      in: path
+      required: true
+      description: Имя семьи единиц из unit.rows загруженной спеки; произвольная семья не создаётся.
+      schema: {type: string, minLength: 1, pattern: '^[^/]+$'}
   schemas:
+    IdempotencyKey:
+      type: string
+      minLength: 1
+      maxLength: 200
+      pattern: '^[^/]+$'
+      description: >-
+        Один непустой сегмент, не больше 200 UTF-8-байт (Н3).
+        maxLength считает символы и не заменяет отдельную проверку байтов.
+    UnitId:
+      type: string
+      minLength: 1
+      description: >-
+        id как строка по Н1.3; numeric — десятичное целое от 1,
+        named — значение поля с грамматикой Н1.3. Unicode-категории проверяются отдельно.
+    ClientFields:
+      type: object
+      propertyNames:
+        not:
+          enum: [id, revision, worker, placement, epoch, phase, observed_revision]
+      additionalProperties: true
+      description: >-
+        Только поля unit.fields; дополнительные имена здесь нужны для произвольной спеки,
+        но неизвестное ей поле отказывается. Типы, required, enum, url, blob, json и
+        fixed/inherit проверяются по Н1 и в порядке Н3, а не одним валидатором общей схемы.
+        PUT содержит изменяемые поля; пустой или null секрет сохраняет прежний (урок 7).
+    Unit:
+      type: object
+      required: [id, revision]
+      properties:
+        id: {$ref: "#/components/schemas/UnitId"}
+        revision: {type: integer, minimum: 1}
+      patternProperties:
+        '_secret$': {type: string, enum: ["", "***"]}
+      additionalProperties: true
+      description: >-
+        Типизированная строка единицы. Остальные поля задаёт unit.fields:
+        int/float — JSON-числа, bool — булево, list — массив, json — JSON-значение,
+        string/url/blob — строки; секрет пустой или маска урока 7.
+        Отсутствующий inherit и json null не добавляются в ответ.
+        Открытый набор имён поддерживает произвольную спеку, а не разрешает чужие поля.
+    CreatedUnit:
+      allOf:
+        - $ref: "#/components/schemas/Unit"
+        - type: object
+          required: [worker]
+          properties:
+            worker: {type: "null"}
+    DeletedUnit:
+      type: object
+      required: [deleted]
+      additionalProperties: false
+      properties:
+        deleted: {$ref: "#/components/schemas/UnitId"}
+    UnitList:
+      type: object
+      required: [rows, configured]
+      additionalProperties: false
+      properties:
+        rows:
+          type: array
+          items: {$ref: "#/components/schemas/RunningUnit"}
+        configured:
+          type: array
+          items: {$ref: "#/components/schemas/Unit"}
+      description: Форма GET из урока 9 Н2; фильтрация по view не меняет форму оболочки.
+    RunningUnit:
+      type: object
+      required: [id, phase, epoch, revision, observed_revision, worker, server, age, worker_state]
+      properties:
+        id: {$ref: "#/components/schemas/UnitId"}
+        phase: {type: string}
+        epoch: {type: integer, minimum: 1}
+        revision: {type: integer, minimum: 1}
+        observed_revision: {type: integer, minimum: 0}
+        worker: {type: string}
+        server: {type: string}
+        age: {type: number}
+        worker_state: {type: string}
+      additionalProperties: true
+      description: >-
+        Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (урок 9 Н2).
+        Слова подсистемы остаются непрозрачными. Смысл свежести и формирования списка — уроки 5 и 9.
     Refusal:
       type: object
       required: [detail, error]
       additionalProperties: false
       properties:
         detail: {type: string}
-        error:  {type: string}             # слово или текст; слова: exists, conflict, no such unit, key reused, in flight, taken over
-        fault:  {type: string, enum: [not_json, not_number, too_long, bad_url, must_match, unique, garbled]}
+        error: {type: string}
+        fault:
+          type: string
+          enum: [not_json, not_number, too_long, bad_url, must_match, unique, garbled]
+    TextRefusal:
+      allOf:
+        - $ref: "#/components/schemas/Refusal"
+        - not: {required: [fault]}
+    FormRefusal:
+      allOf:
+        - $ref: "#/components/schemas/Refusal"
+        - properties:
+            fault: {enum: [not_json, not_number, too_long, bad_url]}
+    CreateBusy:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            error: {enum: [exists, in flight]}
+    ReferenceConflict:
+      allOf:
+        - $ref: "#/components/schemas/Refusal"
+        - required: [fault]
+          properties:
+            error: {const: conflict}
+            fault: {enum: [must_match, unique, garbled]}
+    KeyReused:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            error: {const: key reused}
+    Denied:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            error: {const: denied}
+    Method:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            detail: {const: method}
+            error: {const: method}
+    Unavailable:
+      allOf:
+        - $ref: "#/components/schemas/TextRefusal"
+        - properties:
+            error: {enum: [store unavailable, busy, denied]}
+  responses:
+    BadRequest:
+      description: >-
+        Отказ формы по Н4; порядок Н3. Также общий отказ чтения тела консоли:
+        chunked или короткое тело (урок 9). Причины без fault передают detail и error.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/FormRefusal"}
+    Unauthenticated:
+      description: Личность не подтверждена; урок 9 Н1.3 и Н4.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Denied"}
+    Denied:
+      description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Denied"}
+    NotFound:
+      description: >-
+        Нет строки или надгробие у PUT/DELETE — error no such unit.
+        Неизвестный маршрут — detail no such route, error no such path.
+        Лишний сегмент — текст a unit's path names one unit (урок 9).
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TextRefusal"}
+    Method:
+      description: Метод не разрешён; отдельного GET одной единицы нет.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Method"}
+    SlowBody:
+      description: Тело читается слишком медленно; урок 9 Н4.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TextRefusal"}
+    LargeBody:
+      description: Тело больше объявленного предела; урок 9 Н4. Служебных полей limit/size урок 1 сюда не добавляет.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TextRefusal"}
+    RateLimited:
+      description: Общий код предела входа консоли из урока 9; не новая квота на создание единиц.
+      headers:
+        Retry-After:
+          description: Срок повтора по правилу предела входа.
+          schema: {type: string}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TextRefusal"}
+    Unavailable:
+      description: >-
+        Хранилище недоступно — error с текстом store unavailable; ответ под ключом не запоминается.
+        Также полоса занята — error busy и Retry-After 1,
+        либо ключи были, но проверить доверие нечем — error denied (урок 9).
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema: {type: string, const: "1"}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Unavailable"}
