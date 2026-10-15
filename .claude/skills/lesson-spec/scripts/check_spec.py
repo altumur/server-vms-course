@@ -241,17 +241,41 @@ class Check:
             self.error(path, f"OpenAPI: {exc}")
 
     def norms(self, path, text, prefix):
-        headers = re.findall(r"^##\s+(Н[0-5])(?:\s|$)", text, re.M)
+        tokens = MarkdownIt("commonmark").parse(text)
+        headings, ids, stack = [], [], []
+        section = None
+        for pos, token in enumerate(tokens):
+            if token.type == "heading_open" and token.tag == "h2" and token.level == 0:
+                inline = tokens[pos + 1]
+                section = "".join(child.content for child in inline.children or []
+                                  if child.type in {"text", "code_inline"}).strip()
+                headings.append(section)
+            if (token.type == "inline" and section == "Чеклист готовности" and
+                    len(stack) == 3 and stack[0] in {"bullet_list_open", "ordered_list_open"} and
+                    stack[1:] == ["list_item_open", "paragraph_open"]):
+                children = [child for child in token.children or []
+                            if child.type != "text" or child.content]
+                if (len(children) >= 4 and children[0].type == "text" and
+                        re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
+                        children[1].type == "strong_open" and children[2].type == "text" and
+                        children[3].type == "strong_close" and
+                        re.fullmatch(r"М\d+[A-ZА-Я]*/\d+-\d+", children[2].content)):
+                    ids.append(children[2].content)
+            if token.nesting == 1:
+                stack.append(token.type)
+            elif token.nesting == -1:
+                stack.pop()
+        headers = [match.group(1) for heading in headings
+                   if (match := re.match(r"(Н[0-5])(?:\s|$)", heading))]
         if headers != [f"Н{i}" for i in range(6)]:
             self.error(path, "expected Н0–Н5 once, in order")
-        ids = re.findall(r"^\s*- \[[ xX]\] \*\*(М\d+[A-ZА-Я]*/\d+-\d+)\*\*", text, re.M)
         if not ids:
             self.error(path, "no normative checklist ids")
         for value, count in Counter(ids).items():
             if count != 1 or not value.startswith(prefix + "-"):
                 self.error(path, f"duplicate or foreign checklist id {value}")
         for title in ["Решает реализация", "Чеклист готовности"]:
-            if not re.search(r"^## " + title + r"\s*$", text, re.M):
+            if title not in headings:
                 self.error(path, f"missing section {title}")
         self.stats["norm_ids"] += len(ids)
 
