@@ -272,11 +272,14 @@ components:
       properties:
         op: {type: string, enum: [put, delete]}
         key: {type: string}
-        cas: {type: [string, "null"]}                                 # см. Н1
+        cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
         guard:
           type: object
           required: [key, index]
-          properties: {key: {type: string}, index: {type: string}}
+          additionalProperties: false
+          properties:
+            key: {type: string, minLength: 1}
+            index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
       oneOf:
         - properties:
