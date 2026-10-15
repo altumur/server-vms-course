@@ -21,7 +21,8 @@ from w2cplatform.domain.federation import Unreachable
 from vms.ingest import (ANSWER_KEPT, LANDED_KEPT, POLL_ROUND, UPLINK_FLOOR, CameraPusher, RangeFailed, card_range,
                                    piece_wait)
 from tests.domainvms.recording_domain import camera_pusher, role_requests
-from tests.domain.conftest import Clock, real_card
+from tests.domain.conftest import Clock
+from tests.vmsconftest import real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site, _times
 from tests.vmsconftest import ingest_recorder
 from vms.card import MEMORY_BUDGET, PIECE_BYTES
