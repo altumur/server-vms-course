@@ -196,7 +196,7 @@ rules:
 |---|---|
 | `unit.id` | `numeric` или поле единицы |
 | `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
-| `requests.key` | свойства `requests.schema.properties` — поля тела просьбы (урок 8): `{имя}`, `{имя:int}`; имя вне схемы — отказ; поля единицы здесь ни при чём |
+| `requests.key` | свойства `requests.schema.properties` — поля тела просьбы (урок 8): `{имя}` — значение как строка; `{имя:int}` — значение число, подставляется целая часть (`7.0` → `7`; не число — отказ подачи 400); имя вне схемы — отказ загрузки; поля единицы здесь ни при чём. Тот же шаблон у `tables.<t>.key` (урок 10) |
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table` | таблица из `tables:` |
 | `console.running` | метрика из `metrics[]` |
