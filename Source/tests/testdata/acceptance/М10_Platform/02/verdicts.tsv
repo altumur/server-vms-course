@@ -155,3 +155,16 @@ worker_reads_bare	refused
 worker_requests_itself	refused
 yaml_list_toplevel	refused
 yaml_two_documents	refused
+float_finite_defaults	ok
+float_finite_inherit	ok
+int_field_boundaries	ok
+float_default_inf	refused
+float_default_neg_inf	refused
+float_default_nan	refused
+float_inherit_inf	refused
+float_inherit_nan	refused
+float_default_overflow	refused
+float_inherit_negative_overflow	refused
+json_default_nonfinite	refused
+rows_controller_reserved	refused
+table_controller_reserved	refused
