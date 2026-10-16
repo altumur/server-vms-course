@@ -81,8 +81,8 @@ gate:
   caps:     view < edit < admin
   need:     # что требует дверь; решается по пути ДО чтения тела
     GET/HEAD                         → view (на единицу из пути или ?unit=; без единицы — любой грант)
-    /marks, POST /requests           → edit на единицу тела
-    DELETE /asked/*                  → admin на *
+    /marks, POST /{sub}/requests     → edit на единицу тела
+    DELETE /{sub}/asked/*            → admin на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes
@@ -110,7 +110,7 @@ reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<
          (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub>
 writes:  POST/PUT/DELETE /<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (М11), POST/DELETE /session, /session/break-glass, login_url
-never:   /requests, /api/backup, /resources, /<sub>/<table> вне show, двери держателей (door из where — только оболочке)
+never:   /{sub}/requests, /api/backup, /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
 order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> → /drain → /schema
          → /domain (+ /domain/alarms) → /api/held → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
@@ -165,6 +165,17 @@ HTTP-контракт: [09-the-console.api.openapi.yaml](09-the-console.api.open
 Общие отказы консоли — формы М10/2: `{detail, error}` с установленными значениями `error`; 503 включает `denied` при потере доверия и `busy` с `Retry-After: 1` при заполнении полосы. 429 имеет `Retry-After`. Специальные тела: `NoVersion` — `{error: "no such version"}`; `MountedPage` — `{detail, error: "is mounted"}`; `NotPlaced` — `{reason}`. 400/408/413 описывают отказ чтения; тело ограничено по реально принятым байтам, короткое даёт 400. `/session` GET анонимному даёт 200 с состоянием; плохая попытка POST — 401, открытый режим — 400, неверный аварийный вход — 403. DELETE снимает обе куки. Полоса, framing, доверие/петля, личность, Origin по куке, гранты и чтение проверяются в порядке Н3; отказ не имеет побочных записей двери.
 
 Двери единиц, размещения, событий, таблиц и схемы принадлежат М10/3, 4, 8, 10. `/domain/*` и открытые `/api/*` — контракт М11/ADR-0066; успешное тело пересылки принадлежит ему. Они перечислены как зависимости, без фиктивной схемы «любой объект». Собственные маршруты этого урока `/spec`, `/servers`, `/unplaceable`, обе формы `/where` и `/metrics` также явно объявлены с префиксом `/<sub>`; префиксы делегированных дверей — у их владельцев; общие `/session`, `/mounts`, `/platform` не монтируются. Отсутствующий `v` или иная строка, включая нечисловую, — 404 `NoVersion`.
+
+Короткие пути единиц, таблиц, blob-полей, /policy, /spec, /servers, /unplaceable,
+/where и /metrics выбирают CONSOLE_ROOT; форма /{sub}/… явно выбирает загруженную
+подсистему, включая root. В OpenAPI владельца полный URL может быть задан парой
+стандартных servers + paths: origin консоли без завершающего / либо origin/{sub},
+затем путь операции. Это исполнимое описание URL, а не пояснение x-mounting.
+Общие /drain, /schema, /session, /mounts, /healthz, /resources, /platform/*,
+/servers/{server}/labels и /servers/{server}/decommission не получают такой префикс.
+События /events и отметки /marks следуют формам владельца8. Просьбы и учёт человека
+всегда именуют подсистему: /{sub}/requests и /{sub}/asked/{sha16}, включая CONSOLE_ROOT;
+короткие /requests и /asked/{sha16} вне профиля, неизвестный маршрут —404 по Н2/Н4.
 
 Область монтирования допущена загрузчиком М10/2: имя подсистемы не из 21 зарезервированных слов, а ни одно имя подсистемы не пересекает unit.rows/tables каталога, включая собственные. Недопущенный каталог не запускает консоль; приоритета, скрывающего одну из двух обещанных дверей, нет.
 
