@@ -262,6 +262,16 @@ paths:
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
   /{rows}/{id}/{blob_field}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: rows
       in: path
@@ -345,6 +355,16 @@ paths:
           minimum: 0
           maximum: 33554432
   /{table}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: table
       in: path
@@ -492,6 +512,16 @@ paths:
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
   /{table}/{name}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: table
       in: path
@@ -1422,7 +1452,5 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/M2_ConsoleRefusal'
-x-mounting: 'Консоль: /schema и /drain общие, пути единиц и таблиц — root либо /<sub>. /v1/objects — отдельная дверь
-  ресурса; общие отказы консоли к ней не применяются.'
 x-byte-limits: JSON console >= 1048576 bytes; blob PUT 33554432; resource copy 67108864. Размер проверяется по фактически
   прочитанным байтам и заголовку, не maxLength строки. Chunked консоли — 400; blob без Content-Length — 400.
