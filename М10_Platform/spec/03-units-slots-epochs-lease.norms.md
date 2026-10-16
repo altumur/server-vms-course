@@ -73,8 +73,9 @@ values_by_type:
 absent:
   - поле с inherit, если не задано: элемента нет (не "" и не "null")
   - json-поле со значением null
-platform_fields:   [id, revision, worker, placement, epoch, phase, observed_revision]
-  # клиент не задаёт; в строке единицы только id и revision; worker/placement — строка размещения (урок 4);
+platform_fields:   [id, revision, deleted, worker, placement, epoch, phase, observed_revision]
+  # unit.fields не объявляет (отказ загрузки М10/2), клиент не задаёт; в живой строке только id и revision,
+  # deleted — только у надгробия; worker/placement — строка размещения (урок 4);
   # epoch — строка эпохи; phase, observed_revision — пульс воркера (урок 5)
 ```
 
