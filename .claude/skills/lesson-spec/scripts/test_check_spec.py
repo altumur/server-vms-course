@@ -91,6 +91,38 @@ components:
         self.replace(self.api, "3.1.0", "wrong")
         self.assertTrue(self.check().errors)
 
+    def test_http_status_requires_ascii_digits(self):
+        for code in ["100", "200", "299", "400", "500", "599"]:
+            with self.subTest(code=code):
+                self.scenarios.write_text(f"01-example\t1\tGET /example\t{code} {{}}\n")
+                self.assert_cli(0)
+        for digit in ["٢", "２", "२", "𝟚"]:
+            for position in range(3):
+                code = "200"[:position] + digit + "200"[position + 1:]
+                with self.subTest(code=code):
+                    self.scenarios.write_text(f"01-example\t1\tGET /example\t{code} {{}}\n")
+                    self.assert_cli(1, "expected HTTP status and JSON body")
+        self.scenarios.write_text("01-example\t1\tGET /example\t600 {}\n")
+        self.assert_cli(1, "expected HTTP status and JSON body")
+
+    def test_normative_ids_require_ascii_digits(self):
+        original = self.norms.read_text()
+        for value in ["М12A/1-0٢", "М12A/1-２0", "М12A/1-०1"]:
+            with self.subTest(value=value):
+                self.norms.write_text(original.replace("М12A/1-01", value))
+                self.assert_cli(1, "no normative checklist ids")
+
+    def test_lesson_filename_requires_ascii_digits(self):
+        for number in ["٠1", "０1"]:
+            old_stem = self.lesson.stem
+            new_stem = number + "-example"
+            for path in self.spec.glob(old_stem + ".*"):
+                path.rename(path.with_name(path.name.replace(old_stem, new_stem, 1)))
+            self.lesson.write_text(self.lesson.read_text().replace(old_stem, new_stem))
+            self.lesson = self.lesson.rename(self.lesson.with_name(new_stem + ".md"))
+            with self.subTest(number=number):
+                self.assert_cli(1, "expected module/NN-slug.md")
+
     def test_case_names_are_filenames_not_subsystem_identifiers(self):
         self.add_verdicts()
         (self.acceptance / "cases/valid.subsystem.yaml").rename(self.acceptance / "cases/valid_1.0_OFF.subsystem.yaml")
