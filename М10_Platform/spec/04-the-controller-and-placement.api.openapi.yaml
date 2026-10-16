@@ -484,13 +484,13 @@ components:
             - unavailable
     WorkerName:
       type: string
-      pattern: '^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$'
+      pattern: ^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$
       not:
         pattern: '[^a-z0-9-]'
-      description: >-
-        Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой
-        суффикс из строчных латинских букв/цифр с одиночными дефисами между частями.
-        Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
+      description: 'Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных латинских
+        букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
+        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     UnitId:
       type: string
       minLength: 1
@@ -501,8 +501,9 @@ components:
           - ..
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
-        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
-        Unicode-категории.'
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
+        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     Label:
       type: string
       minLength: 1
@@ -536,7 +537,28 @@ components:
       not:
         anyOf:
         - pattern: '[^a-z0-9_-]'
-        - enum: [platform, domain, console, audit]
+        - enum:
+          - platform
+          - domain
+          - console
+          - audit
+          - spec
+          - session
+          - mounts
+          - healthz
+          - metrics
+          - servers
+          - resources
+          - where
+          - unplaceable
+          - policy
+          - drain
+          - schema
+          - events
+          - marks
+          - requests
+          - asked
+          - api
     Policy:
       type: object
       required:
