@@ -354,7 +354,7 @@ components:
           schema:
             $ref: '#/components/schemas/NoRoute'
     Method:
-      description: Метод не GET.
+      description: Метод не из объявленных для этой двери.
       content:
         application/json:
           schema:
