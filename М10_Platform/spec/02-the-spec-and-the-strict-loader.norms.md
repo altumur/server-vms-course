@@ -44,14 +44,14 @@ NaN, обе бесконечности (в любом допускаемом YAM
 
 ### Н1.2 Документ
 
-Корень — отображение с закрытым набором разделов. Незнакомый ключ на любом уровне — отказ (Н4). Раздел, отсутствующий в файле, значит умолчание своего урока; `name` и `placement.capacity.default` умолчания не имеют и обязательны.
+Корень — отображение с закрытым набором разделов. Незнакомый ключ на любом уровне — отказ (Н4). Раздел, отсутствующий в файле, значит умолчание своего урока, если оно определено. Обязательны без умолчаний `name`, отображение `unit` с явно заданными `unit.rows` и `unit.id`, а также `placement.capacity.default`. Отсутствие любого из них — `refused:value` с путём отсутствующего значения; null не заменяет отображение/строку. `unit.fields` без объявления — пустое отображение. Профиль подсистемы без единиц не входит в этот урок; rows и numeric/named не выбираются загрузчиком за автора.
 
 ```yaml
 spec:
   name:        # ДОЛЖЕН: строка по грамматике ^[a-z][a-z0-9_-]{0,31}$; не из зарезервированных
                #   platform, domain, console, audit, spec, session, mounts, healthz, metrics, servers, resources, where, unplaceable, policy, drain, schema, events, marks, requests, asked, api (деревья и первые сегменты дверей М10/8–10); имя — первый
                #   сегмент всех ключей подсистемы `<name>/…` и её места на домене
-  unit:        # единица: rows, id, fields — грамматика поля Н1.3; смысл строки и слота — урок 3
+  unit:        # ДОЛЖЕН: отображение с обязательными rows и id; fields по умолчанию {}; грамматика поля Н1.3; смысл — урок 3
   placement:   # размещение — урок 4; здесь: capacity.default ДОЛЖЕН быть целым ≥ 0; unplaced.delete_after —
                #   целое ≥ 1, только с named id (не numeric), без fixed-полей кроме id и about только по id (ADR-0067)
   tables:      # таблицы подсистемы — урок 10; поле таблицы по Н1.3 без fixed, inherit, merge, unique
@@ -308,7 +308,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 251 файл `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (37) или `refused` (214). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 255 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (38) или `refused` (217). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -394,6 +394,8 @@ required:false, default:null, без inherit/enum. Остальные default/in
 - [ ] **М10/2-23** публичный unit.id, table.key и requests.key не берут *_secret; типы источников по Н1.4 — случаи r37_unit_id_secret/r37_table_key_secret/r37_table_template_secret/r37_requests_secret
 - [ ] **М10/2-24** имя не из зарезервированных 21 слов — name_reserved_platform, r37_sub_where/r37_sub_metrics/r37_sub_healthz и k38_sub_* (все21 слова), допустимый сосед r37_sub_where2; непересечение каталога, включая A=B, rows и map/list tables, проверяется чтением реализации по Н3 и матрице README: verdicts вызывает загрузить, но не загрузить_каталог, даже для одного файла
 - [ ] **М10/2-25** обычная подстановка — только строка, :int — явный числовой источник; отсутствующий/иной тип тела — 400, не языковое преобразование — случаи r37_requests_plain_*/r37_requests_int_*/r37_table_key_bool/r37_table_template_bool/r37_table_int_template
+
+- [ ] **М10/2-26** unit/rows/id обязательны без умолчаний; минимальная numeric-спека с пустыми fields допустима — r38_unit_absent/r38_unit_rows_absent/r38_unit_id_absent/r38_unit_minimal
 
 ## Соответствие прежним урокам
 
