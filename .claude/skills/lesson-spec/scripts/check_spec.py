@@ -23,7 +23,40 @@ except ImportError as exc:
 
 
 class UniqueLoader(yaml.SafeLoader):
-    """Reject duplicate contract keys instead of silently keeping the last one."""
+    """Read JSON-compatible YAML using the YAML 1.2 Core scalar schema."""
+
+
+# SafeLoader's YAML 1.1 resolvers turn on/yes into the same boolean and 012 into
+# octal. Keep these changes local: verdict fixtures use their own lesson grammar.
+_CORE_TAGS = {"tag:yaml.org,2002:" + name for name in
+              ("bool", "int", "float", "timestamp")}
+UniqueLoader.yaml_implicit_resolvers = {
+    first: [(tag, pattern) for tag, pattern in entries if tag not in _CORE_TAGS]
+    for first, entries in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+UniqueLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
+    list("tTfF"))
+UniqueLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:int",
+    re.compile(r"^(?:[-+]?[0-9]+|0o[0-7]+|0x[0-9a-fA-F]+)$"), list("-+0123456789"))
+UniqueLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:float",
+    re.compile(r"^(?:[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][-+]?[0-9]+)?"
+               r"|[-+]?\.(?:inf|Inf|INF)|\.(?:nan|NaN|NAN))$"),
+    list("-+0123456789."))
+
+
+def core_int(loader, node):
+    value = loader.construct_scalar(node)
+    if value.startswith("0o"):
+        return int(value[2:], 8)
+    if value.startswith("0x"):
+        return int(value[2:], 16)
+    return int(value, 10)
+
+
+UniqueLoader.add_constructor("tag:yaml.org,2002:int", core_int)
 
 
 def unique_mapping(loader, node, deep=False):
@@ -31,6 +64,8 @@ def unique_mapping(loader, node, deep=False):
     result = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str):
+            raise ValueError(f"OpenAPI object key must be a string, line {key_node.start_mark.line + 1}")
         if key in result:
             raise ValueError(f"duplicate YAML key {key!r}, line {key_node.start_mark.line + 1}")
         result[key] = loader.construct_object(value_node, deep=deep)
@@ -223,6 +258,8 @@ class Check:
             self.error(path, "unfilled contract template")
         try:
             doc = yaml.load(text, Loader=UniqueLoader)
+            # OpenAPI's YAML representation must still represent JSON data.
+            json.dumps(doc, allow_nan=False)
             if not isinstance(doc, dict):
                 raise ValueError("OpenAPI document must be an object")
             if not str(doc.get("openapi", "")).startswith("3.1."):
