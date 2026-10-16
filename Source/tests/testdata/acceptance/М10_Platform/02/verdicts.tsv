@@ -238,3 +238,5 @@ r37_sub_where	refused
 r37_sub_metrics	refused
 r37_sub_healthz	refused
 r37_sub_where2	ok
+r37_rows_cluster	refused
+r37_rows_worker	refused
