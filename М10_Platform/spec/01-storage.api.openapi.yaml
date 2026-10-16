@@ -18,12 +18,14 @@ paths:
   /v1/list:
     get:
       summary: перечислить
+      description: После проверки личности по М10/6; право read на значения не требуется.
       parameters:
         - {name: prefix, in: query, required: false, schema: {type: string}}
       responses:
         "200":
           description: каждый ключ с данным префиксом и его версия; ключи — в порядке байтов
           content: {application/json: {schema: {$ref: "#/components/schemas/Listing"}}}
+        "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NoRoute"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/write:
@@ -232,7 +234,7 @@ components:
               - $ref: "#/components/schemas/BadRequestFault"
               - $ref: "#/components/schemas/BadKeyFault"
     Forbidden:
-      description: Нет прав чтения, записи, удаления или чтения стража.
+      description: Личность не допускается по М10/6 либо нет прав чтения, записи, удаления или чтения стража; list не требует права read.
       content:
         application/json:
           schema:
