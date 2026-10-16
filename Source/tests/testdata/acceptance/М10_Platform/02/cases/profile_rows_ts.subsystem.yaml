@@ -64,4 +64,4 @@ display:
     - field: seen
       title: Seen
 lease:
-  unconfirmed_max: false
+  unconfirmed_max: 'off'
