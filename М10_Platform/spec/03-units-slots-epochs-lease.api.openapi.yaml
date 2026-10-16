@@ -179,7 +179,7 @@ components:
       type: object
       propertyNames:
         not:
-          enum: [id, revision, worker, placement, epoch, phase, observed_revision]
+          enum: [id, revision, deleted, worker, placement, epoch, phase, observed_revision]
       additionalProperties: true
       description: >-
         Только поля unit.fields; дополнительные имена здесь нужны для произвольной спеки,
