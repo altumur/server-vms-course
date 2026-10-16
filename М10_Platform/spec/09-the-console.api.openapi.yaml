@@ -18,9 +18,7 @@ paths:
           content:
             application/json:
               schema:
-                anyOf:
-                - $ref: '#/components/schemas/MountedPage'
-                - $ref: '#/components/schemas/M2_NoRoute'
+                $ref: '#/components/schemas/M2_NoRoute'
         '405':
           $ref: '#/components/responses/M2_Method'
         '408':
@@ -57,14 +55,14 @@ paths:
       summary: 'HEAD: Страница root'
       responses:
         '400':
-          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
-            содержит тела
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
-            тела
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
@@ -74,15 +72,16 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
-            тела
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
               schema:
                 type: string
         '503':
-          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
           headers:
             Retry-After:
               schema:
@@ -112,9 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                anyOf:
-                - $ref: '#/components/schemas/MountedPage'
-                - $ref: '#/components/schemas/M2_NoRoute'
+                $ref: '#/components/schemas/M2_NoRoute'
         '405':
           $ref: '#/components/responses/M2_Method'
         '408':
@@ -151,14 +148,14 @@ paths:
       summary: 'HEAD: Страница root'
       responses:
         '400':
-          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
-            содержит тела
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
-            тела
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
@@ -168,15 +165,16 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
-            тела
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
               schema:
                 type: string
         '503':
-          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
           headers:
             Retry-After:
               schema:
@@ -237,6 +235,7 @@ paths:
                 type: string
       parameters:
       - name: v
+        description: Без v или при несовпадении версии — 404 NoVersion; тело модуля не выдаётся.
         in: query
         required: false
         schema:
@@ -256,7 +255,7 @@ paths:
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -331,6 +330,7 @@ paths:
                 type: string
       parameters:
       - name: v
+        description: Без v или при несовпадении версии — 404 NoVersion; тело модуля не выдаётся.
         in: query
         required: false
         schema:
@@ -350,7 +350,7 @@ paths:
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -432,7 +432,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -508,7 +508,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -584,7 +584,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -660,7 +660,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -736,7 +736,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -818,7 +818,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -896,7 +896,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -984,7 +984,7 @@ paths:
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -1041,7 +1041,7 @@ paths:
               schema:
                 type: string
                 minLength: 1
-              description: 'Обязателен для PlaceUnreachable: ровно значение unreachable.'
+              description: 'Обязателен для PlaceUnreachable: ровно значение поля unreachable тела.'
         '405':
           $ref: '#/components/responses/M2_Method'
         '408':
@@ -1074,18 +1074,25 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/M3_UnitId'
+      x-validation-order:
+      - table
+      - unit-query-form
+      - view-on-unit
+      - mandatory-read
+      - held-state
+      - optional-token
     head:
       summary: 'HEAD: Дверь держателя места'
       responses:
         '400':
-          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
-            содержит тела
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
-            тела
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
           headers:
@@ -1101,15 +1108,16 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит
-            тела
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
               schema:
                 type: string
         '503':
-          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
           headers:
             Retry-After:
               schema:
@@ -1177,7 +1185,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -1338,7 +1346,7 @@ paths:
         '404':
           description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
         '405':
-          description: Метод не GET.; HEAD не содержит тела
+          description: Метод не из объявленных для этой двери.; HEAD не содержит тела
         '408':
           description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
         '413':
@@ -1410,6 +1418,659 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GlassInput'
+  /{sub}/servers:
+    get:
+      summary: Наблюдения серверов
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          $ref: '#/components/responses/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servers'
+    head:
+      summary: 'HEAD: Наблюдения серверов'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+  /{sub}/unplaceable:
+    get:
+      summary: Неразмещённые единицы
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          $ref: '#/components/responses/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/M4_Unplaceable'
+    head:
+      summary: 'HEAD: Неразмещённые единицы'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+  /{sub}/where/{id}:
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M3_UnitId'
+    get:
+      summary: Подсказка держателя единицы
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/M4_NotPlaced'
+                - $ref: '#/components/schemas/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M4_Where'
+    head:
+      summary: 'HEAD: Подсказка держателя единицы'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Полное JSON-тело; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
+  /{sub}/where/{table}/{place}:
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: table
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+    - name: place
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M3_UnitId'
+    get:
+      summary: Дверь держателя места
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/PlaceUnreachable'
+                - $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            X-Unreachable:
+              schema:
+                type: string
+                minLength: 1
+              description: 'Обязателен для PlaceUnreachable: ровно значение поля unreachable тела.'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WherePlace'
+      parameters:
+      - name: unit
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/M3_UnitId'
+      x-validation-order:
+      - table
+      - unit-query-form
+      - view-on-unit
+      - mandatory-read
+      - held-state
+      - optional-token
+    head:
+      summary: 'HEAD: Дверь держателя места'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Полное JSON-тело; HEAD не содержит тела
+          headers:
+            X-Unreachable:
+              schema:
+                type: string
+                minLength: 1
+              description: 'Обязателен для PlaceUnreachable: ровно значение unreachable.'
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
+      parameters:
+      - name: unit
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/M3_UnitId'
+  /{sub}/metrics:
+    get:
+      summary: Ряды метрик консоли
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          $ref: '#/components/responses/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Prometheus text exposition, UTF-8; перечень Н3
+          content:
+            text/plain:
+              schema:
+                type: string
+    head:
+      summary: 'HEAD: Ряды метрик консоли'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Нет маршрута; это не ответ загрузчика об ошибочной спеке.; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Prometheus text exposition, UTF-8; перечень Н3; HEAD не содержит тела
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+  /{sub}/:
+    get:
+      summary: Страница смонтированной подсистемы отсутствует
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/MountedPage'
+                - $ref: '#/components/schemas/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+    head:
+      summary: 'HEAD: Страница root'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Полное JSON-тело; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полный документ UTF-8; HEAD не содержит тела
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; минимум по Н1.1.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
+  /{sub}/index.html:
+    get:
+      summary: Страница смонтированной подсистемы отсутствует
+      responses:
+        '400':
+          $ref: '#/components/responses/M2_BadBody'
+        '401':
+          $ref: '#/components/responses/M2_Unauthenticated'
+        '403':
+          $ref: '#/components/responses/M2_Denied'
+        '404':
+          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/MountedPage'
+                - $ref: '#/components/schemas/M2_NoRoute'
+        '405':
+          $ref: '#/components/responses/M2_Method'
+        '408':
+          $ref: '#/components/responses/M2_SlowBody'
+        '413':
+          $ref: '#/components/responses/M2_LargeBody'
+        '429':
+          $ref: '#/components/responses/M2_RateLimited'
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M2_ConsoleRefusal'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+    head:
+      summary: 'HEAD: Страница root'
+      responses:
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
+            HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
+            HEAD не содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+            содержит тела
+        '404':
+          description: Полное JSON-тело; HEAD не содержит тела
+        '405':
+          description: Метод не GET.; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4.; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
+            содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
+        '200':
+          description: Полный документ UTF-8; HEAD не содержит тела
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; минимум по Н1.1.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/M4_SubsystemName'
 components:
   schemas:
     M2_SpecView:
@@ -2450,7 +3111,6 @@ components:
       - worker
       - place
       - server
-      - door
       additionalProperties: false
       properties:
         worker:
@@ -2462,6 +3122,8 @@ components:
           $ref: '#/components/schemas/M4_Server'
         door:
           $ref: '#/components/schemas/M4_Door'
+      description: Держатель места; door присутствует только при подтверждённой двери и view на unit (Н3),
+        не null.
     PlaceUnreachable:
       type: object
       required:
@@ -2531,7 +3193,7 @@ components:
           schema:
             $ref: '#/components/schemas/M2_NoRoute'
     M2_Method:
-      description: Метод не GET.
+      description: Метод не из объявленных для этой двери.
       content:
         application/json:
           schema:
