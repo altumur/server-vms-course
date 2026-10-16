@@ -298,7 +298,7 @@ class Check:
                         re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
                         children[1].type == "strong_open" and children[2].type == "text" and
                         children[3].type == "strong_close" and
-                        re.fullmatch(r"М\d+[A-ZА-Я]*/\d+-\d+", children[2].content)):
+                        re.fullmatch(r"М[0-9]+[A-ZА-Я]*/[0-9]+-[0-9]+", children[2].content)):
                     ids.append(children[2].content)
             if token.nesting == 1:
                 stack.append(token.type)
@@ -350,7 +350,7 @@ class Check:
                 self.error(path, f"line {line}: unsupported request form; needs format-specific check")
             code, separator, body = expect.partition(" ")
             try:
-                if not separator or not re.fullmatch(r"[1-5]\d\d", code):
+                if not separator or not re.fullmatch(r"[1-5][0-9]{2}", code):
                     raise ValueError("expected HTTP status and JSON body")
                 strict_json(body)
             except (ValueError, TypeError) as exc:
@@ -406,7 +406,7 @@ class Check:
                 self.error(path, f"line {line}: {exc}")
 
     def lesson(self, lesson):
-        if lesson.parent.parent != self.root or not re.fullmatch(r"\d{2}-.+\.md", lesson.name):
+        if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
             self.error(lesson, "expected module/NN-slug.md under repository root")
             return
         module = lesson.parent.name
