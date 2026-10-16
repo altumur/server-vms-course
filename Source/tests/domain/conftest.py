@@ -17,12 +17,21 @@ from w2cplatform.domain.federation import Cluster, Federation, Unreachable  # no
 
 
 def _ensure_camera_spec():
-    """Load the public sample contract for camera-as-member fixtures without importing its implementation."""
+    """Load published cam and its declared near neighbour (currently rec), required by ADR-0056.
+
+    Only their YAML contracts enter the catalogue; no VMS implementation is imported.
+    """
     from pathlib import Path
     from w2cplatform import catalog
-    if "cam" not in catalog.specs():
-        from w2cplatform.spec import SubsystemSpec
-        SubsystemSpec.load(str(Path(__file__).parents[2] / "vms" / "cam.subsystem.yaml"))
+    from w2cplatform.spec import SubsystemSpec
+    directory = Path(__file__).parents[2] / "vms"
+    loaded = {spec.name: spec for spec in catalog.specs()}
+    camera = loaded.get("cam")
+    if camera is None:
+        camera = SubsystemSpec.load(str(directory / "cam.subsystem.yaml"))
+    if camera.near not in ("", "none") and camera.near not in loaded:
+        SubsystemSpec.load(str(directory / f"{camera.near}.subsystem.yaml"))
+    return camera
 
 
 class Clock:
@@ -178,9 +187,9 @@ class _LocalConsole:
 class EmbeddedMember:
     """Generic, in-process one-unit platform member fixture for domain tests.
 
-    It loads the published cam spec to interpret camera rows and expose their domain view, and writes the
-    public snapshot and heartbeat shapes directly. It imports no VMS implementation; tests of the VMS worker
-    and controller belong under tests/domainvms.
+    It loads published cam and its declared near neighbour (currently rec) so that its console controller
+    meets ADR-0056. It interprets camera rows and writes public snapshot and heartbeat shapes directly.
+    It imports no VMS implementation; tests of the VMS worker and controller belong under tests/domainvms.
     """
     ROW, EPOCH = "cam/cameras/1", "cam/epoch/1"
     def __init__(self, serial, flash_vars, wall, name=None, reaches=(), address=None, disk=None, pushes=False, can=None):
