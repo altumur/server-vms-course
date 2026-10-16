@@ -296,7 +296,7 @@ components:
         - properties:
             error: {const: unavailable}
             detail: {const: "the sealing key is set and does not read"}
-      description: Кольцо секретов задано, но не читается; только запись с секретами, М10/7 Н2/Н4.
+      description: Кольцо секретов задано, но не читается; все POST/PUT единиц, включая тела без секретов (HMAC памяти повторов), М10/7 Н1.2/Н2/Н4.
     Unavailable:
       allOf:
         - $ref: "#/components/schemas/TextRefusal"
