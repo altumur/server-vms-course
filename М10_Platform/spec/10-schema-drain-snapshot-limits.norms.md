@@ -113,7 +113,7 @@ sweep:    <sub>/sweep {at, digests}  — писатель консоль; раз
 ```yaml
 tables:                                   # спека (форма — урок 2)
   <t>:
-    key:      <поле> | <шаблон по М10/2 Н1.4, requests.key>   # число подстановок не ограничено двумя;
+    key:      <несекретное поле type string> | <шаблон по М10/2 Н1.4, requests.key>   # число подстановок не ограничено двумя;
                                                      # пример: "{of}-{from:int}-{to:int}"; итоговое имя по Н2
     fields:   {<поле>: {type, required, enum, default, schema, ref, must_match, bound_to, credentials, secret_in, schemes}}
               # без fixed, inherit, merge, unique (урок 2)
@@ -126,7 +126,7 @@ field_names: held_by/garbled/by/at/made_at не объявляются (вычи
              сами по себе полям таблицы не запрещены; значения проверяются по объявлению.
 names:      ДОЛЖНЫ быть строками: 1–32 ASCII-символа, первый a-z, остальные a-z/0-9/_/-;
             не platform/domain/console/audit (та же положительная грамматика, что SubsystemName в контракте);
-            не значение unit.rows; не next_id, policy, slots, holds, epoch, idem, placement, workers, requests, asked, sweep, servers, decommissioned, controller; не spec, session, mounts, healthz, metrics, servers, resources, where, unplaceable, policy, drain, schema, events, marks, requests, asked, platform, domain, api (первые сегменты дверей консоли по владельцам Н2); динамический префикс подсистемы не новая зарезервированная семья
+            не значение unit.rows; не next_id, policy, slots, holds, epoch, idem, placement, workers, requests, asked, sweep, servers, decommissioned, controller; не spec, session, mounts, healthz, metrics, servers, resources, where, unplaceable, policy, drain, schema, events, marks, requests, asked, platform, domain, api (первые сегменты дверей консоли по владельцам Н2); конфликт с любым именем подсистемы каталога — отказ каталога по М10/2 Н3, а не разрешённое пересечение root/mount
 rows:       <sub>/<t>/<имя>; писатель — консоль; таблица из worker.writes (урок 6) — таблица воркера: он пишет строку целиком с cas,
             консоль только читает (GET с полями), POST/DELETE → 403 denied «written by its worker»; PUT → 405 как неподдержанный метод; секреты запечатаны (урок 7)
 held_by:    у таблицы мест (placement.places.table) GET дописывает held_by: <воркер> | null
@@ -247,7 +247,7 @@ at — диагностическое время первой отметки п�
 
 ```
 1. любое из by/at/made_at в теле → 400 «unknown field» до вычисления stamp и записи;
-   имя из key (поля тела; шаблон) → иначе 400 «the body does not fill it in»; имя — не путь
+   имя из key (поля тела; шаблон): обычный источник — только строка, :int — конечное binary64-число |x|≤2^53−1 без bool, *_secret не допускается загрузчиком; отсутствует/иной тип → 400 «the body does not fill it in»; имя — не путь
 2. поля: типы, required, enum, schema на строку, ref/must_match (в обе стороны: единицы, указывающие на строку), секреты:
    пустой — прежний, смена bound_to — 400 (урок 7); stamp: by, at, made_at
 3. запечатать; записать полную строку с CAS (конфликт → перечитать и снова проверить все зависимости;
