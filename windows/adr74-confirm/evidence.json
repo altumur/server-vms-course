@@ -4,24 +4,51 @@
   "branch": "codex/course-adr74-confirm-tests-domain",
   "tests": {
     "unit": {
-      "log": "/tmp/adr74-unit-final.log",
-      "sha256": "df5c4b4550dd0e448d2913138ba640c309658016fa5c606236cda5deb3596757",
-      "result": "2050 passed, 1 failed, 2 skipped; the only failure is the expected platform_lists byte-parity test; console skipped because jsdom is unavailable"
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/run.py",
+      "log": "/tmp/adr74-confirm-unit-20261017.log",
+      "sha256": "e546acfc36d34fa193fe41404ba38a891cc6df3f5b3bf079e8d4fe231cf27773",
+      "passed": 2047,
+      "failed": 4,
+      "skipped": 2,
+      "exit_code": 1,
+      "expected_failure": "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
+      "additional_failures": [
+        "test_platform_lists.py::test_the_code_holds_the_tables_lists",
+        "test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door",
+        "test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process"
+      ],
+      "skipped_reason": "console: no jsdom"
     },
     "domain": {
-      "log": "/tmp/adr74-domain-final.log",
-      "sha256": "ed88cd7b55336e6aa165b69178ccf321532654ebce98d9970028e540deaaa23b",
-      "result": "190 passed, 0 failed, 0 skipped"
+      "cwd": "Source",
+      "command": "/tmp/adr74-venv/bin/python tests/domain/run.py",
+      "log": "/tmp/adr74-confirm-domain-final-20261017.log",
+      "sha256": "d1a643b96cd3252478a0efcb70c060b3a136c6862e5b8da4b15a522aab1d4465",
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
     },
     "domainvms": {
-      "log": "/tmp/adr74-domainvms-final3.log",
-      "sha256": "190fe631cb5d54d2be9873f07687d0bc2f258ea205f931d8ab7995d9d4f5e77b",
-      "result": "206 passed, 0 failed, 0 skipped"
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/domainvms/run.py",
+      "log": "/tmp/adr74-confirm-domainvms-20261017.log",
+      "sha256": "95f9cee7152285807f86c21b45e0072f6b5299ce4b3b85e42448ccf0526b4e7a",
+      "passed": 206,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
     },
     "boundary": {
-      "log": "/tmp/adr74-boundary-final.log",
-      "sha256": "9f536a8e65174005a146ec9e659b65ea6091ae6a227bd1c424acd418b778a349",
-      "result": "6 passed, 0 failed, 0 skipped; includes tests_domain_does_not_import_vms"
+      "cwd": "Source",
+      "command": "/tmp/adr74-venv/bin/python tests/run.py test_boundary",
+      "log": "/tmp/adr74-confirm-boundary-final-20261017.log",
+      "sha256": "9c2ee1dcc488d1212ffe36ea00c7abc4ff9e16c51cebb608f2a6635ae6a9d80d",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
     }
   },
   "boundary": {
@@ -37,11 +64,11 @@
   },
   "coverage_table": {
     "path": "windows/adr74-confirm/TESTS.tsv",
-    "rows": 192,
-    "assert_nodes_before": 742,
-    "assert_nodes_after": 742,
+    "rows": 205,
+    "assert_nodes_before": 786,
+    "assert_nodes_after": 786,
     "ast_validation_errors": 0,
-    "sha256": "b937d83b8ff537adc1135810fbe332debac436fb1bd59e84576ba861a64a8bc8"
+    "sha256": "afb1ac8ad3cf2665ffb09ab103686ed0d0c704e50ecda97d556f8006def96f24"
   },
   "repository_checks": {
     "git_diff_check": "passed",
@@ -50,5 +77,55 @@
   "runtime": {
     "python": "3.12.15",
     "obsd": "/Users/murat/w2c/vms-nightly/build/obsd/build/obsd"
+  },
+  "date": "2026-10-17",
+  "source_commit": "83c7c8ed",
+  "acceptance_status": "pending decisions for main regressions; not approved for merge",
+  "review_decisions": [
+    "6e37e42b",
+    "8498f5fd",
+    "643d5223",
+    "0c40e0c1"
+  ],
+  "validation": {
+    "log": "/tmp/adr74-confirm-validation-20261017.log",
+    "sha256": "c815d4de8c03cf3f089775a46c4e048aeaffca164ee6abdfb8f62246057cc749",
+    "exit_code": 0
+  },
+  "fixture_smoke": {
+    "log": "/tmp/adr74-confirm-fixture-20261017.log",
+    "sha256": "1bc0cc4d9ec8797564e00de38c5095b9d383f3110da688cd1502b1611837da3c",
+    "exit_code": 0
+  },
+  "test_module_asserts": {
+    "before": 1679,
+    "after": 1679,
+    "domain_before": 857,
+    "domain_after": 712,
+    "domainvms_before": 822,
+    "domainvms_after": 967
+  },
+  "source_manifest": {
+    "path": "/tmp/adr74-confirm-source-20261017.json",
+    "sha256": "7a5f139aae65470284781a929ebe81ef3f476893c00544538da15d109d2514b6",
+    "files": 1123,
+    "unchanged_after_runs": true
+  },
+  "fixture_catalogue": {
+    "published_specs": [
+      "cam",
+      "rec"
+    ],
+    "neighbour_source": "cam spec.near; no hard-coded recorder name in loader",
+    "load_dir_used": false,
+    "implementation_imports": false
+  },
+  "pending_decisions": [
+    "decisions/inbox/2026-10-17-confirm-secret-roles.md",
+    "decisions/inbox/2026-10-17-confirm-body-limit.md"
+  ],
+  "unit_fixture_repairs": {
+    "Source/tests/test_console_gate.py": "RecWorker test double supplies metrics_text required when serve_archive starts; assertions unchanged",
+    "Source/tests/test_row_reader.py": "RecWorker test double supplies ingest=None required by metrics_text; assertions unchanged"
   }
 }
