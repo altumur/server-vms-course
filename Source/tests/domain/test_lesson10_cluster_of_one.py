@@ -118,7 +118,7 @@ def test_a_day_of_heartbeats_costs_the_flash_nothing():
         d.publish()
         if i % 3 == 0:
             report_sync(agent)                                 # and the agent every 30 s
-    assert after_boot == 3 + 7                           # epoch, unit, identity; roster and six initial book copies
+    assert after_boot == 3 + 5                           # epoch, unit, identity; roster and four cam/rec book copies
     assert d.flash.writes - after_boot == 1              # the grants, once, when they arrived — and nothing else
 
 
@@ -132,8 +132,8 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
     report_sync(DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall))
-    assert d.flash.list("") == ["cam/cameras/1", "cam/epoch/1", "domain/auto/asks", "domain/cam/sources", "domain/grants",
-                                "domain/live/stream-accounts", "domain/member-key", "domain/member-list",
+    assert d.flash.list("") == ["cam/cameras/1", "cam/epoch/1", "domain/cam/sources", "domain/grants",
+                                "domain/member-key", "domain/member-list",
                                 "domain/rec/polls", "domain/rec/primaries", "domain/rec/upstream"]
 
 
