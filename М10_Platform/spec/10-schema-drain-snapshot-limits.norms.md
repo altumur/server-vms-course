@@ -137,6 +137,10 @@ rights:     чтение view, запись admin, ниже — по rights.rout
 
 ## Н2 Двери
 
+Пути таблиц и blob-полей единицы выбирают root либо /{sub} по М10/9 Н2.
+В OpenAPI это стандартные servers + paths. /schema и /drain остаются общими,
+/v1/objects — дверью ресурса: префикс консоли к ней не добавляется.
+
 HTTP-контракт: [10-schema-drain-snapshot-limits.api.openapi.yaml](10-schema-drain-snapshot-limits.api.openapi.yaml).
 
 Иной метод у таблицы — `405` «`/<t> takes GET, POST and DELETE of one row`»; метод проверяется до прав на запись. Общие отказы консоли, `HEAD` и предел чтения — М10/9 и полные формы М10/2.
