@@ -1178,8 +1178,11 @@ components:
           enum:
           - held_by
           - garbled
+          - by
+          - at
+          - made_at
       additionalProperties: true
-      description: Только объявленные поля этой таблицы; типы, required, enum, schema и ключ проверяются динамически по спеке. id/revision/worker/placement/epoch/phase/observed_revision допустимы при объявлении. Поле name допускается только у key=name с типом string.
+      description: Штампы by/at/made_at клиентом не передаются (400 unknown field), независимо от stamp. Только объявленные поля этой таблицы; типы, required, enum, schema и ключ проверяются динамически по спеке. id/revision/worker/placement/epoch/phase/observed_revision допустимы при объявлении. Поле name допускается только у key=name с типом string.
     TableWritten:
       type: object
       required:
