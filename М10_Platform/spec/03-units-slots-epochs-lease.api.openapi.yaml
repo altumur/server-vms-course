@@ -6,10 +6,20 @@ info:
   version: "1"
   description: >-
     Пути относительно консоли выбранной подсистемы; rows равен unit.rows.
-    GET списка принадлежит уроку 9, формы строк — этому уроку.
+    Список читает модуль урока 9; контракт списка и формы строк принадлежат этому уроку.
     Общие ответы консоли из урока 9 перечислены у каждой операции явно.
 paths:
   /{rows}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
       - $ref: "#/components/parameters/Rows"
     post:
@@ -74,6 +84,16 @@ paths:
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /{rows}/{id}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
       - $ref: "#/components/parameters/Rows"
       - name: id
