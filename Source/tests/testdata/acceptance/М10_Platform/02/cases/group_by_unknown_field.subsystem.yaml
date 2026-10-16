@@ -12,7 +12,7 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   tie_break:  most-free-capacity
-  group_by: nosuch
+  group_by: {field: nosuch}
 requests:
   schema:
     type: object
