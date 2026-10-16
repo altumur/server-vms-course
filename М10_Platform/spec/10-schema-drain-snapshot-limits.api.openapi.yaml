@@ -770,6 +770,7 @@ components:
           enum:
           - id
           - revision
+          - deleted
           - worker
           - placement
           - epoch
