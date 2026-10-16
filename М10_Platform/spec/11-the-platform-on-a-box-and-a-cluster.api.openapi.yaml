@@ -792,7 +792,7 @@ components:
           schema:
             $ref: '#/components/schemas/M1_BadRequestFault'
     M1_Forbidden:
-      description: Нет прав чтения, записи, удаления или чтения стража.
+      description: Личность не допускается по М10/6 либо нет прав чтения, записи, удаления или чтения стража; list не требует права read.
       content:
         application/json:
           schema:
