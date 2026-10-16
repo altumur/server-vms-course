@@ -257,3 +257,7 @@ k38_sub_marks	refused
 k38_sub_requests	refused
 k38_sub_asked	refused
 k38_sub_api	refused
+r38_unit_absent	refused
+r38_unit_rows_absent	refused
+r38_unit_id_absent	refused
+r38_unit_minimal	ok
