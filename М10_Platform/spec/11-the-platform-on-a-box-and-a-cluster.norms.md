@@ -59,7 +59,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 | `BOX_ID` | коробка; иначе `/etc/machine-id`, иначе hostname | `%m` | юнит |
 | `SERVER_NAME` | сервер | hostname | `w2c.env` |
 | `LABELS` | метки узла через запятую | — | `w2c.env` |
-| `INSTANCE_ID` | уникальный экземпляр вместо `<box>:<pid>:<6hex>`; новый процесс не переиспользует прежнее значение (М10/8 Н1.2) | — | — |
+| `INSTANCE_ID` | уникальный экземпляр вместо `<box>:<pid>:<6hex>`; оба источника подчиняются компонентному/файловому профилю М10/8 Н1.2, иначе отказ до старта; новый процесс не переиспользует прежнее значение | — | — |
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | `w2c.env` |
 | `PLATFORM_STORE` | хранилище: `file://` \| `memory://` \| `configstore:///run/configstore/<роль>.sock` | `file://<PLATFORM_DIR>/config` | юнит |
 | `OBJECTS` / `PLATFORM_OBJECTS` | объекты: `file://` \| `cluster://…?resource=<url>` | `file://`; `cluster://` при configstore | `w2c.env` |
