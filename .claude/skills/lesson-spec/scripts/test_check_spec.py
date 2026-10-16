@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import yaml
 
-from check_spec import Check, pointer, references
+from check_spec import Check, UniqueLoader, pointer, references
 
 
 class CheckSpecTests(unittest.TestCase):
@@ -112,6 +112,40 @@ components:
     def test_duplicate_yaml_key(self):
         self.replace(self.api, "type: object", "type: object, type: string")
         self.assertTrue(self.check().errors)
+
+    def test_yaml12_words_are_distinct_string_property_names(self):
+        self.replace(self.api, "Example: {type: object}",
+                     "Example: {type: object, properties: {on: {type: string}, yes: {type: string}, "
+                     "off: {type: string}, no: {type: string}}}")
+        self.assertEqual(self.check().errors, [])
+        self.assert_cli(0)
+
+    def test_yaml12_core_values_match_quoted_and_json_representations(self):
+        value = yaml.load("{on: yes, off: no, decimal: 012, octal: 0o12, hex: 0x12, "
+                          "exponent: 1e3, date: 2026-10-16, flag: true, empty: null}",
+                          Loader=UniqueLoader)
+        self.assertEqual(value, {"on": "yes", "off": "no", "decimal": 12, "octal": 10,
+                                 "hex": 18, "exponent": 1000.0, "date": "2026-10-16",
+                                 "flag": True, "empty": None})
+        # The checker must not change the dependency's global scalar resolution.
+        self.assertIs(yaml.safe_load("yes"), True)
+
+    def test_yaml12_real_duplicate_string_and_resolved_integer_keys(self):
+        with self.assertRaisesRegex(ValueError, "duplicate YAML key 'on'"):
+            yaml.load('{on: 1, "on": 2}', Loader=UniqueLoader)
+        with self.assertRaisesRegex(ValueError, "key must be a string"):
+            yaml.load("{012: first, 12: second}", Loader=UniqueLoader)
+
+    def test_yaml12_non_string_object_key_is_not_a_false_duplicate(self):
+        self.replace(self.api, "type: object", "type: object, properties: {true: {type: string}}")
+        self.assert_cli(1, "key must be a string")
+
+    def test_yaml_non_json_scalar_does_not_pass(self):
+        original = self.api.read_text()
+        for value in [".nan", ".inf", "!!timestamp 2026-10-16"]:
+            with self.subTest(value=value):
+                self.api.write_text(original.replace("type: object", "type: object, default: " + value))
+                self.assert_cli(1)
 
     def test_missing_file_and_broken_link(self):
         self.norms.unlink()
