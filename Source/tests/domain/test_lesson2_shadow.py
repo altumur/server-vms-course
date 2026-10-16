@@ -1,6 +1,6 @@
-from tests.catalog_fixture import isolated_catalog
 """Lesson 2 — shadow mode: the taxonomy, slow versus stuck, the one number,
 and the report built from what real clusters publish."""
+from tests.catalog_fixture import isolated_catalog
 from w2cplatform.domain.shadow import Shadow, WorkerReport, exit_criterion, reports_from
 from tests.domain.conftest import Clock, Running, make_domain
 
