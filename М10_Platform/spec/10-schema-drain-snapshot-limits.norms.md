@@ -43,6 +43,7 @@ journal:  drain.started {server, user}; drain.ended {server}
   {cluster, worker: <имя> | null, ts, <rows>: [{id, revision, <поля snapshot:>, worker, server}]}
 fields:   snapshot: спеки (урок 2): нет ключа — все поля кроме *_secret и blob; [] — ни одного поля (id, revision, worker, server
           остаются); авторское поле server также исключено по умолчанию; секрет, blob или server в явном списке — спека не грузится; адреса — с маской
+          объявленные поля единицы не включают platform_fields М10/3, включая deleted/worker: отказ загрузки М10/2;
           unit.rows не cluster/worker/ts: коллизия оболочки — отказ загрузки refused:value (М10/2)
 publish:  после каждого прохода контроллера (урок 4), тем же шагом; шарды ушедших воркеров — пустые; без единиц — пустой unplaced
 ceiling:  L = min(max_bytes хранилища при max_bytes > 0, 64 МиБ двери ресурса); при max_bytes = 0 L = 64 МиБ.
