@@ -93,3 +93,14 @@ ASCII-цифры без ведущего нуля. Знак, пробелы, н�
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python -m unittest discover \
   -s .claude/skills/lesson-spec/scripts -p 'test_check_spec.py'
 ```
+
+
+Для монтирования OpenAPI3.1 использует также стандартные servers у path item:
+полный URL — подстановка server variables плюс путь операции. Корректность обеих
+форм (root/выбранный sub), ограничения имён и отсутствие префикса у общих дверей
+проверяются отдельно; структурная проверка документа не исполняет маршрутизацию.
+Пояснение x-mounting само по себе не задаёт URL. Шаблоны с одинаковой иерархией и
+разными именами переменных paths запрещены стандартом; выбрать стандартный базовый
+URL, а не создавать неразличимые /{rows}/{id} и /{sub}/{rows} в одном Paths Object.
+Основание — [Paths Object](https://spec.openapis.org/oas/v3.1.0.html#paths-object)
+и [Path Item](https://spec.openapis.org/oas/v3.1.0.html#path-item-object).
