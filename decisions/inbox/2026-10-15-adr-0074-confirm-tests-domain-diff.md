@@ -49,3 +49,42 @@ domainvms 206/0/0 (`OBSD_BIN` — сборка 2026-10-14); unit не повто
 После поправок — повтор domain, domainvms, boundary и unit (с единственным `platform_lists`), обновлённые `TESTS.tsv` и
 `evidence.json`, хеш ветки — здесь же, разделом «Исполнение». «Архитектор» сверяет поправки 1–5, разрешает слияние и
 закрывает пункт Confirmation в ADR-0074.
+
+## Исполнение (команда курса, 2026-10-17)
+
+Ветка `codex/course-adr74-confirm-tests-domain`, проверенные код и доказательства — `9d1f5f23`.
+Решения из main влиты; оба конфликта add/add входящих разрешены версией main.
+
+1. `TESTS.tsv`: добавлены все 13 проверок (урок 1 — 10, урок 2 — 3), судьба каждой названа.
+   Итого 205 уникальных целей, 786 → 786 узлов `assert`; во всех тестовых модулях domain + domainvms
+   1679 → 1679 (857 + 822 → 712 + 967).
+2. В `test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one` только `w-1` достигает `vlan:b`;
+   проверяются ровно `w-1`, причина `reaching vlan:b` и сервер `srv-10`. Исполняется testsub с `labels-subset`.
+3. По уточнению `643d5223` `_ensure_camera_spec` читает исходную cam и её соседа из `camera.near`.
+   `device_console` использует тот же загрузчик. Из пустого каталога получены только cam и rec, контроллер строится;
+   live/auto не загружаются, спеки не изменяются, `load_dir(Source/vms)` не используется.
+4. Докстринги EmbeddedMember и загрузчика называют cam, объявленного соседа rec и ADR-0056.
+   Докстринги модулей уроков 1–2 и функций snapshot/heartbeat снова стоят первыми.
+5. Две правки вне исходного окна сохранены как исправления отставших тестовых двойников на базе `dcf2509c`:
+   - `test_console_gate.py::test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_entry_and_nothing_else`:
+     `RecWorker.serve_archive` при создании двери читает `self.metrics_text`; поддельному RecWorker добавлен пустой
+     callback, без которого был AttributeError до проверки двери.
+   - `test_row_reader.py::test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page`:
+     `RecWorker.metrics_text` читает `self.ingest`; двойнику добавлен `ingest=None`, без которого был AttributeError
+     до проверки экранирования. Утверждения обоих тестов не менялись.
+
+В двух проверках урока 10 ожидания flash уточнены под фактически загруженные cam/rec: четыре книги вместо шести;
+сохранены точный бюджет начальных записей, точный список всех строк и проверка отсутствия лишних записей за сутки.
+Изменения названы в соответствующих строках TESTS.tsv; утверждений не убавилось.
+
+Повторы: domain **190/0/0**, domainvms **206/0/0**, boundary **6/0/0**; unit **2047/4/2**.
+Один отказ unit — ранее разрешённый product-parity `platform_lists`; три дополнительных:
+- внутренняя сверка `secret_roles`: main `92a0f988` убрал domainpart из TSV, код и ADR-0074 его сохраняют;
+- две проверки `test_storage_m10`: шаг 22-body-edge, `body.limit` 524288 вместо 1048576, закреплённого Н5 приёмки.
+
+Условие «unit с единственным product-parity» **пока не выполнено**. Диагнозы и рекомендации до кода:
+`2026-10-17-confirm-secret-roles.md`, `2026-10-17-confirm-body-limit.md`. Исправлений общей таблицы или runtime
+без решения не делали. Все 1123 файла Source совпали с сохранённым SHA256-манифестом после прогонов.
+
+Журналы вне репозитория, команды и SHA256 — `windows/adr74-confirm/evidence.json`.
+Платформенный runtime, опубликованные спеки и продукт не изменялись. Слияние в main не выполнялось; diff к повторному чтению.
