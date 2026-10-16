@@ -7,6 +7,16 @@ info:
     require semantic checks.'
 paths:
   /policy:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     get:
       summary: Effective policy
       responses:
@@ -368,6 +378,16 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
   /unplaceable:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     get:
       summary: Units without an eligible worker
       responses:
@@ -398,6 +418,16 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
   /where/{id}:
+    servers:
+      - url: '{origin}'
+        description: Короткий путь выбирает CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+      - url: '{origin}/{sub}'
+        description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+        variables:
+          origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: id
       in: path
