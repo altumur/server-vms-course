@@ -42,8 +42,8 @@ def device_console(device, sealer=None):
     from w2cplatform import catalog
     spec = catalog.spec("cam")
     if spec is None:
-        catalog.load_dir(Path(__file__).parents[1] / "vms")
-        spec = catalog.spec("cam")
+        from w2cplatform.spec import SubsystemSpec
+        spec = SubsystemSpec.load(str(Path(__file__).parents[1] / "vms" / "cam.subsystem.yaml"))
     signed = SignedConsole(spec, device.flash, device.ram, device.wall, sealer)
     class DeviceConsole:
         def apply(self, entry):
