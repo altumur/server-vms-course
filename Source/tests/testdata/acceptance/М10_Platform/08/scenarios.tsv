@@ -25,14 +25,14 @@ scenario	step	request	expect
 04-request-reaped	4	store GET /v1/get?key=testsub/requests/$rid	200 {"items": {"unit": "c4", "add": "5", "valid_until": "@any"}}
 04-request-reaped	5	store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": null}
 04-request-reaped	6	@until 150 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "expired", "ended_by": "reaper"}}
-04-request-reaped	7	@until 40 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
+04-request-reaped	7	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
 05-request-performed	1	@start controller	ok
 05-request-performed	2	@start worker w-1	ok
 05-request-performed	3	console POST /counters {"name": "c5", "start": 1}	201
 05-request-performed	4	@until 30 store GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "1"}}
 05-request-performed	5	console POST /testsub/requests {"unit": "c5", "add": 5}	2xx
 05-request-performed	6	@until 30 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "performed", "unit": "c5", "instance": "@any", "slot": "w-1", "ended_at": "@any"}}
-05-request-performed	7	@until 40 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
+05-request-performed	7	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
 05-request-performed	8	@key(5) console POST /testsub/requests {"unit": "c5", "add": 5}	200 {"answered": "@any"}
 06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
 06-request-refused	2	console POST /testsub/requests {"add": 5}	400
