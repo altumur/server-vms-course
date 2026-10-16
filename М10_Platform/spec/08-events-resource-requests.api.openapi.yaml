@@ -29,18 +29,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Отказ личности/роли до операции по ADR-0075
+          description: Семья не выдаётся, строка-объект или отказ личности
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResourceDenied'
+                oneOf:
+                - $ref: '#/components/schemas/ResourceError'
+                - $ref: '#/components/schemas/ResourceDenied'
       parameters:
       - name: prefix
         in: query
         required: false
         schema:
           type: string
-        description: Начало относительного ключа; пустота разрешена. Проверка по Н1.1, отдельная от полного ключа.
+        description: Начало относительного ключа; пустота разрешена. Проверка по Н1.1, отдельная от полного
+          ключа.
       - name: scope
         in: query
         required: false
@@ -599,7 +602,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleDenied'
         '404':
-          description: Нет пути/цели
+          description: Нет пути; существование строки адресата не проверяется
           content:
             application/json:
               schema:
