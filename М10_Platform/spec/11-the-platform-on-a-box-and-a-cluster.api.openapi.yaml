@@ -1,0 +1,832 @@
+openapi: 3.1.0
+info:
+  title: М10/11 — служебные двери хранилища
+  version: '1'
+paths:
+  /v1/status:
+    get:
+      summary: Локальное наблюдение состава и индексов
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '503':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M1_UnavailableFault'
+                - $ref: '#/components/schemas/Busy'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен только для busy; остальные 503 не обещают срок.
+  /v1/join:
+    post:
+      summary: Вступление по удостоверенной роли демона
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '503':
+          description: Не выполнено либо исход изменения состава неизвестен; перечитать status
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M1_UnavailableFault'
+                - $ref: '#/components/schemas/M1_AmbiguousFault'
+                - $ref: '#/components/schemas/Busy'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен только для busy; остальные 503 не обещают срок.
+        '409':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refused'
+        '413':
+          description: Превышен предел чтения тела служебного запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BodyTooLargeFault'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Join'
+  /v1/leave:
+    post:
+      summary: Выход себя или указанного участника
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '503':
+          description: Не выполнено либо исход изменения состава неизвестен; перечитать status
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M1_UnavailableFault'
+                - $ref: '#/components/schemas/M1_AmbiguousFault'
+                - $ref: '#/components/schemas/Busy'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен только для busy; остальные 503 не обещают срок.
+        '413':
+          description: Превышен предел чтения тела служебного запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BodyTooLargeFault'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Leave'
+  /v1/rights:
+    get:
+      summary: Загруженный файл прав; только личность admin после проверки допустимости пересылки
+      responses:
+        '200':
+          description: Полный загруженный объект JSON; без оболочки и добавочных полей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M6_RightsFile'
+        '403':
+          description: Не admin либо попытка подмены роли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M6_ForbiddenFault'
+        '404':
+          description: Файл прав не загружен или нет маршрута.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M6_BadRequestFault'
+        '503':
+          description: Хранилище недоступно.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M6_UnavailableFault'
+  /v1/write:
+    post:
+      summary: Обычная запись М10/1 или привилегированный подъём пола
+      description: 'Н2 норм: предел чтения тела задаётся отдельно от потолка строки; при его превышении до разбора
+        JSON — 413 toolarge, limit равен пределу тела в байтах. В приёмке предел тела 1048576, потолок строки 524288
+        байт.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/M1_Cmd'
+              - $ref: '#/components/schemas/FloorCmd'
+      responses:
+        '200':
+          description: сделано; again — ответ прежнего применения записи с этим id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_Written'
+        '400':
+          $ref: '#/components/responses/M1_BadRequestOrKey'
+        '404':
+          $ref: '#/components/responses/M1_NoRoute'
+        '403':
+          $ref: '#/components/responses/M1_Forbidden'
+        '409':
+          description: CAS/key reused М10/1 либо floor не возрастает
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M1_ConflictFault'
+                - $ref: '#/components/schemas/Refused'
+        '412':
+          $ref: '#/components/responses/M1_Guard'
+        '413':
+          $ref: '#/components/responses/M1_TooLarge'
+        '503':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/M1_UnavailableFault'
+                - $ref: '#/components/schemas/M1_AmbiguousFault'
+                - $ref: '#/components/schemas/Busy'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен только для busy; остальные 503 не обещают срок.
+  /metrics:
+    get:
+      summary: Метрики демона
+      responses:
+        '200':
+          description: Prometheus text exposition UTF-8; Н1.3
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/M1_BadRequestFault'
+        '503':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/M1_UnavailableFault'
+                - $ref: '#/components/schemas/Busy'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Обязателен только для busy; остальные 503 не обещают срок.
+components:
+  schemas:
+    M1_Cmd:
+      type: object
+      required:
+      - op
+      - key
+      properties:
+        op:
+          type: string
+          enum:
+          - put
+          - delete
+        key:
+          $ref: '#/components/schemas/M1_Key'
+        cas:
+          type:
+          - string
+          - 'null'
+          pattern: ^(?:0|[1-9][0-9]{0,19})?(?![\s\S])
+        guard:
+          type: object
+          required:
+          - key
+          - index
+          additionalProperties: false
+          properties:
+            key:
+              $ref: '#/components/schemas/M1_Key'
+            index:
+              type: string
+              pattern: ^(?:0|[1-9][0-9]{0,19})?(?![\s\S])
+        id:
+          type: string
+          pattern: ^[0-9a-f]{1,64}$
+      oneOf:
+      - properties:
+          op:
+            const: put
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        required:
+        - items
+      - properties:
+          op:
+            const: delete
+          items: {}
+    M1_Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - pattern: ^/
+        - pattern: (^|/)\.\.(/|(?![\s\S]))
+      description: 'Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..; ..foo допустим. Предел
+        1024 байта UTF-8 и меньший файловый предел проверяются отдельно; maxLength не выражает число байтов.'
+    M1_Written:
+      type: object
+      required:
+      - index
+      additionalProperties: false
+      properties:
+        index:
+          $ref: '#/components/schemas/M1_Version'
+        again:
+          const: true
+      description: Первое применение — index; сохранённый повтор добавляет again true.
+    M1_Version:
+      type: string
+      pattern: ^(?:0|[1-9][0-9]{0,19})(?![\s\S])
+      description: Непустая версия по Н1; сравнивается вызывающим только на равенство.
+    M1_Fault:
+      description: Закрытые формы отказов Н4; конкретный код операции ограничивает допустимые ветви.
+      oneOf:
+      - $ref: '#/components/schemas/M1_BadKeyFault'
+      - $ref: '#/components/schemas/M1_BadRequestFault'
+      - $ref: '#/components/schemas/M1_ForbiddenFault'
+      - $ref: '#/components/schemas/M1_ConflictFault'
+      - $ref: '#/components/schemas/M1_GuardFault'
+      - $ref: '#/components/schemas/M1_RowTooLargeFault'
+      - $ref: '#/components/schemas/M1_BodyTooLargeFault'
+      - $ref: '#/components/schemas/M1_UnavailableFault'
+      - $ref: '#/components/schemas/M1_AmbiguousFault'
+    M1_BadKeyFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: badkey
+        error:
+          type: string
+    M1_BadRequestFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: badrequest
+        error:
+          type: string
+    M1_ForbiddenFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: forbidden
+        error:
+          type: string
+    M1_ConflictFault:
+      type: object
+      required:
+      - kind
+      - error
+      - index
+      additionalProperties: false
+      properties:
+        kind:
+          const: conflict
+        error:
+          type: string
+        index:
+          $ref: '#/components/schemas/M1_VersionOrAbsent'
+    M1_VersionOrAbsent:
+      type: string
+      pattern: ^(?:0|[1-9][0-9]{0,19})?(?![\s\S])
+      description: Версия или пустая строка, если строки нет.
+    M1_GuardFault:
+      type: object
+      required:
+      - kind
+      - error
+      - key
+      - index
+      additionalProperties: false
+      properties:
+        kind:
+          const: guard
+        error:
+          type: string
+        key:
+          $ref: '#/components/schemas/M1_Key'
+        index:
+          $ref: '#/components/schemas/M1_VersionOrAbsent'
+    M1_RowTooLargeFault:
+      type: object
+      required:
+      - kind
+      - error
+      - key
+      - size
+      - limit
+      additionalProperties: false
+      properties:
+        kind:
+          const: toolarge
+        error:
+          type: string
+        key:
+          $ref: '#/components/schemas/M1_Key'
+        size:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 0
+      description: key — ключ строки, size — вес items, limit — потолок строки; size больше limit.
+    M1_BodyTooLargeFault:
+      type: object
+      required:
+      - kind
+      - error
+      - limit
+      additionalProperties: false
+      properties:
+        kind:
+          const: toolarge
+        error:
+          type: string
+        limit:
+          type: integer
+          minimum: 1
+        size:
+          type: integer
+          minimum: 1
+      description: Без key; size, если выдан, — известный полный размер тела; size больше limit.
+    M1_UnavailableFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: unavailable
+        error:
+          type: string
+    M1_AmbiguousFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: ambiguous
+        error:
+          type: string
+    M6_RightsFile:
+      type: object
+      additionalProperties: false
+      required:
+      - roles
+      properties:
+        comment:
+          type: string
+          description: Необязательная стабильная пометка генератора; не участвует в оценке прав.
+        roles:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/M6_RoleName'
+          additionalProperties:
+            $ref: '#/components/schemas/M6_RoleRights'
+      description: Загруженный configstore-rights.json. Совпадение с генератором, группами и читателями — смысловая
+        проверка Н1/Н3, не JSON Schema.
+    M6_RoleName:
+      type: string
+      pattern: ^[a-z][a-z0-9_-]{0,63}(?![\s\S])
+      not:
+        enum:
+        - admin
+        - configstore
+        - configstore-door
+    M6_RoleRights:
+      type: object
+      additionalProperties: false
+      required:
+      - group
+      - read
+      - write
+      properties:
+        group:
+          type: string
+          minLength: 1
+        read:
+          type: array
+          items:
+            type: string
+        write:
+          type: array
+          items:
+            type: string
+        delete:
+          type: array
+          items:
+            type: string
+      description: Если delete отсутствует, действует write; явный пустой delete запрещает удаление. Образцы и отрицания
+        — Н1.2/Н1.3. Генератор выводит delete явно.
+    MemberId:
+      type: string
+      pattern: ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\s\S])
+    Status:
+      type: object
+      required:
+      - id
+      - state
+      - leader
+      - leader_id
+      - term
+      - commit
+      - applied
+      - voters
+      - members
+      - tls
+      - max_value
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/MemberId'
+        state:
+          enum:
+          - Leader
+          - Follower
+          - Candidate
+          - Shutdown
+          - Door
+        leader:
+          type: string
+        leader_id:
+          type: string
+        term:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        commit:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        applied:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        voters:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberId'
+        members:
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 1
+          propertyNames:
+            $ref: '#/components/schemas/MemberId'
+        base:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        again:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        tls:
+          type: boolean
+        max_value:
+          type: integer
+          minimum: 1
+        role:
+          type: string
+        last_snapshot:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        out:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberId'
+      allOf:
+      - if:
+          properties:
+            state:
+              const: Door
+        then:
+          required:
+          - role
+          properties:
+            role:
+              const: door
+            term:
+              const: 0
+            commit:
+              const: 0
+            applied:
+              const: 0
+    Join:
+      type: object
+      required:
+      - id
+      - raft
+      - api
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/MemberId'
+        raft:
+          type: string
+          minLength: 1
+        api:
+          type: string
+          minLength: 1
+        force:
+          type: boolean
+    Leave:
+      type: object
+      required:
+      - id
+      additionalProperties: false
+      properties:
+        id:
+          anyOf:
+          - $ref: '#/components/schemas/MemberId'
+          - const: ''
+    Empty:
+      type: object
+      required: []
+      additionalProperties: false
+      properties: {}
+    Refused:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: refused
+        error:
+          type: string
+    Busy:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: busy
+        error:
+          type: string
+    FloorCmd:
+      type: object
+      required:
+      - op
+      - floor
+      - id
+      additionalProperties: false
+      properties:
+        op:
+          const: floor
+        floor:
+          type: integer
+          minimum: 1
+          maximum: 18446744073709551615
+        id:
+          type: string
+          pattern: ^[0-9a-f]{1,64}(?![\s\S])
+    M6_ForbiddenFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: forbidden
+        error:
+          type: string
+    M6_BadRequestFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: badrequest
+        error:
+          type: string
+    M6_UnavailableFault:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: unavailable
+        error:
+          type: string
+  responses:
+    M1_BadRequestOrKey:
+      description: Неверная форма команды либо ключ; классификация — Н4.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/M1_BadRequestFault'
+            - $ref: '#/components/schemas/M1_BadKeyFault'
+    M1_NoRoute:
+      description: Нет маршрута; kind badrequest.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M1_BadRequestFault'
+    M1_Forbidden:
+      description: Личность не допускается по М10/6 либо нет прав чтения, записи, удаления или чтения стража; list не требует права read.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M1_ForbiddenFault'
+    M1_Conflict:
+      description: Версия строки не совпала с cas; index — текущая версия или отсутствие.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M1_ConflictFault'
+    M1_Guard:
+      description: Страж не совпал; key и index относятся к строке-стражу.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/M1_GuardFault'
+    M1_TooLarge:
+      description: Превышен вес строки либо предел тела; поля различают причины.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/M1_RowTooLargeFault'
+            - $ref: '#/components/schemas/M1_BodyTooLargeFault'
+    M1_UnavailableOrAmbiguous:
+      description: Запись не сделана либо исход неизвестен; вид определяет способ повтора.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/M1_UnavailableFault'
+            - $ref: '#/components/schemas/M1_AmbiguousFault'
+x-daemon-boundary: HTTP служебные маршруты перечислены явно. CLI backup/restore/import/recover/admit — отдельные
+  входы Н2, не выдуманные HTTP-пути. door.pass — проксирование по Н1.8, формы и методы успешного ответа принадлежат
+  подсистеме.
+x-integer-wire: term/commit/applied/base/again/last_snapshot/floor — целые uint64; клиент обязан сохранять точность,
+  включая значения выше 2^53. floor/id проверяются отдельно от обычного Cmd.

@@ -334,6 +334,6 @@ So the verdict *one database, and it belongs to a Node* became **no database at 
 - `worker-and-process-model.md` — camera lifecycle must survive a control-plane outage, which is the rule this record generalises
 - М11 Lessons 5–6 — replicate metadata, let footage be local
 - [`module-design.md`](module-design.md) — the epoch issuer, the fencing argument it comes from, and М12 Lesson 4's mTLS on the Node↔directory streams
-- [М10/1](../М10_Platform/01-the-storage-dictionary.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
+- [М10/1](../М10_Platform/01-storage.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
 
 *Written 5 September 2026. Seventh revision added 12 September 2026.*

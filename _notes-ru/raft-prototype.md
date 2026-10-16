@@ -167,6 +167,6 @@ python3 tests/configstore_election.py --timing slow --timeout 1 --kills 20
 ## Ссылки
 
 - [«Кластер без оркестратора»](without-an-orchestrator.md) — решение владельца 3 октября, открытые вопросы
-- [М10/1](../М10_Platform/01-the-storage-dictionary.md) — шов `open_vars` и контракт `Variables`
+- [М10/1](../М10_Platform/01-storage.md) — шов `open_vars` и контракт `Variables`
 - [PySyncObj](https://github.com/bakwc/PySyncObj) — библиотека прототипа
 - [hashicorp/raft](https://github.com/hashicorp/raft) — библиотека продукта

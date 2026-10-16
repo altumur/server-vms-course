@@ -17,7 +17,7 @@
 06-delete	1	POST /v1/write {"op":"put","key":"acc/06-delete/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
 06-delete	2	POST /v1/write {"op":"put","key":"acc/06-delete/c1","items":{"n":"2"},"cas":"$a"}	200 {"index":"$b"}
 06-delete	3	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"$a"}	409 {"kind":"conflict","index":"$b"}
-06-delete	4	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"$b"}	200 {"index":"$c"}
+06-delete	4	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","items":42,"cas":"$b"}	200 {"index":"$c"}
 06-delete	5	GET /v1/get?key=acc/06-delete/c1	200 {"items":null,"index":""}
 06-delete	6	POST /v1/write {"op":"delete","key":"acc/06-delete/c1"}	200 {"index":"$d"}
 06-delete	7	POST /v1/write {"op":"delete","key":"acc/06-delete/c1","cas":"$b"}	409 {"kind":"conflict","index":""}
@@ -26,6 +26,7 @@
 07-no-reuse	3	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"1"},"cas":""}	200 {"index":"$c"}
 07-no-reuse	4	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"2"},"cas":"$a"}	409 {"kind":"conflict","index":"$c"}
 07-no-reuse	5	ASSERT $a != $b $c	
+# 08-list: в шагах 4–6 сравниваются значения и порядок имён в keys по README; b намеренно записан раньше a.
 08-list	1	POST /v1/write {"op":"put","key":"acc/08-list/k/b","items":{"n":"b"}}	200 {"index":"$b"}
 08-list	2	POST /v1/write {"op":"put","key":"acc/08-list/k/a","items":{"n":"a"}}	200 {"index":"$a"}
 08-list	3	POST /v1/write {"op":"put","key":"acc/08-list/kk","items":{"n":"x"}}	200 {"index":"$x"}
@@ -96,5 +97,11 @@
 21-rights	4	POST /v1/write {"op":"put","key":"acc/21-rights/c1","items":{"n":"1"},"guard":{"key":"other/21-rights/s","index":""}}	403 {"kind":"forbidden"}
 21-rights	5	GET /v1/get?key=acc/21-rights/c1	200 {"items":null,"index":""}
 21-rights	6	GET /v1/list?prefix=other/21-rights/	200 {"keys":{}}
-22-body-edge	1	POST /v1/write {"op":"put","key":"acc/22-body-edge/c1","items":{"blob":"@big(4194304)"}}	413 {"kind":"toolarge","limit":524288}
+22-body-edge	1	POST /v1/write {"op":"put","key":"acc/22-body-edge/c1","items":{"blob":"@big(4194304)"}}	413 {"kind":"toolarge","limit":1048576}
 22-body-edge	2	GET /v1/get?key=acc/22-body-edge/c1	200 {"items":null,"index":""}
+23-extra-cmd	1	POST /v1/write {"op":"put","key":"acc/23-extra-cmd/c1","items":{"n":"1"},"id":"2301","zzz":{"op":"delete","key":"other/23-extra-cmd/c1","guard":false}}	200 {"index":"$a"}
+23-extra-cmd	2	POST /v1/write {"op":"put","key":"acc/23-extra-cmd/c1","items":{"n":"1"},"id":"2301","zzz":null,"noise":[1,false]}	200 {"index":"$a","again":true}
+23-extra-cmd	3	GET /v1/get?key=acc/23-extra-cmd/c1	200 {"items":{"n":"1"},"index":"$a"}
+23-extra-cmd	4	POST /v1/write {"op":"delete","key":"acc/23-extra-cmd/c1","items":123,"id":"2302","zzz":{"guard":"bad"}}	200 {"index":"$b"}
+23-extra-cmd	5	POST /v1/write {"op":"delete","key":"acc/23-extra-cmd/c1","items":{"wrong":true},"id":"2302","zzz":false}	200 {"index":"$b","again":true}
+23-extra-cmd	6	GET /v1/get?key=acc/23-extra-cmd/c1	200 {"items":null,"index":""}

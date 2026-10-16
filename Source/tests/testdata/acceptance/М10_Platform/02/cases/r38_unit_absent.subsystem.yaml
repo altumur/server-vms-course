@@ -1,0 +1,2 @@
+name: probe
+placement: {capacity: {default: 1}}

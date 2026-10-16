@@ -17,7 +17,6 @@ heartbeat_strings	events
 secret_roles	console
 secret_roles	controller
 secret_roles	worker
-secret_roles	domainpart
 secret_roles	domain
 secret_roles	domainagent
 secret_roles	resource

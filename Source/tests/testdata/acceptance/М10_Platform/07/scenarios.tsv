@@ -4,6 +4,7 @@ scenario	step	request	expect
 01-sealed	2	@key(1) console POST /tallies {"name": "t1", "of": "c1", "feed": "https://hub.example/a", "feed_user": "admin", "feed_secret": "hunter2"}	201 {"feed_secret": "***"}
 01-sealed	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"feed_secret": "~enc:v2:", "feed_user": "admin"}}
 01-sealed	4	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}]}
+01-sealed	5	@key(1) console POST /tallies {"name": "t1", "of": "c1", "feed": "https://hub.example/a", "feed_user": "admin", "feed_secret": "bravo"}	422 {"error": "key reused"}
 02-mask-and-envelope-in	1	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "***"}	400 {"error": "~mask"}
 02-mask-and-envelope-in	2	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "•••"}	400
 02-mask-and-envelope-in	3	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "enc:v2:k1:AAAA:BBBB"}	400 {"error": "~sealed"}
@@ -27,5 +28,5 @@ scenario	step	request	expect
 04-password-in-address	6	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?via=https%3A%2F%2Fx%2Fy%3Fpwd%3Dhunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
 04-password-in-address	7	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?name=a%40b"}	201 {"id": "t4"}
 04-password-in-address	8	console POST /tallies {"name": "t4b", "of": "c1", "feed": "https://admin@hub.example/d"}	400 {"fault": "bad_url", "error": "~feed_user"}
-05-tables	1	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}, {"id": "t2", "feed_secret": "***"}, {"id": "t3", "feed_secret": "***"}, {"id": "t4", "feed_secret": "@absent"}]}
+05-tables	1	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}, {"id": "t2", "feed_secret": "***"}, {"id": "t3", "feed_secret": "***"}, {"id": "t4", "feed_secret": ""}]}
 06-readers	1	@as testsubworker store GET /v1/get?key=testsub2/tallies/t1	403

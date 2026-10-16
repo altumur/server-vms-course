@@ -9,7 +9,7 @@ scenario	step	request	expect
 02-drain-strand	3	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}
 02-drain-strand	4	console POST /drain?server=srv-b	409
 02-drain-strand	5	console DELETE /drain	2xx
-02-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": "@absent"}
+02-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "", "units": 0, "pending_writes": 0, "safe": true}}}
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
@@ -22,6 +22,8 @@ scenario	step	request	expect
 04-blob	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 3}
 04-blob	6	console2 PUT /tallies/t1/nosuch @raw x	404
 04-blob	7	console2 PUT /tallies/nosuch/mask @raw x	404
+04-blob	8	console2 PUT /tallies/t1 {"mask": "sha256-0000000000000000000000000000000000000000000000000000000000000000"}	400
+04-blob	9	console2 PUT /tallies/t1 {"mask": "$d"}	200 {"mask": "$d"}
 05-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long"}
 05-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
 05-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413

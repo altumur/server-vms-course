@@ -38,10 +38,11 @@ scenario	step	request	expect
 04-two-copies	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 05-sigkill	1	@start controller	ok
 05-sigkill	2	@start worker w-1	ok
-05-sigkill	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "until": "$u1"}}
+05-sigkill	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false", "until": "@any"}}
 05-sigkill	4	@sigkill w-1	ok
-05-sigkill	5	@sleep 20	ok
-05-sigkill	6	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
+05-sigkill	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
+05-sigkill	6	@sleep 20	ok
+05-sigkill	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
 06-deleted	1	@start controller	ok
 06-deleted	2	@start worker w-1	ok
 06-deleted	3	console POST /counters {"name": "c6", "start": 1}	201
