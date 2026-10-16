@@ -125,8 +125,9 @@ field_names: held_by/garbled/by/at/made_at не объявляются (вычи
              иначе refused:value при загрузке. Прочие служебные имена единицы (id/revision/worker и т.д.)
              сами по себе полям таблицы не запрещены; значения проверяются по объявлению.
 names:      ДОЛЖНЫ быть строками: 1–32 ASCII-символа, первый a-z, остальные a-z/0-9/_/-;
-            не platform/domain/console/audit (та же положительная грамматика, что SubsystemName в контракте);
-            не значение unit.rows; не next_id, policy, slots, holds, epoch, idem, placement, workers, requests, asked, sweep, servers, decommissioned, controller; не spec, session, mounts, healthz, metrics, servers, resources, where, unplaceable, policy, drain, schema, events, marks, requests, asked, platform, domain, api (первые сегменты дверей консоли по владельцам Н2); конфликт с любым именем подсистемы каталога — отказ каталога по М10/2 Н3, а не разрешённое пересечение root/mount
+            та же положительная грамматика, что SubsystemName в контракте; не значение unit.rows;
+            запрещены platform, domain, console, audit, next_id, policy, slots, holds, epoch, idem, placement, workers, requests, asked, sweep, servers, decommissioned, controller, spec, session, mounts, healthz, metrics, resources, where, unplaceable, drain, schema, events, marks, api (служебные семьи и зарезервированные сегменты дверей по владельцам Н2);
+            конфликт с любым именем подсистемы каталога — отказ каталога по М10/2 Н3, а не разрешённое пересечение root/mount
 rows:       <sub>/<t>/<имя>; писатель — консоль; таблица из worker.writes (урок 6) — таблица воркера: он пишет строку целиком с cas,
             консоль только читает (GET с полями), POST/DELETE → 403 denied «written by its worker»; PUT → 405 как неподдержанный метод; секреты запечатаны (урок 7)
 held_by:    у таблицы мест (placement.places.table) GET дописывает held_by: <воркер> | null
