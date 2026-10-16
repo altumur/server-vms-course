@@ -279,6 +279,9 @@ paths:
       schema:
         type: string
         minLength: 1
+        maxLength: 64
+        pattern: ^[A-Za-z_][A-Za-z0-9_]*(?![\s\S])
+        description: Имя существующего unit blob-поля; непредставимая спека отвергается загрузчиком по Н1.5.
     put:
       summary: Записать байты blob и затем ссылку строки
       responses:
