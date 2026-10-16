@@ -23,7 +23,7 @@
 ## Один набор юнитов на каждом сервере
 
 ```
-configstore.service          хранилище, голос группы            user configstore   группы ролей (сокеты)
+configstore.service          хранилище, голос группы            user configstore   без групп воркеров; сокеты в setgid-каталогах ролей
 w2c-resource.service         ресурс сервера                      user w2c           w2c-store w2c-events
 w2c-controller@<sub>.service контроллер спеки, по одному на спеку user w2c           w2c-store w2c-events (+ роль)
 w2c-console.service          консоль                             user w2c           w2c-store w2c-events w2c-secrets
