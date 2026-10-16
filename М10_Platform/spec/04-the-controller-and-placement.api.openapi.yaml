@@ -555,7 +555,7 @@ components:
       pattern: ^[a-z][a-z0-9_-]{0,31}/[^/]+$
       not:
         anyOf:
-        - pattern: ^(platform|domain|console|audit)/
+        - pattern: ^(platform|domain|console|audit|spec|session|mounts|healthz|metrics|servers|resources|where|unplaceable|policy|drain|schema|events|marks|requests|asked|api)/
         - pattern: ^[^/]+/\.{1,2}$
         - pattern: '[\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
     SubsystemName:
