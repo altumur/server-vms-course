@@ -1,7 +1,7 @@
-from tests.catalog_fixture import isolated_catalog
 """Lesson 1 — what a cluster cannot know: lookup across clusters from the
 snapshots the clusters publish, incompleteness as a result, placement by
 reachability, CAS against two placers, a dead cluster is not a trigger."""
+from tests.catalog_fixture import isolated_catalog
 import json
 import threading
 from w2cplatform.domain.federation import DomainDirectory
@@ -124,12 +124,12 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     p = ClusterPlacer(fed, sub="testsub")
     pl = p.place(UnitSite("7", "vlan:b"))
     assert pl.cluster == "south"
-    s.workers["w-0"].labels = ["vlan:b"]
+    s.workers["w-0"].labels = ["vlan:a"]
     s.workers["w-1"].labels = ["vlan:b"]
     s.workers["w-0"].heartbeat_once(); s.workers["w-1"].heartbeat_once()
     (cid,) = s.create(7, labels=["vlan:b"])                                           # the domain console forwards the create to south, with ref 7
     where = s.ctl.placement(cid)
-    assert where.worker in ("w-0", "w-1") and "most free capacity" in where.reason and "on srv-" in where.reason
+    assert where.worker == "w-1" and "reaching vlan:b" in where.reason and "on srv-10" in where.reason
     a = DomainDirectory(fed).where(7)
     assert a.cluster == "south" and a.worker == where.worker                          # the snapshot carried the cluster's decision up
     assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/testsub/7"]  # the domain stored its level, nothing about workers
