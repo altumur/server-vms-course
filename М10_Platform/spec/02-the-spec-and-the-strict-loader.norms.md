@@ -119,6 +119,7 @@ rules:
   - unit.fields не объявляет id, revision, deleted, worker, placement, epoch, phase, observed_revision (platform_fields М10/3); refused:value с путём unit.fields.<имя> до проверки/материализации значения, включая default/inherit; запрет не переносится на поля таблицы
   - default и inherit на одном поле — отказ
   - поле таблицы с fixed, inherit, merge или unique — отказ
+  - blob допустим только в unit.fields; имя — 1–64 ASCII, первый A-Z/a-z/_, остальные A-Z/a-z/0-9/_; пустое/непредставимое имя и blob в таблице — refused:value с путём поля (дверь байтов М10/10)
   - blob с required: true, с default или с inherit — отказ (дайджест приходит дверью байтов после создания единицы, урок 10; при создании поле всегда ""; умолчание или наследование писали бы дайджест в строку мимо неё)
   - unit.fields.bytes при наличии любого unit-поля type: blob — отказ загрузки refused:value (счётчик ответа М10/10); без blob обычное поле bytes допустимо
   - snapshot не включает поле server: нет snapshot — server исключается вместе с секретами/blob; явно названный server — отказ загрузки refused:value (М10/10 Н1.3)
