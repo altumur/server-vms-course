@@ -21,7 +21,8 @@ def _ensure_camera_spec():
     from pathlib import Path
     from w2cplatform import catalog
     if "cam" not in catalog.specs():
-        catalog.load_dir(Path(__file__).parents[2] / "vms")
+        from w2cplatform.spec import SubsystemSpec
+        SubsystemSpec.load(str(Path(__file__).parents[2] / "vms" / "cam.subsystem.yaml"))
 
 
 class Clock:
@@ -177,8 +178,9 @@ class _LocalConsole:
 class EmbeddedMember:
     """Generic, in-process one-unit platform member fixture for domain tests.
 
-    It writes the public snapshot and heartbeat shapes directly. It does not load a subsystem spec, worker or
-    controller; tests of those belong beside the subsystem under tests/domainvms.
+    It loads the published cam spec to interpret camera rows and expose their domain view, and writes the
+    public snapshot and heartbeat shapes directly. It imports no VMS implementation; tests of the VMS worker
+    and controller belong under tests/domainvms.
     """
     ROW, EPOCH = "cam/cameras/1", "cam/epoch/1"
     def __init__(self, serial, flash_vars, wall, name=None, reaches=(), address=None, disk=None, pushes=False, can=None):
@@ -237,9 +239,9 @@ class EmbeddedMember:
 def member_name(serial): return f"cam-{serial}"
 
 def snapshot(cluster: Cluster, cameras: dict[int, tuple[str, str]], ts: float) -> None:
-    _ensure_camera_spec()
     """A cluster's snapshot written by hand — ONE OBJECT PER WORKER, which is the
     shape М10's controller publishes: {camera: (worker, server)}."""
+    _ensure_camera_spec()
     shards: dict[str, list] = {}
     for i, (c, (w, s)) in enumerate(cameras.items()):
         shards.setdefault(w or "unplaced", []).append(
@@ -251,8 +253,8 @@ def snapshot(cluster: Cluster, cameras: dict[int, tuple[str, str]], ts: float) -
 
 def heartbeat(cluster: Cluster, worker: str, cams: list[int], ts: float, server: str = "srv-1", epoch: int = 1,
               revision: int = 1, observed: int | None = None, phase: str = "running") -> None:
-    _ensure_camera_spec()
     """What the generic domain test fixture publishes in the platform's heartbeat shape."""
+    _ensure_camera_spec()
     cluster.objects.put(f"cam/heartbeats/{worker}", json.dumps({
         "worker": worker, "ts": ts, "server": server, "instance": f"{worker}-i", "capacity": 50, "headroom": 50 - len(cams),
         "status": [{"id": c, "name": f"cam{c}", "enabled": True, "phase": phase, "position": "converged",
