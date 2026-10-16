@@ -216,33 +216,58 @@ components:
         deleted: {$ref: "#/components/schemas/UnitId"}
     UnitList:
       type: object
-      required: [rows, configured]
+      required:
+      - rows
+      - configured
       additionalProperties: false
       properties:
         rows:
           type: array
-          items: {$ref: "#/components/schemas/RunningUnit"}
+          items:
+            $ref: '#/components/schemas/RunningUnit'
         configured:
           type: array
-          items: {$ref: "#/components/schemas/Unit"}
-      description: Форма GET из урока 9 Н2; фильтрация по view не меняет форму оболочки.
+          items:
+            $ref: '#/components/schemas/Unit'
+      description: Форма GET собственного контракта М10/3 Н2; фильтрация по view не меняет форму оболочки.
     RunningUnit:
       type: object
-      required: [id, phase, epoch, revision, observed_revision, worker, server, age, worker_state]
+      required:
+      - id
+      - phase
+      - epoch
+      - revision
+      - observed_revision
+      - worker
+      - server
+      - age
+      - worker_state
       properties:
-        id: {$ref: "#/components/schemas/UnitId"}
-        phase: {type: string}
-        epoch: {type: integer, minimum: 1}
-        revision: {type: integer, minimum: 1}
-        observed_revision: {type: integer, minimum: 0}
-        worker: {$ref: "#/components/schemas/WorkerName"}
-        server: {type: string}
-        age: {type: number}
-        worker_state: {type: string}
+        id:
+          $ref: '#/components/schemas/UnitId'
+        phase:
+          type: string
+        epoch:
+          type: integer
+          minimum: 1
+        revision:
+          type: integer
+          minimum: 1
+        observed_revision:
+          type: integer
+          minimum: 0
+        worker:
+          $ref: '#/components/schemas/WorkerName'
+        server:
+          type: string
+        age:
+          type: number
+        worker_state:
+          type: string
       additionalProperties: true
-      description: >-
-        Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (урок 9 Н2).
-        Слова подсистемы остаются непрозрачными. Смысл свежести и формирования списка — уроки 5 и 9.
+      description: Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (собственный
+        контракт М10/3 Н2; фильтрация view — М10/9). Слова подсистемы остаются непрозрачными. Смысл свежести
+        и формирования списка — уроки 5 и 9.
     Refusal:
       type: object
       required: [detail, error]
