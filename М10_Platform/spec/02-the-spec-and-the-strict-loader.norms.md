@@ -59,8 +59,8 @@ spec:
   holds:       # удержания — урок 8
   events:      # события — урок 8
   about:       # родитель единицы {sub, field}: оба обязательны, field — поле с fixed: true (урок 3)
-  snapshot:    # поля, уходящие из кластера — урок 10; отсутствует = все, кроме секретов и blob;
-               #   `snapshot:` без значения — отказ; секрет и blob в списке — отказ
+  snapshot:    # поля, уходящие из кластера — урок 10; отсутствует = все, кроме секретов, blob и авторского server;
+               #   `snapshot:` без значения — отказ; секрет, blob и server в списке — отказ
   rights:      # права — урок 6
   secrets:     # секреты — урок 7
   worker:      # что пишет, читает и просит воркер — уроки 5 и 6
@@ -116,6 +116,7 @@ field:
   unique:     true | canonical            # только у поля единицы; canonical — сравнение по канонической форме URL (урок 3 Н1.3)
   ref, bound_to, must_match, schema, schemes, credentials, secret_in:   # формы — уроки 3, 7, 10
 rules:
+  - unit.fields не объявляет id, revision, deleted, worker, placement, epoch, phase, observed_revision (platform_fields М10/3); refused:value с путём unit.fields.<имя> до проверки/материализации значения, включая default/inherit; запрет не переносится на поля таблицы
   - default и inherit на одном поле — отказ
   - поле таблицы с fixed, inherit, merge или unique — отказ
   - blob с required: true, с default или с inherit — отказ (дайджест приходит дверью байтов после создания единицы, урок 10; при создании поле всегда ""; умолчание или наследование писали бы дайджест в строку мимо неё)
