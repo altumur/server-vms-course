@@ -1935,14 +1935,13 @@ paths:
       summary: 'HEAD: Страница root'
       responses:
         '400':
-          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
-            HEAD не содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
-            HEAD не содержит тела
-        '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD не
+            содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит тела
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
@@ -1952,30 +1951,20 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
-            содержит тела
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
               schema:
                 type: string
         '503':
-          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
-            тела
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
               description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
-        '200':
-          description: Полный документ UTF-8; HEAD не содержит тела
-          headers:
-            Content-Security-Policy:
-              schema:
-                type: string
-                minLength: 1
-              description: Обязателен; минимум по Н1.1.
     parameters:
     - name: sub
       in: path
@@ -2024,14 +2013,13 @@ paths:
       summary: 'HEAD: Страница root'
       responses:
         '400':
-          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
-            HEAD не содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
-            HEAD не содержит тела
-        '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD не
+            содержит тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит тела
         '404':
           description: Полное JSON-тело; HEAD не содержит тела
         '405':
@@ -2041,30 +2029,20 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4.; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не
-            содержит тела
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.; HEAD не содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
               schema:
                 type: string
         '503':
-          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит
-            тела
+          description: Недоступно обязательное чтение/доверие/запечатывание либо busy; HEAD не содержит тела
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
               description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
-        '200':
-          description: Полный документ UTF-8; HEAD не содержит тела
-          headers:
-            Content-Security-Policy:
-              schema:
-                type: string
-                minLength: 1
-              description: Обязателен; минимум по Н1.1.
     parameters:
     - name: sub
       in: path
@@ -2098,10 +2076,30 @@ components:
               - domain
               - console
               - audit
+              - spec
+              - session
+              - mounts
+              - healthz
+              - metrics
+              - servers
+              - resources
+              - where
+              - unplaceable
+              - policy
+              - drain
+              - schema
+              - events
+              - marks
+              - requests
+              - asked
+              - api
         rows:
           type: string
         id:
           type: string
+          not:
+            pattern: _secret(?![\s\S])
+          description: numeric либо имя несекретного строкового поля единицы по Н1.4.
         fields:
           type: array
           items:
@@ -2339,16 +2337,18 @@ components:
           - ..
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
-        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
-        Unicode-категории.'
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
+        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M4_WorkerName:
       type: string
       pattern: ^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$
       not:
         pattern: '[^a-z0-9-]'
-      description: 'Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных
-        латинских букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранной спеки
-        проверяется отдельно.'
+      description: 'Имя слота по М10/3 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных латинских
+        букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
+        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M4_Server:
       type: string
       minLength: 1
@@ -2368,6 +2368,23 @@ components:
           - domain
           - console
           - audit
+          - spec
+          - session
+          - mounts
+          - healthz
+          - metrics
+          - servers
+          - resources
+          - where
+          - unplaceable
+          - policy
+          - drain
+          - schema
+          - events
+          - marks
+          - requests
+          - asked
+          - api
     M4_Policy:
       type: object
       required:
@@ -2469,8 +2486,9 @@ components:
           - ..
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
-        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по
-        Unicode-категории.'
+        дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
+        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M4_Label:
       type: string
       minLength: 1
@@ -3222,7 +3240,7 @@ components:
           schema:
             $ref: '#/components/schemas/M2_ConsoleRefusal'
 x-owned-paths:
-  М10/3: GET/POST /{rows}, GET/PUT/DELETE /{rows}/{id}; базовый префикс root или /{sub}
+  М10/3: GET/POST /{rows}, PUT/DELETE /{rows}/{id}; базовый префикс root или /{sub}
   М10/4: /policy, /drain, /unplaceable и /where/{id}; показанные формы Where/Unplaceable — точные копии
   М10/8: /events, /marks, /requests, /asked
   М10/10: /schema, blob и таблицы
