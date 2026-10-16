@@ -68,7 +68,7 @@ spec:
   lease:       # аренда — урок 3; форма: {unconfirmed_max: forever | off | <целое ≥ 1>} и ничего иного;
                #   `lease:` без значения, с иным ключом, `0`, строка, дробь, булево — отказ
   heartbeat:   # слова биения — урок 5; `worker` — слово платформы, объявлять нельзя
-  objects:     # семьи объектов — урок 5; rows не называет платформенную семью
+  objects:     # семьи объектов — урок 8; rows не называет платформенную семью
   door:        # двери воркера — урок 9; routes — каждый маршрут один раз
   servers:     # страница серверов — урок 9; status[].of называет таблицу этой спеки
   display:     # слова консоли — урок 9; закрыт по разделам, внутри словарей — строки
@@ -77,8 +77,8 @@ spec:
   domain:      # вклад в домен — М11
 closed_key_set:
   rule: на каждом уровне допустимы только ключи, которые читает платформа: на верхнем уровне и в заголовках разделов — Н1.2
-        этого урока, внутри раздела — грамматика урока-владельца (3: unit, slot, lease; 4: placement; 5: heartbeat, worker.reads, worker.requests; 6: rights, worker.writes;
-        7: secrets; 8: events, objects, requests, about, holds; 9: display, servers, console, door.routes, metrics — перечень ключей metrics[] в Н3 «/metrics»;
+        этого урока, внутри раздела — грамматика урока-владельца (3: unit, slot, lease; 4: placement; 5: heartbeat; 6: rights, worker.writes, worker.reads;
+        7: secrets; 8: events, objects, requests, worker.requests, about, holds; 9: display, servers, console, door.routes, metrics — перечень ключей metrics[] в Н3 «/metrics»;
         10: tables, snapshot; 11: door.pass; М11: domain); ключ вне
         этих перечней — отказ; сводный перечень, каким его держит реализация, сверяется с уроками чтением (решает реализация, п. 1)
   named:   # уровни, где ключи — имена автора (поля, таблицы, виды токенов, книги, виды, слова опций):
@@ -135,7 +135,7 @@ rules:
 | Ключ | Называет |
 |---|---|
 | `unit.id` | `numeric` или поле единицы |
-| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
+| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.columns[].field`, `display.tree.group_by` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
 | `requests.key` | свойства `requests.schema.properties` — поля тела просьбы (урок 8): `{имя}` — значение как строка; `{имя:int}` — значение число, подставляется целая часть (`7.0` → `7`; не число — отказ подачи 400); имя вне схемы — отказ загрузки; поля единицы здесь ни при чём. Тот же шаблон у `tables.<t>.key` (урок 10) |
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table` | таблица из `tables:` |
@@ -306,7 +306,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 164 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (23) или `refused` (141). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 212 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (23) или `refused` (141). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -318,6 +318,12 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `lease_*` (остальные), `lease_empty_map`, `lease_absent`, `snapshot_said_nothing`, `unplaced_delete_after_*`, `delete_after_with_about`, `about_field_not_fixed_nowitness` | ослабляющие ключи: одно написание, сказанный ключ говорит, условия `delete_after` | Н1.2 |
 | `type_text`, `required_*`, `default_map_string`, `default_and_inherit`, `inherit_map*`, `json_default_map`, `enum_*`, `table_field_*`, `table_marks`, `bound_to_string`, `blob_required`, `blob_required_false`, `blob_default`, `blob_inherit` | грамматика поля | Н1.3 |
 | `unit_id_*`, `fields_*`, `group_by_unknown_field`, `spread_by_*`, `snapshot_unknown_field`, `requests_key_*`, `requests_stamp_group_without_group_by`, `retire_when_unknown_field`, `display_field*`, `display_options_*`, `display_fields_platform_key_*`, `rows_*`, `table_*_shadow`, `table_servers`, `table_controller_reserved`, `objects_rows_heartbeats`, `door_routes_dup`, `worker_requests_itself`, `worker_reads_bare`, `secrets_reader_domainconsole`, `display_*` (остальные) | ссылки между ключами, включая unit.id и групповую метку просьбы; слова консоли — строки; платформенные имена | Н1.4, Н1.2 |
+
+Группа profile_* в verdicts.tsv покрывает М10/2-17…21 и строковые имена полей М10/2-06:
+положительные соседи, каждое зарезервированное имя, границы blob, snapshot и owner worker.writes.
+У profile_unit_deleted_before_default/profile_unit_worker_before_inherit diagnostics.tsv требует
+путь поля до материализации default/inherit. Эти случаи проверяют загрузку, не работу снимка,
+генератора прав или приём секрета HTTP-дверью.
 
 Проверяются чтением (одним файлом не воспроизводятся): отказ каталога (`refused:catalogue`); строка и метка спеки в хранилище, старт без строки и при несовпадении sha256, остановка при смене метки — стенд урока 11; форма `GET /spec` — сценарии двери в уроке 9.
 
@@ -360,7 +366,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 - [ ] **М10/2-03** закрытый набор ключей на каждом уровне; незнакомые — один отказ со всеми путями; списка игнорируемых и предупреждений нет — группа 3; пути и полнота списка — `diagnostics.tsv`: `unknown_depth4`, `unknown_multiple`
 - [ ] **М10/2-04** `name` обязателен, по грамматике; platform/domain/console/audit запрещены — сц. `name_*`
 - [ ] **М10/2-05** `placement.capacity.default` обязателен и целый ≥ 0; слова закрытых перечней — сц. `capacity_default_*`, `requires_nothing`, `servers_both`, `tie_break_random`
-- [ ] **М10/2-06** грамматика поля Н1.3: типы, булевы `required`/`fixed`, одно из `default`/`inherit`, `enum`, поле таблицы без `fixed`/`inherit`/`merge`/`unique`, `blob` без `required: true`, `default` и `inherit`; `required: false` у `blob` допустим — группа 7 (`blob_required`, `blob_required_false`, `blob_default`, `blob_inherit`); строковый тип ключей полей — дополнительно чтением по README приёмки 02: пары числового/bool/null ключа и его кавыченной строки, обе области unit/tables; в TSV этих проб пока нет
+- [ ] **М10/2-06** грамматика поля Н1.3: типы, булевы `required`/`fixed`, одно из `default`/`inherit`, `enum`, поле таблицы без `fixed`/`inherit`/`merge`/`unique`, `blob` без `required: true`, `default` и `inherit`; `required: false` у `blob` допустим — группа 7 (`blob_required`, `blob_required_false`, `blob_default`, `blob_inherit`); строковый тип ключей полей — profile_unit_key_*/profile_table_key_* в verdicts.tsv: числовой/bool/null/float ключ, кавыченные соседи и пара 1/"1" в обеих областях
 - [ ] **М10/2-07** ссылки Н1.4 разрешаются при загрузке: поле, таблица, метрика, маршрут, своя подсистема в `worker.requests` — группа 8, включая `unit_id_nosuch`, `unit_id_numeric`, `requests_stamp_group_without_group_by`
 - [ ] **М10/2-08** ослабляющие ключи не имеют ослабляющих умолчаний и пишутся одним способом: `lease.unconfirmed_max`, `unplaced.delete_after`, `places.server_field`; сказанный ключ без значения — отказ — группа 6
 - [ ] **М10/2-09** непрозрачные уровни Н1.2 не проверяются по набору ключей, общие требования к числам/JSON сохраняются; именованные — любые имена; слова `display` — строки, его разделы закрыты — сц. `display_*`, `json_default_map`, `inherit_map`
@@ -371,6 +377,12 @@ required:false, default:null, без inherit/enum. Остальные default/in
 - [ ] **М10/2-14** смена спеки — смена метки: процесс читает метку на каждом проходе и не реже раза в 30 с, останавливается с кодом 0 (метки нет — то же) и перезапускается супервизором; период обнаружения отсчитывается от публикации метки при успешном чтении; метка только поднимается (`cas` и условие «ниже строки»), отставшую или отсутствующую метку доводит следующий `spec put`, срок его вызова не задан; живой перечитки нет — проверяется чтением
 - [ ] **М10/2-15** `GET /spec` отвечает формой `SpecView` Н2: грамматика имени, типовые связи default/inherit/enum и пределы int/float; null отсутствующего default — проверяется чтением и пробами ответов; сценарии двери — урок 9
 - [ ] **М10/2-16** все пути чтения спеки (файл, строка, встроенная) идут через одну процедуру `загрузить`; отказ загрузки или `toolarge` при `spec put` — код 2 и stderr по Н4, вызов не публикует спеку и метку — проверяется чтением по Н5; СЛЕДУЕТ — прогон таблицы через `spec put`
+
+- [ ] **М10/2-17** имена rows/tables по Н1.2: положительная ASCII-грамматика, длина и зарезервированные семьи/двери; rows не cluster/worker/ts — случаи rows_*/table_* и profile_rows_* по Н5
+- [ ] **М10/2-18** все восемь platform_fields запрещены в unit.fields до default/inherit — случаи profile_unit_*; диагностики двух приоритетов
+- [ ] **М10/2-19** blob только у единицы, имя 1–64 ASCII по Н1.3, без required/default/inherit; bytes+blob запрещено — blob_* и profile_blob_* по Н5
+- [ ] **М10/2-20** snapshot исключает server/secret/blob по умолчанию; явный список с ними отвергается — profile_snapshot_* по Н5; фактические байты снимка проверяет М10/10
+- [ ] **М10/2-21** таблица не объявляет held_by/garbled/by/at/made_at, name только string при key=name; другие имена единицы таблице не запрещены — profile_table_* по Н5
 
 ## Соответствие прежним урокам
 
