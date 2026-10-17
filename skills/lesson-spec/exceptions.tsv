@@ -36,3 +36,5 @@
 М11_Domain/08	scenarios-format	own	стенд нескольких кластеров: пересылка консолью члена, /domain/at, tls_ca → ca (двери holder, member; директивы урока 3 и @env <к> <переменная>) и векторы peer; проверяется по README приёмки
 М11_Domain/09	acceptance-entry	inputs	входы команды may (строки грантов, единица с about и метками, нужное право, now, as_of); проверяется по README приёмки
 М11_Domain/09	scenarios-format	own	стенд нескольких кластеров с людьми и грантами (двери holder, member, signer; директивы урока 3 и @admin) и векторы may; проверяется по README приёмки
+М11_Domain/10	acceptance-entry	inputs	входы команд record, follow и ask-sig (записи срока, ответы консолей, подписи просьбы копии, тестовые ключи); проверяется по README приёмки
+М11_Domain/10	scenarios-format	own	стенд нескольких кластеров: копия и хранители, аварийный перенос и плановая передача (двери holder, member, signer; директивы урока 3 и @start domain on <к>, @stop domain [<к>], @move <к> [stolen] [copy=…]) и векторы record, follow, ask-sig; проверяется по README приёмки
