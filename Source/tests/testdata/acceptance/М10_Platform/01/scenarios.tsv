@@ -119,6 +119,9 @@
 25-query-form	7	GET /v1/list?prefix=acc/25-query-form/&prefix=acc/	400 {"kind":"badrequest"}
 25-query-form	8	GET /v1/get?key=acc/25-query-form/%FF	400 {"kind":"badkey"}
 25-query-form	9	GET /v1/get?key=acc/25-query-form/%zz	200 {"items":null,"index":""}
+25-query-form	10	GET /v1/get?&&key=acc/25-query-form/a%2Bb&&	200 {"items":{"v":"plus"},"index":"$b"}
+25-query-form	11	GET /v1/get?key	400 {"kind":"badkey"}
+25-query-form	12	GET /v1/get?key=%FF&key=acc/25-query-form/a%2Bb	400 {"kind":"badrequest"}
 26-json-strict	1	POST /v1/write {"op":"put","key":"acc/26-json-strict/a","key":"acc/26-json-strict/b","items":{}}	400 {"kind":"badrequest"}
 26-json-strict	2	POST /v1/write {"op":"put","key":"acc/26-json-strict/c","items":{"n":"1","n":"2"}}	400 {"kind":"badrequest"}
 26-json-strict	3	POST /v1/write {"op":"put","key":"acc/26-json-strict/c","items":{},"x":NaN}	400 {"kind":"badrequest"}
@@ -131,4 +134,7 @@
 27-method-route	2	DELETE /v1/write	404 {"kind":"badrequest"}
 27-method-route	3	PUT /v1/list?prefix=acc/	404 {"kind":"badrequest"}
 27-method-route	4	GET /v1/write	404 {"kind":"badrequest"}
-27-method-route	5	GET /v1/list?prefix=acc/27-method-route/	200 {"keys":{}}
+27-method-route	5	GET /v1/%67et?key=acc/27-method-route/a	404 {"kind":"badrequest"}
+27-method-route	6	GET /v1/get/?key=acc/27-method-route/a	404 {"kind":"badrequest"}
+27-method-route	7	GET //v1/get?key=acc/27-method-route/a	404 {"kind":"badrequest"}
+27-method-route	8	GET /v1/list?prefix=acc/27-method-route/	200 {"keys":{}}
