@@ -17,3 +17,5 @@
 М10_Platform/07	acceptance-entry	fields.yaml	объявления полей cam.source и rec.volumes.url для secret_in.tsv как данные приёмки (ADR-0001); проверяется по README приёмки
 М11_Domain/01	scenarios-format	own	приёмка — чистая функция: команда view реализации читает входной JSON проходов и печатает {view, shadow}; проверяется по README приёмки
 М11_Domain/01	acceptance-entry	inputs	каталог входов команды view (копии членов, назначения, часы держателя); проверяется по README приёмки
+М11_Domain/02	acceptance-entry	inputs	каталог входов команд keys, token, seal (наборы, токены, конверты и тестовые ключи); проверяется по README приёмки
+М11_Domain/02	scenarios-format	own	приёмка — чистые функции: команды keys, token, seal реализации читают входной JSON и печатают итог; проверяется по README приёмки
