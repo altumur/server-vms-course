@@ -372,9 +372,9 @@ def test_repeated_barrier_failure_stays_ambiguous_and_retries_only_missing_barri
                 patches.enter_context(patch.object(variables, 'durable_dir', barrier))
                 raw = json.dumps(cmd).encode()
                 if kind == 'file':
-                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous'})
+                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous', 'error': 'ambiguous'})
                     at = store.get('acc/row')[1]
-                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous'})
+                    assert api.request('POST', '/v1/write', raw) == (503, {'kind': 'ambiguous', 'error': 'ambiguous'})
                     assert store.get('acc/row')[1] == at
                     assert api.request('POST', '/v1/write', raw) == (200, {'index': str(at), 'again': True})
                     assert calls == [root, store.dir, root, root, root]
@@ -440,9 +440,9 @@ def test_pending_replay_checks_payload_and_callers_permissions_before_finishing(
                 changed = {**cmd, 'items': {'v': 'changed'}}
                 assert api.request('POST', '/v1/write', json.dumps(changed).encode())[0] == 400
                 forbidden = NativeAPI(store.as_writer('denied', []))
-                assert forbidden.request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden'})
+                assert forbidden.request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden', 'error': 'forbidden'})
                 handle = store.as_writer('limited', {'limited': {'write': ['acc/row'], 'read': []}})
-                assert NativeAPI(handle).request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden'})
+                assert NativeAPI(handle).request('POST', '/v1/write', raw) == (403, {'kind': 'forbidden', 'error': 'forbidden'})
                 assert len(calls) == count
                 broken[0] = False
                 code, receipt = api.request('POST', '/v1/write', raw)

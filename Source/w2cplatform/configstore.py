@@ -223,6 +223,7 @@ from __future__ import annotations
 import argparse
 import http.client
 import ipaddress
+import io
 import json
 import os
 import re
@@ -270,6 +271,9 @@ API_PER_ADDRESS = 8        # …of which one address holds this many, so a stran
 HEADERS_WAIT = 5.0         # seconds a request's line and headers may take, whole
 DOOR_TIMEOUT = 10.0        # seconds a door's socket waits on a caller that sends or reads nothing
 MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character escaped (`\u00XX`), and its key
+MAX_REQUEST_LINE = 65536
+MAX_HEADER_BYTES = 65536
+MAX_HEADER_COUNT = 99       # the stdlib's 100 header lines include the terminating blank line
 
 # A door without a vote (ADR-0070 step 5; `configstoredoor.py`; the notes: Doors without a vote). The headers by the
 # product's names: which door forwards a request, and the role of the socket its process came in on. A door writes its row
@@ -822,7 +826,7 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
     peer's certificate on the `-api` door (`PermissionError` when it is not a daemon's). Reads under the platform's
     deadlines (`Deadlined`, `read_body`: the notes, "Every door is bounded").
     `body_limit` bounds the incoming body; the default still fits a fully escaped row at its ceiling."""
-    from .console import Deadlined, read_body        # the platform's door; imported here, `console` imports much
+    from .console import Deadlined, body_deadline, read_body
 
     class Door(Deadlined, BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -830,8 +834,108 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
         header_timeout = HEADERS_WAIT
         peer = ""                                    # the server a daemon's certificate names (`-api` door)
 
+        def send_error(self, code, message=None, explain=None):
+            # BaseHTTPRequestHandler otherwise emits HTML, HTTP/0.9, 414, 431, 501 or 505.
+            self.request_version = "HTTP/1.1"
+            self.command = getattr(self, "command", "")
+            self._send(404 if code == 501 else 400,
+                       {"kind": "badrequest", "error": "no such method" if code == 501 else "invalid HTTP request"})
+
+        def _header_block(self):
+            lines, size = [], 0
+            while True:
+                line = self.rfile.readline(MAX_HEADER_BYTES - size + 1)
+                size += len(line)
+                if not line or size > MAX_HEADER_BYTES or not line.endswith(b"\r\n"):
+                    self.send_error(400)
+                    return None
+                if line == b"\r\n":
+                    return b"".join(lines) + line
+                name, colon, value = line[:-2].partition(b":")
+                if (len(lines) >= MAX_HEADER_COUNT or not colon
+                        or not re.fullmatch(rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name)
+                        or any(c < 32 and c != 9 or c == 127 for c in value)):
+                    self.send_error(400)
+                    return None
+                lines.append(line)
+
+        def parse_request(self):
+            self.requestline = self.raw_requestline.decode("iso-8859-1").rstrip("\r\n")
+            self.request_version, self.command = "HTTP/1.1", ""
+            match = re.fullmatch(rb"([!#$%&'*+.^_`|~0-9A-Za-z-]+) ([^\x00-\x20\x7f]+) HTTP/1\.[01]\r\n",
+                                 self.raw_requestline)
+            if len(self.raw_requestline) > MAX_REQUEST_LINE or match is None:
+                self.send_error(400)
+                return False
+            block = self._header_block()
+            if block is None:
+                return False
+            stream = self.rfile
+            try:
+                self.rfile = io.BytesIO(block)
+                ok = super().parse_request()
+            finally:
+                self.rfile = stream
+            if ok:
+                # Keep the original target's bytes, including //, instead of the stdlib's path rewrite.
+                self.path = match[2].decode("utf-8", "surrogateescape")
+            return ok
+
+        def _body(self):
+            transfer = self.headers.get_all("Transfer-Encoding", [])
+            if not transfer:
+                if not read_body(self, body_limit):
+                    return None
+                return self.rfile.read(int(self.headers.get("Content-Length") or 0))
+            if len(transfer) != 1 or transfer[0].strip().lower() != "chunked":
+                self.send_error(400)
+                return None
+            # RFC 9112 §6.3: chunked frames the body even when Content-Length is also present.
+            body_deadline(self, body_limit)
+            chunks, size = [], 0
+            try:
+                while True:
+                    line = self.rfile.readline(MAX_REQUEST_LINE + 1)
+                    length = line[:-2].split(b";", 1)[0]
+                    if (len(line) > MAX_REQUEST_LINE or not line.endswith(b"\r\n")
+                            or not re.fullmatch(rb"[0-9a-fA-F]+", length)):
+                        self.send_error(400)
+                        return None
+                    n = int(length, 16)
+                    if size + n > body_limit:
+                        self._send(413, {"kind": "toolarge", "error": "body exceeds the door's limit", "limit": body_limit})
+                        return None
+                    if n == 0:
+                        return b"".join(chunks) if self._header_block() is not None else None
+                    chunk = self.rfile.read(n)
+                    if len(chunk) != n or self.rfile.read(2) != b"\r\n":
+                        self.send_error(400)
+                        return None
+                    chunks.append(chunk)
+                    size += n
+            except (TimeoutError, OSError):
+                self.send_error(400)
+                return None
+
         def log_message(self, *a):           # a request a second per worker is not a log line
             pass
+
+        def finish(self):
+            try:
+                super().finish()
+            finally:
+                # Staged HTTP close: FIN after the complete reply, then discard transport input for at most
+                # one second. Closing TLS over an ignored GET body or an early refusal otherwise resets the
+                # connection between the reply's headers and body. Discarded input never reaches serve().
+                try:
+                    self.connection.shutdown(socket.SHUT_WR)
+                    until = time.monotonic() + 1.0
+                    while time.monotonic() < until:
+                        self.connection.settimeout(max(0.001, until - time.monotonic()))
+                        if not self.connection.recv(65536):
+                            break
+                except OSError:
+                    pass
 
         def _send(self, code: int, body: dict) -> None:
             if code >= 400 and "kind" not in body and not (code == 412 and body.get("error") == "guard"):
@@ -867,15 +971,14 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
             try:
                 # The body first, bounded and under its deadline: a 403 sent over a body left unread is a reset the
                 # caller never reads the 403 from.
-                if not read_body(self, body_limit):
-                    return                               # 400 / 413 / 408 sent, the connection closed
-                n = int(self.headers.get("Content-Length") or 0)
-                raw = self.rfile.read(n) if n else b""
+                raw = self._body() if method == "POST" else b""     # GET bodies are not parsed (М10/1 Н2.1)
+                if raw is None:
+                    return
                 try:
                     role = _who_asks(self, method, role_of(self))
                 except PermissionError as e:
                     return self._send(403, {"kind": "forbidden", "error": str(e)})
-                if method == "GET" and urllib.parse.urlsplit(self.path).path == "/metrics":
+                if method == "GET" and self.path.partition("?")[0] == "/metrics":
                     return self._send_text(daemon.metrics_text())             # every door, every role (ADR-0070)
                 try:
                     deadline = float(self.headers.get("X-Deadline") or daemon.leader_wait)
@@ -1053,7 +1156,7 @@ def _who_asks(handler, method: str, role: str) -> str:
             raise PermissionError(f"a request forwarded by the door {door!r}, with the certificate of {handler.peer}: a "
                                   f"door forwards with its own door certificate")
         return role
-    path = urllib.parse.urlsplit(handler.path).path
+    path = handler.path.partition("?")[0]
     if not door:
         raise PermissionError(f"a door's certificate, and the request names no door ({HEADER_DOOR}): a door says which "
                               f"it is")
@@ -1159,7 +1262,7 @@ class StoreDaemon:
     # `role` is who the door says is calling; on the `-api` door that is `PEER`, with `peer` the server its certificate
     # names (the notes: Doors).
     def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "") -> tuple[int, dict]:
-        path = urllib.parse.urlsplit(target).path
+        path = target.partition("?")[0]
         if method == "GET" and path == "/v1/status":
             return 200, self.status()
         if method == "GET" and path == "/v1/rights":

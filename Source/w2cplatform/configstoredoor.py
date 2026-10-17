@@ -77,12 +77,11 @@ import secrets
 import sys
 import threading
 import time
-import urllib.parse
 
 from . import tls
 from .configstore import (API_PER_ADDRESS, DOOR_BEAT, HEADER_DOOR, HEADER_ROLE, RIGHTS_FILE, SOCKETS, _door,
                           _PeerConnection, _SERVER_ID, _unix_server, socket_group)
-from .storemachine import ADMIN, DOOR, DOORS_PREFIX, PEER, Rights, answer
+from .storemachine import ADMIN, DOOR, DOORS_PREFIX, PEER, Rights, answer, parse_command
 
 FOLLOW = 5.0            # seconds between two asks of the group (the product's)
 DOOR_TRY = 2.0          # the least a door waits for one voter before it tries the next (the product's `doorTry`)
@@ -185,7 +184,7 @@ class DoorDaemon:
 
     # -- a request on one of its sockets (`configstore._door` calls it, as it calls a voter's) -----------
     def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "") -> tuple[int, dict]:
-        path = urllib.parse.urlsplit(target).path
+        path = target.partition("?")[0]
         if method == "GET" and path == "/v1/status":
             return 200, self.status()
         if role == ADMIN:
@@ -196,7 +195,7 @@ class DoorDaemon:
         named = False
         if method == "POST":
             try:
-                body = json.loads(raw or b"{}")
+                body = parse_command(raw)
                 named = isinstance(body, dict) and bool(body.get("id"))
             except ValueError:
                 pass                                 # `answer` says what is wrong with it

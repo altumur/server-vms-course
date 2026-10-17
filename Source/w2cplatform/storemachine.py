@@ -100,7 +100,6 @@ import json
 import re
 import urllib.parse
 
-from .canonical import parse_json
 from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import epoch_row, items_bytes, safe_path, guard_check
@@ -111,6 +110,7 @@ CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string:
 CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
 MAX_KEY_BYTES = 1024       # raw UTF-8 key bytes; only File may refuse an encoded filename earlier
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
+MAX_JSON_DEPTH = 64        # containers, root included; М10/1 implementation choice 9
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
 # A door without a vote (ADR-0070 step 5; `configstoredoor.py`), on a voter's `-api` door with a door's certificate: its
@@ -130,6 +130,60 @@ class Ambiguous(Unavailable):
     """A write reached a leader that went before answering: it may yet be applied. Repeat only with the same id."""
 
 
+class BadRequest(ValueError):
+    """The request's form, before key rules or any store operation (М10/1 Н2.1)."""
+
+
+def query_value(query: str, name: str, *, required: bool = False) -> bytes:
+    """WHATWG urlencoded bytes; only the parameter this operation reads must be unique."""
+    values = []
+    for pair in query.encode("utf-8", "surrogateescape").split(b"&"):
+        key, _, value = pair.partition(b"=")
+        if urllib.parse.unquote_to_bytes(key.replace(b"+", b" ")) == name.encode("ascii"):
+            values.append(urllib.parse.unquote_to_bytes(value.replace(b"+", b" ")))
+    if len(values) > 1 or (required and not values):
+        raise BadRequest(f"{name} must occur exactly once" if required else f"{name} must not repeat")
+    return values[0] if values else b""
+
+
+def parse_command(raw: bytes) -> dict:
+    """Storage JSON syntax, with field-specific Unicode checks left to validation.
+
+    Extra fields may contain huge numbers or lone surrogates; they are never interpreted. The general
+    canonical parser's Unicode/float checks belong to typed documents, not this command's ignored fields.
+    """
+    def object_(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise BadRequest("a JSON object repeats a field name")
+            result[key] = value
+        return result
+
+    def integer(text):
+        # Only the operator's floor uses a number; every other read field is a string/object. Unread numbers
+        # retain a non-string marker, without the interpreter's digit limit or a floating-point range limit.
+        return int(text) if len(text) <= 20 else object()
+
+    def constant(_):
+        raise BadRequest("NaN and Infinity are not JSON")
+
+    try:
+        body = json.loads(raw.decode("utf-8"), object_pairs_hook=object_, parse_int=integer,
+                          parse_float=lambda _: object(), parse_constant=constant)
+        pending = [(body, 0)]
+        while pending:
+            value, depth = pending.pop()
+            if isinstance(value, (dict, list)):
+                depth += 1
+                if depth > MAX_JSON_DEPTH:
+                    raise BadRequest(f"JSON is nested past {MAX_JSON_DEPTH} containers")
+                pending.extend((v, depth) for v in (value.values() if isinstance(value, dict) else value))
+        return body
+    except (ValueError, RecursionError):
+        raise BadRequest("the body is not JSON within this door's parsing bounds") from None
+
+
 # -- keys ---------------------------------------------------------------------------------------------
 # The common door/memory key bound is raw UTF-8. FileVariables additionally checks its encoded filename.
 def check_key(key) -> str:
@@ -143,21 +197,9 @@ def check_key(key) -> str:
 
 # What a write names besides its key and items, bounded (the notes: "What a caller names is bounded too"). Raises
 # `ValueError` naming the field, never quoting it. The door adds the strict wire grammar before submission.
-def check_write(cmd: dict, *, wire: bool = False) -> None:
+def check_write(cmd: dict) -> None:
     if "guard" in cmd and cmd["guard"] is None:
         raise ValueError("guard is {key, index}, never null")
-    if wire:
-        value = cmd.get("cas")
-        if value is not None and not wire_version(value):
-            raise ValueError("cas is null, empty, or a decimal version string")
-        if "id" in cmd and (not isinstance(cmd["id"], str) or not re.fullmatch(r"[0-9a-f]{1,64}", cmd["id"])):
-            raise ValueError("id is 1 to 64 lowercase hex digits")
-        guard = cmd.get("guard")
-        if guard is not None:
-            if (not isinstance(guard, dict) or set(guard) != {"key", "index"}
-                    or not isinstance(guard["key"], str) or not guard["key"]
-                    or not wire_version(guard["index"])):
-                raise ValueError("guard is {key, index}, index a decimal version string")
     op_id = cmd.get("id")
     if op_id is not None and not (isinstance(op_id, str) and OP_ID.match(op_id)):
         raise ValueError("a write's id is up to 64 letters, digits, - and _")
@@ -181,6 +223,42 @@ def wire_version(value):
 
 def wire_index(value):
     return str(value) if value else ""
+
+
+def wire_command(body) -> dict:
+    """Validate in Н2.1 order and discard unread fields before fingerprinting or replication.
+
+    BadRequest is form; ValueError from check_key is badkey. No store, clock or rights are consulted.
+    """
+    if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
+        raise BadRequest("a write is an object with op put or delete")
+    if not isinstance(body.get("key"), str):
+        raise BadRequest("key is a required string")
+    key = check_key(body["key"])
+    cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
+    if body["op"] == "put":
+        items = body.get("items")
+        if not isinstance(items, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in items.items()):
+            raise BadRequest("items are a map of strings")
+        try:
+            items_bytes(items)
+        except UnicodeError:
+            raise BadRequest("items must contain UTF-8 text") from None
+        cmd["items"] = dict(items)
+    if cmd["cas"] is not None and not wire_version(cmd["cas"]):
+        raise BadRequest("cas is null, empty, or a decimal version string")
+    if "guard" in body:
+        guard = body["guard"]
+        if (not isinstance(guard, dict) or set(guard) != {"key", "index"}
+                or not isinstance(guard["key"], str) or not guard["key"] or not wire_version(guard["index"])):
+            raise BadRequest("guard is {key, index}, index a decimal version string")
+        check_key(guard["key"])
+        cmd["guard"] = dict(guard)
+    if "id" in body:
+        if not isinstance(body["id"], str) or not re.fullmatch(r"[0-9a-f]{1,64}", body["id"]):
+            raise BadRequest("id is 1 to 64 lowercase hex digits")
+        cmd["id"] = body["id"]
+    return cmd
 
 
 # The write an operation id stands for: what a repeat must be to be answered from memory. A function of the command
@@ -373,28 +451,27 @@ def too_large(key: str, size: int) -> tuple[int, dict]:
 def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, submit) -> tuple[int, dict]:
     """One request of the data API, as `role`: rights first, then the command through `submit(cmd)` — the log on a
     daemon, the machine itself on a stand. Returns (status, body). Never raises for what a caller sent."""
-    u = urllib.parse.urlsplit(target)
-    q = dict(urllib.parse.parse_qsl(u.query, keep_blank_values=True))
+    path, _, query = target.partition("?")
     try:
-        if method == "GET" and u.path == "/v1/get":
-            key = check_key(q.get("key", ""))
+        if method == "GET" and path == "/v1/get":
+            key = check_key(query_value(query, "key", required=True).decode("utf-8"))
             if not rights.allows(role, "read", key):
                 return fault(403, "forbidden", f"{role} may not read {key}")
             got = submit({"op": "get", "key": key})
             return 200, {"items": got["items"], "index": wire_index(got["index"])}
-        if method == "GET" and u.path == "/v1/list":
-            prefix = q.get("prefix", "")
-            if len(prefix.encode()) > MAX_KEY_BYTES:
+        if method == "GET" and path == "/v1/list":
+            prefix = query_value(query, "prefix")
+            if len(prefix) > MAX_KEY_BYTES:
                 return 200, {"keys": {}}          # longer than any key: nothing to match, nothing to ask the log
-            got = submit({"op": "list", "prefix": prefix})
-            return 200, {"keys": {key: wire_index(index) for key, index in got["keys"].items()}}     # every name, to every role: nothing of a value (ADR-0021, 2026-10-10)
-        if method == "POST" and u.path == "/v1/write":
             try:
-                # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400` are
-                # 400 with the shared table's `fault` (the architect, 2026-10-06); nested past what is read, the same
-                body = parse_json(raw or b"{}")
-            except (ValueError, RecursionError):
-                return fault(400, "badrequest", "the body is not JSON")
+                text_prefix = prefix.decode("utf-8")
+            except UnicodeError:
+                text_prefix = ""                  # a byte prefix may stop inside a character
+            got = submit({"op": "list", "prefix": text_prefix})
+            return 200, {"keys": {key: wire_index(index) for key, index in got["keys"].items()
+                                  if key.encode("utf-8").startswith(prefix)}}
+        if method == "POST" and path == "/v1/write":
+            body = parse_command(raw)
             if isinstance(body, dict) and body.get("op") == "floor":
                 # THE FLOOR UNDER EVERY EPOCH, RAISED (ADR-0070; the external review of 2026-10-11; the product's
                 # `OpFloor`): the operator's alone — root's `admin.sock`, a restore before its first row — never a
@@ -408,24 +485,9 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                                                     f"raised at, a whole number, or nothing")
                 got = submit({"op": "floor", "floor": floor, **({EPOCH_FLOOR_AT: at} if at != "" else {})})
                 return 200, {"index": wire_index(got["index"]), **({"again": True} if got.get("again") else {})}
-            if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
-                return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
-            key = check_key(body.get("key", ""))
-            if isinstance(body.get("guard"), dict) and isinstance(body["guard"].get("key"), str) and body["guard"]["key"]:
-                check_key(body["guard"]["key"])
-            try:
-                check_write(body, wire=True)
-            except ValueError as e:
-                return fault(400, "badrequest", str(e))
-            cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
-            if body.get("guard") is not None:
-                guard = body["guard"]
-                cmd["guard"] = dict(guard)
+            cmd = wire_command(body)
+            key = cmd["key"]
             if body["op"] == "put":
-                items = body.get("items")
-                if not isinstance(items, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in items.items()):
-                    return fault(400, "badrequest", "items are a map of strings")
-                cmd["items"] = {k: str(v) for k, v in items.items()}
                 size = items_bytes(cmd["items"])
                 if size > MAX_VALUE:
                     return too_large(key, size)
@@ -448,7 +510,9 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 return fault(409, "conflict", f"{key}: the version is {got['index'] or 'absent'}, not the one the "
                                               f"write named", index=wire_index(got["index"]))
             return 200, {"index": wire_index(got["index"]), **({"again": True} if got.get("again") else {})}
-        return fault(404, "badrequest", f"no such route: {method} {u.path}")
+        return fault(404, "badrequest", f"no such route: {method} {path}")
+    except BadRequest as e:
+        return fault(400, "badrequest", str(e))
     except ValueError as e:
         return fault(400, "badkey", str(e))
     except Ambiguous as e:
