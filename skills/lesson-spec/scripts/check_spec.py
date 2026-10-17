@@ -212,11 +212,54 @@ def pointer(document, ref):
     return value
 
 
+EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry"}
+EXCEPTIONS = Path(__file__).resolve().parent.parent / "exceptions.tsv"
+SCENARIO_HEADER = ["scenario", "step", "request", "expect"]
+
+
+def scenario_counts(text):
+    """Scenarios and steps of any scenarios.tsv format: one row per step, the scenario in the first column."""
+    steps = Counter()
+    for line in text.splitlines():
+        cols = line.split("\t")
+        if line and not line.startswith("#") and cols != SCENARIO_HEADER and cols[0]:
+            steps[cols[0]] += 1
+    return len(steps), sum(steps.values())
+
+
 class Check:
-    def __init__(self, root):
+    def __init__(self, root, exceptions=None):
         self.root = root.resolve()
         self.errors = []
         self.stats = Counter()
+        self.excepted = []
+        self.registry = {}
+        if exceptions is not None:
+            self.load_exceptions(exceptions)
+
+    # Allowed deviations, each with its reason: lesson (module/NN), kind, value, reason. A row a checked lesson
+    # no longer needs is an error, so the registry cannot keep hiding what has been fixed.
+    def load_exceptions(self, path):
+        text = self.read(path)
+        for line_no, line in enumerate((text or "").splitlines(), 1):
+            if not line or line.startswith("#"):
+                continue
+            cols = line.split("\t")
+            if len(cols) != 4 or not all(cols) or cols[1] not in EXCEPTION_KINDS:
+                self.error(path, f"line {line_no}: expected lesson, kind ({', '.join(sorted(EXCEPTION_KINDS))}), "
+                                 "value, reason")
+                continue
+            lesson, kind, value, reason = cols
+            if (lesson, kind, value) in self.registry:
+                self.error(path, f"line {line_no}: duplicate exception")
+            self.registry[(lesson, kind, value)] = reason
+
+    def exception(self, lesson, kind, value="-"):
+        return self.registry.get((lesson, kind, value))
+
+    def except_(self, path, lesson, kind, value, detail=""):
+        reason = self.registry[(lesson, kind, value)]
+        self.excepted.append(f"{lesson} {kind} {value}: {reason}" + (f" ({detail})" if detail else ""))
 
     def error(self, path, message):
         try:
@@ -315,6 +358,37 @@ class Check:
             if title not in headings:
                 self.error(path, f"missing section {title}")
         self.stats["norm_ids"] += len(ids)
+        return ids
+
+    # Counts and ranges a text states about the lesson must match its tables: a fix that adds a norm or
+    # a scenario has to update every place that counts them. Only unambiguous whole-lesson phrases are read.
+    def counts(self, path, text, prefix, ids, scenarios, instruction):
+        def mismatch(said, actual, what):
+            self.error(path, f"says {said} {what}, the tables have {actual}")
+        if scenarios is not None:
+            total, steps = scenarios
+            for match in re.finditer(r"(\d+)\s*сценари\w*\s*[/,]\s*(\d+)\s*шаг\w*", text):
+                self.stats["count_phrases"] += 1
+                if int(match.group(1)) != total:
+                    mismatch(match.group(1), total, "scenarios")
+                if int(match.group(2)) != steps:
+                    mismatch(match.group(2), steps, "steps")
+            for match in re.finditer(r"scenarios\.tsv\s*\((\d+)\s*[–…-]\s*(\d+)\)", text):
+                self.stats["count_phrases"] += 1
+                if int(match.group(1)) != 1 or int(match.group(2)) != total:
+                    mismatch(f"{match.group(1)}–{match.group(2)}", f"01–{total:02}", "scenarios")
+        if path.name.endswith(".norms.md"):
+            return
+        for match in re.finditer(re.escape(prefix) + r"-0?1\s*[…–-]\s*(\d+)", text):
+            self.stats["count_phrases"] += 1
+            if int(match.group(1)) != len(ids):
+                mismatch(f"{prefix}-01…{match.group(1)}", f"{len(ids)} ids", "checklist ids")
+        if instruction:
+            for match in re.finditer(r"(\d+)\s+(?:id(?!\w)|пункт\w*\s+чеклиста)|[Вв]с[её]\w*\s+(\d+)\s+норм", text):
+                self.stats["count_phrases"] += 1
+                said = match.group(1) or match.group(2)
+                if int(said) != len(ids):
+                    mismatch(said, len(ids), "checklist ids")
 
     def tsv(self, path, width, header=None):
         text = self.read(path)
@@ -409,35 +483,64 @@ class Check:
             return
         module = lesson.parent.name
         number = int(lesson.name[:2])
+        key = f"{module}/{number:02}"
         prefix = f"{module.split('_', 1)[0]}/{number}"
         spec = lesson.parent / "spec"
         norms = spec / f"{lesson.stem}.norms.md"
         instructions = spec / f"{lesson.stem}.README.md"
+        texts, ids = {}, []
         for path in [lesson, norms, instructions]:
             text = self.read(path)
             if text is not None:
+                texts[path] = text
                 self.markdown(path, text)
                 if path == norms:
-                    self.norms(path, text, prefix)
-        self.openapi(spec / f"{lesson.stem}.api.openapi.yaml")
+                    ids = self.norms(path, text, prefix)
+        contract = spec / f"{lesson.stem}.api.openapi.yaml"
+        if self.exception(key, "no-openapi") is None:
+            self.openapi(contract)
+        elif contract.exists():
+            self.error(contract, "stale exception no-openapi: the contract exists")
+        else:
+            self.except_(contract, key, "no-openapi", "-")
         acceptance = self.root / "Source/tests/testdata/acceptance" / module / f"{number:02}"
         readme = acceptance / "README.md"
         text = self.read(readme)
         if text is not None:
+            texts[readme] = text
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "cases"}
+        extra = {value for (lesson_key, kind, value) in self.registry
+                 if lesson_key == key and kind == "acceptance-entry"}
         try:
+            names = set()
             for entry in acceptance.iterdir():
-                if entry.name not in supported:
+                names.add(entry.name)
+                if entry.name in extra:
+                    self.except_(entry, key, "acceptance-entry", entry.name)
+                elif entry.name not in supported:
                     self.error(entry, "unsupported acceptance entry; add a format-specific check")
                 elif entry.name != "cases" and not entry.is_file():
                     self.error(entry, "acceptance table/document must be a file")
+            for name in sorted(extra - names):
+                self.error(acceptance / name, "stale exception acceptance-entry: no such entry")
         except OSError as exc:
             self.error(acceptance, str(exc))
         formats = 0
+        scenarios = None
         if (acceptance / "scenarios.tsv").exists():
-            self.scenarios(acceptance / "scenarios.tsv")
+            table = acceptance / "scenarios.tsv"
+            scenarios = scenario_counts(self.read(table) or "")
+            before = len(self.errors)
+            self.scenarios(table)
+            if self.exception(key, "scenarios-format", "own") is not None:
+                suppressed = len(self.errors) - before
+                del self.errors[before:]
+                if suppressed:
+                    self.except_(table, key, "scenarios-format", "own", f"{suppressed} generic messages")
+                else:
+                    self.error(table, "stale exception scenarios-format: the generic check passes")
             formats += 1
         if (acceptance / "verdicts.tsv").exists():
             verdicts = self.verdicts(acceptance / "verdicts.tsv")
@@ -450,21 +553,28 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
+        for path, text in texts.items():
+            if path != lesson:
+                self.counts(path, text, prefix, ids, scenarios, path == instructions)
         self.stats["lessons"] += 1
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("lessons", nargs="+", help="module/NN-slug.md; only the new shared-spec layout")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
+    parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
+                        help="registry of allowed deviations, default the skill's exceptions.tsv")
     args = parser.parse_args()
-    check = Check(args.root)
+    check = Check(args.root, args.exceptions)
     for name in args.lessons:
         check.lesson((check.root / name).resolve())
     for error in check.errors:
         print("ERROR", error)
+    for line in check.excepted:
+        print("EXCEPTION", line)
     print("COUNTS", " ".join(f"{key}={value}" for key, value in sorted(check.stats.items())))
-    print("FAIL" if check.errors else "PASS", "structural checks only; semantic review and implementation acceptance remain separate")
+    verdict = "FAIL" if check.errors else f"PASS with {len(check.excepted)} exceptions" if check.excepted else "PASS"
+    print(verdict, "structural checks only; semantic review and implementation acceptance remain separate")
     return int(bool(check.errors))
 
 
