@@ -13,7 +13,7 @@
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1000,
+       "ts": 1001,
        "server": "srv-a",
        "status": [
         {
@@ -50,58 +50,14 @@
    }
   },
   {
-   "at": 130,
+   "at": 110,
    "members": {
     "m1": {
      "mark": 2,
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1030,
-       "server": "srv-a",
-       "status": [
-        {
-         "id": "1",
-         "phase": "running",
-         "epoch": 1,
-         "revision": 3,
-         "observed_revision": 1
-        }
-       ]
-      },
-      "testsub/snapshot/w-1": {
-       "cluster": "m1",
-       "worker": "w-1",
-       "ts": 1000,
-       "counters": [
-        {
-         "id": "1",
-         "revision": 1,
-         "name": "c1",
-         "start": 0,
-         "worker": "w-1",
-         "server": "srv-a"
-        }
-       ]
-      }
-     }
-    }
-   },
-   "placements": {
-    "testsub": {
-     "c1": "m1"
-    }
-   }
-  },
-  {
-   "at": 170,
-   "members": {
-    "m1": {
-     "mark": 3,
-     "objects": {
-      "testsub/heartbeats/w-1": {
-       "worker": "w-1",
-       "ts": 1070,
+       "ts": 1002,
        "server": "srv-a",
        "status": [
         {
@@ -141,11 +97,55 @@
    "at": 180,
    "members": {
     "m1": {
+     "mark": 3,
+     "objects": {
+      "testsub/heartbeats/w-1": {
+       "worker": "w-1",
+       "ts": 1003,
+       "server": "srv-a",
+       "status": [
+        {
+         "id": "1",
+         "phase": "running",
+         "epoch": 1,
+         "revision": 3,
+         "observed_revision": 1
+        }
+       ]
+      },
+      "testsub/snapshot/w-1": {
+       "cluster": "m1",
+       "worker": "w-1",
+       "ts": 1000,
+       "counters": [
+        {
+         "id": "1",
+         "revision": 1,
+         "name": "c1",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "placements": {
+    "testsub": {
+     "c1": "m1"
+    }
+   }
+  },
+  {
+   "at": 190,
+   "members": {
+    "m1": {
      "mark": 4,
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1080,
+       "ts": 1004,
        "server": "srv-a",
        "status": [
         {

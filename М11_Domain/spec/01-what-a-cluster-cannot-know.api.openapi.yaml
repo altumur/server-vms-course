@@ -129,11 +129,11 @@ components:
         name:
           $ref: '#/components/schemas/MemberName'
         state:
-          enum: [ok, silent, never]
+          enum: [ok, unseen, silent, never]
         age:
           type: ['number', 'null']
           minimum: 0
-          description: Секунды с последней смены метки по часам держателя; у never — null.
+          description: Секунды с последней смены метки, которую видел этот процесс держателя, без смены — с первого взгляда; у never — null.
     Unit:
       type: object
       required: [sub, id, ref, cluster, phase, age, state]

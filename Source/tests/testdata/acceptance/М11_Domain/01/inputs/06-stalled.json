@@ -13,7 +13,7 @@
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1000,
+       "ts": 1001,
        "server": "srv-a",
        "status": [
         {
@@ -50,14 +50,14 @@
    }
   },
   {
-   "at": 130,
+   "at": 110,
    "members": {
     "m1": {
      "mark": 2,
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1030,
+       "ts": 1002,
        "server": "srv-a",
        "status": [
         {
@@ -94,14 +94,14 @@
    }
   },
   {
-   "at": 170,
+   "at": 180,
    "members": {
     "m1": {
      "mark": 3,
      "objects": {
       "testsub/heartbeats/w-1": {
        "worker": "w-1",
-       "ts": 1070,
+       "ts": 1003,
        "server": "srv-a",
        "status": [
         {

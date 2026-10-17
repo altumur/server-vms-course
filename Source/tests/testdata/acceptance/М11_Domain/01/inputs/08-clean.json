@@ -136,6 +136,50 @@
      "c1": "m1"
     }
    }
+  },
+  {
+   "at": 130,
+   "members": {
+    "m1": {
+     "mark": 4,
+     "objects": {
+      "testsub/heartbeats/w-1": {
+       "worker": "w-1",
+       "ts": 1004,
+       "server": "srv-a",
+       "status": [
+        {
+         "id": "1",
+         "phase": "running",
+         "epoch": 1,
+         "revision": 1,
+         "observed_revision": 1
+        }
+       ]
+      },
+      "testsub/snapshot/w-1": {
+       "cluster": "m1",
+       "worker": "w-1",
+       "ts": 1000,
+       "counters": [
+        {
+         "id": "1",
+         "revision": 1,
+         "name": "c1",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "placements": {
+    "testsub": {
+     "c1": "m1"
+    }
+   }
   }
  ]
 }
