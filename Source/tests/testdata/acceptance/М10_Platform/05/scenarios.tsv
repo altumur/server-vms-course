@@ -53,3 +53,11 @@ scenario	step	request	expect
 06-deleted	8	@sleep 12	ok
 06-deleted	9	console POST /counters {"name": "c6", "start": 5}	201 {"revision": 2}
 06-deleted	10	@until 40 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "2"}}
+07-tie-first-by-name	1	@start controller	ok
+07-tie-first-by-name	2	@start worker w-2	ok
+07-tie-first-by-name	3	@start worker w-1	ok
+07-tie-first-by-name	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+07-tie-first-by-name	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+07-tie-first-by-name	6	@sleep 12	ok
+07-tie-first-by-name	7	console POST /counters {"name": "t7", "start": 1}	201
+07-tie-first-by-name	8	@until 30 store GET /v1/get?key=testsub/placement/t7	200 {"items": {"worker": "w-1"}}

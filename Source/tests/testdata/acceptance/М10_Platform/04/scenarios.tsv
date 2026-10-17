@@ -4,6 +4,8 @@ scenario	step	request	expect
 01-unplaced	2	GET /where/u1	404
 01-unplaced	3	GET /where/	404
 02-unplaceable	1	GET /unplaceable	200 [{"id": "u1", "workers_live": 0}]
+02-unplaceable	2	@until 20 GET /unplaceable	200 [{"id": "u1", "why": "$why"}]
+02-unplaceable	3	GET /where/u1	404 {"reason": "$why"}
 03-policy	1	GET /policy	200 {"servers": "shared"}
 03-policy	2	PUT /policy {"servers": "distinct"}	200
 03-policy	3	GET /policy	200 {"servers": "distinct"}

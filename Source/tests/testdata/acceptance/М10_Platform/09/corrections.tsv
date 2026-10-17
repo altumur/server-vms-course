@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-17	09/02-4, 09/03-1	Сверка 2 чистой комнаты М10 (faa988b0): SpecView.domain — проекция {view, edit, shared, keys}; login_url без LOGIN_URL — /api/login	all
 2026-10-17	09/README:4	Прогон 40 (разбор 0217e88d): снят обрывок прежнего определения @file	all
 2026-10-17	09/04-5, 06-3…5	Прогон 40 Kimi R40-16: тела 404 различают ветви — лишний сегмент пути единицы, MountedPage	all
+2026-10-17	09/scenarios.tsv: 02-spec-and-mounts шаг 5; probe-x.subsystem.yaml	Мутационная проверка 7cecaf2 № 40: metrics.prefix «-» → «_» на третьей спеке стенда	all

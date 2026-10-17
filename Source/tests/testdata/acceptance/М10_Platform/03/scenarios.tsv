@@ -10,6 +10,9 @@ scenario	step	request	expect
 03-update	2	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
 03-update	3	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
 03-update	4	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
+03-update	5	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
+03-update	6	PUT /counters/c3 {"start": null}	400
+03-update	7	GET /counters/c3	200 {"id": "c3", "start": 7, "revision": 4}
 04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
 04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
 04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
@@ -53,3 +56,13 @@ scenario	step	request	expect
 12-input-forms	5	POST /counters {"name": "c12b", "start": 1e2}	400 {"fault": "not_number"}
 12-input-forms	6	POST /counters {"name": "c12b", "labels": ["gpu!"]}	400
 12-input-forms	7	POST /counters {"name": "c12b", "labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}	201 {"labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}
+13-idempotency-key-limits	1	@header Idempotency-Key: @big(200) POST /counters {"name": "k1"}	201 {"id": "k1"}
+13-idempotency-key-limits	2	@header Idempotency-Key: @big(200) POST /counters {"name": "k1"}	201 {"id": "k1", "revision": 1}
+13-idempotency-key-limits	3	@header Idempotency-Key: @big(201) POST /counters {"name": "k2"}	400
+13-idempotency-key-limits	4	@header Idempotency-Key: яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя POST /counters {"name": "k3"}	201 {"id": "k3"}
+13-idempotency-key-limits	5	@header Idempotency-Key: яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя POST /counters {"name": "k4"}	400
+13-idempotency-key-limits	6	@header Idempotency-Key: .. POST /counters {"name": "k5"}	400
+13-idempotency-key-limits	7	@header Idempotency-Key: a/b POST /counters {"name": "k6"}	400
+13-idempotency-key-limits	8	GET /counters/k2	404
+13-idempotency-key-limits	9	GET /counters/k4	404
+13-idempotency-key-limits	10	GET /counters/k5	404

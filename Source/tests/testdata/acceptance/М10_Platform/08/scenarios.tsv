@@ -32,8 +32,13 @@ scenario	step	request	expect
 05-request-performed	4	@until 30 store GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "1"}}
 05-request-performed	5	console POST /testsub/requests {"unit": "c5", "add": 5}	2xx
 05-request-performed	6	@until 30 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "performed", "unit": "c5", "instance": "@any", "slot": "w-1", "ended_at": "@any"}}
-05-request-performed	7	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
-05-request-performed	8	@key(5) console POST /testsub/requests {"unit": "c5", "add": 5}	200 {"answered": "@any"}
+05-request-performed	7	@sleep 20	ok
+05-request-performed	8	store GET /v1/get?key=testsub/requests/$rid	200 {"items": {"unit": "c5"}}
+05-request-performed	9	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
+05-request-performed	10	@key(5) console POST /testsub/requests {"unit": "c5", "add": 5}	200 {"answered": "@any"}
+05-request-performed	11	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "server": "srv-a", "instance": "@any", "ts": "@any", "started": "@any", "status": [{"id": "c5", "phase": "@any", "epoch": "@any", "revision": "@any", "observed_revision": "@any"}]}
+05-request-performed	12	@sigterm w-1	ok
+05-request-performed	13	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "status": []}
 06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
 06-request-refused	2	console POST /testsub/requests {"add": 5}	400
 06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404

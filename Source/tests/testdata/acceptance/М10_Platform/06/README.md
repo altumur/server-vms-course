@@ -3,7 +3,7 @@
 Сценарии урока [М10/6](../../../../../../М10_Platform/06-rights.md) через дверь хранилища.
 Канон — [нормы](../../../../../../М10_Platform/spec/06-rights.norms.md), полные тела двух
 маршрутов — [OpenAPI](../../../../../../М10_Platform/spec/06-rights.api.openapi.yaml).
-В файле 9 сценариев / 40 шагов; роли и файл прав генерируются из `testsub` и `testsub2`
+В файле 10 сценариев / 48 шагов (мутационная проверка 7cecaf2 № 28, 29, 31, 49: `never` у admin, строки допуска контроллера без delete, `/v1/rights` только admin, отрицание `idem` у воркера); роли и файл прав генерируются из `testsub` и `testsub2`
 (`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`.
 
 ## scenarios.tsv

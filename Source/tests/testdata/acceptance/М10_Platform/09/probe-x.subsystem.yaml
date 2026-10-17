@@ -1,0 +1,4 @@
+# probe-x — третья спека стенда урока 9: имя с «-», чтобы проверить metrics.prefix (М10/2 Н2: «-» → «_»).
+name: probe-x
+unit: {rows: probes, id: numeric}
+placement: {capacity: {default: 1}}

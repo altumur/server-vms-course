@@ -6,6 +6,7 @@ scenario	step	request	expect
 01-worker	4	POST /v1/write {"id":"a4","op":"put","key":"testsub/counters/c1","items":{"id":"c1","revision":"1","name":"c1"}}	403
 01-worker	5	POST /v1/write {"id":"a5","op":"put","key":"testsub/placement/c1","items":{"worker":"w-1"}}	403
 01-worker	6	POST /v1/write {"id":"a6","op":"put","key":"testsub/next_id","items":{"n":"5"}}	403
+01-worker	7	GET /v1/get?key=testsub/idem/k6	403
 02-controller	1	@as testsubcontroller POST /v1/write {"id":"b1","op":"put","key":"testsub/placement/c1","items":{"worker":"w-1","reason":"test","at":"1","rev":"1"},"cas":""}	200
 02-controller	2	POST /v1/write {"id":"b2","op":"put","key":"testsub/workers/w-1","items":{"units":"c1","rev":"1"},"cas":""}	200
 02-controller	3	POST /v1/write {"id":"b3","op":"put","key":"testsub/slots/w-1","items":{"holder":"box:1:aaaaaa","until":"1","released":"true","gen":"1","server":"srv-a"}}	200
@@ -14,6 +15,8 @@ scenario	step	request	expect
 02-controller	6	@as testsubcontroller POST /v1/write {"id":"b6","op":"delete","key":"testsub/counters/c1"}	200
 02-controller	7	@as console POST /v1/write {"id":"b7","op":"put","key":"testsub2/tallies/t1","items":{"id":"t1","revision":"1","name":"t1","of":"c1"},"cas":""}	200
 02-controller	8	@as testsub2controller POST /v1/write {"id":"b8","op":"delete","key":"testsub2/tallies/t1"}	403
+02-controller	9	@as testsubcontroller POST /v1/write {"id":"b9","op":"delete","key":"testsub/controller/placement_turn"}	403
+02-controller	10	POST /v1/write {"id":"b10","op":"delete","key":"testsub/controller/placement_intent"}	403
 03-console	1	@as console POST /v1/write {"id":"c1","op":"put","key":"testsub/counters/c3","items":{"id":"c3","revision":"1","name":"c3"},"cas":""}	200
 03-console	2	POST /v1/write {"id":"c2","op":"put","key":"testsub/next_id","items":{"n":"7"}}	200
 03-console	3	POST /v1/write {"id":"c3","op":"put","key":"testsub/idem/k1","items":{"state":"done"}}	200
@@ -29,6 +32,8 @@ scenario	step	request	expect
 05-epoch-never-deleted	3	@as testsubcontroller POST /v1/write {"id":"e3","op":"delete","key":"testsub/epoch/c5"}	403
 05-epoch-never-deleted	4	@as console POST /v1/write {"id":"e4","op":"delete","key":"testsub/epoch/c5"}	403
 05-epoch-never-deleted	5	@as testsubworker GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "3"}}
+05-epoch-never-deleted	6	admin POST /v1/write {"id":"e6","op":"delete","key":"testsub/epoch/c5"}	403
+05-epoch-never-deleted	7	@as testsubworker GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "3"}}
 06-list-without-read	1	@as console POST /v1/write {"id":"f1","op":"put","key":"testsub/idem/k6","items":{"state":"done","body":"secret-ish"},"cas":""}	200 {"index": "$v"}
 06-list-without-read	2	@as testsub2worker GET /v1/list?prefix=testsub/idem/	200 {"keys": {"testsub/idem/k6": "$v"}}
 06-list-without-read	3	GET /v1/get?key=testsub/idem/k6	403
@@ -40,3 +45,6 @@ scenario	step	request	expect
 09-secret-readers	1	@as console GET /v1/get?key=door/signer	200
 09-secret-readers	2	@as testsubworker GET /v1/get?key=door/signer	403
 09-secret-readers	3	@as testsubcontroller GET /v1/get?key=door/signer	403
+10-rights-door	1	@as testsubworker GET /v1/rights	403
+10-rights-door	2	@as console GET /v1/rights	403
+10-rights-door	3	admin GET /v1/rights	200 {"roles": "@any"}

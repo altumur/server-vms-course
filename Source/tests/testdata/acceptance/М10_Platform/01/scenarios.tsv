@@ -53,6 +53,8 @@
 12-id	4	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"2"},"cas":"","id":"0123456789abcdef0123456789abcdef"}	400 {"kind":"badrequest"}
 12-id	5	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"1"},"cas":"$a","id":"0123456789abcdef0123456789abcdef"}	400 {"kind":"badrequest"}
 12-id	6	GET /v1/get?key=acc/12-id/c1	200 {"items":{"n":"1"},"index":"$a"}
+12-id	7	POST /v1/write {"op":"put","key":"acc/12-id/c2","items":{"n":"1"},"cas":"","id":"fedcba9876543210fedcba9876543210"}	200 {"index":"$b"}
+12-id	8	POST /v1/write {"op":"put","key":"acc/12-id/c1","items":{"n":"1"},"cas":"","id":"0123456789abcdef0123456789abcdef"}	200 {"index":"$a","again":true}
 13-bad-key	1	GET /v1/get?key=	400 {"kind":"badkey"}
 13-bad-key	2	GET /v1/get?key=/acc/13-bad-key/c1	400 {"kind":"badkey"}
 13-bad-key	3	GET /v1/get?key=acc/13-bad-key/../c1	400 {"kind":"badkey"}
@@ -80,6 +82,7 @@
 17-routes	3	GET /v1/nothing	404 {"kind":"badrequest"}
 17-routes	4	POST /v1/get	404 {"kind":"badrequest"}
 18-no-echo	1	POST /v1/write {"op":"put","key":"acc/18-no-echo/c1","items":{"n":"1"},"cas":"424242424242"}	409 {"kind":"conflict","index":"","error":"!contains 424242424242"}
+18-no-echo	2	POST /v1/write {"op":"put","key":"acc/18-no-echo/c2","items":{"n":"1"},"guard":{"key":"acc/18-no-echo/s","index":"424242424242"}}	412 {"kind":"guard","index":"","error":"!contains 424242424242"}
 19-key-too-long	1	GET /v1/get?key=acc/19-key-too-long/@big(1100)	400 {"kind":"badkey"}
 19-key-too-long	2	POST /v1/write {"op":"put","key":"acc/19-key-too-long/@big(1100)","items":{}}	400 {"kind":"badkey"}
 19-key-too-long	3	POST /v1/write {"op":"put","key":"acc/19-key-too-long/c1","items":{},"guard":{"key":"acc/19-key-too-long/@big(1100)","index":""}}	400 {"kind":"badkey"}
@@ -91,12 +94,15 @@
 20-guard-forms	6	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":7}}	400 {"kind":"badrequest"}
 20-guard-forms	7	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":"","extra":1}}	400 {"kind":"badrequest"}
 20-guard-forms	8	GET /v1/get?key=acc/20-guard-forms/c1	200 {"items":null,"index":""}
+20-guard-forms	9	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"/acc/20-guard-forms/s","index":""},"id":"XYZ"}	400 {"kind":"badkey"}
 21-rights	1	GET /v1/get?key=other/21-rights/c1	403 {"kind":"forbidden"}
 21-rights	2	POST /v1/write {"op":"put","key":"other/21-rights/c1","items":{"n":"1"}}	403 {"kind":"forbidden"}
 21-rights	3	POST /v1/write {"op":"delete","key":"other/21-rights/c1"}	403 {"kind":"forbidden"}
 21-rights	4	POST /v1/write {"op":"put","key":"acc/21-rights/c1","items":{"n":"1"},"guard":{"key":"other/21-rights/s","index":""}}	403 {"kind":"forbidden"}
 21-rights	5	GET /v1/get?key=acc/21-rights/c1	200 {"items":null,"index":""}
 21-rights	6	GET /v1/list?prefix=other/21-rights/	200 {"keys":{"other/21-rights/c9":"$v"}}
+21-rights	7	POST /v1/write {"op":"put","key":"other/21-rights/c2","items":{"blob":"@big(524288)"}}	413 {"kind":"toolarge"}
+21-rights	8	POST /v1/write {"op":"delete","key":"acc/21-rights/c1","guard":{"key":"other/21-rights/s","index":""}}	403 {"kind":"forbidden"}
 22-body-edge	1	POST /v1/write {"op":"put","key":"acc/22-body-edge/c1","items":{"blob":"@big(4194304)"}}	413 {"kind":"toolarge","limit":1048576}
 22-body-edge	2	GET /v1/get?key=acc/22-body-edge/c1	200 {"items":null,"index":""}
 23-extra-cmd	1	POST /v1/write {"op":"put","key":"acc/23-extra-cmd/c1","items":{"n":"1"},"id":"2301","zzz":{"op":"delete","key":"other/23-extra-cmd/c1","guard":false}}	200 {"index":"$a"}

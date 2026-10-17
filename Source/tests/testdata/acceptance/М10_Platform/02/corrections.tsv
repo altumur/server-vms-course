@@ -23,3 +23,4 @@ date	sample	fix	languages
 2026-10-17	02/r40_worker_table_secret, r40_console_table_secret_ok	Прогон 40 Codex R40-06: секретное поле в таблице воркера — отказ загрузчика; положительный контроль — та же таблица консоли	all
 2026-10-17	02/cases: 37 случаев с worker.writes [shelves] и feed_secret	cammeta-python 02 № 36: по R40-06 сочетание — отказ; в 3 ok-случаях ломало вердикт, в 34 refused маскировало целевой отказ второй причиной; writes снят, предмет и вердикт прежние; сочетание осталось только в r40_worker_table_secret	all
 2026-10-17	02/requests_outcome_fetched_ok, requests_outcome_mark_ok, requests_outcome_fetched_without_key, requests_outcome_append	ADR-0054 доп. 2026-10-17: ключ requests.outcome (mark | fetched); fetched без key и иное слово — отказ загрузки	all
+2026-10-17	02/m49_*, puts.tsv	Мутационная проверка 7cecaf2 № 10–13: каждое запрещённое имя таблицы, граница 2^53, установка spec put (без изменений, rev 2, A=B каталога) — в таблицы	all

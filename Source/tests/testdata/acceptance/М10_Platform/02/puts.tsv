@@ -1,0 +1,11 @@
+# Приёмка М10/2: установка spec put (Н3 «Смена спеки») по порядку. Строка: case<TAB>puts<TAB>expect.
+# puts — файлы puts/<имя>.subsystem.yaml через пробел, ставятся по порядку в одно свежее хранилище; expect — код возврата
+# последней установки и rev строки platform/spec/<name> последнего файла после неё («-» — строки нет). Правила — README.
+case	puts	expect
+same_twice	probe probe	0 1
+changed	probe probe-changed	0 2
+self_rows	self-rows	2 -
+other_rows	probe other-rows	2 -
+self_table	self-table	2 -
+other_table	with-table ledger	2 -
+prefix_clash	a-b a_b	2 -

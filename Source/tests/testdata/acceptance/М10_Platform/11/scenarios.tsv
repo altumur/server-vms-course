@@ -26,3 +26,7 @@ scenario	step	request	expect
 08-floor-replay	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f", "again": true}
 08-floor-replay	4	admin POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f1"}	400 {"kind": "badrequest"}
 08-floor-replay	5	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}
+08-floor-replay	6	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f2"}	409 {"kind": "refused"}
+08-floor-replay	7	admin POST /v1/write {"op": "floor", "floor": 1000, "id": "f3"}	409 {"kind": "refused"}
+08-floor-replay	8	@as console store POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f4"}	403 {"kind": "forbidden"}
+08-floor-replay	9	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}

@@ -27,6 +27,8 @@ scenario	step	request	expect
 05-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long"}
 05-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
 05-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413
+05-ceilings	4	console2 POST /tallies {"name": "t5a", "of": "c1", "rule": "@big(3998)"}	201
+05-ceilings	5	console2 POST /tallies {"name": "t5b", "of": "c1", "rule": "@big(3999)"}	400 {"fault": "too_long"}
 06-tables	1	console2 POST /shelves {"zone": "z1"}	400
 06-tables	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "zone": "z1", "kind": "plain", "admits": true, "held_by": null, "feed": "@absent"}}
 06-tables	3	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "zone": "z1", "held_by": null}]}

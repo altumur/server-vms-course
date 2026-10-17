@@ -1,0 +1,4 @@
+name: ledger
+unit: {rows: stuff, id: numeric}
+placement: {capacity: {default: 1}}
+tables: {ledger: {}}
