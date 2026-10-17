@@ -3,13 +3,15 @@ default that weakens a fence or the single writer is off until the spec turns it
 name takes its place back at once only where the spec says where the place is (`placement.places.server_field`) and the
 place's row says it; anywhere else it waits like anybody — the row standing still `slot_ttl + HOLD_SKEW` by its own
 clock — or until the place is let go. On testsub2, whose units are kept on shelves."""
+
+from tests.frozen_data import frozen_testdata
 import os
 
 from w2cplatform.spec import SubsystemSpec
 from w2cplatform.worker import Worker
 from tests.conftest import Box
 
-TESTSUB2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
+TESTSUB2 = os.path.join(frozen_testdata(), "testsub2.subsystem.yaml")
 
 
 def _spec(server_field: str):
