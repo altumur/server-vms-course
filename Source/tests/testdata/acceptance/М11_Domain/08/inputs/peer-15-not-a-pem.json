@@ -1,0 +1,11 @@
+{
+ "chain": [
+  "not a certificate"
+ ],
+ "fingerprints": [
+  "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"
+ ],
+ "role": "console",
+ "host": "m2.w2c.test",
+ "now": 1760000000
+}

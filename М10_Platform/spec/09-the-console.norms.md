@@ -27,7 +27,7 @@ console_process:                              # платформа; один н�
             object-src 'none'; base-uri 'none'; директивы сверх минимума — решает реализация, называет их;
             атрибутов on…= нет; экранирование h()
 module:                                        # PlatformConsole.mount(root, opts) → console
-  opts:     {sections: [units, access, journal] | [domain], subsystems: [<из /mounts>], lang: ru | en, poll_s: 5}
+  opts:     {sections: [units, access, journal] | [domain] (страница держателя — М11/8 Н1.8), subsystems: [<из /mounts>], lang: ru | en, poll_s: 5}
   never:    не называет подсистем (закрытый список запрещённых слов — тест границы, ADR-0001); не зовёт адресов вне своих;
             не трогает DOM оболочки; не держит сессии за оболочку; не показывает таблиц целиком
   calls:    закрытый список — Н1.4
@@ -123,10 +123,10 @@ session:
 ```yaml
 reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
-         /events, /metrics (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub> (эти три — М11)
+         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10), /domain/shared/<sub> (М11/11)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
-         POST/DELETE /servers/<s>/decommission, /domain/* (М11), POST/DELETE /session, /session/break-glass, login_url
-never:   /{sub}/requests, /api/backup (М11), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
+         POST/DELETE /servers/<s>/decommission, /domain/* (М11/8 Н1.2), POST/DELETE /session, /session/break-glass, login_url
+never:   /{sub}/requests, /api/backup (М11/10), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
 order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (М11) → /drain → /schema
          → /domain (+ /domain/alarms; М11) → /api/held (М11) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
@@ -200,7 +200,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 
 Общие отказы консоли — формы М10/2: `{detail, error}` с установленными значениями `error`; 503 включает `denied` при потере доверия и `busy` с `Retry-After: 1` при заполнении полосы. 429 имеет `Retry-After`. Специальные тела: `NoVersion` — `{error: "no such version"}`; `MountedPage` — `{detail, error: "is mounted"}`; `NotPlaced` — `{reason}`. 400/408/413 описывают отказ чтения; тело ограничено по реально принятым байтам, короткое даёт 400. `/session` GET анонимному даёт 200 с состоянием; плохая попытка POST — 401, открытый режим — 400, неверный аварийный вход — 403. DELETE снимает обе куки. Полоса, framing, доверие/петля, личность, Origin по куке, гранты и чтение проверяются в порядке Н3; отказ не имеет побочных записей двери.
 
-Двери единиц, размещения, событий, таблиц и схемы принадлежат М10/3, 4, 8, 10. `/domain/*` и открытые `/api/*` — контракт М11/ADR-0066; успешное тело пересылки принадлежит ему. Они перечислены как зависимости, без фиктивной схемы «любой объект». Собственные маршруты этого урока `/spec`, `/servers`, `/unplaceable`, обе формы `/where` и `/metrics` также явно объявлены с префиксом `/<sub>`; префиксы делегированных дверей — у их владельцев; общие `/session`, `/mounts`, `/platform` не монтируются. Отсутствующий `v` или иная строка, включая нечисловую, — 404 `NoVersion`.
+Двери единиц, размещения, событий, таблиц и схемы принадлежат М10/3, 4, 8, 10. `/domain/*` и открытые `/api/*` — М11/8 (пересылка, Н1.2–Н1.5, Н1.9) и М11/10 (двери переноса); успешное тело пересылки принадлежит ему. Они перечислены как зависимости, без фиктивной схемы «любой объект». Собственные маршруты этого урока `/spec`, `/servers`, `/unplaceable`, обе формы `/where` и `/metrics` также явно объявлены с префиксом `/<sub>`; префиксы делегированных дверей — у их владельцев; общие `/session`, `/mounts`, `/platform` не монтируются. Отсутствующий `v` или иная строка, включая нечисловую, — 404 `NoVersion`.
 
 Короткие пути единиц, таблиц, blob-полей, /policy, /spec, /servers, /unplaceable,
 /where и /metrics выбирают CONSOLE_ROOT; форма /{sub}/… явно выбирает загруженную
@@ -349,7 +349,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | полоса занята | 503 | `{detail, error: busy}`, `Retry-After: 1` | повторить |
 | обязательное чтение для /servers, /resources, /where или /metrics не подтверждено | 503 | ConsoleRefusal `{detail, error}` | повторить чтение; отсутствие/пустоту не выводить |
 | `/where`: не размещена / не id | 404 / 400 | `{reason}` / `{detail, error}` | — |
-| `/domain/<rest>` к держателю: держатель не ответил / нет домена или ключей | 502 / 503 | контракт М11/ADR-0066 | — |
+| `/domain/<rest>` к держателю: вне таблицы / один переход / нет домена / держатель не ответил / не знаю | 404 / 400 / 404 / 502 / 503 | М11/8 Н4 `{error, detail}` | — |
 | `/where/<t>/<p>`: место не держат | 404 | `{unreachable: place@server}`, `X-Unreachable` | — |
 | `/events` без индекса ресурса | 503 | контракт М10/8 | — |
 | `/spec`: `display` называет не поле; `options` не у enum и не у слова пульса; `console.running` не метрика; `servers.status` платформенное поле | спека не грузится | слова (урок 2) | править спеку |

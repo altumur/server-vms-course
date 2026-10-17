@@ -202,7 +202,12 @@ components:
           type: object
           description: 'Урок 6 Н1.5: элементы строки domain/outcomes члена — {<id>: <исход>}, исход JSON-объектом.'
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
-        tls_ca: {type: array, items: {type: string}, description: урок 8}
+        tls_ca:
+          type: array
+          maxItems: 2
+          uniqueItems: true
+          description: 'Урок 8 Н1.6: отпечатки ca.pem и ca.next.pem кластера по возрастанию; вне дельты.'
+          items: {type: string, pattern: '^[0-9a-f]{64}$'}
         sign_failures:
           type: object
           additionalProperties: true
@@ -357,7 +362,13 @@ components:
         revoked_keys:
           type: array
           items: {$ref: '#/components/schemas/Hex32'}
-        ca: {description: урок 8}
+        ca:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          description: 'Урок 8 Н1.6: отпечатки центра члена по возрастанию.'
+          items: {type: string, pattern: '^[0-9a-f]{64}$'}
     MembersDoc:
       type: object
       required: [rev, members]

@@ -183,7 +183,7 @@ components:
               items:
                 $ref: '#/components/schemas/MemberName'
       description: Поля других уроков (trust — 2; member_list, knocking, reports — 3; topology, relay_refused — 4; books —
-        5; pending, outcomes — 6; term — 10; shared — 11) задают их уроки; отданный вид (ServedView) закрыт и называет их.
+        5; pending, outcomes — 6; url — 8; term — 10; shared — 11) задают их уроки; отданный вид (ServedView) закрыт и называет их.
     ServedView:
       unevaluatedProperties: false
       allOf:
@@ -201,6 +201,7 @@ components:
             books: {description: урок 5}
             pending: {description: урок 6 Н1.6}
             outcomes: {description: урок 6 Н1.6}
+            url: {type: string, description: 'урок 8 Н1.3: адрес консоли домена (DOMAIN_CONSOLE_URL процесса domain)'}
             term: {description: урок 10}
             shared: {description: урок 11}
     Finding:

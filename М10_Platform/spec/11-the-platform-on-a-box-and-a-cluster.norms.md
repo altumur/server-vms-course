@@ -84,7 +84,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 | `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB` | ёмкость роли и бюджет памяти (ADR-0070) | — | `roles/<роль>.env` |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | контроллер (урок 4) | 900, 10 | `w2c.env` |
 | `BUILD` | слово сборки (урок 10) | `dev` | сборка |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*` | домен (М11; `SIGNER_URL` — М11/2 Н1.3) | — | оператор |
+| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS`, `RELAY_*` | домен (М11; `SIGNER_URL` — М11/2 Н1.3; `CLUSTERS`, `DOMAIN_CONSOLE_URL` — М11/8 Н1.3; `DOMAIN_CA`, `RELAY_CA`, `RELAY_MEMBER` — М11/8 Н1.6; `RELAY_URL` — М11/4) | — | оператор |
 | `CONFIGSTORE_ID/RAFT/API/GROUP_SIZE/JOIN/FLAGS/TUNING` | демон хранилища | tuning `lan` | `configstore.env` |
 | `NOTIFY_SOCKET` | сторож systemd | — | systemd |
 
@@ -205,7 +205,8 @@ cert:         CN <роль>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<р
               825 дней; центр 10 лет; роли configstore и configstore-door — ни с какой другой
 kit:          /etc/w2c/tls/ca.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key (ключ 0600 владельцу-пользователю юнита либо 0640 root:<группа пользователя юнита> по ADR-0075 доп.3; каталог 0750)
 revoke:       серийники в revoked — копируются на каждый сервер; процессы перечитывают по содержимому; configstore leave у лидера
-roles:        configstore, configstore-door (демоны — всегда с -tls); resource, console, domain, domainconsole, domainagent, relay,
+roles:        configstore, configstore-door (демоны — всегда с -tls); resource, console, domain, domainconsole, domainagent (и дверь
+              ретранслятора: это агент — М11/4, М11/8 Н1.6),
               <sub>worker — комплект по W2C_ROLE/W2C_TLS_DIR; нет комплекта → дверь на петле, клиент только к http://;
               https:// без комплекта — отказ с причиной (ADR-0075 доп.3)
 rotation:     ca.next.pem рядом — следующий центр, которому уже верят
