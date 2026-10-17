@@ -4,6 +4,8 @@ field's `schemes`, `credentials` and `secret_in` — and that no other key loads
 `testdata/testsub.subsystem.yaml`, and no subsystem's package is imported."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 import tempfile
 
@@ -11,7 +13,7 @@ from w2cplatform import catalog, runtime
 from w2cplatform.secrets import NO_RULES, SecretRules, address_refusal, hide_in_url, is_credential_param
 from w2cplatform.spec import Refused, SubsystemSpec
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 CAP = {"capacity": {"from": "capacity", "default": 4}}
 
 
