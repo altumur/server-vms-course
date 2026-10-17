@@ -156,7 +156,7 @@ closed_key_set:
 | `capacity.from` | строка — поле пульса | нет — `capacity` |
 | `capacity.default` | целое ≥ 0 | обязателен |
 | `capacity.unit_mb` | число > 0 | нет — бюджет памяти не проверяется (урок 5 Н1.2 `memory`) |
-| `capacity.base_mb` | число ≥ 0 | нет — 0 (бюджет `base_mb + unit_mb · Σ весов`, урок 5 Н1.2 `memory`, проверка — Н3 «старт()», шаг 1) |
+| `capacity.base_mb` | число ≥ 0 | нет — 0 (бюджет памяти — одна формула урока 5 Н1.2 `memory`, проверка — урок 5 Н3 «старт()», шаг 1) |
 | `headroom` | `{from}`; `from` — строка, поле пульса | нет — `from: headroom` |
 | `weight` | `{field, default}`: `field` — поле типа int; `default` — целое ≥ 1 | нет — вес 1 у всех; в `weight` оба необязательны: без `field` вес — `default`, без `default` — 1 |
 | `constraint` | слово: `none`, `labels-subset` | нет — `none` |

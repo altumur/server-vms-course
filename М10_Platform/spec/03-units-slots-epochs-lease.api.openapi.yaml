@@ -333,7 +333,7 @@ components:
       additionalProperties: true
       description: Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (собственный
         контракт М10/3 Н2; фильтрация по view — М10/9 Н1.3 need). Слова подсистемы остаются непрозрачными. Смысл свежести
-        и формирования списка — уроки 5 и 9.
+        и формирования списка — М10/3 Н2 («`rows` в `GET /{rows}`»).
     Refusal:
       type: object
       required: [detail, error]
