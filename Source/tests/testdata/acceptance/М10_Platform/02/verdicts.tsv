@@ -310,3 +310,5 @@ c3_near_by_unknown	refused
 c3_near_by_ok	ok
 c3_about_sub_bad	refused
 c3_about_sub_ok	ok
+c3_tab_in_comment_ok	ok
+c3_cut_at_not_url	refused

@@ -178,7 +178,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 
 ### Полные формы и границы Н2
 
-Все JSON-ответы собственных дверей описаны компонентами OpenAPI. Каждый `GET` консоли — своих дверей и дверей других уроков, которые консоль отдаёт (`/spec` — урок 2; `/<rows>`, `/<rows>/<id>` — 3; `/policy`, `/drain`, `/unplaceable`, `/where/<id>` — 4; `/events` — 8; `/schema`, `/<table>` — 10), — отвечает и на `HEAD`: тот же код и заголовки, без тела; каждый контракт, объявляющий такой URL, перечисляет `head`. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
+Все JSON-ответы собственных дверей описаны компонентами OpenAPI. Каждый `GET` консоли — своих дверей и дверей других уроков, которые консоль отдаёт (`/spec` — урок 2; `/<rows>` — 3, одной единицы `GET` нет; `/policy`, `/drain`, `/unplaceable`, `/where/<id>` — 4; `/events` — 8; `/schema`, `/<table>` — 10), — отвечает и на `HEAD`: тот же код и заголовки, без тела; каждый контракт, объявляющий такой URL, перечисляет `head`. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
 
 `Servers` — `{policy, servers: {имя: ServerRow}, status?}`. `ServerRow` содержит обязательные `resource`, `resource_heard_at`, `resource_url`, `space`, `labels`, `labels_node`, `labels_source`, `draining`, `decommission`, `decommissioned`, `decommission_refusal`, `decommission_warning`, `decommissionable`, `lost`, `requires_resource`, `placeable`, `why`, `workers`. Неизвестные адрес/место/время/причина и отсутствующая просьба вывода представлены `null` по схеме. `lost` — массив `{unit, place?, worker?}`; `decommission` — `{at, by, gone?}`. Метки — массивы слов. `WorkerRow` требует `worker, load, capacity, labels, state, idle_by_policy, hung, name_conflict`; `name_conflict` — boolean. Необязательные детали и их типы закрыто перечислены в схеме. `status` выводит объявленные спецификацией значения JSON, не произвольные секретные поля.
 
@@ -188,11 +188,11 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 |---|---|
 | `/metrics` у root | ряды всех подсистем каталога и ряды платформы `w2c_*` (Н3); у `/<sub>/metrics` — ряды только этой подсистемы, без `w2c_*` |
 | ряд `<sub>_<console.running>` | число единиц из прочитанных пульсов воркеров; пульсы прочитаны и живых нет — `0`; неответ хранилища — 503 на весь `/metrics` |
-| `ServerRow.resource` | пульс ресурса менялся < 45 с — `live`; пульс старше, строка `platform/doors/<s>` менялась < 45 с — `unreachable`; нет ни пульса, ни строки двери — `unknown`; иначе — `silent` |
-| `WorkerRow.state` | пульс воркера менялся < 45 с — `live`, иначе `stale` |
+| `ServerRow.resource` | состояние ресурса урока 4 Н1 `resource_state` (наблюдатель — консоль, её часы); своего вывода нет |
+| `WorkerRow.state` | как `worker_state` урока 3 Н2 («`rows` в `GET /{rows}`»): `live` при возрасте пульса ≤ 45 с, иначе `stale` |
 | `WorkerRow.capacity` | поле пульса `placement.capacity.from`; поля нет — `capacity.default`; поле не число — `null`: воркер не принимает новых единиц (урок 4 Н1.3) |
 | `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель (урок 4 Н3 «выбрать»), иначе `false` |
-| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` (< 45 с) или `silent`; `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть; нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
+| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` урока 4 Н1 (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть; нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
 | `WherePlace` без подписанта двери | поля `door` нет совсем (не `null`) |
 
 `/resources` — объект по имени сервера с полными `ResourceRow`: обязательны `server, ts, url, schema, build, usage, usage_at, space, volumes, units, mirrors, short, state`; диагностические расширения перечислены в контракте. Это наблюдение пульсов ресурса, а не удостоверение доступности каждого объекта. `/where/<table>/<place>?unit=<id>` возвращает `{worker, place, server, door?}` либо 404 `{unreachable}` с одноимённым значением заголовка `X-Unreachable`. Неизвестная таблица — 404 до проверки `unit`, известная без `unit` — 400.
@@ -245,7 +245,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
          слот → released, slot_until (null — нечитаем), slot_garbled; удержания → holds;
          судьба контроллера (отчёт прохода) → hung, hung_since, hung_why, presence_unknown; соперники → name_conflict;
          servers.status → status {поле: значение как есть}
-серверы: ресурс (пульс + дверь) → resource live | silent | unreachable | unknown, resource_heard_at, space;
+серверы: ресурс (пульс + дверь) → resource по `resource_state` урока 4 Н1, resource_heard_at, space;
          platform/servers/<s> → labels, labels_source console | node | unknown; дренаж; вывод и его отказ; достижимость
          (placeable, why — по меткам и requires); lost — единицы ушедшего
 неизвестный сервер — "?"; реестра машин нет
@@ -289,7 +289,7 @@ door.routes, доступным подписантом и подтверждён
 ### /metrics — текст
 
 ```
-на подсистему (<sub>_…): workers_live; worker_headroom{worker,server}; headroom; worker_load{worker}; spare_workers;
+на подсистему (<sub>_…; здесь и во всех рядах модуля <sub> — metrics.prefix урока 2 «GET /spec»): workers_live; worker_headroom{worker,server}; headroom; worker_load{worker}; spare_workers;
   epoch_conflicts{worker}; failover_seconds{kind=worst|last,worker}; failovers_unmeasured; heartbeats_garbled;
   heartbeat_skew_seconds_max|min; workers_hung; workers_unjudged; units_unjudged; reconcile_last_pass_age_seconds;
   reconcile_last_success_age_seconds; reconcile_pass_seconds; reconcile_failures; units_unplaced; units_diverged;
@@ -299,10 +299,11 @@ door.routes, доступным подписантом и подтверждён
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
   snapshot_ahead_shards; audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
-  # reconcile_last_pass_age_seconds — сколько секунд объект <sub>/controller/pass (урок 4 Н1.2) не менялся на глазах
-  # консоли (её монотонные часы, первый взгляд — 0), объекта нет — −1; reconcile_last_success_age_seconds — то же от
-  # последней увиденной смены его поля last_success, успешного прохода не было — −1; второй читает скрипт запасных
-  # (урок 11 Н1.5 правило 2)
+  # reconcile_last_pass_age_seconds — сколько секунд прошло по монотонным часам консоли с последней смены объекта
+  # <sub>/controller/pass (урок 4 Н1.2), которую консоль видела; объекта нет или смены консоль ещё не видела — −1
+  # («неизвестно», не 0: первый взгляд возраста не даёт); reconcile_last_success_age_seconds — то же от последней увиденной
+  # смены его поля last_success, успешного прохода не было или смены не видели — −1; второй читает скрипт запасных
+  # (урок 11 Н1.5 правило 2: −1 — ничего не запускать)
 metrics[]:  закрытый перечень ключей элемента (загрузчик урока 2 отказывает иным): name, type, from, agg, equals, when, default,
             live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
 платформы, один раз (root); источник — пульсы ресурсов урока 8 Н1.4 и уборка просьб этой консоли:

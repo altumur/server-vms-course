@@ -3112,11 +3112,6 @@ components:
           additionalProperties:
             type: string
             minLength: 1
-        unreadable:
-          type: array
-          items:
-            type: string
-            minLength: 1
         pass_started:
           type: number
         pass_stalled:

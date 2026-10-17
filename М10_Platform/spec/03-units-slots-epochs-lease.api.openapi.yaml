@@ -249,6 +249,7 @@ components:
         Только поля unit.fields; дополнительные имена здесь нужны для произвольной спеки,
         но неизвестное ей поле отказывается. Типы, required, enum, url, blob, json и
         fixed/inherit проверяются по Н1 и в порядке Н3, а не одним валидатором общей схемы.
+        null у поля с inherit — «не задано», значение снова наследуется; у прочих полей, кроме json, null — 400 (Н2).
         PUT содержит изменяемые поля; пустой или null секрет сохраняет прежний (урок 7 Н3 «создать/править», шаг 3;
         при смене поля из bound_to — 400 «must be given anew»).
         Платформенные имена worker, placement добавлены М10/4; phase, observed_revision — М10/5.
@@ -328,8 +329,9 @@ components:
           type: string
         age:
           type: number
+          minimum: 0
         worker_state:
-          type: string
+          enum: [live, stale]
       additionalProperties: true
       description: Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (собственный
         контракт М10/3 Н2; фильтрация по view — М10/9 Н1.3 need). Слова подсистемы остаются непрозрачными. Смысл свежести

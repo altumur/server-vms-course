@@ -132,6 +132,7 @@ components:
           properties:
             sub:
               type: string
+              pattern: ^[a-z][a-z0-9_-]{0,31}(?![\s\S])
             field:
               type: string
         display:
@@ -182,7 +183,7 @@ components:
           properties:
             prefix:
               type: string
-              description: Префикс имён метрик подсистемы — её имя без «_» (у testsub — "testsub"); имя ряда — <prefix>_<метрика> (урок 9 Н1.2).
+              description: Префикс имён метрик подсистемы — её имя, `-` заменён на `_` (у testsub — "testsub", у cam-x — "cam_x"); имя ряда — <prefix>_<метрика> (урок 9 Н1.2).
             running:
               type: ['string', 'null']
               description: null, если у спеки нет console.running (Н2).
@@ -304,6 +305,8 @@ components:
             type: string
           enum:
             type: array
+            minItems: 1
+            uniqueItems: true
             items:
               type: string
       - properties:
@@ -349,6 +352,8 @@ components:
             type: boolean
           enum:
             type: array
+            minItems: 1
+            uniqueItems: true
             items:
               type: boolean
       - properties:

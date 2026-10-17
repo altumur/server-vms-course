@@ -40,4 +40,4 @@ scenario	step	request	expect
 07-table-ref	2	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh7", "zone": "z1"}	201 {"shelf": "sh7"}
 07-table-ref	3	console2 POST /shelves {"name": "sh7", "zone": "z2"}	409 {"fault": "must_match"}
 07-table-ref	4	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
-07-table-ref	5	console2 GET /tallies/t7	200 {"shelf": "sh7", "zone": "z1"}
+07-table-ref	5	console2 GET /tallies	200 {"configured": [{"id": "t7", "shelf": "sh7", "zone": "z1"}]}

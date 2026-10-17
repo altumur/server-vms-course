@@ -994,12 +994,12 @@ components:
           description: true, когда строка platform/schema испорчена (version null); у читаемой строки поля нет.
         processes:
           type: object
-          description: По пульсам — воркер под именем своего слота, ресурс под именем сервера; контроллер и консоль не входят (Н2).
+          description: По пульсам — воркер под ключом <sub>/<имя слота>, ресурс — resource/<сервер>; контроллер и консоль не входят (Н2).
           additionalProperties:
             $ref: '#/components/schemas/ProcessBuild'
           propertyNames:
             type: string
-            minLength: 1
+            pattern: ^[^/]+/[^/]+(?![\s\S])
     SchemaRaised:
       type: object
       required:

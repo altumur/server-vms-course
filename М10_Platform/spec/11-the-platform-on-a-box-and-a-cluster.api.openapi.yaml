@@ -163,6 +163,12 @@ paths:
                 type: integer
                 const: 1
               description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
+        '409':
+          description: 'Хранилище коробки без raft: leave последнего голоса (Н1.3 box)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refused'
         '413':
           description: Превышен предел чтения тела служебного запроса
           content:
@@ -231,7 +237,7 @@ paths:
         '403':
           $ref: '#/components/responses/M1_Forbidden'
         '409':
-          description: CAS/key reused М10/1 либо floor не возрастает (refused — строка М10/1 Н4)
+          description: CAS М10/1 либо floor не возрастает (refused — строка М10/1 Н4); иной payload с тем же id — 400 badrequest, не 409
           content:
             application/json:
               schema:
