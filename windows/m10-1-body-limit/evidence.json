@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-17",
+  "task": "decisions/inbox/2026-10-17-задача-м10-1-предел-тела-стенда.md",
+  "branch": "codex/course-m10-body-limit",
+  "base": "e4a61c89",
+  "code_commit": "9d69f3a3",
+  "implementation_commits": [
+    "3b3254f8",
+    "33e1c676",
+    "9a75f296"
+  ],
+  "status": "ready for Architect review; platform diff not merged",
+  "checks": {
+    "unit": {
+      "path": "/tmp/m10-body-unit-full-20261017.log",
+      "sha256": "d90a8269f8c515422e89622c6a902c097a9d0d90e41e142bc65a4647abf3717c",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py",
+      "cwd": "Source",
+      "passed": 2072,
+      "failed": 1,
+      "skipped": 1,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ]
+    },
+    "cluster": {
+      "path": "/tmp/m10-body-cluster-final-20261017.log",
+      "sha256": "4f66a67691954c65569bb10f827da8bd4e5c698ac3d0796d2a78a2f0d081ccc6",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/cluster/run.py",
+      "cwd": "Source",
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "failures": []
+    },
+    "domain": {
+      "path": "/tmp/m10-body-domain-final-20261017.log",
+      "sha256": "528eb74eb983d482d760c237f1ae3ff294d7595987c71ee4cf16bd07d5b9e8b5",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/domain/run.py",
+      "cwd": "Source",
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "failures": []
+    }
+  },
+  "acceptance": {
+    "http": {
+      "steps": 105,
+      "failed": 0,
+      "limits": {
+        "body": 1048576,
+        "row": 524288,
+        "checked_before_scenarios": true
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/api-calls.json",
+          "sha256": "5ff60378f56127f6584e4ed4d6c89992be96f474dd4ddb8b79f22ff9876c8b96"
+        },
+        "api.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/api.json",
+          "sha256": "2cc30e0939dda25bcc51910c08078889c7617382363ca238a68345b21014e1df"
+        },
+        "daemon-exit.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/daemon-exit.json",
+          "sha256": "fa0e95a83f898840da4b76c2b66758ca3a98dae38dfa82886becc643ae9bec8b"
+        },
+        "daemon.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/daemon.json",
+          "sha256": "22f67aab078b9b518ab0460652b09111e967ce55533ba4b234048806f529a313"
+        },
+        "daemon.log": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/daemon.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "limits.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/http/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      },
+      "log": {
+        "path": "/tmp/m10-body-acceptance-http-20261017.log",
+        "sha256": "4d88bb0ba953ccf926bd1a7c860cb13f9306b60b3f050630d3a09062b833653d"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-body-acceptance-20261017/http --backend http"
+    },
+    "file": {
+      "steps": 105,
+      "failed": 0,
+      "limits": {
+        "body": 1048576,
+        "row": 524288,
+        "checked_before_scenarios": true
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/file/api-calls.json",
+          "sha256": "cf8fd88f5c4393fbad2600ba0f357747436cb0ed8f532ea0d41f6e96c19aab6b"
+        },
+        "api.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/file/api.json",
+          "sha256": "3f12756fc18a8d9401dcd56c38b9473fa2a5deae959ba8c1baedd53031bab0ec"
+        },
+        "backend.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/file/backend.json",
+          "sha256": "bcdab0739e3c673b6dedf8f41cf1e6e785caacaf19b7ac362cb897f381c93cfc"
+        },
+        "limits.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/file/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      },
+      "log": {
+        "path": "/tmp/m10-body-acceptance-file-20261017.log",
+        "sha256": "4d88bb0ba953ccf926bd1a7c860cb13f9306b60b3f050630d3a09062b833653d"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-body-acceptance-20261017/file --backend file"
+    },
+    "mem": {
+      "steps": 105,
+      "failed": 0,
+      "limits": {
+        "body": 1048576,
+        "row": 524288,
+        "checked_before_scenarios": true
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/mem/api-calls.json",
+          "sha256": "bcffe477943c5fc7e1c276818c8ae06ae1c2fa591a6f0f998f3d7e8659f4ef1b"
+        },
+        "api.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/mem/api.json",
+          "sha256": "3f12756fc18a8d9401dcd56c38b9473fa2a5deae959ba8c1baedd53031bab0ec"
+        },
+        "backend.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/mem/backend.json",
+          "sha256": "bbdb85d53f9e2663b3663a33afdca8805cc6b8d8e2f717146bfc9b38eaeeaa86"
+        },
+        "limits.json": {
+          "path": "/tmp/m10-body-acceptance-20261017/mem/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      },
+      "log": {
+        "path": "/tmp/m10-body-acceptance-mem-20261017.log",
+        "sha256": "4d88bb0ba953ccf926bd1a7c860cb13f9306b60b3f050630d3a09062b833653d"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-body-acceptance-20261017/mem --backend mem"
+    }
+  },
+  "source_manifest": {
+    "path": "/tmp/m10-body-source-final-20261017.json",
+    "sha256": "83f2f1e9ab90ea9a07473371dfcb575e9d03d546a4934da8a866c981c33c5df4",
+    "files": 1125,
+    "unchanged_after_runs": true
+  },
+  "shared_scenarios": {
+    "path": "Source/tests/testdata/acceptance/М10_Platform/01/scenarios.tsv",
+    "sha256": "6f9c33064166acb60a3c59d767bd72914a872a4f6582ac62bb655d5cbb74e98b",
+    "unchanged_from_main": true
+  },
+  "runtime_default": "MAX_BODY = 6 * MAX_VALUE + (64 << 10), preserved; acceptance explicitly sets 1048576",
+  "scope": [
+    "Source/w2cplatform/configstore.py",
+    "Source/tests/storage_acceptance.py",
+    "Source/tests/test_storage_m10.py"
+  ],
+  "norms_and_shared_acceptance_changed": false,
+  "product_changed": false,
+  "test_environment": {
+    "python": "3.12.15",
+    "pysyncobj": true,
+    "yaml": true,
+    "cryptography": true,
+    "console": "jsdom unavailable"
+  },
+  "diff_check": "passed"
+}
