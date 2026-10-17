@@ -13,12 +13,26 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+EXCEPTIONS = Path(__file__).resolve().parent.parent / "exceptions.tsv"
+
+
+def arguments():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("lessons", nargs="+", help="module/NN-slug.md; only the new shared-spec layout")
+    parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
+    parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
+                        help="registry of allowed deviations, default the skill's exceptions.tsv")
+    return parser
+
+
 try:
     import yaml
     from jsonschema_path import SchemaPath
     from markdown_it import MarkdownIt
     from openapi_spec_validator import OpenAPIV31SpecValidator
 except ImportError as exc:
+    if __name__ == "__main__":
+        arguments().parse_args()                     # a wrong call exits 2 before the missing dependency is named
     raise SystemExit(f"Missing dependency: {exc}. See references/validation.md")
 
 
@@ -213,7 +227,6 @@ def pointer(document, ref):
 
 
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry"}
-EXCEPTIONS = Path(__file__).resolve().parent.parent / "exceptions.tsv"
 SCENARIO_HEADER = ["scenario", "step", "request", "expect"]
 
 
@@ -559,12 +572,7 @@ class Check:
         self.stats["lessons"] += 1
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("lessons", nargs="+", help="module/NN-slug.md; only the new shared-spec layout")
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
-    parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
-                        help="registry of allowed deviations, default the skill's exceptions.tsv")
-    args = parser.parse_args()
+    args = arguments().parse_args()
     check = Check(args.root, args.exceptions)
     for name in args.lessons:
         check.lesson((check.root / name).resolve())
