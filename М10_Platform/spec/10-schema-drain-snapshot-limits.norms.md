@@ -28,7 +28,8 @@ platform/drain:  {server: <сервер> | "", at}          # один серв�
 state:
   draining:        <сервер> | ""
   safe:            все подсистемы safe
-  would_strand:    {<sub>: [id…]}                      # проба: единицы этого сервера (и неразмещённые), которым вне него места нет
+  would_strand:    {<sub>: [id…]}                      # проба без моделирования размещения: все единицы воркеров этого сервера
+                                                         # и все неразмещённые (урок 4 Н2.2)
   subsystems:      {<sub>: {draining, subsystem, workers, units, pending_writes, pending_unsaid?, would_strand, safe}}
   safe(sub):       units == 0 ∧ pending_writes == 0 ∧ pending_unsaid пуст
   pending_writes:  Σ по воркерам сервера поля пульса pending_writes (целое ≥ 0; умолчание 0 у базы, подсистема с буфером

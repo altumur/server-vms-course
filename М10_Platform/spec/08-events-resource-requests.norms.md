@@ -152,6 +152,7 @@ resource:                                    # один процесс на се
   heartbeat: объект platform/resources/<server>/heartbeat каждые 10 с
     {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]},
      workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, …}
+  workers:   {<имя слота>: <присутствие>} — по каждому воркеру, о котором ресурс знает на своей коробке (урок 4 «судьба»)
   door_row:  platform/doors/<server> {url, since, at}; at — каждые 15 с (урок 4)
             не писать дверь, пока стоит platform/decommission/<мой сервер> (урок 4 «вывести_сервер»; консоль её удалила)
   lost_after: 45                              # по смене на часах читателя
@@ -165,7 +166,10 @@ resource:                                    # один процесс на се
   mirror:    platform/mirror {enabled, copies}; соседи — следующие copies живых серверов по имени; только закрытые бакеты;
              копия в .mirror/<сервер>/…; копия — никогда не источник, пока хозяин отвечает; PEER_FAILS 3, кусок ≤ 64 MiB,
              копия стареет на час позже оригинала
-  presence:  runs | gone | unlisted | silent | unknown   # о процессе воркера своей коробки; как узнаёт — решает реализация
+  presence:  runs | gone | unlisted | unknown   # о процессе воркера своей коробки; как узнаёт — решает реализация
+             # runs — процесс воркера с этим именем жив на коробке (держит замок присутствия); gone — ресурс знал процесс,
+             # он мёртв; unlisted — воркер у ресурса не зарегистрирован; unknown — присутствие не прочлось.
+             # silent — состояние самого ресурса (урок 4 Н1), не значение присутствия
   requires:  placement.requires: resource — воркер вне пула, пока ресурс его сервера silent (урок 4)
 ```
 
