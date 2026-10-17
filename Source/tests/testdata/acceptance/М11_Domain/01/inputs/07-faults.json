@@ -1,0 +1,127 @@
+{
+ "specs": [
+  "testsub",
+  "testsub2"
+ ],
+ "holder": "m1",
+ "passes": [
+  {
+   "at": 100,
+   "members": {
+    "m1": {
+     "mark": 1,
+     "objects": {
+      "testsub/heartbeats/w-1": {
+       "worker": "w-1",
+       "ts": 1000,
+       "server": "srv-a",
+       "status": [
+        {
+         "id": "1",
+         "phase": "running",
+         "epoch": 2,
+         "revision": 1,
+         "observed_revision": 1
+        },
+        {
+         "id": "5",
+         "phase": "running",
+         "epoch": 1,
+         "revision": 1,
+         "observed_revision": 1
+        }
+       ]
+      },
+      "testsub/heartbeats/w-2": {
+       "worker": "w-2",
+       "ts": 1000,
+       "server": "srv-a",
+       "status": [
+        {
+         "id": "1",
+         "phase": "running",
+         "epoch": 1,
+         "revision": 1,
+         "observed_revision": 1
+        }
+       ]
+      },
+      "testsub/snapshot/w-1": {
+       "cluster": "m1",
+       "worker": "w-1",
+       "ts": 1000,
+       "counters": [
+        {
+         "id": "1",
+         "revision": 1,
+         "name": "c1",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        },
+        {
+         "id": "3",
+         "revision": 1,
+         "name": "c3",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        },
+        {
+         "id": "5",
+         "revision": 1,
+         "name": "c5",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        }
+       ]
+      }
+     }
+    },
+    "m2": {
+     "mark": 1,
+     "objects": {
+      "testsub/heartbeats/w-1": {
+       "worker": "w-1",
+       "ts": 1000,
+       "server": "srv-a",
+       "status": [
+        {
+         "id": "2",
+         "phase": "running",
+         "epoch": 1,
+         "revision": 1,
+         "observed_revision": 1
+        }
+       ]
+      },
+      "testsub/snapshot/w-1": {
+       "cluster": "m2",
+       "worker": "w-1",
+       "ts": 1000,
+       "counters": [
+        {
+         "id": "2",
+         "revision": 1,
+         "name": "c2",
+         "start": 0,
+         "worker": "w-1",
+         "server": "srv-a"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "placements": {
+    "testsub": {
+     "c1": "m1",
+     "c2": "m2",
+     "c3": "m1",
+     "c5": "m2"
+    }
+   }
+  }
+ ]
+}

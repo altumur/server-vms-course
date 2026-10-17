@@ -1,0 +1,12 @@
+scenario	step	request	expect
+# Приёмка М11/1: команда view реализации на входах inputs/ (чистая функция). Формат — README.
+01-two-members	1	view inputs/01-two-members.json	ok {"view": {"complete": true, "holder": "m1", "members": [{"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}], "units": {"testsub": [{"id": "1", "ref": "c1", "cluster": "m1", "worker": "w-1", "server": "srv-a", "phase": "running", "state": "live"}, {"id": "1", "ref": "c2", "cluster": "m2", "worker": "w-1", "state": "live"}], "testsub2": []}, "contested": {}}}
+02-member-silent	1	view inputs/02-member-silent.json	ok {"view": {"complete": false, "members": [{"name": "m1", "state": "ok", "age": 0}, {"name": "m2", "state": "silent", "age": 50}], "units": {"testsub": [{"ref": "c1", "cluster": "m1", "state": "live"}, {"ref": "c2", "cluster": "m2", "state": "silent"}]}}}
+03-configured-and-stale	1	view inputs/03-configured-and-stale.json	ok {"view": {"complete": true, "units": {"testsub": [{"id": "1", "ref": "c1", "state": "stale", "age": 50}, {"id": "2", "ref": "c2", "state": "configured", "phase": "unobserved", "age": 0}]}}}
+04-contested	1	view inputs/04-contested.json	ok {"view": {"complete": false, "units": {"testsub": []}, "contested": {"testsub": {"c1": ["m1", "m2"]}}}}
+05-unmanaged	1	view inputs/05-unmanaged.json	ok {"shadow": {"counts": {"unmanaged": 1, "lagging": 0, "stalled": 0, "orphaned": 0, "conflict": 0, "stale_epoch": 0, "unknown": 0}, "findings": [{"kind": "unmanaged", "sub": "testsub", "ref": "c1", "cluster": "m1", "worker": "w-1"}], "clean_streak": 0, "may_write": false}}
+06-lag-and-stall	1	view inputs/06-stalled.json	ok {"shadow": {"counts": {"stalled": 1, "lagging": 0}, "findings": [{"kind": "stalled", "ref": "c1", "cluster": "m1", "worker": "w-1"}], "may_write": false}}
+06-lag-and-stall	2	view inputs/06-progress.json	ok {"shadow": {"counts": {"stalled": 0, "lagging": 1}, "findings": [{"kind": "lagging", "ref": "c1"}]}}
+07-faults	1	view inputs/07-faults.json	ok {"shadow": {"counts": {"orphaned": 1, "conflict": 1, "stale_epoch": 1, "unmanaged": 0, "lagging": 0, "stalled": 0}, "clean_streak": 0, "may_write": false}}
+08-clean-streak	1	view inputs/08-clean.json	ok {"shadow": {"findings": [], "clean_streak": 3, "may_write": true}}
+08-clean-streak	2	view inputs/08-finding.json	ok {"shadow": {"counts": {"unmanaged": 1}, "clean_streak": 0, "may_write": false}}

@@ -1,0 +1,285 @@
+openapi: 3.1.0
+info:
+  title: M11/1 domain view and shadow report
+  version: '1'
+  description: 'Normative shapes: 01-what-a-cluster-cannot-know.norms.md N1.4, N1.6, N2, N5. Doors of the holder console;
+    a member console forwards them unchanged (M11/8 N2). Request parsing: M10/9 N2. Identity and grants: M11/9.
+    ViewInput and ViewOutput are the input and output of the view command used by the acceptance (N5), not HTTP routes.'
+servers:
+  - url: '{origin}'
+    description: Консоль держателя домена или консоль члена, которая пересылает двери держателю.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin консоли без завершающего /; пример адреса, не настройка.'}
+paths:
+  /domain:
+    get:
+      summary: Вид домена
+      responses:
+        '200':
+          description: Объект domain/view последнего прохода держателя и age
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServedView'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoDomain'
+  /domain/{sub}/{rows}:
+    parameters:
+      - name: sub
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+      - name: rows
+        in: path
+        required: true
+        schema: {type: string, minLength: 1}
+      - name: cluster
+        in: query
+        required: false
+        schema: {type: string, minLength: 1}
+        description: Только единицы этого члена; повтор параметра — 400 по М10/9 Н2.
+    get:
+      summary: Единицы подсистемы в виде домена
+      responses:
+        '200':
+          description: Единицы подсистемы по (cluster, id)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+        '400':
+          $ref: '#/components/responses/BadQuery'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Нет домена, спека без domain.ref, член не в списке, нет такой спеки или rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refusal'
+  /domain/shadow:
+    get:
+      summary: Теневой отчёт последнего прохода
+      responses:
+        '200':
+          description: Теневой отчёт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShadowReport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoDomain'
+components:
+  responses:
+    NoDomain:
+      description: Вида нет или он не читается
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Refusal'
+              - properties:
+                  error: {const: no domain here}
+    BadQuery:
+      description: Запрос не по форме (М10/9 Н2 «Разбор запроса консоли»)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    Unauthenticated:
+      description: Нет личности (урок 9)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    Denied:
+      description: Нет гранта view (урок 9)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    MemberState:
+      type: object
+      required: [name, state, age]
+      additionalProperties: false
+      properties:
+        name:
+          $ref: '#/components/schemas/MemberName'
+        state:
+          enum: [ok, silent, never]
+        age:
+          type: ['number', 'null']
+          minimum: 0
+          description: Секунды с последней смены метки по часам держателя; у never — null.
+    Unit:
+      type: object
+      required: [sub, id, ref, cluster, phase, age, state]
+      additionalProperties: false
+      properties:
+        sub: {type: string, minLength: 1}
+        id: {type: string, minLength: 1}
+        ref: {type: string, minLength: 1}
+        cluster:
+          $ref: '#/components/schemas/MemberName'
+        worker: {type: string, minLength: 1}
+        server: {type: string, minLength: 1}
+        phase: {type: string, minLength: 1}
+        age: {type: number, minimum: 0}
+        state:
+          enum: [live, stale, configured, silent]
+        view:
+          type: object
+          description: Поля domain.view спеки; секретных нет.
+    View:
+      type: object
+      required: [as_of, holder, complete, members, units, contested]
+      properties:
+        as_of: {type: number}
+        holder:
+          $ref: '#/components/schemas/MemberName'
+        complete: {type: boolean}
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberState'
+        units:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Unit'
+        contested:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: array
+              minItems: 2
+              items:
+                $ref: '#/components/schemas/MemberName'
+      description: Поля других уроков (trust — 2; member_list, knocking — 3; topology — 4; tables, workers — 5; pending,
+        outcomes — 6; term — 10; shared — 11) задают их уроки.
+    ServedView:
+      allOf:
+        - $ref: '#/components/schemas/View'
+        - type: object
+          required: [age]
+          properties:
+            age: {type: number, minimum: 0}
+    Finding:
+      type: object
+      required: [kind, sub, ref, detail]
+      additionalProperties: false
+      properties:
+        kind:
+          enum: [lagging, stalled, orphaned, unmanaged, conflict, stale_epoch, unknown]
+        sub: {type: string}
+        ref: {type: string}
+        cluster:
+          $ref: '#/components/schemas/MemberName'
+        worker: {type: string}
+        detail: {type: string, minLength: 1}
+    ShadowReport:
+      type: object
+      required: [counts, findings, clean_streak, may_write, why]
+      additionalProperties: false
+      properties:
+        counts:
+          type: object
+          required: [lagging, stalled, orphaned, unmanaged, conflict, stale_epoch, unknown]
+          additionalProperties: false
+          properties:
+            lagging: {type: integer, minimum: 0}
+            stalled: {type: integer, minimum: 0}
+            orphaned: {type: integer, minimum: 0}
+            unmanaged: {type: integer, minimum: 0}
+            conflict: {type: integer, minimum: 0}
+            stale_epoch: {type: integer, minimum: 0}
+            unknown: {type: integer, minimum: 0}
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        clean_streak: {type: integer, minimum: 0}
+        may_write: {type: boolean}
+        why: {type: string, minLength: 1}
+    ViewInput:
+      type: object
+      description: Вход команды view (Н5) — проходы держателя по порядку.
+      required: [specs, holder, passes]
+      additionalProperties: false
+      properties:
+        specs:
+          type: array
+          minItems: 1
+          items: {type: string, enum: [testsub, testsub2]}
+          description: Спеки каталога из данных спецификации.
+        holder:
+          $ref: '#/components/schemas/MemberName'
+        passes:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [at, members, placements]
+            additionalProperties: false
+            properties:
+              at:
+                type: number
+                minimum: 0
+                description: Монотонные секунды держателя, не стенные; не убывают от прохода к проходу.
+              members:
+                type: object
+                propertyNames:
+                  $ref: '#/components/schemas/MemberName'
+                additionalProperties:
+                  type: object
+                  required: [mark, objects]
+                  additionalProperties: false
+                  properties:
+                    mark:
+                      type: ['integer', 'null']
+                      minimum: 1
+                      description: rev метки reported (урок 3 Н1) или null — метки нет.
+                    objects:
+                      type: object
+                      description: Объекты копии по ключам М10/5 Н1.1 и М10/10 Н1.3.
+              placements:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    $ref: '#/components/schemas/MemberName'
+    ViewOutput:
+      type: object
+      description: Вывод команды view (Н5) — вид и теневой отчёт последнего прохода входа.
+      required: [view, shadow]
+      additionalProperties: false
+      properties:
+        view:
+          $ref: '#/components/schemas/View'
+        shadow:
+          $ref: '#/components/schemas/ShadowReport'
