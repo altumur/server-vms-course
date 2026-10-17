@@ -642,6 +642,16 @@ components:
         self.assertEqual([e for e in errors if "directive" in e][:1] and len([e for e in errors if "directive" in e]), 1,
                          errors)
 
+    def test_directives_join_the_shared_m10_dictionary_and_the_modules_own(self):
+        shared = self.root / "Source/tests/testdata/acceptance/М10_Platform/01/README.md"
+        shared.parent.mkdir(parents=True)
+        shared.write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@start` — запустить процесс.\n")
+        (self.acceptance / "README.md").write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@cut` — разрыв.\n")
+        self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\t@start x\t200 {}\n01-a\t2\t@cut m1\t200 {}\n")
+        self.assertFalse([e for e in self.check().errors if "directive" in e])
+        self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\t@join m1\t200 {}\n")
+        self.assertEqual(len([e for e in self.check().errors if "directive @join" in e]), 1, self.check().errors)
+
     def test_choice_counts_match_the_numbered_items(self):
         self.replace(self.norms, "## Решает реализация\n", "## Решает реализация\n1. одно\n2. другое\n")
         instructions = self.spec / "01-example.README.md"

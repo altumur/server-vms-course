@@ -442,19 +442,24 @@ class Check:
                 if int(said) != len(ids):
                     mismatch(said, len(ids), "checklist ids")
 
-    # Every directive a scenario uses is in the dictionary of the module's stand (README of lesson 1, «Словарь директив»).
-    def directives(self, table, stand):
-        text = self.read(stand) if stand.exists() else None
-        section = re.search(r"Словарь директив.*?(?=^## |\Z)", text or "", re.S | re.M)
-        if section is None:
+    # Every directive a scenario uses is in a stand dictionary (README of lesson 1, «Словарь директив»): the shared one
+    # of М10 and the module's own, which adds only its new directives.
+    def directives(self, table, stands):
+        known, found = set(), False
+        for stand in dict.fromkeys(stands):
+            text = self.read(stand) if stand.exists() else None
+            section = re.search(r"Словарь директив.*?(?=^## |\Z)", text or "", re.S | re.M)
+            if section is not None:
+                found = True
+                known |= set(re.findall(r"(?<![\w@])(@[a-z]+)", section.group(0)))
+        if not found:
             return
-        known = set(re.findall(r"(?<![\w@])(@[a-z]+)", section.group(0)))
         used = set()
         for line in (self.read(table) or "").splitlines():
             if line and not line.startswith("#"):
                 used |= set(re.findall(r"(?<![\w@])(@[a-z]+)", line))
         for name in sorted(used - known):
-            self.error(table, f"directive {name} is not in the stand's dictionary (lesson 1 README)")
+            self.error(table, f"directive {name} is not in a stand dictionary (lesson 1 README of М10 or of the module)")
 
     def tsv(self, path, width, header=None):
         text = self.read(path)
@@ -638,7 +643,8 @@ class Check:
             self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts, choices or None,
                         lecture=path == lesson)
         if scenarios is not None:
-            self.directives(acceptance / "scenarios.tsv", self.root / "Source/tests/testdata/acceptance" / module / "01/README.md")
+            stands = self.root / "Source/tests/testdata/acceptance"
+            self.directives(acceptance / "scenarios.tsv", [stands / "М10_Platform/01/README.md", stands / module / "01/README.md"])
         for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
             self.error(acceptance, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
         self.stats["lessons"] += 1
