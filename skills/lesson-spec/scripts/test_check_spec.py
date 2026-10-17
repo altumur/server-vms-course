@@ -527,6 +527,64 @@ components:
         self.scenarios.unlink()
         self.assertTrue(self.check().errors)
 
+    def registry(self, rows):
+        path = self.root / "exceptions.tsv"
+        path.write_text("# lesson\tkind\tvalue\treason\n" + "".join("\t".join(row) + "\n" for row in rows))
+        result = Check(self.root, path)
+        result.lesson(self.lesson)
+        return result
+
+    def test_stated_counts_must_match_the_tables(self):
+        instructions = self.spec / "01-example.README.md"
+        for text, valid in [("Пройти 1 сценарий / 1 шаг.", True), ("Пройти 2 сценария / 1 шаг.", False),
+                            ("Пройти 1 сценарий/3 шага.", False), ("Все сценарии scenarios.tsv (01–01).", True),
+                            ("Все сценарии scenarios.tsv (01–02).", False), ("Пройти М12A/1-01…01.", True),
+                            ("Пройти М12A/1-01…02.", False), ("Все 1 id имеют свидетельства.", True),
+                            ("Все 2 id имеют свидетельства.", False), ("Для 2 пунктов чеклиста.", False),
+                            ("Проверены все 2 норм.", False), ("Срок 25 с, 3 попытки.", True)]:
+            with self.subTest(text=text):
+                instructions.write_text(f"# Instructions\n{text}\n")
+                self.assertEqual(not self.check().errors, valid, self.check().errors)
+
+    def test_norms_may_name_a_subset_of_checklist_ids(self):
+        self.replace(self.norms, "## Н5 Section", "## Н5 Section\nТаблица: М12A/1-01…03 — гонки.")
+        self.assertFalse(self.check().errors)
+
+    def test_registry_allows_named_deviations_and_reports_them(self):
+        self.api.unlink()
+        (self.acceptance / "extra.tsv").write_text("x\n")
+        self.scenarios.write_text("scenario\tstep\trequest\texpect\n01-example\t1\t@start x\tok\n")
+        self.assertGreaterEqual(len(self.check().errors), 4)
+        result = self.registry([("М12A_Example/01", "no-openapi", "-", "ADR"),
+                                ("М12A_Example/01", "acceptance-entry", "extra.tsv", "README"),
+                                ("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertEqual(result.errors, [])
+        self.assertEqual(len(result.excepted), 3)
+
+    def test_registry_rows_that_are_no_longer_needed_fail(self):
+        result = self.registry([("М12A_Example/01", "no-openapi", "-", "ADR"),
+                                ("М12A_Example/01", "acceptance-entry", "extra.tsv", "README"),
+                                ("М12A_Example/01", "scenarios-format", "own", "README"),
+                                ("М12A_Example/02", "no-openapi", "-", "another lesson is not checked here")])
+        self.assertEqual(len(result.errors), 3, result.errors)
+        self.assertTrue(all("stale exception" in error for error in result.errors))
+
+    def test_registry_rows_need_a_known_kind_and_a_reason(self):
+        for row in [("М12A_Example/01", "anything", "-", "reason"), ("М12A_Example/01", "no-openapi", "-", "")]:
+            with self.subTest(row=row):
+                self.assertTrue(self.registry([row]).errors)
+
+    def test_cli_names_exceptions_and_keeps_them_out_of_pass(self):
+        self.api.unlink()
+        registry = self.root / "exceptions.tsv"
+        registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
+        result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
+                                 str(self.root), "--exceptions", str(registry), str(self.lesson)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("EXCEPTION М12A_Example/01 no-openapi -: ADR", result.stdout)
+        self.assertIn("PASS with 1 exceptions", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
