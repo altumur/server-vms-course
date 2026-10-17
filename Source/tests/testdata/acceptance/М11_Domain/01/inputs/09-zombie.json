@@ -68,7 +68,8 @@
         }
        ]
       }
-     }
+     },
+     "stale": []
     }
    },
    "placements": {
@@ -140,7 +141,8 @@
         }
        ]
       }
-     }
+     },
+     "stale": []
     }
    },
    "placements": {
@@ -212,7 +214,11 @@
         }
        ]
       }
-     }
+     },
+     "stale": [
+      "testsub/heartbeats/w-2",
+      "testsub/heartbeats/w-3"
+     ]
     }
    },
    "placements": {

@@ -17,3 +17,4 @@ date	sample	fix	languages
 2026-10-17	08/scenarios.tsv: 07-append-by-data	Очередь «Архитектора»: дозапись М10/8-19 из чтения в сценарий стенда; учебный обработчик testsub2 (нормы Н5), директивы @start с подсистемой	all
 2026-10-17	08/scenarios.tsv: 07-append-by-data, шаги 19–23	Решение «Архитектора»: fetched — SaidID через запятую (М10/5 Н1.1); длинный rid снимается	all
 2026-10-17	08/scenarios.tsv: 05-request-performed шаги 7–8, 11–13	Мутационная проверка 7cecaf2 № 24, 26, 37: нижняя граница settle; пульс через дверь объектов; последний пульс при SIGTERM — status []	all
+2026-10-17	08/scenarios.tsv: 07-append-by-data шаги 19–20	cammeta-python 08 № 16: вторая единица testsub2 — своя полка sh2 в z2 (spread_by: zone на одном сервере)	all

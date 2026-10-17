@@ -57,7 +57,7 @@ scenario	step	request	expect
 06-view-on-the-stand	1	@domain	ok
 06-view-on-the-stand	2	member m1 console POST /counters {"name": "c1"}	201
 06-view-on-the-stand	3	member m2 console POST /counters {"name": "c2"}	201
-06-view-on-the-stand	4	@until 60 holder GET /domain/testsub/counters	200 [{"id": "1", "ref": "c1", "cluster": "m1", "state": "live"}, {"id": "1", "ref": "c2", "cluster": "m2", "state": "live"}]
+06-view-on-the-stand	4	@until 60 holder GET /domain/testsub/counters	200 [{"id": "c1", "ref": "c1", "cluster": "m1", "state": "live"}, {"id": "c2", "ref": "c2", "cluster": "m2", "state": "live"}]
 06-view-on-the-stand	5	holder GET /domain/testsub/counters?cluster=m2	200 [{"ref": "c2"}]
 06-view-on-the-stand	6	holder GET /domain/testsub/counters?cluster=m9	404 {"error": "no such member"}
 06-view-on-the-stand	7	holder GET /domain	200 {"complete": true, "contested": {"testsub": {}}}
@@ -126,3 +126,4 @@ scenario	step	request	expect
 13-accept	16	accept inputs/accept-16-deleted-in-whole.json	ok {"result": "refused", "status": 400, "reason": "not_a_publication"}
 13-accept	17	accept inputs/accept-17-not-json.json	ok {"result": "refused", "status": 400, "reason": "not_a_publication"}
 13-accept	18	accept inputs/accept-18-whole-same-content.json	ok {"result": "heard", "refresh": true}
+13-accept	19	accept inputs/accept-19-heard-stale-changed.json	ok {"result": "heard", "refresh": true}

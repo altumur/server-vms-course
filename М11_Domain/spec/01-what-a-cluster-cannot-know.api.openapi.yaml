@@ -267,6 +267,10 @@ components:
                     objects:
                       type: object
                       description: Объекты копии по ключам М10/5 Н1.1 и М10/10 Н1.3.
+                    stale:
+                      type: array
+                      items: {type: string}
+                      description: Поле stale метки (урок 3 Н1.3) — пульсы, которые агент члена не видел меняющимися дольше LOST_AFTER; нет — пусто.
               placements:
                 type: object
                 additionalProperties:

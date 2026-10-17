@@ -192,6 +192,10 @@ components:
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
         pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+        stale:
+          type: array
+          items: {type: string}
+          description: Пульсы, не менявшиеся дольше LOST_AFTER на часах агента; вне дельты (Н1.2).
         outcomes: {type: object, description: урок 6}
         tls_ca: {type: array, items: {type: string}, description: урок 8}
         sign_failures: {type: object, description: урок 12}
@@ -209,7 +213,7 @@ components:
     Mark:
       type: object
       description: Объект domain/members/<член>/reported (Н1.3).
-      required: [rev, sha256, base, delta_sha256, sent_at, received_at, key]
+      required: [rev, sha256, base, delta_sha256, sent_at, received_at, key, stale]
       additionalProperties: false
       properties:
         rev: {type: integer, minimum: 1}
@@ -223,6 +227,9 @@ components:
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
         pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+        stale:
+          type: array
+          items: {type: string}
     Carry:
       type: object
       description: Н1.5. Поля уроков 4, 5, 6, 9, 10, 11 — их нормы.
