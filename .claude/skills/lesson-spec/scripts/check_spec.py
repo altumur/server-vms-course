@@ -26,12 +26,11 @@ class UniqueLoader(yaml.SafeLoader):
     """Read JSON-compatible YAML using the YAML 1.2 Core scalar schema."""
 
 
-# SafeLoader's YAML 1.1 resolvers turn on/yes into the same boolean and 012 into
-# octal. Keep these changes local: verdict fixtures use their own lesson grammar.
-_CORE_TAGS = {"tag:yaml.org,2002:" + name for name in
-              ("bool", "int", "float", "timestamp")}
+# Inherit only the Core-compatible null resolver, then add Core scalar rules.
+# YAML 1.1 merge/value rules must not reinterpret ordinary << or = strings.
+# Keep these changes local: verdict fixtures use their own lesson grammar.
 UniqueLoader.yaml_implicit_resolvers = {
-    first: [(tag, pattern) for tag, pattern in entries if tag not in _CORE_TAGS]
+    first: [(tag, pattern) for tag, pattern in entries if tag == "tag:yaml.org,2002:null"]
     for first, entries in yaml.SafeLoader.yaml_implicit_resolvers.items()
 }
 UniqueLoader.add_implicit_resolver(
@@ -60,7 +59,6 @@ UniqueLoader.add_constructor("tag:yaml.org,2002:int", core_int)
 
 
 def unique_mapping(loader, node, deep=False):
-    loader.flatten_mapping(node)
     result = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)

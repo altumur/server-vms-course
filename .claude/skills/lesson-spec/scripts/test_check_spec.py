@@ -172,6 +172,46 @@ components:
         self.replace(self.api, "type: object", "type: object, properties: {true: {type: string}}")
         self.assert_cli(1, "key must be a string")
 
+    def test_yaml12_symbol_strings_preserve_properties_and_example_data(self):
+        original = self.api.read_text()
+        for symbol in ["<<", "="]:
+            for spelling in [symbol, '"' + symbol + '"']:
+                with self.subTest(spelling=spelling):
+                    self.api.write_text(original.replace(
+                        "Example: {type: object}",
+                        "Example: {type: object, properties: {" + spelling + ": {type: string}}, "
+                        "example: {" + spelling + ": {type: string}}}"))
+                    schema = yaml.load(self.api.read_text(), Loader=UniqueLoader)["components"]["schemas"]["Example"]
+                    expected = {symbol: {"type": "string"}}
+                    self.assertEqual(schema["properties"], expected)
+                    self.assertEqual(schema["example"], expected)
+                    self.assert_cli(0)
+
+    def test_yaml12_alias_under_literal_merge_key_stays_nested_data(self):
+        data = "{base: &base {a: 1}, child: {<<: *base}}"
+        expected = {"base": {"a": 1}, "child": {"<<": {"a": 1}}}
+        self.assertEqual(yaml.load(data, Loader=UniqueLoader), expected)
+        # The local Core reader must not change the dependency's global merge behavior.
+        self.assertEqual(yaml.safe_load(data), {"base": {"a": 1}, "child": {"a": 1}})
+        self.replace(self.api, "Example: {type: object}",
+                     "Example: {type: object, example: " + data + "}")
+        self.assert_cli(0)
+
+    def test_explicit_non_core_merge_is_not_silently_applied(self):
+        self.replace(self.api, "Example: {type: object}",
+                     "Example: {type: object, example: "
+                     "{base: &base {a: 1}, child: {!!merge '<<': *base}}}")
+        self.assert_cli(1, "tag:yaml.org,2002:merge")
+
+    def test_yaml12_duplicate_symbol_string_keys_are_rejected(self):
+        original = self.api.read_text()
+        for symbol in ["<<", "="]:
+            with self.subTest(symbol=symbol):
+                self.api.write_text(original.replace(
+                    "Example: {type: object}",
+                    "Example: {type: object, example: {" + symbol + ': {a: 1}, "' + symbol + '": {a: 2}}}'))
+                self.assert_cli(1, "duplicate YAML key")
+
     def test_yaml_non_json_scalar_does_not_pass(self):
         original = self.api.read_text()
         for value in [".nan", ".inf", "!!timestamp 2026-10-16"]:

@@ -261,3 +261,5 @@ r38_unit_absent	refused
 r38_unit_rows_absent	refused
 r38_unit_id_absent	refused
 r38_unit_minimal	ok
+r39_group_by_scalar	refused
+r39_group_by_known_field	ok
