@@ -1,8 +1,7 @@
-# The platform's log mask (w2cplatform/secrets: Rule.MaskLog; w2cplatform.MaskText, ipint/uri.Redact): a text that
-# is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
-# credential, every name=value whose name is a secret's, and every address in it masked. No spec says it, and it is
-# not secret_in.tsv's: those are a url field's values. Read by vmsworker/vms/secret_in_test.go, as a process that
-# knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
+# The platform's log mask: a text that is no field's value — a log line, an error, a JSON document, a connect
+# string — with an Authorization header's credential, every name=value whose name is a secret's, and every address in
+# it masked. No spec says it, and it is not secret_in.tsv's: those are a url field's values. Any implementation reads
+# it as a process that knows the shared specs masks a log line (the names a spec adds — sig, psd — included).
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
 #   raw     the text as written
