@@ -24,3 +24,6 @@
 М11_Domain/03	scenarios-format	own	стенд нескольких кластеров (двери holder, member; директивы @install, @join, @start agent, @domain, @on, @restart domain, @cut, @mend, @clock) и команды-векторы agent-sig, seal-member, accept; проверяется по README приёмки
 М11_Domain/04	acceptance-entry	inputs	входы команды accept урока 3 с дорогой (via, heard_ago); проверяется по README приёмки
 М11_Domain/04	scenarios-format	own	стенд с ретранслятором (двери holder, member; директивы @domain <кластеры>, @start agent <к> via relay, @stop agent, @cut, @mend) и векторы accept; проверяется по README приёмки
+М10_Platform/02	acceptance-entry	puts.tsv	установки spec put по порядку в свежее хранилище: код и rev (без изменений, A=B каталога, metrics.prefix); проверяется по README приёмки
+М10_Platform/02	acceptance-entry	puts	файлы установок puts.tsv; проверяется по README приёмки
+М10_Platform/09	acceptance-entry	probe-x.subsystem.yaml	третья спека стенда урока 9 (имя с «-», metrics.prefix); проверяется по README приёмки
