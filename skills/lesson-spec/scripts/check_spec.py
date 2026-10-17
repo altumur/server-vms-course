@@ -377,28 +377,49 @@ class Check:
 
     # Counts and ranges a text states about the lesson must match its tables: a fix that adds a norm or
     # a scenario has to update every place that counts them. Only unambiguous whole-lesson phrases are read.
-    def counts(self, path, text, prefix, ids, scenarios, instruction, verdicts=None):
+    def counts(self, path, text, prefix, ids, scenarios, instruction, verdicts=None, choices=None, lecture=False):
         def mismatch(said, actual, what):
             self.error(path, f"says {said} {what}, the tables have {actual}")
+        # Examples in code are not the lesson's counts; a phrase that announces a subset is not its total.
+        text = re.sub(r"^```.*?^```", "", text, flags=re.S | re.M)
+        def is_total(match):
+            return not re.search(r"подмножеств|из них|кроме|только|например|пример", text[max(0, match.start() - 80):match.start()])
+        if choices is not None:
+            for match in re.finditer(r"(\d+)\s+(?:выбор\w*|пункт\w*\s+«?Решает реализация)", text):
+                if is_total(match):
+                    self.stats["count_phrases"] += 1
+                    if int(match.group(1)) != choices:
+                        mismatch(match.group(1), choices, "«Решает реализация» items")
+        if lecture:
+            return
         if verdicts is not None:
             # A corpus phrase names files or verdicts with both the ok and the refused count: the whole table.
-            for match in re.finditer(r"(\d+)\s+(?:файл|вердикт|случа)\w*[^\n]*?(\d+)\s*`?ok`?\s*[,/]\s*(\d+)\s*`?refused",
-                                     text):
+            for match in re.finditer(r"(\d+)\s+(?:файл|вердикт|случа)\w*[^\n]*?(?:(\d+)\s*`?ok`?\s*[,/]\s*(\d+)\s*`?refused"
+                                     r"|`?ok`?\s*\((\d+)\)[^\n]*?`?refused`?\s*\((\d+)\))", text):
+                if not is_total(match):
+                    continue
                 self.stats["count_phrases"] += 1
-                said = tuple(int(match.group(i)) for i in (1, 2, 3))
+                ok, refused = (match.group(2), match.group(3)) if match.group(2) else (match.group(4), match.group(5))
+                said = (int(match.group(1)), int(ok), int(refused))
                 if said != verdicts:
                     mismatch("%d (%d ok, %d refused)" % said, "%d (%d ok, %d refused)" % verdicts, "verdicts")
         if scenarios is not None and path.name.endswith(".norms.md"):
             # Every scenario row of the Н5 table names a scenario of scenarios.tsv by its number.
             n5 = re.search(r"^## Н5\b.*?(?=^## |\Z)", text, re.S | re.M)
             numbers = {name.split("-", 1)[0] for name in scenarios[2]}
+            rows = set()
             for match in re.finditer(r"^\|\s*(\d{2})\s*\|", n5.group(0) if n5 else "", re.M):
                 self.stats["count_phrases"] += 1
+                rows.add(match.group(1))
                 if match.group(1) not in numbers:
                     self.error(path, f"Н5 names scenario {match.group(1)}, scenarios.tsv has no such scenario")
+            for number in sorted(numbers - rows) if rows else []:
+                self.error(path, f"scenario {number} of scenarios.tsv has no row in the Н5 table")
         if scenarios is not None:
             total, steps, _ = scenarios
             for match in re.finditer(r"(\d+)\s*сценари\w*\s*[/,]\s*(\d+)\s*шаг\w*", text):
+                if not is_total(match):
+                    continue
                 self.stats["count_phrases"] += 1
                 if int(match.group(1)) != total:
                     mismatch(match.group(1), total, "scenarios")
@@ -420,6 +441,20 @@ class Check:
                 said = match.group(1) or match.group(2)
                 if int(said) != len(ids):
                     mismatch(said, len(ids), "checklist ids")
+
+    # Every directive a scenario uses is in the dictionary of the module's stand (README of lesson 1, «Словарь директив»).
+    def directives(self, table, stand):
+        text = self.read(stand) if stand.exists() else None
+        section = re.search(r"Словарь директив.*?(?=^## |\Z)", text or "", re.S | re.M)
+        if section is None:
+            return
+        known = set(re.findall(r"`(@[a-z]+)", section.group(0)))
+        used = set()
+        for line in (self.read(table) or "").splitlines():
+            if line and not line.startswith("#"):
+                used |= set(re.findall(r"(?<![\w@])(@[a-z]+)", line))
+        for name in sorted(used - known):
+            self.error(table, f"directive {name} is not in the stand's dictionary (lesson 1 README)")
 
     def tsv(self, path, width, header=None):
         text = self.read(path)
@@ -459,21 +494,20 @@ class Check:
         return silenced
 
     def scenario_form(self, path, line, request, expect):
-        if True:
-            if request.startswith("ASSERT "):
-                if expect or not re.fullmatch(r"ASSERT \$\w+ != \$\w+(?: \$\w+)*", request):
-                    self.error(path, f"line {line}: invalid ASSERT or nonempty expectation")
-                return
-            # Deliberately invalid JSON requests are acceptance data, not parse errors here.
-            if not re.match(r"^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) /", request):
-                self.error(path, f"line {line}: unsupported request form; needs format-specific check")
-            code, separator, body = expect.partition(" ")
-            try:
-                if not separator or not re.fullmatch(r"[1-5][0-9]{2}", code):
-                    raise ValueError("expected HTTP status and JSON body")
-                strict_json(body)
-            except (ValueError, TypeError) as exc:
-                self.error(path, f"line {line}: {exc}")
+        if request.startswith("ASSERT "):
+            if expect or not re.fullmatch(r"ASSERT \$\w+ != \$\w+(?: \$\w+)*", request):
+                self.error(path, f"line {line}: invalid ASSERT or nonempty expectation")
+            return
+        # Deliberately invalid JSON requests are acceptance data, not parse errors here.
+        if not re.match(r"^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) /", request):
+            self.error(path, f"line {line}: unsupported request form; needs format-specific check")
+        code, separator, body = expect.partition(" ")
+        try:
+            if not separator or not re.fullmatch(r"[1-5][0-9]{2}", code):
+                raise ValueError("expected HTTP status and JSON body")
+            strict_json(body)
+        except (ValueError, TypeError) as exc:
+            self.error(path, f"line {line}: {exc}")
 
     def verdicts(self, path):
         verdicts = {}
@@ -596,9 +630,15 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
+        choices = None
+        if norms in texts:
+            section = re.search(r"^## Решает реализация\s*$(.*?)(?=^## |\Z)", texts[norms], re.S | re.M)
+            choices = len(re.findall(r"^\d+\.\s", section.group(1), re.M)) if section else None
         for path, text in texts.items():
-            if path != lesson:
-                self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts)
+            self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts, choices or None,
+                        lecture=path == lesson)
+        if scenarios is not None:
+            self.directives(acceptance / "scenarios.tsv", self.root / "Source/tests/testdata/acceptance" / module / "01/README.md")
         for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
             self.error(acceptance, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
         self.stats["lessons"] += 1
