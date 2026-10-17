@@ -11,12 +11,14 @@ tab-separated — `field, raw, masked, fault, note`. `field` is `<sub>.<field>` 
 field there is the row's error, never a row skipped."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import contextlib
 import os
 
 from tests.productdir import SOURCE, product_file
 
-TABLE = os.path.join(SOURCE, "tests", "testdata", "secret_in.tsv")
+TABLE = os.path.join(frozen_testdata(), "secret_in.tsv")
 SPECS = os.path.join(SOURCE, "vms")
 COLUMNS = ("field", "raw", "masked", "fault", "note")
 
@@ -196,7 +198,7 @@ def test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_be
             os.environ["W2C_PRODUCT_DIR"] = was
 
 
-LOG_MASK = os.path.join(SOURCE, "tests", "testdata", "log_mask.tsv")
+LOG_MASK = os.path.join(frozen_testdata(), "log_mask.tsv")
 
 
 def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says():
