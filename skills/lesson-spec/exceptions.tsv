@@ -1,0 +1,16 @@
+# Разрешённые отступления от структурной проверки (ADR-0080 доп. 14). Правит только «Архитектор».
+# Столбцы: урок (модуль/NN), вид (no-openapi | scenarios-format | acceptance-entry), значение, причина.
+# Строка, которая проверяемому уроку больше не нужна, — ошибка проверки: её снимают в той же правке.
+М10_Platform/03	scenarios-format	own	заголовок TSV, @key/@nokey, ожидание кода без тела; проверяется по README приёмки
+М10_Platform/04	scenarios-format	own	формат урока 3 плюс коды 2xx/4xx; проверяется по README приёмки
+М10_Platform/05	no-openapi	-	своей HTTP-двери нет (ADR-0082 доп. 13)
+М10_Platform/05	scenarios-format	own	двери store/console и директивы процессов @start/@sig*; проверяется по README приёмки
+М10_Platform/06	scenarios-format	own	@as/@header, ожидание кода без тела; проверяется по README приёмки
+М10_Platform/07	no-openapi	-	своей HTTP-двери нет, дельта 503 к POST/PUT М10/3 (ADR-0082 доп. 14)
+М10_Platform/07	scenarios-format	own	двери console/store, @key, проверки подстрок и отсутствия; проверяется по README приёмки
+М10_Platform/07	acceptance-entry	secret_in.tsv	входы секретов урока 7; проверяется по README приёмки
+М10_Platform/07	acceptance-entry	log_mask.tsv	маски журнала урока 7; проверяется по README приёмки
+М10_Platform/08	scenarios-format	own	три двери, @start/@until/@key, JSON Lines и байты; проверяется по README приёмки
+М10_Platform/09	scenarios-format	own	общие двери и подстроки ответа; проверяется по README приёмки
+М10_Platform/10	scenarios-format	own	двери консоли, контроллера и ресурса, @raw/@big/@until/@any; проверяется по README приёмки
+М10_Platform/11	scenarios-format	own	директивы процессов и @manual; проверяется по README приёмки
