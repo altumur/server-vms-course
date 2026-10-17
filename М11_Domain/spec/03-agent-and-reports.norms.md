@@ -159,7 +159,7 @@ rights:         роль domainagent (М10/6 Н1.2): пишет domain/* без 
 ```yaml
 domain/view.member_list:   {rev, members} — doc строки domain/members, прочитанный проходом (урок 1 Н3 шаг 1)
 domain/view.knocking:      [knock…] — по name; поля Н1.1
-domain/view.reports:       {<член>: {rev, base, received_at, sent_at, keys_rev?, pinned}}   # pinned: this | another | none
+domain/view.reports:       {<член>: {rev, base, received_at, sent_at, via?, keys_rev?, pinned}}   # pinned: this | another | none; via — урок 4
 ```
 
 ---
@@ -202,27 +202,32 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 Агент сам по времени нового поколения не шлёт: память держателя, потерянную при его сбое, агент узнаёт по 409 `rebase`
 и шлёт целое.
 
-### принять(mark, stored, body, now) — держатель, на POST /api/member/<член> после подписи
+### принять(mark, stored, body, via, heard_ago) — держатель, на POST /api/member/<член> после подписи
+
+`via` — дорога: нет — прямо, иначе имя ретранслятора (урок 4 Н1.3); `heard_ago` — монотонные секунды с последнего
+приёма или «слышал» этого члена по любой дороге (нет — не слышал).
 
 ```
 0. приём одного члена — один за раз в процессе domain (мьютекс); подпись, член и ключ уже проверены (Н2)
 1. body — не JSON-объект по форме Н1.2                                             → 400 not_a_publication
-2. mark есть и body.sent_at = mark.sent_at (та же дорога, via урока 4):
+2. mark есть, mark.via = via и body.sent_at = mark.sent_at:
    sha256(body) = mark.delta_sha256 → same (ничего не писать, метку не освежать); иначе → 409 same_sent_at
-3. base > 0 и (mark нет, или base ≠ mark.rev, или stored не читается или не с mark.sha256) → 409 rebase
+2а. mark есть, mark.via ≠ via, body.sent_at < mark.sent_at и heard_ago < ROAD_QUIET (урок 4 Н1.3) → ignored
+   (ничего не писать: прежняя дорога жива, а это тело старше по часам члена)
+3. base > 0 и (mark нет, или mark.via ≠ via, или base ≠ mark.rev, или stored не читается или не с mark.sha256) → 409 rebase
 4. objects' = (base > 0 ? объекты stored : {}) ∪ body.objects − body.deleted; объекты вне member_objects отбросить
 5. нет шарда снимка какой-то спеки каталога с domain.ref                           → 409 not_ready
 6. mark есть и whole' без sent_at = whole stored без sent_at (JCS)                 → heard:
    метку этот процесс не писал или писал не меньше MARK_REFRESH назад (монотонные) → переписать метку: тот же rev,
    sent_at, received_at новые; иначе ничего не писать
 7. иначе → generation: rev = (mark ? mark.rev : 0) + 1; записать reports/<rev> = JCS(whole'), затем reports/<rev>.delta = body,
-   затем метку {rev, sha256, base, delta_sha256, signature, sent_at, received_at, key, keys_rev?, pinned?};
+   затем метку {rev, sha256, base, delta_sha256, signature, sent_at, received_at, via?, key, keys_rev?, pinned?};
    убрать reports/<rev−2> и его .delta и объекты выше rev
 ```
 
 `sent_at` ниже `mark.sent_at` на той же дороге принимается: порядок на одной дороге задаёт дорога, часы члена, шагнувшие
-назад, берутся сразу; сравнение `sent_at` между двумя дорогами — урок 4. Ответ на шаги 2 (same), 6, 7 — carry (Н1.5) с
-`rev` метки. Сбой между шагами 7: объект выше метки ничей (Н1.3), следующий приём пишет поверх.
+назад, берутся сразу; между двумя дорогами — шаг 2а (урок 4). Ответ на шаги 2 (same), 2а, 6, 7 — carry (Н1.5); его `rev` —
+`rev` метки, если `mark.via` = дорога ответа, иначе 0 (другая дорога шлёт целое). Сбой между шагами 7: объект выше метки ничей (Н1.3), следующий приём пишет поверх.
 
 ### прочитать копию (урок 1 Н3 шаг 2; урок 5, урок 10)
 
@@ -293,8 +298,9 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 agent-sig:          вход {key, method, path, body, header, now, window} → {result: ok} | {result: refused, reason}
 seal-member:        вход {seed, sealed} → {result: ok, plain} | {result: refused, reason: not_m1 | not_an_envelope | does_not_open}
 seal-member-round:  вход {key, seed, plain} → {result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}
-accept:             вход {catalog: [<sub>…], mark: <метка> | null, stored: <whole> | null, body: <текст>, refreshed_ago: <с> | null}
-                    → {result: generation, rev, base, whole} | {result: heard, refresh} | {result: same}
+accept:             вход {catalog: [<sub>…], mark: <метка> | null, stored: <whole> | null, body: <текст>, refreshed_ago: <с> | null,
+                          via?: <ретранслятор> | null, heard_ago?: <с> | null}       # via, heard_ago — урок 4; нет — null
+                    → {result: generation, rev, base, whole} | {result: heard, refresh} | {result: same} | {result: ignored}
                     | {result: refused, status, reason: not_a_publication | same_sent_at | rebase | not_ready}
                     # refreshed_ago — монотонные с, когда этот процесс писал метку; null — не писал
 exit:               0 — вычислено (в том числе отказ словом); 2 — вход не по форме; лишнее поле входа — 2

@@ -1,0 +1,55 @@
+scenario	step	request	expect
+# Приёмка М11/4: стенд hold, m1, m2, relay и векторы accept с дорогой на входах inputs/. Формат — README.
+01-topology	1	@domain m1 relay	ok
+01-topology	2	holder GET /domain/topology	200 {"rev": 0, "star": [], "via": {}}
+01-topology	3	holder PUT /domain/topology {"centre": "hold"}	400
+01-topology	4	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~through itself"}
+01-topology	5	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "hold"}}	409 {"detail": "~domain holder"}
+01-topology	6	holder PUT /domain/topology {"base_rev": 0, "via": {"m9": "relay"}}	409 {"detail": "~not a cluster of this domain"}
+01-topology	7	holder PUT /domain/topology {"base_rev": 0, "star": ["m1"]}	409 {"detail": "~there is no centre"}
+01-topology	8	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay", "relay": "m1"}}	409 {"detail": "~one relay between a member and the domain"}
+01-topology	9	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
+01-topology	10	holder PUT /domain/topology {"base_rev": 0, "via": {}}	409 {"detail": "~at rev 1"}
+01-topology	11	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
+02-road-through-the-relay	1	@domain m1 relay	ok
+02-road-through-the-relay	2	@start agent m2 via relay	ok
+02-road-through-the-relay	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}
+02-road-through-the-relay	4	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200
+02-road-through-the-relay	5	@join m2	ok
+02-road-through-the-relay	6	holder PUT /domain/topology {"base_rev": 0, "via": {"m2": "relay"}}	200 {"rev": 1}
+02-road-through-the-relay	7	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}], "reports": {"m2": {"via": "relay"}}}
+02-road-through-the-relay	8	@until 30 member m2 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}}
+02-road-through-the-relay	9	resource GET /v1/objects/domain/members/m2/reported?scope=local	200 {"via": "relay", "signature": "@absent"}
+02-road-through-the-relay	10	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "@any"}
+03-not-behind-this-relay	1	@domain m1 relay	ok
+03-not-behind-this-relay	2	@stop agent m1	ok
+03-not-behind-this-relay	3	@start agent m1 via relay	ok
+03-not-behind-this-relay	4	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "relay", "state": "ok"}]}
+03-not-behind-this-relay	5	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200
+03-not-behind-this-relay	6	@until 40 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "relay", "state": "ok"}], "reports": {"m1": {"via": "relay"}}}
+04-relay-cut	1	@domain m1 relay	ok
+04-relay-cut	2	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200
+04-relay-cut	3	@stop agent m1	ok
+04-relay-cut	4	@start agent m1 via relay	ok
+04-relay-cut	5	@until 40 holder GET /domain	200 {"complete": true, "reports": {"m1": {"via": "relay"}}}
+04-relay-cut	6	@cut relay	ok
+04-relay-cut	7	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "relay", "state": "silent"}]}
+04-relay-cut	8	@mend relay	ok
+04-relay-cut	9	@until 40 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+05-second-road	1	@domain m1 relay	ok
+05-second-road	2	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200
+05-second-road	3	@stop agent m1	ok
+05-second-road	4	@start agent m1 via relay	ok
+05-second-road	5	@until 40 holder GET /domain	200 {"reports": {"m1": {"via": "relay"}}}
+05-second-road	6	@stop agent m1	ok
+05-second-road	7	@start agent m1	ok
+05-second-road	8	@until 40 holder GET /domain	200 {"complete": true, "reports": {"m1": {"via": "@absent"}}}
+06-accept-with-roads	1	accept inputs/accept-01-same-sent-at-other-road.json	ok {"result": "heard", "refresh": false}
+06-accept-with-roads	2	accept inputs/accept-02-older-other-road-heard.json	ok {"result": "ignored"}
+06-accept-with-roads	3	accept inputs/accept-03-older-other-road-quiet.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 990.0}}
+06-accept-with-roads	4	accept inputs/accept-04-newer-other-road.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 1010.0}}
+06-accept-with-roads	5	accept inputs/accept-05-delta-other-road.json	ok {"result": "refused", "status": 409, "reason": "rebase"}
+06-accept-with-roads	6	accept inputs/accept-06-older-same-road.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 990.0}}
+06-accept-with-roads	7	accept inputs/accept-07-older-other-road-never-heard.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 990.0}}
+06-accept-with-roads	8	accept inputs/accept-08-same-sent-at-other-bytes-other-road.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 1000.0}}
+06-accept-with-roads	9	accept inputs/accept-09-delta-same-relay-road.json	ok {"result": "generation", "rev": 5, "base": 4, "whole": {"sent_at": 1010.0}}

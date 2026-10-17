@@ -1,0 +1,181 @@
+openapi: 3.1.0
+info:
+  title: M11/4 relays, roads and the topology
+  version: '1'
+  description: 'Normative shapes: 04-relays-and-roads.norms.md N1.2, N1.4, N2. /api/relay — door of the holder''s domain
+    process; /api/member and /api/carry on a relay — the same forms as the holder''s (M11/3 contract), answered from the
+    relay''s memory with domain_age; /domain/topology — the domain console (grants M11/9). Request parsing: M10/1 N2.1
+    with M10/9 N2. Publication, Carry and the agent signature — M11/3 contract.'
+servers:
+  - url: '{origin}'
+    description: Дверь процесса domain держателя, дверь ретранслятора или консоль домена.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /api/relay/{relay}:
+    parameters:
+      - name: relay
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/MemberName'}
+    post:
+      summary: Пакет ретранслятора — отчёты членов за ним и стуки
+      parameters:
+        - name: X-Agent-Signature
+          in: header
+          required: true
+          description: Подпись агента ретранслятора (М11/3 Н1.4).
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+      responses:
+        '200':
+          description: Ответ ретранслятору
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelayAnswer'
+        '400':
+          $ref: '#/components/responses/Refused'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+        '413':
+          $ref: '#/components/responses/Refused'
+  /domain/topology:
+    get:
+      summary: Топология домена
+      responses:
+        '200':
+          description: Документ топологии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topology'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+    put:
+      summary: Правка топологии против прочитанной ревизии
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopologyEdit'
+      responses:
+        '200':
+          description: Документ после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topology'
+        '400':
+          $ref: '#/components/responses/Refused'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '409':
+          $ref: '#/components/responses/Refused'
+components:
+  responses:
+    Refused:
+      description: Отказ двери (Н2, Н4)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+        reason: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    Batch:
+      type: object
+      required: [relayed]
+      additionalProperties: false
+      properties:
+        relayed:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties:
+            type: object
+            description: Публикация М11/3 Н1.2 (целое или изменение против rev этой дороги).
+        knocks:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties:
+            type: object
+            required: [publication, signature]
+            additionalProperties: false
+            properties:
+              publication: {type: string, maxLength: 262144}
+              signature: {type: string}
+    RelayAnswer:
+      type: object
+      required: [relay_for, relayed, refused, keys]
+      additionalProperties: false
+      properties:
+        relay_for:
+          type: array
+          items: {$ref: '#/components/schemas/MemberName'}
+        relayed:
+          type: object
+          additionalProperties:
+            type: object
+            description: Carry М11/3 Н1.5; rev — для дороги этого ретранслятора.
+        refused:
+          type: object
+          additionalProperties: {type: string}
+        keys:
+          type: object
+          additionalProperties:
+            type: string
+            pattern: '^$|^[0-9a-f]{64}$'
+    Topology:
+      type: object
+      required: [rev, star, via]
+      additionalProperties: false
+      properties:
+        rev: {type: integer, minimum: 0}
+        centre: {$ref: '#/components/schemas/MemberName'}
+        star:
+          type: array
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/MemberName'}
+        via:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties: {$ref: '#/components/schemas/MemberName'}
+        by: {type: string}
+        at: {type: number}
+    TopologyEdit:
+      type: object
+      required: [base_rev]
+      additionalProperties: false
+      properties:
+        base_rev: {type: integer, minimum: 0}
+        centre: {type: string}
+        star:
+          type: array
+          items: {$ref: '#/components/schemas/MemberName'}
+        via:
+          type: object
+          additionalProperties: {type: string}
