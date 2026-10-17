@@ -268,7 +268,7 @@ platform_readers:                            # общая таблица platfor
   domain/signer-pending: [domain]           # точное имя, не покрыто `domain/signer`
   domain/book-seal:    [domain]
   domain/users/:       [domain]
-  domain/member-key:   [domainagent, console, domain]
+  domain/member-key:   [domainagent, console, domain]   # форма — М11/3 Н1.1
   domain/backup:       [console, domain, domainagent]
   domain/backup-taken: [console, domain, domainagent]   # семья копии: три точных имени и префикс, читатели те же, что у backup
   domain/backup-doc:   [console, domain, domainagent]

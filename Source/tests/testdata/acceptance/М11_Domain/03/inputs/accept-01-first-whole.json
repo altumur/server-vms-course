@@ -1,0 +1,9 @@
+{
+ "body": "{\"key\": \"b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62\", \"objects\": {\"testsub/heartbeats/w-1\": {\"instance\": \"i1\", \"server\": \"srv-a\", \"status\": [{\"epoch\": 1, \"id\": \"1\", \"observed_revision\": 1, \"phase\": \"running\", \"revision\": 1}], \"ts\": 100.0, \"worker\": \"w-1\"}, \"testsub/heartbeats/w-2\": {\"instance\": \"i1\", \"server\": \"srv-a\", \"status\": [], \"ts\": 100.0, \"worker\": \"w-2\"}, \"testsub/snapshot/w-1\": {\"rows\": {\"1\": {\"name\": \"c1\", \"start\": 0}}}}, \"sent_at\": 900.0}",
+ "catalog": [
+  "testsub"
+ ],
+ "mark": null,
+ "refreshed_ago": 1.0,
+ "stored": null
+}

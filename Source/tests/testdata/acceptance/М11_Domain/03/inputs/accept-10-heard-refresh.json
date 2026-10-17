@@ -1,0 +1,52 @@
+{
+ "body": "{\"base\": 4, \"key\": \"b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62\", \"objects\": {}, \"sent_at\": 1005.0}",
+ "catalog": [
+  "testsub"
+ ],
+ "mark": {
+  "base": 0,
+  "delta_sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+  "key": "b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62",
+  "received_at": 1000.5,
+  "rev": 4,
+  "sent_at": 1000.0,
+  "sha256": "7be568ff084e91da44d8753141cfc48bc3d9522f3adc56e388a5e207626a8ecb"
+ },
+ "refreshed_ago": 22.5,
+ "stored": {
+  "key": "b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62",
+  "objects": {
+   "testsub/heartbeats/w-1": {
+    "instance": "i1",
+    "server": "srv-a",
+    "status": [
+     {
+      "epoch": 1,
+      "id": "1",
+      "observed_revision": 1,
+      "phase": "running",
+      "revision": 1
+     }
+    ],
+    "ts": 100.0,
+    "worker": "w-1"
+   },
+   "testsub/heartbeats/w-2": {
+    "instance": "i1",
+    "server": "srv-a",
+    "status": [],
+    "ts": 100.0,
+    "worker": "w-2"
+   },
+   "testsub/snapshot/w-1": {
+    "rows": {
+     "1": {
+      "name": "c1",
+      "start": 0
+     }
+    }
+   }
+  },
+  "sent_at": 1000.0
+ }
+}

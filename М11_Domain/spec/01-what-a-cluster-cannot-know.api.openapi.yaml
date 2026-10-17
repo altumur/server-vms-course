@@ -180,7 +180,7 @@ components:
               minItems: 2
               items:
                 $ref: '#/components/schemas/MemberName'
-      description: Поля других уроков (trust — 2; member_list, knocking — 3; topology — 4; tables, workers — 5; pending,
+      description: Поля других уроков (trust — 2; member_list, knocking, reports — 3; topology — 4; tables, workers — 5; pending,
         outcomes — 6; term — 10; shared — 11) задают их уроки.
     ServedView:
       allOf:

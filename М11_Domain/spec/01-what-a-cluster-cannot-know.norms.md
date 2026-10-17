@@ -75,7 +75,7 @@ domain/view:                     # объект держателя (М10/8 Н1.1
   units:     {<sub>: [Unit]}     # каждая спека каталога с domain.ref (Н1.2), ключ есть и у пустой
   contested: {<sub>: {<ref>: [<член>…]}}   # ref, который заявляют два члена и больше; его единиц нет в units
   <поля других уроков>:          # trust — урок 2; member_list, knocking — урок 3; topology — урок 4; tables, workers — урок 5;
-                                 # pending, outcomes — урок 6; term — урок 10; shared — урок 11; счётчики проходов — урок 3
+                                 # pending, outcomes — урок 6; term — урок 10; shared — урок 11; reports — урок 3
 Unit:        {sub, id, ref, cluster, worker?, server?, phase, age, state, view?}
   id:        id единицы в её кластере (строкой); ref — Н1.2; cluster — член
   worker, server: из пульса (`worker`, поле `server` пульса) или из строки шарда снимка; нет — поля нет

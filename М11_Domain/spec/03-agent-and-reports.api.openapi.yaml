@@ -1,0 +1,297 @@
+openapi: 3.1.0
+info:
+  title: M11/3 agent reports, the holder's answer and members
+  version: '1'
+  description: 'Normative shapes: 03-agent-and-reports.norms.md N1.1-N1.7, N2. /api/* — doors of the holder''s domain
+    process (SIGNER_URL, M11/2 N1.3), signed by the member''s agent (N1.4); /domain/members — doors of the domain
+    console (people: grants M11/9). Request parsing: M10/1 N2.1 with M10/9 N2. Mark and Generation are objects of the
+    holder (M10/8 N1.1), not routes.'
+servers:
+  - url: '{origin}'
+    description: Дверь процесса domain держателя (/api/*) или консоль домена (/domain/*).
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /api/member/{member}:
+    parameters:
+      - $ref: '#/components/parameters/Member'
+    post:
+      summary: Отчёт агента члена — поколение или «слышал»; ответ — то, что агент уносит домой
+      parameters:
+        - $ref: '#/components/parameters/AgentSignature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publication'
+      responses:
+        '200':
+          description: Принято (поколение, «слышал» или тот же отчёт снова)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carry'
+        '400':
+          $ref: '#/components/responses/Refused'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+        '409':
+          description: rebase, same_sent_at или not_ready (Н3 «принять»)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Refusal'
+                  - properties:
+                      reason: {enum: [rebase, same_sent_at, not_ready]}
+                    required: [reason]
+        '413':
+          $ref: '#/components/responses/Refused'
+  /api/carry/{member}:
+    parameters:
+      - $ref: '#/components/parameters/Member'
+    get:
+      summary: Ответ держателя без отчёта (до первого снимка, ретранслятор)
+      parameters:
+        - $ref: '#/components/parameters/AgentSignature'
+      responses:
+        '200':
+          description: Ответ держателя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carry'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+  /domain/members:
+    get:
+      summary: Список членов и стучащиеся
+      responses:
+        '200':
+          description: Список и стучащиеся
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembersView'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+    post:
+      summary: Принять стучащегося по отпечатку его ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, fingerprint]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/MemberName'}
+                fingerprint: {type: string, pattern: '^[0-9a-f]{16}$'}
+      responses:
+        '200':
+          description: Список после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembersDoc'
+        '400':
+          $ref: '#/components/responses/Refused'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+        '409':
+          $ref: '#/components/responses/Refused'
+  /domain/members/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/MemberName'}
+    delete:
+      summary: Член уходит из домена
+      responses:
+        '200':
+          description: Список после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembersDoc'
+        '400':
+          $ref: '#/components/responses/Refused'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          $ref: '#/components/responses/Refused'
+components:
+  parameters:
+    Member:
+      name: member
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/MemberName'}
+    AgentSignature:
+      name: X-Agent-Signature
+      in: header
+      required: true
+      description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)» (Н1.4); окно 300 с в обе стороны.'
+      schema: {type: string, pattern: '^(0|[1-9][0-9]{0,15})\.[A-Za-z0-9_-]{86}$'}
+  responses:
+    Refused:
+      description: Отказ двери (Н4)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+        reason: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    Hex32:
+      type: string
+      pattern: '^[0-9a-f]{64}$'
+    Publication:
+      type: object
+      description: Н1.2. base 0 или нет — тело целое; deleted — только при base > 0. Поля уроков 6, 8, 12 — их нормы.
+      required: [sent_at, objects, key]
+      additionalProperties: false
+      properties:
+        sent_at: {type: number}
+        objects:
+          type: object
+          additionalProperties: true
+        base: {type: integer, minimum: 0}
+        deleted:
+          type: array
+          items: {type: string, minLength: 1}
+        key: {$ref: '#/components/schemas/Hex32'}
+        keys_rev: {type: integer, minimum: 1}
+        pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+        outcomes: {type: object, description: урок 6}
+        tls_ca: {type: array, items: {type: string}, description: урок 8}
+        sign_failures: {type: object, description: урок 12}
+    Generation:
+      type: object
+      description: Объект domain/members/<член>/reports/<rev> (Н1.3), JCS.
+      required: [sent_at, objects, key]
+      additionalProperties: false
+      properties:
+        sent_at: {type: number}
+        objects: {type: object}
+        key: {$ref: '#/components/schemas/Hex32'}
+        keys_rev: {type: integer, minimum: 1}
+        pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+    Mark:
+      type: object
+      description: Объект domain/members/<член>/reported (Н1.3).
+      required: [rev, sha256, base, delta_sha256, sent_at, received_at, key]
+      additionalProperties: false
+      properties:
+        rev: {type: integer, minimum: 1}
+        sha256: {$ref: '#/components/schemas/Hex32'}
+        base: {type: integer, minimum: 0}
+        delta_sha256: {$ref: '#/components/schemas/Hex32'}
+        signature: {type: string}
+        sent_at: {type: number}
+        received_at: {type: number}
+        via: {type: string, description: урок 4}
+        key: {$ref: '#/components/schemas/Hex32'}
+        keys_rev: {type: integer, minimum: 1}
+        pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+    Carry:
+      type: object
+      description: Н1.5. Поля уроков 4, 5, 6, 9, 10, 11 — их нормы.
+      required: [cluster, rev, every]
+      properties:
+        cluster: {$ref: '#/components/schemas/MemberName'}
+        rev: {type: integer, minimum: 0}
+        every: {type: number, minimum: 1, maximum: 3600}
+        keys:
+          type: object
+          required: [doc]
+          additionalProperties: false
+          properties:
+            doc: {type: string}
+        revoked:
+          type: object
+          required: [jtis]
+          additionalProperties: false
+          properties:
+            jtis: {type: string}
+        members:
+          type: object
+          required: [doc]
+          additionalProperties: false
+          properties:
+            doc: {type: string}
+        holder: {type: object, description: урок 10}
+        sealed:
+          type: string
+          description: 'Конверт m1:<eph>:<nonce>:<ct> (Н1.5).'
+          pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'
+    Entry:
+      type: object
+      required: [how, since]
+      properties:
+        how: {type: string, minLength: 1}
+        since: {type: number}
+        by: {type: string}
+        key: {$ref: '#/components/schemas/Hex32'}
+        revoked_keys:
+          type: array
+          items: {$ref: '#/components/schemas/Hex32'}
+    MembersDoc:
+      type: object
+      required: [rev, members]
+      properties:
+        rev: {type: integer, minimum: 1}
+        members:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties: {$ref: '#/components/schemas/Entry'}
+    Knock:
+      type: object
+      required: [name, last, times, key, fingerprint, pinned]
+      additionalProperties: false
+      properties:
+        name: {$ref: '#/components/schemas/MemberName'}
+        last: {type: number}
+        times: {type: integer, minimum: 1}
+        key: {$ref: '#/components/schemas/Hex32'}
+        fingerprint: {type: string, pattern: '^[0-9a-f]{16}$'}
+        pinned: {enum: [this, another, none]}
+        keys_rev: {type: ['integer', 'null'], minimum: 1}
+    MembersView:
+      allOf:
+        - $ref: '#/components/schemas/MembersDoc'
+        - type: object
+          required: [knocking]
+          properties:
+            knocking:
+              type: array
+              items: {$ref: '#/components/schemas/Knock'}
