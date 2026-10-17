@@ -38,3 +38,21 @@ scenario	step	request	expect
 06-request-refused	2	console POST /testsub/requests {"add": 5}	400
 06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404
 06-request-refused	4	console POST /testsub/requests {"unit": "c5", "add": "five"}	400
+07-append-by-data	1	@start controller	ok
+07-append-by-data	2	@start controller testsub2	ok
+07-append-by-data	3	@start worker w-1	ok
+07-append-by-data	4	@start worker testsub2 t-1	ok
+07-append-by-data	5	console POST /counters {"name": "c1"}	201
+07-append-by-data	6	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201
+07-append-by-data	7	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
+07-append-by-data	8	@until 60 store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
+07-append-by-data	9	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202 {"queued": "t1-1-2"}
+07-append-by-data	10	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "2", "ranges": "1-2"}}
+07-append-by-data	11	store GET /v1/get?key=objects/testsub2/commands/t1-1-2	200 {"items": null}
+07-append-by-data	12	@until 90 store GET /v1/get?key=testsub2/requests/t1-1-2	200 {"items": null}
+07-append-by-data	13	store GET /v1/get?key=objects/testsub2/commands/t1-1-2	200 {"items": null}
+07-append-by-data	14	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202 {"queued": "t1-1-2"}
+07-append-by-data	15	@until 90 store GET /v1/get?key=testsub2/requests/t1-1-2	200 {"items": null}
+07-append-by-data	16	store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "2", "ranges": "1-2"}}
+07-append-by-data	17	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202 {"queued": "t1-2-3"}
+07-append-by-data	18	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "3", "ranges": "1-3"}}
