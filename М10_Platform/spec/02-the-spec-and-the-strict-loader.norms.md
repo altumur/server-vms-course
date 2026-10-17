@@ -65,7 +65,7 @@ spec:
   requests:    # просьбы — урок 8
   holds:       # удержания — урок 8
   events:      # события — урок 8
-  about:       # родитель единицы {sub, field}: оба обязательны, field — поле с fixed: true (урок 3)
+  about:       # родитель единицы {sub, field} — урок 8 Н1.2; field — поле с fixed: true (урок 3)
   snapshot:    # поля, уходящие из кластера — урок 10; отсутствует = все, кроме секретов, blob и авторского server;
                #   `snapshot:` без значения — отказ; секрет, blob и server в списке — отказ
   rights:      # права — урок 6
@@ -84,28 +84,187 @@ spec:
   domain:      # вклад в домен — М11
 closed_key_set:
   rule: на каждом уровне допустимы только ключи, которые читает платформа: на верхнем уровне и в заголовках разделов — Н1.2
-        этого урока, внутри раздела — грамматика урока-владельца (3: unit, slot, lease; 4: placement; 5: heartbeat; 6: rights, worker.writes, worker.reads;
-        7: secrets; 8: events, objects, requests, worker.requests, about, holds; 9: display, servers, console, door.routes, metrics — перечень ключей metrics[] в Н3 «/metrics»;
-        10: tables, snapshot; 11: door.pass; М11: domain); ключ вне
-        этих перечней — отказ; сводный перечень, каким его держит реализация, сверяется с уроками чтением (решает реализация, п. 1)
+        этого урока, внутри разделов — сводная таблица Н1.2а; ключ вне неё — отказ. Уроки-владельцы дают смысл ключей
+        и на форму ссылаются сюда
   named:   # уровни, где ключи — имена автора (поля, таблицы, виды токенов, книги, виды, слова опций):
     [unit.fields, tables, tables.*.fields, display.keys, display.options, display.kinds,
      display.fields, display.field_help, domain.books, domain.names, domain.tokens, events.suppress, secrets.readers,
      *.schemes]
-  opaque:  # уровни, внутрь которых загрузчик не смотрит (содержимое — другой стандарт или другой урок):
+  opaque:  # уровни, где шаг 3 не проверяет набор ключей (содержимое — другой стандарт или другой урок);
+           # ссылки Н1.4 на ключи и значения этих уровней проверяются:
     [*.schema (JSON Schema: имена свойств не проверяются, но ключевые слова — только из перечня урока 3 Н1.2;
-     иное ключевое слово — refused:value на шаге 4), unit.fields.*.default и inherit при type json, *.must_match, metrics.where,
+     иное ключевое слово — refused:value на шаге 4), unit.fields.*.default и inherit при type json, ключи *.must_match, metrics.where,
      metrics.unless.where, metrics.labels, placement.near.prefer, placement.affinity.strict, placement.places.where,
      rights.unit_of, display.options.*]
 ```
 
-Имена `unit.rows` и таблиц `tables` (в том числе списковой формы) — строки 1–32 ASCII-символа:
-первый a-z, остальные a-z, 0-9, `_`, `-`; platform/domain/console/audit запрещены.
-Значения вне этой области дают отказ загрузки `refused:value` с путём имени/значения.
-Дополнительно действуют запреты пересечения служебных семейств и дверей из М10/3 Н1.1
-и М10/10 Н1.6. Область named не отменяет эту грамматику; остальные авторские имена ею
-автоматически не ограничиваются. `unit.rows` дополнительно не может быть cluster, worker
-или ts: это имена оболочки снимка М10/10 Н1.3; отказ загрузки `refused:value`.
+Грамматика имён `unit.rows` и таблиц и один перечень запрещённых имён — в Н1.2а. Область named не отменяет
+эту грамматику; остальные авторские имена ею автоматически не ограничиваются.
+
+### Н1.2а Сводная таблица ключей
+
+Одно место формы ключей спеки: ключ → тип и границы → обязательность и умолчание → урок, где ключ получает смысл.
+Уроки-владельцы дают смысл и ссылаются сюда; при расхождении формы права эта таблица. Общие правила:
+ключ вне таблицы — `refused:key`; сказанный ключ без значения — `refused:value`; null не заменяет отображение
+или строку; числа — по Н1.1 и внутри opaque. «named» — ключи уровня суть имена автора; «opaque» — шаг 3 не
+проверяет набор ключей, но ссылки Н1.4 на ключи и значения этого уровня проверяются. «Слово: a, b» — строка
+из закрытого перечня, иное — `refused:value`. «Поле» — поле единицы, а у ключа таблицы — поле этой таблицы.
+
+**Верх и `unit`**
+
+| Ключ | Тип и границы | Обязательность / умолчание | Смысл |
+|---|---|---|---|
+| `name` | строка `^[a-z][a-z0-9_-]{0,31}$`, не из 21 зарезервированного слова Н1.2 | обязателен | 2 Н1.2 |
+| `unit` | отображение `{rows, id, fields}` | обязателен | 3 Н1.1 |
+| `unit.rows` | имя: 1–32 ASCII, первая a-z, далее a-z, 0-9, `_`, `-`; не из перечня запрещённых имён (ниже) | обязателен | 3 Н1.1 |
+| `unit.id` | `numeric` или имя несекретного поля типа string (Н1.4) | обязателен | 3 Н1.3 |
+| `unit.fields` | отображение, named; имя — строковый ключ YAML, не из `platform_fields` урока 3 | нет — `{}` | 3 Н1.2 |
+
+**Поле** — `unit.fields.<имя>.*` и `tables.<т>.fields.<имя>.*` (Н1.3; у поля таблицы нет `fixed`, `inherit`,
+`merge`, `unique` — `refused:key`)
+
+| Ключ | Тип и границы | Обязательность / умолчание | Смысл |
+|---|---|---|---|
+| `type` | слово: `string`, `int`, `float`, `bool`, `list`, `json`, `url`, `blob`; поле `*_secret` — только string | нет — `string` | 3 Н1.2 |
+| `required` | bool; у blob `true` запрещён | нет — `false` | 3 Н3 |
+| `fixed` | bool; только у поля единицы | нет — `false` | 3 Н1.3 |
+| `default` | одно значение типа поля; у float допустимо целое; list — список строк; json — любое JSON (opaque); null — нет умолчания; из `enum`, если он есть; не вместе с `inherit`; у blob запрещён | необязателен | 3 Н1.2 |
+| `inherit` | как `default`; только у поля единицы | необязателен | 3 Н1.2 |
+| `merge` | слово: `union`, `override`; только у поля единицы и только с `inherit` | необязателен | М11 (сведение цепи наследования) |
+| `enum` | непустой список значений типа поля; только у string и bool | необязателен | 3 Н3 |
+| `unique` | `true` или `canonical`; `canonical` — только у url; только у поля единицы | необязателен | 3 Н1.3 |
+| `ref` | строка `<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет | необязателен | 3 Н1.3 |
+| `must_match` | отображение `{<поле цели>: <поле этой строки>}`; значения — поля этой строки (Н1.4), ключи не проверяются | только вместе с `ref` | 3 Н1.3 |
+| `schema` | отображение JSON Schema; ключевые слова — перечень урока 3 Н1.2, глубина ≤ 32 (урок 10 Н1.4) | необязателен | 3 Н1.2; 10 Н1.6 |
+| `bound_to` | имя поля или список имён полей этой строки, не секретов; только у `*_secret` | необязателен | 7 Н1.1 |
+| `credentials` | отображение `{login, secret}`: login — поле строки не url и не секрет, secret — поле `*_secret`; только у url | необязателен; в нём оба обязательны | 7 Н1.1 |
+| `secret_in` | список; элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}`; формы элементов — урок 7 Н1.1; только у url | необязателен | 7 Н1.1 |
+| `schemes` | отображение, named: имя схемы `[a-z][a-z0-9+.-]*` → `{host?, fragment?, none?}` (строка, строка, список строк); только у url | необязателен | 3 Н4 (`bad_url`); 7 Н1.1 |
+
+Поле blob — только в `unit.fields`, имя 1–64 ASCII `[A-Za-z_][A-Za-z0-9_]*`, `bytes` рядом с blob запрещён;
+у таблицы поля `held_by`, `garbled`, `by`, `at`, `made_at` запрещены, `name` — только string при `key: name` (Н1.3).
+
+**`placement`** (смысл — урок 4 Н1.3)
+
+| Ключ | Тип и границы | Обязательность / умолчание |
+|---|---|---|
+| `placement` | отображение | обязателен |
+| `capacity` | `{from, default, unit_mb?, base_mb?}` | обязателен |
+| `capacity.from` | строка — поле пульса | нет — `capacity` |
+| `capacity.default` | целое ≥ 0 | обязателен |
+| `capacity.unit_mb` | число > 0 | нет — бюджет памяти не проверяется (урок 5) |
+| `capacity.base_mb` | число ≥ 0 | нет — 0 (бюджет `base_mb + unit_mb · Σ весов`, урок 5) |
+| `headroom` | `{from}`; `from` — строка, поле пульса | нет — `from: headroom` |
+| `weight` | `{field, default}`: `field` — поле типа int; `default` — целое ≥ 1 | нет — вес 1 у всех; в `weight` оба необязательны: без `field` вес — `default`, без `default` — 1 |
+| `constraint` | слово: `none`, `labels-subset` | нет — `none` |
+| `tie_break` | слово: `most-free-capacity` | нет — оно же |
+| `servers` | слово: `shared`, `distinct` | нет — `shared` |
+| `place_by` | строка: `server` или поле пульса | нет — `server` |
+| `places` | `{table, where?, server_field?, lease?}`: `table` — таблица; `where` — opaque, ключи — поля таблицы; `server_field` — поле таблицы; `lease` — слово `strict` | необязателен |
+| `spread_by` | строка — поле | необязателен |
+| `group_by` | `{field, cut_at?}`: `field` — поле; `cut_at` — слово `host` (у url); скаляр — отказ | необязателен |
+| `near` | `{sub, by?, of?, prefer?}`: `sub` — подсистема (каталог); `by`, `of` — строки; `prefer` — opaque, поля соседа (каталог) | необязателен; в нём `sub` обязателен |
+| `home` | поле или слово `near` (тогда `near` обязателен) | необязателен |
+| `affinity` | `{field?, table?, server_field?, strict?}`: поле; таблица; поле таблицы; `strict` — opaque, ключи — поля таблицы | необязателен |
+| `requires` | слово: `none`, `resource` | нет — `none` |
+| `offers` | bool | нет — `false` |
+| `retire_when` | `{field, in}`: `field` — поле; `in` — список значений | необязателен; в нём оба обязательны |
+| `rebalance` | `{dead_band}`: число ≥ 0 | нет — `dead_band: 0.10` |
+| `unplaced` | `{delete_after}`: целое ≥ 1, только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067) | нет — не удалять |
+
+**`tables`** (смысл — урок 10 Н1.6)
+
+| Ключ | Тип и границы | Обязательность / умолчание |
+|---|---|---|
+| `tables` | отображение named (имя → таблица) или список имён | нет — таблиц нет |
+| имя таблицы | имя по Н1.2; не `unit.rows`; не из перечня запрещённых имён таблиц (ниже) | — |
+| `tables.<т>.key` | несекретное поле string или шаблон `{поле}` / `{поле:int}` (Н1.4) | необязателен |
+| `tables.<т>.fields` | отображение named; поле по таблице «Поле» | нет — `{}` |
+| `tables.<т>.schema` | как `schema` поля | необязателен |
+| `tables.<т>.stamp` | список слов из `by`, `at`, `made_at` | необязателен |
+| `tables.<т>.journal` | `{written, deleted}` — строки | нет — `<т>.written`, `<т>.deleted` |
+
+**`requests`, `holds`, `events`, `about`** (смысл — урок 8)
+
+| Ключ | Тип и границы | Обязательность / умолчание |
+|---|---|---|
+| `requests.schema` | как `schema` поля | необязателен |
+| `requests.valid_for`, `requests.most_valid` | числа ≥ 0; `valid_for ≤ most_valid` | без `free: true` — оба обязательны |
+| `requests.per_person` | целое ≥ 1; требует `ttl` | нет — предела нет |
+| `requests.settle` | число ≥ 0, секунды | нет — 60 |
+| `requests.ttl` | число ≥ 0; 0 — без предела | обязателен при `free` и при `per_person` |
+| `requests.key` | шаблон rid (Н1.4) | нет — `r-<sha16(Idempotency-Key)>` |
+| `requests.stamp` | список слов из `by`, `at`, `group`, `about`; `group` требует `placement.group_by` | необязателен |
+| `requests.journal` | строка — вид журнала | необязателен |
+| `requests.elsewhere` | список строк | необязателен |
+| `requests.free` | bool | нет — `false` |
+| `holds` | `{table, unit, since, until, longest, released?}`: таблица; поля таблицы; `longest` — число > 0, секунды | необязателен; все его ключи необязательны |
+| `events.suppress` | отображение named: вид события → `{window, by?}`: `window` — число > 0, секунды; `by` — непустой список строк без `t`, `id`, `repeats`, `since`, `until` | необязателен; `by` нет — все поля строки, кроме этих |
+| `events.older_epochs` | слово: `fenced`, `earlier-run` | нет — `fenced` |
+| `about` | `{sub, field}`: `sub` — имя подсистемы; `field` — поле с `fixed: true` | необязателен; в нём оба обязательны; смысл — 8 Н1.2, 3 Н1.3 |
+
+**`snapshot`, `rights`, `secrets`, `worker`**
+
+| Ключ | Тип и границы | Обязательность / умолчание | Смысл |
+|---|---|---|---|
+| `snapshot` | список полей без `*_secret`, blob и `server`; `[]` — ни одного | нет — все поля, кроме этих | 10 Н1.3 |
+| `rights.routes` | `{view?, edit?}` — списки семей | нет — записи требуют `admin` | 6 Н1.5 |
+| `rights.cluster_rows` | bool | нет — `false` | 6 Н1.5 |
+| `rights.unit_of` | отображение `{таблица: поле таблицы}` (opaque для шага 3) | необязателен | 6 Н1.5 |
+| `rights.reach` | `{group?, cluster?, requests?}` — списки; `group` требует `placement.group_by` | необязателен | 6 Н1.5 |
+| `rights.names` | список `{field, unit, sub \| of}`: строки, ровно один из `sub` и `of` | необязателен | 6 Н1.5 |
+| `secrets.readers` | named: точное имя строки или префикс с `/` → непустой список ролей из закрытых 8 урока 7 Н1.3 | нет — своих секретных строк нет | 7 Н1.3 |
+| `secrets.reads` | список точных имён или префиксов | необязателен | 7 Н1.3 |
+| `worker.writes` | список собственных таблиц; `unit.rows` или необъявленное имя — `refused:reference` | нет — таблиц воркера нет | 6 Н1.4 |
+| `worker.reads` | список `<семья>/<имя>` или префиксов с `/`; голое слово — отказ | необязателен | 6 Н1.4 |
+| `worker.requests` | список других подсистем (своя — отказ; принимает ли — каталог) | необязателен | 8 Н1.5 |
+
+У объявлений `secrets.readers`, `secrets.reads` и `worker.reads` нет буквального `*`, начального `!` и `delete:`;
+два префикса одного списка, из которых один — начало другого, — отказ (урок 7 Н1.3, урок 6 Н1.4).
+
+**`slot`, `lease`, `heartbeat`, `objects`, `door`, `console`**
+
+| Ключ | Тип и границы | Обязательность / умолчание | Смысл |
+|---|---|---|---|
+| `slot.prefix` | 1–8 строчных латинских | нет — `w` | 3 Н1.4 |
+| `slot.name_env` | `^[A-Z][A-Z0-9_]*$` | нет — имя не берётся из окружения | 3 Н1.4; 5 |
+| `lease` | ровно `{unconfirmed_max}`: `forever`, `off` или целое ≥ 1; `0`, строка-число, дробь, bool — отказ | нет — `off`; в `lease` ключ обязателен | 3 Н1.6 |
+| `heartbeat.strings` | список имён полей пульса, не из `platform_strings` урока 5 Н1.1 | нет — строковых полей нет | 5 Н1.1 |
+| `objects.rows` | список семей строк-объектов; первый сегмент не семья объектов платформы (ниже) и не `*` — иначе `refused:reference` | необязателен | 8 Н1.1 |
+| `objects.door` | список семей двери объектов | необязателен | 8 Н1.1 |
+| `door.routes` | список маршрутов, каждый один раз | нет — двери нет | 9 Н3 |
+| `door.pass` | список сегментов, не повторяющих `door.routes`, `unit.rows` и `where` — иначе `refused:reference` | нет — передачи нет | 11 |
+| `console.running` | `name` метрики из `metrics[]` | нет — `running_gauge: null` | 9 Н1.2 |
+
+**`servers`, `display`** (смысл — урок 9 Н1.2; значения словарей — строки)
+
+| Ключ | Тип и границы | Обязательность / умолчание |
+|---|---|---|
+| `servers.show[]` | `{table, by, title?, columns?}`: таблица; поле таблицы; строка; список полей таблицы | `table` и `by` обязательны |
+| `servers.status[]` | `{field, title?, of?}`: путь в пульсе, первый сегмент не ключ пульса, который читает платформа (урок 5 Н1.1: `worker`, `ts`, `status`, `server`, `instance`, `labels`, `url`, `fetched`, `events`, `conflicts`, `started`, `previous_hb`, `previous_instance`, `previous_server`, `fenced`, `schema`, `build`, `pending_writes`, `server_unsaid`, `stood_in`, `stand_in_renewals`) — иначе `refused:value`; строка; таблица | `field` обязателен |
+| `display.unit`, `.units`, `.units_count`, `.section`, `.general` | строки | нет — «единица» |
+| `display.fields`, `display.field_help` | named → строка (имена — Н1.4) | необязательны |
+| `display.options` | named → `{значение: строка}` (Н1.4; внутри opaque) | необязателен |
+| `display.form[]` | `{title?, state?, placement?, fields?, note?, status?}`: строка; bool; bool; список полей и платформенных имён (Н1.4); строка; список `{field, since?, title?}` (строки) | нет — один блок со всеми полями |
+| `display.events` | bool | нет — вкладка есть |
+| `display.kinds` | named (вид события) → строка | необязателен |
+| `display.keys` | named (id семьи ключей домена) → `{title, about, absent?}` — строки | необязателен; смысл — М11 |
+| `display.tree` | `{group_by?, nested_by?, columns?, children?, <слово>?}`: поле; строка-разделитель; список `{field, title?, width?}` (поле или платформенное имя; строка; целое ≥ 1); bool; 17 слов-подписей урока 9 Н1.2 — строки | необязателен |
+
+**`metrics[]` и `domain` — до перевода М13 и М11 закрыта только форма; смысл и границы — там**
+
+| Ключ | Тип и границы |
+|---|---|
+| `metrics[]` | `{name, type?, from?, agg?, equals?, when?, default?, live?, unheld?, labels?, count?, where?, unless?, buckets?, label?, values?}`: `name` — `[a-z_][a-z0-9_]*`, повтор допустим (ряды одной метрики различаются `labels`); `type` — слово `gauge`, `counter`, `histogram`; `from`, `agg`, `when`, `label` — строки; `equals` — строка, bool или список строк; `default` — число или строка; `live`, `unheld` — bool; `labels` — opaque; `count` — `table <таблица этой спеки>`; `where` — opaque, ключи — поля, при `count` — поля таблицы; `unless` — `{table, where?}`; `buckets` — список чисел; `values` — список строк |
+| `domain` | `{ref?, view?, edit?, shared?, books?, names?, tokens?, kept?, tables?, keys?, reports?, witness?}`: `ref` — строка; `view`, `edit`, `kept`, `tables`, `reports` — списки строк; `shared`, `keys` — opaque; `books`, `names`, `tokens` — named, внутри opaque; `witness` — `{report, member_field}` — строки. В `view`, `edit`, `shared` нет `*_secret` (урок 7) |
+
+**Запрещённые имена.** Имя таблицы не из: `platform`, `domain`, `console`, `audit`, `next_id`, `policy`, `slots`,
+`holds`, `epoch`, `idem`, `placement`, `workers`, `requests`, `asked`, `sweep`, `servers`, `decommissioned`,
+`controller`, `spec`, `session`, `mounts`, `healthz`, `metrics`, `resources`, `where`, `unplaceable`, `drain`,
+`schema`, `events`, `marks`, `api` (служебные семьи раскладки урока 3 Н1.1 и первые сегменты дверей М10/8–10)
+и не из семей объектов платформы `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands` (урок 8 Н1.1).
+`unit.rows` — не из того же перечня и ещё не `cluster`, `worker`, `ts` (оболочка снимка урока 10 Н1.3).
+Нарушение — `refused:value`; пересечение с именами подсистем каталога — `refused:catalogue` (Н3).
 
 ### Н1.3 Поле
 
@@ -143,19 +302,22 @@ rules:
 | Ключ | Называет |
 |---|---|
 | `unit.id` | `numeric` или несекретное поле единицы типа string, включая умолчание типа; поле с суффиксом `_secret` — refused:reference |
-| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.form[].fields[]`, `display.tree.group_by` | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
+| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until/released`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.tree.group_by`, значения `*.must_match` (поля этой строки), `placement.home` (или слово `near`), `bound_to`, `credentials.login`, `credentials.secret` (поля той же строки, урок 7) | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
 | `requests.key` | свойства `requests.schema.properties` — поля тела просьбы (урок 8): `{имя}` — только строка без преобразования, свойство схемы явно имеет `type: string`; `{имя:int}` — конечное binary64-число (как в JCS) с модулем ≤2^53−1, усечение к нулю и десятичная запись без знака +/ведущих нулей (`7.9` → `7`, `-7.9` → `-7`, `-0.5` → `0`); свойство явно имеет `type: integer` или `number`, bool не число. Имя вне properties, суффикс `_secret`, иной/неявный/составной type — refused:reference при загрузке; отсутствующее значение, иной тип или число вне этой границы — 400 при подаче. Поля единицы здесь ни при чём. Тот же шаблон у `tables.<t>.key`: обычная подстановка и одиночное поле — type string (включая умолчание), :int — int/float; секретный источник запрещён (урок 10) |
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
-| `servers.status[].of`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table` | таблица из `tables:` |
+| `servers.status[].of`, `servers.show[].table`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table`, `metrics[].count` (`table <т>`), `worker.writes[]` | таблица из `tables:`; у `worker.writes` — собственная таблица, не `unit.rows` |
+| `placement.weight.field` | поле единицы типа int |
+| `requests.stamp: group`, `rights.reach.group` | требуют `placement.group_by` |
 | `console.running` | метрика из `metrics[]` |
 | `about.field` | поле единицы с `fixed: true` |
 | `door.routes[]` | маршрут, каждый один раз |
+| `door.pass[]` | сегмент, не повторяющий `door.routes`, `unit.rows` и `where` |
 | `objects.rows[]` | семья, не платформенная (`heartbeats`, `contenders`, `snapshot`, `controller`, `blobs`, `commands`, `*`) |
 | `worker.requests[]` | другая подсистема (своя — отказ); что она принимает просьбы — проверка каталога (Н3) |
 | `worker.reads[]` | `<семья>/<имя>`, не голое слово |
 | `placement.near.sub`, `placement.near.prefer` | соседняя подсистема и её поля — проверка каталога (Н3) |
 
-`display.tree.columns[].field` называет поле единицы или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id`. `display.fields.<имя>` и `display.field_help.<имя>` называют поле единицы, поле таблицы, слово пульса из `display.form[].status[]` или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id` (их показывает модуль — урок 9 Н1.2); прочие платформенные имена (`epoch`, `placement`, `age`) и имена вне этих — отказ: `display.fields.epoch` отказан, `display.fields.seen` при `status[].field: seen` принят.
+`display.tree.columns[].field` и элементы `display.form[].fields[]` называют поле единицы или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id`. `display.fields.<имя>` и `display.field_help.<имя>` называют поле единицы, поле таблицы, слово пульса из `display.form[].status[]` или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id` (их показывает модуль — урок 9 Н1.2); прочие платформенные имена (`epoch`, `placement`, `age`) и имена вне этих — отказ: `display.fields.epoch` отказан, `display.fields.seen` при `status[].field: seen` принят.
 
 ### Н1.5 Строка спеки в хранилище
 
@@ -322,13 +484,14 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 274 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (47) или `refused` (227). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 282 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (51) или `refused` (231). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
 | `c2_leading_marker`, `c2_crlf`, `c2_control_*`, `c2_null_*`, `c2_depth_64`/`c2_depth_65`, `c2_flow_*`, `c2_plain_*` | уточнения подмножества по чистой комнате: начальный `---`, CRLF, управляющие символы, регистр null, граница глубины 64/65, потоковые формы, перенос простого слова | Н1.1 |
 | `c2_form_without_title`, `c2_display_events_true` | принятые формы `display`: блок без `title`, `events: true` | Н1.2, урок 9 Н1.2 |
 | `c2_schema_known_keywords`, `c2_schema_unknown_keyword` | ключевые слова JSON Schema — только перечень урока 3 Н1.2 | Н1.2, урок 3 Н1.2 |
+| `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
 | `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan`, `float_*`, `int_field_boundaries`, `json_default_nonfinite` | скаляры: слова, числа, пределы | Н1.1 |
 | `unknown_depth1..4`, `unknown_multiple`, `unknown_in_lease`, `requests_unknown_key`, `requests_unknown_stamp`, `display_unknown_section`, `display_form_unknown_key`, `display_tree_word_erase`, `dup_block_hides_unknown`, `fields_derived_items_unknown` | закрытый набор ключей на каждом уровне; `diagnostics.tsv` проверяет путь и полноту списка неизвестных ключей | Н1.2 |
@@ -370,7 +533,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 Реализация обязана назвать в своём описании:
 
-1. **сводный закрытый перечень ключей** по уровням, каким его проверяет шаг 3 прохода (таблица в коде или данных), и как он сверяется с перечнями уроков-владельцев;
+1. **как реализация держит сводную таблицу Н1.2а** для шага 3 прохода (таблица в коде или данных); сама таблица — норма, не выбор;
 2. **сколько ошибок значений называет один отказ** (первую или все); незнакомые ключи называются все — норма Н3 шага 3, не выбор;
 3. **форма строки лога** при остановке по смене метки (период не реже 30 с и код 0 — норма Н3, ADR-0068);
 4. **форма строки лога** при отказе старта (код 2 — норма Н3, ADR-0068);

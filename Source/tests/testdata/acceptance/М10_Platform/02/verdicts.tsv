@@ -280,3 +280,11 @@ c2_form_without_title	ok
 c2_display_events_true	ok
 c2_schema_unknown_keyword	refused
 c2_schema_known_keywords	ok
+c2_merge_other_word	refused
+c2_merge_override	ok
+c2_cut_at_other_word	refused
+c2_cut_at_host	ok
+c2_metrics_type_other_word	refused
+c2_metrics_name_repeat	ok
+c2_form_fields_platform_id	ok
+c2_table_name_object_family	refused

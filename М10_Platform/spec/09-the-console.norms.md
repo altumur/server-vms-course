@@ -52,13 +52,13 @@ display:
     group_by:    <поле> — чем группировать дерево; nested_by: <разделитель> — значение group_by с разделителем даёт вложенные группы;
                  columns: [{field, title, width}] — field: поле единицы или платформенное имя модуля (worker, server,
                  revision, observed_revision, phase, id; урок 2 Н1.4); children: false — не вкладывать about-единицы
-    group_title, group_hint, filter, no_group, children, contents_title, group_word, no_group_suffix, pick_note,
+    group_title, group_hint, filter, no_group, contents_title, group_word, no_group_suffix, pick_note,
     new_root, new_sub, add_here, new_group_note, remove, not_in, add_to, no_others, new_group:   слова
   # display.actions — снят: модуль и оболочки его не читают (мёртвый ключ, ADR-0003)
 servers:
-  show:    [{table, by, title, columns}]         # строки таблицы table, у которых row[by] == сервер; заголовки — display.fields;
+  show:    [{table, by, title?, columns?}]       # строки таблицы table, у которых row[by] == сервер; заголовки — display.fields;
                                                  # секреты — маской; пусто — «Нет строк»; оболочка может накрыть addBlock(covers)
-  status:  [{field, title, of?}]                 # field не называет платформенные слова heartbeat М10/5 Н1.1 (например worker); иначе refused:value при загрузке; значение пульса воркера по пути field — в строку сервера как есть (строка
+  status:  [{field, title?, of?}]                # field не называет ключ пульса, который читает платформа (перечень — М10/2 Н1.2а, урок 5 Н1.1); иначе refused:value при загрузке; значение пульса воркера по пути field — в строку сервера как есть (строка
                                                  # из heartbeat.strings, число, карта, список; слово на месте числа — garbled,
                                                  # пропуск); of — таблица, по которой страница сопоставляет ключи (ADR-0064)
 console:
