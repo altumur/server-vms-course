@@ -385,3 +385,16 @@ m57_tokens_scenario_ok	ok
 m57_tokens_target_poll_home_in_placement	refused
 m57_tokens_unit_ok	ok
 m57_tokens_unit_without_ref	refused
+m59_keys_display_unknown_id	refused
+m59_keys_id_repeat	refused
+m59_keys_ok	ok
+m59_names_exclusive_other	refused
+m59_names_grant_word	refused
+m59_names_no_book	refused
+m59_names_no_exclusive	refused
+m59_names_no_grant_ok	ok
+m59_names_no_slash	refused
+m59_names_ok	ok
+m59_names_on_carried_book	refused
+m59_names_on_kept	refused
+m59_names_unknown_key	refused

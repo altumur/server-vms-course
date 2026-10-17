@@ -1,0 +1,27 @@
+{
+ "grants": {
+  "lines": [
+   {
+    "subject": "ann",
+    "cap": "view",
+    "scope": "labels:east,ground",
+    "until": 0,
+    "by": "root"
+   }
+  ]
+ },
+ "as_of": 1759999990,
+ "disabled": [],
+ "user": "ann",
+ "glass": false,
+ "cap": "view",
+ "unit": {
+  "sub": "testsub",
+  "id": "c1",
+  "labels": [
+   "east",
+   "ground"
+  ]
+ },
+ "now": 1760000000
+}

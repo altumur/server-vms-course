@@ -1,0 +1,24 @@
+{
+ "grants": {
+  "lines": [
+   {
+    "subject": "ann",
+    "cap": "view",
+    "scope": "unit:testsub/c1",
+    "until": 0,
+    "by": "root"
+   }
+  ]
+ },
+ "as_of": 1759999990,
+ "disabled": [],
+ "user": "ann",
+ "glass": false,
+ "cap": "view",
+ "unit": {
+  "sub": "testsub",
+  "id": "c2",
+  "labels": []
+ },
+ "now": 1760000000
+}

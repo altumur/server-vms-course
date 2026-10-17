@@ -1,0 +1,446 @@
+openapi: 3.1.0
+info:
+  title: M11/9 people, grants, names
+  version: '1'
+  description: 'Normative shapes: 09-people-grants-names.norms.md N1.1-N1.10, N2, N4. /api/login is the holder''s domain
+    process door; /domain/users, /domain/break-glass and /domain/revoke are passed by the domain console to that process
+    (N1.9); /domain/grants is the domain console''s own; /domain/keys is a cluster console''s; /session/break-glass is the M10/9 contract (its order and words: N1.6).
+    A cluster console hands the /domain/* doors on by the forwarding table of lesson 8. Request parsing: M10/9 N2.'
+servers:
+  - url: '{origin}'
+    description: Процесс domain держателя, консоль домена или консоль кластера — по двери.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /api/login:
+    post:
+      summary: Вход человека (Н1.2)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, password]
+              additionalProperties: false
+              properties:
+                user: {type: string}
+                password: {type: string}
+      responses:
+        '200':
+          description: Токен человека
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, until, user]
+                additionalProperties: false
+                properties:
+                  token: {type: string}
+                  until: {type: number}
+                  user: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '429': {$ref: '#/components/responses/TooMany'}
+  /domain/users:
+    get:
+      summary: Люди домена (Н1.1)
+      responses:
+        '200':
+          description: Люди по имени
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users]
+                additionalProperties: false
+                properties:
+                  users:
+                    type: array
+                    items: {$ref: '#/components/schemas/PersonView'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+    post:
+      summary: Завести человека (Н1.1, Н3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, password]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/PersonName'}
+                password: {type: string, minLength: 10}
+      responses:
+        '201':
+          description: Человек заведён
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                additionalProperties: false
+                properties:
+                  user: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/users/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/PersonName'}
+    put:
+      summary: Сменить пароль или выключить (Н1.1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                password: {type: string, minLength: 10}
+                disabled: {type: boolean}
+      responses:
+        '200':
+          description: Человек после правки
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, disabled]
+                additionalProperties: false
+                properties:
+                  user: {$ref: '#/components/schemas/PersonName'}
+                  disabled: {type: boolean}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+    delete:
+      summary: Удалить человека и его строки грантов (Н1.1)
+      responses:
+        '200':
+          description: Удалён
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, deleted, grants_changed]
+                additionalProperties: false
+                properties:
+                  user: {$ref: '#/components/schemas/PersonName'}
+                  deleted: {const: true}
+                  grants_changed:
+                    type: array
+                    items: {type: string}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+  /domain/grants:
+    get:
+      summary: Строки грантов (Н1.3)
+      responses:
+        '200':
+          description: Строки по кластерам и domain
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [grants]
+                additionalProperties: false
+                properties:
+                  grants:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: {$ref: '#/components/schemas/Line'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+  /domain/grants/{cluster}:
+    parameters:
+      - name: cluster
+        in: path
+        required: true
+        description: Имя члена по грамматике урока 3 или domain.
+        schema: {type: string, pattern: '^[a-z0-9-]{1,64}$'}
+    put:
+      summary: Записать строку грантов кластера целиком (Н1.3, Н3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines]
+              additionalProperties: false
+              properties:
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [subject, cap, scope]
+                    additionalProperties: false
+                    properties:
+                      subject: {$ref: '#/components/schemas/PersonName'}
+                      cap: {$ref: '#/components/schemas/Cap'}
+                      scope: {$ref: '#/components/schemas/Scope'}
+                      until: {type: number, minimum: 0, description: '0 или нет — без срока.'}
+      responses:
+        '200':
+          description: Строка после записи
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cluster, lines]
+                additionalProperties: false
+                properties:
+                  cluster: {type: string}
+                  lines:
+                    type: array
+                    items: {$ref: '#/components/schemas/Line'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/break-glass:
+    get:
+      summary: У каких кластеров задан аварийный пароль (Н1.6)
+      responses:
+        '200':
+          description: Кластеры и время установки
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [clusters]
+                additionalProperties: false
+                properties:
+                  clusters:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      required: [set_at]
+                      additionalProperties: false
+                      properties:
+                        set_at: {type: number}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+  /domain/break-glass/{cluster}:
+    parameters:
+      - name: cluster
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[a-z0-9-]{1,64}$'}
+    put:
+      summary: Задать аварийный пароль кластера (Н1.6)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              additionalProperties: false
+              properties:
+                password: {type: string, minLength: 12}
+      responses:
+        '200':
+          description: Задан
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cluster, set]
+                additionalProperties: false
+                properties:
+                  cluster: {type: string}
+                  set: {const: true}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+  /domain/revoke:
+    post:
+      summary: Отозвать токен (Н1.2)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              additionalProperties: false
+              properties:
+                token: {type: string}
+      responses:
+        '200':
+          description: jti добавлен в domain/revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [revoked]
+                additionalProperties: false
+                properties:
+                  revoked: {type: string}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+  /domain/keys:
+    get:
+      summary: Строки и семьи ключей домена в хранилище этого кластера (Н1.8)
+      responses:
+        '200':
+          description: Имена полей без значений; открытый набор
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rows, families, keyset]
+                additionalProperties: false
+                properties:
+                  rows:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: {type: string}
+                  families:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: {type: string}
+                  keyset:
+                    type: ['string', 'null']
+                    description: doc строки domain/keys как есть.
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+components:
+  responses:
+    Refused:
+      description: Отказ (Н4)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+    TooMany:
+      description: Предел попыток (Н1.10)
+      headers:
+        Retry-After:
+          required: true
+          schema: {type: integer, minimum: 1}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, detail]
+            additionalProperties: false
+            properties:
+              error: {const: too many attempts}
+              detail: {type: string}
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {type: string, minLength: 1, description: Слово Н4.}
+        detail: {type: string}
+    PersonName:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: '^[^\s\x00-\x1f\x7f:|()"/]+$'
+      description: Не break-glass и не субъект индекса имён (Н1.1).
+    Cap:
+      enum: [view, edit, admin]
+    Scope:
+      type: string
+      pattern: '^(\*|unit:[a-z][a-z0-9_-]{0,31}/.+|labels:[^,]+(,[^,]+)*)$'
+    Line:
+      type: object
+      required: [subject, cap, scope, until, by]
+      additionalProperties: false
+      properties:
+        subject: {$ref: '#/components/schemas/PersonName'}
+        cap: {$ref: '#/components/schemas/Cap'}
+        scope: {$ref: '#/components/schemas/Scope'}
+        until: {type: number, minimum: 0}
+        by: {type: string}
+    PersonView:
+      type: object
+      required: [name, how, disabled, at, by]
+      additionalProperties: false
+      properties:
+        name: {$ref: '#/components/schemas/PersonName'}
+        how: {const: password}
+        disabled: {type: boolean}
+        at: {type: number}
+        by: {type: string}
+    MayInput:
+      type: object
+      description: Вход функции may (Н1.4).
+      required: [grants, as_of, disabled, user, glass, cap, unit, now]
+      additionalProperties: false
+      properties:
+        grants:
+          unevaluatedProperties: false
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [lines]
+              additionalProperties: false
+              properties:
+                lines:
+                  type: array
+                  items: {$ref: '#/components/schemas/Line'}
+        as_of: {type: ['number', 'null']}
+        disabled:
+          type: array
+          items: {type: string}
+        user: {type: string}
+        glass: {type: boolean}
+        cap: {$ref: '#/components/schemas/Cap'}
+        unit:
+          oneOf:
+            - type: 'null'
+            - const: '*'
+            - $ref: '#/components/schemas/MayUnit'
+        now: {type: number}
+    MayUnit:
+      type: object
+      required: [sub, id, labels]
+      additionalProperties: false
+      properties:
+        sub: {type: string}
+        id: {type: string}
+        labels:
+          type: array
+          items: {type: string}
+        about:
+          type: object
+          required: [sub, id, labels]
+          additionalProperties: false
+          properties:
+            sub: {type: string}
+            id: {type: string}
+            labels:
+              type: array
+              items: {type: string}
+    MayOutput:
+      type: object
+      required: [result]
+      additionalProperties: false
+      properties:
+        result: {enum: [allow, deny]}
+        reason: {enum: [disabled, stale, no_grant]}

@@ -141,7 +141,8 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   revoked?:     строка domain/revoked держателя {jtis} (урок 2 Н1.6)
   members?:     строка domain/members {doc} (Н1.1)
   holder?:      запись срока — урок 10
-  sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants, break_glass — урок 9; books — урок 5
+  sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants — урок 9 Н1.3, break_glass — урок 9 Н1.6;
+                books — урок 5
   <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11; backup — урок 10
 envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 2 Н1.5: четыре части через «:», 2–4 — base64url без «=»
   recipient:    X25519 ключа члена: u = (1 + y)/(1 − y) mod 2^255 − 19 из y открытого Ed25519 (старший бит сброшен),
@@ -189,7 +190,7 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 | DELETE `/domain/members/<член>` | консоль домена | 200 `{rev, members}` без члена | 400 держатель; 404 не член |
 
 Двери `/domain/*` — у консоли домена; консоль кластера пересылает их (урок 8 Н1.2). Грант `admin` для правки списка и `view` для
-чтения — урок 9; до него консоль открыта только с петли (М10/9 Н1.3).
+чтения — урок 9 Н1.5.
 
 ---
 
@@ -251,7 +252,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 ### принять члена (консоль домена, POST /domain/members)
 
 ```
-1. name — держатель → 400; name нет в view.knocking → 404 «<name> is not knocking»
+1. name — держатель → 400; name = domain → 400 «domain is the name of the domain's own grants» (урок 9 Н1.9);
+   name нет в view.knocking → 404 «<name> is not knocking»
 2. fingerprint ≠ отпечаток knock.key → 409 «<name> presents another key than the one compared: look again»
 3. knock.pinned = another → 409 «<name> pinned another root than this domain's: join it again»
 4. knock.key в revoked_members набора или в revoked_keys записи этого имени → 409 «this key was revoked»

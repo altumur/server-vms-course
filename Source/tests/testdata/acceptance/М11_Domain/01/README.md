@@ -37,8 +37,10 @@
 |---|---|---|
 | `holder <запрос>` | консоль домена на `hold` (двери `/domain/*`); `Idempotency-Key` раннер ставит у `POST`, `PUT` и `DELETE` этой двери по правилу `@key` словаря М10/01 (урок 6: правки домена требуют ключа у всех трёх) | М11/3; ключ — М11/6 |
 | `member <кластер> <дверь> <запрос>` | дверь `store` (`admin.sock`), `console`, `console2` (префикс `/testsub2`, урок 5) или `resource` кластера `hold`, `m1`, `m2`; `store`, `console`, `resource` без префикса — кластера `hold` | М11/3 |
-| `@install domain` | команда установки урока 2 (Решает реализация п. 2) на `hold` с `{domain}` и `{recovery}` | М11/3 |
-| `@start domain` | процессы `domain` и консоли домена на `hold` | М11/3 |
+| `@install domain` | команда установки урока 2 (Решает реализация п. 2) на `hold` с `{domain}` и `{recovery}`; затем команда `domain first-admin root` урока 9 с паролем `w2c test root password` (директива `@admin`) | М11/3; `@admin` — М11/9 |
+| `@start domain` | процессы `domain` и консоли домена на `hold`; при первом старте после `@install domain` раннер входит человеком `root` (`signer POST /api/login`) и пишет `holder PUT /domain/grants/<кластер> {lines: [{subject: root, cap: admin, scope: "*"}]}` для каждого кластера стенда (`hold`, `m1`, `m2`, `relay`) — гранты готовят до приёма | М11/3; вход — М11/9 |
+| `signer <запрос>` | дверь процесса `domain` на `hold` через посредника раннера (тот же, что `DOMAIN_URL` агентов) — вход `POST /api/login` | М11/9 |
+| `@person <имя> <пароль>` / `@person -` | раннер входит этим человеком (`signer POST /api/login`; пароль — остаток строки) и дальше ставит `Authorization: Bearer <его токен>` у дверей `holder`, `member … console`, `console2` этого сценария, входя заново по истечении; `-` — без токена. После `@start domain` текущий человек — `root`; до домена заголовка нет. `@header Authorization: …` шага заменяет его | М11/9 |
 | `@restart domain` | SIGTERM обоим, дождаться выхода, запустить снова с тем же `{data}` | М11/3 |
 | `@start agent <кластер>` | агент кластера: `CLUSTER=<кластер>`, `DOMAIN_URL` — посредник раннера к двери `domain` | М11/3 |
 | `@start agent <кластер> via <ретранслятор>` | агент кластера за ретранслятором: `RELAY_URL` — посредник раннера к двери ретранслятора (`DOMAIN_URL` не задан) | М11/4 |

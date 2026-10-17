@@ -1,0 +1,17 @@
+{
+ "grants": null,
+ "as_of": 1759999990,
+ "disabled": [],
+ "user": "ann",
+ "glass": false,
+ "cap": "view",
+ "unit": {
+  "sub": "testsub",
+  "id": "c1",
+  "labels": [
+   "east",
+   "ground"
+  ]
+ },
+ "now": 1760000000
+}

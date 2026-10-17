@@ -1,0 +1,346 @@
+# М11/9 — Люди, гранты, имена: нормы
+
+Канон урока. [Лекция](../09-people-grants-names.md), [HTTP-контракт](09-people-grants-names.api.openapi.yaml),
+[инструкция](09-people-grants-names.README.md), [приёмка](../../Source/tests/testdata/acceptance/М11_Domain/09/README.md).
+
+## Н0 Словарь слов
+
+Нормативные слова — по [общему канону Н0](../../М10_Platform/spec/01-storage.norms.md#н0-словарь-слов).
+
+## Н1 Форма
+
+Общее уроков 1–8 Н1 действует. Люди живут у держателя; токен человека называет субъект и ничего больше (урок 2 Н1.6,
+`kind: person`, без `aud`). Что человеку можно, решает каждый кластер по своим грантам, которые несёт агент; проверка —
+локальное чтение без связи с доменом. Люди с паролями и аварийные пароли — операции процесса `domain` (подписант, ADR-0032),
+он проверяет каждую сам; гранты пишет консоль домена (они не запечатаны). Решение «Архитектора» по вопросам М11/9.
+
+### Н1.1 Человек
+
+```yaml
+domain/users/<имя>:  {name, how, pwhash_secret, disabled, at, by}      # у держателя; писатель — процесс domain
+  name:        имя человека — 1–64 символа без пробельных, управляющих (U+0000–U+001F, U+007F) и : | ( ) " /;
+               не break-glass; не субъект индекса имён (Н1.7)
+  how:         "password"                       # иных способов входа урок не нормирует
+  pwhash_secret: pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> — PBKDF2-HMAC-SHA256 от UTF-8 пароля, соль —
+               16 случайных байт, ключ — 32 байта; секрет по суффиксу (М10/7), запечатан кольцом держателя
+  disabled:    true | false
+  at, by:      стенные секунды и имя человека последней правки (доказанное сторожевой)
+PASSWORD_MIN:  10          # символов
+domain/disabled: {names: "<имя>,…"}              # имена выключенных по возрастанию в байтах UTF-8; нет — ""; писатель —
+               # процесс domain при каждой правке disabled; секретов нет (ADR-0051)
+delete:        удалить строку человека и снять его строки во всех domain/grants/* (Н1.3) — одной правкой на строку грантов
+unreadable:    строка человека, которая не читается, — пропускается и считается (диагностика процесса), остальные служат
+```
+
+### Н1.2 Вход, токен человека, отзыв
+
+```yaml
+door:          POST /api/login {user, password} у процесса domain; тело ≤ LOGIN_BODY (больше — 413); оба поля — строки
+               (иначе 400 bad body); CORS: Access-Control-Allow-Origin: * без credentials — дверь cookie не ставит и не читает
+check:         предел Н1.10 → человек есть, не disabled, пароль сверился (сравнение постоянного времени) → токен;
+               нет человека или disabled — сверка по фиктивному хешу той же стоимости (600000): ответ неизвестному,
+               выключенному и неверному неразличим и по коду, и по телу, и по времени
+answer:        200 {token, until, user}; иначе 401 {error: "refused", detail: "wrong user or password"} — отказ в счёт
+               предела Н1.10
+token:         урок 2 Н1.6: payload {iss: <домен>, sub: <имя>, kind: "person", iat: now, exp: now + TOKEN_LIFETIME, jti},
+               ключ токенов держателя (current набора); until = exp
+TOKEN_LIFETIME: 900        # с
+LOGIN_BODY:    16 KiB
+revoke:        POST /domain/revoke {token} — строка таблицы пересылки урока 8; консоль домена передаёт её процессу domain
+               (Н1.9 `pass`); токен проверяется функцией token урока 2 (не прошёл — 401 со словом token); jti и exp
+               добавляются в domain/revoked (урок 2 Н1.6) — ответ 200 {revoked: <jti>}; отозвать токен может тот, кто
+               его держит; страница зовёт дверь при выходе (М10/9 DELETE /session — снимает cookie)
+login_url:     М10/9 Н1.3 (LOGIN_URL окружения, умолчание /api/login); адрес из записи срока — урок 10
+```
+
+### Н1.3 Гранты
+
+```yaml
+domain/grants/<кластер>:  {doc: <текст JCS {lines}>}   # у держателя; <кластер> — имя члена по грамматике урока 3
+                                                       # (членом быть не обязан: гранты готовят до приёма) или domain
+  lines:       [line…] по (subject, cap, scope, until) в байтах UTF-8, без повторов
+  line:        {subject, cap, scope, until, by}
+    subject:   имя человека (Н1.1) или субъект индекса имён (Н1.7)
+    cap:       view | edit | admin             # view < edit < admin
+    scope:     * | unit:<sub>/<id> | labels:<метка>[,<метка>…]   # метки — азбука урока М10/4 Н2.1, без повторов
+    until:     0 — без срока; иначе стенные секунды — строка действует, пока now < until
+    by:        имя, доказанное сторожевой при записи
+  writer:      консоль домена по двери Н2 (CAS по прочитанной версии); снятие строк человека при удалении — процесс domain
+domain/grants/domain: гранты двери домена (консоль домена и процесс domain); ни один агент их не несёт
+last_admin:    правка domain/grants/domain или людей, после которой нет строки {cap: admin, scope: *, until: 0} человека,
+               который есть и не disabled, — 409 last admin
+carry:         ответ держателя агенту (урок 3 Н1.5) несёт в sealed поле grants: {doc} — строка domain/grants/<член>
+               без строк, чей subject в domain/disabled (ADR-0051); строки нет — поля нет
+member_copy:   агент пишет domain/grants/<член> {doc, as_of} — doc как пришёл, as_of — свои стенные секунды приёма;
+               поля нет — строку удалить
+holder_copy:   у кластера держателя строка domain/grants/<держатель> — та, что пишет консоль домена (as_of нет)
+GRANT_LIFETIME: 86400      # с — копия члена старше as_of + GRANT_LIFETIME не даёт прав
+unreadable:    строка, которая не читается, прав не даёт; строка lines, которая не по форме, — пропускается и считается
+               диагностикой, остальные действуют
+```
+
+Окно отзыва права у члена без связи — `min(TOKEN_LIFETIME + TOKEN_SKEW, GRANT_LIFETIME)` от последнего ответа держателя:
+960 с у токена и сутки у копии грантов. Число заявлено заранее (М12A/04 шаг 5).
+
+### Н1.4 Право — функция `may`
+
+```yaml
+input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: [<имя>…], user, glass, cap, unit, now}
+  unit:    null — дверь без единицы; "*" — право на всё; {sub, id, labels: [<метка>…], about?: {sub, id, labels}}
+  glass:   true — сессия аварийного входа (Н1.6)
+output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
+```
+
+```
+1. glass                                                                → allow
+2. user ∈ disabled                                                      → deny disabled
+3. grants = null                                                        → deny no_grant
+4. as_of ≠ null и now − as_of > GRANT_LIFETIME                          → deny stale
+5. строки: subject = user, until = 0 или now < until
+6. unit = null и cap = view: хоть одна строка                           → allow
+7. строка с rank(cap строки) ≥ rank(cap) и область покрывает unit        → allow
+   * — любую (и "*"); unit:<s>/<i> — unit с (sub, id) = (s, i) или его about с (s, i);
+   labels:L — все метки L у about, если about есть, иначе у самого unit; null и "*" ни одна область, кроме *, не покрывает
+8.                                                                      → deny no_grant
+```
+
+### Н1.5 Сторожевая с грантами
+
+```yaml
+cluster:   М10/9 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token урока 2 по набору и domain/revoked
+           этого кластера (отказ — 401 {error: denied, detail: "token refused: <слово>"}, форма М10/9); затем may (Н1.4) с
+           grants = doc строки domain/grants/<этот кластер>, as_of — её as_of, disabled — domain/disabled этого
+           хранилища (есть только у держателя), cap и unit — need М10/9 Н1.3; deny — 403 {error: denied, detail:
+           "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
+           its agent has not reached the domain»
+domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /spec,
+           /mounts и двери урока с GET; admin — остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin
+session:   GET /session доказанной личности (М10/9 Н1.3) — grants: [{cap, scope}] — действующие строки этого человека
+           (шаг 5 may) у этой консоли, по (cap, scope)
+loopback:  «петля — operator» — только состояние open (нет домена, М10/9 Н1.3); в состоянии on — только Н1.5
+agent:     подпись агента своего кластера (урок 3 Н1.4) — двери единиц, как прежде
+```
+
+### Н1.6 Аварийный вход
+
+```yaml
+domain/break-glass/<кластер>: {pwhash_secret, set_at}    # у держателя; pwhash_secret — та же форма Н1.1
+  writer:      процесс domain по двери PUT /domain/break-glass/<кластер> {password} (admin домена); пароль ≥ GLASS_MIN
+GLASS_MIN:     12          # символов
+carry:         sealed ответа агенту — поле break_glass: {pwhash_secret, set_at}; у члена — domain/break-glass/<член>
+               (секрет запечатан его кольцом); поля нет — агент удаляет строку
+door:          POST /session/break-glass {who, why, password} у консоли кластера (М10/9 Н1.3) — по порядку:
+               1. консоль open — 400 {error: "open", detail: "this console is open: there is nothing to break into"}
+               2. тело не {who, why, password} строками, who или why пусты — 400 bad body
+               3. предел Н1.10                                         → 429
+               4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
+                  нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
+                  не открывается — 503
+               5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)
+               6. 200 {user: "break-glass(<who>)", until} + кука w2c_glass; сессия — в памяти процесса консоли,
+                  GLASS_SESSION, токена нет
+GLASS_SESSION: 900         # с
+journal:       access.break_glass.opened {who, why} | .refused {who, why, reason} | .limited; каждое действие под сессией
+               сильнее view — access.break_glass {who, method, path}
+```
+
+### Н1.7 Индекс имён
+
+```yaml
+spec:      domain.names.<книга>/: {exclusive_with: domain/users, grant?: view | edit | admin}
+           <книга> — книга той же спеки с from (урок 5 Н1.1); иначе, или exclusive_with нет либо другое, или grant
+           не из слов, или иной ключ — refused:reference (М10/2 Н4; случаи m59_names_* урока 2)
+subject:   значение key вклада этой книги
+domain/names/<sub>/<книга>:   у держателя; писатель — процесс domain после сборки книг прохода (урок 5 Н3)
+  items:   "" → JCS {missing: [<член>…]}; <key> → JCS {members: [<член>…]} — по возрастанию, из всех читаемых вкладов,
+           включая спорные unique и недоставленные; значений и секретов нет
+  missing: как missing книги урока 5 Н1.5 — члены, чьих вкладов нет из-за них
+known:     индекс есть, читается и его missing пуст
+checks:    у дверей людей и грантов (процесс domain, консоль домена), по индексам всех names каталога:
+           POST /domain/users с именем — subject индекса                    → 409 name taken
+           строка гранта с subject индекса и rank(cap) > rank(grant)          → 400 grant too wide
+           новый человек или новая строка гранта (нет в прежней строке), а индекс не known → 503 names unknown,
+             detail — «missing members: <члены>» или «index absent or damaged»
+           удаление человека и снятие строк — никогда не ждут
+reverse:   элемент книги с names, чей key — имя человека, не доставляется никому: поле вида view.books.<sub>/<книга>.person_names
+           [<key>…] по возрастанию (урок 5 Н1.5, добавлено М11/9); в отчёте функции assemble урока 5 его нет — её вход без людей
+delivery:  урок 5 Н1.3 grant — у получателя строка гранта с subject = key, rank(cap) ≥ rank(grant), действующая (Н1.4 шаг 5)
+```
+
+### Н1.8 Семьи ключей домена
+
+```yaml
+spec:      domain.keys: [{id, keys?: [<ключ>…], prefix?: <семья/>}] — id ^[a-z][a-z0-9_-]{0,31}$ без повторов; хотя бы
+           одно из keys, prefix; ключи и семья — под domain/<sub>/; display.keys.<id> — слова только для объявленного id
+           (иначе refused:reference); случаи m59_keys_* урока 2
+door:      GET /domain/keys у консоли кластера (своя, не пересылается; view): {rows, families, keyset}
+  rows:      {<ключ строки под domain/>: [<имя поля>…]} — строки этого хранилища, имена полей по возрастанию, без значений
+  families:  {<id>: [<ключ>…]} — по domain.keys спек каталога: названные keys и ключи под prefix, что есть здесь
+  keyset:    doc строки domain/keys как есть (открытые ключи) | null
+```
+
+### Н1.9 Двери людей и первый администратор
+
+```yaml
+pass:      /domain/users…, /domain/break-glass…, /domain/revoke консоль домена передаёт процессу domain (SIGNER_URL своей
+           коробки) — путь, тело, Authorization и Idempotency-Key как пришли, ответ как пришёл (урок 8 Н1.4); процесс
+           domain проверяет токен и domain/grants/domain сам (ADR-0032)
+first:     команда держателя domain first-admin <имя> (пароль — stdin, Н1.1 PASSWORD_MIN): только пока domain/users пуст —
+           пишет человека и строку {subject: <имя>, cap: admin, scope: *, until: 0, by: <имя>} в domain/grants/domain;
+           люди есть — отказ, код ≠ 0
+member:    имя domain — не имя члена: приём члена (урок 3 Н3) — 400 «domain is the name of the domain's own grants»
+```
+
+### Н1.10 Предел попыток
+
+```yaml
+scope:     у процесса domain — POST /api/login; у консоли кластера — POST /session/break-glass; свой счёт у каждой двери
+count:     отказ — неверная пара (Н1.2, Н1.6 шаг 5); успех и отказ формы не считаются
+address:   адрес TCP-пира (заголовки адреса не читаются)
+per_address: 5 отказов этого адреса за последние 900 с → 429; Retry-After — секунды до выхода старейшего из окна
+ceiling:   20 отказов всех адресов за последние 900 с → каждому адресу не чаще одной попытки в 60 с; раньше — 429,
+           Retry-After — секунды до следующей
+body:      429 {error: "too many attempts", detail} и заголовок Retry-After (у консоли — форма М10/9 M2_RateLimited);
+           блокировки по имени человека нет — она дала бы любому выключить администратора
+```
+
+---
+
+## Н2 Двери
+
+HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grants-names.api.openapi.yaml). Тело отказа —
+`{error, detail}`. Двери `/domain/*` консоли домена — строки таблицы пересылки урока 8 (добавлено М11/9).
+
+| Дверь | Кто | Право | Успех | Отказы |
+|---|---|---|---|---|
+| POST `/api/login` | процесс `domain` | — | 200 `{token, until, user}` | 400 bad body; 401 refused; 413; 429 |
+| GET `/domain/users` | `domain` (через консоль домена) | view | 200 `{users: [{name, how, disabled, at, by}]}` по `name` | 401/403 |
+| POST `/domain/users` `{name, password}` | `domain` | admin | 201 `{user}` | 400 bad body, bad name, bad password; 409 exists, name taken; 503 names unknown |
+| PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 404 no such person; 409 last admin |
+| DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 404 no such person; 409 last admin |
+| GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
+| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS; 503 names unknown |
+| GET `/domain/break-glass` | `domain` | view | 200 `{clusters: {<кластер>: {set_at}}}` | 401/403 |
+| PUT `/domain/break-glass/<кластер>` `{password}` | `domain` | admin | 200 `{cluster, set: true}` | 400 bad body, bad password, bad name |
+| POST `/domain/revoke` `{token}` | `domain` | — | 200 `{revoked}` | 400 bad body; 401 слово `token` |
+| POST `/session/break-glass` | консоль кластера | — | Н1.6 | Н1.6, Н1.10 |
+| GET `/domain/keys` | консоль кластера | view | Н1.8 | 401/403 |
+
+Журнал: `domain.user.created`, `.password`, `.disabled`, `.deleted {grants_changed}` — процесс `domain`; `domain.grants.changed
+{cluster, added, removed, by}` — консоль домена; `domain.break_glass.set {cluster, by}` — процесс `domain`. Паролей и хешей в
+строках журнала нет.
+
+---
+
+## Н3 Проход
+
+### дверь людей (процесс domain) — по порядку
+
+```
+1. тело больше 1 МиБ                                                → 413
+2. токен (token урока 2, kind person) и may по domain/grants/domain  → 401 / 403 {error: denied}
+3. тело не по форме двери                                           → 400 bad body
+4. имя не по Н1.1 (POST)                                            → 400 bad name
+5. пароль короче PASSWORD_MIN (GLASS_MIN у break-glass)              → 400 bad password
+6. проверки имён Н1.7                                               → 409 name taken / 503 names unknown
+7. POST: человек есть — 409 exists; PUT, DELETE: нет — 404 no such person
+8. last_admin (Н1.3)                                                → 409 last admin
+9. записать строку (CAS по прочитанной версии); disabled — затем domain/disabled; DELETE — затем строки грантов
+```
+
+### гранты (консоль домена, PUT /domain/grants/<кластер>) — по порядку
+
+```
+1. may по domain/grants/domain, admin                               → 401 / 403
+2. кластер не по грамматике члена и не domain                        → 400 bad name
+3. lines не по форме Н1.3 (cap, scope, until — число ≥ 0, subject по Н1.1), повтор строки → 400 bad line
+4. проверки имён Н1.7: шире grant — 400; новая строка и индекс не known — 503
+5. кластер = domain и last_admin                                     → 409 last admin
+6. записать по CAS: lines по порядку Н1.3, by — доказанное имя; конфликт — перечитать и повторить с шага 4 не больше трёх раз
+```
+
+**Гонки.** Человек выключен, а его токен жив: у кластера держателя отказ сразу (`domain/disabled`), у члена — со следующим
+ответом агенту (ADR-0051). Отзыв гранта у члена без связи — не позже `GRANT_LIFETIME` от последнего ответа. Две консоли
+домена пишут гранты — CAS строки. Одно имя создаётся человеком и вкладом в двух кластерах одновременно — индекс показывает
+обоих, доставка элемента не идёт (Н1.7 reverse), распределённой блокировки нет.
+
+---
+
+## Н4 Отказы
+
+| `error` | Код | Когда |
+|---|---|---|
+| `bad body` | 400 | тело не по форме двери |
+| `bad name` | 400 | имя человека не по Н1.1, кластер не по грамматике |
+| `bad password` | 400 | короче `PASSWORD_MIN` / `GLASS_MIN` |
+| `bad line` | 400 | строка гранта не по форме, повтор |
+| `grant too wide` | 400 | субъекту индекса — шире его `grant` |
+| `refused` | 401 | у процесса `domain`: неверная пара входа; токен `/domain/revoke` не прошёл (`detail` — слово `token`) |
+| `denied` | 401, 403 | у консолей и дверей людей (форма М10/9): токена нет или не прошёл; `may` — deny; аварийный пароль не сверился (401); нет аварийной учётки (403, `detail` — «no emergency account: …») |
+| `no such person` | 404 | человека нет |
+| `exists` | 409 | человек с таким именем есть |
+| `name taken` | 409 | имя — субъект индекса имён |
+| `last admin` | 409 | у двери домена не останется администратора |
+| `too many attempts` | 429 | предел Н1.10, `Retry-After` |
+| `names unknown` | 503 | индекс не known, а правка создаёт или расширяет |
+| `open` | 400 | аварийный вход у открытой консоли |
+| `bad body` у аварийного входа | 400 | `who`, `why` пусты или не строки |
+
+Слова `may`: `disabled`, `stale`, `no_grant`.
+
+---
+
+## Н5 Приёмка
+
+Каталог `Source/tests/testdata/acceptance/М11_Domain/09/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/09/README.md)):
+стенд урока 5 (`testsub` и `testsub2`) с людьми и функция `may` на входах `inputs/`. Отказы загрузки `domain.names` и
+`domain.keys` — случаи `m59_*` корпуса урока 2.
+
+```yaml
+may:       вход — Н1.4 input; вывод — Н1.4 output
+exit:      0 — вычислено; 2 — вход не по форме
+```
+
+| № | Сценарий | Нормы |
+|---|---|---|
+| 01 | стенд: вход, отказ неизвестному и неверному одним ответом; люди — 201, 400, 409; грант `unit:` — `/session` с грантами, чтение единицы, 403 записи и другого кластера, 401 без токена | Н1.1–Н1.5 |
+| 02 | стенд: выключение — отказ у члена после ответа агенту, вход — 401; включение; отзыв — 401; последний администратор — 409 | Н1.1–Н1.3, Н1.5 |
+| 03 | стенд: аварийный пароль — 400 короткий, 200; вход у `m1`: неверный — 401, верный — сессия, шестая неудача — 429 | Н1.6, Н1.10 |
+| 04 | стенд: предел входа — пять неудач, затем 429 и верной паре | Н1.10 |
+| 05 | стенд: индекс `notes` `testsub2`; человек под именем элемента — 409; грант шире `view` — 400; доставка по гранту; молчащий член — 503 на создание, снятие не ждёт | Н1.7 |
+| 06 | стенд: `GET /domain/keys` у `m1` — строки, семьи `testsub`, набор | Н1.8 |
+| 07 | `may`: аварийная сессия, выключенный, нет грантов, давняя копия, view без единицы, `*`, `unit:` и его `about`, `labels:` своих меток и меток `about`, ранги, истёкшая строка, `"*"` только у `*` | Н1.4 |
+
+---
+
+## Решает реализация
+
+1. **команду `may`** — шаблон с `{input}`; **команду `domain first-admin`** — для директивы `@admin` словаря М11/01;
+2. **как раннер входит человеком** — дверь `signer` и директива `@person` словаря М11/01;
+3. **библиотеку PBKDF2** и сравнение постоянного времени — лишь бы форма Н1.1 и неразличимость Н1.2 сохранялись.
+
+---
+
+## Чеклист готовности
+
+- [ ] **М11/9-01** строка человека Н1.1: имя, хеш, `disabled`, удаление со строками грантов — сц. 01, 02
+- [ ] **М11/9-02** вход Н1.2: один ответ неизвестному, выключенному, неверному — сц. 01, 02; равное время — чтением
+- [ ] **М11/9-03** токен человека 900 с, отзыв — сц. 02; `login_url` — урок М10/9
+- [ ] **М11/9-04** гранты Н1.3: форма, `until`, копия члена с `as_of`, без строк выключенных — сц. 01, 02; давняя копия — сц. 07
+- [ ] **М11/9-05** `may` Н1.4 по порядку — сц. 07
+- [ ] **М11/9-06** сторожевая Н1.5: 401/403, `/session` с грантами, консоль домена по `domain/grants/domain` — сц. 01, 02
+- [ ] **М11/9-07** «петля — operator» только в `open` — сц. 01 (без токена — 401); уроки 2, 3, 8 — переведены
+- [ ] **М11/9-08** аварийный вход Н1.6 по порядку, сессия 900 с, журнал — сц. 03; журнал — чтением
+- [ ] **М11/9-09** предел Н1.10: на адрес — сц. 03, 04; общий потолок — чтением (стенд с одного адреса)
+- [ ] **М11/9-10** индекс имён Н1.7: форма, проверки, обратная сторона, доставка по рангу — сц. 05; загрузка — `m59_names_*`
+- [ ] **М11/9-11** семьи ключей Н1.8 — сц. 06; загрузка — `m59_keys_*`
+- [ ] **М11/9-12** первый администратор и имя `domain` — сц. 01–06 (`@admin`); отказ приёма `domain` — чтением
+- [ ] **М11/9-13** двери людей через консоль домена к процессу `domain`, проверка там — сц. 01, 02
+
+## Соответствие прежним урокам
+
+Нормирует то, что рассказывали `М12A_Domain/04-who-may-call-it.md` (шаг 2 — делегировать власть: токен называет субъект;
+шаг 3 — где живут люди и имена; шаг 4 — домен недоступен; шаг 5 — права локальны, их несёт агент, срок — механизм
+отзыва; шаг 6 — ворота консоли и двери домена; шаг 7 — аварийный доступ). Токены и подписант — уроки 2 и 7; шаг 1 и «двери
+между процессами» — урок 8. Учётки VMS-шлюза (ADR-0074 C5) — пример М12. Лицензия и упаковка `М12A_Domain/05` — М13
+(ответ на записку М11 п. 9). ADR-0031, ADR-0032, ADR-0051, ADR-0074 доп. (2). Исторические исходники сохранены в Git.

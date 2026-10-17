@@ -54,7 +54,7 @@ readers:    исполнитель на члене — по worker.reads `domain
 doors:      POST /domain/<sub>/<rows> {cluster, <поля>}        — создать единицу на члене cluster
             PUT /domain/<sub>/<rows>/<ref>[?cluster=<член>]   — править поля
             DELETE /domain/<sub>/<rows>/<ref>[?cluster=<член>] — удалить
-            Idempotency-Key обязателен у всех трёх (иначе 400); грант admin — урок 9 (до него — operator с петли, урок 2 Н1.8)
+            Idempotency-Key обязателен у всех трёх (иначе 400); грант admin у двери домена — урок 9 Н1.5
 fields:     только поля domain.edit спеки (М10/2 Н1.2а); платформенные (cluster, worker, server, placement, epoch,
             observed_revision, phase, revision) и поля вне domain.edit — 400; пустое тело PUT — 400; значения — по
             спеке (М10/3 Н3 шаг 4 формы) — 400; у POST — поле domain.ref спеки обязательно
