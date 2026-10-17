@@ -105,6 +105,8 @@ paths:
             schema:
               type: object
               required: [cluster]
+              additionalProperties: true
+              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
               properties:
                 cluster: {$ref: '#/components/schemas/MemberName'}
       responses:
@@ -132,7 +134,11 @@ paths:
         required: true
         content:
           application/json:
-            schema: {type: object, minProperties: 1}
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: true
+              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
       responses:
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}
@@ -200,6 +206,7 @@ components:
     Refusal:
       type: object
       required: [error]
+      additionalProperties: false
       properties:
         error: {type: string, minLength: 1}
         detail: {type: string}

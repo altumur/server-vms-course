@@ -280,6 +280,7 @@ components:
         Отсутствующий inherit и json null не добавляются в ответ.
         Открытый набор имён поддерживает произвольную спеку, а не разрешает чужие поля.
     CreatedUnit:
+      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/Unit"
         - type: object
@@ -362,6 +363,7 @@ components:
         - $ref: "#/components/schemas/Refusal"
         - not: {required: [fault]}
     FormRefusal:
+      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/Refusal"
         - properties:
@@ -379,16 +381,19 @@ components:
             error: {const: conflict}
             fault: {enum: [must_match, unique, garbled]}
     KeyReused:
+      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/TextRefusal"
         - properties:
             error: {const: key reused}
     Denied:
+      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/TextRefusal"
         - properties:
             error: {const: denied}
     Method:
+      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/TextRefusal"
         - properties:

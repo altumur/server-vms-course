@@ -194,6 +194,7 @@ components:
           type: string
     JsonValue:
       description: JSON value from a loaded spec. Numeric bounds apply recursively, including opaque sections.
+      unevaluatedProperties: false
       anyOf:
       - type: ['null', boolean, string]
       - type: number
@@ -218,12 +219,14 @@ components:
           type: string
       description: Общая форма отказа консоли урока 9 Н4 `{detail, error}`; это не диагностика загрузчика и не Fault хранилища.
     Denied:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:
           error:
             const: denied
     NoRoute:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:
@@ -232,6 +235,7 @@ components:
           error:
             const: no such path
     Method:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:
@@ -240,6 +244,7 @@ components:
           error:
             const: method
     Unavailable:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:

@@ -100,6 +100,7 @@ components:
     Refusal:
       type: object
       required: [error]
+      additionalProperties: false
       properties:
         error: {type: string, minLength: 1}
         detail: {type: string}
@@ -117,7 +118,8 @@ components:
           propertyNames: {$ref: '#/components/schemas/MemberName'}
           additionalProperties:
             type: object
-            description: Публикация М11/3 Н1.2 (целое или изменение против rev этой дороги).
+            additionalProperties: true
+            description: Публикация М11/3 Н1.2 (целое или изменение против rev этой дороги); форма и закрытость — Publication контракта урока 3.
         knocks:
           type: object
           propertyNames: {$ref: '#/components/schemas/MemberName'}
@@ -140,7 +142,8 @@ components:
           type: object
           additionalProperties:
             type: object
-            description: Carry М11/3 Н1.5; rev — для дороги этого ретранслятора.
+            additionalProperties: true
+            description: Carry М11/3 Н1.5; rev — для дороги этого ретранслятора; форма и закрытость — Carry контракта урока 3.
         refused:
           type: object
           additionalProperties: {type: string}

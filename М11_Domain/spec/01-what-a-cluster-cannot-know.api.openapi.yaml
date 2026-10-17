@@ -88,6 +88,7 @@ components:
       content:
         application/json:
           schema:
+            unevaluatedProperties: false
             allOf:
               - $ref: '#/components/schemas/Refusal'
               - properties:
@@ -152,7 +153,8 @@ components:
           enum: [live, stale, configured, silent]
         view:
           type: object
-          description: Поля domain.view спеки; секретных нет.
+          additionalProperties: true
+          description: Поля domain.view спеки; секретных нет. Открыт намеренно — набор полей задаёт спека подсистемы, не урок.
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]
@@ -180,15 +182,27 @@ components:
               minItems: 2
               items:
                 $ref: '#/components/schemas/MemberName'
-      description: Поля других уроков (trust — 2; member_list, knocking, reports — 3; topology — 4; books — 5; pending,
-        outcomes — 6; term — 10; shared — 11) задают их уроки.
+      description: Поля других уроков (trust — 2; member_list, knocking, reports — 3; topology, relay_refused — 4; books —
+        5; pending, outcomes — 6; term — 10; shared — 11) задают их уроки; отданный вид (ServedView) закрыт и называет их.
     ServedView:
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/View'
         - type: object
           required: [age]
           properties:
             age: {type: number, minimum: 0}
+            trust: {description: 'урок 2 Н1.2: {rev, root, book_seal}'}
+            member_list: {description: 'урок 3 Н1.7: {rev, members}'}
+            knocking: {description: 'урок 3 Н1.7: [knock…]'}
+            reports: {description: 'урок 3 Н1.7; via — урок 4'}
+            topology: {description: урок 4 Н1.6}
+            relay_refused: {description: урок 4 Н1.6}
+            books: {description: урок 5}
+            pending: {description: урок 6 Н1.6}
+            outcomes: {description: урок 6 Н1.6}
+            term: {description: урок 10}
+            shared: {description: урок 11}
     Finding:
       type: object
       required: [kind, sub, ref, detail]
@@ -266,7 +280,8 @@ components:
                       description: rev метки reported (урок 3 Н1) или null — метки нет.
                     objects:
                       type: object
-                      description: Объекты копии по ключам М10/5 Н1.1 и М10/10 Н1.3.
+                      additionalProperties: true
+                      description: Объекты копии по ключам М10/5 Н1.1 и М10/10 Н1.3. Открыт намеренно — копия несёт и семьи других уроков (урок 3 Н1.2 member_objects); вид берёт названные.
                     stale:
                       type: array
                       items: {type: string}
@@ -277,6 +292,7 @@ components:
                 additionalProperties:
                   type: object
                   additionalProperties:
+                    unevaluatedProperties: false
                     oneOf:
                       - $ref: '#/components/schemas/MemberName'
                       - type: object

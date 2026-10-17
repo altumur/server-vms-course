@@ -81,6 +81,7 @@ components:
       description: Версия или пустая строка, если строки нет.
     Row:
       description: Три различимых исхода чтения; unreadable бывает только true у повреждённой строки.
+      unevaluatedProperties: false
       oneOf:
         - type: object
           required: [items, index]
@@ -113,6 +114,7 @@ components:
       description: Порядок имён keys — по UTF-8-байтам; JSON Schema порядок объекта не проверяет.
     Cmd:
       type: object
+      unevaluatedProperties: false
       required: [op, key]
       properties:
         op: {type: string, enum: [put, delete], description: "op floor — отдельная схема FloorCmd урока 11 на admin-сокете лидера (добавлено М10/11 Н2)"}

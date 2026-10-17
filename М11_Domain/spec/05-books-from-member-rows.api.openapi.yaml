@@ -38,6 +38,7 @@ paths:
           content:
             application/json:
               schema:
+                unevaluatedProperties: false
                 allOf:
                   - $ref: '#/components/schemas/Refusal'
                   - properties:
@@ -93,7 +94,8 @@ components:
             items:
               type: object
               required: [member, item]
-              description: Поля show входа плюс member и item; секретов и полей вне show нет.
+              additionalProperties: true
+              description: Поля show входа плюс member и item; секретов и полей вне show нет. Открыт намеренно — поля show задаёт спека.
               properties:
                 member: {$ref: '#/components/schemas/MemberName'}
                 item: {type: string, minLength: 1}

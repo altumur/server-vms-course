@@ -867,6 +867,7 @@ components:
             - garbled
     M2_JsonValue:
       description: JSON value from a loaded spec. Numeric bounds apply recursively, including opaque sections.
+      unevaluatedProperties: false
       anyOf:
       - type:
         - 'null'
@@ -1110,12 +1111,14 @@ components:
           type: string
       description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
     M4_Denied:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M4_ConsoleRefusal'
       - properties:
           error:
             const: denied
     M4_NoRoute:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M4_ConsoleRefusal'
       - properties:
@@ -1124,6 +1127,7 @@ components:
           error:
             const: no such path
     M4_Method:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M4_ConsoleRefusal'
       - properties:
@@ -1132,6 +1136,7 @@ components:
           error:
             const: method
     M4_Unavailable:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M4_ConsoleRefusal'
       - properties:
@@ -1166,8 +1171,10 @@ components:
           bytes:
             type: integer
             minimum: 0
+      unevaluatedProperties: false
       description: Полная Unit и число принятых байтов. Спека с blob и объявленным unit.fields.bytes отвергается при загрузке по Н1.5.
     SecretFreeValue:
+      unevaluatedProperties: false
       anyOf:
       - type:
         - 'null'
@@ -1322,12 +1329,14 @@ components:
           type: string
       description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
     M2_Denied:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:
           error:
             const: denied
     M2_NoRoute:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:
@@ -1336,6 +1345,7 @@ components:
           error:
             const: no such path
     TableMethod:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:
@@ -1345,6 +1355,7 @@ components:
           error:
             const: method
     M2_Method:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:

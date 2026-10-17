@@ -2305,6 +2305,7 @@ components:
         rules still require semantic checks.
     M2_JsonValue:
       description: JSON value from a loaded spec. Numeric bounds apply recursively, including opaque sections.
+      unevaluatedProperties: false
       anyOf:
       - type:
         - 'null'
@@ -3157,6 +3158,7 @@ components:
           type: string
       description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
     M2_Denied:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:
@@ -3171,6 +3173,7 @@ components:
           error:
             const: no such path
     M2_Method:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
       - properties:

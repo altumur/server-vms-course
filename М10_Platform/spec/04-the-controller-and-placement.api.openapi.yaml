@@ -671,6 +671,7 @@ components:
           type: string
       description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
     Denied:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:
@@ -685,6 +686,7 @@ components:
           error:
             const: no such path
     Method:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:
@@ -693,6 +695,7 @@ components:
           error:
             const: method
     Unavailable:
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
       - properties:

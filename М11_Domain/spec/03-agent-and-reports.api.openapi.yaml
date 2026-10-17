@@ -45,6 +45,7 @@ paths:
           content:
             application/json:
               schema:
+                unevaluatedProperties: false
                 allOf:
                   - $ref: '#/components/schemas/Refusal'
                   - properties:
@@ -185,6 +186,7 @@ components:
         objects:
           type: object
           additionalProperties: true
+          description: Открыт намеренно — ключи и значения задают member_objects (Н1.2) и уроки 4, 5, 10, 11; прочее держатель отбрасывает молча.
         base: {type: integer, minimum: 0}
         deleted:
           type: array
@@ -196,9 +198,15 @@ components:
           type: array
           items: {type: string}
           description: Пульсы, не менявшиеся дольше LOST_AFTER на часах агента; вне дельты (Н1.2).
-        outcomes: {type: object, description: урок 6}
+        outcomes:
+          type: object
+          description: 'Урок 6 Н1.5: элементы строки domain/outcomes члена — {<id>: <исход>}, исход JSON-объектом.'
+          additionalProperties: {$ref: '#/components/schemas/Outcome'}
         tls_ca: {type: array, items: {type: string}, description: урок 8}
-        sign_failures: {type: object, description: урок 12}
+        sign_failures:
+          type: object
+          additionalProperties: true
+          description: Урок 12; открыт, пока урок не переведён — форму задаст он.
     Generation:
       type: object
       description: Объект domain/members/<член>/reports/<rev> (Н1.3), JCS.
@@ -206,7 +214,10 @@ components:
       additionalProperties: false
       properties:
         sent_at: {type: number}
-        objects: {type: object}
+        objects:
+          type: object
+          additionalProperties: true
+          description: Открыт намеренно — объекты публикации по member_objects (Н1.2).
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
         pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
@@ -234,6 +245,7 @@ components:
       type: object
       description: Н1.5. Поля уроков 4, 5, 6, 9, 10, 11 — их нормы.
       required: [cluster, rev, every]
+      additionalProperties: false
       properties:
         cluster: {$ref: '#/components/schemas/MemberName'}
         rev: {type: integer, minimum: 0}
@@ -256,14 +268,87 @@ components:
           additionalProperties: false
           properties:
             doc: {type: string}
-        holder: {type: object, description: урок 10}
+        holder:
+          type: object
+          additionalProperties: true
+          description: Запись срока — урок 10; открыта, пока урок не переведён.
         sealed:
           type: string
           description: 'Конверт m1:<eph>:<nonce>:<ct> (Н1.5).'
           pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'
+        topology:
+          type: object
+          required: [doc]
+          additionalProperties: false
+          description: Урок 4 Н1.2 — строка domain/topology держателя.
+          properties:
+            doc: {type: string}
+        domain_age: {type: number, minimum: 0, description: 'Урок 4 Н1.4: добавляет ретранслятор.'}
+        placement:
+          type: object
+          required: [rev, records]
+          additionalProperties: false
+          description: Урок 6 Н1.2 — назначения, которые называют этого члена.
+          properties:
+            rev: {type: integer, minimum: 1}
+            records:
+              type: object
+              description: '{"<sub>/<ref>": запись урока 6 Н1.1}'
+              additionalProperties: {$ref: '#/components/schemas/Placement'}
+        pending:
+          type: array
+          description: Урок 6 Н1.4 — ждущие правки этого члена по (at, id).
+          items: {$ref: '#/components/schemas/Edit'}
+        shared: {description: урок 11}
+        backup: {description: урок 10}
+    Placement:
+      type: object
+      required: [cluster, origin, copies, reason, at, rev]
+      additionalProperties: false
+      description: Урок 6 Н1.1.
+      properties:
+        cluster: {$ref: '#/components/schemas/MemberName'}
+        origin: {type: string, description: '"" — нет'}
+        copies:
+          type: array
+          items: {$ref: '#/components/schemas/MemberName'}
+        reason: {type: string}
+        at: {type: number}
+        rev: {type: integer, minimum: 1}
+    Edit:
+      type: object
+      required: [id, what, method, path, body, key, at]
+      additionalProperties: false
+      description: Урок 6 Н1.4.
+      properties:
+        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        what: {type: string}
+        method: {enum: [POST, PUT, DELETE]}
+        path: {type: string, minLength: 1}
+        body:
+          type: object
+          additionalProperties: true
+          description: Открыт намеренно — поля domain.edit спеки (урок 6 Н1.3); DELETE — {}.
+        key: {type: string, minLength: 1, maxLength: 200}
+        at: {type: number}
+        base: {type: integer, minimum: 0}
+    Outcome:
+      type: object
+      required: [id, status, result, at, what, kept_at]
+      additionalProperties: false
+      description: Урок 6 Н1.5.
+      properties:
+        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        status: {type: integer}
+        result: {enum: [performed, conflict, refused]}
+        error: {type: string}
+        at: {type: number}
+        what: {type: string}
+        kept_at: {type: number}
     Entry:
       type: object
       required: [how, since]
+      additionalProperties: false
       properties:
         how: {type: string, minLength: 1}
         since: {type: number}
@@ -272,6 +357,7 @@ components:
         revoked_keys:
           type: array
           items: {$ref: '#/components/schemas/Hex32'}
+        ca: {description: урок 8}
     MembersDoc:
       type: object
       required: [rev, members]
@@ -294,6 +380,7 @@ components:
         pinned: {enum: [this, another, none]}
         keys_rev: {type: ['integer', 'null'], minimum: 1}
     MembersView:
+      unevaluatedProperties: false
       allOf:
         - $ref: '#/components/schemas/MembersDoc'
         - type: object
