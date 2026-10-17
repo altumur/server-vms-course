@@ -138,7 +138,9 @@ Fault kinds and command validation follows Н2.1. Byte prefixes may stop inside 
 
 The default POST body limit remains `6 * 524288 + 65536` bytes, enough for a fully escaped row at its ceiling.
 `StoreDaemon(body_limit=1048576)` sets the acceptance stand's limit; the row ceiling stays 524288 bytes.
-Chunked POST bodies are bounded after decoding; their overflow Fault has no `size`. GET bodies are unread.
+Chunked POST bodies are bounded after decoding; their overflow Fault has no `size`. GET bodies are not parsed.
+After replying, the door closes its sending half and drains transport input for at most one second,
+so an ignored or refused body cannot reset TLS between the reply's headers and body.
 `tests/test_storage_request_parse.py` supplies raw socket probes that scenario TSV cannot express.
 
 ## The Go implementation — the product's
