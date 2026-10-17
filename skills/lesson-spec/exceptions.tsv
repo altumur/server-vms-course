@@ -29,3 +29,4 @@
 М10_Platform/09	acceptance-entry	probe-x.subsystem.yaml	третья спека стенда урока 9 (имя с «-», metrics.prefix); проверяется по README приёмки
 М11_Domain/05	acceptance-entry	inputs	входы команды assemble (копии членов с вкладами, состояния, список членов, тестовые ключи); проверяется по README приёмки
 М11_Domain/05	scenarios-format	own	стенд нескольких кластеров с testsub2 (двери holder, member; директивы урока 3) и векторы assemble; проверяется по README приёмки
+М11_Domain/06	scenarios-format	own	стенд нескольких кластеров: назначение, копии, правки выключенному члену и исходы (двери holder, member; директивы урока 3); проверяется по README приёмки
