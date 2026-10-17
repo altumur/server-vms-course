@@ -38,6 +38,8 @@ dictionary, and are not scanned.
 """
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import ast
 import hashlib
 import os
@@ -50,7 +52,7 @@ from collections import Counter, defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)                                  # the code root, `Source/`
 DEBT = os.path.join(HERE, "boundary_debt.txt")
-TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
+TESTSUB = os.path.join(frozen_testdata(), "testsub.subsystem.yaml")
 
 PLATFORM_TREE = "w2cplatform"                                  # walked whole, every subpackage
 SUBSYSTEM_PACKAGES = ("vms", "gstvms")                         # what the platform must not reach (`Source/<name>/`)
@@ -66,7 +68,7 @@ PLATFORM_TESTS = (
     "tests/conftest.py", "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
-    "tests/storage_acceptance.py", "tests/test_storage_m10.py",
+    "tests/storage_acceptance.py", "tests/test_storage_m10.py", "tests/frozen_data.py",
     "tests/catalog_fixture.py", "tests/test_catalog_fixture.py",
     # a mechanism of the platform as the subject, on testsub and testsub2
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
@@ -311,6 +313,11 @@ def words_in(line: str) -> Counter:
 
 # -- where to look ---------------------------------------------------------------------------------------------------
 
+def _platform_path(relative):
+    return (frozen_testdata() / relative[len("tests/testdata/"):]
+            if relative.startswith("tests/testdata/") else os.path.join(ROOT, relative))
+
+
 def platform_files() -> list[str]:
     """Every file of the platform's tree the words are looked for in, relative to the code root."""
     out = []
@@ -319,7 +326,7 @@ def platform_files() -> list[str]:
         for f in sorted(filenames):
             if f.lower().endswith(SCANNED):
                 out.append(os.path.relpath(os.path.join(dirpath, f), ROOT).replace(os.sep, "/"))
-    return out + [t for t in PLATFORM_TESTS if os.path.exists(os.path.join(ROOT, t))]
+    return out + [t for t in PLATFORM_TESTS if os.path.exists(_platform_path(t))]
 
 
 def fingerprint(text: str) -> str:
@@ -330,7 +337,7 @@ def fingerprint(text: str) -> str:
 def word_findings() -> list[tuple[str, int, str, str]]:
     out = []
     for rel in platform_files():
-        with open(os.path.join(ROOT, rel), encoding="utf-8", errors="replace") as f:
+        with open(_platform_path(rel), encoding="utf-8", errors="replace") as f:
             for ln, text in enumerate(f, 1):
                 for w, n in sorted(words_in(text).items()):
                     out += [(rel, ln, w, fingerprint(text))] * n
