@@ -27,6 +27,8 @@ A test of the platform alone: two subsystems invented here, `bin` and `pick`; no
 """
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 import tempfile
 
@@ -133,7 +135,7 @@ def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_decla
     assert url_host("m://hub/a:b/c@h/x", hub) == url_host("m://hub/h:pw/x", hub) == ""   # a port no number: a login's
     assert url_host("m://hub/a:b%40h%2Ecorp/x", hub) == ""                     # a host only decoding makes is none
     # testsub2: a tally's feed by its host — a mirror's in its path, and the shelf's own copy (`local`) none
-    spec = SubsystemSpec.load(os.path.join(os.path.dirname(__file__), "testdata", "testsub2.subsystem.yaml"))
+    spec = SubsystemSpec.load(os.path.join(frozen_testdata(), "testsub2.subsystem.yaml"))
     assert spec.group_of("https://Feed.Example/t1") == spec.group_of("sftp://feed.example:22/t2") == "feed.example"
     assert spec.group_of("mirror://hub/feed.example/t3#x@y") == "feed.example"
     assert spec.group_of("mirror://local/t4") == "" == spec.group_of("")

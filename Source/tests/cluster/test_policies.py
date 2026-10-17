@@ -16,6 +16,8 @@ grant is a 403 in the stand; and this checks the file against the code both ways
 stand's, every scene, and the doors the scenes do not knock on) is granted, and nothing is granted that the code's
 lists do not ask for — and every read the code makes is granted.
 """
+
+from tests.frozen_data import frozen_testdata
 import json
 import os
 
@@ -167,7 +169,7 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     from tests.catalog_fixture import isolated_catalog
     from w2cplatform.spec import SubsystemSpec
     with isolated_catalog():
-        spec = SubsystemSpec.load(os.path.join(HERE, "tests", "testdata", "testsub.subsystem.yaml"))
+        spec = SubsystemSpec.load(os.path.join(frozen_testdata(), "testsub.subsystem.yaml"))
         generic = Rights(roles([spec], "test"))
         assert generic.allows("testsubdomain", "write", "domain/testsub/ledger")
         assert not generic.allows("testsubdomain", "write", "domain/keys")

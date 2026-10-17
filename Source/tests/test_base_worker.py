@@ -4,6 +4,8 @@ name, and whether it goes through a silence — is read from the place's row by 
 where that is not said, or the place is not this worker's server's, the safe reading holds (ADR 0012, ADR 0029). And
 `of`, what a unit is about, is the platform's to write into every line of the unit: a line that says its own is refused
 by the log itself, whoever opened it; a mark of the console alone names what it marks."""
+
+from tests.frozen_data import frozen_testdata
 import logging
 import os
 import tempfile
@@ -16,7 +18,7 @@ from w2cplatform.journal import Journal
 from w2cplatform.spec import RESERVED_NAMES, SubsystemSpec
 from w2cplatform.worker import SERVER_UNSAID, Worker
 
-TESTSUB2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
+TESTSUB2 = os.path.join(frozen_testdata(), "testsub2.subsystem.yaml")
 SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 

@@ -5,13 +5,15 @@ worker's lease step once the hold has gone unconfirmed past it and the store doe
 the row another worker's (`Worker._strict_place_pass`) — whatever the units'
 `lease.unconfirmed_max` lets them write. On testsub2, whose units are kept on shelves and whose leases go on ten minutes
 unconfirmed."""
+
+from tests.frozen_data import frozen_testdata
 import os
 
 from w2cplatform.spec import SubsystemSpec
 from w2cplatform.worker import Worker
 from tests.conftest import Box
 
-TESTSUB2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
+TESTSUB2 = os.path.join(frozen_testdata(), "testsub2.subsystem.yaml")
 
 
 def _spec(lease: str):

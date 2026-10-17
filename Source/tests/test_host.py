@@ -3,6 +3,8 @@ directory of specs and from nothing else, and its loops are the ones every contr
 test of the platform alone — testsub's spec, no subsystem's package."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import json
 import logging
 import os
@@ -11,7 +13,7 @@ import tempfile
 from w2cplatform import host
 from w2cplatform.resource import heartbeat_key, resources_seen, space_total
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 
 
 class _Lines(logging.Handler):

@@ -3,13 +3,15 @@
 and its door for that unit, as `/where/<id>` hands out a unit's. On testsub2, whose units are kept on shelves: the
 console has no byte routes of its own, so what a unit left on a shelf another worker holds now is read at THAT worker's
 door, with a token for that holder, that unit and the spec's routes."""
+
+from tests.frozen_data import frozen_testdata
 import json
 import os
 import tempfile
 import urllib.error
 import urllib.request
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 
 
 def _get(base, path, token=None):

@@ -5,6 +5,8 @@ clothes — it goes, or a spec that has nothing to do with the product shows wha
 it reads the YAML files, and imports no subsystem's package."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import glob
 import os
 
@@ -14,7 +16,7 @@ from w2cplatform import metrics
 from w2cplatform.spec import SubsystemSpec
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TESTSUBS = sorted(glob.glob(os.path.join(HERE, "testdata", "testsub*.subsystem.yaml")))
+TESTSUBS = sorted(glob.glob(os.path.join(frozen_testdata(), "testsub*.subsystem.yaml")))
 # The subsystems the code root ships: every spec in a package beside the tests (the product's, by whatever name).
 ROOT = os.path.dirname(HERE)
 PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, "*", "*.subsystem.yaml")) if not p.startswith(HERE + os.sep))

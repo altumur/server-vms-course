@@ -4,6 +4,8 @@ whose flow map runs on to the next line loads here and is refused there, so no s
 one line, or block style."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import glob
 import os
 
@@ -11,7 +13,7 @@ import yaml
 
 SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = sorted(glob.glob(os.path.join(SOURCE, "vms", "*.subsystem.yaml"))
-               + glob.glob(os.path.join(SOURCE, "tests", "testdata", "*.subsystem.yaml")))
+               + glob.glob(os.path.join(frozen_testdata(), "*.subsystem.yaml")))
 _OPEN = (yaml.FlowMappingStartToken, yaml.FlowSequenceStartToken)
 _CLOSE = (yaml.FlowMappingEndToken, yaml.FlowSequenceEndToken)
 

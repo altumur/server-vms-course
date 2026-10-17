@@ -3,6 +3,8 @@ two parties see the second one — the operator who writes it and the worker tha
 opens the camera — and nobody in between."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import json
 import urllib.error
 import urllib.parse
@@ -860,7 +862,7 @@ def _testsub2(nested=None):
     its unit's `feed` says hold an address, in place of the file's (`[via]`)."""
     import os
     import yaml
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml"),
+    with open(os.path.join(frozen_testdata(), "testsub2.subsystem.yaml"),
               encoding="utf-8") as f:
         d = yaml.safe_load(f)
     if nested is not None:

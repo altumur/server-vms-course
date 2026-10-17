@@ -5,12 +5,14 @@ loads where the table says `ok` and is refused where it says `refused` — refus
 never a crash (an AttributeError, a RecursionError, PyYAML's own error out of a load)."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 
 from w2cplatform import catalog
 from w2cplatform.spec import SubsystemSpec
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 
 
 def _table() -> list[tuple[str, str]]:

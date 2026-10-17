@@ -5,6 +5,8 @@ lists the counters at the route the spec's row name makes, carries home the book
 them, issues only the token kinds the spec declares, and backs up what the spec keeps."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 from tests.catalog_fixture import isolated_catalog
 
 import json
@@ -14,7 +16,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-TESTSUB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub.subsystem.yaml")
+TESTSUB = os.path.join(frozen_testdata(), "testsub.subsystem.yaml")
 
 
 class Clock:
@@ -1596,7 +1598,7 @@ def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spe
     from w2cplatform.domain import declared
     from w2cplatform.domain.alarms import DomainAlarms
     from w2cplatform.spec import SubsystemSpec
-    t2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
+    t2 = os.path.join(frozen_testdata(), "testsub2.subsystem.yaml")
     s2 = SubsystemSpec.load(t2)
     assert (s2.domain.witness, s2.domain.member_field) == ("seen", "of")
     assert "testsub2/seen/" in declared.witnesses()

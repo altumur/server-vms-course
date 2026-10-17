@@ -8,6 +8,8 @@ module of that subsystem's.
 """
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import json
 import os
 import sys
@@ -167,7 +169,7 @@ class ByName:
 # testsub's unit is a named COUNTER a worker keeps (`testsub/counters/<name>`); testsub2's is a TALLY about one of them,
 # kept on a shelf (`testsub2/tallies/<name>`, `testsub2/shelves/<name>`) — the second says every key the platform reads
 # (`test_spec_rule.py`). A mechanism of the platform is proved on them: if it works here, it works without the product.
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 TESTSUB = os.path.join(TESTDATA, "testsub.subsystem.yaml")
 TESTSUB2 = os.path.join(TESTDATA, "testsub2.subsystem.yaml")
 _SPECS: dict = {}

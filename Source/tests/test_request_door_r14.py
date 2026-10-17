@@ -10,6 +10,8 @@
     minor 10   a non-finite `at` in `file_request`: `RequestRefused`, counted
     minor 12   a begun request whose mark does not read and that names no holder: past its deadline it ends `unknown`
 """
+
+from tests.frozen_data import frozen_testdata
 import copy
 import json
 import os
@@ -22,7 +24,7 @@ from w2cplatform.console import SpecConsole
 from w2cplatform.spec import SubsystemSpec
 from w2cplatform.worker import RequestRefused, Worker
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 
 
 def _spec(key: bool = True, per_person: bool = True):

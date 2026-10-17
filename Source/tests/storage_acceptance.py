@@ -163,8 +163,11 @@ def shape(body):
 
 
 def steps(call):
+    sys.path.insert(0, str(SOURCE))
+    from tests.frozen_data import frozen_testdata
     records, bindings, previous = [], {}, None
-    for number, fields in enumerate(csv.reader(SHARED.read_text().splitlines(), delimiter="\t"), 1):
+    shared = frozen_testdata(SHARED.relative_to(SOURCE / "tests/testdata")).read_text(encoding="utf-8")
+    for number, fields in enumerate(csv.reader(shared.splitlines(), delimiter="\t"), 1):
         if not fields or fields[0].startswith("#"):
             continue
         scenario, step, operation, expected = fields

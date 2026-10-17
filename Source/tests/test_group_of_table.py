@@ -10,6 +10,8 @@ port that is no number, a `#` of a scheme with a fragment). A readable host is a
 the field's, grouping is `group_by`'s, and a row written before a rule refused its source is still on the host it names."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import copy
 import os
 
@@ -17,9 +19,9 @@ from w2cplatform import specyaml
 
 from tests.productdir import SOURCE
 
-TABLE = os.path.join(SOURCE, "tests", "testdata", "group_of.tsv")
+TABLE = os.path.join(frozen_testdata(), "group_of.tsv")
 VMS = os.path.join(SOURCE, "vms", "cam.subsystem.yaml")
-TESTSUB2 = os.path.join(SOURCE, "tests", "testdata", "testsub2.subsystem.yaml")
+TESTSUB2 = os.path.join(frozen_testdata(), "testsub2.subsystem.yaml")
 NONE = ("(none)", "<none>")
 
 

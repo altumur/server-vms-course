@@ -1,4 +1,6 @@
 """C2: durable CRUD queue, a signed local console, closed route set; testsub only."""
+
+from tests.frozen_data import frozen_testdata
 import json
 import tempfile
 import threading
@@ -26,7 +28,7 @@ class Clock:
 
 @contextmanager
 def site():
-    raw = yaml.safe_load((Path(__file__).parent / "testdata" / "testsub.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / "testsub.subsystem.yaml").read_text())
     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace("testsub/", sub+"/")), "name": sub}) for sub in ("testsub", "testsub2")]
     wall, vars_ = Clock(), FakeVariables()
     key = MemberKey.load_or_make(vars_)

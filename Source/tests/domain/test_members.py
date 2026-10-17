@@ -6,6 +6,8 @@ removed, and the next pass drops it, whatever report it left behind. Where nobod
 configuration stands.
 """
 
+from tests.frozen_data import frozen_testdata
+
 from tests.reporting import sync as report_sync
 import json
 import urllib.error
@@ -47,7 +49,7 @@ def test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads():
     from pathlib import Path
     from tests.catalog_fixture import isolated_catalog
     from w2cplatform.spec import SubsystemSpec, SpecController
-    path = Path(__file__).parents[1] / "testdata/testsub.subsystem.yaml"
+    path = frozen_testdata() / 'testsub.subsystem.yaml'
     with isolated_catalog(path):
         spec = SubsystemSpec.load(path)
         wall = Clock(1000.0)

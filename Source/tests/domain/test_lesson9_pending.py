@@ -4,6 +4,8 @@ The former field base/via/conflict merge and carried human subject were removed 
 ADR-0074's C2 amendment. Conflicts are now the member console's HTTP Outcome;
 separate edits retain their own keys rather than merging values in the domain.
 """
+
+from tests.frozen_data import frozen_testdata
 import json
 from types import SimpleNamespace
 from w2cplatform.domain.agent import DomainAgent
@@ -140,7 +142,7 @@ def test_an_address_with_a_password_is_refused_before_it_is_kept_carried_or_repo
     import yaml
     from w2cplatform import catalog
     from w2cplatform.spec import SubsystemSpec
-    raw = yaml.safe_load((Path(__file__).parents[1] / "testdata/testsub.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())
     raw["unit"]["fields"]["endpoint"] = {"type": "url", "secret_in": [
         {"param": ["signature"]},
         {"regex": r"(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)", "in": "path"},

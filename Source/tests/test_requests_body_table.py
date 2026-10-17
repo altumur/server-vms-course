@@ -9,12 +9,14 @@ wrote `str(v)` — `True`, `None`, `5.0` — and a holder in Go read another val
 is a word of `fault.tsv`, empty when taken."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import json
 import os
 
 from tests.productdir import SOURCE, product_file
 
-TABLE = os.path.join(SOURCE, "tests", "testdata", "requests_body.tsv")
+TABLE = os.path.join(frozen_testdata(), "requests_body.tsv")
 ABSENT, EMPTY = "<absent>", "<empty>"
 FIELDS = ("request", "json")
 

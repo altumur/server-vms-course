@@ -11,6 +11,8 @@ and everything else is the base's, no hook: the fence, the epoch taken before a 
 for a unit off the assignment read last, nor for one the lease step let go since that read), the marks, the deadline,
 the two kinds every holder writes — `command` and `command.failed`, with the unit's `of` — and what the heartbeat says.
 """
+
+from tests.frozen_data import frozen_testdata
 import glob
 import json
 import os
@@ -206,7 +208,7 @@ def test_no_spec_names_the_request_familys_kinds_among_its_own():
     `worker.*`. A subsystem's `display.kinds` names only what its own units raise."""
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     paths = glob.glob(os.path.join(root, "vms", "*.subsystem.yaml")) + glob.glob(
-        os.path.join(root, "tests", "testdata", "*.subsystem.yaml"))
+        os.path.join(frozen_testdata(), "*.subsystem.yaml"))
     assert paths
     for p in paths:
         kinds = (SubsystemSpec.load(p).display or {}).get("kinds") or {}

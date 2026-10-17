@@ -1,4 +1,6 @@
 """ADR-0074 scoped tokens and ephemeral transport, testsub/testsub2 only."""
+
+from tests.frozen_data import frozen_testdata
 import copy
 import json
 import threading
@@ -24,7 +26,7 @@ from tests.test_book_names import raises
 
 
 def raw_spec(sub="testsub"):
-    raw = yaml.safe_load((Path(__file__).parent / "testdata" / f"{sub}.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / f"{sub}.subsystem.yaml").read_text())
     raw["domain"]["tokens"] = {"tally": {"lifetime": 60, "claims": ["ref", "aud"],
         "grant": [f"{sub}worker"], "placement": {"sub": sub, "caller": "origin", "ref_claim": "ref",
             "target_fields": ["cluster", "copies"], "audience_claim": "aud"}}}

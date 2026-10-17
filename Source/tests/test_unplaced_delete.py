@@ -2,6 +2,8 @@
 what the loader refuses, the controller's right — a delete and never a write — and its pass on testsub."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import copy
 import os
 
@@ -12,7 +14,7 @@ from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.variables import Forbidden
 from tests.conftest import Box
 
-TESTSUB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub.subsystem.yaml")
+TESTSUB = os.path.join(frozen_testdata(), "testsub.subsystem.yaml")
 
 
 def _raw() -> dict:

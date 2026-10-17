@@ -1,4 +1,6 @@
 """ADR-0074 collection contract, using only testsub and testsub2; no subsystem runtime imports."""
+
+from tests.frozen_data import frozen_testdata
 import copy
 import itertools
 import json
@@ -11,7 +13,7 @@ from w2cplatform.domain.bookmerge import collect
 
 
 def spec(sub="testsub", **overrides):
-    raw = yaml.safe_load((Path(__file__).parent / "testdata" / f"{sub}.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / f"{sub}.subsystem.yaml").read_text())
     rule = {"from": f"{sub}/counts/", "key": "ref", "pick": "all", "to": "to"}
     rule.update(overrides)
     raw["domain"]["books"] = {"counts": rule}
@@ -45,7 +47,7 @@ def test_loader_keeps_collection_rules_and_shown_fields_for_both_test_subsystems
 
 
 def test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_paths():
-    base = yaml.safe_load((Path(__file__).parent / "testdata/testsub.subsystem.yaml").read_text())
+    base = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())
     good = {"from": "testsub/counts/", "key": "ref", "pick": "unique", "to": "to"}
     invalid = [{k: v for k, v in good.items() if k != omitted} for omitted in good]
     for key, values in {
@@ -69,7 +71,7 @@ def test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_pa
 
 
 def test_carried_books_stay_separate_from_collected_books():
-    raw = yaml.safe_load((Path(__file__).parent / "testdata/testsub.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())
     assert SubsystemSpec.from_dict(raw).domain.merged == {}
     raw["domain"]["books"] = ["counts"]
     assert SubsystemSpec.from_dict(raw).domain.merged == {}
