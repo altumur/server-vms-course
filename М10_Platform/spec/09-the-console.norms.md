@@ -62,6 +62,7 @@ servers:
                                                  # пропуск); of — таблица, по которой страница сопоставляет ключи (ADR-0064)
 console:
   running: <метрика спеки> → running_gauge: <sub>_<name>; workers_gauge: <sub>_workers_live
+           # без console.running — running_gauge: null и metrics.running: null (урок 2 Н2)
 ```
 
 ### Н1.3 Сторожевая
@@ -106,9 +107,9 @@ session:
 
 ```yaml
 reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show),
-         /where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema, /events, /metrics
+         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema, /events, /metrics
          (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub>
-writes:  POST/PUT/DELETE /<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
+writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (М11), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup, /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
 order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> → /drain → /schema
@@ -150,13 +151,13 @@ commands:  вид command / command.failed — слово и заметка мо
 
 HTTP-контракт: [09-the-console.api.openapi.yaml](09-the-console.api.openapi.yaml).
 
-Общие коды: неизвестный путь — `404 NoRoute`; неверный метод — `405 {detail: method, error: method}`; `/<rows>/<id>/<ещё>` — 404 «a unit's path names one unit»; полоса занята — `503 busy`, `Retry-After: 1`; `/session`, `/healthz` — резервная полоса; `/metrics`, `/healthz` — полоса монитора.
+Общие коды: неизвестный путь — `404 NoRoute`; неверный метод — `405 {detail: method, error: method}`; `/<rows>/<id>/<ещё>` — 404 «a unit's path names one unit», кроме двери байтов `/<rows>/<id>/<blob_field>` урока 10 (иной метод, чем `PUT`, — 405); полоса занята — `503 busy`, `Retry-After: 1`; `/session`, `/healthz` — резервная полоса; `/metrics`, `/healthz` — полоса монитора.
 
 ---
 
 ### Полные формы и границы Н2
 
-Все JSON-ответы собственных дверей описаны компонентами OpenAPI; `HEAD` повторяет код и заголовки `GET`, но не тело. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
+Все JSON-ответы собственных дверей описаны компонентами OpenAPI. Каждый `GET` консоли — своих дверей и дверей других уроков, которые консоль отдаёт (уроки 2, 3, 4, 8, 10), — отвечает и на `HEAD`: тот же код и заголовки, без тела; каждый контракт, объявляющий такой URL, перечисляет `head`. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
 
 `Servers` — `{policy, servers: {имя: ServerRow}, status?}`. `ServerRow` содержит обязательные `resource`, `resource_heard_at`, `resource_url`, `space`, `labels`, `labels_node`, `labels_source`, `draining`, `decommission`, `decommissioned`, `decommission_refusal`, `decommission_warning`, `decommissionable`, `lost`, `requires_resource`, `placeable`, `why`, `workers`. Неизвестные адрес/место/время/причина и отсутствующая просьба вывода представлены `null` по схеме. `lost` — массив `{unit, place?, worker?}`; `decommission` — `{at, by, gone?}`. Метки — массивы слов. `WorkerRow` требует `worker, load, capacity, labels, state, idle_by_policy, hung, name_conflict`; `name_conflict` — boolean. Необязательные детали и их типы закрыто перечислены в схеме. `status` выводит объявленные спецификацией значения JSON, не произвольные секретные поля.
 

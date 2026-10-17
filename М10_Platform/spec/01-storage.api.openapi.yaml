@@ -260,7 +260,11 @@ components:
               - $ref: "#/components/schemas/RowTooLargeFault"
               - $ref: "#/components/schemas/BodyTooLargeFault"
     Unavailable:
-      description: Операция не сделана; срок ожидания лидера или местной блокировки.
+      description: Операция не сделана; срок ожидания лидера или местной блокировки либо предел соединений.
+      headers:
+        Retry-After:
+          schema: {type: integer, const: 1}
+          description: Только при пределе соединений двери (М10/11 Н4); иначе отсутствует.
       content:
         application/json:
           schema:
@@ -273,6 +277,10 @@ components:
             $ref: "#/components/schemas/BadRequestFault"
     UnavailableOrAmbiguous:
       description: Запись не сделана либо исход неизвестен; вид определяет способ повтора.
+      headers:
+        Retry-After:
+          schema: {type: integer, const: 1}
+          description: Только у unavailable при пределе соединений двери (М10/11 Н4); иначе отсутствует.
       content:
         application/json:
           schema:

@@ -31,6 +31,43 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: форма подсистемы, какой её загрузила консоль; слова display — как написаны'
+      responses:
+        '200':
+          description: Форма подсистемы, какой её загрузила консоль; ревизии в ответе нет; HEAD не содержит тела
+        '400':
+          description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4; HEAD не содержит
+            тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: Нет маршрута; это не ответ загрузчика об ошибочной спеке; HEAD не содержит тела
+        '405':
+          description: Метод не из объявленных для этой двери; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9); HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
 components:
   schemas:
     SpecView:
@@ -127,9 +164,11 @@ components:
             prefix:
               type: string
             running:
-              type: string
+              type: ['string', 'null']
+              description: null, если у спеки нет console.running (Н2).
         running_gauge:
-          type: string
+          type: ['string', 'null']
+          description: null, если у спеки нет console.running (Н2); workers_gauge есть всегда.
         workers_gauge:
           type: string
     JsonValue:

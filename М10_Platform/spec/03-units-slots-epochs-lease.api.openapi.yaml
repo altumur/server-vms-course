@@ -83,6 +83,48 @@ paths:
         "413": {$ref: "#/components/responses/LargeBody"}
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/Unavailable"}
+    head:
+      summary: 'HEAD: все единицы и конфигурация, доступные по view — урок 9'
+      responses:
+        '200':
+          description: rows — единицы из пульсов с данными воркера; configured — строки конфигурации с масками секретов;
+            HEAD не содержит тела
+        '400':
+          description: Общий отказ транспорта или пути, включая badkey полного ключа хранилища; detail и error, без
+            fault; HEAD не содержит тела
+        '401':
+          description: Личность не подтверждена; урок 9 Н1.3 и Н4; HEAD не содержит тела
+        '403':
+          description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9; HEAD не содержит тела
+        '404':
+          description: Нет строки или надгробие у PUT/DELETE — error no such unit. Неизвестный маршрут — detail no such
+            route, error no such path. Лишний сегмент — текст a unit's path names one unit (урок 9); HEAD не содержит
+            тела
+        '405':
+          description: Метод не разрешён; отдельного GET одной единицы нет; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше объявленного предела; урок 9 Н4. Служебных полей limit/size урок 1 сюда не добавляет;
+            HEAD не содержит тела
+        '429':
+          description: Общий код предела входа консоли из урока 9; не новая квота на создание единиц; HEAD не содержит
+            тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Хранилище недоступно — error с текстом store unavailable; ответ под ключом не запоминается. Также
+            полоса занята — error busy и Retry-After 1, либо ключи были, но проверить доверие нечем — error denied (урок
+            9); HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /{rows}/{id}:
     servers:
       - url: '{origin}'
@@ -102,7 +144,7 @@ paths:
         schema: {$ref: "#/components/schemas/UnitId"}
         description: >-
           Ровно один id; грамматика зависит от unit.id (Н1.3).
-          Путь длиннее одного id — 404; неверный именованный id — 400.
+          Путь длиннее одного id — 404, кроме двери байтов /{rows}/{id}/{blob_field} урока 10 (иной метод на ней — 405); неверный именованный id — 400.
     put:
       summary: править поля; revision растёт при каждой успешной правке
       parameters:

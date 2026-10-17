@@ -291,6 +291,93 @@ paths:
           - t
           - occurred
           default: t
+    head:
+      summary: 'HEAD: только консоль (М10/9 Н2), код и заголовки GET без тела; у ресурса HEAD — 405'
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: number
+          default: 0
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: number
+          default: 1000000000000.0
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: subsystem
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: unit
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/UnitRef'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 1000
+      - name: keep
+        in: query
+        required: false
+        schema:
+          enum:
+          - newest
+          - oldest
+          default: newest
+      - name: class
+        in: query
+        required: false
+        schema:
+          enum:
+          - alarm
+          - observation
+      - name: by
+        in: query
+        required: false
+        schema:
+          enum:
+          - t
+          - occurred
+          default: t
+      responses:
+        '200':
+          description: Консоль — как GET с ConsoleEvents; HEAD не содержит тела
+        '400':
+          description: Неверные параметры/чтение тела; HEAD не содержит тела
+        '408':
+          description: 'Консоль: чтение тела медленно; HEAD не содержит тела'
+        '413':
+          description: 'Консоль: тело больше предела; HEAD не содержит тела'
+        '429':
+          description: 'Консоль: предел входа; HEAD не содержит тела'
+        '404':
+          description: 'Консоль: путь недоступен; HEAD не содержит тела'
+        '405':
+          description: 'Ресурс: HEAD не объявлен (М10/8 Н2); HEAD не содержит тела'
+        '401':
+          description: 'Консоль: личность не установлена; HEAD не содержит тела'
+        '403':
+          description: Отказ доступа; HEAD не содержит тела
+        '503':
+          description: 'Ресурс: busy либо индекса нет; консоль: общий отказ двери; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: При busy обязателен со значением 1.
+              schema:
+                const: '1'
   /events/wait:
     get:
       summary: 'Ресурс: подсказка перечитать, без строк событий (ADR-0038)'

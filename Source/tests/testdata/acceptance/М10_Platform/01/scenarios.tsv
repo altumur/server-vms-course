@@ -105,3 +105,8 @@
 23-extra-cmd	4	POST /v1/write {"op":"delete","key":"acc/23-extra-cmd/c1","items":123,"id":"2302","zzz":{"guard":"bad"}}	200 {"index":"$b"}
 23-extra-cmd	5	POST /v1/write {"op":"delete","key":"acc/23-extra-cmd/c1","items":{"wrong":true},"id":"2302","zzz":false}	200 {"index":"$b","again":true}
 23-extra-cmd	6	GET /v1/get?key=acc/23-extra-cmd/c1	200 {"items":null,"index":""}
+24-key-forms	1	POST /v1/write {"op":"put","items":{}}	400 {"kind":"badrequest"}
+24-key-forms	2	POST /v1/write {"op":"put","key":5,"items":{}}	400 {"kind":"badrequest"}
+24-key-forms	3	POST /v1/write {"op":"put","key":"acc/24-key-forms/c1","items":{},"guard":{"key":5,"index":""}}	400 {"kind":"badrequest"}
+24-key-forms	4	GET /v1/get	400 {"kind":"badrequest"}
+24-key-forms	5	GET /v1/get?key=acc/24-key-forms/c1	200 {"items":null,"index":""}

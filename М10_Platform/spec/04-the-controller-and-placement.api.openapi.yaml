@@ -77,6 +77,42 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Policy'
+    head:
+      summary: 'HEAD: Effective policy'
+      responses:
+        '200':
+          description: Effective policy; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: No route; lesson 9; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+            confirmed. Read state before retrying a mutation; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /drain:
     get:
       summary: Drain snapshot; lesson 10 N1.2
@@ -171,6 +207,42 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Drain snapshot; lesson 10 N1.2'
+      responses:
+        '200':
+          description: Drain snapshot; lesson 10 N1.2; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: No route; lesson 9; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+            confirmed. Read state before retrying a mutation; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /servers/{server}/labels:
     parameters:
     - name: server
@@ -292,6 +364,51 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Probe effective or proposed labels, without writing'
+      parameters:
+      - name: labels
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
+          not:
+            pattern: '[^A-Za-z0-9_.:,\-]'
+      responses:
+        '200':
+          description: Probe effective or proposed labels, without writing; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: Unknown server, or no such route. N4; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+            confirmed. Read state before retrying a mutation; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /servers/{server}/decommission:
     parameters:
     - name: server
@@ -417,6 +534,42 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Units without an eligible worker'
+      responses:
+        '200':
+          description: Units without an eligible worker; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: No route; lesson 9; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+            confirmed. Read state before retrying a mutation; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
   /where/{id}:
     servers:
       - url: '{origin}'
@@ -467,6 +620,42 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Placement and optional holder door'
+      responses:
+        '200':
+          description: Placement and optional holder door; HEAD не содержит тела
+        '400':
+          description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
+        '401':
+          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+            тела
+        '403':
+          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+        '404':
+          description: No placement, or no such route; HEAD не содержит тела
+        '405':
+          description: Method not supported by this path; lesson 9; HEAD не содержит тела
+        '408':
+          description: Тело читается слишком медленно; урок 9 Н4; HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'busy (Retry-After: 1), denied, or unavailable when the required store operation could not be
+            confirmed. Read state before retrying a mutation; HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
 components:
   schemas:
     ConsoleRefusal:

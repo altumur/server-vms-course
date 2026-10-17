@@ -2145,9 +2145,11 @@ components:
             prefix:
               type: string
             running:
-              type: string
+              type: ['string', 'null']
+              description: null, если у спеки нет console.running (урок 2 Н2).
         running_gauge:
-          type: string
+          type: ['string', 'null']
+          description: null, если у спеки нет console.running (урок 2 Н2); workers_gauge есть всегда.
         workers_gauge:
           type: string
     M2_FieldView:

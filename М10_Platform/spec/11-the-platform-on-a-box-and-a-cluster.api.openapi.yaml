@@ -42,15 +42,13 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/M1_UnavailableFault'
-                - $ref: '#/components/schemas/Busy'
+                $ref: '#/components/schemas/M1_UnavailableFault'
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
-              description: Обязателен только для busy; остальные 503 не обещают срок.
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
   /v1/join:
     post:
       summary: Вступление по удостоверенной роли демона
@@ -93,13 +91,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/M1_UnavailableFault'
                 - $ref: '#/components/schemas/M1_AmbiguousFault'
-                - $ref: '#/components/schemas/Busy'
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
-              description: Обязателен только для busy; остальные 503 не обещают срок.
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
         '409':
           description: Полное JSON-тело
           content:
@@ -160,13 +157,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/M1_UnavailableFault'
                 - $ref: '#/components/schemas/M1_AmbiguousFault'
-                - $ref: '#/components/schemas/Busy'
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
-              description: Обязателен только для busy; остальные 503 не обещают срок.
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
         '413':
           description: Превышен предел чтения тела служебного запроса
           content:
@@ -235,7 +231,7 @@ paths:
         '403':
           $ref: '#/components/responses/M1_Forbidden'
         '409':
-          description: CAS/key reused М10/1 либо floor не возрастает
+          description: CAS/key reused М10/1 либо floor не возрастает (refused — строка М10/1 Н4)
           content:
             application/json:
               schema:
@@ -254,13 +250,12 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/M1_UnavailableFault'
                 - $ref: '#/components/schemas/M1_AmbiguousFault'
-                - $ref: '#/components/schemas/Busy'
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
-              description: Обязателен только для busy; остальные 503 не обещают срок.
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
   /metrics:
     get:
       summary: Метрики демона
@@ -300,15 +295,13 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/M1_UnavailableFault'
-                - $ref: '#/components/schemas/Busy'
+                $ref: '#/components/schemas/M1_UnavailableFault'
           headers:
             Retry-After:
               schema:
                 type: integer
                 const: 1
-              description: Обязателен только для busy; остальные 503 не обещают срок.
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
 components:
   schemas:
     M1_Cmd:
@@ -713,17 +706,6 @@ components:
       properties:
         kind:
           const: refused
-        error:
-          type: string
-    Busy:
-      type: object
-      required:
-      - kind
-      - error
-      additionalProperties: false
-      properties:
-        kind:
-          const: busy
         error:
           type: string
     FloorCmd:
