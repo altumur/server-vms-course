@@ -919,6 +919,23 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
         def log_message(self, *a):           # a request a second per worker is not a log line
             pass
 
+        def finish(self):
+            try:
+                super().finish()
+            finally:
+                # Staged HTTP close: FIN after the complete reply, then discard transport input for at most
+                # one second. Closing TLS over an ignored GET body or an early refusal otherwise resets the
+                # connection between the reply's headers and body. Discarded input never reaches serve().
+                try:
+                    self.connection.shutdown(socket.SHUT_WR)
+                    until = time.monotonic() + 1.0
+                    while time.monotonic() < until:
+                        self.connection.settimeout(max(0.001, until - time.monotonic()))
+                        if not self.connection.recv(65536):
+                            break
+                except OSError:
+                    pass
+
         def _send(self, code: int, body: dict) -> None:
             if code >= 400 and "kind" not in body and not (code == 412 and body.get("error") == "guard"):
                 # read_body's errors use detail; ADR-0074's guard refusal has its own exact wire body.
@@ -953,7 +970,7 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
             try:
                 # The body first, bounded and under its deadline: a 403 sent over a body left unread is a reset the
                 # caller never reads the 403 from.
-                raw = self._body() if method == "POST" else b""     # GET bodies are not read (М10/1 Н2.1)
+                raw = self._body() if method == "POST" else b""     # GET bodies are not parsed (М10/1 Н2.1)
                 if raw is None:
                     return
                 try:
