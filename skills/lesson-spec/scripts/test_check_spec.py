@@ -574,6 +574,45 @@ components:
             with self.subTest(row=row):
                 self.assertTrue(self.registry([row]).errors)
 
+    def test_registry_rows_the_lesson_does_not_use_are_stale(self):
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertTrue(any("stale exception scenarios-format" in e for e in result.errors), result.errors)
+        result = self.registry([("М12A_Example/01", "acceptance-entry", "README.md", "supported anyway")])
+        self.assertTrue(any("supported without it" in e for e in result.errors), result.errors)
+
+    def test_own_format_keeps_structure_errors(self):
+        self.scenarios.write_text("scenario\tstep\trequest\texpect\n01-a\t1\t@start x\tok\n01-a\t3\t@stop x\tok\n")
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertEqual(len(result.errors), 1, result.errors)
+        self.assertIn("invalid scenario/step sequence", result.errors[0])
+        self.scenarios.write_text("scenario\tstep\trequest\texpect\n01-a\t1\t@start x\tok\textra\n")
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertTrue(any("expected 4 TSV columns" in e for e in result.errors), result.errors)
+
+    def test_counts_leave_out_a_header_row(self):
+        self.scenarios.write_text("scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
+        result = self.check()
+        self.assertEqual((result.stats["scenarios"], result.stats["steps"]), (1, 1))
+
+    def test_verdict_corpus_phrases_and_n5_rows_match_the_tables(self):
+        self.scenarios.unlink()
+        self.add_verdicts()
+        verdicts = [v for v in (self.acceptance / "verdicts.tsv").read_text().split()[1::2]]
+        total, ok = len(verdicts), verdicts.count("ok")
+        readme = self.acceptance / "README.md"
+        for text, valid in [(f"Корпус: {total} файлов, {ok} ok/{total - ok} refused.", True),
+                            (f"Корпус: {total + 1} файлов, {ok} ok/{total - ok + 1} refused.", False)]:
+            with self.subTest(text=text):
+                readme.write_text(f"# Acceptance\n{text}\n")
+                self.assertEqual(not self.check().errors, valid, self.check().errors)
+        readme.write_text("# Acceptance\n")
+        self.scenarios.write_text('# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n')
+        for row, valid in [("| 01 | пример |", True), ("| 02 | нет такого |", False)]:
+            with self.subTest(row=row):
+                self.replace(self.norms, "## Н5 Section", f"## Н5 Section\n| № | что |\n|---|---|\n{row}")
+                self.assertEqual(not self.check().errors, valid, self.check().errors)
+                self.replace(self.norms, f"## Н5 Section\n| № | что |\n|---|---|\n{row}", "## Н5 Section")
+
     def test_cli_names_exceptions_and_keeps_them_out_of_pass(self):
         self.api.unlink()
         registry = self.root / "exceptions.tsv"
