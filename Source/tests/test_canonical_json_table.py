@@ -6,13 +6,15 @@ The course signed `json.dumps(sort_keys=True)` and the product `json.Marshal`: `
 not verify at the other (the external review of 2026-10-11, its fourth defect)."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import hashlib
 import math
 import os
 
 from tests.productdir import SOURCE, product_file
 
-TABLE = os.path.join(SOURCE, "tests", "testdata", "canonical_json.tsv")
+TABLE = os.path.join(frozen_testdata(), "canonical_json.tsv")
 
 
 def _rows():
