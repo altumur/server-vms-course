@@ -1,0 +1,156 @@
+{
+  "task": "ADR-0074 confirmation: Source/tests/domain does not import VMS",
+  "base": "dcf2509c",
+  "branch": "codex/course-adr74-confirm-tests-domain",
+  "tests": {
+    "unit": {
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /tmp/adr74-venv/bin/python tests/run.py",
+      "log": "/tmp/adr74-confirm-unit-role-restored-20261017.log",
+      "sha256": "cde44e80ef97089401205140f2a2623ac7ee8556898d7c01b469a92bf6f45e36",
+      "passed": 2048,
+      "failed": 3,
+      "skipped": 2,
+      "exit_code": 1,
+      "expected_failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
+        "test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door",
+        "test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process"
+      ],
+      "skip_reasons": [
+        "pysyncobj unavailable in this venv",
+        "console: no jsdom"
+      ],
+      "validated_commit": "1a8aac7f"
+    },
+    "domain": {
+      "cwd": "Source",
+      "command": "/tmp/adr74-venv/bin/python tests/domain/run.py",
+      "log": "/tmp/adr74-confirm-domain-final-20261017.log",
+      "sha256": "d1a643b96cd3252478a0efcb70c060b3a136c6862e5b8da4b15a522aab1d4465",
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "domainvms": {
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/domainvms/run.py",
+      "log": "/tmp/adr74-confirm-domainvms-20261017.log",
+      "sha256": "95f9cee7152285807f86c21b45e0072f6b5299ce4b3b85e42448ccf0526b4e7a",
+      "passed": 206,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "boundary": {
+      "cwd": "Source",
+      "command": "/tmp/adr74-venv/bin/python tests/run.py test_boundary",
+      "log": "/tmp/adr74-confirm-boundary-final-20261017.log",
+      "sha256": "9c2ee1dcc488d1212ffe36ea00c7abc4ff9e16c51cebb608f2a6635ae6a9d80d",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    }
+  },
+  "boundary": {
+    "forbidden_imports_in": "Source/tests/domain/*.py",
+    "patterns": [
+      "from vms",
+      "import vms",
+      "from tests.vmsconftest",
+      "import tests.vmsconftest"
+    ],
+    "grep_result": "no matches",
+    "automated_test": "tests/test_boundary.py::test_tests_domain_does_not_import_vms"
+  },
+  "coverage_table": {
+    "path": "windows/adr74-confirm/TESTS.tsv",
+    "rows": 205,
+    "assert_nodes_before": 786,
+    "assert_nodes_after": 786,
+    "ast_validation_errors": 0,
+    "sha256": "afb1ac8ad3cf2665ffb09ab103686ed0d0c704e50ecda97d556f8006def96f24"
+  },
+  "repository_checks": {
+    "git_diff_check": "passed",
+    "changed_product_or_platform_runtime_files": 0
+  },
+  "runtime": {
+    "python": "3.12.15",
+    "obsd": "/Users/murat/w2c/vms-nightly/build/obsd/build/obsd"
+  },
+  "date": "2026-10-17",
+  "source_commit": "1a8aac7f",
+  "acceptance_status": "Conditional merge c1fe202a authorized: exact three permitted failures verified",
+  "review_decisions": [
+    "6e37e42b",
+    "8498f5fd",
+    "643d5223",
+    "0c40e0c1",
+    "992afbe3",
+    "c1fe202a"
+  ],
+  "validation": {
+    "log": "/tmp/adr74-confirm-validation-20261017.log",
+    "sha256": "c815d4de8c03cf3f089775a46c4e048aeaffca164ee6abdfb8f62246057cc749",
+    "exit_code": 0
+  },
+  "fixture_smoke": {
+    "log": "/tmp/adr74-confirm-fixture-20261017.log",
+    "sha256": "1bc0cc4d9ec8797564e00de38c5095b9d383f3110da688cd1502b1611837da3c",
+    "exit_code": 0
+  },
+  "test_module_asserts": {
+    "before": 1679,
+    "after": 1679,
+    "domain_before": 857,
+    "domain_after": 712,
+    "domainvms_before": 822,
+    "domainvms_after": 967
+  },
+  "source_manifest": {
+    "path": "/tmp/adr74-confirm-source-role-restored-20261017.json",
+    "sha256": "735c027653a963f679c4fe54e13319733ae6f53c77562702ead18165c6d4c771",
+    "files": 1125,
+    "unchanged_after_runs": true
+  },
+  "fixture_catalogue": {
+    "published_specs": [
+      "cam",
+      "rec"
+    ],
+    "neighbour_source": "cam spec.near; no hard-coded recorder name in loader",
+    "load_dir_used": false,
+    "implementation_imports": false
+  },
+  "pending_decisions": [],
+  "unit_fixture_repairs": {
+    "Source/tests/test_console_gate.py": "RecWorker test double supplies metrics_text required when serve_archive starts; assertions unchanged",
+    "Source/tests/test_row_reader.py": "RecWorker test double supplies ingest=None required by metrics_text; assertions unchanged"
+  },
+  "previous_unit": {
+    "cwd": "Source",
+    "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/run.py",
+    "log": "/tmp/adr74-confirm-unit-20261017.log",
+    "sha256": "e546acfc36d34fa193fe41404ba38a891cc6df3f5b3bf079e8d4fe231cf27773",
+    "passed": 2047,
+    "failed": 4,
+    "skipped": 2,
+    "exit_code": 1,
+    "expected_failure": "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
+    "additional_failures": [
+      "test_platform_lists.py::test_the_code_holds_the_tables_lists",
+      "test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door",
+      "test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process"
+    ],
+    "skipped_reason": "console: no jsdom"
+  },
+  "separate_followup": "decisions/inbox/2026-10-17-задача-м10-1-предел-тела-стенда.md",
+  "approved_tsv_restore": {
+    "commit": "1a8aac7f",
+    "file": "Source/tests/testdata/platform_lists.tsv",
+    "change": "secret_roles<TAB>domainpart after domainagent; no other changes"
+  }
+}

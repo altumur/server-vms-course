@@ -259,7 +259,7 @@ def test_the_star_camera_uploads_a_named_card_range_to_the_centre_over_its_only_
     """A historical range goes to the same centre that receives live bytes; the camera's actual
     card answers the named recording. The inaccessible relay is never dialled for that answer."""
     import shutil
-    from tests.domain.conftest import real_card
+    from tests.vmsconftest import real_card
     from vms.worker import fake_samples
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall, star={"east"})
@@ -289,7 +289,7 @@ def test_the_star_recorders_card_range_fetches_the_named_camera_recording_throug
     from concurrent.futures import ThreadPoolExecutor
     import shutil
     import threading
-    from tests.domain.conftest import real_card
+    from tests.vmsconftest import real_card
     from vms.ingest import RangeFailed, card_range
     from vms.worker import fake_samples
     wall = Clock()

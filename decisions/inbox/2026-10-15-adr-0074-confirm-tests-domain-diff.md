@@ -111,3 +111,20 @@ domainvms 206/0/0 (`OBSD_BIN` — сборка 2026-10-14); unit не повто
 
 После раздела «Слияние» «Архитектор» закрывает пункт Confirmation в ADR-0074. Два отказа `test_storage_m10` закрывает
 окно М10/1 (`2026-10-17-задача-м10-1-предел-тела-стенда.md`), не это.
+
+## Слияние (команда курса, 2026-10-17)
+
+Ветка `codex/course-adr74-confirm-tests-domain` слита по разрешению `c1fe202a`;
+коммит слияния — **`417459bb`**, проверенные Source — `1a8aac7f`, обновлённые доказательства — `f78eb186`.
+Main перед слиянием — `c1fe202a`; Source после слияния совпадает с проверенным снимком.
+Строка `secret_roles<TAB>domainpart` возвращена отдельным коммитом `1a8aac7f`, других правок TSV в нём нет.
+
+Полный unit: **2048 passed, 3 failed, 2 skipped** (exit 1). Набор отказов проверен точно:
+- `test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one`;
+- `test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door`;
+- `test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process`.
+
+Это ровно три разрешённых отказа; внутренняя сверка таблицы с кодом зелёная.
+Журнал `/tmp/adr74-confirm-unit-role-restored-20261017.log`, SHA256 и манифест 1125 файлов —
+`windows/adr74-confirm/evidence.json`. Два случая М10/1 идут отдельной веткой по назначенной задаче.
+Пункт Confirmation в ADR-0074 закрывает «Архитектор» после этой записи.

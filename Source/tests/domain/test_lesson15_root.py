@@ -15,7 +15,7 @@ import json
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.members import Members
 from w2cplatform.domain.shared import SharedSettings, SharedView, sign
@@ -40,7 +40,7 @@ def _site(wall, n=4):
     admitted with a key (Lesson 6) — the registrar wrote it on the list — and holds an LDevID for it."""
     fed, devices, device_keys = Federation(), {}, {}
     for i in range(n):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall)
         d.boot()
         devices[d.name] = d
         if i == 0:
@@ -221,7 +221,7 @@ def test_the_signers_backup_of_lessons_4_and_7_cannot_answer_a_theft():
     wall = Clock()
     fed = Federation()
     for i in range(2):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall); d.boot()
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall); d.boot()
         fed.add(d.cluster(domain=i == 0))
     signer = Signer(DOMAIN, fed.clusters["cam-SN0"].vars, now=wall)
     try:
@@ -239,11 +239,11 @@ def test_a_member_that_pinned_another_root_is_named_and_not_accepted():
     from w2cplatform.domain.api import ApiError
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
-    impostor_fed, x0 = Federation(), DeviceCluster("X0", FakeVariables(), wall=wall)
+    impostor_fed, x0 = Federation(), EmbeddedMember("X0", FakeVariables(), wall=wall)
     x0.boot()
     impostor_fed.add(x0.cluster(domain=True))
     install(impostor_fed, "cam-X0", DOMAIN, DomainRoot(DOMAIN, now=wall), wall=wall, objects=x0.disk)
-    sn9 = DeviceCluster("SN9", FakeVariables(), wall=wall)
+    sn9 = EmbeddedMember("SN9", FakeVariables(), wall=wall)
     sn9.boot()
     report_sync(DomainAgent(sn9.name, impostor_fed.clusters["cam-X0"].vars, sn9.flash, now=wall, domain_objects=x0.disk_door(),
                 published=sn9.local_objects()))                    # the first answer: the impostor's
@@ -386,7 +386,7 @@ def test_install_seals_the_holders_keys_with_the_installers_ring():
     new_key_file(path)
     for given, env in ((Sealer.from_file(path), None), (None, path)):
         fed = Federation()
-        d = DeviceCluster("SN0", FakeVariables(), wall=wall)
+        d = EmbeddedMember("SN0", FakeVariables(), wall=wall)
         d.boot()
         fed.add(d.cluster(domain=True))
         saved = os.environ.get("SECRETS_KEY")

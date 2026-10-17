@@ -10,7 +10,6 @@ from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
 from w2cplatform.domain.federation import DomainDirectory
-from vms.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
 from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, Running, heartbeat, make_domain, snapshot
 
@@ -24,6 +23,7 @@ def _four_workers(wall):
     return fed, links
 
 
+@isolated_catalog()
 def test_two_hundred_cameras_from_heartbeats_nobody_called():
     wall = Clock(10_000.0); fed, links = _four_workers(lambda: wall() - 3)
     view = ReadView(fed, lost_after=45, wall=wall)
@@ -36,6 +36,7 @@ def test_two_hundred_cameras_from_heartbeats_nobody_called():
     assert view.causes() == []
 
 
+@isolated_catalog()
 def test_the_list_from_a_real_cluster():
     """М11's controller and workers running; the domain's view is exactly their heartbeats."""
     fed, _ = make_domain({"north": (), "south": ()}, "north"); wall = Clock(10_000.0)
@@ -44,9 +45,10 @@ def test_the_list_from_a_real_cluster():
     view = ReadView(fed, wall=wall); view.refresh()
     rows = view.list(size=10)["rows"]
     assert [r["phase"] for r in rows] == ["running"] * 3 and {r["server"] for r in rows} == {"srv-1", "srv-2"}
-    assert {r["worker"] for r in rows} == {"w-0", "w-1"} and rows[0]["observed_revision"] == rows[0]["revision"] == 1
+    assert {r["worker"] for r in rows} == {"w-0", "w-1"} and all(r["epoch"] == 1 for r in rows)
 
 
+@isolated_catalog()
 def test_a_camera_nobody_is_running_is_in_the_list_and_says_so():
     """The defect this closes: the list came only from heartbeats, so a camera that
     NOTHING is running was not in it at all. An operator could add a camera, watch
@@ -73,6 +75,7 @@ def test_a_camera_nobody_is_running_is_in_the_list_and_says_so():
     assert view.list()["total"] == 2
 
 
+@isolated_catalog()
 def test_a_camera_is_not_listed_twice_when_both_sources_have_it():
     """The observation wins, because it says more. The two sources name a camera
     differently — the worker's status entry and the cluster's snapshot row — so the
@@ -93,6 +96,7 @@ def test_a_camera_is_not_listed_twice_when_both_sources_have_it():
     assert all(r["worker_state"] == "live" for r in rows), "an observed camera came back as configured too"
 
 
+@isolated_catalog()
 def test_a_cluster_that_stopped_publishing_is_a_different_silence_from_a_silent_worker():
     """Two silences, and an operator does different things about them.
 
@@ -125,6 +129,7 @@ def test_a_cluster_that_stopped_publishing_is_a_different_silence_from_a_silent_
     assert all(r["worker_state"] == "live" for r in view.list()["rows"]), "the cameras are fine, and the list says so"
 
 
+@isolated_catalog()
 def test_kill_a_server_one_cause_displayed():
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     view = ReadView(fed, lost_after=45, wall=wall)
@@ -142,6 +147,7 @@ def test_kill_a_server_one_cause_displayed():
     assert len(stale) == 100 and "last known state" in stale[0]["as_of"]   # still listed, greyed, with their age
 
 
+@isolated_catalog()
 def test_unreachable_cluster_keeps_last_known_rows_and_says_so():
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     view = ReadView(fed, lost_after=45, wall=wall)
@@ -163,6 +169,7 @@ class FakeClusterConsole:
         self.creates.append(fields); return {"id": len(self.creates), "worker": "w-0"}
 
 
+@isolated_catalog()
 def test_api_refuses_placement_at_both_levels_and_is_idempotent():
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
@@ -187,6 +194,7 @@ def test_api_refuses_placement_at_both_levels_and_is_idempotent():
     assert c["cluster"] == "south" and c["kept"] in pending.of("south")              # the cluster chose the worker; the domain forwarded
 
 
+@isolated_catalog()
 def test_api_says_503_not_404_when_a_cluster_is_unreachable():
     fed, links = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
@@ -198,38 +206,11 @@ def test_api_says_503_not_404_when_a_cluster_is_unreachable():
         assert e.status == 503 and "unknown" in e.detail
 
 
-def test_gateway_fans_out_and_the_worker_sees_one_viewer():
-    tees = {7: LiveTee(7)}
-    def authorise(token, camera):
-        if token != "alice-token": raise Forbidden(token)
-        return "alice"
-    ep = WorkerLiveEndpoint("w-0", tees, authorise)
-    gw = Gateway("gw-1", where=lambda c: "w-0", endpoint=lambda n: ep)
-    viewers = [gw.watch(7, "alice-token", f"browser-{i}", maxsize=5) for i in range(50)]
-    assert tees[7].viewers == 1 and gw.viewers(7) == 50                  # ONE subscription on the worker, fifty out
-    try:
-        gw.watch(7, "bad-token", "browser-x"); raise AssertionError("the cluster's authoriser decides")
-    except Forbidden:
-        pass
-    for f in range(100):
-        tees[7].push(f"frame-{f}")                                       # the worker's push never blocks
-    assert gw.pump() == 30 and tees[7].subscribers["gw-1"].dropped == 70  # upstream leaky queue (30) leaked
-    assert all(len(v.q) == 5 and v.dropped == 25 for v in viewers)       # every slow viewer leaked its own
-    for i in range(50):
-        gw.leave(7, f"browser-{i}")
-    assert tees[7].viewers == 0 and gw.viewers(7) == 0
 
 
-def test_gateway_follows_a_failover():
-    eps = {"w-0": WorkerLiveEndpoint("w-0", {7: LiveTee(7)}, lambda t, c: "alice"),
-           "w-1": WorkerLiveEndpoint("w-1", {7: LiveTee(7)}, lambda t, c: "alice")}
-    home = {"cam": "w-0"}
-    gw = Gateway("gw", where=lambda c: home["cam"], endpoint=eps.__getitem__)
-    gw.watch(7, "t", "b1")
-    home["cam"] = "w-1"                                                   # the controller moved it; the directory says so
-    assert gw.reconnect(7, "t") == "w-1" and eps["w-1"].tees[7].viewers == 1 and gw.viewers(7) == 1
 
 
+@isolated_catalog()
 def test_console_over_http():
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=1000.0)
@@ -266,6 +247,7 @@ def test_console_over_http():
         con.stop(srv)
 
 
+@isolated_catalog()
 def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceiling_on_a_body():
     """М10's sixth review, its sweep of every HTTP door: this one was a thread for every connection, with no deadline
     on a request, and it read a body to whatever `Content-Length` said before it looked at the caller's token. It is
@@ -273,7 +255,10 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
     its request line and headers under a deadline (`Deadlined`), and a body past `MAX_BODY` is 413 with nothing read."""
     import socket
     import time
+    from w2cplatform import catalog
+    from tests.conftest import testsub
     from w2cplatform.console import ConsoleServer
+    catalog.register(testsub())
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     api = ConsoleAPI(DomainDirectory(fed))
     con = Console(DomainDirectory(fed), ReadView(fed, wall=lambda: 1002.0), api, refresh_interval=0.05)
@@ -295,9 +280,9 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         return out, time.monotonic() - began
     try:
         assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
-        reply, took = raw(b"PUT /domain/cam/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        reply, took = raw(b"PUT /domain/testsub/counters/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
-        reply, took = raw(b"PUT /domain/cam/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        reply, took = raw(b"PUT /domain/testsub/counters/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
         held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
         for s in held:
@@ -311,6 +296,7 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         con.stop(srv)
 
 
+@isolated_catalog()
 def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_answered_whoever_floods():
     """М10's seventh review, major: the domain's console (and the signer) had `Bounds(64, 16)` with no reserve and no
     lane for the box — four addresses took every connection. Its bounds are the console's now: `CONSOLE_PER_ADDRESS`
@@ -390,6 +376,7 @@ def _env_lines(path: str) -> dict:
     return out
 
 
+@isolated_catalog()
 def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_address_not_a_network():
     """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
     monitors' lane in code, and their deploy set none of it. Their units name the unix sockets — each in the unit's
@@ -418,6 +405,7 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     assert group not in signer["SupplementaryGroups"][0].split()
 
 
+@isolated_catalog()
 def test_role_requests_need_no_subsystem_tokens_socket_in_the_deployment():
     """No deployed process opens a subsystem tokens socket: it asks its role door."""
     import json
@@ -446,6 +434,7 @@ def test_role_requests_need_no_subsystem_tokens_socket_in_the_deployment():
     assert f"\ng {group} " not in sysusers                                        # no unused group is installed
 
 
+@isolated_catalog()
 def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     """The domain's units in the cluster's form (no orchestrator): each runs `w2c-run.sh <verb>`, names its role's socket
     and joins that role's group first (the rights file's), and lists no `EnvironmentFile=` — the site's lines are
@@ -488,6 +477,7 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     assert not [n for n in left if n.endswith((".hcl", ".hcl.md")) or "nomad" in n], left
 
 
+@isolated_catalog()
 def test_the_domains_units_name_stores_that_open():
     """The twelfth review, major 22: the domain's deploy named its stores by a backend that is gone, and `open_vars`
     refused it before anything started. The units' lines, with the site's (`domain.env.example`, the platform's
@@ -575,6 +565,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         shutil.rmtree(d, ignore_errors=True)
 
 
+@isolated_catalog()
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A
@@ -606,6 +597,7 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     assert d["silent"] and d["age"] == 120
 
 
+@isolated_catalog()
 def test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directory():
     """М10's seventh review, part 2, reproduced: a snapshot shard or a heartbeat that does not parse raised
     `JSONDecodeError` out of the read view's pass — every cluster's time froze, `/api/cameras` and

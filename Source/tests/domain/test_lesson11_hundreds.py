@@ -12,7 +12,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from tests.member_console import admit_fixtures, device_console
 from w2cplatform.domain.api import ConsoleAPI
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory, Federation
 from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.readview import ReadView
@@ -28,7 +28,7 @@ def _site(wall, n=N):
     fed.add(north)
     devices = []
     for i in range(n):
-        d = DeviceCluster(f"SN{i:04d}", FakeVariables(), wall=wall)
+        d = EmbeddedMember(f"SN{i:04d}", FakeVariables(), wall=wall)
         d.boot()
         fed.add(d.cluster())
         devices.append(d)
@@ -206,7 +206,7 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
     the domain pays instead is writes: every report rewrites what changed — the heartbeat and the snapshot
     shard, both stamped with the time — and the `reported` mark."""
     from w2cplatform.domain.agent import DomainAgent
-    from vms.camera_cluster import Ram
+    from tests.domain.conftest import Ram
     from w2cplatform.domain.uplink import member_copy
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
@@ -215,7 +215,7 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
     fed = Federation(); fed.add(north)
     agents, devices = [], []
     for i in range(N):
-        d = DeviceCluster(f"SN{i:04d}", FakeVariables(), wall=wall)
+        d = EmbeddedMember(f"SN{i:04d}", FakeVariables(), wall=wall)
         d.boot()
         fed.add(member_copy(d.name, domain_store, wall=wall))
         agents.append(DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=store, published=d.local_objects()))

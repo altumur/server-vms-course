@@ -1,6 +1,7 @@
 """Lesson 1 — what a cluster cannot know: lookup across clusters from the
 snapshots the clusters publish, incompleteness as a result, placement by
 reachability, CAS against two placers, a dead cluster is not a trigger."""
+from tests.catalog_fixture import isolated_catalog
 import json
 import threading
 from w2cplatform.domain.federation import DomainDirectory
@@ -8,6 +9,7 @@ from w2cplatform.domain.placement import UnitSite, ClusterPlacer, Refused
 from tests.domain.conftest import Clock, Running, make_domain, snapshot
 
 
+@isolated_catalog()
 def test_where_across_three_clusters_from_what_the_clusters_publish():
     """Each cluster's controller placed its cameras on its workers and published
     its snapshot — one object per worker. The domain read those objects and
@@ -23,15 +25,16 @@ def test_where_across_three_clusters_from_what_the_clusters_publish():
     a = d.where(7)
     assert a.found and a.complete and (a.cluster, a.worker, a.server) == ("south", "w-0", "srv-9")
     assert d.where(50).cluster == "cloud" and d.where(1).cluster == "north" and d.where(2).worker in ("w-0", "w-1")
-    assert fed.clusters["south"].snapshot()["units"][0]["id"] == 1                  # the cluster's id; the domain never asks by it
+    assert fed.clusters["south"].snapshot()["units"][0]["id"] == "7"                  # the cluster's id; the domain never asks by it
     holdings, down = d.holdings()
     assert down == [] and holdings["south"] == {"w-0": ["7"]} and holdings["cloud"] == {"w-0": ["50"]}
     # ONE OBJECT PER WORKER — the heartbeat's shape, and for the same reason: north runs two workers,
     # so north publishes two objects. The cluster that grows publishes more of them, not a bigger one.
-    assert fed.clusters["north"].objects.list("cam/snapshot/") == ["cam/snapshot/w-0", "cam/snapshot/w-1"]
+    assert fed.clusters["north"].objects.list("testsub/snapshot/") == ["testsub/snapshot/w-0", "testsub/snapshot/w-1"]
     assert d.ages() == {"cloud": 0.0, "north": 0.0, "south": 0.0}                     # the snapshot's age is the domain's RPO, shown
 
 
+@isolated_catalog()
 def test_where_is_answered_with_worker_and_server_and_stays_honest_about_ids():
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["north"], {1: ("w-0", "srv-1"), 2: ("w-1", "srv-2")}, ts=1000.0)
@@ -44,6 +47,7 @@ def test_where_is_answered_with_worker_and_server_and_stays_honest_about_ids():
     assert not none.found and none.complete and "2 clusters searched" in none.sentence()
 
 
+@isolated_catalog()
 def test_unreachable_cluster_makes_the_answer_incomplete_not_short():
     fed, links = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     snapshot(fed.clusters["north"], {1: ("w-0", "srv-1")}, ts=1000.0)
@@ -56,6 +60,7 @@ def test_unreachable_cluster_makes_the_answer_incomplete_not_short():
     assert b.found and not b.complete and "could not be asked" in b.sentence()
 
 
+@isolated_catalog()
 def test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie():
     """Neither cluster is picked: the answer names both, is not complete, and says it is a placement failure. It used to
     raise — and a member naming another's camera then made `/domain/where` and every edit of that camera a 500 (the
@@ -70,6 +75,7 @@ def test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie():
         assert "placement failure" in a.sentence()
 
 
+@isolated_catalog()
 def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
     """Two shards of ONE cluster can both name a camera for the length of a move:
     the domain reads the shards one at a time, and the writer is between two puts.
@@ -77,6 +83,8 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
     The newer shard wins, and the age of the whole is the age of the STALEST shard,
     because a directory is only as fresh as its oldest part."""
     fed, _ = make_domain({"north": ()}, "north")
+    from tests.domain.conftest import _ensure_camera_spec
+    _ensure_camera_spec()
     c = fed.clusters["north"]
     c.objects.put("cam/snapshot/w-0", json.dumps({"cluster": "north", "worker": "w-0", "ts": 1000.0,
         "cameras": [{"id": 1, "ref": "7", "name": "cam7", "worker": "w-0", "server": "srv-1"}]}).encode())
@@ -87,6 +95,7 @@ def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():
     assert DomainDirectory(fed, wall=lambda: 1010.0).ages()["north"] == 10.0   # 1010 − 1000: the stalest shard
 
 
+@isolated_catalog()
 def test_placement_is_by_reachability_then_headroom():
     fed, _ = make_domain({"north": ("vlan:a", "vlan:b"), "south": ("vlan:b",), "cloud": ("vlan:c",)}, "north")
     head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: cam_headroom
@@ -105,23 +114,28 @@ def test_placement_is_by_reachability_then_headroom():
     assert p.place(UnitSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
 
 
+@isolated_catalog()
 def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     """Two levels, each deciding what it knows: the domain picked south by
     reachability; south's controller picked the worker by capacity and labels."""
     fed, _ = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     wall = Clock(); s = Running(fed.clusters["south"], wall, workers=(("w-0", "srv-9"), ("w-1", "srv-10")))
     admit(fed)
-    p = ClusterPlacer(fed, sub="cam")
-    pl = p.place(UnitSite(7, "vlan:b"))
+    p = ClusterPlacer(fed, sub="testsub")
+    pl = p.place(UnitSite("7", "vlan:b"))
     assert pl.cluster == "south"
+    s.workers["w-0"].labels = ["vlan:a"]
+    s.workers["w-1"].labels = ["vlan:b"]
+    s.workers["w-0"].heartbeat_once(); s.workers["w-1"].heartbeat_once()
     (cid,) = s.create(7, labels=["vlan:b"])                                           # the domain console forwards the create to south, with ref 7
     where = s.ctl.placement(cid)
-    assert where.worker in ("w-0", "w-1") and "reaching vlan:b" in where.reason and "on srv-" in where.reason
+    assert where.worker == "w-1" and "reaching vlan:b" in where.reason and "on srv-10" in where.reason
     a = DomainDirectory(fed).where(7)
     assert a.cluster == "south" and a.worker == where.worker                          # the snapshot carried the cluster's decision up
-    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/cam/7"]  # the domain stored its level, nothing about workers
+    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/testsub/7"]  # the domain stored its level, nothing about workers
 
 
+@isolated_catalog()
 def test_two_placers_racing_agree_by_cas():
     fed, _ = make_domain({"north": ("vlan:a",), "south": ("vlan:a",)}, "north")
     results = []
@@ -140,6 +154,7 @@ def test_two_placers_racing_agree_by_cas():
     assert len(by_cam) == 40
 
 
+@isolated_catalog()
 def test_a_dead_cluster_is_not_a_trigger():
     fed, links = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     admit(fed)
@@ -157,6 +172,7 @@ def test_a_dead_cluster_is_not_a_trigger():
         assert "never crosses a cluster" in str(e)
 
 
+@isolated_catalog()
 def test_exactly_one_domain_holder_is_designated():
     fed, _ = make_domain({"north": (), "south": ()}, "nowhere")
     try:

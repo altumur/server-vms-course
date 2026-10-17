@@ -18,7 +18,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.alarms import Card, DomainAlarms, ReportedDoor, pages
 from w2cplatform.domain.api import ConsoleAPI
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import Grant
 from w2cplatform.domain.pending import PendingEdits
@@ -41,7 +41,7 @@ def _site(wall, n=2, nets=None):
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     devices, agents, cards = {}, {}, {}
     for i in range(n):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall, reaches=((nets or ["vlan:a"] * n)[i],))
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall, reaches=((nets or ["vlan:a"] * n)[i],))
         d.boot(first_name=f"gate-{i}")
         cards[d.name] = Card("cam", tempfile.mkdtemp(prefix="card-"))
         fed.add(member_copy(d.name, north.objects, d.reaches, wall=wall))
@@ -81,7 +81,7 @@ def test_a_camera_that_has_not_published_does_not_report():
     a complete answer the domain must believe. So it reports nothing, and the domain says it has not heard."""
     wall = Clock(NOW)
     north, _ = make_cluster("north", domain=True)
-    d = DeviceCluster("SN9", FakeVariables(), wall=wall)                       # not booted: nothing published
+    d = EmbeddedMember("SN9", FakeVariables(), wall=wall)                       # not booted: nothing published
     agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects, published=d.local_objects())
     assert report_sync(agent) and "has not published" in agent.reported
     assert reported_at(d.name, north.objects) is None
@@ -192,7 +192,7 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     slow = Clock(NOW - 900)                                                     # the camera's own clock
     north, _ = make_cluster("north", domain=True)
     fed = Federation(); fed.add(north)
-    d = DeviceCluster("SN7", FakeVariables(), wall=slow)
+    d = EmbeddedMember("SN7", FakeVariables(), wall=slow)
     d.boot()
     fed.add(member_copy(d.name, north.objects, wall=wall))
     agent = DomainAgent(d.name, north.vars, d.flash, now=slow, domain_objects=north.objects, published=d.local_objects())
@@ -215,22 +215,6 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     assert view.list()["clusters"][d.name] == "unreachable"
 
 
-def test_a_cluster_with_no_cameras_yet_reports_that_it_has_none():
-    """Feedback AA, on the report. A server room nobody has given a camera yet runs its controller once and
-    publishes an empty `unplaced` shard; its agent reports; the domain lists it as a member that answered
-    with nothing — complete — and not as one that never reported."""
-    from vms.controller import VmsController
-    wall = Clock(NOW)
-    north, _ = make_cluster("north", domain=True)
-    south, _ = make_cluster("south")
-    fed = Federation(); fed.add(north)
-    fed.add(member_copy("south", north.objects, wall=wall))
-    VmsController(south.vars, south.objects, wall=wall, cluster="south").publish_snapshot()
-    agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects, published=south.objects)
-    assert report_sync(agent) and agent.reported.startswith("reported")
-    view = ReadView(fed, wall=wall); view.refresh()
-    page = view.list()
-    assert page["total"] == 0 and page["complete"] and page["clusters"]["south"] == "ok"
 
 
 def test_a_report_retains_two_whole_generations_and_never_touches_unrelated_objects():
