@@ -1,4 +1,6 @@
 """ADR-0074 collected names and last-moment grant checks, testsub/testsub2 only."""
+
+from tests.frozen_data import frozen_testdata
 import contextlib
 import copy
 import json
@@ -16,7 +18,7 @@ from w2cplatform.variables import FileVariables
 
 
 def spec(sub="testsub", *, show=()):
-    raw = yaml.safe_load((Path(__file__).parent / "testdata" / f"{sub}.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / f"{sub}.subsystem.yaml").read_text())
     raw["domain"]["books"] = {"counts": {"from": f"{sub}/counts/", "key": "name", "pick": "unique", "to": "to"}}
     if show:
         raw["domain"]["books"]["counts"]["show"] = list(show)
@@ -52,7 +54,7 @@ def raises(cls, fn):
 def test_names_accept_collected_books_without_kept_and_refuse_carried_books():
     for sub in ("testsub", "testsub2"):
         assert "counts/" in spec(sub).domain.names and "counts/" not in spec(sub).domain.kept
-        raw = yaml.safe_load((Path(__file__).parent / "testdata" / f"{sub}.subsystem.yaml").read_text())
+        raw = yaml.safe_load((frozen_testdata() / f"{sub}.subsystem.yaml").read_text())
         raw["domain"]["books"] = {"counts": {}}
         raw["domain"]["names"] = {"counts/": {"exclusive_with": "domain/users", "grant": "view"}}
         raises(ValueError, lambda: SubsystemSpec.from_dict(raw))
