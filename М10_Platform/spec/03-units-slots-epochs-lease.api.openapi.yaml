@@ -152,7 +152,7 @@ paths:
           in: header
           required: false
           schema: {$ref: "#/components/schemas/IdempotencyKey"}
-          description: Необязателен; обязательный ключ и проход повторов POST описаны в Н3.
+          description: Необязателен и не читается — правка сходится по cas (Н3 «править»); каждый повтор PUT поднимает revision. Обязательный ключ и проход повторов POST описаны в Н3.
       requestBody:
         required: true
         content:
