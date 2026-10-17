@@ -247,49 +247,47 @@ class NativeAPI:
         self.store, self.body_limit = store, body_limit
 
     def request(self, method, target, raw):
-        from w2cplatform.canonical import parse_json
-        from w2cplatform.storemachine import check_key, check_write, wire_index
+        code, body = self._request(method, target, raw)
+        if code >= 400:
+            body.setdefault("error", body["kind"])
+        return code, body
+
+    def _request(self, method, target, raw):
+        from w2cplatform.storemachine import BadRequest, check_key, parse_command, query_value, wire_command, wire_index
         from w2cplatform.variables import Conflict, GuardFailed, Forbidden, KeyTooLong
         from w2cplatform.limits import TooLarge
         from w2cplatform.configstorevars import StoreAmbiguous, StoreUnavailable
         from w2cplatform.rights import refusal
-        if len(raw) > self.body_limit:
-            return 413, {"kind": "toolarge", "limit": self.body_limit}
-        route = urllib.parse.urlsplit(target)
-        query = urllib.parse.parse_qs(route.query, keep_blank_values=True)
+        path, _, query = target.partition("?")
         def version(value):
             return int(value) if value else 0
         try:
-            if method == "GET" and route.path == "/v1/get":
-                key = check_key(query.get("key", [""])[0])
+            if method == "GET" and path == "/v1/get":
+                key = check_key(query_value(query, "key", required=True).decode("utf-8"))
                 if refusal(self.store.writer, self.store.acl, key, "read"):
                     raise Forbidden("read refused")
                 items, index = self.store.get(key)
                 return 200, {"items": items, "index": wire_index(index)}
-            if method == "GET" and route.path == "/v1/list":
-                prefix = query.get("prefix", [""])[0]
+            if method == "GET" and path == "/v1/list":
+                prefix = query_value(query, "prefix")
+                try:
+                    text_prefix = prefix.decode("utf-8")
+                except UnicodeError:
+                    text_prefix = ""
                 keys = {}
-                for key in self.store.list(prefix):
+                for key in self.store.list(text_prefix):
+                    if not key.encode("utf-8").startswith(prefix):
+                        continue
                     _, index = self.store.get(key)
                     if index != 0:                 # a row deleted after list may be omitted, never given an absent version
                         keys[key] = wire_index(index)
                 return 200, {"keys": keys}
-            if method != "POST" or route.path != "/v1/write":
+            if method != "POST" or path != "/v1/write":
                 return 404, {"kind": "badrequest"}
-            try:
-                cmd = parse_json(raw)
-            except ValueError:
-                return 400, {"kind": "badrequest"}
-            if not isinstance(cmd, dict) or cmd.get("op") not in ("put", "delete"):
-                return 400, {"kind": "badrequest"}
-            check_key(cmd.get("key"))
+            if len(raw) > self.body_limit:
+                return 413, {"kind": "toolarge", "limit": self.body_limit}
+            cmd = wire_command(parse_command(raw))
             guard = cmd.get("guard")
-            if isinstance(guard, dict) and isinstance(guard.get("key"), str) and guard["key"]:
-                check_key(guard["key"])
-            try:
-                check_write(cmd, wire=True)
-            except ValueError:
-                return 400, {"kind": "badrequest"}
             # Native API versions are opaque native values. This is representation conversion only.
             if cmd.get("cas") is not None:
                 cmd["cas"] = version(cmd["cas"])
@@ -314,6 +312,8 @@ class NativeAPI:
             return 503, {"kind": "unavailable"}
         except TooLarge as error:
             return 413, {"kind": "toolarge", "key": error.key, "size": error.size, "limit": error.limit}
+        except BadRequest as error:
+            return 400, {"kind": "badrequest", "error": str(error)}
         except ValueError as error:
             return 400, {"kind": "badkey", "error": str(error)}
 
