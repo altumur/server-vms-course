@@ -33,17 +33,13 @@ requests:
 snapshot: [name, start]
 # testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
 # member, a ledger for the domain as a whole, served at `/domain/testsub/ledger`, and a family of badges, one row each
-# (`domain/testsub/badges/<name>`), each a subject of the grants beside the people; a tally carries a token of its own kind.
+# (`domain/testsub/badges/<name>`); a tally carries a token of its own kind.
 domain:
   ref: name
   view: [start]
   books: {tallies: {show: [n]}}
   kept: [ledger, badges/]              # `badges/`: a family of rows
   tables: [ledger]
-  # a badge is never named like one of the domain's people, nor a person like a badge, and is granted no more than
-  # `view`: the platform refuses the write that would
-  names:
-    badges/: {exclusive_with: domain/users, grant: view}
   tokens:
     probe:
       lifetime: 60
