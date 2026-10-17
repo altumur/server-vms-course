@@ -1,0 +1,18 @@
+{
+ "field": {
+  "name": "marks",
+  "type": "list",
+  "inherit": [],
+  "merge": "override"
+ },
+ "unit": [
+  "mine"
+ ],
+ "domain": {
+  "term": 1,
+  "rev": 3,
+  "value": [
+   "site"
+  ]
+ }
+}

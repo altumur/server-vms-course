@@ -1,0 +1,13 @@
+{
+ "field": {
+  "name": "step",
+  "type": "int",
+  "inherit": 1
+ },
+ "unit": 3,
+ "domain": {
+  "term": 1,
+  "rev": 3,
+  "value": 5
+ }
+}

@@ -307,7 +307,21 @@ components:
           type: array
           description: Урок 6 Н1.4 — ждущие правки этого члена по (at, id).
           items: {$ref: '#/components/schemas/Edit'}
-        shared: {description: урок 11}
+        shared:
+          type: object
+          required: [pointer]
+          additionalProperties: false
+          description: Общий документ (урок 11 Н1.4); doc — только когда копия члена отстала.
+          properties:
+            pointer:
+              type: object
+              required: [term, rev, sha256]
+              additionalProperties: false
+              properties:
+                term: {type: integer, minimum: 1}
+                rev: {type: integer, minimum: 1}
+                sha256: {$ref: '#/components/schemas/Hex32'}
+            doc: {type: string}
         backup:
           type: object
           required: [pointer, doc]

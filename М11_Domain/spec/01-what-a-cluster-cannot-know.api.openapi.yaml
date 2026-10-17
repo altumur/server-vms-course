@@ -203,7 +203,7 @@ components:
             outcomes: {description: урок 6 Н1.6}
             url: {type: string, description: 'урок 8 Н1.3: адрес консоли домена (DOMAIN_CONSOLE_URL процесса domain)'}
             term: {description: урок 10 Н1.3}
-            shared: {description: урок 11}
+            shared: {description: урок 11 Н1.6 — доставка общего документа}
     Finding:
       type: object
       required: [kind, sub, ref, detail]

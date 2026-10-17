@@ -1,0 +1,45 @@
+scenario	step	request	expect
+# Приёмка М11/11: стенд hold, m1, m2 (общий документ, доставка, молчащий член в списке тревог) и векторы resolve, alarms на входах inputs/. Формат — README.
+01-shared-edit-and-read	1	@domain	ok
+01-shared-edit-and-read	2	holder GET /domain/shared	200 {"doc": null, "declared": {"testsub": [{"name": "step", "type": "int"}, {"name": "marks", "type": "list"}, {"name": "rounds", "type": "json", "schema": "@any"}]}}
+01-shared-edit-and-read	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"term": 1, "rev": 1, "by": "root"}
+01-shared-edit-and-read	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 6}}}	409 {"error": "refused", "detail": "~are at rev 1"}
+01-shared-edit-and-read	5	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"start": 2}, "nosub": {"a": 1}}}	400 {"error": "refused", "detail": "~no subsystem on the domain"}
+01-shared-edit-and-read	6	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": "five"}}}	400 {"error": "refused"}
+01-shared-edit-and-read	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"rounds": [{"counter": "c1", "every": 0}]}}}	400 {"error": "refused"}
+01-shared-edit-and-read	8	member m1 console POST /counters {"name": "c5", "step": 3, "marks": ["mine"]}	201
+01-shared-edit-and-read	9	member m1 console POST /counters {"name": "c6"}	201
+01-shared-edit-and-read	10	@until 60 member m1 console GET /domain/shared/testsub?unit=c6	200 {"sub": "testsub", "term": 1, "rev": 1, "fields": {"step": {"value": 5, "from": "domain term 1 rev 1", "inherit": 1}}}
+01-shared-edit-and-read	11	member m1 console GET /domain/shared/testsub?unit=c5	200 {"fields": {"step": {"value": 3, "from": "unit"}, "marks": {"value": ["mine", "site"], "from": "unit + domain term 1 rev 1", "merge": "union"}}}
+01-shared-edit-and-read	12	member m1 console GET /domain/shared/testsub?unit=nope	404 {"error": "no such unit"}
+01-shared-edit-and-read	13	@until 60 holder GET /domain/shared	200 {"doc": {"rev": 1}, "delivery": {"term": 1, "rev": 1, "holding": ["hold", "m1", "m2"], "silent": []}}
+01-shared-edit-and-read	14	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": null}}}	200 {"rev": 2}
+01-shared-edit-and-read	15	@until 60 member m1 console GET /domain/shared/testsub?unit=c6	200 {"rev": 2, "fields": {"step": {"value": 1, "from": "spec"}}}
+02-silent-member	1	@domain	ok
+02-silent-member	2	@stop agent m2	ok
+02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
+02-silent-member	4	@until 90 holder GET /domain/shared	200 {"delivery": {"silent": ["m2"]}}
+02-silent-member	5	@until 30 holder GET /domain/alarms	200 {"complete": false, "members": {"m2": {"state": "silent"}}, "sentence": "~m2 silent since"}
+02-silent-member	6	holder GET /domain/alarms?since=yesterday	400 {"error": "refused"}
+02-silent-member	7	@start agent m2	ok
+02-silent-member	8	@until 60 holder GET /domain/shared	200 {"delivery": {"holding": ["hold", "m1", "m2"], "silent": []}}
+02-silent-member	9	@until 30 holder GET /domain/alarms	200 {"complete": true, "sentence": "every member answered"}
+03-resolve	1	resolve inputs/resolve-01-unit-own.json	ok {"value": 3, "from": "unit"}
+03-resolve	2	resolve inputs/resolve-02-domain.json	ok {"value": 5, "from": "domain term 1 rev 3"}
+03-resolve	3	resolve inputs/resolve-03-spec.json	ok {"value": 1, "from": "spec"}
+03-resolve	4	resolve inputs/resolve-04-union.json	ok {"value": ["east", "mine", "site"], "from": "unit + domain term 1 rev 3"}
+03-resolve	5	resolve inputs/resolve-05-union-no-unit.json	ok {"value": ["east"], "from": "domain term 1 rev 3"}
+03-resolve	6	resolve inputs/resolve-06-union-no-domain.json	ok {"value": ["mine"], "from": "unit"}
+03-resolve	7	resolve inputs/resolve-07-document.json	ok {"value": [{"counter": "c1", "every": 5}], "from": "domain term 1 rev 3"}
+03-resolve	8	resolve inputs/resolve-08-document-none.json	ok {"value": null, "from": "none"}
+03-resolve	9	resolve inputs/resolve-09-groups.json	ok {"groups": ["east", "west"], "from": "domain term 1 rev 3"}
+03-resolve	10	resolve inputs/resolve-10-override-list.json	ok {"value": ["mine"], "from": "unit"}
+04-alarms	1	alarms inputs/alarms-01-all-answered.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999902.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999900.0, "member": "m1"}], "members": {"m1": {"state": "ok"}, "m2": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
+04-alarms	2	alarms inputs/alarms-02-storm-truncated.json	ok {"events": [{"id": "e1-0", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999990.0, "kind": "contact.bounce", "class": "alarm", "t_src": 1759999990.0, "member": "m1"}, {"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999989.0, "kind": "contact.bounce", "class": "alarm", "t_src": 1759999989.0, "member": "m1"}, {"id": "e1-2", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999988.0, "kind": "contact.bounce", "class": "alarm", "t_src": 1759999988.0, "member": "m1"}, {"id": "e1-9", "subsystem": "testsub", "unit": "testsub/c2", "of": "testsub/c2", "t": 1759999400.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999400.0, "member": "m2"}], "members": {"m1": {"state": "ok", "truncated": true}, "m2": {"state": "ok"}}, "complete": true, "sentence": "m1 had more alarms than one page holds; showing its newest"}
+04-alarms	3	alarms inputs/alarms-03-silent-last-report.json	ok {"events": [{"t": 1759999745.0, "kind": "silent", "class": "alarm", "member": "m1", "subsystem": "domain", "last_report": 1759999700.0, "ongoing": true}, {"id": "e1-2", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999610.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999610.0, "member": "m1"}, {"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759998500.0, "kind": "door.forced", "class": "alarm", "t_src": 1759998500.0, "member": "m1"}], "members": {"m1": {"state": "silent", "known_until": 1759999700.0, "silent_since": 1759999745.0}}, "complete": false, "sentence": "m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since"}
+04-alarms	4	alarms inputs/alarms-04-not-reporting-witness.json	ok {"events": [{"t": 1759999745.0, "kind": "not_reporting", "class": "alarm", "member": "m1", "subsystem": "domain", "last_report": 1759999700.0, "ongoing": true, "alive_at": 1759999940.0, "alive_via": "m2/w-1"}], "members": {"m1": {"state": "not_reporting", "known_until": 1759999700.0, "silent_since": 1759999745.0, "alive_at": 1759999940.0, "alive_via": "m2/w-1"}}, "complete": false, "sentence": "m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since — but m2/w-1 heard of it at 08:52: alive, and not reporting to the domain"}
+04-alarms	5	alarms inputs/alarms-05-witness-older-than-report.json	ok {"events": [{"t": 1759999745.0, "kind": "silent", "class": "alarm", "member": "m1", "subsystem": "domain", "last_report": 1759999700.0, "ongoing": true}], "members": {"m1": {"state": "silent", "known_until": 1759999700.0, "silent_since": 1759999745.0}}, "complete": false, "sentence": "m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since"}
+04-alarms	6	alarms inputs/alarms-06-never-and-unreadable.json	ok {"events": [], "members": {"m1": {"state": "never"}, "m2": {"state": "unreadable"}}, "complete": false, "sentence": "m1 has never reported to the domain; m2's page of alarms does not read"}
+04-alarms	7	alarms inputs/alarms-07-history-dedup-and-cut.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999970.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999960.0, "member": "m1"}, {"id": "e1-5", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759993000.0, "kind": "tamper", "class": "alarm", "t_src": 1759992990.0, "member": "m1", "from_history": true}], "members": {"m1": {"state": "ok", "history_cut_before": 1759992000.0}}, "complete": true, "sentence": "m1 had an alarm storm: the domain keeps only its newest alarms, and what came before 06:40 UTC is not known in full"}
+04-alarms	8	alarms inputs/alarms-08-window.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999900.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
+04-alarms	9	alarms inputs/alarms-09-clock-offset.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999780.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}

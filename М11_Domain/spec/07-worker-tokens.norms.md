@@ -31,7 +31,7 @@ domain.tokens.<вид>:            # раздел спеки (М10/2 Н1.2а); �
     target_fields: [poll_home | centre …] без повторов
   scenario:  {doc, items, name, enabled, trigger, target, act, placement?, ref_claim, trigger_claim, acts_claim, up_claim,
               audience_claim}            # требует domain.ref
-    doc:           подсистема общего документа (урок 11); items — имя массива в нём (одно имя)
+    doc:           подсистема общего документа (урок 11 Н1.2: shared.<doc>); items — имя массива в нём (одно имя)
     name, enabled, trigger, target, act: пути полей элемента ^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$
     placement?:    подсистема, чьи записи назначения называют дом цели
   claims_bind:   ref_claim, audience_claim (у scenario ещё trigger_claim, acts_claim, up_claim) — имена из claims, разные
@@ -114,7 +114,7 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
      аудитория: poll_home(владелец), centre (без centre → 409 no_centre)
    scenario — by:
      владелец by один: член или член за этим ретранслятором (via[владелец] = член)  → иначе 403 trigger_not_reported
-     общий документ doc (урок 11, проверенный) → массив items; нет        → 403 no_shared_doc
+     общий документ doc (урок 11 Н1.2, проверенный record урока 10) → массив items; нет        → 403 no_shared_doc
      элементы: имя уникально, enabled не false, target = ref, trigger = by → acts; нет ни одного → 403 no_item
      дом: запись <placement>/<ref> — её cluster (в star — centre); иначе poll_home(единственного владельца ref)
                                                                           → нет → 403 no_home

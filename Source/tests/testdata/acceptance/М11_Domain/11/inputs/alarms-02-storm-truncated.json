@@ -1,0 +1,69 @@
+{
+ "now": 1760000000.0,
+ "since": 1759913600.0,
+ "until": 1760000000.0,
+ "lost_after": 45,
+ "witnesses": [],
+ "members": {
+  "m1": {
+   "last_report": 1759999995.0,
+   "received_at": 1759999995.0,
+   "page": {
+    "from": 1759913595.0,
+    "to": 1759999995.0,
+    "events": [
+     {
+      "id": "e1-0",
+      "subsystem": "testsub",
+      "unit": "testsub/c1",
+      "of": "testsub/c1",
+      "t": 1759999990.0,
+      "kind": "contact.bounce",
+      "class": "alarm"
+     },
+     {
+      "id": "e1-1",
+      "subsystem": "testsub",
+      "unit": "testsub/c1",
+      "of": "testsub/c1",
+      "t": 1759999989.0,
+      "kind": "contact.bounce",
+      "class": "alarm"
+     },
+     {
+      "id": "e1-2",
+      "subsystem": "testsub",
+      "unit": "testsub/c1",
+      "of": "testsub/c1",
+      "t": 1759999988.0,
+      "kind": "contact.bounce",
+      "class": "alarm"
+     }
+    ],
+    "truncated": true
+   },
+   "history": null
+  },
+  "m2": {
+   "last_report": 1759999995.0,
+   "received_at": 1759999995.0,
+   "page": {
+    "from": 1759913595.0,
+    "to": 1759999995.0,
+    "events": [
+     {
+      "id": "e1-9",
+      "subsystem": "testsub",
+      "unit": "testsub/c2",
+      "of": "testsub/c2",
+      "t": 1759999400.0,
+      "kind": "door.forced",
+      "class": "alarm"
+     }
+    ],
+    "truncated": false
+   },
+   "history": null
+  }
+ }
+}

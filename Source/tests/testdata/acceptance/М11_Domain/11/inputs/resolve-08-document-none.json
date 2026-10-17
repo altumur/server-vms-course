@@ -1,0 +1,8 @@
+{
+ "field": {
+  "name": "rounds",
+  "type": "json",
+  "document": true
+ },
+ "domain": null
+}

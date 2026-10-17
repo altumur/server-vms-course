@@ -1,0 +1,21 @@
+{
+ "now": 1760000000.0,
+ "since": 1759913600.0,
+ "until": 1760000000.0,
+ "lost_after": 45,
+ "witnesses": [],
+ "members": {
+  "m1": {
+   "last_report": null,
+   "received_at": null,
+   "page": null,
+   "history": null
+  },
+  "m2": {
+   "last_report": 1759999995.0,
+   "received_at": 1759999995.0,
+   "page": "garbled",
+   "history": null
+  }
+ }
+}

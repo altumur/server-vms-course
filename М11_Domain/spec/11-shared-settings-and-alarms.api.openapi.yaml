@@ -1,0 +1,235 @@
+openapi: 3.1.0
+info:
+  title: M11/11 shared settings and alarms of members
+  version: '1'
+  description: 'Normative shapes: 11-shared-settings-and-alarms.norms.md N1.2-N1.9, N2, N4. /domain/shared and
+    /domain/alarms are the domain console''s (a PUT is passed to the domain process, ADR-0032); /domain/shared/{sub} is a
+    cluster console''s own. A cluster console hands the domain console''s doors on by the forwarding table of lesson 8.
+    Request parsing: M10/9 N2.'
+servers:
+  - url: '{origin}'
+    description: Консоль домена или консоль кластера — по двери.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /domain/shared:
+    get:
+      summary: Документ, доставка и объявленное (Н1.6)
+      responses:
+        '200':
+          description: '{doc, delivery, declared}'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [doc, delivery, declared]
+                additionalProperties: false
+                properties:
+                  doc:
+                    oneOf:
+                      - type: 'null'
+                      - $ref: '#/components/schemas/SharedDoc'
+                  delivery: {$ref: '#/components/schemas/Delivery'}
+                  declared:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        required: [name, type]
+                        additionalProperties: false
+                        properties:
+                          name: {type: string}
+                          type: {type: string}
+                          schema:
+                            type: object
+                            additionalProperties: true
+                            description: JSON Schema документа из спеки (Н1.1) как объявлена.
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+    put:
+      summary: Правка общего документа (Н1.3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [base_rev, shared]
+              additionalProperties: false
+              properties:
+                base_rev: {type: integer, minimum: 0}
+                shared:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    additionalProperties: true
+                    description: 'Имена domain.shared спеки → значение или null; что можно — спека (Н1.1), не схема контракта.'
+      responses:
+        '200':
+          description: Новая ревизия
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [term, rev, by]
+                additionalProperties: false
+                properties:
+                  term: {type: integer, minimum: 1}
+                  rev: {type: integer, minimum: 1}
+                  by: {type: string}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/shared/{sub}:
+    parameters:
+      - name: sub
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+      - name: unit
+        in: query
+        required: false
+        schema: {type: string, minLength: 1}
+    get:
+      summary: Значения общих полей для этого кластера и единицы (Н1.5)
+      responses:
+        '200':
+          description: '{sub, term, rev, fields}'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sub, term, rev, fields]
+                additionalProperties: false
+                properties:
+                  sub: {type: string}
+                  term: {type: ['integer', 'null']}
+                  rev: {type: ['integer', 'null']}
+                  fields:
+                    type: object
+                    additionalProperties: {$ref: '#/components/schemas/Resolved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+  /domain/alarms:
+    get:
+      summary: Тревоги членов (Н1.8)
+      parameters:
+        - {name: since, in: query, required: false, schema: {type: number}}
+        - {name: until, in: query, required: false, schema: {type: number}}
+      responses:
+        '200':
+          description: '{since, until, events, members, complete, sentence}'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [since, until, events, members, complete, sentence]
+                additionalProperties: false
+                properties:
+                  since: {type: number}
+                  until: {type: number}
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      required: [t, kind, class, member]
+                      additionalProperties: true
+                      description: Строка индекса М10/8 Н1.3 класса alarm плюс member, t_src, from_history; строка молчания — Н1.8 silence_line. Поля строки события задают подсистемы.
+                  members:
+                    type: object
+                    additionalProperties: {$ref: '#/components/schemas/MemberAlarms'}
+                  complete: {type: boolean}
+                  sentence: {type: string}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+components:
+  responses:
+    Refused:
+      description: Отказ (Н4)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+    SharedDoc:
+      type: object
+      required: [domain, term, rev, at, by, shared, issuer, kid, sig]
+      additionalProperties: false
+      properties:
+        domain: {type: string}
+        term: {type: integer, minimum: 1}
+        rev: {type: integer, minimum: 1}
+        at: {type: number}
+        by: {type: string}
+        shared:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: true
+            description: Значения, объявленные domain.shared спеки (Н1.1).
+        issuer: {type: string, pattern: '^[0-9a-f]{64}$'}
+        kid: {type: string, pattern: '^[0-9a-f]{16}$'}
+        sig: {type: string}
+    Delivery:
+      type: object
+      required: [term, rev, holding, behind, refused, silent, sentence]
+      additionalProperties: false
+      properties:
+        term: {type: ['integer', 'null']}
+        rev: {type: ['integer', 'null']}
+        holding:
+          type: array
+          items: {type: string}
+        behind:
+          type: object
+          additionalProperties:
+            type: object
+            required: [term, rev]
+            additionalProperties: false
+            properties:
+              term: {type: integer}
+              rev: {type: integer}
+        refused:
+          type: object
+          additionalProperties: {type: string}
+        silent:
+          type: array
+          items: {type: string}
+        sentence: {type: string}
+    Resolved:
+      type: object
+      required: [from]
+      additionalProperties: false
+      properties:
+        value: {description: Значение поля или документа.}
+        groups:
+          type: array
+          items: {type: string}
+        from: {type: string}
+        inherit: {description: inherit спеки.}
+        merge: {const: union}
+    MemberAlarms:
+      type: object
+      required: [state]
+      additionalProperties: false
+      properties:
+        state: {enum: [ok, silent, not_reporting, never, unreadable]}
+        truncated: {const: true}
+        known_until: {type: number}
+        silent_since: {type: number}
+        alive_at: {type: number}
+        alive_via: {type: string}
+        history_cut_before: {type: number}

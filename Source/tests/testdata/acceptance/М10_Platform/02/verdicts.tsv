@@ -398,3 +398,12 @@ m59_names_ok	ok
 m59_names_on_carried_book	refused
 m59_names_on_kept	refused
 m59_names_unknown_key	refused
+m61_merge_union_on_int	refused
+m61_shared_doc_bad_name	refused
+m61_shared_doc_extra_key	refused
+m61_shared_doc_named_like_field	refused
+m61_shared_not_a_field	refused
+m61_shared_not_inheriting	refused
+m61_shared_ok	ok
+m61_shared_secret	refused
+m61_shared_twice	refused

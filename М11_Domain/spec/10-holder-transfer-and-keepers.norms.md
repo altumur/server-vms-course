@@ -77,8 +77,10 @@ document:        объект держателя domain/backups/rev-<rev> (М10/
   state:         {<ключ строки>: {<элемент>: <значение>}} — строки, что домен решил и чего нет ни у кого больше:
                  domain/members, domain/topology, domain/placement, domain/placement/*, domain/pending/*,
                  domain/outcomes/*, domain/grants/*, domain/users/*, domain/break-glass/*, domain/disabled,
-                 domain/book-seal, domain/shared и domain/shared/* (урок 11), строки kept спек каталога (урок 5 Н1.6)
-  objects:       {<ключ объекта>: <JSON>} — история тревог (урок 11)
+                 domain/book-seal, domain/shared (указатель общего документа, урок 11 Н1.2), строки kept спек каталога
+                 (урок 5 Н1.6)
+  objects:       {<ключ объекта>: <JSON>} — текущий общий документ shared/rev-<rev> (урок 11 Н1.2) и история тревог
+                 domain/alarm-history/<член> каждого члена (урок 11 Н1.9; добавлено М11/11)
   secrets:       элемент *_secret — конверт ключа копии (ниже), не кольца держателя
   not_in:        domain/signer (ключи едут только передачей, Н1.7), domain/keys (набор у каждого члена), индекс имён и
                  книги (пересчитываются проходом), поколения отчётов, domain/stranded
@@ -194,7 +196,7 @@ order:      нет заголовков — 401 «the backup a cluster keeps is 
             X-W2C-Time, X-W2C-Signature)»; список членов не читается — 503; член не в domain/member-list этого кластера или
             без ключа — 403 «<m> is no member with a key on <c>'s list of members»; ключ отозван (revoked_keys записи,
             revoked_members набора) — 403 «<m>'s key was revoked by the domain's root»; ask-sig не ok — 401 со словом
-answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текст документа> | null, shared: <урок 11> | null};
+answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текст документа> | null, shared: <текст общего документа, урок 11 Н1.2> | null};
             копия не читается — 503 «the copy <c> keeps did not read (…): not "none" — ask again»
 ```
 

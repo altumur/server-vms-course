@@ -1,0 +1,15 @@
+{
+ "field": {
+  "name": "marks",
+  "type": "list",
+  "inherit": [],
+  "merge": "union"
+ },
+ "domain": {
+  "term": 1,
+  "rev": 3,
+  "value": [
+   "east"
+  ]
+ }
+}

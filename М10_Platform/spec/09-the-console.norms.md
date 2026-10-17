@@ -83,7 +83,7 @@ gate:
             # «ключи есть» и «след домена» — М11/2 Н1.8
   identity: # по порядку
     1. кука аварийного входа w2c_glass (сессия в памяти, 15 мин)
-    2. X-Agent-Signature — агент домена: только двери единиц (форма и окно 60 с — М11/3 Н1.4)
+    2. X-Agent-Signature — агент домена: только двери единиц и GET /events?class=alarm (фронт и страница тревог — М11/11 Н1.7; форма и окно 60 с — М11/3 Н1.4)
     3. Authorization: Bearer <токен> | кука w2c_token → домен: {user, until, grants} (токен — М11/2 Н3, гранты и may — М11/9 Н1.4–Н1.5)
     4. отладочная личность (ADR-0050): задан W2C_DEBUG_PERSON=<имя>, запрос без токена и без куки, адрес TCP-соединения
        127.0.0.1 или ::1 (заголовки адреса не читаются) → этот человек со своими grants из domain/grants; человека нет
@@ -123,12 +123,12 @@ session:
 ```yaml
 reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
-         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10 Н1.4), /domain/shared/<sub> (М11/11)
+         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10 Н1.4), /domain/shared/<sub> (М11/11 Н1.5)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (М11/8 Н1.2), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (М11/10), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
-order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (М11) → /drain → /schema
-         → /domain (+ /domain/alarms; М11) → /api/held (М11) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
+order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (М11/11 Н1.5) → /drain → /schema
+         → /domain (+ /domain/alarms; М11/11 Н1.8) → /api/held (М11) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
 
 ### Н1.5 Контракт модуля с оболочкой

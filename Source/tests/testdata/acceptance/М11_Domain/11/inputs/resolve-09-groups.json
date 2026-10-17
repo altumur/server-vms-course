@@ -1,0 +1,15 @@
+{
+ "field": {
+  "name": "folder",
+  "type": "string",
+  "group_by": true
+ },
+ "domain": {
+  "term": 1,
+  "rev": 3,
+  "value": [
+   "east",
+   "west"
+  ]
+ }
+}
