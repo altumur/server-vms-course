@@ -4,13 +4,15 @@ be, and the platform's own secret rows with who reads them (`secret_readers`, AD
 `main` keeps one — a list that differs is a red test, not a difference found by a review."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 
 from tests.productdir import SOURCE, product_file
 from w2cplatform import spec
 from w2cplatform.secrets import PLATFORM_SECRET_READERS
 
-TABLE = os.path.join(SOURCE, "tests", "testdata", "platform_lists.tsv")
+TABLE = os.path.join(frozen_testdata(), "platform_lists.tsv")
 # `secret_readers`: the platform's own secret rows and their readers, a word `<row or prefix>=<role>` each — `<row>=`
 # for a row nobody of the platform reads (the product's `PlatformSecretReaders`; ADR-0066's addition of 2026-10-10)
 READERS = {f"{row}={r}" for row, roles in PLATFORM_SECRET_READERS.items() for r in (roles or ("",))}
