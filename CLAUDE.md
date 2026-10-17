@@ -22,7 +22,8 @@
 
 ## Код курса
 - `Source/` — единственный код курса: `w2cplatform/` платформа (с `cluster/`, `domain/`, `trust/`), `vms/` подсистемы, `deploy/`, `gstvms/`, `tests/`, `traces/`. Тесты: `tests/run.py`, `tests/cluster/run.py`, `tests/domain/run.py`, `tests/domainvms/run.py` в venv python3.12 с pyyaml, cryptography, pysyncobj; jsdom-тесты модуля в `tests/console`.
-- Спеки `Source/vms/*.subsystem.yaml` и `tests/testdata/testsub*.yaml` — один YAML с продуктом; после сигнала «Лекций» их байты правит только «Паритет».
+- Спеки `Source/vms/*.subsystem.yaml`, `tests/testdata/testsub*.yaml` и общие таблицы `tests/testdata/*.tsv` — данные спецификации, один YAML с продуктом; их байты правит «Спецификация» (ADR-0080 доп. 16).
+- Новые реализации генерируются по спецификации в `/Users/murat/w2c/cammeta-python` и `cammeta-go`; старые (`Source/`, `vmssubsystem`) — свидетели до сверки (ADR-0080 доп. 16).
 - Тест границы `Source/tests/test_boundary.py` с долгом: долг только уменьшается.
 
 ## Продукт
