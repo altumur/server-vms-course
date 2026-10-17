@@ -278,3 +278,5 @@ c2_plain_folded	ok
 c2_plain_continuation_like_key	refused
 c2_form_without_title	ok
 c2_display_events_true	ok
+c2_schema_unknown_keyword	refused
+c2_schema_known_keywords	ok

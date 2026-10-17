@@ -93,7 +93,8 @@ closed_key_set:
      display.fields, display.field_help, domain.books, domain.names, domain.tokens, events.suppress, secrets.readers,
      *.schemes]
   opaque:  # уровни, внутрь которых загрузчик не смотрит (содержимое — другой стандарт или другой урок):
-    [*.schema (JSON Schema), unit.fields.*.default и inherit при type json, *.must_match, metrics.where,
+    [*.schema (JSON Schema: имена свойств не проверяются, но ключевые слова — только из перечня урока 3 Н1.2;
+     иное ключевое слово — refused:value на шаге 4), unit.fields.*.default и inherit при type json, *.must_match, metrics.where,
      metrics.unless.where, metrics.labels, placement.near.prefer, placement.affinity.strict, placement.places.where,
      rights.unit_of, display.options.*]
 ```
@@ -321,12 +322,13 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 272 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (46) или `refused` (226). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 274 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (47) или `refused` (227). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
 | `c2_leading_marker`, `c2_crlf`, `c2_control_*`, `c2_null_*`, `c2_depth_64`/`c2_depth_65`, `c2_flow_*`, `c2_plain_*` | уточнения подмножества по чистой комнате: начальный `---`, CRLF, управляющие символы, регистр null, граница глубины 64/65, потоковые формы, перенос простого слова | Н1.1 |
 | `c2_form_without_title`, `c2_display_events_true` | принятые формы `display`: блок без `title`, `events: true` | Н1.2, урок 9 Н1.2 |
+| `c2_schema_known_keywords`, `c2_schema_unknown_keyword` | ключевые слова JSON Schema — только перечень урока 3 Н1.2 | Н1.2, урок 3 Н1.2 |
 | `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan`, `float_*`, `int_field_boundaries`, `json_default_nonfinite` | скаляры: слова, числа, пределы | Н1.1 |
 | `unknown_depth1..4`, `unknown_multiple`, `unknown_in_lease`, `requests_unknown_key`, `requests_unknown_stamp`, `display_unknown_section`, `display_form_unknown_key`, `display_tree_word_erase`, `dup_block_hides_unknown`, `fields_derived_items_unknown` | закрытый набор ключей на каждом уровне; `diagnostics.tsv` проверяет путь и полноту списка неизвестных ключей | Н1.2 |
@@ -375,7 +377,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 5. **имя и форму команды установщика** (`spec put`, `spec status`), где лежит исходный файл и как из него делаются права (урок 6);
 6. **предел размера** строки спеки;
 7. **способ хранения встроенной спеки** у процесса, который не читает хранилище при старте (кластер из одного процесса), и как он сверяет её с строкой;
-8. **команду загрузки одного файла для приёмки**: раннер вызывает её на каждом файле `verdicts.tsv`; код выхода 0 — спека, иной — отказ, текст отказа называет файл (README приёмки).
+8. **команду загрузки одного файла для приёмки** по разделу «Стенд» README приёмки урока 1: раннер вызывает её на каждом файле `verdicts.tsv`; код выхода 0 — спека, иной — отказ, текст отказа называет файл.
 
 ---
 

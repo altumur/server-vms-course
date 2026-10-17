@@ -44,3 +44,10 @@ scenario	step	request	expect
 11-bad-path	1	PUT /counters/c3/x {"start": 1}	404
 11-bad-path	2	PUT /counters/nosuch {"start": 1}	404 {"error": "no such unit"}
 11-bad-path	3	DELETE /counters/nosuch	404 {"error": "no such unit"}
+12-input-forms	1	@key(a) POST /counters {"name": "c12", "start": 1}	201 {"id": "c12", "revision": 1}
+12-input-forms	2	@key(a) POST /counters {"start": 1, "name": "c12"}	201 {"id": "c12", "revision": 1}
+12-input-forms	3	@key(a) POST /testsub/counters {"name":"c12","start":1}	201 {"id": "c12", "revision": 1}
+12-input-forms	4	POST /counters {"name": "c12b", "start": 1.0}	400 {"fault": "not_number"}
+12-input-forms	5	POST /counters {"name": "c12b", "start": 1e2}	400 {"fault": "not_number"}
+12-input-forms	6	POST /counters {"name": "c12b", "labels": ["gpu!"]}	400
+12-input-forms	7	POST /counters {"name": "c12b", "labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}	201 {"labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}
