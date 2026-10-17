@@ -21,3 +21,8 @@ scenario	step	request	expect
 05-power-pull	2	@manual вернуть сервер: демон рестартует по member.json без повторного join, ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад	manual
 06-recover	1	@manual на отдельном тестовом кластере остановить/отсечь все прежние демоны и писателей; сохранить исходные каталоги; подтвердить upper; одним оператором выполнить recover на остановленном демоне; новый floor выше upper, старые узлы отсечены, новые эпохи не повторяются; при неизвестном upper/неполной изоляции отказ, в том числе с force	manual
 07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ (размер сверх объявленного не берёт и -force); дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
+08-floor-replay	1	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f"}
+08-floor-replay	2	@restart store	ok
+08-floor-replay	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f", "again": true}
+08-floor-replay	4	admin POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f1"}	400 {"kind": "badrequest"}
+08-floor-replay	5	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}

@@ -6,6 +6,9 @@ scenario	step	request	expect
 01-page-and-module	4	GET /platform/console.css?v=1	200
 01-page-and-module	5	GET /platform/console.js?v=2	404 {"error": "no such version"}
 01-page-and-module	6	GET /healthz	200 {"ok": true}
+01-page-and-module	7	GET /	200 @file Source/w2cplatform/console.html
+01-page-and-module	8	GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
+01-page-and-module	9	GET /platform/console.css?v=1	200 @file Source/w2cplatform/console.css
 02-spec-and-mounts	1	GET /spec	200 {"name": "testsub", "rows": "counters", "id": "name", "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live", "metrics": {"prefix": "testsub", "running": "counters_running"}, "display": {"keys": {"tallies": {"title": "tallies"}}}}
 02-spec-and-mounts	2	GET /mounts	200 {"root": "testsub", "mounts": {"testsub2": {"name": "testsub2", "rows": "tallies"}}}
 02-spec-and-mounts	3	GET /testsub2/spec	200 {"name": "testsub2", "rows": "tallies", "id": "name"}

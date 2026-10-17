@@ -36,3 +36,8 @@ scenario	step	request	expect
 06-tables	7	console2 DELETE /shelves/sh1	200 {"deleted": "sh1"}
 06-tables	8	console2 GET /shelves/sh1	404
 06-tables	9	console2 DELETE /shelves/sh1	404
+07-table-ref	1	console2 POST /shelves {"name": "sh7", "zone": "z1"}	201
+07-table-ref	2	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh7", "zone": "z1"}	201 {"shelf": "sh7"}
+07-table-ref	3	console2 POST /shelves {"name": "sh7", "zone": "z2"}	409 {"fault": "must_match"}
+07-table-ref	4	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
+07-table-ref	5	console2 GET /tallies/t7	200 {"shelf": "sh7", "zone": "z1"}
