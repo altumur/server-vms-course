@@ -2134,8 +2134,26 @@ components:
             $ref: '#/components/schemas/M2_JsonValue'
         domain:
           type: object
-          additionalProperties:
-            $ref: '#/components/schemas/M2_JsonValue'
+          description: Проекция раздела domain спеки, которую читает модуль консоли (урок 2 «GET /spec»); есть, когда раздел есть.
+          required: [view, edit, shared, keys]
+          additionalProperties: false
+          properties:
+            view: {type: array, items: {type: string}}
+            edit: {type: array, items: {type: string}}
+            shared:
+              type: array
+              items: {type: string}
+              description: Имена полей domain.shared.
+            keys:
+              type: array
+              items:
+                type: object
+                required: [id, keys]
+                additionalProperties: false
+                properties:
+                  id: {type: string}
+                  keys: {type: array, items: {type: string}}
+                  prefix: {type: string}
         metrics:
           type: object
           required:

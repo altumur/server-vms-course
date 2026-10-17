@@ -41,9 +41,11 @@ scenario	step	request	expect
 09-list-comma	3	POST /counters {"name": "c9b", "labels": ["a,b"]}	400
 10-inherit-absent	1	POST /counters {"name": "c10"}	201 {"id": "c10", "step": "@absent", "marks": "@absent"}
 10-inherit-absent	2	PUT /counters/c10 {"step": 2}	200 {"step": 2, "revision": 2}
+10-inherit-absent	3	PUT /counters/c10 {"step": null}	200 {"step": "@absent", "revision": 3}
 11-bad-path	1	PUT /counters/c3/x {"start": 1}	404
 11-bad-path	2	PUT /counters/nosuch {"start": 1}	404 {"error": "no such unit"}
 11-bad-path	3	DELETE /counters/nosuch	404 {"error": "no such unit"}
+11-bad-path	4	GET /counters/	404
 12-input-forms	1	@key(a) POST /counters {"name": "c12", "start": 1}	201 {"id": "c12", "revision": 1}
 12-input-forms	2	@key(a) POST /counters {"start": 1, "name": "c12"}	201 {"id": "c12", "revision": 1}
 12-input-forms	3	@key(a) POST /testsub/counters {"name":"c12","start":1}	201 {"id": "c12", "revision": 1}

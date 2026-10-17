@@ -18,7 +18,10 @@
 ```yaml
 text:
   encoding: UTF-8; без BOM; без NUL и иных управляющих: C0, кроме TAB, LF и CR, DEL и C1, включая U+0085 (NEL, который YAML 1.2 допускает), — отказ со строкой файла;
-            отступы пробелами (табуляция в отступе — отказ); перевод строки LF или CRLF (`\r` перед `\n` отрезается)
+            отступы пробелами (табуляция в отступе — отказ); перевод строки LF или CRLF (`\r` перед `\n` отрезается);
+            TAB допустим только внутри строки в кавычках и внутри блочного скаляра: после `:` или `-`, внутри простого
+            слова, перед комментарием и в потоковых `{…}`/`[…]` — отказ; U+2028 и U+2029 (переводы строки, которые
+            читатели YAML понимают по-разному) — отказ где угодно, в том числе в кавычках
   document: ровно один документ: один начальный `---` до всякого содержимого допустим (на его строке — только
             комментарий); второй `---`, `...` или директива `%` — отказ; корень — отображение
             (список, скаляр, пустой файл — отказ)
@@ -34,6 +37,9 @@ text:
             по модулю не больше 2^53 − 1; больше — текст читается как целое, отказ `refused:value` на шаге 4
     float:  `1.5`, `1e308`, `.5`; `.inf`/`.nan` распознаются как float, но отказываются на шаге значений Н3
     string: всё остальное; слово в кавычках — слово, даже если похоже на число
+    escape: в двойных кавычках — только `\\` `\"` `\/` `\t` `\<TAB>` `\n` `\r` `\<пробел>` `\_` (U+00A0) `\xXX` `\uXXXX`
+            `\UXXXXXXXX`; знак результата подчиняется encoding (`\x07`, `\u0000`, `\u2028` — отказ); `\0` `\a` `\b` `\v` `\f`
+            `\e` `\N` `\L` `\P` и незнакомое (`\q`) — отказ; в одинарных кавычках экранирований нет, кроме `''`
   blocks:   отображения и списки отступом; потоковые `{a: b}` и `[a, b]` в одну строку; блочные скаляры `|` и `>`
             (с `-` или `+`); простое слово, перенесённое на строки глубже своего ключа: строки склеиваются
             одним пробелом; строка продолжения с `: ` внутри, с `:` в конце или начинающаяся с `#`, `[`, `{`,
@@ -134,15 +140,15 @@ closed_key_set:
 | `default` | одно значение типа поля; у float допустимо целое; list — список строк; json — любое JSON (opaque); null — нет умолчания; из `enum`, если он есть; не вместе с `inherit`; у blob запрещён | необязателен | 3 Н1.2 |
 | `inherit` | как `default`; только у поля единицы | необязателен | 3 Н1.2 |
 | `merge` | слово: `union`, `override`; только у поля единицы и только с `inherit` | необязателен | М11 (сведение цепи наследования) |
-| `enum` | непустой список значений типа поля; только у string и bool | необязателен | 3 Н3 |
-| `unique` | `true` или `canonical`; `canonical` — только у url; только у поля единицы | необязателен | 3 Н1.3 |
+| `enum` | непустой список различных значений типа поля (повтор — `refused:value`); только у string и bool | необязателен | 3 Н3 |
+| `unique` | `true` или `canonical`; `canonical` — только у url; не у list (`refused:value`); только у поля единицы | необязателен | 3 Н1.3 |
 | `ref` | строка `<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет | необязателен | 3 Н1.3 |
 | `must_match` | отображение `{<поле цели>: <поле этой строки>}`; значения — поля этой строки (Н1.4), ключи не проверяются | только вместе с `ref` | 3 Н1.3 |
 | `schema` | отображение JSON Schema; ключевые слова — перечень урока 3 Н1.2, глубина ≤ 32 (урок 10 Н1.4) | необязателен | 3 Н1.2; 10 Н1.6 |
 | `bound_to` | имя поля или список имён полей этой строки, не секретов; только у `*_secret` | необязателен | 7 Н1.1 |
 | `credentials` | отображение `{login, secret}`: login — поле строки не url и не секрет, secret — поле `*_secret`; только у url | необязателен; в нём оба обязательны | 7 Н1.1 |
 | `secret_in` | список; элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}`; формы элементов — урок 7 Н1.1; только у url | необязателен | 7 Н1.1 |
-| `schemes` | отображение, named: имя схемы `[a-z][a-z0-9+.-]*` → `{host?, fragment?, none?}` (строка, строка, список строк); только у url | необязателен | 3 Н4 (`bad_url`); 7 Н1.1 |
+| `schemes` | отображение, named: имя схемы `[a-z][a-z0-9+.-]*` → `{host?, fragment?, none?}`; только у url. `host` — слово `authority` (умолчание: хост — узел authority) или `path` (хост — первый сегмент пути, узел authority — не хост: `mirror://<hub>/<host>/…`); `fragment` — слово `none`: `#` — обычный знак, не начало фрагмента (урок 7 А2), нет ключа — `#` начинает фрагмент; `none` — список строк: значение места хоста, означающее «хоста нет» (`mirror://local/…`), проверка «нет хоста» урока 3 Н4 к нему не применяется. Иное слово — `refused:value` | необязателен | 3 Н4 (`bad_url`); 7 Н1.1 |
 
 Поле blob — только в `unit.fields`, имя 1–64 ASCII `[A-Za-z_][A-Za-z0-9_]*`, `bytes` рядом с blob запрещён;
 у таблицы поля `held_by`, `garbled`, `by`, `at`, `made_at` запрещены, `name` — только string при `key: name` (Н1.3).
@@ -166,7 +172,7 @@ closed_key_set:
 | `places` | `{table, where?, server_field?, lease?}`: `table` — таблица; `where` — opaque, ключи — поля таблицы; `server_field` — поле таблицы; `lease` — слово `strict` | необязателен |
 | `spread_by` | строка — поле | необязателен |
 | `group_by` | `{field, cut_at?}`: `field` — поле; `cut_at` — слово `host` (у url); скаляр — отказ | необязателен |
-| `near` | `{sub, by?, of?, prefer?}`: `sub` — подсистема (каталог); `by`, `of` — строки; `prefer` — opaque, поля соседа (каталог) | необязателен; в нём `sub` обязателен |
+| `near` | `{sub, by?, of?, prefer?}`: `sub` — подсистема (каталог); `by` — поле этой единицы (Н1.4); `of` — строка, поле соседа; `prefer` — opaque, поля соседа (каталог) | необязателен; в нём `sub` обязателен |
 | `home` | поле или слово `near` (тогда `near` обязателен) | необязателен |
 | `affinity` | `{field?, table?, server_field?, strict?}`: поле; таблица; поле таблицы; `strict` — opaque, ключи — поля таблицы | необязателен |
 | `requires` | слово: `none`, `resource` | нет — `none` |
@@ -204,7 +210,7 @@ closed_key_set:
 | `holds` | `{table, unit, since, until, longest, released?}`: таблица; поля таблицы; `longest` — число > 0, секунды | необязателен; все его ключи необязательны |
 | `events.suppress` | отображение named: вид события → `{window, by?}`: `window` — число > 0, секунды; `by` — непустой список строк без `t`, `id`, `repeats`, `since`, `until` | необязателен; `by` нет — все поля строки, кроме этих |
 | `events.older_epochs` | слово: `fenced`, `earlier-run` | нет — `fenced` |
-| `about` | `{sub, field}`: `sub` — имя подсистемы; `field` — поле с `fixed: true` | необязателен; в нём оба обязательны; смысл — 8 Н1.2, 3 Н1.3 |
+| `about` | `{sub, field}`: `sub` — имя подсистемы по грамматике `name` (Н1.2; существование — не проверка загрузчика); `field` — поле с `fixed: true` | необязателен; в нём оба обязательны; смысл — 8 Н1.2, 3 Н1.3 |
 
 **`snapshot`, `rights`, `secrets`, `worker`**
 
@@ -309,7 +315,7 @@ rules:
 | Ключ | Называет |
 |---|---|
 | `unit.id` | `numeric` или несекретное поле единицы типа string, включая умолчание типа; поле с суффиксом `_secret` — refused:reference |
-| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.affinity.strict.*`, `holds.unit/since/until/released`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.tree.group_by`, значения `*.must_match` (поля этой строки), `placement.home` (или слово `near`), `bound_to`, `credentials.login`, `credentials.secret` (поля той же строки, урок 7 Н1.1) | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
+| `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.near.by`, `placement.affinity.strict.*`, `holds.unit/since/until/released`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.tree.group_by`, значения `*.must_match` (поля этой строки), `placement.home` (или слово `near`), `bound_to`, `credentials.login`, `credentials.secret` (поля той же строки, урок 7 Н1.1) | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
 | `requests.key` | свойства `requests.schema.properties` — поля тела просьбы `POST /<sub>/requests` (урок 8 Н1.5): `{имя}` — только строка без преобразования, свойство схемы явно имеет `type: string`; `{имя:int}` — конечное binary64-число (как в JCS) с модулем ≤2^53−1, усечение к нулю и десятичная запись без знака +/ведущих нулей (`7.9` → `7`, `-7.9` → `-7`, `-0.5` → `0`); свойство явно имеет `type: integer` или `number`, bool не число. Имя вне properties, суффикс `_secret`, иной/неявный/составной type — refused:reference при загрузке; отсутствующее значение, иной тип или число вне этой границы — 400 при подаче. Поля единицы здесь ни при чём. Тот же шаблон у `tables.<t>.key`: обычная подстановка и одиночное поле — type string (включая умолчание), :int — int/float; секретный источник запрещён (урок 10 Н1.6 `tables.<t>.key`: несекретное поле) |
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `servers.show[].table`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table`, `metrics[].count` (`table <т>`), `worker.writes[]` | таблица из `tables:`; у `worker.writes` — собственная таблица, не `unit.rows` |
@@ -364,6 +370,12 @@ rules:
 ### GET /spec
 
 HTTP-контракт — [`02-the-spec-and-the-strict-loader.api.openapi.yaml`](02-the-spec-and-the-strict-loader.api.openapi.yaml) рядом (OpenAPI 3.1). Он задаёт маршрут `GET /spec` (и `HEAD` — тот же код и заголовки без тела, урок 9 Н2), схему `SpecView` и коды ответов. Процедура загрузки выше не является HTTP-дверью и в этот файл не входит.
+
+Раздел `domain` спеки входит в ответ только проекцией, которую читает модуль консоли (урок 9 Н1.1 `module`):
+`domain: {view, edit, shared, keys}` — `view`, `edit` как написаны, `shared` — имена его полей (у элемента-отображения —
+`name`), `keys` — элементы `{id, keys, prefix?}` как написаны; несказанный список — `[]`; без раздела `domain` ключа нет.
+Прочие ключи раздела (`ref`, `books`, `names`, `tokens`, `kept`, `tables`, `reports`, `witness`) — работа держателя
+домена (М11), в `SpecView` их нет.
 
 Ревизии спеки в ответе нет: консоль, прочитавшая другую ревизию, уже не работает (Н3 «Смена спеки»).
 
@@ -474,7 +486,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 | Причина | Класс | Кто и как видит | Что делает вызывающий |
 |---|---|---|---|
-| текст вне подмножества Н1.1: кодировка, управляющий символ, второй документ, корень не отображение, якорь, тег, повторный ключ, глубина, табуляция, ключ без `:` в потоковом отображении, пара в потоковом списке, непрочитанная строка (в том числе продолжение простого слова, похожее на ключ) | `refused:text` | отказ с источником, путём и строкой файла | править файл |
+| текст вне подмножества Н1.1: кодировка, управляющий символ, второй документ, корень не отображение, якорь, тег, повторный ключ, глубина, табуляция вне кавычек и блочного скаляра, U+2028/U+2029, экранирование вне перечня, ключ без `:` в потоковом отображении, пара в потоковом списке, непрочитанная строка (в том числе продолжение простого слова, похожее на ключ) | `refused:text` | отказ с источником, путём и строкой файла | править файл |
 | `name` отсутствует, не по грамматике, зарезервировано | `refused:name` | отказ с источником и `name` | править файл |
 | ключ, которого нет в закрытом наборе своего уровня, в том числе `fixed`, `inherit`, `merge`, `unique` у поля таблицы | `refused:key` | отказ с источником и путём каждого такого ключа | править файл: опечатка или чужое слово |
 | значение не по форме: тип, слово вне перечня, число строкой, целое по модулю больше 2^53 − 1, NaN/бесконечность/переполнение float, обязательный ключ отсутствует, сказанный ключ без значения; запрещённое слово (зарезервированное имя rows или таблицы, платформенное слово пульса) | `refused:value` | отказ с источником, путём и причиной | править файл |
@@ -501,6 +513,8 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_schema_known_keywords`, `c2_schema_unknown_keyword` | ключевые слова JSON Schema — только перечень урока 3 Н1.2 | Н1.2, урок 3 Н1.2 |
 | `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
 | `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
+| `c3_tab_*`, `c3_u2028_*`, `c3_escape_*` | сверка 2 чистой комнаты: TAB вне кавычек и блочного скаляра, U+2028, экранирования двойных кавычек | Н1.1 |
+| `c3_enum_repeat`, `c3_unique_list`, `c3_schemes_*`, `c3_near_by_*`, `c3_about_sub_*` | сверка 2: повтор в `enum`, `unique` у списка, слова `schemes`, `near.by` — ссылка на поле, грамматика `about.sub` | Н1.3, Н1.4 |
 | `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan`, `float_*`, `int_field_boundaries`, `json_default_nonfinite` | скаляры: слова, числа, пределы | Н1.1 |
 | `unknown_depth1..4`, `unknown_multiple`, `unknown_in_lease`, `requests_unknown_key`, `requests_unknown_stamp`, `display_unknown_section`, `display_form_unknown_key`, `display_tree_word_erase`, `dup_block_hides_unknown`, `fields_derived_items_unknown` | закрытый набор ключей на каждом уровне; `diagnostics.tsv` проверяет путь и полноту списка неизвестных ключей | Н1.2 |

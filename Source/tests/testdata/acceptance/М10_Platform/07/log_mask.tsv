@@ -26,3 +26,7 @@ DESCRIBE rtsp://10.0.0.9:554/user=admin&password=hunter2xyz&channel=1&stream=0.s
 proxy-authorization: bearer abc.def	proxy-authorization: bearer ***	
 Authorization: Digest username="admin", response="5ccc"	Authorization: Digest username="admin", response="5ccc"	Digest's hash is left
 {"source":"driverpack://acme/u:hunter2xyz@10.0.0.5/ch/1"}	{"source":"driverpack://acme/u:***@10.0.0.5/ch/1"}	
+{"name":"gate","password":"hunter2"}	{"name":"gate","password":"***"}	a JSON pair whose name is a secret's is a pair too
+{"password" : "a\"b", "x": 1}	{"password" : "***", "x": 1}	the value runs to its closing quote, past an escaped one
+{"password": ""}	{"password": ""}	an empty value stays empty
+{"password": 1234}	{"password": "***"}	a number is a value too

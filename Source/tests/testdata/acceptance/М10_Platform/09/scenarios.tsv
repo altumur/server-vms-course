@@ -12,7 +12,8 @@ scenario	step	request	expect
 02-spec-and-mounts	1	GET /spec	200 {"name": "testsub", "rows": "counters", "id": "name", "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live", "metrics": {"prefix": "testsub", "running": "counters_running"}, "display": {"keys": {"tallies": {"title": "tallies"}}}}
 02-spec-and-mounts	2	GET /mounts	200 {"root": "testsub", "mounts": {"testsub2": {"name": "testsub2", "rows": "tallies"}}}
 02-spec-and-mounts	3	GET /testsub2/spec	200 {"name": "testsub2", "rows": "tallies", "id": "name"}
-03-open-session	1	GET /session	200 {"open": true}
+02-spec-and-mounts	4	GET /testsub2/spec	200 {"domain": {"view": [], "edit": [], "shared": ["rules"], "keys": [], "tokens": "@absent", "books": "@absent"}}
+03-open-session	1	GET /session	200 {"open": true, "login_url": "/api/login"}
 03-open-session	2	POST /session {"token": "x"}	400
 04-servers-where	1	GET /servers	200 {"policy": {"servers": "shared"}, "servers": {}}
 04-servers-where	2	GET /unplaceable	200 []

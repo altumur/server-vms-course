@@ -2,6 +2,7 @@ scenario	step	request	expect
 # Приёмка М10/4: двери контроллера консоли testsub без воркеров. Формат — README (как у урока 3, плюс коды 2xx/4xx).
 01-unplaced	1	POST /counters {"name": "u1", "start": 1}	201 {"id": "u1", "worker": null}
 01-unplaced	2	GET /where/u1	404
+01-unplaced	3	GET /where/	404
 02-unplaceable	1	GET /unplaceable	200 [{"id": "u1", "workers_live": 0}]
 03-policy	1	GET /policy	200 {"servers": "shared"}
 03-policy	2	PUT /policy {"servers": "distinct"}	200
@@ -19,6 +20,7 @@ scenario	step	request	expect
 04-drain	7	DELETE /drain	2xx
 04-drain	8	POST /drain	400
 04-drain	9	POST /drain?server=	400
+04-drain	10	POST /drain?server=srv-a&server=srv-b	400
 05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400
 05-server-labels	2	PUT /servers/srv-a/labels {"labels": ["vlan a"]}	400
 05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404
