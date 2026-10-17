@@ -1,4 +1,6 @@
 """C2: a domain reference resolves to one member's local ID before queueing."""
+
+from tests.frozen_data import frozen_testdata
 import json
 import threading
 from contextlib import contextmanager
@@ -44,7 +46,7 @@ def row(local_id="local-counter", sub="testsub", ref="SERIAL-42"):
 
 @contextmanager
 def site():
-    raw = yaml.safe_load((Path(__file__).parent / "testdata/testsub.subsystem.yaml").read_text())
+    raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())
     raw["unit"]["fields"]["serial"] = {"type": "string", "required": True}
     raw["domain"]["ref"] = "serial"
     raw["snapshot"].append("serial")
