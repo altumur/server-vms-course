@@ -19,7 +19,7 @@ roles:
     <sub>worker:         воркер спеки
   platform:              [resource, console, domain, domainconsole, domainagent] # console одна на кластер, пишет строки оператора всех спек; domain, domainconsole, domainagent — роли домена (М11)
   store_internal:        [admin, configstore (peer), configstore-door]     # в файле прав не называются; configstore-door — дверь без голоса (добавлено М10/11 Н1.3)
-  reader_word_only:      [domainpart]    # (М11) слово платформы в secrets.readers (М10/7 Н1.3; решение C7
+  reader_word_only:      [domainworker]    # (М11) слово платформы в secrets.readers (М10/7 Н1.3; решение C7
                                          # decisions/inbox/2026-10-15-c7-общее-имя-роли.md): роли в файле прав не даёт —
                                          # процесса нет (ADR-0074 п. 6) — и в сравнение «объявленные = способные прочесть» не входит
 name:      ^[a-z][a-z0-9_-]{0,63}$       # имя роли; <sub> — по грамматике имени спеки (урок 2)
@@ -106,7 +106,7 @@ delete в файле не даёт domainconsole удаления вне domain/
 - отрицания `!<s>/idem/*` и `!<s>/asked/*` (заявки и учёт людей — только консоль) получают только роли, чьи чтения
   их достают (образец, покрывающий `<s>/*`); файл прав для одних входов байт-стабилен;
 - слова `secrets.readers`: `controller` и `worker` — роли объявляющей спеки (`<s>controller`, `<s>worker`),
-  остальные — платформенные роли как есть, `domainpart` — по Н1.1; `secrets.reads` спеки `B` добавляет `Bworker`
+  остальные — платформенные роли как есть, `domainworker` — по Н1.1; `secrets.reads` спеки `B` добавляет `Bworker`
   к читателям названной строки;
 - образец объектов `objects/<s>/commands/*` выдаётся в файл как есть, только `write`: строк хранилища он не
   касается, оценщик строк его не встречает.

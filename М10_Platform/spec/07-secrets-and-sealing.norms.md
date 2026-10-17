@@ -261,7 +261,7 @@ print:     отпечаток идемпотентности тела с сек�
 secrets:                                     # раздел спеки (форма — урок 2)
   readers: {<строка или префикс>: [<роль>…]} # свои секретные строки и кто их читает
   reads:   [<строка или префикс>…]           # чужие секретные строки, которые читает воркер этой спеки
-roles:     [console, controller, worker, domainpart, domain, domainagent, resource, domainconsole]   # закрыто; domainpart, domain, domainagent, domainconsole — роли домена (М11); domainpart — роль платформы, спеки подсистем её не включают (процесса этой роли нет, урок 6 Н1.1)
+roles:     [console, controller, worker, domainworker, domain, domainagent, resource, domainconsole]   # закрыто; domainworker, domain, domainagent, domainconsole — роли домена (М11); domainworker — роль платформы, спеки подсистем её не включают (процесса этой роли нет, урок 6 Н1.1)
 platform_readers:                            # общая таблица platform_lists.tsv; строки domain/* — М11
   domain/break-glass/: [console, domain, domainagent]
   domain/signer:       [domain]
