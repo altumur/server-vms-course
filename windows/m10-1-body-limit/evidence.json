@@ -9,7 +9,7 @@
     "33e1c676",
     "9a75f296"
   ],
-  "status": "ready for Architect review; platform diff not merged",
+  "status": "merged by approval 0e659168; see integration",
   "checks": {
     "unit": {
       "path": "/tmp/m10-body-unit-full-20261017.log",
@@ -179,5 +179,41 @@
     "cryptography": true,
     "console": "jsdom unavailable"
   },
-  "diff_check": "passed"
+  "diff_check": "passed",
+  "integration": {
+    "approval": "0e659168",
+    "main_before_merge": "0e659168c4e1dc76febc95f426a8e5b69e978baf",
+    "merge_commit": "8d026425eb7cd59a0b5b003122c830afacedffcb",
+    "reviewed_branch_commit": "15af00d3",
+    "python_unchanged_from_reviewed_branch": true,
+    "conflict_resolution": "Kept main version of the task report, including Architect approval; no code conflicts.",
+    "source_changes_from_reviewed_branch": [
+      "Source/tests/testdata/acceptance/М10_Platform/01/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/03/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/07/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/07/log_mask.tsv",
+      "Source/tests/testdata/acceptance/М10_Platform/07/secret_in.tsv"
+    ],
+    "check": {
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py test_storage_m10 test_platform_lists test_boundary",
+      "cwd": "Source",
+      "path": "/tmp/m10-body-merge-targeted-20261017.log",
+      "sha256": "2d3911ee14a1e1f0915c260fd997f3a1e94ff2721529737d5e4d28a4b844d2ff",
+      "passed": 31,
+      "failed": 1,
+      "skipped": 0,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ]
+    },
+    "source_manifest": {
+      "path": "/tmp/m10-body-merge-source-20261017.json",
+      "sha256": "5a197d349f1c66a36e4a6a462db7e44b6e7f0f049f1767bb5d2f43b55bfc1bcd",
+      "files": 1125
+    },
+    "next_task": "decisions/inbox/2026-10-17-задача-перенос-python-в-cammeta-python.md",
+    "next_task_not_before": "2026-10-22",
+    "next_task_started": false
+  }
 }
