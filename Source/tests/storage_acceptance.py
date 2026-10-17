@@ -20,6 +20,8 @@ import urllib.parse
 
 SOURCE = Path(__file__).resolve().parents[1]
 SHARED = SOURCE / "tests/testdata/acceptance/М10_Platform/01/scenarios.tsv"
+BODY_LIMIT = 1048576  # fixed acceptance door setting, М10/1 Н5
+ROW_LIMIT = 524288
 VARIABLE = re.compile(r"^\$([A-Za-z][A-Za-z0-9_]*)$")
 
 
@@ -57,7 +59,8 @@ def daemon(source, directory, coverage_path):
     stopped = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stopped.set())
     signal.signal(signal.SIGINT, lambda *_: stopped.set())
-    service = StoreDaemon(LocalBackend(), node_id="trial", sockets=str(directory), rights=rights)
+    service = StoreDaemon(LocalBackend(), node_id="trial", sockets=str(directory), rights=rights,
+                          body_limit=BODY_LIMIT)
     try:
         print(json.dumps({"ready": True, "pid": os.getpid(), "socket": str(directory / "acceptance.sock")}), flush=True)
         stopped.wait()
@@ -97,6 +100,18 @@ def request(path, method, target, body):
         return response.status, json.loads(response.read())
     finally:
         con.close()
+
+
+def verify_limits(call):
+    """Check the actual executor's fixed acceptance settings before any scenario runs (М10/1 Н5)."""
+    code, body = call("POST", "/v1/write", b"!" * BODY_LIMIT)
+    assert code == 400 and body.get("kind") == "badrequest", ("body at boundary", code, body)
+    code, body = call("POST", "/v1/write", b"!" * (BODY_LIMIT + 1))
+    assert code == 413 and body.get("kind") == "toolarge" and body.get("limit") == BODY_LIMIT, ("body", code, body)
+    raw = json.dumps({"op": "put", "key": "acc/preflight/row", "items": {"blob": "x" * (ROW_LIMIT - 3)}}).encode()
+    code, body = call("POST", "/v1/write", raw)
+    assert code == 413 and body.get("limit") == ROW_LIMIT and body.get("size") == ROW_LIMIT + 1, ("row", code, body)
+    return {"body": BODY_LIMIT, "row": ROW_LIMIT, "checked_before_scenarios": True}
 
 
 def substitute(text, bindings):
@@ -206,7 +221,9 @@ def scenarios(source, output):
                 ready = json.loads(process.stdout.readline())
                 assert ready["ready"] and ready["pid"] != os.getpid()
                 save(output / "daemon.json", ready)
-                records = steps(lambda method, target, raw: request(path, method, target, raw))
+                call = lambda method, target, raw: request(path, method, target, raw)
+                save(output / "limits.json", verify_limits(call))
+                records = steps(call)
             finally:
                 if process.poll() is None:
                     process.terminate()
@@ -226,16 +243,18 @@ class NativeAPI:
     The native handle has a writer ACL; get uses that evaluator, list needs no read permission.
     No answer(), StoreMachine or HTTP door is involved in this executor.
     """
-    def __init__(self, store):
-        self.store = store
+    def __init__(self, store, body_limit=BODY_LIMIT):
+        self.store, self.body_limit = store, body_limit
 
     def request(self, method, target, raw):
         from w2cplatform.canonical import parse_json
-        from w2cplatform.storemachine import check_key, check_write, wire_index, MAX_VALUE
+        from w2cplatform.storemachine import check_key, check_write, wire_index
         from w2cplatform.variables import Conflict, GuardFailed, Forbidden, KeyTooLong
         from w2cplatform.limits import TooLarge
         from w2cplatform.configstorevars import StoreAmbiguous, StoreUnavailable
         from w2cplatform.rights import refusal
+        if len(raw) > self.body_limit:
+            return 413, {"kind": "toolarge", "limit": self.body_limit}
         route = urllib.parse.urlsplit(target)
         query = urllib.parse.parse_qs(route.query, keep_blank_values=True)
         def version(value):
@@ -257,9 +276,6 @@ class NativeAPI:
                 return 200, {"keys": keys}
             if method != "POST" or route.path != "/v1/write":
                 return 404, {"kind": "badrequest"}
-            # Only the notation's body bound, not a row/CAS/replay rule.
-            if len(raw) > 6 * MAX_VALUE + (64 << 10):
-                return 413, {"kind": "toolarge", "limit": MAX_VALUE}
             try:
                 cmd = parse_json(raw)
             except ValueError:
@@ -312,12 +328,14 @@ def native_scenarios(backend, output):
             called[key] = called.get(key, 0) + 1
         return None
     with tempfile.TemporaryDirectory(prefix="m10-native-") as root:
-        store = FileVariables(root, max_bytes=524288, volatile=True) if backend == "file" else MemVariables(max_bytes=524288)
+        store = FileVariables(root, max_bytes=ROW_LIMIT, volatile=True) if backend == "file" else MemVariables(max_bytes=ROW_LIMIT)
         handle = store.as_writer("acceptance", ["acc/*"])
         old_trace = sys.gettrace()
         sys.settrace(trace)
         try:
-            records = steps(NativeAPI(handle).request)
+            call = NativeAPI(handle).request
+            save(output / "limits.json", verify_limits(call))
+            records = steps(call)
         finally:
             sys.settrace(old_trace)
         save(output / "api-calls.json", called)
