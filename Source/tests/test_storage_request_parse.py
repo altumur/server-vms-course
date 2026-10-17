@@ -182,3 +182,22 @@ def test_nonvoting_door_keeps_retries_named_when_unread_numbers_are_huge():
     _fault(door.serve("POST", "/v1/write", b'{"id":"a1","id":"b2"}', "writer", 1), 400, "badrequest")
     _fault(door.serve("GET", "http://[", b"", "writer", 1), 404, "badrequest")
     assert forwarded == [True]  # both refusals were local, before reaching a voter
+
+
+def test_ignored_and_refused_bodies_do_not_truncate_tls_replies_when_the_door_closes():
+    from tests.test_configstorevars import TLS, _dial
+    from w2cplatform import tls
+    context = tls.client_context(os.path.join(TLS, "srv-b"))
+    with tempfile.TemporaryDirectory() as root:
+        daemon = StoreDaemon(LocalBackend(), node_id="srv-a", sockets=root, api=("127.0.0.1", 0),
+                             tls_dir=os.path.join(TLS, "srv-a"), body_limit=64)
+        try:
+            for _ in range(32):
+                code, body = _dial(daemon.api_url, context, "srv-a", "GET", "/v1/status", b"ignored, not JSON")
+                assert code == 200 and body["rows"] == 0
+                _fault(_dial(daemon.api_url, context, "srv-a", "PATCH", "/v1/get", b"ignored"), 404, "badrequest")
+                code, body = _dial(daemon.api_url, context, "srv-a", "POST", "/v1/write", b"!" * 65)
+                assert code == 413 and body["kind"] == "toolarge" and body["limit"] == 64
+                assert isinstance(body["error"], str)
+        finally:
+            daemon.stop()
