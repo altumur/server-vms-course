@@ -218,6 +218,7 @@ closed_key_set:
 | `worker.writes` | список собственных таблиц; `unit.rows` или необъявленное имя — `refused:reference` | нет — таблиц воркера нет | 6 Н1.4 |
 | `worker.reads` | список `<семья>/<имя>` или префиксов с `/`; голое слово — отказ | необязателен | 6 Н1.4 |
 | `worker.requests` | список других подсистем (своя — отказ; принимает ли — каталог) | необязателен | 8 Н1.5 |
+| `worker.deletes` | список семей единиц этой спеки — только `unit.rows`; таблица или чужая семья — `refused:reference` | нет — строки единиц воркер не удаляет | 6 Н1.4 (ADR-0067 доп. 2026-10-17) |
 
 У объявлений `secrets.readers`, `secrets.reads` и `worker.reads` нет буквального `*`, начального `!` и `delete:`;
 два префикса одного списка, из которых один — начало другого, — отказ (урок 7 Н1.3, урок 6 Н1.4).
@@ -307,6 +308,7 @@ rules:
 | `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `servers.show[].table`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table`, `metrics[].count` (`table <т>`), `worker.writes[]` | таблица из `tables:`; у `worker.writes` — собственная таблица, не `unit.rows` |
 | `placement.weight.field` | поле единицы типа int |
+| `worker.deletes[]` | `unit.rows` этой спеки |
 | `requests.stamp: group`, `rights.reach.group` | требуют `placement.group_by` |
 | `console.running` | метрика из `metrics[]` |
 | `about.field` | поле единицы с `fixed: true` |
@@ -484,7 +486,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 282 файла `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (51) или `refused` (231). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 285 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (52) или `refused` (233). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -492,6 +494,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_form_without_title`, `c2_display_events_true` | принятые формы `display`: блок без `title`, `events: true` | Н1.2, урок 9 Н1.2 |
 | `c2_schema_known_keywords`, `c2_schema_unknown_keyword` | ключевые слова JSON Schema — только перечень урока 3 Н1.2 | Н1.2, урок 3 Н1.2 |
 | `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
+| `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
 | `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan`, `float_*`, `int_field_boundaries`, `json_default_nonfinite` | скаляры: слова, числа, пределы | Н1.1 |
 | `unknown_depth1..4`, `unknown_multiple`, `unknown_in_lease`, `requests_unknown_key`, `requests_unknown_stamp`, `display_unknown_section`, `display_form_unknown_key`, `display_tree_word_erase`, `dup_block_hides_unknown`, `fields_derived_items_unknown` | закрытый набор ключей на каждом уровне; `diagnostics.tsv` проверяет путь и полноту списка неизвестных ключей | Н1.2 |

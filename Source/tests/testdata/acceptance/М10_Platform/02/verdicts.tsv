@@ -288,3 +288,6 @@ c2_metrics_type_other_word	refused
 c2_metrics_name_repeat	ok
 c2_form_fields_platform_id	ok
 c2_table_name_object_family	refused
+c2_worker_deletes_own_rows	ok
+c2_worker_deletes_other_family	refused
+c2_worker_deletes_table	refused
