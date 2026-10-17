@@ -52,7 +52,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 
 ### Н1.2 Контракт окружения
 
-Порядок чтения раннера: значения юнита → файл роли `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы; раньше прочитанное побеждает; `SPARE_FOR`/`SPARE_FILE` из файлов не читаются.
+Порядок чтения раннера: значения юнита → файл роли `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы; раньше прочитанное побеждает; `SPARE_FOR`/`W2C_SPARE_FILE` из файлов не читаются.
 
 Файлы окружения (`w2c.env`, `roles/*.env`, файл подсистемы, `W2C_SPARE_FILE`, `configstore.env`) читаются разбором, не
 `source`: строка `KEY=VALUE`, `KEY` — `[A-Za-z_][A-Za-z0-9_]*`; необязательный префикс `export `; значение в парных `"…"`
@@ -112,7 +112,8 @@ door:      -door -id -voters a@h:p,…: без голоса; те же соке�
            configstore_doors; все голосующие недоступны → 503 unavailable; join/leave не делает
 admin_ops: status | join [-force] | leave [id] | admit <id> | backup <файл> (0600, tmp + rename) | restore --from [-force]
            | import --from file://… [-index-base N] [-force] | recover -id -dir -peers … [-force] | rights [-groups]
-           import/restore/floor — только на admin.sock лидера; recover — локально на остановленном демоне (лидера нет,
+           import/restore/floor в группе (raft) — только на admin.sock лидера, до первой строки; на коробке (`box` ниже) —
+           в свежий каталог остановленного демона; recover — локально на остановленном демоне (лидера нет,
            большинства нет — Н3 «восстановить»), не через сокет; status/backup/leave себя — у любого
 floor:                                        # platform/epoch_floor {floor, generation_at}
   generation: max((upper >> 32) + 1, целых часов UTC с 2026-01-01); floor = generation << 32;
@@ -123,7 +124,8 @@ floor:                                        # platform/epoch_floor {floor, gen
               оператор должен подтвердить, что выше upper прежняя установка ничего не выдавала (например, копия после
               остановки писателей);
               upper ≥ текущего floor и всех сохранённых epoch. Нет достоверной границы потерянного хвоста — отказ восстановления
-  when:    restore, import — до первой строки, только op: floor на admin.sock лидера; recover — локально в дампе остановленного
+  when:    restore, import — до первой строки: в группе только op: floor на admin.sock лидера, на коробке — первой записью
+           в каталог остановленного демона (`box`); recover — локально в дампе остановленного
            демона (сокета нет, Н3 «восстановить» шаг 1); строка не
            пишется put/delete; только растёт; часы раньше generation_at → отказ без -force; force разрешает только
            часы назад, но не повтор/понижение поколения, переполнение uint64 или параллельное восстановление
@@ -138,8 +140,9 @@ box:       хранилище коробки — сборка без raft, од�
            («this build has no raft»); /v1/status — state Leader, term 1, leader и leader_id — он сам, voters [<id>],
            members {<id>: <api>}; /metrics — ряды выше значениями одного участника (term 1, elections_total 1, last_contact 0,
            voters 1, voters_expected 1, doors 0); join своего id — 200 {}, чужого — 409 refused и с -force; leave — 409 refused
-           («the last voter»); admit — отказ, код ≠ 0; import/restore — в свежий каталог остановленного демона, не через
-           admin.sock: пол первой записью, затем строки; restore совпадает с import (соседей нет)
+           («the last voter»); admit — отказ, код ≠ 0; import/restore на коробке — в свежий каталог остановленного демона,
+           не через admin.sock (в группе — admin.sock лидера, `admin_ops` выше): пол первой записью, затем строки; restore
+           совпадает с import (соседей нет)
 ```
 
 Числа max-conns=64, api-conns=32, api-per-address=8 — умолчания профиля, не скрытый
@@ -240,7 +243,7 @@ rule:     маршрут консоли, чей первый сегмент в p
           сторожевая консоли проверяет своё раньше; воркер проверяет учётные данные снова; ответ как есть (статус, Content-Type,
           тело ≤ 4 МиБ); клиент к воркеру — с сертификатом роли, если есть
 codes:    503 «this console passes no route on to a worker» (клиента нет) | 503 «no worker of <sub> with a door is heard»
-          | 400 тело не прочитано | 502 «<worker> did not answer»
+          | 400 тело не прочитано | 408 тело читается медленно | 413 тело больше предела (М10/9 Н4) | 502 «<worker> did not answer»
 ```
 
 ### Н1.9 Команды оператора
@@ -270,7 +273,7 @@ HTTP-контракт: [11-the-platform-on-a-box-and-a-cluster.api.openapi.yaml]
 |---|---|
 | GET `/v1/status` | `{id, state, leader, leader_id, term, commit, applied, voters, members, tls, max_value}`; optional `base, again, role, last_snapshot, out`. Индексы — точные uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — массив id, members — карта id → адрес, leader/leader_id пусты при неизвестном лидере. Door требует role=door и term/commit/applied=0. Это локальное наблюдение, не подтверждение большинства |
 | POST `/v1/join` | `{id, raft, api, force?}`, успех 200 `{}`; 409 `{kind: refused, error}` — недопустимый состав; 403 — `ForbiddenFault` М10/1 |
-| POST `/v1/leave` | `{id}` (пустая строка — себя), успех 200 `{}`; изменение чужого состава — только административный допуск Н1.3 |
+| POST `/v1/leave` | `{id}` (пустая строка — себя), успех 200 `{}`; изменение чужого состава — только административный допуск Н1.3; у коробки без raft выход последнего голоса — 409 `{kind: refused, error}` «the last voter» (Н1.3 `box`) |
 | GET `/v1/rights` | Точная форма и отказы М10/6, доступность admin/роль/пересылка по его Н3 |
 | POST `/v1/write` | Обычный Cmd М10/1 либо `{op: floor, floor: положительный uint64, id: 1–64 строчных hex}` на admin.sock лидера. Повтор floor с тем же id возвращает сохранённый исход — память повторов та же, что у записи с id (урок 1 Н3 «Повтор по идентификатору»): в хранилище, с его долговечностью и теми же сроками — долговечное переживает перезапуск демона, недолговечное учебное («Решает реализация» п. 4) теряет при перезапуске и пол, и память, и говорит это в описании; другой payload с этим id — отказ 400 badrequest М10/1 (не конфликт CAS); новый id с floor ≤ нынешнего — 409 refused (строка М10/1 Н4). Успех — Written М10/1. Обычная запись floor через put/delete запрещена |
 | GET `/metrics` | Перечень текстовых рядов Н1.3; корректное экранирование меток |
@@ -370,7 +373,9 @@ revoke: w2c-ca.sh revoke <server> → revoked/crl; скопировать на �
 | нет лидера 5 с | 503 `unavailable` | — | ждать; воркеры живут по аренде |
 | лидер потерян после отправки записи | 503 `ambiguous` | — | повтор тем же `id` (урок 1) |
 | соединений больше предела | 503 `unavailable`, `Retry-After: 1` (М10/1 Н4; запись не сделана) | — | повторить не раньше срока |
-| `floor` не admin / вниз / `put` строки пола | 403 / отказ | слова | — |
+| `floor` не admin | 403 `forbidden` | урок 6 | — |
+| `floor` не выше нынешнего (новый id) | 409 `refused` | М10/1 Н4 | — |
+| `put`/`delete` строки пола обычной записью | 403 `forbidden` | урок 6 Н1.3 `never` | только `op: floor` |
 | `import`/`restore`: база меньше наибольшей версии; строка больше 512 КиБ; чужая строка; нечитаемая | отказ целиком до первой записи | слова | другая база / починить копию |
 | `recover`/`restore`: часы раньше `generation_at` | отказ | фаза/причина | `-force` снимает только отказ часов; верхняя граница/изоляция/монотонность обязательны |
 | восстановление: неизвестен upper, не отсечена старая группа, переполнение | отказ до изменений | фаза/причина | восстановить предусловия; force не помогает |

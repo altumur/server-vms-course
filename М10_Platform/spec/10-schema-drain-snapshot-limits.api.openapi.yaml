@@ -387,7 +387,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/M2_ConsoleRefusal'
         '405':
-          $ref: '#/components/responses/M2_Method'
+          $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/M2_SlowBody'
         '413':
@@ -434,7 +434,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/M2_ConsoleRefusal'
         '405':
-          $ref: '#/components/responses/M2_Method'
+          $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/M2_SlowBody'
         '413':
@@ -549,7 +549,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/M2_ConsoleRefusal'
         '405':
-          $ref: '#/components/responses/M2_Method'
+          $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/M2_SlowBody'
         '413':
@@ -590,7 +590,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/M2_ConsoleRefusal'
         '405':
-          $ref: '#/components/responses/M2_Method'
+          $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/M2_SlowBody'
         '413':
@@ -1335,6 +1335,15 @@ components:
             const: no such route
           error:
             const: no such path
+    TableMethod:
+      allOf:
+      - $ref: '#/components/schemas/M2_ConsoleRefusal'
+      - properties:
+          detail:
+            type: string
+            pattern: takes GET, POST and DELETE of one row(?![\s\S])
+          error:
+            const: method
     M2_Method:
       allOf:
       - $ref: '#/components/schemas/M2_ConsoleRefusal'
@@ -1434,6 +1443,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/M2_NoRoute'
+    TableMethod:
+      description: Метод таблицы не из GET, POST и DELETE одной строки (Н2).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TableMethod'
     M2_Method:
       description: Метод не из объявленных для этой двери.
       content:

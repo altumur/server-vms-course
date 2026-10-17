@@ -19,7 +19,7 @@ scenario	step	request	expect
 04-servers-where	2	GET /unplaceable	200 []
 04-servers-where	3	POST /counters {"name": "c4", "start": 1}	201
 04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
-04-servers-where	5	GET /where/no/such	404
+04-servers-where	5	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
 04-servers-where	6	GET /resources	200 {}
 05-metrics	1	GET /metrics	200 ~testsub_workers_live 0
 05-metrics	2	GET /metrics	200 ~testsub_units_unplaced
@@ -27,6 +27,6 @@ scenario	step	request	expect
 05-metrics	4	GET /metrics	200 ~w2c_resources_live
 06-refusals	1	GET /nosuch	404 {"error": "no such path"}
 06-refusals	2	PATCH /counters	405 {"error": "method"}
-06-refusals	3	GET /counters/c4/x	404
-06-refusals	4	GET /testsub2/	404
-06-refusals	5	GET /testsub2/index.html	404
+06-refusals	3	GET /counters/c4/x	404 {"detail": "~names one unit", "error": "no such path"}
+06-refusals	4	GET /testsub2/	404 {"error": "is mounted"}
+06-refusals	5	GET /testsub2/index.html	404 {"error": "is mounted"}

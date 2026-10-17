@@ -96,7 +96,7 @@
 21-rights	3	POST /v1/write {"op":"delete","key":"other/21-rights/c1"}	403 {"kind":"forbidden"}
 21-rights	4	POST /v1/write {"op":"put","key":"acc/21-rights/c1","items":{"n":"1"},"guard":{"key":"other/21-rights/s","index":""}}	403 {"kind":"forbidden"}
 21-rights	5	GET /v1/get?key=acc/21-rights/c1	200 {"items":null,"index":""}
-21-rights	6	GET /v1/list?prefix=other/21-rights/	200 {"keys":{}}
+21-rights	6	GET /v1/list?prefix=other/21-rights/	200 {"keys":{"other/21-rights/c9":"$v"}}
 22-body-edge	1	POST /v1/write {"op":"put","key":"acc/22-body-edge/c1","items":{"blob":"@big(4194304)"}}	413 {"kind":"toolarge","limit":1048576}
 22-body-edge	2	GET /v1/get?key=acc/22-body-edge/c1	200 {"items":null,"index":""}
 23-extra-cmd	1	POST /v1/write {"op":"put","key":"acc/23-extra-cmd/c1","items":{"n":"1"},"id":"2301","zzz":{"op":"delete","key":"other/23-extra-cmd/c1","guard":false}}	200 {"index":"$a"}
@@ -110,6 +110,9 @@
 24-key-forms	3	POST /v1/write {"op":"put","key":"acc/24-key-forms/c1","items":{},"guard":{"key":5,"index":""}}	400 {"kind":"badrequest"}
 24-key-forms	4	GET /v1/get	400 {"kind":"badrequest"}
 24-key-forms	5	GET /v1/get?key=acc/24-key-forms/c1	200 {"items":null,"index":""}
+24-key-forms	6	POST /v1/write {"op":"put","key":"acc/24-key-forms/c1","items":{},"guard":{"index":""}}	400 {"kind":"badrequest"}
+24-key-forms	7	POST /v1/write?key=other/x {"op":"put","key":"acc/24-key-forms/c2","items":{}}	200 {"index":"$a"}
+24-key-forms	8	GET /v1/get?key=acc/24-key-forms/c2 {"junk":	200 {"items":{},"index":"$a"}
 25-query-form	1	POST /v1/write {"op":"put","key":"acc/25-query-form/a b","items":{"v":"space"}}	200 {"index":"$a"}
 25-query-form	2	POST /v1/write {"op":"put","key":"acc/25-query-form/a+b","items":{"v":"plus"}}	200 {"index":"$b"}
 25-query-form	3	GET /v1/get?key=acc/25-query-form/a+b	200 {"items":{"v":"space"},"index":"$a"}
@@ -130,6 +133,9 @@
 26-json-strict	6	GET /v1/list?prefix=acc/26-json-strict/	200 {"keys":{}}
 26-json-strict	7	POST /v1/write {"op":"put","key":"acc/26-json-strict/d","items":{},"x":"\udc00"}	200 {"index":"$a"}
 26-json-strict	8	GET /v1/list?prefix=acc/26-json-strict/	200 {"keys":{"acc/26-json-strict/d":"$a"}}
+26-json-strict	9	POST /v1/write {"op":"put","key":"acc/26-json-strict/e","items":{},"x":Infinity}	400 {"kind":"badrequest"}
+26-json-strict	10	POST /v1/write ﻿{"op":"put","key":"acc/26-json-strict/f","items":{}}	400 {"kind":"badrequest"}
+26-json-strict	11	GET /v1/list?prefix=acc/26-json-strict/	200 {"keys":{"acc/26-json-strict/d":"$a"}}
 27-method-route	1	PATCH /v1/get?key=acc/27-method-route/a	404 {"kind":"badrequest"}
 27-method-route	2	DELETE /v1/write	404 {"kind":"badrequest"}
 27-method-route	3	PUT /v1/list?prefix=acc/	404 {"kind":"badrequest"}

@@ -98,7 +98,7 @@ paths:
           description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9 Н4 «гранта нет», «чужой Origin на действующем запросе по куке», «нет домена, не петля»; HEAD не содержит тела
         '404':
           description: Нет строки или надгробие у PUT/DELETE — error no such unit. Неизвестный маршрут — detail no such
-            route, error no such path. Лишний сегмент — текст a unit's path names one unit (урок 9 Н2 «Общие коды»); HEAD не содержит
+            route, error no such path. Лишний сегмент — detail a unit's path names one unit, error no such path (урок 9 Н2 «Общие коды»); HEAD не содержит
             тела
         '405':
           description: Метод не разрешён; отдельного GET одной единицы нет; HEAD не содержит тела
@@ -423,7 +423,7 @@ components:
       description: >-
         Нет строки или надгробие у PUT/DELETE — error no such unit.
         Неизвестный маршрут — detail no such route, error no such path.
-        Лишний сегмент — текст a unit's path names one unit (урок 9 Н2 «Общие коды»).
+        Лишний сегмент — detail a unit's path names one unit, error no such path (урок 9 Н2 «Общие коды»).
       content:
         application/json:
           schema: {$ref: "#/components/schemas/TextRefusal"}

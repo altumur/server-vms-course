@@ -9,8 +9,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -56,9 +54,6 @@ paths:
       responses:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
-            HEAD не содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
             HEAD не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
@@ -102,8 +97,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -150,9 +143,6 @@ paths:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.;
             HEAD не содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.;
-            HEAD не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не
             содержит тела
@@ -195,8 +185,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -246,9 +234,6 @@ paths:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
             тела
@@ -290,8 +275,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -341,9 +324,6 @@ paths:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
             тела
@@ -385,8 +365,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -423,9 +401,6 @@ paths:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
             тела
@@ -1138,8 +1113,6 @@ paths:
       responses:
         '400':
           $ref: '#/components/responses/M2_BadBody'
-        '401':
-          $ref: '#/components/responses/M2_Unauthenticated'
         '403':
           $ref: '#/components/responses/M2_Denied'
         '404':
@@ -1176,9 +1149,6 @@ paths:
         '400':
           description: Общий отказ транспорта консоли — тело chunked или короче объявленного; урок 9 Н4.; HEAD не
             содержит тела
-        '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.; HEAD
-            не содержит тела
         '403':
           description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.; HEAD не содержит
             тела
