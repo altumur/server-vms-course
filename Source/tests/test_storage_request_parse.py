@@ -164,3 +164,21 @@ def test_chunked_body_is_measured_after_decoding_and_oversize_has_no_size():
             assert request(path, "GET", "/v1/get?key=acc/a", b"")[1]["items"] == {}
         finally:
             daemon.stop()
+
+
+def test_nonvoting_door_keeps_retries_named_when_unread_numbers_are_huge():
+    from w2cplatform.configstoredoor import DoorDaemon
+    door = DoorDaemon.__new__(DoorDaemon)
+    door.node_id = "parse"
+    door.rights = Rights({"writer": {"write": ["acc/*"]}})
+    forwarded = []
+    def pass_on(method, target, raw, role, deadline, named):
+        forwarded.append(named)
+        return 200, {"index": "1"}
+    door.pass_on = pass_on
+    raw = b'{"op":"put","key":"acc/a","items":{},"id":"a1","x":' + b'9' * 5000 + b'}'
+    assert door.serve("POST", "/v1/write", raw, "writer", 1) == (200, {"index": "1"})
+    assert forwarded == [True]
+    _fault(door.serve("POST", "/v1/write", b'{"id":"a1","id":"b2"}', "writer", 1), 400, "badrequest")
+    _fault(door.serve("GET", "http://[", b"", "writer", 1), 404, "badrequest")
+    assert forwarded == [True]  # both refusals were local, before reaching a voter
