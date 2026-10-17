@@ -1,0 +1,31 @@
+{
+ "keys": {
+  "domain": "acme",
+  "rev": 2,
+  "root": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684",
+  "current": "t1",
+  "keys": {
+   "t1": "dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f"
+  },
+  "issuing": [
+   "b7478a6313d3d9ca"
+  ],
+  "revoked_issuing": [
+   "d5d409043df34a75"
+  ],
+  "book_seal": "1111111111111111111111111111111111111111111111111111111111111111",
+  "kid": "root",
+  "sig": "EuYmRdATWoCHtZP-Ol7UImD2_yiBY08d8z9tJujhNwGGu4htCjYwj5yf9Fk4ey3pdDFOf1LAeazlJS-uytxuDg"
+ },
+ "held": {
+  "doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"hold\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"sig\":\"Q-ZfQHrk_Tah50LL9jLQm4wQUiU8Cu8FSNccIZkZBTPshuPGlLdMEJju09zyIo9hEXvTHFoAmYKUKD25qls5DQ\",\"term\":1,\"url\":\"http://hold.test:8443\"}"
+ },
+ "answers": {
+  "m1": {
+   "doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"restored_from\":{\"rev\":3,\"term\":1},\"sig\":\"NVTpK7Z0xhNCh6_EPdMRYlvykN3206nq21CsAvVU4sDZYGXfPB9jh5bcg5o01QArLj1nDxb1ekwElPX_TkWfDg\",\"term\":2,\"url\":\"http://m1.test:8443\"}"
+  },
+  "m2": {
+   "doc": "{\"at\":1759999950,\"domain\":\"acme\",\"holder\":\"m2\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"sig\":\"bsgpdM3219mMg6knjIk_W4kJ9E3aBBxpotM9qNSkr95CF27kvdeErHkRzPq_4EfX-dnt_PYwVoggxkWNjERZCg\",\"term\":2,\"url\":\"http://m2.test:8443\"}"
+  }
+ }
+}

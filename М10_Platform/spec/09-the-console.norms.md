@@ -123,7 +123,7 @@ session:
 ```yaml
 reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
-         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10), /domain/shared/<sub> (М11/11)
+         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10 Н1.4), /domain/shared/<sub> (М11/11)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (М11/8 Н1.2), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (М11/10), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)

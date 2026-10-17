@@ -1,0 +1,23 @@
+{
+ "keys": {
+  "domain": "acme",
+  "rev": 2,
+  "root": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684",
+  "current": "t1",
+  "keys": {
+   "t1": "dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f"
+  },
+  "issuing": [
+   "b7478a6313d3d9ca"
+  ],
+  "revoked_issuing": [
+   "d5d409043df34a75"
+  ],
+  "book_seal": "1111111111111111111111111111111111111111111111111111111111111111",
+  "kid": "root",
+  "sig": "EuYmRdATWoCHtZP-Ol7UImD2_yiBY08d8z9tJujhNwGGu4htCjYwj5yf9Fk4ey3pdDFOf1LAeazlJS-uytxuDg"
+ },
+ "row": {
+  "doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"d5d409043df34a7543abb0177d0c972c2fbc0a696a996b9bb18bdcbec8236a3e\",\"kid\":\"d5d409043df34a75\",\"sig\":\"JTTm8F5XjDu7IayP5-LfgU7cZ6npPU2VDrqSFGFEMXxO10TXirA1Ba5cSNYOELJrxKlUmBYHg1zJDrUpvUhPCg\",\"term\":2,\"url\":\"http://m1.test:8443\"}"
+ }
+}

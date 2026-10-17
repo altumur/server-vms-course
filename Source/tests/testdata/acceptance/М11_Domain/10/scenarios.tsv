@@ -1,0 +1,64 @@
+scenario	step	request	expect
+# Приёмка М11/10: стенд hold, m1, m2 с подписантом и на m1 (копия и хранители, аварийный перенос, плановая передача) и векторы record, follow, ask-sig на входах inputs/. Формат — README.
+01-held-and-copies	1	@domain	ok
+01-held-and-copies	2	member m1 console GET /api/held	200 {"cluster": "m1", "term": 1, "holder": {"holder": "hold", "term": 1}, "keys": "@any"}
+01-held-and-copies	3	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+01-held-and-copies	4	@until 60 member m2 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+01-held-and-copies	5	member hold console GET /api/held	200 {"cluster": "hold", "term": 1, "backup": null}
+01-held-and-copies	6	@until 60 holder GET /domain	200 {"term": {"term": 1, "holder": "hold", "backup": {"term": 1, "rev": "$r"}, "backup_holders": ["m1", "m2"], "copies": {"m1": {"term": 1, "rev": "$r"}, "m2": {"term": 1, "rev": "$r"}}}}
+01-held-and-copies	7	member m1 console GET /api/backup	401 {"error": "refused", "detail": "~a member signs its ask"}
+02-emergency-move	1	@domain	ok
+02-emergency-move	2	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+02-emergency-move	3	@sleep 45	ok
+02-emergency-move	4	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+02-emergency-move	5	@stop domain	ok
+02-emergency-move	6	@start domain on m1	ok
+02-emergency-move	7	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
+02-emergency-move	8	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+02-emergency-move	9	holder@m1 GET /domain/grants	200 {"grants": {"m2": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "root"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+02-emergency-move	10	@start domain	ok
+02-emergency-move	11	@until 60 member hold console GET /api/held	200 {"term": 2}
+02-emergency-move	12	@sleep 10	ok
+02-emergency-move	13	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
+02-emergency-move	14	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+02-emergency-move	15	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
+03-move-refusals	1	@domain	ok
+03-move-refusals	2	@stop domain	ok
+03-move-refusals	3	@start domain on m1	ok
+03-move-refusals	4	@move m1 copy=1.999	400 {"error": "refused"}
+03-move-refusals	5	@move m1 copy=1.999 why=no such copy	409 {"detail": "~no neighbour gave the copy named"}
+03-move-refusals	6	@move m1	200 {"term": 2, "holder": "m1"}
+03-move-refusals	7	@move m1	409 {"detail": "~holds the domain at term 2"}
+04-planned-handover	1	@domain	ok
+04-planned-handover	2	@start domain on m1	ok
+04-planned-handover	3	holder POST /domain/handover {"to": "m9"}	400
+04-planned-handover	4	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1", "stranded": []}
+04-planned-handover	5	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
+04-planned-handover	6	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+04-planned-handover	7	holder@m1 GET /domain	200 {"term": {"term": 2, "holder": "m1"}}
+04-planned-handover	8	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+05-record	1	record inputs/record-01-ok.json	ok {"result": "ok", "term": 1, "holder": "hold"}
+05-record	2	record inputs/record-02-ok-restored.json	ok {"result": "ok", "term": 2, "holder": "m1"}
+05-record	3	record inputs/record-03-another-domain.json	ok {"result": "refused", "reason": "another_domain"}
+05-record	4	record inputs/record-04-revoked-issuer.json	ok {"result": "refused", "reason": "revoked_issuer"}
+05-record	5	record inputs/record-05-unknown-issuer.json	ok {"result": "refused", "reason": "unknown_issuer"}
+05-record	6	record inputs/record-06-kid-not-issuer.json	ok {"result": "refused", "reason": "bad_signature"}
+05-record	7	record inputs/record-07-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
+05-record	8	record inputs/record-08-not-a-row.json	ok {"result": "refused", "reason": "not_a_record"}
+05-record	9	record inputs/record-09-extra-field.json	ok {"result": "refused", "reason": "not_a_record"}
+06-follow	1	follow inputs/follow-01-larger-term.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
+06-follow	2	follow inputs/follow-02-held-larger.json	ok {"result": "stay", "reason": "larger", "term": 2, "refused": {}}
+06-follow	3	follow inputs/follow-03-holding.json	ok {"result": "stay", "reason": "holding", "term": 2, "refused": {}}
+06-follow	4	follow inputs/follow-04-two-holders.json	ok {"result": "stay", "reason": "two_holders", "term": 2, "refused": {}}
+06-follow	5	follow inputs/follow-05-moved-its-door.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:9443", "refused": {}}
+06-follow	6	follow inputs/follow-06-forged-larger.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m2": "unknown_issuer"}}
+06-follow	7	follow inputs/follow-07-nobody-answers.json	ok {"result": "stay", "reason": "none", "refused": {}}
+06-follow	8	follow inputs/follow-08-forged-only.json	ok {"result": "stay", "reason": "none", "refused": {"m9": "unknown_issuer"}}
+07-ask-sig	1	ask-sig inputs/ask-sig-01-backup-ok.json	ok {"result": "ok"}
+07-ask-sig	2	ask-sig inputs/ask-sig-02-prepare-ok.json	ok {"result": "ok"}
+07-ask-sig	3	ask-sig inputs/ask-sig-03-missing.json	ok {"result": "refused", "reason": "missing"}
+07-ask-sig	4	ask-sig inputs/ask-sig-04-bad-time.json	ok {"result": "refused", "reason": "bad_time"}
+07-ask-sig	5	ask-sig inputs/ask-sig-05-skew.json	ok {"result": "refused", "reason": "skew"}
+07-ask-sig	6	ask-sig inputs/ask-sig-06-window-edge.json	ok {"result": "ok"}
+07-ask-sig	7	ask-sig inputs/ask-sig-07-other-key.json	ok {"result": "refused", "reason": "bad_signature"}
+07-ask-sig	8	ask-sig inputs/ask-sig-08-other-cluster.json	ok {"result": "refused", "reason": "bad_signature"}

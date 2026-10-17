@@ -31,7 +31,8 @@ domain/members: {doc: <текст JSON>}           # у держателя; пи
   doc:          {rev, members: {<член>: Entry}}
   rev:          целое ≥ 1, +1 на каждую запись
   Entry:        {how, since, by?, key?, revoked_keys?, ca?}   # ca — урок 8 Н1.6; how держателя — урок 10
-    how:        "admitted by <человек>" | "holder" | "former holder" — откуда член в списке (урок 10 — два последних)
+    how:        "admitted by <человек>" | "holder" | "held the domain until term <N>" — откуда член в списке (урок 10 Н1.2 —
+                два последних)
     since:      стенные секунды держателя записи
     by:         человек, принявший члена (урок 9; до него — operator, М10/9 Н1.3, и how — «admitted by operator»); у holder нет
     key:        hex ключа члена, принятого по отпечатку; у holder — ключ из первого отчёта его агента (урок 10)
@@ -140,10 +141,10 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   keys?:        строка domain/keys держателя {doc} (урок 2 Н1.2)
   revoked?:     строка domain/revoked держателя {jtis} (урок 2 Н1.6)
   members?:     строка domain/members {doc} (Н1.1)
-  holder?:      запись срока — урок 10
+  holder?:      строка domain/holder держателя {doc} (урок 10 Н1.1)
   sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants — урок 9 Н1.3, break_glass — урок 9 Н1.6;
                 books — урок 5
-  <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11; backup — урок 10
+  <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11; backup — урок 10 Н1.5
 envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 2 Н1.5: четыре части через «:», 2–4 — base64url без «=»
   recipient:    X25519 ключа члена: u = (1 + y)/(1 − y) mod 2^255 − 19 из y открытого Ed25519 (старший бит сброшен),
                 little-endian (RFC 7748 §4.1); закрытый — первые 32 байта SHA-512(seed_secret) как скаляр X25519

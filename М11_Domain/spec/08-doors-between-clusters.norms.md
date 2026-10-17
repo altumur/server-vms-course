@@ -23,7 +23,7 @@ door:      консоль кластера (М10/9) — единственный
 process:   двери процессов /api/* (агент — урок 3, ретранслятор — урок 4, токены — урок 7) идут своими адресами
            (DOMAIN_URL, RELAY_URL), не через консоль
 local:     консоль кластера отвечает сама только на: GET /domain/<sub>/books/<книга> (урок 5 Н2, книга этого члена);
-           /domain/at/… (Н1.5); двери переноса (Н1.9, урок 10); GET /domain/keys (урок 9 Н1.8; добавлено М11/9)
+           /domain/at/… (Н1.5); двери переноса (Н1.9, урок 10 Н1.4, Н1.9); GET /domain/keys (урок 9 Н1.8; добавлено М11/9)
 forwarded: пары (метод, путь) таблицы Н1.2 — в консоль домена (Н1.3, Н1.4); прочее под /domain/ — 404 not a domain route,
            держатель не зовётся
 ```
@@ -54,6 +54,8 @@ forwarded: пары (метод, путь) таблицы Н1.2 — в конс�
 | GET | `/domain/break-glass` | 9 Н2 (добавлено М11/9) |
 | PUT | `/domain/break-glass/<кластер>` | 9 Н2 (добавлено М11/9) |
 | POST | `/domain/revoke` | 9 Н2 (добавлено М11/9) |
+| POST | `/domain/handover` | 10 Н2 (добавлено М11/10) |
+| POST | `/domain/stranded/apply` | 10 Н2 (добавлено М11/10) |
 
 Сопоставление по порядку: `books` урока 5 (своя), `at` (своя), строки таблицы сверху вниз; `<sub>` — подсистема каталога
 этой консоли; сегмент `door.pass`, совпавший с `books`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
@@ -172,11 +174,11 @@ routes:   POST /api/prepare, POST /api/take, POST /domain/move у консоли
           (урок 2 Н1.3); путь и тело как пришли; подписанные заголовки X-W2C-Member, X-W2C-Time, X-W2C-Signature
           и Idempotency-Key — как пришли
 order:    1. пришёл X-W2C-Via — 400 one hop; 2. тело больше 1 МиБ — 413; 3. нет SIGNER_URL — 404 (ниже);
-          4. переслать с X-W2C-Via: <CLUSTER>; сроки — урок 10
+          4. переслать с X-W2C-Via: <CLUSTER>; сроки — 10 с у prepare, 90 с у take и move (урок 10 Н1.7, Н1.8)
 codes:    нет SIGNER_URL — 404 {error: "no signer here", detail: "<кластер> runs no signer of the domain (SIGNER_URL): the
           domain cannot be handed here"}; не ответил — 502 {error: "did not answer", detail: "this box's signer did
           not answer"}; ответ — как пришёл
-local:    GET /api/held, GET /api/backup — консоль отвечает сама; формы, подписи и отказы — урок 10
+local:    GET /api/held, GET /api/backup — консоль отвечает сама; формы, подписи и отказы — урок 10 Н1.4, Н1.9
 ```
 
 ---

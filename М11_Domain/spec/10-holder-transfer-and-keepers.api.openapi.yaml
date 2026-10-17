@@ -1,0 +1,291 @@
+openapi: 3.1.0
+info:
+  title: M11/10 holder transfer, backup copy and keepers
+  version: '1'
+  description: 'Normative shapes: 10-holder-transfer-and-keepers.norms.md N1.1-N1.9, N2, N4. /api/held and /api/backup are
+    answered by a cluster console itself; /api/prepare, /api/take and /domain/move a cluster console passes to the domain
+    process of its box (SIGNER_URL, M11/8 N1.9); /domain/handover and /domain/stranded/apply are the domain console''s.
+    Request parsing: M10/9 N2.'
+servers:
+  - url: '{origin}'
+    description: Консоль кластера или консоль домена — по двери.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /api/held:
+    get:
+      summary: Запись срока, набор и пара копии этого кластера (Н1.4)
+      responses:
+        '200':
+          description: Все ключи всегда
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cluster, holder, term, keys, backup]
+                additionalProperties: false
+                properties:
+                  cluster: {$ref: '#/components/schemas/MemberName'}
+                  holder:
+                    oneOf:
+                      - type: 'null'
+                      - $ref: '#/components/schemas/HolderRecord'
+                  term: {type: ['integer', 'null'], minimum: 1}
+                  keys:
+                    type: ['object', 'null']
+                    additionalProperties: true
+                    description: Документ domain/keys урока 2 Н1.2; форма и закрытость — урок 2.
+                  backup:
+                    oneOf:
+                      - type: 'null'
+                      - $ref: '#/components/schemas/Pair'
+        '503': {$ref: '#/components/responses/Refused'}
+  /api/backup:
+    get:
+      summary: Копия этого кластера подписанному члену (Н1.9)
+      parameters:
+        - {name: X-W2C-Member, in: header, required: true, schema: {$ref: '#/components/schemas/MemberName'}}
+        - {name: X-W2C-Time, in: header, required: true, schema: {type: string, pattern: '^-?(0|[1-9][0-9]*)\.[0-9]{3}$'}}
+        - {name: X-W2C-Signature, in: header, required: true, schema: {type: string, pattern: '^[A-Za-z0-9_-]+$'}}
+      responses:
+        '200':
+          description: Указатель, документ копии и общий документ
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cluster, pointer, backup, shared]
+                additionalProperties: false
+                properties:
+                  cluster: {$ref: '#/components/schemas/MemberName'}
+                  pointer:
+                    oneOf:
+                      - type: 'null'
+                      - $ref: '#/components/schemas/Pointer'
+                  backup: {type: ['string', 'null'], description: Текст JCS документа копии (Н1.5).}
+                  shared: {description: 'Общий документ урока 11; до него — null.'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /api/prepare:
+    post:
+      summary: Цель готовит ключ для приёма передачи (Н1.7 шаг 4)
+      parameters:
+        - {name: X-W2C-Time, in: header, required: true, schema: {type: string}}
+        - {name: X-W2C-Signature, in: header, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Открытая половина подготовленного X25519
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cluster, seal]
+                additionalProperties: false
+                properties:
+                  cluster: {$ref: '#/components/schemas/MemberName'}
+                  seal: {$ref: '#/components/schemas/Hex32'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+  /api/take:
+    post:
+      summary: Цель принимает домен (Н1.7 take)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grant, keys_sealed]
+              additionalProperties: false
+              properties:
+                grant:
+                  type: object
+                  required: [doc]
+                  additionalProperties: false
+                  properties:
+                    doc: {type: string, description: 'JCS {grant: handover, domain, to, from, term, rev, at, issuer, kid, sig}.'}
+                keys_sealed: {type: string, pattern: '^x25519:v1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
+      responses:
+        '200':
+          description: Запись срока цели
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [record]
+                additionalProperties: false
+                properties:
+                  record: {$ref: '#/components/schemas/HolderRecord'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/move:
+    post:
+      summary: Аварийный перенос сюда по файлу восстановления (Н1.8)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recovery]
+              additionalProperties: false
+              properties:
+                recovery: {type: string, description: Текст файла восстановления урока 2 Н1.1.}
+                stolen: {type: boolean}
+                copy: {$ref: '#/components/schemas/Pair'}
+                why: {type: string, minLength: 1}
+      responses:
+        '200':
+          description: Новый срок
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [term, holder, restored_from, ignored, sentence]
+                additionalProperties: false
+                properties:
+                  term: {type: integer, minimum: 2}
+                  holder: {$ref: '#/components/schemas/MemberName'}
+                  restored_from:
+                    oneOf:
+                      - type: 'null'
+                      - $ref: '#/components/schemas/Pair'
+                  ignored:
+                    type: array
+                    items: {$ref: '#/components/schemas/MemberName'}
+                  sentence: {type: string}
+        '400': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/handover:
+    post:
+      summary: Плановая передача (Н1.7)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              additionalProperties: false
+              properties:
+                to: {$ref: '#/components/schemas/MemberName'}
+      responses:
+        '200':
+          description: Передача сделана
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [term, rev, to, stranded]
+                additionalProperties: false
+                properties:
+                  term: {type: integer, minimum: 2}
+                  rev: {type: integer, minimum: 1}
+                  to: {$ref: '#/components/schemas/MemberName'}
+                  stranded:
+                    type: array
+                    items: {$ref: '#/components/schemas/StrandedItem'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /domain/stranded/apply:
+    post:
+      summary: Повторить брошенную правку у нового держателя (Н1.6 apply)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [path, key]
+              additionalProperties: false
+              properties:
+                path: {type: string, minLength: 1}
+                key: {type: string, minLength: 1}
+      responses:
+        '202': {description: Правка принята новым держателем — ответ его двери как пришёл}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+components:
+  responses:
+    Refused:
+      description: Отказ (Н4)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+        holder: {$ref: '#/components/schemas/HolderRecord'}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    Hex32:
+      type: string
+      pattern: '^[0-9a-f]{64}$'
+    Pair:
+      type: object
+      required: [term, rev]
+      additionalProperties: false
+      properties:
+        term: {type: integer, minimum: 1}
+        rev: {type: integer, minimum: 1}
+    Pointer:
+      type: object
+      required: [term, rev, sha256]
+      additionalProperties: false
+      properties:
+        term: {type: integer, minimum: 1}
+        rev: {type: integer, minimum: 1}
+        sha256: {$ref: '#/components/schemas/Hex32'}
+    HolderRecord:
+      type: object
+      description: Документ domain/holder (Н1.1).
+      required: [domain, term, holder, url, at, issuer, kid, sig]
+      additionalProperties: false
+      properties:
+        domain: {type: string}
+        term: {type: integer, minimum: 1}
+        holder: {$ref: '#/components/schemas/MemberName'}
+        url: {type: string}
+        ca:
+          type: array
+          minItems: 1
+          maxItems: 2
+          items: {$ref: '#/components/schemas/Hex32'}
+        at: {type: number}
+        restored_from: {$ref: '#/components/schemas/Pair'}
+        issuer: {$ref: '#/components/schemas/Hex32'}
+        kid: {type: string, pattern: '^[0-9a-f]{16}$'}
+        sig: {type: string, pattern: '^[A-Za-z0-9_-]+$'}
+    StrandedItem:
+      type: object
+      required: [path, key, value]
+      additionalProperties: false
+      properties:
+        path: {type: string}
+        key: {type: string}
+        value: {type: string, description: 'Значение элемента; секрет — "<secret: differs>".'}

@@ -275,8 +275,11 @@ components:
             doc: {type: string}
         holder:
           type: object
-          additionalProperties: true
-          description: Запись срока — урок 10; открыта, пока урок не переведён.
+          required: [doc]
+          additionalProperties: false
+          description: Строка domain/holder держателя (урок 10 Н1.1).
+          properties:
+            doc: {type: string}
         sealed:
           type: string
           description: 'Конверт m1:<eph>:<nonce>:<ct> (Н1.5).'
@@ -305,7 +308,21 @@ components:
           description: Урок 6 Н1.4 — ждущие правки этого члена по (at, id).
           items: {$ref: '#/components/schemas/Edit'}
         shared: {description: урок 11}
-        backup: {description: урок 10}
+        backup:
+          type: object
+          required: [pointer, doc]
+          additionalProperties: false
+          description: Копия хранителю (урок 10 Н1.5).
+          properties:
+            pointer:
+              type: object
+              required: [term, rev, sha256]
+              additionalProperties: false
+              properties:
+                term: {type: integer, minimum: 1}
+                rev: {type: integer, minimum: 1}
+                sha256: {$ref: '#/components/schemas/Hex32'}
+            doc: {type: string}
     Placement:
       type: object
       required: [cluster, origin, copies, reason, at, rev]
