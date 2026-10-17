@@ -22,3 +22,5 @@
 М11_Domain/02	no-openapi	-	своей HTTP-двери нет: набор и отзыв несут ответ агенту (М11/3) и /api/held (М11/8, М11/10); формы строк и команд приёмки — нормы Н1, Н5 (как М10/5, ADR-0082 доп. 13)
 М11_Domain/03	acceptance-entry	inputs	входы команд agent-sig, seal-member и accept (векторы подписи агента и конверта m1, приём отчёта держателем, тестовые ключи); проверяется по README приёмки
 М11_Domain/03	scenarios-format	own	стенд нескольких кластеров (двери holder, member; директивы @install, @join, @start agent, @domain, @on, @restart domain, @cut, @mend, @clock) и команды-векторы agent-sig, seal-member, accept; проверяется по README приёмки
+М11_Domain/04	acceptance-entry	inputs	входы команды accept урока 3 с дорогой (via, heard_ago); проверяется по README приёмки
+М11_Domain/04	scenarios-format	own	стенд с ретранслятором (двери holder, member; директивы @domain <кластеры>, @start agent <к> via relay, @stop agent, @cut, @mend) и векторы accept; проверяется по README приёмки
