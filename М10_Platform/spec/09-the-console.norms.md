@@ -41,16 +41,17 @@ display:
   fields:        {<поле>: <подпись>}            # поле строки, id, phase/worker/server/revision/observed_revision, поле status
   field_help:    {<поле>: <подсказка>}
   options:       {<имя>: {<значение>: <слово>}}                 # у поля с enum — значения из enum; у слова пульса из form.status[] — любые строки (подписи значений); иное — отказ (урок 2 Н1.4)
-  form:          [{title, state?, placement?, fields?, note?, status?: [{field, since?, title?}]}]
+  form:          [{title?, state?, placement?, fields?, note?, status?: [{field, since?, title?}]}]   # title необязателен
                  # блоки карточки по порядку; state — бейдж состояния; placement — воркер·сервер, причина из /where;
                  # status — поля, сказанные воркером, только чтение, с «с …» по since; поле вне блоков не показывается;
                  # без form — один блок со всеми полями
-  events:        false — у модуля нет вкладки журнала единицы
+  events:        bool; false — у модуля нет вкладки журнала единицы; true и отсутствие — есть
   kinds:         {<вид события>: <слово>}        # слова видов подсистемы; виды платформы — словарь модуля
   keys:          {<id семьи ключей домена>: {title, about, absent?}}   # М11
   tree:
     group_by:    <поле> — чем группировать дерево; nested_by: <разделитель> — значение group_by с разделителем даёт вложенные группы;
-                 columns: [{field, title, width}]; children: false — не вкладывать about-единицы
+                 columns: [{field, title, width}] — field: поле единицы или платформенное имя модуля (worker, server,
+                 revision, observed_revision, phase, id; урок 2 Н1.4); children: false — не вкладывать about-единицы
     group_title, group_hint, filter, no_group, children, contents_title, group_word, no_group_suffix, pick_note,
     new_root, new_sub, add_here, new_group_note, remove, not_in, add_to, no_others, new_group:   слова
   # display.actions — снят: модуль и оболочки его не читают (мёртвый ключ, ADR-0003)

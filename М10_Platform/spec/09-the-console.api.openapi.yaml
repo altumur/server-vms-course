@@ -2129,6 +2129,7 @@ components:
             $ref: '#/components/schemas/M2_JsonValue'
         places:
           type: object
+          description: placement.places спеки, как загружен (урок 4); отсутствует, если раздела нет.
           additionalProperties:
             $ref: '#/components/schemas/M2_JsonValue'
         domain:
@@ -2144,6 +2145,7 @@ components:
           properties:
             prefix:
               type: string
+              description: Префикс имён метрик подсистемы — "<name>_" (урок 9 Н1.2, running_gauge = <name>_<метрика>).
             running:
               type: ['string', 'null']
               description: null, если у спеки нет console.running (урок 2 Н2).
