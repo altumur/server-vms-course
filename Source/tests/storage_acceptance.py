@@ -19,7 +19,6 @@ import time
 import urllib.parse
 
 SOURCE = Path(__file__).resolve().parents[1]
-FROZEN_ACCEPTANCE_REF = "a0bd9e53"  # старый Python заморожен, ADR-0080 доп. 16
 SHARED = SOURCE / "tests/testdata/acceptance/М10_Platform/01/scenarios.tsv"
 BODY_LIMIT = 1048576  # fixed acceptance door setting, М10/1 Н5
 ROW_LIMIT = 524288
@@ -164,10 +163,10 @@ def shape(body):
 
 
 def steps(call):
+    sys.path.insert(0, str(SOURCE))
+    from tests.frozen_data import frozen_testdata
     records, bindings, previous = [], {}, None
-    shared = subprocess.check_output(
-        ["git", "show", f"{FROZEN_ACCEPTANCE_REF}:{SHARED.relative_to(SOURCE.parent).as_posix()}"],
-        cwd=SOURCE, encoding="utf-8")
+    shared = frozen_testdata(SHARED.relative_to(SOURCE / "tests/testdata")).read_text(encoding="utf-8")
     for number, fields in enumerate(csv.reader(shared.splitlines(), delimiter="\t"), 1):
         if not fields or fields[0].startswith("#"):
             continue
