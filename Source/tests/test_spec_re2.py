@@ -6,6 +6,8 @@ construct (the strict loader, ADR 0012). Escaped look-alikes stand. A test of th
 from `testdata/testsub*.yaml`; and every spec of the course still loads."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import copy
 import glob
 import os
@@ -17,7 +19,7 @@ from w2cplatform.schema import re2_fault
 from w2cplatform.spec import SubsystemSpec
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TESTDATA = os.path.join(HERE, "testdata")
+TESTDATA = str(frozen_testdata())
 BS = "\\"
 
 # (pattern, the construct its refusal names) — Python compiles every one of them, Go none (the last two it reads otherwise)
