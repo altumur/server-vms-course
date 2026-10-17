@@ -5,7 +5,7 @@
   "base": "5f3d0186",
   "canonical_main": "3eafbb8e",
   "code_commit": "c104437c2db77e5e8462c2761bd6fb182a4feba6",
-  "status": "ready for Architect review; platform diff not merged",
+  "status": "merged after Architect approval ebfbbca9; targeted verification on merged tree completed",
   "checks": {
     "unit": {
       "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/unit.log",
@@ -204,5 +204,63 @@
     "RFC 9112 probes refuse obs-fold and whitespace before the colon, and accept chunked even together with Content-Length; canonical TSV includes exact route and query-order cases.",
     "Superseded full unit attempts were interrupted after source updates and are not claimed as completed verification."
   ],
-  "next_task_not_before": "2026-10-22"
+  "next_task_not_before": "2026-10-22",
+  "integration": {
+    "approval": "ebfbbca9fc0a575851e20b10c29a6e0f611992f6",
+    "merge_commit": "02fa01ec7e7e1207bc1ddfc28f2a6853bf25489a",
+    "parent_main": "3e2ad5883143361990eb4f838033dd5aefe22057",
+    "reviewed_code_commit": "c104437c2db77e5e8462c2761bd6fb182a4feba6",
+    "reviewed_files_unchanged": true,
+    "reviewed_files": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/merged-reviewed-files.json",
+      "sha256": "69f82e498a5d954477d6bb243b7bd9dd79b65d429106f9a97bf96845e86ed543"
+    },
+    "source_manifest": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/merged-source-manifest.json",
+      "sha256": "d84056c9ef62d7085b43583b58caf2980f91e28e539ce2f127c1eb666732adcc",
+      "files": 1143
+    },
+    "main_changes_outside_reviewed_files": [
+      "Source/tests/testdata/acceptance/М10_Platform/01/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/02/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_control_bel.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_control_c1.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_control_nel.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_crlf.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_depth_64.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_depth_65.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_display_events_true.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_flow_map_key_without_colon.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_flow_seq_pair.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_form_without_title.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_leading_marker.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_null_mixed_case_word.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_null_upper.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_plain_continuation_like_key.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_plain_folded.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_schema_known_keywords.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/cases/c2_schema_unknown_keyword.subsystem.yaml",
+      "Source/tests/testdata/acceptance/М10_Platform/02/verdicts.tsv",
+      "Source/tests/testdata/acceptance/М10_Platform/03/README.md",
+      "Source/tests/testdata/acceptance/М10_Platform/03/corrections.tsv",
+      "Source/tests/testdata/acceptance/М10_Platform/03/scenarios.tsv"
+    ],
+    "targeted": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/merged-targeted.log",
+      "sha256": "d4474dfeca0db06eb14c620fadfebc2144d0fa266d645a42b85081af73109263",
+      "passed": 62,
+      "failed": 1,
+      "skipped": 0,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ],
+      "cwd": "/Users/murat/w2c/wt-course-adr74-confirm-integrate/Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py test_storage_m10 test_storage_request_parse test_storemachine test_boundary test_platform_lists"
+    },
+    "conflict_resolution": "Only the inbox task conflicted; the main version, including the Architect decision, was kept.",
+    "nonblocking_note": "Listing a non-UTF-8 prefix currently asks for all rows and filters by bytes; narrowing to the decodable prefix is deferred, as noted by the Architect.",
+    "full_checks_on_merged_tree": false,
+    "note": "Previous full checks remain attached to c104437c; merged verification repeats the targeted set and proves all seven reviewed files unchanged."
+  }
 }
