@@ -312,3 +312,5 @@ c3_about_sub_bad	refused
 c3_about_sub_ok	ok
 c3_tab_in_comment_ok	ok
 c3_cut_at_not_url	refused
+r40_worker_table_secret	refused
+r40_console_table_secret_ok	ok

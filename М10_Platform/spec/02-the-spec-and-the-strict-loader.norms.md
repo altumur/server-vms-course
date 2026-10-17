@@ -225,7 +225,7 @@ closed_key_set:
 | `rights.names` | список `{field, unit, sub \| of}`: строки, ровно один из `sub` и `of` | необязателен | 6 Н1.5 |
 | `secrets.readers` | named: точное имя строки или префикс с `/` → непустой список ролей из закрытых 8 урока 7 Н1.3 | нет — своих секретных строк нет | 7 Н1.3 |
 | `secrets.reads` | список точных имён или префиксов | необязателен | 7 Н1.3 |
-| `worker.writes` | список собственных таблиц; `unit.rows` или необъявленное имя — `refused:reference` | нет — таблиц воркера нет | 6 Н1.4 |
+| `worker.writes` | список собственных таблиц; `unit.rows` или необъявленное имя — `refused:reference`; таблица с полем `*_secret` — `refused:value`: её строки пишет только воркер, а перезапечатывает консоль (урок 7 Н3 «перезапечатать при старте»), назначенного иного писателя нет | нет — таблиц воркера нет | 6 Н1.4 |
 | `worker.reads` | список `<семья>/<имя>` или префиксов с `/`; голое слово — отказ | необязателен | 6 Н1.4 |
 | `worker.requests` | список других подсистем (своя — отказ; принимает ли — каталог) | необязателен | 8 Н1.5 |
 | `worker.deletes` | список семей единиц этой спеки — только `unit.rows`; таблица или чужая семья — `refused:reference` | нет — строки единиц воркер не удаляет | 6 Н1.4 (ADR-0067 доп. 2026-10-17) |
@@ -510,7 +510,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 306 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (52) или `refused` (233). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 308 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (52) или `refused` (233). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -520,6 +520,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
 | `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
 | `c3_tab_*`, `c3_u2028_*`, `c3_escape_*` | сверка 2 чистой комнаты: TAB вне кавычек и блочного скаляра, U+2028, экранирования двойных кавычек | Н1.1 |
+| `r40_worker_table_secret`, `r40_console_table_secret_ok` | секретное поле в таблице воркера (`worker.writes`) — отказ; та же таблица консоли — принята | Н1.2а |
 | `c3_cut_at_not_url`, `c3_enum_repeat`, `c3_unique_list`, `c3_schemes_*`, `c3_near_by_*`, `c3_about_sub_*` | сверка 2: повтор в `enum`, `unique` у списка, слова `schemes`, `near.by` — ссылка на поле, грамматика `about.sub` | Н1.3, Н1.4 |
 | `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
 | `display_word_On_Off_unquoted`, `lease_90_quoted`, `lease_hex_0x10`, `lease_1_000`, `lease_huge_int`, `lease_1e308`, `lease_.inf`, `lease_nan`, `float_*`, `int_field_boundaries`, `json_default_nonfinite` | скаляры: слова, числа, пределы | Н1.1 |

@@ -57,6 +57,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ForbiddenFault'
+        '400':
+          description: Запрос не по форме владельца (урок 1 Н2.1), например повтор prefix.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
         '404':
           description: Нет маршрута.
           content:

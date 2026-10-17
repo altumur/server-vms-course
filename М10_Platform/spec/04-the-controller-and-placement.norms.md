@@ -102,7 +102,7 @@ resource_state:     # ресурс сервера — одно определе�
   unreachable:  пульс не live, строка двери platform/doors/<s> менялась в последние LOST_AFTER — ресурс есть, пульсов нет
   unknown:      наблюдатель не видел ни пульса, ни строки двери ни разу
   silent:       иначе (в том числе нечитаемый пульс); исключает и двигает только silent
-process_presence:   # что ресурс говорит о процессе воркера
+process_presence:   # что ресурс говорит о процессе воркера: вывод урока 8 Н1.4 `presence` по ключу <sub>/<имя слота> своей подсистемы
   runs | gone | unlisted | unknown   # unknown — неподтверждённое чтение; silent — только состояние ресурса выше
 fate:               alive | wait | hung | hung_moved | unsure | unsure_moved | move | release
 NAME_FATES:         [move, hung_moved, unsure_moved, release]   # + wait за пределом HUNG_MOVE_AFTER

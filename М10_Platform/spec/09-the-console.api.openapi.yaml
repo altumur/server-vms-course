@@ -3096,19 +3096,24 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
+            pattern: ^[^/]+/[^/]+(?![\s\S])
+            description: <sub>/<имя слота> (урок 8 Н1.4).
         running:
           type: array
           items:
             type: string
-            minLength: 1
+            pattern: ^[^/]+/[^/]+(?![\s\S])
+            description: <sub>/<имя слота> (урок 8 Н1.4).
         unknown:
           type: array
           items:
             type: string
-            minLength: 1
+            pattern: ^[^/]+/[^/]+(?![\s\S])
+            description: <sub>/<имя слота> (урок 8 Н1.4).
         instances:
           type: object
+          propertyNames:
+            pattern: ^[^/]+/[^/]+(?![\s\S])
           additionalProperties:
             type: string
             minLength: 1

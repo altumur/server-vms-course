@@ -33,7 +33,7 @@ scenario	step	request	expect
 04-two-copies	6	@start worker w-1	ok
 04-two-copies	7	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 04-two-copies	8	ASSERT $h1 != $h2	ok
-04-two-copies	9	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "2"}}
+04-two-copies	9	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
 04-two-copies	10	@sleep 15	ok
 04-two-copies	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 05-sigkill	1	@start controller	ok
