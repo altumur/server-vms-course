@@ -147,6 +147,7 @@ components:
             ({"oneOf": [{"type": "object", "properties": {"a": {"const": 1}}},
                         {"type": "object", "properties": {"b": {"const": 2}}}], "unevaluatedProperties": False}, True),
             ({"type": "object", "additionalProperties": False, "examples": [{"type": "object"}]}, True),
+            ({"type": "object", "additionalProperties": False, "not": {"required": ["a", "b"]}}, True),
         ]
         for example, valid in cases:
             with self.subTest(example=example):

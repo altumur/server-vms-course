@@ -242,12 +242,11 @@ def scenario_counts(text):
 
 # Every object schema of a contract says its openness: `additionalProperties` (false — closed, a schema — a map, true —
 # open on purpose) or, on a composite, `unevaluatedProperties`. Parts of a composition (allOf/anyOf/oneOf members,
-# if/then/else, and a component schema referenced as such a member) are closed by their composite, not one by one: a
+# if/then/else, not, and a component schema referenced as such a member) are closed by their composite, not one by one: a
 # closed part would refuse its siblings' properties, and `additionalProperties: true` on a part would evaluate them all.
 COMPOSE = ("allOf", "anyOf", "oneOf")
 SUBSCHEMA_MAPS = ("properties", "patternProperties", "$defs", "dependentSchemas")
-SUBSCHEMAS = ("items", "additionalProperties", "unevaluatedProperties", "propertyNames", "contains", "not",
-              "unevaluatedItems")
+SUBSCHEMAS = ("items", "additionalProperties", "unevaluatedProperties", "propertyNames", "contains", "unevaluatedItems")
 
 
 def objectlike(node):
@@ -275,7 +274,7 @@ def unstated_openness(doc):
         for key in COMPOSE:
             for i, sub in enumerate(node.get(key) or []):
                 schema(sub, f"{pointer}/{key}/{i}", part=True)
-        for key in ("if", "then", "else"):
+        for key in ("if", "then", "else", "not"):    # `not: {required: […]}` is a condition: openness would change it
             schema(node.get(key), f"{pointer}/{key}", part=True)
 
     def walk(node, pointer):
