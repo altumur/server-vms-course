@@ -47,7 +47,7 @@ book seal 2 57bf48000f17919375a83a26f7b2064ade5a0b8ee1c29f9a3bbdd87c28434603
 Отказ — тоже код 0: `{"result": "refused", "reason": <слово Н3>}`. Каждый шаг — отдельный запуск команды.
 `seal-round` сверяется по `opened` и `distinct`; форма двух `envelopes` — по Н1.5.
 
-Всего 11 сценариев / 50 шагов.
+Всего 11 сценариев / 51 шаг.
 
 ## corrections.tsv
 

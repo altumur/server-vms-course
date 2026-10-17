@@ -105,7 +105,8 @@ placement:
   affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
 holds: {table: notches, unit: of, since: from, until: to, longest: 86400, released: released_at}
 # a person asks the holder of a tally to count a range: the holder adds the integers of [from, to] its count does not
-# cover yet (the ranges covered it keeps in its own row) and names the rid in its heartbeat's `fetched`; no mark is
+# cover yet (the ranges covered it keeps in its object row objects/testsub2/marks/<unit>, family marks/* below) and
+# names the rid in its heartbeat's `fetched`; no mark is
 # written, and the same range asked again adds nothing (ADR-0054: `outcome: fetched`, the rid comes from the data)
 requests:
   free: true

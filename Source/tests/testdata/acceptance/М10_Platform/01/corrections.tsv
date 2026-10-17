@@ -21,3 +21,4 @@ date	sample	fix	languages
 2026-10-17	01/README «Стенд»	cammeta-python 01 № 34: роль прогона — acc, сокет acc.sock рядом с {socket}, файл прав с этой ролью	all
 2026-10-17	01/README словарь: @file	check_spec c2e47a69 (директивы против словаря): строка @file записана в форме директивы, не «<код> @file»	all
 2026-10-17	01/README «Стенд»: {rights} и файл прав роли acc	cammeta-python 01 № 35: подстановка {rights}, полный текст файла, delete явно	all
+2026-10-17	01/README.md: словарь, ожидание <код> <JSON>	cammeta-python 01 № 36: число JSON сравнивается по значению (50 = 50.0)	all

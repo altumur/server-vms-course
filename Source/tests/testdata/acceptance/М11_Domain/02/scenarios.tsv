@@ -49,4 +49,5 @@ scenario	step	request	expect
 10-envelope-form	4	seal inputs/seal-11-short-nonce.json	ok {"result": "refused", "reason": "not_an_envelope"}
 10-envelope-form	5	seal inputs/seal-14-short-ct.json	ok {"result": "refused", "reason": "not_an_envelope"}
 10-envelope-form	6	seal inputs/seal-12-zero-eph.json	ok {"result": "refused", "reason": "not_an_envelope"}
+10-envelope-form	7	seal inputs/seal-16-noncanonical-ct.json	ok {"result": "refused", "reason": "not_an_envelope"}
 11-seal-round	1	seal-round inputs/seal-round-01.json	ok {"result": "ok", "opened": ["s3cret-ü", "s3cret-ü"], "distinct": true}
