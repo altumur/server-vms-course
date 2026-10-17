@@ -56,3 +56,8 @@ scenario	step	request	expect
 07-append-by-data	16	store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "2", "ranges": "1-2"}}
 07-append-by-data	17	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202 {"queued": "t1-2-3"}
 07-append-by-data	18	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "3", "ranges": "1-3"}}
+07-append-by-data	19	console2 POST /tallies {"name": "tally-with-a-name-much-longer-than-forty-chars", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
+07-append-by-data	20	@until 60 store GET /v1/get?key=testsub2/epoch/tally-with-a-name-much-longer-than-forty-chars	200 {"items": {"epoch": "1"}}
+07-append-by-data	21	console POST /testsub2/requests {"unit": "tally-with-a-name-much-longer-than-forty-chars", "from": 1, "to": 1}	202 {"queued": "tally-with-a-name-much-longer-than-forty-chars-1-1"}
+07-append-by-data	22	@until 90 store GET /v1/get?key=testsub2/requests/tally-with-a-name-much-longer-than-forty-chars-1-1	200 {"items": null}
+07-append-by-data	23	store GET /v1/get?key=objects/testsub2/marks/tally-with-a-name-much-longer-than-forty-chars	200 {"items": {"count": "1", "ranges": "1-1"}}
