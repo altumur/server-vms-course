@@ -613,6 +613,43 @@ components:
                 self.assertEqual(not self.check().errors, valid, self.check().errors)
                 self.replace(self.norms, f"## Н5 Section\n| № | что |\n|---|---|\n{row}", "## Н5 Section")
 
+    def test_counts_read_the_bracket_form_and_skip_code_and_subsets(self):
+        self.scenarios.unlink()
+        self.add_verdicts()
+        readme = self.acceptance / "README.md"
+        for text, valid in [("Корпус: 2 файла, `ok` (1), `refused` (1).", True),
+                            ("Корпус: 2 файла, `ok` (2), `refused` (0).", False),
+                            ("```\nКорпус: 9 файлов, 1 ok/8 refused.\n```", True),
+                            ("Например, 9 файлов, 1 ok/8 refused.", True)]:
+            with self.subTest(text=text):
+                readme.write_text(f"# Acceptance\n{text}\n")
+                self.assertEqual(not self.check().errors, valid, self.check().errors)
+
+    def test_every_scenario_has_a_row_in_the_n5_table(self):
+        self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\tGET /example\t200 {}\n"
+                                  "02-b\t1\tGET /example\t200 {}\n")
+        self.replace(self.norms, "## Н5 Section", "## Н5 Section\n| № | что |\n|---|---|\n| 01 | a |")
+        self.assertTrue(any("scenario 02" in e for e in self.check().errors), self.check().errors)
+
+    def test_directives_are_in_the_stand_dictionary(self):
+        stand = self.acceptance / "README.md"
+        stand.write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@start` — запустить процесс.\n")
+        self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\tGET /example\t200 {}\n")
+        self.assertFalse(self.check().errors)
+        self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\tGET /example?x=a@b\t200 {}\n"
+                                  "01-a\t2\t@stop x\t200 {}\n")
+        errors = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")]).errors
+        self.assertEqual([e for e in errors if "directive" in e][:1] and len([e for e in errors if "directive" in e]), 1,
+                         errors)
+
+    def test_choice_counts_match_the_numbered_items(self):
+        self.replace(self.norms, "## Решает реализация\n", "## Решает реализация\n1. одно\n2. другое\n")
+        instructions = self.spec / "01-example.README.md"
+        for text, valid in [("Названы 2 выбора реализации.", True), ("Названы 3 выбора реализации.", False)]:
+            with self.subTest(text=text):
+                instructions.write_text(f"# Instructions\n{text}\n")
+                self.assertEqual(not self.check().errors, valid, self.check().errors)
+
     def test_cli_names_exceptions_and_keeps_them_out_of_pass(self):
         self.api.unlink()
         registry = self.root / "exceptions.tsv"
