@@ -15,3 +15,5 @@
 М10_Platform/10	scenarios-format	own	двери консоли, контроллера и ресурса, @raw/@big/@until/@any, подстроки ответа; проверяется по README приёмки
 М10_Platform/11	scenarios-format	own	директивы процессов, @manual, подстроки ответа; проверяется по README приёмки
 М10_Platform/07	acceptance-entry	fields.yaml	объявления полей cam.source и rec.volumes.url для secret_in.tsv как данные приёмки (ADR-0001); проверяется по README приёмки
+М11_Domain/01	scenarios-format	own	приёмка — чистая функция: команда view реализации читает входной JSON проходов и печатает {view, shadow}; проверяется по README приёмки
+М11_Domain/01	acceptance-entry	inputs	каталог входов команды view (копии членов, назначения, часы держателя); проверяется по README приёмки
