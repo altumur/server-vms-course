@@ -1,0 +1,53 @@
+same #7 op wrong and key wrong
+same #7 key wrong and cas wrong
+same #7 items wrong and cas wrong
+DIFF #8 no key
+     step 1: clean=(400, {'kind': 'badrequest', 'index': None})
+             old  =(400, {'kind': 'badkey', 'index': None})
+DIFF #8 key is a number
+     step 1: clean=(400, {'kind': 'badrequest', 'index': None})
+             old  =(400, {'kind': 'badkey', 'index': None})
+same #8 guard.key is a number
+same #8 GET without key
+same #9 id null
+same #9 id empty
+DIFF #10 plus in query
+     step 3: clean=(200, {'items': {'v': 'plus'}, 'index': '<v>'})
+             old  =(200, {'items': {'v': 'space'}, 'index': '<v>'})
+DIFF #10 repeated key
+     step 1: clean=(400, {'kind': 'badkey', 'index': None})
+             old  =(200, {'items': None, 'index': ''})
+DIFF #10 bad utf-8 in key
+     step 1: clean=(400, {'kind': 'badkey', 'index': None})
+             old  =(200, {'items': None, 'index': ''})
+same #11 list without prefix
+DIFF #12 duplicate field
+     step 1: clean=(400, {'kind': 'badrequest', 'index': None})
+             old  =(200, {'index': '<v>'})
+same #12 NaN in extra
+same #12 BOM
+same #12 huge number in extra
+same #22 double slash key
+same #22 dot segment
+same #22 trailing slash
+DIFF #24 size on body over limit
+     step 1: clean=(413, {'kind': 'toolarge', 'limit': 1048576, 'size': 1048577, 'index': None})
+             old  =(413, {'kind': 'toolarge', 'limit': 1048576, 'index': None})
+DIFF #26 unknown method
+     step 1: clean=(404, {'kind': 'badrequest', 'index': None})
+             old  =(501, b'<!DOCTYPE HTML>\n<html lang="en">\n    <head>\n        <meta charset="utf-8">\n     ')
+DIFF #26 no HTTP version
+     step 1: clean=('{"keys":{}}', b'')
+             old  =('{"keys": {}}', b'')
+same #26 HTTP/1.0
+DIFF #27 lone surrogate in key
+     step 1: clean=(400, {'kind': 'badkey', 'index': None})
+             old  =(400, {'kind': 'badrequest', 'index': None})
+same #27 lone surrogate in items
+same #28 replay cas null vs absent
+same #28 replay items order
+same #30 GET with body
+same #- delete absent
+same #- items value number
+same #- prefix without trailing slash
+10 of 32 probes differ
