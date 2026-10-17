@@ -887,9 +887,10 @@ def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
                 if not read_body(self, body_limit):
                     return None
                 return self.rfile.read(int(self.headers.get("Content-Length") or 0))
-            if len(transfer) != 1 or transfer[0].strip().lower() != "chunked" or "Content-Length" in self.headers:
+            if len(transfer) != 1 or transfer[0].strip().lower() != "chunked":
                 self.send_error(400)
                 return None
+            # RFC 9112 §6.3: chunked frames the body even when Content-Length is also present.
             body_deadline(self, body_limit)
             chunks, size = [], 0
             try:
