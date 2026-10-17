@@ -20,3 +20,5 @@
 М11_Domain/02	acceptance-entry	inputs	каталог входов команд keys, token, seal (наборы, токены, конверты и тестовые ключи); проверяется по README приёмки
 М11_Domain/02	scenarios-format	own	приёмка — чистые функции: команды keys, token, seal реализации читают входной JSON и печатают итог; проверяется по README приёмки
 М11_Domain/02	no-openapi	-	своей HTTP-двери нет: набор и отзыв несут ответ агенту (М11/3) и /api/held (М11/8, М11/10); формы строк и команд приёмки — нормы Н1, Н5 (как М10/5, ADR-0082 доп. 13)
+М11_Domain/03	acceptance-entry	inputs	входы команд agent-sig и seal-member (векторы подписи агента и конверта m1, тестовые ключи); проверяется по README приёмки
+М11_Domain/03	scenarios-format	own	стенд нескольких кластеров (двери holder, member; директивы @install, @join, @start agent, @cut, @mend, @clock) и команды-векторы; проверяется по README приёмки
