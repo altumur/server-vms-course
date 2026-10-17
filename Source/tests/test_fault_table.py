@@ -5,11 +5,13 @@ the table's status through the doors' one function (`console.refused_status`), a
 (`requests_body.tsv`, `group_of.tsv`) say no word it does not hold."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 
 from tests.productdir import SOURCE, product_file
 
-DATA = os.path.join(SOURCE, "tests", "testdata")
+DATA = str(frozen_testdata())
 TABLE = os.path.join(DATA, "fault.tsv")
 
 
