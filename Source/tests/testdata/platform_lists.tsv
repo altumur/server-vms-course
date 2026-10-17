@@ -19,7 +19,7 @@ secret_roles	controller
 secret_roles	worker
 secret_roles	domain
 secret_roles	domainagent
-secret_roles	domainpart
+secret_roles	domainworker
 secret_roles	resource
 secret_roles	domainconsole
 secret_readers	domain/break-glass/=console
