@@ -21,3 +21,4 @@ date	sample	fix	languages
 2026-10-17	02/c3_* (19 случаев)	Сверка 2 чистой комнаты М10 (faa988b0): TAB вне кавычек и блочного скаляра, U+2028/2029, перечень экранирований; повтор enum, unique у list, слова schemes, near.by — поле, about.sub — грамматика имени	all
 2026-10-17	02/c3_tab_in_comment_ok, c3_cut_at_not_url	Прогон 40 (разбор 0217e88d): TAB внутри комментария допустим; cut_at у не-url — refused:value	all
 2026-10-17	02/r40_worker_table_secret, r40_console_table_secret_ok	Прогон 40 Codex R40-06: секретное поле в таблице воркера — отказ загрузчика; положительный контроль — та же таблица консоли	all
+2026-10-17	02/cases: 37 случаев с worker.writes [shelves] и feed_secret	cammeta-python 02 № 36: по R40-06 сочетание — отказ; в 3 ok-случаях ломало вердикт, в 34 refused маскировало целевой отказ второй причиной; writes снят, предмет и вердикт прежние; сочетание осталось только в r40_worker_table_secret	all

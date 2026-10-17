@@ -3,8 +3,6 @@ slot:
   prefix: t
   name_env: TALLY_NAME
 worker:
-  writes:
-  - shelves
   reads:
   - testsub
   requests:

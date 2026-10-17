@@ -2133,7 +2133,7 @@ components:
           properties:
             prefix:
               type: string
-              description: Префикс имён метрик подсистемы — её имя без «_» (у testsub — "testsub"); имя ряда — <prefix>_<метрика> (урок 9 Н1.2).
+              description: Префикс имён метрик подсистемы — её имя, `-` заменён на `_` (у testsub — "testsub", у cam-x — "cam_x"; урок 2 «GET /spec»); имя ряда — <prefix>_<метрика> (урок 9 Н1.2).
             running:
               type: ['string', 'null']
               description: null, если у спеки нет console.running (урок 2 Н2).

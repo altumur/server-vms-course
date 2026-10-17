@@ -172,7 +172,7 @@ closed_key_set:
 | `place_by` | строка: `server` или поле пульса | нет — `server` |
 | `places` | `{table, where?, server_field?, lease?}`: `table` — таблица; `where` — opaque, ключи — поля таблицы; `server_field` — поле таблицы; `lease` — слово `strict` | необязателен |
 | `spread_by` | строка — поле | необязателен |
-| `group_by` | `{field, cut_at?}`: `field` — поле; `cut_at` — слово `host`, только у поля url (у иного типа — `refused:value`); скаляр — отказ | необязателен |
+| `group_by` | `{field, cut_at?}`: `field` — поле; `cut_at` — слово `host` (иное слово — `refused:value`), только у поля url: у поля иного типа — `refused:reference` (тип — свойство цели `group_by.field`, как у `unit.id`); скаляр — отказ | необязателен |
 | `near` | `{sub, by?, of?, prefer?}`: `sub` — подсистема (каталог); `by` — поле этой единицы (Н1.4); `of` — строка, поле соседа; `prefer` — opaque, поля соседа (каталог) | необязателен; в нём `sub` обязателен |
 | `home` | поле или слово `near` (тогда `near` обязателен) | необязателен |
 | `affinity` | `{field?, table?, server_field?, strict?}`: поле; таблица; поле таблицы; `strict` — opaque, ключи — поля таблицы | необязателен |
