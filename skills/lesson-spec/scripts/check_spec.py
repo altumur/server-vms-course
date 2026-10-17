@@ -231,13 +231,13 @@ SCENARIO_HEADER = ["scenario", "step", "request", "expect"]
 
 
 def scenario_counts(text):
-    """Scenarios and steps of any scenarios.tsv format: one row per step, the scenario in the first column."""
+    """Scenarios, steps and scenario names of any scenarios.tsv format: one row per step, the scenario first."""
     steps = Counter()
     for line in text.splitlines():
         cols = line.split("\t")
         if line and not line.startswith("#") and cols != SCENARIO_HEADER and cols[0]:
             steps[cols[0]] += 1
-    return len(steps), sum(steps.values())
+    return len(steps), sum(steps.values()), set(steps)
 
 
 class Check:
@@ -247,6 +247,7 @@ class Check:
         self.stats = Counter()
         self.excepted = []
         self.registry = {}
+        self.used = set()
         if exceptions is not None:
             self.load_exceptions(exceptions)
 
@@ -271,6 +272,7 @@ class Check:
         return self.registry.get((lesson, kind, value))
 
     def except_(self, path, lesson, kind, value, detail=""):
+        self.used.add((lesson, kind, value))
         reason = self.registry[(lesson, kind, value)]
         self.excepted.append(f"{lesson} {kind} {value}: {reason}" + (f" ({detail})" if detail else ""))
 
@@ -375,11 +377,27 @@ class Check:
 
     # Counts and ranges a text states about the lesson must match its tables: a fix that adds a norm or
     # a scenario has to update every place that counts them. Only unambiguous whole-lesson phrases are read.
-    def counts(self, path, text, prefix, ids, scenarios, instruction):
+    def counts(self, path, text, prefix, ids, scenarios, instruction, verdicts=None):
         def mismatch(said, actual, what):
             self.error(path, f"says {said} {what}, the tables have {actual}")
+        if verdicts is not None:
+            # A corpus phrase names files or verdicts with both the ok and the refused count: the whole table.
+            for match in re.finditer(r"(\d+)\s+(?:файл|вердикт|случа)\w*[^\n]*?(\d+)\s*`?ok`?\s*[,/]\s*(\d+)\s*`?refused",
+                                     text):
+                self.stats["count_phrases"] += 1
+                said = tuple(int(match.group(i)) for i in (1, 2, 3))
+                if said != verdicts:
+                    mismatch("%d (%d ok, %d refused)" % said, "%d (%d ok, %d refused)" % verdicts, "verdicts")
+        if scenarios is not None and path.name.endswith(".norms.md"):
+            # Every scenario row of the Н5 table names a scenario of scenarios.tsv by its number.
+            n5 = re.search(r"^## Н5\b.*?(?=^## |\Z)", text, re.S | re.M)
+            numbers = {name.split("-", 1)[0] for name in scenarios[2]}
+            for match in re.finditer(r"^\|\s*(\d{2})\s*\|", n5.group(0) if n5 else "", re.M):
+                self.stats["count_phrases"] += 1
+                if match.group(1) not in numbers:
+                    self.error(path, f"Н5 names scenario {match.group(1)}, scenarios.tsv has no such scenario")
         if scenarios is not None:
-            total, steps = scenarios
+            total, steps, _ = scenarios
             for match in re.finditer(r"(\d+)\s*сценари\w*\s*[/,]\s*(\d+)\s*шаг\w*", text):
                 self.stats["count_phrases"] += 1
                 if int(match.group(1)) != total:
@@ -420,16 +438,32 @@ class Check:
                 rows.append((line_no, cols))
         return rows
 
-    def scenarios(self, path):
+    # The structure (columns, scenario/step numbering) is checked for every format; the generic grammar of requests
+    # and expectations only for the generic one. With `own`, returns how many grammar messages its format silenced.
+    def scenarios(self, path, own=False):
         steps = Counter()
-        for line, (scenario, step, request, expect) in self.tsv(path, 4):
+        silenced = 0
+        for line, (scenario, step, request, expect) in self.tsv(path, 4, SCENARIO_HEADER):
             steps[scenario] += 1
             if not scenario or step != str(steps[scenario]):
                 self.error(path, f"line {line}: invalid scenario/step sequence")
+            before = len(self.errors)
+            self.scenario_form(path, line, request, expect)
+            if own:
+                silenced += len(self.errors) - before
+                del self.errors[before:]
+        self.stats["scenarios"] += len(steps)
+        self.stats["steps"] += sum(steps.values())
+        if not steps:
+            self.error(path, "empty scenarios table")
+        return silenced
+
+    def scenario_form(self, path, line, request, expect):
+        if True:
             if request.startswith("ASSERT "):
                 if expect or not re.fullmatch(r"ASSERT \$\w+ != \$\w+(?: \$\w+)*", request):
                     self.error(path, f"line {line}: invalid ASSERT or nonempty expectation")
-                continue
+                return
             # Deliberately invalid JSON requests are acceptance data, not parse errors here.
             if not re.match(r"^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) /", request):
                 self.error(path, f"line {line}: unsupported request form; needs format-specific check")
@@ -440,10 +474,6 @@ class Check:
                 strict_json(body)
             except (ValueError, TypeError) as exc:
                 self.error(path, f"line {line}: {exc}")
-        self.stats["scenarios"] += len(steps)
-        self.stats["steps"] += sum(steps.values())
-        if not steps:
-            self.error(path, "empty scenarios table")
 
     def verdicts(self, path):
         verdicts = {}
@@ -513,6 +543,7 @@ class Check:
         if self.exception(key, "no-openapi") is None:
             self.openapi(contract)
         elif contract.exists():
+            self.used.add((key, "no-openapi", "-"))
             self.error(contract, "stale exception no-openapi: the contract exists")
         else:
             self.except_(contract, key, "no-openapi", "-")
@@ -530,14 +561,15 @@ class Check:
             names = set()
             for entry in acceptance.iterdir():
                 names.add(entry.name)
-                if entry.name in extra:
+                if entry.name in extra and entry.name in supported:
+                    self.used.add((key, "acceptance-entry", entry.name))
+                    self.error(entry, "stale exception acceptance-entry: the entry is supported without it")
+                elif entry.name in extra:
                     self.except_(entry, key, "acceptance-entry", entry.name)
                 elif entry.name not in supported:
                     self.error(entry, "unsupported acceptance entry; add a format-specific check")
                 elif entry.name != "cases" and not entry.is_file():
                     self.error(entry, "acceptance table/document must be a file")
-            for name in sorted(extra - names):
-                self.error(acceptance / name, "stale exception acceptance-entry: no such entry")
         except OSError as exc:
             self.error(acceptance, str(exc))
         formats = 0
@@ -545,18 +577,16 @@ class Check:
         if (acceptance / "scenarios.tsv").exists():
             table = acceptance / "scenarios.tsv"
             scenarios = scenario_counts(self.read(table) or "")
-            before = len(self.errors)
-            self.scenarios(table)
-            if self.exception(key, "scenarios-format", "own") is not None:
-                suppressed = len(self.errors) - before
-                del self.errors[before:]
-                if suppressed:
-                    self.except_(table, key, "scenarios-format", "own", f"{suppressed} generic messages")
-                else:
-                    self.error(table, "stale exception scenarios-format: the generic check passes")
+            own = self.exception(key, "scenarios-format", "own") is not None
+            silenced = self.scenarios(table, own)
+            if own and silenced:
+                self.except_(table, key, "scenarios-format", "own", f"{silenced} generic grammar messages")
             formats += 1
+        verdict_counts = None
         if (acceptance / "verdicts.tsv").exists():
             verdicts = self.verdicts(acceptance / "verdicts.tsv")
+            values = list(verdicts.values()) if isinstance(verdicts, dict) else []
+            verdict_counts = (len(values), values.count("ok"), values.count("refused"))
             if (acceptance / "diagnostics.tsv").exists():
                 self.diagnostics(acceptance / "diagnostics.tsv", verdicts)
             formats += 1
@@ -568,7 +598,9 @@ class Check:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
         for path, text in texts.items():
             if path != lesson:
-                self.counts(path, text, prefix, ids, scenarios, path == instructions)
+                self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts)
+        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
+            self.error(acceptance, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
         self.stats["lessons"] += 1
 
 def main():
