@@ -14,10 +14,15 @@
 ```yaml
 console_process:                              # платформа; один на сервер; из каталога спек (строки platform/spec/*, урок 2)
   root:     CONSOLE_ROOT — подсистема, чья оболочка отдаётся на /; остальные — /mounts, без страницы
-  shell:    <sub>.shell.html — в строке спеки (shell, урок 2 Н1.5) | файл рядом со спекой; нет — console.html платформы
-  module:   /platform/console.js, /platform/console.css — один код у всех реализаций (байт в байт, ADR-0005, ADR-0019)
-  version:  ?v=<n>; MODULE_VERSION = 1; иная — 404 no such version; console.version — целое, оболочка сверяет
-  page:     CSP script-src 'self' 'sha256-…' (хэши встроенных скриптов); object-src 'none'; base-uri 'none';
+  shell:    поле shell строки спеки platform/spec/<sub> (урок 2 Н1.5); пусто или нет поля — console.html платформы;
+            файла рядом со спекой консоль не ищет: она читает каталог из хранилища
+  module:   /platform/console.js, /platform/console.css — один код у всех реализаций (байт в байт, ADR-0005, ADR-0019);
+            файлы модуля — опубликованные данные спецификации, реализация отдаёт их как есть; переписывание по
+            контракту КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md — проверка полноты контракта, не способ реализации
+  version:  ?v=<n>; MODULE_VERSION = 1; v нет, повторён или не 1 — 404 {error: "no such version"}; console.version —
+            целое, оболочка сверяет
+  page:     CSP — минимум script-src 'self' 'sha256-…' (хэши встроенных скриптов страницы, от её текста при отдаче);
+            object-src 'none'; base-uri 'none'; директивы сверх минимума — решает реализация, называет их;
             атрибутов on…= нет; экранирование h()
 module:                                        # PlatformConsole.mount(root, opts) → console
   opts:     {sections: [units, access, journal] | [domain], subsystems: [<из /mounts>], lang: ru | en, poll_s: 5}
@@ -166,6 +171,19 @@ HTTP-контракт: [09-the-console.api.openapi.yaml](09-the-console.api.open
 
 `Servers` — `{policy, servers: {имя: ServerRow}, status?}`. `ServerRow` содержит обязательные `resource`, `resource_heard_at`, `resource_url`, `space`, `labels`, `labels_node`, `labels_source`, `draining`, `decommission`, `decommissioned`, `decommission_refusal`, `decommission_warning`, `decommissionable`, `lost`, `requires_resource`, `placeable`, `why`, `workers`. Неизвестные адрес/место/время/причина и отсутствующая просьба вывода представлены `null` по схеме. `lost` — массив `{unit, place?, worker?}`; `decommission` — `{at, by, gone?}`. Метки — массивы слов. `WorkerRow` требует `worker, load, capacity, labels, state, idle_by_policy, hung, name_conflict`; `name_conflict` — boolean. Необязательные детали и их типы закрыто перечислены в схеме. `status` выводит объявленные спецификацией значения JSON, не произвольные секретные поля.
 
+**Выдачи консоли — вывод из строк и пульсов** (часы — монотонные часы консоли; первый взгляд на версию — как свежий):
+
+| Выдача | Правило |
+|---|---|
+| `/metrics` у root | ряды всех подсистем каталога и ряды платформы `w2c_*` (Н3); у `/<sub>/metrics` — ряды только этой подсистемы, без `w2c_*` |
+| ряд `<sub>_<console.running>` | число единиц из прочитанных пульсов воркеров; пульсы прочитаны и живых нет — `0`; неответ хранилища — 503 на весь `/metrics` |
+| `ServerRow.resource` | пульс ресурса менялся < 45 с — `live`; пульс старше, строка `platform/doors/<s>` менялась < 45 с — `unreachable`; нет ни пульса, ни строки двери — `unknown`; иначе — `silent` |
+| `WorkerRow.state` | пульс воркера менялся < 45 с — `live`, иначе `stale` |
+| `WorkerRow.capacity` | поле пульса `placement.capacity.from`; поля нет — `capacity.default`; поле не число — `null`: воркер не принимает новых единиц (урок 4 Н1.3) |
+| `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель (урок 4 Н3 «выбрать»), иначе `false` |
+| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` (< 45 с) или `silent`; `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть; нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
+| `WherePlace` без подписанта двери | поля `door` нет совсем (не `null`) |
+
 `/resources` — объект по имени сервера с полными `ResourceRow`: обязательны `server, ts, url, schema, build, usage, usage_at, space, volumes, units, mirrors, short, state`; диагностические расширения перечислены в контракте. Это наблюдение пульсов ресурса, а не удостоверение доступности каждого объекта. `/where/<table>/<place>?unit=<id>` возвращает `{worker, place, server, door?}` либо 404 `{unreachable}` с одноимённым значением заголовка `X-Unreachable`. Неизвестная таблица — 404 до проверки `unit`, известная без `unit` — 400.
 
 Общие отказы консоли — формы М10/2: `{detail, error}` с установленными значениями `error`; 503 включает `denied` при потере доверия и `busy` с `Retry-After: 1` при заполнении полосы. 429 имеет `Retry-After`. Специальные тела: `NoVersion` — `{error: "no such version"}`; `MountedPage` — `{detail, error: "is mounted"}`; `NotPlaced` — `{reason}`. 400/408/413 описывают отказ чтения; тело ограничено по реально принятым байтам, короткое даёт 400. `/session` GET анонимному даёт 200 с состоянием; плохая попытка POST — 401, открытый режим — 400, неверный аварийный вход — 403. DELETE снимает обе куки. Полоса, framing, доверие/петля, личность, Origin по куке, гранты и чтение проверяются в порядке Н3; отказ не имеет побочных записей двери.
@@ -270,9 +288,17 @@ door.routes, доступным подписантом и подтверждён
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
 metrics[]:  закрытый перечень ключей элемента (загрузчик урока 2 отказывает иным): name, type, from, agg, equals, when, default,
             live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
-платформы, один раз (root): w2c_resources_live; w2c_resource_heartbeats_garbled; w2c_resource_full{server};
-  w2c_resource_short_bytes{server}; w2c_resource_waits*; w2c_resource_rows_garbled; w2c_resource_restore_*; w2c_resource_mirror_*;
-  w2c_requests_expired_total{sub}; w2c_requests_unknown_total{sub}
+платформы, один раз (root); источник — пульсы ресурсов урока 8 Н1.4 и уборка просьб этой консоли:
+  w2c_resources_live — ресурсов, чей пульс менялся < 45 с; w2c_resource_heartbeats_garbled — нечитаемых пульсов ресурсов
+  с запуска процесса консоли; w2c_resource_full{server} — 1 при space.full пульса; w2c_resource_short_bytes{server} — поле
+  short: сколько байтов отметка просила освободить и не смогла; w2c_resource_waits{server} — ожиданий /events/wait сейчас,
+  w2c_resource_waits_held_total, _full_total, _replaced_total{server} — с запуска ресурса (поле waits, урок 8 Н3
+  «/events/wait»); w2c_resource_rows_garbled{server,table} — нечитаемых строк таблиц, прочитанных ресурсом;
+  w2c_resource_restore_left{server}, w2c_resource_restore_failures_total{server} — поле restore (восстановление
+  событий с копий соседей, урок 8 Н1.4 mirror); w2c_resource_mirror_failures_total{server},
+  w2c_resource_mirror_too_big_total{server} — поле mirror (урок 8 Н1.4 mirror, PEER_FAILS);
+  w2c_requests_expired_total{sub}, w2c_requests_unknown_total{sub} — просьб, которые уборка этой консоли закрыла
+  expired и unknown с запуска процесса (урок 8 Н3 sweep)
 значения — по значению, не по написанию в пульсе: целое — целым (61, не 61.0; age тоже 10), нецелое — кратчайшей
   записью, читаемой обратно в то же число (7.5; экспонента допустима: 1e+21, 1e-07); одно правило для отсчёта,
   le корзины и слова equals (ADR-0055); подписи экранированы
@@ -296,7 +322,9 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | нет домена, не петля | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | подключить домен |
 | ключи были, проверить нечем | 503 | `{detail: "…admits nobody", error: denied}` | восстановить доверие |
 | чужой Origin на действующем запросе по куке | 403 | `{detail, error: denied}` | — |
-| `/session POST` у открытой консоли | 400 | `{detail, error}` | — |
+| `/session POST` у открытой консоли | 400 | `{detail, error: "this console is open"}` | — |
+| `/session GET` и `DELETE` у открытой консоли | 200 | GET — `{open: true, login_url}`; DELETE — `{out: true}` | — |
+| общий предел входа консоли: запросов одной личности больше предела | 429 | ConsoleRefusal `{detail, error}`, `Retry-After` | ждать срока; значение предела — решает реализация (п. 2) |
 | аварийный вход: предел | 429 | `Retry-After` | ждать |
 | тело: chunked / больше / медленно / коротко | 400 / 413 / 408 / 400 | `{detail, error}` Н2 | ошибка клиента |
 | полоса занята | 503 | `{detail, error: busy}`, `Retry-After: 1` | повторить |
@@ -330,8 +358,8 @@ metrics[]:  закрытый перечень ключей элемента (з�
 
 Реализация обязана назвать в своём описании:
 
-1. **откуда берётся оболочка** (строка спеки `shell` — урок 2; файл рядом со спекой) и `CONSOLE_ROOT`;
-2. **пределы**: тело (≥ 1 MiB), блоб, сессия (16 KiB), полосы и их размеры, таймауты;
+1. **как задаётся `CONSOLE_ROOT`**; источник оболочки — норма Н1.1 (поле `shell` строки спеки);
+2. **пределы**: тело (≥ 1 MiB), блоб, сессия (16 KiB), полосы и их размеры, таймауты, общий предел входа (429, Н4);
 3. **кэши** `/where` (directory 5 с), эпох (3 с), `/domain` пересылки;
 4. **отладочная личность** (Н1.3 `identity` п. 4) и аварийный вход — предел попыток;
 5. **дополнительные ряды `/metrics`** сверх Н3;

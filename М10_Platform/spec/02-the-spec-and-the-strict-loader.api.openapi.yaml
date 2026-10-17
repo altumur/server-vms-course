@@ -53,7 +53,7 @@ paths:
         '413':
           description: Тело больше предела консоли; урок 9 Н4; HEAD не содержит тела
         '429':
-          description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет; HEAD не содержит тела
+          description: Общий предел входа консоли (урок 9 Н4); новой квоты на чтение спеки нет; HEAD не содержит тела
           headers:
             Retry-After:
               description: Срок повтора по правилу предела входа.
@@ -164,7 +164,7 @@ components:
           properties:
             prefix:
               type: string
-              description: Префикс имён метрик подсистемы — "<name>_" (урок 9 Н1.2, running_gauge = <name>_<метрика>).
+              description: Префикс имён метрик подсистемы — её имя без «_» (у testsub — "testsub"); имя ряда — <prefix>_<метрика> (урок 9 Н1.2).
             running:
               type: ['string', 'null']
               description: null, если у спеки нет console.running (Н2).
@@ -433,7 +433,7 @@ components:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     RateLimited:
-      description: Общий предел входа консоли из урока 9; новой квоты на чтение спеки нет.
+      description: Общий предел входа консоли (урок 9 Н4); новой квоты на чтение спеки нет.
       headers:
         Retry-After:
           description: Срок повтора по правилу предела входа.
