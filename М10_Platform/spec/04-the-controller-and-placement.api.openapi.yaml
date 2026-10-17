@@ -85,10 +85,10 @@ paths:
         '400':
           description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+          description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes; HEAD не содержит
             тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+          description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied; HEAD не содержит тела
         '404':
           description: No route; lesson 9; HEAD не содержит тела
         '405':
@@ -215,10 +215,10 @@ paths:
         '400':
           description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+          description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes; HEAD не содержит
             тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+          description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied; HEAD не содержит тела
         '404':
           description: No route; lesson 9; HEAD не содержит тела
         '405':
@@ -381,10 +381,10 @@ paths:
         '400':
           description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+          description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes; HEAD не содержит
             тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+          description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied; HEAD не содержит тела
         '404':
           description: Unknown server, or no such route. N4; HEAD не содержит тела
         '405':
@@ -542,10 +542,10 @@ paths:
         '400':
           description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+          description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes; HEAD не содержит
             тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+          description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied; HEAD не содержит тела
         '404':
           description: No route; lesson 9; HEAD не содержит тела
         '405':
@@ -628,10 +628,10 @@ paths:
         '400':
           description: Invalid request form or body transport; lessons 4 and 9; HEAD не содержит тела
         '401':
-          description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3; HEAD не содержит
+          description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes; HEAD не содержит
             тела
         '403':
-          description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой; HEAD не содержит тела
+          description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied; HEAD не содержит тела
         '404':
           description: No placement, or no such route; HEAD не содержит тела
         '405':
@@ -1024,13 +1024,13 @@ components:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     Unauthenticated:
-      description: Общий отказ личности из урока 9; доступность открытых путей определяется его Н1.3.
+      description: Не личность — урок 9 Н4, error denied; открытые пути — урок 9 Н1.3 open_routes.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Denied'
     Denied:
-      description: Общий отказ доступа из урока 9; применяется по условиям его сторожевой.
+      description: Отказ доступа — урок 9 Н4 («гранта нет» по Н1.3 need, «нет домена, не петля», чужой Origin по Н1.3 csrf), error denied.
       content:
         application/json:
           schema:

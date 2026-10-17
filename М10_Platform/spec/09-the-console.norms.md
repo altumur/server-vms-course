@@ -77,7 +77,11 @@ gate:
     1. кука аварийного входа w2c_glass (сессия в памяти, 15 мин)
     2. X-Agent-Signature — агент домена: только двери единиц (урок М11)
     3. Authorization: Bearer <токен> | кука w2c_token → домен: {user, until, grants}
-    4. отладочная личность ADR-0050 — только с петли
+    4. отладочная личность (ADR-0050): задан W2C_DEBUG_PERSON=<имя>, запрос без токена и без куки, адрес TCP-соединения
+       127.0.0.1 или ::1 (заголовки адреса не читаются) → этот человек со своими grants из domain/grants; человека нет
+       или он выключен — как без входа; с другого адреса — как без переменной; доверенный прокси на петле и заданная
+       переменная → процесс не стартует; видно: /session отдаёт debug: true, при старте тревога session.debug_open,
+       каждая правка — в журнал с debug: true
     5. иначе 401
   x_user:   заголовок X-User стирается всегда; вписывается доказанное имя
   caps:     view < edit < admin
@@ -92,7 +96,7 @@ gate:
     по телу — rights.unit_of, reach, names добавляют единицы (урок 6)
   scope:    грант на * | unit:<sub>/<id> | labels:<…>; грант на единицу или на её about-единицу
   csrf:     действующий запрос по куке с чужим Origin → 403
-  body:     предел тела (≥ 1 MiB; blob — урок 10); chunked → 400; медленно → 408; больше → 413
+  body:     предел тела (≥ 1 MiB; blob PUT /<rows>/<id>/<blob_field> — 32 МиБ, урок 10 Н1.4); chunked → 400; медленно → 408; больше → 413
   refusal:  {detail, error: denied}; 403 → журнал access.denied
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
               /api/held, /api/backup, /api/prepare, /api/take]
@@ -107,14 +111,14 @@ session:
 ### Н1.4 Что зовёт модуль — закрытый список
 
 ```yaml
-reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show),
-         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema, /events, /metrics
-         (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub>
+reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
+         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
+         /events, /metrics (только running_gauge и workers_gauge), /domain/*, /api/held, /domain/shared/<sub> (эти три — М11)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (М11), POST/DELETE /session, /session/break-glass, login_url
-never:   /{sub}/requests, /api/backup, /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
-order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> → /drain → /schema
-         → /domain (+ /domain/alarms) → /api/held → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
+never:   /{sub}/requests, /api/backup (М11), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
+order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (М11) → /drain → /schema
+         → /domain (+ /domain/alarms; М11) → /api/held (М11) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
 
 ### Н1.5 Контракт модуля с оболочкой
@@ -158,7 +162,7 @@ HTTP-контракт: [09-the-console.api.openapi.yaml](09-the-console.api.open
 
 ### Полные формы и границы Н2
 
-Все JSON-ответы собственных дверей описаны компонентами OpenAPI. Каждый `GET` консоли — своих дверей и дверей других уроков, которые консоль отдаёт (уроки 2, 3, 4, 8, 10), — отвечает и на `HEAD`: тот же код и заголовки, без тела; каждый контракт, объявляющий такой URL, перечисляет `head`. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
+Все JSON-ответы собственных дверей описаны компонентами OpenAPI. Каждый `GET` консоли — своих дверей и дверей других уроков, которые консоль отдаёт (`/spec` — урок 2; `/<rows>`, `/<rows>/<id>` — 3; `/policy`, `/drain`, `/unplaceable`, `/where/<id>` — 4; `/events` — 8; `/schema`, `/<table>` — 10), — отвечает и на `HEAD`: тот же код и заголовки, без тела; каждый контракт, объявляющий такой URL, перечисляет `head`. HTML, JS, CSS и метрики — строки соответствующего media type, а не JSON. Успешный `/healthz` — ровно `{ok: true}`. `/mounts` — `{root, mounts: {имя подсистемы: SpecView}}`. `SpecView` взят из М10/2 без ослабления.
 
 `Servers` — `{policy, servers: {имя: ServerRow}, status?}`. `ServerRow` содержит обязательные `resource`, `resource_heard_at`, `resource_url`, `space`, `labels`, `labels_node`, `labels_source`, `draining`, `decommission`, `decommissioned`, `decommission_refusal`, `decommission_warning`, `decommissionable`, `lost`, `requires_resource`, `placeable`, `why`, `workers`. Неизвестные адрес/место/время/причина и отсутствующая просьба вывода представлены `null` по схеме. `lost` — массив `{unit, place?, worker?}`; `decommission` — `{at, by, gone?}`. Метки — массивы слов. `WorkerRow` требует `worker, load, capacity, labels, state, idle_by_policy, hung, name_conflict`; `name_conflict` — boolean. Необязательные детали и их типы закрыто перечислены в схеме. `status` выводит объявленные спецификацией значения JSON, не произвольные секретные поля.
 
@@ -269,7 +273,9 @@ metrics[]:  закрытый перечень ключей элемента (з�
 платформы, один раз (root): w2c_resources_live; w2c_resource_heartbeats_garbled; w2c_resource_full{server};
   w2c_resource_short_bytes{server}; w2c_resource_waits*; w2c_resource_rows_garbled; w2c_resource_restore_*; w2c_resource_mirror_*;
   w2c_requests_expired_total{sub}; w2c_requests_unknown_total{sub}
-значения — по ADR-0055; подписи экранированы
+значения — по значению, не по написанию в пульсе: целое — целым (61, не 61.0; age тоже 10), нецелое — кратчайшей
+  записью, читаемой обратно в то же число (7.5; экспонента допустима: 1e+21, 1e-07); одно правило для отсчёта,
+  le корзины и слова equals (ADR-0055); подписи экранированы
 ```
 
 **Граница наблюдения.** Ряды могут относиться к разным моментам; отсутствие достоверных данных не заменяется нулём. Отказ обязательного сбора — 503; диагностические ряды могут отдельно показывать неизвестность по своему контракту. Записи — двери уроков 3, 4, 8 со своими `cas` и ключами.
@@ -316,7 +322,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live` | Н3 |
 | 06 | отказы: неизвестный путь 404 `no such path`; метод 405; `/counters/c4/x` 404; смонтированная `/testsub2/` 404 | Н4 |
 
-Проверяются чтением и структурно: модуль — по контракту `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен) — одно свидетельство для всех реализаций, потому что модуль у них один (ADR-0005); сторожевая с доменом (401/403/503, порядок, CSP) — стенд М11; `/where` с дверью — testsub2 (`door.routes`), стенд урока 11; `servers.status`/`show` — testsub2 (`servers.show` по `shelves`, `servers.status`), стенд урока 11; правило адреса без домена — стенд урока 11.
+Проверяются чтением и структурно: модуль — по контракту `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен) — одно свидетельство для всех реализаций, потому что модуль у них один (ADR-0005); сторожевая с доменом (401/403/503, порядок, CSP) — стенд М11; `/where` с дверью — testsub2 (`door: {routes: [read, play]}`), чтением (стенд урока 11: воркера testsub2 в его сценариях нет); `servers.status`/`show` — testsub2 (`servers.show` по `shelves`, `servers.status`), чтением (стенд урока 11, сценария нет); правило адреса без домена (Н1.3 `open`; урок 11 Н1.6 `roles`) — чтением (стенд урока 11, сценария нет).
 
 ---
 
@@ -327,7 +333,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 1. **откуда берётся оболочка** (строка спеки `shell` — урок 2; файл рядом со спекой) и `CONSOLE_ROOT`;
 2. **пределы**: тело (≥ 1 MiB), блоб, сессия (16 KiB), полосы и их размеры, таймауты;
 3. **кэши** `/where` (directory 5 с), эпох (3 с), `/domain` пересылки;
-4. **отладочная личность** ADR-0050 и аварийный вход — предел попыток;
+4. **отладочная личность** (Н1.3 `identity` п. 4) и аварийный вход — предел попыток;
 5. **дополнительные ряды `/metrics`** сверх Н3;
 6. **пересылка `/domain/*`** держателю: заголовки, один переход;
 7. **CSP** сверх минимума Н1.1.
@@ -341,11 +347,11 @@ metrics[]:  закрытый перечень ключей элемента (з�
 - [ ] **М10/9-03** `display`, `servers.show/status`, `console.running` — слова по Н1.2; `display.actions` снят; `/spec` отдаёт `display` как написано — сц. 02; урок 2
 - [ ] **М10/9-04** сторожевая Н1.3: порядок, `need` по пути до тела, `X-User` никогда, открыта только с петли, закрыта при потере доверия, `{detail, error: denied}`, журнал — сц. 03; стенд М11
 - [ ] **М10/9-05** `/session` с `grants` — чтением (стенд М11); модуль `may` по ним
-- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется чтением: вызовы модуля и их порядок по `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; причина — модуль один у всех реализаций, двери порядок загрузки не показывают
+- [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется чтением: вызовы модуля и их порядок — по Н1.4 `reads`/`writes`/`never`/`order`; причина — модуль один у всех реализаций, двери порядок загрузки не показывают
 - [ ] **М10/9-07** контракт оболочки Н1.5: `api` с ключом логического действия и повторами только по контракту владельца, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери)
 - [ ] **М10/9-08** `/servers`, `/resources` и `WorkerRow` по Н2/Н3 — сц. 04; стенд урока 5; ResourceRow — чтением обязательных полей Н2: сц.04/6 видит только пустой объект
 - [ ] **М10/9-09** `/where`: эффективное размещение через intent/placement/intent по М10/4 (чтением по README приёмки 09, в TSV только отсутствие); 404 с `reason`, `door` только по view, токен Ed25519 120 с, журнал `door.issued` — сц. 04; стенд М12A; where(table,place) — чтением этого Н3: TSV04 проверяет лишь неизвестную таблицу, не удержание и токен
-- [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, ADR-0055 — сц. 05
+- [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, число по значению (Н3 «/metrics — текст», ADR-0055) — сц. 05
 - [ ] **М10/9-11** общие коды Н4, полосы, пределы тела — сц. 06; чтением
 - [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — проверяется чтением: тест границы реализации (список маршрутов консоли против слов потока и архива); причина — отсутствие маршрута запросом не показать
 

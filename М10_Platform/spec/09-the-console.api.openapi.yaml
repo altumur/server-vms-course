@@ -3247,7 +3247,7 @@ x-owned-paths:
   М10/3: GET/POST /{rows}, PUT/DELETE /{rows}/{id}; базовый префикс root или /{sub}
   М10/4: /policy, /drain, /unplaceable и /where/{id}; показанные формы Where/Unplaceable — точные копии
   М10/8: /events, /marks, /requests, /asked
-  М10/10: /schema, blob и таблицы
+  М10/10: GET/PUT /schema, PUT /{rows}/{id}/{blob_field}, GET/POST /{table}, GET/DELETE /{table}/{name}
   М11 / ADR-0066: /domain/* и /api/held, /api/backup, /api/prepare, /api/take — самостоятельные двери домена; не
     заглушки JSON этого контракта
 x-mounting: Маршруты подсистемы /spec, /servers, /unplaceable, /where, /metrics также имеют префикс /<sub>. /session,

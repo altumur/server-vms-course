@@ -60,7 +60,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9); HEAD не содержит
+          description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9 Н4, строки «полоса занята» и «ключи были, проверить нечем»); HEAD не содержит
             тела
           headers:
             Retry-After:
@@ -148,7 +148,7 @@ components:
             $ref: '#/components/schemas/JsonValue'
         places:
           type: object
-          description: placement.places спеки, как загружен (урок 4); отсутствует, если раздела нет.
+          description: placement.places спеки, как загружен (смысл — урок 4 Н1.3); отсутствует, если раздела нет.
           additionalProperties:
             $ref: '#/components/schemas/JsonValue'
         domain:
@@ -197,7 +197,7 @@ components:
           type: string
         error:
           type: string
-      description: Общая форма отказа консоли урока 9; это не диагностика загрузчика и не Fault хранилища.
+      description: Общая форма отказа консоли урока 9 Н4 `{detail, error}`; это не диагностика загрузчика и не Fault хранилища.
     Denied:
       allOf:
       - $ref: '#/components/schemas/ConsoleRefusal'
@@ -444,7 +444,7 @@ components:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     Unavailable:
-      description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9).
+      description: Общий отказ консоли — busy с Retry-After 1 либо denied при потере доверия (урок 9 Н4, строки «полоса занята» и «ключи были, проверить нечем»).
       headers:
         Retry-After:
           description: Обязателен со значением 1 при busy; не обещан для остальных причин.

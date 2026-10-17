@@ -6,8 +6,8 @@ info:
   version: "1"
   description: >-
     Пути относительно консоли выбранной подсистемы; rows равен unit.rows.
-    Список читает модуль урока 9; контракт списка и формы строк принадлежат этому уроку.
-    Общие ответы консоли из урока 9 перечислены у каждой операции явно.
+    Список читает модуль консоли (урок 9 Н1.4, вызовы /<rows> и /<sub>/<rows>); контракт списка и формы строк принадлежат этому уроку.
+    Общие ответы консоли (урок 9 Н2 «Общие коды», Н4) перечислены у каждой операции явно.
 paths:
   /{rows}:
     servers:
@@ -65,7 +65,7 @@ paths:
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/WriteUnavailable"}
     get:
-      summary: все единицы и конфигурация, доступные по view — урок 9
+      summary: все единицы и конфигурация, доступные по view (урок 9 Н1.3 need)
       responses:
         "200":
           description: >-
@@ -84,7 +84,7 @@ paths:
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/Unavailable"}
     head:
-      summary: 'HEAD: все единицы и конфигурация, доступные по view — урок 9'
+      summary: 'HEAD: все единицы и конфигурация, доступные по view (урок 9 Н1.3 need)'
       responses:
         '200':
           description: rows — единицы из пульсов с данными воркера; configured — строки конфигурации с масками секретов;
@@ -95,10 +95,10 @@ paths:
         '401':
           description: Личность не подтверждена; урок 9 Н1.3 и Н4; HEAD не содержит тела
         '403':
-          description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9; HEAD не содержит тела
+          description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9 Н4 «гранта нет», «чужой Origin на действующем запросе по куке», «нет домена, не петля»; HEAD не содержит тела
         '404':
           description: Нет строки или надгробие у PUT/DELETE — error no such unit. Неизвестный маршрут — detail no such
-            route, error no such path. Лишний сегмент — текст a unit's path names one unit (урок 9); HEAD не содержит
+            route, error no such path. Лишний сегмент — текст a unit's path names one unit (урок 9 Н2 «Общие коды»); HEAD не содержит
             тела
         '405':
           description: Метод не разрешён; отдельного GET одной единицы нет; HEAD не содержит тела
@@ -249,7 +249,9 @@ components:
         Только поля unit.fields; дополнительные имена здесь нужны для произвольной спеки,
         но неизвестное ей поле отказывается. Типы, required, enum, url, blob, json и
         fixed/inherit проверяются по Н1 и в порядке Н3, а не одним валидатором общей схемы.
-        PUT содержит изменяемые поля; пустой или null секрет сохраняет прежний (урок 7).
+        PUT содержит изменяемые поля; пустой или null секрет сохраняет прежний (урок 7 Н3 «создать/править», шаг 3;
+        при смене поля из bound_to — 400 «must be given anew»).
+        Платформенные имена worker, placement добавлены М10/4; phase, observed_revision — М10/5.
     Unit:
       type: object
       required: [id, revision]
@@ -262,7 +264,7 @@ components:
       description: >-
         Типизированная строка единицы. Остальные поля задаёт unit.fields:
         int/float — JSON-числа, bool — булево, list — массив, json — JSON-значение,
-        string/url/blob — строки; секрет пустой или маска урока 7.
+        string/url/blob — строки; секрет пустой или маска "***" (урок 7 Н1.1 mask, добавлено М10/7).
         Отсутствующий inherit и json null не добавляются в ответ.
         Открытый набор имён поддерживает произвольную спеку, а не разрешает чужие поля.
     CreatedUnit:
@@ -330,7 +332,7 @@ components:
           type: string
       additionalProperties: true
       description: Элемент status пульса (урок 5 Н1.1) плюс worker, server, age, worker_state (собственный
-        контракт М10/3 Н2; фильтрация view — М10/9). Слова подсистемы остаются непрозрачными. Смысл свежести
+        контракт М10/3 Н2; фильтрация по view — М10/9 Н1.3 need). Слова подсистемы остаются непрозрачными. Смысл свежести
         и формирования списка — уроки 5 и 9.
     Refusal:
       type: object
@@ -400,7 +402,7 @@ components:
     BadRequest:
       description: >-
         Отказ формы по Н4; порядок Н3. Также общий отказ чтения тела консоли:
-        chunked или короткое тело (урок 9). Причины без fault передают detail и error.
+        chunked или короткое тело (урок 9 Н1.3 body, Н4 «тело: chunked / больше / медленно / коротко»). Причины без fault передают detail и error.
         Отказ полного ключа хранилища — error badkey без fault; завершение POST по Н3.
       content:
         application/json:
@@ -411,7 +413,7 @@ components:
         application/json:
           schema: {$ref: "#/components/schemas/Denied"}
     Denied:
-      description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9.
+      description: Нет гранта, недопустимый Origin или без домена не с петли; урок 9 Н4 «гранта нет», «чужой Origin на действующем запросе по куке», «нет домена, не петля».
       content:
         application/json:
           schema: {$ref: "#/components/schemas/Denied"}
@@ -419,7 +421,7 @@ components:
       description: >-
         Нет строки или надгробие у PUT/DELETE — error no such unit.
         Неизвестный маршрут — detail no such route, error no such path.
-        Лишний сегмент — текст a unit's path names one unit (урок 9).
+        Лишний сегмент — текст a unit's path names one unit (урок 9 Н2 «Общие коды»).
       content:
         application/json:
           schema: {$ref: "#/components/schemas/TextRefusal"}
@@ -450,8 +452,9 @@ components:
     Unavailable:
       description: >-
         Хранилище недоступно — error с текстом store unavailable; ответ под ключом не запоминается.
-        Также полоса занята — error busy и Retry-After 1,
-        либо ключи были, но проверить доверие нечем — error denied (урок 9).
+        Также полоса занята — error busy и Retry-After 1 (урок 9 Н4 «полоса занята»),
+        либо ключи были, но проверить доверие нечем — error denied (урок 9 Н1.3 shut, Н4 «ключи были, проверить нечем»);
+        слова busy и denied добавлены М10/9.
       headers:
         Retry-After:
           description: Обязателен со значением 1 при busy; не обещан для остальных причин.
@@ -461,7 +464,7 @@ components:
           schema: {$ref: "#/components/schemas/Unavailable"}
     WriteUnavailable:
       description: >-
-        Общий 503 по Unavailable либо заданное, но нечитаемое кольцо секретов по М10/7.
+        Общий 503 по Unavailable либо заданное, но нечитаемое кольцо секретов по М10/7 Н4 («ключ задан и не читается, любой POST/PUT единицы»).
         Ответ 5xx как done не сохраняется; состояние pending — по М10/3 Н3.
       headers:
         Retry-After:

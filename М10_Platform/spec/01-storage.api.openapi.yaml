@@ -22,7 +22,7 @@ paths:
   /v1/list:
     get:
       summary: перечислить
-      description: После проверки личности по М10/6; право read на значения не требуется.
+      description: После проверки личности по М10/6 Н3 «проверить»; право read на значения не требуется.
       parameters:
         - name: prefix
           in: query
@@ -115,7 +115,7 @@ components:
       type: object
       required: [op, key]
       properties:
-        op: {type: string, enum: [put, delete]}
+        op: {type: string, enum: [put, delete], description: "op floor — отдельная схема FloorCmd урока 11 на admin-сокете лидера (добавлено М10/11 Н2)"}
         key: {$ref: "#/components/schemas/Key"}
         cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
         guard:
@@ -249,7 +249,7 @@ components:
               - $ref: "#/components/schemas/BadRequestFault"
               - $ref: "#/components/schemas/BadKeyFault"
     Forbidden:
-      description: Личность не допускается по М10/6 либо нет прав чтения, записи, удаления или чтения стража; list не требует права read.
+      description: Личность не допускается по М10/6 Н3 «проверить» либо allowed М10/6 Н1.3 отказал в чтении, записи, удалении или чтении стража; list не требует права read.
       content:
         application/json:
           schema:

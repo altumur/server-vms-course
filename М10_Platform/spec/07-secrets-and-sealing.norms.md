@@ -261,8 +261,8 @@ print:     отпечаток идемпотентности тела с сек�
 secrets:                                     # раздел спеки (форма — урок 2)
   readers: {<строка или префикс>: [<роль>…]} # свои секретные строки и кто их читает
   reads:   [<строка или префикс>…]           # чужие секретные строки, которые читает воркер этой спеки
-roles:     [console, controller, worker, domainpart, domain, domainagent, resource, domainconsole]   # закрыто; domainpart — роль платформы, спеки подсистем её не включают (процесса этой роли нет, урок 6 Н1.1)
-platform_readers:                            # общая таблица platform_lists.tsv
+roles:     [console, controller, worker, domainpart, domain, domainagent, resource, domainconsole]   # закрыто; domainpart, domain, domainagent, domainconsole — роли домена (М11); domainpart — роль платформы, спеки подсистем её не включают (процесса этой роли нет, урок 6 Н1.1)
+platform_readers:                            # общая таблица platform_lists.tsv; строки domain/* — М11
   domain/break-glass/: [console, domain, domainagent]
   domain/signer:       [domain]
   domain/signer-pending: [domain]           # точное имя, не покрыто `domain/signer`
@@ -273,7 +273,7 @@ platform_readers:                            # общая таблица platfor
   domain/backup-taken: [console, domain, domainagent]   # семья копии: три точных имени и префикс, читатели те же, что у backup
   domain/backup-doc:   [console, domain, domainagent]
   domain/backups/:     [console, domain, domainagent]
-  door/signer:         []                    # читателя называет спека (testsub2: [console])
+  door/signer:         []                    # добавлено М10/9 (подписант токена Н3 «/where/<id>»); читателя называет спека (testsub2: [console])
 rule:      объявления secrets.readers/reads не содержат буквальный `*`, не начинаются с `!` или `delete:`;
            непредставимое объявление отвергается загрузчиком/генератором до выдачи файла, не экранируется и не усекается.
            Ограничение относится к объявлениям прав, не к общему ключу хранилища М10/1.
@@ -317,7 +317,7 @@ never:
 | Вход | Полное тело по контракту владельца | Ограничение этого урока |
 |---|---|---|
 | POST единицы, 201; PUT, 200 | CreatedUnit / UpdatedUnit | Непустые секреты маской; `id`, `revision` и прочие поля по М10/3; сохранённый ответ POST также с масками |
-| GET списка единиц, 200 | UnitList (`rows`, `configured`) | Маска на любой глубине; таблица отдаётся без секретных полей, её дверь принадлежит М10/10 |
+| GET списка единиц, 200 | UnitList (`rows`, `configured`) | Маска на любой глубине; таблица отдаётся без секретных полей, её дверь `GET /<table>` — М10/10 Н2 |
 | POST/PUT, 400 | `{detail, error}`; при неверном url также `fault: bad_url` | Обе строки обязательны, значение секрета не повторяется; маска, конверт и смена bound_to не получают `bad_url`; только POST без кольца с непустым секретом — sealing key required без fault по Н4 |
 | POST/PUT, 503 при нечитаемом кольце | SealingUnavailable: `{detail, error: "unavailable"}` | detail — `the sealing key is set and does not read`; без fault; общие отказы хранилища/полосы сохраняют собственные формы М10/3 |
 | GET строки хранилища | Row либо ForbiddenFault М10/1 | У читателя в items конверт; у нечитателя 403, значение не выдаётся |
