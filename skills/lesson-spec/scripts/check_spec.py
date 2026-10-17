@@ -448,7 +448,7 @@ class Check:
         section = re.search(r"Словарь директив.*?(?=^## |\Z)", text or "", re.S | re.M)
         if section is None:
             return
-        known = set(re.findall(r"`(@[a-z]+)", section.group(0)))
+        known = set(re.findall(r"(?<![\w@])(@[a-z]+)", section.group(0)))
         used = set()
         for line in (self.read(table) or "").splitlines():
             if line and not line.startswith("#"):
