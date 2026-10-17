@@ -42,7 +42,7 @@ paths:
               schema: {$ref: "#/components/schemas/Example"}
 components:
   schemas:
-    Example: {type: object}
+    Example: {type: object, additionalProperties: false}
 ''')
         self.acceptance = self.root / "Source/tests/testdata/acceptance/М12A_Example/01"
         self.acceptance.mkdir(parents=True)
@@ -133,6 +133,31 @@ components:
         self.replace(self.api, 'version: "1"', 'version: 1')
         self.assertTrue(self.check().errors)
 
+    def test_object_schemas_say_their_openness(self):
+        doc = yaml.load(self.api.read_text(), Loader=UniqueLoader)
+        schemas = doc["components"]["schemas"]
+        cases = [
+            ({"type": "object"}, False),
+            ({"type": "object", "additionalProperties": {"type": "string"}}, True),
+            ({"properties": {"a": {"type": "object", "additionalProperties": True}}, "additionalProperties": False}, True),
+            ({"properties": {"a": {"type": "object"}}, "additionalProperties": False}, False),
+            ({"allOf": [{"$ref": "#/components/schemas/Base"}, {"properties": {"b": {"type": "string"}}}]}, False),
+            ({"allOf": [{"$ref": "#/components/schemas/Base"}, {"properties": {"b": {"type": "string"}}}],
+              "unevaluatedProperties": False}, True),
+            ({"oneOf": [{"type": "object", "properties": {"a": {"const": 1}}},
+                        {"type": "object", "properties": {"b": {"const": 2}}}], "unevaluatedProperties": False}, True),
+            ({"type": "object", "additionalProperties": False, "examples": [{"type": "object"}]}, True),
+        ]
+        for example, valid in cases:
+            with self.subTest(example=example):
+                schemas["Example"] = example
+                schemas.pop("Base", None)
+                if "Base" in str(example):  # a base reached only as a member of a composition stays unsaid
+                    schemas["Base"] = {"type": "object", "properties": {"a": {"type": "string"}}}
+                self.api.write_text(yaml.safe_dump(doc, allow_unicode=True))
+                errors = [e for e in self.check().errors if "openness" in e]
+                self.assertEqual(not errors, valid, errors)
+
     def test_dangling_reference(self):
         self.replace(self.api, "#/components/schemas/Example", "#/components/schemas/Missing")
         self.assertTrue(self.check().errors)
@@ -146,8 +171,8 @@ components:
         self.assertTrue(self.check().errors)
 
     def test_yaml12_words_are_distinct_string_property_names(self):
-        self.replace(self.api, "Example: {type: object}",
-                     "Example: {type: object, properties: {on: {type: string}, yes: {type: string}, "
+        self.replace(self.api, "Example: {type: object, additionalProperties: false}",
+                     "Example: {type: object, additionalProperties: false, properties: {on: {type: string}, yes: {type: string}, "
                      "off: {type: string}, no: {type: string}}}")
         self.assertEqual(self.check().errors, [])
         self.assert_cli(0)
@@ -178,8 +203,8 @@ components:
             for spelling in [symbol, '"' + symbol + '"']:
                 with self.subTest(spelling=spelling):
                     self.api.write_text(original.replace(
-                        "Example: {type: object}",
-                        "Example: {type: object, properties: {" + spelling + ": {type: string}}, "
+                        "Example: {type: object, additionalProperties: false}",
+                        "Example: {type: object, additionalProperties: false, properties: {" + spelling + ": {type: string}}, "
                         "example: {" + spelling + ": {type: string}}}"))
                     schema = yaml.load(self.api.read_text(), Loader=UniqueLoader)["components"]["schemas"]["Example"]
                     expected = {symbol: {"type": "string"}}
@@ -193,13 +218,13 @@ components:
         self.assertEqual(yaml.load(data, Loader=UniqueLoader), expected)
         # The local Core reader must not change the dependency's global merge behavior.
         self.assertEqual(yaml.safe_load(data), {"base": {"a": 1}, "child": {"a": 1}})
-        self.replace(self.api, "Example: {type: object}",
-                     "Example: {type: object, example: " + data + "}")
+        self.replace(self.api, "Example: {type: object, additionalProperties: false}",
+                     "Example: {type: object, additionalProperties: false, example: " + data + "}")
         self.assert_cli(0)
 
     def test_explicit_non_core_merge_is_not_silently_applied(self):
-        self.replace(self.api, "Example: {type: object}",
-                     "Example: {type: object, example: "
+        self.replace(self.api, "Example: {type: object, additionalProperties: false}",
+                     "Example: {type: object, additionalProperties: false, example: "
                      "{base: &base {a: 1}, child: {!!merge '<<': *base}}}")
         self.assert_cli(1, "tag:yaml.org,2002:merge")
 
@@ -208,8 +233,8 @@ components:
         for symbol in ["<<", "="]:
             with self.subTest(symbol=symbol):
                 self.api.write_text(original.replace(
-                    "Example: {type: object}",
-                    "Example: {type: object, example: {" + symbol + ': {a: 1}, "' + symbol + '": {a: 2}}}'))
+                    "Example: {type: object, additionalProperties: false}",
+                    "Example: {type: object, additionalProperties: false, example: {" + symbol + ': {a: 1}, "' + symbol + '": {a: 2}}}'))
                 self.assert_cli(1, "duplicate YAML key")
 
     def test_yaml_non_json_scalar_does_not_pass(self):
@@ -450,7 +475,7 @@ components:
         doc = yaml.safe_load(self.api.read_text())
         doc["paths"]["/example"]["post"] = {
             "requestBody": {"content": {"application/json": {
-                "schema": {"type": "object"}, "example": {"$ref": "ordinary application data"}}}},
+                "schema": {"type": "object", "additionalProperties": False}, "example": {"$ref": "ordinary application data"}}}},
             "responses": {"200": {"description": "OK"}},
         }
         self.write_api(doc)

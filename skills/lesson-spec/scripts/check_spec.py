@@ -240,6 +240,80 @@ def scenario_counts(text):
     return len(steps), sum(steps.values()), set(steps)
 
 
+# Every object schema of a contract says its openness: `additionalProperties` (false — closed, a schema — a map, true —
+# open on purpose) or, on a composite, `unevaluatedProperties`. Parts of a composition (allOf/anyOf/oneOf members,
+# if/then/else, and a component schema referenced as such a member) are closed by their composite, not one by one: a
+# closed part would refuse its siblings' properties, and `additionalProperties: true` on a part would evaluate them all.
+COMPOSE = ("allOf", "anyOf", "oneOf")
+SUBSCHEMA_MAPS = ("properties", "patternProperties", "$defs", "dependentSchemas")
+SUBSCHEMAS = ("items", "additionalProperties", "unevaluatedProperties", "propertyNames", "contains", "not",
+              "unevaluatedItems")
+
+
+def objectlike(node):
+    return isinstance(node, dict) and (node.get("type") == "object" or "properties" in node or "required" in node)
+
+
+def unstated_openness(doc):
+    out = []
+
+    def schema(node, pointer, part=False):
+        if not isinstance(node, dict) or "$ref" in node:
+            return
+        parts = [m for k in COMPOSE for m in node.get(k) or []] + [node.get(k) for k in ("then", "else")]
+        said = "additionalProperties" in node or "unevaluatedProperties" in node
+        if not part and not said and (objectlike(node) or any(objectlike(m) for m in parts)):
+            out.append(pointer)
+        for key in SUBSCHEMA_MAPS:
+            if isinstance(node.get(key), dict):
+                for name, sub in node[key].items():
+                    schema(sub, f"{pointer}/{key}/{name}")
+        for key in SUBSCHEMAS:
+            schema(node.get(key), f"{pointer}/{key}")
+        for i, item in enumerate(node.get("prefixItems") or []):
+            schema(item, f"{pointer}/prefixItems/{i}")
+        for key in COMPOSE:
+            for i, sub in enumerate(node.get(key) or []):
+                schema(sub, f"{pointer}/{key}/{i}", part=True)
+        for key in ("if", "then", "else"):
+            schema(node.get(key), f"{pointer}/{key}", part=True)
+
+    def walk(node, pointer):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in ("example", "examples"):
+                    continue
+                if key == "schema":
+                    schema(value, f"{pointer}/schema")
+                elif pointer == "#/components" and key == "schemas" and isinstance(value, dict):
+                    for name, sub in value.items():
+                        schema(sub, f"{pointer}/schemas/{name}")
+                else:
+                    walk(value, f"{pointer}/{key}")
+        elif isinstance(node, list):
+            for i, value in enumerate(node):
+                walk(value, f"{pointer}/{i}")
+
+    parts = {m["$ref"] for m in composition_members(doc) if isinstance(m, dict) and isinstance(m.get("$ref"), str)}
+    walk(doc, "#")
+    return [p for p in out if p not in parts]
+
+
+def composition_members(node):
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in ("example", "examples"):
+                continue
+            if key in COMPOSE and isinstance(value, list):
+                yield from value
+            elif key in ("then", "else"):
+                yield value
+            yield from composition_members(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from composition_members(value)
+
+
 class Check:
     def __init__(self, root, exceptions=None):
         self.root = root.resolve()
@@ -329,6 +403,9 @@ class Check:
             # Check actual reference positions, not similarly named fields in application data.
             self.stats["local_refs"] += sum(1 for _ in references(doc))
             validate(doc)
+            for pointer in unstated_openness(doc):
+                self.error(path, f"OpenAPI: object schema {pointer} does not say its openness "
+                                 "(additionalProperties, or unevaluatedProperties on a composite)")
             self.stats["openapi"] += 1
         except Exception as exc:
             self.error(path, f"OpenAPI: {exc}")
