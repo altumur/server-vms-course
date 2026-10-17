@@ -5,6 +5,8 @@ words; and a cluster's console answers `GET /domain/<sub>/books/<book>` from its
 the platform alone, on testsub: the spec with a book shown is built here (the spec bytes are «Паритет»'s)."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import json
 import os
 import sys
@@ -16,7 +18,7 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-TESTSUB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub.subsystem.yaml")
+TESTSUB = os.path.join(frozen_testdata(), "testsub.subsystem.yaml")
 
 
 def _base() -> dict:
