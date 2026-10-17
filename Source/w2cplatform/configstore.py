@@ -817,10 +817,11 @@ class RaftBackend:
 
 
 # -- doors -----------------------------------------------------------------------------------------------
-def _door(daemon: "StoreDaemon", role_of):
+def _door(daemon: "StoreDaemon", role_of, *, body_limit: int = MAX_BODY):
     """The HTTP handler of one door. `role_of(handler)` says who is calling: the socket's role, or the role in the
     peer's certificate on the `-api` door (`PermissionError` when it is not a daemon's). Reads under the platform's
-    deadlines (`Deadlined`, `read_body`: the notes, "Every door is bounded")."""
+    deadlines (`Deadlined`, `read_body`: the notes, "Every door is bounded").
+    `body_limit` bounds the incoming body; the default still fits a fully escaped row at its ceiling."""
     from .console import Deadlined, read_body        # the platform's door; imported here, `console` imports much
 
     class Door(Deadlined, BaseHTTPRequestHandler):
@@ -837,7 +838,7 @@ def _door(daemon: "StoreDaemon", role_of):
                 # read_body's errors use detail; ADR-0074's guard refusal has its own exact wire body.
                 body = {"kind": {408: "timeout", 413: "toolarge"}.get(code, "badrequest"),
                         "error": str(body.get("detail") or body.get("error") or ""),
-                        **({"limit": MAX_VALUE} if code == 413 else {})}
+                        **({"limit": body_limit} if code == 413 else {})}
             raw = json.dumps(body).encode()
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
@@ -866,7 +867,7 @@ def _door(daemon: "StoreDaemon", role_of):
             try:
                 # The body first, bounded and under its deadline: a 403 sent over a body left unread is a reset the
                 # caller never reads the 403 from.
-                if not read_body(self, MAX_BODY):
+                if not read_body(self, body_limit):
                     return                               # 400 / 413 / 408 sent, the connection closed
                 n = int(self.headers.get("Content-Length") or 0)
                 raw = self.rfile.read(n) if n else b""
@@ -1115,11 +1116,14 @@ def _membership(path: str, raw: bytes) -> tuple[str, tuple | None]:
 
 class StoreDaemon:
     """A backend and its doors. `sockets` is the directory of the role sockets (None: none), `api` the TCP door
-    (`(host, port)`, mTLS from `tls_dir`), `rights` the rights file read."""
+    (`(host, port)`, mTLS from `tls_dir`), `rights` the rights file read.
+    `body_limit` bounds each door; its default allows JSON escaping of a row at its ceiling."""
 
     def __init__(self, backend, *, node_id: str, sockets: str | None = None, rights: Rights | None = None,
                  api: tuple[str, int] | None = None, tls_dir: str | None = None, api_advertised: str = "",
-                 leader_wait: float = LEADER_WAIT):
+                 leader_wait: float = LEADER_WAIT, body_limit: int = MAX_BODY):
+        if isinstance(body_limit, bool) or not isinstance(body_limit, int) or body_limit <= 0:
+            raise ValueError("the door body limit is a positive number of bytes")
         self.backend, self.node_id = backend, node_id
         self.rights = rights or Rights()
         self.leader_wait = leader_wait
@@ -1128,15 +1132,16 @@ class StoreDaemon:
         self.api_url = ""
         if sockets:
             os.makedirs(sockets, exist_ok=True)
-            self._listen(_unix_server(os.path.join(sockets, "admin.sock"), _door(self, lambda h: ADMIN), 0o600, None))
+            admin = _door(self, lambda h: ADMIN, body_limit=body_limit)
+            self._listen(_unix_server(os.path.join(sockets, "admin.sock"), admin, 0o600, None))
             for role in sorted(self.rights.roles):
-                door = _door(self, lambda h, role=role: role)
+                door = _door(self, lambda h, role=role: role, body_limit=body_limit)
                 self._listen(_unix_server(os.path.join(sockets, f"{role}.sock"), door, 0o660,
                                           socket_group(role, self.rights)))
         if api is not None:
             if not tls_dir:
                 raise ValueError("the -api door is mutual TLS only: -tls <dir> (deploy/w2c-ca.sh)")
-            srv = _TlsServer(api, _door(self, _peer_role), tls.ServerContext(tls_dir))
+            srv = _TlsServer(api, _door(self, _peer_role, body_limit=body_limit), tls.ServerContext(tls_dir))
             self._listen(srv)
             host, port = srv.server_address[:2]
             self.api_url = api_advertised or f"{host}:{port}"
