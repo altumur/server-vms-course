@@ -15,6 +15,8 @@ and the platform names a unit `<sub>/<id>` and nothing else: the events index's 
 Everything here runs on testsub and a second subsystem invented for the purpose — no subsystem of the product is
 imported (`test_boundary.py` holds this file to that).
 """
+
+from tests.frozen_data import frozen_testdata
 import json
 import os
 import tempfile
@@ -32,7 +34,7 @@ from w2cplatform.variables import FileVariables
 from tests.conftest import stamped
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
+TESTSUB = os.path.join(frozen_testdata(), "testsub.subsystem.yaml")
 
 # A second subsystem, ABOUT testsub's counters: a tally is about one counter, and its notes (a table) are each about
 # one counter too.
