@@ -126,13 +126,16 @@ def test_raw_http_failures_have_fault_envelopes_and_declared_parsing_bounds():
                 b"GET /v1/list extra HTTP/1.1\r\n\r\n",
                 b"GET /v1/list HTTP/1.1\r\nHeader without colon\r\n\r\n",
                 b"GET /v1/list HTTP/1.1\r\nBad Name: value\r\n\r\n",
+                b"GET /v1/list HTTP/1.1\r\nX: value\r\n folded\r\n\r\n",
+                b"GET /v1/list HTTP/1.1\r\nX : value\r\n\r\n",
                 b"GET /v1/list HTTP/1.1\r\nX: unfinished",
-                b"GET /" + b"a" * MAX_REQUEST_LINE + b" HTTP/1.1\r\n\r\n",
+                b"GET /" + b"a" * (MAX_REQUEST_LINE - len(b"GET / HTTP/1.1\r\n") + 1) + b" HTTP/1.1\r\n\r\n",
                 b"GET /v1/list HTTP/1.1\r\nX: " + b"a" * MAX_HEADER_BYTES + b"\r\n\r\n",
                 b"GET /v1/list HTTP/1.1\r\n" + b"X: a\r\n" * (MAX_HEADER_COUNT + 1) + b"\r\n",
             ):
                 _fault(_raw(path, raw), 400, "badrequest")
-            for target in (b"PATCH /v1/get", b"DELETE /v1/write", b"GET //v1/list", b"GET /not-a-route"):
+            for target in (b"PATCH /v1/get", b"DELETE /v1/write", b"GET //v1/list", b"GET /not-a-route",
+                           b"GET http://localhost/v1/get?key=acc/x"):
                 _fault(_raw(path, target + b" HTTP/1.1\r\n\r\n"), 404, "badrequest")
             head = b"GET /v1/list?prefix="
             line = head + b"a" * (MAX_REQUEST_LINE - len(head) - len(b" HTTP/1.1\r\n")) + b" HTTP/1.1\r\n\r\n"
@@ -156,6 +159,8 @@ def test_chunked_body_is_measured_after_decoding_and_oversize_has_no_size():
             body = b'{"op":"put","key":"acc/a","items":{}}'.ljust(64)
             chunks = b"".join(b"1\r\n" + bytes([c]) + b"\r\n" for c in body) + b"0\r\n\r\n"
             assert _raw(path, headers + chunks)[0] == 200
+            both = headers.replace(b"\r\n\r\n", b"\r\nContent-Length: 999999999\r\n\r\n")
+            assert _raw(path, both + chunks)[0] == 200  # RFC 9112: chunked takes precedence
             code, fault = _raw(path, headers + b"41\r\n")
             assert code == 413 and fault["kind"] == "toolarge" and fault["limit"] == 64
             assert set(fault) == {"kind", "error", "limit"}  # total size is unknown
