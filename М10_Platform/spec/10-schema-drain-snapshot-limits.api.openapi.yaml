@@ -616,7 +616,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TableDeleted'
         '409':
-          description: Конфликт CAS или ссылок
+          description: Исчерпаны повторы CAS; ссылки на строку удалению не мешают (урок 3 Н1.3, ADR-0057)
           content:
             application/json:
               schema:
@@ -991,8 +991,10 @@ components:
           minimum: 0
         schema_unknown:
           type: boolean
+          description: true, когда строка platform/schema испорчена (version null); у читаемой строки поля нет.
         processes:
           type: object
+          description: По пульсам — воркер под именем своего слота, ресурс под именем сервера; контроллер и консоль не входят (Н2).
           additionalProperties:
             $ref: '#/components/schemas/ProcessBuild'
           propertyNames:
@@ -1194,6 +1196,15 @@ components:
           - type: 'null'
         garbled:
           type: boolean
+        by:
+          type: string
+          description: Штамп stamp — пользователь записи (Н1.6).
+        at:
+          type: number
+          description: Штамп stamp — стенные секунды этой записи (Н1.6).
+        made_at:
+          type: number
+          description: Штамп stamp — стенные секунды первой записи строки (Н1.6).
       propertyNames:
         not:
           pattern: _secret(?![\s\S])

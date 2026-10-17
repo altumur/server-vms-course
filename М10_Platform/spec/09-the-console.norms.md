@@ -102,6 +102,7 @@ gate:
   scope:    грант на * | unit:<sub>/<id> | labels:<…>; грант на единицу или на её about-единицу
   csrf:     действующий запрос по куке с чужим Origin → 403
   body:     предел тела (≥ 1 MiB; blob PUT /<rows>/<id>/<blob_field> — 32 МиБ, урок 10 Н1.4); chunked → 400; медленно → 408; больше → 413
+            (ответ раннего отказа — урок 1 Н2.1)
   refusal:  {detail, error: denied}; 403 → журнал access.denied
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
               /api/held, /api/backup, /api/prepare, /api/take]
