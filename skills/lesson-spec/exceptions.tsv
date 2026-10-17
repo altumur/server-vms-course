@@ -27,3 +27,5 @@
 М10_Platform/02	acceptance-entry	puts.tsv	установки spec put по порядку в свежее хранилище: код и rev (без изменений, A=B каталога, metrics.prefix); проверяется по README приёмки
 М10_Platform/02	acceptance-entry	puts	файлы установок puts.tsv; проверяется по README приёмки
 М10_Platform/09	acceptance-entry	probe-x.subsystem.yaml	третья спека стенда урока 9 (имя с «-», metrics.prefix); проверяется по README приёмки
+М11_Domain/05	acceptance-entry	inputs	входы команды assemble (копии членов с вкладами, состояния, список членов, тестовые ключи); проверяется по README приёмки
+М11_Domain/05	scenarios-format	own	стенд нескольких кластеров с testsub2 (двери holder, member; директивы урока 3) и векторы assemble; проверяется по README приёмки
