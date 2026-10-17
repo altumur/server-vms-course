@@ -46,9 +46,9 @@
 
 ## Форма урока
 
-Порядок сопровождения формы — проектный [lesson-spec](../.claude/skills/lesson-spec/SKILL.md):
-[таблица связанных изменений](../.claude/skills/lesson-spec/references/change-map.md),
-[ручной чеклист](../.claude/skills/lesson-spec/references/review-checklist.md), затем шаблоны и структурная
+Порядок сопровождения формы — проектный [lesson-spec](../skills/lesson-spec/SKILL.md):
+[таблица связанных изменений](../skills/lesson-spec/references/change-map.md),
+[ручной чеклист](../skills/lesson-spec/references/review-checklist.md), затем шаблоны и структурная
 проверка. Инструкция не заменяет канон уроков; примеры М10/1–2 учитывают прогоны 17–20.
 
 Лекция остаётся рядом с остальными лекциями модуля; у файлов спецификации общий префикс с её именем

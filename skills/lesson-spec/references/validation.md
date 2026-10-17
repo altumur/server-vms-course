@@ -5,7 +5,7 @@
 
 ```sh
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python \
-  .claude/skills/lesson-spec/scripts/check_spec.py \
+  skills/lesson-spec/scripts/check_spec.py \
   М10_Platform/01-storage.md М10_Platform/02-the-spec-and-the-strict-loader.md
 ```
 
@@ -91,7 +91,7 @@ ASCII-цифры без ведущего нуля. Знак, пробелы, н�
 
 ```sh
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python -m unittest discover \
-  -s .claude/skills/lesson-spec/scripts -p 'test_check_spec.py'
+  -s skills/lesson-spec/scripts -p 'test_check_spec.py'
 ```
 
 
