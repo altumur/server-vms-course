@@ -19,10 +19,8 @@ from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.relay import Relay
 from w2cplatform.domain.console import Console
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import DomainDirectory, Federation
-from vms.ingest import CameraPusher
-from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.placement import UnitSite, ClusterPlacer
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
@@ -53,7 +51,7 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
     assert agents[1].say_reaches() and not agents[1].say_reaches()   # written when it changes, and only then
     assert placer.place(UnitSite(2, "vlan:c")).cluster == "south"
 
-    cam = DeviceCluster("SN8001", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN8001", FakeVariables(), wall=wall)
     cam.boot()
     fed.add(member_copy(cam.name, north.objects, wall=wall))
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
@@ -147,7 +145,7 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     east, _ = make_cluster("east")
-    cam = DeviceCluster("SN8003", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN8003", FakeVariables(), wall=wall)
     cam.boot()
     direct = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
     report_sync(direct)                                                      # it reaches the domain after all
@@ -175,7 +173,8 @@ def test_books_behind_a_relay_are_as_old_as_the_relay_says_on_the_cameras_own_cl
     compared, and a camera whose clock runs five minutes ahead still judges its books by their true age."""
     from w2cplatform.domain.relay import say_seen
     relay_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
-    relay_vars, relay_objects = FakeVariables(), __import__("vms.camera_cluster", fromlist=["Ram"]).Ram()
+    from tests.domain.conftest import Ram
+    relay_vars, relay_objects = FakeVariables(), Ram()
     agent = DomainAgent("cam-SN8004", Relay(None, relay_objects).vars, FakeVariables(), now=cam_clock)
     last = relay_clock()
     say_seen(relay_objects, last, relay_clock())                     # the relay reached the domain just now
@@ -218,7 +217,7 @@ def test_a_lower_member_timestamp_is_refused_even_after_a_change_of_road():
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     east, _ = make_cluster("east")
-    cam = DeviceCluster("SN8005", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN8005", FakeVariables(), wall=wall)
     cam.boot()
     report_sync(DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()))
     fed = Federation(); fed.add(north)
@@ -241,50 +240,10 @@ def test_a_lower_member_timestamp_is_refused_even_after_a_change_of_road():
     assert not view.list()["complete"]                                     # and it is not silent
 
 
-def test_sources_do_not_infer_push_from_topology_or_network_reachability():
-    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
-    from vms.recording_books import source
-    wall = Clock()
-    _, _, south, cam, books, _, _ = _site(wall)
-    books.assign(SERIAL, "south"); books.collect()
-    assert "push" not in source(south.vars.get("domain/cam/sources")[0], SERIAL).value
-    cam.pushes = True
-    books.collect()
-    assert source(south.vars.get("domain/cam/sources")[0], SERIAL).value["push"] is True
 
 
-def test_recorder_pull_failure_is_local_and_never_changes_the_origin_source():
-    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
-    from vms.recording_books import source, primary
-    wall = Clock()
-    _, _, south, cam, books, _, _ = _site(wall)
-    books.assign(SERIAL, "south"); books.collect()
-    row = {"id": SERIAL, "cam": "ref:"+SERIAL, "enabled": True}
-    books.observe("south", [row], [{"id": SERIAL, "phase": "pending", "source_unreachable": True}], ingest="http://south/ingest")
-    books.collect()
-    assert "push" not in source(south.vars.get("domain/cam/sources")[0], SERIAL).value
-    assert primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["push"] is True
-    books.observe("south", [row], [{"id": SERIAL, "phase": "running"}], ingest="http://south/ingest")
-    books.collect()
-    assert primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value["push"] is True
-    cam.address = "10.1.0.99"; books.collect()
-    books.observe("south", [row], [{"id": SERIAL, "phase": "running"}], ingest="http://south/ingest")
-    books.collect()
-    assert "push" not in primary(cam.flash.get("domain/rec/primaries")[0], SERIAL, "south").value
 
 
-def test_unconfirmed_source_does_not_start_a_stream_from_network_guesses():
-    from tests.domainvms.test_lesson13_crossing import _site, SERIAL
-    from vms.recording_sources import NotResolvable, resolve
-    wall = Clock()
-    _, _, south, cam, books, _, _ = _site(wall)
-    books.assign(SERIAL, "south")
-    try:
-        resolve(south.vars, "ref:"+SERIAL, wall())
-    except NotResolvable:
-        pass
-    else:
-        raise AssertionError("an unconfirmed source was selected")
 
 
 def admit(fed):

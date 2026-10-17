@@ -1,7 +1,6 @@
 """Explicit initial holder pass for VMS integration sites, before operator writes."""
 import math
 
-from vms.config import SPEC
 from w2cplatform.domain import booknames
 from w2cplatform.domain.federation import Unreachable
 from w2cplatform.domain.members import Members
@@ -9,7 +8,6 @@ from w2cplatform.domain.reports import read
 from w2cplatform.domain.signer_service import Holder
 from w2cplatform.domain.uplink import publication
 from w2cplatform.domain.carry import HolderDoor, publication_bytes
-from w2cplatform.spec import SpecController
 from w2cplatform.trust.memberkey import MemberKey, sign_request
 
 
@@ -40,7 +38,10 @@ real controller's empty snapshot. No account/name index is seeded or repaired.
         except Unreachable:
             pass
         if not published.list('cam/snapshot/'):
-            SpecController(SPEC, vars_, published, wall=wall, cluster=name).publish_snapshot()
+            # A generic empty member report is enough for the holder's pass; no subsystem controller is involved.
+            import json
+            published.put(f"cam/snapshot/{name}", json.dumps({"cluster": name, "worker": name,
+                "ts": wall(), "cameras": []}).encode())
         # Earlier than this fixture's first agent pass, without changing media time.
         sent = math.nextafter(wall(), -math.inf)
         body = publication_bytes(publication(name, vars_, published, sent, key=keys[name]))

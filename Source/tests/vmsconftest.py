@@ -320,3 +320,14 @@ def ingest_recorder(cluster: str, url: str, wall=None, vars_=None, objects=None,
         rec.volume_pass()
     rec.heartbeat_once()
     return rec
+
+
+def real_card(t0: float, t1: float, recording: str = "1-card", step: float = 1.0, size: int = 256, card=None):
+    """A real VMS card populated with the VMS worker's sample frames."""
+    import tempfile
+    from vms.card import CardBuffer
+    from vms.worker import fake_samples
+    card = card or CardBuffer(tempfile.mkdtemp(prefix="card-"))
+    for sample in fake_samples(t0, t1, step=step, gop=2.0, size=size):
+        card.append(f"{recording}/e1", sample)
+    return card

@@ -38,8 +38,9 @@ class SignedConsole:
 
 def device_console(device, sealer=None):
     """A pinned-device fixture supplies its stores and published view to the generic console."""
-    from vms.config import SPEC
-    signed = SignedConsole(SPEC, device.flash, device.ram, device.wall, sealer)
+    from tests.domain.conftest import _ensure_camera_spec
+    spec = _ensure_camera_spec()
+    signed = SignedConsole(spec, device.flash, device.ram, device.wall, sealer)
     class DeviceConsole:
         def apply(self, entry):
             response = signed.apply(entry)

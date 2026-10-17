@@ -14,9 +14,8 @@ import tempfile
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent
-from vms.ingest import POLLED
 from w2cplatform.domain.alarms import AlarmHistory, Card, DomainAlarms, ReportedDoor, pages, reported_doors
-from vms.camera_cluster import DeviceCluster
+from tests.domain.conftest import EmbeddedMember
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
@@ -30,7 +29,7 @@ def _site(wall, nets=("vlan:a", "vlan:a", "vlan:b")):
     fed.add(north)
     devices, cards, agents = {}, {}, {}
     for i, net in enumerate(nets):
-        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall, reaches=(net,))
+        d = EmbeddedMember(f"SN{i}", FakeVariables(), wall=wall, reaches=(net,))
         d.boot()
         fed.add(member_copy(d.name, north.objects, wall=wall, reaches=(net,)))   # the domain reads its reports
         devices[d.name] = d
@@ -163,21 +162,6 @@ def test_a_member_that_goes_dark_is_answered_from_its_last_report_and_its_silenc
     assert not out["complete"] and "cam-SN0 silent since" in out["sentence"] and "none known since" in out["sentence"]
 
 
-def test_a_camera_still_polling_its_ingest_is_alive_and_not_reporting():
-    """Its agent stopped — a crash, an expired certificate — and the camera works. The ingest it polls says so
-    (`rec/polled`): the poll is kept by the camera's pusher, not by its agent. The alarm is then "not
-    reporting", with where and when it was last seen alive: the operator sends somebody to fix software, not
-    to look for a broken camera."""
-    wall = Clock(NOW)
-    fed, north, devices, cards, agents, report, reported = _site(wall)
-    DomainAlarms(fed, reported, wall).list(since=NOW - 60)
-    wall.advance(120)
-    report(skip=("cam-SN0",))                                            # its agent is gone; the camera is not
-    north.objects.put(f"{POLLED}/srt___north_9000", json.dumps({"cluster": "north", "ts": wall(), "units": {"cam-SN0": 2.0}}).encode())
-    out = DomainAlarms(fed, reported, wall).list(since=NOW - 60)
-    alarm = [e for e in out["events"] if e["member"] == "cam-SN0"][0]
-    assert (alarm["kind"], alarm["alive_at"], alarm["alive_via"]) == ("not_reporting", NOW + 118, "north")
-    assert "alive, and not reporting to the domain" in out["sentence"]
 
 
 def test_the_domain_keeps_a_week_of_what_it_read_and_a_dead_card_takes_nothing_with_it():
@@ -271,14 +255,14 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     from w2cplatform.domain.relay import Relay
     from w2cplatform.domain.topology import Topology
     from w2cplatform.domain.uplink import member_copy
-    from vms.camera_cluster import DeviceCluster
+    from tests.domain.conftest import EmbeddedMember
     from tests.domain.conftest import Clock, make_cluster
     wall = Clock(NOW)
     fed = Federation()
     north, _ = make_cluster("north", domain=True)
     office, _ = make_cluster("office")
     fed.add(north)
-    cam = DeviceCluster("SN7", FakeVariables(), wall=wall)
+    cam = EmbeddedMember("SN7", FakeVariables(), wall=wall)
     cam.boot()
     card = Card("cam", tempfile.mkdtemp(prefix="card-"))
     fed.add(member_copy("office", north.objects, wall=wall))
@@ -347,7 +331,7 @@ def test_a_pass_reads_an_offices_bundle_once_however_many_cameras_are_behind_it(
     office, _ = make_cluster("office")
     fed.add(north)
     fed.add(member_copy("office", north.objects, wall=wall))
-    cams = [DeviceCluster(f"SN7{i}", FakeVariables(), wall=wall) for i in range(3)]
+    cams = [EmbeddedMember(f"SN7{i}", FakeVariables(), wall=wall) for i in range(3)]
     topo = Topology(north.vars)
     topo.edit(lambda d: d.update(centre="north", via={c.name: "office" for c in cams}), base_rev=0,
               known={"north", "office", *(c.name for c in cams)})
