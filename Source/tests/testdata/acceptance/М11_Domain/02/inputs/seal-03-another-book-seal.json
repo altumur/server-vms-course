@@ -1,0 +1,8 @@
+{
+ "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g",
+ "item": "a1",
+ "member": "m1",
+ "pointer": "/feed/token_secret",
+ "seed": "7aa6f54ef18e05f623a4a0b502b1d177683400a6c087bda5fbe5d0404f28eb1f",
+ "source_path": "testsub2/notes/n1"
+}

@@ -1,0 +1,25 @@
+{
+ "held": {
+  "book_seal": "bcd5fdec0a3585c7b8793b352a0322a72c6aa1801c1874dac9e7cebfc2c8f970",
+  "current": "t1",
+  "domain": "acme",
+  "issuing": [
+   "i1"
+  ],
+  "keys": {
+   "t1": "dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f"
+  },
+  "kid": "root",
+  "rev": 1,
+  "revoked_issuing": [],
+  "root": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684",
+  "sig": "RUcUe1tgrauhXMbvAy3hTJXanA9hiyw1O2RxjiVqSDz38sAoR1P0p6XNSseQZRf1fc4LowfKmBYkOUxmXpXiBA"
+ },
+ "offered": {
+  "doc": "{\"book_seal\": \"bcd5fdec0a3585c7b8793b352a0322a72c6aa1801c1874dac9e7cebfc2c8f970\", \"current\": \"t1\", \"domain\": \"acme\", \"extra\": 1, \"issuing\": [\"i1\"], \"keys\": {\"t1\": \"dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f\"}, \"kid\": \"root\", \"rev\": 2, \"revoked_issuing\": [], \"root\": \"34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684\", \"sig\": \"kfr0iyobK0pjzsNXNRGpcfcjU5-eYU021E5yZs6Erd-UvEhYmlabmvCvhq0Zv6zvip8w9xhcSiVmH_17iVcGCQ\"}"
+ },
+ "pinned": {
+  "domain": "acme",
+  "pub": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684"
+ }
+}

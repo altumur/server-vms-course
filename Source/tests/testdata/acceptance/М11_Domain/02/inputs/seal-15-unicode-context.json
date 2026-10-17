@@ -1,0 +1,8 @@
+{
+ "envelope": "x25519:v1:0qx82jVfrWfnNSLLVnXclkWqpel9RmhdV2SxC2csKnI:AAECAwQFBgcICQoL:7Ge_1-75_Vi9xEaVePCXeb8",
+ "item": "ключ/a~b",
+ "member": "m1",
+ "pointer": "/a~1b/0/x_secret",
+ "seed": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a",
+ "source_path": "testsub2/notes/n1"
+}

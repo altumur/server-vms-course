@@ -15,7 +15,7 @@
 secret_field:
   rule:   имя поля оканчивается на _secret — и только это; реестра нет; secret_note — не секрет
   type:   string (в строке — конверт); в спеке у поля: bound_to, иначе как у строки
-  where:  поля единицы, поля таблиц, строки платформы (М11: domain/signer {issuing_key_secret, …}, door/signer
+  where:  поля единицы, поля таблиц, строки платформы (М11/2 Н1.3–Н1.4: domain/signer {token_key_secret, issuing_key_secret, …}, domain/book-seal {seed_secret}, door/signer
           {kid, seed_secret}, domain/member-key {seed_secret, …}, domain/break-glass/<к> {pwhash_secret, …}, …)
 url_field:                                   # у поля type: url (форма — урок 2)
   credentials: {login: <поле строки, не url и не секрет>, secret: <поле *_secret>}
@@ -262,7 +262,7 @@ secrets:                                     # раздел спеки (форм
   readers: {<строка или префикс>: [<роль>…]} # свои секретные строки и кто их читает
   reads:   [<строка или префикс>…]           # чужие секретные строки, которые читает воркер этой спеки
 roles:     [console, controller, worker, domainworker, domain, domainagent, resource, domainconsole]   # закрыто; domainworker, domain, domainagent, domainconsole — роли домена (М11); domainworker — роль платформы, спеки подсистем её не включают (процесса этой роли нет, урок 6 Н1.1)
-platform_readers:                            # общая таблица platform_lists.tsv; строки domain/* — М11
+platform_readers:                            # общая таблица platform_lists.tsv; строки domain/* — М11 (signer, signer-pending, book-seal — М11/2 Н1.3–Н1.4)
   domain/break-glass/: [console, domain, domainagent]
   domain/signer:       [domain]
   domain/signer-pending: [domain]           # точное имя, не покрыто `domain/signer`

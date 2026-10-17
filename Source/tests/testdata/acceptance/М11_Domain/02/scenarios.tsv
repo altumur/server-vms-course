@@ -1,0 +1,52 @@
+scenario	step	request	expect
+# Приёмка М11/2: команды keys, token, seal, seal-round реализации на входах inputs/ (чистые функции). Формат — README.
+01-key-set-forward	1	keys inputs/keys-02-newer.json	ok {"result": "took", "rev": 2}
+01-key-set-forward	2	keys inputs/keys-03-same-rev.json	ok {"result": "holding", "rev": 2}
+01-key-set-forward	3	keys inputs/keys-04-older.json	ok {"result": "refused", "reason": "older", "rev": 2}
+01-key-set-forward	4	keys inputs/keys-15-rotation-after-theft.json	ok {"result": "took", "rev": 1760000000}
+01-key-set-forward	5	keys inputs/keys-01-first.json	ok {"result": "took", "rev": 1}
+02-key-set-root	1	keys inputs/keys-05-no-pin.json	ok {"result": "refused", "reason": "no_pin"}
+02-key-set-root	2	keys inputs/keys-06-another-root.json	ok {"result": "refused", "reason": "another_root"}
+02-key-set-root	3	keys inputs/keys-12-another-domain.json	ok {"result": "refused", "reason": "another_root"}
+02-key-set-root	4	keys inputs/keys-07-root-claims-ours.json	ok {"result": "refused", "reason": "bad_signature"}
+02-key-set-root	5	keys inputs/keys-08-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
+02-key-set-root	6	keys inputs/keys-11-kid-not-root.json	ok {"result": "refused", "reason": "bad_signature"}
+03-key-set-form	1	keys inputs/keys-09-no-book-seal.json	ok {"result": "refused", "reason": "no_book_seal"}
+03-key-set-form	2	keys inputs/keys-10-not-json.json	ok {"result": "refused", "reason": "not_a_set"}
+03-key-set-form	3	keys inputs/keys-13-unknown-field.json	ok {"result": "refused", "reason": "not_a_set"}
+03-key-set-form	4	keys inputs/keys-14-current-not-in-keys.json	ok {"result": "refused", "reason": "not_a_set"}
+03-key-set-form	5	keys inputs/keys-16-row-extra-item.json	ok {"result": "refused", "reason": "not_a_set"}
+03-key-set-form	6	keys inputs/keys-17-duplicate-key.json	ok {"result": "refused", "reason": "not_a_set"}
+04-token-keys	1	token inputs/token-01-current.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
+04-token-keys	2	token inputs/token-02-retiring-before-until.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
+04-token-keys	3	token inputs/token-03-retiring-after-until.json	ok {"result": "refused", "reason": "unknown_key"}
+04-token-keys	4	token inputs/token-04-key-not-in-set.json	ok {"result": "refused", "reason": "unknown_key"}
+04-token-keys	5	token inputs/token-15-stolen-key-after-new-set.json	ok {"result": "refused", "reason": "unknown_key"}
+05-token-form	1	token inputs/token-05-payload-changed.json	ok {"result": "refused", "reason": "bad_signature"}
+05-token-form	2	token inputs/token-06-two-parts.json	ok {"result": "refused", "reason": "not_a_token"}
+05-token-form	3	token inputs/token-14-alg-not-eddsa.json	ok {"result": "refused", "reason": "not_a_token"}
+05-token-form	4	token inputs/token-17-duplicate-header-key.json	ok {"result": "refused", "reason": "not_a_token"}
+05-token-form	5	token inputs/token-07-no-jti.json	ok {"result": "refused", "reason": "bad_claims"}
+05-token-form	6	token inputs/token-16-jti-grammar.json	ok {"result": "refused", "reason": "bad_claims"}
+06-token-clock	1	token inputs/token-08-expired-at-60.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
+06-token-clock	2	token inputs/token-09-expired-past-60.json	ok {"result": "refused", "reason": "expired"}
+06-token-clock	3	token inputs/token-10-future-past-60.json	ok {"result": "refused", "reason": "future"}
+07-token-revoked	1	token inputs/token-11-revoked.json	ok {"result": "refused", "reason": "revoked"}
+07-token-revoked	2	token inputs/token-13-other-revoked.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
+07-token-revoked	3	token inputs/token-12-revoked-unreadable.json	ok {"result": "refused", "reason": "no_revocations"}
+08-envelope-opens	1	seal inputs/seal-01-opens.json	ok {"result": "ok", "plain": "s3cret-ü"}
+08-envelope-opens	2	seal inputs/seal-02-empty-plain.json	ok {"result": "ok", "plain": ""}
+08-envelope-opens	3	seal inputs/seal-15-unicode-context.json	ok {"result": "ok", "plain": "x"}
+09-envelope-does-not-open	1	seal inputs/seal-03-another-book-seal.json	ok {"result": "refused", "reason": "does_not_open"}
+09-envelope-does-not-open	2	seal inputs/seal-04-another-member.json	ok {"result": "refused", "reason": "does_not_open"}
+09-envelope-does-not-open	3	seal inputs/seal-05-another-source.json	ok {"result": "refused", "reason": "does_not_open"}
+09-envelope-does-not-open	4	seal inputs/seal-06-another-item.json	ok {"result": "refused", "reason": "does_not_open"}
+09-envelope-does-not-open	5	seal inputs/seal-07-another-pointer.json	ok {"result": "refused", "reason": "does_not_open"}
+09-envelope-does-not-open	6	seal inputs/seal-13-ct-flipped.json	ok {"result": "refused", "reason": "does_not_open"}
+10-envelope-form	1	seal inputs/seal-08-version-v2.json	ok {"result": "refused", "reason": "not_v1"}
+10-envelope-form	2	seal inputs/seal-09-padding.json	ok {"result": "refused", "reason": "not_an_envelope"}
+10-envelope-form	3	seal inputs/seal-10-four-parts.json	ok {"result": "refused", "reason": "not_an_envelope"}
+10-envelope-form	4	seal inputs/seal-11-short-nonce.json	ok {"result": "refused", "reason": "not_an_envelope"}
+10-envelope-form	5	seal inputs/seal-14-short-ct.json	ok {"result": "refused", "reason": "not_an_envelope"}
+10-envelope-form	6	seal inputs/seal-12-zero-eph.json	ok {"result": "refused", "reason": "not_an_envelope"}
+11-seal-round	1	seal-round inputs/seal-round-01.json	ok {"result": "ok", "opened": ["s3cret-ü", "s3cret-ü"], "distinct": true}

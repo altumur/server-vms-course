@@ -84,7 +84,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 | `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB` | ёмкость роли и бюджет памяти (ADR-0070) | — | `roles/<роль>.env` |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | контроллер (урок 4) | 900, 10 | `w2c.env` |
 | `BUILD` | слово сборки (урок 10) | `dev` | сборка |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*` | домен (М11) | — | оператор |
+| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*` | домен (М11; `SIGNER_URL` — М11/2 Н1.3) | — | оператор |
 | `CONFIGSTORE_ID/RAFT/API/GROUP_SIZE/JOIN/FLAGS/TUNING` | демон хранилища | tuning `lan` | `configstore.env` |
 | `NOTIFY_SOCKET` | сторож systemd | — | systemd |
 
