@@ -126,6 +126,21 @@ python3 -m vms jobs                                    # the VMS's housekeeping:
 ```
 (`PLATFORM_DIR`, by default `/data/platform`, is where every one of them finds the box's two stores.)
 
+## Storage request parsing — М10/1 implementation choices
+
+The storage door accepts HTTP/1.0 and HTTP/1.1. Its request line is at most 65536 bytes including CRLF;
+the complete header block, including its final CRLF, is at most 65536 bytes and 99 fields. Malformed HTTP
+and parsing limits return `400 badrequest` as JSON Faults, unknown methods/routes `404 badrequest`.
+JSON nesting is at most 64 objects/arrays, including the root. Repeated names are refused in every object;
+ignored fields' strings and numbers have no further limit beyond body size and nesting. Numbers in ignored
+fields are not converted to Python integers or floats. Key and items Unicode checks follow their own
+Fault kinds and command validation follows Н2.1. Byte prefixes may stop inside a UTF-8 character.
+
+The default POST body limit remains `6 * 524288 + 65536` bytes, enough for a fully escaped row at its ceiling.
+`StoreDaemon(body_limit=1048576)` sets the acceptance stand's limit; the row ceiling stays 524288 bytes.
+Chunked POST bodies are bounded after decoding; their overflow Fault has no `size`. GET bodies are unread.
+`tests/test_storage_request_parse.py` supplies raw socket probes that scenario TSV cannot express.
+
 ## The Go implementation — the product's
 
 The same contract in Go is the product, `vmssubsystem` (a repository of its own): the same platform, the same
