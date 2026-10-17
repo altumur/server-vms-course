@@ -52,7 +52,8 @@ configstore-rights.json:
       group:  <группа сокета>
       read:   [<образец>…]
       write:  [<образец>…]
-      delete: [<образец>…]            # отсутствует = как write (при генерации); delete: и write: в коде — разнесены сюда
+      delete: [<образец>…]            # отсутствует — у роли delete = её write (так читает оценщик и так пишет генератор);
+                                      # delete: и write: в коде — разнесены сюда
 pattern:
   exact:    "testsub/next_id"            # равенство ключу
   prefix:   "testsub/counters/*"         # * только последним знаком; в середине — ни с чем не совпадает
