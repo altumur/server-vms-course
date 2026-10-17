@@ -143,8 +143,9 @@ token:         <b64url(header)>.<b64url(payload)>.<b64url(sig)>       # ровн
   header:      JSON-объект; обязательные alg — строка "EdDSA", kid — строка; прочие поля пропускаются (не отказ);
                выпускающий пишет ровно {alg, kid} в JCS
   payload:     JSON-объект; обязательные: iat, exp — конечные числа, стенные секунды; jti — строка 1–64 [A-Za-z0-9_-];
-               прочие поля этим уроком пропускаются: sub, kind, aud и др. читают уроки 7 и 9; выпускающий пишет JCS и jti —
-               16 знаков hex из случайных 8 байт
+               kind — непустая строка: person у людей (урок 9), вид спеки у воркеров (урок 7); прочие поля этим уроком
+               пропускаются, кроме поля аудитории вида (урок 7 Н1.1 audience_claim) при проверке получателем; выпускающий пишет
+               JCS и jti — 16 знаков hex из случайных 8 байт
   sig:         Ed25519 ключа kid набора над ASCII «<header>.<payload>» как пришли
 domain/revoked: {jtis: "<jti>:<exp>,…"}      # ровно один элемент jtis, строка; пусто — ""; строки нет — отзывов нет;
                                             # иной состав, запись не «<jti>:<число JSON>» (jti по грамматике токена) — не по форме:
@@ -230,11 +231,16 @@ OLD_KEYS:      3600        # с — until прежнего current при пла
    header.alg ≠ "EdDSA"; header.kid не строка                                     → refused not_a_token
 3. kid ∉ keys.keys, или kid ∈ until и now > until[kid]                           → refused unknown_key
 4. подпись не проверяется keys.keys[kid] над ASCII «<header>.<payload>»           → refused bad_signature
-5. iat или exp не конечное число, jti не строка по грамматике Н1.6               → refused bad_claims
+5. iat или exp не конечное число, jti не строка по грамматике Н1.6, kind не непустая строка → refused bad_claims
 6. now > exp + TOKEN_SKEW                                                         → refused expired
 7. now < iat − TOKEN_SKEW                                                         → refused future
 8. jti в revoked                                                                  → refused revoked
-9. иначе                                                                          → ok payload (вид и aud — урок 7)
+9. expect есть и kind ≠ expect.kind                                              → refused wrong_kind
+10. expect.cluster есть и поле expect.audience_claim (умолчание aud) не список строк или без expect.cluster
+                                                                                  → refused wrong_audience
+11. иначе                                                                         → ok payload
+# expect — что ждёт получатель (урок 7 Н3 «проверить у получателя»): вид и свой кластер; у токенов людей кластер не
+# задаётся (person без аудитории, урок 9)
 ```
 
 Равенство на границе принимает: `now = exp + 60` — ещё `ok`. `revoked` отсутствует (строки нет) — отзывов нет. Дверь,
@@ -361,9 +367,10 @@ keys:        вход {pinned: Pin | null, held: <doc по форме Н1.2, к�
              вывод {result: took | holding, rev} | {result: refused, reason: no_pin | not_a_set | bad_signature |
                    another_root | no_book_seal | older, rev?}            # rev при older — rev held
 token:       вход {keys: <doc по форме Н1.2 — принятый набор>, revoked: <строка domain/revoked как прочитана> | null,
-             now: <конечное число — стенные секунды проверяющего>, token: <как пришёл>}
+             now: <конечное число — стенные секунды проверяющего>, token: <как пришёл>,
+             expect?: {kind: <строка>, cluster: <член> | null, audience_claim?: <имя поля, умолчание aud>}}
              вывод {result: ok, payload} | {result: refused, reason: no_revocations | not_a_token | unknown_key | bad_signature |
-                   bad_claims | expired | future | revoked}
+                   bad_claims | expired | future | revoked | wrong_kind | wrong_audience}
 seal:        вход {seed: <hex 32 байт>, envelope: <как пришёл>, member, source_path, item, pointer: <строки>}   # open Н3
              вывод {result: ok, plain} | {result: refused, reason: not_v1 | not_an_envelope | does_not_open}
 seal-round:  вход {book_seal: <hex 32 байт>, seed: <hex 32 байт>, plain, member, source_path, item, pointer: <строки>}
@@ -382,13 +389,14 @@ exit:        0 — вычислено (в том числе отказ слов�
 | 02 | набор: без закреплённого корня, другой корень, другой домен, подпись другим ключом под нашим root, подмена после подписи, kid не root | Н1.1, Н1.2, Н3 keys |
 | 03 | набор: без book_seal, не JSON, лишнее поле, current не в keys, лишний элемент строки, повтор ключа JSON | Н1.2, Н3 keys |
 | 04 | токен: текущий ключ, прежний до until и после, ключа нет в наборе, украденный ключ после нового набора | Н1.6, Н1.7, Н3 token |
-| 05 | токен: подмена payload, две части, alg не EdDSA, повтор ключа в header, нет jti, jti не по грамматике | Н1.6, Н3 token |
+| 05 | токен: подмена payload, две части, alg не EdDSA, повтор ключа в header, нет jti, jti не по грамматике, нет kind | Н1.6, Н3 token |
 | 06 | токен: граница exp + 60 (ok) и exp + 61, iat в будущем дальше 60 | Н1.6, Н3 token |
 | 07 | токен: отозван, отозван другой, строка отзывов не по форме | Н1.6, Н1.7, Н3 token |
 | 08 | конверт открывается, пустое значение, юникод и `~`/`/` в item и pointer | Н1.5 |
 | 09 | конверт к другому ключу приёма; иной member, source_path, item, pointer; испорченный ct — does_not_open | Н1.5 |
 | 10 | конверт: другая версия, `=`, четыре части, короткий nonce и ct, нулевой eph, неканонический base64url | Н1, Н1.5 |
 | 11 | круг: реализация запечатывает дважды и открывает свои конверты; конверты различны | Н1.5 |
+| 12 | токен у получателя: вид и аудитория (`expect`) — свой кластер в `aud` — ok, чужой — `wrong_audience`, другой вид — `wrong_kind`; `person` без аудитории — ok | Н3 token шаги 9–10, урок 7 |
 
 Векторы открытия проверяют байты конверта; запечатывание недетерминировано (новая `eph` и `nonce`), поэтому его форму
 проверяет круг `seal-round` и векторы чужого запечатывания. Установка, смены и окно отзыва на стенде нескольких кластеров —

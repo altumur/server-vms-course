@@ -1,0 +1,25 @@
+{
+ "keys": {
+  "book_seal": "bcd5fdec0a3585c7b8793b352a0322a72c6aa1801c1874dac9e7cebfc2c8f970",
+  "current": "t2",
+  "domain": "acme",
+  "issuing": [
+   "i1"
+  ],
+  "keys": {
+   "t1": "dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f",
+   "t2": "3a83cf9155301bcf1e0eaf11bc653b1e88f88c5703d546029218b09fba7cff35"
+  },
+  "kid": "root",
+  "rev": 3,
+  "revoked_issuing": [],
+  "root": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684",
+  "sig": "z3WcK3W2e3I6FMZsmXgB_fkLf5FYZwPHpfk4XjETzf44M5OMP7rJQbDtoyplB0c0CeuMPFFMIMY_piRNphGVCQ",
+  "until": {
+   "t1": 1760000100
+  }
+ },
+ "now": 1760000000,
+ "revoked": null,
+ "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InQyIn0.eyJleHAiOjE3NjAwMDA4OTAsImlhdCI6MTc1OTk5OTk5MCwianRpIjoiMDEyMzQ1Njc4OWFiY2RlZiIsInN1YiI6ImFsaWNlIn0.LpYWU2xBI9HYJiGjeL74CiAJ7GoDfw-Z6DoR_EX9mM6_zl3Hv4PrjOiBq5kfLar7OhvIvbyh6RifBOU7DoLvAw"
+}

@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: M11/7 worker tokens through the agent
+  version: '1'
+  description: 'Normative shapes: 07-worker-tokens.norms.md N1.2-N1.4, N2. /tokens/{sub}/{kind} is the member agent''s
+    local door (the role is the identity of the connection, never the body); /api/tokens/... is the holder''s domain
+    process door, signed by the agent (M11/3 N1.4). Request parsing: M10/1 N2.1.'
+servers:
+  - url: '{origin}'
+    description: Местная дверь агента или дверь процесса domain держателя.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /tokens/{sub}/{kind}:
+    parameters:
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Kind'}
+    post:
+      summary: Воркер просит токен у агента своего кластера
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/LocalAsk'}
+      responses:
+        '200':
+          description: Токен этому соединению
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Given'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+  /api/tokens/{member}/{sub}/{kind}:
+    parameters:
+      - name: member
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/MemberName'}
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Kind'}
+    post:
+      summary: Агент просит токен у держателя
+      parameters:
+        - name: X-Agent-Signature
+          in: header
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/HolderAsk'}
+      responses:
+        '200':
+          description: Ответ, запечатанный члену конвертом m1
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sealed]
+                additionalProperties: false
+                properties:
+                  sealed: {type: string, pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+components:
+  parameters:
+    Sub:
+      name: sub
+      in: path
+      required: true
+      schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+    Kind:
+      name: kind
+      in: path
+      required: true
+      schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+  responses:
+    Refused:
+      description: Отказ (Н4); у выдачи — reason из закрытого списка
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {type: string, minLength: 1}
+        reason:
+          enum: [bad_request, by_misplaced, not_granted, assignment_unreadable, no_assignment, outside_scope,
+                 unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience,
+                 no_centre]
+        detail: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    RequestId:
+      type: string
+      pattern: '^[A-Za-z0-9_-]{1,64}$'
+    LocalAsk:
+      type: object
+      required: [request_id, ref]
+      additionalProperties: false
+      properties:
+        request_id: {$ref: '#/components/schemas/RequestId'}
+        ref: {type: string, minLength: 1}
+        by: {type: string, minLength: 1}
+    HolderAsk:
+      type: object
+      required: [request_id, role, ref]
+      additionalProperties: false
+      properties:
+        request_id: {$ref: '#/components/schemas/RequestId'}
+        role: {type: string, minLength: 1}
+        ref: {type: string, minLength: 1}
+        by: {type: string, minLength: 1}
+    Given:
+      type: object
+      required: [request_id, token, exp]
+      additionalProperties: false
+      properties:
+        request_id: {$ref: '#/components/schemas/RequestId'}
+        token: {type: string, minLength: 1}
+        exp: {type: number}

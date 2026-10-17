@@ -1,0 +1,37 @@
+scenario	step	request	expect
+# Приёмка М11/7: стенд hold, m1, m2 с местной дверью агента и векторы issue на входах inputs/. Формат — README.
+01-token-and-audience	1	@domain	ok
+01-token-and-audience	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+01-token-and-audience	3	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "$tok", "exp": "@any"}
+01-token-and-audience	4	@verify m1 tally $tok	ok {"result": "ok", "payload": {"sub": "m2", "kind": "tally", "counter": "c1", "aud": ["m1"]}}
+01-token-and-audience	5	@verify m2 tally $tok	ok {"result": "refused", "reason": "wrong_audience"}
+01-token-and-audience	6	@verify m1 probe $tok	ok {"result": "refused", "reason": "wrong_kind"}
+02-refusals	1	@domain	ok
+02-refusals	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+02-refusals	3	token m2 testsub2worker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	403 {"error": "refused", "reason": "not_granted"}
+02-refusals	4	token m1 testsubworker POST /tokens/testsub/tally {"request_id": "r3", "ref": "c1"}	403 {"error": "refused", "reason": "outside_scope"}
+02-refusals	5	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r4", "ref": "c9"}	403 {"error": "refused", "reason": "no_assignment"}
+02-refusals	6	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "bad id", "ref": "c1"}	400
+03-issue	1	issue inputs/issue-01-placement-ok.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m2", "kind": "tally", "iat": 1760000000, "exp": 1760000600, "counter": "c1", "aud": ["hold", "m1"]}}
+03-issue	2	issue inputs/issue-02-not-granted-role.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}
+03-issue	3	issue inputs/issue-03-no-kind.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}
+03-issue	4	issue inputs/issue-04-bad-body.json	ok {"result": "refused", "status": 400, "reason": "bad_request"}
+03-issue	5	issue inputs/issue-05-by-outside-scenario.json	ok {"result": "refused", "status": 400, "reason": "by_misplaced"}
+03-issue	6	issue inputs/issue-06-not-origin.json	ok {"result": "refused", "status": 403, "reason": "outside_scope"}
+03-issue	7	issue inputs/issue-07-no-assignment.json	ok {"result": "refused", "status": 403, "reason": "no_assignment"}
+03-issue	8	issue inputs/issue-08-assignment-unreadable.json	ok {"result": "refused", "status": 403, "reason": "assignment_unreadable"}
+03-issue	9	issue inputs/issue-09-unadmitted-in-record.json	ok {"result": "refused", "status": 403, "reason": "outside_scope"}
+03-issue	10	issue inputs/issue-10-unit-self-ok.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "probe", "iat": 1760000000, "exp": 1760000060, "ref": "c1", "aud": ["relay"]}}
+03-issue	11	issue inputs/issue-11-unit-self-not-owner.json	ok {"result": "refused", "status": 403, "reason": "unit_not_unique"}
+03-issue	12	issue inputs/issue-12-unit-two-owners.json	ok {"result": "refused", "status": 403, "reason": "unit_not_unique"}
+03-issue	13	issue inputs/issue-13-feed-placement-falls-to-unit.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "relay", "kind": "feed", "iat": 1760000000, "exp": 1760000600, "ref": "c1", "aud": ["hold"]}}
+03-issue	14	issue inputs/issue-14-feed-not-poll-home.json	ok {"result": "refused", "status": 403, "reason": "not_poll_home"}
+03-issue	15	issue inputs/issue-15-feed-no-centre.json	ok {"result": "refused", "status": 409, "reason": "no_centre"}
+03-issue	16	issue inputs/issue-16-scenario-direct.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["hold"]}}
+03-issue	17	issue inputs/issue-17-scenario-behind-relay.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "up": "hold", "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["relay"]}}
+03-issue	18	issue inputs/issue-18-scenario-relay-lift.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "relay", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["hold"]}}
+03-issue	19	issue inputs/issue-19-scenario-no-item.json	ok {"result": "refused", "status": 403, "reason": "no_item"}
+03-issue	20	issue inputs/issue-20-scenario-not-own-trigger.json	ok {"result": "refused", "status": 403, "reason": "trigger_not_reported"}
+03-issue	21	issue inputs/issue-21-scenario-no-doc.json	ok {"result": "refused", "status": 403, "reason": "no_shared_doc"}
+03-issue	22	issue inputs/issue-22-scenario-by-missing.json	ok {"result": "refused", "status": 400, "reason": "by_misplaced"}
+03-issue	23	issue inputs/issue-23-scenario-placement-home.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["hold", "m2"]}}
