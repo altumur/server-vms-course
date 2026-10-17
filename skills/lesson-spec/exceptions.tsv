@@ -14,3 +14,4 @@
 М10_Platform/09	scenarios-format	own	общие двери и подстроки ответа; проверяется по README приёмки
 М10_Platform/10	scenarios-format	own	двери консоли, контроллера и ресурса, @raw/@big/@until/@any, подстроки ответа; проверяется по README приёмки
 М10_Platform/11	scenarios-format	own	директивы процессов, @manual, подстроки ответа; проверяется по README приёмки
+М10_Platform/07	acceptance-entry	fields.yaml	объявления полей cam.source и rec.volumes.url для secret_in.tsv как данные приёмки (ADR-0001); проверяется по README приёмки
