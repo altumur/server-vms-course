@@ -7,7 +7,7 @@
 # beside the worker that holds its counter (`near`), and a person may ask its holder to add to it (`requests`).
 name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
-worker: {reads: [testsub/counters/], requests: [testsub]}
+worker: {reads: [testsub/counters], requests: [testsub]}
 # its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
 # files its resource's door gives out (`resource.door_readable`)
 objects: {rows: [marks/*], door: [tickets/*]}
@@ -16,7 +16,7 @@ heartbeat: {strings: [jam]}
 # a tally's count goes on ten minutes past an unconfirmed lease (a count under an old epoch is told apart by it)
 lease: {unconfirmed_max: 600}
 # the seed of its door's tokens is read by its console alone; its worker reads testsub's counters (`worker.reads`)
-secrets: {readers: {door/signer: [console]}, reads: [testsub/counters/]}
+secrets: {readers: {door/signer: [console]}, reads: [testsub/counters]}
 about: {sub: testsub, field: of}
 unit:
   rows: tallies                       # testsub2/tallies/<name>
