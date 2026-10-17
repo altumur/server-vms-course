@@ -357,3 +357,15 @@ m49_table_sweep	refused
 m49_table_unplaceable	refused
 m49_table_where	refused
 m49_table_workers	refused
+m51_books_carried_ok	ok
+m51_books_key_secret	refused
+m51_books_key_without_from	refused
+m51_books_merged_ok	ok
+m51_books_other_sub	refused
+m51_books_partial	refused
+m51_books_pick_word	refused
+m51_books_show_empty	refused
+m51_books_show_secret	refused
+m51_books_to_is_key	refused
+m51_books_two_segments	refused
+m51_books_unknown_key	refused

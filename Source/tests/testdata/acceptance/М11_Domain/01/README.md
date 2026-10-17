@@ -35,7 +35,7 @@
 | Дверь или директива | Смысл | Урок |
 |---|---|---|
 | `holder <запрос>` | консоль домена на `hold` (двери `/domain/*`) | М11/3 |
-| `member <кластер> <дверь> <запрос>` | дверь `store` (`admin.sock`), `console` или `resource` кластера `hold`, `m1`, `m2`; `store`, `console`, `resource` без префикса — кластера `hold` | М11/3 |
+| `member <кластер> <дверь> <запрос>` | дверь `store` (`admin.sock`), `console`, `console2` (префикс `/testsub2`, урок 5) или `resource` кластера `hold`, `m1`, `m2`; `store`, `console`, `resource` без префикса — кластера `hold` | М11/3 |
 | `@install domain` | команда установки урока 2 (Решает реализация п. 2) на `hold` с `{domain}` и `{recovery}` | М11/3 |
 | `@start domain` | процессы `domain` и консоли домена на `hold` | М11/3 |
 | `@restart domain` | SIGTERM обоим, дождаться выхода, запустить снова с тем же `{data}` | М11/3 |

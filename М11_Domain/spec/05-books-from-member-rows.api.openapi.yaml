@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: M11/5 books from member rows
+  version: '1'
+  description: 'Normative shapes: 05-books-from-member-rows.norms.md N1.3, N2. The door is the cluster console''s (a member''s
+    or the holder''s): the book of THIS member as delivered to it. Request parsing: M10/1 N2.1 with M10/9 N2; grants — M11/9.'
+servers:
+  - url: '{origin}'
+    description: Консоль кластера — члена или держателя.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /domain/{sub}/books/{book}:
+    parameters:
+      - name: sub
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+      - name: book
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[a-z0-9][a-z0-9_-]*$'}
+    get:
+      summary: Книга этого члена
+      responses:
+        '200':
+          description: '"" — неполнота книги, остальные ключи — записи по (member, item) с полями show'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookView'
+        '401':
+          $ref: '#/components/responses/Refused'
+        '403':
+          $ref: '#/components/responses/Refused'
+        '404':
+          description: Спека не объявляет книгу, книга без show или ещё не доставлена
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Refusal'
+                  - properties:
+                      error: {const: no such book shown}
+        '405':
+          $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/Refused'
+components:
+  responses:
+    Refused:
+      description: Отказ двери
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    Missing:
+      type: array
+      items:
+        type: object
+        required: [member, why]
+        additionalProperties: false
+        properties:
+          member: {$ref: '#/components/schemas/MemberName'}
+          why: {enum: [unseen, silent, never, no_copy, bad_contribution, secret_unopened]}
+    BookView:
+      type: object
+      required: ['']
+      properties:
+        '':
+          type: object
+          required: [missing]
+          additionalProperties: false
+          properties:
+            missing: {$ref: '#/components/schemas/Missing'}
+      additionalProperties:
+        type: object
+        required: [entries, missing]
+        additionalProperties: false
+        properties:
+          entries:
+            type: array
+            items:
+              type: object
+              required: [member, item]
+              description: Поля show входа плюс member и item; секретов и полей вне show нет.
+              properties:
+                member: {$ref: '#/components/schemas/MemberName'}
+                item: {type: string, minLength: 1}
+          missing: {$ref: '#/components/schemas/Missing'}

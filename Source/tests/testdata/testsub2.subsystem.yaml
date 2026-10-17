@@ -49,6 +49,10 @@ unit:
     keep_days:   {inherit: 7, type: int, merge: override}  # scalar inheritance witness, not an event-retention policy
     flags:       {type: list, inherit: [], merge: union}
     state:       {type: string, default: open}
+    # the members a tally's book entries go to (domain.books `to`), and a secret its roll entry carries — sealed to the
+    # domain's book seal on the way, masked at every door (М11/5)
+    to:          {type: list}
+    note_secret: {type: string}
 tables:
   shelves:
     key: name
@@ -147,8 +151,8 @@ domain:
   reports: [counts/]
   witness: {report: seen, member_field: of}
   books:
-    notes: {from: testsub2/notes/, key: ref, pick: unique, to: to}
-    rolls: {from: testsub2/rolls/, key: ref, pick: all, to: to}
+    notes: {from: testsub2/notes/, key: ref, pick: unique, to: to, show: [ref]}
+    rolls: {from: testsub2/rolls/, key: ref, pick: all, to: to, show: [ref]}
   names:
     notes/: {exclusive_with: domain/users, grant: view}
   tokens:
