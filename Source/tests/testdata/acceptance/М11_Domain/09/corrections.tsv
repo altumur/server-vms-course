@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-10-18	01-login-people-grants/9, 12–14; 05-names-index/2	счётчик подготовки урока 5 — `c1-m1`; чтение — `GET /counters` (двери `GET /<rows>/<id>` нет)	all

@@ -12,7 +12,7 @@ scenario	step	request	expect
 03-update	4	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
 03-update	5	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
 03-update	6	PUT /counters/c3 {"start": null}	400
-03-update	7	GET /counters/c3	200 {"id": "c3", "start": 7, "revision": 4}
+03-update	7	GET /counters	200 {"configured": [{"id": "c3", "start": 7, "revision": 4}]}
 04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
 04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
 04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
@@ -63,14 +63,14 @@ scenario	step	request	expect
 13-idempotency-key-limits	5	@header Idempotency-Key: яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя POST /counters {"name": "k4"}	400
 13-idempotency-key-limits	6	@header Idempotency-Key: .. POST /counters {"name": "k5"}	400
 13-idempotency-key-limits	7	@header Idempotency-Key: a/b POST /counters {"name": "k6"}	400
-13-idempotency-key-limits	8	GET /counters/k2	404
-13-idempotency-key-limits	9	GET /counters/k4	404
-13-idempotency-key-limits	10	GET /counters/k5	404
+13-idempotency-key-limits	8	POST /counters {"name": "k2"}	201 {"id": "k2", "revision": 1}
+13-idempotency-key-limits	9	POST /counters {"name": "k4"}	201 {"id": "k4", "revision": 1}
+13-idempotency-key-limits	10	POST /counters {"name": "k5"}	201 {"id": "k5", "revision": 1}
 14-if-match	1	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
 14-if-match	2	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
 14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
 14-if-match	4	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
 14-if-match	5	@header If-Match: two PUT /counters/m14 {"start": 3}	400
-14-if-match	6	GET /counters/m14	200 {"start": 2, "revision": 2}
+14-if-match	6	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
 14-if-match	7	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
 14-if-match	8	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}

@@ -44,6 +44,10 @@ domain/topology:   {doc: <JCS текст>}         # у держателя; пи
     - через держателя: «<m> through <h>: that is the domain holder itself»; держатель в via — «<h> is the domain holder:
       it reaches the domain in place, through nobody»
 domain/member-topology: {doc}                # у члена: строка domain/topology из ответа держателя (поле topology) как есть
+put_order:         PUT /domain/topology по порядку: 400 — нет base_rev или тело не по форме → 409 «the topology is at rev N;
+                   this edit was made against rev M — look again» (ревизия раньше содержания) → отказы refusals одним 409
+                   через «; » → запись по CAS (не больше 10 конфликтов); star пишется по возрастанию без повторов; via
+                   с пустым ретранслятором — член уходит из via; by — имя, доказанное сторожевой (урок 9 Н1.5)
 home:              ближайшая дверь члена к домену — via[член], иначе centre, иначе держатель (урок 7 `poll_home`)
 ```
 
@@ -138,14 +142,19 @@ HTTP-контракт: [04-relays-and-roads.api.openapi.yaml](04-relays-and-road
 5. нет ответа → вернуть невзятые публикации в память, если с тех пор не пришло новее; стуки — отбросить; heard не менять
 ```
 
-Проход ретранслятора идёт, даже если его собственный отчёт держателю не прошёл (урок 3 Н3 шаг 5).
+Проход ретранслятора идёт, даже если его собственный отчёт держателю не прошёл (урок 3 Н3 шаг 5). Пакет уходит каждым
+проходом, и пустой (`{relayed: {}}`): так ретранслятор без членов в памяти узнаёт `relay_for` и `keys`. Пока `relay_for`
+не называет члена, его отчёт у двери ретранслятора — отчёт незнакомца: верная подпись своим ключом — стук в памяти и 403
+(Н2), неверная — 401. До первого ответа держателя ретранслятор отвечает члену 503 (Н2), и член `domain/reached` не пишет.
 
 ### держатель на POST /api/relay/<ретранслятор>
 
 ```
 1. подпись и ключ ретранслятора — как у члена (урок 3 Н2)
 2. для каждого relayed[член]: член не в списке или via[член] ≠ ретранслятор → refused «<член> does not reach the domain
-   through <ретранслятор>: the topology says <via или direct>»; больше BODY_LIMIT → refused; иначе принять (урок 3 Н3)
+   through <ретранслятор>: the topology says <via или direct>»; key публикации ≠ key записи члена или отозван (revoked_keys,
+   revoked_members набора) → refused «<член> presents another key than the one in the list, or it was revoked», ничего
+   не записано; больше BODY_LIMIT → refused; иначе принять (урок 3 Н3)
    с via = ретранслятор и байтами relayed[член] (JCS); отказ принять → refused (слово урока 3)
 3. стуки — Н1.4 knocks
 4. ответ: relay_for по топологии, relayed — carry каждому члену relay_for (rev — для этой дороги), refused, keys

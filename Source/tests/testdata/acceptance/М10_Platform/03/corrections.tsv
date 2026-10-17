@@ -19,3 +19,4 @@ date	sample	fix	languages
 2026-10-17	03/README:113	Прогон 40 Codex R40-02: снят устаревший счёт «44 строк»	all
 2026-10-17	03/scenarios.tsv: 03-update шаги 5–7, 13-idempotency-key-limits	Мутационная проверка 7cecaf2 № 16–19: пределы Idempotency-Key из «Дополнительных проверок» в TSV; PUT другого name — 400 is fixed; null без inherit — 400	all
 2026-10-17	03/scenarios.tsv: 14-if-match	Решение «Архитектора» по М11/6 п. 5: If-Match у PUT и DELETE, 412 revision moved, не целое — 400	all
+2026-10-18	03-update/7, 13-idempotency-key-limits/8–10, 14-if-match/6	двери `GET /<rows>/<id>` нет (Н2): чтение — `GET /counters` и `configured`; отклонённое создание — повторным `POST` того же имени с `revision: 1` (чистая комната 03 № 23)	all

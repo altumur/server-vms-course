@@ -8,12 +8,12 @@ scenario	step	request	expect
 01-login-people-grants	6	holder POST /domain/users {"name": "bob", "password": "short"}	400 {"error": "bad password"}
 01-login-people-grants	7	holder POST /domain/users {"name": "a|b", "password": "ann password 1"}	400 {"error": "bad name"}
 01-login-people-grants	8	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	409 {"error": "exists"}
-01-login-people-grants	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
+01-login-people-grants	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
 01-login-people-grants	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "owner", "scope": "*"}]}	400 {"error": "bad line"}
 01-login-people-grants	11	@person ann ann password 1	ok
-01-login-people-grants	12	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1"}]}
-01-login-people-grants	13	member m1 console GET /counters/c1	200 {"name": "c1"}
-01-login-people-grants	14	member m1 console PUT /counters/c1 {"start": 5}	403 {"error": "denied"}
+01-login-people-grants	12	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+01-login-people-grants	13	member m1 console GET /counters	200 {"configured": [{"id": "c1-m1"}]}
+01-login-people-grants	14	member m1 console PUT /counters/c1-m1 {"start": 5}	403 {"error": "denied"}
 01-login-people-grants	15	member m2 console GET /counters	403 {"error": "denied"}
 01-login-people-grants	16	holder GET /domain/users	403 {"error": "denied"}
 01-login-people-grants	17	@person -	ok
@@ -61,7 +61,7 @@ scenario	step	request	expect
 04-login-limit	6	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 04-login-limit	7	signer POST /api/login {"user": "root", "password": "w2c test root password"}	429 {"error": "too many attempts"}
 05-names-index	1	@domain	ok
-05-names-index	2	member m1 console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+05-names-index	2	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 05-names-index	3	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
 05-names-index	4	holder POST /domain/users {"name": "t7", "password": "t7 password 1"}	409 {"error": "name taken"}
 05-names-index	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "scope": "*"}]}	400 {"error": "grant too wide"}
