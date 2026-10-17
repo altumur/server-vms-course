@@ -12,13 +12,16 @@
 - `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` — публичный контракт модуля консоли.
 - `ARCHITECTURE.md` — система и история решений; `GLOSSARY.md` — слова проекта.
 
+## Навыки
+- `skills/` — навыки проекта (`lesson-spec`, `platform-review`); в `.claude/skills/` символьные ссылки. Правит только «Архитектор» (ADR-0080 доп. 14).
+
 ## Правила проектирования (`.cursor/rules/*.mdc`)
 - Перед кодом: `service-boundaries.mdc`, `messaging-contracts.mdc`, `resilience.mdc`, `observability.mdc`, `data-consistency.mdc`; класс части определяет `architecture.mdc`.
 - Перед запиской: `adr-format.mdc`, `doc-language.mdc`.
 - Остальные по теме: `devices-and-media`, `events-and-alarms`, `recording-and-retention`, `sharding-and-backpressure`, `consensus-and-leadership`, `control-and-data-plane`, `plugins-extensibility`.
 
 ## Код курса
-- `Source/` — единственный код курса: `w2cplatform/` платформа, `vms/` подсистема, `cluster/`, `domain/`, `tests/`, `traces/`. Тесты: `tests/run.py`, `tests/cluster/run.py`, `tests/domain/run.py`, `tests/domainvms/run.py` в venv python3.12 с pyyaml, cryptography, pysyncobj; jsdom-тесты модуля в `tests/console`.
+- `Source/` — единственный код курса: `w2cplatform/` платформа (с `cluster/`, `domain/`, `trust/`), `vms/` подсистемы, `deploy/`, `gstvms/`, `tests/`, `traces/`. Тесты: `tests/run.py`, `tests/cluster/run.py`, `tests/domain/run.py`, `tests/domainvms/run.py` в venv python3.12 с pyyaml, cryptography, pysyncobj; jsdom-тесты модуля в `tests/console`.
 - Спеки `Source/vms/*.subsystem.yaml` и `tests/testdata/testsub*.yaml` — один YAML с продуктом; после сигнала «Лекций» их байты правит только «Паритет».
 - Тест границы `Source/tests/test_boundary.py` с долгом: долг только уменьшается.
 
