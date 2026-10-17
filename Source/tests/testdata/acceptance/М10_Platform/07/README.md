@@ -7,11 +7,65 @@
 ## secret_in.tsv и log_mask.tsv
 
 Формат общих таблиц адресов и строк лога — в шапке каждой. Раннер: `secret_in.tsv` —
-каждая строка читается правилом названного поля (`cam.source`, `rec.volumes.url` общих
-спек каталога): показ равен `masked`, отказ пуст или называет поле из `fault`, текст
-отказа не содержит raw-значения пароля. `log_mask.tsv` — лог-маска процесса, знающего
-те же спеки каталога, даёт `masked`. Наличие только testsub/testsub2 для HTTP не заменяет
-эти правила полей; если нужные спеки не загружены, таблица не считается пройденной.
+каждая строка читается правилом названного поля из раздела ниже: показ равен `masked`,
+отказ пуст или называет поле из `fault`, текст отказа не содержит raw-значения пароля.
+`log_mask.tsv` — лог-маска с правилом каталога из тех же двух полей даёт `masked`.
+
+## Правила двух полей таблицы (данные приёмки)
+
+`secret_in.tsv` читается правилом названного в строке поля. Объявления этих полей — данные этой приёмки, а не
+ссылка на каталог VMS (ADR-0001): реализация урока 7 не обязана знать спеки `cam` и `rec`. Объявления ниже
+совпадают с полями `unit.fields.source` спеки `cam` и `tables.volumes.fields.url` спеки `rec` на 2026-10-17;
+правило каталога для вложенных адресов и для `log_mask.tsv` — объединение правил этих двух полей с общим
+словарём (Н1.1 урока). Форма каждого ключа — сводная таблица М10/2 Н1.2а и Н1.1 урока 7.
+
+```yaml
+cam.source:
+  type: url
+  schemes:
+    driverpack:
+      host: path
+      none: [file]
+    ipint: {fragment: none}
+    rtsp: {}
+    rtsps: {}
+    http: {}
+    https: {}
+    cfw:
+      none: [local]
+  credentials: {login: cred_username, secret: cred_secret}
+  secret_in:
+  - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, =accesskeyid, =awsaccesskeyid]
+    login: [user, usr, username, userid, login, loginuse, loginname, uname, account, =accesskeyid, =awsaccesskeyid]
+  - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
+  - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
+  - param: [password*, passwd*, pwd*, psw*, secret*, '*password', '*passwd', '*pwd', '*secret', '*token']
+  - {regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)', in: path}
+  - {regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)', in: query}
+  - regex: (?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)
+    in: [path, query]
+  - regex: (?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)
+    in: [path, query]
+  - {regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)', in: path}
+  - regex: ^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)
+    in: path
+    schemes: [driverpack]
+  - regex: ^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@
+    in: path
+    schemes: [driverpack]
+  - regex: ^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@
+    in: path
+    schemes: [driverpack]
+  - nested: [src, url]
+rec.volumes.url:
+  type: url
+  credentials: {login: access_key, secret: access_secret}
+  secret_in:
+  - param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]
+  - param: [password*, passwd*, pwd*, secret*, '*password', '*passwd', '*pwd', '*secret', '*token']
+  - nested: [src, url]
+```
+
 
 ## scenarios.tsv
 
