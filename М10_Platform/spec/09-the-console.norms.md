@@ -287,6 +287,10 @@ door.routes, доступным подписантом и подтверждён
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
   snapshot_ahead_shards; audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
+  # reconcile_last_pass_age_seconds — сколько секунд объект <sub>/controller/pass (урок 4 Н1.2) не менялся на глазах
+  # консоли (её монотонные часы, первый взгляд — 0), объекта нет — −1; reconcile_last_success_age_seconds — то же от
+  # последней увиденной смены его поля last_success, успешного прохода не было — −1; второй читает скрипт запасных
+  # (урок 11 Н1.5 правило 2)
 metrics[]:  закрытый перечень ключей элемента (загрузчик урока 2 отказывает иным): name, type, from, agg, equals, when, default,
             live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
 платформы, один раз (root); источник — пульсы ресурсов урока 8 Н1.4 и уборка просьб этой консоли:
