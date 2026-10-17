@@ -1,0 +1,207 @@
+{
+  "task": "decisions/inbox/2026-10-17-задача-старый-python-заморожен.md",
+  "branch": "codex/course-frozen-python-acceptance",
+  "base": "135eac01",
+  "amendment": "fe2cdfcd",
+  "code_commit": "e61f22021c6b4572f5842b02764900c85ab20157",
+  "status": "ready for Architect review; code not merged",
+  "source_scope": [
+    "Source/tests/cluster/test_policies.py",
+    "Source/tests/conftest.py",
+    "Source/tests/domain/test_foreign_data.py",
+    "Source/tests/domain/test_lesson9_pending.py",
+    "Source/tests/domain/test_members.py",
+    "Source/tests/frozen_data.py",
+    "Source/tests/storage_acceptance.py",
+    "Source/tests/test_agent_console_signature.py",
+    "Source/tests/test_base_worker.py",
+    "Source/tests/test_book_merge.py",
+    "Source/tests/test_book_names.py",
+    "Source/tests/test_boundary.py",
+    "Source/tests/test_canonical_json_table.py",
+    "Source/tests/test_credentials.py",
+    "Source/tests/test_domain_books.py",
+    "Source/tests/test_domain_platform.py",
+    "Source/tests/test_fault_table.py",
+    "Source/tests/test_group_of_table.py",
+    "Source/tests/test_holder_requests.py",
+    "Source/tests/test_host.py",
+    "Source/tests/test_member_edits.py",
+    "Source/tests/test_member_resolver.py",
+    "Source/tests/test_place_follows.py",
+    "Source/tests/test_platform_lists.py",
+    "Source/tests/test_request_door_r14.py",
+    "Source/tests/test_requests_body_table.py",
+    "Source/tests/test_secret_in_table.py",
+    "Source/tests/test_spec_declarations.py",
+    "Source/tests/test_spec_flow.py",
+    "Source/tests/test_spec_keys.py",
+    "Source/tests/test_spec_re2.py",
+    "Source/tests/test_spec_rule.py",
+    "Source/tests/test_spec_verdicts.py",
+    "Source/tests/test_spec_yaml.py",
+    "Source/tests/test_strict_place.py",
+    "Source/tests/test_token_requests.py",
+    "Source/tests/test_units_about.py",
+    "Source/tests/test_unplaced_delete.py",
+    "Source/tests/test_where_place.py"
+  ],
+  "pinned_data": {
+    "constant": "FROZEN_TESTDATA_REF",
+    "ref": "a0bd9e53",
+    "commit": "a0bd9e532ee16343c8b0568b0e13c08e10afbd31",
+    "scope": [
+      "acceptance/**",
+      "testsub*.subsystem.yaml",
+      "*.tsv"
+    ],
+    "root_files_materialized_once_per_process": true,
+    "acceptance_files_materialized_on_request": true,
+    "frozen_file_verification": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/frozen-files-final.json",
+      "sha256": "5c5429e3cb0b518682e76bb4e874807d18c3e6244973dc8f6641163bc7d35823"
+    }
+  },
+  "before": {
+    "backend": "file",
+    "passed": 143,
+    "steps": 144,
+    "failed_scenario": "21-rights",
+    "failed_step": "6",
+    "exit_code": 1,
+    "log": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/before-file.log",
+      "sha256": "458af05291d6c072d7939b7b6f56e53901ef652abb19b78d0a98c8eaa7255992"
+    },
+    "records": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/before-file/api.json",
+      "sha256": "14a44763d4b4f9a518b199ea92464ab2169e1652b06b9f3d97393cf45b99465f"
+    }
+  },
+  "checks": {
+    "unit": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/unit.log",
+      "sha256": "1f91852a6e0e8a04bf78ffaf26ff3967737ea17534760f6c2816b589de59eeba",
+      "passed": 2079,
+      "failed": 1,
+      "skipped": 1,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ],
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py",
+      "cwd": "Source"
+    },
+    "cluster": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/cluster.log",
+      "sha256": "944d539893e68d42593f4f8d3ae5bce2ca347a5e55a44536e57601add728f6f0",
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "failures": [],
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/cluster/run.py",
+      "cwd": "Source"
+    },
+    "domain": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/domain.log",
+      "sha256": "e3d8f76b1e52f378ee328f8902b5b5a4dcf09b672e2a6e05601ecc3d83d87dbb",
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "failures": [],
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/domain/run.py",
+      "cwd": "Source"
+    },
+    "domainvms": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/domainvms.log",
+      "sha256": "2293555d012ea13a1bf7ff1ba8dd1ed1905530ab7b37886b163528757ffd8809",
+      "passed": 206,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "failures": [],
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/domainvms/run.py",
+      "cwd": "Source"
+    },
+    "final-targeted": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-targeted.log",
+      "sha256": "1f86a858fad6404711618e178b3267741b92d27c4fcd6a505687dce8351c8f00",
+      "passed": 93,
+      "failed": 1,
+      "skipped": 0,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ],
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py test_storage_m10 test_spec_verdicts test_spec_yaml test_spec_rule test_spec_keys test_platform_lists test_fault_table test_canonical_json_table test_requests_body_table test_group_of_table test_secret_in_table test_request_door_r14 test_boundary",
+      "cwd": "Source"
+    }
+  },
+  "test_storage_m10": {
+    "passed": 23,
+    "failed": 0,
+    "from": "final-targeted.log"
+  },
+  "acceptance": {
+    "http": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-http.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "records": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-http/api.json",
+        "sha256": "e55a8dce28522127494e5fcc92109b75b78396e33220903f7aa259141a8d5ffd"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-http --backend http"
+    },
+    "file": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-file.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "records": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-file/api.json",
+        "sha256": "f5c2984383c09f05a4c670f4d9d61b73757a7c6db01b482e117034fe33398e91"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-file --backend file"
+    },
+    "mem": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-mem.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "records": {
+        "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-mem/api.json",
+        "sha256": "f5c2984383c09f05a4c670f4d9d61b73757a7c6db01b482e117034fe33398e91"
+      },
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/final-mem --backend mem"
+    }
+  },
+  "source_manifest": {
+    "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/source-manifest.json",
+    "sha256": "2e00accc4e8f1dd9009044e32be55f47795a1c1e7e876341c2d0d00385f18269",
+    "files": 1179,
+    "unchanged_after_runs": true
+  },
+  "notes": [
+    "Only test infrastructure changed; runtime code, shared data, norms and product were not modified by this team.",
+    "Source/vms specs remain current. Other fixtures and text debt files retain their working-tree paths through symlinks.",
+    "Boundary scans the pinned testsub inputs and still scans current platform code; the new helper is included in PLATFORM_TESTS.",
+    "The initial unit attempt was interrupted after fe2cdfcd expanded the task; it is not claimed as a completed check.",
+    "Console may be skipped by the unit runner when jsdom is absent; actual skip count is recorded."
+  ]
+}
