@@ -4,7 +4,7 @@
   "base": "135eac01",
   "amendment": "fe2cdfcd",
   "code_commit": "e61f22021c6b4572f5842b02764900c85ab20157",
-  "status": "ready for Architect review; code not merged",
+  "status": "approved merge; integration checks complete",
   "source_scope": [
     "Source/tests/cluster/test_policies.py",
     "Source/tests/conftest.py",
@@ -203,5 +203,38 @@
     "Boundary scans the pinned testsub inputs and still scans current platform code; the new helper is included in PLATFORM_TESTS.",
     "The initial unit attempt was interrupted after fe2cdfcd expanded the task; it is not claimed as a completed check.",
     "Console may be skipped by the unit runner when jsdom is absent; actual skip count is recorded."
-  ]
+  ],
+  "integration": {
+    "merge_commit": "117625912e5e4610c32f6c56b37236a37f16bcbb",
+    "code_merged_from": "e61f22021c6b4572f5842b02764900c85ab20157",
+    "metadata_branch_commits_merged_again": false,
+    "merge_verification": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/merge-verification.json",
+      "sha256": "2542099ab1efffdb7c44bc45aad88a00163739eba3bcce6116b27408e91a386e"
+    },
+    "targeted": {
+      "passed": 93,
+      "failed": 1,
+      "skipped": 0,
+      "exit_code": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ],
+      "storage_m10_passed": 23,
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/merged-targeted.log",
+      "sha256": "8606776589ff320d581e8ae636e05171f3b7c066c9782decb7b2df0170f744d5",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py test_storage_m10 test_spec_verdicts test_spec_yaml test_spec_rule test_spec_keys test_platform_lists test_fault_table test_canonical_json_table test_requests_body_table test_group_of_table test_secret_in_table test_request_door_r14 test_boundary",
+      "cwd": "/Users/murat/orca/workspaces/server-vms-course/course-frozen-python-merge/Source"
+    },
+    "source_manifest": {
+      "path": "/Users/murat/w2c/archives/course-frozen-python-acceptance-20261017/merged-source-manifest.json",
+      "files": 1179,
+      "sha256": "852e278a8b5aa54ef5c90724f7e7fe666c28b1bf6a34c5a20eca8c55c6767895"
+    },
+    "notes": [
+      "The merge adds exactly the 39 reviewed test-infrastructure files.",
+      "The three branch metadata commits are not ancestors of main; their existing cherry-picked versions were retained.",
+      "Source changes since the completed full suites are confined to canonical acceptance data; the old Python tests consume that data from a0bd9e53."
+    ]
+  }
 }
