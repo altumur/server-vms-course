@@ -25,7 +25,7 @@ units:                                        # на каждом сервере
                           127.0.0.1:8080; CONSOLE_ROOT
   <dep>-<sub>worker.service: User=<пользователь подсистемы>; SupplementaryGroups=<dep>-<sub>worker w2c-store w2c-events
                           [w2c-secrets у держателей секретов]; WORKER_NAME=<prefix>-%l-1; W2C_ROLE=<sub>worker;
-                          Type=simple; NotifyAccess=main; WatchdogSec=360; TimeoutStopSec ≥ 20 (рекордер 40)
+                          Type=simple; NotifyAccess=main; WatchdogSec=360; TimeoutStopSec ≥ 20 (воркер, которому на сброс нужно больше, называет своё значение)
   <dep>-<sub>worker-spare@.service: тот же юнит без WORKER_NAME; W2C_SPARE_FILE=/run/w2c-spares/%n.env; Requisite=configstore;
                                     RestartPreventExitStatus=2 (нет файла — выход 2 без перезапуска; таймер запасных поднимет снова, когда файл появится)
   w2c-spares.service/.timer: Type=oneshot; User=w2c-spares без групп (ADR-0046); OnBootSec 1–2 мин; OnUnitActiveSec 1 мин
@@ -373,7 +373,7 @@ revoke: w2c-ca.sh revoke <server> → revoked/crl; скопировать на �
 | 06 | `@manual` учение `recover`: пол эпох вырос, эпохи после восстановления не повторяются | Н1.3 floor |
 | 07 | `@manual` вступление четвёртого сервера — 409; с `-force` — отказ (группа 3 объявлена); дверь без голоса на нём | Н1.3 |
 
-Проверяются структурно (тесты юнитов обеих сторон): юниты, пользователи, группы, каталоги и режимы, порядок окружения, сторож между 300 и 900, polkit, потолок запасных по формуле, `TimeoutStopSec`; сертификаты и отзыв — тесты центра; `door.pass` — стенд М12A (`live`).
+Проверяются структурно (тесты юнитов обеих сторон): юниты, пользователи, группы, каталоги и режимы, порядок окружения, сторож между 300 и 900, polkit, потолок запасных по формуле, `TimeoutStopSec`; сертификаты и отзыв — тесты центра; `door.pass` — на `testsub2` (`door: {pass: [entries]}`), чтением: стенду урока 11 нужен воркер с дверью.
 
 ---
 
