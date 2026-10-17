@@ -4,6 +4,8 @@ pass, part 4: the relay's bundle, `RecursionError`, kept edits, grants, asks, th
 a name that is a number; and the open rest of the seventh: the trust readers, the agent's pass, the books' steps,
 `identity.users`, the signer's start)."""
 
+from tests.frozen_data import frozen_testdata
+
 from tests.catalog_fixture import isolated_catalog
 
 from tests.member_console import device_console, admit_fixtures
@@ -70,7 +72,7 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     from w2cplatform.spec import SubsystemSpec, SpecController
     from w2cplatform.domain.signer_service import Holder
     from w2cplatform.domain.api import ConsoleAPI
-    data = Path(__file__).parents[1] / "testdata"
+    data = frozen_testdata()
     with isolated_catalog(data / "testsub.subsystem.yaml", data / "testsub2.subsystem.yaml"):
         spec = SubsystemSpec.load(data / "testsub.subsystem.yaml")
         wall = Clock(10_000.0)
