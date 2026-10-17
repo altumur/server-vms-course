@@ -8,9 +8,10 @@
 # весь модуль в курсе
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python \
   skills/lesson-spec/scripts/check_spec.py М10_Platform/[0-9][0-9]-*.md
-# выгрузка cammeta-specs: --root — её корень, уроки — её пути
-uv run … python skills/lesson-spec/scripts/check_spec.py --root /Users/murat/w2c/cammeta-specs \
-  /Users/murat/w2c/cammeta-specs/М10_Platform/[0-9][0-9]-*.md
+# выгрузка cammeta-specs: --root — её корень, уроки — её пути, реестр — того же коммита курса
+S=/Users/murat/w2c/cammeta-specs
+uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
+  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/М10_Platform/[0-9][0-9]-*.md
 ```
 
 `--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
