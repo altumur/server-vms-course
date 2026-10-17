@@ -5,20 +5,23 @@
   "tests": {
     "unit": {
       "cwd": "Source",
-      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/run.py",
-      "log": "/tmp/adr74-confirm-unit-20261017.log",
-      "sha256": "e546acfc36d34fa193fe41404ba38a891cc6df3f5b3bf079e8d4fe231cf27773",
-      "passed": 2047,
-      "failed": 4,
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /tmp/adr74-venv/bin/python tests/run.py",
+      "log": "/tmp/adr74-confirm-unit-role-restored-20261017.log",
+      "sha256": "cde44e80ef97089401205140f2a2623ac7ee8556898d7c01b469a92bf6f45e36",
+      "passed": 2048,
+      "failed": 3,
       "skipped": 2,
       "exit_code": 1,
-      "expected_failure": "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
-      "additional_failures": [
-        "test_platform_lists.py::test_the_code_holds_the_tables_lists",
+      "expected_failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
         "test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door",
         "test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process"
       ],
-      "skipped_reason": "console: no jsdom"
+      "skip_reasons": [
+        "pysyncobj unavailable in this venv",
+        "console: no jsdom"
+      ],
+      "validated_commit": "1a8aac7f"
     },
     "domain": {
       "cwd": "Source",
@@ -79,13 +82,15 @@
     "obsd": "/Users/murat/w2c/vms-nightly/build/obsd/build/obsd"
   },
   "date": "2026-10-17",
-  "source_commit": "83c7c8ed",
-  "acceptance_status": "pending decisions for main regressions; not approved for merge",
+  "source_commit": "1a8aac7f",
+  "acceptance_status": "Conditional merge c1fe202a authorized: exact three permitted failures verified",
   "review_decisions": [
     "6e37e42b",
     "8498f5fd",
     "643d5223",
-    "0c40e0c1"
+    "0c40e0c1",
+    "992afbe3",
+    "c1fe202a"
   ],
   "validation": {
     "log": "/tmp/adr74-confirm-validation-20261017.log",
@@ -106,9 +111,9 @@
     "domainvms_after": 967
   },
   "source_manifest": {
-    "path": "/tmp/adr74-confirm-source-20261017.json",
-    "sha256": "7a5f139aae65470284781a929ebe81ef3f476893c00544538da15d109d2514b6",
-    "files": 1123,
+    "path": "/tmp/adr74-confirm-source-role-restored-20261017.json",
+    "sha256": "735c027653a963f679c4fe54e13319733ae6f53c77562702ead18165c6d4c771",
+    "files": 1125,
     "unchanged_after_runs": true
   },
   "fixture_catalogue": {
@@ -120,12 +125,32 @@
     "load_dir_used": false,
     "implementation_imports": false
   },
-  "pending_decisions": [
-    "decisions/inbox/2026-10-17-confirm-secret-roles.md",
-    "decisions/inbox/2026-10-17-confirm-body-limit.md"
-  ],
+  "pending_decisions": [],
   "unit_fixture_repairs": {
     "Source/tests/test_console_gate.py": "RecWorker test double supplies metrics_text required when serve_archive starts; assertions unchanged",
     "Source/tests/test_row_reader.py": "RecWorker test double supplies ingest=None required by metrics_text; assertions unchanged"
+  },
+  "previous_unit": {
+    "cwd": "Source",
+    "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd /tmp/adr74-venv/bin/python tests/run.py",
+    "log": "/tmp/adr74-confirm-unit-20261017.log",
+    "sha256": "e546acfc36d34fa193fe41404ba38a891cc6df3f5b3bf079e8d4fe231cf27773",
+    "passed": 2047,
+    "failed": 4,
+    "skipped": 2,
+    "exit_code": 1,
+    "expected_failure": "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one",
+    "additional_failures": [
+      "test_platform_lists.py::test_the_code_holds_the_tables_lists",
+      "test_storage_m10.py::test_native_shared_acceptance_uses_each_real_backend_without_a_door",
+      "test_storage_m10.py::test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_process"
+    ],
+    "skipped_reason": "console: no jsdom"
+  },
+  "separate_followup": "decisions/inbox/2026-10-17-задача-м10-1-предел-тела-стенда.md",
+  "approved_tsv_restore": {
+    "commit": "1a8aac7f",
+    "file": "Source/tests/testdata/platform_lists.tsv",
+    "change": "secret_roles<TAB>domainpart after domainagent; no other changes"
   }
 }
