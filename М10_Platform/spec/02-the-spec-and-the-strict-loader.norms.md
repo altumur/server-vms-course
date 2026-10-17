@@ -204,6 +204,7 @@ closed_key_set:
 | `requests.settle` | число ≥ 0, секунды | нет — 60 |
 | `requests.ttl` | число ≥ 0; 0 — без предела | обязателен при `free` и при `per_person` |
 | `requests.key` | шаблон rid (Н1.4) | нет — `r-<sha16(Idempotency-Key)>` |
+| `requests.outcome` | слово `mark` или `fetched` (смысл — урок 8, ADR-0054 доп. 2026-10-17); `fetched` требует `requests.key` (Н1.4) | нет — `mark` |
 | `requests.stamp` | список слов из `by`, `at`, `group`, `about`; `group` требует `placement.group_by` | необязателен |
 | `requests.journal` | строка — вид журнала | необязателен |
 | `requests.elsewhere` | список строк | необязателен |
@@ -323,6 +324,7 @@ rules:
 | `placement.weight.field` | поле единицы типа int |
 | `worker.deletes[]` | `unit.rows` этой спеки |
 | `requests.stamp: group`, `rights.reach.group` | требуют `placement.group_by` |
+| `requests.outcome: fetched` | требует `requests.key`: id дозаписи — из данных, повтор сверяется с данными; без него — отказ |
 | `console.running` | метрика из `metrics[]` |
 | `about.field` | поле единицы с `fixed: true` |
 | `door.routes[]` | маршрут, каждый один раз |
@@ -510,7 +512,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 308 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (60) или `refused` (248). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 312 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (62) или `refused` (250). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк по README; один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -520,6 +522,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
 | `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
 | `c3_tab_*`, `c3_u2028_*`, `c3_escape_*` | сверка 2 чистой комнаты: TAB вне кавычек и блочного скаляра, U+2028, экранирования двойных кавычек | Н1.1 |
+| `requests_outcome_*` | `requests.outcome`: `mark` и `fetched` с `key` — ok; `fetched` без `key` и иное слово — refused (ADR-0054 доп. 2026-10-17) | Н1.2а, Н1.4 |
 | `r40_worker_table_secret`, `r40_console_table_secret_ok` | секретное поле в таблице воркера (`worker.writes`) — отказ; та же таблица консоли — принята | Н1.2а |
 | `c3_cut_at_not_url`, `c3_enum_repeat`, `c3_unique_list`, `c3_schemes_*`, `c3_near_by_*`, `c3_about_sub_*` | сверка 2: повтор в `enum`, `unique` у списка, слова `schemes`, `near.by` — ссылка на поле, грамматика `about.sub` | Н1.3, Н1.4 |
 | группа 1: `base`, `yaml_*`, `dup_*`, `bom_utf8`, `non_utf8_*`, `nul_byte_in_word`, `tab_indent`, `anchor_*`, `deep_*`, `multiline_plain_scalar`, `overindent_hides_tail`, `block_scalar_hides_*`, `empty_document`, `key_true_yaml11` | минимальный принятый документ; подмножество YAML, один документ, корень-отображение, повторные ключи, глубина | Н1.1 |
@@ -607,6 +610,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 - [ ] **М10/2-25** обычная подстановка — только строка, :int — явный числовой источник; отсутствующий/иной тип тела — 400, не языковое преобразование — случаи r37_requests_plain_*/r37_requests_int_*/r37_table_key_bool/r37_table_template_bool/r37_table_int_template
 
 - [ ] **М10/2-26** unit/rows/id обязательны без умолчаний; минимальная numeric-спека с пустыми fields допустима — r38_unit_absent/r38_unit_rows_absent/r38_unit_id_absent/r38_unit_minimal
+- [ ] **М10/2-27** `requests.outcome` — `mark` (умолчание) или `fetched`; `fetched` без `requests.key` и иное слово — отказ загрузки — случаи requests_outcome_fetched_ok/requests_outcome_mark_ok/requests_outcome_fetched_without_key/requests_outcome_append
 
 ## Соответствие прежним урокам
 

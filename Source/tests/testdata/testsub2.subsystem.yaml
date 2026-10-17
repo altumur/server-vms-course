@@ -104,16 +104,18 @@ placement:
   rebalance:   {dead_band: 0.2}
   affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
 holds: {table: notches, unit: of, since: from, until: to, longest: 86400, released: released_at}
+# a person asks the holder of a tally to count a range: the holder adds the integers of [from, to] its count does not
+# cover yet (the ranges covered it keeps in its own row) and names the rid in its heartbeat's `fetched`; no mark is
+# written, and the same range asked again adds nothing (ADR-0054: `outcome: fetched`, the rid comes from the data)
 requests:
   free: true
   schema:
     type: object
-    required: [unit, add]
+    required: [unit, from, to]
     additionalProperties: false
-    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
-  key: "{unit}-{add:int}"
-  valid_for: 30
-  most_valid: 600
+    properties: {unit: {type: string}, from: {type: integer}, to: {type: integer}}
+  key: "{unit}-{from:int}-{to:int}"
+  outcome: fetched
   per_person: 3
   settle: 30
   ttl: 3600
