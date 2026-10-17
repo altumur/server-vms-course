@@ -4,6 +4,8 @@ words and not booleans, decimal integers within 2^53 — and every refusal a Val
 line. A test of the platform alone: the specs are written here."""
 from __future__ import annotations
 
+from tests.frozen_data import frozen_testdata
+
 import os
 import tempfile
 
@@ -12,9 +14,9 @@ import yaml
 from w2cplatform import specyaml
 from w2cplatform.spec import SubsystemSpec
 
-TESTDATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata")
+TESTDATA = str(frozen_testdata())
 SPECS = [os.path.join(TESTDATA, f) for f in ("testsub.subsystem.yaml", "testsub2.subsystem.yaml")] + \
-    [os.path.join(os.path.dirname(TESTDATA), "..", "vms", f) for f in
+    [os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms", f) for f in
      ("cam.subsystem.yaml", "rec.subsystem.yaml", "live.subsystem.yaml", "det.subsystem.yaml", "detjob.subsystem.yaml",
       "survey.subsystem.yaml", "auto.subsystem.yaml")]
 
