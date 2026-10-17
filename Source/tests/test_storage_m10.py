@@ -87,6 +87,8 @@ def test_the_unchanged_shared_acceptance_passes_through_a_separate_daemon_proces
         result = subprocess.run([sys.executable, str(runner), output], text=True,
                                 capture_output=True, timeout=45)
         assert result.returncode == 0, result.stdout + result.stderr
+        assert json.loads((Path(output) / "limits.json").read_text()) == {
+            "body": 1048576, "row": 524288, "checked_before_scenarios": True}
 
 
 def test_native_shared_acceptance_uses_each_real_backend_without_a_door():
@@ -99,6 +101,8 @@ def test_native_shared_acceptance_uses_each_real_backend_without_a_door():
             result = subprocess.run([sys.executable, str(runner), output, "--backend", backend],
                                     text=True, capture_output=True, timeout=45)
             assert result.returncode == 0, backend + result.stdout + result.stderr
+            assert json.loads((Path(output) / "limits.json").read_text()) == {
+                "body": 1048576, "row": 524288, "checked_before_scenarios": True}
             metadata = json.loads((Path(output) / "backend.json").read_text())
             assert metadata["door"] is False and metadata["backend"] == backend
             calls = json.loads((Path(output) / "api-calls.json").read_text())
@@ -444,3 +448,42 @@ def test_pending_replay_checks_payload_and_callers_permissions_before_finishing(
                 code, receipt = api.request('POST', '/v1/write', raw)
                 assert code == 200 and receipt['again'] is True
                 assert receipt['index'] == str(store.get('acc/row')[1])
+
+
+def test_configured_door_body_limit_is_distinct_from_the_row_ceiling():
+    from w2cplatform.configstore import LocalBackend, StoreDaemon
+    from tests.storage_acceptance import request
+    with tempfile.TemporaryDirectory(prefix="m10-body-") as root:
+        daemon = StoreDaemon(LocalBackend(), node_id="limits", sockets=root, body_limit=1048576)
+        try:
+            path = os.path.join(root, "admin.sock")
+            # At the body boundary parsing is reached; one byte past it is refused before parsing.
+            code, body = request(path, "POST", "/v1/write", b"!" * 1048576)
+            assert code == 400 and body["kind"] == "badrequest"
+            code, body = request(path, "POST", "/v1/write", b"!" * 1048577)
+            assert code == 413 and body["kind"] == "toolarge" and body["limit"] == 1048576
+            # This valid body fits the door but its items are one byte past the row ceiling.
+            raw = json.dumps({"op": "put", "key": "acc/row", "items": {"blob": "x" * 524285}}).encode()
+            code, body = request(path, "POST", "/v1/write", raw)
+            assert code == 413 and body["limit"] == 524288 and body["size"] == 524289
+            assert request(path, "GET", "/v1/get?key=acc/row", b"")[1]["items"] is None
+        finally:
+            daemon.stop()
+
+
+def test_default_door_still_accepts_a_fully_escaped_row_at_its_ceiling():
+    from w2cplatform.configstore import LocalBackend, StoreDaemon
+    from tests.storage_acceptance import request
+    with tempfile.TemporaryDirectory(prefix="m10-body-") as root:
+        daemon = StoreDaemon(LocalBackend(), node_id="escaped", sockets=root)
+        try:
+            path = os.path.join(root, "admin.sock")
+            value = "\x00" * 524284
+            raw = json.dumps({"op": "put", "key": "acc/row", "items": {"blob": value}}).encode()
+            assert len(raw) > 1048576  # the acceptance door bound must not become the production default
+            code, body = request(path, "POST", "/v1/write", raw)
+            assert code == 200 and body["index"]
+            code, body = request(path, "GET", "/v1/get?key=acc/row", b"")
+            assert code == 200 and body["items"] == {"blob": value}
+        finally:
+            daemon.stop()
