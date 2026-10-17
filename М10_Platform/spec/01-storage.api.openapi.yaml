@@ -6,12 +6,16 @@ paths:
     get:
       summary: прочитать
       parameters:
-        - {name: key, in: query, required: true, schema: {$ref: "#/components/schemas/Key"}}
+        - name: key
+          in: query
+          required: true
+          schema: {$ref: "#/components/schemas/Key"}
+          description: Разбор query — Н2.1 (application/x-www-form-urlencoded; + — пробел, %2B — плюс); повтор или отсутствие — 400 badrequest, байты не UTF-8 — 400 badkey.
       responses:
         "200":
           description: строка; отсутствующая — items null, index ""
           content: {application/json: {schema: {$ref: "#/components/schemas/Row"}}}
-        "400": {$ref: "#/components/responses/BadKey"}
+        "400": {$ref: "#/components/responses/BadRequestOrKey"}
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "503": {$ref: "#/components/responses/Unavailable"}
@@ -20,11 +24,16 @@ paths:
       summary: перечислить
       description: После проверки личности по М10/6; право read на значения не требуется.
       parameters:
-        - {name: prefix, in: query, required: false, schema: {type: string}}
+        - name: prefix
+          in: query
+          required: false
+          schema: {type: string}
+          description: Байты после разбора query по Н2.1, UTF-8 не требуется; отсутствие — пустой префикс; повтор — 400 badrequest.
       responses:
         "200":
           description: каждый ключ с данным префиксом и его версия; ключи — в порядке байтов
           content: {application/json: {schema: {$ref: "#/components/schemas/Listing"}}}
+        "400": {$ref: "#/components/responses/BadRequest"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NoRoute"}
         "503": {$ref: "#/components/responses/Unavailable"}
@@ -225,8 +234,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/BadKeyFault"
+    BadRequest:
+      description: Запрос не по форме (Н2.1); kind badrequest.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadRequestFault"
     BadRequestOrKey:
-      description: Неверная форма команды либо ключ; классификация — Н4.
+      description: Неверная форма запроса или команды либо ключ; классификация — Н2.1 и Н4.
       content:
         application/json:
           schema:
@@ -270,7 +285,7 @@ components:
           schema:
             $ref: "#/components/schemas/UnavailableFault"
     NoRoute:
-      description: Нет маршрута; kind badrequest.
+      description: Нет маршрута или метода на нём (Н2.1); kind badrequest. Неразбираемый HTTP — 400 badrequest, не 414, 431, 501 или 505.
       content:
         application/json:
           schema:
