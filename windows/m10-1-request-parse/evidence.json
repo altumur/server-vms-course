@@ -1,0 +1,208 @@
+{
+  "date": "2026-10-17",
+  "task": "decisions/inbox/2026-10-17-задача-реализациям-разбор-запроса-м10-1.md",
+  "branch": "codex/course-m10-request-parse",
+  "base": "5f3d0186",
+  "canonical_main": "3eafbb8e",
+  "code_commit": "c104437c2db77e5e8462c2761bd6fb182a4feba6",
+  "status": "ready for Architect review; platform diff not merged",
+  "checks": {
+    "unit": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/unit.log",
+      "sha256": "a29f5f72c3f6878e2c7c0f622d1e7719092699529be5e90c2cd01e23ec17abb7",
+      "passed": 2079,
+      "failed": 1,
+      "skipped": 1,
+      "failures": [
+        "test_platform_lists.py::test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one"
+      ],
+      "exit_code": 1,
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py"
+    },
+    "cluster": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/cluster.log",
+      "sha256": "7be441d5ae155a1c4f7c02b2b36eb19d9b37feea720a344f0c42e211e453626b",
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0,
+      "failures": [],
+      "exit_code": 0,
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/cluster/run.py"
+    },
+    "domain": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/domain.log",
+      "sha256": "583865b3e1a4fed562d2c5f5267e36236fcfa6a1057f1a243998d3994cfbf117",
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0,
+      "failures": [],
+      "exit_code": 0,
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/domain/run.py"
+    },
+    "domainvms": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/domainvms.log",
+      "sha256": "57d8d617cd0b6956573c3611427c577aba2a6714532db15eb09f0375fe15f067",
+      "passed": 206,
+      "failed": 0,
+      "skipped": 0,
+      "failures": [],
+      "exit_code": 0,
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/domainvms/run.py"
+    },
+    "targeted": {
+      "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/targeted.log",
+      "sha256": "38fcaf9dbbf9526bca37eaaeaff0a13d14e0adb8102bbf786e88af42367a6886",
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "failures": [],
+      "exit_code": 0,
+      "cwd": "Source",
+      "command": "OBSD_BIN=/Users/murat/w2c/vms-nightly/build/obsd/build/obsd PYTHONUNBUFFERED=1 /Users/murat/w2c/vms-nightly/venv/bin/python tests/run.py test_storage_m10 test_storage_request_parse test_storemachine test_boundary"
+    }
+  },
+  "acceptance": {
+    "http": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-request-parse-rfc-acceptance-20261017/http --backend http",
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance-http.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/api-calls.json",
+          "sha256": "1b68945b511ef070e6899ad7b2f6b6d2297d1e035fb74e3c43b4dc04292c2429"
+        },
+        "api.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/api.json",
+          "sha256": "e55a8dce28522127494e5fcc92109b75b78396e33220903f7aa259141a8d5ffd"
+        },
+        "daemon-exit.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/daemon-exit.json",
+          "sha256": "20daa7ddfe703518b5164902087fb984ae8e28d214976574b773a65cfa8e2d81"
+        },
+        "daemon.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/daemon.json",
+          "sha256": "49bb5d74abd18e876eabed799cc53a26a5be4385934bb2962f9b05bc48a11b0d"
+        },
+        "daemon.log": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/daemon.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "limits.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/http/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      }
+    },
+    "file": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-request-parse-rfc-acceptance-20261017/file --backend file",
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance-file.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/file/api-calls.json",
+          "sha256": "adc5a76384bc67b37cb809392bc83a3f8f0e1660658d28514eb31d071ca50883"
+        },
+        "api.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/file/api.json",
+          "sha256": "f5c2984383c09f05a4c670f4d9d61b73757a7c6db01b482e117034fe33398e91"
+        },
+        "backend.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/file/backend.json",
+          "sha256": "285d35b774dded7ad5fb8568767e4b00e0a10234874f9b4902b571be7d270e0f"
+        },
+        "limits.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/file/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      }
+    },
+    "mem": {
+      "scenarios": 27,
+      "steps": 138,
+      "failed": 0,
+      "exit_code": 0,
+      "command": "/Users/murat/w2c/vms-nightly/venv/bin/python tests/storage_acceptance.py /tmp/m10-request-parse-rfc-acceptance-20261017/mem --backend mem",
+      "log": {
+        "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance-mem.log",
+        "sha256": "0e23a1e179ed733b66a73584573cabb0867d436b12cb3cb24eabfc28e6ee99e1"
+      },
+      "artifacts": {
+        "api-calls.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/mem/api-calls.json",
+          "sha256": "f5814935b20a709da9dfc5adde16528b1fa22d8f8b296aee98dcb83979bab51d"
+        },
+        "api.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/mem/api.json",
+          "sha256": "f5c2984383c09f05a4c670f4d9d61b73757a7c6db01b482e117034fe33398e91"
+        },
+        "backend.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/mem/backend.json",
+          "sha256": "9148aeaed293b2749bd9934fbb4adc1ea2695df25a51b733e414bb8a8c027654"
+        },
+        "limits.json": {
+          "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/acceptance/mem/limits.json",
+          "sha256": "af8ce7f7edd9983576779ba114df83061720d46673311f4969c0e06e1eaccd31"
+        }
+      }
+    }
+  },
+  "source_manifest": {
+    "path": "/Users/murat/w2c/archives/course-m10-request-parse-20261017/source-manifest.json",
+    "sha256": "fa466c6fe6154e786c1a44861e3bbfbb34c9d4c1160c2a5390fe56419836cd2c",
+    "files": 1126,
+    "unchanged_after_runs": true
+  },
+  "implementation_choices": {
+    "request_line_bytes_including_crlf": 65536,
+    "header_block_bytes_including_final_crlf": 65536,
+    "header_fields": 99,
+    "json_container_depth_including_root": 64,
+    "body_limit_default": 3211264,
+    "acceptance_body_limit": 1048576,
+    "row_ceiling": 524288
+  },
+  "scope": [
+    "Source/README.md",
+    "Source/tests/storage_acceptance.py",
+    "Source/tests/test_storage_m10.py",
+    "Source/tests/test_storage_request_parse.py",
+    "Source/w2cplatform/configstore.py",
+    "Source/w2cplatform/configstoredoor.py",
+    "Source/w2cplatform/storemachine.py"
+  ],
+  "norms_and_shared_acceptance_changed_by_course_team": false,
+  "product_changed": false,
+  "diff_check": "passed",
+  "environment": {
+    "python": "3.12.15",
+    "raft": "pysyncobj available; real Raft tests enabled",
+    "obsd": "/Users/murat/w2c/vms-nightly/build/obsd/build/obsd",
+    "console_js": "jsdom absent; skip explicitly recorded by unit runner"
+  },
+  "notes": [
+    "The typed-document canonical parser keeps its contract; storage command syntax defers Unicode validation to the field being read.",
+    "NativeAPI still executes real File/Mem stores without answer()/StoreMachine/HTTP; only parsing and Fault envelopes are shared.",
+    "Two existing tests retain their failure/side-effect assertions and add the mandatory Fault.error field to four exact expectations.",
+    "The nonvoting door uses the same command parser to recognize id even with huge ignored numeric values.",
+    "Staged transport close bounds input draining to one second and prevents truncated TLS replies after ignored or refused bodies; seven regression functions include 96 TLS requests.",
+    "RFC 9112 probes refuse obs-fold and whitespace before the colon, and accept chunked even together with Content-Length; canonical TSV includes exact route and query-order cases.",
+    "Superseded full unit attempts were interrupted after source updates and are not claimed as completed verification."
+  ],
+  "next_task_not_before": "2026-10-22"
+}
