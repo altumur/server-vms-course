@@ -153,6 +153,7 @@ paths:
           required: false
           schema: {$ref: "#/components/schemas/IdempotencyKey"}
           description: Необязателен и не читается — правка сходится по cas (Н3 «править»); каждый повтор PUT поднимает revision. Обязательный ключ и проход повторов POST описаны в Н3.
+        - $ref: "#/components/parameters/IfMatch"
       requestBody:
         required: true
         content:
@@ -175,11 +176,14 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/ReferenceConflict"}
+        "412": {$ref: "#/components/responses/RevisionMoved"}
         "413": {$ref: "#/components/responses/LargeBody"}
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/WriteUnavailable"}
     delete:
       summary: пометить удалённой без изменения revision
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       responses:
         "200":
           description: Идентификатор помеченной единицы; повторное удаление — 404.
@@ -192,11 +196,18 @@ paths:
         "404": {$ref: "#/components/responses/NotFound"}
         "405": {$ref: "#/components/responses/Method"}
         "408": {$ref: "#/components/responses/SlowBody"}
+        "412": {$ref: "#/components/responses/RevisionMoved"}
         "413": {$ref: "#/components/responses/LargeBody"}
         "429": {$ref: "#/components/responses/RateLimited"}
         "503": {$ref: "#/components/responses/Unavailable"}
 components:
   parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: Условие правки по revision строки (Н3 «править», «удалить»); не равен — 412, не целое — 400.
+      schema: {type: string, pattern: '^[1-9][0-9]*$'}
     Rows:
       name: rows
       in: path
@@ -396,6 +407,17 @@ components:
         - properties:
             error: {enum: [store unavailable, busy, denied]}
   responses:
+    RevisionMoved:
+      description: If-Match не равен revision строки (Н3 «править», «удалить»); ничего не записано.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, revision]
+            additionalProperties: false
+            properties:
+              error: {const: revision moved}
+              revision: {type: integer, minimum: 1}
     BadRead:
       description: Общий отказ транспорта или пути, включая badkey полного ключа хранилища; detail и error, без fault.
       content:

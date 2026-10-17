@@ -142,7 +142,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   members?:     строка domain/members {doc} (Н1.1)
   holder?:      запись срока — урок 10
   sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants, break_glass — урок 9; books — урок 5
-  <поля уроков>: placement — урок 6; topology — урок 4; shared — урок 11; backup — урок 10
+  <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11; backup — урок 10
 envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 2 Н1.5: четыре части через «:», 2–4 — base64url без «=»
   recipient:    X25519 ключа члена: u = (1 + y)/(1 − y) mod 2^255 − 19 из y открытого Ed25519 (старший бит сброшен),
                 little-endian (RFC 7748 §4.1); закрытый — первые 32 байта SHA-512(seed_secret) как скаляр X25519

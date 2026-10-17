@@ -273,10 +273,20 @@ components:
                       description: Поле stale метки (урок 3 Н1.3) — пульсы, которые агент члена не видел меняющимися дольше LOST_AFTER; нет — пусто.
               placements:
                 type: object
+                description: '{<sub>: {<ref>: <член> | {cluster, copies}}} — назначения урока 6 Н1.1; имя — то же, что {cluster: имя, copies: []}.'
                 additionalProperties:
                   type: object
                   additionalProperties:
-                    $ref: '#/components/schemas/MemberName'
+                    oneOf:
+                      - $ref: '#/components/schemas/MemberName'
+                      - type: object
+                        required: [cluster, copies]
+                        additionalProperties: false
+                        properties:
+                          cluster: {$ref: '#/components/schemas/MemberName'}
+                          copies:
+                            type: array
+                            items: {$ref: '#/components/schemas/MemberName'}
     ViewOutput:
       type: object
       description: Вывод команды view (Н5) — вид и теневой отчёт последнего прохода входа.

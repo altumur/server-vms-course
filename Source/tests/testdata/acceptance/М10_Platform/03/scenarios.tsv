@@ -66,3 +66,11 @@ scenario	step	request	expect
 13-idempotency-key-limits	8	GET /counters/k2	404
 13-idempotency-key-limits	9	GET /counters/k4	404
 13-idempotency-key-limits	10	GET /counters/k5	404
+14-if-match	1	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
+14-if-match	2	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
+14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
+14-if-match	4	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
+14-if-match	5	@header If-Match: two PUT /counters/m14 {"start": 3}	400
+14-if-match	6	GET /counters/m14	200 {"start": 2, "revision": 2}
+14-if-match	7	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
+14-if-match	8	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}

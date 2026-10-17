@@ -1,0 +1,234 @@
+openapi: 3.1.0
+info:
+  title: M11/6 assignment and kept edits
+  version: '1'
+  description: 'Normative shapes: 06-assignment.norms.md N1.1-N1.6, N2. Doors of the domain console; a member console
+    forwards them (M11/8). Request parsing: M10/1 N2.1 with M10/9 N2; grants: M11/9 (admin to change, view to read).'
+servers:
+  - url: '{origin}'
+    description: Консоль домена или консоль члена, которая пересылает двери.
+    variables:
+      origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+paths:
+  /domain/placement:
+    get:
+      summary: Все назначения
+      responses:
+        '200':
+          description: Счётчик и записи
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rev, records]
+                additionalProperties: false
+                properties:
+                  rev: {type: integer, minimum: 0}
+                  records:
+                    type: object
+                    additionalProperties: {$ref: '#/components/schemas/Placement'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+  /domain/placement/{sub}/{ref}:
+    parameters:
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Ref'}
+    get:
+      summary: Одно назначение
+      responses:
+        '200':
+          description: Запись
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Placement'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+    put:
+      summary: Назначить (только оператор)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cluster]
+              additionalProperties: false
+              properties:
+                cluster: {$ref: '#/components/schemas/MemberName'}
+                origin: {$ref: '#/components/schemas/MemberName'}
+                copies:
+                  type: array
+                  uniqueItems: true
+                  items: {$ref: '#/components/schemas/MemberName'}
+                reason: {type: string}
+      responses:
+        '200':
+          description: Запись после правки; то же содержимое — прежняя rev
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Placement'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+    delete:
+      summary: Снять назначение
+      responses:
+        '200':
+          description: Снято
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                additionalProperties: false
+                properties:
+                  deleted: {type: string}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+  /domain/{sub}/{rows}:
+    parameters:
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Rows'}
+    post:
+      summary: Создать единицу на члене (правка хранится)
+      parameters:
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cluster]
+              properties:
+                cluster: {$ref: '#/components/schemas/MemberName'}
+      responses:
+        '202': {$ref: '#/components/responses/Kept'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '422': {$ref: '#/components/responses/Refused'}
+  /domain/{sub}/{rows}/{ref}:
+    parameters:
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Rows'}
+      - {$ref: '#/components/parameters/Ref'}
+      - name: cluster
+        in: query
+        required: false
+        schema: {$ref: '#/components/schemas/MemberName'}
+    put:
+      summary: Править поля domain.edit единицы члена (правка хранится)
+      parameters:
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, minProperties: 1}
+      responses:
+        '202': {$ref: '#/components/responses/Kept'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '422': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+    delete:
+      summary: Удалить единицу члена (правка хранится)
+      parameters:
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      responses:
+        '202': {$ref: '#/components/responses/Kept'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '422': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
+components:
+  parameters:
+    Sub:
+      name: sub
+      in: path
+      required: true
+      schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+    Rows:
+      name: rows
+      in: path
+      required: true
+      schema: {type: string, minLength: 1}
+    Ref:
+      name: ref
+      in: path
+      required: true
+      schema: {type: string, minLength: 1}
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 200}
+  responses:
+    Refused:
+      description: Отказ двери (Н2, Н4)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+    Kept:
+      description: Правка хранится до члена (Н1.4)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [kept, cluster, what, note]
+            additionalProperties: false
+            properties:
+              kept: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+              cluster: {$ref: '#/components/schemas/MemberName'}
+              what: {type: string}
+              note: {type: string}
+  schemas:
+    Refusal:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+    MemberName:
+      type: string
+      pattern: '^[a-z0-9-]{1,64}$'
+    Placement:
+      type: object
+      required: [cluster, origin, copies, reason, at, rev]
+      additionalProperties: false
+      properties:
+        cluster: {$ref: '#/components/schemas/MemberName'}
+        origin: {type: string, description: '"" — нет'}
+        copies:
+          type: array
+          items: {$ref: '#/components/schemas/MemberName'}
+        reason: {type: string}
+        at: {type: number}
+        rev: {type: integer, minimum: 1}
+    Outcome:
+      type: object
+      description: Исход правки (Н1.5); в виде домена — outcomes.
+      required: [id, status, result, at, what, kept_at]
+      additionalProperties: false
+      properties:
+        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        status: {type: integer}
+        result: {enum: [performed, conflict, refused]}
+        error: {type: string}
+        at: {type: number}
+        what: {type: string}
+        kept_at: {type: number}
