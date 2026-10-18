@@ -11,6 +11,11 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/holder` — `at`.
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
+- пишет: `domain/signer` (put), `domain/signer-pending` (put), `domain/members` (cas);
+- читает: `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`.
+
 Общее уроков 1–9 Н1 действует. Держатель держит **срок** — номер, который растёт только переносом или передачей; аренды,
 продления и автоматической смены держателя нет. Голосовать нечем: ни один raft не охватывает кластеры. Держатель пишет
 только своё хранилище; члены узнают нового держателя сами, по записи, которую проверяют своим набором (ADR-0066, решение
