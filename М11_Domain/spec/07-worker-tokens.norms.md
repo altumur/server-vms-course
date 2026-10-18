@@ -36,7 +36,8 @@ domain.tokens.<вид>:            # раздел спеки (М10/2 Н1.2а); �
     placement?:    подсистема, чьи записи назначения называют дом цели
   claims_bind:   ref_claim, audience_claim (у scenario ещё trigger_claim, acts_claim, up_claim) — имена из claims, разные
 computed:   centre, star_centre, poll_home — не поля записи и не поля единиц: вычисляются по топологии (урок 4 Н1.2)
-            centre — topology.centre; star_centre — centre, если cluster записи в star, иначе ничего;
+            centre — topology.centre; star_centre — centre, если cluster записи в star, иначе ничего (в аудиторию не
+            добавляет и не отказ); cluster в star, а centre нет — 409 no_centre;
             poll_home(член) — via[член], иначе centre, иначе держатель
 refusals:   отказ загрузки refused:value с путём (М10/2 Н4) на каждое нарушение выше; вид в двух спеках каталога — refused:catalogue
 ```
@@ -49,8 +50,8 @@ door:       POST /tokens/<sub>/<вид> у агента своего класт�
 body:       {request_id, ref, by?} — request_id 1–64 [A-Za-z0-9_-]; ref, by — непустые строки; больше TOKEN_BODY — 413
 TOKEN_BODY: 4 KiB
 answer:     200 {request_id, token, exp} — только этому соединению; иное — код и тело держателя как пришли
-no_queue:   агент держит запрос, пока держатель не ответил (не дольше TOKEN_WAIT); не ответил — соединение рвётся,
-            воркер просит заново; очереди ответов нет
+no_queue:   агент держит запрос, пока держатель не ответил (не дольше TOKEN_WAIT); не ответил — 503 {error: "unavailable"}
+            (Н2: до держателя не дотянуться), воркер просит заново; очереди ответов нет
 TOKEN_WAIT: 10          # с
 ```
 
@@ -69,7 +70,9 @@ agent:      открыть m1; request_id ≠ запрошенного или ex
 ```yaml
 payload:    {iss: <домен>, sub: <член-заявитель>, kind: <вид>, iat: now, exp: now + lifetime, jti: 16 hex,
              <ref_claim>: ref, <audience_claim>: [<член>…] по возрастанию, без повторов,
-             scenario: <trigger_claim>: by, <acts_claim>: [<act>…] по JCS без повторов, <up_claim>?: centre}
+             scenario: <trigger_claim>: by, <acts_claim>: [<act>…] без повторов по тексту JCS, по возрастанию байтов UTF-8
+             этого текста, <up_claim>?: centre}
+names:     ref_claim и audience_claim — из области, которая дала аудиторию (placement без записи упал на unit — из unit)
 signed:     ключом токенов держателя (current набора, урок 2 Н1.2), JCS header и payload (урок 2 Н1.6)
 ```
 
@@ -99,7 +102,7 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
 
 ```
 1. член, ключ, подпись — урок 3 Н2                                       → 404 / 403 / 401
-2. тело не по форме Н1.3                                                 → 400 bad_request
+2. тело не по форме Н1.3 — закрытое {request_id, role, ref, by?}          → 400 bad_request
 3. вид не объявлен спекой sub, или без области, или role ∉ grant          → 403 not_granted
 4. by есть без scenario или нет у scenario                               → 400 by_misplaced
 5. область:
@@ -107,18 +110,21 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
      нечитаема                                                           → 403 assignment_unreadable
      нет: есть unit — к unit; иначе                                      → 403 no_assignment
      имя записи (cluster, origin, copies) не член, или член ≠ поле caller → 403 outside_scope
+       (origin "" — не имя: на членство не проверяется, в аудиторию не входит; caller origin при "" — outside_scope)
      аудитория: значения target_fields; centre/star_centre без centre     → 409 no_centre
-   unit — владельцы ref (члены, чьи копии заявляют единицу с этим ref, урок 1):
+   unit — владельцы ref (члены, чьи копии заявляют единицу с этим ref в units подсистемы unit.sub, урок 1):
      caller self: владелец — ровно этот член; caller poll_home: владелец один  → иначе 403 unit_not_unique
      caller poll_home: poll_home(владелец) ≠ член                         → 403 not_poll_home
-     аудитория: poll_home(владелец), centre (без centre → 409 no_centre)
+     аудитория: значения target_fields — poll_home → poll_home(владелец), centre → centre (без centre → 409 no_centre)
    scenario — by:
+     владельцы by и ref — в units подсистемы вида (sub спеки, объявившей вид)
      владелец by один: член или член за этим ретранслятором (via[владелец] = член)  → иначе 403 trigger_not_reported
      общий документ doc (урок 11 Н1.2, проверенный record урока 10) → массив items; нет        → 403 no_shared_doc
-     элементы: имя уникально, enabled не false, target = ref, trigger = by → acts; нет ни одного → 403 no_item
-     дом: запись <placement>/<ref> — её cluster (в star — centre); иначе poll_home(единственного владельца ref)
-                                                                          → нет → 403 no_home
-     аудитория: подъём ретранслятора (заявитель — via владельца by) — [centre];
+     элементы: имя — строка, которая встречается в массиве один раз; enabled отсекает только false (нет поля —
+       включён); target = ref, trigger = by; нет поля по пути act — элемент пропускается → acts; нет ни одного → 403 no_item
+     дом: запись <placement>/<ref> — её cluster (в star — centre); записи нет — poll_home(единственного владельца ref)
+       запись нечитаема, или cluster в star без centre — дома нет, к владельцу не переходить  → нет → 403 no_home
+     аудитория (правила по порядку; дом посчитан раньше): подъём ретранслятора (заявитель — via владельца by) — [centre];
                 заявитель за ретранслятором R: R = дом — [R], иначе [R] и up = centre;
                 иначе — {дом} и centre, если он есть; у подъёма и за ретранслятором ≠ дом centre нужен → нет → 409 no_centre
 6. аудитория пуста или с не членом                                       → 403 no_audience
@@ -164,7 +170,7 @@ token урока 2 с expect {kind: <вид>, cluster: <свой кластер>
 ## Н5 Приёмка
 
 Каталог `Source/tests/testdata/acceptance/М11_Domain/07/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/07/README.md)):
-команда `issue` на входах `inputs/` и стенд урока 3 с местной дверью агента. Отказы объявления — случаи `m57_tokens_*`
+команда `issue` на входах `inputs/` и стенд урока 3 с местной дверью агента (каталог `testsub` и `testsub2`, как урок 5). Отказы объявления — случаи `m57_tokens_*`
 корпуса урока 2.
 
 ```yaml

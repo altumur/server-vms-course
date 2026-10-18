@@ -226,6 +226,10 @@ components:
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
         pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+        outcomes:
+          type: object
+          description: 'Урок 6 Н1.5: исходы правок домена из публикации — часть целого поколения.'
+          additionalProperties: {$ref: '#/components/schemas/Outcome'}
     Mark:
       type: object
       description: Объект domain/members/<член>/reported (Н1.3).

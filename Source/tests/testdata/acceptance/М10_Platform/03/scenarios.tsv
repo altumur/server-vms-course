@@ -16,7 +16,7 @@ scenario	step	request	expect
 04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
 04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
 04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
-04-platform-fields	4	PUT /counters/c3 {"epoch": 9}	400 {"error": "~may not set"}
+04-platform-fields	4	PUT /counters/c2 {"epoch": 9}	400 {"error": "~may not set"}
 05-required	1	POST /counters {"start": 1}	400 {"error": "~needs a name"}
 05-required	2	POST /counters {"name": "", "start": 1}	400
 06-name-grammar	1	POST /counters {"name": "a/b"}	400
@@ -45,7 +45,7 @@ scenario	step	request	expect
 10-inherit-absent	1	POST /counters {"name": "c10"}	201 {"id": "c10", "step": "@absent", "marks": "@absent"}
 10-inherit-absent	2	PUT /counters/c10 {"step": 2}	200 {"step": 2, "revision": 2}
 10-inherit-absent	3	PUT /counters/c10 {"step": null}	200 {"step": "@absent", "revision": 3}
-11-bad-path	1	PUT /counters/c3/x {"start": 1}	404
+11-bad-path	1	PUT /counters/c2/x {"start": 1}	404
 11-bad-path	2	PUT /counters/nosuch {"start": 1}	404 {"error": "no such unit"}
 11-bad-path	3	DELETE /counters/nosuch	404 {"error": "no such unit"}
 11-bad-path	4	GET /counters/	404

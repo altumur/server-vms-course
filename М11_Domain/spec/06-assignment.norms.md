@@ -64,7 +64,8 @@ order:      проверки тела по порядку: платформен�
 find:       ref → член и id по виду домена (урок 1 Н1.4); ?cluster= — только этот член
 refusals:   ровно урок 1 Н4:
   - ?cluster= не член списка                         → 404 {error: "no such member"}
-  - ref в contested                                  → 503 {error: "refused", detail: называет членов}
+  - ref в contested                                  → 503 {error: "refused", detail: называет членов}; так и при
+    ?cluster= одного из спорящих — вид не держит единиц спорного ref; член вне спора — поиск только у него
   - ref не найден, кто-то не ok (unseen, silent, never) → 503 {error: "refused", detail: называет молчащих}
   - ref не найден, ответ полный                       → 404 {error: "refused", detail: "<sub> <ref> is in no member of the domain"}
   - POST: cluster не член                             → 404 {error: "no such member"}
@@ -78,13 +79,15 @@ kept:       найденная единица (в том числе у член�
 domain/pending/<член>:   строка держателя; элемент <id> — текст JSON правки
   edit:     {id, what, method, path, body, key, at, base?}
     id:     "e-" + первые 12 знаков hex sha256(UTF-8(член) ‖ 0x00 ‖ UTF-8(Idempotency-Key))
-    what:   имена полей тела по возрастанию через «,» (DELETE — "")
+    what:   имена полей тела по возрастанию через «,», у POST — с полем domain.ref, без cluster (DELETE — "")
     method: POST | PUT | DELETE;  path — путь двери единиц консоли члена: /<sub>/<rows> или /<sub>/<rows>/<id>
             (id — местный id единицы из копии члена); body — объект полей (DELETE — {})
     key:    Idempotency-Key запроса
-    at:     стенные секунды консоли домена; если по этому id уже записан исход — не меньше следующего за его kept_at
+    at:     стенные секунды консоли домена; если по этому id уже записан исход (строка domain/outcomes/<член> держателя,
+            Н1.6) — не меньше следующего за его kept_at
             числа (nextafter): новый приём того же ключа отличим от прежнего
-    base?:  revision единицы в копии члена у держателя в момент приёма (PUT, DELETE); у POST нет; есть ждущая PUT того же
+    base?:  revision единицы в копии члена у держателя в момент приёма (PUT, DELETE); у POST нет; строки шарда с
+            revision этой единицы в копии нет — base нет, правка идёт без If-Match; есть ждущая PUT того же
             path — base = её base + 1 (так применяется её результат, а не прежнее значение); ждущая DELETE того же path —
             новая правка этого path отказывается 409 {error: "unit is being deleted"}
             # ждущая правка не применилась (conflict) — следующие того же path тоже дадут conflict: оператор решает заново
@@ -105,8 +108,8 @@ apply:      для каждой правки ответа по порядку: �
 outcome:    {id, status, result, error?, at, what, kept_at}
   status:   код ответа консоли
   result:   performed (2xx) | conflict (412: единицу на члене поменяли после приёма — правка не применена, единица не
-            перезаписана) | refused (иной 4xx)
-  error:    detail ответа при status ≥ 400, без значений секретов
+            перезаписана) | refused (иной 4xx, в том числе 409, кроме «in flight»/«taken over» ниже)
+  error:    detail ответа (нет detail — его error) при status ≥ 400, без значений секретов
   at:       стенные секунды агента;  kept_at — at правки
 retry:      консоль не ответила, status ≥ 500, 409 «in flight»/«taken over» (М10/3) → исхода нет, повтор следующим проходом
 domain/outcomes:  строка члена (агент): элемент <id> — текст JSON исхода; исход снимается, когда держатель перестал
@@ -138,7 +141,7 @@ HTTP-контракт: [06-assignment.api.openapi.yaml](06-assignment.api.openap
 |---|---|---|
 | GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}` | 401/403 — урок 9 |
 | GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; 404 нет спеки или без `domain.ref` |
-| PUT `/domain/placement/<sub>/<ref>` `{cluster, origin?, copies?, reason?}` | 200 Placement; то же содержимое — без новой `rev` | 400 лишнее поле, нет `cluster`, `copies` с повтором или с `cluster`; 404 нет спеки или без `domain.ref`; 409 имя — не член; 503 счётчик не записался за 8 попыток |
+| PUT `/domain/placement/<sub>/<ref>` `{cluster, origin?, copies?, reason?}` | 200 Placement; то же содержимое — без новой `rev` | по порядку: 400 лишнее поле, нет `cluster`, `copies` с повтором или с `cluster`; 404 нет спеки или без `domain.ref`; 409 имя — не член (`cluster`, непустой `origin`, каждое из `copies`); 503 счётчик не записался за 8 попыток |
 | DELETE `/domain/placement/<sub>/<ref>` | 200 `{deleted: "<sub>/<ref>"}` | 404 нет записи |
 | POST `/domain/<sub>/<rows>` | 202 kept | Н1.3, Н1.4 |
 | PUT, DELETE `/domain/<sub>/<rows>/<ref>[?cluster=]` | 202 kept | Н1.3, Н1.4 |

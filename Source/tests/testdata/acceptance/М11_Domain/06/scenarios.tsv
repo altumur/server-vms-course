@@ -38,7 +38,7 @@ scenario	step	request	expect
 03-kept-and-applied	5	holder PUT /domain/testsub/counters/c3 {"start": 5}	202 {"kept": "$id", "cluster": "m1", "what": "start"}
 03-kept-and-applied	6	@key(5) holder PUT /domain/testsub/counters/c3 {"start": 5}	202 {"kept": "$id"}
 03-kept-and-applied	7	@key(5) holder PUT /domain/testsub/counters/c3 {"start": 6}	422
-03-kept-and-applied	8	holder GET /domain	200 {"pending": {"m1": 1}}
+03-kept-and-applied	8	@until 10 holder GET /domain	200 {"pending": {"m1": 1}}
 03-kept-and-applied	9	member m1 console GET /counters	200 {"configured": [{"id": "c3", "start": 1}]}
 03-kept-and-applied	10	@mend m1	ok
 03-kept-and-applied	11	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c3", "start": 5}]}
@@ -107,7 +107,7 @@ scenario	step	request	expect
 05-kept-full	53	holder PUT /domain/testsub/counters/c5 {"start": 49}	202
 05-kept-full	54	holder PUT /domain/testsub/counters/c5 {"start": 50}	202
 05-kept-full	55	holder PUT /domain/testsub/counters/c5 {"start": 51}	409 {"error": "kept_full"}
-05-kept-full	56	holder GET /domain	200 {"pending": {"m1": 50}}
+05-kept-full	56	@until 10 holder GET /domain	200 {"pending": {"m1": 50}}
 06-shadow-and-executors	1	@domain	ok
 06-shadow-and-executors	2	holder PUT /domain/placement/testsub/c6 {"cluster": "m1", "copies": ["m2"]}	200
 06-shadow-and-executors	3	holder PUT /domain/placement/testsub/c8 {"cluster": "m1"}	200

@@ -19,7 +19,8 @@
 ```yaml
 domain/users/<имя>:  {name, how, pwhash_secret, disabled, at, by}      # у держателя; писатель — процесс domain
   name:        имя человека — 1–64 символа без пробельных, управляющих (U+0000–U+001F, U+007F) и : | ( ) " /;
-               не break-glass; не субъект индекса имён (Н1.7)
+               не ровно break-glass (имя аварийной сессии — break-glass(<who>), скобки и так запрещены) — 400 bad name;
+               не субъект индекса имён (Н1.7)
   how:         "password"                       # иных способов входа урок не нормирует
   pwhash_secret: pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> — PBKDF2-HMAC-SHA256 от UTF-8 пароля, соль —
                16 случайных байт, ключ — 32 байта; секрет по суффиксу (М10/7), запечатан кольцом держателя
@@ -35,8 +36,9 @@ unreadable:    строка человека, которая не читаетс
 ### Н1.2 Вход, токен человека, отзыв
 
 ```yaml
-door:          POST /api/login {user, password} у процесса domain; тело ≤ LOGIN_BODY (больше — 413); оба поля — строки
-               (иначе 400 bad body); CORS: Access-Control-Allow-Origin: * без credentials — дверь cookie не ставит и не читает
+door:          POST /api/login {user, password} у процесса domain; тело ≤ LOGIN_BODY (больше — 413 {error: "too large",
+               detail}); оба поля — строки (иначе 400 {error: "bad body", detail}); CORS: Access-Control-Allow-Origin: *
+               у каждого ответа двери, без credentials — дверь cookie не ставит и не читает
 check:         предел Н1.10 → человек есть, не disabled, пароль сверился (сравнение постоянного времени) → токен;
                нет человека или disabled — сверка по фиктивному хешу той же стоимости (600000): ответ неизвестному,
                выключенному и неверному неразличим и по коду, и по телу, и по времени
@@ -65,16 +67,20 @@ domain/grants/<кластер>:  {doc: <текст JCS {lines}>}   # у держ
     cap:       view | edit | admin             # view < edit < admin
     scope:     * | unit:<sub>/<id> | labels:<метка>[,<метка>…]   # метки — азбука урока М10/4 Н2.1, без повторов
     until:     0 — без срока; иначе стенные секунды — строка действует, пока now < until
-    by:        имя, доказанное сторожевой при записи
+    by:        имя, доказанное сторожевой при записи; строка, совпавшая по (subject, cap, scope, until) с прежней, при
+               записи строки целиком сохраняет свой by, новая — имя записавшего
   writer:      консоль домена по двери Н2 (CAS по прочитанной версии); снятие строк человека при удалении — процесс domain
 domain/grants/domain: гранты двери домена (консоль домена и процесс domain); ни один агент их не несёт
 last_admin:    правка domain/grants/domain или людей, после которой нет строки {cap: admin, scope: *, until: 0} человека,
                который есть и не disabled, — 409 last admin
 carry:         ответ держателя агенту (урок 3 Н1.5) несёт в sealed поле grants: {doc} — строка domain/grants/<член>
                без строк, чей subject в domain/disabled (ADR-0051); строки нет — поля нет
-member_copy:   агент пишет domain/grants/<член> {doc, as_of} — doc как пришёл, as_of — свои стенные секунды приёма;
-               поля нет — строку удалить
-holder_copy:   у кластера держателя строка domain/grants/<держатель> — та, что пишет консоль домена (as_of нет)
+member_copy:   агент пишет у своего кластера точный ключ domain/grants {doc, as_of} — doc как пришёл, as_of — свои стенные
+               секунды приёма; поля нет — строку удалить. Как domain/outcomes урока 6: копия члена — точный ключ, строки
+               держателя — семья domain/grants/<кластер>; агенту — !domain/grants/* без !domain/grants (М10/6 Н1.2)
+holder_copy:   у кластера держателя копию domain/grants пишет его агент из ответа своего держателя, как у любого члена:
+               одно правило чтения, второго писателя нет (ADR-0032); до первого ответа агенту строки нет — прав нет,
+               вход — аварийный (Н1.6), как у члена до первого ответа
 GRANT_LIFETIME: 86400      # с — копия члена старше as_of + GRANT_LIFETIME не даёт прав
 unreadable:    строка, которая не читается, прав не даёт; строка lines, которая не по форме, — пропускается и считается
                диагностикой, остальные действуют
@@ -110,14 +116,16 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 ```yaml
 cluster:   М10/9 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token урока 2 по набору и domain/revoked
            этого кластера (отказ — 401 {error: denied, detail: "token refused: <слово>"}, форма М10/9); затем may (Н1.4) с
-           grants = doc строки domain/grants/<этот кластер>, as_of — её as_of, disabled — domain/disabled этого
+           grants = doc строки domain/grants (копия этого кластера), as_of — её as_of, disabled — domain/disabled этого
            хранилища (есть только у держателя), cap и unit — need М10/9 Н1.3; deny — 403 {error: denied, detail:
            "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
            its agent has not reached the domain»
 domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /spec,
-           /mounts и двери урока с GET; admin — остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin
+           /mounts и двери урока с GET; admin — остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin;
+           кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле (Н1.2 revoke)
+body_unit: need, чья единица в теле (М10/9 Н1.3: /marks, POST /<sub>/requests), решается до чтения тела — unit = "*"
 session:   GET /session доказанной личности (М10/9 Н1.3) — grants: [{cap, scope}] — действующие строки этого человека
-           (шаг 5 may) у этой консоли, по (cap, scope)
+           (шаг 5 may) у этой консоли, по (cap, scope); у аварийной сессии — [] (её may — allow по glass)
 loopback:  «петля — operator» — только состояние open (нет домена, М10/9 Н1.3); в состоянии on — только Н1.5
 agent:     подпись агента своего кластера (урок 3 Н1.4) — двери единиц, как прежде
 ```
@@ -129,7 +137,9 @@ domain/break-glass/<кластер>: {pwhash_secret, set_at}    # у держа�
   writer:      процесс domain по двери PUT /domain/break-glass/<кластер> {password} (admin домена); пароль ≥ GLASS_MIN
 GLASS_MIN:     12          # символов
 carry:         sealed ответа агенту — поле break_glass: {pwhash_secret, set_at}; у члена — domain/break-glass/<член>
-               (секрет запечатан его кольцом); поля нет — агент удаляет строку
+               (секрет запечатан его кольцом); поля нет — агент удаляет строку. У кластера держателя строка
+               domain/break-glass/<держатель> — его собственная (пишет процесс domain): агент держателя её не пишет и не
+               удаляет, ответ себе поля break_glass не несёт
 door:          POST /session/break-glass {who, why, password} у консоли кластера (М10/9 Н1.3) — по порядку:
                1. консоль open — 400 {error: "open", detail: "this console is open: there is nothing to break into"}
                2. тело не {who, why, password} строками, who или why пусты — 400 bad body
@@ -155,17 +165,22 @@ subject:   значение key вклада этой книги
 domain/names/<sub>/<книга>:   у держателя; писатель — процесс domain после сборки книг прохода (урок 5 Н3)
   items:   "" → JCS {missing: [<член>…]}; <key> → JCS {members: [<член>…]} — по возрастанию, из всех читаемых вкладов,
            включая спорные unique и недоставленные; значений и секретов нет
-  missing: как missing книги урока 5 Н1.5 — члены, чьих вкладов нет из-за них
+  missing: как missing книги урока 5 Н1.5 — члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution,
+           secret_unopened); член unseen — не missing: его вклад в книге есть
 known:     индекс есть, читается и его missing пуст
 checks:    у дверей людей и грантов (процесс domain, консоль домена), по индексам всех names каталога:
            POST /domain/users с именем — subject индекса                    → 409 name taken
            строка гранта с subject индекса и rank(cap) > rank(grant)          → 400 grant too wide
-           новый человек или новая строка гранта (нет в прежней строке), а индекс не known → 503 names unknown,
-             detail — «missing members: <члены>» или «index absent or damaged»
+           новый человек или новая строка гранта (нет в прежней строке), чей subject не человек домена (нет в
+             domain/users), а индекс не known → 503 names unknown, detail — «missing members: <члены>» или «index
+             absent or damaged»; строка гранта человека домена (и root) индекса не ждёт: имена исключают друг друга
+             (exclusive_with), человек ключом индекса не бывает
            удаление человека и снятие строк — никогда не ждут
 reverse:   элемент книги с names, чей key — имя человека, не доставляется никому: поле вида view.books.<sub>/<книга>.person_names
            [<key>…] по возрастанию (урок 5 Н1.5, добавлено М11/9); в отчёте функции assemble урока 5 его нет — её вход без людей
 delivery:  урок 5 Н1.3 grant — у получателя строка гранта с subject = key, rank(cap) ≥ rank(grant), действующая (Н1.4 шаг 5)
+no_grant:  names без grant — ни предела ширины строки, ни условия доставки: ключ доставляется по to, как у книги без
+           names; reverse действует
 ```
 
 ### Н1.8 Семьи ключей домена
@@ -175,7 +190,8 @@ spec:      domain.keys: [{id, keys?: [<ключ>…], prefix?: <семья/>}] �
            одно из keys, prefix; ключи и семья — под domain/<sub>/; display.keys.<id> — слова только для объявленного id
            (иначе refused:reference); случаи m59_keys_* урока 2
 door:      GET /domain/keys у консоли кластера (своя, не пересылается; view): {rows, families, keyset}
-  rows:      {<ключ строки под domain/>: [<имя поля>…]} — строки этого хранилища, имена полей по возрастанию, без значений
+  rows:      {<ключ строки под domain/>: [<имя поля>…]} — строки этого хранилища, имена полей по возрастанию, без значений;
+             строка, чтение которой консоли отказано (М10/6), пропускается
   families:  {<id>: [<ключ>…]} — по domain.keys спек каталога: названные keys и ключи под prefix, что есть здесь
   keyset:    doc строки domain/keys как есть (открытые ключи) | null
 ```
@@ -196,7 +212,8 @@ member:    имя domain — не имя члена: приём члена (ур
 
 ```yaml
 scope:     у процесса domain — POST /api/login; у консоли кластера — POST /session/break-glass; свой счёт у каждой двери
-count:     отказ — неверная пара (Н1.2, Н1.6 шаг 5); успех и отказ формы не считаются
+count:     отказ — неверная пара (Н1.2, Н1.6 шаг 5); успех и отказ формы не считаются; попытка — каждый вызов, прошедший
+           форму (момент для ceiling)
 address:   адрес TCP-пира (заголовки адреса не читаются)
 per_address: 5 отказов этого адреса за последние 900 с → 429; Retry-After — секунды до выхода старейшего из окна
 ceiling:   20 отказов всех адресов за последние 900 с → каждому адресу не чаще одной попытки в 60 с; раньше — 429,
@@ -255,7 +272,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 1. may по domain/grants/domain, admin                               → 401 / 403
 2. кластер не по грамматике члена и не domain                        → 400 bad name
 3. lines не по форме Н1.3 (cap, scope, until — число ≥ 0, subject по Н1.1), повтор строки → 400 bad line
-4. проверки имён Н1.7: шире grant — 400; новая строка и индекс не known — 503
+4. проверки имён Н1.7: шире grant — 400; новая строка не человека домена и индекс не known — 503
 5. кластер = domain и last_admin                                     → 409 last admin
 6. записать по CAS: lines по порядку Н1.3, by — доказанное имя; конфликт — перечитать и повторить с шага 4 не больше трёх раз
 ```
@@ -283,7 +300,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `name taken` | 409 | имя — субъект индекса имён |
 | `last admin` | 409 | у двери домена не останется администратора |
 | `too many attempts` | 429 | предел Н1.10, `Retry-After` |
-| `names unknown` | 503 | индекс не known, а правка создаёт или расширяет |
+| `names unknown` | 503 | индекс не known, а правка создаёт человека или строку гранта не человека домена |
 | `open` | 400 | аварийный вход у открытой консоли |
 | `bad body` у аварийного входа | 400 | `who`, `why` пусты или не строки |
 

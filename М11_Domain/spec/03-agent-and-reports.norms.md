@@ -87,7 +87,9 @@ fresh:          агент помнит по каждому пульсу, ког
 
 ```yaml
 generation:     domain/members/<член>/reports/<rev>   # объект держателя (М10/8 Н1.1): целое поколение, JCS
-  whole:        {sent_at, objects, key, keys_rev?, pinned?}   # objects — все объекты члена после применения изменения
+  whole:        {sent_at, objects, key, keys_rev?, pinned?, outcomes?}   # objects — все объекты члена после применения
+                изменения; outcomes — урок 6 Н1.5: смена исходов — новое поколение, агент шлёт поле в каждой
+                публикации, пока строка domain/outcomes не пуста; нет поля — исходов нет
 delta:          domain/members/<член>/reports/<rev>.delta     # байты тела публикации как получены — то, что подписал агент
 reported:       domain/members/<член>/reported               # объект-метка; единственная граница принятого
   rev:          целое ≥ 1 — номер поколения; выдаёт держатель: +1 на принятое изменение

@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-18	03-kept-and-applied/9, 11; 04-conflict/9	двери `GET /<rows>/<id>` нет (М10/3 Н2): `GET /counters` и `configured`	all
+2026-10-18	03-kept-and-applied/8, 05-kept-full/56 читали view.pending сразу после 202, а вид пишет проход держателя раз в VIEW_EVERY 3 с (генератор 01bf847, журнал М11-06 № 1)	@until 10 у обоих шагов; норма вида не меняется	all

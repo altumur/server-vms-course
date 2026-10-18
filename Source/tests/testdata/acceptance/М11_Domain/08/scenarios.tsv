@@ -52,10 +52,10 @@ scenario	step	request	expect
 04-tls-ca-to-the-entry	14	holder POST /domain/members/m1/ca {"ca": []}	200 {"members": {"m1": {"ca": "@absent"}}}
 05-the-holders-page	1	@domain	ok
 05-the-holders-page	2	holder GET /	200 @header Content-Type: ~text/html
-05-the-holders-page	3	holder GET /platform/console.js	200 @file Source/w2cplatform/console.js
+05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
 05-the-holders-page	4	holder GET /spec	200 {"name": "", "rows": null}
 05-the-holders-page	5	holder GET /mounts	200 {"root": "", "mounts": {"testsub": "@any"}}
-05-the-holders-page	6	holder GET /session	200 {"open": true, "login_url": "/api/login"}
+05-the-holders-page	6	holder GET /session	200 {"open": false, "user": "root", "login_url": "/api/login"}
 06-peer	1	peer inputs/peer-01-ok.json	ok {"result": "ok"}
 06-peer	2	peer inputs/peer-02-anchor-intermediate.json	ok {"result": "ok"}
 06-peer	3	peer inputs/peer-03-anchor-root-through-intermediate.json	ok {"result": "ok"}

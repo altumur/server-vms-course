@@ -26,10 +26,10 @@ paths:
       summary: where единицы у консоли другого члена (Н1.5)
       responses:
         '200': {$ref: '#/components/responses/AsItCame'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '400': {$ref: '#/components/responses/AtBadRequest'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/AtNotFound'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/at/{cluster}/{sub}/where/{table}/{place}:
@@ -54,10 +54,10 @@ paths:
       summary: where места у консоли другого члена (Н1.5)
       responses:
         '200': {$ref: '#/components/responses/AsItCame'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '400': {$ref: '#/components/responses/AtBadRequest'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/AtNotFound'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/members/{member}/ca:
@@ -161,6 +161,22 @@ components:
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
+    AtNotFound:
+      description: '404 /domain/at/… — отказ пересылки (Н4) или ответ консоли члена как пришёл (Н1.5 answer): NotPlaced двери
+        where М10/4 или её NoRoute (форма ConsoleRefusal М10/4 — частный случай Refusal)'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - {$ref: '#/components/schemas/Refusal'}
+              - {$ref: '#/components/schemas/MemberNotPlaced'}
+    AtBadRequest:
+      description: '400 /domain/at/… — отказ пересылки (Н4) или ответ консоли члена как пришёл (Н1.5 answer); 400 двери where
+        М10/4 — BadBody формы ConsoleRefusal {error, detail}, частный случай Refusal, поэтому одна схема покрывает обе стороны
+        (oneOf двух равных форм был бы неразрешим)'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
   schemas:
     Refusal:
       type: object
@@ -172,6 +188,13 @@ components:
           minLength: 1
           description: Слово Н4 (not a domain route, one hop, no domain here, no console known, did not answer, …).
         detail: {type: string}
+    MemberNotPlaced:
+      type: object
+      description: Ответ 404 двери where консоли члена как пришёл — форма NotPlaced контракта М10/4.
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason: {type: string, minLength: 1}
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'
