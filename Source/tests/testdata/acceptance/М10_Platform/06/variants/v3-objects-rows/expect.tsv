@@ -1,0 +1,6 @@
+# Ожидаемые эффективные права варианта (README приёмки 06, «Варианты спек»): роль, действие, ключ, allow | deny.
+role	action	key	expect
+vaworker	write	objects/va/marks/m1	allow
+vaworker	write	objects/va/marks	deny
+vaworker	write	objects/va/marksx	deny
+console	write	objects/va/marks/m1	deny

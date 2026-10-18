@@ -1,0 +1,10 @@
+# Ожидаемые эффективные права варианта (README приёмки 06, «Варианты спек»): роль, действие, ключ, allow | deny.
+role	action	key	expect
+console	write	va/requests/r1	allow
+console	write	va/asked/a1	deny
+console	write	vb/requests/r1	deny
+vbworker	write	va/requests/r1	allow
+vbworker	write	vb/requests/r1	deny
+vaworker	read	va/requests/r1	allow
+vaworker	write	objects/va/commands/r1	allow
+vbworker	write	objects/vb/commands/r1	deny

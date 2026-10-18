@@ -1,0 +1,20 @@
+name: va
+unit:
+  rows: items
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int, default: 0}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+  unplaced:   {delete_after: 3600}
+requests:
+  valid_for: 30
+  most_valid: 600
+  schema:
+    type: object
+    required: [unit]
+    additionalProperties: false
+    properties: {unit: {type: string}}

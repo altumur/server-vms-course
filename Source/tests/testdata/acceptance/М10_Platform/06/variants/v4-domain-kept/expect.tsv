@@ -1,0 +1,16 @@
+# Ожидаемые эффективные права варианта (README приёмки 06, «Варианты спек»): роль, действие, ключ, allow | deny.
+role	action	key	expect
+vadomain	write	domain/va/worker	allow
+vadomain	write	domain/va/ledger	allow
+vadomain	write	domain/va/ledger/x	deny
+vadomain	write	domain/va/badges/b1	allow
+domainagent	write	domain/va/ledger	deny
+domainagent	write	domain/va/ledger/x	allow
+domainagent	write	domain/va/badges/b1	deny
+domainagent	write	domain/va/badges	allow
+domainagent	write	domain/va/worker	deny
+domainagent	write	domain/va/worker/x	deny
+domainagent	write	domain/va/heartbeat	deny
+domainagent	write	domain/members	deny
+domain	write	domain/members	allow
+vaworker	write	domain/va/worker	deny

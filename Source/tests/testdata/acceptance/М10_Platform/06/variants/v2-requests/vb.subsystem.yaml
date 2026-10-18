@@ -1,0 +1,13 @@
+name: vb
+unit:
+  rows: items
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int, default: 0}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+  unplaced:   {delete_after: 3600}
+worker: {requests: [va]}
