@@ -1,6 +1,6 @@
 # The closed vocabulary of `fault`: the word a door's refusal says to a machine and a test, beside `detail` for a person.
 # One table for the course (Source/tests/testdata/fault.tsv; canonical.FAULTS and every door's code) and the product
-# (testdata/fault.tsv at its root; its Fault set), byte for byte. Owner: «Паритет». Decision of «Архитектор», 2026-10-06;
+# (testdata/fault.tsv at its root; its Fault set), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Decision of «Архитектор», 2026-10-06;
 # described in lesson 09. A new word comes here FIRST, then into the code of both sides; requests_body.tsv and
 # group_of.tsv take their words only from here, and their tests check it. The door's `error` word is not compared.
 #
