@@ -236,7 +236,7 @@ CATALOG = Path("Platform/common/data/catalog.tsv")
 CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 CATALOG_KINDS = {"row", "object", "file", "dir"}
 CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
-ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain))"
+ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)"
 LESSON = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]{1,2}|P/[0-9]{2}(?:\.[0-9]+)?)"
 DATA_LINE = re.compile(r"^- (владеет|пишет|читает):\s*(.*?);?\s*$")
 
