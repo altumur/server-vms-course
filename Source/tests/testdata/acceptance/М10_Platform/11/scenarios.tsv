@@ -40,3 +40,35 @@ scenario	step	request	expect
 09-resource-unreadable-heartbeat	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
 10-foreign-dir	1	@foreign store nolabel	ok
 10-foreign-dir	2	@foreign store otherlabel	ok
+11-copy	1	@import store inputs/copy-ok.jsonl	ok
+11-copy	2	restored GET /v1/get?key=testsub/next_id	200 {"items": {"n": "2"}}
+11-copy	3	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
+11-copy	4	restored GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "@any"}}
+11-copy	5	@import store inputs/copy-ok-unordered.jsonl	ok
+11-copy	6	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
+11-copy	7	@backup store c1	ok
+11-copy	8	@import store backup c1	ok
+11-copy	9	restored GET /v1/get?key=platform/spec/testsub	200 {"items": {"rev": "@any"}}
+11-copy	10	restored GET /v1/get?key=platform/spec/testsub2	200 {"items": {"rev": "@any"}}
+12-copy-refused	1	@import store inputs/bad-format.jsonl	refused
+12-copy-refused	2	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	3	@import store inputs/bad-version.jsonl	refused
+12-copy-refused	4	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	5	@import store inputs/bad-header-extra.jsonl	refused
+12-copy-refused	6	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	7	@import store inputs/bad-no-header.jsonl	refused
+12-copy-refused	8	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	9	@import store inputs/bad-row-extra.jsonl	refused
+12-copy-refused	10	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	11	@import store inputs/bad-row-missing.jsonl	refused
+12-copy-refused	12	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	13	@import store inputs/bad-not-json.jsonl	refused
+12-copy-refused	14	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	15	@import store inputs/bad-not-row.jsonl	refused
+12-copy-refused	16	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	17	@import store inputs/bad-repeat-key.jsonl	refused
+12-copy-refused	18	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	19	@import store inputs/bad-index-above.jsonl	refused
+12-copy-refused	20	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	21	@import store inputs/bad-unreadable.jsonl	refused
+12-copy-refused	22	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
