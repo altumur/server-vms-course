@@ -243,6 +243,7 @@ box:       хранилище коробки — сборка без raft, од�
 | `-tuning` | `default` \| `lan` \| `slow` | `default` | профиль сроков raft (`tuning` выше) |
 | `-leader-wait` | срок | `5s` | ожидание лидера (`leader_wait` выше) |
 | `-max-value` | байты, > 0 (`0` и не число — отказ старта, код 2; сверка python и go М10/6–11, B7) | `512KiB` | потолок строки (урок 1 Н4, `{row_ceiling}` «Стенда») |
+| `-max-body` | байты, > 0 (как `-max-value`) | `1MiB` | предел чтения HTTP-тела `POST /v1/write` (урок 1 Н2, `{body_limit}` «Стенда»), отдельно от потолка строки `-max-value` (журнал cammeta-python, урок 11 № 24) |
 | `-max-conns`, `-api-conns`, `-api-per-address` | целое > 0 | 64, 32, 8 | пределы соединений (ниже) |
 | `-index-base` | целое ≥ 0 | 0 | у `import`: база версий (`import` выше) |
 
