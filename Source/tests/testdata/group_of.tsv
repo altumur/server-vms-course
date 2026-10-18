@@ -1,8 +1,7 @@
 # The group a camera's source puts it in (`placement.group_by: {field: source, cut_at: host}` over a url field that
 # declares its schemes, `fields.source.schemes: {<scheme>: {host, fragment, none} | {}}` — {} is «by the RFC»; one
-# declaration read by the url rule and the grouping alike): one table for the course (Source/, Python) and the product (Go),
-# read the same way by both: Source/tests/testdata/group_of.tsv (course, tests/test_group_of_table.py) and
-# testdata/group_of.tsv at the product's root (w2cplatform TestTheSharedTableOfGroups), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's deviceOf (vms/gate.go), its
+# declaration read by the url rule and the grouping alike): one table for the course and the product
+# (each keeps its copy and a test of the course and a test of the product read it the same way), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's grouping code, its
 # tests, the course's reviews 8, 10, 13, 14 and the course's seed (7fbcbade), merged.
 #
 # source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}, cfw: {none: [local]}}}
