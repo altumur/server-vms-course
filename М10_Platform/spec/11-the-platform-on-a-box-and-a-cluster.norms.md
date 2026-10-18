@@ -23,11 +23,14 @@ units:                                        # на каждом сервере
                           WatchdogSec=360 (СЛЕДУЕТ)
   w2c-console.service:    User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets; SECRETS_KEY; CONSOLE_HOST/PORT
                           127.0.0.1:8080; CONSOLE_ROOT
-  <dep>-<sub>worker.service: User=<пользователь подсистемы>; SupplementaryGroups=<dep>-<sub>worker w2c-store w2c-events
-                          [w2c-secrets у держателей секретов]; WORKER_NAME=<prefix>-%l-1 (<prefix> — slot.prefix спеки,
-                          урок 3 Н1.4, умолчание w; %l — короткое имя хоста); W2C_ROLE=<sub>worker;
+  <dep>-<sub>worker@.service: User=<пользователь подсистемы>; SupplementaryGroups=<dep>-<sub>worker w2c-store w2c-events
+                          [w2c-secrets у держателей секретов]; экземпляр %i — имя слота <prefix>-%l-1 (<prefix> —
+                          slot.prefix спеки, урок 3 Н1.4, умолчание w; %l — короткое имя хоста), команда воркера получает
+                          его аргументом — один канал со стендом (подстановка {name} README приёмки М10/01); переменную
+                          окружения с именем юнит ставит, только если спека объявила slot.name_env, — эту и тем же %i;
+                          W2C_ROLE=<sub>worker;
                           Type=simple; NotifyAccess=main; WatchdogSec=360; TimeoutStopSec ≥ 20 (воркер, которому на сброс нужно больше, называет своё значение)
-  <dep>-<sub>worker-spare@.service: тот же юнит без WORKER_NAME; W2C_SPARE_FILE=/run/w2c-spares/%n.env; Requisite=configstore;
+  <dep>-<sub>worker-spare@.service: тот же юнит без имени: без аргумента и без переменной slot.name_env; W2C_SPARE_FILE=/run/w2c-spares/%n.env; Requisite=configstore;
                                     RestartPreventExitStatus=2 (нет файла — выход 2 без перезапуска; таймер запасных поднимет снова, когда файл появится)
   w2c-spares.service/.timer: Type=oneshot; User=w2c-spares без групп (ADR-0046); OnBootSec 1–2 мин; OnUnitActiveSec 1 мин
   w2c-domain.service:      роль domain; w2c-run.sh signer; User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets;
@@ -70,7 +73,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 
 | Переменная | Смысл | Умолчание | Кто ставит |
 |---|---|---|---|
-| `WORKER_NAME` / `<ROLE>_NAME` | имя слота (пожелание, урок 3) | — | юнит |
+| переменная `slot.name_env` спеки (только если спека её объявила; `testsub2` — `TALLY_NAME`) | имя слота (пожелание, урок 3) — то же, что аргумент `%i` юнита | — | юнит |
 | `SLOT_INDEX` | номер слота вместо имени | — | юнит |
 | `SPARE_FOR` | запасной для набора меток; пусто — пустой набор | — | раннер из `W2C_SPARE_FILE` |
 | `BOX_ID` | коробка; иначе `/etc/machine-id`, иначе hostname | `%m` | юнит |
@@ -188,7 +191,8 @@ presence:   ресурс говорит о процессах своей кор�
 ### Н1.5 Запасные
 
 ```yaml
-spare_unit:   экземпляр шаблона юнита роли с теми же учётными данными, ключами, пользователем и группами, без WORKER_NAME;
+spare_unit:   экземпляр шаблона юнита роли с теми же учётными данными, ключами, пользователем и группами, без имени слота
+              (ни аргумента, ни переменной slot.name_env);
               W2C_SPARE_FILE=/run/w2c-spares/%n.env — одна строка SPARE_FOR=<набор меток>; нет файла → выход 2 (ADR-0046)
 script:       w2c-spares.sh, раз в минуту таймером, User=w2c-spares без групп; polkit: только start, только пользователем
               w2c-spares, только <шаблон>@[1-9][0-9]?.service
