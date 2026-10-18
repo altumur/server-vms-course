@@ -1,5 +1,5 @@
 # The canonical form of a signed document — RFC 8785 (JCS), whole (ADR-0072): one table for the course
-# (Source/tests/testdata/canonical_json.tsv) and the product (testdata/canonical_json.tsv at its root), byte for byte.
+# and the product (each keeps its copy), byte for byte.
 # A row is: a JSON text as it may come; its RFC 8785 form; the sha256 of that form's UTF-8, hex. Both sides read every
 # input, canonicalize it and compare both columns. Required (the ADR): <>& unescaped, 1.0 → 1, 1e21 → 1e+21, -0 → 0,
 # nesting, a name outside the BMP (sorted by UTF-16 code units: U+1F600 before U+FB33), the control characters,
