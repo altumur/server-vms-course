@@ -5,7 +5,7 @@
 «Паритет» снят). Владелец — урок, который вводит алгоритм первым (записка модуля, «Векторы»).
 
 На стадии A таблицы паритета лежат на прежнем месте, `Source/tests/testdata/`: их читает и продукт (`sync-course.sh`).
-Они переезжают в каталог урока-владельца, `<процесс>/vectors/<алгоритм>/`, вместе с уроком на стадии B. Тогда же продукт один раз переключает пути.
+Они переезжают в каталог урока-владельца, `NN-<процесс>/vectors/<алгоритм>/`, вместе с уроком на стадии B. Тогда же продукт один раз переключает пути.
 Новые векторы стадии A лежат здесь сразу.
 
 | Вектор | Где сейчас | Владелец (стадия A) | Норма |
@@ -15,7 +15,7 @@
 | `cut_at: host` | `Source/tests/testdata/group_of.tsv` | М10/4 | М10/4 Н1.3 `group_by` |
 | `rid` | `Source/tests/testdata/rid.tsv` | М10/8 | М10/8 Н1.5 |
 | сериализация тела просьбы | `Source/tests/testdata/requests_body.tsv` | М10/8 | М10/8 Н1.5, ADR-0072 |
-| digest просьбы | [`console/vectors/request-digest/`](../../console/vectors/request-digest/) | М10/8 | М10/8 Н1.5 `digest` |
+| digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | М10/8 | М10/8 Н1.5 `digest` |
 | секреты в адресе | `Source/tests/testdata/secret_in.tsv` | М10/7 | М10/7 Н1.1а |
 | маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
 | секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | М10/7 Н1.3, М10/6 Н1.4 |

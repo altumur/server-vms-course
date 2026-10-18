@@ -408,7 +408,7 @@ class Check:
             self.registry[(lesson, kind, value)] = reason
 
     def lesson_norms(self, address):
-        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/<процесс>/spec/03-*.norms.md, процесс — по
+        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/NN-<процесс>/spec/03-*.norms.md, каталог — по
         Platform/lessons.tsv (None if absent)."""
         module, _, number = address.partition("/")
         number = number.split(".")[0]
