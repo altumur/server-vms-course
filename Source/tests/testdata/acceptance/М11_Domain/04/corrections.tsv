@@ -7,3 +7,4 @@ date	sample	fix	languages
 2026-10-18	04/scenarios.tsv; inputs	прогон 41, мутации №18, №20: держатель в via — 409; domain/reached за ретранслятором без связи с держателем не растёт (минус domain_age, числовой ASSERT)	all
 2026-10-18	06-accept-with-roads 8	прогон 41 K41-02: равный sent_at другой дорогой — одно тело; другие байты — 409 same_sent_at, а не generation (урок 3 Н3 шаг 2)	all
 2026-10-18	02-road-through-the-relay 10	решение «Архитектора» 2026-10-18 «время в строке» (Н0 М10/1): писатель — дробная до 3 знаков; ожидание @time вместо @any — изменение поведения	all
+2026-10-18	inputs/accept-01-same-sent-at-other-road.json (06-accept-with-roads 1)	request_sha256 метки входа = sha256 тела (f079c3cc…): те же байты другой дороги — heard; было 2d711642… — по норме 409 same_sent_at; наведено разделением метки R41-05 (7c3714da) (cammeta-python М11-04 № 8)	all
