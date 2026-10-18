@@ -17,7 +17,8 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект `domain/view` — `as_of`.
 
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
-- владеет: `domain/view`, `domain/shadow`.
+- владеет: `domain/view`, `domain/shadow`;
+- читает: `domain/members/<член>/reported`, `domain/members/<член>/reports/<rev>`, `domain/placement/<sub>/<ref>`, `domain/members`, `domain/topology`.
 
 ### Н1.1 Домен, член, держатель
 
