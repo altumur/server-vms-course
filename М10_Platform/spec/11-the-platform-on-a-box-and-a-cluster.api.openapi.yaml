@@ -605,8 +605,10 @@ components:
           - Door
         leader:
           type: string
+          description: Адрес -api лидера, как в members; пусто, если лидер неизвестен или запущен без -api.
         leader_id:
           type: string
+          description: id лидера; пусто, если лидер неизвестен.
         term:
           type: integer
           minimum: 0
