@@ -1,0 +1,1 @@
+{"comment": "вектор оценщика прав (М10/6 Н1.2–Н1.3): буквальные образцы и префикс", "roles": {"acc": {"group": "acc", "read": ["acc/exact", "acc/pre/*", "acc/a*b", "acc/p/!x", "!"], "write": [], "delete": []}, "none": {"group": "none", "read": ["acc/*", "!*"], "write": [], "delete": []}}}

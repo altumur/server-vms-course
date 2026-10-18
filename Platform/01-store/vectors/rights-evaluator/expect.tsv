@@ -1,0 +1,18 @@
+# Вектор оценщика прав: роль, действие, ключ → allow | deny по файлу прав rights.json рядом (М10/6 Н1.2 pattern, Н1.3).
+# deny — 403 forbidden на сокете роли; allow — любой иной ответ. Строки с # и пустые пропускаются; первая — заголовок.
+role	action	key	expect
+acc	read	acc/exact	allow
+acc	read	acc/exactly	deny
+acc	read	acc/pre/x	allow
+acc	read	acc/pre/x/y	allow
+acc	read	acc/pre	deny
+acc	read	acc/a*b	allow
+acc	read	acc/axb	deny
+acc	read	acc/a*bc	deny
+acc	read	acc/ab	deny
+acc	read	acc/p/!x	allow
+acc	read	acc/p/x	deny
+acc	read	acc/other	deny
+acc	write	acc/exact	deny
+none	read	acc/x	deny
+none	read	acc/a*b	deny
