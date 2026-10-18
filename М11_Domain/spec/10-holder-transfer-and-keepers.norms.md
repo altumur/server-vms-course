@@ -22,7 +22,8 @@ domain/holder:   {doc: <текст JCS документа>}       # у держ�
     domain:      имя домена (урок 2 Н1.1)
     term:        целое ≥ 1
     holder:      имя члена-держателя
-    url:         адрес двери процесса domain держателя (SIGNER_URL его коробки) — туда агенты носят отчёты (урок 3); у
+    url:         адрес двери процесса domain держателя — SIGNER_URL окружения этого процесса, без него
+                 http://localhost:8445 (стенд одной машины) — туда агенты носят отчёты (урок 3); у
                  держателя из нескольких узлов — адрес, который доходит до любого узла кластера, а не одного сервера
                  (очередь процесса domain — урок 12 Н1.7; добавлено М11/12)
     ca?:         [<отпечаток>…], 1–2 — центр держателя (урок 8 Н1.6; ADR-0075 уточнение 2)
@@ -92,6 +93,8 @@ backup_key:      HMAC-SHA256(ключ: root_key файла восстановл�
   envelope:      enc:v2 М10/7 Н1.2 этим ключом, AAD — ключ строки 0x00 «/<элемент>»
 rev:             растёт только при смене содержимого — JCS state с открытыми секретами, objects, backup_key_rev,
                  holder_member_key; не чаще BACKUP_EVERY; держатель хранит последние 5 документов
+first:           первая копия — в первом проходе держателя, без ожидания BACKUP_EVERY (это предел, не задержка); затем — при
+                 смене содержимого, не чаще раза в BACKUP_EVERY
 BACKUP_EVERY:    30         # с
 BACKUP_HOLDERS:  2          # члены ok (урок 1), кроме держателя, по убыванию hex sha256(UTF-8 «<держатель>/<член>»)
 keepers:         domain/keepers/<член> {term, rev, sha256} у держателя — указатель выбранного хранителя; sha256 — hex
@@ -111,14 +114,17 @@ limit:           копию открывает ключ копии, выведе
 ```yaml
 yields:      процесс domain уступает, когда в его хранилище запись domain/holder большего срока проходит record по набору
              этого кластера (её приносит свой агент, Н3 «следовать»); слову соседа и непроверенной записи — нет
-start:       после перезапуска — сначала смотрит запись своего хранилища; больший срок — стартует смещённым и не пишет claim
+start:       после перезапуска — сначала смотрит запись своего хранилища; больший срок — стартует смещённым и не пишет claim.
+             Смещён, когда запись хранилища проходит record и: ключи подписанта есть, а запись — другого держателя и срока
+             больше того, что этот процесс держал (срок свой неизвестен — любого); или ключи забыты (forget) и запись чужая
 refusal:     смещённый на каждую правку подписанта и консоли домена — 409 {error: "deposed", detail: "<n> held the domain at
              term N; <h> holds it at term M — edits go there", holder: <doc>}; на отчёт агента — 409 {error: "deposed",
              holder: <doc>}
 forget:      domain/signer := {forgotten: "deposed by term <M>"} — ключи держателя стёрты (обещание, Н1.7 limit)
 stranded:    domain/stranded {doc: JCS {term, holder, base: {term, rev}, items: [{path, key, value}]}} — один раз при смене:
              элементы state (Н1.5), которые отличаются от base — копии, из которой восстановлен новый срок, если это
-             копия этого держателя (restored_from записи), иначе его последней копии; секрет — value "<secret: differs>";
+             копия этого держателя (restored_from записи), иначе его последней копии; value — значение элемента как
+             хранится (текст), секрет — "<secret: differs>"; сравнение — по открытым значениям;
              строка domain/pending/* засчитывается, только если правка сдвинулась (нет в base или иной at)
 apply:       POST /domain/stranded/apply {path, key} у консоли домена смещённого (admin): элемент domain/pending/<член> —
              повторить правку урока 6 той же дверью у консоли домена нового держателя (url записи → его консоль:
@@ -133,7 +139,8 @@ door:        POST /domain/handover {to} у консоли домена (admin, �
 target:      член списка с консолью в CLUSTERS, не держатель; иначе 400
 order:       1. заморозка: frozen_for = to; правки людей и подписанта — 503 {error: "frozen", detail: "<h> is handing the
                 domain over to <to>; edits are refused until it has — seconds, not minutes — and then go there"}; приём
-                отчётов и закрытие правок отчётами идут
+                отчётов и закрытие правок отчётами идут. Консоль домена (ключей и памяти подписанта у неё нет) читает
+                view.term.frozen_for и отвечает на правки людей этим 503; процесс domain держит свою заморозку в памяти
              2. копия с force: указатели хранителей и to
              3. ждать отчёт to с этой парой в domain/backup-taken — не дольше HANDOVER_WAIT; нет — снять заморозку,
                 409 {error: "called off", detail: "<to> did not take backup rev R; the handover is called off and <h> is
@@ -151,7 +158,8 @@ take:        цель по порядку: подписант держит до�
              «nothing is prepared on <me>: the holder asks POST /api/prepare first»; ключи не открываются — 403; grant не
              проходит record-подпись по набору цели или называет не её — 403; её domain/backup-taken ≠ {term, rev}
              гранта — 409 «<me> did not take backup rev R of term T: the handover restores from nothing older»;
-             затем — перенос Н1.8 шаги 5–8 из этой копии с этими ключами; журнал domain.taken
+             затем — перенос Н1.8 шаги 5–8 из этой копии с этими ключами: соседей цель не спрашивает, новый срок =
+             1 + max(term гранта, term своей записи); журнал domain.taken
 HANDOVER_WAIT: 30         # с = 6 × REPORT_EVERY
 limit:       передача копирует ключи подписанта на цель; что прежний их забыл (forget) — обещание, не доказательство. Если
              прежнему держателю нельзя доверять (кража, утечка коробки), путь один — аварийный перенос со stolen (Н1.8): он
@@ -162,7 +170,8 @@ limit:       передача копирует ключи подписанта �
 
 ```yaml
 door:        POST /domain/move {recovery, stolen?, copy?, why?} у консоли кластера цели → процесс domain тем же путём
-             (урок 8 Н1.9); срок 90 с; w2cctl domain move <дверь> <файл> [stolen] [copy=<term>.<rev> why=<слова>]
+             (урок 8 Н1.9); срок 90 с; w2cctl domain move <дверь> <файл> [stolen] [copy=<term>.<rev> why=<слова>];
+             личность — по режиму консоли (М10/9 Н1.3 identity), гранта дверь не требует: право доказывает файл восстановления
   recovery:  текст файла восстановления урока 2 Н1.1 {domain, root_key, root_pub}
   copy:      {term, rev} — восстановить ровно эту копию; без why — 400
 order:       1. тело не по форме — 400 {error: "refused", detail: "a move is {recovery: <the recovery file, as its text>,
@@ -175,7 +184,9 @@ order:       1. тело не по форме — 400 {error: "refused", detail:
              5. соседи — консоли CLUSTERS: GET /api/held каждого; копия — GET /api/backup с подписью члена этого кластера
                 (Н3 ask-sig); не ответил — пропущен; ответил без копии — ignored
              6. выбор копии: copy — ровно она у любого соседа (и своя), иначе 409 «nothing was restored: no neighbour gave
-                the copy named, term T rev R (…)»; без copy — наибольшая (term, rev) из проверенных; сосед объявил в
+                the copy named, term T rev R (…)»; без copy — наибольшая (term, rev) из проверенных, а нет ни одной (ни
+                сосед, ни своё хранилище копии не дали) — без копии: state не восстанавливается, список членов — копия
+                domain/member-list этого кластера, он — holder, ответ 200 с restored_from: null; сосед объявил в
                 /api/held копию новее, а не отдал (401, 403, 503) — 409 «nothing was restored: the newest copy this move
                 could read is …, and <n> keeps term T rev R and did not give it (<why>) — restoring it would roll the
                 domain back. Make the newer copy readable here, or name the copy to restore (copy: {term, rev}) and say
@@ -226,8 +237,11 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 ### record(keys, row) — запись срока или документ с подписью Н1.1, по порядку
 
 ```
-1. row не {doc: <текст>}, doc не JSON-объект с полями Н1.1 (или документа копии Н1.5, гранта Н1.7)  → not_a_record
-2. doc.domain ≠ keys.domain                                                      → another_domain
+1. row не {doc: <текст>}, doc не JSON-объект закрытого набора Н1.1 (или документа копии Н1.5, гранта Н1.7)
+   с типами: term — целое ≥ 1, at — число, holder — имя члена, url — непустая строка, ca — 1–2 отпечатка,
+   restored_from — {term, rev}, issuer — hex 32 байт                              → not_a_record
+2. doc.domain ≠ keys.domain (у документа с domain; документ копии его не несёт —
+   к домену его привязывает выпускающий, шаги 3–5)                               → another_domain
 3. doc.kid ∈ keys.revoked_issuing                                                → revoked_issuer
 4. doc.kid ∉ keys.issuing                                                        → unknown_issuer
 5. doc.kid ≠ первые 16 hex doc.issuer, или подпись не сходится                   → bad_signature
@@ -238,12 +252,17 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 
 ```
 1. ответы: GET /api/held каждой консоли CLUSTERS (срок 3 с; не ответила — пропуск) и запись из 409 deposed прошлого отчёта
+1а. keys ответов /api/held — функцией keys урока 2 Н3 по закреплённому корню в свой набор (перенос без stolen меняет
+   выпускающий: новый набор приходит так, раньше ответа нового держателя)
 2. каждая запись → record по своему набору; не ok — не следовать, журнал domain.follow.refused {cluster, reason}
 3. лучшая — наибольший term; тот же term у двух держателей — никуда, журнал «<a> and <b> both claim term T: followed by
    nobody»; тот же term и держатель с другим url — бо́льший at
 4. своя запись (если проходит record): term больше лучшей — держать (larger); тот же term и держатель, а её at не меньше —
-   держать (holding); иначе — записать лучшую domain/holder (CAS) и носить отчёт в её url (DOMAIN_URL — только первая
-   дверь); ответов с проверенной записью нет — держать (none)
+   держать (holding); тот же term, другой держатель — записать лучшую (два держателя одного срока считаются только среди
+   ответов, шаг 3); иначе — записать лучшую domain/holder (CAS); ответов с проверенной записью нет — держать (none)
+5. куда носить отчёт: в DOMAIN_URL, пока лучшая запись того же срока, что запись держателя, ответившего на этой двери
+   (carry.holder); запись большего срока или 409 deposed этой двери — в url лучшей записи; за ретранслятором (урок 4) —
+   к ретранслятору, как прежде
 ```
 
 Функция `follow` — шаги 2–4 на входе Н5.
@@ -253,10 +272,11 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 ```
 message:  backup|<кластер>|<член>|<время>   (просьба копии; ключ члена)
           prepare|<цель>|<время>            (подготовка передачи; ключ токенов current набора)
-time:     X-W2C-Time — десятичная запись стенных секунд с тремя знаками после точки
+time:     X-W2C-Time — десятичная запись стенных секунд с тремя знаками после точки: (0|[1-9][0-9]*)\.[0-9]{3}
 signature: X-W2C-Signature — base64url без «=» подписи Ed25519 над UTF-8(message)
-check:    по порядку: заголовка нет — missing; время не по форме — bad_time; |now − время| > 300 — skew;
-          подпись не сходится — bad_signature; иначе ok
+check:    по порядку: заголовка нет — missing (prepare — X-W2C-Time, X-W2C-Signature; backup — ещё X-W2C-Member);
+          время не по форме — bad_time; |now − время| > 300 — skew; подпись не base64url без «=», не 64 байта или не
+          сходится — bad_signature; иначе ok
 ```
 
 ### проверить копию (агент хранителя)
@@ -300,7 +320,8 @@ check:    по порядку: заголовка нет — missing; время
 record:    вход {keys: <документ набора>, row: {doc}}; вывод {result: ok, term, holder} | {result: refused, reason}
 follow:    вход {keys, held: {doc} | null, answers: {<кластер>: {doc} | null}};
            вывод {result: follow, term, holder, url} | {result: stay, reason: holding | larger | none | two_holders,
-           term?} и refused: {<кластер>: <слово record>}
+           term?} и refused: {<кластер>: <слово record>}; term у stay — срок своей записи, если она прошла record, иначе
+           поля нет
 ask-sig:   вход {ask: backup | prepare, cluster, member?, pub, header: {member?, time?, signature?}, now};
            вывод {result: ok} | {result: refused, reason}
 exit:      0 — вычислено; 2 — вход не по форме

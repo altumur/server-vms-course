@@ -45,7 +45,8 @@ write:           сначала объект, затем указатель по
 after_move:      новый держатель (урок 10 Н1.8) переподписывает то же содержимое как rev + 1, by "domain" — у него другой
                  выпускающий; при плановой передаче выпускающий тот же, документ не меняется
 readers:         процесс domain, консоль домена, воркер подсистемы на домене (роль <sub>domain) — указатель domain/shared
-                 (точное имя) и объекты shared/rev-*; проекций по подсистемам нет (C6)
+                 (точное имя) и объекты shared/rev-*; консоль кластера — строка domain/shared (точное имя: у держателя
+                 указатель, у члена строка копии, Н1.4; М10/6 Н1.4 console, добавлено М11/11); проекций по подсистемам нет (C6)
 ```
 
 ### Н1.3 Правка
@@ -59,8 +60,9 @@ order:           1. заморозка, смещение — урок 10 (503 fr
                  3. base_rev ≠ rev указателя (0 — документа нет) — 409 {error: "refused", detail: "the shared settings are at
                     rev N; the edit was made against rev M — look again"}
                  4. содержание — все отказы одним 400 через «; »: «shared settings for '<sub>': no subsystem on the domain
-                    shares a field by that name»; «'<имя>' is not in its domain.shared [...]»; тип поля по спеке (М10/3
-                    Н3 шаг 4 формы); значение документа против его schema (слова схемы)
+                    shares a field by that name»; «'<имя>' is not in its domain.shared [...]»; тип поля — та же проверка
+                    формы, что у двери единиц (М10/3 Н3 шаг 4), на одном этом поле, слово отказа — её; значение документа
+                    против его schema (слова схемы)
                  5. новый документ: прежний shared, поверх — значения правки; null — снять имя; пустая подсистема —
                     снять; rev + 1, term — свой, at, by
                  6. записать (Н1.2 write); CAS не прошёл — 409 «the shared settings changed while this edit was made — look again»
@@ -87,7 +89,8 @@ resolve:         функция Н3 — значение поля для еди�
 door:            GET /domain/shared/<sub>[?unit=<id>] у консоли кластера (своя, не пересылается; view) →
                  200 {sub, term, rev, fields: {<имя>: <запись>}} — по каждому элементу domain.shared этой спеки
   record:        поле — {value, from, inherit, merge?} (merge — только union); group_by — {groups, from}; документ — {value, from}
-  term, rev:     документа этого кластера; документа нет — null, значения — без домена
+  term, rev:     документа этого кластера: у члена — объект domain/shared (копия, взятая Н3), у держателя — объект, который
+                 называет указатель; документа нет — null, значения — без домена
 refusals:        подсистема без domain.shared — 404 {error: "no such shared settings", detail: "'<sub>' shares no field with the
                  domain"}; ?unit= не id этой спеки — 400 «a unit of <другая> is resolved by its own console»; единицы нет
                  — 404 {error: "no such unit"}; документ не проходит record — значения без домена, journal domain.shared.refused
@@ -121,8 +124,11 @@ page:          объект отчёта domain/alarms (урок 3 Н1.2 member_
 ALARM_WINDOW:  86400       # с
 ALARM_PAGE:    100
 urgent:        раз в секунду агент читает только фронт — GET /events?class=alarm&limit=1&keep=newest своей консоли; t
-               строки > to прошлой страницы — собрать страницу и отправить отчёт сейчас, но не чаще URGENT_GAP после
-               прошлого срочного; цена — одно чтение строки индекса в секунду на член, не больше (урок 12 Н1.9: сотни членов)
+               строки > to прошлой страницы — собрать страницу и отправить отчёт сейчас, вне очередного прохода, но не
+               чаще URGENT_GAP после прошлого срочного; цена — одно чтение строки индекса в секунду на член, не больше
+               (урок 12 Н1.9: сотни членов)
+rebuild:       страница собирается при старте агента и когда фронт новее to; иначе отчёт несёт прежнюю страницу — спокойный
+               член поколений не порождает (урок 12 Н1.2)
 URGENT_GAP:    1           # с
 identity:      агент ходит к /events своей консоли подписью агента (урок 3 Н1.4; М10/9 Н1.3 identity шаг 2, добавлено М11/11)
 ```
@@ -138,12 +144,13 @@ member_state:  ok | silent | not_reporting | never | unreadable
   silent:      последний отчёт старше LOST_AFTER (вид урока 1, 45 с); silent_since = последний отчёт + LOST_AFTER
   not_reporting: silent, а свидетель слышал единицу члена позже последнего отчёта
   never:       отчёта не было ни разу
-  unreadable:  страница не по форме Н1.7
+  unreadable:  страница не по форме Н1.7 (у функции alarms — и вход "garbled")
 silence_line:  молчащий член — строка тревоги {t: silent_since, kind: silent | not_reporting, class: alarm, member,
                subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?} — всегда, пока молчит
 witness:       domain.witness {report, member_field} (М10/2): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
                секунды с последнего раза}} у кластеров и в отчётах; member_field — fixed поле единицы, несущее имя члена
-               (иначе refused:value); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"
+               (иначе refused:value); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
+               наибольший alive_at среди тех, что позже last_report
 clock:         время строки страницы на часах домена: t + (received_at отчёта − page.to); t_src — t как пришло
 events_order:  по t убывая, затем member, id; строки истории — from_history: true
 ```
@@ -153,6 +160,7 @@ events_order:  по t убывая, затем member, id; строки исто
 ```yaml
 history:       объект держателя domain/alarm-history/<член> {events, cut_before} — скользящая неделя, не больше
                HISTORY_LINES строк, самые новые; cut_before — с какого момента член держится целиком
+  events:      строки страницы, как приняты: t — на часах домена (Н1.8 clock), t_src — как пришло
 HISTORY_DAYS:  7
 HISTORY_LINES: 2000
 writer:        только проход держателя (процесс domain, ADR-0032): после приёма отчёта дописать строки его страницы,
@@ -212,14 +220,17 @@ label:  "domain term T rev R"
          "garbled" | null, history: <Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
 1. каждый член:
    last_report нет и page нет                         → never
-   page = "garbled"                                   → unreadable
+   page = "garbled" или не по форме Н1.7              → unreadable
    now − last_report > lost_after                     → silent; свидетель с ts − units[член] > last_report — not_reporting
    иначе                                              → ok
-2. строки: страница (часы Н1.8 clock) ∪ история (from_history) без повторов по same_line, в окне [since, until];
-   строка молчания — Н1.8 silence_line
+2. строки: страница (часы Н1.8 clock) ∪ история (from_history, t как хранится) без повторов по same_line — есть в обеих,
+   берётся строка страницы; строка молчания — Н1.8 silence_line; окно [since, until] — для всех строк, и для строки
+   молчания
 3. members: {<член>: {state, truncated?, known_until?, silent_since?, alive_at?, alive_via?, history_cut_before?}};
-   known_until — last_report у silent/not_reporting; history_cut_before — у истории с cut_before > since
-4. complete = все ok; sentence — «every member answered» или фразы через «; »:
+   truncated: true — у читаемой страницы с truncated; known_until — last_report у silent/not_reporting;
+   history_cut_before — у истории с cut_before > since
+4. complete = все ok; sentence — «every member answered» или фразы через «; », по членам (байты UTF-8), у члена — в
+   порядке списка ниже:
    «<m> silent since <HH:MM> — its alarms from its last report, known up to <HH:MM> UTC; none known since»
    «… — but <alive_via> heard of it at <HH:MM>: alive, and not reporting to the domain»
    «<m> has never reported to the domain»; «<m>'s page of alarms does not read»
@@ -254,7 +265,7 @@ label:  "domain term T rev R"
 ```yaml
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
 alarms:    вход — Н3 alarms; вывод {events, members, complete, sentence}
-exit:      0 — вычислено; 2 — вход не по форме
+exit:      0 — вычислено; 2 — вход не по форме (у resolve — и merge union при значении не списке)
 ```
 
 | № | Сценарий | Нормы |
