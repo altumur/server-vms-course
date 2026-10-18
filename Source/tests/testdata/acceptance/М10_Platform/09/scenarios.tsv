@@ -16,6 +16,8 @@ scenario	step	request	expect
 02-spec-and-mounts	3	GET /testsub2/spec	200 {"name": "testsub2", "rows": "tallies", "id": "name"}
 02-spec-and-mounts	4	GET /testsub2/spec	200 {"domain": {"view": [], "edit": [], "shared": ["rules"], "keys": [], "tokens": "@absent", "books": "@absent"}}
 02-spec-and-mounts	5	GET /probe-x/spec	200 {"name": "probe-x", "metrics": {"prefix": "probe_x"}, "workers_gauge": "probe_x_workers_live"}
+02-spec-and-mounts	6	GET /metrics	200 ~w2c_requests_expired_total{sub="testsub"}
+02-spec-and-mounts	7	GET /metrics	200 !contains w2c_requests_expired_total{sub="probe-x"}
 03-open-session	1	GET /session	200 {"open": true, "login_url": "/api/login"}
 03-open-session	2	POST /session {"token": "x"}	400
 03-open-session	3	DELETE /session	200 {"out": true}
