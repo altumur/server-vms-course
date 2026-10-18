@@ -1,7 +1,7 @@
 scenario	step	request	expect
 # Приёмка М10/11: стенд с ресурсом и учения (@manual). Формат — README.
 01-resource-door	1	@start resource	ok
-01-resource-door	2	@until 20 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@any", "at": "$a1"}}
+01-resource-door	2	@until 20 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time", "at": "$a1"}}
 01-resource-door	3	@sleep 20	ok
 01-resource-door	4	store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "$a2"}}
 01-resource-door	5	ASSERT $a1 != $a2	ok
@@ -43,7 +43,7 @@ scenario	step	request	expect
 11-copy	1	@import store inputs/copy-ok.jsonl	ok
 11-copy	2	restored GET /v1/get?key=testsub/next_id	200 {"items": {"n": "2"}}
 11-copy	3	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
-11-copy	4	restored GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "@any", "generation_at": "@any"}}
+11-copy	4	restored GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "@any", "generation_at": "@time"}}
 11-copy	5	@import store inputs/copy-ok-unordered.jsonl	ok
 11-copy	6	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
 11-copy	7	@backup store c1	ok
@@ -72,3 +72,11 @@ scenario	step	request	expect
 12-copy-refused	20	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
 12-copy-refused	21	@import store inputs/bad-unreadable.jsonl	refused
 12-copy-refused	22	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+13-time-reader	1	@start resource	ok
+13-time-reader	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
+13-time-reader	3	@sigterm resource	ok
+13-time-reader	4	@spoil object platform/resources/srv-a/heartbeat	ok
+13-time-reader	5	@as resource store POST /v1/write {"id":"a3","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"901.123456"}}	200
+13-time-reader	6	@sleep 5	ok
+13-time-reader	7	@as resource store POST /v1/write {"id":"a4","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906.654321"}}	200
+13-time-reader	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
