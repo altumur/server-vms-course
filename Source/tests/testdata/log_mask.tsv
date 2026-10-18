@@ -1,8 +1,8 @@
-# The platform's log mask (w2cplatform/secrets: Rule.MaskLog; w2cplatform.MaskText, ipint/uri.Redact): a text that
+# The platform's log mask (the course's and the product's masking of a log line): a text that
 # is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
 # credential, every name=value whose name is a secret's, and every address in it masked. The norm — М10/7 Н1.4 `log`
 # with Н1.1а (pairs, addresses); it is not secret_in.tsv's: those are a url field's values. Owner: «Спецификация»; the
-# product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by vmsworker/vms/secret_in_test.go, as a process that
+# product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by a test of the product, as a process that
 # knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
