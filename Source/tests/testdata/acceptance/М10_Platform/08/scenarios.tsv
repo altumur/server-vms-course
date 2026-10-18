@@ -5,12 +5,35 @@ scenario	step	request	expect
 01-objects-door	3	resource GET /v1/objects/testsub/counters/c1?scope=local	403
 01-objects-door	4	resource GET /v1/objects/testsub/heartbeats/w-9?scope=cluster	404
 01-objects-door	5	resource PUT /v1/objects/testsub/heartbeats/w-9 {"x": 1}	405
+01-objects-door	6	resource GET /v1/objects?prefix=testsub/&scope=local	200 {"server": "srv-a", "objects": {}}
+01-objects-door	7	resource GET /v1/objects?prefix=other/&scope=local	403
+01-objects-door	8	resource GET /v1/objects/other/heartbeats/x?scope=local	403
+01-objects-door	9	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local&foo=	400
+01-objects-door	10	resource GET /v1/objects?prefix=%FF&scope=local	400
+01-objects-door	11	resource GET /v1/objects/testsub/heartbeats?scope=local	403
+01-objects-door	12	resource GET /v1/objects/testsub/heartbeats/%FF?scope=local	400
+01-objects-door	13	resource GET /v1/objects/testsub/heartbeats/x%E2%80%A8y?scope=local	400
+01-objects-door	14	resource OPTIONS /v1/objects?scope=local	405
+01-objects-door	15	resource PUT /v1/objects?scope=local {"x": 1}	405
 02-events-query	1	resource GET /events?keep=sideways	400
 02-events-query	2	resource GET /events?by=whenever	400
 02-events-query	3	resource GET /events?class=warning	400
 02-events-query	4	resource GET /events?unit=c1	400
 02-events-query	5	resource GET /events?unit=testsub/c1	200 {"events": [], "state": "live", "truncated": 0}
 02-events-query	6	console GET /events?unit=testsub/c1	200 {"events": [], "state": "~live"}
+02-events-query	7	resource GET /events?unit=testsub/	400
+02-events-query	8	console GET /events?unit=testsub/	400
+02-events-query	9	resource GET /events?from=+1	400
+02-events-query	10	resource GET /events?from=%201	400
+02-events-query	11	resource GET /events?from=%D9%A1	400
+02-events-query	12	console GET /events?from=+1	400
+02-events-query	13	resource GET /events?from=1_0	200 {"events": [], "state": "live", "truncated": 0}
+02-events-query	14	resource GET /events?limit=%D9%A1	400
+02-events-query	15	resource GET /events?foo=	400
+02-events-query	16	resource GET /events?kind=a&kind=b	400
+02-events-query	17	resource GET /events/wait?want=testsub/k&timeout=1&foo=1	400
+02-events-query	18	resource GET /events/wait?want=testsub/k&since=%D9%A1&timeout=1	400
+02-events-query	19	resource POST /events {}	405
 03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
 03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
@@ -19,6 +42,7 @@ scenario	step	request	expect
 03-operator-mark	6	console POST /counters {"name": "c6", "start": 1}	201
 03-operator-mark	7	console POST /marks {"unit": "testsub/c6", "note": "extra ok", "text": "ignored"}	2xx
 03-operator-mark	8	@until 15 console GET /events?unit=testsub/c6&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c6", "text": "@absent"}]}
+03-operator-mark	9	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "user": "operator"}]}
 04-request-reaped	1	console POST /counters {"name": "c4", "start": 1}	201
 04-request-reaped	2	console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
 04-request-reaped	3	@key(2) console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
@@ -26,6 +50,14 @@ scenario	step	request	expect
 04-request-reaped	5	store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": null}
 04-request-reaped	6	@until 150 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "expired", "ended_by": "reaper"}}
 04-request-reaped	7	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
+04-request-reaped	8	@until 15 resource GET /events?kind=request.asked&limit=1	200 {"events": [{"kind": "request.asked", "sub": "testsub", "target": "c4", "bucket": "$b"}]}
+04-request-reaped	9	resource GET /buckets/audit/console	200 @header Content-Type: ~application/x-ndjson
+04-request-reaped	10	resource @header Range: bytes=-5 GET /events/$b	206
+04-request-reaped	11	resource @header Range: bytes=5-2 GET /events/$b	416
+04-request-reaped	12	console @header Idempotency-Key: . POST /testsub/requests {"unit": "c4", "add": 3}	202
+04-request-reaped	13	console @header Idempotency-Key: a,b POST /testsub/requests {"unit": "c4", "add": 4}	202
+04-request-reaped	14	console POST /testsub/requests {"unit": "c4", "add": 2, "valid_until": 0}	202 {"queued": "$r0"}
+04-request-reaped	15	store GET /v1/get?key=testsub/requests/$r0	200 {"items": {"unit": "c4", "valid_until": "0"}}
 05-request-performed	1	@start controller	ok
 05-request-performed	2	@start worker w-1	ok
 05-request-performed	3	console POST /counters {"name": "c5", "start": 1}	201
@@ -37,12 +69,17 @@ scenario	step	request	expect
 05-request-performed	9	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
 05-request-performed	10	@key(5) console POST /testsub/requests {"unit": "c5", "add": 5}	200 {"answered": "@any"}
 05-request-performed	11	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "server": "srv-a", "instance": "@any", "ts": "@time", "started": "@time", "status": [{"id": "c5", "phase": "@any", "epoch": "@any", "revision": "@any", "observed_revision": "@any"}]}
-05-request-performed	12	@sigterm w-1	ok
-05-request-performed	13	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "status": []}
+05-request-performed	12	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"server": "srv-a", "units": {"testsub": ["c5"]}, "waits": "@any", "restore": "@any", "mirror": "@any"}
+05-request-performed	13	resource GET /v1/objects/testsub/heartbeats/W-1?scope=local	404
+05-request-performed	14	@sigterm w-1	ok
+05-request-performed	15	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "status": []}
 06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
 06-request-refused	2	console POST /testsub/requests {"add": 5}	400
 06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404
 06-request-refused	4	console POST /testsub/requests {"unit": "c5", "add": "five"}	400
+06-request-refused	5	console POST /testsub/requests {bad	400 {"fault": "@absent"}
+06-request-refused	6	console POST /testsub/requests {"unit": "c5", "add": 5, "valid_until": null}	400
+06-request-refused	7	console POST /testsub/requests {"unit": "nosuch", "add": 5, "valid_until": 99999999999}	400
 07-append-by-data	1	@start controller	ok
 07-append-by-data	2	@start controller testsub2	ok
 07-append-by-data	3	@start worker w-1	ok
@@ -67,3 +104,20 @@ scenario	step	request	expect
 07-append-by-data	22	console POST /testsub2/requests {"unit": "tally-with-a-name-much-longer-than-forty-chars", "from": 1, "to": 1}	202 {"queued": "tally-with-a-name-much-longer-than-forty-chars-1-1"}
 07-append-by-data	23	@until 90 store GET /v1/get?key=testsub2/requests/tally-with-a-name-much-longer-than-forty-chars-1-1	200 {"items": null}
 07-append-by-data	24	store GET /v1/get?key=objects/testsub2/marks/tally-with-a-name-much-longer-than-forty-chars	200 {"items": {"count": "1", "ranges": "1-1"}}
+07-append-by-data	25	console POST /testsub2/requests {"unit": "t1", "from": 7, "to": 7}	202 {"queued": "t1-7-7"}
+07-append-by-data	26	store GET /v1/get?key=testsub2/requests/t1-7-7	200 {"items": {"unit": "t1", "of": "c1", "by": "operator"}}
+07-append-by-data	27	@until 15 resource GET /events?kind=tally.asked&limit=1	200 {"events": [{"kind": "tally.asked", "sub": "testsub2", "target": "t1", "addr": "@any"}]}
+07-append-by-data	28	console POST /testsub2/requests {"unit": "t1", "from": -0, "to": 0}	202 {"queued": "t1-0-0"}
+07-append-by-data	29	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "5", "ranges": "0-3,7-7"}}
+07-append-by-data	30	console POST /testsub2/requests {"unit": "t1", "from": 9, "to": 9, "valid_until": 4102444800}	400
+08-resource-paths	1	resource GET /mirrored/srv-b/../../../../etc/hosts	404
+08-resource-paths	2	resource GET /mirrored/..	404
+08-resource-paths	3	resource GET /mirrored/srv-b/..%2F..%2Fetc%2Fhosts	404
+08-resource-paths	4	resource @header X-Sum: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a PUT /mirror/../testsub/c1/e1/20260101T000000Z.events.jsonl @raw {}	400
+08-resource-paths	5	resource @header X-Sum: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a PUT /mirror/srv-z/x @raw {}	400
+08-resource-paths	6	resource @header X-Sum: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a PUT /mirror/srv-b/testsub/c1/e1/../../../../objects/testsub/heartbeats/w-1 @raw {}	400
+08-resource-paths	7	resource GET /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	405
+08-resource-paths	8	resource GET /buckets/testsub/	404
+08-resource-paths	9	resource GET /buckets/../objects	404
+08-resource-paths	10	resource GET /buckets/testsub%2Fc1	404
+08-resource-paths	11	resource GET /events/../objects/testsub/heartbeats/w-1	404
