@@ -153,13 +153,16 @@ route:    /domain/<sub>/<сегмент>[/…], <сегмент> ∈ door.pass �
           на домене этой подсистемы (урок 5 Н1.6: держатель слота domain/<sub>/worker, роль <sub>domain) путь
           /<сегмент>[/…] и query; заголовки, тело, ответ, коды — М10/11 Н1.8; клиент — роли domainconsole
 address:  url пульса воркера на домене; где этот пульс — долг урока 5 Н1.6 (воркер на домене, ХОД)
+absent:   воркера на домене этой подсистемы не слышно — 503 {error: "unavailable", detail: "no worker of <sub> with a
+          door is heard"} (слова М10/11 Н1.8)
 member:   консоль кластера пересылает эти пути консоли домена строкой таблицы Н1.2
 ```
 
 ### Н1.8 Страница держателя
 
 ```yaml
-page:     GET /, /index.html — страница модуля консоли с opts.sections: [domain] (М10/9 Н1.5); /platform/console.js,
+page:     GET /, /index.html — опубликованная страница модуля консоли (М10/9 Н1.5), которая отличается только
+          аргументом вызова mount: opts.sections: [domain]; CSP — по тексту отданной страницы (М10/9); /platform/console.js,
           /platform/console.css — байты опубликованного модуля как есть (М10/9 Н1.1)
 spec:     GET /spec → {"name": "", "rows": null} — корня нет
 mounts:   GET /mounts → {"root": "", "mounts": {<sub>: <описание М10/9 Н2 /mounts>}} по каталогу держателя, без media
@@ -208,6 +211,7 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 
 ```
 1. (метод, путь) не в таблице Н1.2 и не своё (books, at, keys, shared/<sub>, двери переноса) → 404 not a domain route
+   (шаги 1–2 — до личности: путь вне таблицы — 404 и без токена; сторожевая — шаг 3)
 2. тело — предел консоли (М10/9 Н1.3)                                        → 413 / 400 / 408
 3. сторожевая — кто звонит (урок 9 Н1.5)                                     → 401 / 403 урока 9
 4. holds (Н1.3):
@@ -247,7 +251,8 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 
 ```
 1. host — IP-адрес (v4 или v6)                                               → ip_address
-2. chain — не непустой список читаемых PEM-сертификатов                      → bad_chain
+2. chain — не непустой список читаемых PEM-сертификатов: элемент — ровно один блок CERTIFICATE, base64 строгий,
+   DER разбирается целиком; иначе — до поиска якоря                          → bad_chain
 3. fingerprints пуст, или в chain[1:] нет сертификата центра (CA:true) с отпечатком из fingerprints → foreign_ca
    якорь — первый такой сертификат по порядку chain
 4. нет пути chain[0] → … → якорь по chain: каждый сертификат подписан ключом следующего, следующий — CA:true
