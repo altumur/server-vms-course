@@ -1,10 +1,10 @@
 # Where the Databases Live
 
-**A decision record for М9_EdgeVMS and М11_Cluster.** Companion to `worker-and-process-model.md`, written in answer to *"a domain exists when its Postgres exists — so is Postgres installed on every host, and how do they sync?"*, and then revised in answer to a second question that corrected it: *if the host needs an event store and an index anyway, why not Postgres locally too?*
+**A decision record for М9_EdgeVMS and М11_Cluster** (module names of the time). Companion to `worker-and-process-model.md` (retired), written in answer to *"a domain exists when its Postgres exists — so is Postgres installed on every host, and how do they sync?"*, and then revised in answer to a second question that corrected it: *if the host needs an event store and an index anyway, why not Postgres locally too?*
 
 It was revised a third time, and that revision **inverted the second verdict below.** The question that did it: *the Node is a Nomad allocation, not a server — its configuration does not change when Nomad moves it from one server to another, so why does anything need to write ownership at all?* That is right, and the design changed because of it.
 
-A fourth revision followed the PKI split — М11 now runs a certificate authority in every domain, which poses a *where does the key live* question this record is the right place to answer — and while making it, **found this record wrong in five places about the epoch.** It said the domain database issues it. It does not: the epoch is a Nomad Variable, and everything downstream of that error is corrected below.
+A fourth revision followed the PKI split — М11 then ran a certificate authority in every domain (since replaced: TLS certificates come from each cluster's supply centre, ADR 0075, and the domain issues none), which poses a *where does the key live* question this record is the right place to answer — and while making it, **found this record wrong in five places about the epoch.** It said the domain database issues it. It does not: the epoch is a Nomad Variable, and everything downstream of that error is corrected below.
 
 A fifth revision removed the domain database entirely. The objection that did it was aimed at this record's own first verdict — *"a node database, one per Node, and a domain directory, one per domain; both Postgres"* — and consisted of pointing at the last three words. It is wrong, and the reason it took five revisions to see is instructive: the directory does two jobs with nothing in common, and a database is the obvious answer to either one taken alone.
 
@@ -309,7 +309,7 @@ The sixth revision ended with one database in the whole design — Postgres per 
 | **Archive index** — which segment holds which time range | **ObjectStorage's own index** in each volume (since 1 October 2026: the course's `Manifest` is gone; a recorder answers for the volume it holds at its archive door) and an **event index on each resource over its own buckets** (the event index inside the resource process; the console merges them) that copies nothing: it reads the buckets where they lie, at the moment of each query — a SQLite cache stood here until 28 September, and rebuilding and tailing it cost more than it saved | An index that is never the source of truth is a cache, and a cache that admits to being one needs no durability story. The manifest is beside the segments it names |
 | **Events** — observations written by the worker | **Buckets on the resource** (`<resource>/<subsystem>/<unit>/e<epoch>/…events.jsonl`), written by the worker holding the unit's epoch, **copied to a peer resource** in the same cluster, restored by the owner | The write path had to survive the epoch moving between workers, and a bucket keyed by epoch does that by construction; a database on a server that just died does not |
 
-So the verdict *one database, and it belongs to a Node* became **no database at all in the product** — not even the SQLite cache that stood on each resource until 28 September. Verdict 2 (*the Node owns its configuration and replicates upward*) inverted once more: **the cluster's controller owns configuration**, and the domain reads each subsystem's snapshot and its workers' heartbeats — from each member's report, left in the domain holder's store by the member's own agent — never the rows. Verdicts 3, 4 and 5 stand unchanged — destructive operations still never run from unreachable authority (retention is a row in the cluster's raft, applied by the resource's own policy pass), a worker still never crosses a cluster, and every store is still chosen by shape.
+So the verdict *one database, and it belongs to a Node* became **no database at all in the product** — not even the SQLite cache that stood on each resource until 28 September. Verdict 2 (*the Node owns its configuration and replicates upward*) inverted once more: **the cluster's controller owns configuration**, and the domain reads each subsystem's snapshot and its workers' heartbeats — from each member's report, which the member's agent sends and the holder's `domain` process stores — never the rows. Verdicts 3, 4 and 5 stand unchanged — destructive operations still never run from unreachable authority (retention is a row in the cluster's raft, applied by the resource's own policy pass), a worker still never crosses a cluster, and every store is still chosen by shape.
 
 **What the summary table looks like now:**
 
@@ -317,23 +317,23 @@ So the verdict *one database, and it belongs to a Node* became **no database at 
 |---|---|
 | Postgres anywhere? | **No.** Configuration is rows in the cluster's store; the archive index is a rebuildable cache; events are files |
 | Who owns camera 7's configuration? | **The cluster's controller** — one writer, CAS, in the cluster's raft. Not the worker recording it, and not the domain |
-| What does the domain read? | **Two kinds of object per subsystem of each member**: its snapshot shards (`<sub>/snapshot/…`) and each worker's heartbeat (`<sub>/heartbeats/<w>`), as the member's agent reported them. It asks by the spec's `domain.ref`, never by a cluster-local id |
-| What survives a domain outage? | Recording, playback, edits at the cluster's console, **and failover** — a lapsed slot is inherited and the controller redistributes without anyone above |
-| What stops? | Creating a camera across clusters, choosing a cluster, issuing certificates and tokens |
+| What does the domain read? | **Two kinds of object per subsystem of each member**: its snapshot shards (`<sub>/snapshot/…`) and each worker's heartbeat (`<sub>/heartbeats/<w>`), as the member's agent reported them, plus the objects later lessons name (roads, book contributions, witnesses, backup receipts, shared settings, alarm pages). It asks by the spec's `domain.ref`, never by a cluster-local id |
+| What survives a domain outage? | Recording, playback, edits at the cluster's console while its people's tokens and grant copies last or by break-glass (М11/9), **and failover** — a lapsed slot is inherited and the controller redistributes without anyone above |
+| What stops? | Creating a camera across clusters, choosing a cluster, issuing person and worker tokens |
 | Where does the epoch come from? | **A row of the cluster's store per unit** (`<sub>/epoch/<unit>`), moved by CAS when a worker takes the unit. The fourth revision's argument, on another store, and now the only fencing token there is |
 | What happens when a server dies? | Its spares stand in for its processes (ADR 0021), or other workers inherit their slots and the controller redistributes; the resource's events are restored from its peer's copy; **nothing rewrites a row's owner because the owner was never a server** |
 | HA? | Still not a question the design asks. Raft for the rows, a peer copy for the events, and the archive itself stays on the disks that recorded it |
 
-**Product recommendation, seventh form: the cluster's controller is the authority for configuration and there is no database; a server is disks, stores and whatever runs on it; the domain is a service of the platform (ADR 0024) — a reader of what its members report, a few rows it alone decides (placement, kept edits, what a subsystem keeps for the whole domain), and one signer, the only process with its keys (ADR 0032).** Seven revisions of this record moved in one direction throughout — every one of them took state out of a database — and the seventh took out the last one.
+**Product recommendation, seventh form: the cluster's controller is the authority for configuration and there is no database; a server is disks, stores and whatever runs on it; the domain is a service of the platform (ADR 0024) — a reader of what its members report, the rows it alone decides (members, topology, placement, kept edits, people and grants, shared settings, what a subsystem keeps for the whole domain — М11/10 Н1.5 lists them), and one signer, the only process with its keys (ADR 0032).** Seven revisions of this record moved in one direction throughout — every one of them took state out of a database — and the seventh took out the last one.
 
 ---
 
 ## Sources
 
 - [PostgreSQL HA: repmgr vs Patroni vs pg_auto_failover](https://tomasz-gintowt.medium.com/postgresql-high-availability-repmgr-vs-patroni-vs-pg-auto-failover-a16fd0bfbc1e) — external dependencies of each, witness versus monitor versus DCS, and the closing argument that a system the team understands beats a more advanced one it does not
-- `worker-and-process-model.md` — camera lifecycle must survive a control-plane outage, which is the rule this record generalises
-- М11 Lessons 5–6 — replicate metadata, let footage be local
-- [`module-design.md`](module-design.md) — the epoch issuer, the fencing argument it comes from, and М12 Lesson 4's mTLS on the Node↔directory streams
+- `worker-and-process-model.md` (retired, not in the repository) — camera lifecycle must survive a control-plane outage, which is the rule this record generalises
+- [М10/8](../М10_Platform/08-events-resource-requests.md) — events in buckets on the resource, copied to a peer; footage stays on the disks that recorded it
+- [М10/3](../М10_Platform/03-units-slots-epochs-lease.md) — the epoch row per unit and the fencing it gives
 - [М10/1](../М10_Platform/01-storage.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
 
 *Written 5 September 2026. Seventh revision added 12 September 2026.*

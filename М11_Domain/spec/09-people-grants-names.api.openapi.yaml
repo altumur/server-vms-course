@@ -376,7 +376,7 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — запасной: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}

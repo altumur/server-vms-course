@@ -14,7 +14,7 @@ servers:
 paths:
   /api/held:
     get:
-      summary: Запись срока, набор и пара копии этого кластера (Н1.4)
+      summary: Запись срока, набор и пара резервной копии этого кластера (Н1.4)
       responses:
         '200':
           description: Все ключи всегда
@@ -42,14 +42,14 @@ paths:
         '503': {$ref: '#/components/responses/Refused'}
   /api/backup:
     get:
-      summary: Копия этого кластера подписанному члену (Н1.9)
+      summary: Резервная копия этого кластера подписанному члену (Н1.9)
       parameters:
         - {name: X-W2C-Member, in: header, required: true, schema: {$ref: '#/components/schemas/MemberName'}}
         - {name: X-W2C-Time, in: header, required: true, schema: {type: string, pattern: '^-?(0|[1-9][0-9]*)\.[0-9]{3}$'}}
         - {name: X-W2C-Signature, in: header, required: true, schema: {type: string, pattern: '^[A-Za-z0-9_-]+$'}}
       responses:
         '200':
-          description: Указатель, документ копии и общий документ
+          description: Указатель, документ резервной копии и общий документ
           content:
             application/json:
               schema:
@@ -62,7 +62,7 @@ paths:
                     oneOf:
                       - type: 'null'
                       - $ref: '#/components/schemas/Pointer'
-                  backup: {type: ['string', 'null'], description: Текст JCS документа копии (Н1.5).}
+                  backup: {type: ['string', 'null'], description: Текст JCS документа резервной копии (Н1.5).}
                   shared: {description: 'Общий документ урока 11; до него — null.'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
@@ -243,7 +243,7 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — запасной: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}

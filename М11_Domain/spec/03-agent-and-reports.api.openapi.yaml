@@ -189,7 +189,7 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — запасной (урок 12 Н1.7; добавлено М11/12): error standby, detail называет активный экземпляр'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий (урок 12 Н1.7; добавлено М11/12): error standby, detail называет активный экземпляр'
       content:
         application/json:
           schema:
