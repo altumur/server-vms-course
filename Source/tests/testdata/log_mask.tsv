@@ -1,7 +1,8 @@
 # The platform's log mask (w2cplatform/secrets: Rule.MaskLog; w2cplatform.MaskText, ipint/uri.Redact): a text that
 # is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
-# credential, every name=value whose name is a secret's, and every address in it masked. No spec says it, and it is
-# not secret_in.tsv's: those are a url field's values. Read by vmsworker/vms/secret_in_test.go, as a process that
+# credential, every name=value whose name is a secret's, and every address in it masked. The norm — М10/7 Н1.4 `log`
+# with Н1.1а (pairs, addresses); it is not secret_in.tsv's: those are a url field's values. Owner: «Спецификация»; the
+# product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by vmsworker/vms/secret_in_test.go, as a process that
 # knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
@@ -27,3 +28,8 @@ DESCRIBE rtsp://10.0.0.9:554/user=admin&password=hunter2xyz&channel=1&stream=0.s
 proxy-authorization: bearer abc.def	proxy-authorization: bearer ***	
 Authorization: Digest username="admin", response="5ccc"	Authorization: Digest username="admin", response="5ccc"	Digest's hash is left
 {"source":"driverpack://acme/u:hunter2xyz@10.0.0.5/ch/1"}	{"source":"driverpack://acme/u:***@10.0.0.5/ch/1"}	
+{"password": 1234;}	{"password": "***";}	a JSON pair: the scalar is one JSON token, what follows it stays (М10/7 Н1.4 log; S18)
+{"password": "s3cr\"et", "a": 1}	{"password": "***", "a": 1}	a JSON pair: a string runs to its closing unescaped quote
+{"password": ""}	{"password": ""}	an empty string stays empty
+?pwd=http://u:p@h/x&channel=1	?pwd=***&channel=1	a secret pair's value is masked to its end, an address in it included (Н1.1а А6; S17)
+?user=admin%26pwd%3Dhunter2&x=1	?user=***&x=1	a pair hidden by escaping carries a password: the whole value is masked (Н1.1а А7)
