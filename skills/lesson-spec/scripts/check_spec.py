@@ -227,6 +227,15 @@ def pointer(document, ref):
 
 
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry"}
+# Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
+REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
+
+
+def path_segment(segment):
+    """A diagnostic path segment: a mapping key (nonempty string) or a list index (non-negative integer)."""
+    if isinstance(segment, str):
+        return bool(segment)
+    return type(segment) is int and segment >= 0
 SCENARIO_HEADER = ["scenario", "step", "request", "expect"]
 
 
@@ -623,8 +632,8 @@ class Check:
                     raise ValueError("diagnostic case must be unique and have refused verdict")
                 seen.add(case)
                 paths, lines = strict_json(paths), strict_json(lines)
-                if not isinstance(paths, list) or not paths or any(not isinstance(p, list) or not p or any(not isinstance(k, str) or not k for k in p) for p in paths):
-                    raise ValueError("paths must be nonempty arrays of nonempty string segments")
+                if not isinstance(paths, list) or not paths or any(not isinstance(p, list) or not p or not all(map(path_segment, p)) for p in paths):
+                    raise ValueError("paths must be nonempty arrays of nonempty string keys or non-negative integer indexes")
                 if len({tuple(p) for p in paths}) != len(paths):
                     raise ValueError("duplicate diagnostic paths")
                 if not isinstance(lines, list) or any(type(n) is not int or n < 1 for n in lines):
@@ -634,6 +643,15 @@ class Check:
                 self.stats["diagnostics"] += 1
             except (ValueError, TypeError) as exc:
                 self.error(path, f"line {line}: {exc}")
+
+    def classes(self, path, verdicts):
+        seen = set()
+        for line, (case, kind) in self.tsv(path, 2):
+            if case in seen or verdicts.get(case) != "refused" or kind not in REFUSAL_CLASSES:
+                self.error(path, f"line {line}: class case must be unique, have refused verdict and a class of {sorted(REFUSAL_CLASSES)}")
+            seen.add(case)
+        if not seen:
+            self.error(path, "empty classes table")
 
     def lesson(self, lesson):
         if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
@@ -669,7 +687,7 @@ class Check:
             texts[readme] = text
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
-        supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "cases"}
+        supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases"}
         extra = {value for (lesson_key, kind, value) in self.registry
                  if lesson_key == key and kind == "acceptance-entry"}
         try:
@@ -704,9 +722,13 @@ class Check:
             verdict_counts = (len(values), values.count("ok"), values.count("refused"))
             if (acceptance / "diagnostics.tsv").exists():
                 self.diagnostics(acceptance / "diagnostics.tsv", verdicts)
+            if (acceptance / "classes.tsv").exists():
+                self.classes(acceptance / "classes.tsv", verdicts)
             formats += 1
-        elif (acceptance / "diagnostics.tsv").exists():
-            self.error(acceptance, "diagnostics.tsv without verdicts.tsv")
+        else:
+            for table in ("diagnostics.tsv", "classes.tsv"):
+                if (acceptance / table).exists():
+                    self.error(acceptance, f"{table} without verdicts.tsv")
         if (acceptance / "cases").exists() and not (acceptance / "verdicts.tsv").is_file():
             self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:

@@ -547,6 +547,21 @@ components:
         (self.acceptance / "diagnostics.tsv").write_text('valid\t[["field"]]\t[2]\ninvalid\t[["field"]]\t[true]\n')
         self.assertEqual(len(self.check().errors), 2)
 
+    def test_diagnostic_path_takes_list_indexes_as_integers(self):
+        self.add_verdicts()
+        (self.acceptance / "diagnostics.tsv").write_text('invalid\t[["unit", "fields", 0]]\t[2]\n')
+        self.assertEqual(self.check().errors, [])
+        (self.acceptance / "diagnostics.tsv").write_text('invalid\t[["unit", -1], ["unit", true]]\t[2]\n')
+        self.assertEqual(len(self.check().errors), 1)
+
+    def test_classes_name_refused_cases_with_a_known_class(self):
+        self.add_verdicts()
+        classes = self.acceptance / "classes.tsv"
+        classes.write_text("# case\tclass\ninvalid\tvalue\n")
+        self.assertEqual(self.check().errors, [])
+        classes.write_text("valid\tvalue\ninvalid\tsyntax\n")
+        self.assertEqual(len(self.check().errors), 2)
+
     def test_empty_and_unknown_acceptance_are_not_green(self):
         self.scenarios.write_text("# empty\n")
         self.assertTrue(self.check().errors)
