@@ -20,7 +20,7 @@ client	{"unit":"t1","from":1.0,"to":2e0}	{"from":1,"to":2,"unit":"t1"}	23c2bedd6
 client	{"unit":"t1","from":1,"to":2,"valid_until":1760745600}	{"from":1,"to":2,"unit":"t1"}	23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9	valid_until — the one server field a client may send — is not hashed
 client	{"unit":"c1","add":{"b":[1,2.50],"a":null}}	{"add":{"a":null,"b":[1,2.5]},"unit":"c1"}	0a79615c48aa82b64d9a56610321323d314517133c77c0409719a325b2101a25	nested object: keys sorted, 2.50 is 2.5, null inside stays
 client	{"unit":"c1","x":1e-7,"y":1e21}	{"unit":"c1","x":1e-7,"y":1e+21}	5f5b1e736f58a7c02bfd6a84ffa10cc648bb3f210519289e1e2636cc3e2bd3ec	small and large numbers in ES6 form: 1e-7, 1e+21
-client	{"unit":"т1","note":"ж <&>"}	{"note":"ж <&>","unit":"т1"}	3dc900ecdd3a652d99bfa10ecb0eb38faea98ee5a152135c843b3abb74227035	UTF-8 as is, U+2028 raw, no HTML escaping
+client	{"unit":"т1","note":"ж <&> x"}	{"note":"ж <&> x","unit":"т1"}	4f31d442f551f9e6281bbefbef38e0ae853cfaccaeae295095bd08432e60b05d	UTF-8 as is, U+2028 raw, no HTML escaping
 client	{"unit":"c1","דּ":1,"😀":2}	{"unit":"c1","😀":2,"דּ":1}	24cfc601a748641e5c9a7d3568695f8199ac1dd988a275b875d58189a4f7198b	keys by UTF-16 code units: U+1F600 before U+FB33
 worker	{"unit":"t1","from":"1","to":"2"}	{"from":"1","to":"2"}	43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9	base: the row's body fields as written (text), unit dropped
 worker	{"unit":"t1","from":"1","to":"2","valid_until":"1760745600","by":"operator","at":"1760745600.5","of":"c1","filed":"w-1:4242:a1b2c3"}	{"from":"1","to":"2"}	43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9	valid_until, stamps (by, at, group, the about field — of at testsub2) and filed are not hashed
