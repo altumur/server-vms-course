@@ -1,6 +1,7 @@
 # The platform's closed lists a spec is held to, one table for the course (Source/tests/testdata/platform_lists.tsv;
 # spec.PLATFORM_HEARTBEAT_STRINGS, spec.SECRET_ROLES) and the product (testdata/platform_lists.tsv at its root;
-# PlatformHeartbeatStrings, subsystemRoles + platformRoles in known.go), byte for byte. Owner: «Паритет». ADR-0019, its
+# PlatformHeartbeatStrings, subsystemRoles + platformRoles in known.go), byte for byte. Owner: «Спецификация»; the
+# product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). ADR-0019, its
 # addition of 2026-10-10 (review 15 minor 15). A row is list, word; each list is a set — its order is not compared.
 #   heartbeat_strings  the platform's own string fields of every heartbeat: a spec's heartbeat.strings names none of them
 #   secret_roles       the roles secrets.readers may name
