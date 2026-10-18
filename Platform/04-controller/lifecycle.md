@@ -27,11 +27,11 @@
 | `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (профиль коробки одной реализации) | [М10/11] Н1.2 |
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | [М10/11] Н1.2 |
 | `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов: отчёт прохода, шарды снимка | `<PLATFORM_DIR>/objects` | [М10/11] Н1.2 «Канал настройки» |
+| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [М10/11] Н1.2 «Канал настройки», [М10/8] Н1.2 `journal` |
 | `SERVER_NAME` | свой сервер; не по грамматике суффикса слота — код 2 | короткий hostname | [М10/11] Н1.2 |
 | `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [М10/11] Н1.2 |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | сроки судьбы зависшего слота и бюджет достижимости | 900, 10 | [М10/11] Н1.2, [М10/4] Н3 |
 | `CLUSTER` | имя кластера в шарде снимка | `local` | [М10/11] Н1.2, [М10/10] Н1.3 |
-| `BUILD` | слово сборки в пульсах и `/schema` | `dev` | [М10/11] Н1.2, [М10/10] |
 | `W2C_TLS_DIR` | корень комплектов; свой комплект — `<W2C_TLS_DIR>/<sub>controller` | `/etc/w2c/tls` | [М10/11] Н1.2, Н1.6 |
 | `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения: общий и подсистемы | `/etc/w2c/w2c.env`; без значения — нет | [М10/11] Н1.2 |
 | `NOTIFY_SOCKET` | сторож systemd | — | [М10/11] Н1.1 `notify` |
@@ -54,7 +54,10 @@
   `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([М10/10] Н1.3). Имена файлов — одно кодирование урока 8 Н1.1.
 - **Читает**: пульсы воркеров `<sub>/heartbeats/<имя>`, пульс ресурса `platform/resources/<server>/heartbeat`,
   `platform/spec/<sub>` и метку `/rev`, `platform/schema`, `platform/servers/*`, `platform/doors/*`,
-  `platform/decommission/*`, `platform/drain` ([каталог]).
+  `platform/decommission/*`, `platform/drain`, слоты `<sub>/slots/<имя>`, места `<sub>/holds/<место>` ([каталог]);
+  очередь размещения и intent (`<sub>/controller/placement_turn`, `placement_intent`) он и пишет, и читает ([М10/4] Н1.5).
+- **Слова сборки** (`BUILD`) у контроллера нет в выдаче: пульса он не пишет и в `processes` `/schema` не входит
+  ([М10/10] Н2 `GET /schema`).
 - **Не пишет** в корень событий, кроме своего журнала `audit/<sub>controller/e1/…` (урок 8 Н1.2 `journal`).
 
 ## Коды выхода
