@@ -26,3 +26,18 @@ platform/epoch_floor	row	М10/3	put=admin(только op: floor урока 11 �
 <sub>/holds/<место>	row	М10/5	create=<s>worker(cas "", место свободно); cas=<s>worker(своё место: продление и отпуск)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	placement.places	1	-	М10/5 Н1.3
 <sub>/contenders/<имя>/<коробка>	object	М10/5	put=<s>worker(своя коробка, CONTEND_EVERY)	console, <s>controller, <s>worker	-	1	-	М10/5 Н1.4
 <SECRETS_KEY>	file	М10/7	create=admin(w2cctl secrets new, O_EXCL, 0640 root:w2c-secrets, не внутри хранилища); put=admin(w2cctl secrets rotate, новая строка сверху, прежние ключи сохраняются)	console, <s>worker, domain, domainagent	-	1	-	М10/7 Н1.2
+platform/resources/<server>/heartbeat	object	М10/8	put=resource(свой server, каждые 10 с)	console, <s>controller	-	1	-	М10/8 Н1.4
+<sub>/requests/<rid>	row	М10/8	create=console(дверь просьб, cas ""),<s>worker(worker.requests другой спеки, cas "", filed); delete=console(жнец: отвеченная по settle, брошенная по ttl или valid_until)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	requests	1	-	М10/8 Н1.5
+<sub>/requests/free-<server>-<volume>	row	М10/8	create=resource(том выше high, cas ""); cas=resource(своя форма и версия, между low и high не трогать); delete=resource(free ≤ 0 или platform/space выключен)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	requests.free	1	-	М10/8 Н1.4
+<sub>/asked/<sha16(имя)>	row	М10/8	create=console(резерв rid человека, cas ""); cas=console(резерв и снятие rid); delete=console(пустой учёт)	console	requests.per_person	1	-	М10/8 Н1.5
+objects/<sub>/commands/<rid>	row	М10/8	mark=<s>worker(begun до вызова),console(no_begun жнецом); put=<s>worker(answer начавшего держателя); cas=<s>worker(закрытие чужой begun по индексу, ended_by),console(жнец: unknown по индексу); delete=<s>worker(после kept, с подтверждённым исходом)	console, <s>worker	requests	1	-	М10/8 Н1.5
+objects/<sub>/<spec:objects.rows>/*	row	М10/8	create=<s>worker(put_new — cas ""); cas=<s>worker(put_at по прочитанному индексу); delete=<s>worker	<s>worker	objects.rows	1	-	М10/8 Н1.1
+<sub>/retention	row	М10/8	put=admin(w2cctl retention)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	-	1	-	М10/8 Н1.3
+<sub>/alarms_retention	row	М10/8	put=admin(w2cctl retention)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	-	1	-	М10/8 Н1.3
+platform/space	row	М10/8	put=admin(w2cctl space)	console, <s>controller, resource, domain, domainagent	-	1	-	М10/8 Н1.4
+platform/mirror	row	М10/8	put=admin(w2cctl mirror)	console, <s>controller, resource, domain, domainagent	-	1	-	М10/8 Н1.4
+<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	М10/8	append=<s>worker(observe подсистемы, один писатель бакета единицы)	resource	-	1	-	М10/8 Н1.2
+<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	М10/8	append=<s>worker(тревога, fsync строки и каталогов)	resource	-	1	-	М10/8 Н1.2
+<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	М10/8	append=console,<s>controller,<s>worker,resource,domain,domainconsole,domainagent(все процессы роли на сервере, строка целиком под исключительной блокировкой файла, fsync)	resource	-	1	-	М10/8 Н1.2
+<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	М10/8	append=console(отметки оператора, свой экземпляр)	resource	-	1	-	М10/8 Н1.2
+<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	М10/8	put=resource(копия закрытого бакета соседа по PUT /mirror, tmp + rename, ≤ 64 MiB); delete=resource(срок копии на час дольше оригинала)	resource	-	1	-	М10/8 Н1.4
