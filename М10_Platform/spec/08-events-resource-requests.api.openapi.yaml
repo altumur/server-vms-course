@@ -1088,8 +1088,6 @@ components:
       - server
       - bucket
       - class
-      - epoch_is
-      - fenced
       additionalProperties: true
       properties:
         id:
@@ -1137,8 +1135,26 @@ components:
         until:
           type: number
       description: Поля подсистемы открыты; перечисленные поля платформы имеют эти типы и не переопределяются. of
-        пуст только у платформенной строки без адресата. Все JSON-числа конечны. Согласованность epoch_is/fenced
-        — Н1.3.
+        пуст только у платформенной строки без адресата. Все JSON-числа конечны. epoch_is и fenced ставит консоль при
+        слиянии (у ресурса их нет); согласованность epoch_is/fenced — Н1.3.
+    ResourceEventRow:
+      description: Строка ответа ресурса — без epoch_is и fenced (их ставит консоль при слиянии, Н3).
+      type: object
+      additionalProperties: true
+      allOf:
+      - $ref: '#/components/schemas/EventRow'
+      properties:
+        epoch_is: false
+        fenced: false
+    ConsoleEventRow:
+      description: Строка ответа консоли — с epoch_is и fenced (Н1.3, Н3 «слияние»).
+      type: object
+      additionalProperties: true
+      allOf:
+      - $ref: '#/components/schemas/EventRow'
+      required:
+      - epoch_is
+      - fenced
     ResourceEvents:
       type: object
       required:
@@ -1150,7 +1166,7 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/EventRow'
+            $ref: '#/components/schemas/ResourceEventRow'
         state:
           const: live
         truncated:
@@ -1176,7 +1192,7 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/EventRow'
+            $ref: '#/components/schemas/ConsoleEventRow'
         state:
           type: string
           pattern: ^live(?:; [^;\r\n]+ (?:unreachable|from mirror))*(?![\s\S])
