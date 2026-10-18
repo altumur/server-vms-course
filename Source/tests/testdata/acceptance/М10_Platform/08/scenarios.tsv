@@ -37,7 +37,7 @@ scenario	step	request	expect
 03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
 03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
-03-operator-mark	4	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3"}]}
+03-operator-mark	4	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "@absent", "fenced": "@absent"}]}
 03-operator-mark	5	console POST /marks {"note": "no unit"}	400
 03-operator-mark	6	console POST /counters {"name": "c6", "start": 1}	201
 03-operator-mark	7	console POST /marks {"unit": "testsub/c6", "note": "extra ok", "text": "ignored"}	2xx
