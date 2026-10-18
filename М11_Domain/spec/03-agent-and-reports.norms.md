@@ -98,7 +98,7 @@ reported:       domain/members/<член>/reported               # объект-
   sha256:       hex sha256 байтов generation
   base:         rev, против которого пришло изменение; 0 — пришло целое
   delta_sha256: hex sha256 байтов delta (при base 0 — тела целого, как пришло)
-  signature:    заголовок X-Agent-Signature прямого отчёта как пришёл (Н1.4); через ретранслятор — урок 4
+  signature?:   заголовок X-Agent-Signature прямого отчёта как пришёл (Н1.4); через ретранслятор поля нет (урок 4 Н1.3)
   sent_at:      sent_at публикации; received_at — стенные секунды держателя приёма
   via?:         ретранслятор — урок 4
   key, keys_rev?, pinned?: из публикации — по ним консоль домена принимает члена и показывает закрепление
@@ -332,7 +332,8 @@ accept:             вход {catalog: [<sub>…], mark: <метка> | null, st
                     → {result: generation, rev, base, whole} | {result: heard, refresh} | {result: same} | {result: ignored}
                     | {result: refused, status, reason: not_a_publication | same_sent_at | rebase | not_ready}
                     # refreshed_ago — монотонные с, когда этот процесс писал метку; null — не писал
-exit:               0 — вычислено (в том числе отказ словом); 2 — вход не по форме; лишнее поле входа — 2
+exit:               0 — вычислено (в том числе отказ словом); 2 — вход не по форме (метка — строго Н1.3: stale есть всегда,
+                    signature — у метки без via); лишнее поле входа — 2
 ```
 
 | № | Сценарий | Нормы |

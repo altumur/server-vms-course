@@ -321,7 +321,7 @@ record:    вход {keys: <документ набора>, row: {doc}}; выв�
 follow:    вход {keys, held: {doc} | null, answers: {<кластер>: {doc} | null}};
            вывод {result: follow, term, holder, url} | {result: stay, reason: holding | larger | none | two_holders,
            term?} и refused: {<кластер>: <слово record>}; term у stay — срок своей записи, если она прошла record, иначе
-           поля нет
+           поля нет — при любой причине, и у two_holders: спорный срок term не подменяет
 ask-sig:   вход {ask: backup | prepare, cluster, member?, pub, header: {member?, time?, signature?}, now};
            вывод {result: ok} | {result: refused, reason}
 exit:      0 — вычислено; 2 — вход не по форме

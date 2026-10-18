@@ -11,7 +11,9 @@
   "received_at": 1000.5,
   "rev": 4,
   "sent_at": 1000.0,
-  "sha256": "93eb2c5e5118e6909e9df1539c394564a930041f6c519549bc6c5af0bc10a397"
+  "sha256": "93eb2c5e5118e6909e9df1539c394564a930041f6c519549bc6c5af0bc10a397",
+  "signature": "1000000.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "stale": []
  },
  "refreshed_ago": 1.0,
  "stored": {

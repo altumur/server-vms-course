@@ -12,6 +12,7 @@
   "rev": 4,
   "sent_at": 1000.0,
   "sha256": "93eb2c5e5118e6909e9df1539c394564a930041f6c519549bc6c5af0bc10a397",
+  "stale": [],
   "via": "relay"
  },
  "refreshed_ago": 1.0,

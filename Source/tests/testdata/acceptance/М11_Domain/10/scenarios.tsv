@@ -49,7 +49,7 @@ scenario	step	request	expect
 06-follow	1	follow inputs/follow-01-larger-term.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
 06-follow	2	follow inputs/follow-02-held-larger.json	ok {"result": "stay", "reason": "larger", "term": 2, "refused": {}}
 06-follow	3	follow inputs/follow-03-holding.json	ok {"result": "stay", "reason": "holding", "term": 2, "refused": {}}
-06-follow	4	follow inputs/follow-04-two-holders.json	ok {"result": "stay", "reason": "two_holders", "term": 2, "refused": {}}
+06-follow	4	follow inputs/follow-04-two-holders.json	ok {"result": "stay", "reason": "two_holders", "term": 1, "refused": {}}
 06-follow	5	follow inputs/follow-05-moved-its-door.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:9443", "refused": {}}
 06-follow	6	follow inputs/follow-06-forged-larger.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m2": "unknown_issuer"}}
 06-follow	7	follow inputs/follow-07-nobody-answers.json	ok {"result": "stay", "reason": "none", "refused": {}}
