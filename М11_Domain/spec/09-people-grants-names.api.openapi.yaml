@@ -98,7 +98,7 @@ paths:
               additionalProperties: false
               properties:
                 name: {$ref: '#/components/schemas/PersonName'}
-                password: {type: string, minLength: 10}
+                password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
         '201':
           description: Человек заведён
@@ -135,7 +135,7 @@ paths:
               minProperties: 1
               additionalProperties: false
               properties:
-                password: {type: string, minLength: 10}
+                password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
                 disabled: {type: boolean}
       responses:
         '200':
@@ -334,7 +334,7 @@ paths:
               required: [password]
               additionalProperties: false
               properties:
-                password: {type: string, minLength: 12}
+                password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
         '200':
           description: Задан
@@ -552,3 +552,7 @@ components:
       properties:
         result: {enum: [allow, deny]}
         reason: {enum: [disabled, stale, no_grant]}
+      description: reason — только при deny (Н1.4)
+      if: {properties: {result: {const: allow}}}
+      then: {not: {required: [reason]}}
+      else: {required: [reason]}

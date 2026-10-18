@@ -45,3 +45,5 @@ scenario	step	request	expect
 03-issue	25	issue inputs/issue-25-scenario-name-twice.json	ok {"result": "refused", "status": 403, "reason": "no_item"}
 03-issue	26	issue inputs/issue-26-scenario-acts-order.json	ok {"result": "ok", "claims": {"acts": [{"do": "add", "item": "t2"}, {"do": "count", "item": "t2"}]}}
 03-issue	27	issue inputs/issue-27-poll-home-centre.json	ok {"result": "ok", "claims": {"sub": "m2", "aud": ["m2"]}}
+03-issue	28	issue inputs/issue-28-scenario-no-home.json	ok {"result": "refused", "status": 403, "reason": "no_home"}
+03-issue	29	issue inputs/issue-29-scenario-no-audience.json	ok {"result": "refused", "status": 403, "reason": "no_audience"}

@@ -58,7 +58,7 @@
 | поиск по имени | `ref: name`, `view: [start]` | `ref: name` | 1, 5 |
 | книги | `books.tallies: {show: [n]}` | `books.notes` (`pick: unique`), `books.rolls` (`pick: all`) с `from`/`key`/`to` | 5 |
 | имена | — (`names.badges/` снято М11/9: имена — у книги с `from`) | `names.notes/` | 5, 9 |
-| отчёты и свидетель | — | `reports: [counts/]`, `witness: {report: seen, member_field: of}` | 3, 5 |
+| отчёты и свидетель | — | `reports: [counts/]`, `witness: {report: seen, member_field: of}` | 3, 5 (отчёты), 11 (свидетель) |
 | токены | `tokens.probe.unit`, `tokens.tally.placement` | `tokens.feed` (`placement` и `unit`), `tokens.tally2.scenario` | 7 |
 | правки домена | `edit: [start, labels]` | — | 6 |
 | общие настройки | `shared: [step, marks, rounds]` (`inherit`, `merge: union`, `json`) | `shared: [rules]` (`json`) | 11 |

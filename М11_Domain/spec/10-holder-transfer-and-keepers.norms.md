@@ -98,6 +98,8 @@ rev:             растёт только при смене содержимо�
                  holder_member_key; не чаще BACKUP_EVERY; держатель хранит последние 5 документов
 first:           первая резервная копия — в первом проходе держателя, без ожидания BACKUP_EVERY (это предел, не задержка); затем — при
                  смене содержимого, не чаще раза в BACKUP_EVERY
+force:           резервная копия вне очереди BACKUP_EVERY (Н1.7 шаг 2): rev растёт, только если содержимое сменилось; прежнее
+                 содержимое — указатели на прежний rev
 BACKUP_EVERY:    30         # с
 BACKUP_HOLDERS:  2          # члены ok (урок 1), кроме держателя, по убыванию hex sha256(UTF-8 «<держатель>/<член>»)
 keepers:         domain/keepers/<член> {term, rev, sha256} у держателя — указатель выбранного хранителя; sha256 — hex
@@ -201,7 +203,10 @@ order:       1. тело не по форме — 400 {error: "refused", detail:
                 not this domain's»
              5. соседи — консоли CLUSTERS: GET /api/held каждого; резервная копия — GET /api/backup с подписью члена этого кластера
                 (Н3 ask-sig); не ответил — пропущен; ответил без резервной копии — ignored
-             6. выбор резервной копии: copy — ровно она у любого соседа (и своя), иначе 409 «nothing was restored: no neighbour gave
+             6. ни одной записи срока и ни одной резервной копии (ни у соседей, ни своей) — 409 {error: "refused",
+                detail: "nothing to restore from: no neighbour and not this cluster keeps a record of the holder or a
+                backup — a new domain is installed, not moved"}; иначе
+                выбор резервной копии: copy — ровно она у любого соседа (и своя), иначе 409 «nothing was restored: no neighbour gave
                 the copy named, term T rev R (…)»; без copy — наибольшая (term, rev) из проверенных, а нет ни одной (ни
                 сосед, ни своё хранилище резервной копии не дали) — без неё: state не восстанавливается, список членов — копия
                 domain/member-list этого кластера, он — holder, ответ 200 с restored_from: null; сосед объявил в
@@ -242,10 +247,10 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 |---|---|---|---|
 | GET `/api/held` | консоль кластера | Н1.4 | 503 |
 | GET `/api/backup` | консоль кластера | Н1.9 | Н1.9 |
-| POST `/api/prepare` | консоль кластера → процесс `domain` (урок 8 Н1.9) | `{cluster, seal}` | 400 подпись не та форма; 403 не ключом токенов текущего набора; 409 этот кластер держит домен |
-| POST `/api/take` `{grant, keys_sealed}` | консоль кластера → процесс `domain` | запись срока цели `{record}` | Н1.7 take |
-| POST `/domain/move` | консоль кластера → процесс `domain` | Н1.8 | Н1.8 |
-| POST `/domain/handover` `{to}` | консоль домена → процесс `domain` | `{term, rev, to, stranded: []}` | 400 цель; 401/403; 409 deposed, called off; 502 консоль домена или пересылка не дождалась (урок 8 Н1.2 «Ожидание» 100 с); 503 frozen, «a handover is under way already» |
+| POST `/api/prepare` | консоль кластера → процесс `domain` (урок 8 Н1.9) | `{cluster, seal}` | 400 подпись не та форма (ask-sig `missing`, `bad_time`); 403 не ключом токенов текущего набора или вне окна (`bad_signature`, `skew`); `detail` — слово; 409 этот кластер держит домен; 503 standby (урок 12) |
+| POST `/api/take` `{grant, keys_sealed}` | консоль кластера → процесс `domain` | запись срока цели `{record}` | Н1.7 take; 503 standby (урок 12) |
+| POST `/domain/move` | консоль кластера → процесс `domain` | Н1.8 | Н1.8; 503 standby (урок 12) |
+| POST `/domain/handover` `{to}` | консоль домена → процесс `domain` | `{term, rev, to, stranded: []}` | 400 цель; 401/403; 409 deposed, called off; 404 `no signer here` (урок 8 Н1.9); 502 консоль домена или пересылка не дождалась (урок 8 Н1.2 «Ожидание» 100 с); 503 frozen, «a handover is under way already»; 503 standby (урок 12) |
 | POST `/domain/stranded/apply` `{path, key}` | консоль домена смещённого → процесс `domain` | ответ двери урока 6 нового держателя как пришёл | Н1.6 apply; коды двери урока 6 и пересылки урока 8 — как пришли |
 
 ---
@@ -257,13 +262,15 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 ```
 1. row не {doc: <текст>}, doc не JSON-объект закрытого набора Н1.1 (или документа резервной копии Н1.5, гранта Н1.7)
    с типами: term — целое ≥ 1, at — число, holder — имя члена, url — непустая строка, ca — 1–2 отпечатка,
-   restored_from — {term, rev}, issuer — hex 32 байт                              → not_a_record
+   restored_from — {term, rev}, issuer — hex 32 байт; у гранта grant — "handover", to и from — имена членов,
+   rev — целое ≥ 1                                                               → not_a_record
 2. doc.domain ≠ keys.domain (у документа с domain; документ резервной копии его не несёт —
    к домену его привязывает выпускающий, шаги 3–5)                               → another_domain
 3. doc.kid ∈ keys.revoked_issuing                                                → revoked_issuer
 4. doc.kid ∉ keys.issuing                                                        → unknown_issuer
 5. doc.kid ≠ первые 16 hex doc.issuer, или подпись не сходится                   → bad_signature
 6.                                                                               → ok {term, holder}
+   (у гранта holder — его from: держатель, выдавший грант)
 ```
 
 ### следовать (агент члена, в каждом проходе раньше отчёта)
@@ -321,7 +328,9 @@ check:    по порядку: заголовка нет — missing (prepare �
 | `deposed` | 409 | держатель смещён: правки и отчёты; `holder` — запись нового |
 | `frozen` | 503 | идёт плановая передача |
 | `called off` | 409 | цель не взяла резервную копию передачи |
-| `refused` | 400, 403, 409 | формы и отказы переноса, передачи и приёма (Н1.7, Н1.8) |
+| `refused` | 400, 401, 403, 404, 409, 503 | формы и отказы переноса, передачи и приёма (Н1.6–Н1.9): 401 `/api/backup` без заголовков или ask-sig не ok (`detail` — слово); 404 apply без элемента; 409 «nothing to restore from», apply не смещён; 503 «a move is under way here already» |
+| `no signer here`, `did not answer` | 404, 502 | пересылка подписанту (урок 8 Н1.9) |
+| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
 | `unavailable` | 503 | хранилище не ответило (`/api/held`, `/api/backup`) |
 | `redo it on the new holder` | 400 | брошенное, кроме правки члена |
 

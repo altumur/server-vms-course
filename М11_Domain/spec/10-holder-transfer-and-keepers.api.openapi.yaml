@@ -70,7 +70,7 @@ paths:
                       - type: 'null'
                       - $ref: '#/components/schemas/Pointer'
                   backup: {type: ['string', 'null'], description: Текст JCS документа резервной копии (Н1.5).}
-                  shared: {description: 'Общий документ урока 11; до него — null.'}
+                  shared: {type: ['string', 'null'], description: 'Текст общего документа урока 11 (Н1.9); до него — null.'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}

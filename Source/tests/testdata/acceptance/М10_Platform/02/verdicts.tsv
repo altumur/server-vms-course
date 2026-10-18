@@ -385,6 +385,12 @@ m57_tokens_scenario_ok	ok
 m57_tokens_target_poll_home_in_placement	refused
 m57_tokens_unit_ok	ok
 m57_tokens_unit_without_ref	refused
+m57_tokens_grant_repeat	refused
+m57_tokens_target_repeat	refused
+m57_tokens_bind_same	refused
+m57_tokens_unit_caller_word	refused
+m57_tokens_unit_target_word	refused
+m57_tokens_scenario_without_ref	refused
 m59_keys_display_unknown_id	refused
 m59_keys_id_repeat	refused
 m59_keys_ok	ok
@@ -407,6 +413,7 @@ m61_shared_not_inheriting	refused
 m61_shared_ok	ok
 m61_shared_secret	refused
 m61_shared_twice	refused
+m61_witness_member_field_not_fixed	refused
 # c4_* — сверка cammeta-python и cammeta-go М10/2 (2026-10-18): структура YAML, ключи-строки, значения (решение decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md п. 12–18)
 c4_block_less_indented	refused
 c4_block_more_indented_first	refused

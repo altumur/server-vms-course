@@ -20,7 +20,7 @@ domain.shared:   [<элемент>…]            # раздел спеки (М1
   element:       <имя поля единицы> | {name, type: json, schema}     # у документа ровно эти три ключа
   field:         поле unit.fields, не секрет (М10/7 Н1.1); наследует (inherit) или это display.tree.group_by
   document:      name — ^[a-z][a-z0-9_-]*$, не имя поля единицы; schema — JSON Schema (М10/3 schemes), по ней проверяется значение
-refusals:        refused:value с путём domain.shared[<i>] (М10/2 Н4; случаи m61_shared_* урока 2), тексты:
+refusals:        refused:value с путём domain.shared[<i>] (М10/2 Н4; случаи m61_* корпуса М10/2), тексты:
   - «is not {name, type: json, schema} — a document the domain holds is JSON, and what it may be is its schema»
   - «is not a name, or is a secret — the shared document is signed, not sealed»
   - «is not a field of the unit»
@@ -53,14 +53,14 @@ readers:         процесс domain, консоль домена, ворке�
 
 ```yaml
 door:            PUT /domain/shared {base_rev, shared: {<sub>: {<имя>: <значение> | null}}} у консоли домена (admin, урок 9)
-                 → процесс domain тем же путём (ADR-0032); тело ≤ 1 МиБ (иначе 413)
+                 → процесс domain тем же путём (ADR-0032); тело ≤ 1 МиБ (иначе 413 {error: "refused"})
 order:           1. заморозка, смещение — урок 10 (503 frozen, 409 deposed)
                  2. тело не {base_rev: целое ≥ 0, shared: объект} — 400 {error: "refused", detail: "the edit is {base_rev:
                     <the revision it was made against>, shared: {<sub>: {<field>: value or null}}}"}
                  3. base_rev ≠ rev указателя (0 — документа нет) — 409 {error: "refused", detail: "the shared settings are at
                     rev N; the edit was made against rev M — look again"}
                  4. содержание — все отказы одним 400 через «; »: «shared settings for '<sub>': no subsystem on the domain
-                    shares a field by that name»; «'<имя>' is not in its domain.shared [...]»; тип поля — та же проверка
+                    shares a field by that name»; «'<имя>' is not in its domain.shared [<имена domain.shared спеки через «, », по возрастанию>]»; тип поля — та же проверка
                     формы, что у двери единиц (М10/3 Н3 шаг 4), на одном этом поле, слово отказа — её; значение документа
                     против его schema (слова схемы)
                  5. новый документ: прежний shared, поверх — значения правки; null — снять имя; пустая подсистема —
@@ -92,7 +92,7 @@ door:            GET /domain/shared/<sub>[?unit=<id>] у консоли клас
   term, rev:     документа этого кластера: у члена — объект domain/shared (копия, взятая Н3), у держателя — объект, который
                  называет указатель; документа нет — null, значения — без домена
 refusals:        подсистема без domain.shared — 404 {error: "no such shared settings", detail: "'<sub>' shares no field with the
-                 domain"}; ?unit= не id этой спеки — 400 «a unit of <другая> is resolved by its own console»; единицы нет
+                 domain"}; ?unit= не id этой спеки — 400 {error: "refused", detail: «a unit of <другая> is resolved by its own console»}; единицы нет
                  — 404 {error: "no such unit"}; документ не проходит record — значения без домена, journal domain.shared.refused
 ```
 
@@ -149,7 +149,8 @@ silence_line:  молчащий член — строка тревоги {t: sil
                subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?} — всегда, пока молчит
 witness:       domain.witness {report, member_field} (М10/2): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
                секунды с последнего раза}} у кластеров и в отчётах; member_field — fixed поле единицы, несущее имя члена
-               (иначе refused:value); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
+               (иначе refused:value с путём domain.witness.member_field, текст «'<поле>' is no fixed field of the unit: a
+               witness names a member by a field that does not change»); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report
 clock:         время строки страницы на часах домена: t + (received_at − sent_at) последнего принятого отчёта, который
                несёт эту страницу (поля последнего запроса метки, урок 3 Н1.3); не page.to: прежняя страница в новом отчёте
@@ -222,9 +223,11 @@ label:  "domain term T rev R"
          "garbled" | null, history: <Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
 1. каждый член:
    last_report нет и page нет                         → never
+   last_report нет, а page есть                       → вход не по форме (код 2): страница приходит только с отчётом
    page = "garbled" или не по форме Н1.7              → unreadable
    now − last_report > lost_after                     → silent; свидетель с ts − units[член] > last_report — not_reporting
    иначе                                              → ok
+   page = null при last_report — страницы нет: строк страницы нет, не unreadable
 2. строки: страница (часы Н1.8 clock) ∪ история (from_history, t как хранится) без повторов по same_line — есть в обеих,
    берётся строка страницы; строка молчания — Н1.8 silence_line; окно [since, until] — для всех строк, и для строки
    молчания
@@ -251,7 +254,8 @@ label:  "domain term T rev R"
 
 | `error` | Код | Когда |
 |---|---|---|
-| `refused` | 400, 409 | правка (Н1.3); окно `/domain/alarms` |
+| `refused` | 400, 409, 413 | правка (Н1.3), тело больше 1 МиБ — 413; окно `/domain/alarms`; `?unit=` — id другой спеки (Н1.5) |
+| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
 | `no such shared settings` | 404 | подсистема без `domain.shared` |
 | `no such unit` | 404 | `?unit=` нет такой единицы |
 | `frozen`, `deposed` | 503, 409 | урок 10 |
@@ -262,12 +266,13 @@ label:  "domain term T rev R"
 
 Каталог `Source/tests/testdata/acceptance/М11_Domain/11/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/11/README.md)):
 стенд урока 3 (каталог `testsub`: поля `step`, `marks`, документ `rounds`) и команды `resolve`, `alarms` на входах
-`inputs/`. Отказы `domain.shared` и `merge` — случаи `m61_shared_*` корпуса урока 2.
+`inputs/`. Отказы `domain.shared`, `merge` и `domain.witness` — случаи `m61_*` корпуса М10/2.
 
 ```yaml
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
 alarms:    вход — Н3 alarms; вывод {events, members, complete, sentence}
-exit:      0 — вычислено; 2 — вход не по форме (у resolve — и merge union при значении не списке)
+exit:      0 — вычислено; 2 — вход не по форме (у resolve — и merge union при значении не списке; ожидания кода 2 в словаре
+           нет — чтением)
 ```
 
 | № | Сценарий | Нормы |
@@ -291,11 +296,11 @@ exit:      0 — вычислено; 2 — вход не по форме (у res
 
 ## Чеклист готовности
 
-- [ ] **М11/11-01** объявление Н1.1 и `merge` — случаи `m61_shared_*`
+- [ ] **М11/11-01** объявление Н1.1, `merge` и `domain.witness` — случаи `m61_*` корпуса М10/2
 - [ ] **М11/11-02** документ Н1.2: форма, подпись выпускающим, указатель, пять объектов, `rev + 1` после переноса — сц. 01; переподпись — чтением
 - [ ] **М11/11-03** правка Н1.3 по порядку, все отказы одним 400 — сц. 01
 - [ ] **М11/11-04** доставка Н1.4: `doc` только при расхождении, проверка агента, никогда назад, отказ — сц. 01, 02; подделка — урок 10 `record`
-- [ ] **М11/11-05** значение при чтении Н1.5 — сц. 01, 03
+- [ ] **М11/11-05** значение при чтении Н1.5 — сц. 01, 03; `?unit=` другой спеки — чтением (каталог стенда урока 11 — одна спека)
 - [ ] **М11/11-06** доставлено скольким Н1.6, `declared` со схемой — сц. 01, 02
 - [ ] **М11/11-07** страница тревог Н1.7, фронт раз в секунду, срочный отчёт — чтением (стенд тревог не поднимает)
 - [ ] **М11/11-08** список Н1.8: состояния, строка молчания, свидетель — сц. 02, 04

@@ -158,7 +158,7 @@ door:          POST /session/break-glass {who, why, password} у консоли 
                3. предел Н1.10                                         → 429
                4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
                   нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
-                  не открывается — 503
+                  не открывается — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)
                6. 200 {user: "break-glass(<who>)", until} + кука w2c_glass; сессия — в памяти процесса консоли,
                   GLASS_SESSION, токена нет
@@ -242,16 +242,16 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 
 | Дверь | Кто | Право | Успех | Отказы |
 |---|---|---|---|---|
-| POST `/api/login` | процесс `domain` (через консоль: таблица пересылки урока 8) | — | 200 `{token, until, user}` | 400 bad body; 401 refused; 409 deposed; 413; 429; пересылка — урок 8 Н4 |
+| POST `/api/login` | процесс `domain` (через консоль: таблица пересылки урока 8) | — | 200 `{token, until, user}` | 400 bad body; 401 refused; 409 deposed; 413 too large; 429; 503 standby (урок 12 Н1.7; добавлено М11/12); пересылка — урок 8 Н4 |
 | GET `/domain/users` | `domain` (через консоль домена) | view | 200 `{users: [{name, how, disabled, at, by}]}` по `name` | 401/403 |
-| POST `/domain/users` `{name, password}` | `domain` | admin | 201 `{user}` | 400 bad body, bad name, bad password; 409 exists, name taken; 503 names unknown |
-| PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 404 no such person; 409 last admin |
-| DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 404 no such person; 409 last admin |
+| POST `/domain/users` `{name, password}` | `domain` | admin | 201 `{user}` | 400 bad body, bad name, bad password; 401/403 — Н1.5; 409 exists, name taken; 413 too large; 503 names unknown; 503 standby (урок 12) |
+| PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 401/403 — Н1.5; 404 no such person; 409 last admin; 413 too large; 503 standby (урок 12) |
+| DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 401/403 — Н1.5; 404 no such person; 409 last admin; 503 standby (урок 12) |
 | GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
-| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS; 503 names unknown |
+| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS (`refused`); 401/403 — Н1.5; 413 too large; 503 names unknown; 503 standby (урок 12) |
 | GET `/domain/break-glass` | `domain` | view | 200 `{clusters: {<кластер>: {set_at}}}` | 401/403 |
-| PUT `/domain/break-glass/<кластер>` `{password}` | `domain` | admin | 200 `{cluster, set: true}` | 400 bad body, bad password, bad name |
-| POST `/domain/revoke` `{token}` | `domain` | — | 200 `{revoked}` | 400 bad body; 401 слово `token` |
+| PUT `/domain/break-glass/<кластер>` `{password}` | `domain` | admin | 200 `{cluster, set: true}` | 400 bad body, bad password, bad name; 401/403 — Н1.5; 413 too large; 503 standby (урок 12) |
+| POST `/domain/revoke` `{token}` | `domain` | — | 200 `{revoked}` | 400 bad body; 401 слово `token`; 413 too large; 503 standby (урок 12) |
 | POST `/session/break-glass` | консоль кластера | — | Н1.6 | Н1.6, Н1.10 |
 | GET `/domain/keys` | консоль кластера | view | Н1.8 | 401/403 |
 
@@ -266,7 +266,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 ### дверь людей (процесс domain) — по порядку
 
 ```
-1. тело больше 1 МиБ                                                → 413
+1. тело больше 1 МиБ                                                → 413 too large
 2. токен (token урока 2, kind person) и may по domain/grants/domain  → 401 / 403 {error: denied}
 3. тело не по форме двери                                           → 400 bad body
 4. имя не по Н1.1 (POST)                                            → 400 bad name
@@ -313,6 +313,11 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `last admin` | 409 | у двери домена не останется администратора |
 | `too many attempts` | 429 | предел Н1.10, `Retry-After` |
 | `names unknown` | 503 | индекс не known, а правка создаёт человека или строку гранта не человека домена |
+| `unavailable` | 503 | строка аварийной учётки этого кластера не открывается (Н1.6 шаг 4) |
+| `too large` | 413 | тело больше `LOGIN_BODY` у `/api/login`, больше 1 МиБ у дверей людей |
+| `deposed` | 409 | смещённый держатель (урок 10 Н1.6), тело с `holder` |
+| `refused` | 409 | «the grants kept changing; look again» после трёх конфликтов CAS |
+| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
 | `open` | 400 | аварийный вход у открытой консоли |
 | `bad body` у аварийного входа | 400 | `who`, `why` пусты или не строки |
 
@@ -355,17 +360,17 @@ exit:      0 — вычислено; 2 — вход не по форме
 ## Чеклист готовности
 
 - [ ] **М11/9-01** строка человека Н1.1: имя, хеш, `disabled`, удаление со строками грантов — сц. 01, 02
-- [ ] **М11/9-02** вход Н1.2: один ответ неизвестному, выключенному, неверному — сц. 01, 02; равное время — чтением
+- [ ] **М11/9-02** вход Н1.2: один ответ неизвестному, выключенному, неверному — сц. 01, 02; равное время — чтением (стенд не меряет время ответа)
 - [ ] **М11/9-03** токен человека 900 с, отзыв — сц. 02; `login_url` — урок М10/9
 - [ ] **М11/9-04** гранты Н1.3: форма, `until`, копия члена с `as_of`, без строк выключенных — сц. 01, 02; давняя копия — сц. 07
 - [ ] **М11/9-05** `may` Н1.4 по порядку — сц. 07
 - [ ] **М11/9-06** сторожевая Н1.5: 401/403, `/session` с грантами, консоль домена по `domain/grants/domain` — сц. 01, 02
 - [ ] **М11/9-07** «петля — operator» только в `open` — сц. 01 (без токена — 401); уроки 2, 3, 8 — переведены
-- [ ] **М11/9-08** аварийный вход Н1.6 по порядку, сессия 900 с, журнал — сц. 03; журнал — чтением
+- [ ] **М11/9-08** аварийный вход Н1.6 по порядку, сессия 900 с — сц. 03; срок сессии и журнал — чтением (шаг дольше 900 с; журнал приёмка не сравнивает)
 - [ ] **М11/9-09** предел Н1.10: на адрес — сц. 03, 04; общий потолок — чтением (стенд с одного адреса)
 - [ ] **М11/9-10** индекс имён Н1.7: форма, проверки, обратная сторона, доставка по рангу — сц. 05; загрузка — `m59_names_*`
 - [ ] **М11/9-11** семьи ключей Н1.8 — сц. 06; загрузка — `m59_keys_*`
-- [ ] **М11/9-12** первый администратор и имя `domain` — сц. 01–06 (`@admin`); отказ приёма `domain` — чтением
+- [ ] **М11/9-12** первый администратор и имя `domain` — сц. 01–06 (`@admin`); отказ приёма `domain` — чтением (стенд не ставит кластер с именем `domain`)
 - [ ] **М11/9-13** двери людей через консоль домена к процессу `domain`, проверка там — сц. 01, 02
 
 ## Соответствие прежним урокам
