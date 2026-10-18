@@ -9,6 +9,11 @@
 
 ## Н1 Форма
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `door/signer`, `door/keys`;
+- пишет: `platform/servers/<сервер>` (put), `platform/drain` (put), `platform/drain` (delete), `platform/decommission/<сервер>` (create), `platform/decommission/<сервер>` (delete), `<sub>/policy` (put), `platform/doors/<сервер>` (delete);
+- читает: `platform/spec/<sub>`, `<sub>/placement/<id>`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `platform/doors/<сервер>`.
+
 ### Н1.1 Три части
 
 ```yaml

@@ -14,3 +14,5 @@ platform/decommission/<сервер>	row	М10/4	create=console(запрос вы
 <sub>/controller/placement_turn	row	М10/4	create=<s>controller(cas "", захват очереди); cas=<s>controller(захват прошедшего срока, продление TURN_RENEW, holder "" в конце прохода, spec_rev не убывает)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	-	1	-	М10/4 Н1.5
 <sub>/controller/placement_intent	row	М10/4	create=<s>controller(cas "" и страж placement_turn); guard=<s>controller(cas и страж placement_turn, active или idle)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	-	1	-	М10/4 Н1.5
 <sub>/controller/pass	object	М10/4	put=<s>controller(конец каждого прохода)	console	-	1	-	М10/4 Н1.2
+door/signer	row	М10/9	create=console(при первой выдаче токена двери, cas "", seed_secret — конверт кольца); cas=console(перезапечатывание при старте под текущий kid, урок 7)	console	door.routes	1	-	М10/9 Н3
+door/keys	row	М10/9	create=console(вместе с door/signer); cas=console(добавить свой kid)	console, <s>worker	door.routes	1	-	М10/9 Н3
