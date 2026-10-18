@@ -26,3 +26,4 @@ date	sample	fix	languages
 2026-10-17	02/m49_*, puts.tsv	Мутационная проверка 7cecaf2 № 10–13: каждое запрещённое имя таблицы, граница 2^53, установка spec put (без изменений, rev 2, A=B каталога) — в таблицы	all
 2026-10-17	02/m51_books_*	М11/5 Н1.1: форма domain.books и отказы загрузки — в корпус урока 2	all
 2026-10-17	02/m57_tokens_*	М11/7 Н1.1: форма domain.tokens и отказы загрузки — в корпус урока 2	all
+2026-10-18	cases/c4_*, verdicts.tsv, diagnostics.tsv, classes.tsv (новый)	сверка cammeta-python и cammeta-go М10/2: структура YAML в Н1.1, ключи-строки, класс, путь и строка в диагностике, значения unplaced, requests.key, вложенные префиксы, display.fields, default без значения, inherit из enum	all
