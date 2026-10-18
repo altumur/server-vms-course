@@ -10,6 +10,11 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): объект пульса `<sub>/heartbeats/<имя>` — `ts`, `started`, `previous_hb`, `stood_in.as_of`; `<sub>/holds/<место>` — `until` (как у слота).
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `<sub>/heartbeats/<имя>`, `<sub>/holds/<место>`, `<sub>/contenders/<имя>/<коробка>`;
+- пишет: `<sub>/slots/<имя>` (create), `<sub>/slots/<имя>` (cas), `<sub>/epoch/<id>` (create), `<sub>/epoch/<id>` (cas);
+- читает: `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/epoch_floor`, `platform/decommission/<сервер>`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/spec/<sub>`.
+
 ### Н1.1 Пульс
 
 Объект `<sub>/heartbeats/<имя>` (объект, не строка; запись — `put` объектов урока 8 Н1.1 `api`, чтение — `GET /v1/objects/{key}` урока 8 Н2). Платформа читает `worker`, `ts`, `status[].id`, `status[].phase`, `status[].epoch`, `status[].revision`, `status[].observed_revision`, `server`, `instance`, `labels`, ёмкость и запас; остальное — слова подсистемы, которые платформа не читает (`heartbeat.strings` спеки называет, какие из них — строки).
