@@ -24,7 +24,7 @@ scenario	step	request	expect
 03-unreadable-member-key	3	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pub"}}
 03-unreadable-member-key	4	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "garbled", "pub": "$pub"}}	200
 03-unreadable-member-key	5	@start agent m1	ok
-03-unreadable-member-key	6	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": {"sign_failures_domain": "1", "at": "@any"}}
+03-unreadable-member-key	6	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": {"sign_failures_domain": "1", "at": "@time"}}
 03-unreadable-member-key	7	@until 90 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}]}
 03-unreadable-member-key	8	@stop agent m1	ok
 03-unreadable-member-key	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "$pub"}}	200
