@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
 - владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
 - пишет: `domain/signer` (put), `domain/signer-pending` (put), `domain/members` (cas);
-- читает: `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`.
+- читает: `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Общее уроков 1–9 Н1 действует. Держатель держит **срок** — номер, который растёт только переносом или передачей; аренды,
 продления и автоматической смены держателя нет. Голосовать нечем: ни один raft не охватывает кластеры. Держатель пишет
