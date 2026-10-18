@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-17	11/08-floor-replay	Сверка чистой комнаты М10 (4335405d): повтор op: floor тем же id после перезапуска хранилища — сохранённый исход; директивы admin и @restart store	all
 2026-10-17	11/03-3, 11/05-2, 11/README	Прогон 40 (разбор 0217e88d): ключ processes resource/srv-a; возврат home урока 4; сц. 08 — долговечное хранилище	all
 2026-10-17	11/scenarios.tsv	Мутационная проверка 7cecaf2: шаги по колонке «Рекомендация» (ХОД-Спецификация.md, мутационный проход)	all
+2026-10-18	11/scenarios.tsv: 09 (новый); README	сверка cammeta-python и cammeta-go: нечитаемый пульс ресурса при свежей двери — unreachable, правила resource_state по порядку; директива @spoil object	all

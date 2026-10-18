@@ -30,3 +30,11 @@ scenario	step	request	expect
 08-floor-replay	7	admin POST /v1/write {"op": "floor", "floor": 1000, "id": "f3"}	409 {"kind": "refused"}
 08-floor-replay	8	@as console store POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f4"}	403 {"kind": "forbidden"}
 08-floor-replay	9	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}
+09-resource-unreadable-heartbeat	1	@start resource	ok
+09-resource-unreadable-heartbeat	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
+09-resource-unreadable-heartbeat	3	@sigterm resource	ok
+09-resource-unreadable-heartbeat	4	@spoil object platform/resources/srv-a/heartbeat	ok
+09-resource-unreadable-heartbeat	5	@as resource POST /v1/write {"id":"u1","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"901"}}	200
+09-resource-unreadable-heartbeat	6	@sleep 5	ok
+09-resource-unreadable-heartbeat	7	@as resource POST /v1/write {"id":"u2","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906"}}	200
+09-resource-unreadable-heartbeat	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}

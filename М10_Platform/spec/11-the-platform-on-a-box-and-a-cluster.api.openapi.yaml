@@ -573,8 +573,8 @@ components:
           type: array
           items:
             type: string
-      description: Если delete отсутствует, действует write; явный пустой delete запрещает удаление. Образцы и отрицания
-        — Н1.2/Н1.3. Генератор выводит delete явно.
+      description: 'delete отсутствует — пустой список, удалять нельзя (урок 6 Н1.2, решение b60d983e); генератор выводит
+        delete явно у каждой роли. Образцы и отрицания — Н1.2/Н1.3.'
     MemberId:
       type: string
       pattern: ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\s\S])
