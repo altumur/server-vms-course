@@ -71,3 +71,7 @@ domain/member	row	М11/3	create=domainagent(функция keys приняла �
 domain/members/<член>/reports/<rev>	object	М11/3	put=domain(приём отчёта, шаг 7: целое поколение JCS); delete=domain(keep: старше двух последних и выше метки — следующим приёмом)	domain	-	1	-	М11/3 Н1.3
 domain/members/<член>/reports/<rev>.delta	object	М11/3	put=domain(приём отчёта: тело публикации как получено); delete=domain(keep: вместе с поколением)	domain	-	1	-	М11/3 Н1.3
 domain/members/<член>/reported	object	М11/3	put=domain(поля поколения — только с generation, поля запроса — каждый приём с записью метки)	domain	-	1	-	М11/3 Н1.3
+domain/topology	row	М11/4	cas=domain(дверь PUT /domain/topology через консоль домена, не больше 10 конфликтов)	<s>worker, domain, domainconsole, domainagent	-	1	-	М11/4 Н1.2
+domain/member-topology	row	М11/4	cas=domainagent(у члена: поле topology ответа держателя как есть, только при отличии)	<s>worker, domain, domainconsole, domainagent	-	1	-	М11/4 Н1.2
+domain/reached	object	М11/4	put=domainagent(у члена: момент ответа минус domain_age, назад не уходит, тот же ts не переписывается, новый — не чаще FRESH_EVERY)	domainagent	-	1	-	М11/4 Н1.4, М11/12 Н1.2
+domain/reaches	object	М11/4	put=domainagent(у члена: сети REACHES или интерфейсов, по возрастанию без повторов)	domainagent	-	1	-	М11/4 Н1.5
