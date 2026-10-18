@@ -9,6 +9,11 @@
 
 ## Н1 Форма
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `<SECRETS_KEY>`;
+- пишет: `<sub>/<spec:unit.rows>/<id>` (cas), `door/signer` (cas);
+- читает: `platform/spec/<sub>`, `<sub>/<spec:unit.rows>/<id>`, `<sub>/idem/<key>`.
+
 ### Н1.1 Что секрет
 
 ```yaml
