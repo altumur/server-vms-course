@@ -1,10 +1,10 @@
-# A request's id (`rid`, the name of <sub>/requests/<rid> and of its mark <sub>/commands/<rid>): one table for the
-# course (Source/tests/testdata/rid.tsv) and the product (testdata/rid.tsv at its root), byte for byte. Owner:
-# «Паритет»; rule: «Архитектор», 2026-10-06, after the fourteenth review (the course counted characters and answered
+# A request's id (`rid`, the name of <sub>/requests/<rid> and of its mark objects/<sub>/commands/<rid>): one table for the
+# course (Source/tests/testdata/rid.tsv) and the product (testdata/rid.tsv at its root), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083); rule: «Архитектор», 2026-10-06, after the fourteenth review (the course counted characters and answered
 # 500 to a\u0085b and to 150 × «я»).
 #
 # THE RULE: at most 200 BYTES of UTF-8, not empty, not . or ..; no / \ " ' and no character of Unicode's Cc, Zl or Zp
-# (controls, U+0085, U+2028, U+2029). Refused at the door with a 400; on the worker's path as RequestRefused,
+# (controls, U+0085, U+2028, U+2029); not beginning with free- — the family of the resource's own requests
+# <sub>/requests/free-<server>-<volume> (М10/8 Н1.5, decision of «Архитектор» 2026-10-18). Refused at the door with a 400; on the worker's path as RequestRefused,
 # counted in filings.refused.
 #
 # Columns, tab-separated; a line that begins with '#' and an empty line are no row:
@@ -35,3 +35,8 @@
 "ключ-1"	ok
 "x-{unit}"	ok
 "a,b"	ok
+"free-a-1-2"	refused
+"free-"	refused
+"free"	ok
+"Free-a"	ok
+"xfree-a"	ok
