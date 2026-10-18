@@ -2,7 +2,7 @@
 # declares its schemes, `fields.source.schemes: {<scheme>: {host, fragment, none} | {}}` — {} is «by the RFC»; one
 # declaration read by the url rule and the grouping alike): one table for the course (Source/, Python) and the product (Go),
 # read the same way by both: Source/tests/testdata/group_of.tsv (course, tests/test_group_of_table.py) and
-# testdata/group_of.tsv at the product's root (w2cplatform TestTheSharedTableOfGroups), byte for byte. Owner: «Паритет». ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's deviceOf (vms/gate.go), its
+# testdata/group_of.tsv at the product's root (w2cplatform TestTheSharedTableOfGroups), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's deviceOf (vms/gate.go), its
 # tests, the course's reviews 8, 10, 13, 14 and the course's seed (7fbcbade), merged.
 #
 # source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}, cfw: {none: [local]}}}
@@ -32,6 +32,9 @@
 #   refusing is the url rule's business, grouping is group_by's: a source refused whose host can still be read keeps
 #   the group of its host (an old row stays with its neighbours) — the row says the group AND refused; a login or a
 #   password in the path of a `host: path` scheme (admin:Hunter2%40…) is the url rule's own refusal by that option
+#   a character RFC 3986 allows nowhere (space, controls, " < > \ ^ ` { | }) makes the url unreadable: bad_url before
+#   storing (М10/7 Н1.1а А2); the group is still the host's when the host reads; ' is a sub-delim of the grammar, but
+#   no RFC 1123 label: a host with it reads as no host (сверка python и go М10/6–11, S4)
 #
 # Columns, tab-separated; a line that begins with '#' and an empty line are no row:
 #   source   the camera's source as written (`mirror` is testsub2's scheme: host: path, fragment: none, none: [local])
@@ -162,3 +165,7 @@ mirror://hub1/h%2Ecorp/x	<none>	bad_url
 rtsp://h/x#@evil/	h	bad_url
 cfw://local	<none>	
 cfw://user:pw@local	local	bad_url
+rtsp://nvr50/ch^1	nvr50	bad_url
+rtsp://nvr50/a{b}/c	nvr50	bad_url
+rtsp://nvr50/a\b	nvr50	bad_url
+rtsp://hub.ex'ample/x	<none>	bad_url
