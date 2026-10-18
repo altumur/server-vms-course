@@ -11,3 +11,4 @@ date	sample	fix	languages
 2026-10-17	11/scenarios.tsv	Мутационная проверка 7cecaf2: шаги по колонке «Рекомендация» (ХОД-Спецификация.md, мутационный проход)	all
 2026-10-18	11/scenarios.tsv: 09 (новый); README	сверка cammeta-python и cammeta-go: нечитаемый пульс ресурса при свежей двери — unreachable, правила resource_state по порядку; директива @spoil object	all
 2026-10-18	09-resource-unreadable-heartbeat 5, 7	@as resource без двери: по словарю М10/01 @as — роль следующих store-шагов, шаг пишет «@as resource store POST» (находка cammeta-go 11 № 7)	all
+2026-10-18	09-resource-unreadable-heartbeat 5, 7	id команды /v1/write не по М10/1 Н1 (1–64 строчных hex): g1/u1/u2 → a1/a2; нормативный ответ был бы 400 (cammeta-go 05 № 6, 11 № 8)	all

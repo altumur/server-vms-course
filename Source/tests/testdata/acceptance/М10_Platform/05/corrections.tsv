@@ -9,3 +9,5 @@ date	sample	fix	languages
 2026-10-17	05/scenarios.tsv: 07-tie-first-by-name	Мутационная проверка 7cecaf2 № 23: равная ёмкость — первый по имени	all
 2026-10-18	05/scenarios.tsv: 02-unit 7, 08-two-specs, 09-bad-given-name, 10-name-taken-once	сверка python и go М10/3–5, п. 24–28: каталог testsub + testsub2, rows с running (пустые rows и бесконечный захват при двух спеках были не видны), отказ старта при неверном заданном имени, одна тревога worker.name_taken	all
 2026-10-18	11-group-by-without-value	сверка python и go М10/3–5, P4 (решение «Архитектора» п. 2): group_by без значения и нечитаемый — не группа, шаг на стенде двух спек	all
+2026-10-18	11-group-by-without-value 6	id команды /v1/write не по М10/1 Н1 (1–64 строчных hex): g1/u1/u2 → a1/a2; нормативный ответ был бы 400 (cammeta-go 05 № 6, 11 № 8)	all
+2026-10-18	11-group-by-without-value 7–9	решение «Архитектора»: spread_by без значения в разведении не участвует (урок 4 Н1.3) — три tallies без zone на одном t-1; обе реализации отказывали 404 по старому чтению «пустое — значение»	all
