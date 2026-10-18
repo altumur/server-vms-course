@@ -30,9 +30,10 @@ text:
             отображение с колонки 1: сдвинутый документ, корень потоком `{…}`, список, скаляр, пустой файл — отказ
   comment:  `#` начинает комментарий только после пробела (или в начале строки); `]# c`, `"a"# c`, `слово# c` — не
             комментарий, а строка, не отнесённая ни к какому ключу (отказ)
-  keys:     ключ отображения — всегда строка: простой ключ `1`, `true`, `null`, `~` — строка своего исходного текста
-            (`1`, `true`); равенство ключей — после этого: `{1: a, '1': b}` — ключ, сказанный дважды; ключ-коллекция —
-            отказ
+  keys:     ключ отображения — строка по YAML 1.2 core: простой ключ, который core читает не строкой (int, float,
+            bool, null, `~`: `1`, `1.5`, `true`, `null`), — отказ `text` везде, в том числе внутри значений `type: json`;
+            в кавычках (`'1'`, `'true'`) — строка; ключ-коллекция — отказ. Так спеку одинаково читает любой
+            стандартный инструмент YAML (решение «Архитектора», изменено 2026-10-18)
   refused:  якорь `&`, псевдоним `*`, ключ слияния `<<`, любой тег `!…`; ключ, сказанный дважды в одном отображении
             (и в потоковом `{a: 1, a: 2}`); ключ-отображение и ключ-список; вложенность глубже 64 (корень —
             уровень 1, каждое отображение и список, блочные и потоковые одинаково, — ещё уровень, скаляр уровня
@@ -270,7 +271,7 @@ closed_key_set:
 | `servers.show[]` | `{table, by, title?, columns?}`: таблица; поле таблицы; строка; список полей таблицы | `table` и `by` обязательны |
 | `servers.status[]` | `{field, title?, of?}`: путь в пульсе, первый сегмент не ключ пульса, который читает платформа (урок 5 Н1.1: `worker`, `ts`, `status`, `server`, `instance`, `labels`, `url`, `fetched`, `events`, `conflicts`, `started`, `previous_hb`, `previous_instance`, `previous_server`, `fenced`, `schema`, `build`, `pending_writes`, `server_unsaid`, `stood_in`, `stand_in_renewals`; `schema`, `build`, `pending_writes` — добавлено М10/10) — иначе `refused:value`; строка; таблица | `field` обязателен |
 | `display.unit`, `.units`, `.units_count`, `.section`, `.general` | строки | нет — «единица» |
-| `display.fields`, `display.field_help` | named → строка (имена — Н1.4; ключ `1` — строка «1», не поле — `refused:reference`) | необязательны |
+| `display.fields`, `display.field_help` | named → строка (имена — Н1.4; простой ключ `1` — `refused:text` по Н1.1 keys; `'1'` — строка, не поле — `refused:reference`) | необязательны |
 | `display.options` | named → `{значение: строка}` (Н1.4; внутри opaque) | необязателен |
 | `display.form[]` | `{title?, state?, placement?, fields?, note?, status?}`: строка; bool; bool; список полей и платформенных имён (Н1.4); строка; список `{field, since?, title?}` (строки) | нет — один блок со всеми полями |
 | `display.events` | bool | нет — вкладка есть |
@@ -322,7 +323,7 @@ rules:
   - unit.fields.bytes при наличии любого unit-поля type: blob — отказ загрузки refused:value (поле bytes ответа BlobWritten двери байтов, М10/10 Н1.5); без blob обычное поле bytes допустимо
   - snapshot не включает поле server: нет snapshot — server исключается вместе с секретами/blob; явно названный server — отказ загрузки refused:value (М10/10 Н1.3)
   - таблица: held_by/garbled/by/at/made_at запрещены как поля (вычисляемые значения и штампы, независимо от наличия stamp); name допустимо только с типом string (явным или по умолчанию) и key: name (М10/10 Н1.6), иначе refused:value
-  - имя поля unit.fields и tables.*.fields — только строковый ключ YAML; числовой, bool и null-ключ — refused:value с путём соответствующего fields. Преобразование имени в строку запрещено; на ключи значений json/display.options этот запрет не переносится
+  - имя поля unit.fields и tables.*.fields — только строковый ключ YAML; простой ключ не строкой core (числовой, bool, null) — refused:text по Н1.1 keys, как везде, в том числе у ключей значений json и display.options (изменено 2026-10-18); преобразование имени в строку запрещено
   - значение поля в строке хранилища — урок 3 Н1.2 (<sub>/<rows>/<id>)
 ```
 
@@ -335,7 +336,7 @@ rules:
 | `unit.id` | `numeric` или несекретное поле единицы типа string, включая умолчание типа; поле с суффиксом `_secret` — refused:reference |
 | `snapshot[]`, `placement.spread_by`, `placement.group_by.field`, `placement.retire_when.field`, `placement.places.server_field`, `placement.places.where.*`, `placement.affinity.field`, `placement.affinity.server_field`, `placement.near.by`, `placement.affinity.strict.*`, `holds.unit/since/until/released`, `metrics[].where.*`, `metrics[].unless.where.*`, `rights.unit_of.*`, `servers.show[].by`, `servers.show[].columns[]`, `display.fields.*`, `display.field_help.*`, `display.options.*`, `display.tree.group_by`, значения `*.must_match` (поля этой строки), `placement.home` (или слово `near`), `bound_to`, `credentials.login`, `credentials.secret` (поля той же строки, урок 7 Н1.1) | поле единицы (`fields:`) или поле таблицы, если ключ стоит у таблицы; у `display.form[].status[].field` и `display.options.<поле>` слово из `status` — поле платформенной строки |
 | `requests.key` | свойства `requests.schema.properties` — поля тела просьбы `POST /<sub>/requests` (урок 8 Н1.5): `{имя}` — только строка без преобразования, свойство схемы явно имеет `type: string`; `{имя:int}` — конечное binary64-число (как в JCS) с модулем ≤2^53−1, усечение к нулю и десятичная запись без знака +/ведущих нулей (`7.9` → `7`, `-7.9` → `-7`, `-0.5` → `0`); свойство явно имеет `type: integer` или `number`, bool не число. Имя вне properties, суффикс `_secret`, иной/неявный/составной type — refused:reference при загрузке; отсутствующее значение, иной тип или число вне этой границы — 400 при подаче. Поля единицы здесь ни при чём. Тот же шаблон у `tables.<t>.key`: обычная подстановка и одиночное поле — type string (включая умолчание), :int — int/float; секретный источник запрещён (урок 10 Н1.6 `tables.<t>.key`: несекретное поле) |
-| `display.options.<имя>.*` | значения `enum` поля единицы или таблицы; у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
+| `display.options.<имя>.*` | значения `enum` поля единицы или таблицы (у поля `bool` ключ — текст значения в кавычках: `'true'`, `'false'`; простой `true:` — `text` по Н1.1 keys); у слова пульса из `display.form[].status[]` — любые строки (подписи значений); иное имя или поле без `enum` — отказ |
 | `servers.status[].of`, `servers.show[].table`, `placement.places.table`, `placement.affinity.table`, `holds.table`, `metrics[].unless.table`, `metrics[].count` (`table <т>`), `worker.writes[]` | таблица из `tables:`; у `worker.writes` — собственная таблица, не `unit.rows` |
 | `placement.weight.field` | поле единицы типа int |
 | `worker.deletes[]` | `unit.rows` этой спеки |
@@ -536,7 +537,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 436 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (77) или `refused` (359); `puts.tsv` — 7 установок `spec put` по порядку в свежее хранилище: код последней и rev строки спеки (Н3 «Смена спеки», `загрузить_каталог`). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк, для случаев `classes.tsv` — класс отказа (README); один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 439 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (78) или `refused` (361); `puts.tsv` — 7 установок `spec put` по порядку в свежее хранилище: код последней и rev строки спеки (Н3 «Смена спеки», `загрузить_каталог`). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк, для случаев `classes.tsv` — класс отказа (README); один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -546,7 +547,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_merge_*`, `c2_cut_at_*`, `c2_metrics_*`, `c2_form_fields_platform_id`, `c2_table_name_object_family` | сводная таблица: слова `merge` и `cut_at`, тип и повтор имени метрики, платформенное имя в `form[].fields[]`, семья объектов как имя таблицы | Н1.2а, Н1.4 |
 | `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
 | `c3_tab_*`, `c3_u2028_*`, `c3_escape_*` | сверка 2 чистой комнаты: TAB вне кавычек и блочного скаляра, U+2028, экранирования двойных кавычек | Н1.1 |
-| `c4_*` | сверка python и go. Принято: TAB после отступа блочного скаляра, `-   key:`, список без отступа, апостроф в простом слове. Отказано: строка блочного скаляра мельче первой, второй и сдвинутый `---`, сдвинутый корень, корень потоком, `#` без пробела, `a:b` в потоке, пустой элемент потока, одиночный CR, U+FFFE/U+FFFF, повтор ключей после приведения к строке, ключ-коллекция, `unplaced: {}`, `requests.key` без `{…}`, вложенные префиксы `secrets.readers`, числовой ключ `display.fields`, `default:` без значения, `inherit` вне `enum`, `door.pass` на rows | Н1.1, Н1.2а, Н1.3, Н1.4 |
+| `c4_*` | сверка python и go. Принято: TAB после отступа блочного скаляра, `-   key:`, список без отступа, апостроф в простом слове, ключи в кавычках `'1'`, `'true'` внутри `json`. Отказано: строка блочного скаляра мельче первой, второй и сдвинутый `---`, сдвинутый корень, корень потоком, `#` без пробела, `a:b` в потоке, пустой элемент потока, одиночный CR, U+FFFE/U+FFFF, простой ключ не строкой core (`1` внутри `json`, `1` в `display.fields` — `text`), ключ-коллекция, `unplaced: {}`, `requests.key` без `{…}`, вложенные префиксы `secrets.readers`, ключ `'1'` в `display.fields` — `reference`, `default:` без значения, `inherit` вне `enum`, `door.pass` на rows | Н1.1, Н1.2а, Н1.3, Н1.4 |
 | `m57_tokens_*` | `domain.tokens`: placement, unit, scenario — ok; вид person, lifetime 0, повтор и зарезервированное в claims, пустой grant, слово caller, poll_home у placement, необъявленное утверждение, scenario рядом с placement, путь в items, заглавная в пути, unit без domain.ref, вид без области, повтор в grant и target_fields, одно имя в двух claims_bind, чужое слово caller и target_fields у unit, scenario без domain.ref — refused (М11/7 Н1.1) | Н1.2а |
 | `m51_books_*` | `domain.books`: собираемая и переносимая — ok; неполная четвёрка, key без from, чужая подсистема, два сегмента, слово pick, to = key, секрет в key и show, пустой show, незнакомый ключ, книга и строка kept одного имени — refused (М11/5 Н1.1) | Н1.2а |
 | `m59_names_*`, `m59_keys_*` | `domain.names` у книги с `from` — ok (и без `grant`); у `kept`, у переносимой книги, без книги, без «/», без `exclusive_with` или с другим, слово `grant`, незнакомый ключ — refused; `domain.keys` со словами `display.keys` — ok; слово для необъявленного id, повтор id — refused (М11/9 Н1.7, Н1.8) |

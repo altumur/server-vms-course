@@ -33,6 +33,8 @@ c4_door_pass_rows	reference
 c4_key_seq	text
 c4_key_map	text
 c4_key_int_and_string	text
-c4_display_fields_numeric_key	reference
+c4_display_fields_numeric_key	text
+c4_display_fields_quoted_numeric_key	reference
 c4_inherit_outside_enum	value
 c4_default_without_value	value
+display_options_bool_plain_key	text

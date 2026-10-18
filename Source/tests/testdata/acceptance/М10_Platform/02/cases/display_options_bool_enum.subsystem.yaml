@@ -28,7 +28,7 @@ display:
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}
-    flag: {true: "Yes", false: "No"}
+    flag: {'true': "Yes", 'false': "No"}
   form:
     - title: Main
       fields: [name, start, kind]

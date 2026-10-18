@@ -40,6 +40,7 @@ display_form_fields_unknown	refused
 display_form_unknown_key	refused
 display_kinds_nested	refused
 display_options_bool_enum	ok
+display_options_bool_plain_key	refused
 display_options_field_without_enum	refused
 display_options_not_a_field	refused
 display_options_not_in_enum	refused
@@ -433,6 +434,7 @@ c4_flow_empty_item	refused
 c4_fffe	refused
 c4_ffff	refused
 c4_key_int_and_string	refused
+c4_key_quoted_in_json_ok	ok
 c4_key_map	refused
 c4_key_seq	refused
 c4_plain_apostrophe_ok	ok
@@ -440,6 +442,7 @@ c4_unplaced_empty	refused
 c4_requests_key_no_template	refused
 c4_readers_nested	refused
 c4_display_fields_numeric_key	refused
+c4_display_fields_quoted_numeric_key	refused
 c4_default_without_value	refused
 c4_inherit_outside_enum	refused
 c4_door_pass_rows	refused
