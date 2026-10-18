@@ -63,7 +63,11 @@ paths:
               additionalProperties: false
               properties:
                 cluster: {$ref: '#/components/schemas/MemberName'}
-                origin: {$ref: '#/components/schemas/MemberName'}
+                origin:
+                  description: 'член-владелец источника; "" — снять источник (Н1.1; прогон 41 R41-10)'
+                  oneOf:
+                    - {$ref: '#/components/schemas/MemberName'}
+                    - {const: ''}
                 copies:
                   type: array
                   uniqueItems: true

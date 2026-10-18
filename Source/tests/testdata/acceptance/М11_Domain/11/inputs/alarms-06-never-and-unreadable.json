@@ -8,12 +8,14 @@
   "m1": {
    "last_report": null,
    "received_at": null,
+   "sent_at": null,
    "page": null,
    "history": null
   },
   "m2": {
    "last_report": 1759999995.0,
    "received_at": 1759999995.0,
+   "sent_at": null,
    "page": "garbled",
    "history": null
   }

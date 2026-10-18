@@ -36,7 +36,8 @@
 
 `inputs/alarms-*.json` — вход `alarms` (Н3):
 - `now` = 1760000000, окно — сутки, `lost_after` 45;
-- члены: `last_report` и `received_at` — часы домена, `page` — страница Н1.7 (`"garbled"` — не читается; `null` — нет),
+- члены: `last_report` и `received_at` — часы домена, `sent_at` — часы члена того же отчёта (у векторов — `page.to`, при
+  `page` не объектом — `null`), `page` — страница Н1.7 (`"garbled"` — не читается; `null` — нет),
   `history` — Н1.9;
 - `witnesses` — объекты свидетелей.
 

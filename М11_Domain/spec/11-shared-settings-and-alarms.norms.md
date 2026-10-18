@@ -34,7 +34,7 @@ merge:           unit.fields.<f>.merge (М10/2): override | union; только 
 ### Н1.2 Общий документ
 
 ```yaml
-document:        объект держателя shared/rev-<rev> — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}
+document:        объект держателя domain/shared-docs/rev-<rev> — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}
   shared:        {<sub>: {<имя>: <значение>}} — только объявленное Н1.1; подсистемы и имена по возрастанию (JCS)
   term, rev:     срок держателя (урок 10) и номер правки; порядок — (term, rev), term старше
   by:            имя, доказанное сторожевой; после переноса — "domain"
@@ -45,7 +45,7 @@ write:           сначала объект, затем указатель по
 after_move:      новый держатель (урок 10 Н1.8) переподписывает то же содержимое как rev + 1, by "domain" — у него другой
                  выпускающий; при плановой передаче выпускающий тот же, документ не меняется
 readers:         процесс domain, консоль домена, воркер подсистемы на домене (роль <sub>domain) — указатель domain/shared
-                 (точное имя) и объекты shared/rev-*; консоль кластера — строка domain/shared (точное имя: у держателя
+                 (точное имя) и объекты domain/shared-docs/rev-* (семья domain/* двери объектов М10/8); консоль кластера — строка domain/shared (точное имя: у держателя
                  указатель, у члена строка копии, Н1.4; М10/6 Н1.4 console, добавлено М11/11); проекций по подсистемам нет (C6)
 ```
 
@@ -78,7 +78,7 @@ member:          агент по порядку (Н3 «взять докумен
                  domain/shared {doc: JCS {term, rev, sha256}}; отказ — строка domain/shared-refused {doc: JCS {term, rev,
                  reason, at}}; прежний документ остаётся
 in_report:       строки domain/shared и domain/shared-refused — объекты отчёта (урок 3 Н1.2 member_objects, добавлено М11/11)
-holder_self:     у кластера держателя строка domain/shared — указатель (Н1.2), а документ — объект shared/rev-<rev>: агент
+holder_self:     у кластера держателя строка domain/shared — указатель (Н1.2), а документ — объект domain/shared-docs/rev-<rev>: агент
                  держателя документа не берёт, консоль держателя читает указатель (Н1.5)
 ```
 
@@ -151,7 +151,9 @@ witness:       domain.witness {report, member_field} (М10/2): объекты <s
                секунды с последнего раза}} у кластеров и в отчётах; member_field — fixed поле единицы, несущее имя члена
                (иначе refused:value); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report
-clock:         время строки страницы на часах домена: t + (received_at отчёта − page.to); t_src — t как пришло
+clock:         время строки страницы на часах домена: t + (received_at − sent_at) последнего принятого отчёта, который
+               несёт эту страницу (поля последнего запроса метки, урок 3 Н1.3); не page.to: прежняя страница в новом отчёте
+               старые тревоги вперёд не сдвигает (решение «Архитектора» по R41-16 прогона 41); t_src — t как пришло
 events_order:  по t убывая, затем member, id; строки истории — from_history: true
 ```
 
@@ -216,7 +218,7 @@ label:  "domain term T rev R"
 ### alarms(input)
 
 ```
-вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, page: <Н1.7> |
+вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <Н1.7> |
          "garbled" | null, history: <Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
 1. каждый член:
    last_report нет и page нет                         → never

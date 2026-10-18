@@ -25,7 +25,7 @@ scenario	step	request	expect
 02-disable-revoke-last-admin	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
 02-disable-revoke-last-admin	5	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
 02-disable-revoke-last-admin	6	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
-02-disable-revoke-last-admin	7	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "ann"}}
+02-disable-revoke-last-admin	7	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
 02-disable-revoke-last-admin	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	403 {"error": "denied"}
 02-disable-revoke-last-admin	9	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
 02-disable-revoke-last-admin	10	holder PUT /domain/users/ann {"disabled": false}	200 {"user": "ann", "disabled": false}

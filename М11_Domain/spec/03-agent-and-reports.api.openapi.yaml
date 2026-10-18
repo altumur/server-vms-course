@@ -365,7 +365,7 @@ components:
               additionalProperties: {$ref: '#/components/schemas/Placement'}
         pending:
           type: array
-          description: Урок 6 Н1.4 — ждущие правки этого члена по (at, id).
+          description: Урок 6 Н1.4 — ждущие правки этого члена по seq.
           items: {$ref: '#/components/schemas/Edit'}
         shared:
           type: object
@@ -413,11 +413,12 @@ components:
         rev: {type: integer, minimum: 1}
     Edit:
       type: object
-      required: [id, what, method, path, body, key, at]
+      required: [id, seq, what, method, path, body, key, at, asked]
       additionalProperties: false
       description: Урок 6 Н1.4.
       properties:
         id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        seq: {type: integer, minimum: 1, description: 'порядок приёма (урок 6 Н1.4; прогон 41 R41-09)'}
         what: {type: string}
         method: {enum: [POST, PUT, DELETE]}
         path: {type: string, minLength: 1}
@@ -428,6 +429,15 @@ components:
         key: {type: string, minLength: 1, maxLength: 200}
         at: {type: number}
         base: {type: integer, minimum: 0}
+        asked:
+          type: object
+          required: [method, path, body]
+          additionalProperties: false
+          description: 'запрос двери домена, как его принял процесс (урок 6 Н1.4; урок 10 Н1.6 apply)'
+          properties:
+            method: {enum: [POST, PUT, DELETE]}
+            path: {type: string, minLength: 1}
+            body: {type: object, additionalProperties: true, description: Открыт намеренно — тело двери домена урока 6 Н2.}
     Outcome:
       type: object
       required: [id, status, result, at, what, kept_at]

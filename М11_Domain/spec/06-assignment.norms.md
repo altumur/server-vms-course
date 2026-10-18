@@ -77,8 +77,11 @@ kept:       найденная единица (в том числе у член�
 
 ```yaml
 domain/pending/<член>:   строка держателя; элемент <id> — текст JSON правки
-  edit:     {id, what, method, path, body, key, at, base?, asked}
+  edit:     {id, seq, what, method, path, body, key, at, base?, asked}
     id:     "e-" + первые 12 знаков hex sha256(UTF-8(член) ‖ 0x00 ‖ UTF-8(Idempotency-Key))
+    seq:    номер приёма — значение элемента seq этой строки после +1 при приёме, под тем же CAS; seq задаёт порядок ждущих
+            правок члена: по нему назначается base (ниже) и выдаются правки (carry); at — только время для людей и исходов
+            (решение «Архитектора» по R41-09 прогона 41)
     what:   имена полей тела по возрастанию через «,», у POST — с полем domain.ref, без cluster (DELETE — "")
     method: POST | PUT | DELETE;  path — путь двери единиц консоли члена: /<sub>/<rows> или /<sub>/<rows>/<id>
             (id — местный id единицы из копии члена); body — объект полей (DELETE — {})
@@ -90,7 +93,7 @@ domain/pending/<член>:   строка держателя; элемент <id
             числа (nextafter): новый приём того же ключа отличим от прежнего
     base?:  revision единицы в копии члена у держателя в момент приёма (PUT, DELETE); у POST нет; строки шарда с
             revision этой единицы в копии нет — base нет, правка идёт без If-Match; есть ждущая PUT того же
-            path — base = её base + 1 (так применяется её результат, а не прежнее значение); ждущая DELETE того же path —
+            path — base = base последней из них по seq + 1 (так применяется её результат, а не прежнее значение); ждущая DELETE того же path —
             новая правка этого path отказывается 409 {error: "unit is being deleted"}
             # ждущая правка не применилась (conflict) — следующие того же path тоже дадут conflict: оператор решает заново
 writer:     процесс domain — приём (Н3, дверь консоли домена — урок 3 Н1.8) и снятие исполненной (Н3 «исход»); CAS строки
@@ -98,7 +101,8 @@ repeat:     тот же id и те же method, path, body — 202 с прежн
             was used for another edit"}; нечитаемая прежняя запись этого id — 422 (ключ не переиспользуется)
 KEPT_LIMIT: 50          # ждущих правок на члена; 51-я — 409 {error: "kept_full", detail: "<член> has 50 edits waiting"}
 reply:      202 {kept: <id>, cluster: <член>, what, note: "kept; <член> applies it when it next reports"}
-carry:      ответ держателя (урок 3 Н1.5) несёт pending: [<edit>…] этого члена по (at, id)
+carry:      ответ держателя (урок 3 Н1.5) несёт pending: [<edit>…] этого члена по seq; элемент seq строки — счётчик, не правка
+           (правки — элементы e-…; KEPT_LIMIT считает их)
 ```
 
 ### Н1.5 Применение агентом и исход
@@ -160,8 +164,8 @@ HTTP-контракт: [06-assignment.api.openapi.yaml](06-assignment.api.openap
 3. id = Н1.4; прочитать domain/pending/<член>: тот же id — repeat (202 / 422)
 4. ждущих 50                                                                    → 409 kept_full
    ждёт DELETE того же path                                                       → 409 unit is being deleted
-   base: копия члена; ждёт PUT того же path — её base + 1
-5. edit {id, what, method, path, body, key, at, base?, asked} → записать по CAS (конфликт — перечитать с шага 3, до 10 раз,
+   base: копия члена; ждёт PUT того же path — base последней по seq + 1
+5. seq строки + 1; edit {id, seq, what, method, path, body, key, at, base?, asked} → записать правку и seq одним CAS (конфликт — перечитать с шага 3, до 10 раз,
    затем 409 «the pending edits kept changing; ask again»)
 6. 202
 ```
