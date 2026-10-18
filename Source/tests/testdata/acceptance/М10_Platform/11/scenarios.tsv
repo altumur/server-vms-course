@@ -38,3 +38,5 @@ scenario	step	request	expect
 09-resource-unreadable-heartbeat	6	@sleep 5	ok
 09-resource-unreadable-heartbeat	7	@as resource store POST /v1/write {"id":"a2","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906"}}	200
 09-resource-unreadable-heartbeat	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
+10-foreign-dir	1	@foreign store nolabel	ok
+10-foreign-dir	2	@foreign store otherlabel	ok
