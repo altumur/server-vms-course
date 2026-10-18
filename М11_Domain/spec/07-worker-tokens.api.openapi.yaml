@@ -34,8 +34,8 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/InvalidReply'}
+        '503': {$ref: '#/components/responses/Unavailable'}
   /api/tokens/{member}/{sub}/{kind}:
     parameters:
       - name: member
@@ -87,17 +87,46 @@ components:
       required: true
       schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
   responses:
+    Unavailable:
+      description: 'У агента: держатель не ответил за TOKEN_WAIT (Н1.2)'
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: unavailable}
+              detail: {type: string}
+    InvalidReply:
+      description: 'У агента: m1 не открылся, не тот request_id или exp ≤ now (Н1.3)'
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: invalid token reply}
+              detail: {type: string}
     Refused:
       description: Отказ (Н4); у выдачи — reason из закрытого списка
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/Refusal'}
+          schema: {$ref: '#/components/schemas/StandbyBody'}
   schemas:
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

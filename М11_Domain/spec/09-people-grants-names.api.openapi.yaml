@@ -117,7 +117,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/users/{name}:
     parameters:
       - name: name
@@ -272,7 +272,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Forwarded'}
         '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/break-glass:
     get:
       summary: У каких кластеров задан аварийный пароль (Н1.6)
@@ -425,6 +425,14 @@ paths:
           description: как у GET, без тела
 components:
   responses:
+    Refused503:
+      description: '503 names unknown (Н1.7) или standby процесса domain (урок 12 Н1.7)'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/NotStandby'}
     Forwarded:
       description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
       content:
@@ -436,10 +444,10 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/Refusal'}
+          schema: {$ref: '#/components/schemas/StandbyBody'}
     TooMany:
       description: Предел попыток (Н1.10)
       headers:
@@ -456,6 +464,17 @@ components:
               error: {const: too many attempts}
               detail: {type: string}
   schemas:
+    NotStandby:
+      allOf:
+        - {$ref: '#/components/schemas/Refusal'}
+        - {properties: {error: {not: {const: standby}}}}
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

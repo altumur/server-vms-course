@@ -50,6 +50,7 @@ paths:
                     allOf:
                       - $ref: '#/components/schemas/Refusal'
                       - properties:
+                          error: {const: refused}
                           reason: {enum: [rebase, same_sent_at, not_ready]}
                         required: [reason]
                   - $ref: '#/components/schemas/Deposed'
@@ -206,12 +207,18 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий (урок 12 Н1.7; добавлено М11/12): error standby, detail называет активный экземпляр'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/Refusal'
+          schema: {$ref: '#/components/schemas/StandbyBody'}
   schemas:
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Deposed:
       type: object
       required: [error, holder]

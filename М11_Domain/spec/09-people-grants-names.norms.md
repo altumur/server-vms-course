@@ -317,7 +317,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `too large` | 413 | тело больше `LOGIN_BODY` у `/api/login`, больше 1 МиБ у дверей людей |
 | `deposed` | 409 | смещённый держатель (урок 10 Н1.6), тело с `holder` |
 | `refused` | 409 | «the grants kept changing; look again» после трёх конфликтов CAS |
-| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
+| `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
 | `open` | 400 | аварийный вход у открытой консоли |
 | `bad body` у аварийного входа | 400 | `who`, `why` пусты или не строки |
 

@@ -120,7 +120,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Forwarded'}
         '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
     delete:
       summary: Снять назначение
       responses:
@@ -203,7 +203,7 @@ paths:
         '413': {$ref: '#/components/responses/Forwarded'}
         '422': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
     delete:
       summary: Удалить единицу члена (правка хранится)
       parameters:
@@ -218,7 +218,7 @@ paths:
         '413': {$ref: '#/components/responses/Forwarded'}
         '422': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
 components:
   parameters:
     Sub:
@@ -242,6 +242,14 @@ components:
       required: true
       schema: {type: string, minLength: 1, maxLength: 200}
   responses:
+    Refused503:
+      description: '503 урока (счётчик не записался; правка: ref не найден при неполном ответе, contested) или standby процесса domain (урок 12 Н1.7)'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/NotStandby'}
     Forwarded:
       description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
       content:
@@ -266,6 +274,17 @@ components:
               what: {type: string}
               note: {type: string}
   schemas:
+    NotStandby:
+      allOf:
+        - {$ref: '#/components/schemas/Refusal'}
+        - {properties: {error: {not: {const: standby}}}}
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

@@ -39,7 +39,7 @@ paths:
                     oneOf:
                       - type: 'null'
                       - $ref: '#/components/schemas/Pair'
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Unavailable'}
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
       responses:
@@ -73,7 +73,7 @@ paths:
                   shared: {type: ['string', 'null'], description: 'Текст общего документа урока 11 (Н1.9); до него — null.'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Unavailable'}
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
       responses:
@@ -146,7 +146,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/move:
     post:
       summary: Аварийный перенос сюда по файлу восстановления (Н1.8)
@@ -190,7 +190,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/handover:
     post:
       summary: Плановая передача (Н1.7)
@@ -227,7 +227,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/stranded/apply:
     post:
       summary: Повторить брошенную правку у нового держателя (Н1.6 apply)
@@ -252,20 +252,50 @@ paths:
         '413': {$ref: '#/components/responses/Refused'}
         '422': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
 components:
   responses:
+    Unavailable:
+      description: 'Хранилище не ответило, список членов или резервная копия не читается (Н1.4, Н1.9)'
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: unavailable}
+              detail: {type: string}
+    Refused503:
+      description: '503 frozen, «a move is under way here already», «a handover is under way already» (Н1.7, Н1.8) или standby процесса domain (урок 12 Н1.7)'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/NotStandby'}
     Refused:
       description: Отказ (Н4); 503 у /api/take, /domain/move, /domain/handover — в том числе standby подписанта (урок 12 Н1.7)
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/Refusal'}
+          schema: {$ref: '#/components/schemas/StandbyBody'}
   schemas:
+    NotStandby:
+      allOf:
+        - {$ref: '#/components/schemas/Refusal'}
+        - {properties: {error: {not: {const: standby}}}}
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

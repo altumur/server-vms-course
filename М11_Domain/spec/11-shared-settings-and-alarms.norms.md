@@ -255,7 +255,7 @@ label:  "domain term T rev R"
 | `error` | Код | Когда |
 |---|---|---|
 | `refused` | 400, 409, 413 | правка (Н1.3), тело больше 1 МиБ — 413; окно `/domain/alarms`; `?unit=` — id другой спеки (Н1.5) |
-| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
+| `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
 | `no such shared settings` | 404 | подсистема без `domain.shared` |
 | `no such unit` | 404 | `?unit=` нет такой единицы |
 | `frozen`, `deposed` | 503, 409 | урок 10 |

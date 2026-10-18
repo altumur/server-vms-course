@@ -21,3 +21,4 @@ scenario	step	request	expect
 11-findings-without-step	1	view inputs/11-unknown-member.json	ok {"shadow": {"counts": {"unknown": 1}, "findings": [{"kind": "unknown", "ref": "c9"}], "may_write": false}}
 11-findings-without-step	2	view inputs/11-two-workers-one-member.json	ok {"shadow": {"counts": {"conflict": 1}}}
 11-findings-without-step	3	view inputs/11-never.json	ok {"view": {"members": [{"name": "m1", "state": "unseen"}, {"name": "m2", "state": "never", "age": null}]}}
+11-findings-without-step	4	view inputs/11-pulse-without-row.json	ok {"view": {"units": {"testsub": [{"id": "1", "ref": "c1", "cluster": "m1"}, {"id": "1", "ref": "c2", "cluster": "m2"}]}}}

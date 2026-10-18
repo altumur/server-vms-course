@@ -222,6 +222,7 @@ components:
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]
+      additionalProperties: true
       properties:
         as_of: {type: number}
         holder:

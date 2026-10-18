@@ -28,3 +28,4 @@ date	sample	fix	languages
 2026-10-17	02/m57_tokens_*	М11/7 Н1.1: форма domain.tokens и отказы загрузки — в корпус урока 2	all
 2026-10-18	cases/c4_*, verdicts.tsv, diagnostics.tsv, classes.tsv (новый)	сверка cammeta-python и cammeta-go М10/2: структура YAML в Н1.1, ключи-строки, класс, путь и строка в диагностике, значения unplaced, requests.key, вложенные префиксы, display.fields, default без значения, inherit из enum	all
 2026-10-18	m57_tokens_grant_repeat, _target_repeat, _bind_same, _unit_caller_word, _unit_target_word, _scenario_without_ref; m61_witness_member_field_not_fixed	прогон 41 K41-24: суженные области М11/7 Н1.1 и domain.witness М11/11 без случая корпуса — семь отказов	all
+2026-10-18	m51_books_kept_same_name	прогон 41 Kimi (мелкое, урок 5): отказ «книга и строка kept одного имени» без случая корпуса	all

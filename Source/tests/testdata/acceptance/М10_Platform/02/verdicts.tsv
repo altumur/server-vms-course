@@ -369,6 +369,7 @@ m51_books_show_secret	refused
 m51_books_to_is_key	refused
 m51_books_two_segments	refused
 m51_books_unknown_key	refused
+m51_books_kept_same_name	refused
 m57_tokens_caller_word	refused
 m57_tokens_claim_undeclared	refused
 m57_tokens_claims_repeat	refused

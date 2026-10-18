@@ -4,7 +4,7 @@ info:
   version: '1'
   description: 'Normative shapes: 04-relays-and-roads.norms.md N1.2, N1.4, N2. /api/relay — door of the holder''s domain
     process; /api/member and /api/carry on a relay — the same forms as the holder''s (M11/3 contract), answered from the
-    relay''s memory with domain_age; /domain/topology — the domain console (grants M11/9). Request parsing: M10/1 N2.1
+    relay''s memory with domain_age, codes — N2 of this lesson; /domain/topology — the domain console (grants M11/9). Request parsing: M10/1 N2.1
     with M10/9 N2. Publication, Carry and the agent signature — M11/3 contract.'
 servers:
   - url: '{origin}'
@@ -50,7 +50,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413':
           $ref: '#/components/responses/Refused'
-        '503': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Standby'}
   /domain/topology:
     get:
       summary: Топология домена
@@ -116,6 +116,11 @@ paths:
         '503': {$ref: '#/components/responses/Forwarded'}
 components:
   responses:
+    Standby:
+      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/StandbyBody'}
     Forwarded:
       description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
       content:
@@ -128,6 +133,13 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
   schemas:
+    StandbyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: standby}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]
@@ -207,10 +219,15 @@ components:
       additionalProperties: false
       properties:
         base_rev: {type: integer, minimum: 0}
-        centre: {type: string}
+        centre: {$ref: '#/components/schemas/MemberName'}
         star:
           type: array
           items: {$ref: '#/components/schemas/MemberName'}
         via:
           type: object
-          additionalProperties: {type: string}
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties:
+            description: 'ретранслятор; "" — член уходит из via (Н1.2 put_order)'
+            anyOf:
+              - {$ref: '#/components/schemas/MemberName'}
+              - {const: ''}

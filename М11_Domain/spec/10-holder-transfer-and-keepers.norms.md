@@ -330,7 +330,7 @@ check:    по порядку: заголовка нет — missing (prepare �
 | `called off` | 409 | цель не взяла резервную копию передачи |
 | `refused` | 400, 401, 403, 404, 409, 503 | формы и отказы переноса, передачи и приёма (Н1.6–Н1.9): 401 `/api/backup` без заголовков или ask-sig не ok (`detail` — слово); 404 apply без элемента; 409 «nothing to restore from», apply не смещён; 503 «a move is under way here already» |
 | `no signer here`, `did not answer` | 404, 502 | пересылка подписанту (урок 8 Н1.9) |
-| `standby` | 503 | процесс `domain` — запасной (урок 12 Н1.7) |
+| `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
 | `unavailable` | 503 | хранилище не ответило (`/api/held`, `/api/backup`) |
 | `redo it on the new holder` | 400 | брошенное, кроме правки члена |
 
