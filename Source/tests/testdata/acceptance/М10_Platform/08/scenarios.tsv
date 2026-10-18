@@ -121,3 +121,6 @@ scenario	step	request	expect
 08-resource-paths	9	resource GET /buckets/../objects	404
 08-resource-paths	10	resource GET /buckets/testsub%2Fc1	404
 08-resource-paths	11	resource GET /events/../objects/testsub/heartbeats/w-1	404
+08-resource-paths	12	@append event testsub/c1/e1 {bad	ok
+08-resource-paths	13	resource GET /events?unit=testsub/c1	200 {"state": "live", "lines_garbled": 1}
+08-resource-paths	14	console GET /events?unit=testsub/c1	200 {"lines_garbled": 1}
