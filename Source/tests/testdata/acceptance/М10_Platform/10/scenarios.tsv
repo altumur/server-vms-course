@@ -59,11 +59,12 @@ scenario	step	request	expect
 08-snapshot-garbled	3	@as console store POST /v1/write {"id":"c7","op":"put","key":"testsub/counters/s7","items":{"id":"s7","revision":"1","name":"s7","start":"notint"},"cas":""}	200
 08-snapshot-garbled	4	console POST /counters {"name": "s8", "start": 2}	201
 08-snapshot-garbled	5	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"worker": null, "counters": [{"id": "s8", "revision": 1, "name": "s8", "start": 2, "worker": null}]}
-08-snapshot-garbled	6	@sigterm controller	ok
-08-snapshot-garbled	7	@spoil object testsub/snapshot/unplaced	ok
-08-snapshot-garbled	8	console GET /metrics	200 ~testsub_snapshot_garbled_shards 1
+08-snapshot-garbled	6	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"snapshot_rows_garbled": 1}
+08-snapshot-garbled	7	@sigterm controller	ok
+08-snapshot-garbled	8	@spoil object testsub/snapshot/unplaced	ok
+08-snapshot-garbled	9	console GET /metrics	200 ~testsub_snapshot_garbled_shards 1
 09-drain-unreadable-pulse	1	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
-09-drain-unreadable-pulse	2	@put object testsub/heartbeats/w-1 ../04/inputs/hb-w-1-no-status.json	ok
+09-drain-unreadable-pulse	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
 09-drain-unreadable-pulse	3	@start controller	ok
 09-drain-unreadable-pulse	4	console POST /counters {"name": "d9"}	201
 09-drain-unreadable-pulse	5	@until 20 console GET /where/d9	200 {"worker": "w-1"}
