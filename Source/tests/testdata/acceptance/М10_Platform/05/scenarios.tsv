@@ -102,3 +102,10 @@ scenario	step	request	expect
 11-group-by-without-value	7	@until 30 console2 GET /where/ta	200 {"worker": "t-1"}
 11-group-by-without-value	8	@until 30 console2 GET /where/tb	200 {"worker": "t-1"}
 11-group-by-without-value	9	@until 30 console2 GET /where/tc	200 {"worker": "t-1"}
+12-sigkill-presence	1	@start controller	ok
+12-sigkill-presence	2	@start resource	ok
+12-sigkill-presence	3	@start worker w-1	ok
+12-sigkill-presence	4	console POST /counters {"name": "c12"}	201
+12-sigkill-presence	5	@until 30 store GET /v1/get?key=testsub/placement/c12	200 {"items": {"worker": "w-1"}}
+12-sigkill-presence	6	@sigkill w-1	ok
+12-sigkill-presence	7	@until 60 store GET /v1/get?key=testsub/placement/c12	200 {"items": {"worker": ""}}
