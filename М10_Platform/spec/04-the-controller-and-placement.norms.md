@@ -58,6 +58,9 @@ pass:
   diverged:             <назначений, исправленных sync>
   unplaced:             <единиц без воркера, кроме снятых с эксплуатации>
   garbled:              <строк единиц, которые не читаются>
+  snapshot_rows_garbled: <строк единиц, не вошедших в шард снимка последнего прохода: поле snapshot: не читается
+                        своим типом (урок 10 Н1.3 garbled)>   # М10/1 Н0 «Устойчивость выдачи»; решение «Архитектора»,
+                        #   сверка python и go М10/6–11, T7
   reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total,
   workers_hung, workers_hung_moved_total, workers_unsure_moved_total, name_conflicts: <числа>
   unplaceable:          {<id>: <why>}   # единицы без места этого прохода и непустая причина; из него консоль берёт why
