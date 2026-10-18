@@ -27,6 +27,10 @@ scenario	step	request	expect
 04-resource	1	@as resource POST /v1/write {"id":"d1","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"1"}}	200
 04-resource	2	POST /v1/write {"id":"d2","op":"put","key":"testsub/counters/c4","items":{"id":"c4","revision":"1","name":"c4"}}	403
 04-resource	3	POST /v1/write {"id":"d3","op":"put","key":"testsub/placement/c4","items":{"worker":"w-1"}}	403
+04-resource	4	GET /v1/get?key=testsub/retention	200 {"items": null}
+04-resource	5	GET /v1/get?key=testsub/alarms_retention	200 {"items": null}
+04-resource	6	GET /v1/get?key=testsub2/retention	200 {"items": null}
+04-resource	7	GET /v1/get?key=testsub2/alarms_retention	200 {"items": null}
 05-epoch-never-deleted	1	@as testsubworker POST /v1/write {"id":"e1","op":"put","key":"testsub/epoch/c5","items":{"epoch":"3"},"cas":""}	200
 05-epoch-never-deleted	2	POST /v1/write {"id":"e2","op":"delete","key":"testsub/epoch/c5"}	403
 05-epoch-never-deleted	3	@as testsubcontroller POST /v1/write {"id":"e3","op":"delete","key":"testsub/epoch/c5"}	403
@@ -34,6 +38,9 @@ scenario	step	request	expect
 05-epoch-never-deleted	5	@as testsubworker GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "3"}}
 05-epoch-never-deleted	6	admin POST /v1/write {"id":"e6","op":"delete","key":"testsub/epoch/c5"}	403
 05-epoch-never-deleted	7	@as testsubworker GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "3"}}
+05-epoch-never-deleted	8	POST /v1/write {"id":"e8","op":"put","key":"testsub/epoch/","items":{"epoch":"1"},"cas":""}	200
+05-epoch-never-deleted	9	admin POST /v1/write {"id":"e9","op":"delete","key":"testsub/epoch/"}	403
+05-epoch-never-deleted	10	GET /v1/get?key=testsub/epoch/	200 {"items": {"epoch": "1"}}
 06-list-without-read	1	@as console POST /v1/write {"id":"f1","op":"put","key":"testsub/idem/k6","items":{"state":"done","body":"secret-ish"},"cas":""}	200 {"index": "$v"}
 06-list-without-read	2	@as testsub2worker GET /v1/list?prefix=testsub/idem/	200 {"keys": {"testsub/idem/k6": "$v"}}
 06-list-without-read	3	GET /v1/get?key=testsub/idem/k6	403
@@ -42,6 +49,7 @@ scenario	step	request	expect
 07-guard-needs-read	2	POST /v1/write {"id":"a8","op":"put","key":"testsub/holds/p7","items":{"holder":"box:1:bbbbbb","until":"9999999999","released":"false","gen":"1","by":"w-7"},"guard":{"key":"testsub/slots/w-7","index":"$s"}}	200
 07-guard-needs-read	3	@as testsub2worker POST /v1/write {"id":"a9","op":"put","key":"testsub2/holds/p7","items":{"holder":"box:1:cccccc","until":"9999999999","released":"false","gen":"1","by":"t-1"},"guard":{"key":"testsub/idem/k6","index":""}}	403
 08-role-header	1	@as testsubworker @header X-Configstore-Role: console POST /v1/write {"id":"b9","op":"put","key":"testsub/counters/c8","items":{"id":"c8","revision":"1","name":"c8"}}	403
+08-role-header	2	@as testsubworker @header X-Configstore-Role: console POST /v1/write {bad	403
 09-secret-readers	1	@as console GET /v1/get?key=door/signer	200
 09-secret-readers	2	@as testsubworker GET /v1/get?key=door/signer	403
 09-secret-readers	3	@as testsubcontroller GET /v1/get?key=door/signer	403
@@ -53,3 +61,14 @@ scenario	step	request	expect
 11-request-marks	3	@as testsubworker POST /v1/write {"id":"a2","op":"delete","key":"objects/testsub/commands/r1"}	200
 11-request-marks	4	@as testsubworker POST /v1/write {"id":"a3","op":"put","key":"objects/testsub2/commands/r1","items":{"slot":"w-1"},"cas":""}	403
 11-request-marks	5	@as testsubcontroller POST /v1/write {"id":"a4","op":"put","key":"objects/testsub/commands/r2","items":{"slot":"w-1"},"cas":""}	403
+12-domain-roles	1	admin GET /v1/rights	200 {"roles": {"testsubdomain": "@any", "testsub2domain": "@absent"}}
+12-domain-roles	2	@as testsubdomain POST /v1/write {"id":"aa1","op":"put","key":"domain/testsub/tallies/m1","items":{"n":"1"},"cas":""}	200
+12-domain-roles	3	@as domainagent POST /v1/write {"id":"aa2","op":"put","key":"domain/testsub/worker","items":{"holder":"x"}}	403
+12-domain-roles	4	POST /v1/write {"id":"aa3","op":"put","key":"domain/testsub/heartbeat","items":{"n":"1"}}	403
+12-domain-roles	5	POST /v1/write {"id":"aa4","op":"put","key":"domain/testsub/ledger","items":{"n":"1"}}	403
+12-domain-roles	6	POST /v1/write {"id":"aa5","op":"put","key":"domain/testsub/badges/b1","items":{"n":"1"}}	403
+12-domain-roles	7	POST /v1/write {"id":"aa6","op":"put","key":"domain/testsub/ledger/x","items":{"n":"1"}}	200
+12-domain-roles	8	POST /v1/write {"id":"aa7","op":"put","key":"domain/testsub/badges","items":{"n":"1"}}	200
+12-domain-roles	9	@as console GET /v1/get?key=domain/grants/c1	403
+12-domain-roles	10	GET /v1/get?key=domain/view	403
+12-domain-roles	11	@as testsubworker GET /v1/get?key=domain/holder	200 {"items": null}
