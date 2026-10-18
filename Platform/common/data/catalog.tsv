@@ -68,7 +68,7 @@ domain/signer	row	М11/2	create=admin(установка: секреты — к�
 domain/signer-pending	row	М11/2	put=domain(у цели плановой передачи: подготовленный ключ X25519, секрет — конверт кольца)	domain	-	1	-	М11/2 Н1.3, М11/10 Н1.7
 domain/book-seal	row	М11/2	create=admin(установка, раньше набора rev 1); put=domain(смена ключа приёма книг, смена после кражи, перенос)	domain	-	1	-	М11/2 Н1.4
 domain/revoked	row	М11/2	put=domain(у держателя: отзыв и каждый проход, снятие записей с exp + TOKEN_SKEW < now, по возрастанию jti); cas=domainagent(у члена: как пришло в ответе держателя, только при отличии, не у кластера держателя, пока он держит срок)	console, <s>worker, domain, domainconsole, domainagent	-	1	-	М11/2 Н1.6
-domain/member-key	row	М11/3	create=domainagent(первый старт агента, секрет — конверт кольца)	domainagent	-	1	-	М11/3 Н1.1
+domain/member-key	row	М11/3	create=domainagent(первый старт агента, секрет — конверт кольца)	domainagent, domain(подпись GET /api/backup при переносе)	-	1	-	М11/3 Н1.1
 domain/members	row	М11/3	cas=domain(приём и уход членов через консоль домена, держатель в списке, claim и Entry.ca)	domain, domainconsole, domainagent	-	1	-	М11/3 Н1.1
 domain/member-list	row	М11/3	cas=domainagent(у члена: doc из ответа держателя как есть, только при отличии)	console, domain, domainconsole, domainagent	-	1	-	М11/3 Н1.1, Н1.6
 domain/member	row	М11/3	create=domainagent(функция keys приняла набор и строки нет, и у кластера держателя)	console, <s>worker, domain, domainconsole, domainagent	-	1	-	М11/3 Н1.1

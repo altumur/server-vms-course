@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
 - пишет: `domain/signer` (put), `domain/signer-pending` (put), `domain/members` (cas);
-- читает: `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- читает: `domain/member-key`, `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Общее уроков 1–9 Н1 действует. Держатель держит **срок** — номер, который растёт только переносом или передачей; аренды,
 продления и автоматической смены держателя нет. Голосовать нечем: ни один raft не охватывает кластеры. Держатель пишет
@@ -139,11 +139,14 @@ yields:      процесс domain уступает, когда в его хра
              «следовать»); слову соседа и непроверенной записи — нет
 switch:      у кластера держателя строки domain/keys, domain/revoked, domain/holder, своя domain/break-glass/<кластер> и
              указатель domain/shared пишет процесс domain, а агент этого кластера их не пишет — пока запись domain/holder
-             своего хранилища проходит record и называет держателем этот кластер, а domain/signer не forgotten (урок 3 Н1.6
-             holder_cluster). Точка смены одна — запись domain/holder большего срока, прошедшая record: при плановой
+             своего хранилища проходит record и называет держателем этот кластер (урок 3 Н1.6 holder_cluster). Условие агента —
+             только по записи: «domain/signer не forgotten» — условие процесса domain, domain/signer агенту не открыт; forget
+             наступает только после записи чужого большего срока (yields), потому запись «держатель — этот кластер» и забытые
+             ключи вместе не бывают. Точка смены одна — запись domain/holder большего срока, прошедшая record: при плановой
              передаче её пишет процесс прежнего держателя (Н1.7 шаг 6), при переносе — агент «следованием» (его
              единственная запись в эти строки до точки). С неё процесс уступает и этих строк больше не пишет, агент пишет
              их как у любого члена. У цели — зеркально: claim нового срока (Н1.1) — точка, с неё агент цели их не пишет
+             (запись, называющая цель, пришла раньше claim — агент уже не пишет эти строки, их пишет процесс с claim)
 start:       после перезапуска — сначала смотрит запись своего хранилища; больший срок — стартует смещённым и не пишет claim.
              Смещён, когда запись хранилища проходит record и: ключи подписанта есть, а запись — другого держателя и срока
              больше того, что этот процесс держал (срок свой неизвестен — любого); или ключи забыты (forget) и запись чужая
@@ -218,7 +221,7 @@ order:       1. тело не по форме — 400 {error: "refused", detail:
              4. файл не читается или root_pub не от root_key, или не root набора этого кластера — 403 «the recovery file is
                 not this domain's»
              5. соседи — консоли CLUSTERS: GET /api/held каждого; резервная копия — GET /api/backup с подписью члена этого кластера
-                (Н3 ask-sig); не ответил — пропущен; ответил без резервной копии — ignored
+                (Н3 ask-sig; ключ — domain/member-key, урок 3 Н1.1 readers); не ответил — пропущен; ответил без резервной копии — ignored
              6. ни одной записи срока и ни одной резервной копии (ни у соседей, ни своей) — 409 {error: "refused",
                 detail: "nothing to restore from: no neighbour and not this cluster keeps a record of the holder or a
                 backup — a new domain is installed, not moved"}; иначе

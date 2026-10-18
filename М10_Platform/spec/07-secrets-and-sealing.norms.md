@@ -286,7 +286,7 @@ platform_readers:                            # общая таблица platfor
   domain/signer-pending: [domain]           # точное имя, не покрыто `domain/signer`
   domain/book-seal:    [domain]
   domain/users/:       [domain]
-  domain/member-key:   [domainagent]                    # форма — М11/3 Н1.1; открытый ключ — несекретно в domain/member и Entry.key
+  domain/member-key:   [domainagent, domain]            # форма — М11/3 Н1.1 (domain — только подпись GET /api/backup, М11/10 Н1.8 шаг 5); открытый ключ — несекретно в domain/member и Entry.key
                                             # резервные копии урока 10 — объекты, не строки-секреты: в списке их нет
   door/signer:         []                    # добавлено М10/9 (подписант токена Н3 «/where/<id>»); читателя называет спека (testsub2: [console])
 rule:      объявления secrets.readers/reads не содержат буквальный `*`, не начинаются с `!` или `delete:`;
