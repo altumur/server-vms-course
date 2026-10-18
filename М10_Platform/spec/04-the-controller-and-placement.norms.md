@@ -10,6 +10,10 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; предложение слота — `offered_at` (урок 3); объект `<sub>/controller/pass` — `at`, `last_success`.
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`;
+- читает: `platform/spec/<sub>`.
+
 ### Н1.1 Строки контроллера
 
 ```yaml
