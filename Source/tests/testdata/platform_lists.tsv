@@ -5,8 +5,8 @@
 #   heartbeat_strings  the platform's own string fields of every heartbeat: a spec's heartbeat.strings names none of them
 #   secret_roles       the roles secrets.readers may name
 #   secret_readers     the platform's own secret rows and who reads them, <row or prefix>=<role> (`<row>=` — nobody but
-#                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10 (the console reads the
-#                      copy of the backup, to give it to a member that signs)
+#                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10. The domain's backups
+#                      are objects, not secret rows (М11/10 Н1.5; review 41): no row of them here
 heartbeat_strings	worker
 heartbeat_strings	server
 heartbeat_strings	url
@@ -30,18 +30,4 @@ secret_readers	domain/signer-pending=domain
 secret_readers	domain/book-seal=domain
 secret_readers	domain/users/=domain
 secret_readers	domain/member-key=domainagent
-secret_readers	domain/member-key=console
-secret_readers	domain/member-key=domain
-secret_readers	domain/backup=console
-secret_readers	domain/backup=domain
-secret_readers	domain/backup=domainagent
-secret_readers	domain/backup-taken=console
-secret_readers	domain/backup-taken=domain
-secret_readers	domain/backup-taken=domainagent
-secret_readers	domain/backup-doc=console
-secret_readers	domain/backup-doc=domain
-secret_readers	domain/backup-doc=domainagent
-secret_readers	domain/backups/=console
-secret_readers	domain/backups/=domain
-secret_readers	domain/backups/=domainagent
 secret_readers	door/signer=
