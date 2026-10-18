@@ -73,6 +73,7 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Standby'}
 components:
   parameters:
     Sub:
@@ -88,6 +89,11 @@ components:
   responses:
     Refused:
       description: Отказ (Н4); у выдачи — reason из закрытого списка
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
+    Standby:
+      description: 'Процесс domain без очереди domain/signer-turn — запасной: {error: standby, detail} на каждой двери (урок 12 Н1.7; добавлено М11/12)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}

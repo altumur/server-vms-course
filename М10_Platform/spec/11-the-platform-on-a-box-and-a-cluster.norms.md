@@ -30,6 +30,13 @@ units:                                        # на каждом сервере
   <dep>-<sub>worker-spare@.service: тот же юнит без WORKER_NAME; W2C_SPARE_FILE=/run/w2c-spares/%n.env; Requisite=configstore;
                                     RestartPreventExitStatus=2 (нет файла — выход 2 без перезапуска; таймер запасных поднимет снова, когда файл появится)
   w2c-spares.service/.timer: Type=oneshot; User=w2c-spares без групп (ADR-0046); OnBootSec 1–2 мин; OnUnitActiveSec 1 мин
+  w2c-domain.service:      роль domain; w2c-run.sh signer; User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets;
+                          SECRETS_KEY; SIGNER_HOST/PORT 0.0.0.0:8445; один активный на кластер — очередь domain/signer-turn
+                          (М11/12 Н1.7, Н1.8; добавлено М11/12)
+  w2c-domain-console.service: роль domainconsole; w2c-run.sh domainconsole; кольца и w2c-secrets нет;
+                          DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 (М11/12 Н1.8)
+  w2c-domainagent.service: роль domainagent; w2c-run.sh domainagent; своего порта нет; дверь ретранслятора —
+                          RELAY_PORT 8446 (М11/4); местная дверь — М11/7, если TCP — умолчание 8448 (М11/12 Н1.8)
 watchdog:  WatchdogSec между FOR (300) урока 5 и HUNG_MOVE_AFTER (900): 360; notify — из цикла, не из подмены (урок 5)
 notify:    датаграмма sd_notify на NOTIFY_SOCKET: контроллер шлёт READY=1 после проверки схемы и чтения спеки (Н3 «старт
            сервера» шаг 3), воркер — после захвата имени; оба — WATCHDOG=1 каждым оборотом своего цикла; нет NOTIFY_SOCKET — молчат
@@ -84,7 +91,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 | `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB` | ёмкость роли и бюджет памяти (ADR-0070) | — | `roles/<роль>.env` |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | контроллер (урок 4) | 900, 10 | `w2c.env` |
 | `BUILD` | слово сборки (урок 10) | `dev` | сборка |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS`, `RELAY_*` | домен (М11; `SIGNER_URL` — М11/2 Н1.3; `CLUSTERS`, `DOMAIN_CONSOLE_URL` — М11/8 Н1.3; `DOMAIN_CA`, `RELAY_CA`, `RELAY_MEMBER` — М11/8 Н1.6; `RELAY_URL` — М11/4) | — | оператор |
+| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS`, `RELAY_*` | домен (М11; `SIGNER_HOST/PORT`, `DOMAIN_CONSOLE_HOST/PORT` — М11/12 Н1.8; `SIGNER_URL` — М11/2 Н1.3; `CLUSTERS`, `DOMAIN_CONSOLE_URL` — М11/8 Н1.3; `DOMAIN_CA`, `RELAY_CA`, `RELAY_MEMBER` — М11/8 Н1.6; `RELAY_URL` — М11/4) | — | оператор |
 | `CONFIGSTORE_ID/RAFT/API/GROUP_SIZE/JOIN/FLAGS/TUNING` | демон хранилища | tuning `lan` | `configstore.env` |
 | `NOTIFY_SOCKET` | сторож systemd | — | systemd |
 
@@ -208,7 +215,8 @@ revoke:       серийники в revoked — копируются на каж
 roles:        configstore, configstore-door (демоны — всегда с -tls); resource, console, domain, domainconsole, domainagent (и дверь
               ретранслятора: это агент — М11/4, М11/8 Н1.6),
               <sub>worker — комплект по W2C_ROLE/W2C_TLS_DIR; нет комплекта → дверь на петле, клиент только к http://;
-              https:// без комплекта — отказ с причиной (ADR-0075 доп.3)
+              https:// без комплекта — отказ с причиной (ADR-0075 доп.3); узкое исключение — клиент агента в процессе
+              кластера из одного, только к дверям держателя и ретранслятора, с проверкой сервера (М11/12 Н1.3)
 rotation:     ca.next.pem рядом — следующий центр, которому уже верят
 ```
 
@@ -420,7 +428,7 @@ revoke: w2c-ca.sh revoke <server> → revoked/crl; скопировать на �
 4. **долговечность хранилища** (fsync, снимки raft: порог, интервал, хвост) — учебное хранилище может быть не долговечным, и это сказано в его описании (ADR-0070 п. 4);
 5. **как ресурс узнаёт присутствие процессов** (Н1.4);
 6. **форму доставки** сверх systemd/launchd (Quadlet, Nomad) и чем она отличается (группы, порты);
-7. **порты домена** и его юниты (М11);
+7. ~~**порты домена** и его юниты~~ — нормированы: М11/12 Н1.8 (строки юнитов Н1.1 выше);
 8. **учёт соединений демона** и переопределения пределов развёртыванием, `-tuning` для медленных сетей; нормативные умолчания — Н1.3;
 9. **как `backup` получает согласованное состояние работающего демона** (Н2); требование к копии — норма Н2, не выбор.
 

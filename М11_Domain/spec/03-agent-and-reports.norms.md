@@ -36,7 +36,8 @@ domain/members: {doc: <текст JSON>}           # у держателя; пи
     since:      стенные секунды держателя записи
     by:         человек, принявший члена (урок 9; до него — operator, М10/9 Н1.3, и how — «admitted by operator»); у holder нет
     key:        hex ключа члена, принятого по отпечатку; у holder — ключ из первого отчёта его агента (урок 10)
-    revoked_keys: [<hex>…] — прежние ключи этого имени, отозванные (урок 2 Н3 «смена после кражи»)
+    revoked_keys: [<hex>…] — прежние ключи этого имени, отозванные (урок 2 Н3 «смена после кражи»); не больше 4 последних,
+                  Entry ≤ 400 байт JCS (урок 12 Н1.5; добавлено М11/12)
 domain/member-list: {doc}                    # у члена: строка domain/members из ответа держателя как есть (Н1.5); писатель — агент
 domain/member:  {cluster}                    # у члена: имя своего члена; агент пишет создание-однажды при took функции keys
                                              # урока 2, если строки нет
@@ -69,7 +70,8 @@ publication:    тело POST /api/member/<член> (Н2) — JSON-объект
                 по монотонным часам агента; по возрастанию; нет — пусто. Вне дельты: не входит в whole и не порождает
                 поколения; живость воркера — факт кластера (М10/4), домен наблюдает его (решение «Архитектора» по М11-03 № 5)
   pinned?:      отпечаток domain/root члена (нет — не закреплён)
-  outcomes?:    {<id>: <исход>} — исходы правок домена, урок 6 Н1.5;   tls_ca? — урок 8 Н1.6;   sign_failures? — урок 12
+  outcomes?:    {<id>: <исход>} — исходы правок домена, урок 6 Н1.5;   tls_ca? — урок 8 Н1.6;   sign_failures? — урок 12 Н1.6;
+                members_rev? — урок 12 Н1.4 (rev списка, который член держит; вне дельты)
 member_objects:                               # что агент несёт и что держатель хранит; прочее держатель отбрасывает молча
   <sub>/heartbeats/<воркер>:  пульс М10/5 Н1.1 каждой спеки каталога с domain.ref
   <sub>/snapshot/<шард>:      шард снимка М10/10 Н1.3 каждой такой спеки
@@ -142,7 +144,8 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   # sealed — нет (секретного члену до уроков 5 и 9 нет)
   keys?:        строка domain/keys держателя {doc} (урок 2 Н1.2)
   revoked?:     строка domain/revoked держателя {jtis} (урок 2 Н1.6)
-  members?:     строка domain/members {doc} (Н1.1)
+  members?:     строка domain/members {doc} (Н1.1) — только отставшему: members_rev публикации нет или ≠ rev
+                (урок 12 Н1.4; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (урок 10 Н1.1)
   sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants — урок 9 Н1.3, break_glass — урок 9 Н1.6;
                 books — урок 5
@@ -165,7 +168,8 @@ envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 
 ```yaml
 from_carry:     keys → domain/keys через функцию keys урока 2 Н3 (отказ — строка прежняя, причина в журнал);
                 revoked → domain/revoked как есть; members → domain/member-list как есть; первый took → domain/member {cluster};
-                прочие поля — их уроки; каждая запись — CAS по прочитанному индексу, секретные поля — конверты кольца М10/7
+                прочие поля — их уроки; каждая запись — только при отличии от прочитанного (урок 12 Н1.2; добавлено М11/12), CAS по
+                прочитанному индексу, секретные поля — конверты кольца М10/7
 rights:         роль domainagent (М10/6 Н1.2): пишет domain/* без строк держателя; читает своё по объявлениям
 ```
 
@@ -174,7 +178,8 @@ rights:         роль domainagent (М10/6 Н1.2): пишет domain/* без 
 ```yaml
 domain/view.member_list:   {rev, members} — doc строки domain/members, прочитанный проходом (урок 1 Н3 шаг 1)
 domain/view.knocking:      [knock…] — по name; поля Н1.1
-domain/view.reports:       {<член>: {rev, base, received_at, sent_at, via?, keys_rev?, pinned}}   # pinned: this | another | none; via — урок 4
+domain/view.reports:       {<член>: {rev, base, received_at, sent_at, via?, keys_rev?, pinned, sign_failures?}}   # sign_failures —
+                           из последней публикации (урок 12 Н1.6; добавлено М11/12)   # pinned: this | another | none; via — урок 4
 ```
 
 ---
@@ -212,6 +217,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 5. 200 → применить ответ (Н1.6); last_rev = carry.rev; every = carry.every
    409 rebase → last_rev = 0 и сразу одна повторная отправка целым; 409 same_sent_at → следующий проход (новый sent_at)
    409 not_ready, 401, 403, 404 → журнал (одна строка на смену причины), следующий проход
+   503 standby → держатель недоступен на этот проход: следующий проход, last_rev не меняется; не отказ и не повод искать
+   другой срок (урок 12 Н1.7; добавлено М11/12); 413 whole too large → domain/agent too_large, last_rev = 0 (урок 12 Н1.5)
    нет ответа → следующий проход; last_rev не меняется
 ```
 
@@ -233,6 +240,7 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
    (ничего не писать: прежняя дорога жива, а это тело старше по часам члена)
 3. base > 0 и (mark нет, или mark.via ≠ via, или base ≠ mark.rev, или stored не читается или не с mark.sha256) → 409 rebase
 4. objects' = (base > 0 ? объекты stored : {}) ∪ body.objects − body.deleted; объекты вне member_objects отбросить
+4а. JCS(whole') больше BODY_LIMIT → 413 {error: "whole too large", detail}; ничего не писать (урок 12 Н1.5; добавлено М11/12)
 5. нет шарда снимка какой-то спеки каталога с domain.ref                           → 409 not_ready
 6. mark есть и whole' без sent_at = whole stored без sent_at (JCS)                 → heard:
    метку этот процесс не писал, или писал не меньше MARK_REFRESH назад (монотонные), или body.stale ≠ mark.stale →
@@ -262,6 +270,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 3. knock.pinned = another → 409 «<name> pinned another root than this domain's: join it again»
 4. knock.key в revoked_members набора или в revoked_keys записи этого имени → 409 «this key was revoked»
 5. name уже член с другим key → 409 «<name> was admitted with another key: have it leave first»; с тем же — 200 без записи
+5а. name не член, а в domain/members уже MEMBERS_MAX (1000) записей → 409 «too many members: the list holds 1000»
+   (урок 12 Н1.5; добавлено М11/12)
 6. записать domain/members по CAS: rev + 1, Entry {how: "admitted by <человек>", since, by, key}; конфликт CAS →
    перечитать и повторить с шага 4 не больше трёх раз, затем 409 «the list of members kept changing; look again»
 ```
@@ -289,7 +299,7 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 
 | Причина | Исход | Кто и как видит | Что делает вызывающий |
 |---|---|---|---|
-| тело больше BODY_LIMIT | 413 | агент: журнал | уменьшить отчёт (урок 12) |
+| тело больше BODY_LIMIT | 413 | агент: журнал | дельта при `base > 0`; целое больше — `domain/agent too_large` (урок 12 Н1.5) |
 | тело не публикация | 400 `not_a_publication` | агент: журнал | дефект агента |
 | член не в списке | 404 `no member called <член>` | агент: журнал; держатель: knock | принять (Н3) |
 | ключ не тот, что в списке, или отозван | 403 | агент: журнал | ключ сменился — принять заново |

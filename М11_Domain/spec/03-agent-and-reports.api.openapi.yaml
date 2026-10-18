@@ -52,7 +52,12 @@ paths:
                       reason: {enum: [rebase, same_sent_at, not_ready]}
                     required: [reason]
         '413':
-          $ref: '#/components/responses/Refused'
+          description: 'Тело больше BODY_LIMIT или целое поколение больше BODY_LIMIT — {error: "whole too large"} (урок 12 Н1.5; добавлено М11/12)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Refusal'}
+        '503':
+          $ref: '#/components/responses/Standby'
   /api/carry/{member}:
     parameters:
       - $ref: '#/components/parameters/Member'
@@ -73,6 +78,8 @@ paths:
           $ref: '#/components/responses/Refused'
         '404':
           $ref: '#/components/responses/Refused'
+        '503':
+          $ref: '#/components/responses/Standby'
   /domain/members:
     get:
       summary: Список членов и стучащиеся
@@ -118,7 +125,10 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          $ref: '#/components/responses/Refused'
+          description: 'Н3 «принять члена» шаги 2–6; список полон — detail «too many members: the list holds 1000» (урок 12 Н1.5; добавлено М11/12)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Refusal'}
   /domain/members/{name}:
     parameters:
       - name: name
@@ -158,6 +168,12 @@ components:
   responses:
     Refused:
       description: Отказ двери (Н4)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    Standby:
+      description: 'Процесс domain без очереди domain/signer-turn — запасной (урок 12 Н1.7; добавлено М11/12): error standby, detail называет активный экземпляр'
       content:
         application/json:
           schema:
@@ -210,8 +226,16 @@ components:
           items: {type: string, pattern: '^[0-9a-f]{64}$'}
         sign_failures:
           type: object
-          additionalProperties: true
-          description: Урок 12; открыт, пока урок не переведён — форму задаст он.
+          minProperties: 1
+          additionalProperties: false
+          description: 'Урок 12 Н1.6 (добавлено М11/12): запросы, которые агент с запуска не отправил, потому что не смог подписать; вне дельты.'
+          properties:
+            domain: {type: integer, minimum: 1}
+            console: {type: integer, minimum: 1}
+        members_rev:
+          type: integer
+          minimum: 1
+          description: 'Урок 12 Н1.4 (добавлено М11/12): rev документа domain/member-list, который член держит; вне дельты.'
     Generation:
       type: object
       description: Объект domain/members/<член>/reports/<rev> (Н1.3), JCS.
@@ -275,6 +299,7 @@ components:
           type: object
           required: [doc]
           additionalProperties: false
+          description: 'Только отставшему: members_rev публикации нет или не равен rev держателя (урок 12 Н1.4; добавлено М11/12); нет поля — без изменений.'
           properties:
             doc: {type: string}
         holder:

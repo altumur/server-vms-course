@@ -37,7 +37,7 @@ ref:        не проверяется на существование: наз�
 ```yaml
 carry.placement:  {rev, records: {"<sub>/<ref>": {cluster, origin, copies: [<член>…], reason, at, rev}}}   # урок 3 Н1.5
   records:   только назначения, которые называют этого члена: он — cluster, origin или в copies (минимум знания;
-             цена ответа при сотнях членов — урок 12)
+             цена ответа при сотнях членов — урок 12 Н1.9)
   rev:       счётчик domain/placement держателя
   absent:    поле нет, пока счётчика нет (rev 0)
 member:     domain/placed/<sub>/<ref> — элементы записи как у держателя (Н1.1); domain/placed {rev}
