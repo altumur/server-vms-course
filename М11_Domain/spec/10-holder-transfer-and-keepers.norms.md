@@ -221,8 +221,8 @@ journal:     domain.moved {term, restored_from, stolen, copy, why, by} — то�
 
 ```yaml
 ask:        заголовки X-W2C-Member, X-W2C-Time, X-W2C-Signature (Н3 ask-sig, ask = backup)
-order:      нет заголовков — 401 «the backup a cluster keeps is the domain's state: a member signs its ask (X-W2C-Member,
-            X-W2C-Time, X-W2C-Signature)»; список членов не читается — 503; член не в domain/member-list этого кластера или
+order:      нет заголовков — 401 {error: "refused", detail: «the backup a cluster keeps is the domain's state: a member
+            signs its ask (X-W2C-Member, X-W2C-Time, X-W2C-Signature)»}; прочие отказы — тоже error "refused"; список членов не читается — 503; член не в domain/member-list этого кластера или
             без ключа — 403 «<m> is no member with a key on <c>'s list of members»; ключ отозван (revoked_keys записи,
             revoked_members набора) — 403 «<m>'s key was revoked by the domain's root»; ask-sig не ok — 401 со словом
 answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текст документа> | null, shared: <текст общего документа, урок 11 Н1.2> | null};

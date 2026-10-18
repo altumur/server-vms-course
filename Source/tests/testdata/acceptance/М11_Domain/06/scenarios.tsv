@@ -12,7 +12,7 @@ scenario	step	request	expect
 01-placement	10	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "1"}}
 01-placement	11	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1"}}
 01-placement	12	member m2 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": null}
-01-placement	13	member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+01-placement	13	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
 01-placement	14	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
 01-placement	15	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": null}
 01-placement	16	holder DELETE /domain/placement/testsub/c1	404

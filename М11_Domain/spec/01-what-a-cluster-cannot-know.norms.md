@@ -219,7 +219,7 @@ HTTP-контракт: [01-what-a-cluster-cannot-know.api.openapi.yaml](01-what-
 |---|---|---|
 | 01 | два члена, единица в каждом: вид полный, единицы по (cluster, id), числовой `id` 1 у обоих, поиск по ref | Н1.2, Н1.4 |
 | 02 | первый проход — члены `unseen`, `complete: false`; член молчит дольше LOST_AFTER: `silent`, его единицы `silent` | Н1.3, Н1.5 |
-| 03 | единица только в шарде — `configured`, фаза `unobserved`; пульс старше LOST_AFTER — `stale` | Н1.3, Н1.4 |
+| 03 | единица только в шарде — `configured`, фаза `unobserved`; пульс в `stale` метки (урок 3 Н1.2) — `stale` | Н1.3, Н1.4 |
 | 04 | один ref в двух членах: `contested`, единиц нет в `units`, `complete: false` | Н1.4 |
 | 05 | теневой отчёт: unmanaged без назначений, `may_write: false` | Н1.6 |
 | 06 | lagging → stalled за SHADOW_STALL без прогресса, снова lagging при прогрессе | Н1.6 |

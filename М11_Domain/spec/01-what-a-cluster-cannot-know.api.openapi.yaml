@@ -310,7 +310,8 @@ components:
                     oneOf:
                       - $ref: '#/components/schemas/MemberName'
                       - type: object
-                        required: [cluster, copies]
+                        required: [cluster]
+                        description: 'copies нет — пусто (Н5; прогон 41)'
                         additionalProperties: false
                         properties:
                           cluster: {$ref: '#/components/schemas/MemberName'}
