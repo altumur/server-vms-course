@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `platform/schema`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/blobs/sha256-<hex>`, `.gone/<ключ>`, `<sub>/sweep`, `<sub>/<spec:tables>/<имя>`;
 - пишет: `platform/drain` (put), `<sub>/<spec:unit.rows>/<id>` (cas);
-- читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/resources/<server>/heartbeat`, `platform/mirror`.
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/resources/<server>/heartbeat`, `platform/mirror`.
 
 ### Н1.1 Схема
 
