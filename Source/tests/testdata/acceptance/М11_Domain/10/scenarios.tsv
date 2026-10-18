@@ -34,11 +34,12 @@ scenario	step	request	expect
 04-planned-handover	1	@domain	ok
 04-planned-handover	2	@start domain on m1	ok
 04-planned-handover	3	holder POST /domain/handover {"to": "m9"}	400
-04-planned-handover	4	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1", "stranded": []}
-04-planned-handover	5	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
-04-planned-handover	6	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
-04-planned-handover	7	holder@m1 GET /domain	200 {"term": {"term": 2, "holder": "m1"}}
-04-planned-handover	8	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+04-planned-handover	4	holder POST /domain/handover {"to": "hold"}	400
+04-planned-handover	5	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1", "stranded": []}
+04-planned-handover	6	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
+04-planned-handover	7	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+04-planned-handover	8	holder@m1 GET /domain	200 {"term": {"term": 2, "holder": "m1"}}
+04-planned-handover	9	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 05-record	1	record inputs/record-01-ok.json	ok {"result": "ok", "term": 1, "holder": "hold"}
 05-record	2	record inputs/record-02-ok-restored.json	ok {"result": "ok", "term": 2, "holder": "m1"}
 05-record	3	record inputs/record-03-another-domain.json	ok {"result": "refused", "reason": "another_domain"}
@@ -56,6 +57,7 @@ scenario	step	request	expect
 06-follow	6	follow inputs/follow-06-forged-larger.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m2": "unknown_issuer"}}
 06-follow	7	follow inputs/follow-07-nobody-answers.json	ok {"result": "stay", "reason": "none", "refused": {}}
 06-follow	8	follow inputs/follow-08-forged-only.json	ok {"result": "stay", "reason": "none", "refused": {"m9": "unknown_issuer"}}
+06-follow	9	follow inputs/follow-09-same-term-other-holder.json	ok {"result": "follow", "term": 2, "holder": "m2", "url": "http://m2.test:8443"}
 07-ask-sig	1	ask-sig inputs/ask-sig-01-backup-ok.json	ok {"result": "ok"}
 07-ask-sig	2	ask-sig inputs/ask-sig-02-prepare-ok.json	ok {"result": "ok"}
 07-ask-sig	3	ask-sig inputs/ask-sig-03-missing.json	ok {"result": "refused", "reason": "missing"}

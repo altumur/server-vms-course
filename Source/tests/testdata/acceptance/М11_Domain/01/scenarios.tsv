@@ -18,3 +18,6 @@ scenario	step	request	expect
 09-zombie-pulse	1	view inputs/09-zombie.json	ok {"view": {"units": {"testsub": [{"worker": "w-1", "state": "live"}, {"worker": "w-2", "state": "stale"}, {"worker": "w-3", "state": "stale"}]}}, "shadow": {"counts": {"lagging": 0, "stalled": 0, "orphaned": 0, "unmanaged": 0, "conflict": 0, "stale_epoch": 0, "unknown": 0}, "findings": [], "may_write": false}}
 10-copies-are-executors	1	view inputs/10-copies.json	ok {"view": {"complete": false, "contested": {"testsub": {"c1": ["m1", "m2"]}}}, "shadow": {"counts": {"lagging": 0, "stalled": 0, "orphaned": 0, "unmanaged": 0, "conflict": 0, "stale_epoch": 0, "unknown": 0}, "findings": []}}
 10-copies-are-executors	2	view inputs/10-not-executor.json	ok {"shadow": {"counts": {"lagging": 0, "stalled": 0, "orphaned": 0, "unmanaged": 0, "conflict": 1, "stale_epoch": 0, "unknown": 0}, "findings": [{"kind": "conflict", "ref": "c1"}]}}
+11-findings-without-step	1	view inputs/11-unknown-member.json	ok {"shadow": {"counts": {"unknown": 1}, "findings": [{"kind": "unknown", "ref": "c9"}], "may_write": false}}
+11-findings-without-step	2	view inputs/11-two-workers-one-member.json	ok {"shadow": {"counts": {"conflict": 1}}}
+11-findings-without-step	3	view inputs/11-never.json	ok {"view": {"members": [{"name": "m1", "state": "unseen"}, {"name": "m2", "state": "never", "age": null}]}}

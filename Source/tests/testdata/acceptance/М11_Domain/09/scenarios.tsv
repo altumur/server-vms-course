@@ -36,8 +36,10 @@ scenario	step	request	expect
 02-disable-revoke-last-admin	14	holder POST /domain/revoke {"token": "not a token"}	401 {"error": "refused"}
 02-disable-revoke-last-admin	15	holder DELETE /domain/users/root	409 {"error": "last admin"}
 02-disable-revoke-last-admin	16	holder PUT /domain/grants/domain {"lines": []}	409 {"error": "last admin"}
-02-disable-revoke-last-admin	17	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
-02-disable-revoke-last-admin	18	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+02-disable-revoke-last-admin	17	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	18	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*", "until": 4102444800}]}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	19	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
+02-disable-revoke-last-admin	20	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
 03-break-glass	1	@domain	ok
 03-break-glass	2	holder PUT /domain/break-glass/m1 {"password": "short pw"}	400 {"error": "bad password"}
 03-break-glass	3	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}
@@ -99,3 +101,10 @@ scenario	step	request	expect
 07-may	21	may inputs/may-21-star-unit-needs-star-scope.json	ok {"result": "deny", "reason": "no_grant"}
 07-may	22	may inputs/may-22-other-subject.json	ok {"result": "deny", "reason": "no_grant"}
 07-may	23	may inputs/may-23-labels-no-labels-unit.json	ok {"result": "deny", "reason": "no_grant"}
+08-grant-by-kept	1	@domain	ok
+08-grant-by-kept	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+08-grant-by-kept	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200
+08-grant-by-kept	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
+08-grant-by-kept	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200
+08-grant-by-kept	6	holder @header Authorization: Bearer $ta PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+08-grant-by-kept	7	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "ann"}]}}

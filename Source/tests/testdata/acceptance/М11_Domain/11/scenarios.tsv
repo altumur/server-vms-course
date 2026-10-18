@@ -5,7 +5,7 @@ scenario	step	request	expect
 01-shared-edit-and-read	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"term": 1, "rev": 1, "by": "root"}
 01-shared-edit-and-read	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 6}}}	409 {"error": "refused", "detail": "~are at rev 1"}
 01-shared-edit-and-read	5	holder PUT /domain/shared {"base_rev": 0, "shared": {"nosub": {"a": 1}}}	409 {"error": "refused", "detail": "~are at rev 1"}
-01-shared-edit-and-read	6	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"start": 2}, "nosub": {"a": 1}}}	400 {"error": "refused", "detail": "~no subsystem on the domain"}
+01-shared-edit-and-read	6	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"start": 2}, "nosub": {"a": 1}}}	400 {"error": "refused", "detail": "~no subsystem on the domain ~is not in its domain.shared"}
 01-shared-edit-and-read	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": "five"}}}	400 {"error": "refused"}
 01-shared-edit-and-read	8	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"rounds": [{"counter": "c1", "every": 0}]}}}	400 {"error": "refused"}
 01-shared-edit-and-read	9	member m1 console POST /counters {"name": "c5", "step": 3, "marks": ["mine"]}	201
@@ -22,9 +22,10 @@ scenario	step	request	expect
 02-silent-member	4	@until 90 holder GET /domain/shared	200 {"delivery": {"silent": ["m2"]}}
 02-silent-member	5	@until 30 holder GET /domain/alarms	200 {"complete": false, "members": {"m2": {"state": "silent"}}, "sentence": "~m2 silent since"}
 02-silent-member	6	holder GET /domain/alarms?since=yesterday	400 {"error": "refused"}
-02-silent-member	7	@start agent m2	ok
-02-silent-member	8	@until 60 holder GET /domain/shared	200 {"delivery": {"holding": ["hold", "m1", "m2"], "silent": []}}
-02-silent-member	9	@until 30 holder GET /domain/alarms	200 {"complete": true, "sentence": "every member answered"}
+02-silent-member	7	holder GET /domain/alarms?since=2&until=1	400 {"error": "refused"}
+02-silent-member	8	@start agent m2	ok
+02-silent-member	9	@until 60 holder GET /domain/shared	200 {"delivery": {"holding": ["hold", "m1", "m2"], "silent": []}}
+02-silent-member	10	@until 30 holder GET /domain/alarms	200 {"complete": true, "sentence": "every member answered"}
 03-resolve	1	resolve inputs/resolve-01-unit-own.json	ok {"value": 3, "from": "unit"}
 03-resolve	2	resolve inputs/resolve-02-domain.json	ok {"value": 5, "from": "domain term 1 rev 3"}
 03-resolve	3	resolve inputs/resolve-03-spec.json	ok {"value": 1, "from": "spec"}
@@ -44,6 +45,7 @@ scenario	step	request	expect
 04-alarms	7	alarms inputs/alarms-07-history-dedup-and-cut.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999970.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999960.0, "member": "m1"}, {"id": "e1-5", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759993000.0, "kind": "tamper", "class": "alarm", "t_src": 1759992990.0, "member": "m1", "from_history": true}], "members": {"m1": {"state": "ok", "history_cut_before": 1759992000.0}}, "complete": true, "sentence": "m1 had an alarm storm: the domain keeps only its newest alarms, and what came before 06:40 UTC is not known in full"}
 04-alarms	8	alarms inputs/alarms-08-window.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999900.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
 04-alarms	9	alarms inputs/alarms-09-clock-offset.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999780.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
+04-alarms	10	alarms inputs/alarms-10-two-witnesses.json	ok {"members": {"m1": {"state": "not_reporting", "alive_at": 1759999965.0, "alive_via": "m2/w-2"}}}
 05-unsigned-document	1	@domain	ok
 05-unsigned-document	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
 05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200

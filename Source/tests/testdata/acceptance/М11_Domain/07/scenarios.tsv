@@ -38,3 +38,6 @@ scenario	step	request	expect
 03-issue	22	issue inputs/issue-22-scenario-by-missing.json	ok {"result": "refused", "status": 400, "reason": "by_misplaced"}
 03-issue	23	issue inputs/issue-23-scenario-placement-home.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["hold", "m2"]}}
 03-issue	24	issue inputs/issue-24-not-granted-before-by.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}
+03-issue	25	issue inputs/issue-25-scenario-name-twice.json	ok {"result": "refused", "status": 403, "reason": "no_item"}
+03-issue	26	issue inputs/issue-26-scenario-acts-order.json	ok {"result": "ok", "claims": {"acts": [{"do": "add", "item": "t2"}, {"do": "count", "item": "t2"}]}}
+03-issue	27	issue inputs/issue-27-poll-home-centre.json	ok {"result": "ok", "claims": {"sub": "m2", "aud": ["m2"]}}

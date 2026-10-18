@@ -4,3 +4,4 @@ date	sample	fix	languages
 2026-10-17	01/inputs/10-copies.json, 10-not-executor.json	Решение «Архитектора» по М11/6 п. 7: исполнители назначения — cluster и copies	all
 2026-10-18	07-faults/1 ждал orphaned: 1 — вход даёт c5 → m2 при заявке только у m1 (генератор 01bf847, журнал М11-01 № 10)	по норме Н1.6 два факта: назначенный не работает (orphaned) и работает неназначенный (conflict); ожидание orphaned: 2, conflict: 1; норма называет это строкой facts	all
 2026-10-18	01/scenarios.tsv; inputs	прогон 41, мутации №1, №2: LOST_AFTER 45/46, SHADOW_STALL 160/161 — обе стороны	all
+2026-10-18	01/scenarios.tsv; inputs	прогон 41, мутации №3–5: сц. 11 — unknown (назначение не члену), conflict двух воркеров одного члена, never с age null	all

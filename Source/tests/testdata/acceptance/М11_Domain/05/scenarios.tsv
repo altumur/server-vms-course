@@ -4,11 +4,17 @@ scenario	step	request	expect
 01-roll-delivered	2	member m1 console2 POST /tallies {"name": "t1", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"], "note_secret": "s3cret-1"}	201 {"note_secret": "***"}
 01-roll-delivered	3	@until 90 member m2 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": {"entries": [{"ref": "t1", "member": "m1", "item": "t-1/t1", "note_secret": "@absent", "to": "@absent"}], "missing": []}}
 01-roll-delivered	4	member m1 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": "@absent"}
-01-roll-delivered	5	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "~enc:v2:"}}
-01-roll-delivered	6	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "!contains s3cret-1"}}
-01-roll-delivered	7	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "~enc:v2:"}}
-01-roll-delivered	8	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "!contains s3cret-1"}}
-01-roll-delivered	9	member m2 console GET /domain/testsub2/books/nosuch	404 {"error": "no such book shown"}
+01-roll-delivered	5	member hold console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": "@absent"}
+01-roll-delivered	6	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "~enc:v2:"}}
+01-roll-delivered	7	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "!contains s3cret-1"}}
+01-roll-delivered	8	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "~enc:v2:"}}
+01-roll-delivered	9	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "!contains s3cret-1"}}
+01-roll-delivered	10	member m2 console GET /domain/testsub2/books/nosuch	404 {"error": "no such book shown"}
+01-roll-delivered	11	holder GET /domain	200 {"reports": {"m1": {"rev": "$r1"}}}
+01-roll-delivered	12	@sleep 12	ok
+01-roll-delivered	13	holder GET /domain	200 {"reports": {"m1": {"rev": "$r1"}}}
+01-roll-delivered	14	holder DELETE /domain/members/m2	200
+01-roll-delivered	15	@until 30 store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": null}
 02-notes-unique	1	@domain	ok
 02-notes-unique	2	member m1 console2 POST /tallies {"name": "t5", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 02-notes-unique	3	member m2 console2 POST /tallies {"name": "t5", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
@@ -40,3 +46,4 @@ scenario	step	request	expect
 06-assemble	8	assemble inputs/assemble-08-states.json	ok {"rows": {"m1": {"": {"missing": [{"member": "hold", "why": "unseen"}, {"member": "m1", "why": "silent"}, {"member": "m2", "why": "no_copy"}, {"member": "m3", "why": "never"}]}, "h": {"entries": [{"member": "hold"}]}}, "hold": {"s": "@absent"}}}
 06-assemble	9	assemble inputs/assemble-09-recipient-not-member.json	ok {"rows": {"m2": {"t1": {"entries": [{"member": "m1"}]}}}, "report": {"undelivered": {"m1": ["m9"]}}}
 06-assemble	10	assemble inputs/assemble-10-foreign-objects-ignored.json	ok {"rows": {"m2": {"": {"missing": []}, "x": "@absent"}}, "report": {"dropped": {}}}
+06-assemble	11	assemble inputs/assemble-11-unique-repeat-two-slots.json	ok {"rows": {"m2": {"": {"missing": [{"member": "m1", "why": "bad_contribution"}]}}}, "report": {"dropped": {"m1": "bad_contribution"}}}

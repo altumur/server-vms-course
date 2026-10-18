@@ -5,13 +5,14 @@ scenario	step	request	expect
 01-topology	3	holder PUT /domain/topology {"centre": "hold"}	400
 01-topology	4	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~through itself"}
 01-topology	5	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "hold"}}	409 {"detail": "~domain holder"}
-01-topology	6	holder PUT /domain/topology {"base_rev": 0, "via": {"m9": "relay"}}	409 {"detail": "~not a cluster of this domain"}
-01-topology	7	holder PUT /domain/topology {"base_rev": 0, "star": ["m1"]}	409 {"detail": "~there is no centre"}
-01-topology	8	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay", "relay": "m1"}}	409 {"detail": "~one relay between a member and the domain"}
-01-topology	9	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
-01-topology	10	holder PUT /domain/topology {"base_rev": 0, "via": {}}	409 {"detail": "~at rev 1"}
-01-topology	11	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~at rev 1"}
-01-topology	12	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
+01-topology	6	holder PUT /domain/topology {"base_rev": 0, "via": {"hold": "relay"}}	409 {"detail": "~reaches the domain in place"}
+01-topology	7	holder PUT /domain/topology {"base_rev": 0, "via": {"m9": "relay"}}	409 {"detail": "~not a cluster of this domain"}
+01-topology	8	holder PUT /domain/topology {"base_rev": 0, "star": ["m1"]}	409 {"detail": "~there is no centre"}
+01-topology	9	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay", "relay": "m1"}}	409 {"detail": "~one relay between a member and the domain"}
+01-topology	10	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
+01-topology	11	holder PUT /domain/topology {"base_rev": 0, "via": {}}	409 {"detail": "~at rev 1"}
+01-topology	12	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~at rev 1"}
+01-topology	13	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
 02-road-through-the-relay	1	@domain m1 relay	ok
 02-road-through-the-relay	2	@start agent m2 via relay	ok
 02-road-through-the-relay	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}
@@ -26,6 +27,13 @@ scenario	step	request	expect
 02-road-through-the-relay	12	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "silent"}, {"name": "relay", "state": "ok"}]}
 02-road-through-the-relay	13	@clock m2 0	ok
 02-road-through-the-relay	14	@until 40 holder GET /domain	200 {"complete": true}
+02-road-through-the-relay	15	@cut relay	ok
+02-road-through-the-relay	16	@sleep 70	ok
+02-road-through-the-relay	17	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t1"}
+02-road-through-the-relay	18	@sleep 65	ok
+02-road-through-the-relay	19	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t2"}
+02-road-through-the-relay	20	ASSERT $t2 - $t1 < 2	ok
+02-road-through-the-relay	21	@mend relay	ok
 03-not-behind-this-relay	1	@domain m1 relay	ok
 03-not-behind-this-relay	2	@stop agent m1	ok
 03-not-behind-this-relay	3	@start agent m1 via relay	ok

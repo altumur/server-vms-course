@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-17	02/inputs/token-*, сц. 05 шаг 7, сц. 12	Решение «Архитектора» по М11/7 п. 6 и дополнение: kind у каждого токена (без него — bad_claims); проверка получателем — wrong_kind, wrong_audience	all
 2026-10-18	02/scenarios.tsv: 02/02, 02/03; keys-18, keys-19	прогон 41, мутации №7, №8: kid не root раньше чужого домена; подпись раньше book_seal (двойная ошибка — первый по порядку отказ)	all
 2026-10-18	02/scenarios.tsv; inputs	прогон 41, мутации №6: iat = now + 60 — ok	all
+2026-10-18	02/scenarios.tsv; inputs	прогон 41, мутации №9, №10: запись отзыва не «<jti>:<число JSON>» — no_revocations; аудитория по audience_claim, а не по aud	all

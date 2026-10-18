@@ -38,10 +38,14 @@ scenario	step	request	expect
 07-token-revoked	1	token inputs/token-11-revoked.json	ok {"result": "refused", "reason": "revoked"}
 07-token-revoked	2	token inputs/token-13-other-revoked.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 07-token-revoked	3	token inputs/token-12-revoked-unreadable.json	ok {"result": "refused", "reason": "no_revocations"}
+07-token-revoked	4	token inputs/token-26-revoked-exp-word.json	ok {"result": "refused", "reason": "no_revocations"}
+07-token-revoked	5	token inputs/token-27-revoked-exp-leading-zero.json	ok {"result": "refused", "reason": "no_revocations"}
 12-token-kind-and-audience	1	token inputs/token-18-audience-ok.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 12-token-kind-and-audience	2	token inputs/token-19-wrong-audience.json	ok {"result": "refused", "reason": "wrong_audience"}
 12-token-kind-and-audience	3	token inputs/token-20-wrong-kind.json	ok {"result": "refused", "reason": "wrong_kind"}
 12-token-kind-and-audience	4	token inputs/token-21-person-no-audience.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
+12-token-kind-and-audience	5	token inputs/token-24-audience-claim-for.json	ok {"result": "ok", "payload": {"sub": "alice"}}
+12-token-kind-and-audience	6	token inputs/token-25-audience-claim-for-wrong.json	ok {"result": "refused", "reason": "wrong_audience"}
 08-envelope-opens	1	seal inputs/seal-01-opens.json	ok {"result": "ok", "plain": "s3cret-ü"}
 08-envelope-opens	2	seal inputs/seal-02-empty-plain.json	ok {"result": "ok", "plain": ""}
 08-envelope-opens	3	seal inputs/seal-15-unicode-context.json	ok {"result": "ok", "plain": "x"}
