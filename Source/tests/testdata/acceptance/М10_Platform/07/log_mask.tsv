@@ -30,3 +30,7 @@ Authorization: Digest username="admin", response="5ccc"	Authorization: Digest us
 {"password" : "a\"b", "x": 1}	{"password" : "***", "x": 1}	the value runs to its closing quote, past an escaped one
 {"password": ""}	{"password": ""}	an empty value stays empty
 {"password": 1234}	{"password": "***"}	a number is a value too
+?pwd=http://u:hunter2@h/x	?pwd=***	a secret pair's value is masked whole, an address in it too, not only its userinfo (A6; reconciliation M10/6-11, S17)
+?%26p%2577d=hunter2	?***	a name that decodes to «&pwd» is read as pairs: the name goes with the value (A7; S17)
+?pwd=Hun<ter2&x=1	?pwd=***&x=1	< does not end a pair's value: the mask runs to the end of the value (A6; S4)
+{"password": 1234;}	{"password": "***";}	a scalar is one JSON token: what follows it stays (S18)
