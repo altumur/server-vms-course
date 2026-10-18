@@ -1,6 +1,7 @@
 # What each loader says of a spec: one table for the course (Source/tests/testdata/spec_verdicts.tsv and the files of
 # spec_verdicts/) and the product (testdata/spec_verdicts.tsv and testdata/spec_verdicts/ at its root), byte for byte.
-# Owner: «Паритет». Cases: the fourteenth review's (РЕВЬЮ-SERVERVMS-14/probes/loader); verdicts: «Архитектор»,
+# Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083).
+# The cases are byte for byte the same-named cases of acceptance М10/02 (cases/), the verdicts its verdicts.tsv. Cases: the fourteenth review's (РЕВЬЮ-SERVERVMS-14/probes/loader); verdicts: «Архитектор»,
 # 2026-10-06. A loader that answers otherwise is a red test, not a finding of the next review.
 #
 # THE RULES the verdicts hold
