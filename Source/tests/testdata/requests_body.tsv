@@ -1,6 +1,7 @@
 # How a request's body value is written into its row, and how any JSON value the platform puts in a row is written (the
 # canonical form): one table for the course (Source/tests/testdata/requests_body.tsv; w2cplatform/canonical.py) and the
-# product (testdata/requests_body.tsv at its root; canonjson.go, requests.go), byte for byte. Owner: «Паритет».
+# product (testdata/requests_body.tsv at its root; canonjson.go, requests.go), byte for byte. Owner: «Спецификация»;
+# the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083).
 # Rules: «Архитектор», 2026-10-05/06. The course's seed (2d517c88) merged in whole.
 #
 # THE STAND both tests file through: a family whose schema says `v: {maxLength: 32}` (a `request` row: POST /requests
@@ -11,15 +12,19 @@
 #     true / false      the JSON text: true, false (not Python's True)
 #     null              at the top level of ANY field, a `json` one too: the field is ABSENT from the row (its default
 #                       stands); an empty string is the empty string; inside a JSON value a null stays null
-#     a number          exactly its digits, never through a float (Go: json.Number); a whole value in integer digits
-#                       (5, not 5.0; -0 is 0); otherwise the shortest decimal that reads back as the same float, never
-#                       an exponent; one past float64 (1e400) is refused: not_number
+#     a number          JCS (RFC 8785, ADR-0072; М10/8 Н1.5 «иное значение — канонический JSON»): ES6
+#                       Number.prototype.toString of the IEEE-754 double — a whole value in integer digits below 1e21
+#                       (5, not 5.0; -0 is 0), otherwise the shortest form that reads back as the same double, with an
+#                       exponent below 1e-6 and from 1e21 (1e-7, 1e+21); digits past the double are rounded
+#                       (9007199254740993 → 9007199254740992); one past float64 (1e400) is refused: not_number
+#                       (corrected to JCS 2026-10-18, stage A of ADR-0083: the old «never an exponent, never through a
+#                       float» predates ADR-0072)
 #     a string          as it is, unquoted, its own quotes its own; a string that looks like a number or a boolean
 #                       stays the string; what type a field is, the schema says, not the text
-#     length            the schema's maxLength over the WRITTEN text (1e40 is 41 digits: too_long); the writing
+#     length            the schema's maxLength over the WRITTEN text (1e40 is written 1e+40: 5 characters); the writing
 #                       function does not judge length
-#   the canonical JSON — a dict or a list in a request row, and any value of a `json` field: compact, a dict's keys
-#   sorted, UTF-8 as it is (no \u escaping; no HTML escaping of < > &; / not escaped), U+2028/2029 raw, control
+#   the canonical JSON (JCS, ADR-0072) — a dict or a list in a request row, and any value of a `json` field: compact,
+#   a dict's keys sorted by UTF-16 code units (U+1F600 before U+FB33), UTF-8 as it is (no \u escaping; no HTML escaping of < > &; / not escaped), U+2028/2029 raw, control
 #   characters as json.dumps(ensure_ascii=False) writes them (\b \f \n \r \t short, the rest \u00xx lowercase),
 #   numbers inside by the scalar rule, a null inside stays null. A `json` field's value is taken AS IT IS: a string
 #   is a string document ("s" is stored "s"), never parsed again; the page parses its own text box before it sends,
@@ -46,11 +51,11 @@ request	5.0	5
 request	-0.0	0	
 request	0.1	0.1	
 request	-2.5	-2.5	
-request	1e21	1000000000000000000000	
-request	1e-7	0.0000001	
-request	1.5e-10	0.00000000015	
-request	9007199254740993	9007199254740993	
-request	1e33		too_long
+request	1e21	1e+21	
+request	1e-7	1e-7	
+request	1.5e-10	1.5e-10	
+request	9007199254740993	9007199254740992	
+request	1e33	1e+33	
 request	"abc"	abc	
 request	"5"	5	
 request	{"b":1,"a":2}	{"a":2,"b":1}	
@@ -61,11 +66,11 @@ json	"{\"b\": 1, \"a\": 2}"	"{\"b\": 1, \"a\": 2}"
 json	"{oops"	"{oops"	
 json	{"b":1,"a":[1,2.0]}	{"a":[1,2],"b":1}	
 json	{"t":"<b>&"}	{"t":"<b>&"}	
-json	{"x":1e-7}	{"x":0.0000001}	
+json	{"x":1e-7}	{"x":1e-7}	
 json	{"x":1000.0}	{"x":1000}	
 json	{"x":1.50}	{"x":1.5}	
 json	{"x":1e3}	{"x":1000}	
-json	{"n":9007199254740993}	{"n":9007199254740993}	
+json	{"n":9007199254740993}	{"n":9007199254740992}	
 json	{"c":"a\u0001b\tc"}	{"c":"a\u0001b\tc"}	
 json	{"s":"\u2028"}	{"s":" "}	
 json	{"q":"\"\\/"}	{"q":"\"\\/"}	
@@ -77,10 +82,10 @@ request	1.50	1.5
 request	1e3	1000	
 request	1E+3	1000	
 request	-0	0	
-request	12345678901234567890	12345678901234567890	
-request	99999999999999999999999999999999	99999999999999999999999999999999	
-request	-99999999999999999999999999999999		too_long
-request	1e40		too_long
+request	12345678901234567890	12345678901234567000	
+request	99999999999999999999999999999999	1e+32	
+request	-99999999999999999999999999999999	-1e+32	
+request	1e40	1e+40	
 request	"text"	text	
 request	"text, as \"it\" is"	text, as "it" is	
 request	"5.0"	5.0	
@@ -89,7 +94,7 @@ request	"é ü"	é ü
 request	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"		too_long
 request	{"b": 2, "a": [1]}	{"a":[1],"b":2}	
 request	[1.50, 1e3, -0]	[1.5,1000,0]	
-request	[12345678901234567890]	[12345678901234567890]	
+request	[12345678901234567890]	[12345678901234567000]	
 request	{"s": "<&>/"}	{"s":"<&>/"}	
 request	{"e": "\b\f\n\u0001"}	{"e":"\b\f\n\u0001"}	
 request	{"l": "\u2028"}	{"l":" "}	
@@ -108,3 +113,9 @@ json	{"x":NaN}		not_json
 json	null	<absent>	
 json	"s"	"s"	
 json	"\"s\""	"\"s\""	
+request	{"דּ":2,"😀":1}	{"😀":1,"דּ":2}	
+json	{"דּ":2,"😀":1}	{"😀":1,"דּ":2}	
+json	{"x":0.000001}	{"x":0.000001}	
+json	{"x":1e20}	{"x":100000000000000000000}	
+json	{"x":1e21}	{"x":1e+21}	
+request	0.000001	0.000001	
