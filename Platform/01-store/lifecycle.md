@@ -19,13 +19,17 @@
 
 ## Окружение
 
-Сам демон окружения не читает: его настройка — флаги (ниже). Окружение читает раннер, который собирает флаги.
+Настройку демона задают флаги (ниже): файл `configstore.env` читает раннер и собирает из него флаги. Сам демон читает
+только окружение systemd — переданные сокеты (`LISTEN_FDS`, `LISTEN_FDNAMES`) и сторожа (`NOTIFY_SOCKET`): переданный
+сокет флагом не заменить (М10/11 Н1.3 `sockets`).
+Порядок файлов окружения раннера — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
+(М10/11 Н1.2; [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env` | `tuning` — `lan` | М10/11 Н1.2 |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | М10/11 Н1.2, Н1.3 «Флаги демона» |
 | `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | М10/11 Н1.2, Н1.3 «Флаги демона» `-id` |
-| `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`) | — | М10/11 Н1.3 `sockets` |
+| `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | М10/11 Н1.3 `sockets` |
 | `NOTIFY_SOCKET` | сторож systemd | — | М10/11 Н1.2 |
 
 ## Флаги
@@ -44,11 +48,12 @@
 | `<PLATFORM_DIR>/configstore` (`-dir`) | каталог данных демона; формат на диске — решает реализация (М10/1 «Решает реализация» п. 3) | М10/11 Н1.2 «Канал настройки и раскладка» |
 | `<-dir>/FORMAT` | метка формата `{format, version, impl}`: пишется первой в пустой каталог; чужая или нет при непустом каталоге — отказ, код 2 | М10/11 Н1.3 `format` |
 | `<-dir>/member.json` | партнёры и `how` после вступления; рестарт — не вступление | М10/11 Н1.3 `group.join` (путь внутри `-dir` — решает реализация) |
-| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; `admin.sock` 0600, сокет роли 0660 с группой роли | М10/11 Н1.3 `sockets`, Н1.1 `dirs` |
+| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | М10/11 Н1.3 `sockets`, Н1.1 `dirs` |
 | `/etc/w2c/configstore-rights.json` (`-rights`) | файл прав; без файла — только `admin.sock`; живой перезагрузки нет | М10/6 Н1.2 |
-| `/etc/w2c/tls/configstore/` (`-tls`) | комплект роли `configstore` или `configstore-door` | М10/11 Н1.6 |
+| `/etc/w2c/tls` (`-tls`) | корень комплектов: внутри — комплект роли `configstore` или `configstore-door` | М10/11 Н1.3 «Флаги демона» `-tls`, Н1.6 |
 | файл копии (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, вне `-dir` | М10/11 Н1.3 `copy`, `admin_ops`; вектор — `Platform/common/vectors/README.md` |
 | строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../common/data/catalog.tsv) |
+| строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | М10/11 Н1.3 `floor`, [каталог](../common/data/catalog.tsv) |
 
 ## Коды выхода
 
