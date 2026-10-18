@@ -10,7 +10,7 @@
 ## Н1 Форма
 
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
-- владеет: `<SECRETS_KEY>`;
+- владеет: `/etc/w2c/secrets/platform.key`;
 - пишет: `<sub>/<spec:unit.rows>/<id>` (cas), `door/signer` (cas);
 - читает: `platform/spec/<sub>`, `<sub>/<spec:unit.rows>/<id>`, `<sub>/idem/<key>`.
 

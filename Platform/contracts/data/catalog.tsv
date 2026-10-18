@@ -25,7 +25,7 @@ platform/epoch_floor	row	М10/3	put=admin(только op: floor урока 11 �
 <sub>/heartbeats/<имя>	object	М10/5	put=<s>worker(своё имя, HEARTBEAT_EVERY, и подмена BEAT_EVERY)	console, <s>controller, <s>worker, resource, domainagent	-	1	-	М10/5 Н1.1
 <sub>/holds/<место>	row	М10/5	create=<s>worker(cas "", место свободно); cas=<s>worker(своё место: продление и отпуск)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	placement.places	1	-	М10/5 Н1.3
 <sub>/contenders/<имя>/<коробка>	object	М10/5	put=<s>worker(своя коробка, CONTEND_EVERY)	console, <s>controller, <s>worker	-	1	-	М10/5 Н1.4
-<SECRETS_KEY>	file	М10/7	create=admin(w2cctl secrets new, O_EXCL, 0640 root:w2c-secrets, не внутри хранилища); put=admin(w2cctl secrets rotate, новая строка сверху, прежние ключи сохраняются)	console, <s>worker, domain, domainagent	-	1	-	М10/7 Н1.2
+/etc/w2c/secrets/platform.key	file	М10/7	create=admin(путь — SECRETS_KEY, умолчание этот, w2cctl secrets new, O_EXCL, 0640 root:w2c-secrets, не внутри хранилища); put=admin(w2cctl secrets rotate, новая строка сверху, прежние ключи сохраняются)	console, <s>worker, domain, domainagent	-	1	-	М10/7 Н1.2
 platform/resources/<server>/heartbeat	object	М10/8	put=resource(свой server, каждые 10 с)	console, <s>controller	-	1	-	М10/8 Н1.4
 <sub>/requests/<rid>	row	М10/8	create=console(дверь просьб, cas ""),<s>worker(worker.requests другой спеки, cas "", filed); delete=console(жнец: отвеченная по settle, брошенная по ttl или valid_until)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	requests	1	-	М10/8 Н1.5
 <sub>/requests/free-<server>-<volume>	row	М10/8	create=resource(том выше high, cas ""); cas=resource(своя форма и версия, между low и high не трогать); delete=resource(free ≤ 0 или platform/space выключен)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	requests.free	1	-	М10/8 Н1.4
@@ -48,3 +48,12 @@ platform/schema	row	М10/10	put=console(PUT /schema?version=N в окне обс
 .gone/<ключ>	object	М10/10	put=console(надгробие удалённого тела у своего хранилища объектов); delete=console(все peers подтвердили и прошло 7 дней, или ключ записан снова)	resource	unit.fields	1	-	М10/10 Н1.5 delete
 <sub>/sweep	row	М10/10	cas=console(отметка только при пустой прежней партии, снятие списка в окне, put_blob снимает дайджест)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	unit.fields	1	-	М10/10 Н1.5 sweep
 <sub>/<spec:tables>/<имя>	row	М10/10	put=console(POST таблицы: полная строка с CAS, кроме таблиц worker.writes); cas=<s>worker(таблица из worker.writes, строка целиком); delete=console(DELETE таблицы, кроме таблиц worker.writes)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	tables	1	-	М10/10 Н1.6
+platform/configstore-doors/<id>	row	М10/11	put=configstore-door(своя строка {seen_at} раз в 30 с, без cas и guard, запросом лидеру)	console, <s>controller, domain, domainagent, admin	-	1	-	М10/11 Н1.3 door
+<файл копии>	file	М10/11	create=admin(configstore backup <файл>: 0600, tmp + rename, вне -dir)	admin	-	1	-	М10/11 Н1.3 copy
+/run/w2c-spares/<юнит>.env	file	М10/11	create=admin(w2c-spares.sh до systemctl start: tmp + rename, 0644, одна строка SPARE_FOR)	<s>worker	-	1	-	М10/11 Н1.5 spare_file
+/etc/w2c/tls/ca.pem	file	М10/11	put=admin(w2c-ca.sh init и own, 0644)	*	-	1	-	М10/11 Н1.6 kit
+/etc/w2c/tls/ca.next.pem	file	М10/11	put=admin(w2c-ca.sh, следующий центр при ротации)	*	-	1	-	М10/11 Н1.6 rotation
+/etc/w2c/tls/revoked	file	М10/11	put=admin(w2c-ca.sh revoke, копия на каждый сервер)	*	-	1	-	М10/11 Н1.6 revoke
+/etc/w2c/tls/crl.pem	file	М10/11	put=admin(w2c-ca.sh crl)	*	-	1	-	М10/11 Н1.6 kit
+/etc/w2c/tls/<роль>/server.pem	file	М10/11	put=admin(w2c-ca.sh issue и own, 0644)	*	-	1	-	М10/11 Н1.6 kit
+/etc/w2c/tls/<роль>/server.key	file	М10/11	put=admin(w2c-ca.sh own: 0600 пользователю юнита или 0640 root и группа пользователя юнита)	*	-	1	-	М10/11 Н1.6 kit
