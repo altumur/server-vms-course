@@ -172,11 +172,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/EventsAnswer'
         '400':
-          description: Неверные параметры/чтение тела
+          description: 'Неверные параметры/чтение тела: ресурс — ResourceError, консоль — TextError (Н2, Н3 «запрос»)'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                oneOf:
+                - $ref: '#/components/schemas/ResourceError'
+                - $ref: '#/components/schemas/TextError'
         '408':
           description: 'Консоль: чтение тела медленно'
           content:
@@ -202,11 +204,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/TextError'
         '405':
-          description: 'Консоль: метод не поддержан'
+          description: 'Метод не поддержан: консоль — TextError; ресурс (HEAD — 405, Н2) — ResourceError'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                oneOf:
+                - $ref: '#/components/schemas/ResourceError'
+                - $ref: '#/components/schemas/TextError'
         '401':
           description: 'Консоль: личность не установлена'
           content:
