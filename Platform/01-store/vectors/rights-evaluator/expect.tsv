@@ -13,6 +13,11 @@ acc	read	acc/ab	deny
 acc	read	acc/p/!x	allow
 acc	read	acc/p/x	deny
 acc	read	acc/other	deny
-acc	write	acc/exact	deny
 none	read	acc/x	deny
 none	read	acc/a*b	deny
+acc	write	acc/exact	deny
+acc	write	acc/w/x	allow
+acc	delete	acc/pre/x	allow
+acc	delete	acc/exact	deny
+acc	delete	acc/w/x	deny
+none	delete	acc/x	deny
