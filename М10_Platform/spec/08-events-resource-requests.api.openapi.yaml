@@ -205,13 +205,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/TextError'
         '405':
-          description: 'Метод не поддержан: консоль — TextError; ресурс (HEAD — 405, Н2) — ResourceError'
+          description: 'Метод не поддержан: консоль — TextError; ресурс (в том числе HEAD и POST, Н2) — без тела (сверка python и go М10/6–11, E17)'
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/ResourceError'
-                - $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/TextError'
         '401':
           description: 'Консоль: личность не установлена'
           content:
@@ -1161,6 +1159,10 @@ components:
           minimum: 0
         partial:
           const: true
+        lines_garbled:
+          description: Число пропущенных нечитаемых строк бакетов и файлов не на месте (Н1.3; М10/1 Н0 «Устойчивость выдачи»); поля нет, когда пропусков нет.
+          type: integer
+          minimum: 1
     ConsoleEvents:
       type: object
       required:
@@ -1184,6 +1186,10 @@ components:
           minimum: 0
         partial:
           const: true
+        lines_garbled:
+          description: Сумма lines_garbled ответивших ресурсов плюс строки ответов ресурсов не по форме EventRow, пропущенные консолью (Н3 «слияние»); поля нет, когда пропусков нет.
+          type: integer
+          minimum: 1
         complete:
           type: boolean
         incomplete:
