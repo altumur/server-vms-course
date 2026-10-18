@@ -14,9 +14,10 @@
 #   requests.stamp: [group] only with placement.group_by; a key template's braces closed
 #   a JSON default or inherit of a `json` field is any JSON value
 #   every key naming a field of a DECLARED table or of the unit's row names one of its `fields:` or `stamp:` (the
-#   fifteenth review, major 1): unit.derived.items, rights.unit_of, servers.show.by/columns, placement.places.server_field/
+#   fifteenth review, major 1): rights.unit_of, servers.show.by/columns, placement.places.server_field/
 #   where, placement.affinity.server_field/strict, holds.unit/since/until, metrics where and unless.where; a table only
-#   named is not asked
+#   named is not asked; unit.derived is no key of `unit` (closed: rows, id, fields) — fields_derived_items_unknown is
+#   refused as an unknown key, not by a field name (М10/2 Н1.2а, corpus group 3; stage A review SA1-26)
 #   unit.id is `numeric` or a field; a field's type one of string, int, float, bool, list, json, url, blob; door.routes
 #   each once; objects.rows no platform family (heartbeats, contenders, snapshot, controller, blobs, commands, *);
 #   worker.requests not the spec itself (minor 10, 16)
