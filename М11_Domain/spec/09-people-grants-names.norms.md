@@ -12,7 +12,7 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/users/<имя>` — `at`; строка гранта — `until` (`0` — без срока); копия `domain/grants` — `as_of`.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/users/<имя>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/grants`, `domain/break-glass/<кластер>`, `domain/names/<sub>/<книга>`;
+- владеет: `domain/users/<имя>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/grants`, `domain/break-glass/<кластер>`, `domain/names/<sub>/<книга>`, `domain/deleting/<имя>`;
 - пишет: `domain/revoked` (put);
 - читает: `domain/member`, `domain/keys`, `domain/revoked`, `domain/members`, `domain/signer`.
 
@@ -37,7 +37,12 @@ PASSWORD_MIN:  10          # символов
 domain/disabled: {names: <текст JCS массива имён>}  # имена выключенных по возрастанию в байтах UTF-8, без повторов; нет —
                # "[]"; массив, не строка через «,»: имя может нести запятую (решение «Архитектора» по R41-11); писатель —
                # процесс domain при каждой правке disabled; секретов нет (ADR-0051)
-delete:        удалить строку человека и снять его строки во всех domain/grants/* (Н1.3) — одной правкой на строку грантов
+delete:        удалить строку человека и снять его строки во всех domain/grants/* (Н1.3) — одной правкой на строку грантов;
+               под меткой удаления ниже (Н3 «дверь людей» шаг 9)
+domain/deleting/<имя>: {}    # метка удаления человека у держателя; писатель — процесс domain под стражем domain/signer-turn;
+               # стоит с начала DELETE до снятия всех строк грантов с subject = <имя>; пока стоит — имя занято:
+               # POST /domain/users — 409 exists, новая строка гранта с этим subject — 409 being deleted; сверка при
+               # старте и каждым проходом урока 1 снимает по ней строки грантов и удаляет метку (журнал cammeta-go, М11-09 № 1; решение «Архитектора»)
 unreadable:    строка человека, которая не читается, — пропускается и считается (диагностика процесса), остальные служат
 ```
 
@@ -192,7 +197,9 @@ checks:    у дверей людей и грантов (процесс domain),
            строка гранта с subject индекса и rank(cap) > rank(grant)          → 400 grant too wide
            новый человек или новая строка гранта (нет в прежней строке), чей subject не человек домена (нет в
              domain/users), а индекс не known → 503 names unknown, detail — «missing members: <члены>» или «index
-             absent or damaged»; строка гранта человека домена (и root) индекса не ждёт: имена исключают друг друга
+             absent or damaged»;
+           новая строка гранта, чей subject не человек домена, индексы known, а такого key нет ни в одном индексе →
+             400 unknown subject; строки, что были в прежней строке, не проверяются (журнал cammeta-go, М11-09 № 1; решение «Архитектора»); строка гранта человека домена (и root) индекса не ждёт: имена исключают друг друга
              (exclusive_with), человек ключом индекса не бывает
            удаление человека и снятие строк — никогда не ждут
 reverse:   элемент книги с names, чей key — имя человека, не доставляется никому: поле вида view.books.<sub>/<книга>.person_names
@@ -255,7 +262,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 401/403 — Н1.5; 404 no such person; 409 last admin; 413 too large; 503 standby (урок 12) |
 | DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 401/403 — Н1.5; 404 no such person; 409 last admin; 503 standby (урок 12) |
 | GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
-| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS (`refused`); 401/403 — Н1.5; 413 too large; 503 names unknown; 503 standby (урок 12) |
+| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 400 unknown subject; 409 being deleted; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS (`refused`); 401/403 — Н1.5; 413 too large; 503 names unknown; 503 standby (урок 12) |
 | GET `/domain/break-glass` | `domain` | view | 200 `{clusters: {<кластер>: {set_at}}}` | 401/403 |
 | PUT `/domain/break-glass/<кластер>` `{password}` | `domain` | admin | 200 `{cluster, set: true}` | 400 bad body, bad password, bad name; 401/403 — Н1.5; 413 too large; 503 standby (урок 12) |
 | POST `/domain/revoke` `{token}` | `domain` | — | 200 `{revoked}` | 400 bad body; 401 слово `token`; 413 too large; 503 standby (урок 12) |
@@ -279,14 +286,18 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 4. имя не по Н1.1 (POST)                                            → 400 bad name
 5. пароль короче PASSWORD_MIN (GLASS_MIN у break-glass)              → 400 bad password
 6. проверки имён Н1.7                                               → 409 name taken / 503 names unknown
-7. POST: человек есть — 409 exists; PUT, DELETE: нет — 404 no such person
+7. POST: человек есть или стоит метка domain/deleting/<имя> — 409 exists; PUT, DELETE: нет — 404 no such person
 8. last_admin (Н1.3)                                                → 409 last admin
-9. записать строку (CAS по прочитанной версии); disabled — затем domain/disabled; DELETE — затем строки грантов
+9. записать строку (CAS по прочитанной версии); disabled — затем domain/disabled; DELETE: записать метку
+   domain/deleting/<имя> → удалить строку человека → снять строки subject = <имя> во всех domain/grants/* (CAS) →
+   удалить метку; ответ — после снятия метки (журнал cammeta-go, М11-09 № 1; решение «Архитектора»)
 ```
 
 Обрыв шага 9 между строкой человека и `domain/disabled` или строками грантов: вход человеку уже закрыт (строка), а члены
-его ещё пускают. Процесс `domain` при старте и каждым проходом урока 1 сверяет: `domain/disabled` — по флагам строк людей,
-строки грантов людей, которых нет, — снимает; расхождение живёт не дольше прохода.
+его ещё пускают. Процесс `domain` при старте и каждым проходом урока 1 сверяет: `domain/disabled` — по флагам строк людей;
+для каждой метки `domain/deleting/<имя>` — снимает строки грантов с subject = `<имя>`, затем удаляет метку; индексов имён
+не ждёт; расхождение живёт не дольше прохода. «Людей, которых нет» по отсутствию строки не ищет: субъект индекса имён тоже
+не человек домена (журнал cammeta-go, М11-09 № 1; решение «Архитектора»).
 
 ### гранты (процесс domain, PUT /domain/grants/<кластер> через консоль домена) — по порядку
 
@@ -294,9 +305,12 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 1. may по domain/grants/domain, admin                               → 401 / 403
 2. кластер не по грамматике члена и не domain                        → 400 bad name
 3. lines не по форме Н1.3 (cap, scope, until — число ≥ 0, subject по Н1.1), повтор строки → 400 bad line
-4. проверки имён Н1.7: шире grant — 400; новая строка не человека домена и индекс не known — 503
+4. проверки имён Н1.7: шире grant — 400; новая строка не человека домена и индекс не known — 503; индекс known, а subject
+   не человек и не key — 400 unknown subject; новая строка с subject, у которого стоит метка domain/deleting/ — 409 being
+   deleted
 5. кластер = domain и last_admin                                     → 409 last admin
 6. записать по CAS: lines по порядку Н1.3, by — доказанное имя; конфликт — перечитать и повторить с шага 4 не больше трёх раз
+   (конфликт с DELETE возвращает к шагу 4, и он видит метку удаления)
 ```
 
 **Гонки.** Человек выключен, а его токен жив: у кластера держателя отказ сразу (`domain/disabled`), у члена — со следующим
@@ -319,7 +333,9 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `refused` | 401 | у процесса `domain`: неверная пара входа; токен `/domain/revoke` не прошёл (`detail` — слово `token`) |
 | `denied` | 401, 403 | у консолей и дверей людей (форма М10/9): токена нет или не прошёл; `may` — deny; аварийный пароль не сверился (401); нет аварийной учётки (403, `detail` — «no emergency account: …») |
 | `no such person` | 404 | человека нет |
-| `exists` | 409 | человек с таким именем есть |
+| `exists` | 409 | человек с таким именем есть или стоит метка его удаления `domain/deleting/<имя>` |
+| `being deleted` | 409 | новая строка гранта с subject, у которого стоит метка удаления (Н3 «гранты» шаг 4) |
+| `unknown subject` | 400 | новая строка гранта: subject не человек домена и не key ни одного индекса имён, индексы known |
 | `name taken` | 409 | имя — субъект индекса имён |
 | `last admin` | 409 | у двери домена не останется администратора |
 | `too many attempts` | 429 | предел Н1.10, `Retry-After` |
@@ -357,6 +373,7 @@ exit:      0 — вычислено; 2 — вход не по форме
 | 06 | стенд: `GET /domain/keys` у `m1` — строки, семьи `testsub`, набор | Н1.8 |
 | 07 | `may`: аварийная сессия, выключенный, нет грантов, давняя копия, view без единицы, `*`, `unit:` и его `about`, `labels:` своих меток и меток `about`, ранги, истёкшая строка, `"*"` только у `*` | Н1.4 |
 | 08 | строка, совпавшая с прежней, сохраняет свой `by`; новая — имя записавшего (мутационная проверка 2026-10-18) | Н1.3 |
+| 09 | метка удаления: человек `dz` с грантом у `m1`, метка `domain/deleting/dz` записана прямо — сверка прохода снимает строку гранта `dz` и удаляет метку; DELETE с обрывом после строки человека, POST и новая строка гранта при метке — 409 — чтением: стенд не прерывает DELETE и не опережает проход 3 с (журнал cammeta-go, М11-09 № 1) | Н1.1 `domain/deleting`, Н3 «дверь людей» шаг 9 и сверка |
 
 ---
 
