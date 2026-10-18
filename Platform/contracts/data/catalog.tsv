@@ -49,7 +49,6 @@ platform/schema	row	М10/10	put=console(PUT /schema?version=N в окне обс
 <sub>/sweep	row	М10/10	cas=console(отметка только при пустой прежней партии, снятие списка в окне, put_blob снимает дайджест)	console, <s>controller, <s>worker, <s>domain, domain, domainagent	unit.fields	1	-	М10/10 Н1.5 sweep
 <sub>/<spec:tables>/<имя>	row	М10/10	put=console(POST таблицы: полная строка с CAS, кроме таблиц worker.writes); cas=<s>worker(таблица из worker.writes, строка целиком); delete=console(DELETE таблицы, кроме таблиц worker.writes)	console, <s>controller, <s>worker, <s>domain, resource, domain, domainagent	tables	1	-	М10/10 Н1.6
 platform/configstore-doors/<id>	row	М10/11	put=configstore-door(своя строка {seen_at} раз в 30 с, без cas и guard, запросом лидеру)	console, <s>controller, domain, domainagent, admin	-	1	-	М10/11 Н1.3 door
-<файл копии>	file	М10/11	create=admin(configstore backup <файл>: 0600, tmp + rename, вне -dir)	admin	-	1	-	М10/11 Н1.3 copy
 /run/w2c-spares/<юнит>.env	file	М10/11	create=admin(w2c-spares.sh до systemctl start: tmp + rename, 0644, одна строка SPARE_FOR)	<s>worker	-	1	-	М10/11 Н1.5 spare_file
 /etc/w2c/tls/ca.pem	file	М10/11	put=admin(w2c-ca.sh init и own, 0644)	*	-	1	-	М10/11 Н1.6 kit
 /etc/w2c/tls/ca.next.pem	file	М10/11	put=admin(w2c-ca.sh, следующий центр при ротации)	*	-	1	-	М10/11 Н1.6 rotation
@@ -59,3 +58,9 @@ platform/configstore-doors/<id>	row	М10/11	put=configstore-door(своя стр
 /etc/w2c/tls/<роль>/server.key	file	М10/11	put=admin(w2c-ca.sh own: 0600 пользователю юнита или 0640 root и группа пользователя юнита)	*	-	1	-	М10/11 Н1.6 kit
 domain/view	object	М11/1	put=domain(проход держателя раз в VIEW_EVERY, после чтения копий членов)	console, domain, domainconsole	-	1	-	М11/1 Н1.4
 domain/shadow	object	М11/1	put=domain(тем же проходом, что вид)	domainconsole	-	1	-	М11/1 Н1.6
+domain/keys	row	М11/2	create=admin(установка домена: набор rev 1 подписан корнем, создание-однажды); cas=domain(у держателя: смена набора, документ подписан корнем, rev только вперёд),domainagent(у члена: функция keys приняла набор, только при отличии, не у кластера держателя, пока он держит срок)	console, <s>worker, domain, domainconsole, domainagent	-	1	-	М11/2 Н1.2
+domain/root	row	М11/2	create=admin(установка у держателя и команда join у члена: создание-однажды, закрепление не чинится)	console, domain, domainconsole, domainagent	-	1	-	М11/2 Н1.1
+domain/signer	row	М11/2	create=admin(установка: секреты — конверты кольца); put=domain(плановая смена ключа токенов, перенос и передача, смещённый — forgotten)	domain	-	1	-	М11/2 Н1.3
+domain/signer-pending	row	М11/2	put=domain(у цели плановой передачи: подготовленный ключ X25519, секрет — конверт кольца)	domain	-	1	-	М11/2 Н1.3, М11/10 Н1.7
+domain/book-seal	row	М11/2	create=admin(установка, раньше набора rev 1); put=domain(смена ключа приёма книг, смена после кражи, перенос)	domain	-	1	-	М11/2 Н1.4
+domain/revoked	row	М11/2	put=domain(у держателя: отзыв и каждый проход, снятие записей с exp + TOKEN_SKEW < now, по возрастанию jti); cas=domainagent(у члена: как пришло в ответе держателя, только при отличии, не у кластера держателя, пока он держит срок)	console, <s>worker, domain, domainconsole, domainagent	-	1	-	М11/2 Н1.6
