@@ -10,3 +10,4 @@ date	sample	fix	languages
 2026-10-17	09/README:4	Прогон 40 (разбор 0217e88d): снят обрывок прежнего определения @file	all
 2026-10-17	09/04-5, 06-3…5	Прогон 40 Kimi R40-16: тела 404 различают ветви — лишний сегмент пути единицы, MountedPage	all
 2026-10-17	09/scenarios.tsv: 02-spec-and-mounts шаг 5; probe-x.subsystem.yaml	Мутационная проверка 7cecaf2 № 40: metrics.prefix «-» → «_» на третьей спеке стенда	all
+2026-10-18	09/scenarios.tsv: 01 шаги 10–11, 03 шаги 3–5, 05 шаг 5, 06 шаги 6–11; 07–10 (новые); README	сверка python и go М10/6–11: query модуля по урок 1 Н2.1 (C1), DELETE /session снимает куки (C34), ряды «всегда» (C8), методы двери байтов, asked без per_person, POST на страницу смонтированной, unit не по форме (C26, C27, C28, C6), нечитаемый intent — 503 (C5), нечитаемый пульс — 200 и heartbeats_garbled (C3, Н0 «Устойчивость выдачи»), нехватка — 200 (C2), ряды w2c_resource_* из полей ResourceRow (C9, C10)	all
