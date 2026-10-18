@@ -1,3 +1,4 @@
 {"format":"w2c-configstore-copy","version":1,"index":"7"}
+{"key":"platform/epoch_floor","items":{"floor":"4294967296","generation_at":"1760745600.5"},"index":"6"}
 {"key":"testsub/counters/1","items":{"n":"1"},"index":"5"}
 {"key":"testsub/next_id","items":{"n":"2"},"index":"3"}
