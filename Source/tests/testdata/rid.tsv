@@ -1,5 +1,5 @@
 # A request's id (`rid`, the name of <sub>/requests/<rid> and of its mark objects/<sub>/commands/<rid>): one table for the
-# course (Source/tests/testdata/rid.tsv) and the product (testdata/rid.tsv at its root), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083); rule: «Архитектор», 2026-10-06, after the fourteenth review (the course counted characters and answered
+# course and the product (each keeps its copy), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083); rule: «Архитектор», 2026-10-06, after the fourteenth review (the course counted characters and answered
 # 500 to a\u0085b and to 150 × «я»).
 #
 # THE RULE: at most 200 BYTES of UTF-8, not empty, not . or ..; no / \ " ' and no character of Unicode's Cc, Zl or Zp
