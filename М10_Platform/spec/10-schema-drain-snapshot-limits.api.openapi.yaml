@@ -709,7 +709,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/M8_ResourceError'
         '405':
-          description: Метод/семья не допускает PUT
+          description: Метод/семья не допускает PUT; ключ не blob-формы (заглавные hex, без sha256-) или подсистема без blob-поля — обычный объект, его пишет владелец (Н1.5 mirror)
           content:
             application/json:
               schema:
