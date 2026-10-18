@@ -27,7 +27,7 @@ one_hop:      между членом и держателем — не боль�
 ### Н1.2 Топология
 
 ```yaml
-domain/topology:   {doc: <JCS текст>}         # у держателя; писатель — консоль домена по двери Н2, CAS
+domain/topology:   {doc: <JCS текст>}         # у держателя; писатель — процесс domain по двери Н2 (урок 3 Н1.8), CAS
   doc:             {rev, centre?, star, via, by?, at?}
     rev:           целое ≥ 0; 0 — «никогда не писали» (строки нет — так же); +1 на запись
     centre?:       член — центр домена: к нему тянутся звёздные ретрансляторы (уроки 7, 12)
@@ -120,7 +120,7 @@ HTTP-контракт: [04-relays-and-roads.api.openapi.yaml](04-relays-and-road
 | GET `/api/carry/<член>` | дверь ретранслятора | 200 — carry из памяти с `domain_age` | 403, 401, 503 — как выше |
 | POST `/api/tokens/<член>/…` | дверь ретранслятора | урок 7 | урок 7 |
 | GET `/domain/topology` | консоль домена | 200 doc (Н1.2) | 404 `no domain here`; 401/403 — урок 9 |
-| PUT `/domain/topology` `{base_rev, centre?, star?, via?}` | консоль домена | 200 doc после записи по CAS (не указанное поле — прежнее; `via` — целиком, пустой ретранслятор — член уходит из via) | 400 нет `base_rev`; 409 «the topology is at rev N; this edit was made against rev M — look again»; 409 отказы Н1.2; 409 «the topology kept changing; look again» после 10 конфликтов CAS |
+| PUT `/domain/topology` `{base_rev, centre?, star?, via?}` | консоль домена → процесс `domain` (урок 3 Н1.8) | 200 doc после записи по CAS (не указанное поле — прежнее; `via` — целиком, пустой ретранслятор — член уходит из via) | 400 нет `base_rev`; 409 «the topology is at rev N; this edit was made against rev M — look again»; 409 отказы Н1.2; 409 «the topology kept changing; look again» после 10 конфликтов CAS |
 
 Дверь ретранслятора принимает члена той же функцией «принять» урока 3 Н3 над своей памятью: у ретранслятора своя
 целая копия каждого члена и свой `rev` для его дельт. Держатель видит только то, что ретранслятор поднял пакетом.

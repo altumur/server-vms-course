@@ -17,7 +17,7 @@
 - У агента: дверь ретранслятора (`RELAY=1`) с `POST /api/member/<член>`, `GET /api/carry/<член>`; проход ретранслятора
   Н3; `RELAY_URL` для члена за ретранслятором; `domain/reached`, `domain/reaches`.
 - У процесса `domain`: `POST /api/relay/<ретранслятор>`; «принять» урока 3 с `via` и `heard_ago`; стуки из пакета.
-- У консоли домена: `GET`/`PUT /domain/topology`.
+- У консоли домена: `GET`/`PUT /domain/topology`; правку пишет процесс `domain` (урок 3 Н1.8).
 
 ## Порядок работы
 

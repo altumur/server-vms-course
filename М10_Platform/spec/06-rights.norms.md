@@ -82,7 +82,7 @@ allowed(role, action, key):
   иначе                                                  → нет
 never:                                                   # и для admin
   - delete строки <x>/epoch/<y> — ровно один сегмент <y> после «<x>/epoch/», x ≠ platform (строка эпохи урока 3 <sub>/epoch/<id>)
-  - delete под domain/ не ролью домена (domain, domainagent; domainconsole — domain/placement/)
+  - delete под domain/ не ролью домена (domain, domainagent)
   - write и delete platform/epoch_floor (только операция восстановления, урок 11)
 list:   имена и версии под префиксом — любой роли; значения — нет
 guard:  запись со стражем требует права read на строку-страж; страж права не расширяет (ADR-0074 доп. 3)
@@ -90,9 +90,7 @@ admin:  всё, кроме never; peer (другой демон) — ничег�
 ```
 
 Положительные списки ниже — исходные права, не обход Н1.3: never применяется ко всем,
-включая admin; отрицания секретных читателей М10/7 вычитаются из read. Поэтому наличие
-delete в файле не даёт domainconsole удаления вне domain/placement/. В частности,
-счётчик domain/placement без завершающего / этим исключением не разрешён.
+включая admin; отрицания секретных читателей М10/7 вычитаются из read.
 
 ### Н1.4 Вывод прав из спеки
 
@@ -122,8 +120,8 @@ delete в файле не даёт domainconsole удаления вне domain/
 | `<s>worker` | `<s>/epoch/*`, `<s>/slots/*`, `<s>/holds/*`; `<s>/<т>/*` по `worker.writes`; `<другая>/requests/*` по `worker.requests`; `delete:<s>/<rows>/*` по `worker.deletes` — только удаление, без записи (ADR-0067 доп. 2026-10-17); источники книг домена (`from` книг своей спеки — М11/5 Н1.2); свои строки-объекты по `objects.rows` | `platform/schema` (добавлено М10/10), `platform/epoch_floor` (добавлено М10/11 Н1.3 `floor`), `<s>/*` кроме `<s>/idem/*` и `<s>/asked/*` (заявки и учёт людей — только консоль, ADR-0060), `<about.sub>/<rows>/*` (строки единиц, о которых его единицы, — не `idem`, не слоты чужой подсистемы), `platform/decommission/*`, `platform/servers/*`, `platform/doors/*` (дверь сервера чужого имени — урок 5, соперники), `domain/keys`, `domain/member` (отметка члена `{cluster}`, пишет агент; не путать с `domain/member-key` — ключ агента члена, секрет, читатели по `platform_lists`; обе — М11/3 Н1.1), `domain/revoked` (отзыв токенов, ADR-0074), `door/keys`; `worker.reads` (ключ с `/` на конце — префикс); `domain/holder` при чтении чего-либо под `domain/`; `domain/shared` (точное имя указателя общего документа; байты поколений — объекты `shared/rev-N` через дверь объектов) при `domain.shared` в спеке или ключе объёма `scenario` у вида токена — объект `scenario:` внутри `domain.tokens.<вид>` (смысл — М11/7 Н1.1); `domain/shared/*` и `domain/shared-docs/*` — семья держателя, воркеру не выдаются; `domain/holder`, `domain/member-topology`, `domain/topology` при ключе объёма `unit` у вида токена — объект `unit:` внутри `domain.tokens.<вид>`, как у `testsub2` (смысл — М11/7 Н1.1); строки и метки просьб тех, кому подаёт; `domain/grants/*` при `door.routes` |
 | `resource` | `platform/doors/*`, `<s>/requests/free-*` при `requests.free` | свои двери и свои write (`<s>/requests/free-*` — форму и версию строки под ключом ресурс читает перед `cas`, урок 8), `platform/decommission/*` (вывод своего сервера — урок 4: дверь не пишется, пока стоит запрос), `platform/schema` (раскладка хранилища до старта; добавлено М10/10), `platform/mirror`, `platform/space` (добавлено М10/8 Н1.4), таблица `holds`, строки спек с `about`, `<дерево>/retention`, `alarms_retention` (добавлено М10/8) |
 | `domain` (М11) | `domain/*`, `identity/*` | `platform/*`, `<s>/*` всех спек |
-| `domainconsole` (М11; назначение и хранимые правки — М11/6 Н1.1, Н1.4) | `domain/members`, `domain/topology`, `domain/placement*`, `domain/grants/*`, `domain/pending/*` | `domain/*` кроме `!domain/signer*` |
-| `domainagent` (М11; агент — М11/3 Н1.1, Н1.6) | `domain/*` минус строки держателя (signer, signer-turn — очередь процесса domain, М11/12 Н1.7, book-seal, placement, names, users, members, licence, stranded, grants, pending, outcomes, keepers, ldevid, disabled): каждое имя `n` исключает точный ключ и семью — `!domain/<n>` и `!domain/<n>/*`, не `!domain/<n>*` (тот задел бы `domain/grantsx`); у `grants` и `outcomes` — только семья `!domain/<n>/*`: их точный ключ — копия члена, которую пишет агент (`domain/grants` — копия грантов, М11/9 Н1.3; `domain/outcomes` — исходы члена, М11/6 Н1.5); книги — пишет `domain/<s>/<книга>` (книга члена, М11/5 Н1.4), не пишет `domain/<s>/<книга>/*` (строки держателя по членам); минус kept и worker/heartbeat каждой спеки (М11/5, догадка 06 № 15 чистой комнаты) | `*` минус секреты |
+| `domainconsole` (М11; дверь правок — М11/3 Н1.8) | — (строки держателя пишет только процесс `domain`: консоль передаёт ему правку) | `domain/*` кроме `!domain/signer*` |
+| `domainagent` (М11; агент — М11/3 Н1.1, Н1.6) | `domain/*` минус строки, которые пишет только процесс `domain` (по строкам «писатель — процесс domain» уроков М11: signer, signer-pending — подготовленный ключ передачи, М11/2 Н1.3, signer-turn — очередь процесса domain, М11/12 Н1.7, book-seal, members, topology, placement, names, users, disabled, grants, pending, outcomes, keepers, stranded): каждое имя `n` исключает точный ключ и семью — `!domain/<n>` и `!domain/<n>/*`, не `!domain/<n>*` (тот задел бы `domain/grantsx`); у `grants` и `outcomes` — только семья `!domain/<n>/*`: их точный ключ — копия члена, которую пишет агент (`domain/grants` — копия грантов, М11/9 Н1.3; `domain/outcomes` — исходы члена, М11/6 Н1.5); книги — пишет `domain/<s>/<книга>` (книга члена, М11/5 Н1.4), не пишет `domain/<s>/<книга>/*` (строки держателя по членам); минус kept и worker/heartbeat каждой спеки (М11/5, догадка 06 № 15 чистой комнаты) | `*` минус секреты |
 
 Объявления, переводимые в образцы (`worker.reads`, `secrets.readers`, `secrets.reads`), не содержат буквальный `*` и не начинаются с `!`/`delete:`; непредставимое объявление — отказ загрузки/генерации до файла. Это не запрет такого ключа в самом хранилище. Проверять не только читателей самого секрета, но и неизменность прав соседних обычных строк.
 

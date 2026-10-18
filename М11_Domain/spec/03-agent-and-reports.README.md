@@ -17,7 +17,8 @@
 - Агент (роль `domainagent`): ключ члена, проход Н3, публикация Н1.2 целым или дельтой, подпись Н1.4, применение ответа Н1.6.
 - У процесса `domain`: двери `POST /api/member/<член>`, `GET /api/carry/<член>`; функция «принять» Н3 с мьютексом на
   члена; стук `knock`; держатель в списке; поля вида `member_list`, `knocking`, `reports`.
-- У консоли домена: `GET`/`POST /domain/members`, `DELETE /domain/members/<член>`.
+- У консоли домена: `GET`/`POST /domain/members`, `DELETE /domain/members/<член>`; правки она передаёт процессу `domain`
+  (Н1.8), приём члена Н3 исполняет процесс.
 - Команду `join` на члене и команды приёмки `agent-sig`, `seal-member`, `seal-member-round`, `accept`.
 
 ## Порядок работы

@@ -133,7 +133,8 @@ on_accept:    держатель, после исхода same, heard или gen
               reason: "more than two"}; иначе Entry.ca = tls_ca по CAS domain/members (rev + 1), журнал
               domain.member.ca {member, ca}; tls_ca нет или [] — Entry.ca не меняется (снимает только администратор)
 relayed:      отпечатки члена за ретранслятором — из пересланной публикации (урок 4): то же доверие, что к ней
-admin:        POST /domain/members/<член>/ca {ca: [<отпечаток>…]} у консоли домена, грант admin (урок 9): заменить Entry.ca;
+admin:        POST /domain/members/<член>/ca {ca: [<отпечаток>…]} у консоли домена → процесс domain (урок 3 Н1.8), грант admin
+              (урок 9): заменить Entry.ca;
               [] — снять; журнал domain.member.ca {member, ca, by}; by — доказанное сторожевой имя
 client:       клиент двери другого кластера по https:// знает член назначения и принимает сервер, когда peer = ok:
               консоль члена — имя из CLUSTERS; консоль кластера держателя и подписант — держатель; ретранслятор —
@@ -198,7 +199,7 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 | строки таблицы Н1.2 | консоль кластера | ответ консоли домена как пришёл | Н3 «переслать» |
 | прочее под `/domain/` (кроме `books`, `at`) | консоль кластера | — | 404 `not a domain route` |
 | GET `/domain/at/<кластер>/<sub>/where/…` | консоль кластера | ответ консоли члена как пришёл | Н3 «у члена» |
-| POST `/domain/members/<член>/ca` `{ca}` | консоль домена | 200 `{rev, members}` после записи по CAS | 400 не список, не 64 hex, повтор, больше двух; 404 не член; 409 «the list of members kept changing; look again» после трёх конфликтов CAS; 401/403 — урок 9 |
+| POST `/domain/members/<член>/ca` `{ca}` | консоль домена → процесс `domain` (урок 3 Н1.8) | 200 `{rev, members}` после записи по CAS | 400 не список, не 64 hex, повтор, больше двух; 404 не член; 409 «the list of members kept changing; look again» после трёх конфликтов CAS; 401/403 — урок 9 |
 | `/domain/<sub>/<сегмент pass>…` | консоль домена | ответ воркера на домене как пришёл | М10/11 Н1.8 |
 | GET `/`, `/spec`, `/mounts`, `/session` | консоль домена | Н1.8 | М10/9 |
 | POST `/api/prepare`, `/api/take`, `/domain/move` | консоль кластера | ответ подписанта как пришёл | Н1.9 |

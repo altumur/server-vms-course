@@ -12,7 +12,7 @@
 Общее уроков 1–8 Н1 действует. Люди живут у держателя; токен человека называет субъект и ничего больше (урок 2 Н1.6,
 `kind: person`, без `aud`). Что человеку можно, решает каждый кластер по своим грантам, которые несёт агент; проверка —
 локальное чтение без связи с доменом. Люди с паролями и аварийные пароли — операции процесса `domain` (подписант, ADR-0032),
-он проверяет каждую сам; гранты пишет консоль домена (они не запечатаны). Решение «Архитектора» по вопросам М11/9.
+он проверяет каждую сам; гранты пишет он же (урок 3 Н1.8: консоль домена правку передаёт). Решение «Архитектора» по вопросам М11/9.
 
 ### Н1.1 Человек
 
@@ -69,7 +69,8 @@ domain/grants/<кластер>:  {doc: <текст JCS {lines}>}   # у держ
     until:     0 — без срока; иначе стенные секунды — строка действует, пока now < until
     by:        имя, доказанное сторожевой при записи; строка, совпавшая по (subject, cap, scope, until) с прежней, при
                записи строки целиком сохраняет свой by, новая — имя записавшего
-  writer:      консоль домена по двери Н2 (CAS по прочитанной версии); снятие строк человека при удалении — процесс domain
+  writer:      процесс domain — по двери Н2 консоли домена (урок 3 Н1.8; CAS по прочитанной версии) и снятием строк человека
+               при удалении
 domain/grants/domain: гранты двери домена (консоль домена и процесс domain); ни один агент их не несёт
 last_admin:    правка domain/grants/domain или людей, после которой нет строки {cap: admin, scope: *, until: 0} человека,
                который есть и не disabled, — 409 last admin
@@ -170,7 +171,7 @@ domain/names/<sub>/<книга>:   у держателя; писатель — �
   missing: как missing книги урока 5 Н1.5 — члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution,
            secret_unopened); член unseen — не missing: его вклад в книге есть
 known:     индекс есть, читается и его missing пуст
-checks:    у дверей людей и грантов (процесс domain, консоль домена), по индексам всех names каталога:
+checks:    у дверей людей и грантов (процесс domain), по индексам всех names каталога:
            POST /domain/users с именем — subject индекса                    → 409 name taken
            строка гранта с subject индекса и rank(cap) > rank(grant)          → 400 grant too wide
            новый человек или новая строка гранта (нет в прежней строке), чей subject не человек домена (нет в
@@ -201,9 +202,8 @@ door:      GET /domain/keys у консоли кластера (своя, не �
 ### Н1.9 Двери людей и первый администратор
 
 ```yaml
-pass:      /domain/users…, /domain/break-glass…, /domain/revoke консоль домена передаёт процессу domain (SIGNER_URL своей
-           коробки) — путь, тело, Authorization и Idempotency-Key как пришли, ответ как пришёл (урок 8 Н1.4); процесс
-           domain проверяет токен и domain/grants/domain сам (ADR-0032)
+pass:      правки /domain/users…, /domain/break-glass…, /domain/grants/…, /domain/revoke консоль домена передаёт процессу
+           domain по уроку 3 Н1.8; процесс проверяет токен и domain/grants/domain сам (ADR-0032)
 first:     команда держателя domain first-admin <имя> (пароль — stdin, Н1.1 PASSWORD_MIN): только пока domain/users пуст —
            пишет человека и строку {subject: <имя>, cap: admin, scope: *, until: 0, by: <имя>} в domain/grants/domain;
            люди есть — отказ, код ≠ 0
@@ -239,7 +239,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 404 no such person; 409 last admin |
 | DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 404 no such person; 409 last admin |
 | GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
-| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS; 503 names unknown |
+| PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS; 503 names unknown |
 | GET `/domain/break-glass` | `domain` | view | 200 `{clusters: {<кластер>: {set_at}}}` | 401/403 |
 | PUT `/domain/break-glass/<кластер>` `{password}` | `domain` | admin | 200 `{cluster, set: true}` | 400 bad body, bad password, bad name |
 | POST `/domain/revoke` `{token}` | `domain` | — | 200 `{revoked}` | 400 bad body; 401 слово `token` |
@@ -247,7 +247,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | GET `/domain/keys` | консоль кластера | view | Н1.8 | 401/403 |
 
 Журнал: `domain.user.created`, `.password`, `.disabled`, `.deleted {grants_changed}` — процесс `domain`; `domain.grants.changed
-{cluster, added, removed, by}` — консоль домена; `domain.break_glass.set {cluster, by}` — процесс `domain`. Паролей и хешей в
+{cluster, added, removed, by}` — процесс `domain`; `domain.break_glass.set {cluster, by}` — процесс `domain`. Паролей и хешей в
 строках журнала нет.
 
 ---
@@ -268,7 +268,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 9. записать строку (CAS по прочитанной версии); disabled — затем domain/disabled; DELETE — затем строки грантов
 ```
 
-### гранты (консоль домена, PUT /domain/grants/<кластер>) — по порядку
+### гранты (процесс domain, PUT /domain/grants/<кластер> через консоль домена) — по порядку
 
 ```
 1. may по domain/grants/domain, admin                               → 401 / 403
@@ -280,8 +280,8 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 ```
 
 **Гонки.** Человек выключен, а его токен жив: у кластера держателя отказ сразу (`domain/disabled`), у члена — со следующим
-ответом агенту (ADR-0051). Отзыв гранта у члена без связи — не позже `GRANT_LIFETIME` от последнего ответа. Две консоли
-домена пишут гранты — CAS строки. Одно имя создаётся человеком и вкладом в двух кластерах одновременно — индекс показывает
+ответом агенту (ADR-0051). Отзыв гранта у члена без связи — не позже `GRANT_LIFETIME` от последнего ответа. Гранты пишет
+один процесс `domain` — CAS строки. Одно имя создаётся человеком и вкладом в двух кластерах одновременно — индекс показывает
 обоих, доставка элемента не идёт (Н1.7 reverse), распределённой блокировки нет.
 
 ---
