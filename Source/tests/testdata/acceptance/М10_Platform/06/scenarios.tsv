@@ -61,6 +61,7 @@ scenario	step	request	expect
 11-request-marks	3	@as testsubworker POST /v1/write {"id":"a2","op":"delete","key":"objects/testsub/commands/r1"}	200
 11-request-marks	4	@as testsubworker POST /v1/write {"id":"a3","op":"put","key":"objects/testsub2/commands/r1","items":{"slot":"w-1"},"cas":""}	403
 11-request-marks	5	@as testsubcontroller POST /v1/write {"id":"a4","op":"put","key":"objects/testsub/commands/r2","items":{"slot":"w-1"},"cas":""}	403
+11-request-marks	6	@as testsub2worker POST /v1/write {"id":"a9","op":"put","key":"testsub/marks/x","items":{"slot":"t-1"},"cas":""}	403
 12-domain-roles	1	admin GET /v1/rights	200 {"roles": {"testsubdomain": "@any", "testsub2domain": "@absent"}}
 12-domain-roles	2	@as testsubdomain POST /v1/write {"id":"aa1","op":"put","key":"domain/testsub/tallies/m1","items":{"n":"1"},"cas":""}	200
 12-domain-roles	3	@as domainagent POST /v1/write {"id":"aa2","op":"put","key":"domain/testsub/worker","items":{"holder":"x"}}	403
