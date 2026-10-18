@@ -11,6 +11,10 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`.
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `domain/shared`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/shared-refused`, `domain/alarms`, `domain/alarm-history/<член>`;
+- читает: `domain/holder`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`.
+
 Общее уроков 1–10 Н1 действует. Домен не знает ни одного поля подсистемы (ADR-0010): что общее, объявляет спека, а
 значение домена разрешается **при чтении**, не записью в строки. Тревоги членов домен собирает из их отчётов: к члену он
 соединений не открывает. Решение «Архитектора» по вопросам М11/11; C6 «точный документ».

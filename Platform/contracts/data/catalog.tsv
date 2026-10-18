@@ -102,3 +102,9 @@ domain/backup	object	М11/10	put=domainagent(у хранителя: докуме
 domain/backup-taken	row	М11/10	put=domainagent(у хранителя: после объекта domain/backup)	console, domain, domainconsole, domainagent	-	1	-	М11/10 Н1.5
 domain/backup-refused	row	М11/10	put=domainagent(у хранителя: документ не прошёл проверку)	domain, domainconsole, domainagent, admin	-	1	-	М11/10 Н1.5
 domain/stranded	row	М11/10	put=domain(смещённый процесс, один раз при смене держателя, страж domain/signer-turn)	domain, domainconsole, domainagent	-	1	-	М11/10 Н1.6
+domain/shared	row	М11/11	cas=domain(у держателя: указатель {doc: JCS {term, rev, sha256, object}} после объекта по прочитанной версии, страж domain/signer-turn); put=domainagent(у члена: строка копии {doc: JCS {term, rev, sha256}} после объекта domain/shared)	console, <s>worker, <s>domain, domain, domainconsole, domainagent	-	1	-	М11/11 Н1.2, Н1.4
+domain/shared	object	М11/11	put=domainagent(у члена: текст документа, проверенный record, раньше строки domain/shared)	console, <s>worker, domainagent	-	1	-	М11/11 Н1.4, Н1.5
+domain/shared-docs/rev-<rev>	object	М11/11	put=domain(подписанный документ, раньше указателя domain/shared, без стража); delete=domain(хранятся последние 5)	<s>domain, domain, domainconsole	-	1	-	М11/11 Н1.2; М11/12 Н1.7 objects
+domain/shared-refused	row	М11/11	put=domainagent(у члена: документ отказан, {doc: JCS {term, rev, reason, at}})	domain, domainconsole, domainagent	-	1	-	М11/11 Н1.4
+domain/alarms	object	М11/11	put=domainagent(страница тревог члена при старте агента и когда фронт новее to, объект отчёта)	domain	-	1	-	М11/11 Н1.7
+domain/alarm-history/<член>	object	М11/11	put=domain(проход держателя после приёма отчёта, только при подтверждённой очереди не раньше TURN_RENEW назад)	domain, domainconsole	-	1	-	М11/11 Н1.9; М11/12 Н1.7 objects
