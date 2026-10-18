@@ -14,6 +14,10 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `<sub>/slots/<имя>` — `until`, `offered_at`, `taken_at`; `platform/epoch_floor` — `generation_at`.
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/next_id`, `<sub>/idem/<key>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`, `platform/epoch_floor`;
+- читает: `platform/spec/<sub>`, `<sub>/placement/<id>`, `<sub>/controller/pass`.
+
 ### Н1.1 Раскладка ключей подсистемы
 
 `unit`, `unit.rows` и `unit.id` обязательны без умолчаний (М10/2 Н1.2). `unit.rows` — имя по грамматике и не из перечня запрещённых имён сводной таблицы М10/2 Н1.2а (служебные семьи
