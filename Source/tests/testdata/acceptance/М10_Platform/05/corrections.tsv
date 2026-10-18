@@ -7,3 +7,4 @@ date	sample	fix	languages
 2026-10-16	прогон 36 Kimi	waiting/refused/nameless производятся по таблице захвата; пульс сценами01/03 не измеряется; @sigterm/@sigkill без # действуют на последнюю копию.	all
 2026-10-17	05/04-two-copies шаг 9	Прогон 40 Codex R40-03: рост эпохи (@not(1)), не число 2 — канон не гарантирует одну выдачу на смену копии	all
 2026-10-17	05/scenarios.tsv: 07-tie-first-by-name	Мутационная проверка 7cecaf2 № 23: равная ёмкость — первый по имени	all
+2026-10-18	05/scenarios.tsv: 02-unit 7, 08-two-specs, 09-bad-given-name, 10-name-taken-once	сверка python и go М10/3–5, п. 24–28: каталог testsub + testsub2, rows с running (пустые rows и бесконечный захват при двух спеках были не видны), отказ старта при неверном заданном имени, одна тревога worker.name_taken	all

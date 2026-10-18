@@ -27,6 +27,9 @@ scenario	step	request	expect
 06-name-grammar	6	POST /counters {"name": ".."}	400
 06-name-grammar	7	POST /counters {"name": "a\\b"}	400
 06-name-grammar	8	POST /counters {"name": "a.b"}	201 {"id": "a.b"}
+06-name-grammar	9	POST /counters {"name": "a b"}	201 {"id": "a b"}
+06-name-grammar	10	PUT /counters/a%20b {"start": 1}	200 {"id": "a b", "start": 1}
+06-name-grammar	11	PUT /counters/%FF {"start": 1}	400
 07-delete	1	POST /counters {"name": "c7", "start": 1}	201 {"revision": 1}
 07-delete	2	PUT /counters/c7 {"start": 2}	200 {"revision": 2}
 07-delete	3	PUT /counters/c7 {"start": 3}	200 {"revision": 3}
@@ -39,6 +42,12 @@ scenario	step	request	expect
 08-types	3	POST /counters {"name": "c8", "labels": "a"}	400
 08-types	4	POST /counters {"name": "c8", "start": true}	400 {"fault": "not_number"}
 08-types	5	POST /counters {"name": "c8", "start": 8}	201 {"start": 8}
+08-types	6	POST /counters {"name": "c8s", "labels": ["\ud800"]}	400 {"fault": "not_json"}
+08-types	7	@key(6) POST /counters {"name": "c8s", "labels": ["a"]}	201 {"id": "c8s"}
+08-types	8	POST /counters {"name": "c8e", "start": 1e400}	400 {"fault": "not_json"}
+08-types	9	POST /counters {"name": "c8i", "start": 9007199254740992}	400 {"fault": "not_number"}
+08-types	10	POST /counters {"name": "c8j", "start": -9007199254740991}	201 {"start": -9007199254740991}
+08-types	11	POST /counters {"name": "c8x", "step": "b", "start": "a"}	400 {"error": "~start"}
 09-list-comma	1	POST /counters {"name": "c9", "marks": ["a,b", "c"]}	201 {"marks": ["a,b", "c"]}
 09-list-comma	2	PUT /counters/c9 {"marks": ["[x", "y"]}	200 {"marks": ["[x", "y"], "revision": 2}
 09-list-comma	3	POST /counters {"name": "c9b", "labels": ["a,b"]}	400
@@ -66,11 +75,13 @@ scenario	step	request	expect
 13-idempotency-key-limits	8	POST /counters {"name": "k2"}	201 {"id": "k2", "revision": 1}
 13-idempotency-key-limits	9	POST /counters {"name": "k4"}	201 {"id": "k4", "revision": 1}
 13-idempotency-key-limits	10	POST /counters {"name": "k5"}	201 {"id": "k5", "revision": 1}
+13-idempotency-key-limits	11	@header Idempotency-Key: d1 @header Idempotency-Key: d1 POST /counters {"name": "k7"}	400
 14-if-match	1	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
 14-if-match	2	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
 14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
 14-if-match	4	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
 14-if-match	5	@header If-Match: two PUT /counters/m14 {"start": 3}	400
-14-if-match	6	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
-14-if-match	7	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
-14-if-match	8	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
+14-if-match	6	@header If-Match: 2 @header If-Match: 2 PUT /counters/m14 {"start": 3}	400
+14-if-match	7	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
+14-if-match	8	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
+14-if-match	9	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}

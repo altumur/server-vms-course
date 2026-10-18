@@ -23,6 +23,9 @@ scenario	step	request	expect
 04-drain	8	POST /drain	400
 04-drain	9	POST /drain?server=	400
 04-drain	10	POST /drain?server=srv-a&server=srv-b	400
+04-drain	11	POST /drain?server=..	400
+04-drain	12	POST /drain?server=a%20b	400
+04-drain	13	POST /drain?server=@big(254)	400
 05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400
 05-server-labels	2	PUT /servers/srv-a/labels {"labels": ["vlan a"]}	400
 05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404

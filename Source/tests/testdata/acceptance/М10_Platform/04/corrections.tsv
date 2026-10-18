@@ -14,3 +14,4 @@ date	sample	fix	languages
 2026-10-17	04/scenarios.tsv: 04-drain шаги 8–9, 05-server-labels шаг 4	Чистая комната М10, урок 4: POST /drain без server и с пустым — 400; пустой элемент query labels — 400 до проверки сервера	all
 2026-10-17	04/01-3, 04/04-10	Сверка 2 чистой комнаты М10 (faa988b0): /where/ — 404; повтор server у POST /drain — 400	all
 2026-10-17	04/scenarios.tsv: 02-unplaceable шаги 2–3	Мутационная проверка 7cecaf2 № 21: reason /where = why /unplaceable	all
+2026-10-18	04-drain 11–13	сверка python и go М10/3–5 п. 23: имя сервера в query по грамматике Н2.1 — 400	all

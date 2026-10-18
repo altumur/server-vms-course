@@ -734,10 +734,11 @@ components:
       not:
         pattern: '[^A-Za-z0-9_.:-]'
     Server:
+      description: Имя сервера — имя хоста RFC 1123 (Н2.1 урока 4; сверка python и go 2026-10-18).
       type: string
       minLength: 1
-      not:
-        pattern: '[/\\]'
+      maxLength: 253
+      pattern: '^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$'
     ServerOrEmpty:
       anyOf:
       - $ref: '#/components/schemas/Server'
@@ -941,6 +942,7 @@ components:
         worker:
           $ref: '#/components/schemas/WorkerName'
         server:
+          description: Из пульса воркера, иначе из строки слота, иначе null (Н2.2).
           type:
           - string
           - 'null'
