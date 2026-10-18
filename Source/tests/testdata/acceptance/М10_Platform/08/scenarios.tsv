@@ -110,6 +110,9 @@ scenario	step	request	expect
 07-append-by-data	28	console POST /testsub2/requests {"unit": "t1", "from": -0, "to": 0}	202 {"queued": "t1-0-0"}
 07-append-by-data	29	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "5", "ranges": "0-3,7-7"}}
 07-append-by-data	30	console POST /testsub2/requests {"unit": "t1", "from": 9, "to": 9, "valid_until": 4102444800}	400
+07-append-by-data	31	console2 POST /tallies {"name": "free-a", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
+07-append-by-data	32	console POST /testsub2/requests {"unit": "free-a", "from": 1, "to": 2}	400 {"detail": "~unit"}
+07-append-by-data	33	store GET /v1/get?key=testsub2/requests/free-a-1-2	200 {"items": null}
 08-resource-paths	1	resource GET /mirrored/srv-b/../../../../etc/hosts	404
 08-resource-paths	2	resource GET /mirrored/..	404
 08-resource-paths	3	resource GET /mirrored/srv-b/..%2F..%2Fetc%2Fhosts	404
