@@ -16,3 +16,4 @@ date	sample	fix	languages
 2026-10-18	11/scenarios.tsv: 11, 12 (новые); inputs/*.jsonl; README; словарь М10/01: @backup store, @import store, дверь restored, команды backup и import	пилот хранилища (ADR-0083 п. 7, А2; строка реестра 08693f11d): копия JSON Lines переносится, отказ входа — целиком, ни одной строки	all
 2026-10-18	11-copy 4; inputs/copy-ok.jsonl	строка пола platform/epoch_floor во входе копии: форма generation_at — М10/3 Н1.5 (решение «Архитектора»)	all
 2026-10-18	01-resource-door 2, 11-copy 4; 13-time-reader (новый, сторона читателя)	решение «Архитектора» 2026-10-18 «время в строке» (Н0 М10/1): писатель — дробная до 3 знаков; ожидание @time вместо @any — изменение поведения	all
+2026-10-18	08-floor-replay 10–12; 14-copy-ids (новый); 15-service-doors (новый); README	сверка python и go М10/6–11 (B1–B5, B10, B26): пол целым и наибольший uint64, память повторов не в копии, порядок служебных дверей и личность join/leave, HEAD, door.pass без воркера	all
