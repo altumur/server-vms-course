@@ -30,6 +30,23 @@ paths:
           $ref: '#/components/responses/NoDomain'
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/{sub}/{rows}:
     parameters:
       - name: sub
@@ -70,6 +87,23 @@ paths:
                 $ref: '#/components/schemas/Refusal'
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/shadow:
     get:
       summary: Теневой отчёт последнего прохода
@@ -89,6 +123,23 @@ paths:
           $ref: '#/components/responses/NoDomain'
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
 components:
   responses:
     Forwarded:

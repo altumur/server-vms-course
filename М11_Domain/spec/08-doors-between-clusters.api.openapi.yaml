@@ -32,6 +32,23 @@ paths:
         '404': {$ref: '#/components/responses/AtNotFound'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/at/{cluster}/{sub}/where/{table}/{place}:
     parameters:
       - {$ref: '#/components/parameters/Cluster'}
@@ -48,7 +65,7 @@ paths:
       - name: unit
         in: query
         required: false
-        description: '<sub>/<id> — передаётся как пришёл (М10/4 Н2).'
+        description: '<id> единицы спеки <sub> (форма М10/9 Н2 where) — передаётся как пришёл.'
         schema: {type: string}
     get:
       summary: where места у консоли другого члена (Н1.5)
@@ -60,6 +77,23 @@ paths:
         '404': {$ref: '#/components/responses/AtNotFound'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/members/{member}/ca:
     parameters:
       - name: member
@@ -124,6 +158,11 @@ paths:
                 properties:
                   name: {const: ''}
                   rows: {type: 'null'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
   /mounts:
     get:
       summary: Подсистемы каталога держателя (Н1.8)
@@ -144,6 +183,11 @@ paths:
                       type: object
                       additionalProperties: true
                       description: Описание подсистемы М10/9 Н2 /mounts; форма и закрытость — контракт урока М10/9.
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
 components:
   parameters:
     Cluster:

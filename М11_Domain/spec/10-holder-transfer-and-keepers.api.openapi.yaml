@@ -40,6 +40,13 @@ paths:
                       - type: 'null'
                       - $ref: '#/components/schemas/Pair'
         '503': {$ref: '#/components/responses/Refused'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /api/backup:
     get:
       summary: Резервная копия этого кластера подписанному члену (Н1.9)
@@ -67,6 +74,17 @@ paths:
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /api/prepare:
     post:
       summary: Цель готовит ключ для приёма передачи (Н1.7 шаг 4)

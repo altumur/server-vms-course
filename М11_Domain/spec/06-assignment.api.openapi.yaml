@@ -33,6 +33,23 @@ paths:
         '404': {$ref: '#/components/responses/Forwarded'}
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/placement/{sub}/{ref}:
     parameters:
       - {$ref: '#/components/parameters/Sub'}
@@ -51,6 +68,23 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
     put:
       summary: Назначить (только оператор)
       requestBody:

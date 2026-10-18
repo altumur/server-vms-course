@@ -64,6 +64,9 @@ forwarded: пары (метод, путь) таблицы Н1.2 — в конс�
 | GET | `/domain/alarms` | 11 Н2 (добавлено М11/11) | 5 | да |
 | POST | `/api/login` | 9 Н1.2 (добавлено М11/9; вход людей через консоль) | 5 | — (вход) |
 
+Строка с `GET` покрывает и `HEAD` того же пути: пересылается как `HEAD`, ответ — тот же код и заголовки без тела (М10/9 Н2;
+прогон 41).
+
 Сопоставление по порядку: `books` урока 5 (своя), `at` (своя), строки таблицы сверху вниз; `<sub>` — подсистема каталога
 этой консоли; сегмент `door.pass`, совпавший с `books`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
 передаётся.
@@ -114,7 +117,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 
 ```yaml
 routes:    GET /domain/at/<кластер>/<sub>/where/<id>
-           GET /domain/at/<кластер>/<sub>/where/<таблица>/<место>?unit=<sub>/<id>
+           GET /domain/at/<кластер>/<sub>/where/<таблица>/<место>?unit=<id>
            <sub> — спека каталога этой консоли; <таблица> — places.table этой спеки (М10/4 Н2); query как пришёл
 to:        <CLUSTERS[кластер]>/<sub>/where/… — тот же хвост; корень или маунт решает принимающая (ADR-0061 доп. п. 3):
            консоль, чья корневая подсистема — <sub>, отвечает на /<sub>/where/… как на /where/…
@@ -137,7 +140,8 @@ Entry.ca:     поле записи члена урока 3 Н1.1: [<отпеч�
 on_accept:    держатель, после исхода same, heard или generation приёма (урок 3 Н3 «принять», шаги 2, 6, 7), если body.tls_ca
               есть, непусто и ≠ Entry.ca: больше двух — запись не меняется, журнал domain.member.ca.refused {member,
               reason: "more than two"}; иначе Entry.ca = tls_ca по CAS domain/members (rev + 1), журнал
-              domain.member.ca {member, ca}; tls_ca нет или [] — Entry.ca не меняется (снимает только администратор)
+              domain.member.ca {member, ca}; tls_ca нет или [] — Entry.ca не меняется (снимает только администратор);
+              отпечатки не по возрастанию — держатель и дверь admin записывают их отсортированными (не отказ)
 relayed:      отпечатки члена за ретранслятором — из пересланной публикации (урок 4): то же доверие, что к ней
 admin:        POST /domain/members/<член>/ca {ca: [<отпечаток>…]} у консоли домена → процесс domain (урок 3 Н1.8), грант admin
               (урок 9): заменить Entry.ca;
@@ -205,7 +209,7 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 | Дверь | Кто | Успех | Отказы |
 |---|---|---|---|
 | строки таблицы Н1.2 | консоль кластера | ответ консоли домена как пришёл | Н3 «переслать» |
-| прочее под `/domain/` (кроме `books`, `at`) | консоль кластера | — | 404 `not a domain route` |
+| прочее под `/domain/` (кроме своих: `books`, `at`, `keys`, `shared/<sub>`, двери переноса Н1.9) | консоль кластера | — | 404 `not a domain route` |
 | GET `/domain/at/<кластер>/<sub>/where/…` | консоль кластера | ответ консоли члена как пришёл | Н3 «у члена» |
 | POST `/domain/members/<член>/ca` `{ca}` | консоль домена → процесс `domain` (урок 3 Н1.8) | 200 `{rev, members}` после записи по CAS | 400 не список, не 64 hex, повтор, больше двух; 404 не член; 409 «the list of members kept changing; look again» после трёх конфликтов CAS; 401/403 — урок 9 |
 | `/domain/<sub>/<сегмент pass>…` | консоль домена | ответ воркера на домене как пришёл | М10/11 Н1.8 |
@@ -229,6 +233,7 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 5. пришёл X-W2C-Via                                                          → 400 one hop
 6. domain/member-list не читается, хранилище молчит                          → 503 the list of members does not read
 7. списка нет или в нём нет записи how: "holder"                             → 404 no domain here
+7а. запись how: "holder" — этот кластер (holds ложно: вида нет)               → 404 no domain here
 8. CLUSTERS не читается                                                      → 503 CLUSTERS does not read
 9. нет строки держателя                                                      → 404 no console known
 10. переслать на CLUSTERS[держатель] (Н1.4) с X-W2C-Via                       → ответ как пришёл | 502
@@ -291,16 +296,20 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 | `domain console not known` | 503 | кластер держит домен, `view.url` нет (`DOMAIN_CONSOLE_URL` не задан) |
 | `one hop` | 400 | пришёл `X-W2C-Via`, а пересылать надо в другой кластер, или на `/domain/at/…`, или подписанту |
 | `the list of members does not read` | 503 | `domain/member-list` не читается или хранилище молчит — «не знаю», не «не член» |
-| `no domain here` | 404 | кластер не член домена или не знает держателя |
+| `no domain here` | 404 | кластер не член домена или не знает держателя; держатель по списку — этот кластер, а вида нет |
 | `CLUSTERS does not read` | 503 | значение `CLUSTERS` не по форме Н1.3 |
 | `no console known` | 404 | в `CLUSTERS` нет строки кластера; `detail` — «no console of <кластер> is known here (CLUSTERS)» |
 | `not a route handed to a member` | 404 | `/domain/at/…` не `GET` или не форма `where` |
 | `not another member` | 404 | `/domain/at/<этот кластер>/…` |
 | `no such member` | 404 | кластера нет в списке членов |
-| `did not answer` | 502 | нет ответа за `FORWARD_WAIT`, сеть, отказ `peer`; `detail` — «<кластер>'s console did not answer[: <слово peer>]» |
+| `did not answer` | 502 | нет ответа за `FORWARD_WAIT`, сеть, отказ `peer`; `detail` — «<кластер>'s console did not answer[: <слово peer>]»; у подписанта (Н1.9) — сроки 10/90 с, `detail` «this box's signer did not answer» |
 | `answer too large` | 502 | ответ больше `FORWARD_MAX` |
 | `answer broke off` | 502 | ответ оборвался |
 | `no signer here` | 404 | Н1.9 |
+| `refused` | 400 | `POST /domain/members/<член>/ca`: `ca` не список, не 64 hex, повтор, больше двух (Н1.6) |
+| `refused` | 404 | `POST /domain/members/<член>/ca`: не член |
+| `refused` | 409 | `…/ca`: «the list of members kept changing; look again» после трёх конфликтов CAS |
+| (М10/9) | 413 / 400 / 408 | тело пересылки — пределы консоли М10/9 Н1.3 (шаг 2 «переслать») |
 
 Слова `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `expired`, `no_role`, `wrong_role`, `wrong_name`.
 
@@ -343,12 +352,13 @@ exit:      0 — вычислено; 2 — вход не по форме
 - [ ] **М11/8-02** таблица пересылки Н1.2 закрыта; прочее — 404 без звонка — сц. 01
 - [ ] **М11/8-03** адрес: `view.url` у кластера держателя, `CLUSTERS` и запись держателя у члена; один переход — сц. 01, 02
 - [ ] **М11/8-04** пересылка Н1.4: заголовки, ответ как пришёл — сц. 01, 02; тело 1 МиБ с 413, 1 МиБ ответа, «Ожидание» строки —
-  чтением; `answer too large`, `answer broke off` — чтением
+  чтением (стенд не шлёт тел и ответов больше МиБ и не держит консоль дольше срока); `answer too large`, `answer broke off` —
+  чтением (учебной двери с большим или оборванным ответом нет)
 - [ ] **М11/8-05** `X-Operator: console` признаётся только у доказанной роли — чтением (стенд без TLS); пришедший `X-User`/`X-Operator` снимается (чтением) — сц. 02
-- [ ] **М11/8-06** журнал `domain.forwarded` — чтением
+- [ ] **М11/8-06** журнал `domain.forwarded` — чтением (журнал приёмка не сравнивает)
 - [ ] **М11/8-07** `/domain/at/…` Н1.5 и отказы по порядку — сц. 03
 - [ ] **М11/8-08** `tls_ca` → `Entry.ca`, правка администратора, больше двух — сц. 04
-- [ ] **М11/8-09** `peer` — сц. 06; первый контакт `DOMAIN_CA`/`RELAY_CA`, `RELAY_MEMBER` — чтением
+- [ ] **М11/8-09** `peer` — сц. 06; первый контакт `DOMAIN_CA`/`RELAY_CA`, `RELAY_MEMBER` — чтением (стенд без TLS)
 - [ ] **М11/8-10** `door.pass` на домене — чтением (воркера на домене у стенда нет, урок 5)
 - [ ] **М11/8-11** страница держателя Н1.8 — сц. 05; вызовы модуля в режиме `domain` — тест модуля у его владельца
 - [ ] **М11/8-12** пересылка подписанту Н1.9 — без `SIGNER_URL` 404 — сц. 02; остальное — урок 10

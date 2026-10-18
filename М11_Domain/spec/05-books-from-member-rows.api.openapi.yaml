@@ -47,6 +47,21 @@ paths:
           $ref: '#/components/responses/Refused'
         '503':
           $ref: '#/components/responses/Refused'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
 components:
   responses:
     Refused:
