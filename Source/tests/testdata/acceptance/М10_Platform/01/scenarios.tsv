@@ -81,6 +81,7 @@
 17-routes	2	POST /v1/write []	400 {"kind":"badrequest"}
 17-routes	3	GET /v1/nothing	404 {"kind":"badrequest"}
 17-routes	4	POST /v1/get	404 {"kind":"badrequest"}
+17-routes	5	POST /v1/write {"op":"floor","floor":1,"id":"ab"}	403 {"kind":"forbidden"}
 18-no-echo	1	POST /v1/write {"op":"put","key":"acc/18-no-echo/c1","items":{"n":"1"},"cas":"424242424242"}	409 {"kind":"conflict","index":"","error":"!contains 424242424242"}
 18-no-echo	2	POST /v1/write {"op":"put","key":"acc/18-no-echo/c2","items":{"n":"1"},"guard":{"key":"acc/18-no-echo/s","index":"424242424242"}}	412 {"kind":"guard","key":"acc/18-no-echo/s","index":""}
 19-key-too-long	1	GET /v1/get?key=acc/19-key-too-long/@big(1100)	400 {"kind":"badkey"}
@@ -95,6 +96,8 @@
 20-guard-forms	7	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"acc/20-guard-forms/s","index":"","extra":1}}	400 {"kind":"badrequest"}
 20-guard-forms	8	GET /v1/get?key=acc/20-guard-forms/c1	200 {"items":null,"index":""}
 20-guard-forms	9	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"/acc/20-guard-forms/s","index":""},"id":"XYZ"}	400 {"kind":"badkey"}
+20-guard-forms	10	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":{"key":"/x","index":"x"}}	400 {"kind":"badrequest"}
+20-guard-forms	11	POST /v1/write {"op":"put","key":"acc/20-guard-forms/c1","items":{},"guard":null}	400 {"kind":"badrequest"}
 21-rights	1	GET /v1/get?key=other/21-rights/c1	403 {"kind":"forbidden"}
 21-rights	2	POST /v1/write {"op":"put","key":"other/21-rights/c1","items":{"n":"1"}}	403 {"kind":"forbidden"}
 21-rights	3	POST /v1/write {"op":"delete","key":"other/21-rights/c1"}	403 {"kind":"forbidden"}
@@ -131,6 +134,7 @@
 25-query-form	10	GET /v1/get?&&key=acc/25-query-form/a%2Bb&&	200 {"items":{"v":"plus"},"index":"$b"}
 25-query-form	11	GET /v1/get?key	400 {"kind":"badkey"}
 25-query-form	12	GET /v1/get?key=%FF&key=acc/25-query-form/a%2Bb	400 {"kind":"badrequest"}
+25-query-form	13	GET /v1/get?key=acc/25-query-form/x%00	200 {"items":null,"index":""}
 26-json-strict	1	POST /v1/write {"op":"put","key":"acc/26-json-strict/a","key":"acc/26-json-strict/b","items":{}}	400 {"kind":"badrequest"}
 26-json-strict	2	POST /v1/write {"op":"put","key":"acc/26-json-strict/c","items":{"n":"1","n":"2"}}	400 {"kind":"badrequest"}
 26-json-strict	3	POST /v1/write {"op":"put","key":"acc/26-json-strict/c","items":{},"x":NaN}	400 {"kind":"badrequest"}
