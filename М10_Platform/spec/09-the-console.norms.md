@@ -334,11 +334,12 @@ door.routes, доступным подписантом и подтверждён
   decommission_requests_standing; name_conflicts; groups_waiting; servers_labels_unread; workers_needed{labels};
   units_short{labels}; spare_offers{labels}; spares_withheld{labels}; server_labels{server,labels,source};
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
-  snapshot_ahead_shards; audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
+  snapshot_ahead_shards; snapshot_garbled_shards (урок 10 Н1.3; сверка python и go М10/6–11, T6); audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
   # всегда, и при нуле (пульсы прочитаны, хранилище ответило): workers_live, headroom, spare_workers,
   # failovers_unmeasured, heartbeats_garbled, reconcile_last_pass_age_seconds, reconcile_last_success_age_seconds,
-  # units_unplaced, decommission_requests_standing, snapshot_age_seconds, snapshot_ahead_shards и счётчики самой консоли
+  # units_unplaced, decommission_requests_standing, snapshot_age_seconds, snapshot_ahead_shards, snapshot_garbled_shards
+  # и счётчики самой консоли
   # audit_failures, garbled_rows, idempotency_store_failures, requests_ledger_garbled; ряды с метками — по своим
   # объектам; ряды из отчёта прохода и нехватки (reconcile_pass_seconds, reconcile_failures, units_short, spare_offers,
   # workers_needed …) — при прочитанном отчёте; нехватка, отчёт или пульс, которых не прочесть, ряд снимают, а не
