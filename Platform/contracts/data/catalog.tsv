@@ -57,3 +57,5 @@ platform/configstore-doors/<id>	row	М10/11	put=configstore-door(своя стр
 /etc/w2c/tls/crl.pem	file	М10/11	put=admin(w2c-ca.sh crl)	*	-	1	-	М10/11 Н1.6 kit
 /etc/w2c/tls/<роль>/server.pem	file	М10/11	put=admin(w2c-ca.sh issue и own, 0644)	*	-	1	-	М10/11 Н1.6 kit
 /etc/w2c/tls/<роль>/server.key	file	М10/11	put=admin(w2c-ca.sh own: 0600 пользователю юнита или 0640 root и группа пользователя юнита)	*	-	1	-	М10/11 Н1.6 kit
+domain/view	object	М11/1	put=domain(проход держателя раз в VIEW_EVERY, после чтения копий членов)	console, domain, domainconsole	-	1	-	М11/1 Н1.4
+domain/shadow	object	М11/1	put=domain(тем же проходом, что вид)	domainconsole	-	1	-	М11/1 Н1.6
