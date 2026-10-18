@@ -130,7 +130,7 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          description: 'Н3 «принять члена» шаги 2–6; список полон — detail «too many members: the list holds 1000» (урок 12 Н1.5; добавлено М11/12)'
+          description: 'Н3 «принять члена» шаги 2–6; список полон — detail «too many members: the list holds 500»; Entry больше 820 байт — «the entry of <name> would exceed 820 bytes» (урок 12 Н1.5; добавлено М11/12)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -259,9 +259,13 @@ components:
             domain: {type: integer, minimum: 1}
             console: {type: integer, minimum: 1}
         members_rev:
-          type: integer
-          minimum: 1
-          description: 'Урок 12 Н1.4 (добавлено М11/12): rev документа domain/member-list, который член держит; вне дельты.'
+          type: object
+          required: [term, rev]
+          additionalProperties: false
+          description: 'Урок 12 Н1.4 (добавлено М11/12): {term, rev} документа domain/member-list, который член держит; вне дельты.'
+          properties:
+            term: {type: integer, minimum: 1}
+            rev: {type: integer, minimum: 1}
     Generation:
       type: object
       description: Объект domain/members/<член>/reports/<rev> (Н1.3), JCS.
@@ -282,8 +286,8 @@ components:
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
     Mark:
       type: object
-      description: Объект domain/members/<член>/reported (Н1.3).
-      required: [rev, sha256, base, delta_sha256, sent_at, received_at, key, stale]
+      description: 'Объект domain/members/<член>/reported (Н1.3): поля поколения (rev, sha256, base, delta_sha256, signature, key, keys_rev, pinned) и поля последнего принятого запроса (sent_at, received_at, request_sha256, via, stale).'
+      required: [rev, sha256, base, delta_sha256, sent_at, received_at, request_sha256, key, stale]
       additionalProperties: false
       properties:
         rev: {type: integer, minimum: 1}
@@ -293,6 +297,7 @@ components:
         signature: {type: string}
         sent_at: {type: number}
         received_at: {type: number}
+        request_sha256: {$ref: '#/components/schemas/Hex32'}
         via: {type: string, description: урок 4}
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
@@ -325,7 +330,7 @@ components:
           type: object
           required: [doc]
           additionalProperties: false
-          description: 'Только отставшему: members_rev публикации нет или не равен rev держателя (урок 12 Н1.4; добавлено М11/12); нет поля — без изменений.'
+          description: 'Только отставшему: members_rev публикации нет или не равен (term, rev) держателя (урок 12 Н1.4; добавлено М11/12); нет поля — без изменений.'
           properties:
             doc: {type: string}
         holder:

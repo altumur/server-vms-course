@@ -7,7 +7,7 @@ scenario	step	request	expect
 01-cold-start-and-acceptance	5	@until 30 holder GET /domain/members	200 {"members": {"hold": {"how": "holder", "key": "@any"}}, "knocking": [{"name": "m1", "fingerprint": "$fp1", "pinned": "none"}]}
 01-cold-start-and-acceptance	6	member m1 store GET /v1/get?key=domain/keys	200 {"items": null}
 01-cold-start-and-acceptance	7	holder POST /domain/members {"name": "m1", "fingerprint": "0000000000000000"}	409 {"error": "refused"}
-01-cold-start-and-acceptance	8	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "~admitted by", "key": "@any"}}}
+01-cold-start-and-acceptance	8	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "admitted", "by": "root", "key": "@any"}}}
 01-cold-start-and-acceptance	9	@join m1	ok
 01-cold-start-and-acceptance	10	@until 30 member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}}
 01-cold-start-and-acceptance	11	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "@any"}}

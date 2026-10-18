@@ -4,7 +4,7 @@ scenario	step	request	expect
 01-forward-to-holder	2	holder GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
 01-forward-to-holder	3	member m1 console GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
 01-forward-to-holder	4	member hold console GET /domain	200 {"holder": "hold", "complete": true}
-01-forward-to-holder	5	member m1 console GET /domain/members	200 {"members": {"hold": {"how": "holder"}, "m1": {"how": "~admitted by"}}}
+01-forward-to-holder	5	member m1 console GET /domain/members	200 {"members": {"hold": {"how": "holder"}, "m1": {"how": "admitted"}}}
 01-forward-to-holder	6	member m1 console PUT /domain/placement/testsub/c1 {"cluster": "m2"}	200 {"cluster": "m2", "rev": "@any"}
 01-forward-to-holder	7	holder GET /domain/placement/testsub/c1	200 {"cluster": "m2"}
 01-forward-to-holder	8	member m1 console GET /domain/nowhere	404 {"error": "not a domain route"}

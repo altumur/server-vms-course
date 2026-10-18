@@ -1,3 +1,4 @@
 date	sample	fix	languages
 2026-10-17	04/inputs/accept-*	cammeta-python М11-03 № 2: sha256 меток — по JCS	all
 2026-10-18	04/inputs/accept-*	прогон 41 B2: метка входа — по Н1.3 строго: stale ([]); signature — только у прямой дороги, через ретранслятор поля нет (урок 4 Н1.3)	all
+2026-10-18	04/inputs/accept-*	прогон 41 R41-05: request_sha256 в метке	all
