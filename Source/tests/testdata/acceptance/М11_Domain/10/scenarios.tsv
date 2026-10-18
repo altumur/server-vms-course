@@ -10,21 +10,22 @@ scenario	step	request	expect
 01-held-and-copies	8	member m1 console GET /api/backup	401 {"error": "refused", "detail": "~a member signs its ask"}
 01-held-and-copies	9	member m1 console @header X-W2C-Member: m1 GET /api/backup	401 {"error": "refused"}
 02-emergency-move	1	@domain	ok
-02-emergency-move	2	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
-02-emergency-move	3	@sleep 45	ok
-02-emergency-move	4	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
-02-emergency-move	5	@stop domain	ok
-02-emergency-move	6	@start domain on m1	ok
-02-emergency-move	7	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
-02-emergency-move	8	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
-02-emergency-move	9	holder@m1 GET /domain/grants	200 {"grants": {"m2": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "root"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
-02-emergency-move	10	@start domain	ok
-02-emergency-move	11	@until 60 member hold console GET /api/held	200 {"term": 2}
-02-emergency-move	12	@sleep 10	ok
-02-emergency-move	13	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
-02-emergency-move	14	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed"}
-02-emergency-move	15	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
-02-emergency-move	16	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
+02-emergency-move	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+02-emergency-move	3	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+02-emergency-move	4	@sleep 45	ok
+02-emergency-move	5	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+02-emergency-move	6	@stop domain	ok
+02-emergency-move	7	@start domain on m1	ok
+02-emergency-move	8	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
+02-emergency-move	9	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+02-emergency-move	10	holder@m1 GET /domain/grants	200 {"grants": {"m2": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "root"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+02-emergency-move	11	@start domain	ok
+02-emergency-move	12	@until 60 member hold console GET /api/held	200 {"term": 2}
+02-emergency-move	13	@sleep 10	ok
+02-emergency-move	14	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
+02-emergency-move	15	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed"}
+02-emergency-move	16	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+02-emergency-move	17	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
 03-move-refusals	1	@domain	ok
 03-move-refusals	2	@stop domain	ok
 03-move-refusals	3	@start domain on m1	ok
