@@ -110,3 +110,4 @@ domain/alarms	object	М11/11	put=domainagent(страница тревог чл�
 domain/alarm-history/<член>	object	М11/11	put=domain(проход держателя после приёма отчёта, только при подтверждённой очереди не раньше TURN_RENEW назад)	domain, domainconsole	-	1	-	М11/11 Н1.9; М11/12 Н1.7 objects
 domain/agent	row	М11/12	put=domainagent(у члена: только при изменении прочих полей)	domain, domainconsole, domainagent, admin	-	1	-	М11/12 Н1.6
 domain/signer-turn	row	М11/12	cas=domain(очередь процесса domain: взять — чужая неизменная версия не моложе TURN_TERM, продлить своей версией каждые TURN_RENEW, отдать holder "" по SIGTERM)	domain, domainagent	-	1	-	М11/12 Н1.7
+<корень событий>/.workers/<sub>/<экземпляр>.lock	file	М10/8	put=<s>worker(при старте до захвата имени: содержимое {instance, sub, worker, server, pid} заново, исключающий flock всё время жизни); delete=resource(файл gone, под своим flock)	resource	-	1	-	М10/8 Н1.4
