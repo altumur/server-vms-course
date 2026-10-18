@@ -32,3 +32,5 @@ resource	read	va/retention	allow
 resource	read	va/alarms_retention	allow
 resource	write	va/items/u1	deny
 vadomain	write	domain/va/worker	deny
+domainconsole	read	platform/schema	allow
+domainconsole	read	platform/doors/srv-a	deny
