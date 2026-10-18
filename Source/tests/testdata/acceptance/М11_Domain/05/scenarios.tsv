@@ -47,3 +47,4 @@ scenario	step	request	expect
 06-assemble	9	assemble inputs/assemble-09-recipient-not-member.json	ok {"rows": {"m2": {"t1": {"entries": [{"member": "m1"}]}}}, "report": {"undelivered": {"m1": ["m9"]}}}
 06-assemble	10	assemble inputs/assemble-10-foreign-objects-ignored.json	ok {"rows": {"m2": {"": {"missing": []}, "x": "@absent"}}, "report": {"dropped": {}}}
 06-assemble	11	assemble inputs/assemble-11-unique-repeat-two-slots.json	ok {"rows": {"m2": {"": {"missing": [{"member": "m1", "why": "bad_contribution"}]}}}, "report": {"dropped": {"m1": "bad_contribution"}}}
+06-assemble	12	assemble inputs/assemble-12-ring-unopened.json	ok {"rows": {"m2": {"": {"missing": [{"member": "m1", "why": "secret_unopened"}]}, "t1": "@absent"}}, "report": {"dropped": {"m1": "secret_unopened"}}}
