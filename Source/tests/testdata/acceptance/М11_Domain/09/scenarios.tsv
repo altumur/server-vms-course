@@ -110,4 +110,4 @@ scenario	step	request	expect
 08-grant-by-kept	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
 08-grant-by-kept	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200
 08-grant-by-kept	6	holder @header Authorization: Bearer $ta PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
-08-grant-by-kept	7	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "ann"}]}}
+08-grant-by-kept	7	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "ann"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
