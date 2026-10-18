@@ -594,8 +594,20 @@ components:
         errors = "\n".join(self.check().errors)
         self.assertIn("participants of cas", errors)
         self.assertIn("operation 'upsert'", errors)
-        self.assertIn("readers are roles", errors)
+        self.assertIn("readers: expected role", errors)
         self.assertIn("overlap with equal narrowness", errors)
+
+    def test_catalog_spec_variables_conditional_readers_and_kinds(self):
+        units = ["<sub>/<spec:unit.rows>/<id>", "row", "М12A/1", "guard=console(cas по версии строки)", "<s>worker(при door.routes), console", "-", "1", "-", "М12A/1 Н1"]
+        tables = ["<sub>/<spec:tables>/<имя>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
+        pointer = ["domain/shared", "row", "М12A/1", "cas=domain", "configstore-door", "-", "1", "-", "М12A/1 Н1"]
+        copy = ["domain/shared", "object", "М12A/1", "put=domainagent", "*", "-", "1", "-", "М12A/1 Н1"]
+        bad = ["<sub>/<spec:Bad>/<x>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
+        self.write_catalog(units, tables, pointer, copy, bad)
+        self.data("- владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/<spec:tables>/<имя>`, `domain/shared`;")
+        errors = self.check().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("spec variable", errors[0])
 
     def test_data_paragraph_must_match_catalog(self):
         self.write_catalog(self.SLOT)

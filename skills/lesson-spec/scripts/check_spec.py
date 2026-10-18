@@ -236,9 +236,27 @@ CATALOG = Path("Platform/contracts/data/catalog.tsv")
 CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 CATALOG_KINDS = {"row", "object", "file", "dir"}
 CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
-ROLE = r"(?:console|resource|domain|domainagent|domainconsole|admin|<s>(?:controller|worker|domain))"
+ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain))"
 LESSON = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]{1,2}|P/[0-9]{2}(?:\.[0-9]+)?)"
 DATA_LINE = re.compile(r"^- (владеет|пишет|читает):\s*(.*?);?\s*$")
+
+
+def parse_roles(text, what):
+    """`role(cond),role` → {role}; a condition belongs to its role, never holds `;` or nested `(`."""
+    roles, pos = set(), 0
+    while pos < len(text):
+        match = re.match(ROLE + r"(?:\(([^()]*)\))?", text[pos:])
+        if not match or (match.group(1) is not None and ";" in match.group(1)):
+            raise ValueError(f"{what}: expected role[(condition)] at {text[pos:]!r}")
+        roles.add(re.match(ROLE, text[pos:]).group(0))
+        pos += match.end()
+        if pos < len(text):
+            if text[pos] != ",":
+                raise ValueError(f"{what}: expected ',' at {text[pos:]!r}")
+            pos += 1 + (text[pos + 1:pos + 2] == " ")
+    if not roles:
+        raise ValueError(f"{what}: no roles")
+    return roles
 
 
 def parse_ops(text):
@@ -248,34 +266,23 @@ def parse_ops(text):
         op, sep, rest = part.partition("=")
         if not sep or op not in CATALOG_OPS or op in ops:
             raise ValueError(f"operation {op!r} unknown, repeated or without participants")
-        roles, pos = set(), 0
-        while pos < len(rest):
-            match = re.match(ROLE + r"(?:\(([^()]*)\))?", rest[pos:])
-            if not match or (match.group(1) is not None and ";" in match.group(1)):
-                raise ValueError(f"participants of {op}: expected role[(condition)] at {rest[pos:]!r}")
-            roles.add(re.match(ROLE, rest[pos:]).group(0))
-            pos += match.end()
-            if pos < len(rest):
-                if rest[pos] != ",":
-                    raise ValueError(f"participants of {op}: expected ',' at {rest[pos:]!r}")
-                pos += 1 + (rest[pos + 1:pos + 2] == " ")
-        if not roles:
-            raise ValueError(f"operation {op} has no participants")
-        ops[op] = roles
+        ops[op] = parse_roles(rest, f"participants of {op}")
     return ops
 
 
 def key_pattern(key):
-    """Catalog key → (regex, literal length, sample key): `<слово>` is one segment, a trailing `/*` the family."""
+    """Catalog key → (regex, literal length, sample key, spec keys): `<слово>` is one segment, a trailing `/*` the
+    family; `<spec:ключ>` is a segment named by that spec key — patterns with different spec keys never overlap."""
     family = key.endswith("/*")
     body = key[:-2] if family else key
     parts = re.split(r"(<[^<>]+>)", body)
     regex = "".join("[^/]+" if part.startswith("<") else re.escape(part) for part in parts)
     sample = "".join("x" if part.startswith("<") else part for part in parts)
     literal = sum(len(part) for part in parts if not part.startswith("<"))
+    spec_keys = tuple(part[6:-1] for part in parts if part.startswith("<spec:"))
     if family:
         regex, sample = regex + "/.+", sample + "/x"
-    return re.compile(regex), literal, sample
+    return re.compile(regex), literal, sample, spec_keys
 
 
 def path_segment(segment):
@@ -421,16 +428,17 @@ class Check:
         for line, cols in rows[1:]:
             row = dict(zip(CATALOG_FIELDS, cols))
             try:
-                if not row["key"] or row["key"] in self.catalog:
-                    raise ValueError("key empty or repeated")
+                if not row["key"] or (row["key"], row["kind"]) in self.catalog:
+                    raise ValueError("key and kind empty or repeated")
+                if any(not re.fullmatch(r"spec:[a-z_]+(?:\.[a-z_]+)*", v) for v in re.findall(r"<(spec:[^<>]*)>", row["key"])):
+                    raise ValueError("a spec variable is <spec:ключ.спеки>")
                 if row["kind"] not in CATALOG_KINDS:
                     raise ValueError(f"kind is one of {sorted(CATALOG_KINDS)}")
                 if not re.fullmatch(LESSON, row["owner"]):
                     raise ValueError("owner is a lesson address (М10/3, М11/6, P/03)")
                 row["ops"] = parse_ops(row["ops"])
-                readers = [r.strip() for r in row["readers"].split(",")]
-                if row["readers"] != "*" and not all(re.fullmatch(ROLE, r) for r in readers):
-                    raise ValueError("readers are roles of М10/6 Н1.1 or *")
+                if row["readers"] != "*":
+                    parse_roles(row["readers"], "readers")
                 if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]):
                     raise ValueError("when is - or a spec key")
                 if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
@@ -446,11 +454,13 @@ class Check:
                 self.error(path, f"line {line}: {exc}")
                 continue
             row["pattern"] = key_pattern(row["key"])
-            self.catalog[row["key"]] = row
+            self.catalog[(row["key"], row["kind"])] = row
         patterns = list(self.catalog.values())
         for i, a in enumerate(patterns):
             for b in patterns[i + 1:]:
-                (ra, la, sa), (rb, lb, sb) = a["pattern"], b["pattern"]
+                (ra, la, sa, ka), (rb, lb, sb, kb) = a["pattern"], b["pattern"]
+                if a["kind"] != b["kind"] or ka != kb:
+                    continue
                 if la == lb and (rb.fullmatch(sa) or ra.fullmatch(sb)):
                     self.error(path, f"keys {a['key']} and {b['key']} overlap with equal narrowness")
         self.stats["catalog_rows"] += len(self.catalog)
@@ -459,7 +469,10 @@ class Check:
     def data_paragraph(self, path, text, prefix):
         if self.catalog is None:
             return
-        owned = {key for key, row in self.catalog.items() if row["owner"] == prefix}
+        owned = {key for (key, _), row in self.catalog.items() if row["owner"] == prefix}
+        by_key = {}
+        for (key, _), row in self.catalog.items():
+            by_key.setdefault(key, []).append(row)
         lines = text.splitlines()
         start = next((i for i, line in enumerate(lines) if line.startswith("**Данные**")), None)
         if start is None:
@@ -472,12 +485,12 @@ class Check:
             if not match:
                 break
             for key, op in re.findall(r"`([^`]+)`(?:\s*\(([a-z]+)\))?", match.group(2)):
-                if key not in self.catalog:
+                if key not in by_key:
                     self.error(path, f"«Данные»: {key} is not in the catalog")
                     continue
                 if match.group(1) == "пишет":
                     said["пишет"][key] = op
-                    if not op or op not in self.catalog[key]["ops"]:
+                    if not op or not any(op in row["ops"] for row in by_key[key]):
                         self.error(path, f"«Данные»: write ({op or 'no operation'}) is not among the catalog ops of {key}")
                 else:
                     said[match.group(1)].add(key)
