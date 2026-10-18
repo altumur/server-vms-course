@@ -25,3 +25,4 @@ date	sample	fix	languages
 2026-10-18	18-no-echo/2, 21-rights/7	ожидание 412/413 — полная форма Н4 (`key`, `index`; `key`, `size`, `limit`): раннер урока 1 сравнивает JSON целиком (чистая комната 01 № 37)	all
 2026-10-18	17-routes/5, 20-guard-forms/10–11, 25-query-form/13; README пробы	сверка cammeta-python и cammeta-go М10/1: floor на ролевом сокете — 403; форма стража раньше ключа; %00 — байт ключа; CRLF, HEADER_BYTES, JSON_DEPTH, рамка тела RFC 9112, обрыв не исполняется	all
 2026-10-18	01/README «Стенд», словарь @start worker, @spoil object	сверка cammeta-python и cammeta-go: имя воркера — подстановкой {name}, из окружения только по slot.name_env (testsub его не задаёт)	all
+2026-10-18	01/README словарь: ASSERT, $имя, ~	прогон 41, мутации №20, №52: числовой ASSERT связанных значений, $имя связывает и число, несколько подстрок через « ~»	all

@@ -64,3 +64,4 @@ scenario	step	request	expect
 07-ask-sig	6	ask-sig inputs/ask-sig-06-window-edge.json	ok {"result": "ok"}
 07-ask-sig	7	ask-sig inputs/ask-sig-07-other-key.json	ok {"result": "refused", "reason": "bad_signature"}
 07-ask-sig	8	ask-sig inputs/ask-sig-08-other-cluster.json	ok {"result": "refused", "reason": "bad_signature"}
+07-ask-sig	9	ask-sig inputs/ask-sig-09-time-one-decimal.json	ok {"result": "refused", "reason": "bad_time"}
