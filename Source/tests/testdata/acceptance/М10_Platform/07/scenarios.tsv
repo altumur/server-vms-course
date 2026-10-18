@@ -47,3 +47,6 @@ scenario	step	request	expect
 08-feed-anew	1	console POST /tallies {"name": "t8", "of": "c1", "feed": "https://hub.example/h"}	201 {"feed_secret": ""}
 08-feed-anew	2	console PUT /tallies/t8 {"feed": "https://hub.example/h2"}	400 {"error": "~must be given anew"}
 08-feed-anew	3	console PUT /tallies/t8 {"feed": "https://hub.example/h2", "feed_secret": "s8"}	200 {"feed_secret": "***"}
+09-unreadable-row-start	1	@as console store POST /v1/write {"id":"a7","op":"put","key":"testsub2/tallies/t9","items":{"name":"t9","of":"c1","rule":"{bad"}}	200
+09-unreadable-row-start	2	@restart console	ok
+09-unreadable-row-start	3	console GET /tallies	200
