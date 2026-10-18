@@ -34,3 +34,5 @@ resource	write	va/items/u1	deny
 vadomain	write	domain/va/worker	deny
 domainconsole	read	platform/schema	allow
 domainconsole	read	platform/doors/srv-a	deny
+domainconsole	read	platform/spec/va	allow
+domainconsole	read	platform/spec/va/rev	allow
