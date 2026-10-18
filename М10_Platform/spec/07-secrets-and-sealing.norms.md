@@ -11,7 +11,7 @@
 
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
 - владеет: `/etc/w2c/secrets/platform.key`;
-- пишет: `<sub>/<spec:unit.rows>/<id>` (cas), `door/signer` (cas);
+- пишет: `<sub>/<spec:unit.rows>/<id>` (cas), `door/signer` (cas), `<sub>/<spec:tables>/<имя>` (cas);
 - читает: `platform/spec/<sub>`, `<sub>/<spec:unit.rows>/<id>`, `<sub>/idem/<key>`.
 
 ### Н1.1 Что секрет
