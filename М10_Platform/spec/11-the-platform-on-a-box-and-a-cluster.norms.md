@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `platform/configstore-doors/<id>`, `/run/w2c-spares/<юнит>.env`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<роль>/server.pem`, `/etc/w2c/tls/<роль>/server.key`;
 - пишет: `platform/epoch_floor` (put);
-- читает: `platform/spec/<sub>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`.
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`.
 
 ### Н1.1 Процессы и юниты
 
