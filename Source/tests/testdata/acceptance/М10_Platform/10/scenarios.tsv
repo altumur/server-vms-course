@@ -13,7 +13,7 @@ scenario	step	request	expect
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
-03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@any", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
+03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@time", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
 03-snapshot	5	console GET /metrics	200 ~testsub_snapshot_age_seconds
 04-blob	1	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
 04-blob	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
