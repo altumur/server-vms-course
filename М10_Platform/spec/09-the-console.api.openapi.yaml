@@ -2678,9 +2678,9 @@ components:
           type: integer
           minimum: 0
         capacity:
-          type: ['integer', 'null']
+          type: ['number', 'null']
           minimum: 0
-          description: Поле пульса placement.capacity.from; нет поля — capacity.default; не число — null (урок 4 Н1.3).
+          description: Поле пульса placement.capacity.from — число как в пульсе, дробное без округления; нет поля — capacity.default; не число — null (урок 4 Н1.3; журнал cammeta-go, урок 9 № 5).
         labels:
           type: array
           items:

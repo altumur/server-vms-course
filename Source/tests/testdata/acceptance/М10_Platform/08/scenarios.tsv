@@ -48,7 +48,7 @@ scenario	step	request	expect
 07-append-by-data	3	@start worker w-1	ok
 07-append-by-data	4	@start worker testsub2 t-1	ok
 07-append-by-data	5	console POST /counters {"name": "c1"}	201
-07-append-by-data	6	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201
+07-append-by-data	6	@as console store POST /v1/write {"id":"a6","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
 07-append-by-data	7	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
 07-append-by-data	8	@until 60 store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
 07-append-by-data	9	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202 {"queued": "t1-1-2"}
@@ -61,7 +61,7 @@ scenario	step	request	expect
 07-append-by-data	16	store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "2", "ranges": "1-2"}}
 07-append-by-data	17	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202 {"queued": "t1-2-3"}
 07-append-by-data	18	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "3", "ranges": "1-3"}}
-07-append-by-data	19	console2 POST /shelves {"name": "sh2", "zone": "z2", "server": "srv-a"}	201
+07-append-by-data	19	@as console store POST /v1/write {"id":"a19","op":"put","key":"testsub2/shelves/sh2","items":{"name":"sh2","zone":"z2","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
 07-append-by-data	20	console2 POST /tallies {"name": "tally-with-a-name-much-longer-than-forty-chars", "of": "c1", "shelf": "sh2", "zone": "z2"}	201
 07-append-by-data	21	@until 60 store GET /v1/get?key=testsub2/epoch/tally-with-a-name-much-longer-than-forty-chars	200 {"items": {"epoch": "1"}}
 07-append-by-data	22	console POST /testsub2/requests {"unit": "tally-with-a-name-much-longer-than-forty-chars", "from": 1, "to": 1}	202 {"queued": "tally-with-a-name-much-longer-than-forty-chars-1-1"}

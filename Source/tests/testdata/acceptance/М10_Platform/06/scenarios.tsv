@@ -48,3 +48,8 @@ scenario	step	request	expect
 10-rights-door	1	@as testsubworker GET /v1/rights	403
 10-rights-door	2	@as console GET /v1/rights	403
 10-rights-door	3	admin GET /v1/rights	200 {"roles": "@any"}
+11-request-marks	1	@as testsubworker POST /v1/write {"id":"a1","op":"put","key":"objects/testsub/commands/r1","items":{"instance":"box:1:aaaaaa","slot":"w-1","unit":"testsub/counters/c1","at":"1","digest":"0"},"cas":""}	200
+11-request-marks	2	@as testsubworker GET /v1/get?key=objects/testsub/commands/r1	200 {"items": {"slot": "w-1"}}
+11-request-marks	3	@as testsubworker POST /v1/write {"id":"a2","op":"delete","key":"objects/testsub/commands/r1"}	200
+11-request-marks	4	@as testsubworker POST /v1/write {"id":"a3","op":"put","key":"objects/testsub2/commands/r1","items":{"slot":"w-1"},"cas":""}	403
+11-request-marks	5	@as testsubcontroller POST /v1/write {"id":"a4","op":"put","key":"objects/testsub/commands/r2","items":{"slot":"w-1"},"cas":""}	403

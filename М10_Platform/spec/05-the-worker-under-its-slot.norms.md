@@ -33,13 +33,17 @@ heartbeat:
                                      # имя места, которое воркер держит (Н3 «место»), "" — не держит; пишет база, не подсистема
   conflicts: <Σ конфликтов аренд + перенесённых>   # метрика <sub>_epoch_conflicts
   started:   <момент старта>
-  previous_hb, previous_instance, previous_server:  # что воркер застал под своим именем при старте, если было
+  previous_hb, previous_instance, previous_server:  # что воркер застал под своим именем при старте, если было: previous_hb —
+                                         # число ts застанного пульса, previous_instance и previous_server — его instance и server
+                                         # (журнал cammeta-go, урок 9 № 6: по ним консоль считает failover_seconds, М10/9 Н3)
   fenced:    true                        # только пока отсечён и имя ещё моё; после отдать_имя пульс не пишется
   schema, build, pending_writes:         # добавлено М10/10: Н1.1 heartbeat (schema, build), Н1.2 pending_writes —
                                          # базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe
   server_unsaid:  "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
                                          # ровно эта строка (ADR-0029); только когда сервер не назван, а спека требует places.server_field
-  stood_in:  {step, for, as_of}          # только в пульсе подмены (Н3)
+  stood_in:  {step, for, as_of}          # только в пульсе подмены (Н3); as_of — ts последнего пульса цикла, который подмена
+                                         # повторяет (возраст состояния подсистемы), у следующих повторов тот же; ts пульса —
+                                         # время этого повтора (журнал cammeta-go, урок 5 № 2)
   stand_in_renewals: <число>             # только когда > 0
 said_id:     # имя просьбы в fetched (М10/8)
   plain:     rid как есть, если в нём не больше 40 символов Unicode (кодовых точек), он не начинается с «#», в нём нет «,», «"»,
@@ -316,7 +320,8 @@ start_unit не вернулись. Запуск и отсечение согл�
   записать форму Н1.3 с cas; conflict → следующий; все заняты → "" (я запасной)
 держать: продление на каждом шаге аренды и в подмене с cas; другой holder → потеряно; хранилище молчит → держится
   в окне: строгое место (lease: strict и не своё) — пока подтверждено < WRITE_WINDOW, закрыть к CLOSE_BY;
-  своё место — пока < WRITE_WINDOW + unconfirmed_max (forever — без предела)
+  своё место и не строгое чужое (без lease: strict) — пока < WRITE_WINDOW + unconfirmed_max (forever — без предела):
+  окно WRITE_WINDOW только у строгого (Н1.3 own_place; журнал cammeta-go, урок 5 № 3)
   окно вышло → спросить ещё раз; не «моё» → leave_place: журнал «the hold on <p> has not been confirmed for N s,
   and its lease is strict | past the units' ceiling — letting go of it»; подсистема закрывает писателя
 отпустить: released: "true", until: now (только упорядоченная остановка)

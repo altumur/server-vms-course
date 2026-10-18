@@ -43,7 +43,8 @@ paths:
         schema:
           type: string
         description: Начало относительного ключа; пустота разрешена. Проверка по Н1.1, отдельная от полного
-          ключа.
+          ключа. Обычный список не показывает надгробий .gone/; prefix=.gone/ — только чтение надгробий
+          {written, peers, acked} (урок 10 Н1.5 delete; журнал cammeta-go, урок 10 № 2).
       - name: scope
         in: query
         required: false
