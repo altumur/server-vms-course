@@ -9,6 +9,8 @@
 
 ## Н1 Форма
 
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `platform/configstore-doors/<id>` — `seen_at`; пол `platform/epoch_floor` — урок 3.
+
 ### Н1.1 Процессы и юниты
 
 ```yaml
