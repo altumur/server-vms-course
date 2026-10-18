@@ -9,6 +9,8 @@
 
 ## Н1 Форма
 
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): строка события — `t`; объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; `<sub>/requests/<rid>` — `valid_until`, `at` (штамп); `<sub>/requests/free-<server>-<volume>` — `at`; метка `objects/<sub>/commands/<rid>` — `begun.at`, `begun.valid_until`, `ended_at`.
+
 ### Н1.1 Объект
 
 ```yaml
