@@ -13,7 +13,7 @@
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `<sub>/heartbeats/<имя>`, `<sub>/holds/<место>`, `<sub>/contenders/<имя>/<коробка>`;
 - пишет: `<sub>/slots/<имя>` (create), `<sub>/slots/<имя>` (cas), `<sub>/epoch/<id>` (create), `<sub>/epoch/<id>` (cas), `<корень событий>/.workers/<sub>/<экземпляр>.lock` (put);
-- читает: `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/epoch_floor`, `platform/decommission/<сервер>`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/spec/<sub>`, `platform/schema`.
+- читает: `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/epoch_floor`, `platform/decommission/<сервер>`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/schema`.
 
 ### Н1.1 Пульс
 
