@@ -35,3 +35,4 @@ scenario	step	request	expect
 03-issue	21	issue inputs/issue-21-scenario-no-doc.json	ok {"result": "refused", "status": 403, "reason": "no_shared_doc"}
 03-issue	22	issue inputs/issue-22-scenario-by-missing.json	ok {"result": "refused", "status": 400, "reason": "by_misplaced"}
 03-issue	23	issue inputs/issue-23-scenario-placement-home.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m1", "kind": "tally2", "iat": 1760000000, "exp": 1760000060, "ref": "t2", "by": "t1", "acts": [{"item": "t2", "do": "count"}], "aud": ["hold", "m2"]}}
+03-issue	24	issue inputs/issue-24-not-granted-before-by.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}

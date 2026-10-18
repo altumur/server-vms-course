@@ -11,12 +11,14 @@ scenario	step	request	expect
 02-key-set-root	4	keys inputs/keys-07-root-claims-ours.json	ok {"result": "refused", "reason": "bad_signature"}
 02-key-set-root	5	keys inputs/keys-08-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
 02-key-set-root	6	keys inputs/keys-11-kid-not-root.json	ok {"result": "refused", "reason": "bad_signature"}
+02-key-set-root	7	keys inputs/keys-18-kid-not-root-another-domain.json	ok {"result": "refused", "reason": "bad_signature"}
 03-key-set-form	1	keys inputs/keys-09-no-book-seal.json	ok {"result": "refused", "reason": "no_book_seal"}
 03-key-set-form	2	keys inputs/keys-10-not-json.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	3	keys inputs/keys-13-unknown-field.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	4	keys inputs/keys-14-current-not-in-keys.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	5	keys inputs/keys-16-row-extra-item.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	6	keys inputs/keys-17-duplicate-key.json	ok {"result": "refused", "reason": "not_a_set"}
+03-key-set-form	7	keys inputs/keys-19-no-book-seal-bad-signature.json	ok {"result": "refused", "reason": "bad_signature"}
 04-token-keys	1	token inputs/token-01-current.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 04-token-keys	2	token inputs/token-02-retiring-before-until.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 04-token-keys	3	token inputs/token-03-retiring-after-until.json	ok {"result": "refused", "reason": "unknown_key"}

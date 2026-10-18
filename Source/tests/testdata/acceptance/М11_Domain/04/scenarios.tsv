@@ -10,7 +10,8 @@ scenario	step	request	expect
 01-topology	8	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay", "relay": "m1"}}	409 {"detail": "~one relay between a member and the domain"}
 01-topology	9	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
 01-topology	10	holder PUT /domain/topology {"base_rev": 0, "via": {}}	409 {"detail": "~at rev 1"}
-01-topology	11	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
+01-topology	11	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~at rev 1"}
+01-topology	12	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
 02-road-through-the-relay	1	@domain m1 relay	ok
 02-road-through-the-relay	2	@start agent m2 via relay	ok
 02-road-through-the-relay	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}

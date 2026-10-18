@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-18	404 /domain/at/… в контракте — только Refusal, а норма Н1.5 отдаёт ответ консоли члена как пришёл: NotPlaced {reason} (сц. 03/4, 03/12; журнал М11-08 № 2)	контракт: 404 — oneOf Refusal и MemberNotPlaced; 400 — Refusal (BadBody члена — её частный случай); ожидания приёмки не менялись	all
 2026-10-18	08/scenarios.tsv: 01 шаг 5	прогон 41 R41-17: how — "admitted", имя человека только в by	all
 2026-10-18	08/scenarios.tsv; inputs	прогон 41, мутация №38: 06/17 — просроченный якорь при живом листе	all
+2026-10-18	08/scenarios.tsv: 02/11–13	прогон 41, мутации №36: 404 no domain here раньше 503 CLUSTERS (двойная ошибка — первый по порядку отказ)	all

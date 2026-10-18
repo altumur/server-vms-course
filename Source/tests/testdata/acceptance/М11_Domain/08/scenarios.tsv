@@ -20,8 +20,11 @@ scenario	step	request	expect
 02-one-hop-and-addresses	8	@env m1 CLUSTERS=hold	ok
 02-one-hop-and-addresses	9	member m1 console GET /domain	503 {"error": "CLUSTERS does not read"}
 02-one-hop-and-addresses	10	@env m1 CLUSTERS	ok
-02-one-hop-and-addresses	11	@on hold @sigterm console	ok
-02-one-hop-and-addresses	12	member m1 console GET /domain	502 {"error": "did not answer"}
+02-one-hop-and-addresses	11	@env m2 CLUSTERS=hold	ok
+02-one-hop-and-addresses	12	member m2 console GET /domain	404 {"error": "no domain here"}
+02-one-hop-and-addresses	13	@env m2 CLUSTERS	ok
+02-one-hop-and-addresses	14	@on hold @sigterm console	ok
+02-one-hop-and-addresses	15	member m1 console GET /domain	502 {"error": "did not answer"}
 03-where-at-a-member	1	@domain	ok
 03-where-at-a-member	2	member m2 console POST /counters {"name": "c2"}	201
 03-where-at-a-member	3	member m2 console GET /where/c2	404 {"reason": "$why"}

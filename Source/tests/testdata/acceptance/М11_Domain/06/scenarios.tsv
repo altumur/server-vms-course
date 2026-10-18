@@ -3,19 +3,20 @@ scenario	step	request	expect
 01-placement	1	@domain	ok
 01-placement	2	holder GET /domain/placement	200 {"rev": 0, "records": {}}
 01-placement	3	holder PUT /domain/placement/nosuch/c1 {"cluster": "m1"}	404
-01-placement	4	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409
-01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400
-01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 1}
-01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 1}
-01-placement	8	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 2}
-01-placement	9	@until 30 member m1 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": {"cluster": "m1", "rev": "2"}}
-01-placement	10	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "1"}}
-01-placement	11	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1"}}
-01-placement	12	member m2 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": null}
-01-placement	13	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
-01-placement	14	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
-01-placement	15	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": null}
-01-placement	16	holder DELETE /domain/placement/testsub/c1	404
+01-placement	4	holder PUT /domain/placement/nosuch/c1 {"cluster": "m9"}	404
+01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409
+01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400
+01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 1}
+01-placement	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 1}
+01-placement	9	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 2}
+01-placement	10	@until 30 member m1 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": {"cluster": "m1", "rev": "2"}}
+01-placement	11	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "1"}}
+01-placement	12	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1"}}
+01-placement	13	member m2 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": null}
+01-placement	14	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+01-placement	15	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+01-placement	16	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": null}
+01-placement	17	holder DELETE /domain/placement/testsub/c1	404
 02-edit-refusals	1	@domain	ok
 02-edit-refusals	2	member m1 console POST /counters {"name": "c1"}	201
 02-edit-refusals	3	@until 60 holder GET /domain/testsub/counters	200 [{"ref": "c1", "cluster": "m1"}]

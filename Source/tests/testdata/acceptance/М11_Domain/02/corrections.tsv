@@ -1,3 +1,4 @@
 date	sample	fix	languages
 2026-10-17	02/seal-16-noncanonical-ct	cammeta-python М11-02 № 6: base64url — каноническая запись (лишние биты нулевые); неканонический конверт — not_an_envelope	all
 2026-10-17	02/inputs/token-*, сц. 05 шаг 7, сц. 12	Решение «Архитектора» по М11/7 п. 6 и дополнение: kind у каждого токена (без него — bad_claims); проверка получателем — wrong_kind, wrong_audience	all
+2026-10-18	02/scenarios.tsv: 02/02, 02/03; keys-18, keys-19	прогон 41, мутации №7, №8: kid не root раньше чужого домена; подпись раньше book_seal (двойная ошибка — первый по порядку отказ)	all
