@@ -37,8 +37,9 @@ unreadable:    строка человека, которая не читаетс
 
 ```yaml
 door:          POST /api/login {user, password} у процесса domain; тело ≤ LOGIN_BODY (больше — 413 {error: "too large",
-               detail}); оба поля — строки (иначе 400 {error: "bad body", detail}); CORS: Access-Control-Allow-Origin: *
-               у каждого ответа двери, без credentials — дверь cookie не ставит и не читает
+               detail}); оба поля — строки (иначе 400 {error: "bad body", detail}); дверь cookie не ставит и не читает
+via:           страница ходит к своей консоли: POST /api/login — открытая строка таблицы пересылки урока 8 и open_routes
+               М10/9, консоль домена передаёт её процессу (урок 3 Н1.8); CORS нет — другой origin страница не зовёт
 check:         предел Н1.10 → человек есть, не disabled, пароль сверился (сравнение постоянного времени) → токен;
                нет человека или disabled — сверка по фиктивному хешу той же стоимости (600000): ответ неизвестному,
                выключенному и неверному неразличим и по коду, и по телу, и по времени
@@ -233,7 +234,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 
 | Дверь | Кто | Право | Успех | Отказы |
 |---|---|---|---|---|
-| POST `/api/login` | процесс `domain` | — | 200 `{token, until, user}` | 400 bad body; 401 refused; 413; 429 |
+| POST `/api/login` | процесс `domain` (через консоль: таблица пересылки урока 8) | — | 200 `{token, until, user}` | 400 bad body; 401 refused; 409 deposed; 413; 429; пересылка — урок 8 Н4 |
 | GET `/domain/users` | `domain` (через консоль домена) | view | 200 `{users: [{name, how, disabled, at, by}]}` по `name` | 401/403 |
 | POST `/domain/users` `{name, password}` | `domain` | admin | 201 `{user}` | 400 bad body, bad name, bad password; 409 exists, name taken; 503 names unknown |
 | PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 404 no such person; 409 last admin |

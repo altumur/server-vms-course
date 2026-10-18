@@ -89,6 +89,7 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Standby'}
   /api/take:
@@ -125,6 +126,7 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/move:
@@ -164,9 +166,11 @@ paths:
                     items: {$ref: '#/components/schemas/MemberName'}
                   sentence: {type: string}
         '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/handover:
@@ -201,7 +205,10 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/stranded/apply:
     post:
@@ -224,7 +231,10 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '422': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
 components:
   responses:
     Refused:

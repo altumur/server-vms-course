@@ -21,12 +21,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServedView'
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Denied'
         '404':
           $ref: '#/components/responses/NoDomain'
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/{sub}/{rows}:
     parameters:
       - name: sub
@@ -65,6 +68,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Refusal'
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/shadow:
     get:
       summary: Теневой отчёт последнего прохода
@@ -75,14 +80,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShadowReport'
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Denied'
         '404':
           $ref: '#/components/responses/NoDomain'
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
 components:
   responses:
+    Forwarded:
+      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     NoDomain:
       description: Вида нет или он не читается
       content:
@@ -92,7 +105,7 @@ components:
             allOf:
               - $ref: '#/components/schemas/Refusal'
               - properties:
-                  error: {const: no domain here}
+                  error: {enum: [no domain here, no console known], description: 'no console known — пересылка урока 8 Н3 шаг 9 (добавлено М11/8)'}
     BadQuery:
       description: Запрос не по форме (М10/9 Н2 «Разбор запроса консоли»)
       content:

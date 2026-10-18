@@ -47,8 +47,10 @@ paths:
           $ref: '#/components/responses/Refused'
         '404':
           $ref: '#/components/responses/Refused'
+        '409': {$ref: '#/components/responses/Refused'}
         '413':
           $ref: '#/components/responses/Refused'
+        '503': {$ref: '#/components/responses/Refused'}
   /domain/topology:
     get:
       summary: Топология домена
@@ -59,12 +61,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Topology'
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401':
           $ref: '#/components/responses/Refused'
         '403':
           $ref: '#/components/responses/Refused'
         '404':
           $ref: '#/components/responses/Refused'
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
     put:
       summary: Правка топологии против прочитанной ревизии
       requestBody:
@@ -86,10 +91,19 @@ paths:
           $ref: '#/components/responses/Refused'
         '403':
           $ref: '#/components/responses/Refused'
+        '404': {$ref: '#/components/responses/Forwarded'}
         '409':
           $ref: '#/components/responses/Refused'
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
 components:
   responses:
+    Forwarded:
+      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     Refused:
       description: Отказ двери (Н2, Н4)
       content:
@@ -105,6 +119,7 @@ components:
         error: {type: string, minLength: 1}
         detail: {type: string}
         reason: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'

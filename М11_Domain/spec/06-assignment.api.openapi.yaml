@@ -27,8 +27,12 @@ paths:
                   records:
                     type: object
                     additionalProperties: {$ref: '#/components/schemas/Placement'}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/placement/{sub}/{ref}:
     parameters:
       - {$ref: '#/components/parameters/Sub'}
@@ -41,9 +45,12 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Placement'}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
     put:
       summary: Назначить (только оператор)
       requestBody:
@@ -73,6 +80,8 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Refused'}
     delete:
       summary: Снять назначение
@@ -87,9 +96,13 @@ paths:
                 additionalProperties: false
                 properties:
                   deleted: {type: string}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/{sub}/{rows}:
     parameters:
       - {$ref: '#/components/parameters/Sub'}
@@ -116,7 +129,10 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
         '422': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/{sub}/{rows}/{ref}:
     parameters:
       - {$ref: '#/components/parameters/Sub'}
@@ -146,7 +162,9 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
         '422': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Refused'}
     delete:
       summary: Удалить единицу члена (правка хранится)
@@ -159,7 +177,9 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
         '422': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Refused'}
 components:
   parameters:
@@ -184,6 +204,11 @@ components:
       required: true
       schema: {type: string, minLength: 1, maxLength: 200}
   responses:
+    Forwarded:
+      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     Refused:
       description: Отказ двери (Н2, Н4)
       content:
@@ -210,6 +235,7 @@ components:
       properties:
         error: {type: string, minLength: 1}
         detail: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'

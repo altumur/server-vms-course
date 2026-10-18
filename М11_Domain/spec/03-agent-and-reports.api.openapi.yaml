@@ -41,16 +41,18 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          description: rebase, same_sent_at или not_ready (Н3 «принять»)
+          description: rebase, same_sent_at или not_ready (Н3 «принять»); deposed смещённого держателя с записью нового (урок 10 Н1.6; добавлено М11/10)
           content:
             application/json:
               schema:
-                unevaluatedProperties: false
-                allOf:
-                  - $ref: '#/components/schemas/Refusal'
-                  - properties:
-                      reason: {enum: [rebase, same_sent_at, not_ready]}
-                    required: [reason]
+                oneOf:
+                  - unevaluatedProperties: false
+                    allOf:
+                      - $ref: '#/components/schemas/Refusal'
+                      - properties:
+                          reason: {enum: [rebase, same_sent_at, not_ready]}
+                        required: [reason]
+                  - $ref: '#/components/schemas/Deposed'
         '413':
           description: 'Тело больше BODY_LIMIT или целое поколение больше BODY_LIMIT — {error: "whole too large"} (урок 12 Н1.5; добавлено М11/12)'
           content:
@@ -90,12 +92,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MembersView'
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401':
           $ref: '#/components/responses/Refused'
         '403':
           $ref: '#/components/responses/Refused'
         '404':
           $ref: '#/components/responses/Refused'
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
     post:
       summary: Принять стучащегося по отпечатку его ключа
       requestBody:
@@ -129,6 +134,9 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/members/{name}:
     parameters:
       - name: name
@@ -152,6 +160,9 @@ paths:
           $ref: '#/components/responses/Refused'
         '404':
           $ref: '#/components/responses/Refused'
+        '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
 components:
   parameters:
     Member:
@@ -166,6 +177,11 @@ components:
       description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)» (Н1.4); окно 300 с в обе стороны.'
       schema: {type: string, pattern: '^(0|[1-9][0-9]{0,15})\.[A-Za-z0-9_-]{86}$'}
   responses:
+    Forwarded:
+      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     Refused:
       description: Отказ двери (Н4)
       content:
@@ -179,6 +195,15 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
   schemas:
+    Deposed:
+      type: object
+      required: [error, holder]
+      additionalProperties: false
+      description: Отказ смещённого держателя (урок 10 Н1.6; добавлено М11/10)
+      properties:
+        error: {const: deposed}
+        detail: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'документ записи срока нового держателя как объект (форма — HolderRecord контракта урока 10)'}
     Refusal:
       type: object
       required: [error]
@@ -186,6 +211,7 @@ components:
         error: {type: string, minLength: 1}
         detail: {type: string}
         reason: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'

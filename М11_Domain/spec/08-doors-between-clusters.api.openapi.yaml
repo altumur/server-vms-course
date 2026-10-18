@@ -4,8 +4,8 @@ info:
   version: '1'
   description: 'Normative shapes: 08-doors-between-clusters.norms.md N1.2-N1.9, N2, N4. A cluster console hands the
     method-path pairs of the forwarding table (N1.2) to the domain console unchanged and returns the answer as it came
-    (status, Content-Type, X-Unreachable, body); those doors belong to their lessons (1, 3, 4, 6) and are not repeated
-    here. Any other path under /domain/ is 404 "not a domain route". This contract holds the doors of this lesson:
+    (status, Content-Type, X-Unreachable, body); those doors belong to their lessons (1, 3, 4, 6, 9, 10, 11), and each
+    of those contracts carries the forwarding refusals (response Forwarded: 400 one hop, 404, 413, 502, 503). Any other path under /domain/ is 404 "not a domain route". This contract holds the doors of this lesson:
     a member''s where by its name, the admin''s CA door, the holder''s page doors and the refusals of forwarding.
     Request parsing: M10/9 N2.'
 servers:
@@ -106,6 +106,9 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
   /spec:
     get:
       summary: Спека консоли домена — корня нет (Н1.8)
@@ -188,6 +191,7 @@ components:
           minLength: 1
           description: Слово Н4 (not a domain route, one hop, no domain here, no console known, did not answer, …).
         detail: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberNotPlaced:
       type: object
       description: Ответ 404 двери where консоли члена как пришёл — форма NotPlaced контракта М10/4.

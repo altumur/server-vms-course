@@ -41,8 +41,11 @@ paths:
                   user: {$ref: '#/components/schemas/PersonName'}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '429': {$ref: '#/components/responses/TooMany'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Standby'}
   /domain/users:
     get:
@@ -60,8 +63,12 @@ paths:
                   users:
                     type: array
                     items: {$ref: '#/components/schemas/PersonView'}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
     post:
       summary: Завести человека (Н1.1, Н3)
       requestBody:
@@ -89,8 +96,10 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/users/{name}:
     parameters:
@@ -128,6 +137,9 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
     delete:
       summary: Удалить человека и его строки грантов (Н1.1)
       responses:
@@ -145,10 +157,13 @@ paths:
                   grants_changed:
                     type: array
                     items: {type: string}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/grants:
     get:
       summary: Строки грантов (Н1.3)
@@ -167,8 +182,12 @@ paths:
                     additionalProperties:
                       type: array
                       items: {$ref: '#/components/schemas/Line'}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/grants/{cluster}:
     parameters:
       - name: cluster
@@ -215,7 +234,10 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
         '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Refused'}
   /domain/break-glass:
     get:
@@ -238,8 +260,12 @@ paths:
                       additionalProperties: false
                       properties:
                         set_at: {type: number}
+        '400': {$ref: '#/components/responses/Forwarded'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/break-glass/{cluster}:
     parameters:
       - name: cluster
@@ -273,6 +299,11 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/revoke:
     post:
       summary: Отозвать токен (Н1.2)
@@ -299,6 +330,11 @@ paths:
                   revoked: {type: string}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Forwarded'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Forwarded'}
+        '502': {$ref: '#/components/responses/Forwarded'}
+        '503': {$ref: '#/components/responses/Forwarded'}
   /domain/keys:
     get:
       summary: Строки и семьи ключей домена в хранилище этого кластера (Н1.8)
@@ -329,6 +365,11 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
 components:
   responses:
+    Forwarded:
+      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     Refused:
       description: Отказ (Н4)
       content:
@@ -362,6 +403,7 @@ components:
       properties:
         error: {type: string, minLength: 1, description: Слово Н4.}
         detail: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     PersonName:
       type: string
       minLength: 1

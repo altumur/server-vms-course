@@ -77,12 +77,14 @@ kept:       найденная единица (в том числе у член�
 
 ```yaml
 domain/pending/<член>:   строка держателя; элемент <id> — текст JSON правки
-  edit:     {id, what, method, path, body, key, at, base?}
+  edit:     {id, what, method, path, body, key, at, base?, asked}
     id:     "e-" + первые 12 знаков hex sha256(UTF-8(член) ‖ 0x00 ‖ UTF-8(Idempotency-Key))
     what:   имена полей тела по возрастанию через «,», у POST — с полем domain.ref, без cluster (DELETE — "")
     method: POST | PUT | DELETE;  path — путь двери единиц консоли члена: /<sub>/<rows> или /<sub>/<rows>/<id>
             (id — местный id единицы из копии члена); body — объект полей (DELETE — {})
     key:    Idempotency-Key запроса
+    asked:  {method, path, body} — запрос двери домена, как его принял процесс: путь Н2 с ref и ?cluster=<член> у PUT и
+            DELETE, тело с cluster у POST; по нему правку повторяют у нового держателя (урок 10 Н1.6 apply)
     at:     стенные секунды процесса domain; если по этому id уже записан исход (строка domain/outcomes/<член> держателя,
             Н1.6) — не меньше следующего за его kept_at
             числа (nextafter): новый приём того же ключа отличим от прежнего
@@ -159,7 +161,7 @@ HTTP-контракт: [06-assignment.api.openapi.yaml](06-assignment.api.openap
 4. ждущих 50                                                                    → 409 kept_full
    ждёт DELETE того же path                                                       → 409 unit is being deleted
    base: копия члена; ждёт PUT того же path — её base + 1
-5. edit {id, what, method, path, body, key, at, base?} → записать по CAS (конфликт — перечитать с шага 3, до 10 раз,
+5. edit {id, what, method, path, body, key, at, base?, asked} → записать по CAS (конфликт — перечитать с шага 3, до 10 раз,
    затем 409 «the pending edits kept changing; ask again»)
 6. 202
 ```

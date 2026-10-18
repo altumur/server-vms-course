@@ -175,7 +175,9 @@ local_door:  местная дверь агента (урок 7 Н1.2) — вы�
 | POST `/api/member/<член>` | 3 Н2 | 413 `{error: "whole too large", detail}` (Н1.5); 503 `standby` (Н1.7) |
 | GET `/api/carry/<член>` | 3 Н2 | 503 `standby` |
 | POST `/api/tokens/<член>/<sub>/<вид>` | 7 Н2 | 503 `standby` |
-| POST `/api/login` и двери людей процесса `domain` | 9 Н2 | 503 `standby` |
+| POST `/api/relay/<ретранслятор>` | 4 Н2 | 503 `standby` |
+| POST `/api/login` и двери людей процесса `domain` (`/domain/users*`, `/domain/break-glass*`, `/domain/grants/*`, `/domain/revoke`) | 9 Н2 | 503 `standby` |
+| правки консоли домена (урок 3 Н1.8: двери `/domain/*` уроков 3, 4, 6, 8, 11) | 3 Н1.8 | 503 `standby` процесса как пришёл |
 | POST `/api/prepare`, `/api/take`, `/domain/move`, `/domain/handover` | 10 Н2 | 503 `standby` (ответ подписанта как пришёл) |
 
 ---

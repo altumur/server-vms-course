@@ -105,10 +105,12 @@ components:
       properties:
         error: {type: string, minLength: 1}
         reason:
+          description: 'слова Н3 «выдать»; у 401 — слова подписи урока 3 Н4 (no_signature, not_a_signature, out_of_window, bad_signature; добавлено прогоном 41)'
           enum: [bad_request, by_misplaced, not_granted, assignment_unreadable, no_assignment, outside_scope,
                  unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience,
-                 no_centre]
+                 no_centre, no_signature, not_a_signature, out_of_window, bad_signature]
         detail: {type: string}
+        holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'

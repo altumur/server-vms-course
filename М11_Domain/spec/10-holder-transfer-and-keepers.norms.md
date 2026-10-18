@@ -128,17 +128,19 @@ start:       после перезапуска — сначала смотрит
              больше того, что этот процесс держал (срок свой неизвестен — любого); или ключи забыты (forget) и запись чужая
 refusal:     смещённый процесс на каждую правку (правки консоли домена идут через него, урок 3 Н1.8; консоль отдаёт ответ
              как пришёл) — 409 {error: "deposed", detail: "<n> held the domain at
-             term N; <h> holds it at term M — edits go there", holder: <doc>}; на отчёт агента — 409 {error: "deposed",
-             holder: <doc>}
+             term N; <h> holds it at term M — edits go there", holder: <документ записи нового держателя как объект>};
+             на отчёт агента — 409 {error: "deposed", holder: <тот же документ>}
 forget:      domain/signer := {forgotten: "deposed by term <M>"} — ключи держателя стёрты (обещание, Н1.7 limit)
 stranded:    domain/stranded {doc: JCS {term, holder, base: {term, rev}, items: [{path, key, value}]}} — один раз при смене:
              элементы state (Н1.5), которые отличаются от base — копии, из которой восстановлен новый срок, если это
              копия этого держателя (restored_from записи), иначе его последней копии; value — значение элемента как
              хранится (текст), секрет — "<secret: differs>"; сравнение — по открытым значениям;
              строка domain/pending/* засчитывается, только если правка сдвинулась (нет в base или иной at)
-apply:       POST /domain/stranded/apply {path, key} у консоли домена смещённого (admin): элемент domain/pending/<член> —
-             повторить правку урока 6 той же дверью у консоли домена нового держателя (url записи → его консоль:
-             method, "/domain" + path правки, тело, Idempotency-Key = key правки); ответ — как пришёл; иной элемент —
+apply:       POST /domain/stranded/apply {path, key} у консоли домена смещённого (admin; правку исполняет процесс, урок 3
+             Н1.8): элемент domain/pending/<член> — повторить правку урока 6 у нового держателя: asked правки (урок 6 Н1.4)
+             как есть — метод, путь, тело, Idempotency-Key = key, Authorization вызвавшего — консоли кластера нового
+             держателя CLUSTERS[holder записи] пересылкой урока 8 (с X-W2C-Via: <CLUSTER>; та пересылает своей консоли
+             домена, урок 8 Н1.3); ответ — как пришёл (коды двери урока 6 и пересылки); иной элемент —
              400 {error: "redo it on the new holder", detail}; не смещён — 409; элемента нет — 404
 ```
 
@@ -182,7 +184,9 @@ limit:       передача копирует ключи подписанта �
 ```yaml
 door:        POST /domain/move {recovery, stolen?, copy?, why?} у консоли кластера цели → процесс domain тем же путём
              (урок 8 Н1.9); срок 90 с; w2cctl domain move <дверь> <файл> [stolen] [copy=<term>.<rev> why=<слова>];
-             личность — по режиму консоли (М10/9 Н1.3 identity), гранта дверь не требует: право доказывает файл восстановления
+             личность — по режиму консоли (М10/9 Н1.3 identity) и грант admin кластера-цели (урок 8 Н1.9 шаг 3); в день
+             потери домена его дают копия грантов (срок — GRANT_LIFETIME, урок 9 Н1.3) или аварийный вход (урок 9 Н1.6);
+             файл восстановления доказывает домен, а не человека
   recovery:  текст файла восстановления урока 2 Н1.1 {domain, root_key, root_pub}
   copy:      {term, rev} — восстановить ровно эту копию; без why — 400
 order:       1. тело не по форме — 400 {error: "refused", detail: "a move is {recovery: <the recovery file, as its text>,
@@ -238,8 +242,8 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 | POST `/api/prepare` | консоль кластера → процесс `domain` (урок 8 Н1.9) | `{cluster, seal}` | 400 подпись не та форма; 403 не ключом токенов текущего набора; 409 этот кластер держит домен |
 | POST `/api/take` `{grant, keys_sealed}` | консоль кластера → процесс `domain` | запись срока цели `{record}` | Н1.7 take |
 | POST `/domain/move` | консоль кластера → процесс `domain` | Н1.8 | Н1.8 |
-| POST `/domain/handover` `{to}` | консоль домена → процесс `domain` | `{term, rev, to, stranded: []}` | 400 цель; 401/403; 409 deposed, called off; 503 frozen, «a handover is under way already» |
-| POST `/domain/stranded/apply` `{path, key}` | консоль домена смещённого | как пришёл | Н1.6 apply |
+| POST `/domain/handover` `{to}` | консоль домена → процесс `domain` | `{term, rev, to, stranded: []}` | 400 цель; 401/403; 409 deposed, called off; 502 консоль домена или пересылка не дождалась (урок 8 Н1.2 «Ожидание» 100 с); 503 frozen, «a handover is under way already» |
+| POST `/domain/stranded/apply` `{path, key}` | консоль домена смещённого → процесс `domain` | ответ двери урока 6 нового держателя как пришёл | Н1.6 apply; коды двери урока 6 и пересылки урока 8 — как пришли |
 
 ---
 

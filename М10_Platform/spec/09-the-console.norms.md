@@ -98,6 +98,7 @@ gate:
     /marks, POST /{sub}/requests     → edit на единицу тела
     DELETE /{sub}/asked/*            → admin на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
+    POST /domain/move                → admin на * (аварийный перенос домена сюда, М11/10 Н1.8)
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes
     таблицы                          → по rights.routes (view | edit | admin)
@@ -108,14 +109,15 @@ gate:
             (ответ раннего отказа — урок 1 Н2.1)
   refusal:  {detail, error: denied}; 403 → журнал access.denied
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
-              /api/held, /api/backup, /api/prepare, /api/take]
+              /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (М11/9 Н1.2)
 session:
   GET  /session  → открыта: {open: true, login_url}; закрыта анонимному: {open: false, login_url};
                    доказанной личности: {open: false, login_url, user, until, via, grants: [{cap, scope}], debug?}
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; POST /session/break-glass {who, why, password} → {user, until} + кука w2c_glass; 429 по пределу
-  login_url: дверь домена /api/login (М11/9 Н1.2); консоль токенов людей не выдаёт; значение — LOGIN_URL окружения (урок 11
-             Н1.2), не задано — "/api/login" (строка, не null, и у открытой консоли)
+  login_url: дверь домена /api/login (М11/9 Н1.2) — консоль пересылает её домену (open_routes, М11/8 таблица пересылки);
+             консоль токенов людей не выдаёт; значение — LOGIN_URL окружения (урок 11 Н1.2), не задано — "/api/login"
+             (строка, не null, и у открытой консоли)
 ```
 
 ### Н1.4 Что зовёт модуль — закрытый список
