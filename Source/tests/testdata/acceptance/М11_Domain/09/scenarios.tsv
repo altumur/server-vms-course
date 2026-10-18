@@ -111,3 +111,9 @@ scenario	step	request	expect
 08-grant-by-kept	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200
 08-grant-by-kept	6	holder @header Authorization: Bearer $ta PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
 08-grant-by-kept	7	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "ann"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+09-deleting-mark	1	@domain	ok
+09-deleting-mark	2	holder POST /domain/users {"name": "dz", "password": "dz password 1"}	201
+09-deleting-mark	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "dz", "cap": "view", "scope": "*"}]}	200
+09-deleting-mark	4	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/dz", "items": {}}	200
+09-deleting-mark	5	@until 20 holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin"}]}}
+09-deleting-mark	6	@until 20 member hold store GET /v1/get?key=domain/deleting/dz	200 {"items": null}
