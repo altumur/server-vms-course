@@ -1,7 +1,7 @@
 # The closed vocabulary of `fault`: the word a door's refusal says to a machine and a test, beside `detail` for a person.
 # One table for the course and the product (each keeps its copy; the course's and the product's set of fault words and
 # every door's code take it), byte for byte. Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Decision of «Архитектор», 2026-10-06;
-# described in lesson 09. A new word comes here FIRST, then into the code of both sides; requests_body.tsv and
+# described in lesson 03 Н4 (the unit door's refusals; stage A review SA1-25). A new word comes here FIRST, then into the code of both sides; requests_body.tsv and
 # group_of.tsv take their words only from here, and their tests check it. The door's `error` word is not compared.
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
