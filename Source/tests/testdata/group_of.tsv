@@ -149,7 +149,7 @@ driverpack://acme/NVR-1./ch/1	nvr-1
 driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1	
 driverpack://acme/	<none>	bad_url
 driverpack://file/clips/a.mp4	<none>	
-driverpack://file	<none>	
+driverpack://file	<none>	bad_url
 driverpack://FILE./clips/a.mp4	<none>	
 driverpack://acme/nvr%2Ecorp/ch/1	<none>	bad_url
 driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	bad_url
