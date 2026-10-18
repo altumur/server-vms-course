@@ -5,7 +5,7 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова — по [общему канону Н0](../../М10_Platform/spec/01-storage.norms.md#н0-словарь-слов).
+Нормативные слова — по [общему канону Н0](../../М10_Platform/spec/01-storage.norms.md#н0-словарь-слов). Порядок массивов вывода — урок 1 Н0 (общее М11).
 
 ## Н1 Форма
 
@@ -108,7 +108,7 @@ domain/view.shared:  {term, rev, holding, behind, refused, silent, sentence}    
 door:          GET /domain/shared у консоли домена (view) → 200 {doc, delivery, declared}
   doc:         документ как подписан (объект) | null
   delivery:    view.shared
-  declared:    {<sub>: [{name, type, schema?}]} — элементы domain.shared спек каталога; schema — у документа
+  declared:    {<sub>: [{name, type, schema?}]} — элементы domain.shared спек каталога, по name; schema — у документа
                (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a, добавлено М11/11)
 ```
 
@@ -208,7 +208,7 @@ HTTP-контракт: [11-shared-settings-and-alarms.api.openapi.yaml](11-share
         domain — {term, rev, value} значения в документе | null
 label:  "domain term T rev R"
 1. document              → {value: domain ? domain.value : null, from: domain ? label : "none"}
-2. group_by              → {groups: domain ? domain.value : [], from: domain ? label : "none"}
+2. group_by              → {groups: domain ? domain.value : [], from: domain ? label : "none"}   # groups — в порядке domain.value
 3. unit есть, merge union, domain есть → {value: sorted(unit ∪ domain.value), from: "unit + " + label}
 4. unit есть             → {value: unit, from: "unit"}
 5. domain есть           → {value: domain.value, from: label}

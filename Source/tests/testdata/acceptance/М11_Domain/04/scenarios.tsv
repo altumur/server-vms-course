@@ -64,5 +64,5 @@ scenario	step	request	expect
 06-accept-with-roads	5	accept inputs/accept-05-delta-other-road.json	ok {"result": "refused", "status": 409, "reason": "rebase"}
 06-accept-with-roads	6	accept inputs/accept-06-older-same-road.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 990.0}}
 06-accept-with-roads	7	accept inputs/accept-07-older-other-road-never-heard.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 990.0}}
-06-accept-with-roads	8	accept inputs/accept-08-same-sent-at-other-bytes-other-road.json	ok {"result": "generation", "rev": 5, "base": 0, "whole": {"sent_at": 1000.0}}
+06-accept-with-roads	8	accept inputs/accept-08-same-sent-at-other-bytes-other-road.json	ok {"result": "refused", "status": 409, "reason": "same_sent_at"}
 06-accept-with-roads	9	accept inputs/accept-09-delta-same-relay-road.json	ok {"result": "generation", "rev": 5, "base": 4, "whole": {"sent_at": 1010.0}}

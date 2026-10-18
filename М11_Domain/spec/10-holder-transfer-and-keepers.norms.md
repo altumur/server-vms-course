@@ -5,7 +5,7 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова — по [общему канону Н0](../../М10_Platform/spec/01-storage.norms.md#н0-словарь-слов).
+Нормативные слова — по [общему канону Н0](../../М10_Platform/spec/01-storage.norms.md#н0-словарь-слов). Порядок массивов вывода — урок 1 Н0 (общее М11).
 
 ## Н1 Форма
 
@@ -52,7 +52,7 @@ former:          Entry {how: "held the domain until term <N>", since, key} — �
 ```yaml
 domain/view.term:  {term, holder, url, backup, backup_holders, copies, frozen_for?, stranded?}   # урок 1 Н1.4, добавлено М11/10
   backup:          {term, rev} последней резервной копии | null
-  backup_holders:  [<член>…] — выбранные хранители по возрастанию (Н1.5)
+  backup_holders:  [<член>…] — выбранные хранители (отбор — Н1.5), выводятся по возрастанию имени
   copies:          {<член>: {term, rev} | {garbled: <почему>}} — строка domain/backup-taken из копии каждого члена у
                    держателя (урок 3);
                    не хранит — нет ключа
@@ -134,7 +134,7 @@ refusal:     смещённый процесс на каждую правку (�
              term N; <h> holds it at term M — edits go there", holder: <документ записи нового держателя как объект>};
              на отчёт агента — 409 {error: "deposed", holder: <тот же документ>}
 forget:      domain/signer := {forgotten: "deposed by term <M>"} — ключи держателя стёрты (обещание, Н1.7 limit)
-stranded:    domain/stranded {doc: JCS {term, holder, base: {term, rev}, items: [{path, key, value}]}} — один раз при смене:
+stranded:    domain/stranded {doc: JCS {term, holder, base: {term, rev}, items: [{path, key, value}] по (path, key)}} — один раз при смене:
              элементы state (Н1.5), которые отличаются от base — резервной копии, из которой восстановлен новый срок, если это
              резервная копия этого держателя (restored_from записи), иначе его последней; value — значение элемента как
              хранится (текст), секрет — "<secret: differs>"; сравнение — по открытым значениям;
