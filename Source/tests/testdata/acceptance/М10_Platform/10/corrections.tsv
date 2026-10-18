@@ -19,3 +19,4 @@ date	sample	fix	languages
 2026-10-18	01/5; 02/7–10; 04/6–7, 10–12; 05/1, 3; 06/10–12; 08–11 (новые)	сверка python и go М10/6–11 (T2, T6, T7, T9–T11, T13–T15, T17–T22, T24–T26, S10; совпало без нормы — версия без границы, If-Match): шаги к нормам урока 10 и правилу смены feed урока 7	all
 2026-10-18	09-drain-unreadable-pulse 2; inputs/hb-w-1-no-status.json	вход сц. 09 — свой inputs урока 10 (строка реестра e31e5c28), копия входа урока 4	all
 2026-10-18	08-snapshot-garbled 6 (новый шаг)	счётчик snapshot_rows_garbled отчёта прохода (урок 4 Н1.2; T7, решение «Архитектора»; изменение поведения)	all
+2026-10-18	12-pulse-number-forms (новый); inputs/hb-w-1-*.json	формы чисел пульса: pending_writes нет, дробь, -0.0, 2^63 — pending_unsaid; schema 1.0 — null; build числом — "" (сверка python и go М10/6–11, T1, T3, T4, T27; строка реестра e31e5c28)	all
