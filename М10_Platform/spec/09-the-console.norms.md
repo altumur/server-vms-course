@@ -334,7 +334,8 @@ metrics[]:  закрытый перечень ключей элемента (з�
             live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
 платформы, один раз (root); источник — пульсы ресурсов урока 8 Н1.4 и уборка просьб этой консоли:
   w2c_resources_live — ресурсов, чей пульс менялся < 45 с; w2c_resource_heartbeats_garbled — нечитаемых пульсов ресурсов
-  с запуска процесса консоли; w2c_resource_full{server} — 1 при space.full пульса; w2c_resource_short_bytes{server} — поле
+  с запуска процесса консоли; w2c_resource_full{server} — 1, когда space.full пульса ≥ 1 (том заполнен: used = total), иначе 0; space.full — доля
+  урока 8 Н1.4, отдаётся как есть (журнал cammeta-go, урок 9 № 8); w2c_resource_short_bytes{server} — поле
   short: сколько байтов отметка просила освободить и не смогла; w2c_resource_waits{server} — ожиданий /events/wait сейчас,
   w2c_resource_waits_held_total, _full_total, _replaced_total{server} — с запуска ресурса (поле waits, урок 8 Н3
   «/events/wait»); w2c_resource_rows_garbled{server,table} — нечитаемых строк таблиц, прочитанных ресурсом;
