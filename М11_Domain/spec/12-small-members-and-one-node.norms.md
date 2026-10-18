@@ -152,8 +152,9 @@ w2c-domain.service:          роль domain; w2c-run.sh signer; User=w2c; Suppl
                              SECRETS_KEY (credential); SIGNER_HOST/PORT 0.0.0.0:8445 — агенты членов ходят сюда (урок 3)
 w2c-domain-console.service:  роль domainconsole; w2c-run.sh domainconsole; кольца нет, w2c-secrets нет;
                              DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 — консоли членов пересылают сюда (урок 8)
-w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; своего порта нет; дверь ретранслятора — урок 4
-                             (RELAY_PORT 8446)
+w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; User=w2c; SupplementaryGroups=w2c-store w2c-events
+                             w2c-secrets; SECRETS_KEY (credential) — ключ члена и конверты кольца (М10/7 holders); своего
+                             порта нет; дверь ретранслятора — урок 4 (RELAY_PORT 8446)
 local_door:  местная дверь агента (урок 7 Н1.2) — выбор реализации; если TCP — порты 8444–8447 не занимать, умолчание 8448
 ```
 
@@ -280,5 +281,5 @@ local_door:  местная дверь агента (урок 7 Н1.2) — вы�
 `М12A_Domain/11-hundreds-of-small-members.md` (цена; модель «домен читает члена» снята уроками 1 и 3),
 `М12A_Domain/14-a-domain-holder-on-one-node.md` (шаги 8 и 10: камера-держатель — лекция, два процесса держателя —
 Н1.7, Н1.8) и `М12A_Domain/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md` (лекция, одним
-примером). Порты домена — долг М10/11 «Решает реализация» п. 7. ADR-0032, ADR-0066, ADR-0070, ADR-0074, ADR-0075.
+примером). Порты домена — бывший долг М10/11 «Решает реализация» п. 7, закрыт Н1.8. ADR-0032, ADR-0066, ADR-0070, ADR-0074, ADR-0075.
 Исторические исходники сохранены в Git.

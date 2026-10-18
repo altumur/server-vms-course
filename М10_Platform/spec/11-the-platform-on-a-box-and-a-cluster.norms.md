@@ -35,8 +35,10 @@ units:                                        # на каждом сервере
                           (М11/12 Н1.7, Н1.8; добавлено М11/12)
   w2c-domain-console.service: роль domainconsole; w2c-run.sh domainconsole; кольца и w2c-secrets нет;
                           DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 (М11/12 Н1.8)
-  w2c-domainagent.service: роль domainagent; w2c-run.sh domainagent; своего порта нет; дверь ретранслятора —
-                          RELAY_PORT 8446 (М11/4); местная дверь — М11/7, если TCP — умолчание 8448 (М11/12 Н1.8)
+  w2c-domainagent.service: роль domainagent; w2c-run.sh domainagent; User=w2c; SupplementaryGroups=w2c-store w2c-events
+                          w2c-secrets; SECRETS_KEY (credential: ключ члена, книги и аварийные строки — конверты кольца, М10/7
+                          holders); своего порта нет; дверь ретранслятора — RELAY_PORT 8446 (М11/4); местная дверь — М11/7,
+                          если TCP — умолчание 8448 (М11/12 Н1.8)
 watchdog:  WatchdogSec между FOR (300) урока 5 и HUNG_MOVE_AFTER (900): 360; notify — из цикла, не из подмены (урок 5)
 notify:    датаграмма sd_notify на NOTIFY_SOCKET: контроллер шлёт READY=1 после проверки схемы и чтения спеки (Н3 «старт
            сервера» шаг 3), воркер — после захвата имени; оба — WATCHDOG=1 каждым оборотом своего цикла; нет NOTIFY_SOCKET — молчат
@@ -91,6 +93,7 @@ dirs:                                         # /data/platform; /etc/w2c → /da
 | `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB` | ёмкость роли и бюджет памяти (ADR-0070) | — | `roles/<роль>.env` |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | контроллер (урок 4) | 900, 10 | `w2c.env` |
 | `BUILD` | слово сборки (урок 10) | `dev` | сборка |
+| `CLUSTER` | имя кластера установки: имя члена домена (М11/1 Н1.1) и `cluster` снимка (урок 10 Н1.3) | `local` (вне домена) | `w2c.env` |
 | `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS`, `RELAY_*` | домен (М11; `SIGNER_HOST/PORT`, `DOMAIN_CONSOLE_HOST/PORT` — М11/12 Н1.8; `SIGNER_URL` — М11/2 Н1.3; `CLUSTERS`, `DOMAIN_CONSOLE_URL` — М11/8 Н1.3; `DOMAIN_CA`, `RELAY_CA`, `RELAY_MEMBER` — М11/8 Н1.6; `RELAY_URL` — М11/4) | — | оператор |
 | `CONFIGSTORE_ID/RAFT/API/GROUP_SIZE/JOIN/FLAGS/TUNING` | демон хранилища | tuning `lan` | `configstore.env` |
 | `NOTIFY_SOCKET` | сторож systemd | — | systemd |
