@@ -481,7 +481,7 @@ components:
           additionalProperties: {$ref: '#/components/schemas/Entry'}
     Knock:
       type: object
-      required: [name, last, times, key, fingerprint, pinned]
+      required: [name, last, times, key, fingerprint, pinned, keys_rev]
       additionalProperties: false
       properties:
         name: {$ref: '#/components/schemas/MemberName'}
