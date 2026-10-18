@@ -20,6 +20,7 @@
 | маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
 | секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | М10/7 Н1.3, М10/6 Н1.4 |
 | корпус спеки | `Source/tests/testdata/spec_verdicts.tsv` | М10/2 | М10/2 Н1, Н4 |
+| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | М10/6 | М10/6 Н1.2 `pattern`, Н1.3 |
 | копия хранилища | `Source/tests/testdata/acceptance/М10_Platform/11/inputs/` | М10/11 | М10/11 Н1.3 `copy` |
 | `view`, `keys`, `token`, `seal`, `accept`, `assemble`, `issue`, `peer`, `may`, `record`, `follow`, `ask-sig`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 
