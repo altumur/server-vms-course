@@ -11,6 +11,11 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/members` — `Entry.since`; стук `knock` — `last`; метка приёма — `received_at` (`sent_at` — как пришёл в публикации, Н1.2).
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `domain/member-key`, `domain/members`, `domain/member-list`, `domain/member`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reports/<rev>.delta`, `domain/members/<член>/reported`;
+- пишет: `domain/keys` (cas), `domain/revoked` (cas), `domain/view` (put);
+- читает: `domain/root`, `<sub>/heartbeats/<имя>`, `<sub>/snapshot/<воркер>`.
+
 Общее урока 2 Н1 действует: hex строчный, base64url без `=`, JCS — RFC 8785, формы JSON закрыты, повтор ключа — форма не
 та, порядок ключей объекта ничего не значит. «Стенные секунды» — часы процесса, который проверяет или пишет; «монотонные» —
 его монотонные часы (урок 1 Н1.3).
