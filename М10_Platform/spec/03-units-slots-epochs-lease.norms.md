@@ -43,9 +43,10 @@ platform rows:
   platform/epoch_floor:     {items: {floor, generation_at}; писатель — операция «восстановить хранилище» урока 11 Н3 (поднимает пол на поколение); право — только у неё (урок 6 Н1.3 never)}
 objects:                               # объекты, не строки; дверь объектов — урок 8 Н1.1
   # heartbeats — урок 5 Н1.1; contenders — урок 5 Н1.4; snapshot — урок 10 Н1.3; controller/pass — урок 4 Н1.2;
-  # blobs — урок 10 Н1.5; commands — метка урока 8 Н1.5 mark
+  # blobs — урок 10 Н1.5; метка просьбы — строка-объект objects/<sub>/commands/<rid> урока 8 Н1.5 mark (ключ
+  # хранилища строк, не дверь объектов; каталог данных)
   <sub>/heartbeats/<имя>, <sub>/contenders/<имя>/<коробка>, <sub>/snapshot/*, <sub>/controller/pass,
-  <sub>/blobs/<дайджест>, <sub>/commands/<id>
+  <sub>/blobs/<дайджест>
 reserved_table_names:   <rows> и перечень запрещённых имён таблиц М10/2 Н1.2а
 ```
 
