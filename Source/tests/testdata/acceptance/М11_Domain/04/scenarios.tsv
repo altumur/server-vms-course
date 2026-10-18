@@ -21,6 +21,10 @@ scenario	step	request	expect
 02-road-through-the-relay	8	@until 30 member m2 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}}
 02-road-through-the-relay	9	resource GET /v1/objects/domain/members/m2/reported?scope=local	200 {"via": "relay", "signature": "@absent"}
 02-road-through-the-relay	10	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "@any"}
+02-road-through-the-relay	11	@clock m2 +400	ok
+02-road-through-the-relay	12	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "silent"}, {"name": "relay", "state": "ok"}]}
+02-road-through-the-relay	13	@clock m2 0	ok
+02-road-through-the-relay	14	@until 40 holder GET /domain	200 {"complete": true}
 03-not-behind-this-relay	1	@domain m1 relay	ok
 03-not-behind-this-relay	2	@stop agent m1	ok
 03-not-behind-this-relay	3	@start agent m1 via relay	ok

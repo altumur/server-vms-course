@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-18	11/inputs/alarms-*; README	прогон 41 R41-16: часы тревоги — t + (received_at − sent_at) отчёта; вход несёт sent_at (у векторов = page.to, ожидания прежние)	all
+2026-10-18	11/scenarios.tsv; inputs	прогон 41, мутация №55: сц. 05 — неподписанный документ не берётся	all

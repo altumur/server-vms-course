@@ -72,3 +72,4 @@ scenario	step	request	expect
 06-peer	14	peer inputs/peer-14-leaf-only.json	ok {"result": "refused", "reason": "foreign_ca"}
 06-peer	15	peer inputs/peer-15-not-a-pem.json	ok {"result": "refused", "reason": "bad_chain"}
 06-peer	16	peer inputs/peer-16-intermediate-missing.json	ok {"result": "refused", "reason": "bad_chain"}
+06-peer	17	peer inputs/peer-17-anchor-expired.json	ok {"result": "refused", "reason": "expired"}
