@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - пишет: `domain/members` (cas);
 - читает: `domain/member-list`, `domain/members`, `domain/holder`, `domain/keys`, `domain/grants`, `domain/view`.
 

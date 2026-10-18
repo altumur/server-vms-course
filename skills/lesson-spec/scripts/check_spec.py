@@ -232,7 +232,7 @@ REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
 
 
 # Data contract catalog (ADR-0083 доп. (2) п. 1–2, form decisions/inbox/2026-10-18-каталог-данных-форма.md).
-CATALOG = Path("Platform/contracts/data/catalog.tsv")
+CATALOG = Path("Platform/common/data/catalog.tsv")
 CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 CATALOG_KINDS = {"row", "object", "file", "dir"}
 CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
@@ -408,10 +408,16 @@ class Check:
             self.registry[(lesson, kind, value)] = reason
 
     def lesson_norms(self, address):
-        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/spec/03-*.norms.md (None if absent)."""
+        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/<процесс>/spec/03-*.norms.md, процесс — по
+        Platform/lessons.tsv (None if absent)."""
         module, _, number = address.partition("/")
         number = number.split(".")[0]
-        dirs = [self.root / "Platform"] if module == "P" else sorted(self.root.glob(f"{module}_*"))
+        if module == "P":
+            lessons = self.root / "Platform/lessons.tsv"
+            names = dict(row for _, row in [(n, c[:2]) for n, c in self.tsv(lessons, 3)]) if lessons.exists() else {}
+            dirs = [self.root / "Platform" / names[number]] if number in names else []
+        else:
+            dirs = sorted(self.root.glob(f"{module}_*"))
         for directory in dirs:
             found = sorted((directory / "spec").glob(f"{int(number):02}-*.norms.md"))
             found = [f for f in found if re.fullmatch(r"[0-9]{2}-[^.]+\.norms\.md", f.name)]

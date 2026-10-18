@@ -10,7 +10,7 @@
 
 ## Н1 Форма
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - читает: `platform/spec/<sub>`.
 
 ### Н1.1 Роли

@@ -11,7 +11,7 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`.
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/shared`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/shared-refused`, `domain/alarms`, `domain/alarm-history/<член>`;
 - читает: `domain/holder`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`.
 

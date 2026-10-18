@@ -11,7 +11,7 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/topology` — `at`; объект `domain/reached` — `ts`.
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/topology`, `domain/member-topology`, `domain/reached`, `domain/reaches`;
 - пишет: `domain/view` (put);
 - читает: `domain/members`, `domain/keys`.

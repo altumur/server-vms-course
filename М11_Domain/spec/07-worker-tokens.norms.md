@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - читает: `domain/placement/<sub>/<ref>`, `domain/members`, `domain/topology`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/members/<член>/reports/<rev>`, `domain/signer`, `domain/keys`, `domain/revoked`.
 
 Общее уроков 2 и 3 Н1 действует. Токен воркера — токен домена урока 2 Н1.6 с `kind` вида спеки. Ключ подписи держателя

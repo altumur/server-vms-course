@@ -62,7 +62,7 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 
 ## Каталог данных (ADR-0083)
 
-Если в корне есть `Platform/contracts/data/catalog.tsv`, скрипт проверяет его и абзацы «Данные» уроков. Форма каталога
+Если в корне есть `Platform/common/data/catalog.tsv`, скрипт проверяет его и абзацы «Данные» уроков. Форма каталога
 — `decisions/inbox/2026-10-18-каталог-данных-форма.md`.
 
 | Что проверяется | Что остаётся ручным |

@@ -11,7 +11,7 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `platform/schema` — `at`; объект `<sub>/snapshot/<воркер>` — `ts`; надгробие `.gone/<ключ>` — `written`; `<sub>/sweep` — `at`; штампы строк таблиц — `at`, `made_at`.
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `platform/schema`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/blobs/sha256-<hex>`, `.gone/<ключ>`, `<sub>/sweep`, `<sub>/<spec:tables>/<имя>`;
 - пишет: `platform/drain` (put), `<sub>/<spec:unit.rows>/<id>` (cas);
 - читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/workers/<имя>`, `<sub>/<spec:unit.rows>/<id>`, `platform/resources/<server>/heartbeat`, `platform/mirror`.

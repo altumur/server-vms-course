@@ -563,7 +563,7 @@ components:
         self.assertEqual(len(self.check().errors), 2)
 
     def write_catalog(self, *rows):
-        path = self.root / "Platform/contracts/data/catalog.tsv"
+        path = self.root / "Platform/common/data/catalog.tsv"
         path.parent.mkdir(parents=True, exist_ok=True)
         header = "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n"
         path.write_text("# catalog\n" + header + "".join("\t".join(row) + "\n" for row in rows))

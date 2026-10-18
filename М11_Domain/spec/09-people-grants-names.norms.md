@@ -11,7 +11,7 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/users/<имя>` — `at`; строка гранта — `until` (`0` — без срока); копия `domain/grants` — `as_of`.
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/users/<имя>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/grants`, `domain/break-glass/<кластер>`, `domain/names/<sub>/<книга>`;
 - пишет: `domain/revoked` (put);
 - читает: `domain/member`, `domain/keys`, `domain/revoked`, `domain/members`, `domain/signer`.

@@ -11,7 +11,7 @@
 
 ## Н1 Форма
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `platform/spec/<sub>`, `platform/spec/<sub>/rev`.
 
 ### Н1.1 Текст спеки

@@ -12,7 +12,7 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/agent` — `at`.
 
-**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/agent`, `domain/signer-turn`;
 - пишет: `domain/member-list` (cas);
 - читает: `domain/member-key`, `domain/reached`, `domain/grants`.
