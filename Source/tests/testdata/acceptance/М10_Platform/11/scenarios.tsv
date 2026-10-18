@@ -30,6 +30,9 @@ scenario	step	request	expect
 08-floor-replay	7	admin POST /v1/write {"op": "floor", "floor": 1000, "id": "f3"}	409 {"kind": "refused"}
 08-floor-replay	8	@as console store POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f4"}	403 {"kind": "forbidden"}
 08-floor-replay	9	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}
+08-floor-replay	10	admin POST /v1/write {"op": "floor", "floor": 2.0e1, "id": "f5"}	400 {"kind": "badrequest"}
+08-floor-replay	11	admin POST /v1/write {"op": "floor", "floor": 18446744073709551615, "id": "f6"}	200 {"index": "@any"}
+08-floor-replay	12	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "18446744073709551615"}}
 09-resource-unreadable-heartbeat	1	@start resource	ok
 09-resource-unreadable-heartbeat	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 09-resource-unreadable-heartbeat	3	@sigterm resource	ok
@@ -80,3 +83,18 @@ scenario	step	request	expect
 13-time-reader	6	@sleep 5	ok
 13-time-reader	7	@as resource store POST /v1/write {"id":"a4","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906.654321"}}	200
 13-time-reader	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
+14-copy-ids	1	admin POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"index": "$v1"}
+14-copy-ids	2	@backup store c2	ok
+14-copy-ids	3	@import store backup c2	ok
+14-copy-ids	4	restored GET /v1/get?key=other/b10	200 {"items": {"n": "1"}}
+14-copy-ids	5	restored POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"index": "@any", "again": "@absent"}
+14-copy-ids	6	restored POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"again": true}
+15-service-doors	1	@as console store POST /v1/join {"id": "x1", "raft": "127.0.0.1:1", "api": "127.0.0.1:2"}	403 {"kind": "forbidden"}
+15-service-doors	2	store POST /v1/leave {"id": ""}	403 {"kind": "forbidden"}
+15-service-doors	3	admin POST /v1/join @big(1048577)	413 {"kind": "toolarge"}
+15-service-doors	4	admin PUT /v1/status @big(1048577)	413 {"kind": "toolarge"}
+15-service-doors	5	admin PUT /v1/status	405
+15-service-doors	6	admin POST /v1/join {"id": "x1", "raft": "", "api": ""}	400 {"kind": "badrequest"}
+15-service-doors	7	admin HEAD /v1/status	405
+15-service-doors	8	admin HEAD /v1/rights	404
+15-service-doors	9	console2 GET /entries	503
