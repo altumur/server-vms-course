@@ -11,10 +11,12 @@ scenario	step	request	expect
 01-roll-delivered	9	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "!contains s3cret-1"}}
 01-roll-delivered	10	member m2 console GET /domain/testsub2/books/nosuch	404 {"error": "no such book shown"}
 01-roll-delivered	11	holder GET /domain	200 {"reports": {"m1": {"rev": "$r1"}}}
-01-roll-delivered	12	@sleep 12	ok
-01-roll-delivered	13	holder GET /domain	200 {"reports": {"m1": {"rev": "$r1"}}}
-01-roll-delivered	14	holder DELETE /domain/members/m2	200
-01-roll-delivered	15	@until 30 store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": null}
+01-roll-delivered	12	resource GET /v1/objects/domain/members/m1/reports/$r1?scope=local	200 {"objects": {"testsub2/rolls/t-1": {"t1": {"note_secret": "$e1"}}}}
+01-roll-delivered	13	@sleep 12	ok
+01-roll-delivered	14	holder GET /domain	200 {"reports": {"m1": {"rev": "$r2"}}}
+01-roll-delivered	15	resource GET /v1/objects/domain/members/m1/reports/$r2?scope=local	200 {"objects": {"testsub2/rolls/t-1": {"t1": {"note_secret": "$e1"}}}}
+01-roll-delivered	16	holder DELETE /domain/members/m2	200
+01-roll-delivered	17	@until 30 store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": null}
 02-notes-unique	1	@domain	ok
 02-notes-unique	2	member m1 console2 POST /tallies {"name": "t5", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 02-notes-unique	3	member m2 console2 POST /tallies {"name": "t5", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
