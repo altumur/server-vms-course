@@ -8,6 +8,8 @@
 
 ## Н1 Форма
 
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; предложение слота — `offered_at` (урок 3); объект `<sub>/controller/pass` — `at`, `last_success`.
+
 ### Н1.1 Строки контроллера
 
 ```yaml
