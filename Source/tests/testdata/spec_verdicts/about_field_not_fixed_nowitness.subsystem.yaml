@@ -3,8 +3,6 @@ slot:
   prefix: t
   name_env: TALLY_NAME
 worker:
-  writes:
-  - shelves
   reads:
   - testsub/counters
   requests:
@@ -427,8 +425,6 @@ display:
     lane: полоса, по которой воркер ведёт счёт
   kinds:
     tally.tick: тик
-  actions:
-    add: прибавить
   tree:
     group_by: zone
     nested_by: /
