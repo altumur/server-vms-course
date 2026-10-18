@@ -24,22 +24,25 @@ scenario	step	request	expect
 02-disable-revoke-last-admin	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 02-disable-revoke-last-admin	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
 02-disable-revoke-last-admin	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
-02-disable-revoke-last-admin	5	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
-02-disable-revoke-last-admin	6	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
-02-disable-revoke-last-admin	7	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
-02-disable-revoke-last-admin	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	403 {"error": "denied"}
-02-disable-revoke-last-admin	9	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
-02-disable-revoke-last-admin	10	holder PUT /domain/users/ann {"disabled": false}	200 {"user": "ann", "disabled": false}
-02-disable-revoke-last-admin	11	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
-02-disable-revoke-last-admin	12	holder POST /domain/revoke {"token": "$ta"}	200 {"revoked": "@any"}
-02-disable-revoke-last-admin	13	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	401
-02-disable-revoke-last-admin	14	holder POST /domain/revoke {"token": "not a token"}	401 {"error": "refused"}
-02-disable-revoke-last-admin	15	holder DELETE /domain/users/root	409 {"error": "last admin"}
-02-disable-revoke-last-admin	16	holder PUT /domain/grants/domain {"lines": []}	409 {"error": "last admin"}
-02-disable-revoke-last-admin	17	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
-02-disable-revoke-last-admin	18	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*", "until": 4102444800}]}	409 {"error": "last admin"}
-02-disable-revoke-last-admin	19	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
-02-disable-revoke-last-admin	20	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+02-disable-revoke-last-admin	5	member m1 console @header Authorization: Bearer @spoil($ta) GET /counters	401
+02-disable-revoke-last-admin	6	holder @header Authorization: Bearer @spoil($ta) GET /domain/users	401
+02-disable-revoke-last-admin	7	holder POST /domain/revoke {"token": "@spoil($ta)"}	401 {"error": "refused"}
+02-disable-revoke-last-admin	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
+02-disable-revoke-last-admin	9	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+02-disable-revoke-last-admin	10	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+02-disable-revoke-last-admin	11	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	403 {"error": "denied"}
+02-disable-revoke-last-admin	12	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
+02-disable-revoke-last-admin	13	holder PUT /domain/users/ann {"disabled": false}	200 {"user": "ann", "disabled": false}
+02-disable-revoke-last-admin	14	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
+02-disable-revoke-last-admin	15	holder POST /domain/revoke {"token": "$ta"}	200 {"revoked": "@any"}
+02-disable-revoke-last-admin	16	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	401
+02-disable-revoke-last-admin	17	holder POST /domain/revoke {"token": "not a token"}	401 {"error": "refused"}
+02-disable-revoke-last-admin	18	holder DELETE /domain/users/root	409 {"error": "last admin"}
+02-disable-revoke-last-admin	19	holder PUT /domain/grants/domain {"lines": []}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	20	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	21	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*", "until": 4102444800}]}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	22	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
+02-disable-revoke-last-admin	23	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
 03-break-glass	1	@domain	ok
 03-break-glass	2	holder PUT /domain/break-glass/m1 {"password": "short pw"}	400 {"error": "bad password"}
 03-break-glass	3	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}

@@ -22,14 +22,15 @@ scenario	step	request	expect
 02-another-root-and-leave	6	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "another"}]}
 02-another-root-and-leave	7	holder POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	409 {"error": "refused", "detail": "~another key than the one compared"}
 02-another-root-and-leave	8	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	409 {"error": "refused", "detail": "~another root"}
-02-another-root-and-leave	9	@join m2	refused
-02-another-root-and-leave	10	holder POST /domain/members {"name": "hold", "fingerprint": "0000000000000000"}	400
-02-another-root-and-leave	11	holder DELETE /domain/members/m9	404
-02-another-root-and-leave	12	@start agent m1	ok
-02-another-root-and-leave	13	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
-02-another-root-and-leave	14	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"key": "@any"}}}
-02-another-root-and-leave	15	holder DELETE /domain/members/m1	200 {"members": {"m1": "@absent", "hold": "@any"}}
-02-another-root-and-leave	16	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
+02-another-root-and-leave	9	member m2 store GET /v1/get?key=domain/keys	200 {"items": null}
+02-another-root-and-leave	10	@join m2	refused
+02-another-root-and-leave	11	holder POST /domain/members {"name": "hold", "fingerprint": "0000000000000000"}	400
+02-another-root-and-leave	12	holder DELETE /domain/members/m9	404
+02-another-root-and-leave	13	@start agent m1	ok
+02-another-root-and-leave	14	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
+02-another-root-and-leave	15	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"key": "@any"}}}
+02-another-root-and-leave	16	holder DELETE /domain/members/m1	200 {"members": {"m1": "@absent", "hold": "@any"}}
+02-another-root-and-leave	17	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
 03-generations-and-mark	1	@domain	ok
 03-generations-and-mark	2	@sleep 20	ok
 03-generations-and-mark	3	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "keys_rev": "@any", "pinned": "@any"}
@@ -99,6 +100,8 @@ scenario	step	request	expect
 10-agent-signature	14	agent-sig inputs/agent-sig-14-missing.json	ok {"result": "refused", "reason": "no_signature"}
 10-agent-signature	15	agent-sig inputs/agent-sig-15-ms-leading-zero.json	ok {"result": "refused", "reason": "not_a_signature"}
 10-agent-signature	16	agent-sig inputs/agent-sig-16-ms-17-digits.json	ok {"result": "refused", "reason": "not_a_signature"}
+10-agent-signature	17	agent-sig inputs/agent-sig-17-signature-63-bytes.json	ok {"result": "refused", "reason": "not_a_signature"}
+10-agent-signature	18	agent-sig inputs/agent-sig-18-get-with-body.json	ok {"result": "refused", "reason": "bad_signature"}
 11-seal-member	1	seal-member inputs/seal-member-01-opens.json	ok {"result": "ok", "plain": "{\"grants\":{\"alice\":[\"view\"]}}"}
 11-seal-member	2	seal-member inputs/seal-member-02-empty.json	ok {"result": "ok", "plain": ""}
 11-seal-member	3	seal-member inputs/seal-member-03-other-member.json	ok {"result": "refused", "reason": "does_not_open"}

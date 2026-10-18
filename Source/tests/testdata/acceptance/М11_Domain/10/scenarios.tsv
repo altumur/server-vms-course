@@ -22,8 +22,9 @@ scenario	step	request	expect
 02-emergency-move	11	@until 60 member hold console GET /api/held	200 {"term": 2}
 02-emergency-move	12	@sleep 10	ok
 02-emergency-move	13	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
-02-emergency-move	14	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
-02-emergency-move	15	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
+02-emergency-move	14	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed"}
+02-emergency-move	15	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+02-emergency-move	16	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
 03-move-refusals	1	@domain	ok
 03-move-refusals	2	@stop domain	ok
 03-move-refusals	3	@start domain on m1	ok
@@ -49,6 +50,9 @@ scenario	step	request	expect
 05-record	7	record inputs/record-07-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
 05-record	8	record inputs/record-08-not-a-row.json	ok {"result": "refused", "reason": "not_a_record"}
 05-record	9	record inputs/record-09-extra-field.json	ok {"result": "refused", "reason": "not_a_record"}
+05-record	10	record inputs/record-10-backup-ok.json	ok {"result": "ok", "term": 1, "holder": "hold"}
+05-record	11	record inputs/record-11-backup-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
+05-record	12	record inputs/record-12-grant-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
 06-follow	1	follow inputs/follow-01-larger-term.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
 06-follow	2	follow inputs/follow-02-held-larger.json	ok {"result": "stay", "reason": "larger", "term": 2, "refused": {}}
 06-follow	3	follow inputs/follow-03-holding.json	ok {"result": "stay", "reason": "holding", "term": 2, "refused": {}}
@@ -58,6 +62,7 @@ scenario	step	request	expect
 06-follow	7	follow inputs/follow-07-nobody-answers.json	ok {"result": "stay", "reason": "none", "refused": {}}
 06-follow	8	follow inputs/follow-08-forged-only.json	ok {"result": "stay", "reason": "none", "refused": {"m9": "unknown_issuer"}}
 06-follow	9	follow inputs/follow-09-same-term-other-holder.json	ok {"result": "follow", "term": 2, "holder": "m2", "url": "http://m2.test:8443"}
+06-follow	10	follow inputs/follow-10-tampered-answer.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m1": "bad_signature"}}
 07-ask-sig	1	ask-sig inputs/ask-sig-01-backup-ok.json	ok {"result": "ok"}
 07-ask-sig	2	ask-sig inputs/ask-sig-02-prepare-ok.json	ok {"result": "ok"}
 07-ask-sig	3	ask-sig inputs/ask-sig-03-missing.json	ok {"result": "refused", "reason": "missing"}
@@ -67,3 +72,10 @@ scenario	step	request	expect
 07-ask-sig	7	ask-sig inputs/ask-sig-07-other-key.json	ok {"result": "refused", "reason": "bad_signature"}
 07-ask-sig	8	ask-sig inputs/ask-sig-08-other-cluster.json	ok {"result": "refused", "reason": "bad_signature"}
 07-ask-sig	9	ask-sig inputs/ask-sig-09-time-one-decimal.json	ok {"result": "refused", "reason": "bad_time"}
+07-ask-sig	10	ask-sig inputs/ask-sig-10-future-skew.json	ok {"result": "refused", "reason": "skew"}
+07-ask-sig	11	ask-sig inputs/ask-sig-11-prepare-other-key.json	ok {"result": "refused", "reason": "bad_signature"}
+08-forged-record-ignored	1	@domain	ok
+08-forged-record-ignored	2	member hold store POST /v1/write {"op": "put", "key": "domain/holder", "items": {"doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"restored_from\":{\"rev\":3,\"term\":1},\"sig\":\"NVTpK7Z0xhNCh6_EPdMRYlvykN3206nq21CsAvVU4sDZYGXfPB9jh5bcg5o01QArLj1nDxb1ekwElPX_TkWfDg\",\"term\":2,\"url\":\"http://m1.test:9999\"}"}}	200
+08-forged-record-ignored	3	@sleep 15	ok
+08-forged-record-ignored	4	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
+08-forged-record-ignored	5	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}

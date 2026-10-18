@@ -12,6 +12,7 @@ scenario	step	request	expect
 02-key-set-root	5	keys inputs/keys-08-tampered.json	ok {"result": "refused", "reason": "bad_signature"}
 02-key-set-root	6	keys inputs/keys-11-kid-not-root.json	ok {"result": "refused", "reason": "bad_signature"}
 02-key-set-root	7	keys inputs/keys-18-kid-not-root-another-domain.json	ok {"result": "refused", "reason": "bad_signature"}
+02-key-set-root	8	keys inputs/keys-20-signature-63-bytes.json	ok {"result": "refused", "reason": "bad_signature"}
 03-key-set-form	1	keys inputs/keys-09-no-book-seal.json	ok {"result": "refused", "reason": "no_book_seal"}
 03-key-set-form	2	keys inputs/keys-10-not-json.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	3	keys inputs/keys-13-unknown-field.json	ok {"result": "refused", "reason": "not_a_set"}
@@ -35,6 +36,7 @@ scenario	step	request	expect
 06-token-clock	2	token inputs/token-09-expired-past-60.json	ok {"result": "refused", "reason": "expired"}
 06-token-clock	3	token inputs/token-10-future-past-60.json	ok {"result": "refused", "reason": "future"}
 06-token-clock	4	token inputs/token-23-future-at-60.json	ok {"result": "ok"}
+06-token-clock	5	token inputs/token-28-exp-string.json	ok {"result": "refused", "reason": "bad_claims"}
 07-token-revoked	1	token inputs/token-11-revoked.json	ok {"result": "refused", "reason": "revoked"}
 07-token-revoked	2	token inputs/token-13-other-revoked.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 07-token-revoked	3	token inputs/token-12-revoked-unreadable.json	ok {"result": "refused", "reason": "no_revocations"}

@@ -10,6 +10,8 @@ scenario	step	request	expect
 01-forward-to-holder	8	member m1 console GET /domain/nowhere	404 {"error": "not a domain route"}
 01-forward-to-holder	9	member m1 console DELETE /domain/topology	404 {"error": "not a domain route"}
 01-forward-to-holder	10	member m1 console PUT /domain/topology {"base_rev": 0, "via": "@big(1100000)"}	413
+01-forward-to-holder	11	@person -	ok
+01-forward-to-holder	12	member m1 console @header X-Operator: console GET /domain/users	401
 02-one-hop-and-addresses	1	@domain m1	ok
 02-one-hop-and-addresses	2	member m2 console GET /domain	404 {"error": "no domain here"}
 02-one-hop-and-addresses	3	member m1 console @header X-W2C-Via: m2 GET /domain	400 {"error": "one hop"}
@@ -78,3 +80,6 @@ scenario	step	request	expect
 06-peer	15	peer inputs/peer-15-not-a-pem.json	ok {"result": "refused", "reason": "bad_chain"}
 06-peer	16	peer inputs/peer-16-intermediate-missing.json	ok {"result": "refused", "reason": "bad_chain"}
 06-peer	17	peer inputs/peer-17-anchor-expired.json	ok {"result": "refused", "reason": "expired"}
+06-peer	18	peer inputs/peer-19-leaf-not-signed-by-named-ca.json	ok {"result": "refused", "reason": "bad_chain"}
+06-peer	19	peer inputs/peer-20-intermediate-not-ca.json	ok {"result": "refused", "reason": "bad_chain"}
+06-peer	20	peer inputs/peer-21-leaf-not-yet-valid.json	ok {"result": "refused", "reason": "expired"}

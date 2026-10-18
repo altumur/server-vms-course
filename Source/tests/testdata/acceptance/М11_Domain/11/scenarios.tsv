@@ -26,6 +26,7 @@ scenario	step	request	expect
 02-silent-member	8	@start agent m2	ok
 02-silent-member	9	@until 60 holder GET /domain/shared	200 {"delivery": {"holding": ["hold", "m1", "m2"], "silent": []}}
 02-silent-member	10	@until 30 holder GET /domain/alarms	200 {"complete": true, "sentence": "every member answered"}
+02-silent-member	11	member m1 console @header X-Agent-Signature: 1760000000000.AAAA GET /events?class=alarm	401
 03-resolve	1	resolve inputs/resolve-01-unit-own.json	ok {"value": 3, "from": "unit"}
 03-resolve	2	resolve inputs/resolve-02-domain.json	ok {"value": 5, "from": "domain term 1 rev 3"}
 03-resolve	3	resolve inputs/resolve-03-spec.json	ok {"value": 1, "from": "spec"}
@@ -51,3 +52,8 @@ scenario	step	request	expect
 05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200
 05-unsigned-document	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~not_a_record"}}
 05-unsigned-document	5	member m1 store GET /v1/get?key=domain/shared	200 {"items": null}
+05-unsigned-document	6	member hold console GET /domain/shared/testsub	200 {"fields": {"step": {"value": 1, "from": "spec"}}}
+06-pointer-checksum	1	@domain	ok
+06-pointer-checksum	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
+06-pointer-checksum	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
+06-pointer-checksum	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~does not match the pointer"}}

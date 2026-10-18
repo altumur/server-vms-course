@@ -1,0 +1,10 @@
+{
+ "ask": "prepare",
+ "cluster": "m1",
+ "pub": "88cae557b9e5d4285769289b5af9d27cfdee0092823f38993912feae4b0c92c7",
+ "header": {
+  "time": "1759999995.000",
+  "signature": "qWV8oT2k31ZqnI7rkiduXIafzw5PWQc_tD9w3PeFFXu8mcb58xFjdYgup72AyneNbNNjzxJaEQo7WcvYWuQdAQ"
+ },
+ "now": 1760000000
+}
