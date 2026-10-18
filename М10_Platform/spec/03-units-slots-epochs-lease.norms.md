@@ -16,7 +16,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/next_id`, `<sub>/idem/<key>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`, `platform/epoch_floor`;
-- читает: `platform/spec/<sub>`, `<sub>/placement/<id>`, `<sub>/controller/pass`.
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/placement/<id>`, `<sub>/controller/pass`.
 
 ### Н1.1 Раскладка ключей подсистемы
 
