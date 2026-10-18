@@ -1,0 +1,1 @@
+{"worker": "w-1", "ts": 1760000000, "status": [], "server": "srv-a", "instance": "acc:1:0a0b0c", "capacity": 4, "pending_writes": 0, "labels": "a,b"}
