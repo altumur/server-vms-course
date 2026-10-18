@@ -11,6 +11,11 @@
 
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/placement/<sub>/<ref>` — `at`; правка в `domain/pending/<член>` — `at`; исход — `at`, `kept_at`.
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/placed`, `domain/placed/<sub>/<ref>`, `domain/pending/<член>`, `domain/outcomes`, `domain/outcomes/<член>`;
+- пишет: `domain/view` (put);
+- читает: `domain/members`, `<sub>/<spec:unit.rows>/<id>`.
+
 Общее уроков 2 и 3 Н1 действует. Назначение пишет только оператор: размещение единиц доменом по достижимости — долг в
 `ХОД-Спецификация.md` (ответ на записку М11 п. 3). Домен не пишет строк в члены: правку члена применяет агент члена через
 дверь единиц своей консоли (М10/3).
