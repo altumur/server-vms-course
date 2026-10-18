@@ -1,15 +1,18 @@
 scenario	step	request	expect
 # Приёмка М11/12: стенд hold, m1, m2 — спокойный член, список членов только отставшему, ключ члена не читается, один процесс domain. Формат — README.
 01-quiet-member	1	@domain m1	ok
-01-quiet-member	2	@sleep 10	ok
-01-quiet-member	3	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "$t1"}
-01-quiet-member	4	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}, "index": "$i1"}
-01-quiet-member	5	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}, "index": "$k1"}
-01-quiet-member	6	@sleep 30	ok
-01-quiet-member	7	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
-01-quiet-member	8	member m1 store GET /v1/get?key=domain/member-list	200 {"index": "$i1"}
-01-quiet-member	9	member m1 store GET /v1/get?key=domain/keys	200 {"index": "$k1"}
-01-quiet-member	10	member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
+01-quiet-member	2	@sleep 35	ok
+01-quiet-member	3	store GET /v1/get?key=domain/keepers/m1	200 {"items": {"sha256": "$b1"}}
+01-quiet-member	4	@until 30 member m1 store GET /v1/get?key=domain/backup-taken	200 {"items": {"sha256": "$b1"}}
+01-quiet-member	5	@sleep 10	ok
+01-quiet-member	6	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "$t1"}
+01-quiet-member	7	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}, "index": "$i1"}
+01-quiet-member	8	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}, "index": "$k1"}
+01-quiet-member	9	@sleep 30	ok
+01-quiet-member	10	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
+01-quiet-member	11	member m1 store GET /v1/get?key=domain/member-list	200 {"index": "$i1"}
+01-quiet-member	12	member m1 store GET /v1/get?key=domain/keys	200 {"index": "$k1"}
+01-quiet-member	13	member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
 02-members-only-to-the-lagging	1	@domain m1	ok
 02-members-only-to-the-lagging	2	@sleep 10	ok
 02-members-only-to-the-lagging	3	@carry m1	ok {"cluster": "m1", "members": "@absent"}
