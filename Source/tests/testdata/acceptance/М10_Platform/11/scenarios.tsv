@@ -99,3 +99,10 @@ scenario	step	request	expect
 15-service-doors	7	admin HEAD /v1/status	405
 15-service-doors	8	admin HEAD /v1/rights	404
 15-service-doors	9	console2 GET /entries	503
+16-presence-lock	1	@start resource	ok
+16-presence-lock	2	@start worker w-1	ok
+16-presence-lock	3	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+16-presence-lock	4	@sigkill w-1	ok
+16-presence-lock	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": []}
+16-presence-lock	6	@start worker w-1	ok
+16-presence-lock	7	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
