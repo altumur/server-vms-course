@@ -12,7 +12,8 @@
 
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
 - владеет: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`;
-- читает: `platform/spec/<sub>`.
+- пишет: `<sub>/slots/<имя>` (create), `<sub>/<spec:unit.rows>/<id>` (delete);
+- читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/holds/<место>`, `platform/schema`, `platform/resources/<server>/heartbeat`.
 
 ### Н1.1 Строки контроллера
 
