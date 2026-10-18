@@ -1,6 +1,6 @@
 # The platform's log mask (the course's and the product's masking of a log line): a text that
 # is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
-# credential, every name=value whose name is a secret's, and every address in it masked. The norm — М10/7 Н1.4 `log`
+# credential (Authorization and Proxy-Authorization, М10/7 Н1.4), every name=value whose name is a secret's, and every address in it masked. The norm — М10/7 Н1.4 `log`
 # with Н1.1а (pairs, addresses); it is not secret_in.tsv's: those are a url field's values. Owner: «Спецификация»; the
 # product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by a test of the product, as a process that
 # knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
@@ -33,3 +33,11 @@ Authorization: Digest username="admin", response="5ccc"	Authorization: Digest us
 {"password": ""}	{"password": ""}	an empty string stays empty
 ?pwd=http://u:p@h/x&channel=1	?pwd=***&channel=1	a secret pair's value is masked to its end, an address in it included (Н1.1а А6; S17)
 ?user=admin%26pwd%3Dhunter2&x=1	?user=***&x=1	a pair hidden by escaping carries a password: the whole value is masked (Н1.1а А7)
+# rows of the acceptance copy М10/07 and Bearer (stage A review: Gemini 4.3, SA1-23)
+{"name":"gate","password":"hunter2"}	{"name":"gate","password":"***"}	a JSON pair whose name is a secret's is a pair too
+{"password" : "a\"b", "x": 1}	{"password" : "***", "x": 1}	the value runs to its closing quote, past an escaped one
+{"password": 1234}	{"password": "***"}	a number is a value too
+?pwd=http://u:hunter2@h/x	?pwd=***	a secret pair's value is masked whole, an address in it too, not only its userinfo (A6; reconciliation M10/6-11, S17)
+?%26p%2577d=hunter2	?***	a name that decodes to «&pwd» is read as pairs: the name goes with the value (A7; S17)
+?pwd=Hun<ter2&x=1	?pwd=***&x=1	< does not end a pair's value: the mask runs to the end of the value (A6; S4)
+Authorization: Bearer abc.def	Authorization: Bearer ***	the Authorization header with Bearer (М10/7 Н1.4 log; stage A review SA1-23)
