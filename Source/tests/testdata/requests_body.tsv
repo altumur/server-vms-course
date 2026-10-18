@@ -1,6 +1,6 @@
 # How a request's body value is written into its row, and how any JSON value the platform puts in a row is written (the
-# canonical form): one table for the course (Source/tests/testdata/requests_body.tsv; w2cplatform/canonical.py) and the
-# product (testdata/requests_body.tsv at its root; canonjson.go, requests.go), byte for byte. Owner: «Спецификация»;
+# canonical form): one table for the course and the
+# product (each keeps its copy; the canonical JSON and the request door of both sides take it), byte for byte. Owner: «Спецификация»;
 # the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083).
 # Rules: «Архитектор», 2026-10-05/06. The course's seed (2d517c88) merged in whole.
 #
