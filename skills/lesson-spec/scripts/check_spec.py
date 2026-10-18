@@ -231,6 +231,53 @@ EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry"}
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
 
 
+# Data contract catalog (ADR-0083 доп. (2) п. 1–2, form decisions/inbox/2026-10-18-каталог-данных-форма.md).
+CATALOG = Path("Platform/contracts/data/catalog.tsv")
+CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
+CATALOG_KINDS = {"row", "object", "file", "dir"}
+CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
+ROLE = r"(?:console|resource|domain|domainagent|domainconsole|admin|<s>(?:controller|worker|domain))"
+LESSON = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]{1,2}|P/[0-9]{2}(?:\.[0-9]+)?)"
+DATA_LINE = re.compile(r"^- (владеет|пишет|читает):\s*(.*?);?\s*$")
+
+
+def parse_ops(text):
+    """`op=role(cond),role; op=…` → {op: {role}}; a condition belongs to its role, never holds `;` or nested `(`."""
+    ops = {}
+    for part in text.split("; "):
+        op, sep, rest = part.partition("=")
+        if not sep or op not in CATALOG_OPS or op in ops:
+            raise ValueError(f"operation {op!r} unknown, repeated or without participants")
+        roles, pos = set(), 0
+        while pos < len(rest):
+            match = re.match(ROLE + r"(?:\(([^()]*)\))?", rest[pos:])
+            if not match or (match.group(1) is not None and ";" in match.group(1)):
+                raise ValueError(f"participants of {op}: expected role[(condition)] at {rest[pos:]!r}")
+            roles.add(re.match(ROLE, rest[pos:]).group(0))
+            pos += match.end()
+            if pos < len(rest):
+                if rest[pos] != ",":
+                    raise ValueError(f"participants of {op}: expected ',' at {rest[pos:]!r}")
+                pos += 1 + (rest[pos + 1:pos + 2] == " ")
+        if not roles:
+            raise ValueError(f"operation {op} has no participants")
+        ops[op] = roles
+    return ops
+
+
+def key_pattern(key):
+    """Catalog key → (regex, literal length, sample key): `<слово>` is one segment, a trailing `/*` the family."""
+    family = key.endswith("/*")
+    body = key[:-2] if family else key
+    parts = re.split(r"(<[^<>]+>)", body)
+    regex = "".join("[^/]+" if part.startswith("<") else re.escape(part) for part in parts)
+    sample = "".join("x" if part.startswith("<") else part for part in parts)
+    literal = sum(len(part) for part in parts if not part.startswith("<"))
+    if family:
+        regex, sample = regex + "/.+", sample + "/x"
+    return re.compile(regex), literal, sample
+
+
 def path_segment(segment):
     """A diagnostic path segment: a mapping key (nonempty string) or a list index (non-negative integer)."""
     if isinstance(segment, str):
@@ -330,8 +377,11 @@ class Check:
         self.excepted = []
         self.registry = {}
         self.used = set()
+        self.catalog = None
         if exceptions is not None:
             self.load_exceptions(exceptions)
+        if (self.root / CATALOG).exists():
+            self.load_catalog(self.root / CATALOG)
 
     # Allowed deviations, each with its reason: lesson (module/NN), kind, value, reason. A row a checked lesson
     # no longer needs is an error, so the registry cannot keep hiding what has been fixed.
@@ -349,6 +399,91 @@ class Check:
             if (lesson, kind, value) in self.registry:
                 self.error(path, f"line {line_no}: duplicate exception")
             self.registry[(lesson, kind, value)] = reason
+
+    def lesson_norms(self, address):
+        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/spec/03-*.norms.md (None if absent)."""
+        module, _, number = address.partition("/")
+        number = number.split(".")[0]
+        dirs = [self.root / "Platform"] if module == "P" else sorted(self.root.glob(f"{module}_*"))
+        for directory in dirs:
+            found = sorted((directory / "spec").glob(f"{int(number):02}-*.norms.md"))
+            found = [f for f in found if re.fullmatch(r"[0-9]{2}-[^.]+\.norms\.md", f.name)]
+            if found:
+                return found[0]
+        return None
+
+    def load_catalog(self, path):
+        rows = self.tsv(path, len(CATALOG_FIELDS))
+        if not rows or rows[0][1] != CATALOG_FIELDS:
+            self.error(path, f"expected header {' '.join(CATALOG_FIELDS)}")
+            return
+        self.catalog = {}
+        for line, cols in rows[1:]:
+            row = dict(zip(CATALOG_FIELDS, cols))
+            try:
+                if not row["key"] or row["key"] in self.catalog:
+                    raise ValueError("key empty or repeated")
+                if row["kind"] not in CATALOG_KINDS:
+                    raise ValueError(f"kind is one of {sorted(CATALOG_KINDS)}")
+                if not re.fullmatch(LESSON, row["owner"]):
+                    raise ValueError("owner is a lesson address (М10/3, М11/6, P/03)")
+                row["ops"] = parse_ops(row["ops"])
+                readers = [r.strip() for r in row["readers"].split(",")]
+                if row["readers"] != "*" and not all(re.fullmatch(ROLE, r) for r in readers):
+                    raise ValueError("readers are roles of М10/6 Н1.1 or *")
+                if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]):
+                    raise ValueError("when is - or a spec key")
+                if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
+                    raise ValueError("version is an integer ≥ 1")
+                if row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
+                    raise ValueError(f"schema {row['schema']} is not a file under Platform/")
+                norm = re.match(LESSON, row["norm"])
+                if not norm or self.lesson_norms(norm.group(0)) is None:
+                    raise ValueError("norm names an existing lesson")
+                if self.lesson_norms(row["owner"]) is None:
+                    raise ValueError("owner names an existing lesson")
+            except ValueError as exc:
+                self.error(path, f"line {line}: {exc}")
+                continue
+            row["pattern"] = key_pattern(row["key"])
+            self.catalog[row["key"]] = row
+        patterns = list(self.catalog.values())
+        for i, a in enumerate(patterns):
+            for b in patterns[i + 1:]:
+                (ra, la, sa), (rb, lb, sb) = a["pattern"], b["pattern"]
+                if la == lb and (rb.fullmatch(sa) or ra.fullmatch(sb)):
+                    self.error(path, f"keys {a['key']} and {b['key']} overlap with equal narrowness")
+        self.stats["catalog_rows"] += len(self.catalog)
+
+    # Paragraph «Данные» in Н1 of a lesson against the catalog: what the lesson owns, writes and reads.
+    def data_paragraph(self, path, text, prefix):
+        if self.catalog is None:
+            return
+        owned = {key for key, row in self.catalog.items() if row["owner"] == prefix}
+        lines = text.splitlines()
+        start = next((i for i, line in enumerate(lines) if line.startswith("**Данные**")), None)
+        if start is None:
+            if owned:
+                self.error(path, f"no «Данные» paragraph, the catalog says it owns {sorted(owned)}")
+            return
+        said = {"владеет": set(), "пишет": {}, "читает": set()}
+        for line in lines[start + 1:]:
+            match = DATA_LINE.match(line)
+            if not match:
+                break
+            for key, op in re.findall(r"`([^`]+)`(?:\s*\(([a-z]+)\))?", match.group(2)):
+                if key not in self.catalog:
+                    self.error(path, f"«Данные»: {key} is not in the catalog")
+                    continue
+                if match.group(1) == "пишет":
+                    said["пишет"][key] = op
+                    if not op or op not in self.catalog[key]["ops"]:
+                        self.error(path, f"«Данные»: write ({op or 'no operation'}) is not among the catalog ops of {key}")
+                else:
+                    said[match.group(1)].add(key)
+        if said["владеет"] != owned:
+            self.error(path, f"«Данные»: owns {sorted(said['владеет'])}, the catalog says {sorted(owned)}")
+        self.stats["data_paragraphs"] += 1
 
     def exception(self, lesson, kind, value="-"):
         return self.registry.get((lesson, kind, value))
@@ -672,6 +807,7 @@ class Check:
                 self.markdown(path, text)
                 if path == norms:
                     ids = self.norms(path, text, prefix)
+                    self.data_paragraph(path, text, prefix)
         contract = spec / f"{lesson.stem}.api.openapi.yaml"
         if self.exception(key, "no-openapi") is None:
             self.openapi(contract)

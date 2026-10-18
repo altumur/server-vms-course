@@ -562,6 +562,51 @@ components:
         classes.write_text("valid\tvalue\ninvalid\tsyntax\n")
         self.assertEqual(len(self.check().errors), 2)
 
+    def write_catalog(self, *rows):
+        path = self.root / "Platform/contracts/data/catalog.tsv"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        header = "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n"
+        path.write_text("# catalog\n" + header + "".join("\t".join(row) + "\n" for row in rows))
+
+    def data(self, *lines):
+        text = self.norms.read_text().replace("## Н1 Section\n", "## Н1 Section\n**Данные**:\n" + "".join(l + "\n" for l in lines) + "\n")
+        self.norms.write_text(text)
+
+    SLOT = ["<sub>/slots/<имя>", "row", "М12A/1",
+            'create=<s>worker(cas "", имя свободно),<s>controller(только предложение); cas=<s>worker(своё имя), <s>controller(release)',
+            "<s>controller, console", "-", "1", "-", "М12A/1 Н1"]
+
+    def test_catalog_and_data_paragraph_agree(self):
+        self.write_catalog(self.SLOT, ["platform/spec/<sub>", "row", "М12A/1", "put=admin", "*", "-", "1", "-", "М12A/1 Н1"])
+        self.data("- владеет: `<sub>/slots/<имя>`, `platform/spec/<sub>`;", "- пишет: `<sub>/slots/<имя>` (cas);")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["catalog_rows"], 2)
+        self.assertEqual(result.stats["data_paragraphs"], 1)
+
+    def test_catalog_ops_grammar_and_overlap(self):
+        bad_semicolon = list(self.SLOT); bad_semicolon[0] = "a/<x>"; bad_semicolon[3] = "cas=<s>worker(одно; другое)"
+        bad_op = list(self.SLOT); bad_op[0] = "b/<x>"; bad_op[3] = "upsert=console"
+        bad_role = list(self.SLOT); bad_role[0] = "c/<x>"; bad_role[4] = "operator"
+        twin = list(self.SLOT); twin[0] = "<sub>/slots/<id>"
+        self.write_catalog(self.SLOT, bad_semicolon, bad_op, bad_role, twin)
+        self.data("- владеет: `<sub>/slots/<имя>`, `<sub>/slots/<id>`;")
+        errors = "\n".join(self.check().errors)
+        self.assertIn("participants of cas", errors)
+        self.assertIn("operation 'upsert'", errors)
+        self.assertIn("readers are roles", errors)
+        self.assertIn("overlap with equal narrowness", errors)
+
+    def test_data_paragraph_must_match_catalog(self):
+        self.write_catalog(self.SLOT)
+        self.data("- владеет: `nothing/here`;", "- пишет: `<sub>/slots/<имя>` (delete);")
+        errors = "\n".join(self.check().errors)
+        self.assertIn("nothing/here is not in the catalog", errors)
+        self.assertIn("write (delete) is not among the catalog ops", errors)
+        self.assertIn("the catalog says ['<sub>/slots/<имя>']", errors)
+        self.norms.write_text(self.norms.read_text().replace("**Данные**", "**Иное**"))
+        self.assertIn("no «Данные» paragraph", "\n".join(self.check().errors))
+
     def test_empty_and_unknown_acceptance_are_not_green(self):
         self.scenarios.write_text("# empty\n")
         self.assertTrue(self.check().errors)
