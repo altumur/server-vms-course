@@ -12,3 +12,4 @@ date	sample	fix	languages
 2026-10-18	11/scenarios.tsv: 09 (новый); README	сверка cammeta-python и cammeta-go: нечитаемый пульс ресурса при свежей двери — unreachable, правила resource_state по порядку; директива @spoil object	all
 2026-10-18	09-resource-unreadable-heartbeat 5, 7	@as resource без двери: по словарю М10/01 @as — роль следующих store-шагов, шаг пишет «@as resource store POST» (находка cammeta-go 11 № 7)	all
 2026-10-18	09-resource-unreadable-heartbeat 5, 7	id команды /v1/write не по М10/1 Н1 (1–64 строчных hex): g1/u1/u2 → a1/a2; нормативный ответ был бы 400 (cammeta-go 05 № 6, 11 № 8)	all
+2026-10-18	11/scenarios.tsv: 10 (новый); README; словарь М10/01: @foreign store, spec-put	пилот хранилища (ADR-0083 п. 7, А1, А6): старт хранилища на чужом каталоге — код 2, каталог не изменён; спеки стенда кладёт spec-put через admin.sock, не команда хранилища	all
