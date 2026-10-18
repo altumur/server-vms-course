@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
 - владеет: `platform/resources/<server>/heartbeat`, `<sub>/requests/<rid>`, `<sub>/requests/free-<server>-<volume>`, `<sub>/asked/<sha16(имя)>`, `objects/<sub>/commands/<rid>`, `objects/<sub>/<spec:objects.rows>/*`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`;
 - пишет: `platform/doors/<сервер>` (put);
-- читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`, `platform/decommission/<сервер>`.
+- читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`, `platform/decommission/<сервер>`, `platform/schema`, `<sub>/<spec:tables>/<имя>`.
 
 ### Н1.1 Объект
 
