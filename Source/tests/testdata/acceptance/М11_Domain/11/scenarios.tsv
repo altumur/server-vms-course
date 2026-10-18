@@ -1,7 +1,7 @@
 scenario	step	request	expect
 # Приёмка М11/11: стенд hold, m1, m2 (общий документ, доставка, молчащий член в списке тревог) и векторы resolve, alarms на входах inputs/. Формат — README.
 01-shared-edit-and-read	1	@domain	ok
-01-shared-edit-and-read	2	holder GET /domain/shared	200 {"doc": null, "declared": {"testsub": [{"name": "step", "type": "int"}, {"name": "marks", "type": "list"}, {"name": "rounds", "type": "json", "schema": "@any"}]}}
+01-shared-edit-and-read	2	holder GET /domain/shared	200 {"doc": null, "declared": {"testsub": [{"name": "marks", "type": "list"}, {"name": "rounds", "type": "json", "schema": "@any"}, {"name": "step", "type": "int"}]}}
 01-shared-edit-and-read	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"term": 1, "rev": 1, "by": "root"}
 01-shared-edit-and-read	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 6}}}	409 {"error": "refused", "detail": "~are at rev 1"}
 01-shared-edit-and-read	5	holder PUT /domain/shared {"base_rev": 0, "shared": {"nosub": {"a": 1}}}	409 {"error": "refused", "detail": "~are at rev 1"}
