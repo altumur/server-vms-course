@@ -63,3 +63,19 @@ scenario	step	request	expect
 10-resource-pulse-rows	1	@start resource	ok
 10-resource-pulse-rows	2	@until 30 GET /resources	200 {"srv-a": {"state": "live", "waits": "@any", "mirror": "@any", "restore": "@any"}}
 10-resource-pulse-rows	3	GET /metrics	200 ~w2c_resource_waits{server="srv-a"} ~w2c_resource_mirror_failures_total{server="srv-a"} ~w2c_resource_mirror_too_big_total{server="srv-a"} ~w2c_resource_restore_left{server="srv-a"}
+11-resource-pulse-inputs	1	@put object platform/resources/srv-p/heartbeat inputs/res-srv-p-stalled.json	ok
+11-resource-pulse-inputs	2	@put object platform/resources/srv-q/heartbeat inputs/res-srv-q-extra-field.json	ok
+11-resource-pulse-inputs	3	@put object platform/resources/srv-r/heartbeat inputs/res-srv-r-wrong-server.json	ok
+11-resource-pulse-inputs	4	@put object platform/resources/srv-s/heartbeat inputs/res-srv-s-no-url.json	ok
+11-resource-pulse-inputs	5	GET /resources	200 {"srv-p": {"state": "live", "pass_stalled": 12.5}, "srv-q": "@absent", "srv-r": "@absent", "srv-s": "@absent", "srv-x": "@absent"}
+11-resource-pulse-inputs	6	GET /metrics	200 ~w2c_resource_heartbeats_garbled
+12-worker-pulse-inputs	1	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
+12-worker-pulse-inputs	2	@put object testsub/heartbeats/w-7 inputs/hb-w-7-other-name.json	ok
+12-worker-pulse-inputs	3	@put object testsub/heartbeats/W-9 inputs/hb-W-9-bad-name.json	ok
+12-worker-pulse-inputs	4	@put object testsub/heartbeats/w-3 inputs/hb-w-3-no-server.json	ok
+12-worker-pulse-inputs	5	GET /servers	200 {"servers": {"srv-a": {"labels": ["a", "b"], "labels_node": ["a", "b"], "labels_source": "node", "workers": [{"worker": "w-1", "labels": ["a", "b"]}]}, "?": {"workers": [{"worker": "w-3"}]}}}
+12-worker-pulse-inputs	6	GET /metrics	200 ~testsub_heartbeats_garbled 2
+12-worker-pulse-inputs	7	@as console store POST /v1/write {"id":"c16","op":"put","key":"platform/servers/srv-a","items":{"labels":"c"}}	200
+12-worker-pulse-inputs	8	GET /servers	200 {"servers": {"srv-a": {"labels": ["c"], "labels_node": ["a", "b"], "labels_source": "console", "workers": [{"worker": "w-1", "labels": ["c"]}]}}}
+12-worker-pulse-inputs	9	@put object testsub2/heartbeats/t-1 inputs/hb-t-1-belt-slow.json	ok
+12-worker-pulse-inputs	10	GET /testsub2/servers	200 {"servers": {"srv-a": {"workers": [{"worker": "t-1", "status": {"jam": "stuck", "belt.state": "@absent"}}]}}}
