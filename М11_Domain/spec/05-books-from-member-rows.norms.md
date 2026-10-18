@@ -9,6 +9,11 @@
 
 ## Н1 Форма
 
+**Данные** ([каталог](../../Platform/contracts/data/catalog.tsv)):
+- владеет: `<sub>/<spec:domain.books.from>`, `<sub>/<spec:domain.books.from>/<слот>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`, `domain/<sub>/<spec:domain.kept>`, `domain/<sub>/<spec:domain.kept>/*`, `domain/<sub>/worker`;
+- пишет: `domain/view` (put);
+- читает: `<sub>/slots/<имя>`, `domain/book-seal`, `domain/members/<член>/reports/<rev>`.
+
 Общее уроков 2 и 3 Н1 действует. Книга — наблюдение, не власть: `from` прав записи не даёт, писателя назначает
 размещение (М10/4), секреты запечатаны, `show` скрытого не раскрывает, широковещания нет (ADR-0074).
 
