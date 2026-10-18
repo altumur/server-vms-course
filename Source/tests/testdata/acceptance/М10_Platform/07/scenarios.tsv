@@ -9,6 +9,8 @@ scenario	step	request	expect
 02-mask-and-envelope-in	2	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "•••"}	400
 02-mask-and-envelope-in	3	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "enc:v2:k1:AAAA:BBBB"}	400 {"error": "~sealed"}
 02-mask-and-envelope-in	4	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "a***b"}	201 {"feed_secret": "***"}
+02-mask-and-envelope-in	5	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "\t***"}	400 {"error": "~mask"}
+02-mask-and-envelope-in	6	console POST /tallies {"name": "t2", "of": "c1", "feed": "https://hub.example/b", "feed_secret": "\u00a0***"}	400 {"error": "~mask"}
 03-keep-and-bound	1	console POST /tallies {"name": "t3", "of": "c1", "feed": "https://hub.example/c", "feed_user": "u", "feed_secret": "s3"}	201 {"revision": 1}
 03-keep-and-bound	2	store GET /v1/get?key=testsub2/tallies/t3	200 {"items": {"feed_secret": "$e1"}}
 03-keep-and-bound	3	console PUT /tallies/t3 {"feed_user": "u2"}	200 {"revision": 2, "feed_secret": "***"}
@@ -28,5 +30,20 @@ scenario	step	request	expect
 04-password-in-address	6	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?via=https%3A%2F%2Fx%2Fy%3Fpwd%3Dhunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
 04-password-in-address	7	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?name=a%40b"}	201 {"id": "t4"}
 04-password-in-address	8	console POST /tallies {"name": "t4b", "of": "c1", "feed": "https://admin@hub.example/d"}	400 {"fault": "bad_url", "error": "~feed_user"}
+04-password-in-address	9	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https'://hub.example/d?token=hunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
+04-password-in-address	10	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https ://hub.example/d"}	400 {"fault": "bad_url"}
+04-password-in-address	11	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https:%3A//hub.example/d?token=hunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
+04-password-in-address	12	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.ex'ample/d?token=hunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
+04-password-in-address	13	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.example/d?via=https://admin:hunter2@x/y"}	400 {"fault": "bad_url", "error": "!contains feed_user"}
+04-password-in-address	14	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.example/d?who=a%26pwd%3Dhunter2"}	400 {"fault": "bad_url", "error": "!contains feed_user"}
 05-tables	1	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}, {"id": "t2", "feed_secret": "***"}, {"id": "t3", "feed_secret": "***"}, {"id": "t4", "feed_secret": ""}]}
 06-readers	1	@as testsubworker store GET /v1/get?key=testsub2/tallies/t1	403
+07-nested-replace	1	console POST /tallies {"name": "t7", "of": "c1", "feed": "https://hub.example/g", "rule": {"cams": [{"n": "A", "pw_secret": "pa7"}, {"n": "B", "pw_secret": "pb7"}]}}	201 {"rule": {"cams": [{"n": "A", "pw_secret": "***"}, {"n": "B", "pw_secret": "***"}]}}
+07-nested-replace	2	store GET /v1/get?key=testsub2/tallies/t7	200 {"items": {"rule": "~enc:v2:"}}
+07-nested-replace	3	console PUT /tallies/t7 {"rule": {"cams": [{"n": "B"}, {"n": "A"}]}}	200 {"rule": {"cams": [{"n": "B", "pw_secret": "@absent"}, {"n": "A", "pw_secret": "@absent"}]}}
+07-nested-replace	4	store GET /v1/get?key=testsub2/tallies/t7	200 {"items": {"rule": "!contains enc:v2:"}}
+07-nested-replace	5	console PUT /tallies/t7 {"rule": {"cams": [{"n": "A", "pw_secret": null}]}}	200 {"rule": {"cams": [{"n": "A", "pw_secret": null}]}}
+07-nested-replace	6	console PUT /tallies/t7 {"rule": {"cams": [{"n": "A", "pw_secret": 5}]}}	400
+08-feed-anew	1	console POST /tallies {"name": "t8", "of": "c1", "feed": "https://hub.example/h"}	201 {"feed_secret": ""}
+08-feed-anew	2	console PUT /tallies/t8 {"feed": "https://hub.example/h2"}	400 {"error": "~must be given anew"}
+08-feed-anew	3	console PUT /tallies/t8 {"feed": "https://hub.example/h2", "feed_secret": "s8"}	200 {"feed_secret": "***"}
