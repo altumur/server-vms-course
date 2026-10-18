@@ -1,0 +1,5 @@
+# Каталог данных модуля «Платформа» (ADR-0083, стадия A). Форма — decisions/inbox/2026-10-18-каталог-данных-форма.md.
+# Строки выписаны из норм М10 и М11 урок за уроком; owner — адрес урока, при переносе переводится по id-map.tsv.
+key	kind	owner	ops	readers	when	version	schema	norm
+platform/spec/<sub>	row	М10/2	create=admin(spec put, cas "", первая установка rev 1); cas=admin(spec put, rev + 1 по прочитанной версии строки)	*	-	1	-	М10/2 Н1.5
+platform/spec/<sub>/rev	row	М10/2	create=admin(после строки, cas "", метки нет); cas=admin(rev метки ниже rev строки, по прочитанной версии метки)	*	-	1	-	М10/2 Н1.5
