@@ -26,3 +26,4 @@ date	sample	fix	languages
 2026-10-18	03-operator-mark 10; 08-resource-paths 15–16	кодирование имён: unit отметки консоли раскодирован (Н-3); класс тревоги по полю class в дереве audit (Н-2); @append event с {now}	all
 2026-10-18	07-append-by-data 8, 21	@as действует на шаг и следующие store-шаги: после записи полок ролью console шаги 8 и 21 возвращают роль сценария testsub2worker — иначе чтения objects/testsub2/marks/* шли бы от console и давали 403 (журнал cammeta-python 08 № 34, видит и go)	all
 2026-10-18	08-resource-paths 12–16 (без изменений)	имя бакета и e<эпоха> — форма нормы, не кодируются; шаги @append event это и проверяют (журнал cammeta-go 08 № 10)	all
+2026-10-18	03-operator-mark 4	строка ответа ресурса — без epoch_is и fenced: их ставит консоль при слиянии (решение «Архитектора», ревью стадии A; изменение выдачи ресурса)	all
