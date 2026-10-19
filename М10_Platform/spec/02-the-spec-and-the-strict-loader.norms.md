@@ -44,6 +44,8 @@ text:
             уровень 1, каждое отображение и список, блочные и потоковые одинаково, — ещё уровень, скаляр уровня
             не добавляет); ключ без `:` в потоковом отображении (`{a, b: 1}`; `a:b` без пробела — одно слово, так что
             `{a:b}` — ключ без `:`) и пара `k: v` в потоковом списке (`[a: 1]`); пустой элемент потока (`[a,,b]`, `[a,]`);
+            ключ потокового отображения с `:` и без значения (`{unconfirmed_max:}`) — не пустой элемент потока, а
+            сказанный ключ без значения: `refused:value` (scalars null; добавлено пилотом варианта C, П7);
             строка файла, которую читатель не смог отнести ни к какому ключу
   scalars:
     # таблица скаляров — норма этого урока, не ссылка на core YAML 1.2 (добавлено пилотом JSON Schema)
@@ -190,13 +192,13 @@ closed_key_set:
 | Ключ | Тип и границы | Обязательность / умолчание |
 |---|---|---|
 | `placement` | отображение | обязателен |
-| `capacity` | `{from, default, unit_mb?, base_mb?}` | обязателен |
+| `capacity` | `{from?, default, unit_mb?, base_mb?}` (добавлено пилотом варианта C, П1: `?` — необязательный ключ) | обязателен |
 | `capacity.from` | строка — поле пульса | нет — `capacity` |
 | `capacity.default` | целое ≥ 0 | обязателен |
 | `capacity.unit_mb` | число > 0 | нет — бюджет памяти не проверяется (урок 5 Н1.2 `memory`) |
 | `capacity.base_mb` | число ≥ 0 | нет — 0 (бюджет памяти — одна формула урока 5 Н1.2 `memory`, проверка — урок 5 Н3 «старт()», шаг 1) |
-| `headroom` | `{from}`; `from` — строка, поле пульса | нет — `from: headroom` |
-| `weight` | `{field, default}`: `field` — поле типа int; `default` — целое ≥ 1 | нет — вес 1 у всех; в `weight` оба необязательны: без `field` вес — `default`, без `default` — 1 |
+| `headroom` | `{from?}`; `from` — строка, поле пульса | нет — `from: headroom` |
+| `weight` | `{field?, default?}`: `field` — поле типа int; `default` — целое ≥ 1 | нет — вес 1 у всех; в `weight` оба необязательны: без `field` вес — `default`, без `default` — 1 |
 | `constraint` | слово: `none`, `labels-subset` | нет — `none` |
 | `tie_break` | слово: `most-free-capacity` | нет — оно же |
 | `servers` | слово: `shared`, `distinct` | нет — `shared` |
@@ -223,7 +225,7 @@ closed_key_set:
 | `tables.<т>.fields` | отображение named; поле по таблице «Поле» | нет — `{}` |
 | `tables.<т>.schema` | как `schema` поля | необязателен |
 | `tables.<т>.stamp` | список слов из `by`, `at`, `made_at` | необязателен |
-| `tables.<т>.journal` | `{written, deleted}` — строки | нет — `<т>.written`, `<т>.deleted` |
+| `tables.<т>.journal` | `{written?, deleted?}` — строки | нет — `<т>.written`, `<т>.deleted` |
 
 **`requests`, `holds`, `events`, `about`** (смысл — урок 8)
 
@@ -240,7 +242,7 @@ closed_key_set:
 | `requests.journal` | строка — вид журнала | необязателен |
 | `requests.elsewhere` | список строк | необязателен |
 | `requests.free` | bool | нет — `false` |
-| `holds` | `{table, unit, since, until, longest, released?}`: таблица; поля таблицы; `longest` — число > 0, секунды | необязателен; все его ключи необязательны |
+| `holds` | `{table?, unit?, since?, until?, longest?, released?}`: таблица; поля таблицы; `longest` — число > 0, секунды | необязателен; все его ключи необязательны |
 | `events.suppress` | отображение named: вид события → `{window, by?}`: `window` — число > 0, секунды; `by` — непустой список строк без `t`, `id`, `repeats`, `since`, `until` | необязателен; `by` нет — все поля строки, кроме этих |
 | `events.older_epochs` | слово: `fenced`, `earlier-run` | нет — `fenced` |
 | `about` | `{sub, field}`: `sub` — имя подсистемы по грамматике `name` (Н1.2; существование — не проверка загрузчика); `field` — поле с `fixed: true` | необязателен; в нём оба обязательны; смысл — 8 Н1.2, 3 Н1.3 |
@@ -256,7 +258,7 @@ closed_key_set:
 | `rights.reach` | `{group?, cluster?, requests?}` — списки; `group` требует `placement.group_by` | необязателен | 6 Н1.5 |
 | `rights.names` | список `{field, unit, sub \| of}`: строки, ровно один из `sub` и `of` | необязателен | 6 Н1.5 |
 | `secrets.readers` | named: точное имя строки или префикс с `/` → непустой список ролей из закрытых 8 урока 7 Н1.3 | нет — своих секретных строк нет | 7 Н1.3 |
-| `secrets.reads` | список точных имён или префиксов | необязателен | 7 Н1.3 |
+| `secrets.reads` | список `<семья>/<имя>` или префиксов с `/`, как `worker.reads`; голое слово — отказ value (добавлено пилотом варианта C, П2) | необязателен | 7 Н1.3 |
 | `worker.writes` | список собственных таблиц; `unit.rows` или необъявленное имя — `refused:reference`; таблица с полем `*_secret` — `refused:value`: её строки пишет только воркер, а перезапечатывает консоль (урок 7 Н3 «перезапечатать при старте»), назначенного иного писателя нет | нет — таблиц воркера нет | 6 Н1.4 |
 | `worker.reads` | список `<семья>/<имя>` или префиксов с `/`; голое слово — отказ | необязателен | 6 Н1.4 |
 | `worker.requests` | список других подсистем (своя — отказ; принимает ли — каталог) | необязателен | 8 Н1.5 |
@@ -325,8 +327,8 @@ field:
   # list — список строк; произвольные значения/структуры принадлежат типу json
   default:    одно значение типа поля     # json — любое значение JSON; отображение у string — отказ
   inherit:    одно значение типа поля     # только у поля единицы; последнее звено цепи наследования
-  merge:      слово (например union)      # только у поля единицы и только с inherit
-  enum:       [значения типа поля]        # только у string (строки) и bool (true/false); у int, float, list, json — отказ; default ДОЛЖЕН быть из enum
+  merge:      union | override            # только у поля единицы и только с inherit; union — только у type: list (Н1.2а)
+  enum:       [значения типа поля]        # только у string (строки) и bool (true/false); у int, float, list, json, url, blob — отказ (как Н1.2а; добавлено пилотом варианта C, П5); default ДОЛЖЕН быть из enum
   unique:     true | canonical            # только у поля единицы; canonical — сравнение по канонической форме URL (урок 3 Н1.3)
   ref, bound_to, must_match, schema, schemes, credentials, secret_in:   # формы: ref, must_match — урок 3 Н1.3; schema — урок 3 Н1.2,
                                                                         #   глубина — урок 10 Н1.4; bound_to, credentials, secret_in, schemes — урок 7 Н1.1
@@ -364,7 +366,6 @@ rules:
 | `door.pass[]` | сегмент, не повторяющий `door.routes`, `unit.rows` и `where` |
 | `objects.rows[]` | семья, не платформенная (`heartbeats`, `contenders`, `snapshot`, `controller`, `blobs`, `commands`, `*`) |
 | `worker.requests[]` | другая подсистема (своя — отказ); что она принимает просьбы — проверка каталога (Н3) |
-| `worker.reads[]` | `<семья>/<имя>`, не голое слово |
 | `placement.near.sub`, `placement.near.of`, `placement.near.prefer` | соседняя подсистема и её поля — проверка каталога (Н3) |
 
 `display.tree.columns[].field` и элементы `display.form[].fields[]` называют поле единицы или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id`. `display.fields.<имя>` и `display.field_help.<имя>` называют поле единицы, поле таблицы, слово пульса из `display.form[].status[]` или одно из платформенных `worker`, `server`, `revision`, `observed_revision`, `phase`, `id` (их показывает модуль — урок 9 Н1.2); прочие платформенные имена (`epoch`, `placement`, `age`) и имена вне этих — отказ: `display.fields.epoch` отказан, `display.fields.seen` при `status[].field: seen` принят.
@@ -538,7 +539,11 @@ required:false, default:null, без inherit/enum. Остальные default/in
 ключа — путь повторного ключа и строка второго объявления; ошибка кодировки — строка байта, без пути. У правила на два
 ключа путь — ключ, который правило запрещает рядом с другим: `merge: union` у поля не `list` — `…fields.<поле>.merge`;
 `bytes` рядом с blob — `unit.fields.bytes`; поле `name` таблицы не по форме — `tables.<т>.fields.name`; `delete_after`
-при `numeric` id — `placement.unplaced.delete_after` (добавлено пилотом JSON Schema). Путь и строка проверяются приёмкой (`diagnostics.tsv`),
+при `numeric` id — `placement.unplaced.delete_after` (добавлено пилотом JSON Schema). У правил на присутствие путь —
+«A запрещён без B» — сам A (`merge` без `inherit`, `must_match` без `ref`, `login` без `param`, `in` без `regex`); «A требует
+B» — недостающий B (`per_person` и `free: true` → `ttl`, `free: false` → `valid_for`, `most_valid`; `from` → `key`, `pick`,
+`to`) (добавлено пилотом варианта C, П4). Форма значения ключа (`worker.reads[]`, `secrets.reads[]` — `<семья>/<имя>`) —
+класс value, а не ссылка Н1.4 (добавлено пилотом варианта C, П3). Путь и строка проверяются приёмкой (`diagnostics.tsv`),
 класс — `classes.tsv` (Н5).
 
 | Причина | Класс | Кто и как видит | Что делает вызывающий |
@@ -562,7 +567,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 466 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (85) или `refused` (381); `puts.tsv` — 7 установок `spec put` по порядку в свежее хранилище: код последней и rev строки спеки (Н3 «Смена спеки», `загрузить_каталог`). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк, для случаев `classes.tsv` — класс отказа (README); один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
+Каталог `Source/tests/testdata/acceptance/М10_Platform/02/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md)): `verdicts.tsv` — 468 файлов `cases/<case>.subsystem.yaml`, каждый загружается один, ответ `ok` (86) или `refused` (382); `puts.tsv` — 7 установок `spec put` по порядку в свежее хранилище: код последней и rev строки спеки (Н3 «Смена спеки», `загрузить_каталог`). Раннер — штатный путь загрузки реализации; отказ засчитывается только в словах, называющих файл. Для случаев `diagnostics.tsv` дополнительно сравниваются пути ключей и номера строк, для случаев `classes.tsv` — класс отказа (README); один правильный вердикт без требуемой диагностики не закрывает эти случаи. СЛЕДУЕТ прогнать те же файлы через `spec put`. Восемь новых отказов float/JSON проверяют точный путь в diagnostics; три положительных случая проверяют конечные float и границы int.
 
 | Группа случаев | Что проверяет | Нормы |
 |---|---|---|
@@ -573,6 +578,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 | `c2_worker_deletes_*` | `worker.deletes`: своя семья единиц — ok, чужая семья или таблица — refused (ADR-0067 доп.) | Н1.2а, Н1.4 |
 | `c3_tab_*`, `c3_u2028_*`, `c3_escape_*` | сверка 2 чистой комнаты: TAB вне кавычек и блочного скаляра, U+2028, экранирования двойных кавычек | Н1.1 |
 | `c5_*` | пилот JSON Schema (2026-10-19): запись float в целом месте — `value` (10 вариантов сверки); bool в любом регистре (`tRuE`); ключи `0x10`, `0o7` — слова; значение на следующей строке (слово, кавычки, поток), `?x` ключом и значением — `text`; `unit: -` и ключ длиннее 1024 знаков — ok; `retire_when` без `in` — `value`; `rebalance: {}` — ok; суррогат в экранировании, в том числе парой и `\U` — `text`; `default: ~` — ok | Н1.1, Н1.2а |
+| `c6_*` | пилот варианта C (2026-10-19): `secrets.reads` голым словом — `value`, с `/` — ok (П2) | Н1.2а |
 | `c4_*` | сверка python и go. Принято: TAB после отступа блочного скаляра, `-   key:`, список без отступа, апостроф в простом слове, ключи в кавычках `'1'`, `'true'` внутри `json`. Отказано: строка блочного скаляра мельче первой, второй и сдвинутый `---`, сдвинутый корень, корень потоком, `#` без пробела, `a:b` в потоке, пустой элемент потока, одиночный CR, U+FFFE/U+FFFF, простой ключ не строкой core (`1` внутри `json`, `1` в `display.fields` — `text`), ключ-коллекция, `unplaced: {}`, `requests.key` без `{…}`, вложенные префиксы `secrets.readers`, ключ `'1'` в `display.fields` — `reference`, `default:` без значения, `inherit` вне `enum`, `door.pass` на rows | Н1.1, Н1.2а, Н1.3, Н1.4 |
 | `m57_tokens_*` | `domain.tokens`: placement, unit, scenario — ok; вид person, lifetime 0, повтор и зарезервированное в claims, пустой grant, слово caller, poll_home у placement, необъявленное утверждение, scenario рядом с placement, путь в items, заглавная в пути, unit без domain.ref, вид без области, повтор в grant и target_fields, одно имя в двух claims_bind, чужое слово caller и target_fields у unit, scenario без domain.ref — refused (М11/7 Н1.1) | Н1.2а |
 | `m51_books_*` | `domain.books`: собираемая и переносимая — ok; неполная четвёрка, key без from, чужая подсистема, два сегмента, слово pick, to = key, секрет в key и show, пустой show, незнакомый ключ, книга и строка kept одного имени — refused (М11/5 Н1.1) | Н1.2а |
