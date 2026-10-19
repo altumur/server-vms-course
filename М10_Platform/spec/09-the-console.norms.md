@@ -112,7 +112,8 @@ gate:
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes
     таблицы                          → по rights.routes (view | edit | admin)
-    по телу — rights.unit_of, reach, names добавляют единицы (урок 6)
+    по телу — rights.unit_of, reach, names добавляют единицы (урок 6); у сторожевой домена до тела — предпроверка
+    unit = "*" (М11/9 Н1.5 body_unit), эти проверки после тела сохраняются (добавлено сверкой М11)
   scope:    грант на * | unit:<sub>/<id> | labels:<…>; грант на единицу или на её about-единицу
   csrf:     действующий запрос по куке с чужим Origin → 403
   body:     предел тела (≥ 1 MiB; blob PUT /<rows>/<id>/<blob_field> — 32 МиБ, урок 10 Н1.4); chunked → 400; медленно → 408; больше → 413

@@ -161,7 +161,9 @@ cluster:   М10/9 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /spec,
            /mounts и двери урока с GET; admin — остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin;
            кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле (Н1.2 revoke)
-body_unit: need, чья единица в теле (М10/9 Н1.3: /marks, POST /<sub>/requests), решается до чтения тела — unit = "*"
+body_unit: need, чья единица в теле (М10/9 Н1.3: /marks, POST /<sub>/requests), решается до чтения тела — unit = "*";
+           у сторожевой домена действует эта предпроверка до тела, проверки М10/9 после тела (rights.unit_of, reach,
+           names) сохраняются (добавлено сверкой М11)
 session:   GET /session доказанной личности (М10/9 Н1.3) — grants: [{cap, scope}] — действующие строки этого человека
            (шаг 5 may) у этой консоли, по (cap, scope); у аварийной сессии — [] (её may — allow по glass)
 loopback:  «петля — operator» — только состояние open (нет домена, М10/9 Н1.3); в состоянии on — только Н1.5
