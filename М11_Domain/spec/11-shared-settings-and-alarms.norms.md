@@ -253,6 +253,10 @@ label:  "domain term T rev R"
 
 ### alarms(input)
 
+Фильтр — у двери, форма — у функции: дверь тревог собирает вход из хранилища и битого свидетеля (без ts и т. п.)
+отбрасывает со счётчиком до вызова — устойчивость; вектор alarms получает уже собранный вход, и свидетель не по форме в
+нём — вход не по форме, код 2 (H14). Одно другому не противоречит (добавлено сверкой М11, cammeta-python М11-11 № 20).
+
 ```
 вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <Н1.7> |
          "garbled" | null, history: <Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
