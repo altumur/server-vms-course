@@ -16,3 +16,4 @@ date	sample	fix	languages
 2026-10-17	04/scenarios.tsv: 02-unplaceable шаги 2–3	Мутационная проверка 7cecaf2 № 21: reason /where = why /unplaceable	all
 2026-10-18	04-drain 11–13	сверка python и go М10/3–5 п. 23: имя сервера в query по грамматике Н2.1 — 400	all
 2026-10-18	07-drain-units	сверка python и go М10/3–5, P8: единицы дренажа — назначение ∪ status; status: [] при назначенных — safe: false (вход inputs/, строка реестра c529d2e6)	all
+2026-10-19	README «Операции над именами»	ADR-0084: запасных нет — строки предложений, отзыва и offer-полей сняты; заказ воркеров по серверам — шаги урока 5 после урока 8 (@grow), М10/4-16 чтением	all
