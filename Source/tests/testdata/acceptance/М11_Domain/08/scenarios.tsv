@@ -85,3 +85,8 @@ scenario	step	request	expect
 06-peer	18	peer inputs/peer-19-leaf-not-signed-by-named-ca.json	ok {"result": "refused", "reason": "bad_chain"}
 06-peer	19	peer inputs/peer-20-intermediate-not-ca.json	ok {"result": "refused", "reason": "bad_chain"}
 06-peer	20	peer inputs/peer-21-leaf-not-yet-valid.json	ok {"result": "refused", "reason": "expired"}
+06-peer	21	peer inputs/peer-22-anchor-rsa.json	ok {"result": "ok"}
+06-peer	22	peer inputs/peer-23-anchor-ed25519.json	ok {"result": "ok"}
+06-peer	23	peer inputs/peer-24-anchor-p384-sha384.json	ok {"result": "ok"}
+06-peer	24	peer inputs/peer-25-empty-role.json	ok {"result": "refused", "reason": "no_role"}
+06-peer	25	peer inputs/peer-26-host-with-zone.json	ok {"result": "refused", "reason": "ip_address"}
