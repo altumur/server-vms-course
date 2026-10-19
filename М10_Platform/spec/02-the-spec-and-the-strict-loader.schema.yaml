@@ -480,7 +480,7 @@ $defs:
           server_field: {$ref: '#/$defs/str'}
           strict: {type: object}
       requires: {enum: [none, resource]}
-      offers: {type: boolean}
+      grows: {type: boolean}
       retire_when:
         type: object
         required: [field, in]

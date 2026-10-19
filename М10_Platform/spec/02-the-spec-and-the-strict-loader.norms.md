@@ -208,7 +208,7 @@ closed_key_set:
 | `home` | поле или слово `near` (тогда `near` обязателен) | необязателен |
 | `affinity` | `{field?, table?, server_field?, strict?}`: поле; таблица; поле таблицы; `strict` — opaque, ключи — поля таблицы | необязателен |
 | `requires` | слово: `none`, `resource` | нет — `none` |
-| `offers` | bool | нет — `false` |
+| `grows` | bool: роль растёт по требованию — контроллер заказывает воркеры по серверам (урок 4 Н3 «заказать()»); заказ — только при `true` (ADR-0084) | нет — `false` |
 | `retire_when` | `{field, in}`: `field` — поле; `in` — список значений | необязателен; в нём оба обязательны: без `in` — `refused:value` с путём `placement.retire_when.in` (добавлено пилотом JSON Schema) |
 | `rebalance` | `{dead_band?}`: число ≥ 0 | нет — `dead_band: 0.10`; `rebalance: {}` — то же умолчание (добавлено пилотом JSON Schema) |
 | `unplaced` | `{delete_after}`: `delete_after` обязателен (`unplaced: {}` — `refused:value`), целое ≥ 1, только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067) | нет — не удалять |
