@@ -22,7 +22,7 @@ scenario	step	request	expect
 02-notes-unique	2	member m1 console2 POST /tallies {"name": "t5", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 02-notes-unique	3	member m2 console2 POST /tallies {"name": "t5", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
 02-notes-unique	4	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"conflicts": ["t5"]}}}
-02-notes-unique	5	member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t5": "@absent"}}
+02-notes-unique	5	@until 30 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t5": "@absent"}}
 03-silent-contributor	1	@domain	ok
 03-silent-contributor	2	member m2 console2 POST /tallies {"name": "t3", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
 03-silent-contributor	3	@until 90 member m1 console GET /domain/testsub2/books/rolls	200 {"t3": {"entries": [{"member": "m2", "ref": "t3"}]}}
@@ -38,7 +38,7 @@ scenario	step	request	expect
 05-recipient-not-member	1	@domain	ok
 05-recipient-not-member	2	member m1 console2 POST /tallies {"name": "t6", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m9"]}	201
 05-recipient-not-member	3	@until 90 holder GET /domain	200 {"books": {"testsub2/rolls": {"undelivered": {"m1": ["m9"]}}}}
-05-recipient-not-member	4	member m2 console GET /domain/testsub2/books/rolls	200 {"t6": "@absent"}
+05-recipient-not-member	4	@until 30 member m2 console GET /domain/testsub2/books/rolls	200 {"t6": "@absent"}
 06-assemble	1	assemble inputs/assemble-01-rolls-delivered.json	ok {"rows": {"hold": {"": {"missing": []}, "t1": "@absent", "t2": "@absent"}, "m1": {"t1": "@absent", "t2": {"entries": [{"member": "m2", "item": "t-1/t2", "value": {"ref": "t2"}}], "missing": []}}, "m2": {"t1": {"entries": [{"member": "m1", "item": "t-1/t1"}]}, "t2": {"entries": [{"member": "m2"}]}}}, "report": {"conflicts": [], "dropped": {}, "undelivered": {}}}
 06-assemble	2	assemble inputs/assemble-02-unique-conflict.json	ok {"rows": {"m1": {"t5": "@absent"}, "m2": {"t5": "@absent"}}, "report": {"conflicts": ["t5"]}}
 06-assemble	3	assemble inputs/assemble-03-all-order.json	ok {"rows": {"hold": {"k": {"entries": [{"member": "m1", "item": "t-1/z"}, {"member": "m2", "item": "t-1/a"}, {"member": "m2", "item": "t-1/b"}]}}}}
