@@ -33,6 +33,14 @@ scenario	step	request	expect
 03-unreadable-member-key	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "$pub"}}	200
 03-unreadable-member-key	10	@start agent m1	ok
 03-unreadable-member-key	11	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}]}
+03-unreadable-member-key	12	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "garbled", "pub": "$pub"}}	200
+03-unreadable-member-key	13	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": {"sign_failures_domain": "@any", "at": "@time"}}
+03-unreadable-member-key	14	@until 90 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}]}
+03-unreadable-member-key	15	@stop agent m1	ok
+03-unreadable-member-key	16	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "$pub"}}	200
+03-unreadable-member-key	17	@start agent m1	ok
+03-unreadable-member-key	18	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}]}
+03-unreadable-member-key	19	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
 04-one-domain-process	1	@domain m1	ok
 04-one-domain-process	2	@start domain second	ok
 04-one-domain-process	3	@until 30 signer2 POST /api/login {"user": "root", "password": "w2c test root password"}	503 {"error": "standby"}
