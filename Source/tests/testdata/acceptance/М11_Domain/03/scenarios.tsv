@@ -36,14 +36,17 @@ scenario	step	request	expect
 03-generations-and-mark	3	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "keys_rev": "@any", "pinned": "@any"}
 03-generations-and-mark	4	member m1 console POST /counters {"name": "c3"}	201
 03-generations-and-mark	5	@until 30 member m1 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200
-03-generations-and-mark	6	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "@not($r1)"}
-03-generations-and-mark	7	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r2", "base": "@not(0)"}
-03-generations-and-mark	8	ASSERT $r1 != $r2	ok
-03-generations-and-mark	9	resource GET /v1/objects/domain/members/m1/reports/$r2?scope=local	200 {"objects": {"testsub/snapshot/w-1": "@any"}, "key": "@any"}
-03-generations-and-mark	10	resource GET /v1/objects/domain/members/m1/reports/$r2.delta?scope=local	200
-03-generations-and-mark	11	@sleep 20	ok
-03-generations-and-mark	12	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "$s3"}
-03-generations-and-mark	13	@until 40 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "@not($s3)"}
+03-generations-and-mark	6	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "$sa"}
+03-generations-and-mark	7	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "@not($sa)"}
+03-generations-and-mark	8	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "$sb"}
+03-generations-and-mark	9	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "@not($sb)"}
+03-generations-and-mark	10	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r2", "base": "@not(0)"}
+03-generations-and-mark	11	ASSERT $r1 != $r2	ok
+03-generations-and-mark	12	resource GET /v1/objects/domain/members/m1/reports/$r2?scope=local	200 {"objects": {"testsub/snapshot/w-1": "@any"}, "key": "@any"}
+03-generations-and-mark	13	resource GET /v1/objects/domain/members/m1/reports/$r2.delta?scope=local	200
+03-generations-and-mark	14	@sleep 20	ok
+03-generations-and-mark	15	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "$s3"}
+03-generations-and-mark	16	@until 40 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "@not($s3)"}
 04-cut-and-mend	1	@domain	ok
 04-cut-and-mend	2	@cut m1	ok
 04-cut-and-mend	3	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}

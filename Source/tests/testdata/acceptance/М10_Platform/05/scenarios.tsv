@@ -2,8 +2,8 @@ scenario	step	request	expect
 # Приёмка М10/5: стенд testsub под раннером. Формат и директивы — README.
 01-start	1	@start controller	ok
 01-start	2	@start worker w-1	ok
-01-start	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "@time", "released": "false", "gen": "1", "server": "srv-a"}}
-01-start	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1"}}
+01-start	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u0", "released": "false", "gen": "1", "server": "srv-a"}}
+01-start	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "@not($u0)"}}
 01-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
 01-start	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"until": "@not($u1)"}}
 01-start	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "until": "$u2"}}

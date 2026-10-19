@@ -26,7 +26,7 @@
 
 | Приёмка | Шаг | Поле |
 |---|---|---|
-| М10/05 | 01-start 3, 05-sigkill 3 | слот: `until` |
+| М10/05 | 05-sigkill 3 | слот: `until` (01-start 3 связывает `until` в `$u0` — ревью стадии B 1–2, п. 3) |
 | М10/08 | 04-request-reaped 4 | просьба: `valid_until` |
 | М10/08 | 05-request-performed 6 | метка: `ended_at` |
 | М10/08 | 05-request-performed 11 | пульс воркера: `ts`, `started` |

@@ -15,13 +15,14 @@ scenario	step	request	expect
 01-quiet-member	13	member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
 02-members-only-to-the-lagging	1	@domain m1	ok
 02-members-only-to-the-lagging	2	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}}
-02-members-only-to-the-lagging	3	@carry m1	ok {"cluster": "m1", "members": "@absent"}
-02-members-only-to-the-lagging	4	@start agent m2	ok
-02-members-only-to-the-lagging	5	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2"}]}
-02-members-only-to-the-lagging	6	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200 {"members": {"m2": {"key": "@any"}}}
-02-members-only-to-the-lagging	7	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m2\""}}
-02-members-only-to-the-lagging	8	@sleep 10	ok
-02-members-only-to-the-lagging	9	@carry m1	ok {"cluster": "m1", "members": "@absent"}
+02-members-only-to-the-lagging	3	@sleep 10	ok
+02-members-only-to-the-lagging	4	@carry m1	ok {"cluster": "m1", "members": "@absent"}
+02-members-only-to-the-lagging	5	@start agent m2	ok
+02-members-only-to-the-lagging	6	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2"}]}
+02-members-only-to-the-lagging	7	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200 {"members": {"m2": {"key": "@any"}}}
+02-members-only-to-the-lagging	8	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m2\""}}
+02-members-only-to-the-lagging	9	@sleep 10	ok
+02-members-only-to-the-lagging	10	@carry m1	ok {"cluster": "m1", "members": "@absent"}
 03-unreadable-member-key	1	@domain m1	ok
 03-unreadable-member-key	2	@stop agent m1	ok
 03-unreadable-member-key	3	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pub"}}
