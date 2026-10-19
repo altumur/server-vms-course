@@ -121,7 +121,9 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
      нет: есть unit — к unit; иначе                                      → 403 no_assignment
      имя записи (cluster, origin, copies) не член, или член ≠ поле caller → 403 outside_scope
        (origin "" — не имя: на членство не проверяется, в аудиторию не входит; caller origin при "" — outside_scope)
-     аудитория: значения target_fields; centre/star_centre без centre     → 409 no_centre
+     аудитория: значения target_fields по Н1.1 computed: centre без centre → 409 no_centre; star_centre — только
+       при cluster записи в star (вне star ничего не добавляет, отказа нет), cluster в star без centre → 409 no_centre
+       (добавлено сверкой М11)
    unit — владельцы ref (члены, чьи копии заявляют единицу с этим ref в units подсистемы unit.sub, урок 1):
      caller self: владелец — ровно этот член; caller poll_home: владелец один  → иначе 403 unit_not_unique
      caller poll_home: poll_home(владелец) ≠ член                         → 403 not_poll_home
