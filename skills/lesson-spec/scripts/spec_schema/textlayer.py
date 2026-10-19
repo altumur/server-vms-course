@@ -226,11 +226,15 @@ def _build(events, lines):
             before = lines[ev.start_mark.line][:ev.start_mark.column].rstrip()
             if before.endswith("?") and (len(before) == 1 or before[-2] in " \t-[{,"):
                 raise TextRefused("S", line, "complex key ? …")
+            key = ev.value
             if stack[-1][4]:
                 rest = lines[ev.end_mark.line][ev.end_mark.column:].lstrip(" ")
-                if not rest.startswith(":"):
+                # {k:} — the parser keeps ':' inside the plain key; Н1.1 reads it as key k with an empty value (Н12).
+                if plain and key.endswith(":") and rest[:1] in ("}", ","):
+                    key = key[:-1]
+                elif not rest.startswith(":"):
                     raise TextRefused("N", line, "flow mapping key without ':'")
-            stack[-1][2] = ev.value
+            stack[-1][2] = key
             stack[-1][3] = line
             stack[-1][7] = ev.start_mark.column
             continue
