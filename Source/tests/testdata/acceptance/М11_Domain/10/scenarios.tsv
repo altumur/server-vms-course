@@ -29,10 +29,11 @@ scenario	step	request	expect
 03-move-refusals	1	@domain	ok
 03-move-refusals	2	@stop domain	ok
 03-move-refusals	3	@start domain on m1	ok
-03-move-refusals	4	@move m1 copy=1.999	400 {"error": "refused"}
-03-move-refusals	5	@move m1 copy=1.999 why=no such copy	409 {"detail": "~no neighbour gave the copy named"}
-03-move-refusals	6	@move m1	200 {"term": 2, "holder": "m1"}
-03-move-refusals	7	@move m1	409 {"detail": "~holds the domain at term 2"}
+03-move-refusals	4	@move m1	409 {"error": "refused", "detail": "~nothing was restored"}
+03-move-refusals	5	@move m1 copy=1.999	400 {"error": "refused"}
+03-move-refusals	6	@move m1 copy=1.999 why=no such copy	409 {"detail": "~no neighbour gave the copy named"}
+03-move-refusals	7	@move m1 why=nothing to restore from on the stand	200 {"term": 2, "holder": "m1"}
+03-move-refusals	8	@move m1	409 {"detail": "~holds the domain at term 2"}
 04-planned-handover	1	@domain	ok
 04-planned-handover	2	@start domain on m1	ok
 04-planned-handover	3	holder POST /domain/handover {"to": "m9"}	400
@@ -142,7 +143,7 @@ scenario	step	request	expect
 12-handover-then-move	3	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1"}
 12-handover-then-move	4	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
 12-handover-then-move	5	@start domain on m2	ok
-12-handover-then-move	6	@move m2	200 {"term": 3, "holder": "m2"}
+12-handover-then-move	6	@move m2 why=the stand moves the domain after a handover	200 {"term": 3, "holder": "m2"}
 12-handover-then-move	7	@until 60 member m1 console GET /api/held	200 {"term": 3, "holder": {"holder": "m2"}}
 12-handover-then-move	8	@sleep 10	ok
 12-handover-then-move	9	holder@m1 PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
