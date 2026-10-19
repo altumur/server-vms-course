@@ -28,3 +28,4 @@ memory-capacity-zero	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "
 memory-room	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3], "stop": []}	потолок 8 выше цели — запуск как обычно
 memory-below-target	{"want": "5", "running": [], "memory": {"HOST_MEMORY_MB": "4096", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3, 4], "stop": []}	потолок 4 с базовым — к нему три, не четыре (rules 4)
 memory-only-base	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "1024", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	потолок 1 — только базовый, стартов нет
+memory-no-capacity	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024"}}	{"start": [], "stop": []}	нет CAPACITY — не целое > 0 — пропуск (rules 4; сверка М10/3–5, V2)
