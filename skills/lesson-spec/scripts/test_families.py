@@ -197,6 +197,15 @@ class Codec(FamiliesBase):
                 self.assertEqual(self.judge("writer", **{field: text})["verdict"], writer)
                 self.assertEqual(self.judge("reader", **{field: text})["verdict"], reader)
 
+    def test_tolerant_reader_closed_writer(self):
+        """properties + names открывают лишние ключи читателю; writer: {max_items: 0} закрывает их писателю (DIALECT § 2)."""
+        form = load_form(b"dialect: data-form/1\nroot:\n  type: object\n  properties:\n    a:\n      type: string\n"
+                         b"  names: {key: {type: string}, value: {type: any}}\n  writer: {max_items: 0}\n",
+                         load_common(self.root / "Platform/common/data/common.form.yaml"))
+        self.assertEqual(Judge(form, "writer").judge({"a": "x"}, "object")["verdict"], "ok")
+        self.assertEqual(Judge(form, "writer").judge({"a": "x", "extra": 1}, "object")["verdict"], "refused")
+        self.assertEqual(Judge(form, "reader").judge({"a": "x", "extra": 1}, "object")["verdict"], "ok")
+
     def test_whole_holds_for_the_reader_too(self):
         self.assertEqual(self.judge("reader", gen="1.0")["paths"], ["/gen"])
         self.assertEqual(self.judge("reader", gen="-1")["paths"], ["/gen"])

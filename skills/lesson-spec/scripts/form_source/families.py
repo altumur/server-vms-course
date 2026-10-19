@@ -390,7 +390,7 @@ class Judge(Loader):
         self.limits(t, v, p, out)
         if self.mode == "writer" and t.writer is not None:
             Loader.node(self, t.writer, v, p, nm, out)
-            self.limits(t.writer, v, p, out)
+            self.limits(t.writer, v, p, out, t.properties)   # имена вне properties узла, не узла writer
         Loader.node(self, n, v, p, nm, out)
 
     def is_time(self, v):
@@ -400,13 +400,14 @@ class Judge(Loader):
             return math.isfinite(v) and v >= 0 and (self.mode == "reader" or round(v, 3) == v)
         return isinstance(v, str) and TIME[self.mode].fullmatch(v) is not None
 
-    def limits(self, t, v, p, out):
+    def limits(self, t, v, p, out, properties=None):
+        """properties — ключи узла, которому принадлежит writer: `max_items` отображения с `names` считает имена вне них."""
         if t.max_bytes is not None and isinstance(v, str) and len(v.encode("utf-8")) > t.max_bytes:
             self.fail(out, p, "value", "max_bytes")
         if t.max_items is not None:
             if isinstance(v, list) and len(v) > t.max_items:
                 self.fail(out, p, "value", "max_items")
-            if isinstance(v, dict) and len([k for k in v if k not in (t.properties or {})]) > t.max_items:
+            if isinstance(v, dict) and len([k for k in v if k not in (t.properties or properties or {})]) > t.max_items:
                 self.fail(out, p, "value", "max_items: names")
 
     def judge(self, value, kind="row"):
