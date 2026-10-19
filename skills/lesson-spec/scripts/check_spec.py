@@ -2,7 +2,8 @@
 """Read-only structural checks for the published lecture + shared spec layout.
 
 No product imports, execution of acceptance requests, or network reference loading.
-Requires PyYAML, openapi-spec-validator and markdown-it-py; see validation.md.
+Requires PyYAML, openapi-spec-validator and markdown-it-py; a lesson with a form schema next to its norms (ADR-0085)
+also jsonschema, ruamel.yaml and regress. See validation.md.
 """
 
 import argparse
@@ -13,7 +14,11 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-EXCEPTIONS = Path(__file__).resolve().parent.parent / "exceptions.tsv"
+SCRIPTS = Path(__file__).resolve().parent
+EXCEPTIONS = SCRIPTS.parent / "exceptions.tsv"
+# Form schema next to the norm (ADR-0085): spec/<lesson>.schema.yaml and .references.tsv, run by spec_schema/run.py.
+SCHEMA_INSTALL = ("uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py "
+                  "--with jsonschema --with ruamel.yaml --with regress python skills/lesson-spec/scripts/check_spec.py …")
 
 
 def arguments():
@@ -799,13 +804,54 @@ class Check:
                 self.error(path, f"line {line}: {exc}")
 
     def classes(self, path, verdicts):
-        seen = set()
+        seen = {}
         for line, (case, kind) in self.tsv(path, 2):
             if case in seen or verdicts.get(case) != "refused" or kind not in REFUSAL_CLASSES:
                 self.error(path, f"line {line}: class case must be unique, have refused verdict and a class of {sorted(REFUSAL_CLASSES)}")
-            seen.add(case)
+            seen[case] = kind
         if not seen:
             self.error(path, "empty classes table")
+        return seen
+
+    # The form schema is a check next to the norm, not the norm (ADR-0085): every case of the lesson corpus goes through
+    # the text layer, the schema and the reference pass; its verdict must be verdicts.tsv's and its class classes.tsv's.
+    # A difference is a defect of the schema, the norm or the corpus. Missing dependencies fail, never skip.
+    def spec_schema(self, schema, references, cases, verdicts, classes):
+        for path in (schema, references):
+            if not path.is_file():
+                self.error(path, "form schema check needs both .schema.yaml and .references.tsv (ADR-0085)")
+                return
+        if verdicts is None:
+            self.error(schema, "form schema without verdicts.tsv: nothing to check it against")
+            return
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from spec_schema.run import Runner
+        except ImportError as exc:
+            self.error(schema, f"form schema check needs jsonschema, ruamel.yaml and regress (ADR-0085), missing: {exc}; "
+                               f"run: {SCHEMA_INSTALL}")
+            return
+        try:
+            runner = Runner(schema, references)
+        except Exception as exc:
+            self.error(schema, f"form schema: {exc}")
+            return
+        for case, expected in sorted(verdicts.items()):
+            path = cases / f"{case}.subsystem.yaml"
+            try:
+                got = runner.judge(path.read_bytes())
+            except OSError:
+                continue                                 # verdicts() has named the missing case
+            except Exception as exc:
+                self.error(path, f"form schema: runner failed: {exc!r}")
+                continue
+            why = f"layer {got['layer']}" + (f": {got['errors'][0]}" if got["errors"] else "")
+            if got["verdict"] != expected:
+                self.error(path, f"form schema: verdict expected {expected}, got {got['verdict']} ({why})")
+            elif case in classes and got["class"] != classes[case]:
+                self.error(path, f"form schema: class expected {classes[case]}, got {got['class']} ({why})")
+            self.stats["schema_cases"] += 1
 
     def lesson(self, lesson):
         if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
@@ -871,6 +917,7 @@ class Check:
                 self.except_(table, key, "scenarios-format", "own", f"{silenced} generic grammar messages")
             formats += 1
         verdict_counts = None
+        verdicts, classes = None, {}
         if (acceptance / "verdicts.tsv").exists():
             verdicts = self.verdicts(acceptance / "verdicts.tsv")
             values = list(verdicts.values()) if isinstance(verdicts, dict) else []
@@ -878,7 +925,7 @@ class Check:
             if (acceptance / "diagnostics.tsv").exists():
                 self.diagnostics(acceptance / "diagnostics.tsv", verdicts)
             if (acceptance / "classes.tsv").exists():
-                self.classes(acceptance / "classes.tsv", verdicts)
+                classes = self.classes(acceptance / "classes.tsv", verdicts)
             formats += 1
         else:
             for table in ("diagnostics.tsv", "classes.tsv"):
@@ -888,6 +935,9 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
+        schema, schema_refs = spec / f"{lesson.stem}.schema.yaml", spec / f"{lesson.stem}.references.tsv"
+        if schema.exists() or schema_refs.exists():
+            self.spec_schema(schema, schema_refs, acceptance / "cases", verdicts, classes)
         choices = None
         if norms in texts:
             section = re.search(r"^## Решает реализация\s*$(.*?)(?=^## |\Z)", texts[norms], re.S | re.M)

@@ -6,7 +6,8 @@
 
 ```sh
 # весь модуль в курсе
-uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python \
+uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
+  --with jsonschema --with ruamel.yaml --with regress python \
   skills/lesson-spec/scripts/check_spec.py М10_Platform/[0-9][0-9]-*.md
 # выгрузка cammeta-specs: --root — её корень, уроки — её пути, реестр — того же коммита курса
 S=/Users/murat/w2c/cammeta-specs
@@ -17,7 +18,9 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 `--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
 `exceptions.tsv` навыка). Для выгрузки реестр берётся того же коммита курса, что её `COURSE_COMMIT`:
 строка реестра для файла, которого в выгрузке ещё нет, даёт «stale exception». В окружении с `PyYAML`,
-`openapi-spec-validator` и `markdown-it-py` можно запускать `python3` напрямую.
+`openapi-spec-validator`, `markdown-it-py`, `jsonschema`, `ruamel.yaml` и `regress` можно запускать `python3`
+напрямую. Последние три нужны [схеме формы](#схема-формы-спеки-adr-0085) урока М10/2; в выгрузке схемы нет, и там
+они не используются.
 
 ## Итог
 
@@ -26,6 +29,8 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
   строкой `EXCEPTION` с причиной.
 - Код 1 и строка `FAIL` — найдены дефекты или неподдержанный формат. Неполная проверка даёт `FAIL`, а не `PASS`.
 - Код 1 и `Missing dependency…` без строки `FAIL` — нет зависимости; это не пропуск успешной проверки.
+- Код 1, `FAIL` и ошибка `form schema check needs jsonschema, ruamel.yaml and regress … run: uv run …` — у урока есть
+  схема формы, а её зависимостей нет; проверка не пропускается.
 - Код 2 — неверные аргументы командной строки.
 
 ## Реестр исключений
@@ -59,6 +64,24 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 | `classes.tsv` (`case<TAB>class`): отказанный случай, уникальность, класс из `text`, `key`, `value`, `reference`, `name`, `catalogue` (М10/2 Н4); в путях `diagnostics.tsv` ключ — непустая строка, индекс списка — целое ≥ 0 | Совпадение с фактическим классом — раннером |
 | Четыре столбца `corrections.tsv` | Полнота журнала — вручную |
 | Счёты и диапазоны в нормах, инструкции и README приёмки: «N сценариев / M шагов», «scenarios.tsv (01–NN)», корпус «N файлов/вердиктов … A ok / B refused», номера `| NN |` таблицы Н5 норм против имён сценариев; в инструкции и README приёмки также «<урок>-01…NN», «N id», «N пунктов чеклиста», «все N норм» — против фактических таблиц и числа id чеклиста | Распознаются только эти формы и только как счёт всего урока; другие формулировки (словами, подмножество) — вручную по чеклисту. Число сверенных фраз — `count_phrases` в строке `COUNTS` |
+
+## Схема формы спеки (ADR-0085)
+
+Если рядом с нормами урока лежат `spec/<урок>.schema.yaml` и `spec/<урок>.references.tsv` (сейчас — только М10/2),
+скрипт прогоняет каждый случай `verdicts.tsv` урока через прогонщик [`scripts/spec_schema/run.py`](../scripts/spec_schema/run.py):
+слой текста (`textlayer.py`), схему JSON Schema 2020-12 и проход ссылок (`refs.py`). Схема — проверка рядом с нормой,
+не норма: норма — проза Н1.1–Н1.4; профиль схемы — её шапка. Байты схемы и ссылок правит «Спецификация» той же правкой,
+что норму урока 2; прогонщик — «Архитектор».
+
+| Что проверяется | Что остаётся ручным |
+|---|---|
+| Схема проходит метасхему 2020-12 и профиль: ключевые слова из закрытого перечня, тип у каждого объявленного свойства, `pattern` по ECMA-262; строки ссылок — четыре столбца, слово из словаря прохода | Согласие схемы с прозой там, где корпус молчит |
+| Вердикт каждого случая — как в `verdicts.tsv`; у случая из `classes.tsv` — тот же класс. Расхождение — ошибка случая с ожидаемым, полученным и слоем (`text:<правило>`, `schema`, `global`, `refs`) | Путь и строка диагностики (`diagnostics.tsv`) — не сверяются; класс случаев вне `classes.tsv` |
+| Одна из пары файлов без другой, схема без `verdicts.tsv` — ошибка | — |
+
+Расхождение означает дефект схемы, нормы или корпуса: схему, отставшую от нормы, правят вместе с нормой; норму и корпус —
+по правилам урока. Число прогнанных случаев — `schema_cases` в строке `COUNTS`. Отдельный прогон файлов:
+`python skills/lesson-spec/scripts/spec_schema/run.py FILE…` (JSON-строка на файл; `--schema`, `--references`).
 
 ## Каталог данных (ADR-0083)
 
@@ -124,6 +147,7 @@ JSON Pointer проверяется по [RFC 6901](https://www.rfc-editor.org/r
 Изменение скрипта проверяется его тестами на испорченных копиях документов:
 
 ```sh
-uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py python -m unittest discover \
+uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
+  --with jsonschema --with ruamel.yaml --with regress python -m unittest discover \
   -s skills/lesson-spec/scripts -p 'test_check_spec.py'
 ```

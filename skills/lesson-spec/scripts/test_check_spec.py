@@ -562,6 +562,68 @@ components:
         classes.write_text("valid\tvalue\ninvalid\tsyntax\n")
         self.assertEqual(len(self.check().errors), 2)
 
+    # Form schema next to the norm (ADR-0085): a closed root of one key and no reference rows.
+    SCHEMA = """$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+required: [name]
+additionalProperties: false
+properties:
+  name: {type: string}
+"""
+
+    def add_schema(self, verdicts="valid\tok\nextra\trefused\n", classes="extra\tkey\n"):
+        (self.spec / "01-example.schema.yaml").write_text(self.SCHEMA)
+        (self.spec / "01-example.references.tsv").write_text("path\tcheck\tclass\tnorm\n")
+        (self.acceptance / "cases").mkdir()
+        (self.acceptance / "cases/valid.subsystem.yaml").write_text("name: valid\n")
+        (self.acceptance / "cases/extra.subsystem.yaml").write_text("name: extra\nextra: 1\n")
+        (self.acceptance / "verdicts.tsv").write_text(verdicts)
+        (self.acceptance / "classes.tsv").write_text(classes)
+
+    def test_form_schema_refuses_an_extra_key_as_key(self):
+        self.add_schema()
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["schema_cases"], 2)
+        # The course schema of М10/2 refuses an unknown root key in an accepted corpus case, class key.
+        from spec_schema.run import Runner
+        course = Path(__file__).resolve().parents[3]
+        corpus = course / "Source/tests/testdata/acceptance/М10_Platform/02"
+        case = corpus / "cases/base.subsystem.yaml"
+        self.assertIn("\nbase\tok\n", (corpus / "verdicts.tsv").read_text())
+        runner = Runner()
+        self.assertEqual(runner.judge(case.read_bytes())["verdict"], "ok")
+        got = runner.judge(case.read_bytes() + b"extra_section: 1\n")
+        self.assertEqual((got["verdict"], got["class"], got["layer"]), ("refused", "key", "schema"))
+
+    def test_form_schema_verdict_or_class_difference_fails(self):
+        self.add_schema(verdicts="valid\tok\nextra\tok\n", classes="")
+        (self.acceptance / "classes.tsv").unlink()
+        errors = self.check().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("extra.subsystem.yaml: form schema: verdict expected ok, got refused (layer schema", errors[0])
+        self.assert_cli(1, "verdict expected ok, got refused")
+        (self.acceptance / "verdicts.tsv").write_text("valid\tok\nextra\trefused\n")
+        (self.acceptance / "classes.tsv").write_text("extra\tvalue\n")
+        errors = self.check().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("class expected value, got key (layer schema", errors[0])
+
+    def test_form_schema_outside_profile_or_alone_fails(self):
+        self.add_schema()
+        self.replace(self.spec / "01-example.schema.yaml", "type: object", "type: object\nminProperties: 1")
+        self.assertIn("keyword minProperties is outside the profile", "\n".join(self.check().errors))
+        (self.spec / "01-example.references.tsv").unlink()
+        self.assertIn("needs both .schema.yaml and .references.tsv", "\n".join(self.check().errors))
+
+    def test_form_schema_without_dependencies_fails_with_the_install_command(self):
+        self.add_schema()
+        with patch.dict(sys.modules, {"spec_schema": None, "spec_schema.run": None}):
+            errors = self.check().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("form schema check needs jsonschema, ruamel.yaml and regress", errors[0])
+        self.assertIn("uv run --no-project", errors[0])
+
     def write_catalog(self, *rows):
         path = self.root / "Platform/common/data/catalog.tsv"
         path.parent.mkdir(parents=True, exist_ok=True)
