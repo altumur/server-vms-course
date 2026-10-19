@@ -1000,7 +1000,7 @@ class Check:
     # A lesson of the Platform module (ADR-0083): Platform/NN-<процесс>/NN-<процесс>.md, norms per chapter
     # spec/NN.K-<процесс>.norms.md (or one spec/NN-<процесс>.norms.md), one instruction and one OpenAPI, acceptance per
     # chapter acceptance/K/ (or acceptance/). Each chapter is checked as a lesson of its own; the lecture and the
-    # instruction count the whole lesson. The form schema of ADR-0085 is М10/2's only: lesson 2 moves to its source.
+    # instruction count the whole lesson. An ADR-0085 pair next to chapter norms checks that chapter's corpus.
     def platform_lesson(self, lesson):
         stem = lesson.stem
         if not re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", stem) or lesson.parent.name != stem:
@@ -1042,11 +1042,18 @@ class Check:
                 owned |= self.data_paragraph(norms, text, prefix, key if chapter else None)
                 chapter_texts[norms] = text
             where = acceptance / chapter if chapter else acceptance
+            verdicts, classes = None, {}
             if where.is_dir():
-                more, scenarios, verdict_counts, _, _ = self.acceptance(where, key, f"{chapter}/" if chapter else "")
+                more, scenarios, verdict_counts, verdicts, classes = self.acceptance(where, key, f"{chapter}/" if chapter else "")
                 chapter_texts.update(more)
                 if scenarios is not None:
                     self.directives(where / "scenarios.tsv", self.stands())
+            # The ADR-0085 pair moves with the chapter that owns the corpus (ADR-0086 Р4) until the lesson takes its
+            # form source (ADR-0087): spec/NN.K-<процесс>.schema.yaml and .references.tsv next to the chapter norms.
+            base = norms.name[:-len(".norms.md")]
+            schema, schema_refs = spec / f"{base}.schema.yaml", spec / f"{base}.references.tsv"
+            if schema.exists() or schema_refs.exists():
+                self.spec_schema(schema, schema_refs, where / "cases", verdicts, classes)
             elif not chapter:
                 self.error(acceptance, "no acceptance directory")
             choices = self.choices(text) if text is not None else None
