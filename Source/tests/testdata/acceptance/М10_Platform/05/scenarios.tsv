@@ -127,3 +127,45 @@ scenario	step	request	expect
 13-capture-taking	12	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
 13-capture-taking	13	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
 13-capture-taking	14	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
+14-grow-on-order	1	@start resource	ok
+14-grow-on-order	2	@start controller testsub2	ok
+14-grow-on-order	3	console POST /counters {"name": "c1"}	201
+14-grow-on-order	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+14-grow-on-order	5	console2 POST /shelves {"name": "s-a2", "zone": "z", "server": "srv-a"}	201
+14-grow-on-order	6	@start worker testsub2 t-srv-a-1 on srv-a	ok
+14-grow-on-order	7	@until 20 store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
+14-grow-on-order	8	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}
+14-grow-on-order	9	console2 POST /tallies {"name": "ta", "of": "c1", "weight": 6}	201
+14-grow-on-order	10	@until 30 console2 GET /where/ta	200 {"worker": "t-srv-a-1"}
+14-grow-on-order	11	console2 POST /tallies {"name": "tb", "of": "c1", "weight": 6}	201
+14-grow-on-order	12	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "why": "@any"}}
+14-grow-on-order	13	@until 20 GET /testsub2/metrics	200 ~testsub2_workers_wanted{server="srv-a"} 2
+14-grow-on-order	14	@grow srv-a	ok
+14-grow-on-order	15	@until 30 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
+14-grow-on-order	16	@until 60 console2 GET /where/tb	200 {"worker": "t-srv-a-2"}
+14-grow-on-order	17	@until 30 store GET /v1/get?key=testsub2/epoch/tb	200 {"items": {"epoch": "1"}}
+14-grow-on-order	18	@sigterm t-srv-a-2	ok
+14-grow-on-order	19	@until 20 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "true"}}
+14-grow-on-order	20	@until 90 store GET /v1/get?key=testsub2/epoch/tb	200 {"items": {"epoch": "2"}}
+14-grow-on-order	21	@until 30 console2 GET /where/tb	200 {"worker": "t-srv-a-2"}
+15-order-not-raised	1	@start resource	ok
+15-order-not-raised	2	@start resource on srv-b	ok
+15-order-not-raised	3	@start controller testsub2	ok
+15-order-not-raised	4	console POST /counters {"name": "c1"}	201
+15-order-not-raised	5	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+15-order-not-raised	6	console2 POST /shelves {"name": "s-a2", "zone": "z", "server": "srv-a"}	201
+15-order-not-raised	7	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b"}	201
+15-order-not-raised	8	console2 POST /shelves {"name": "s-b2", "zone": "z", "server": "srv-b"}	201
+15-order-not-raised	9	@start worker testsub2 t-srv-a-1 on srv-a	ok
+15-order-not-raised	10	@start worker testsub2 t-srv-b-1 on srv-b	ok
+15-order-not-raised	11	@until 30 store GET /v1/get?key=testsub2/want/srv-b	200 {"items": {"want": "1"}}
+15-order-not-raised	12	console2 POST /tallies {"name": "ta", "of": "c1", "weight": 6}	201
+15-order-not-raised	13	console2 POST /tallies {"name": "tb", "of": "c1", "weight": 6}	201
+15-order-not-raised	14	@until 30 console2 GET /where/tb	200 {"worker": "@any"}
+15-order-not-raised	15	console2 POST /tallies {"name": "tc", "of": "c1", "weight": 6}	201
+15-order-not-raised	16	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2"}}
+15-order-not-raised	17	@until 120 store GET /v1/get?key=testsub2/want/srv-b	200 {"items": {"want": "2"}}
+15-order-not-raised	18	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}
+15-order-not-raised	19	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"raise_failed": {"srv-a": "@any"}}
+15-order-not-raised	20	@grow srv-b	ok
+15-order-not-raised	21	@until 60 console2 GET /where/tc	200 {"worker": "t-srv-b-2"}
