@@ -238,6 +238,8 @@ def pointer(document, ref):
     return value
 
 
+# Files a desktop leaves in any directory; never part of a lesson (not tracked by git).
+IGNORED = {".DS_Store"}
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
@@ -992,6 +994,8 @@ class Check:
         own_format = False                          # an excepted entry checked by the README of the acceptance
         try:
             for item in acceptance.iterdir():
+                if item.name in IGNORED:
+                    continue
                 value = entry + item.name
                 if item.name in extra and item.name in supported:
                     self.used.add((key, "acceptance-entry", value))
@@ -1130,7 +1134,7 @@ class Check:
                 self.markdown(path, text)
         self.openapi_or_exception(spec / f"{stem}.api.openapi.yaml", key)
         try:
-            entries = sorted(acceptance.iterdir()) if chapters else []
+            entries = sorted(p for p in acceptance.iterdir() if p.name not in IGNORED) if chapters else []
         except OSError as exc:
             self.error(acceptance, str(exc))
             entries = []
