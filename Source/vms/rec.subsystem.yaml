@@ -278,8 +278,8 @@ metrics:
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
-  # (The number a host's spares script starts recorders for is the platform's, from `placement.places`:
-  # `rec_workers_needed{labels=""}` — the enabled volumes nobody holds, less the live recorders that hold none.)
+  # (How many recorders are short is the platform's, from `placement.places`: the enabled volumes nobody holds, less the
+  # live recorders that hold none.)
   # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
   - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
   # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).
