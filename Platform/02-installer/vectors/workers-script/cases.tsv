@@ -13,3 +13,5 @@ next-after-nine	{"want": "10", "running": [2, 3, 4, 5, 6, 7, 8, 9]}	{"start": [1
 no-series	{"want": null, "running": [2, 3]}	{"start": [], "stop": []}	ряда нет — ничего не запускать и не останавливать (Р1)
 want-zero	{"want": "0", "running": [2]}	{"start": [], "stop": []}	значение вне 1…99 — ряд не читается: ничего
 want-hundred	{"want": "100", "running": [2]}	{"start": [], "stop": []}	вне 1…99: ничего
+want-leading-zero	{"want": "02", "running": [2]}	{"start": [], "stop": []}	ведущий ноль — не форма метрики М10/9: ряда нет, ничего
+want-fraction	{"want": "2.0", "running": [2]}	{"start": [], "stop": []}	дробь — не форма метрики М10/9: ряда нет, ничего
