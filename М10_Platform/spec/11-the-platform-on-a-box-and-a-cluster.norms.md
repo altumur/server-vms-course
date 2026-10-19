@@ -338,7 +338,13 @@ cert:         CN <роль>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<р
               825 дней; центр 10 лет; роли configstore и configstore-door — ни с какой другой
 sig:          подписи сертификатов центра, промежуточных и листов — закрытый список: ECDSA P-256 и P-384 с SHA-256 или
               SHA-384, RSA ≥ 2048 бит — PKCS#1 v1.5 и PSS с SHA-256 или SHA-384, Ed25519; иная подпись —
-              цепочка не проверяется (М11/8 Н3 peer шаг 4 — bad_chain; рукопожатие — отказ); добавлено сверкой М11, D14
+              цепочка не проверяется (М11/8 Н3 peer шаг 4 — bad_chain); у двери роли М11/8 список проверяется после
+              рукопожатия шагом peer — 403 bad_chain, в рукопожатии ограничивать не требуется (стеки этого не умеют
+              одинаково); добавлено сверкой М11, D14, cammeta-python М11-08 № 21
+client_cert:  дверь процесса domain (SIGNER_URL, М11/2 Н1.3) запрашивает сертификат клиента необязательно и доверяет только
+              своим ca.pem, ca.next.pem: роль domainconsole из SAN открывает чтение X-W2C-Client (М11/9 Н1.10 address);
+              агенты и ретрансляторы (класс signed М11/8 Н1.6) сертификата не шлют (добавлено сверкой М11,
+              cammeta-python М11-09 № 22)
 kit:          /etc/w2c/tls/ca.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key (ключ 0600 владельцу-пользователю юнита либо 0640 root:<группа пользователя юнита> по ADR-0075 доп.3; каталог 0750)
 revoke:       серийники в revoked — копируются на каждый сервер; процессы перечитывают по содержимому; configstore leave у лидера
 roles:        configstore, configstore-door (демоны — всегда с -tls); resource, console, domain, domainconsole, domainagent (и дверь
