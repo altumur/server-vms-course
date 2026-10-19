@@ -15,8 +15,8 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `<sub>/slots/<имя>` — `until`; `platform/epoch_floor` — `generation_at`.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/next_id`, `<sub>/idem/<key>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`, `platform/epoch_floor`;
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/placement/<id>`, `<sub>/controller/pass`.
+- владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/next_id`, `<sub>/idem/<key>`, `<sub>/slots/<имя>`, `<sub>/epoch/<id>`;
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/placement/<id>`, `<sub>/controller/pass`, `platform/epoch_floor`.
 
 ### Н1.1 Раскладка ключей подсистемы
 
