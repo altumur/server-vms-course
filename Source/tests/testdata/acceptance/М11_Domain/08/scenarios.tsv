@@ -29,9 +29,9 @@ scenario	step	request	expect
 02-one-hop-and-addresses	15	member m1 console GET /domain	502 {"error": "did not answer"}
 03-where-at-a-member	1	@domain	ok
 03-where-at-a-member	2	member m2 console POST /counters {"name": "c2"}	201
-03-where-at-a-member	3	member m2 console GET /where/c2	404 {"reason": "$why"}
-03-where-at-a-member	4	member m1 console GET /domain/at/m2/testsub/where/c2	404 {"reason": "$why"}
-03-where-at-a-member	5	member m2 console GET /testsub/where/c2	404 {"reason": "$why"}
+03-where-at-a-member	3	@until 30 member m2 console GET /where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
+03-where-at-a-member	4	member m1 console GET /domain/at/m2/testsub/where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
+03-where-at-a-member	5	member m2 console GET /testsub/where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
 03-where-at-a-member	6	member m1 console @header X-W2C-Via: hold GET /domain/at/m2/testsub/where/c2	400 {"error": "one hop"}
 03-where-at-a-member	7	member m1 console DELETE /domain/at/m2/testsub/where/c2	404 {"error": "not a route handed to a member"}
 03-where-at-a-member	8	member m1 console GET /domain/at/m2/testsub/counters	404 {"error": "not a route handed to a member"}
