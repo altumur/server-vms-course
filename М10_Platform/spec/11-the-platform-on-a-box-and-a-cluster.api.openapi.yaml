@@ -729,7 +729,7 @@ components:
         floor:
           type: integer
           minimum: 1
-          maximum: 18446744073709551615
+          maximum: 9007194959773696
         id:
           type: string
           pattern: ^[0-9a-f]{1,64}(?![\s\S])
