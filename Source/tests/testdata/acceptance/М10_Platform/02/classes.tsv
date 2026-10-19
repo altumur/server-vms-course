@@ -64,3 +64,5 @@ m61_merge_union_on_int	value
 profile_blob_bytes	value
 profile_table_name_int	value
 r37_numeric_delete_after	value
+c6_secrets_reads_bare	value
+worker_reads_bare	value
