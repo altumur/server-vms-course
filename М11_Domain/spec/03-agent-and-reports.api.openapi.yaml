@@ -308,16 +308,12 @@ components:
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
         tls_ca:
           type: array
-          maxItems: 2
-          uniqueItems: true
-          description: 'Урок 8 Н1.6: отпечатки ca.pem и ca.next.pem кластера по возрастанию; вне дельты.'
-          items: {type: string, pattern: '^[0-9a-f]{64}$'}
+          description: 'Урок 8 Н1.6: отпечатки ca.pem и ca.next.pem кластера по возрастанию; вне дельты. Форма — любой список строк: длину, повтор и вид отпечатка проверяет держатель (on_accept), несходящееся — журнал domain.member.ca.refused, отчёт принимается (решение «Архитектора» по сверке М11, D10).'
+          items: {type: string}
         tls_ca_certs:
           type: array
-          minItems: 1
-          maxItems: 2
-          description: 'Урок 8 Н1.6: PEM сертификатов центров tls_ca в том же порядке, sha256(DER) — отпечаток на том же месте; только вместе с tls_ca; вне дельты.'
-          items: {type: string, minLength: 1}
+          description: 'Урок 8 Н1.6: PEM сертификатов центров tls_ca в том же порядке, sha256(DER) — отпечаток на том же месте; только вместе с tls_ca; вне дельты. Форма — любой список строк, прочее — on_accept (сверка М11, D10).'
+          items: {type: string}
         sign_failures:
           type: object
           minProperties: 1

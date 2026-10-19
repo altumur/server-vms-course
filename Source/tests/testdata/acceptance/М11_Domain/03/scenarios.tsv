@@ -137,6 +137,11 @@ scenario	step	request	expect
 13-accept	19	accept inputs/accept-19-heard-stale-changed.json	ok {"result": "heard", "refresh": true}
 13-accept	20	accept inputs/accept-20-whole-over-broken-stored.json	ok {"result": "generation", "rev": 5, "base": 0}
 13-accept	21	accept inputs/accept-21-rev-exhausted.json	ok {"result": "refused", "status": 503, "reason": "rev_exhausted"}
+13-accept	22	accept inputs/accept-22-tls-ca-three.json	ok {"result": "generation", "rev": 1, "base": 0}
+13-accept	23	accept inputs/accept-23-tls-ca-certs-empty.json	ok {"result": "generation", "rev": 1, "base": 0}
+13-accept	24	accept inputs/accept-24-tls-ca-repeat.json	ok {"result": "generation", "rev": 1, "base": 0}
+13-accept	25	accept inputs/accept-25-tls-ca-upper.json	ok {"result": "generation", "rev": 1, "base": 0}
+13-accept	26	accept inputs/accept-26-tls-ca-short.json	ok {"result": "generation", "rev": 1, "base": 0}
 14-knock-needs-signature	1	@install domain	ok
 14-knock-needs-signature	2	@start domain	ok
 14-knock-needs-signature	3	@start agent hold	ok
