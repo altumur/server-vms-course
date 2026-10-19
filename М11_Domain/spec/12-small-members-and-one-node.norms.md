@@ -14,8 +14,8 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/agent`, `domain/signer-turn`;
-- пишет: `domain/member-list` (cas);
-- читает: `domain/member-key`, `domain/reached`, `domain/grants`.
+- пишет: `domain/member-list` (cas), `domain/reached` (put), `domain/grants` (put), `domain/members` (cas), `domain/view` (put), `domain/members/<член>/reported` (put), `domain/alarm-history/<член>` (put);
+- читает: `domain/member-key`, `domain/signer`.
 
 Общее уроков 1–11 Н1 действует. Член отчитывается сам (урок 3): домен не открывает к нему соединений, молчание — возраст
 метки по часам держателя. Новой формы члена урок не вводит. Он называет, во что обходится домен на сотнях малых членов,

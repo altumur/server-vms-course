@@ -13,7 +13,8 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `platform/configstore-doors/<id>`, `platform/epoch_floor`, `/etc/w2c/roles/<роль>.env`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<роль>/server.pem`, `/etc/w2c/tls/<роль>/server.key`;
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `/etc/w2c/configstore-rights.json`.
+- пишет: `platform/mirror` (put), `platform/space` (put), `<sub>/retention` (put), `<sub>/alarms_retention` (put);
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `/etc/w2c/configstore-rights.json`, `<sub>/epoch/<id>`.
 
 ### Н1.1 Процессы и юниты
 
