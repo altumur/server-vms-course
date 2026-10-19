@@ -115,7 +115,9 @@ domain/signer: {kid, token_key_secret, serial, issuing_key_secret, backup_key_se
   backup_key_rev:     целое ≥ 1, при установке 1
   forgotten:          смещённый держатель заменяет строку на {forgotten: "deposed by term N"} (урок 10 Н1.6)
 readers:       domain (общая таблица читателей секретов М10/7 Н1.3 `platform_readers`)
-domain/signer-pending:  подготовленный ключ X25519 плановой передачи у цели (урок 10 Н1.7); читатель тот же
+domain/signer-pending:  {seed_secret} — подготовленный ключ X25519 плановой передачи у цели (урок 10 Н1.7); читатель тот же
+  seed_secret:  hex 32 случайных байт — закрытый скаляр X25519, конверт кольца М10/7 (одно имя с domain/member-key,
+                domain/book-seal; добавлено пилотом схем семей данных, Д4)
 SIGNER_URL:    адрес двери процесса domain держателя; его знают консоль кластера держателя и запись срока (уроки 8, 10)
 ```
 

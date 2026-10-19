@@ -206,7 +206,7 @@ order:       1. заморозка: frozen_for = to; правки людей и 
                 still the holder"}, журнал domain.handover.called_off
              4. POST <консоль to>/api/prepare — заголовки X-W2C-Time, X-W2C-Signature: подпись ключом токенов над
                 prepare|<to>|<время> (Н3 ask-sig); 10 с; ответ {cluster, seal} — X25519 цели (hex); подготовленный ключ —
-                domain/signer-pending цели (урок 2 Н1.3), служит один раз
+                domain/signer-pending цели {seed_secret} (урок 2 Н1.3), служит один раз
              5. POST <консоль to>/api/take {grant, keys_sealed}; 90 с:
                 grant — {doc: JCS {grant: "handover", domain, to, from, term, rev, at, issuer, kid, sig}} — подпись Н1.1;
                 keys_sealed — конверт x25519:v1 (урок 2 Н1.5) к seal с AAD «take|<to>» текста JSON {token_key_secret,
