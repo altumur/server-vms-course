@@ -412,7 +412,16 @@ follow:    вход {keys, held: {doc} | null, answers: {<кластер>: {doc}
            поля нет — при любой причине, и у two_holders: спорный срок term не подменяет
 ask-sig:   вход {ask: backup | prepare, cluster, member?, pub, header: {member?, time?, signature?}, now};
            вывод {result: ok} | {result: refused, reason}
-exit:      0 — вычислено; 2 — вход не по форме
+exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу словаря М11/01 («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14):
+           keys у record и follow — доверенный документ набора урока 2 Н1.2 закрытой формы: поля нет (revoked_issuing,
+           sig, domain), issuing не список, keys null — 2; подпись набора проверена при записи (урок 2 Н3 keys), функция её
+           не проверяет — испорченный sig не отказ; у record нет row, лишнее поле, вход не объект — 2; row (null, строка,
+           {}, doc не JSON или числом, лишнее поле row) — 0 not_a_record;
+           у follow нет held или answers, answers не объект, лишнее поле — 2; held не {doc} (строка, массив) — своя запись не
+           прошла record: 0, stay без term или follow; answers.<к> не {doc} и не null — 0, refused.<к>: not_a_record;
+           answers: {}, held: {} — 0; ключ answers не имя кластера — посчитан как ответ;
+           у ask-sig pub не hex 32 байт, cluster не имя кластера, ask не backup | prepare, now не число или нет, нет header,
+           header не объект, header.time не строка, лишнее поле в header или во входе — 2
 ```
 
 | № | Сценарий | Нормы |
