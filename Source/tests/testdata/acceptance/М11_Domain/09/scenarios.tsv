@@ -11,15 +11,16 @@ scenario	step	request	expect
 01-login-people-grants	9	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	409 {"error": "exists"}
 01-login-people-grants	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
 01-login-people-grants	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "owner", "scope": "*"}]}	400 {"error": "bad line"}
-01-login-people-grants	12	@person ann ann password 1	ok
-01-login-people-grants	13	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
-01-login-people-grants	14	member m1 console GET /counters	200 {"configured": [{"id": "c1-m1"}]}
-01-login-people-grants	15	member m1 console PUT /counters/c1-m1 {"start": 5}	403 {"error": "denied"}
-01-login-people-grants	16	member m2 console GET /counters	403 {"error": "denied"}
-01-login-people-grants	17	holder GET /domain/users	403 {"error": "denied"}
-01-login-people-grants	18	@person -	ok
-01-login-people-grants	19	member m1 console GET /counters	401
-01-login-people-grants	20	holder GET /domain	401
+01-login-people-grants	12	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "root", "cap": "view", "scope": "*", "until": 4102444800.1234565}]}	200 {"cluster": "m2", "lines": [{"subject": "root", "cap": "admin", "until": 0}, {"subject": "root", "cap": "view", "until": 4102444800.123}]}
+01-login-people-grants	13	@person ann ann password 1	ok
+01-login-people-grants	14	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+01-login-people-grants	15	member m1 console GET /counters	200 {"configured": [{"id": "c1-m1"}]}
+01-login-people-grants	16	member m1 console PUT /counters/c1-m1 {"start": 5}	403 {"error": "denied"}
+01-login-people-grants	17	member m2 console GET /counters	403 {"error": "denied"}
+01-login-people-grants	18	holder GET /domain/users	403 {"error": "denied"}
+01-login-people-grants	19	@person -	ok
+01-login-people-grants	20	member m1 console GET /counters	401
+01-login-people-grants	21	holder GET /domain	401
 02-disable-revoke-last-admin	1	@domain	ok
 02-disable-revoke-last-admin	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 02-disable-revoke-last-admin	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
