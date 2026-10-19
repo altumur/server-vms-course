@@ -511,8 +511,9 @@ revision не менять; enc:v1 — не трогать и считать «?
 
 Каталог `Source/tests/testdata/acceptance/М10_Platform/07/` ([README](../../Source/tests/testdata/acceptance/М10_Platform/07/README.md)):
 
-- `secret_in.tsv` — адреса: `field raw masked fault note`; читается правилами полей, объявленными в файле данных приёмки `fields.yaml` (имена полей таблицы — `cam.source` и `rec.volumes.url`); отказ не содержит значения;
-- `log_mask.tsv` — строки не-значения: `raw masked note`;
+- общая таблица [`Source/tests/testdata/secret_in.tsv`](../../Source/tests/testdata/secret_in.tsv) — адреса: `field raw masked fault note`; читается правилами полей, объявленными в файле данных приёмки `fields.yaml` (имена полей таблицы — `cam.source` и `rec.volumes.url`); отказ не содержит значения;
+- общая таблица [`Source/tests/testdata/log_mask.tsv`](../../Source/tests/testdata/log_mask.tsv) — строки не-значения: `raw masked note`;
+  обе — один источник курса и продукта (ADR-0003), копии в каталоге приёмки нет;
 - `scenarios.tsv` — дверь единиц `testsub2` (`tallies`: `feed` url с `credentials` и `secret_in`, `feed_secret` с `bound_to: [feed]`) и дверь хранилища.
 
 | № | Сценарий | Нормы |
