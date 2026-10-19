@@ -834,3 +834,80 @@ properties:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PlatformLessonTests(unittest.TestCase):
+    """A lesson of the Platform module: chapters spec/NN.K-<процесс>.norms.md, acceptance/K/ per chapter."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.dir = self.root / "Platform/01-store"
+        self.spec = self.dir / "spec"
+        self.spec.mkdir(parents=True)
+        self.lesson = self.dir / "01-store.md"
+        self.lesson.write_text("# Store\n")
+        self.readme = self.spec / "01-store.README.md"
+        self.readme.write_text("# Instructions\n")
+        for chapter in ("1", "2"):
+            (self.spec / f"01.{chapter}-store.norms.md").write_text(
+                "\n".join(f"## Н{i} Section" for i in range(6)) +
+                "\n## Решает реализация\n## Чеклист готовности\n" +
+                f"- [ ] **P/01.{chapter}-01** Example — проверяется чтением\n")
+            acceptance = self.dir / "acceptance" / chapter
+            acceptance.mkdir(parents=True)
+            (acceptance / "README.md").write_text("# Acceptance\n")
+            (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+            (acceptance / "scenarios.tsv").write_text(
+                "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
+        (self.spec / "01-store.api.openapi.yaml").write_text('''openapi: 3.1.0
+info: {title: Store, version: "1"}
+paths:
+  /example:
+    get:
+      responses:
+        "200":
+          description: Example
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: false}
+''')
+
+    def check(self):
+        result = Check(self.root)
+        result.lesson(self.lesson)
+        return result
+
+    def test_two_chapters_pass(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["norm_ids"], 2)
+        self.assertEqual(result.stats["lessons"], 1)
+
+    def test_foreign_chapter_id(self):
+        path = self.spec / "01.1-store.norms.md"
+        path.write_text(path.read_text().replace("P/01.1-01", "P/01.2-01"))
+        self.assertTrue(any("foreign checklist id P/01.2-01" in e for e in self.check().errors))
+
+    def test_chapter_without_sections(self):
+        (self.spec / "01.2-store.norms.md").write_text("## Чеклист готовности\n- [ ] **P/01.2-01** x\n")
+        self.assertTrue(any("01.2-store.norms.md: expected Н0–Н5" in e for e in self.check().errors))
+
+    def test_unsupported_chapter_acceptance_entry(self):
+        (self.dir / "acceptance/2/notes.txt").write_text("x\n")
+        self.assertTrue(any("notes.txt: unsupported acceptance entry" in e for e in self.check().errors))
+
+    def test_entry_outside_chapter_directories(self):
+        (self.dir / "acceptance/3").mkdir()
+        self.assertTrue(any("only chapter directories" in e for e in self.check().errors))
+
+    def test_lesson_scenario_count_is_the_sum_of_chapters(self):
+        self.readme.write_text("# Instructions\n3 сценария / 2 шага.\n")
+        self.assertTrue(any("says 3 scenarios, the tables have 2" in e for e in self.check().errors))
+        self.readme.write_text("# Instructions\n2 сценария / 2 шага.\n")
+        self.assertEqual(self.check().errors, [])
+
+    def test_whole_and_chapter_norms_conflict(self):
+        (self.spec / "01-store.norms.md").write_text("# x\n")
+        self.assertTrue(any("either one norms file or chapter norms" in e for e in self.check().errors))

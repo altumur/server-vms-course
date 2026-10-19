@@ -416,7 +416,7 @@ class Check:
         """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/NN-<процесс>/spec/03-*.norms.md, каталог — по
         Platform/lessons.tsv (None if absent)."""
         module, _, number = address.partition("/")
-        number = number.split(".")[0]
+        number, _, chapter = number.partition(".")
         if module == "P":
             lessons = self.root / "Platform/lessons.tsv"
             names = dict(row for _, row in [(n, c[:2]) for n, c in self.tsv(lessons, 3)]) if lessons.exists() else {}
@@ -426,6 +426,10 @@ class Check:
         for directory in dirs:
             found = sorted((directory / "spec").glob(f"{int(number):02}-*.norms.md"))
             found = [f for f in found if re.fullmatch(r"[0-9]{2}-[^.]+\.norms\.md", f.name)]
+            if module == "P":
+                # A lesson split into chapters: the named chapter, else the first one.
+                chapters = sorted((directory / "spec").glob(f"{int(number):02}.{chapter or '[1-9]'}-*.norms.md"))
+                found += [f for f in chapters if re.fullmatch(r"[0-9]{2}\.[1-9]-[^.]+\.norms\.md", f.name)]
             if found:
                 return found[0]
         return None
@@ -477,10 +481,13 @@ class Check:
         self.stats["catalog_rows"] += len(self.catalog)
 
     # Paragraph «Данные» in Н1 of a lesson against the catalog: what the lesson owns, writes and reads.
-    def data_paragraph(self, path, text, prefix):
+    def data_paragraph(self, path, text, prefix, lesson=None):
+        """`lesson` — the lesson address of a chapter (P/01 for P/01.3): its rows may be claimed by any chapter;
+        returns what the paragraph says the file owns."""
         if self.catalog is None:
-            return
+            return set()
         owned = {key for (key, _), row in self.catalog.items() if row["owner"] == prefix}
+        shared = {key for (key, _), row in self.catalog.items() if lesson and row["owner"] == lesson}
         by_key = {}
         for (key, _), row in self.catalog.items():
             by_key.setdefault(key, []).append(row)
@@ -489,7 +496,7 @@ class Check:
         if start is None:
             if owned:
                 self.error(path, f"no «Данные» paragraph, the catalog says it owns {sorted(owned)}")
-            return
+            return set()
         said = {"владеет": set(), "пишет": {}, "читает": set()}
         for line in lines[start + 1:]:
             match = DATA_LINE.match(line)
@@ -505,9 +512,11 @@ class Check:
                         self.error(path, f"«Данные»: write ({op or 'no operation'}) is not among the catalog ops of {key}")
                 else:
                     said[match.group(1)].add(key)
-        if said["владеет"] != owned:
-            self.error(path, f"«Данные»: owns {sorted(said['владеет'])}, the catalog says {sorted(owned)}")
+        if not owned <= said["владеет"] <= owned | shared:
+            self.error(path, f"«Данные»: owns {sorted(said['владеет'])}, the catalog says {sorted(owned)}"
+                             + (f" (and the lesson's {sorted(shared)})" if shared else ""))
         self.stats["data_paragraphs"] += 1
+        return said["владеет"]
 
     def exception(self, lesson, kind, value="-"):
         return self.registry.get((lesson, kind, value))
@@ -598,7 +607,7 @@ class Check:
                         re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
                         children[1].type == "strong_open" and children[2].type == "text" and
                         children[3].type == "strong_close" and
-                        re.fullmatch(r"М[0-9]+[A-ZА-Я]*/[0-9]+-[0-9]+", children[2].content)):
+                        re.fullmatch(r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\.[1-9])?)-[0-9]+", children[2].content)):
                     ids.append(children[2].content)
             if token.nesting == 1:
                 stack.append(token.type)
@@ -867,35 +876,17 @@ class Check:
                 self.error(path, f"form schema: course spec refused {got['verdict']} ({why})")
             self.stats["schema_specs"] += 1
 
-    def lesson(self, lesson):
-        if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
-            self.error(lesson, "expected module/NN-slug.md under repository root")
-            return
-        module = lesson.parent.name
-        number = int(lesson.name[:2])
-        key = f"{module}/{number:02}"
-        prefix = f"{module.split('_', 1)[0]}/{number}"
-        spec = lesson.parent / "spec"
-        norms = spec / f"{lesson.stem}.norms.md"
-        instructions = spec / f"{lesson.stem}.README.md"
-        texts, ids = {}, []
-        for path in [lesson, norms, instructions]:
-            text = self.read(path)
-            if text is not None:
-                texts[path] = text
-                self.markdown(path, text)
-                if path == norms:
-                    ids = self.norms(path, text, prefix)
-                    self.data_paragraph(path, text, prefix)
-        contract = spec / f"{lesson.stem}.api.openapi.yaml"
-        if self.exception(key, "no-openapi") is None:
-            self.openapi(contract)
-        elif contract.exists():
-            self.used.add((key, "no-openapi", "-"))
-            self.error(contract, "stale exception no-openapi: the contract exists")
-        else:
-            self.except_(contract, key, "no-openapi", "-")
-        acceptance = self.root / "Source/tests/testdata/acceptance" / module / f"{number:02}"
+    # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module (lesson 1
+    # moves it there), the М10 one until then, and the module's own.
+    def stands(self, module=None):
+        acceptance = self.root / "Source/tests/testdata/acceptance"
+        return [self.root / "Platform/common/acceptance/README.md", acceptance / "М10_Platform/01/README.md"] + \
+               ([acceptance / module / "01/README.md"] if module else [])
+
+    # One acceptance directory: the supported tables, each with its format check. `entry` prefixes the value of an
+    # acceptance-entry exception (a chapter directory of a Platform lesson: `K/name`).
+    def acceptance(self, acceptance, key, entry=""):
+        texts = {}
         readme = acceptance / "README.md"
         text = self.read(readme)
         if text is not None:
@@ -903,21 +894,20 @@ class Check:
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases"}
-        extra = {value for (lesson_key, kind, value) in self.registry
-                 if lesson_key == key and kind == "acceptance-entry"}
+        extra = {value[len(entry):] for (lesson_key, kind, value) in self.registry
+                 if lesson_key == key and kind == "acceptance-entry" and value.startswith(entry)}
         try:
-            names = set()
-            for entry in acceptance.iterdir():
-                names.add(entry.name)
-                if entry.name in extra and entry.name in supported:
-                    self.used.add((key, "acceptance-entry", entry.name))
-                    self.error(entry, "stale exception acceptance-entry: the entry is supported without it")
-                elif entry.name in extra:
-                    self.except_(entry, key, "acceptance-entry", entry.name)
-                elif entry.name not in supported:
-                    self.error(entry, "unsupported acceptance entry; add a format-specific check")
-                elif entry.name != "cases" and not entry.is_file():
-                    self.error(entry, "acceptance table/document must be a file")
+            for item in acceptance.iterdir():
+                value = entry + item.name
+                if item.name in extra and item.name in supported:
+                    self.used.add((key, "acceptance-entry", value))
+                    self.error(item, "stale exception acceptance-entry: the entry is supported without it")
+                elif item.name in extra:
+                    self.except_(item, key, "acceptance-entry", value)
+                elif item.name not in supported:
+                    self.error(item, "unsupported acceptance entry; add a format-specific check")
+                elif item.name != "cases" and not item.is_file():
+                    self.error(item, "acceptance table/document must be a file")
         except OSError as exc:
             self.error(acceptance, str(exc))
         formats = 0
@@ -949,21 +939,138 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if not formats:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
+        return texts, scenarios, verdict_counts, verdicts, classes
+
+    def choices(self, text):
+        section = re.search(r"^## Решает реализация\s*$(.*?)(?=^## |\Z)", text, re.S | re.M)
+        return len(re.findall(r"^\d+\.\s", section.group(1), re.M)) if section else None
+
+    def openapi_or_exception(self, contract, key):
+        if self.exception(key, "no-openapi") is None:
+            self.openapi(contract)
+        elif contract.exists():
+            self.used.add((key, "no-openapi", "-"))
+            self.error(contract, "stale exception no-openapi: the contract exists")
+        else:
+            self.except_(contract, key, "no-openapi", "-")
+
+    def stale(self, key, where):
+        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
+            self.error(where, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
+
+    def lesson(self, lesson):
+        if lesson.parent.parent == self.root / "Platform":
+            return self.platform_lesson(lesson)
+        if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
+            self.error(lesson, "expected module/NN-slug.md under repository root")
+            return
+        module = lesson.parent.name
+        number = int(lesson.name[:2])
+        key = f"{module}/{number:02}"
+        prefix = f"{module.split('_', 1)[0]}/{number}"
+        spec = lesson.parent / "spec"
+        norms = spec / f"{lesson.stem}.norms.md"
+        instructions = spec / f"{lesson.stem}.README.md"
+        texts, ids = {}, []
+        for path in [lesson, norms, instructions]:
+            text = self.read(path)
+            if text is not None:
+                texts[path] = text
+                self.markdown(path, text)
+                if path == norms:
+                    ids = self.norms(path, text, prefix)
+                    self.data_paragraph(path, text, prefix)
+        self.openapi_or_exception(spec / f"{lesson.stem}.api.openapi.yaml", key)
+        acceptance = self.root / "Source/tests/testdata/acceptance" / module / f"{number:02}"
+        more, scenarios, verdict_counts, verdicts, classes = self.acceptance(acceptance, key)
+        texts.update(more)
         schema, schema_refs = spec / f"{lesson.stem}.schema.yaml", spec / f"{lesson.stem}.references.tsv"
         if schema.exists() or schema_refs.exists():
             self.spec_schema(schema, schema_refs, acceptance / "cases", verdicts, classes)
-        choices = None
-        if norms in texts:
-            section = re.search(r"^## Решает реализация\s*$(.*?)(?=^## |\Z)", texts[norms], re.S | re.M)
-            choices = len(re.findall(r"^\d+\.\s", section.group(1), re.M)) if section else None
+        choices = self.choices(texts[norms]) if norms in texts else None
         for path, text in texts.items():
             self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts, choices or None,
                         lecture=path == lesson)
         if scenarios is not None:
-            stands = self.root / "Source/tests/testdata/acceptance"
-            self.directives(acceptance / "scenarios.tsv", [stands / "М10_Platform/01/README.md", stands / module / "01/README.md"])
-        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
-            self.error(acceptance, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
+            self.directives(acceptance / "scenarios.tsv", self.stands(module))
+        self.stale(key, acceptance)
+        self.stats["lessons"] += 1
+
+    # A lesson of the Platform module (ADR-0083): Platform/NN-<процесс>/NN-<процесс>.md, norms per chapter
+    # spec/NN.K-<процесс>.norms.md (or one spec/NN-<процесс>.norms.md), one instruction and one OpenAPI, acceptance per
+    # chapter acceptance/K/ (or acceptance/). Each chapter is checked as a lesson of its own; the lecture and the
+    # instruction count the whole lesson. The form schema of ADR-0085 is М10/2's only: lesson 2 moves to its source.
+    def platform_lesson(self, lesson):
+        stem = lesson.stem
+        if not re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", stem) or lesson.parent.name != stem:
+            self.error(lesson, "expected Platform/NN-<процесс>/NN-<процесс>.md")
+            return
+        number, process = stem[:2], stem[3:]
+        key = f"P/{number}"
+        spec, acceptance = lesson.parent / "spec", lesson.parent / "acceptance"
+        whole = spec / f"{stem}.norms.md"
+        chapters = sorted(p for p in spec.glob(f"{number}.[1-9]-{process}.norms.md"))
+        if whole.exists() and chapters:
+            self.error(whole, "a lesson has either one norms file or chapter norms, not both")
+        parts = [(p.name.split("-", 1)[0].split(".")[1], p) for p in chapters] or [(None, whole)]
+        instructions = spec / f"{stem}.README.md"
+        texts, all_ids, owned, total_choices = {}, [], set(), 0
+        totals = {"scenarios": None, "verdicts": None}
+        for path in [lesson, instructions]:
+            text = self.read(path)
+            if text is not None:
+                texts[path] = text
+                self.markdown(path, text)
+        self.openapi_or_exception(spec / f"{stem}.api.openapi.yaml", key)
+        try:
+            entries = sorted(acceptance.iterdir()) if chapters else []
+        except OSError as exc:
+            self.error(acceptance, str(exc))
+            entries = []
+        names = {chapter for chapter, _ in parts}
+        for entry in entries:
+            if not (entry.is_dir() and entry.name in names):
+                self.error(entry, "acceptance of a lesson with chapters holds only chapter directories acceptance/K/")
+        for chapter, norms in parts:
+            prefix = f"{key}.{chapter}" if chapter else key
+            text = self.read(norms)
+            ids, scenarios, verdict_counts, chapter_texts = [], None, None, {}
+            if text is not None:
+                self.markdown(norms, text)
+                ids = self.norms(norms, text, prefix)
+                owned |= self.data_paragraph(norms, text, prefix, key if chapter else None)
+                chapter_texts[norms] = text
+            where = acceptance / chapter if chapter else acceptance
+            if where.is_dir():
+                more, scenarios, verdict_counts, _, _ = self.acceptance(where, key, f"{chapter}/" if chapter else "")
+                chapter_texts.update(more)
+                if scenarios is not None:
+                    self.directives(where / "scenarios.tsv", self.stands())
+            elif not chapter:
+                self.error(acceptance, "no acceptance directory")
+            choices = self.choices(text) if text is not None else None
+            # A chapter's own texts count the chapter.
+            for path, body in chapter_texts.items():
+                self.counts(path, body, prefix, ids, scenarios, False, verdict_counts, choices or None)
+            all_ids += ids
+            total_choices += choices or 0
+            for name, value in (("scenarios", scenarios), ("verdicts", verdict_counts)):
+                if value is not None:
+                    old = totals[name]
+                    if name == "scenarios":
+                        totals[name] = (value if old is None else
+                                        (old[0] + value[0], old[1] + value[1], old[2] | {f"{chapter}/{n}" for n in value[2]}))
+                    else:
+                        totals[name] = value if old is None else tuple(a + b for a, b in zip(old, value))
+        if self.catalog is not None and chapters:
+            shared = {k for (k, _), row in self.catalog.items() if row["owner"] == key}
+            for missing in sorted(shared - owned):
+                self.error(lesson, f"«Данные»: no chapter owns {missing}, the catalog gives it to {key}")
+        # The lecture and the instruction count the whole lesson: sums over the chapters.
+        for path, text in texts.items():
+            self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],
+                        total_choices or None, lecture=path == lesson)
+        self.stale(key, acceptance)
         self.stats["lessons"] += 1
 
 def main():
