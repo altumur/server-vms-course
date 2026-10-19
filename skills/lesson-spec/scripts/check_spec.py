@@ -27,6 +27,8 @@ def arguments():
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
+    parser.add_argument("--strict-coverage", action="store_true",
+                        help="every references.tsv row of a form source must be the sole cause of a corpus case")
     return parser
 
 
@@ -187,6 +189,9 @@ def references(document):
     yield from walk(document, "document")
 
 
+FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->"}
+
+
 def markdown_links(tokens):
     for token in tokens:
         if token.type == "link_open":
@@ -195,6 +200,8 @@ def markdown_links(tokens):
             yield token.attrGet("src")
             # Children form the alt text, not independently rendered links or HTML.
             continue
+        elif token.type == "html_block" and token.content.strip() in FORM_MARKERS:
+            continue                                  # the built form section of ADR-0087 between its markers
         elif token.type in {"html_inline", "html_block"}:
             raise ValueError("unsupported raw HTML; local links/resources need a separate check")
         if token.children:
@@ -382,8 +389,9 @@ def composition_members(node):
 
 
 class Check:
-    def __init__(self, root, exceptions=None):
+    def __init__(self, root, exceptions=None, strict_coverage=False):
         self.root = root.resolve()
+        self.strict_coverage = strict_coverage
         self.errors = []
         self.stats = Counter()
         self.excepted = []
@@ -876,6 +884,91 @@ class Check:
                 self.error(path, f"form schema: course spec refused {got['verdict']} ({why})")
             self.stats["schema_specs"] += 1
 
+    # The form source of ADR-0087 next to the chapter norms: the section built from it stands in the norms byte for byte
+    # between the markers, the corpus goes through the loader built from it (verdict, class, paths, lines), every
+    # course spec loads, and the coverage of references.tsv is counted (strict with --strict-coverage).
+    def form_source(self, norms, text, form, references, scalars, acceptance, verdicts, classes):
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from form_source import Loader, SourceError, build_section, held_rows
+            from form_source.section import BEGIN, END
+        except ImportError as exc:
+            self.error(form, f"form source check needs ruamel.yaml (text layer Н1.1), missing: {exc}; run: {SCHEMA_INSTALL}")
+            return
+        for path in (references, scalars):
+            if not path.is_file():
+                self.error(path, "form source needs .form.yaml, .references.tsv and .scalars.tsv (ADR-0087 п. 1)")
+                return
+        try:
+            loader = Loader(form, references, scalars)
+            section = build_section(form, references, scalars)
+        except SourceError as exc:
+            self.error(form, f"form source: {exc}")
+            return
+        if text is not None:
+            lines = text.split("\n")
+            begins = [i for i, line in enumerate(lines) if line == BEGIN]
+            ends = [i for i, line in enumerate(lines) if line == END]
+            if len(begins) != 1 or len(ends) != 1 or ends[0] < begins[0]:
+                self.error(norms, f"form source: the norms hold the built section once, between {BEGIN} and {END}")
+            else:
+                said = "\n".join(lines[begins[0] + 1:ends[0]]) + "\n"
+                if said != section:
+                    old, new = said.splitlines(), section.splitlines()
+                    at = next((i for i, (a, b) in enumerate(zip(old, new)) if a != b), min(len(old), len(new)))
+                    self.error(norms, f"form source: the section differs from the built one at its line {at + 1} "
+                                      f"(rebuild: python skills/lesson-spec/scripts/form_source/build.py {norms.relative_to(self.root)})")
+        if verdicts is None:
+            self.error(form, "form source without verdicts.tsv: nothing to check it against")
+            return
+        diagnostics = {}
+        if (acceptance / "diagnostics.tsv").exists():
+            for _, (case, paths, lines_) in self.tsv(acceptance / "diagnostics.tsv", 3):
+                try:
+                    diagnostics[case] = (strict_json(paths), strict_json(lines_))
+                except ValueError:
+                    pass                                    # diagnostics() names the bad row
+        results = []
+        for case, expected in sorted(verdicts.items()):
+            path = acceptance / "cases" / f"{case}.subsystem.yaml"
+            try:
+                got = loader.judge(path.read_bytes())
+            except OSError:
+                continue                                    # verdicts() has named the missing case
+            except Exception as exc:
+                self.error(path, f"form source: loader failed: {exc!r}")
+                continue
+            results.append(got)
+            why = f"layer {got['layer']}" + (f": {got['why'][0]}" if got["why"] else "")
+            if got["verdict"] != expected:
+                self.error(path, f"form source: verdict expected {expected}, got {got['verdict']} ({why})")
+            elif case in classes and got["class"] != classes[case]:
+                self.error(path, f"form source: class expected {classes[case]}, got {got['class']} ({why})")
+            elif case in diagnostics:
+                paths, lines_ = diagnostics[case]
+                if sorted(map(json.dumps, paths)) != sorted(map(json.dumps, got["paths"])):
+                    self.error(path, f"form source: paths expected {json.dumps(paths, ensure_ascii=False)}, "
+                                     f"got {json.dumps(got['paths'], ensure_ascii=False)} ({why})")
+                elif not set(lines_) <= set(got["lines"]):
+                    self.error(path, f"form source: lines expected {lines_}, got {got['lines']}")
+            self.stats["form_cases"] += 1
+        specs = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+                 *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        for path in sorted(specs):
+            got = loader.judge(path.read_bytes())
+            if got["verdict"] != "ok":
+                why = f"layer {got['layer']}" + (f": {got['why'][0]}" if got["why"] else "")
+                self.error(path, f"form source: course spec refused {got['class']} ({why})")
+            self.stats["form_specs"] += 1
+        held = held_rows(results)
+        self.stats["form_rows"] += len(loader.rows)
+        self.stats["form_rows_held"] += len(held)
+        if self.strict_coverage:
+            for row in loader.rows:
+                if row.no not in held:
+                    self.error(references, f"line {row.no}: no corpus case has this row as its sole cause (ADR-0087 доп. (1) Р10)")
+
     # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module (lesson 1
     # moves it there), the М10 one until then, and the module's own.
     def stands(self, module=None):
@@ -1048,14 +1141,20 @@ class Check:
                 chapter_texts.update(more)
                 if scenarios is not None:
                     self.directives(where / "scenarios.tsv", self.stands())
-            # The ADR-0085 pair moves with the chapter that owns the corpus (ADR-0086 Р4) until the lesson takes its
-            # form source (ADR-0087): spec/NN.K-<процесс>.schema.yaml and .references.tsv next to the chapter norms.
-            base = norms.name[:-len(".norms.md")]
-            schema, schema_refs = spec / f"{base}.schema.yaml", spec / f"{base}.references.tsv"
-            if schema.exists() or schema_refs.exists():
-                self.spec_schema(schema, schema_refs, where / "cases", verdicts, classes)
             elif not chapter:
                 self.error(acceptance, "no acceptance directory")
+            # The ADR-0085 pair moves with the chapter that owns the corpus (ADR-0086 Р4) until the lesson takes its
+            # form source (ADR-0087): spec/NN.K-<процесс>.form.yaml, .references.tsv, .scalars.tsv next to the norms.
+            base = norms.name[:-len(".norms.md")]
+            schema, schema_refs = spec / f"{base}.schema.yaml", spec / f"{base}.references.tsv"
+            source = spec / f"{base}.form.yaml"
+            if source.exists():
+                if schema.exists():
+                    self.error(schema, "a chapter has either the ADR-0085 pair or the ADR-0087 form source, not both")
+                self.form_source(norms, text, source, schema_refs, spec / f"{base}.scalars.tsv", where, verdicts,
+                                 classes)
+            elif schema.exists() or schema_refs.exists():
+                self.spec_schema(schema, schema_refs, where / "cases", verdicts, classes)
             choices = self.choices(text) if text is not None else None
             # A chapter's own texts count the chapter.
             for path, body in chapter_texts.items():
@@ -1083,7 +1182,7 @@ class Check:
 
 def main():
     args = arguments().parse_args()
-    check = Check(args.root, args.exceptions)
+    check = Check(args.root, args.exceptions, args.strict_coverage)
     for name in args.lessons:
         check.lesson((check.root / name).resolve())
     for error in check.errors:

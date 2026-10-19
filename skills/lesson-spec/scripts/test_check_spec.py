@@ -861,7 +861,9 @@ class PlatformLessonTests(unittest.TestCase):
             (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
             (acceptance / "scenarios.tsv").write_text(
                 "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
-        (self.spec / "01-store.api.openapi.yaml").write_text('''openapi: 3.1.0
+        (self.spec / "01-store.api.openapi.yaml").write_text(self.API)
+
+    API = '''openapi: 3.1.0
 info: {title: Store, version: "1"}
 paths:
   /example:
@@ -872,7 +874,7 @@ paths:
           content:
             application/json:
               schema: {type: object, additionalProperties: false}
-''')
+'''
 
     def check(self):
         result = Check(self.root)
@@ -925,3 +927,71 @@ paths:
     def test_whole_and_chapter_norms_conflict(self):
         (self.spec / "01-store.norms.md").write_text("# x\n")
         self.assertTrue(any("either one norms file or chapter norms" in e for e in self.check().errors))
+
+
+class FormSourceChapterTests(unittest.TestCase):
+    """Глава Platform-урока с источником формы ADR-0087: раздел байт в байт, корпус через построенный загрузчик."""
+
+    def setUp(self):
+        from test_form_source import FORM, REFS, SCALARS
+        from form_source import build_section
+        from form_source.section import BEGIN, END
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.dir = self.root / "Platform/02-installer"
+        self.spec = self.dir / "spec"
+        self.spec.mkdir(parents=True)
+        self.lesson = self.dir / "02-installer.md"
+        self.lesson.write_text("# Installer\n")
+        (self.spec / "02-installer.README.md").write_text("# Instructions\n")
+        base = self.spec / "02.1-installer"
+        for suffix, text in ((".form.yaml", FORM), (".references.tsv", REFS), (".scalars.tsv", SCALARS)):
+            Path(str(base) + suffix).write_text(text, encoding="utf-8")
+        section = build_section(*(Path(str(base) + s) for s in (".form.yaml", ".references.tsv", ".scalars.tsv")))
+        self.norms = self.spec / "02.1-installer.norms.md"
+        self.norms.write_text("\n".join(f"## Н{i} Section" for i in range(6)) + "\n" + BEGIN + "\n" + section + END + "\n" +
+                              "## Решает реализация\n## Чеклист готовности\n" +
+                              "- [ ] **P/02.1-01** Example — проверяется чтением\n")
+        self.acceptance = self.dir / "acceptance/1"
+        (self.acceptance / "cases").mkdir(parents=True)
+        (self.acceptance / "README.md").write_text("# Acceptance\n")
+        (self.acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (self.acceptance / "verdicts.tsv").write_text("good\tok\nbad\trefused\n")
+        (self.acceptance / "cases/good.subsystem.yaml").write_text("name: a\n")
+        (self.acceptance / "cases/bad.subsystem.yaml").write_text("name: a\nzz: 1\n")
+        (self.spec / "02-installer.api.openapi.yaml").write_text(PlatformLessonTests.API)
+
+    def check(self):
+        result = Check(self.root)
+        result.lesson(self.lesson)
+        return result
+
+    def test_pass(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual((result.stats["form_cases"], result.stats["form_rows"]), (2, 3))
+
+    def test_section_must_match(self):
+        self.norms.write_text(self.norms.read_text().replace("| `tmpl` | строка |", "| `tmpl` | слово |"))
+        self.assertTrue(any("section differs" in e for e in self.check().errors))
+
+    def test_corpus_through_the_loader(self):
+        (self.acceptance / "verdicts.tsv").write_text("good\tok\nbad\tok\n")
+        self.assertTrue(any("verdict expected ok, got refused" in e for e in self.check().errors))
+        (self.acceptance / "verdicts.tsv").write_text("good\tok\nbad\trefused\n")
+        (self.acceptance / "classes.tsv").write_text("bad\tvalue\n")
+        self.assertTrue(any("class expected value, got key" in e for e in self.check().errors))
+        (self.acceptance / "classes.tsv").unlink()
+        (self.acceptance / "diagnostics.tsv").write_text('bad\t[["aa"]]\t[]\n')
+        self.assertTrue(any("paths expected" in e for e in self.check().errors))
+
+    def test_pair_and_source_conflict(self):
+        (self.spec / "02.1-installer.schema.yaml").write_text("{}\n")
+        self.assertTrue(any("not both" in e for e in self.check().errors))
+
+    def test_strict_coverage(self):
+        result = Check(self.root, strict_coverage=True)
+        result.lesson(self.lesson)
+        self.assertTrue(any("sole cause" in e for e in result.errors))
+

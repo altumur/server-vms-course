@@ -42,11 +42,9 @@ def jcs_number(x):
         raise ValueError("not finite")
     if x == 0:
         return "0"
-    if x.is_integer() and abs(x) < 1e21:
-        return str(int(x))
-    r = repr(x)
+    r = repr(x)                                  # кратчайшие цифры, как ECMAScript
     if "e" not in r:
-        return r
+        return r[:-2] if r.endswith(".0") else r
     m, e = r.split("e")
     e = int(e)
     if -7 < e < 21:
