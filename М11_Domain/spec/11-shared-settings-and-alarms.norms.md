@@ -13,7 +13,7 @@
 `cut_before` (писатель — не больше трёх знаков дроби; добавлено сверкой М11, A22).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/shared`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/shared-refused`, `domain/alarms`, `domain/alarm-history/<член>`;
+- владеет: `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/shared-refused`, `domain/alarms`, `domain/alarm-history/<член>`, `<sub>/<spec:domain.witness.report>/<имя>`;
 - читает: `domain/holder`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`.
 
 Общее уроков 1–10 Н1 действует. Домен не знает ни одного поля подсистемы (ADR-0010): что общее, объявляет спека, а
