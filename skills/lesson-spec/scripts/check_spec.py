@@ -305,6 +305,10 @@ def path_segment(segment):
         return bool(segment)
     return type(segment) is int and segment >= 0
 SCENARIO_HEADER = ["scenario", "step", "request", "expect"]
+# Count words of a scenario total («восемь сценариев»): nominative, up to twenty; larger totals are written in digits.
+NUMBER_WORDS = {w: i for i, w in enumerate(
+    "один два три четыре пять шесть семь восемь девять десять одиннадцать двенадцать тринадцать четырнадцать "
+    "пятнадцать шестнадцать семнадцать восемнадцать девятнадцать двадцать".split(), 1)}
 
 
 def scenario_counts(text):
@@ -680,14 +684,26 @@ class Check:
                 self.error(path, f"scenario {number} of scenarios.tsv has no row in the Н5 table")
         if scenarios is not None:
             total, steps, _ = scenarios
-            for match in re.finditer(r"(\d+)\s*сценари\w*\s*[/,]\s*(\d+)\s*шаг\w*", text):
+            # «N сценариев / M шагов»; число сценариев — и словом до двадцати, через одно слово («восемь независимых
+            # сценариев, 121 шаг»).
+            words = "|".join(sorted(NUMBER_WORDS, key=len, reverse=True))
+            for match in re.finditer(r"(?<!\w)(\d+|(?i:%s)(?!\w))\s*(?:[а-яё]+\s+)?сценари\w*\s*[/,]\s*(\d+)\s*шаг\w*"
+                                     % words, text):
                 if not is_total(match):
                     continue
                 self.stats["count_phrases"] += 1
-                if int(match.group(1)) != total:
-                    mismatch(match.group(1), total, "scenarios")
+                said = match.group(1)
+                if (int(said) if said.isdigit() else NUMBER_WORDS[said.lower()]) != total:
+                    mismatch(said, total, "scenarios")
                 if int(match.group(2)) != steps:
                     mismatch(match.group(2), steps, "steps")
+            # Шаги без сценариев — только фразой «Всего N шагов» с начала предложения.
+            for match in re.finditer(r"(?:^|(?<=[.:;!?]\s))Всего\s+(\d+)\s+шаг\w*", text, re.M):
+                if not is_total(match):
+                    continue
+                self.stats["count_phrases"] += 1
+                if int(match.group(1)) != steps:
+                    mismatch(match.group(1), steps, "steps")
             for match in re.finditer(r"scenarios\.tsv\s*\((\d+)\s*[–…-]\s*(\d+)\)", text):
                 self.stats["count_phrases"] += 1
                 if int(match.group(1)) != 1 or int(match.group(2)) != total:
