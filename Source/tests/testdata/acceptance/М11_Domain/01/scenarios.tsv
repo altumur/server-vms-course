@@ -22,3 +22,9 @@ scenario	step	request	expect
 11-findings-without-step	2	view inputs/11-two-workers-one-member.json	ok {"shadow": {"counts": {"conflict": 1}}}
 11-findings-without-step	3	view inputs/11-never.json	ok {"view": {"members": [{"name": "m1", "state": "unseen"}, {"name": "m2", "state": "never", "age": null}]}}
 11-findings-without-step	4	view inputs/11-pulse-without-row.json	ok {"view": {"units": {"testsub": [{"id": "1", "ref": "c1", "cluster": "m1"}, {"id": "1", "ref": "c2", "cluster": "m2"}]}}}
+12-mark-gone-and-back	1	view inputs/12-mark-gone.json	ok {"view": {"complete": false, "members": [{"name": "m1", "state": "silent", "age": 10}], "units": {"testsub": [{"id": "1", "ref": "c1", "state": "silent"}]}}}
+12-mark-gone-and-back	2	view inputs/12-mark-back.json	ok {"view": {"members": [{"name": "m1", "state": "ok", "age": 0}], "units": {"testsub": [{"id": "1", "ref": "c1", "state": "live"}]}}}
+13-leave-and-back	1	view inputs/13-leave-and-back.json	ok {"view": {"complete": false, "members": [{"name": "m1", "state": "ok"}, {"name": "m2", "state": "unseen", "age": 0}]}}
+14-age-round	1	view inputs/14-age-round.json	ok {"view": {"members": [{"name": "m1", "state": "unseen", "age": 0.3}]}}
+15-duplicate-id	1	view inputs/15-duplicate-id.json	ok {"view": {"units": {"testsub": [{"id": "1", "ref": "c5", "cluster": "m1"}]}}}
+16-pulse-jcs	1	view inputs/16-pulse-jcs.json	ok {"view": {"members": [{"name": "m1", "state": "ok"}], "units": {"testsub": [{"id": "1", "state": "live", "age": 50}]}}}

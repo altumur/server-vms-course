@@ -6,3 +6,4 @@ date	sample	fix	languages
 2026-10-18	01/scenarios.tsv; inputs	прогон 41, мутации №1, №2: LOST_AFTER 45/46, SHADOW_STALL 160/161 — обе стороны	all
 2026-10-18	01/scenarios.tsv; inputs	прогон 41, мутации №3–5: сц. 11 — unknown (назначение не члену), conflict двух воркеров одного члена, never с age null	all
 2026-10-18	11-findings-without-step 4	прогон 41 Kimi (мелкое, урок 1): ветка no_ref Н1.4 — элемент пульса без строки шарда в units не входит	all
+2026-10-19	12–16; inputs 12–16	сверка М11 01–04 (V1–V6): пропавшая метка — silent с прежней копией, never только «ни разу», уход забывает память, округление от десятичной записи, дубль id — большая revision, смена пульса — смена JCS	all

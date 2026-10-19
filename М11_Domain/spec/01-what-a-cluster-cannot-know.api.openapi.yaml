@@ -343,7 +343,8 @@ components:
                     mark:
                       type: ['integer', 'null']
                       minimum: 1
-                      description: rev метки reported (урок 3 Н1) или null — метки нет.
+                      maximum: 9007199254740991
+                      description: rev метки reported (урок 3 Н1) или null — метки нет; больше 2^53 − 1 — вход не по форме (код 2; добавлено сверкой М11, V7).
                     objects:
                       type: object
                       additionalProperties: true
