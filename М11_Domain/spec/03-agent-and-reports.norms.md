@@ -87,6 +87,9 @@ publication:    тело POST /api/member/<член> (Н2) — JSON-объект
   pinned?:      отпечаток domain/root члена (нет — не закреплён)
   outcomes?:    {<id>: <исход>} — исходы правок домена, урок 6 Н1.5;   tls_ca?, tls_ca_certs? — урок 8 Н1.6;   sign_failures? — урок 12 Н1.6;
                 members_rev? — урок 12 Н1.4 ({term, rev} списка, который член держит; вне дельты)
+out_of_delta:   поле вне дельты (stale, tls_ca, tls_ca_certs, sign_failures, members_rev и поля поздних уроков) не по форме
+                своего урока — поле не взято, журнал держателя, отчёт принимается, как tls_ca урока 8 Н1.6; stale — ключи
+                без повторов, повтор — поле не взято (решение «Архитектора» по сверке М11, A3–A6, A9)
 member_objects:                               # что агент несёт и что держатель хранит; прочее держатель отбрасывает молча
   <sub>/heartbeats/<воркер>:  пульс М10/5 Н1.1 каждой спеки каталога с domain.ref
   <sub>/snapshot/<шард>:      шард снимка М10/10 Н1.3 каждой такой спеки
@@ -128,6 +131,8 @@ reported:       domain/members/<член>/reported               # объект-
   request_sha256: hex sha256 байтов тела этого запроса, как пришло; повтор узнаётся по (sent_at, request_sha256)
   via?:         ретранслятор — урок 4
   stale:        из публикации при каждом приёме, включая «слышал» (Н3 шаг 6); нет в публикации — []
+  sign_failures?: из публикации при каждом приёме с записью метки, как stale; поколения не создаёт и метку само не
+                освежает; нет в публикации — поля нет (урок 12 Н1.6; решение «Архитектора» по сверке М11, A7, W1)
 keep:           два последних поколения и их delta; старше и выше метки — убираются следующим приёмом
 REPORT_EVERY:   5           # с — проход агента; ответ держателя может назначить every (Н1.5), 1 … 3600
 MARK_REFRESH:   22.5        # с = LOST_AFTER/2 (урок 1 Н1.3) по монотонным часам держателя
@@ -216,7 +221,7 @@ rights:         роль domainagent (М10/6 Н1.4): пишет domain/* без 
 domain/view.member_list:   {rev, members} — doc строки domain/members, прочитанный проходом (урок 1 Н3 шаг 1)
 domain/view.knocking:      [knock…] — по name; поля Н1.1
 domain/view.reports:       {<член>: {rev, base, received_at, sent_at, via?, keys_rev?, pinned, sign_failures?}}   # sign_failures —
-                           из последней публикации (урок 12 Н1.6; добавлено М11/12)   # pinned: this | another | none; via — урок 4
+                           из метки (поле последнего принятого запроса, Н1.3; урок 12 Н1.6; добавлено М11/12)   # pinned: this | another | none; via — урок 4
 ```
 
 ---
@@ -264,7 +269,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 ### проход агента (раз в every, умолчание REPORT_EVERY)
 
 ```
-1. domain/member-key: нет — создать (Н1.1 born); прочитать pinned (domain/root), keys_rev (domain/keys);
+1. domain/member-key: нет — создать (Н1.1 born); ключ читать каждый проход, не прочитался — не подписывать (урок 12 Н1.6
+   key_read; сверка М11, N1); прочитать pinned (domain/root), keys_rev (domain/keys);
    по каждому пульсу копии — момент последней его смены на своих монотонных часах → stale (Н1.2)
 2. собрать member_objects (Н1.2); не ready → GET /api/carry/<член> (ключи и список без отчёта) и следующий проход
 3. last_rev = 0 (старт процесса, после 409 rebase) → тело целое (base 0);
@@ -275,7 +281,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
    409 rebase → last_rev = 0 и сразу одна повторная отправка целым; 409 same_sent_at → следующий проход (новый sent_at)
    409 not_ready, 401, 403, 404 → журнал (одна строка на смену причины), следующий проход
    503 standby → держатель недоступен на этот проход: следующий проход, last_rev не меняется; не отказ и не повод искать
-   другой срок (урок 12 Н1.7; добавлено М11/12); 413 whole too large → domain/agent too_large, last_rev = 0 (урок 12 Н1.5)
+   другой срок (урок 12 Н1.7; добавлено М11/12); 413 whole too large → domain/agent too_large, last_rev = 0; то же целое не повторяется, пока объекты не изменятся
+   (урок 12 Н1.5 body; сверка М11, N9)
    нет ответа → следующий проход; last_rev и подтверждённая база не меняются
 ```
 
@@ -304,12 +311,12 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
    (stored не читается или не с mark.sha256 — шаг 7: испорченное поколение заменяется новым; добавлено сверкой М11, A1):
    метку этот процесс не писал, или писал не меньше MARK_REFRESH назад (монотонные), или body.stale ≠ mark.stale
    (сравниваются отсортированные списки ключей; сверка М11, A8) →
-   переписать метку: поля поколения прежние; поля последнего запроса — sent_at, received_at, request_sha256, via, stale —
-   этого запроса; иначе ничего не писать
+   переписать метку: поля поколения прежние; поля последнего запроса — sent_at, received_at, request_sha256, via, stale,
+   sign_failures — этого запроса; иначе ничего не писать
 7. иначе → generation: rev = (mark ? mark.rev : 0) + 1; mark.rev = 2^53 − 1 → 503 {error: "refused", reason: "rev_exhausted",
    detail: "<член>'s generations reached 2^53 − 1: the mark cannot grow"}, ничего не меняется (добавлено сверкой М11, A18); записать reports/<rev> = JCS(whole'), затем reports/<rev>.delta = body,
    затем метку {rev, sha256, base, delta_sha256, signature?, key, keys_rev?, pinned?, sent_at, received_at,
-   request_sha256 (= delta_sha256), via?, stale};
+   request_sha256 (= delta_sha256), via?, stale, sign_failures?};
    убрать reports/<rev−2> и его .delta и объекты выше rev
 ```
 
@@ -328,15 +335,17 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 
 ```
 1. name — держатель → 400; name = domain → 400 «domain is the name of the domain's own grants» (урок 9 Н1.9);
+   name уже член: fingerprint = отпечаток его Entry.key → 200 без записи; иначе → 409 «<name> was admitted with another
+   key: have it leave first» (член не стучится — «уже член» раньше knocking; решение «Архитектора» по сверке М11, D20);
    name нет в view.knocking → 404 «<name> is not knocking»
 2. fingerprint ≠ отпечаток knock.key → 409 «<name> presents another key than the one compared: look again»;
    knock.key малого порядка или не точка кривой (Н1.1 pub) → 409 «<name> presents a key that signs nothing» (сверка М11, M1)
 3. knock.pinned = another → 409 «<name> pinned another root than this domain's: join it again»
 4. knock.key в revoked_members набора или в revoked_keys записи этого имени → 409 «this key was revoked»
-5. name уже член с другим key → 409 «<name> was admitted with another key: have it leave first»; с тем же — 200 без записи
+5. (шаг «уже член» — в шаге 1)
 5а. name не член, а в domain/members уже MEMBERS_MAX (500) записей → 409 «too many members: the list holds 500»
    (урок 12 Н1.5; добавлено М11/12)
-6. записать domain/members по CAS: rev + 1, term — свой, Entry {how: "admitted", since, by, key}; Entry больше
+6. записать domain/members по CAS: rev + 1, term — свой, Entry {how: "admitted", since, by, key}; любая Entry документа (урок 12 Н1.5 every_entry; сверка М11, N6) больше
    ENTRY_MAX (урок 12 Н1.5) — 409 «the entry of <name> would exceed 820 bytes»; конфликт CAS →
    перечитать и повторить с шага 4 не больше трёх раз, затем 409 «the list of members kept changing; look again»
 ```

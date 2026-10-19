@@ -354,7 +354,7 @@ components:
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
     Mark:
       type: object
-      description: 'Объект domain/members/<член>/reported (Н1.3): поля поколения (rev, sha256, base, delta_sha256, signature, key, keys_rev, pinned) и поля последнего принятого запроса (sent_at, received_at, request_sha256, via, stale).'
+      description: 'Объект domain/members/<член>/reported (Н1.3): поля поколения (rev, sha256, base, delta_sha256, signature, key, keys_rev, pinned) и поля последнего принятого запроса (sent_at, received_at, request_sha256, via, stale, sign_failures — решение «Архитектора» по сверке М11, A7/W1).'
       required: [rev, sha256, base, delta_sha256, sent_at, received_at, request_sha256, key, stale]
       additionalProperties: false
       properties:
@@ -373,6 +373,14 @@ components:
         stale:
           type: array
           items: {type: string}
+        sign_failures:
+          type: object
+          minProperties: 1
+          additionalProperties: false
+          description: 'Поле последнего принятого запроса — из публикации (урок 12 Н1.6); поколения не создаёт.'
+          properties:
+            domain: {type: integer, minimum: 1}
+            console: {type: integer, minimum: 1}
     Carry:
       type: object
       description: Н1.5. Поля уроков 4, 5, 6, 9, 10, 11 — их нормы.
