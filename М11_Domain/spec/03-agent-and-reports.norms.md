@@ -27,7 +27,9 @@ agent:          процесс роли domainagent (М10/6), один на кл
                 и ответ держателя домой; ключей домена не держит (урок 2 Н1.3)
 domain/member-key: {seed_secret, pub}        # у члена; секрет — конверт кольца М10/7; читатели — domainagent и domain (М10/7 Н1.3)
   seed_secret:  hex 32 случайных байт — зерно Ed25519 ключа члена (RFC 8032)
-  pub:          hex открытого ключа; ключ члена — один: им агент подписывает (Н1.4) и к нему держатель запечатывает (Н1.5)
+  pub:          hex открытого ключа; ключ члена — один: им агент подписывает (Н1.4) и к нему держатель запечатывает (Н1.5);
+                точка кривой Ed25519 не малого порядка ([8]A ≠ нейтраль, RFC 8032 §5.1.3): иной ключ подписи не даёт —
+                agent-sig bad_signature, стук 401, приём 409 (добавлено сверкой М11, M1)
   readers:      domainagent — все подписи члена; domain — только подпись просьбы GET /api/backup при переносе (урок 10
                 Н1.8 шаг 5, Н3 ask-sig); отчётов агента и иных подписей члена процесс domain не делает; писатель — агент
   born:         агент при первом старте, создание-однажды; при старте агент пишет в журнал строку
@@ -152,7 +154,8 @@ replay:         кэша повторов нет: те же байты в окн
 ```
 
 Проверка — функция `agent-sig` (Н3), слова отказа: `no_signature` (заголовка нет или пуст), `not_a_signature` (нет `.`,
-`мс` не по форме, `sig` не base64url без `=` или не 64 байта), `out_of_window`, `bad_signature`. Другой формы подписи у
+`мс` не по форме, `sig` не base64url без `=` или не 64 байта), `out_of_window`, `bad_signature` (и ключ малого порядка
+или не точка кривой, Н1.1 pub). Другой формы подписи у
 этих дверей нет: тройка `X-W2C-Member/Time/Signature` — у просьб без члена в пути (урок 10).
 
 ### Н1.5 Ответ держателя агенту и конверт `m1`
@@ -170,7 +173,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
                 (урок 12 Н1.4; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (урок 10 Н1.1)
   sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants — урок 9 Н1.3, break_glass — урок 9 Н1.6;
-                books — урок 5
+                books — урок 5; только когда секретное есть — пустого конверта нет (добавлено сверкой М11, D8)
   <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11 Н1.4; backup — урок 10 Н1.5
 envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 2 Н1.5: четыре части через «:», 2–4 — base64url без «=»
   recipient:    X25519 ключа члена: u = (1 + y)/(1 − y) mod 2^255 − 19 из y открытого Ed25519 (старший бит сброшен),
@@ -190,7 +193,9 @@ envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 
 ```yaml
 from_carry:     keys → domain/keys через функцию keys урока 2 Н3 (отказ — строка прежняя, причина в журнал);
                 revoked → domain/revoked как есть; members → domain/member-list как есть; набор принят и строки нет →
-                domain/member {cluster};
+                domain/member {cluster}; прочие поля ответа (revoked, members, holder, sealed, поля уроков) применяются
+                только после исхода took или holding функции keys над keys этого ответа; иной исход или keys нет — ответ
+                не применяется, строки прежние, журнал (добавлено сверкой М11, R2: набор отвергнут — его ответу не верят);
                 прочие поля — их уроки; каждая запись — только при отличии от прочитанного (урок 12 Н1.2; добавлено М11/12;
                 метки свежести — as_of копии грантов, domain/reached — не чаще FRESH_EVERY, урок 12 Н1.2), CAS по
                 прочитанному индексу, секретные поля — конверты кольца М10/7
@@ -242,7 +247,7 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| POST `/api/member/<член>` | процесс `domain` держателя (дверь `SIGNER_URL`, урок 2 Н1.3) | 200 carry (Н1.5) | по порядку: 413 больше BODY_LIMIT; 400 не публикация Н1.2; не член — подпись ключом из тела (`key`): неверна — 401, верна — стук (Н1.1 knock) и 404 «no member called <член>»; член — держатель, чья Entry ещё без key (Н3 «держатель в списке» шаг 1): подпись ключом из тела (`key`) — верна → шаг 2 того прохода, иначе 401; прочий член — 403 ключа нет в записи или он не тот, 403 отозван (`revoked_keys`, `revoked_members` набора); 401 подпись ключом записи (Н1.4); 409 `rebase`, `same_sent_at`, `not_ready` (Н3 «принять»); 409 `deposed` (урок 10 Н1.6); 413 `whole too large`, 503 `standby` (урок 12; добавлено М11/12) |
+| POST `/api/member/<член>` | процесс `domain` держателя (дверь `SIGNER_URL`, урок 2 Н1.3) | 200 carry (Н1.5) | по порядку: 413 больше BODY_LIMIT; 400 не публикация Н1.2 (в том числе вложенность JSON глубже JSON_DEPTH М10/1 Н1 — 128; сверка М11, A12); не член — подпись ключом из тела (`key`): неверна — 401, верна — стук (Н1.1 knock) и 404 «no member called <член>»; член — держатель, чья Entry ещё без key (Н3 «держатель в списке» шаг 1): подпись ключом из тела (`key`) — верна → шаг 2 того прохода, иначе 401; прочий член — 403 ключа нет в записи или он не тот, 403 отозван (`revoked_keys`, `revoked_members` набора); 401 подпись ключом записи (Н1.4); 409 `rebase`, `same_sent_at`, `not_ready` (Н3 «принять»); 409 `deposed` (урок 10 Н1.6); 413 `whole too large`, 503 `standby` (урок 12; добавлено М11/12) |
 | GET `/api/carry/<член>` | процесс `domain` держателя | 200 carry; поколения не меняет | 404 не член; 403 в записи нет ключа (держатель до первого отчёта своего агента: «no member key in the list yet») или он отозван; 401 подпись над пустым телом; 409 `deposed` (урок 10); 503 `standby` (урок 12; добавлено М11/12) |
 | GET `/domain/members` | консоль домена (`domainconsole`) | 200 `{rev, members, knocking}` | 404 `no domain here` (вида нет); 401/403 — урок 9 |
 | POST `/domain/members` `{name, fingerprint}` | консоль домена → процесс `domain` (Н1.8) | 200 `{rev, members}` после записи по CAS | 400 нет `name` или `fingerprint` не 16 hex, или `name` — держатель; 404 не стучится; 409 — Н4 |
@@ -294,11 +299,14 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 4. objects' = (base > 0 ? объекты stored : {}) ∪ body.objects − body.deleted; объекты вне member_objects отбросить
 4а. JCS(whole') больше BODY_LIMIT → 413 {error: "whole too large", detail}; ничего не писать (урок 12 Н1.5; добавлено М11/12)
 5. нет шарда снимка какой-то спеки каталога с domain.ref                           → 409 not_ready
-6. mark есть и whole' без sent_at = whole stored без sent_at (JCS)                 → heard:
-   метку этот процесс не писал, или писал не меньше MARK_REFRESH назад (монотонные), или body.stale ≠ mark.stale →
+6. mark есть, stored читается и с mark.sha256, и whole' без sent_at = whole stored без sent_at (JCS) → heard
+   (stored не читается или не с mark.sha256 — шаг 7: испорченное поколение заменяется новым; добавлено сверкой М11, A1):
+   метку этот процесс не писал, или писал не меньше MARK_REFRESH назад (монотонные), или body.stale ≠ mark.stale
+   (сравниваются отсортированные списки ключей; сверка М11, A8) →
    переписать метку: поля поколения прежние; поля последнего запроса — sent_at, received_at, request_sha256, via, stale —
    этого запроса; иначе ничего не писать
-7. иначе → generation: rev = (mark ? mark.rev : 0) + 1; записать reports/<rev> = JCS(whole'), затем reports/<rev>.delta = body,
+7. иначе → generation: rev = (mark ? mark.rev : 0) + 1; mark.rev = 2^53 − 1 → 503 {error: "refused", reason: "rev_exhausted",
+   detail: "<член>'s generations reached 2^53 − 1: the mark cannot grow"}, ничего не меняется (добавлено сверкой М11, A18); записать reports/<rev> = JCS(whole'), затем reports/<rev>.delta = body,
    затем метку {rev, sha256, base, delta_sha256, signature?, key, keys_rev?, pinned?, sent_at, received_at,
    request_sha256 (= delta_sha256), via?, stale};
    убрать reports/<rev−2> и его .delta и объекты выше rev
@@ -320,7 +328,8 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 ```
 1. name — держатель → 400; name = domain → 400 «domain is the name of the domain's own grants» (урок 9 Н1.9);
    name нет в view.knocking → 404 «<name> is not knocking»
-2. fingerprint ≠ отпечаток knock.key → 409 «<name> presents another key than the one compared: look again»
+2. fingerprint ≠ отпечаток knock.key → 409 «<name> presents another key than the one compared: look again»;
+   knock.key малого порядка или не точка кривой (Н1.1 pub) → 409 «<name> presents a key that signs nothing» (сверка М11, M1)
 3. knock.pinned = another → 409 «<name> pinned another root than this domain's: join it again»
 4. knock.key в revoked_members набора или в revoked_keys записи этого имени → 409 «this key was revoked»
 5. name уже член с другим key → 409 «<name> was admitted with another key: have it leave first»; с тем же — 200 без записи
@@ -359,6 +368,7 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 |---|---|---|---|
 | тело больше BODY_LIMIT | 413 | агент: журнал | дельта при `base > 0`; целое больше — `domain/agent too_large` (урок 12 Н1.5) |
 | тело не публикация | 400 `not_a_publication` | агент: журнал | дефект агента |
+| номер поколения исчерпан (`mark.rev` = 2^53 − 1) | 503 `rev_exhausted` | агент: журнал; оператор | член уходит и принимается заново (сверка М11, A18) |
 | член не в списке | 404 `no member called <член>` | агент: журнал; держатель: knock | принять (Н3) |
 | ключ не тот, что в списке, или отозван | 403 | агент: журнал | ключ сменился — принять заново |
 | подпись: `no_signature`, `not_a_signature`, `out_of_window`, `bad_signature` | 401, `reason` — слово | агент: журнал | часы (NTP) или ключ |
@@ -389,13 +399,17 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 
 ```yaml
 agent-sig:          вход {key, method, path, body, header, now, window} → {result: ok} | {result: refused, reason}
+                    # path — путь без query (Н1.4); с «?» — вход не по форме, код 2; key малого порядка — bad_signature
+                    # (Н1.1 pub; добавлено сверкой М11, G1, M1)
 seal-member:        вход {seed, sealed} → {result: ok, plain} | {result: refused, reason: not_m1 | not_an_envelope | does_not_open}
 seal-member-round:  вход {key, seed, plain} → {result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}
 accept:             вход {catalog: [<sub>…], mark: <метка> | null, stored: <whole> | null, body: <текст>, refreshed_ago: <с> | null,
                           via?: <ретранслятор> | null, heard_ago?: <с> | null}       # via, heard_ago — урок 4; нет — null
                     → {result: generation, rev, base, whole} | {result: heard, refresh} | {result: same} | {result: ignored}
-                    | {result: refused, status, reason: not_a_publication | same_sent_at | rebase | not_ready | whole_too_large}
-                    # whole_too_large — шаг 4а, status 413 (урок 12 Н1.5; добавлено прогоном 41)
+                    | {result: refused, status, reason: not_a_publication | same_sent_at | rebase | not_ready | whole_too_large
+                       | rev_exhausted}
+                    # whole_too_large — шаг 4а, status 413 (урок 12 Н1.5; добавлено прогоном 41); rev_exhausted — шаг 7,
+                    # status 503 (добавлено сверкой М11, A18)
                     # refreshed_ago — монотонные с, когда этот процесс писал метку; null — не писал
 exit:               0 — вычислено (в том числе отказ словом); 2 — вход не по форме (метка — строго Н1.3: stale есть всегда,
                     signature — у метки без via); лишнее поле входа — 2
@@ -412,10 +426,10 @@ exit:               0 — вычислено (в том числе отказ с
 | 07 | вид: после перезапуска `domain` члены `unseen`, затем `ok`; молчащий — `silent` (сц. 02 урока 1) | урок 1 Н1.3 |
 | 08 | вид: единица без воркера — `configured`; воркер убит — `stale` (сц. 03 урока 1) | урок 1 Н1.3, Н1.4 |
 | 09 | вид: один ref в двух членах — `contested`, единицы нет в `units` (сц. 04 урока 1) | урок 1 Н1.4 |
-| 10 | подпись агента: векторы — окно в обе стороны, граница, тело, путь, метод, чужой ключ, формы | Н1.4 |
+| 10 | подпись агента: векторы — окно в обе стороны, граница, тело, путь, метод, чужой ключ, формы; ключ малого порядка — `bad_signature` (сверка М11, M1) | Н1.4, Н1.1 pub |
 | 11 | конверт `m1`: векторы открытия и отказов, форма продукта с точками — `not_m1` | Н1.5 |
 | 12 | круг `m1`: реализация запечатывает дважды и открывает своё | Н1.5 |
-| 13 | принять: целое, дельта, rebase трёх видов, same, same_sent_at, heard с освежением и без, смена `stale` освежает метку, sent_at назад, not_ready, лишние объекты отброшены | Н3 «принять» |
+| 13 | принять: целое, дельта, rebase трёх видов, same, same_sent_at, heard с освежением и без, смена `stale` освежает метку, sent_at назад, not_ready, лишние объекты отброшены; целое поверх испорченного stored — generation, исчерпанный rev — 503 `rev_exhausted` (сверка М11, A1, A18) | Н3 «принять» |
 | 14 | стук незнакомца: подпись ключом из тела вне окна — 401, в `knocking` его нет; верная — стук (мутационная проверка 2026-10-18) | Н2, Н1.4 |
 
 ---

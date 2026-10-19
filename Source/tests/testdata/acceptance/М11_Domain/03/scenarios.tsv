@@ -103,6 +103,7 @@ scenario	step	request	expect
 10-agent-signature	16	agent-sig inputs/agent-sig-16-ms-17-digits.json	ok {"result": "refused", "reason": "not_a_signature"}
 10-agent-signature	17	agent-sig inputs/agent-sig-17-signature-63-bytes.json	ok {"result": "refused", "reason": "not_a_signature"}
 10-agent-signature	18	agent-sig inputs/agent-sig-18-get-with-body.json	ok {"result": "refused", "reason": "bad_signature"}
+10-agent-signature	19	agent-sig inputs/agent-sig-19-small-order-key.json	ok {"result": "refused", "reason": "bad_signature"}
 11-seal-member	1	seal-member inputs/seal-member-01-opens.json	ok {"result": "ok", "plain": "{\"grants\":{\"alice\":[\"view\"]}}"}
 11-seal-member	2	seal-member inputs/seal-member-02-empty.json	ok {"result": "ok", "plain": ""}
 11-seal-member	3	seal-member inputs/seal-member-03-other-member.json	ok {"result": "refused", "reason": "does_not_open"}
@@ -134,6 +135,8 @@ scenario	step	request	expect
 13-accept	17	accept inputs/accept-17-not-json.json	ok {"result": "refused", "status": 400, "reason": "not_a_publication"}
 13-accept	18	accept inputs/accept-18-whole-same-content.json	ok {"result": "heard", "refresh": true}
 13-accept	19	accept inputs/accept-19-heard-stale-changed.json	ok {"result": "heard", "refresh": true}
+13-accept	20	accept inputs/accept-20-whole-over-broken-stored.json	ok {"result": "generation", "rev": 5, "base": 0}
+13-accept	21	accept inputs/accept-21-rev-exhausted.json	ok {"result": "refused", "status": 503, "reason": "rev_exhausted"}
 14-knock-needs-signature	1	@install domain	ok
 14-knock-needs-signature	2	@start domain	ok
 14-knock-needs-signature	3	@start agent hold	ok

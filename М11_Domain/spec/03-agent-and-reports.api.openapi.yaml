@@ -33,13 +33,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Carry'
         '400':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedWord'
         '401':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedWord'
         '403':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedPlain'
         '404':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedPlain'
         '409':
           description: rebase, same_sent_at или not_ready (Н3 «принять»); deposed смещённого держателя с записью нового (урок 10 Н1.6; добавлено М11/10)
           content:
@@ -60,7 +60,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
         '503':
-          $ref: '#/components/responses/Standby'
+          $ref: '#/components/responses/StandbyOrExhausted'
   /api/carry/{member}:
     parameters:
       - $ref: '#/components/parameters/Member'
@@ -76,11 +76,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Carry'
         '401':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedWord'
         '403':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedPlain'
         '404':
-          $ref: '#/components/responses/Refused'
+          $ref: '#/components/responses/RefusedPlain'
         '503':
           $ref: '#/components/responses/Standby'
   /domain/members:
@@ -206,6 +206,42 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Refusal'
+    RefusedWord:
+      description: 'Отказ двери агентов со словом (Н4): {error: refused, reason, detail} — у 400 not_a_publication, у 401 слово подписи Н1.4 (добавлено сверкой М11)'
+      content:
+        application/json:
+          schema:
+            unevaluatedProperties: false
+            allOf:
+              - $ref: '#/components/schemas/Refusal'
+              - properties:
+                  error: {const: refused}
+                  reason: {type: string, minLength: 1}
+                required: [reason]
+    RefusedPlain:
+      description: 'Отказ двери агентов без слова (Н4): {error: refused, detail} (добавлено сверкой М11)'
+      content:
+        application/json:
+          schema:
+            unevaluatedProperties: false
+            allOf:
+              - $ref: '#/components/schemas/Refusal'
+              - properties:
+                  error: {const: refused}
+    StandbyOrExhausted:
+      description: 'standby (урок 12 Н1.7) или исчерпан номер поколения — {error: refused, reason: rev_exhausted, detail} (Н3 «принять» шаг 7; добавлено сверкой М11, A18)'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/StandbyBody'
+              - unevaluatedProperties: false
+                allOf:
+                  - $ref: '#/components/schemas/Refusal'
+                  - properties:
+                      error: {const: refused}
+                      reason: {const: rev_exhausted}
+                    required: [reason]
     Standby:
       description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
       content:
@@ -230,7 +266,8 @@ components:
         holder: {type: object, additionalProperties: true, description: 'документ записи срока нового держателя как объект (форма — HolderRecord контракта урока 10)'}
     Refusal:
       type: object
-      required: [error]
+      required: [error, detail]
+      description: 'Н4: detail есть у каждого отказа; error — refused, кроме слов поздних уроков (deposed, whole too large, standby) и общих слов вида (no domain here); добавлено сверкой М11'
       additionalProperties: false
       properties:
         error: {type: string, minLength: 1}
