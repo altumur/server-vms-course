@@ -40,7 +40,7 @@ scenario	step	request	expect
 04-planned-handover	5	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1", "stranded": []}
 04-planned-handover	6	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
 04-planned-handover	7	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
-04-planned-handover	8	holder@m1 GET /domain	200 {"term": {"term": 2, "holder": "m1"}}
+04-planned-handover	8	@until 30 holder@m1 GET /domain	200 {"term": {"term": 2, "holder": "m1"}}
 04-planned-handover	9	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 05-record	1	record inputs/record-01-ok.json	ok {"result": "ok", "term": 1, "holder": "hold"}
 05-record	2	record inputs/record-02-ok-restored.json	ok {"result": "ok", "term": 2, "holder": "m1"}
@@ -100,7 +100,7 @@ scenario	step	request	expect
 09-move-live-holder	10	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "$k2"}}
 09-move-live-holder	11	@until 30 member hold store GET /v1/get?key=domain/keys	200 {"items": {"doc": "$k2"}}
 09-move-live-holder	12	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
-09-move-live-holder	13	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
+09-move-live-holder	13	@until 30 holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
 10-move-stale-set	1	@domain	ok
 10-move-stale-set	2	@sleep 35	ok
 10-move-stale-set	3	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r1"}}
