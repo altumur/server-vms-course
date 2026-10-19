@@ -71,7 +71,9 @@ doors:      POST /domain/<sub>/<rows> {cluster, <поля>}        — созд�
             POST: cluster нет, не строка или пустая строка — 400, до поиска (добавлено сверкой М11, A4)
 fields:     только поля domain.edit спеки (М10/2 Н1.2а); платформенные (cluster, worker, server, placement, epoch,
             observed_revision, phase, revision) и поля вне domain.edit — 400; пустое тело PUT — 400; значения — по
-            спеке (М10/3 Н3 шаг 4 формы) — 400; у POST — поле domain.ref спеки обязательно
+            спеке (М10/3 Н3 шаг 4 формы) — 400; POST дополнительно принимает обязательное поле domain.ref спеки, даже
+            если его нет в domain.edit (у testsub edit — [start, labels], ref — name); у PUT исключения нет: ref — в пути
+            (добавлено сверкой М11)
 secrets:    *_secret на любой глубине, адрес с учётными данными — 400 «a secret is set in the member's own cluster, never
             through a kept edit» (М10/7 Н1.4, Н4: domain.edit с секретом — отказ загрузки спеки; секрета через домен не передают)
 order:      проверки тела по порядку: платформенные поля → секреты → поля вне domain.edit → пустое тело PUT → значения
