@@ -44,6 +44,8 @@
 #   stored   the text the row holds; <absent> — the field is not in the row; <empty> — the empty string
 #   fault    empty (the tab is still there: every row has four columns) — taken; too_long — past the schema's maxLength (request) or JSON_CEILING (json);
 #            not_json — a body that is not JSON (json rows); <refused> — the request door's 400 without fault (request rows)
+# A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a JSON text is
+# written as JSON writes it inside a string — the escape `\t`, `\n` (two characters, the JSON's own), never raw.
 request	true	true	
 request	false	false	
 request	null	null	

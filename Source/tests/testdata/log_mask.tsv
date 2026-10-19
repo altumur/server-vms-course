@@ -5,6 +5,8 @@
 # product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by a test of the product, as a process that
 # knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
 #
+# A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a value cannot be
+# written, and no row needs one; `\t`, `\n` in a cell are two characters.
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
 #   raw     the text as written
 #   masked  what a log shows of it

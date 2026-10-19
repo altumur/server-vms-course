@@ -5,6 +5,8 @@
 # nesting, a name outside the BMP (sorted by UTF-16 code units: U+1F600 before U+FB33), the control characters,
 # the empty object and list. Owner: «Спецификация»; the product's conformance — its own acceptance against this table
 # (ADR-0080 доп. 16, ADR-0083).
+# A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a JSON text is
+# written as JSON writes it inside a string — the escape `\t`, `\n` (two characters, the JSON's own), never raw.
 {"b":2,"a":1}	{"a":1,"b":2}	43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777
 {"label":"A&B <gate>"}	{"label":"A&B <gate>"}	9bf7df596389c91cbd93e84379fb58b08fa8305b21e2acc71a65fc300a51c557
 {"at":1.0,"rev":1}	{"at":1,"rev":1}	32ac2c8aabe7d4b1866197fd72bb4534ac7a90c77ddff0f94239b4cb610a17ca
