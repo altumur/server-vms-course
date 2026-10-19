@@ -177,6 +177,11 @@ def _build(events, lines):
         if (stack and isinstance(stack[-1][0], dict) and not stack[-1][4] and not is_key and not empty
                 and (name == "ScalarEvent" or ev.flow_style) and line != stack[-1][3]):
             raise TextRefused("N", line, "value on the line after its key is not a block collection")
+        # Н1.1 blocks: скаляр или поток строкой ниже голого «-» — отказ текста (как значение ниже ключа).
+        if (stack and isinstance(stack[-1][0], list) and not stack[-1][4] and not empty
+                and (name == "ScalarEvent" or getattr(ev, "flow_style", False))
+                and not lines[ev.start_mark.line][:ev.start_mark.column].rstrip().endswith("-")):
+            raise TextRefused("N", line, "item value on the line after its dash")
         if name in ("MappingStartEvent", "SequenceStartEvent"):
             if is_key:
                 raise TextRefused("K", line, "collection as key")
@@ -255,6 +260,9 @@ def _build(events, lines):
             elif isinstance(v, float) and (math.isinf(v) or math.isnan(v)):
                 numbers.append((path_of(), ev.value))
                 v = None
+            elif isinstance(v, float) and v == 0.0 and re.search(r"[1-9]", re.split(r"[eE]", ev.value)[0]):
+                numbers.append((path_of(), ev.value))   # потеря значимости (1e-400 → 0) — отказ value (Н1.1)
+                v = None
         else:
             v = ev.value
         put(v, ev)
@@ -286,7 +294,7 @@ def _check_continuation(lines, l0, p):
         t = s.strip()
         if t.startswith("#"):
             continue
-        if t.startswith(CONT_BAD_START) or ": " in t or t.endswith(":"):
+        if t.startswith(CONT_BAD_START) or ": " in t or t.endswith(":") or " #" in t or "\t#" in t:
             raise TextRefused("N", ln + 1, "continuation line of a plain word looks like a key or an indicator")
 
 
