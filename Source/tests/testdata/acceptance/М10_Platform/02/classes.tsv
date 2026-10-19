@@ -135,3 +135,13 @@ c8_int_4301_digits	value
 c8_word_hash_space	text
 c8_ref47_unplaced_about_not_id	value
 c8_requests_key_nested_brace	reference
+profile_unit_key_integer	text
+profile_unit_key_bool	text
+profile_unit_key_null	text
+profile_unit_key_float	text
+profile_unit_key_integer_string_pair	text
+profile_table_key_integer	text
+profile_table_key_bool	text
+profile_table_key_null	text
+profile_table_key_float	text
+profile_table_key_integer_string_pair	text

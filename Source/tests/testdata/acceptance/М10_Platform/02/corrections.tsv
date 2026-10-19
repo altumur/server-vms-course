@@ -42,3 +42,4 @@ date	sample	fix	languages
 2026-10-19	diagnostics.tsv	пути — каноническим порядком по байтам JSON Pointer, номера строк — по возрастанию (ADR-0087 доп. (3) Р2); unknown_multiple переупорядочен	all
 2026-10-19	c8_int_4301_digits, c8_word_hash_space	Р6 внесены после правки проверки курса («Архитектор», 82ea0dbac): целое из 4301 цифры — refused:value на пути значения, «слово# c» — refused:text (Н1.1 comment)	all
 2026-10-19	c8_ref47_unplaced_about_not_id, c8_requests_key_nested_brace	класс по решениям «Архитектора»: шаг 4 раньше шага 5 (Н3) — value; вложенная { в шаблоне — reference (Н1.2а requests.key, О14)	all
+2026-10-19	README «Дополнительная проверка строковых имён полей», profile_*_key_* (10)	ревью стадии A 2 (П5, RA2-03): нестроковый простой ключ — refused:text по Н1.1 keys везде, не value с путём fields; класс в classes.tsv	all
