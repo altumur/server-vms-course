@@ -31,7 +31,7 @@
 | `view`, `keys`, `token`, `seal`, `accept`, `assemble`, `issue`, `peer`, `may`, `record`, `follow`, `ask-sig`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | М10/4 | М10/4 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | М10/4 | М10/4 Н3 «сократить()», Р4 |
-| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | М10/11 | М10/11 Н1.5 rules 2–3 |
+| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | М10/11 | М10/11 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | М10/4 | М10/4 Н3 «порядок наборов» |
 | снятие заказа по сроку, поздний старт, сокращение по выдержке | шагом приёмки — М10/05 сц. 14–16 | М10/4 | М10/4 Н3; ADR-0084 |
 | `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — М11/10 сц. 09; вход `follow` наборов ответов не несёт | М11/10 | М11/10 Н1.6 `yields`, Н3 «следовать» 1а |

@@ -1,4 +1,4 @@
-# Что запускает и останавливает скрипт воркеров по заказу (М10/11 Н1.5 rules 2–3; ADR-0084 доп. (1) Р1, Р4).
+# Что запускает и останавливает скрипт воркеров по заказу (М10/11 Н1.5 rules 2–4; ADR-0084 доп. (1) Р1, Р4).
 # Форма — README рядом. Стадия A (A6).
 case	input	expect	note
 start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3 — два заказанных к базовому
@@ -15,3 +15,14 @@ want-zero	{"want": "0", "running": [2]}	{"start": [], "stop": []}	значени
 want-hundred	{"want": "100", "running": [2]}	{"start": [], "stop": []}	вне 1…99: ничего
 want-leading-zero	{"want": "02", "running": [2]}	{"start": [], "stop": []}	ведущий ноль — не форма метрики М10/9: ряда нет, ничего
 want-fraction	{"want": "2.0", "running": [2]}	{"start": [], "stop": []}	дробь — не форма метрики М10/9: ряда нет, ничего
+console-silent	{"want": "3", "running": [], "console": "silent"}	{"start": [], "stop": []}	консоль молчит — молчание не повод (rules 2, Р1)
+console-silent-stop	{"want": "1", "running": [2, 3], "console": "silent"}	{"start": [], "stop": []}	и не останавливать при молчании
+reconcile-stale	{"want": "3", "running": [], "reconcile_age": "61"}	{"start": [], "stop": []}	сверка старше 60 с (rules 2)
+reconcile-never	{"want": "3", "running": [], "reconcile_age": "-1"}	{"start": [], "stop": []}	−1 — сверки не было (rules 2)
+reconcile-sixty	{"want": "3", "running": [], "reconcile_age": "60"}	{"start": [2, 3], "stop": []}	60 — ещё не старше (rules 2)
+memory-no-file	{"want": "3", "running": [], "memory": null}	{"start": [], "stop": []}	нет roles/<роль>.env — роль пропуск (rules 4)
+memory-zero-divisor	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "0", "CAPACITY": "4"}}	{"start": [], "stop": []}	делитель ноль — пропуск (rules 4)
+memory-negative	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "-8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	бюджет не положительный — пропуск
+memory-fraction	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024.0", "CAPACITY": "4"}}	{"start": [], "stop": []}	бюджет не целое — пропуск
+memory-capacity-zero	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "0"}}	{"start": [], "stop": []}	CAPACITY не > 0 — пропуск
+memory-room	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3], "stop": []}	потолок 8 выше цели — запуск как обычно
