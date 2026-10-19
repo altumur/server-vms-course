@@ -10,7 +10,7 @@
 ## Н1 Форма
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `<sub>/<spec:domain.books.from>`, `<sub>/<spec:domain.books.from>/<слот>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`, `domain/<sub>/<spec:domain.kept>`, `domain/<sub>/<spec:domain.kept>/*`, `domain/<sub>/worker`;
+- владеет: `<sub>/<spec:domain.books.from>`, `<sub>/<spec:domain.books.from>/<слот>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`, `domain/<sub>/<spec:domain.kept>`, `domain/<sub>/<spec:domain.kept>/*`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`;
 - пишет: `domain/view` (put);
 - читает: `<sub>/slots/<имя>`, `domain/book-seal`, `domain/members/<член>/reports/<rev>`.
 
@@ -141,6 +141,11 @@ carried_book:    domain.books.<книга>: {} | {show} — строки domain/
 kept:            domain.kept: [<имя>|<семья>/…] — строки domain/<sub>/<имя> у держателя, пишет воркер на домене; члену не
                  доставляются; domain.tables — какие из kept — таблицы (М10/10)
 door_pass:       /domain/<sub>/<сегмент door.pass> консоли домена → воркеру на домене (урок 8 Н1.7)
+heartbeat:       объект domain/<sub>/heartbeat в хранилище объектов держателя (М10/8 Н1.1), один на подсистему — пульс
+                 воркера на домене формы М10/5 Н1.1 (worker — имя его слота domain/<sub>/worker, ts, server, url, instance,
+                 status …; время — Н0); пишет <sub>domain каждые HEARTBEAT_EVERY и подменой (М10/5 Н3); читают domain
+                 и domainconsole — url двери door.pass (урок 8 Н1.7 address), пульс не читается или не свеж LOST_AFTER —
+                 «не слышно» (урок 8 Н1.7 absent); объекты под права хранилища не входят (М10/6) (стадия A, A3)
 ```
 
 Учебного воркера на домене у `testsub` стенд не несёт: переносимая книга `tallies` и `kept` проверяются чтением (долг в
