@@ -2,7 +2,7 @@ scenario	step	request	expect
 # Приёмка М10/11: стенд с ресурсом и учения (@manual). Формат — README.
 01-resource-door	1	@start resource	ok
 01-resource-door	2	@until 20 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time", "at": "$a1"}}
-01-resource-door	3	@sleep 20	ok
+01-resource-door	3	@until 30 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "@not($a1)"}}
 01-resource-door	4	store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "$a2"}}
 01-resource-door	5	ASSERT $a1 != $a2	ok
 01-resource-door	6	console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}

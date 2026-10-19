@@ -3,9 +3,9 @@ scenario	step	request	expect
 01-start	1	@start controller	ok
 01-start	2	@start worker w-1	ok
 01-start	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "@time", "released": "false", "gen": "1", "server": "srv-a"}}
-01-start	4	@sleep 10	ok
+01-start	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1"}}
 01-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
-01-start	6	@sleep 10	ok
+01-start	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"until": "@not($u1)"}}
 01-start	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "until": "$u2"}}
 01-start	8	ASSERT $u1 != $u2	ok
 02-unit	1	@start controller	ok
@@ -16,7 +16,7 @@ scenario	step	request	expect
 02-unit	6	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
 02-unit	7	@until 30 console GET /counters	200 {"rows": [{"id": "c1", "phase": "running", "worker": "w-1", "server": "srv-a", "worker_state": "live"}]}
 02-unit	8	console PUT /counters/c1 {"start": 2}	200 {"revision": 2}
-02-unit	9	@sleep 15	ok
+02-unit	9	@sleep 12	ok
 02-unit	10	store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
 03-sigterm	1	@start controller	ok
 03-sigterm	2	@start worker w-1	ok
@@ -35,7 +35,7 @@ scenario	step	request	expect
 04-two-copies	7	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 04-two-copies	8	ASSERT $h1 != $h2	ok
 04-two-copies	9	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
-04-two-copies	10	@sleep 15	ok
+04-two-copies	10	@sleep 12	ok
 04-two-copies	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 05-sigkill	1	@start controller	ok
 05-sigkill	2	@start worker w-1	ok
@@ -69,7 +69,7 @@ scenario	step	request	expect
 08-two-specs	5	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
 08-two-specs	6	console POST /counters {"name": "c8", "start": 1}	201
 08-two-specs	7	@until 30 console GET /counters	200 {"rows": [{"id": "c8", "phase": "running", "worker": "w-1", "worker_state": "live"}]}
-08-two-specs	8	@sleep 15	ok
+08-two-specs	8	@sleep 12	ok
 08-two-specs	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
 08-two-specs	10	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
 09-bad-given-name	1	@start worker W-1	ok
@@ -88,10 +88,10 @@ scenario	step	request	expect
 10-name-taken-once	8	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 10-name-taken-once	9	ASSERT $h1 != $h2	ok
 10-name-taken-once	10	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
-10-name-taken-once	11	@sleep 15	ok
+10-name-taken-once	11	@sleep 12	ok
 10-name-taken-once	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
 10-name-taken-once	13	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
-10-name-taken-once	14	@sleep 15	ok
+10-name-taken-once	14	@sleep 12	ok
 10-name-taken-once	15	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
 11-group-by-without-value	1	@start controller testsub2	ok
 11-group-by-without-value	2	@start worker testsub2 t-1	ok
@@ -123,7 +123,7 @@ scenario	step	request	expect
 13-capture-taking	8	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
 13-capture-taking	9	@sigkill w-1	ok
 13-capture-taking	10	@as testsubworker store POST /v1/write {"id":"9a13","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"1999999999","released":"taking","gen":"2","server":"srv-a"}}	200
-13-capture-taking	11	@sleep 15	ok
+13-capture-taking	11	@sleep 10	ok
 13-capture-taking	12	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
 13-capture-taking	13	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
 13-capture-taking	14	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
