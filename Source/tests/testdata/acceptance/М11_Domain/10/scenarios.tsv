@@ -58,6 +58,7 @@ scenario	step	request	expect
 05-record	14	record inputs/record-14-backup-bad-holder.json	ok {"result": "refused", "reason": "not_a_record"}
 05-record	15	record inputs/record-15-backup-members-repeat.json	ok {"result": "refused", "reason": "not_a_record"}
 05-record	16	record inputs/record-16-ca-repeat.json	ok {"result": "refused", "reason": "not_a_record"}
+05-record	17	record inputs/record-17-keys-not-a-set.json	@exit 2
 06-follow	1	follow inputs/follow-01-larger-term.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
 06-follow	2	follow inputs/follow-02-held-larger.json	ok {"result": "stay", "reason": "larger", "term": 2, "refused": {}}
 06-follow	3	follow inputs/follow-03-holding.json	ok {"result": "stay", "reason": "holding", "term": 2, "refused": {}}
@@ -81,6 +82,7 @@ scenario	step	request	expect
 07-ask-sig	9	ask-sig inputs/ask-sig-09-time-one-decimal.json	ok {"result": "refused", "reason": "bad_time"}
 07-ask-sig	10	ask-sig inputs/ask-sig-10-future-skew.json	ok {"result": "refused", "reason": "skew"}
 07-ask-sig	11	ask-sig inputs/ask-sig-11-prepare-other-key.json	ok {"result": "refused", "reason": "bad_signature"}
+07-ask-sig	12	ask-sig inputs/ask-sig-12-pub-not-hex.json	@exit 2
 08-forged-record-ignored	1	@domain	ok
 08-forged-record-ignored	2	member hold store POST /v1/write {"op": "put", "key": "domain/holder", "items": {"doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"restored_from\":{\"rev\":3,\"term\":1},\"sig\":\"NVTpK7Z0xhNCh6_EPdMRYlvykN3206nq21CsAvVU4sDZYGXfPB9jh5bcg5o01QArLj1nDxb1ekwElPX_TkWfDg\",\"term\":2,\"url\":\"http://m1.test:9999\"}"}}	200
 08-forged-record-ignored	3	@sleep 15	ok

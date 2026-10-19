@@ -1,0 +1,11 @@
+{
+ "ask": "backup",
+ "cluster": "m2",
+ "pub": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+ "header": {
+  "member": "m1",
+  "time": "1759999995.000",
+  "signature": "3El59uRd59uMwaQdO_2qr1mDj9KXrDD77yUtgDBQsazPaMzhuKpzsIPvM3UVdwVW7trJJtVeyIfcLX80t7TqDg"
+ },
+ "now": 1760000000
+}
