@@ -311,7 +311,8 @@ closed_key_set:
 (добавлено М10/10); первых сегментов дверей и деревьев — `servers`, `where`, `unplaceable`, `drain` (добавлено М10/4),
 `events`, `marks`, `console`, `audit` (добавлено М10/8), `session`, `mounts`, `healthz`, `metrics`, `resources`
 (добавлено М10/9), `schema` (добавлено М10/10); путей домена `domain`, `api` (М11);
-и не из семей объектов платформы `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands` (урок 8 Н1.1).
+и не из семей объектов платформы — список `object_families` общей таблицы `platform_lists.tsv` (урок 8 Н1.1; `controller` уже
+в перечне выше, `*` именем не бывает).
 `unit.rows` — не из того же перечня и ещё не `cluster`, `worker`, `ts` (оболочка снимка урока 10 Н1.3).
 Нарушение — `refused:value`; пересечение с именами подсистем каталога — `refused:catalogue` (Н3).
 
