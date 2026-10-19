@@ -1,0 +1,21 @@
+# Семья platform/spec/<sub> — строка спеки подсистемы в хранилище (P/02.3; P/02.3 Н1.5). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Поле yaml — оболочка
+# манифеста (ADR-0088 доп. (1) Р3): форма самих байтов — источник формы главы 2.1 (02.1-installer.form.yaml).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    yaml:
+      type: string
+      description: байты файла спеки как есть; загружаются по главе 2.1 (Н3 «загрузить»)
+    sha256:
+      ref: common.sha256_hex
+      description: дайджест байтов yaml; читатель сравнивает запись как есть
+    rev:
+      type: string
+      pattern: '[1-9][0-9]*'
+      description: десятичное целое ≥ 1 — ревизия правила; первая установка — 1, затем +1 записью с cas по строке
+    shell:
+      type: string
+      description: страница подсистемы (урок 9 Н1.1) или ""; отсутствие поля и "" — одно и то же «страницы нет»
+  required: [yaml, sha256, rev]

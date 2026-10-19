@@ -1,0 +1,14 @@
+# Семья platform/spec/<sub>/rev — метка ревизии спеки (P/02.3; P/02.3 Н1.5). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    rev:
+      type: string
+      pattern: '[1-9][0-9]*'
+      description: то же число, что rev строки; пишется после строки, никогда не понижается
+    sha256:
+      ref: common.sha256_hex
+      description: тот же дайджест, что у строки
+  required: [rev, sha256]
