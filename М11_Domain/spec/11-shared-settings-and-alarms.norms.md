@@ -234,7 +234,8 @@ HTTP-контракт: [11-shared-settings-and-alarms.api.openapi.yaml](11-share
 1. shared ответа нет, или (term, rev) указателя ≤ своей строки domain/shared   → ничего (up to date | holding newer)
 2. doc нет                                                                       → ничего: придёт следующим ответом
 3. sha256 текста ≠ pointer.sha256                                                → refused «the object does not match the pointer's checksum»
-4. record (урок 10 Н3) по своему набору не ok                                    → refused «<слово record>»
+4. record (урок 10 Н3) по своему набору с видом «общий документ» (Н1.1 document; добавлено описью семей) не ok
+                                                                                 → refused «<слово record>»
 5. (term, rev) документа ≠ указателю                                             → refused «the object is term T rev R, the pointer says otherwise»
 6. записать объект, затем строку (Н1.4)
 ```
