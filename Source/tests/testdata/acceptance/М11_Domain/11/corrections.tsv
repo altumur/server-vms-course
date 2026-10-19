@@ -5,3 +5,4 @@ date	sample	fix	languages
 2026-10-18	11/scenarios.tsv; inputs	прогон 41, мутации №52–54: все причины правки через «; » (две подстроки); since > until — 400; свидетелей два — наибольший alive_at	all
 2026-10-18	11/scenarios.tsv; inputs	прогон 41, мутации класс record и сумм: значения консоли без неподписанного документа; сумма указателя (сц. 06); подпись агента у /events	all
 2026-10-18	01-shared-edit-and-read 2	declared — по name (Н1.6; урок 1 Н0, K41-01): marks, rounds, step; шаг ждал порядок спеки (cammeta-python М11-11 № 16)	all
+2026-10-19	04-alarms 11–14; inputs alarms-11…14	сверка М11 09–12 (A13, A15–A17): cut_before 0 на старте, строка страницы не alarm — unreadable, повтор same_line в странице — первая, ничья свидетелей — меньший alive_via	all

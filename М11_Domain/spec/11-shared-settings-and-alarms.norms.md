@@ -9,7 +9,8 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`.
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`; объект истории `domain/alarm-history/<член>` — `events[].t`,
+`cut_before` (писатель — не больше трёх знаков дроби; добавлено сверкой М11, A22).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/shared`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/shared-refused`, `domain/alarms`, `domain/alarm-history/<член>`;
@@ -47,7 +48,9 @@ document:        объект держателя domain/shared-docs/rev-<rev> �
   signature:     выпускающий ключ, как запись срока (урок 10 Н1.1, проверка — record); неподписанный не принимается никогда
 pointer:         domain/shared {doc: JCS {term, rev, sha256, object}} у держателя; sha256 — hex sha256 текста объекта
 write:           сначала объект, затем указатель по CAS (две правки одновременно — одна получает 409); держатель хранит
-                 последние 5 объектов
+                 последние 5 объектов; объект ревизии пишется, только если его нет или его байты те же — иначе правке 409
+                 «the shared settings changed while this edit was made — look again» и объект не трогается: проигравшая
+                 правка не перезаписывает объект выигравшей (добавлено сверкой М11, A1)
 after_move:      новый держатель (урок 10 Н1.8) переподписывает то же содержимое как rev + 1, by "domain" — у него другой
                  выпускающий; при плановой передаче выпускающий тот же, документ не меняется
 readers:         процесс domain, консоль домена, воркер подсистемы на домене (роль <sub>domain) — указатель domain/shared
@@ -61,16 +64,20 @@ readers:         процесс domain, консоль домена, ворке�
 door:            PUT /domain/shared {base_rev, shared: {<sub>: {<имя>: <значение> | null}}} у консоли домена (admin, урок 9)
                  → процесс domain тем же путём (ADR-0032); тело ≤ 1 МиБ (иначе 413 {error: "refused"})
 order:           1. заморозка, смещение — урок 10 (503 frozen, 409 deposed)
-                 2. тело не {base_rev: целое ≥ 0, shared: объект} — 400 {error: "refused", detail: "the edit is {base_rev:
+                 2. тело не {base_rev: целое ≥ 0, shared: объект, каждое shared.<sub> — объект} — 400 (shared.<sub> не
+                    объект — тоже здесь, до base_rev; добавлено сверкой М11, A9) {error: "refused", detail: "the edit is {base_rev:
                     <the revision it was made against>, shared: {<sub>: {<field>: value or null}}}"}
                  3. base_rev ≠ rev указателя (0 — документа нет) — 409 {error: "refused", detail: "the shared settings are at
                     rev N; the edit was made against rev M — look again"}
                  4. содержание — все отказы одним 400 через «; »: «shared settings for '<sub>': no subsystem on the domain
                     shares a field by that name»; «'<имя>' is not in its domain.shared [<имена domain.shared спеки через «, », по возрастанию>]»; тип поля — та же проверка
                     формы, что у двери единиц (М10/3 Н3 шаг 4), на одном этом поле, слово отказа — её; значение документа
-                    против его schema (слова схемы)
+                    против его schema (слова схемы); значение, которое М10/7 запечатал бы (имя *_secret на любой глубине,
+                    находка пароля в адресе по М10/7 Н1.1а), — «'<имя>': the shared document is signed, not sealed» (сверка М11, A6)
                  5. новый документ: прежний shared, поверх — значения правки; null — снять имя; пустая подсистема —
-                    снять; rev + 1, term — свой, at, by
+                    снять; rev + 1, term — свой, at, by; прежний документ (объект, который называет указатель) не читается
+                    или не с его sha256 — 503 {error: "refused", detail: "the shared document at rev N does not read: nothing
+                    is written"}, ничего не пишется: правка поверх пустого потеряла бы прежние значения (сверка М11, A7)
                  6. записать (Н1.2 write); CAS не прошёл — 409 «the shared settings changed while this edit was made — look again»
 answer:          200 {term, rev, by}; журнал domain.shared.edited {term, rev, by}
 ```
@@ -82,8 +89,11 @@ carry:           ответ держателя агенту (урок 3 Н1.5) �
                  только когда domain/shared из копии члена ≠ указателю (урок 3 «прочитать копию»)
 member:          агент по порядку (Н3 «взять документ»); затем объект domain/shared = текст, затем строка
                  domain/shared {doc: JCS {term, rev, sha256}}; отказ — строка domain/shared-refused {doc: JCS {term, rev,
-                 reason, at}}; прежний документ остаётся
+                 reason, at}}; прежний документ остаётся; взятый документ снимает строку domain/shared-refused с парой не
+                 новее своей (добавлено сверкой М11, A4)
 in_report:       строки domain/shared и domain/shared-refused — объекты отчёта (урок 3 Н1.2 member_objects, добавлено М11/11)
+                 одной формой: значение объекта — разобранный doc строки, {term, rev, sha256} и {term, rev, reason, at},
+                 term и rev — целые JSON (как domain/backup-taken урока 10; добавлено сверкой М11, A3)
 holder_self:     у кластера держателя строка domain/shared — указатель (Н1.2), а документ — объект domain/shared-docs/rev-<rev>: агент
                  держателя документа не берёт, консоль держателя читает указатель (Н1.5)
 ```
@@ -98,8 +108,10 @@ door:            GET /domain/shared/<sub>[?unit=<id>] у консоли клас
   term, rev:     документа этого кластера: у члена — объект domain/shared (копия, взятая Н3), у держателя — объект, который
                  называет указатель; документа нет — null, значения — без домена
 refusals:        подсистема без domain.shared — 404 {error: "no such shared settings", detail: "'<sub>' shares no field with the
-                 domain"}; ?unit= не id этой спеки — 400 {error: "refused", detail: «a unit of <другая> is resolved by its own console»}; единицы нет
-                 — 404 {error: "no such unit"}; документ не проходит record — значения без домена, journal domain.shared.refused
+                 domain"}; ?unit= пустой или повторён — 400 {error: "refused", detail: "a unit id is required"} (как урок 1
+                 Н4 ?cluster=; добавлено сверкой М11, A11); ?unit= не id этой спеки — 400 {error: "refused", detail: «a unit of <другая> is resolved by its own console»}; единицы нет
+                 или id не по грамматике М10/3 (в том числе `..` после декодирования) — 404 {error: "no such unit"}; документ не
+                 проходит record — значения без домена, journal domain.shared.refused
 ```
 
 ### Н1.6 Доставлено скольким
@@ -143,7 +155,8 @@ identity:      агент ходит к /events своей консоли под
 
 ```yaml
 door:          GET /domain/alarms?since=&until= у консоли домена (view); умолчание — сутки до now; не конечные числа или
-               since > until — 400 {error: "refused", detail: "since and until are times, in seconds"}
+               since > until — 400 {error: "refused", detail: "since and until are times, in seconds"}; число — по
+               грамматике числа JSON целиком (без пробелов, «+», «_»), параметр не повторён (добавлено сверкой М11, A12)
 answer:        200 {since, until, events, members, complete, sentence} — функция alarms (Н3) на странице последнего отчёта
                каждого члена списка (держатель включён), истории (Н1.9) и свидетелях
 member_state:  ok | silent | not_reporting | never | unreadable
@@ -154,10 +167,13 @@ member_state:  ok | silent | not_reporting | never | unreadable
 silence_line:  молчащий член — строка тревоги {t: silent_since, kind: silent | not_reporting, class: alarm, member,
                subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?} — всегда, пока молчит
 witness:       domain.witness {report, member_field} (М10/2): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
-               секунды с последнего раза}} у кластеров и в отчётах; member_field — fixed поле единицы, несущее имя члена
+               секунды с последнего раза}} у кластеров и в отчётах; семья — ключи <sub>/<report>/<имя> (имя после «/»), агент
+               несёт каждый объект семьи как объект отчёта (урок 3 Н1.2 member_objects), объект <sub>/<report> без имени —
+               не свидетель (добавлено сверкой М11, A2); member_field — fixed поле единицы, несущее имя члена
                (иначе refused:value с путём domain.witness.member_field, текст «'<поле>' is no fixed field of the unit: a
                witness names a member by a field that does not change»); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
-               наибольший alive_at среди тех, что позже last_report
+               наибольший alive_at среди тех, что позже last_report; при равном — меньший alive_via в байтах UTF-8
+               (добавлено сверкой М11, A17)
 clock:         время строки страницы на часах домена: t + (received_at − sent_at) последнего принятого отчёта, который
                несёт эту страницу (поля последнего запроса метки, урок 3 Н1.3); не page.to: прежняя страница в новом отчёте
                старые тревоги вперёд не сдвигает (решение «Архитектора» по R41-16 прогона 41); t_src — t как пришло
@@ -168,7 +184,11 @@ events_order:  по t убывая, затем member, id; строки исто
 
 ```yaml
 history:       объект держателя domain/alarm-history/<член> {events, cut_before} — скользящая неделя, не больше
-               HISTORY_LINES строк, самые новые; cut_before — с какого момента член держится целиком
+               HISTORY_LINES строк, самые новые; cut_before — с какого момента член держится целиком: число (часы домена),
+               при создании истории — 0, не null (добавлено сверкой М11, A13)
+cut:           писатель срезает строки с t < now − HISTORY_DAYS × 86400 и ставит cut_before = max(cut_before, now −
+               HISTORY_DAYS × 86400); сверх HISTORY_LINES — снимает самые старые и ставит cut_before = max(cut_before, t
+               самой новой снятой); cut_before не убывает (добавлено сверкой М11, A14)
   events:      строки страницы, как приняты: t — на часах домена (Н1.8 clock), t_src — как пришло
 HISTORY_DAYS:  7
 HISTORY_LINES: 2000
@@ -230,12 +250,13 @@ label:  "domain term T rev R"
 1. каждый член:
    last_report нет и page нет                         → never
    last_report нет, а page есть                       → вход не по форме (код 2): страница приходит только с отчётом
-   page = "garbled" или не по форме Н1.7              → unreadable
+   page = "garbled" или не по форме Н1.7              → unreadable; не по форме — и строка без id, class ≠ alarm, kind
+                                                        пустой, unit не строка, from > to (добавлено сверкой М11, A15)
    now − last_report > lost_after                     → silent; свидетель с ts − units[член] > last_report — not_reporting
    иначе                                              → ok
    page = null при last_report — страницы нет: строк страницы нет, не unreadable
 2. строки: страница (часы Н1.8 clock) ∪ история (from_history, t как хранится) без повторов по same_line — есть в обеих,
-   берётся строка страницы; строка молчания — Н1.8 silence_line; окно [since, until] — для всех строк, и для строки
+   берётся строка страницы; повтор внутри одной страницы — первая по порядку страницы (сверка М11, A16); строка молчания — Н1.8 silence_line; окно [since, until] — для всех строк, и для строки
    молчания
 3. members: {<член>: {state, truncated?, known_until?, silent_since?, alive_at?, alive_via?, history_cut_before?}};
    truncated: true — у читаемой страницы с truncated; known_until — last_report у silent/not_reporting;
@@ -261,7 +282,7 @@ label:  "domain term T rev R"
 
 | `error` | Код | Когда |
 |---|---|---|
-| `refused` | 400, 409, 413 | правка (Н1.3), тело больше 1 МиБ — 413; окно `/domain/alarms`; `?unit=` — id другой спеки (Н1.5) |
+| `refused` | 400, 409, 413, 503 | правка (Н1.3), тело больше 1 МиБ — 413, прежний документ не читается — 503 (сверка М11, A7); окно `/domain/alarms`; `?unit=` пустой, повторён или id другой спеки (Н1.5) |
 | `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
 | `no such shared settings` | 404 | подсистема без `domain.shared` |
 | `no such unit` | 404 | `?unit=` нет такой единицы |
@@ -279,7 +300,10 @@ label:  "domain term T rev R"
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
 alarms:    вход — Н3 alarms; вывод {events, members, complete, sentence}
 exit:      0 — вычислено; 2 — вход не по форме (у resolve — и merge union при значении не списке; ожидания кода 2 в словаре
-           нет — чтением)
+           нет — чтением). Не по форме у alarms: имя члена не по грамматике члена, lost_after < 0, history или свидетель не
+           по форме Н1.9 и Н1.8, страница-объект без received_at и sent_at; страница не объект ([], число) — unreadable, не 2;
+           у resolve: term, rev не целые ≥ 1 (целое по значению, урок 2 Н1), пустое name, merge union без списочного inherit,
+           значение group_by не список (добавлено сверкой М11, A18, A19)
 ```
 
 | № | Сценарий | Нормы |
@@ -287,7 +311,7 @@ exit:      0 — вычислено; 2 — вход не по форме (у res
 | 01 | стенд: правка — 200; старая `base_rev` — 409; поле не общее, тип, схема — один 400; `m1` берёт документ, `GET /domain/shared/testsub?unit=` с `from`, `union` у `marks`; доставка | Н1.2–Н1.6 |
 | 02 | стенд: агент `m2` выключен — в доставке `silent`, строка тревоги `silent` в `/domain/alarms`; вернулся — взял документ | Н1.6, Н1.8 |
 | 03 | `resolve`: своё, домена, объединение, спеки, документ, группы, домена нет | Н3 resolve |
-| 04 | `alarms`: все ответили; шторм `truncated`; молчит — последний отчёт; свидетель — `not_reporting`; ни разу; страница не читается; история без повторов и `history_cut_before`; окно | Н3 alarms |
+| 04 | `alarms`: все ответили; шторм `truncated`; молчит — последний отчёт; свидетель — `not_reporting`; ни разу; страница не читается; история без повторов и `history_cut_before`; окно; `cut_before` 0, строка не `alarm`, повтор в странице, ничья свидетелей (сверка М11, A13, A15–A17) | Н3 alarms, Н1.8, Н1.9 |
 | 05 | неподписанный документ, положенный мимо правки: член не берёт — `domain/shared-refused` `not_a_record` (мутационная проверка 2026-10-18) | Н1.2 `signature`, Н3 «взять документ» |
 | 06 | указатель с чужой суммой: член не берёт документ — `domain/shared-refused` «does not match the pointer» (мутационная проверка, класс сумм) | Н3 «взять документ» шаг 3 |
 
@@ -304,14 +328,14 @@ exit:      0 — вычислено; 2 — вход не по форме (у res
 ## Чеклист готовности
 
 - [ ] **М11/11-01** объявление Н1.1, `merge` и `domain.witness` — случаи `m61_*` корпуса М10/2
-- [ ] **М11/11-02** документ Н1.2: форма, подпись выпускающим, указатель, пять объектов, `rev + 1` после переноса — сц. 01; переподпись — чтением
-- [ ] **М11/11-03** правка Н1.3 по порядку, все отказы одним 400 — сц. 01
-- [ ] **М11/11-04** доставка Н1.4: `doc` только при расхождении, проверка агента, никогда назад, отказ — сц. 01, 02; подделка — урок 10 `record`
+- [ ] **М11/11-02** документ Н1.2: форма, подпись выпускающим, указатель, пять объектов, `rev + 1` после переноса — сц. 01; переподпись, объект ревизии не перезаписывается проигравшей правкой (A1) — чтением
+- [ ] **М11/11-03** правка Н1.3 по порядку, все отказы одним 400 — сц. 01; `shared.<sub>` не объект, значение под печать, прежний документ не читается — 503 (A6, A7, A9) — чтением
+- [ ] **М11/11-04** доставка Н1.4: `doc` только при расхождении, проверка агента, никогда назад, отказ — сц. 01, 02; подделка — урок 10 `record`; форма строк в отчёте и снятие отказа взятым документом (A3, A4) — чтением
 - [ ] **М11/11-05** значение при чтении Н1.5 — сц. 01, 03; `?unit=` другой спеки — чтением (каталог стенда урока 11 — одна спека)
 - [ ] **М11/11-06** доставлено скольким Н1.6, `declared` со схемой — сц. 01, 02
 - [ ] **М11/11-07** страница тревог Н1.7, фронт раз в секунду, срочный отчёт — чтением (стенд тревог не поднимает)
-- [ ] **М11/11-08** список Н1.8: состояния, строка молчания, свидетель — сц. 02, 04
-- [ ] **М11/11-09** история Н1.9: один писатель, предел, без повторов, в резервной копии урока 10 — сц. 04; писатель — чтением
+- [ ] **М11/11-08** список Н1.8: состояния, строка молчания, свидетель, строгость страницы, ничья свидетелей — сц. 02, 04; семья свидетелей в отчёте, грамматика since/until (A2, A12) — чтением
+- [ ] **М11/11-09** история Н1.9: один писатель, предел, без повторов, в резервной копии урока 10, `cut_before` 0 — сц. 04; писатель и срез (A14) — чтением
 
 ## Соответствие прежним урокам
 

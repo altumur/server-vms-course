@@ -47,6 +47,10 @@ scenario	step	request	expect
 04-alarms	8	alarms inputs/alarms-08-window.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999900.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
 04-alarms	9	alarms inputs/alarms-09-clock-offset.json	ok {"events": [{"id": "e1-1", "subsystem": "testsub", "unit": "testsub/c1", "of": "testsub/c1", "t": 1759999900.0, "kind": "door.forced", "class": "alarm", "t_src": 1759999780.0, "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true, "sentence": "every member answered"}
 04-alarms	10	alarms inputs/alarms-10-two-witnesses.json	ok {"members": {"m1": {"state": "not_reporting", "alive_at": 1759999965.0, "alive_via": "m2/w-2"}}}
+04-alarms	11	alarms inputs/alarms-11-cut-before-zero.json	ok {"members": {"m1": {"state": "ok", "history_cut_before": "@absent"}}, "complete": true, "sentence": "every member answered"}
+04-alarms	12	alarms inputs/alarms-12-page-line-not-alarm.json	ok {"events": [], "members": {"m1": {"state": "unreadable"}}, "complete": false, "sentence": "m1's page of alarms does not read"}
+04-alarms	13	alarms inputs/alarms-13-same-line-in-page.json	ok {"events": [{"id": "e1-1", "kind": "door.forced", "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true}
+04-alarms	14	alarms inputs/alarms-14-witness-tie.json	ok {"members": {"m1": {"state": "not_reporting", "alive_at": 1759999960.0, "alive_via": "m2/w-1"}}}
 05-unsigned-document	1	@domain	ok
 05-unsigned-document	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
 05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200

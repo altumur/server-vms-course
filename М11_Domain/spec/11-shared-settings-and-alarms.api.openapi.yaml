@@ -208,7 +208,7 @@ paths:
 components:
   responses:
     Refused503:
-      description: '503 frozen (урок 10) или standby процесса domain (урок 12 Н1.7)'
+      description: '503 frozen (урок 10), standby процесса domain (урок 12 Н1.7) или refused — прежний документ не читается, ничего не записано (Н1.3 шаг 5; добавлено сверкой М11, A7)'
       content:
         application/json:
           schema:
