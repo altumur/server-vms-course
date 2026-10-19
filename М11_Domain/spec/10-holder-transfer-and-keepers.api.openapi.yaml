@@ -162,7 +162,7 @@ paths:
                 recovery: {type: string, description: Текст файла восстановления урока 2 Н1.1.}
                 stolen: {type: boolean}
                 copy: {$ref: '#/components/schemas/Pair'}
-                why: {type: string, minLength: 1, pattern: '\S', description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18).'}
+                why: {type: string, minLength: 1, pattern: '\S', description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18). Без copy — разрешение перенести «из ничего», когда ни одна резервная копия не получена (Н1.8 шаг 6; добавлено моделью Quint М11, ER).'}
       responses:
         '200':
           description: Новый срок

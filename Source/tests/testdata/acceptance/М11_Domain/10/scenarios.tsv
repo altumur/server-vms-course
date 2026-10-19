@@ -88,3 +88,64 @@ scenario	step	request	expect
 08-forged-record-ignored	3	@sleep 15	ok
 08-forged-record-ignored	4	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
 08-forged-record-ignored	5	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}
+09-move-live-holder	1	@domain	ok
+09-move-live-holder	2	@sleep 35	ok
+09-move-live-holder	3	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+09-move-live-holder	4	@start domain on m1	ok
+09-move-live-holder	5	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
+09-move-live-holder	6	@until 60 member hold console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+09-move-live-holder	7	@sleep 10	ok
+09-move-live-holder	8	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
+09-move-live-holder	9	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+09-move-live-holder	10	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "$k2"}}
+09-move-live-holder	11	@until 30 member hold store GET /v1/get?key=domain/keys	200 {"items": {"doc": "$k2"}}
+09-move-live-holder	12	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+09-move-live-holder	13	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
+10-move-stale-set	1	@domain	ok
+10-move-stale-set	2	@sleep 35	ok
+10-move-stale-set	3	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r1"}}
+10-move-stale-set	4	@stop agent m1	ok
+10-move-stale-set	5	@stop domain	ok
+10-move-stale-set	6	@start domain on m2	ok
+10-move-stale-set	7	@move m2	200 {"term": 2, "holder": "m2", "restored_from": {"term": 1, "rev": "$r1"}}
+10-move-stale-set	8	@until 60 member hold console GET /api/held	200 {"term": 2, "holder": {"holder": "m2"}}
+10-move-stale-set	9	holder@m2 POST /domain/users {"name": "bob", "password": "bob password 1"}	201
+10-move-stale-set	10	@sleep 40	ok
+10-move-stale-set	11	holder@m2 GET /domain	200 {"term": {"term": 2, "backup": {"term": 2, "rev": "$r2"}}}
+10-move-stale-set	12	@until 60 member hold console GET /api/held	200 {"backup": {"term": 2, "rev": "$r2"}}
+10-move-stale-set	13	@stop domain m2	ok
+10-move-stale-set	14	@start domain on m1	ok
+10-move-stale-set	15	@move m1	200 {"term": 3, "holder": "m1", "restored_from": {"term": 2, "rev": "$r2"}}
+10-move-stale-set	16	holder@m1 PUT /domain/users/bob {"disabled": false}	200 {"user": "bob", "disabled": false}
+11-revoked-not-revived	1	@domain	ok
+11-revoked-not-revived	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+11-revoked-not-revived	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+11-revoked-not-revived	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t0"}
+11-revoked-not-revived	5	holder POST /domain/revoke {"token": "$t0"}	200 {"revoked": "@any"}
+11-revoked-not-revived	6	@sleep 65	ok
+11-revoked-not-revived	7	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
+11-revoked-not-revived	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
+11-revoked-not-revived	9	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201
+11-revoked-not-revived	10	@sleep 6	ok
+11-revoked-not-revived	11	holder GET /domain	200 {"term": {"backup": {"term": 1, "rev": "$r"}}}
+11-revoked-not-revived	12	@until 20 member m2 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+11-revoked-not-revived	13	holder POST /domain/revoke {"token": "$ta"}	200 {"revoked": "@any"}
+11-revoked-not-revived	14	@until 20 member m1 console @header Authorization: Bearer $ta GET /counters	401
+11-revoked-not-revived	15	holder GET /domain	200 {"term": {"backup": {"term": 1, "rev": "$r"}}}
+11-revoked-not-revived	16	@stop domain	ok
+11-revoked-not-revived	17	@start domain on m2	ok
+11-revoked-not-revived	18	@move m2	200 {"term": 2, "holder": "m2", "restored_from": {"term": 1, "rev": "$r"}}
+11-revoked-not-revived	19	@until 60 member m1 console GET /api/held	200 {"term": 2, "holder": {"holder": "m2"}}
+11-revoked-not-revived	20	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	401
+12-handover-then-move	1	@domain	ok
+12-handover-then-move	2	@start domain on m1	ok
+12-handover-then-move	3	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1"}
+12-handover-then-move	4	@until 60 member m2 console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
+12-handover-then-move	5	@start domain on m2	ok
+12-handover-then-move	6	@move m2	200 {"term": 3, "holder": "m2"}
+12-handover-then-move	7	@until 60 member m1 console GET /api/held	200 {"term": 3, "holder": {"holder": "m2"}}
+12-handover-then-move	8	@sleep 10	ok
+12-handover-then-move	9	holder@m1 PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
+12-handover-then-move	10	member m1 store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 3"}}
+12-handover-then-move	11	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
+12-handover-then-move	12	@until 60 member hold console GET /api/held	200 {"term": 3, "holder": {"holder": "m2"}}
