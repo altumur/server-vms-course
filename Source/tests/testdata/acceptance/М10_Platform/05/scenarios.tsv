@@ -118,11 +118,12 @@ scenario	step	request	expect
 13-capture-taking	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
 13-capture-taking	4	console POST /counters {"name": "c13", "start": 1}	201
 13-capture-taking	5	@until 30 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
-13-capture-taking	6	@start worker w-2	ok
-13-capture-taking	7	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
-13-capture-taking	8	@sigkill w-1	ok
-13-capture-taking	9	@as testsubworker store POST /v1/write {"id":"9a13","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"1999999999","released":"taking","gen":"2","server":"srv-a"}}	200
-13-capture-taking	10	@sleep 15	ok
-13-capture-taking	11	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
-13-capture-taking	12	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
-13-capture-taking	13	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
+13-capture-taking	6	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "1"}}
+13-capture-taking	7	@start worker w-2	ok
+13-capture-taking	8	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+13-capture-taking	9	@sigkill w-1	ok
+13-capture-taking	10	@as testsubworker store POST /v1/write {"id":"9a13","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"1999999999","released":"taking","gen":"2","server":"srv-a"}}	200
+13-capture-taking	11	@sleep 15	ok
+13-capture-taking	12	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
+13-capture-taking	13	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
+13-capture-taking	14	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
