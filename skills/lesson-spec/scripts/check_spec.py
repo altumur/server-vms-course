@@ -915,10 +915,11 @@ class Check:
         if (acceptance / "scenarios.tsv").exists():
             table = acceptance / "scenarios.tsv"
             scenarios = scenario_counts(self.read(table) or "")
-            own = self.exception(key, "scenarios-format", "own") is not None
+            # A chapter's own grammar is excepted per chapter (`K/own`), like acceptance-entry.
+            own = self.exception(key, "scenarios-format", entry + "own") is not None
             silenced = self.scenarios(table, own)
             if own and silenced:
-                self.except_(table, key, "scenarios-format", "own", f"{silenced} generic grammar messages")
+                self.except_(table, key, "scenarios-format", entry + "own", f"{silenced} generic grammar messages")
             formats += 1
         verdict_counts = None
         verdicts, classes = None, {}

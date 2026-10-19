@@ -908,6 +908,20 @@ paths:
         self.readme.write_text("# Instructions\n2 сценария / 2 шага.\n")
         self.assertEqual(self.check().errors, [])
 
+    def test_own_scenario_grammar_is_excepted_per_chapter(self):
+        (self.dir / "acceptance/2/scenarios.tsv").write_text(
+            "# scenario\tstep\trequest\texpect\n01-example\t1\t@own directive\t200 {}\n")
+        self.assertTrue(self.check().errors)
+        registry = self.root / "exceptions.tsv"
+        registry.write_text("P/01\tscenarios-format\t2/own\tchapter grammar\n")
+        result = Check(self.root, registry)
+        result.lesson(self.lesson)
+        self.assertEqual(result.errors, [])
+        registry.write_text("P/01\tscenarios-format\t1/own\tchapter grammar\n")
+        result = Check(self.root, registry)
+        result.lesson(self.lesson)
+        self.assertTrue(any("stale exception scenarios-format 1/own" in e for e in result.errors), result.errors)
+
     def test_whole_and_chapter_norms_conflict(self):
         (self.spec / "01-store.norms.md").write_text("# x\n")
         self.assertTrue(any("either one norms file or chapter norms" in e for e in self.check().errors))
