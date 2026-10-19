@@ -88,7 +88,7 @@ domain/<sub>/<spec:domain.kept>	row	М11/5	guard=<s>domain(под слотом d
 domain/<sub>/<spec:domain.kept>/*	row	М11/5	guard=<s>domain(под слотом domain/<sub>/worker)	<s>domain(domain.kept или переносимая книга), domain, domainconsole, domainagent	domain.kept	1	-	М11/5 Н1.6
 domain/<sub>/worker	row	М11/5	create=<s>domain(захват слота воркера на домене, форма М10/3 Н1.4); cas=<s>domain(продление, отдача)	<s>domain(domain.kept или переносимая книга), domain, domainconsole, domainagent	domain.kept	1	-	М11/5 Н1.6, М10/3 Н1.4
 domain/placement	row	М11/6	cas=domain(+1 на каждую запись и удаление назначения)	domain, domainconsole, domainagent	-	1	-	М11/6 Н1.1
-domain/placement/<sub>/<ref>	row	М11/6	put=domain(PUT /domain/placement/<sub>/<ref> через консоль домена); delete=domain(DELETE того же пути)	<s>worker(worker.reads domain/placed/<sub>/), domain, domainconsole, domainagent	-	1	-	М11/6 Н1.1
+domain/placement/<sub>/<ref>	row	М11/6	put=domain(PUT /domain/placement/<sub>/<ref> через консоль домена); delete=domain(DELETE того же пути)	<s>worker(на держателе: worker.reads domain/placed/<sub>/ даёт и domain/placement/<sub>/, М10/6 Н3 шаг 3), domain, domainconsole, domainagent	-	1	-	М11/6 Н1.1
 domain/placed	row	М11/6	cas=domainagent(у члена: после копий записей, carry.placement.rev больше)	domain, domainconsole, domainagent	-	1	-	М11/6 Н1.2
 domain/placed/<sub>/<ref>	row	М11/6	cas=domainagent(у члена: изменившиеся копии по прочитанной версии); delete=domainagent(копии, которых нет в records)	<s>worker(worker.reads domain/placed/<sub>/), domain, domainconsole, domainagent	-	1	-	М11/6 Н1.2
 domain/pending/<член>	row	М11/6	cas=domain(приём правки через консоль домена, снятие исполненной по исходу)	domain, domainconsole, domainagent	-	1	-	М11/6 Н1.4
