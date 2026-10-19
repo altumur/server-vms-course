@@ -7,6 +7,10 @@
 #   secret_readers     the platform's own secret rows and who reads them, <row or prefix>=<role> (`<row>=` — nobody but
 #                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10. The domain's backups
 #                      are objects, not secret rows (М11/10 Н1.5; review 41): no row of them here
+#   platform_shown     the platform's own unit fields a spec may name where it shows a unit: display.tree.columns[].field
+#                      and display.form[].fields[] (М10/2 Н1.3)
+#   object_families    the platform's object families under objects/<sub>/: a spec's objects.rows[] names none of them;
+#                      `*` — the family-wide prefix (М10/2 Н1.4)
 heartbeat_strings	worker
 heartbeat_strings	server
 heartbeat_strings	url
@@ -32,3 +36,16 @@ secret_readers	domain/users/=domain
 secret_readers	domain/member-key=domainagent
 secret_readers	domain/member-key=domain
 secret_readers	door/signer=
+platform_shown	worker
+platform_shown	server
+platform_shown	revision
+platform_shown	observed_revision
+platform_shown	phase
+platform_shown	id
+object_families	heartbeats
+object_families	contenders
+object_families	snapshot
+object_families	controller
+object_families	blobs
+object_families	commands
+object_families	*
