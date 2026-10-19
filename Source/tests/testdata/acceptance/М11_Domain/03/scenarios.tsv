@@ -12,7 +12,7 @@ scenario	step	request	expect
 01-cold-start-and-acceptance	10	@until 30 member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}}
 01-cold-start-and-acceptance	11	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "@any"}}
 01-cold-start-and-acceptance	12	@until 30 member m1 store GET /v1/get?key=domain/member	200 {"items": {"cluster": "m1"}}
-01-cold-start-and-acceptance	13	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m1\""}}
+01-cold-start-and-acceptance	13	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m1\""}}
 01-cold-start-and-acceptance	14	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}], "knocking": [], "reports": {"m1": {"pinned": "this"}}}
 02-another-root-and-leave	1	@install domain	ok
 02-another-root-and-leave	2	@start domain	ok
