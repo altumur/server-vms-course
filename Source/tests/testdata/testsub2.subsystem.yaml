@@ -102,7 +102,7 @@ placement:
   group_by:    {field: feed, cut_at: host}
   place_by:    shelf
   places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
-  offers:      true
+  grows:       true
   home:        shelf
   retire_when: {field: state, in: [done, failed]}   # two ends, and the placement's reason says which
   rebalance:   {dead_band: 0.2}
