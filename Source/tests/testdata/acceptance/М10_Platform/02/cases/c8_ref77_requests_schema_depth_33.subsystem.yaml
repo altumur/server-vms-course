@@ -1,0 +1,32 @@
+# requests.schema глубже 32 (33 вложенных отображения); норма М10/10 Н1.4, М10/2 Н1.2а; строка 77 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int,    default: 0}
+    kind:   {type: string, enum: [a, b], default: a}
+    labels: {type: list}
+placement:
+  capacity:   {from: capacity, default: 4}
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+requests:
+  schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: object}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+  valid_for: 30
+  most_valid: 600
+snapshot: [name, start]
+display:
+  unit: counter
+  units: counters
+  fields: {name: Name, start: Start}
+  options:
+    kind: {a: Alpha, b: Beta}
+  form:
+    - title: Main
+      fields: [name, start, kind]
+      status:
+        - {field: seen, title: Seen}
+lease: {unconfirmed_max: off}

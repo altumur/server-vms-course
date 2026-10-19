@@ -1,0 +1,11 @@
+# bound_to (строка) поля таблицы называет необъявленное поле nofeed; норма М10/2 Н1.4, М10/7 Н1.1; строка 20 references.tsv
+name: probe
+unit: {rows: counters, id: numeric}
+placement: {capacity: {default: 4}}
+tables:
+  notes:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      feed: {type: url}
+      feed_secret: {type: string, bound_to: nofeed}

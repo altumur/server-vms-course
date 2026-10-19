@@ -1,0 +1,10 @@
+# default поля таблицы не из его enum; норма М10/2 Н1.2а default; строка 24 references.tsv
+name: probe
+unit: {rows: counters, id: numeric}
+placement: {capacity: {default: 4}}
+tables:
+  notes:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      kind: {type: string, enum: [a, b], default: c}

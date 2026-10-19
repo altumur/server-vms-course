@@ -1,0 +1,6 @@
+# holds.since называет необъявленное поле таблицы holds.table; норма М10/2 Н1.4 (holds.unit/since/until/released); строка 50 references.tsv
+name: probe
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+tables: {disks: {fields: {server: {type: string}}}}
+holds: {table: disks, since: t0}

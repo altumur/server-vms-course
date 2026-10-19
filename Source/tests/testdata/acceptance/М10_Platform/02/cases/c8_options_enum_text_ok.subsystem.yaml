@@ -1,0 +1,38 @@
+# В3 (ADR-0087 доп. (4)): enum строками '1e0', '1.50' и ключи display.options теми же строками — ok (text() строки — сама строка); норма М10/2 Н1.4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int,    default: 0}
+    kind:   {type: string, enum: [a, b], default: a}
+    labels: {type: list}
+    grade:  {type: string, enum: ['1e0', '1.50']}
+placement:
+  capacity:   {from: capacity, default: 4}
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+requests:
+  schema:
+    type: object
+    required: [unit, add]
+    additionalProperties: false
+    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
+  valid_for: 30
+  most_valid: 600
+snapshot: [name, start]
+display:
+  unit: counter
+  units: counters
+  fields: {name: Name, start: Start}
+  options:
+    kind: {a: Alpha, b: Beta}
+    grade: {'1e0': One, '1.50': Half}
+  form:
+    - title: Main
+      fields: [name, start, kind]
+      status:
+        - {field: seen, title: Seen}
+lease: {unconfirmed_max: off}

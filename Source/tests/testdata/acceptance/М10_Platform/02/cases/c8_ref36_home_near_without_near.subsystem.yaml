@@ -1,0 +1,4 @@
+# placement.home: near без placement.near; норма М10/2 Н1.4 (placement.home или слово near), Н1.2а home; строка 36 references.tsv
+name: probe
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}, home: near}

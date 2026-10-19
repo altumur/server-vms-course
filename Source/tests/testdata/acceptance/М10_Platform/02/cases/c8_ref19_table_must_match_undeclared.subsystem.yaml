@@ -1,0 +1,11 @@
+# значение must_match поля таблицы называет необъявленное поле nozone этой таблицы; норма М10/2 Н1.4, М10/3 Н1.3; строка 19 references.tsv
+name: probe
+unit: {rows: counters, id: numeric}
+placement: {capacity: {default: 4}}
+tables:
+  notes:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      shelf: {type: string, ref: probe/shelves, must_match: {zone: nozone}}
+      zone: {type: string}

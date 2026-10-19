@@ -1,0 +1,4 @@
+# placement.affinity.table называет необъявленную таблицу; норма М10/2 Н1.4 (placement.affinity.table); строка 42 references.tsv
+name: probe
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}, affinity: {table: disks}}

@@ -1,0 +1,4 @@
+# placement.home называет необъявленное поле единицы; норма М10/2 Н1.4 (placement.home); строка 37 references.tsv
+name: probe
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}, home: zone}

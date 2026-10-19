@@ -1,0 +1,10 @@
+# schema таблицы глубиной 33 (> 32); норма М10/10 Н1.4, М10/10 Н1.6; строка 26 references.tsv
+name: probe
+unit: {rows: counters, id: numeric}
+placement: {capacity: {default: 4}}
+tables:
+  notes:
+    key: name
+    schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+    fields:
+      name: {type: string, required: true}

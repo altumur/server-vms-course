@@ -1,0 +1,8 @@
+# schema поля единицы глубиной 33 (> 32); норма М10/2 Н1.2а schema, М10/10 Н1.4; строка 12 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: numeric
+  fields:
+    rule: {type: json, schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+placement: {capacity: {default: 4}}
