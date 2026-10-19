@@ -114,7 +114,8 @@ components:
       description: Порядок имён keys — по UTF-8-байтам; JSON Schema порядок объекта не проверяет.
     Cmd:
       type: object
-      unevaluatedProperties: false
+      description: "Лишние поля верхнего уровня команды принимаются и не читаются независимо от JSON-типа (Н2, М10/1-12, сц. 23); закрыт только guard (добавлено ревью стадии A 2)"
+      unevaluatedProperties: true
       required: [op, key]
       properties:
         op: {type: string, enum: [put, delete], description: "op floor — отдельная схема FloorCmd урока 11 на admin-сокете лидера (добавлено М10/11 Н2)"}
