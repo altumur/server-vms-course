@@ -477,3 +477,10 @@ c5_default_tilde_ok	ok
 c6_secrets_reads_bare	refused
 c6_secrets_reads_with_slash_ok	ok
 c6_flow_map_empty_value	refused
+c7_comment_deep_after_word	ok
+c7_comment_very_deep	ok
+c7_ufeff_middle_ok	ok
+c7_word_fold_blank_line	ok
+c7_word_fold_close_bracket	ok
+c7_seq_block_scalars_ok	ok
+c7_float_max_rounded_ok	ok
