@@ -851,10 +851,6 @@ properties:
         self.assertIn("PASS with 1 exceptions", result.stdout)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class PlatformLessonTests(unittest.TestCase):
     """A lesson of the Platform module: chapters spec/NN.K-<процесс>.norms.md, acceptance/K/ per chapter."""
 
@@ -1025,3 +1021,110 @@ class FormSourceChapterTests(unittest.TestCase):
         result.lesson(self.lesson)
         self.assertTrue(any("sole cause" in e for e in result.errors))
 
+
+class FamiliesChapterTests(unittest.TestCase):
+    """Семьи данных главы по каталогу (ADR-0088): схема и исходы строятся, раздел между маркерами — байт в байт."""
+
+    def setUp(self):
+        from test_families import COMMON, OUTCOMES, SLOT
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        (self.root / "Platform").mkdir()
+        (self.root / "Platform/lessons.tsv").write_text("# lesson\tdir\ttitle\n03\t03-worker\tВоркер\n")
+        common = self.root / "Platform/common/data"
+        common.mkdir(parents=True)
+        (common / "common.form.yaml").write_text(COMMON, encoding="utf-8")
+        (common / "codec.tsv").write_text("type\trow_writer\trow_reader\tjson_writer\tjson_reader\tnorm\n")
+        (self.root / "Platform/common/DIALECT.md").write_text("# Диалект\n")
+        (common / "catalog.tsv").write_text(
+            "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n"
+            "<sub>/slots/<id>\trow\tP/03.2\tput=<s>worker\t*\t-\t1\t03-worker/data/slot.form.yaml\tP/03.2 Н1\n")
+        self.dir = self.root / "Platform/03-worker"
+        self.spec, self.data = self.dir / "spec", self.dir / "data"
+        self.spec.mkdir(parents=True)
+        self.data.mkdir()
+        (self.data / "slot.form.yaml").write_text(SLOT, encoding="utf-8")
+        (self.data / "slot.outcomes.tsv").write_text(OUTCOMES, encoding="utf-8")
+        self.lesson = self.dir / "03-worker.md"
+        self.lesson.write_text("# Worker\n")
+        (self.spec / "03-worker.README.md").write_text("# Instructions\n")
+        (self.spec / "03-worker.api.openapi.yaml").write_text(PlatformLessonTests.API)
+        for chapter in ("1", "2"):
+            data = ("**Данные** ([каталог](../../common/data/catalog.tsv)):\n- владеет: `<sub>/slots/<id>`.\n\n"
+                    if chapter == "2" else "")
+            (self.spec / f"03.{chapter}-worker.norms.md").write_text(
+                "## Н0 Section\n## Н1 Section\n" + data + "\n".join(f"## Н{i} Section" for i in range(2, 6)) +
+                "\n## Решает реализация\n## Чеклист готовности\n" +
+                f"- [ ] **P/03.{chapter}-01** Example — проверяется чтением\n")
+            acceptance = self.dir / "acceptance" / chapter
+            acceptance.mkdir(parents=True)
+            (acceptance / "README.md").write_text("# Acceptance\n")
+            (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+            (acceptance / "scenarios.tsv").write_text(
+                "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
+        self.norms = self.spec / "03.2-worker.norms.md"
+
+    def check(self):
+        result = Check(self.root)
+        result.lesson(self.lesson)
+        return result
+
+    def mark(self, norms=None, body=None):
+        from form_source.families import build_for_norms
+        norms = norms or self.norms
+        body = build_for_norms(self.norms, self.root) if body is None else body
+        norms.write_text(norms.read_text().replace("## Н2 Section", "<!-- families:begin -->\n" + body +
+                                                   "<!-- families:end -->\n\n## Н2 Section"))
+
+    def test_without_markers_is_counted_not_failed(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual((result.stats["family_schemas"], result.stats["family_outcomes"]), (1, 3))
+        self.assertEqual((result.stats["families_with_section"], result.stats["families_without_section"]), (0, 1))
+
+    def test_built_section_between_markers(self):
+        self.mark()
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual((result.stats["families_with_section"], result.stats["families_without_section"]), (1, 0))
+        self.assertGreater(result.stats["local_links"], 0)
+
+    def test_section_differs(self):
+        from form_source.families import build_for_norms
+        self.mark(body=build_for_norms(self.norms, self.root).replace("| поколение |", "| поколения |"))
+        errors = self.check().errors
+        self.assertTrue(any("families: the section differs from the built one" in e and "build_families.py" in e
+                            for e in errors), errors)
+        self.norms.write_text(self.norms.read_text().replace("<!-- families:end -->\n", ""))
+        self.assertTrue(any("between <!-- families:begin -->" in e for e in self.check().errors))
+
+    def test_markers_in_a_chapter_without_families(self):
+        self.mark(norms=self.spec / "03.1-worker.norms.md", body="")
+        self.assertTrue(any("no family with a schema" in e for e in self.check().errors))
+
+    def test_outcomes_against_the_schema(self):
+        (self.data / "slot.outcomes.tsv").write_text(
+            "path\toutcome\tpriority\tunit\tnorm\n\tx\t1\tстрока\tn\n/epoch\tx\t1\tстрока\tn\n")
+        self.assertTrue(any("slot.form.yaml: families: slot.outcomes.tsv:3: path '/epoch' is not a place" in e
+                            for e in self.check().errors))
+        (self.data / "slot.outcomes.tsv").unlink()
+        self.assertTrue(any("no outcomes file" in e for e in self.check().errors))
+
+    def test_schema_that_does_not_build(self):
+        (self.data / "slot.form.yaml").write_text("dialect: data-form/1\nroot:\n  type: object\n  opaque: true\n"
+                                                  "  sealed: true\n")
+        self.assertTrue(any("words outside the dialect" in e for e in self.check().errors))
+
+    def test_catalog_row_without_file_or_out_of_place(self):
+        (self.data / "slot.form.yaml").unlink()
+        self.assertTrue(any("schema 03-worker/data/slot.form.yaml is not a file under Platform/" in e
+                            for e in self.check().errors))
+        catalog = self.root / "Platform/common/data/catalog.tsv"
+        catalog.write_text(catalog.read_text().replace("03-worker/data/slot.form.yaml", "03-worker/slot.form.yaml"))
+        (self.dir / "slot.form.yaml").write_text("x\n")
+        self.assertTrue(any("is not NN-<процесс>/data/<семья>.form.yaml" in e for e in self.check().errors))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -58,6 +58,12 @@ class Section:
 
     # ---- тип и границы одного узла (без раскрытия свойств — они строками ниже)
     def kind(self, n):
+        s = self.kind_of(n)
+        if n.notes.get("whole"):                     # схема семьи: пометка позиции (ADR-0088 доп. (2) С9)
+            s += "; целый знак и у читателя (whole)"
+        return s
+
+    def kind_of(self, n):
         if n.ref is not None:
             if n.ref in self.own:
                 return "по определению `%s`" % n.ref
@@ -78,13 +84,50 @@ class Section:
         for k, w in (("minimum", "≥"), ("exclusive_minimum", ">"), ("maximum", "≤")):
             if getattr(n, k) is not None:
                 extra.append("%s %s" % (w, getattr(n, k)))
+        extra += self.data_words(n)
         return "; ".join(([s] if s else []) + extra)
+
+    def data_words(self, n):
+        """Слова схем семей (ADR-0088 доп. (2)); у формы манифеста их нет."""
+        out = []
+        if n.max_bytes is not None:
+            out.append("не длиннее %d байт UTF-8" % n.max_bytes)
+        if n.encoding == "json":
+            out.append("в `items` — текст JSON (encoding: json)")
+        elif n.encoding == "jcs":
+            out.append("в `items` — текст JSON, у писателя — JCS (encoding: jcs)")
+        if n.writer is not None:
+            w = n.writer
+            ws = []
+            if w.enum is not None:
+                ws.append("одно из: " + ", ".join(code(x) for x in w.enum))
+            if w.not_enum is not None:
+                ws.append("не из: " + ", ".join(code(x) for x in w.not_enum))
+            if w.pattern is not None:
+                ws.append("целиком `%s`" % w.pattern)
+            if w.not_pattern is not None:
+                ws.append("не целиком `%s`" % w.not_pattern)
+            for k, word in (("minimum", "≥"), ("exclusive_minimum", ">"), ("maximum", "≤")):
+                if getattr(w, k) is not None:
+                    ws.append("%s %s" % (word, getattr(w, k)))
+            if w.max_bytes is not None:
+                ws.append("не длиннее %d байт UTF-8" % w.max_bytes)
+            if w.min_items is not None:
+                ws.append("не короче %d" % w.min_items)
+            if w.max_items is not None:
+                ws.append("не длиннее %d" % w.max_items)
+            if w.unique_items:
+                ws.append("без повторов")
+            out.append("только у писателя: " + ", ".join(ws))
+        return out
 
     def type_word(self, n, t):
         if t == "array":
             s = "список"
             if n.min_items is not None:
                 s += ", не короче %d" % n.min_items
+            if n.max_items is not None:
+                s += ", не длиннее %d" % n.max_items
             if n.unique_items:
                 s += ", без повторов"
             if n.items is not None:
@@ -101,11 +144,13 @@ class Section:
                     self.kind(n.names[0]), self.kind(n.names[1]))
                 if n.ordered:
                     s += "; порядок автора (ordered)"
+                if n.max_items is not None:
+                    s += "; не больше %d имён" % n.max_items
             elif n.required and n.properties is None:
                 s += "; обязательны " + ", ".join(code(k) for k in n.required)
             return s
         return {"string": "строка", "integer": "целое", "number": "число", "boolean": "bool", "null": "null",
-                "any": "любое значение"}[t]
+                "any": "любое значение", "time": "время (P/01.1 Н0 «Время в строке»)"}[t]
 
     def need(self, parent, k, n):
         req = parent is not None and k in self.f.deref(parent).required

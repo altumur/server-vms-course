@@ -8,7 +8,7 @@ import json
 import math
 import re
 
-from .source import Form, _is, _jt, load_source, form_segs, textlayer
+from .source import Form, _is, _jt, load_source, form_segs, py_pattern, textlayer
 
 _ABSENT = object()
 SCALAR_CHECKS = {"in", "not in", "=", "!=", "<=", "~", "!~", "template"}
@@ -166,9 +166,9 @@ class Loader:
             self.fail(out, p, "value", "not in enum")
         if n.not_enum is not None and in_list(v, n.not_enum):
             self.fail(out, p, "value", "forbidden word")
-        if n.pattern is not None and isinstance(v, str) and not re.fullmatch(n.pattern, v, re.S):
+        if n.pattern is not None and isinstance(v, str) and not re.fullmatch(py_pattern(n.pattern), v, re.S):
             self.fail(out, p, "value", "pattern")
-        if n.not_pattern is not None and isinstance(v, str) and re.fullmatch(n.not_pattern, v, re.S):
+        if n.not_pattern is not None and isinstance(v, str) and re.fullmatch(py_pattern(n.not_pattern), v, re.S):
             self.fail(out, p, "value", "forbidden pattern")
         num = isinstance(v, (int, float)) and not isinstance(v, bool)
         if num and n.minimum is not None and v < n.minimum:
@@ -217,9 +217,9 @@ class Loader:
             return
         if any(in_list(eff(k), vals) for k, vals in (w.get("is_not") or {}).items()):     # ничего — истинно (Ф12)
             return
-        if "name_pattern" in w and not (nm is not None and re.fullmatch(w["name_pattern"], nm, re.S)):
+        if "name_pattern" in w and not (nm is not None and re.fullmatch(py_pattern(w["name_pattern"]), nm, re.S)):
             return
-        if "name_not_pattern" in w and not (nm is not None and not re.fullmatch(w["name_not_pattern"], nm, re.S)):
+        if "name_not_pattern" in w and not (nm is not None and not re.fullmatch(py_pattern(w["name_not_pattern"]), nm, re.S)):
             return
         for k in r.require:
             if k not in v:

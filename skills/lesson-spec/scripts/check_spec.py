@@ -189,7 +189,8 @@ def references(document):
     yield from walk(document, "document")
 
 
-FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->"}
+# Built sections between their markers: the form of ADR-0087 and the data families of ADR-0088.
+FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->"}
 
 
 def markdown_links(tokens):
@@ -201,7 +202,7 @@ def markdown_links(tokens):
             # Children form the alt text, not independently rendered links or HTML.
             continue
         elif token.type == "html_block" and token.content.strip() in FORM_MARKERS:
-            continue                                  # the built form section of ADR-0087 between its markers
+            continue                                  # a built section (ADR-0087, ADR-0088) between its markers
         elif token.type in {"html_inline", "html_block"}:
             raise ValueError("unsupported raw HTML; local links/resources need a separate check")
         if token.children:
@@ -243,6 +244,23 @@ IGNORED = {".DS_Store"}
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
+
+
+# Data family sections (ADR-0088): markers in the norms of the owning chapter, common definitions of the schemas.
+FAMILIES_BEGIN, FAMILIES_END = "<!-- families:begin -->", "<!-- families:end -->"
+FAMILIES_COMMON = Path("Platform/common/data/common.form.yaml")
+
+
+def family_place(row):
+    """A catalog schema is NN-<процесс>/data/<семья>.form.yaml of the owner lesson, for row and JSON object only
+    (ADR-0088 п. 1, доп. (1) Р2); the same rule as form_source.families.schema_place, without the text layer."""
+    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+\.form\.yaml", row["schema"])
+    if not match:
+        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>.form.yaml (ADR-0088 п. 1)")
+    if row["kind"] not in {"row", "object"}:
+        raise ValueError("a schema is only for row and JSON object (ADR-0088 доп. (1) Р2)")
+    if not re.fullmatch(rf"P/{match.group(1)}(\.[1-9])?", row["owner"]):
+        raise ValueError(f"schema {row['schema']} is not in the lesson of its owner {row['owner']}")
 
 
 # Data contract catalog (ADR-0083 доп. (2) п. 1–2, form decisions/inbox/2026-10-18-каталог-данных-форма.md).
@@ -474,6 +492,8 @@ class Check:
                     raise ValueError("version is an integer ≥ 1")
                 if row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
+                if row["schema"] != "-":
+                    family_place(row)
                 norm = re.match(LESSON, row["norm"])
                 if not norm or self.lesson_norms(norm.group(0)) is None:
                     raise ValueError("norm names an existing lesson")
@@ -987,6 +1007,67 @@ class Check:
                 if row.no not in held:
                     self.error(references, f"line {row.no}: no corpus case has this row as its sole cause (ADR-0087 доп. (1) Р10)")
 
+    # The data families of ADR-0088 that a chapter owns by the catalog (owner = the chapter, schema named): each schema
+    # builds from the dialect (data-form/1 with common.form.yaml), its outcomes.tsv is in form and names places of the
+    # schema; if the norms hold the markers, the section between them is the built one byte for byte. Without markers
+    # (transition) it is no error; COUNTS says how many families have the section and how many do not.
+    def families(self, norms, text, prefix):
+        self.stats["families_with_section"] += 0
+        self.stats["families_without_section"] += 0
+        if self.catalog is None:
+            return
+        rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] != "-"]
+        lines = text.split("\n") if text is not None else []
+        if not rows and not any(line in (FAMILIES_BEGIN, FAMILIES_END) for line in lines):
+            return
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from form_source import SourceError
+            from form_source.families import build_families_section, load_family
+            from form_source.source import load_common
+        except ImportError as exc:
+            self.error(norms, f"families check needs ruamel.yaml (text layer Н1.1), missing: {exc}; run: {SCHEMA_INSTALL}")
+            return
+        built = []
+        try:
+            common = load_common(self.root / FAMILIES_COMMON)
+        except (SourceError, OSError) as exc:
+            self.error(self.root / FAMILIES_COMMON, f"families: {exc}")
+            return
+        for row in rows:
+            try:
+                built.append(load_family(self.root, row, common))
+            except (SourceError, OSError) as exc:
+                self.error(self.root / "Platform" / row["schema"], f"families: {exc}")
+                continue
+            self.stats["family_schemas"] += 1
+            self.stats["family_outcomes"] += len(built[-1].outcomes)
+        if text is None:
+            return
+        begins = [i for i, line in enumerate(lines) if line == FAMILIES_BEGIN]
+        ends = [i for i, line in enumerate(lines) if line == FAMILIES_END]
+        if not begins and not ends:
+            self.stats["families_without_section"] += len(rows)
+            return
+        if len(begins) != 1 or len(ends) != 1 or ends[0] < begins[0]:
+            self.error(norms, f"families: the norms hold the built section once, between {FAMILIES_BEGIN} and {FAMILIES_END}")
+            return
+        if not rows:
+            self.error(norms, "families: section markers, but the catalog gives this chapter no family with a schema")
+            return
+        if len(built) != len(rows):
+            return                                          # the family that does not build is named above
+        said = "\n".join(lines[begins[0] + 1:ends[0]]) + "\n"
+        section = build_families_section(norms, self.root, built)
+        if said != section:
+            old, new = said.splitlines(), section.splitlines()
+            at = next((i for i, (a, b) in enumerate(zip(old, new)) if a != b), min(len(old), len(new)))
+            self.error(norms, f"families: the section differs from the built one at its line {at + 1} (rebuild: python "
+                              f"skills/lesson-spec/scripts/form_source/build_families.py {norms.relative_to(self.root)})")
+            return
+        self.stats["families_with_section"] += len(rows)
+
     # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module (lesson 1
     # moves it there), the М10 one until then, and the module's own.
     def stands(self, module=None):
@@ -1188,6 +1269,7 @@ class Check:
                                  classes)
             elif schema.exists() or schema_refs.exists():
                 self.spec_schema(schema, schema_refs, where / "cases", verdicts, classes)
+            self.families(norms, text, prefix)
             choices = self.choices(text) if text is not None else None
             # A chapter's own texts count the chapter.
             for path, body in chapter_texts.items():

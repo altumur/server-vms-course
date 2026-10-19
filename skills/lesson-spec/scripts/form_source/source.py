@@ -19,6 +19,13 @@ NODE_WORDS = {"ref", "type", "enum", "not_enum", "pattern", "not_pattern", "mini
 RULE_WORDS = {"when", "require", "forbid", "one_of", "any_of", "check", "reject", "x-class", "ref"}
 WHEN_WORDS = {"present", "absent", "is", "is_not", "name_pattern", "name_not_pattern"}
 CLASSES = {"name", "key", "value", "reference"}
+# Схемы семей данных (`dialect: data-form/1`, ADR-0088 доп. (2) С1–С10): слова сверх формы манифеста.
+DATA_TYPES = TYPES | {"time"}
+DATA_NOTE_WORDS = NOTE_WORDS | {"whole"}
+DATA_NODE_WORDS = NODE_WORDS | {"whole", "max_items", "max_bytes", "encoding", "writer"}
+WRITER_WORDS = {"enum", "not_enum", "pattern", "not_pattern", "minimum", "maximum", "exclusive_minimum", "max_bytes",
+                "min_items", "max_items", "unique_items"}
+ENCODINGS = {"json", "jcs"}
 SCALAR_KINDS = {"null", "true", "false", "int", "float", "nonfinite", "string"}
 REPEAT_MAX = 1000          # предел повтора RE2 — общее подмножество (доп. (1) Р5)
 
@@ -32,9 +39,24 @@ class SourceError(Exception):
 _PUNCT = set("!\"#%&',-./:;<=>@_`~{}[]()*+?|\\^$")
 
 
-def check_pattern(p, where):
+_HEX = re.compile(r"\\x\{([0-9A-Fa-f]{2,6})\}")
+
+
+def _hexcode(p, i):
+    """Код знака `\\x{HHHH}` с позиции i (С7): длина записи или 0."""
+    m = _HEX.match(p, i)
+    return len(m.group(0)) if m and int(m.group(1), 16) <= 0x10FFFF else 0
+
+
+def py_pattern(p):
+    """Выражение диалекта → Python (§ 4): `\\x{HHHH}` → `\\UHHHHHHHH`; без кода знака — как есть."""
+    return _HEX.sub(lambda m: "\\U%08x" % int(m.group(1), 16), p) if "\\x{" in p else p
+
+
+def check_pattern(p, where, hexcodes=False):
     """§ 4: печатный ASCII; . [] [^] () | * + ? {m} {m,n} (m ≤ n ≤ 1000); \\ только перед пунктуацией; без ^ $ вне
-    класса, без \\s \\d \\w \\b, просмотра, флагов и ленивых повторов."""
+    класса, без \\s \\d \\w \\b, просмотра, флагов и ленивых повторов. hexcodes — код знака `\\x{HHHH}` в классе и вне
+    его (ADR-0088 доп. (2) С7; схемы семей)."""
     if not isinstance(p, str):
         raise SourceError("%s: pattern must be a string" % where)
     i, depth = 0, 0
@@ -42,6 +64,9 @@ def check_pattern(p, where):
         c = p[i]
         if ord(c) < 0x20 or ord(c) > 0x7e:
             raise SourceError("%s: pattern %r: non-ASCII or control char" % (where, p))
+        if c == "\\" and hexcodes and _hexcode(p, i):
+            i += _hexcode(p, i)
+            continue
         if c == "\\":
             if i + 1 >= len(p) or p[i + 1] not in _PUNCT:
                 raise SourceError("%s: pattern %r: escape \\%s outside the dialect" % (where, p, p[i + 1:i + 2]))
@@ -56,6 +81,9 @@ def check_pattern(p, where):
             if j < len(p) and p[j] == "]":
                 j += 1
             while j < len(p) and p[j] != "]":
+                if p[j] == "\\" and hexcodes and _hexcode(p, j):
+                    j += _hexcode(p, j)
+                    continue
                 if p[j] == "\\":
                     if j + 1 >= len(p) or p[j + 1] not in _PUNCT:
                         raise SourceError("%s: pattern %r: escape in class" % (where, p))
@@ -96,7 +124,7 @@ def check_pattern(p, where):
     if depth:
         raise SourceError("%s: pattern %r: unbalanced (" % (where, p))
     try:
-        re.compile(p)
+        re.compile(py_pattern(p) if hexcodes else p)
     except re.error as exc:
         raise SourceError("%s: pattern %r: %s" % (where, p, exc))
     return p
@@ -129,6 +157,8 @@ class Node:
         self.rules = []
         self.notes = {}
         self.rules_only = False
+        # data-form/1 (ADR-0088 доп. (2)): whole — пометка позиции (в notes)
+        self.max_items = self.max_bytes = self.encoding = self.writer = None
 
 
 ANY = Node("<любое значение>")
@@ -148,6 +178,7 @@ class Rule:
 class Form:
     def __init__(self, root, defs):
         self.root, self.defs = root, defs
+        self.dialect = "m10-form/1"
 
     def deref(self, n):
         seen = set()
@@ -279,27 +310,31 @@ def _keys(v, where, word):
     return v
 
 
-def parse_node(d, where, defs_names):
+def parse_node(d, where, defs_names, data=False):
+    """data — схема семьи (`data-form/1`): слова ADR-0088 доп. (2) сверх формы манифеста."""
     if not isinstance(d, dict):
         raise SourceError("%s: node must be a mapping" % where)
-    bad = set(d) - NODE_WORDS
+    words, notes = (DATA_NODE_WORDS, DATA_NOTE_WORDS) if data else (NODE_WORDS, NOTE_WORDS)
+    bad = set(d) - words
     if bad:
         raise SourceError("%s: words outside the dialect: %s" % (where, sorted(bad)))
     n = Node(where)
-    for k in NOTE_WORDS & set(d):
+    for k in notes & set(d):
         n.notes[k] = d[k]
     if "x-class" in d and d["x-class"] not in CLASSES:
         raise SourceError("%s: x-class %r" % (where, d["x-class"]))
+    if "whole" in d and d["whole"] is not True:
+        raise SourceError("%s: whole: true only" % where)
     if "ref" in d:
-        if set(d) - NOTE_WORDS - {"ref"}:
-            raise SourceError("%s: ref with facets %s" % (where, sorted(set(d) - NOTE_WORDS - {"ref"})))
+        if set(d) - notes - {"ref"}:
+            raise SourceError("%s: ref with facets %s" % (where, sorted(set(d) - notes - {"ref"})))
         if d["ref"] not in defs_names:
             raise SourceError("%s: unknown ref %r" % (where, d["ref"]))
         n.ref = d["ref"]
         return n
     if "type" in d:
         t = d["type"] if isinstance(d["type"], list) else [d["type"]]
-        if not t or not all(isinstance(x, str) for x in t) or set(t) - TYPES:
+        if not t or not all(isinstance(x, str) for x in t) or set(t) - (DATA_TYPES if data else TYPES):
             raise SourceError("%s: type %r" % (where, d["type"]))
         n.types = t
     for k in ("enum", "not_enum"):
@@ -307,7 +342,9 @@ def parse_node(d, where, defs_names):
             setattr(n, k, _scalar_list(d[k], where, k))
     for k in ("pattern", "not_pattern"):
         if k in d:
-            setattr(n, k, check_pattern(d[k], "%s.%s" % (where, k)))
+            setattr(n, k, check_pattern(d[k], "%s.%s" % (where, k), data))
+    if data:
+        _parse_data_words(n, d, where)
     for k in ("minimum", "maximum", "exclusive_minimum"):
         if k in d:
             if isinstance(d[k], bool) or not isinstance(d[k], (int, float)):
@@ -316,13 +353,13 @@ def parse_node(d, where, defs_names):
     if "properties" in d:
         if not isinstance(d["properties"], dict):
             raise SourceError("%s: properties must be a mapping" % where)
-        n.properties = {k: parse_node(v, "%s.%s" % (where, k), defs_names) for k, v in d["properties"].items()}
+        n.properties = {k: parse_node(v, "%s.%s" % (where, k), defs_names, data) for k, v in d["properties"].items()}
     if "names" in d:
         nm = d["names"]
         if not isinstance(nm, dict) or set(nm) != {"key", "value"}:
             raise SourceError("%s: names must be {key, value}" % where)
-        n.names = (parse_node(nm["key"], where + ".{name}", defs_names),
-                   parse_node(nm["value"], where + ".*", defs_names))
+        n.names = (parse_node(nm["key"], where + ".{name}", defs_names, data),
+                   parse_node(nm["value"], where + ".*", defs_names, data))
     for k in ("opaque", "ordered", "unique_items"):
         if k in d:
             if d[k] is not True:
@@ -331,7 +368,7 @@ def parse_node(d, where, defs_names):
     if "required" in d:
         n.required = _keys(d["required"], where, "required")
     if "items" in d:
-        n.items = parse_node(d["items"], where + "[]", defs_names)
+        n.items = parse_node(d["items"], where + "[]", defs_names, data)
     if "min_items" in d:
         if isinstance(d["min_items"], bool) or not isinstance(d["min_items"], int) or d["min_items"] < 0:
             raise SourceError("%s: min_items must be an integer ≥ 0" % where)
@@ -339,11 +376,11 @@ def parse_node(d, where, defs_names):
     if "variants" in d:
         if "type" in d or not isinstance(d["variants"], list) or not d["variants"]:
             raise SourceError("%s: variants must be a nonempty list, without type" % where)
-        n.variants = [parse_node(v, "%s|%d" % (where, i), defs_names) for i, v in enumerate(d["variants"])]
+        n.variants = [parse_node(v, "%s|%d" % (where, i), defs_names, data) for i, v in enumerate(d["variants"])]
     if "rules" in d:
         if not isinstance(d["rules"], list):
             raise SourceError("%s: rules must be a list" % where)
-        n.rules = [parse_rule(r, "%s.rules[%d]" % (where, i), defs_names) for i, r in enumerate(d["rules"])]
+        n.rules = [parse_rule(r, "%s.rules[%d]" % (where, i), defs_names, data) for i, r in enumerate(d["rules"])]
     is_object = bool(n.types and "object" in n.types)
     if is_object and not (n.properties is not None or n.names is not None or n.opaque):
         raise SourceError("%s: object needs properties, names or opaque" % where)
@@ -358,10 +395,54 @@ def parse_node(d, where, defs_names):
     for k in n.required:
         if n.names is None and k not in (n.properties or {}):
             raise SourceError("%s: required %r is not a property" % (where, k))
+    if n.max_items is not None and not (n.types and ("array" in n.types or ("object" in n.types and n.names))):
+        raise SourceError("%s: max_items needs type array or an object of names" % where)
+    if n.max_bytes is not None and not (n.types and "string" in n.types):
+        raise SourceError("%s: max_bytes needs type string" % where)
     return n
 
 
-def parse_rule(r, where, defs_names):
+def _count(d, k, where):
+    if isinstance(d[k], bool) or not isinstance(d[k], int) or d[k] < 0:
+        raise SourceError("%s: %s must be an integer ≥ 0" % (where, k))
+    return d[k]
+
+
+def _parse_data_words(n, d, where):
+    """Слова схем семей (ADR-0088 доп. (2)): max_items (С5), max_bytes (С6), encoding json|jcs (С2, С4), writer (С10)."""
+    for k in ("max_items", "max_bytes"):
+        if k in d:
+            setattr(n, k, _count(d, k, where))
+    if "encoding" in d:
+        if d["encoding"] not in ENCODINGS:
+            raise SourceError("%s: encoding is one of %s" % (where, sorted(ENCODINGS)))
+        n.encoding = d["encoding"]
+    if "writer" in d:
+        w = d["writer"]
+        if not isinstance(w, dict) or not w or set(w) - WRITER_WORDS:
+            raise SourceError("%s: writer holds only constraints %s" % (where, sorted(WRITER_WORDS)))
+        x = n.writer = Node(where + ".writer")
+        for k in ("enum", "not_enum"):
+            if k in w:
+                setattr(x, k, _scalar_list(w[k], x.where, k))
+        for k in ("pattern", "not_pattern"):
+            if k in w:
+                setattr(x, k, check_pattern(w[k], "%s.%s" % (x.where, k), True))
+        for k in ("minimum", "maximum", "exclusive_minimum"):
+            if k in w:
+                if isinstance(w[k], bool) or not isinstance(w[k], (int, float)):
+                    raise SourceError("%s: %s must be a number" % (x.where, k))
+                setattr(x, k, w[k])
+        for k in ("max_bytes", "min_items", "max_items"):
+            if k in w:
+                setattr(x, k, _count(w, k, x.where))
+        if "unique_items" in w:
+            if w["unique_items"] is not True:
+                raise SourceError("%s: unique_items: true only" % x.where)
+            x.unique_items = True
+
+
+def parse_rule(r, where, defs_names, data=False):
     if not isinstance(r, dict) or set(r) - RULE_WORDS:
         raise SourceError("%s: rule words outside the dialect: %s" % (where, sorted(set(r or {}) - RULE_WORDS)))
     x = Rule(where)
@@ -381,11 +462,11 @@ def parse_rule(r, where, defs_names):
             raise SourceError("%s: %s must map keys to lists" % (where, k))
     for k in ("name_pattern", "name_not_pattern"):
         if k in w:
-            check_pattern(w[k], "%s.%s" % (where, k))
+            check_pattern(w[k], "%s.%s" % (where, k), data)
     x.when = w
     for k in ("require", "forbid", "one_of", "any_of"):
         setattr(x, k, _keys(r.get(k, []), where, k))
-    x.check = {k: parse_node(v, "%s.check.%s" % (where, k), defs_names) for k, v in (r.get("check") or {}).items()}
+    x.check = {k: parse_node(v, "%s.check.%s" % (where, k), defs_names, data) for k, v in (r.get("check") or {}).items()}
     x.reject = r.get("reject")
     x.xclass = r.get("x-class")
     if x.xclass is not None and x.xclass not in CLASSES:
@@ -400,29 +481,71 @@ def read_text(path_or_bytes):
     return data
 
 
-def load_form(src):
-    """`*.form.yaml` → Form. Слой текста Н1.1 (доп. (4) В1): то, что он отказывает, — ошибка источника."""
+def read_form_text(src):
+    """Слой текста Н1.1 (доп. (4) В1): то, что он отказывает, — ошибка источника."""
     try:
         d, numbers, empties = textlayer.load_text(read_text(src))
     except textlayer.TextRefused as exc:
         raise SourceError("form: text layer Н1.1: %s" % exc)
     if numbers or empties:
         raise SourceError("form: numbers out of range %s or keys without a value %s" % (numbers, empties))
-    if set(d) != {"dialect", "root", "defs"} or d["dialect"] != "m10-form/1":
-        raise SourceError("form: top level must be {dialect: m10-form/1, root, defs}")
-    if not isinstance(d["defs"], dict):
-        raise SourceError("form: defs must be a mapping")
-    names = set(d["defs"])
+    if not isinstance(d, dict):
+        raise SourceError("form: top level must be a mapping")
+    return d
+
+
+def _parse_defs(raw, names, data, where="defs"):
+    if not isinstance(raw, dict):
+        raise SourceError("form: %s must be a mapping" % where)
     defs = {}
-    for k, v in d["defs"].items():
+    for k, v in raw.items():
         if isinstance(v, dict) and "rules" in v and set(v) <= {"rules"} | NOTE_WORDS:   # определение только из правил
-            n = Node("defs." + k)
-            n.rules = [parse_rule(r, "defs.%s.rules[%d]" % (k, i), names) for i, r in enumerate(v["rules"])]
+            n = Node("%s.%s" % (where, k))
+            n.rules = [parse_rule(r, "%s.%s.rules[%d]" % (where, k, i), names, data) for i, r in enumerate(v["rules"])]
             n.rules_only = True
             defs[k] = n
         else:
-            defs[k] = parse_node(v, "defs." + k, names)
-    form = Form(parse_node(d["root"], "root", names), defs)
+            defs[k] = parse_node(v, "%s.%s" % (where, k), names, data)
+    return defs
+
+
+def _common_refs(x, names):
+    """Ссылки внутри common.form.yaml — на его же определения: `ref: имя` → `common.имя` (DIALECT § 2)."""
+    if isinstance(x, list):
+        return [_common_refs(v, names) for v in x]
+    if isinstance(x, dict):
+        return {k: ("common." + v if k == "ref" and isinstance(v, str) and v in names else _common_refs(v, names))
+                for k, v in x.items()}
+    return x
+
+
+def load_common(src):
+    """`common.form.yaml` (`data-form/1`, только defs) → его определения как сырьё (разбираются в каждой схеме)."""
+    d = read_form_text(src)
+    if set(d) != {"dialect", "defs"} or d["dialect"] != "data-form/1" or not isinstance(d["defs"], dict):
+        raise SourceError("common: top level must be {dialect: data-form/1, defs}")
+    return _common_refs(d["defs"], set(d["defs"]))
+
+
+def load_form(src, common=None):
+    """`*.form.yaml` → Form. Форма манифеста — `m10-form/1` {dialect, root, defs}; схема семьи — `data-form/1`
+    {dialect, root, defs?} с определениями `common.<имя>` из load_common (ADR-0088 п. 1, доп. (2) С3)."""
+    d = read_form_text(src)
+    data = d.get("dialect") == "data-form/1"
+    if data:
+        if not {"dialect", "root"} <= set(d) <= {"dialect", "root", "defs"}:
+            raise SourceError("form: top level must be {dialect: data-form/1, root, defs?}")
+    elif set(d) != {"dialect", "root", "defs"} or d["dialect"] != "m10-form/1":
+        raise SourceError("form: top level must be {dialect: m10-form/1, root, defs}")
+    own = d.get("defs", {})
+    if not isinstance(own, dict):
+        raise SourceError("form: defs must be a mapping")
+    common = common if data and common is not None else {}
+    names = set(own) | {"common." + k for k in common}
+    defs = _parse_defs(own, names, data)
+    defs.update({"common." + k: v for k, v in _parse_defs(common, names, data, "common").items()})
+    form = Form(parse_node(d["root"], "root", names, data), defs)
+    form.dialect = d["dialect"]
 
     def expand(rules, seen=()):
         out = []
@@ -453,6 +576,8 @@ def load_form(src):
             if not (v.types == ["object"] and v.names is None and "name" not in (v.properties or {})):
                 raise SourceError("%s: ordered: the value must be an object of properties without key name "
                                   "(ADR-0089 доп. (1))" % n.where)
+        if "whole" in n.notes and "integer" not in form.types_of(n):
+            raise SourceError("%s: whole needs type integer" % n.where)
         if not n.rules_only:
             for r in n.rules:
                 _check_rule_keys(form, n, r)
