@@ -8,3 +8,4 @@ date	sample	fix	languages
 2026-10-18	06-accept-with-roads 8	прогон 41 K41-02: равный sent_at другой дорогой — одно тело; другие байты — 409 same_sent_at, а не generation (урок 3 Н3 шаг 2)	all
 2026-10-18	02-road-through-the-relay 10	решение «Архитектора» 2026-10-18 «время в строке» (Н0 М10/1): писатель — дробная до 3 знаков; ожидание @time вместо @any — изменение поведения	all
 2026-10-18	inputs/accept-01-same-sent-at-other-road.json (06-accept-with-roads 1)	request_sha256 метки входа = sha256 тела (f079c3cc…): те же байты другой дороги — heard; было 2d711642… — по норме 409 same_sent_at; наведено разделением метки R41-05 (7c3714da) (cammeta-python М11-04 № 8)	all
+2026-10-19	02-road-through-the-relay 16, 21	сверка М11 01–04: нестабильный шаг 20 (reached вырос на 60,08 с под @cut) — сравнение с моментом разрыва ($c — as_of вида сразу после @cut), а не двух чтений	all

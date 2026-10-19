@@ -28,12 +28,13 @@ scenario	step	request	expect
 02-road-through-the-relay	13	@clock m2 0	ok
 02-road-through-the-relay	14	@until 40 holder GET /domain	200 {"complete": true}
 02-road-through-the-relay	15	@cut relay	ok
-02-road-through-the-relay	16	@sleep 70	ok
-02-road-through-the-relay	17	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t1"}
-02-road-through-the-relay	18	@sleep 65	ok
-02-road-through-the-relay	19	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t2"}
-02-road-through-the-relay	20	ASSERT $t2 - $t1 < 2	ok
-02-road-through-the-relay	21	@mend relay	ok
+02-road-through-the-relay	16	holder GET /domain	200 {"as_of": "$c"}
+02-road-through-the-relay	17	@sleep 70	ok
+02-road-through-the-relay	18	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t1"}
+02-road-through-the-relay	19	@sleep 65	ok
+02-road-through-the-relay	20	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t2"}
+02-road-through-the-relay	21	ASSERT $t2 - $c < 5	ok
+02-road-through-the-relay	22	@mend relay	ok
 03-not-behind-this-relay	1	@domain m1 relay	ok
 03-not-behind-this-relay	2	@stop agent m1	ok
 03-not-behind-this-relay	3	@start agent m1 via relay	ok
