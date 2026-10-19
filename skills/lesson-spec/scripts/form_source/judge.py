@@ -297,29 +297,8 @@ class Loader:
             if v is not None:
                 return v
             break
-        n, node, has = self.form.root, doc, True
-        for s in segs:
-            kind = s.kind
-            key = None
-            if kind == "key":
-                key = s.val
-            elif kind in ("bind", "var"):
-                key = env.get(s.val)
-            elif kind == "dyn":
-                key = self.term(s.val, doc, env, cur)
-            elif kind in ("each_bind", "ivar"):
-                key = env.get(s.val)
-            nxt = self.form.child(n, s.val if kind == "key" else "*", node, has)
-            if nxt is None:
-                return _ABSENT
-            if has and isinstance(node, dict) and key in node:
-                node = node[key]
-            elif has and isinstance(node, list) and isinstance(key, int) and key < len(node):
-                node = node[key]
-            else:
-                node, has = None, False
-            n = nxt
-        return self.form.note(n, "default") if self.form.has_note(n, "default") else _ABSENT
+        n = self._at_node(doc, segs, env, cur)
+        return self.form.note(n, "default") if n is not None and self.form.has_note(n, "default") else _ABSENT
 
     def term(self, t, doc, env, cur):
         k = t[0]
@@ -389,7 +368,82 @@ class Loader:
                     return False
         return True
 
-    def pred(self, p, doc, env, cur):
+    def _depth(self, t, doc, env, cur, curpath):
+        """`depth t` — по дереву с умолчаниями (свод Ф18): узел формы терма — по его пути в дереве (`.` — путь строки,
+        `@путь` — путь значения, иначе место умолчания), под ним дописываются умолчания формы внутри присутствующего."""
+        n, v = None, _ABSENT
+        if t[0] == "cur":
+            v = cur
+            if curpath is not None:
+                n = self._node_by_path(doc, curpath)
+        elif t[0] == "at":
+            for x, path, _ in self.walk(doc, t[1], env, cur=cur):
+                if x is not None:
+                    v, n = x, self._node_by_path(doc, path)
+                break
+            if v is _ABSENT:
+                v = self.at(doc, t[1], env, cur)
+                n = self._at_node(doc, t[1], env, cur)
+        else:
+            v = self.term(t, doc, env, cur)
+        return depth(self.with_defaults(n, v) if n is not None else v)
+
+    def _node_by_path(self, doc, path):
+        """Узел формы на конкретном пути дерева (ключи и индексы); варианты — по значению (О3)."""
+        n, node = self.form.root, doc
+        for s in path:
+            n = self.form.child(n, "*" if isinstance(s, int) else s, node, True)
+            if n is None:
+                return None
+            node = node[s] if isinstance(node, (dict, list)) else None
+        return n
+
+    def _at_node(self, doc, segs, env, cur):
+        """Место, из которого `@путь` без значения в дереве берёт default формы (как at)."""
+        n, node, has = self.form.root, doc, True
+        for s in segs:
+            kind = s.kind
+            key = None
+            if kind == "key":
+                key = s.val
+            elif kind in ("bind", "var", "each_bind", "ivar"):
+                key = env.get(s.val)
+            elif kind == "dyn":
+                key = self.term(s.val, doc, env, cur)
+            n = self.form.child(n, s.val if kind == "key" else "*", node, has)
+            if n is None:
+                return None
+            if has and isinstance(node, dict) and key in node:
+                node = node[key]
+            elif has and isinstance(node, list) and isinstance(key, int) and key < len(node):
+                node = node[key]
+            else:
+                node, has = None, False
+        return n
+
+    def with_defaults(self, n, v):
+        """Значение с умолчаниями формы внутри присутствующего (как канонический вид, без `ordered`)."""
+        f = self.form
+        n = f.deref(n)
+        if n.variants is not None:
+            for vn in n.variants:
+                if _is(v, f.types_of(vn)):
+                    return self.with_defaults(vn, v)
+            return v
+        if isinstance(v, dict) and not n.opaque:
+            out = {}
+            for k, x in v.items():
+                c = (n.properties or {}).get(k) or (n.names[1] if n.names is not None else None)
+                out[k] = self.with_defaults(c, x) if c is not None else x
+            for k, c in (n.properties or {}).items():
+                if k not in v and f.has_note(c, "default"):
+                    out[k] = self.with_defaults(c, f.note(c, "default"))
+            return out
+        if isinstance(v, list) and n.items is not None:
+            return [self.with_defaults(n.items, x) for x in v]
+        return v
+
+    def pred(self, p, doc, env, cur, curpath=None):
         k = p[0]
         T = lambda t: self.term(t, doc, env, cur)            # noqa: E731
         if k == "exists":
@@ -403,7 +457,7 @@ class Loader:
         if k == "prefix_free":
             return prefix_free(self.set_(p[1], doc, env, cur))
         if k == "depth":
-            return depth(T(p[1])) <= p[2]
+            return self._depth(p[1], doc, env, cur, curpath) <= p[2]
         if k == "template":
             return template(T(p[1]), self.set_(p[2], doc, env, cur), self.set_(p[3], doc, env, cur), p[4])
         if k == "=":                                            # нет значения: = ложно, != истинно (О6)
@@ -433,7 +487,8 @@ class Loader:
                     continue
                 if r.check[0] in SCALAR_CHECKS and r.check[1] == ("cur",) and isinstance(cur, (dict, list)):
                     continue
-                if all(self.pred(c, doc, env, cur) for c in r.conds) and not self.pred(r.check, doc, env, cur):
+                if (all(self.pred(c, doc, env, cur, path) for c in r.conds)
+                        and not self.pred(r.check, doc, env, cur, path)):
                     out.append((r.cls, path, "references.tsv:%d" % r.no, r.no))
         return out
 

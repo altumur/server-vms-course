@@ -183,6 +183,18 @@ class LoaderTests(Base):
         got = self.judge("name: a\nfields:\n  f:\n    size: " + "9" * 4301 + "\n")
         self.assertEqual((got["class"], got["paths"]), ("value", [["fields", "f", "size"]]))
 
+    def test_depth_counts_the_tree_with_defaults(self):
+        # Ф18: `depth` — по дереву с умолчаниями формы: умолчание `nested` (глубина 2) под присутствующим `deep`.
+        form = FORM.replace("    tmpl:\n      type: string\n", "    tmpl:\n      type: string\n    deep:\n"
+                            "      type: object\n      default: {}\n      properties:\n        nested:\n"
+                            "          type: object\n          opaque: true\n          default: {a: {b: 1}}\n")
+        self.write(form, REFS + "deep\tdepth . <= 2\tvalue\tt4\nname\tdepth @deep <= 2\tvalue\tt5\n")
+        got = self.judge("name: a\ndeep: {}\n")              # без умолчаний глубина 1, с умолчаниями — 3
+        self.assertEqual((got["class"], got["layer"], got["paths"]), ("value", "relations", [["deep"], ["name"]]))
+        got = self.judge("name: a\n")                        # `@deep` без значения — default формы и умолчания под ним
+        self.assertEqual((got["class"], got["paths"]), ("value", [["name"]]))
+        self.assertEqual(self.judge("name: a\ndeep:\n  nested: {}\n")["verdict"], "ok")
+
     def test_number_out_of_range_takes_the_nearest_x_class(self):
         # Ф1: класс числа вне пределов — x-class ближайшего места на пути, иначе value; раздел говорит так же.
         got = self.judge("name: 1e999\n")
