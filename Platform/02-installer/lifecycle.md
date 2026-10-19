@@ -23,7 +23,7 @@
 | `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `signer`, `domainconsole`, `domainagent`, `workers`, `rights`; окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
 | `w2cctl rights -deployment <имя> [--check <файл>]` | вывод прав из `SPEC_DIR`; `--check` — по смыслу | P/02.5 Н2, Н3 |
 | `w2c-ca.sh init \| issue \| revoke \| crl \| own` | центр и комплекты ролей | P/02.4 Н1.6 |
-| `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | М10/7 Н1.2, P/02.4 Н1.9 |
+| `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | [договор запечатывания](../common/contracts/sealing.md), P/02.4 Н1.9 |
 | `w2cctl mirror \| space \| retention \| epoch \| tls status \| heartbeat \| domain move` | строки оператора и проверки | P/02.4 Н1.9 |
 | `w2c-workers.sh` | скрипт воркеров по заказу: `w2c-workers.service` (`Type=oneshot`, `Restart=no`, `User=w2c-workers` без групп, один на сервер) и `.timer` (`OnBootSec` 1–2 мин, `OnUnitActiveSec` 1 мин); ряды `<sub>_workers_wanted{server}` → `start`/`stop` экземпляров `<prefix>-<SERVER_NAME>-<n>`, n 2…99 (ADR-0084) | P/02.4 Н1.1, Н1.5 |
 | кластер из одного со встроенной спекой | процесс коробки сам пишет строку спеки и метку — правом `admin`, как установщик | P/02.3 Н1.5, P/02.4 Н1.10 |
@@ -54,7 +54,7 @@
 | `/etc/w2c/configstore-rights.json` | файл прав, по смыслу равный выводу; иначе установка отказана | P/02.5 Н3 «установить» |
 | строки `platform/spec/<sub>`, `platform/spec/<sub>/rev` | строка спеки и метка | [каталог](../common/data/catalog.tsv), P/02.3 Н1.5 |
 | `/etc/w2c/tls/ca.pem`, `ca.next.pem`, `revoked`, `crl.pem`, `<роль>/server.pem`, `<роль>/server.key` | центр и комплекты ролей | [каталог](../common/data/catalog.tsv), P/02.4 Н1.6 |
-| `/etc/w2c/secrets/platform.key` | кольцо: `secrets new` создаёт, `rotate` дописывает сверху | [каталог](../common/data/catalog.tsv), М10/7 Н1.2 |
+| `/etc/w2c/secrets/platform.key` | кольцо: `secrets new` создаёт, `rotate` дописывает сверху | [каталог](../common/data/catalog.tsv), [договор запечатывания](../common/contracts/sealing.md) «Файл кольца» |
 | юниты Н1.1 и юниты сокетов `configstore-*.socket` | пишет `install.sh` | P/02.4 Н1.1 |
 
 ## Коды выхода

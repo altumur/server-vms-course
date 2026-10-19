@@ -1,0 +1,9 @@
+# Конверт enc:v2 (договор запечатывания): seal(ключ, kid, nonce, ключ строки, путь, значение) → envelope; open(envelope) с тем же
+# ключом и тем же AAD → значение. Ключ — 32 байта sha256("w2c test <слово>"), nonce — первые 12 байт sha256("w2c test <слово>").
+# Строка: case<TAB>key_hex<TAB>kid<TAB>nonce_b64url<TAB>row_key<TAB>pointer<TAB>plaintext (JSON-строка)<TAB>envelope.
+case	key_hex	kid	nonce_b64url	row_key	pointer	plaintext	envelope
+top	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	k1	ikNeujSOpkp66hql	testsub2/tallies/t1	/feed_secret	"hunter2"	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE
+nested	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	k1	-G9vH369MoCFS3aJ	testsub2/tallies/t1	/settings/a~1b/0/password_secret	"s3cret:with:colons"	enc:v2:k1:-G9vH369MoCFS3aJ:mPhe9Fr2hbquiyiil29xxZTJOsThxVOIDbsMw9C4yOqeeA
+unicode	32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7	k2	Z_IEPgwEgJN0suhQ	testsub2/tallies/камера-1	/feed_secret	"пароль 🔑"	enc:v2:k2:Z_IEPgwEgJN0suhQ:w627HGBCA_Jcp_6pAzhVKe4Jc16fVa6xcO0p0DQ4p0ax
+kid_hash_inside	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	k#1	p588JkjN9BNB4tE4	testsub2/tallies/t1	/feed_secret	"x"	enc:v2:k#1:p588JkjN9BNB4tE4:YI_Bhdfe_5wFqXGgTHlV_BA
+platform	563d51fa1fa5792ff7e97119be700ebd63c96ee698b512501e4d65ac9b54d1b9	k3	qEHEp1wZaZEjoBq2	platform/config/doors	/doors/console/tls_key_secret	"-----BEGIN KEY-----"	enc:v2:k3:qEHEp1wZaZEjoBq2:1KTMl9EjZpBQ9sSk4fBOHhA5arIFuqEEDR345WQjPjhKG8g

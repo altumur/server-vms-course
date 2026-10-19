@@ -56,7 +56,7 @@ SIGTERM», Н4), [М10/3](../../М10_Platform/spec/03-units-slots-epochs-lease.n
 | `<корень событий>/.workers/<sub>/<экземпляр>.lock` | замок присутствия: содержимое заново при старте, исключающий `flock` всё время жизни | [каталог](../common/data/catalog.tsv), М10/8 Н1.4, М10/5 Н3 шаг 2б |
 | `<корень событий>/<sub>/<unit>/e<эпоха>/…`, `<sub>.alarms/…`, `audit/<sub>worker/e1/…` | бакеты событий, участник `append` | [каталог](../common/data/catalog.tsv), М10/8 Н1.2 |
 | объекты `<sub>/heartbeats/<имя>`, `<sub>/contenders/<имя>/<коробка>` | пульс и метка соперника | [каталог](../common/data/catalog.tsv), М10/5 Н1.1, Н1.4 |
-| `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | кольцо — только чтение | [каталог](../common/data/catalog.tsv), М10/7 Н1.2 |
+| `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | кольцо — только чтение | [каталог](../common/data/catalog.tsv), [договор запечатывания](../common/contracts/sealing.md) |
 | имена компонентов в деревьях | одно кодирование `%XX`, `%h<sha256>` | М10/8 Н1.1 |
 
 ## Коды выхода

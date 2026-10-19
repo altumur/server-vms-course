@@ -1,0 +1,7 @@
+# Открытие (договор запечатывания): open(key_hex, envelope, row_key, pointer) → значение (JSON-строка) или sealed.
+case	key_hex	envelope	row_key	pointer	expect	note
+other_row	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE	testsub2/tallies/t2	/feed_secret	sealed	конверт перенесён на другую строку
+other_field	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE	testsub2/tallies/t1	/other_secret	sealed	конверт перенесён на другое поле
+name_only_aad	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE	testsub2/tallies/t1	feed_secret	sealed	путь без начального / — не тот AAD; подбора прежних способов нет
+other_key	32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE	testsub2/tallies/t1	/feed_secret	sealed	ключ другого кольца под тем же kid
+same_place	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE	testsub2/tallies/t1	/feed_secret	"hunter2"	контроль: своё место и ключ — значение

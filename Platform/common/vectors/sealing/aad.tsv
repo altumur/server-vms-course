@@ -1,0 +1,9 @@
+# Путь AAD (договор запечатывания, «Путь AAD»): ключ строки и сегменты пути от корня строки → JSON Pointer и байты AAD.
+# Строка: case<TAB>row_key<TAB>path (JSON-массив сегментов: строка — ключ, число — индекс)<TAB>pointer<TAB>aad_hex<TAB>note.
+case	row_key	path	pointer	aad_hex	note
+top	testsub2/tallies/t1	["feed_secret"]	/feed_secret	74657374737562322f74616c6c6965732f7431002f666565645f736563726574	верхнее поле
+nested	testsub2/tallies/t1	["settings", "a/b", 0, "password_secret"]	/settings/a~1b/0/password_secret	74657374737562322f74616c6c6965732f7431002f73657474696e67732f617e31622f302f70617373776f72645f736563726574	`/` в ключе — `~1`, индекс массива — десятичный
+tilde	testsub2/tallies/t1	["a~b", "x_secret"]	/a~0b/x_secret	74657374737562322f74616c6c6965732f7431002f617e30622f785f736563726574	`~` в ключе — `~0`
+deep_index	testsub2/tallies/t1	["cams", 10, "auth", "pwd_secret"]	/cams/10/auth/pwd_secret	74657374737562322f74616c6c6965732f7431002f63616d732f31302f617574682f7077645f736563726574	индекс без ведущих нулей
+unicode_row	testsub2/tallies/камера-1	["feed_secret"]	/feed_secret	74657374737562322f74616c6c6965732fd0bad0b0d0bcd0b5d180d0b02d31002f666565645f736563726574	ключ строки — UTF-8
+platform_row	platform/config/doors	["doors", "console", "tls_key_secret"]	/doors/console/tls_key_secret	706c6174666f726d2f636f6e6669672f646f6f7273002f646f6f72732f636f6e736f6c652f746c735f6b65795f736563726574	строка платформы
