@@ -169,3 +169,21 @@ scenario	step	request	expect
 15-order-not-raised	19	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"raise_failed": {"srv-a": "@any"}}
 15-order-not-raised	20	@grow srv-b	ok
 15-order-not-raised	21	@until 60 console2 GET /where/tc	200 {"worker": "t-srv-b-2"}
+16-shrink	1	@start resource	ok
+16-shrink	2	@start controller testsub2 shrink_after=20	ok
+16-shrink	3	console POST /counters {"name": "c1"}	201
+16-shrink	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+16-shrink	5	console2 POST /shelves {"name": "s-a2", "zone": "z", "server": "srv-a"}	201
+16-shrink	6	@start worker testsub2 t-srv-a-1 on srv-a	ok
+16-shrink	7	@until 20 store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
+16-shrink	8	console2 POST /tallies {"name": "ta", "of": "c1", "weight": 6}	201
+16-shrink	9	@until 30 console2 GET /where/ta	200 {"worker": "t-srv-a-1"}
+16-shrink	10	console2 POST /tallies {"name": "tb", "of": "c1", "weight": 6}	201
+16-shrink	11	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2"}}
+16-shrink	12	@grow srv-a	ok
+16-shrink	13	@until 60 console2 GET /where/tb	200 {"worker": "t-srv-a-2"}
+16-shrink	14	console2 DELETE /tallies/tb	200 {"deleted": "tb"}
+16-shrink	15	console2 DELETE /tallies/ta	200 {"deleted": "ta"}
+16-shrink	16	@until 60 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1", "retiring": "@absent"}}
+16-shrink	17	@until 90 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "true"}}
+16-shrink	18	store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
