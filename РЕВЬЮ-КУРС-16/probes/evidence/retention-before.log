@@ -1,8 +1,0 @@
-{"alarms_left": true, "bad_policy_keys": [], "events_left": true, "garbled": [], "operator_record_left": true, "removed": 0, "scenario": "valid-common"}
-other/retention/7: the row of days does not parse (could not convert string to float: 'broken'; on srv-a); its buckets are kept, not swept, until it is mended
-other.alarms/retention/7: the row of days does not parse (could not convert string to float: 'broken'; on srv-a); its buckets are kept, not swept, until it is mended
-{"alarms_left": true, "bad_policy_keys": ["other.alarms/retention/7", "other/retention/7"], "events_left": true, "garbled": ["other.alarms/7", "other/7"], "operator_record_left": false, "removed": 1, "scenario": "invalid-common"}
-{"alarms_left": false, "bad_policy_keys": [], "events_left": false, "garbled": [], "operator_record_left": false, "removed": 3, "scenario": "zero-common"}
-{"alarms_left": true, "bad_policy_keys": [], "events_left": true, "garbled": [], "operator_record_left": false, "removed": 1, "scenario": "mirror-only-valid"}
-{"alarms_left": false, "bad_policy_keys": [], "events_left": false, "garbled": [], "operator_record_left": false, "removed": 3, "scenario": "stale-unit-rows"}
-{"alarms_left": false, "bad_policy_keys": [], "events_left": false, "garbled": [], "operator_record_left": true, "removed": 2, "scenario": "expired-common"}

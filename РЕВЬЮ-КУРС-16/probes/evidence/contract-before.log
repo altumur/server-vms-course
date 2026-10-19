@@ -1,3 +1,0 @@
-{"common_rows_and_versions_unchanged": true, "individual_rows": ["vms/retention/1", "vms/alarms_retention/1"], "removed_fields_refused": [], "scenario": "camera-lifecycle"}
-{"reason": null, "refused": false, "scenario": "old-derived-yaml"}
-{"held_events_and_alarms_survive": true, "released_events_and_alarms_removed": true, "scenario": "holds-and-release"}

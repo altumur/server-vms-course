@@ -1,3 +1,0 @@
-{"common_rows_and_versions_unchanged": true, "individual_rows": [], "removed_fields_refused": ["events_retention_days", "alarms_retention_days"], "scenario": "camera-lifecycle"}
-{"reason": "spec testsub: no spec says `unit.derived` \u2014 a key the platform does not read is a mistake or another's word; it is refused, not passed over", "refused": true, "scenario": "old-derived-yaml"}
-{"held_events_and_alarms_survive": true, "released_events_and_alarms_removed": true, "scenario": "holds-and-release"}
