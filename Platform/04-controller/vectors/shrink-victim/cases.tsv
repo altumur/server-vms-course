@@ -1,0 +1,7 @@
+# Жертва сокращения (М10/4 Н3 «сократить()», жертва; ADR-0084 доп. (1) Р4). Форма — README рядом. Стадия A (A6).
+case	input	expect	note
+base-only	{"prefix": "w", "workers": [{"name": "w-srv-a-1", "server": "srv-a"}]}	{"victim": null}	базовый -1 жертвой не бывает
+one-extra	{"prefix": "w", "workers": [{"name": "w-srv-a-1", "server": "srv-a"}, {"name": "w-srv-a-2", "server": "srv-a"}]}	{"victim": "w-srv-a-2"}	единственный заказанный
+number-as-integer	{"prefix": "w", "workers": [{"name": "w-srv-a-1", "server": "srv-a"}, {"name": "w-srv-a-9", "server": "srv-a"}, {"name": "w-srv-a-10", "server": "srv-a"}]}	{"victim": "w-srv-a-10"}	номер — целым: 10 больше 9 (Р4), не по слотовому порядку
+across-servers	{"prefix": "w", "workers": [{"name": "w-srv-a-3", "server": "srv-a"}, {"name": "w-srv-b-2", "server": "srv-b"}, {"name": "w-srv-b-1", "server": "srv-b"}]}	{"victim": "w-srv-a-3"}	наибольший номер среди серверов
+server-with-hyphen	{"prefix": "t", "workers": [{"name": "t-srv-1-1", "server": "srv-1"}, {"name": "t-srv-1-2", "server": "srv-1"}]}	{"victim": "t-srv-1-2"}	имя сервера с «-» и цифрой: номер — после имени сервера

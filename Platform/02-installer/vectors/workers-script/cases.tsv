@@ -1,0 +1,15 @@
+# Что запускает и останавливает скрипт воркеров по заказу (М10/11 Н1.5 rules 2–3; ADR-0084 доп. (1) Р1, Р4).
+# Форма — README рядом. Стадия A (A6).
+case	input	expect	note
+start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3 — два заказанных к базовому
+start-missing	{"want": "3", "running": [2]}	{"start": [3], "stop": []}	недостающий — наименьший свободный номер
+start-smallest-free	{"want": "3", "running": [3]}	{"start": [2], "stop": []}	свободен 2 — его первым
+start-gaps	{"want": "5", "running": [2, 4]}	{"start": [3, 5], "stop": []}	дыры заполняются наименьшими
+steady	{"want": "2", "running": [2]}	{"start": [], "stop": []}	цель достигнута — ничего
+stop-largest	{"want": "2", "running": [2, 5, 10]}	{"start": [], "stop": [5, 10]}	лишние — наибольшие номера
+stop-integer	{"want": "2", "running": [9, 10]}	{"start": [], "stop": [10]}	номер целым: остановить 10, не 9
+want-one	{"want": "1", "running": [2, 3]}	{"start": [], "stop": [2, 3]}	want 1 — остаётся только базовый
+next-after-nine	{"want": "10", "running": [2, 3, 4, 5, 6, 7, 8, 9]}	{"start": [10], "stop": []}	после 9 — 10
+no-series	{"want": null, "running": [2, 3]}	{"start": [], "stop": []}	ряда нет — ничего не запускать и не останавливать (Р1)
+want-zero	{"want": "0", "running": [2]}	{"start": [], "stop": []}	значение вне 1…99 — ряд не читается: ничего
+want-hundred	{"want": "100", "running": [2]}	{"start": [], "stop": []}	вне 1…99: ничего
