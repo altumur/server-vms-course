@@ -19,8 +19,8 @@
 - Консоль кластера: таблица пересылки Н1.2, адрес Н1.3 (`view.url`, `CLUSTERS`, запись держателя в списке), одна функция
   пересылки Н1.4 и журнал `domain.forwarded`, `/domain/at/…` Н1.5, пересылка подписанту Н1.9 (тела — урок 10).
 - Любая консоль: снятие пришедших `X-User`, `X-Operator`; признание `X-Operator: console` только у роли `console`.
-- Процесс `domain`: поле вида `url` из `DOMAIN_CONSOLE_URL`; приём `tls_ca` в `Entry.ca` (Н1.6 `on_accept`).
-- Агент: `tls_ca` из `ca.pem`/`ca.next.pem` каталога `W2C_TLS_DIR` в каждой публикации; `DOMAIN_CA`, `RELAY_CA`,
+- Процесс `domain`: поле вида `url` из `DOMAIN_CONSOLE_URL`; приём `tls_ca` в `Entry.ca` и `tls_ca_certs` в строку `domain/members/<член>/ca-certs` до неё (Н1.6 `on_accept`); объединение рукопожатия двери роли (Н1.6 `server.role`).
+- Агент: `tls_ca` и `tls_ca_certs` из `ca.pem`/`ca.next.pem` каталога `W2C_TLS_DIR` в каждой публикации; `DOMAIN_CA`, `RELAY_CA`,
   `RELAY_MEMBER` при `https://`.
 - Консоль домена: `POST /domain/members/<член>/ca`; `door.pass` на домене (Н1.7); страница держателя Н1.8.
 - Клиент TLS между кластерами — проверка `peer` (Н3) и команда `peer`.
@@ -31,7 +31,7 @@
 2. Разбор `CLUSTERS` и адрес Н1.3; таблица Н1.2 и отказ `not a domain route`.
 3. Функция пересылки Н1.4: заголовки, тело, ответ как пришёл, пределы, журнал.
 4. `/domain/at/…` по порядку Н3 «у члена».
-5. `tls_ca` → `Entry.ca` и дверь администратора; поле вида `url`.
+5. `tls_ca` → `Entry.ca`, `tls_ca_certs` → `ca-certs` и дверь администратора; поле вида `url`.
 6. Страница держателя и `door.pass` на домене.
 
 ## Ловушки языка и библиотеки

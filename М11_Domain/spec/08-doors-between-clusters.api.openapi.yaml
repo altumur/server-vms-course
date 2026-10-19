@@ -115,8 +115,13 @@ paths:
                   type: array
                   maxItems: 2
                   uniqueItems: true
-                  description: '[] — снять отпечатки.'
+                  description: '[] — снять отпечатки и строку ca-certs.'
                   items: {$ref: '#/components/schemas/Fingerprint'}
+                ca_certs:
+                  type: array
+                  maxItems: 2
+                  description: 'Н1.6 admin: PEM сертификатов центров в порядке ca, sha256(DER) — отпечаток на том же месте; пишутся в domain/members/<член>/ca-certs до Entry.ca.'
+                  items: {type: string, minLength: 1}
       responses:
         '200':
           description: Список членов после записи по CAS (урок 3 Н2)

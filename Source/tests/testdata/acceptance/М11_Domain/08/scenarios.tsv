@@ -44,19 +44,21 @@ scenario	step	request	expect
 04-tls-ca-to-the-entry	1	@domain	ok
 04-tls-ca-to-the-entry	2	@env m1 W2C_TLS_DIR=inputs/kit-m1-one	ok
 04-tls-ca-to-the-entry	3	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
-04-tls-ca-to-the-entry	4	@until 30 member m2 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"}}
-04-tls-ca-to-the-entry	5	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "0000000000000000000000000000000000000000000000000000000000000000"]}	400
-04-tls-ca-to-the-entry	6	holder POST /domain/members/m1/ca {"ca": ["zz"]}	400
-04-tls-ca-to-the-entry	7	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}	400
-04-tls-ca-to-the-entry	8	holder POST /domain/members/nobody/ca {"ca": []}	404
-04-tls-ca-to-the-entry	9	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}}}
-04-tls-ca-to-the-entry	10	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
-04-tls-ca-to-the-entry	11	@env m1 W2C_TLS_DIR=inputs/kit-m1-two	ok
-04-tls-ca-to-the-entry	12	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
-04-tls-ca-to-the-entry	13	@env m1 W2C_TLS_DIR	ok
-04-tls-ca-to-the-entry	14	@sleep 12	ok
-04-tls-ca-to-the-entry	15	holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
-04-tls-ca-to-the-entry	16	holder POST /domain/members/m1/ca {"ca": []}	200 {"members": {"m1": {"ca": "@absent"}}}
+04-tls-ca-to-the-entry	4	member hold store GET /v1/get?key=domain/members/m1/ca-certs	200 {"items": {"certs": "~BEGIN CERTIFICATE"}}
+04-tls-ca-to-the-entry	5	@until 30 member m2 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"}}
+04-tls-ca-to-the-entry	6	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "0000000000000000000000000000000000000000000000000000000000000000"]}	400
+04-tls-ca-to-the-entry	7	holder POST /domain/members/m1/ca {"ca": ["zz"]}	400
+04-tls-ca-to-the-entry	8	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}	400
+04-tls-ca-to-the-entry	9	holder POST /domain/members/nobody/ca {"ca": []}	404
+04-tls-ca-to-the-entry	10	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}}}
+04-tls-ca-to-the-entry	11	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	12	@env m1 W2C_TLS_DIR=inputs/kit-m1-two	ok
+04-tls-ca-to-the-entry	13	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	14	@env m1 W2C_TLS_DIR	ok
+04-tls-ca-to-the-entry	15	@sleep 12	ok
+04-tls-ca-to-the-entry	16	holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	17	holder POST /domain/members/m1/ca {"ca": []}	200 {"members": {"m1": {"ca": "@absent"}}}
+04-tls-ca-to-the-entry	18	member hold store GET /v1/get?key=domain/members/m1/ca-certs	200 {"items": null}
 05-the-holders-page	1	@domain	ok
 05-the-holders-page	2	holder GET /	200 @header Content-Type: ~text/html
 05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js

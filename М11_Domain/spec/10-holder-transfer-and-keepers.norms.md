@@ -14,7 +14,7 @@
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
 - пишет: `domain/signer` (put), `domain/signer-pending` (put), `domain/members` (cas);
-- читает: `domain/member-key`, `domain/member-list`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- читает: `domain/member-key`, `domain/member-list`, `domain/members/<член>/ca-certs`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Общее уроков 1–9 Н1 действует. Держатель держит **срок** — номер, который растёт только переносом или передачей; аренды,
 продления и автоматической смены держателя нет. Голосовать нечем: ни один raft не охватывает кластеры. Держатель пишет
@@ -87,7 +87,7 @@ document:        объект держателя domain/backups/rev-<rev> (М10/
                  objects, backup_key_rev, holder_member_key?, issuer, kid, sig}; подпись — как Н1.1
   members:       имена списка членов
   state:         {<ключ строки>: {<элемент>: <значение>}} — строки, что домен решил и чего нет ни у кого больше:
-                 domain/members, domain/topology, domain/placement, domain/placement/*, domain/pending/*,
+                 domain/members, domain/members/<член>/ca-certs (урок 8 Н1.6), domain/topology, domain/placement, domain/placement/*, domain/pending/*,
                  domain/outcomes/*, domain/grants/*, domain/users/*, domain/break-glass/*, domain/disabled,
                  domain/book-seal, domain/revoked (иначе перенос оживил бы отозванные токены), domain/shared (указатель
                  общего документа, урок 11 Н1.2), строки kept и переносимых книг спек каталога (урок 5 Н1.6: их пишет

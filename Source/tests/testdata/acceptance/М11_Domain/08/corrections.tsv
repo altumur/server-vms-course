@@ -7,3 +7,4 @@ date	sample	fix	languages
 2026-10-18	08/scenarios.tsv; inputs	прогон 41, мутации №37: 03/12 — ответ двери where держателя как пришёл ({reason}), а не отказ пересылки	all
 2026-10-18	08/scenarios.tsv; inputs	прогон 41, мутации №39, №40: повтор отпечатка — 400; Entry.ca по tls_ca меняет rev списка — копия у m2 с отпечатком	all
 2026-10-18	08/scenarios.tsv; inputs	прогон 41, мутации класс подписей и сроков: лист не подписан названным центром, промежуточный не CA, лист ещё не действует; X-Operator без роли — 401	all
+2026-10-19	04-tls-ca-to-the-entry 4, 18	cammeta-python М11-08 № 19: tls_ca_certs публикации → строка domain/members/m1/ca-certs до Entry.ca, снятие ca [] удаляет её; ссылки README на шаги сц. 04 сверены с номерами (были сдвинуты на один)	all
