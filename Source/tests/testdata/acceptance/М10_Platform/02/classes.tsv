@@ -67,3 +67,6 @@ r37_numeric_delete_after	value
 c6_secrets_reads_bare	value
 worker_reads_bare	value
 c6_flow_map_empty_value	value
+c7_word_continuation_comment	text
+c7_seq_dash_scalar_below	text
+c7_float_underflow	value

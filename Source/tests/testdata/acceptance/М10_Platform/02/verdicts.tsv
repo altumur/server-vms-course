@@ -484,3 +484,6 @@ c7_word_fold_blank_line	ok
 c7_word_fold_close_bracket	ok
 c7_seq_block_scalars_ok	ok
 c7_float_max_rounded_ok	ok
+c7_word_continuation_comment	refused
+c7_seq_dash_scalar_below	refused
+c7_float_underflow	refused
