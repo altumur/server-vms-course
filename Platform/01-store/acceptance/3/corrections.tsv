@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-19	перенос	сценарии 04-store-metrics, 07-group-size, 08-floor-replay, 10-foreign-dir, 11-copy, 12-copy-refused, 14-copy-ids, 15-service-doors шаги 1–8 и входы inputs/*.jsonl из М10/11 (стадия B)	all
+2026-10-19	inputs/rights.json	файл прав стенда — готовый вход главы 1.2 вместо вывода прав P/02.5 (урок 1 не зависит от урока 2); шаги и ожидания без изменений	all

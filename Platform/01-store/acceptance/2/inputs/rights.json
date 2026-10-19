@@ -1,0 +1,144 @@
+{
+  "comment": "Готовый вход приёмки глав P/01.2 и P/01.3 (не вывод генератора): роли и образцы, нужные шагам, — подмножество вывода P/02.5 Н1.4 для testsub и testsub2, развёртывание testsub; правится только правкой приёмки",
+  "roles": {
+    "console": {
+      "group": "w2c-console",
+      "read": [
+        "door/keys",
+        "door/signer",
+        "platform/*",
+        "testsub/*",
+        "testsub2/*"
+      ],
+      "write": [
+        "door/keys",
+        "door/signer",
+        "platform/decommission/*",
+        "platform/drain",
+        "platform/schema",
+        "platform/servers/*",
+        "testsub/counters/*",
+        "testsub/idem/*",
+        "testsub/next_id",
+        "testsub/policy",
+        "testsub/requests/*",
+        "testsub/sweep",
+        "testsub2/idem/*",
+        "testsub2/next_id",
+        "testsub2/policy",
+        "testsub2/requests/*",
+        "testsub2/sweep",
+        "testsub2/tallies/*"
+      ],
+      "delete": [
+        "door/keys",
+        "door/signer",
+        "platform/decommission/*",
+        "platform/doors/*",
+        "platform/drain",
+        "platform/schema",
+        "platform/servers/*",
+        "testsub/counters/*",
+        "testsub/idem/*",
+        "testsub/next_id",
+        "testsub/policy",
+        "testsub/requests/*",
+        "testsub/sweep",
+        "testsub2/idem/*",
+        "testsub2/next_id",
+        "testsub2/policy",
+        "testsub2/requests/*",
+        "testsub2/sweep",
+        "testsub2/tallies/*"
+      ]
+    },
+    "testsubcontroller": {
+      "group": "w2c-testsubcontroller",
+      "read": [
+        "!testsub/asked/*",
+        "!testsub/idem/*",
+        "platform/*",
+        "testsub/*"
+      ],
+      "write": [
+        "testsub/controller/placement_intent",
+        "testsub/controller/placement_turn",
+        "testsub/decommissioned/*",
+        "testsub/placement/*",
+        "testsub/slots/*",
+        "testsub/want/*",
+        "testsub/workers/*"
+      ],
+      "delete": [
+        "testsub/counters/*",
+        "testsub/decommissioned/*",
+        "testsub/placement/*",
+        "testsub/slots/*",
+        "testsub/want/*",
+        "testsub/workers/*"
+      ]
+    },
+    "testsubworker": {
+      "group": "testsub-testsubworker",
+      "read": [
+        "!testsub/asked/*",
+        "!testsub/idem/*",
+        "domain/holder",
+        "domain/keys",
+        "domain/member",
+        "domain/revoked",
+        "door/keys",
+        "platform/decommission/*",
+        "platform/doors/*",
+        "platform/epoch_floor",
+        "platform/schema",
+        "platform/servers/*",
+        "platform/spec/*",
+        "testsub/*"
+      ],
+      "write": [
+        "testsub/epoch/*",
+        "testsub/holds/*",
+        "testsub/slots/*"
+      ],
+      "delete": [
+        "testsub/epoch/*",
+        "testsub/holds/*",
+        "testsub/slots/*"
+      ]
+    },
+    "testsub2worker": {
+      "group": "testsub-testsub2worker",
+      "read": [
+        "!testsub2/asked/*",
+        "!testsub2/idem/*",
+        "domain/holder",
+        "domain/keys",
+        "domain/member",
+        "domain/revoked",
+        "door/keys",
+        "platform/decommission/*",
+        "platform/doors/*",
+        "platform/epoch_floor",
+        "platform/schema",
+        "platform/servers/*",
+        "platform/spec/*",
+        "testsub/counters/*",
+        "testsub/requests/*",
+        "testsub2/*"
+      ],
+      "write": [
+        "testsub/requests/*",
+        "testsub2/epoch/*",
+        "testsub2/holds/*",
+        "testsub2/slots/*"
+      ],
+      "delete": [
+        "testsub/requests/*",
+        "testsub2/epoch/*",
+        "testsub2/holds/*",
+        "testsub2/slots/*"
+      ]
+    }
+  }
+}
