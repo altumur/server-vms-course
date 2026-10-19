@@ -852,6 +852,20 @@ class Check:
             elif case in classes and got["class"] != classes[case]:
                 self.error(path, f"form schema: class expected {classes[case]}, got {got['class']} ({why})")
             self.stats["schema_cases"] += 1
+        # Every subsystem spec of the course must load too, not only the corpus (ADR-0085 доп. (1), Р3).
+        # Corpora (cases/, spec_verdicts/) hold refused specs on purpose; only the specs subsystems ship are checked here.
+        specs = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+                 *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        for path in sorted(specs):
+            try:
+                got = runner.judge(path.read_bytes())
+            except Exception as exc:
+                self.error(path, f"form schema: runner failed: {exc!r}")
+                continue
+            if got["verdict"] != "ok":
+                why = f"layer {got['layer']}" + (f": {got['errors'][0]}" if got["errors"] else "")
+                self.error(path, f"form schema: course spec refused {got['verdict']} ({why})")
+            self.stats["schema_specs"] += 1
 
     def lesson(self, lesson):
         if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
