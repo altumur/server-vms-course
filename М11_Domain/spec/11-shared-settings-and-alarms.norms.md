@@ -27,7 +27,7 @@ domain.shared:   [<элемент>…]            # раздел спеки (М1
   element:       <имя поля единицы> | {name, type: json, schema}     # у документа ровно эти три ключа
   field:         поле unit.fields, не секрет (М10/7 Н1.1); наследует (inherit) или это display.tree.group_by
   document:      name — ^[a-z][a-z0-9_-]*$, не имя поля единицы; schema — JSON Schema (М10/3 schemes), по ней проверяется значение
-refusals:        refused:value с путём domain.shared[<i>] (М10/2 Н4; случаи m61_* корпуса М10/2), тексты:
+refusals:        refused:value с путём под domain.shared[<i>] — сам элемент или глубже, повтор документа — второе вхождение (М10/2 Н4 (добавлено корпусом урока 2); случаи m61_* корпуса М10/2), тексты:
   - «is not {name, type: json, schema} — a document the domain holds is JSON, and what it may be is its schema»
   - «is not a name, or is a secret — the shared document is signed, not sealed»
   - «is not a field of the unit»
