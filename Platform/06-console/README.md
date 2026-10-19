@@ -11,7 +11,7 @@ spec/06-console.api.openapi.yaml   двери
 spec/06-console.library.md         договор библиотеки (если есть)
 spec/06-console.README.md          инструкция реализации
 lifecycle.md                    флаги, окружение, коды выхода, юниты
-data/<семья>.schema.json        схемы семей, которыми урок владеет
+data/<семья>.form.yaml          схемы семей, которыми урок владеет (диалект ADR-0087; ADR-0088)
 vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
 acceptance/[K/]                 приёмка
 ```

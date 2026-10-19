@@ -11,7 +11,7 @@ spec/08-domain.api.openapi.yaml   двери
 spec/08-domain.library.md         договор библиотеки (если есть)
 spec/08-domain.README.md          инструкция реализации
 lifecycle.md                    флаги, окружение, коды выхода, юниты
-data/<семья>.schema.json        схемы семей, которыми урок владеет
+data/<семья>.form.yaml          схемы семей, которыми урок владеет (диалект ADR-0087; ADR-0088)
 vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
 acceptance/[K/]                 приёмка
 ```

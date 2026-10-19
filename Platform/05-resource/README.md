@@ -11,7 +11,7 @@ spec/05-resource.api.openapi.yaml   двери
 spec/05-resource.library.md         договор библиотеки (если есть)
 spec/05-resource.README.md          инструкция реализации
 lifecycle.md                    флаги, окружение, коды выхода, юниты
-data/<семья>.schema.json        схемы семей, которыми урок владеет
+data/<семья>.form.yaml          схемы семей, которыми урок владеет (диалект ADR-0087; ADR-0088)
 vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
 acceptance/[K/]                 приёмка
 ```
