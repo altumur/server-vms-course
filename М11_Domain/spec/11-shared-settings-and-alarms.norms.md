@@ -93,7 +93,9 @@ member:          агент по порядку (Н3 «взять докумен
                  новее своей (добавлено сверкой М11, A4)
 in_report:       строки domain/shared и domain/shared-refused — объекты отчёта (урок 3 Н1.2 member_objects, добавлено М11/11)
                  одной формой: значение объекта — разобранный doc строки, {term, rev, sha256} и {term, rev, reason, at},
-                 term и rev — целые JSON (как domain/backup-taken урока 10; решение «Архитектора» по сверке М11, A3)
+                 term и rev — целые JSON (как domain/backup-taken урока 10; решение «Архитектора» по сверке М11, A3);
+                 у кластера держателя строка domain/shared — указатель держателя, и агент несёт его doc целиком:
+                 {term, rev, sha256, object} (добавлено пилотом схем семей данных, Д1)
 holder_self:     у кластера держателя строка domain/shared — указатель (Н1.2), а документ — объект domain/shared-docs/rev-<rev>: агент
                  держателя документа не берёт, консоль держателя читает указатель (Н1.5)
 ```
@@ -120,7 +122,7 @@ refusals:        подсистема без domain.shared — 404 {error: "no s
 ```yaml
 domain/view.shared:  {term, rev, holding, behind, refused, silent, sentence}       # урок 1 Н1.4, добавлено М11/11
   holding:     [<член>…] — копия члена ≥ (term, rev) указателя; держатель включён
-  behind:      {<член>: {term, rev}} — держит старее
+  behind:      {<член>: {term, rev}} — держит старее; член без копии — {term: 0, rev: 0}, не null (добавлено пилотом схем семей данных, Д2)
   refused:     {<член>: <reason>} — domain/shared-refused члена с (term, rev) указателя
   silent:      [<член>…] — член не ok по виду (урок 1); раньше прочих правил
   sentence:    «rev R on H of T members[; not taken yet: …][; not answering: …][; refused by: <член> (<reason>), …]»

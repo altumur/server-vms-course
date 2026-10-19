@@ -280,9 +280,10 @@ components:
             type: object
             required: [term, rev]
             additionalProperties: false
+            description: 'Член без копии — {term: 0, rev: 0}, не null (Н1.6).'
             properties:
-              term: {type: integer}
-              rev: {type: integer}
+              term: {type: integer, minimum: 0}
+              rev: {type: integer, minimum: 0}
         refused:
           type: object
           additionalProperties: {type: string}
