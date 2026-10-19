@@ -53,9 +53,10 @@ class _Scanner(Scanner):
 
 
 class TextRefused(Exception):
-    def __init__(self, rule, line, msg):
+    """path — путь отказа текста, где он есть (повтор ключа, ключ не строкой, строка без ключа): Н4 «Диагностика»."""
+    def __init__(self, rule, line, msg, path=None):
         super().__init__("%s line %s: %s" % (rule, line, msg))
-        self.rule, self.line, self.msg = rule, line, msg
+        self.rule, self.line, self.msg, self.path = rule, line, msg, path
 
 
 class NonFinite:
@@ -90,6 +91,11 @@ def _check_chars(text, base_line=None):
 def load_text(data):
     """bytes → (tree, numbers, empties) или TextRefused. numbers — пути чисел вне диапазона, empties — пути
     пустых значений (оба — класс value)."""
+    return load_text_map(data)[:3]
+
+
+def load_text_map(data):
+    """То же и карта строк: {путь (кортеж ключей и индексов): строка ключа или элемента} (ADR-0087 доп. (3) Р4)."""
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as e:
@@ -119,6 +125,7 @@ def load_text(data):
 
 
 def _build(events, lines):
+    linemap = {}
     numbers = []
     empties = []               # сказанный ключ без значения (класс value)
     quoted_spans = []          # (line0, col0, line1, col1) — где TAB допустим
@@ -132,15 +139,18 @@ def _build(events, lines):
             return
         top = stack[-1]
         c = top[0]
+        base = [t[6] for t in stack[1:]]
         if isinstance(c, list):
+            linemap[tuple(base + [len(c)])] = ev.start_mark.line + 1
             c.append(value)
             return
         if top[2] is _NOKEY:
-            raise TextRefused("K", ev.start_mark.line + 1, "collection as key")
+            raise TextRefused("K", ev.start_mark.line + 1, "collection as key", base)
         k = top[2]
         top[2] = _NOKEY
         if k in c:
-            raise TextRefused("R1", top[3], "duplicate key %r" % k)
+            raise TextRefused("R1", top[3], "duplicate key %r" % k, base + [k])
+        linemap[tuple(base + [k])] = top[3]
         c[k] = value
 
     def path_of():
@@ -178,7 +188,7 @@ def _build(events, lines):
         empty = name == "ScalarEvent" and ev.value == "" and ev.style is None
         if (stack and isinstance(stack[-1][0], dict) and not stack[-1][4] and not is_key and not empty
                 and (name == "ScalarEvent" or ev.flow_style) and line != stack[-1][3]):
-            raise TextRefused("N", line, "value on the line after its key is not a block collection")
+            raise TextRefused("N", line, "value on the line after its key is not a block collection", path_of())
         # Н1.1 blocks: скаляр или поток строкой ниже голого «-» — отказ текста (как значение ниже ключа).
         if (stack and isinstance(stack[-1][0], list) and not stack[-1][4] and not empty
                 and (name == "ScalarEvent" or getattr(ev, "flow_style", False))
@@ -186,7 +196,7 @@ def _build(events, lines):
             raise TextRefused("N", line, "item value on the line after its dash")
         if name in ("MappingStartEvent", "SequenceStartEvent"):
             if is_key:
-                raise TextRefused("K", line, "collection as key")
+                raise TextRefused("K", line, "collection as key", path_of()[:-1])
             if len(stack) + 1 > MAX_DEPTH:
                 raise TextRefused("R5", line, "depth > %d" % MAX_DEPTH)
             c = {} if name == "MappingStartEvent" else []
@@ -225,14 +235,15 @@ def _build(events, lines):
             raise TextRefused("N", line, "plain scalar starting with '?'")
         # Н1.1 comment: `слово# c` — «#» после знака, а не пробела, перед пробелом — не комментарий, а строка без ключа.
         if plain and re.search(r"[^ \t]#[ \t]", ev.value):   # `a#b`, `C#` — слово (свод Т28)
-            raise TextRefused("N", line, "'#' after a word is not a comment")
+            raise TextRefused("N", line, "'#' after a word is not a comment", path_of())
         if is_key:
             if not plain or ev.value != "<<":
                 pass
             else:
                 raise TextRefused("R3", line, "merge key <<")
             if plain and not isinstance(resolve_plain(ev.value), str):
-                raise TextRefused("K", line, "key %r is not a string by the scalars table (Н1.1)" % ev.value)
+                raise TextRefused("K", line, "key %r is not a string by the scalars table (Н1.1)" % ev.value,
+                                  path_of()[:-1] + [ev.value])
             before = lines[ev.start_mark.line][:ev.start_mark.column].rstrip()
             if before.endswith("?") and (len(before) == 1 or before[-2] in " \t-[{,"):
                 raise TextRefused("S", line, "complex key ? …")
@@ -251,7 +262,11 @@ def _build(events, lines):
         if plain and ev.value != "" and stack and not stack[-1][4]:
             top = stack[-1]
             p = top[7] if isinstance(top[0], dict) else _indent(lines[ev.start_mark.line])
-            _check_continuation(lines, ev.start_mark.line, p)
+            try:
+                _check_continuation(lines, ev.start_mark.line, p)
+            except TextRefused as e:
+                e.path = path_of()
+                raise
         if plain:
             v = resolve_plain(ev.value)
             if ev.value == "":
@@ -274,7 +289,7 @@ def _build(events, lines):
     _check_tabs(lines, quoted_spans)
     if not isinstance(root[0], dict):
         raise TextRefused("T", 1, "root is not a mapping")
-    return root[0], numbers, empties
+    return root[0], numbers, empties, linemap
 
 
 _NOKEY = object()
