@@ -476,3 +476,4 @@ c5_escape_U_surrogate	refused
 c5_default_tilde_ok	ok
 c6_secrets_reads_bare	refused
 c6_secrets_reads_with_slash_ok	ok
+c6_flow_map_empty_value	refused
