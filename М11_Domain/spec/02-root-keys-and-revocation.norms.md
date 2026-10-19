@@ -11,7 +11,7 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/keys` — значения `until`. `exp` в `domain/revoked` — из токена, по Н1.6.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/keys`, `domain/root`, `domain/signer`, `domain/signer-pending`, `domain/book-seal`, `domain/revoked`;
+- владеет: `domain/keys`, `domain/root`, `domain/signer`, `domain/signer-pending`, `domain/book-seal`, `domain/revoked`, `<файл восстановления домена>`;
 - пишет: `domain/view` (put).
 
 Общее для всех форм урока: hex — строчные `0-9a-f`; base64url — алфавит RFC 4648 §5 без `=`, запись каноническая: длина

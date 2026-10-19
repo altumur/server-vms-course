@@ -12,9 +12,9 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0](01-storage.norms.md#время-в-строке): `platform/configstore-doors/<id>` — `seen_at`; пол `platform/epoch_floor` — урок 3.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `platform/configstore-doors/<id>`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<роль>/server.pem`, `/etc/w2c/tls/<роль>/server.key`;
+- владеет: `platform/configstore-doors/<id>`, `/etc/w2c/roles/<роль>.env`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<роль>/server.pem`, `/etc/w2c/tls/<роль>/server.key`;
 - пишет: `platform/epoch_floor` (put);
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`.
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `/etc/w2c/configstore-rights.json`.
 
 ### Н1.1 Процессы и юниты
 

@@ -11,6 +11,7 @@
 ## Н1 Форма
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
+- владеет: `/etc/w2c/configstore-rights.json`;
 - читает: `platform/spec/<sub>`.
 
 ### Н1.1 Роли
