@@ -104,6 +104,8 @@ scenario	step	request	expect
 07-may	21	may inputs/may-21-star-unit-needs-star-scope.json	ok {"result": "deny", "reason": "no_grant"}
 07-may	22	may inputs/may-22-other-subject.json	ok {"result": "deny", "reason": "no_grant"}
 07-may	23	may inputs/may-23-labels-no-labels-unit.json	ok {"result": "deny", "reason": "no_grant"}
+07-may	24	may inputs/may-24-unit-id-not-grammar.json	ok {"result": "deny", "reason": "no_grant"}
+07-may	25	may inputs/may-25-bad-line-skipped.json	ok {"result": "allow"}
 08-grant-by-kept	1	@domain	ok
 08-grant-by-kept	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 08-grant-by-kept	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200
@@ -117,3 +119,13 @@ scenario	step	request	expect
 09-deleting-mark	4	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/dz", "items": {}}	200
 09-deleting-mark	5	@until 20 holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin"}]}}
 09-deleting-mark	6	@until 20 member hold store GET /v1/get?key=domain/deleting/dz	200 {"items": null}
+10-deleting-any-mark	1	@domain	ok
+10-deleting-any-mark	2	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/a|b", "items": {}}	200
+10-deleting-any-mark	3	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/aa", "items": {"x": "1"}}	200
+10-deleting-any-mark	4	@until 20 member hold store GET /v1/get?key=domain/deleting/aa	200 {"items": null}
+10-deleting-any-mark	5	@until 20 member hold store GET /v1/get?key=domain/deleting/a%7Cb	200 {"items": null}
+10-deleting-any-mark	6	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/zz", "items": {}}	200
+10-deleting-any-mark	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zz", "cap": "view", "scope": "*"}]}	409 {"error": "being deleted"}
+10-deleting-any-mark	8	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	409 {"error": "exists"}
+10-deleting-any-mark	9	@until 20 member hold store GET /v1/get?key=domain/deleting/zz	200 {"items": null}
+10-deleting-any-mark	10	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	201
