@@ -192,9 +192,12 @@ events_order:  по t убывая, затем member, id; строки исто
 history:       объект держателя domain/alarm-history/<член> {events, cut_before} — скользящая неделя, не больше
                HISTORY_LINES строк, самые новые; cut_before — с какого момента член держится целиком: число (часы домена),
                при создании истории — 0, не null (добавлено сверкой М11, A13)
-cut:           писатель срезает строки с t < now − HISTORY_DAYS × 86400 и ставит cut_before = max(cut_before, now −
-               HISTORY_DAYS × 86400); сверх HISTORY_LINES — снимает самые старые и ставит cut_before = max(cut_before, t
-               самой новой снятой); cut_before не убывает (добавлено сверкой М11, A14)
+cut:           cut_before двигается только при фактическом снятии строк: сняты строки с t < now − HISTORY_DAYS × 86400 —
+               cut_before = max(cut_before, now − HISTORY_DAYS × 86400); сняты самые старые сверх HISTORY_LINES —
+               cut_before = max(cut_before, t самой новой снятой); ничего не снято — объект истории не меняется, и тихий
+               член не двигает rev резервной копии (урок 10 Н1.5 rev); начальный 0; cut_before не убывает (добавлено
+               сверкой М11, A14; решение «Архитектора» по cammeta-go М11-03 № 11: прежнее «на каждом проходе» меняло
+               содержимое копии само)
   events:      строки страницы, как приняты: t — на часах домена (Н1.8 clock), t_src — как пришло
 HISTORY_DAYS:  7
 HISTORY_LINES: 2000
