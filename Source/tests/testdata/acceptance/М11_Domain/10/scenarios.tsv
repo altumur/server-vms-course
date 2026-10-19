@@ -23,7 +23,7 @@ scenario	step	request	expect
 02-emergency-move	12	@until 60 member hold console GET /api/held	200 {"term": 2}
 02-emergency-move	13	@sleep 10	ok
 02-emergency-move	14	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
-02-emergency-move	15	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed"}
+02-emergency-move	15	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed", "detail": "~edits go there", "holder": {"holder": "m1"}}
 02-emergency-move	16	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 02-emergency-move	17	holder@m1 GET /domain/members	200 {"members": {"m1": {"how": "holder"}, "hold": {"how": "~held the domain until term 1"}}}
 03-move-refusals	1	@domain	ok
