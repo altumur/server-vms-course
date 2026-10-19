@@ -238,7 +238,7 @@ def pointer(document, ref):
     return value
 
 
-EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry"}
+EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
 
@@ -1076,7 +1076,18 @@ class Check:
                     self.data_paragraph(path, text, prefix)
         self.openapi_or_exception(spec / f"{lesson.stem}.api.openapi.yaml", key)
         acceptance = self.root / "Source/tests/testdata/acceptance" / module / f"{number:02}"
-        more, scenarios, verdict_counts, verdicts, classes = self.acceptance(acceptance, key)
+        # A lesson whose whole acceptance moved to Platform lessons keeps its norms only (no-acceptance); a table
+        # left in its directory makes the exception stale.
+        if self.exception(key, "no-acceptance") is not None:
+            left = [t for t in ("scenarios.tsv", "verdicts.tsv", "cases") if (acceptance / t).exists()]
+            if left:
+                self.used.add((key, "no-acceptance", "-"))
+                self.error(acceptance, f"stale exception no-acceptance: the lesson still has {', '.join(left)}")
+            else:
+                self.except_(acceptance, key, "no-acceptance", "-")
+            more, scenarios, verdict_counts, verdicts, classes = {}, None, None, None, {}
+        else:
+            more, scenarios, verdict_counts, verdicts, classes = self.acceptance(acceptance, key)
         texts.update(more)
         schema, schema_refs = spec / f"{lesson.stem}.schema.yaml", spec / f"{lesson.stem}.references.tsv"
         if schema.exists() or schema_refs.exists():

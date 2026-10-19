@@ -694,6 +694,15 @@ properties:
         result.lesson(self.lesson)
         return result
 
+    def test_no_acceptance_for_a_lesson_whose_acceptance_moved(self):
+        result = self.registry([("М12A_Example/01", "no-acceptance", "-", "moved")])
+        self.assertTrue(any("stale exception no-acceptance" in e for e in result.errors), result.errors)
+        self.scenarios.unlink()
+        self.assertTrue(any("no supported acceptance table" in e for e in self.registry([]).errors))
+        result = self.registry([("М12A_Example/01", "no-acceptance", "-", "moved")])
+        self.assertFalse([e for e in result.errors if "acceptance" in e], result.errors)
+        self.assertTrue(any("no-acceptance" in line for line in result.excepted))
+
     def test_stated_counts_must_match_the_tables(self):
         instructions = self.spec / "01-example.README.md"
         for text, valid in [("Пройти 1 сценарий / 1 шаг.", True), ("Пройти 2 сценария / 1 шаг.", False),
