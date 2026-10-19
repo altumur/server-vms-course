@@ -55,3 +55,4 @@ scenario	step	request	expect
 06-assemble	14	assemble inputs/assemble-14-notes-grant.json	ok {"rows": {"m2": {"": {"missing": []}, "t7": {"entries": [{"member": "m1", "item": "t-1/t7"}]}}}}
 06-assemble	15	assemble inputs/assemble-15-notes-no-grant.json	ok {"rows": {"m2": {"": {"missing": []}, "t7": "@absent"}}}
 06-assemble	16	assemble inputs/assemble-16-notes-grants-null.json	ok {"rows": {"m2": {"": {"missing": []}, "t7": {"entries": [{"member": "m1", "item": "t-1/t7"}]}}}}
+06-assemble	17	assemble inputs/assemble-17-grants-without-now.json	@exit 2
