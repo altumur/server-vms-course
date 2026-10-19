@@ -933,6 +933,17 @@ paths:
         result.lesson(self.lesson)
         self.assertTrue(any("stale exception scenarios-format 1/own" in e for e in result.errors), result.errors)
 
+    def test_chapter_with_only_an_excepted_entry(self):
+        acceptance = self.dir / "acceptance/2"
+        (acceptance / "scenarios.tsv").unlink()
+        (acceptance / "puts.tsv").write_text("x\n")
+        self.assertTrue(any("no supported acceptance table" in e for e in self.check().errors))
+        registry = self.root / "exceptions.tsv"
+        registry.write_text("P/01\tacceptance-entry\t2/puts.tsv\tchecked by the README\n")
+        result = Check(self.root, registry)
+        result.lesson(self.lesson)
+        self.assertFalse([e for e in result.errors if "acceptance" in e], result.errors)
+
     def test_whole_and_chapter_norms_conflict(self):
         (self.spec / "01-store.norms.md").write_text("# x\n")
         self.assertTrue(any("either one norms file or chapter norms" in e for e in self.check().errors))

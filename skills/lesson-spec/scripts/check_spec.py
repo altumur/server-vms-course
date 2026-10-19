@@ -989,6 +989,7 @@ class Check:
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases"}
         extra = {value[len(entry):] for (lesson_key, kind, value) in self.registry
                  if lesson_key == key and kind == "acceptance-entry" and value.startswith(entry)}
+        own_format = False                          # an excepted entry checked by the README of the acceptance
         try:
             for item in acceptance.iterdir():
                 value = entry + item.name
@@ -997,6 +998,7 @@ class Check:
                     self.error(item, "stale exception acceptance-entry: the entry is supported without it")
                 elif item.name in extra:
                     self.except_(item, key, "acceptance-entry", value)
+                    own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
                 elif item.name != "cases" and not item.is_file():
@@ -1031,7 +1033,7 @@ class Check:
                     self.error(acceptance, f"{table} without verdicts.tsv")
         if (acceptance / "cases").exists() and not (acceptance / "verdicts.tsv").is_file():
             self.error(acceptance, "cases/ without verdicts.tsv")
-        if not formats:
+        if not formats and not own_format:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
         return texts, scenarios, verdict_counts, verdicts, classes
 
