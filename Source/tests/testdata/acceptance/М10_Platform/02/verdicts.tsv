@@ -554,3 +554,5 @@ c8_requests_key_nested_brace	refused
 c8_options_enum_float	refused
 c8_options_enum_text_ok	ok
 c8_options_enum_text_canonical	refused
+c8_int_4301_digits	refused
+c8_word_hash_space	refused

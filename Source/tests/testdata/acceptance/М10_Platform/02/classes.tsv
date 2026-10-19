@@ -131,3 +131,7 @@ c8_json_default_overflow	value
 c8_untyped_field_default	value
 c8_options_enum_float	value
 c8_options_enum_text_canonical	reference
+c8_int_4301_digits	value
+c8_word_hash_space	text
+c8_ref47_unplaced_about_not_id	value
+c8_requests_key_nested_brace	reference
