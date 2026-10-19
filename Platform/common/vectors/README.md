@@ -19,7 +19,7 @@
 | секреты в адресе | `Source/tests/testdata/secret_in.tsv` | М10/7 | М10/7 Н1.1а |
 | маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
 | секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | М10/7 Н1.3, М10/6 Н1.4 |
-| корпус спеки | `Source/tests/testdata/spec_verdicts.tsv` | М10/2 | М10/2 Н1, Н4 |
+| корпус спеки | `Source/tests/testdata/acceptance/М10_Platform/02/` (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | М10/2 | М10/2 Н1, Н4, Н5 |
 | оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | М10/6 | М10/6 Н1.2 `pattern`, Н1.3 |
 | копия хранилища | `Source/tests/testdata/acceptance/М10_Platform/11/inputs/` | М10/11 | М10/11 Н1.3 `copy` |
 | вывод прав из спеки (по смыслу) | `Source/tests/testdata/acceptance/М10_Platform/06/variants/` | М10/6 | М10/6 Н1.4, Н3 |
