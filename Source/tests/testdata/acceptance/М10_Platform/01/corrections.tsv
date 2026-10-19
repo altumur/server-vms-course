@@ -30,3 +30,4 @@ date	sample	fix	languages
 2026-10-19	словарь: @grow, @start worker/resource on <сервер>	ADR-0084: директива «Стенда» исполняет ряд workers_wanted вместо скрипта сервера; процессы второго сервера — свой PLATFORM_DIR, то же хранилище и кольцо, файл роли для room	all
 2026-10-19	@start controller shrink_after	ADR-0084: shrink_after=<с> — окружение W2C_SHRINK_AFTER контроллера, только стенд	all
 2026-10-19	Стенд, W2C_ENV	путь файла настроек стенда — {data}/etc/w2c/w2c.env, roles/ рядом (выбор владельца раннеров, cammeta-acceptance e3ec5c3; М10/11 Н1.2)	all
+2026-10-19	Команды векторов платформы	команды order, shrink-victim, workers-script ({input}, код 0/2, JSON) и прогон cases.tsv пакетов Platform/*/vectors/ раннером (стадия A, A6)	all
