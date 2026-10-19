@@ -7,7 +7,7 @@
 
 - Юнит `w2c-domain.service`, роль `domain`, раннер `w2c-run.sh signer`, `User=w2c`, группы `w2c-store w2c-events
   w2c-secrets` — [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md), строки юнитов
-  [P/02.4 Н1.1](../../М10_Platform/spec/11-the-platform-on-a-box-and-a-cluster.norms.md).
+  [P/02.4 Н1.1](../02-installer/spec/02.4-installer.norms.md).
 - Общее юнитов (`Restart`, `RestartPreventExitStatus=2`, раннер, `ProtectSystem`) — P/02.4 Н1.1 `common`.
 - Только у кластера-держателя. Процессов может быть несколько (узлы кластера), активен один — очередь
   `domain/signer-turn` ([М11/12 Н1.7](../../М11_Domain/spec/12-small-members-and-one-node.norms.md)).

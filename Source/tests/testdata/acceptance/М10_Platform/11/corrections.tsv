@@ -22,3 +22,4 @@ date	sample	fix	languages
 2026-10-19	08-floor-replay 11–13	пол эпох ≤ 2^53 − 2^32 (эпохи < 2^53, ADR-0070; пилот схем семей данных Д6): 2^64 − 1 — 400 badrequest, 9007194959773696 — принят	all
 2026-10-19	перенос	сценарии 04-store-metrics, 07-group-size, 08-floor-replay, 10-foreign-dir, 11-copy, 12-copy-refused, 14-copy-ids, 15-service-doors шаги 1–8 и входы inputs/*.jsonl — в Platform/01-store/acceptance/3/ (P/01.3, стадия B); 15-service-doors здесь — шаг 9	all
 2026-10-19	@sleep	сны по ADR-0080 доп. (17) п. 4: ожидание события — @until по признаку, проверка отсутствия и время перед действием — наименьшей длиной с причиной в README («Сны»)	all
+2026-10-19	15-service-doors	ревью стадии B 1–2 п. 12: после переноса шагов 1–8 в P/01.3 оставшийся шаг — шаг 1 (прежний шаг 9); README и Н5 называют его так	all

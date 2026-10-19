@@ -34,7 +34,7 @@
 
 ## Флаги
 
-Закрытая таблица «Флаги демона» — [P/01.3 Н1.3](../../М10_Platform/spec/11-the-platform-on-a-box-and-a-cluster.norms.md):
+Закрытая таблица «Флаги демона» — [P/01.3 Н1.3](spec/01.3-store.norms.md):
 `-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
 `-api-conns`, `-api-per-address`, `-index-base`. Флаг вне таблицы — отказ старта, код 2. Административные команды —
@@ -86,4 +86,4 @@
 
 - Путь `member.json` внутри `-dir` и формат каталога данных — решает реализация (P/01.1 «Решает реализация» п. 3); между
   реализациями переносит только копия `copy`.
-- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 Н1.1](../../М10_Platform/spec/11-the-platform-on-a-box-and-a-cluster.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).
+- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 Н1.1](../02-installer/spec/02.4-installer.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).
