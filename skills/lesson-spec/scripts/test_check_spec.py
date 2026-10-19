@@ -585,16 +585,17 @@ properties:
         result = self.check()
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["schema_cases"], 2)
-        # The course schema of chapter 2.1 refuses an unknown root key in an accepted corpus case, class key.
-        from spec_schema.run import Runner
+        # The course form source of chapter 2.1 (ADR-0087; the ADR-0085 pair is gone) refuses an unknown root key in an
+        # accepted corpus case, class key.
+        from form_source import Loader
         course = Path(__file__).resolve().parents[3]
-        corpus = course / "Platform/02-installer/acceptance/1"
+        spec, corpus = course / "Platform/02-installer/spec", course / "Platform/02-installer/acceptance/1"
         case = corpus / "cases/base.subsystem.yaml"
         self.assertIn("\nbase\tok\n", (corpus / "verdicts.tsv").read_text())
-        runner = Runner()
-        self.assertEqual(runner.judge(case.read_bytes())["verdict"], "ok")
-        got = runner.judge(case.read_bytes() + b"extra_section: 1\n")
-        self.assertEqual((got["verdict"], got["class"], got["layer"]), ("refused", "key", "schema"))
+        loader = Loader(*(spec / f"02.1-installer.{name}" for name in ("form.yaml", "references.tsv", "scalars.tsv")))
+        self.assertEqual(loader.judge(case.read_bytes())["verdict"], "ok")
+        got = loader.judge(case.read_bytes() + b"extra_section: 1\n")
+        self.assertEqual((got["verdict"], got["class"]), ("refused", "key"))
 
     def test_form_schema_verdict_or_class_difference_fails(self):
         self.add_schema(verdicts="valid\tok\nextra\tok\n", classes="")
