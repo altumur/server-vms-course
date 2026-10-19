@@ -1,0 +1,51 @@
+{
+ "body": {
+  "ref": "c1",
+  "request_id": "r1"
+ },
+ "decl": {
+  "claims": [
+   "counter",
+   "aud"
+  ],
+  "grant": [
+   "testsubworker"
+  ],
+  "lifetime": 600,
+  "placement": {
+   "audience_claim": "aud",
+   "caller": "origin",
+   "ref_claim": "counter",
+   "sub": "testsub",
+   "target_fields": [
+    "cluster",
+    "copies"
+   ]
+  }
+ },
+ "domain": "acme",
+ "holder": "hold",
+ "kind": "tally",
+ "member": "m2",
+ "members": [
+  "hold",
+  "m1",
+  "m2",
+  "relay"
+ ],
+ "now": 1760000000,
+ "placements": {
+  "testsub/c1": {
+   "cluster": "m1",
+   "origin": "m2"
+  }
+ },
+ "role": "testsubworker",
+ "shared": null,
+ "sub": "testsub",
+ "topology": {
+  "star": [],
+  "via": {}
+ },
+ "units": {}
+}

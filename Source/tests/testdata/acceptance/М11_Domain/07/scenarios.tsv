@@ -18,6 +18,7 @@ scenario	step	request	expect
 02-refusals	9	@clock m2 +400	ok
 02-refusals	10	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r7", "ref": "c1"}	401
 02-refusals	11	@clock m2 0	ok
+02-refusals	12	token m2 testsubworker POST /tokens/nosuch/tally {"request_id": "r8", "ref": "c1"}	404
 03-issue	1	issue inputs/issue-01-placement-ok.json	ok {"result": "ok", "claims": {"iss": "acme", "sub": "m2", "kind": "tally", "iat": 1760000000, "exp": 1760000600, "counter": "c1", "aud": ["hold", "m1"]}}
 03-issue	2	issue inputs/issue-02-not-granted-role.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}
 03-issue	3	issue inputs/issue-03-no-kind.json	ok {"result": "refused", "status": 403, "reason": "not_granted"}
@@ -47,3 +48,4 @@ scenario	step	request	expect
 03-issue	27	issue inputs/issue-27-poll-home-centre.json	ok {"result": "ok", "claims": {"sub": "m2", "aud": ["m2"]}}
 03-issue	28	issue inputs/issue-28-scenario-no-home.json	ok {"result": "refused", "status": 403, "reason": "no_home"}
 03-issue	29	issue inputs/issue-29-scenario-no-audience.json	ok {"result": "refused", "status": 403, "reason": "no_audience"}
+03-issue	30	issue inputs/issue-30-record-without-copies.json	ok {"result": "refused", "status": 403, "reason": "assignment_unreadable"}
