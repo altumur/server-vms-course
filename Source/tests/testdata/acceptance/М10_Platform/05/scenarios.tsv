@@ -184,13 +184,15 @@ scenario	step	request	expect
 15-order-not-raised	27	console2 POST /tallies {"name": "t15", "of": "c1"}	201
 15-order-not-raised	28	console2 POST /tallies {"name": "t16", "of": "c1"}	201
 15-order-not-raised	29	@until 30 console2 GET /where/t16	200 {"worker": "@any"}
-15-order-not-raised	30	console2 POST /tallies {"name": "t17", "of": "c1"}	201
-15-order-not-raised	31	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2"}}
-15-order-not-raised	32	@until 120 store GET /v1/get?key=testsub2/want/srv-b	200 {"items": {"want": "2"}}
-15-order-not-raised	33	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}
-15-order-not-raised	34	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"raise_failed": {"srv-a": "@any"}}
-15-order-not-raised	35	@grow srv-b	ok
-15-order-not-raised	36	@until 60 console2 GET /where/t17	200 {"worker": "t-srv-b-2"}
+15-order-not-raised	30	@until 30 console2 GET /where/t9	200 {"worker": "@any"}
+15-order-not-raised	31	@until 30 console2 GET /unplaceable	200 []
+15-order-not-raised	32	console2 POST /tallies {"name": "t17", "of": "c1"}	201
+15-order-not-raised	33	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2"}}
+15-order-not-raised	34	@until 120 store GET /v1/get?key=testsub2/want/srv-b	200 {"items": {"want": "2"}}
+15-order-not-raised	35	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}
+15-order-not-raised	36	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"raise_failed": {"srv-a": "@any"}}
+15-order-not-raised	37	@grow srv-b	ok
+15-order-not-raised	38	@until 60 console2 GET /where/t17	200 {"worker": "t-srv-b-2"}
 16-shrink	1	@start resource	ok
 16-shrink	2	@start controller testsub2 shrink_after=20	ok
 16-shrink	3	console POST /counters {"name": "c1"}	201
