@@ -140,6 +140,9 @@ page:          объект отчёта domain/alarms (урок 3 Н1.2 member_
                {from, to, events, truncated}
   events:      строки индекса М10/8 Н1.3 класса alarm всех спек каталога: GET /events?class=alarm&from=<to − ALARM_WINDOW>
                &to=<now>&limit=ALARM_PAGE&keep=newest у своей консоли (М10/8 merge) — {id, subsystem, unit, of, t, kind, …}
+  event:       строка страницы — форма строки индекса М10/8 Н1.3: id — непустая строка (обязателен), class = alarm, kind —
+               непустая строка, unit — строка, t — число; строка не по этой форме (в том числе без id) — страница не по
+               форме: у держателя член unreadable (Н3 alarms шаг 1; решение «Архитектора» по сверке М11, H14, A15)
   from, to:    окно страницы по стенным часам члена; to — момент сборки
   truncated:   truncated ответа индекса > 0
 ALARM_WINDOW:  86400       # с
@@ -302,11 +305,16 @@ label:  "domain term T rev R"
 ```yaml
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
 alarms:    вход — Н3 alarms; вывод {events, members, complete, sentence}
-exit:      0 — вычислено; 2 — вход не по форме (у resolve — и merge union при значении не списке; ожидания кода 2 в словаре
-           нет — чтением). Не по форме у alarms: имя члена не по грамматике члена, lost_after < 0, history или свидетель не
-           по форме Н1.9 и Н1.8, страница-объект без received_at и sent_at; страница не объект ([], число) — unreadable, не 2;
-           у resolve: term, rev не целые ≥ 1 (целое по значению, урок 2 Н1), пустое name, merge union без списочного inherit,
-           значение group_by не список (добавлено сверкой М11, A18, A19)
+exit:      0 — вычислено; 2 — вход не по форме (ожидания кода 2 в словаре нет — чтением); коды выхода — по принципу словаря М11/01 («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14).
+           Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, history или свидетель не по форме Н1.9
+           и Н1.8 (history без cut_before или с cut_before null — тоже, Н1.9 A13), страница-объект без received_at и sent_at,
+           нет received_at или sent_at у члена с отчётом, history строкой, свидетель без ts, witnesses не список, now не
+           число, лишнее поле; страница не объект ([], число) или не по форме Н1.7 — 0 unreadable, не 2; page null при
+           last_report, received_at и sent_at null у never — 0;
+           у resolve: term, rev не целые ≥ 1 (целое по значению: 1.0 = 1, урок 2 Н1), пустое field.name, неизвестный
+           field.type, неизвестный merge, при merge union любое из трёх значений (unit, domain.value, inherit) не список —
+           даже неиспользованное, значение group_by не список, нет domain или domain без value, unit null или domain.value
+           null при union, лишнее поле (добавлено сверкой М11, A18, A19, H14)
 ```
 
 | № | Сценарий | Нормы |
