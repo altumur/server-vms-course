@@ -215,7 +215,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 | `WorkerRow.labels` | действующие метки его сервера, как у `ServerRow.labels`, — не поле пульса (сверка python и go М10/6–11, C16) |
 | `ServerRow.placeable`, `why` | `true`, когда на сервере есть живой воркер подсистемы, который проходит пул и ограничения урока 4 Н3 «выбрать» (метки, `requires`); нет такого — `false`, `why` — причина («no eligible live worker») (сверка python и go М10/6–11, C17) |
 | `ServerRow.decommissionable` | `true`, когда запрос вывода без `gone` сейчас был бы принят (урок 4 Н3 «вывести_сервер»: ни ресурс, ни воркер, ни слот сервера не слышны `LOST_AFTER`, ресурс когда-то слышали); пустой сервер под этим условием — `true`; иначе `false`, причина — `decommission_refusal` (сверка python и go М10/6–11, C18) |
-| `WorkerRow.released`, `slot_until`, `slot_garbled` | строки слота нет — трёх полей нет; строка нечитаема или не по форме урока 3 Н1.4 — `slot_garbled: true`, `slot_until: null`, `released` нет; читаема — `released` и `slot_until` из неё, `slot_garbled: false` (сверка python и go М10/6–11, C19) |
+| `WorkerRow.released`, `slot_until`, `slot_garbled` | строки слота нет — трёх полей нет; строка нечитаема или не по форме урока 3 Н1.4 — `slot_garbled: true`, `slot_until: null`, `released` нет; читаема — `released` и `slot_until` из неё, `slot_garbled: false` (сверка python и go М10/6–11, C19); `released` — `true` только при `"true"`; при `"taking"` (захват в работе, урок 3 Н1.4) — `released: false` и `slot_taking: true`, иначе поля `slot_taking` нет (добавлено пилотом Quint, F2) |
 | пульс ресурса в `/resources`, `/servers`, `/metrics` | нечитаемый — не JSON-объект; `server` ≠ серверу в ключе; нет обязательного поля `ResourceRow` (кроме `state`, его выводит консоль) или поле не своего типа; поле вне `ResourceRow` (его поля — закрытый перечень полей пульса, которые пишет ресурс урока 8 Н1.4). Нечитаемый пульс в `/resources` не входит, жизни не подтверждает (урок 4 Н1 `resource_state`) и считается в `w2c_resource_heartbeats_garbled`; ответ 200 (сверка python и go М10/6–11, C11) |
 
 `/resources` — объект по имени сервера с полными `ResourceRow`: обязательны `server, ts, url, schema, build, usage, usage_at, space, volumes, units, mirrors, short, state`; диагностические расширения перечислены в контракте. Это наблюдение пульсов ресурса, а не удостоверение доступности каждого объекта. `/where/<table>/<place>?unit=<id>` возвращает `{worker, place, server, door?}` либо 404 `{unreachable}` с одноимённым значением заголовка `X-Unreachable`. Неизвестная таблица — 404 до проверки `unit`, известная без `unit` — 400.
@@ -267,7 +267,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 
 ```
 воркеры: пульсы семьи (любого возраста) → state live, если менялся < 45 с по часам консоли, иначе stale;
-         слот → released, slot_until (null — нечитаем), slot_garbled; удержания → holds;
+         слот → released, slot_taking, slot_until (null — нечитаем), slot_garbled; удержания → holds;
          судьба контроллера (отчёт прохода) → hung, hung_since, hung_why, presence_unknown; соперники → name_conflict;
          servers.status → status {поле: значение как есть}
 серверы: ресурс (пульс + дверь) → resource по `resource_state` урока 4 Н1, resource_heard_at, space;

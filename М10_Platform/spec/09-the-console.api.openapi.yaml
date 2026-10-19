@@ -2696,6 +2696,11 @@ components:
           type: boolean
         released:
           type: boolean
+        slot_taking:
+          description: Только при released "taking" строки слота (захват в работе, урок 3 Н1.4); иначе поля нет.
+          type: boolean
+          enum:
+          - true
         slot_until:
           anyOf:
           - type: number
