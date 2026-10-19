@@ -1,0 +1,2 @@
+date	sample	fix	languages
+2026-10-19	перенос	сценарии 01-worker, 02-controller, 03-console, 04-resource, 09-secret-readers, 11-request-marks, 12-domain-roles и каталог variants/ (v1–v5) из М10/06 (стадия B); номера, шаги и тексты без изменений; в строках-комментариях scenarios.tsv и expect.tsv вариантов — только адреса	all

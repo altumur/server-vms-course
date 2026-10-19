@@ -1,4 +1,4 @@
-# Приёмка урока М10/2 «Спека подсистемы и строгий загрузчик» (ADR-0080): вердикты загрузчика.
+# Приёмка главы P/02.1 «Спека подсистемы и строгий загрузчик» (ADR-0080; перенесена из М10/2): вердикты загрузчика.
 # Строка: case<TAB>verdict. case — файл cases/<case>.subsystem.yaml, загруженный один, как спека подсистемы;
 # verdict — ok (грузится) или refused (отказ, называющий файл); диагностика — diagnostics.tsv и чтением по Н5. Правила — Н1, Н4;
 # здесь только таблица. Происхождение: таблица spec_verdicts.tsv (ревью 14 и 15, вердикты «Архитектора», 2026-10-06),
@@ -416,7 +416,7 @@ m61_shared_ok	ok
 m61_shared_secret	refused
 m61_shared_twice	refused
 m61_witness_member_field_not_fixed	refused
-# c4_* — сверка cammeta-python и cammeta-go М10/2 (2026-10-18): структура YAML, ключи-строки, значения (решение decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md п. 12–18)
+# c4_* — сверка cammeta-python и cammeta-go P/02.1 (2026-10-18): структура YAML, ключи-строки, значения (решение decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md п. 12–18)
 c4_block_less_indented	refused
 c4_block_more_indented_first	refused
 c4_block_tab_content_ok	ok

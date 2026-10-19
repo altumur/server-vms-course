@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка М10/6: дверь хранилища под ролями развёртывания testsub (сценарии 05–08, 10 перенесены в Platform/01-store/acceptance/2, стадия B). Формат — README.
+# Приёмка P/02.5: дверь хранилища под ролями развёртывания testsub (сценарии 01–04, 09, 11, 12 из М10/06, стадия B; 05–08, 10 — Platform/01-store/acceptance/2). Формат — README.
 01-worker	1	@as testsubworker POST /v1/write {"id":"a1","op":"put","key":"testsub/epoch/c1","items":{"epoch":"1"},"cas":""}	200
 01-worker	2	POST /v1/write {"id":"a2","op":"put","key":"testsub/slots/w-1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 01-worker	3	POST /v1/write {"id":"a3","op":"put","key":"testsub/holds/p1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","by":"w-1"},"cas":""}	200

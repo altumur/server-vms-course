@@ -19,7 +19,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
       - $ref: "#/components/parameters/Rows"
     post:
@@ -135,7 +135,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
       - $ref: "#/components/parameters/Rows"
       - name: id

@@ -22,27 +22,13 @@
 
 ### Н1.1 Объявление `domain.shared`
 
-```yaml
-domain.shared:   [<элемент>…]            # раздел спеки (М10/2 Н1.2а, добавлено М11/11)
-  element:       <имя поля единицы> | {name, type: json, schema}     # у документа ровно эти три ключа
-  field:         поле unit.fields, не секрет (М10/7 Н1.1); наследует (inherit) или это display.tree.group_by
-  document:      name — ^[a-z][a-z0-9_-]*$, не имя поля единицы; schema — JSON Schema (М10/3 schemes), по ней проверяется значение
-refusals:        refused:value с путём под domain.shared[<i>] — сам элемент или глубже, повтор документа — второе вхождение (М10/2 Н4 (добавлено корпусом урока 2); случаи m61_* корпуса М10/2), тексты:
-  - «is not {name, type: json, schema} — a document the domain holds is JSON, and what it may be is its schema»
-  - «is not a name, or is a secret — the shared document is signed, not sealed»
-  - «is not a field of the unit»
-  - «is a field of the unit — a document the domain holds whole is no unit's: name it apart»
-  - «neither inherits nor is the field the page groups by (display.tree.group_by) — a domain value it would have nowhere to go»
-  - «names one thing twice»
-merge:           unit.fields.<f>.merge (М10/2): override | union; только с inherit; union — только у type list
-                 (иначе refused:value «merge is override or union (a list's) — said of a field that inherits»)
-```
+Перенесено в [P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md) (стадия B; глава позднего слоя, вводит урок 8).
 
 ### Н1.2 Общий документ
 
 ```yaml
 document:        объект держателя domain/shared-docs/rev-<rev> — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}
-  shared:        {<sub>: {<имя>: <значение>}} — только объявленное Н1.1; подсистемы и имена по возрастанию (JCS)
+  shared:        {<sub>: {<имя>: <значение>}} — только объявленное P/02.1 Н1.2б; подсистемы и имена по возрастанию (JCS)
   term, rev:     срок держателя (урок 10) и номер правки; порядок — (term, rev), term старше
   by:            имя, доказанное сторожевой; после переноса — "domain"
   signature:     выпускающий ключ, как запись срока (урок 10 Н1.1, проверка — record); неподписанный не принимается никогда
@@ -55,7 +41,7 @@ after_move:      новый держатель (урок 10 Н1.8) перепо�
                  выпускающий; при плановой передаче выпускающий тот же, документ не меняется
 readers:         процесс domain, консоль домена, воркер подсистемы на домене (роль <sub>domain) — указатель domain/shared
                  (точное имя) и объекты domain/shared-docs/rev-* (семья domain/* двери объектов М10/8); консоль кластера — строка domain/shared (точное имя: у держателя
-                 указатель, у члена строка копии, Н1.4; М10/6 Н1.4 console, добавлено М11/11); проекций по подсистемам нет (C6)
+                 указатель, у члена строка копии, Н1.4; P/02.5 Н1.4 console, добавлено М11/11); проекций по подсистемам нет (C6)
 ```
 
 ### Н1.3 Правка
@@ -174,12 +160,11 @@ member_state:  ok | silent | not_reporting | never | unreadable
   unreadable:  страница не по форме Н1.7 (у функции alarms — и вход "garbled")
 silence_line:  молчащий член — строка тревоги {t: silent_since, kind: silent | not_reporting, class: alarm, member,
                subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?} — всегда, пока молчит
-witness:       domain.witness {report, member_field} (М10/2): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
+witness:       domain.witness {report, member_field} (P/02.1 Н1.2б): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
                секунды с последнего раза}} у кластеров и в отчётах; семья — ключи <sub>/<report>/<имя> (имя после «/»), агент
                несёт каждый объект семьи как объект отчёта (урок 3 Н1.2 member_objects), объект <sub>/<report> без имени —
                не свидетель (добавлено сверкой М11, A2); member_field — fixed поле единицы, несущее имя члена
-               (иначе refused:value с путём domain.witness.member_field, текст «'<поле>' is no fixed field of the unit: a
-               witness names a member by a field that does not change»); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
+               (отказ загрузки — P/02.1 Н1.2б); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report; при равном — меньший alive_via в байтах UTF-8
                (добавлено сверкой М11, A17)
 clock:         время строки страницы на часах домена: t + (received_at − sent_at) последнего принятого отчёта, который
@@ -234,7 +219,7 @@ HTTP-контракт: [11-shared-settings-and-alarms.api.openapi.yaml](11-share
 1. shared ответа нет, или (term, rev) указателя ≤ своей строки domain/shared   → ничего (up to date | holding newer)
 2. doc нет                                                                       → ничего: придёт следующим ответом
 3. sha256 текста ≠ pointer.sha256                                                → refused «the object does not match the pointer's checksum»
-4. record (урок 10 Н3) по своему набору с видом «общий документ» (Н1.1 document; добавлено описью семей) не ok
+4. record (урок 10 Н3) по своему набору с видом «общий документ» (P/02.1 Н1.2б document; добавлено описью семей) не ok
                                                                                  → refused «<слово record>»
 5. (term, rev) документа ≠ указателю                                             → refused «the object is term T rev R, the pointer says otherwise»
 6. записать объект, затем строку (Н1.4)
@@ -310,7 +295,7 @@ label:  "domain term T rev R"
 
 Каталог `Source/tests/testdata/acceptance/М11_Domain/11/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/11/README.md)):
 стенд урока 3 (каталог `testsub`: поля `step`, `marks`, документ `rounds`) и команды `resolve`, `alarms` на входах
-`inputs/`. Отказы `domain.shared`, `merge` и `domain.witness` — случаи `m61_*` корпуса М10/2.
+`inputs/`. Отказы `domain.shared`, `merge` и `domain.witness` — случаи `m61_*` корпуса главы P/02.1 ([P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md)).
 
 ```yaml
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
@@ -348,7 +333,6 @@ exit:      0 — вычислено; 2 — вход не по форме (шаг
 
 ## Чеклист готовности
 
-- [ ] **М11/11-01** объявление Н1.1, `merge` и `domain.witness` — случаи `m61_*` корпуса М10/2
 - [ ] **М11/11-02** документ Н1.2: форма, подпись выпускающим, указатель, пять объектов, `rev + 1` после переноса — сц. 01; переподпись, объект ревизии не перезаписывается проигравшей правкой (A1) — чтением
 - [ ] **М11/11-03** правка Н1.3 по порядку, все отказы одним 400 — сц. 01; `shared.<sub>` не объект, значение под печать, прежний документ не читается — 503 (A6, A7, A9) — чтением
 - [ ] **М11/11-04** доставка Н1.4: `doc` только при расхождении, проверка агента, никогда назад, отказ — сц. 01, 02; подделка — урок 10 `record`; форма строк в отчёте и снятие отказа взятым документом (A3, A4) — чтением

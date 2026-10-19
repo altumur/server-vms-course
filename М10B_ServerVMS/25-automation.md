@@ -26,7 +26,7 @@
 - **[М10/8](../М10_Platform/08-events-resource-requests.md)**, шаг 14 — семейство `<sub>/requests/<id>`: ограниченная работа, о которой попросили, кто её исполняет и кто убирает по heartbeat'у.
 - **[М10/8](../М10_Platform/08-events-resource-requests.md)** — `MergedIndex`: как консоль сливает события со всех ресурсов.
 - **[М10/8](../М10_Platform/08-events-resource-requests.md)**, шаг 8 — `Frontier`: докуда читатель журнала дошёл, и почему это файл рядом с событиями; в [уроке 23](23-an-archive-we-do-not-own.md) им же помнит край обзор.
-- **[М10/2](../М10_Platform/02-the-spec-and-the-strict-loader.md)** — `SubsystemSpec`, типы полей и `schema:`, `acl_console`/`acl_worker_role`, раздел `worker:`; **[М10/9](../М10_Platform/09-the-console.md)**, шаг 12а — `rights` спеки.
+- **[М10/2](../Platform/02-installer/02-installer.md)** — `SubsystemSpec`, типы полей и `schema:`, `acl_console`/`acl_worker_role`, раздел `worker:`; **[М10/9](../М10_Platform/09-the-console.md)**, шаг 12а — `rights` спеки.
 
 ## Чему вы научитесь
 
@@ -99,7 +99,7 @@ auto/scenarios/door-on-badge:
 
 ## Шаг 3 — Форма в спеке, смысл у вычислителя
 
-Триггеры — **список форм**. Расплющить их в поля значит либо ограничиться одним триггером, либо завести `when_1_sub`, `when_2_sub` — схему, притворяющуюся, что она не схема. Поэтому поле `when` — типа `json`, и у платформы для такого поля есть второе слово: `schema:`, JSON Schema поля ([М10/2](../М10_Platform/02-the-spec-and-the-strict-loader.md), шаг 20). Проверяет её платформа у двери, для любого писателя, словами схемы (ADR 0002):
+Триггеры — **список форм**. Расплющить их в поля значит либо ограничиться одним триггером, либо завести `when_1_sub`, `when_2_sub` — схему, притворяющуюся, что она не схема. Поэтому поле `when` — типа `json`, и у платформы для такого поля есть второе слово: `schema:`, JSON Schema поля ([М10/2](../Platform/02-installer/02-installer.md), шаг 20). Проверяет её платформа у двери, для любого писателя, словами схемы (ADR 0002):
 
 ```yaml
     when:
@@ -408,7 +408,7 @@ camera 7 has 5 preset(s), not 9
 worker: {requests: [cam, rec, det]}
 ```
 
-Из неё платформа выводит роль воркера: три своих префикса (эпохи, слоты, места) и `requests_acl("cam", "rec", "det")` — `cam/requests/*`, `rec/requests/*`, `det/requests/*` (`SubsystemSpec.acl_worker_role`, [М10/2](../М10_Platform/02-the-spec-and-the-strict-loader.md); тот же ключ попадает в файл прав кластера, а подачу по нему сверяет сама база, `Worker.file_request`). Точка входа `python3 -m vms autoworker` открывает хранилище с этой ролью и ничего к ней не добавляет. Каждая из трёх целей объявляет у себя семейство `requests:` — иначе спека `auto` не грузится там, где каталог целый (`catalog.requests_known`, ревью 14, minor 9): заявку в подсистему без семейства никто не исполнил бы и не убрал. У `det` это семейство с `elsewhere: [detect, scan]` — его заявки превращают в работу задания VMS (`jobs.detect_on_request`), а не держатель детектора.
+Из неё платформа выводит роль воркера: три своих префикса (эпохи, слоты, места) и `requests_acl("cam", "rec", "det")` — `cam/requests/*`, `rec/requests/*`, `det/requests/*` (`SubsystemSpec.acl_worker_role`, [М10/2](../Platform/02-installer/02-installer.md); тот же ключ попадает в файл прав кластера, а подачу по нему сверяет сама база, `Worker.file_request`). Точка входа `python3 -m vms autoworker` открывает хранилище с этой ролью и ничего к ней не добавляет. Каждая из трёх целей объявляет у себя семейство `requests:` — иначе спека `auto` не грузится там, где каталог целый (`catalog.requests_known`, ревью 14, minor 9): заявку в подсистему без семейства никто не исполнил бы и не убрал. У `det` это семейство с `elsewhere: [detect, scan]` — его заявки превращают в работу задания VMS (`jobs.detect_on_request`), а не держатель детектора.
 
 `requests` — правильное семейство, чтобы открыть, именно из-за того, чем оно уже является: ограниченная работа, адресованная единице, выполняемая держателем, убираемая по завершении. Право на него не меняет конфигурацию, ничего не размещает и не переживает строку, которую пишет. Тест `test_autoworker.py::test_the_token_reaches_requests_and_nothing_else` проверяет четыре запрещённых пути: `cam/cameras/12`, `rec/recordings/7`, `cam/placement/12` и — что приятно — `auto/scenarios/x`: вычислитель не может править даже собственные сценарии.
 

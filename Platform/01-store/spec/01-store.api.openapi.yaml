@@ -748,7 +748,7 @@ components:
       headers:
         Retry-After:
           schema: {type: integer, const: 1}
-          description: Только при пределе соединений двери (М10/11 Н4); иначе отсутствует.
+          description: Только при пределе соединений двери (P/01.3 Н4); иначе отсутствует.
       content:
         application/json:
           schema:
@@ -764,7 +764,7 @@ components:
       headers:
         Retry-After:
           schema: {type: integer, const: 1}
-          description: Только у unavailable при пределе соединений двери (М10/11 Н4); иначе отсутствует.
+          description: Только у unavailable при пределе соединений двери (P/01.3 Н4); иначе отсутствует.
       content:
         application/json:
           schema:

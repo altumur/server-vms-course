@@ -18,20 +18,20 @@
 | digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | М10/8 | М10/8 Н1.5 `digest` |
 | секреты в адресе | `Source/tests/testdata/secret_in.tsv` | М10/7 | М10/7 Н1.1а |
 | маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
-| секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | М10/7 Н1.3, М10/6 Н1.4 |
-| корпус спеки | `Source/tests/testdata/acceptance/М10_Platform/02/` (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | М10/2 | М10/2 Н1, Н4, Н5 |
-| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | М10/6 | P/01.2 Н1.2 `pattern`, Н1.3 |
-| копия хранилища | `Source/tests/testdata/acceptance/М10_Platform/11/inputs/` | М10/11 | P/01.3 Н1.3 `copy` |
-| вывод прав из спеки (по смыслу) | `Source/tests/testdata/acceptance/М10_Platform/06/variants/` | М10/6 | М10/6 Н1.4, Н3 |
+| секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | P/02.5 Н1.3, P/02.5 Н1.4 |
+| корпус спеки | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 Н1, Н4, Н5 |
+| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 Н1.2 `pattern`, Н1.3 |
+| копия хранилища | [`01-store/acceptance/3/inputs/`](../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 Н1.3 `copy` |
+| вывод прав из спеки (по смыслу) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 Н1.4, Н3 |
 | текстовые формы значений (`values_by_type`) | векторов нет — шаги приёмки М10/03; пакет — с переносом урока 6 | М10/3 | М10/3 Н1.2 |
 | id события | векторов нет — норма формы; пакет — с переносом урока 5 | М10/8 | М10/8 Н1.2 `id` |
-| разбор адреса | частью — `secret_in.tsv`, `group_of.tsv`; отдельного пакета нет | М10/7 | М10/7 Н1.1а, М10/2 Н1.2а `schemes` |
+| разбор адреса | частью — `secret_in.tsv`, `group_of.tsv`; отдельного пакета нет | М10/7 | М10/7 Н1.1а, P/02.1 Н1.2а `schemes` |
 | конверт `enc:v2` и кольцо | векторов нет — шаги приёмки М10/07; пакет — с переносом урока 3 | М10/7 | М10/7 Н1.2 |
 | «принять консолью» | векторов нет — шаги приёмки М11/08 | М11/8 | М11/8 Н3 |
 | `view`, `keys`, `token`, `seal`, `accept`, `assemble`, `issue`, `peer`, `may`, `record`, `follow`, `ask-sig`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | М10/4 | М10/4 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | М10/4 | М10/4 Н3 «сократить()», Р4 |
-| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | М10/11 | М10/11 Н1.5 rules 2–4 |
+| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | М10/11 | P/02.4 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | М10/4 | М10/4 Н3 «порядок наборов» |
 | снятие заказа по сроку, поздний старт, сокращение по выдержке | шагом приёмки — М10/05 сц. 14–16 | М10/4 | М10/4 Н3; ADR-0084 |
 | `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — М11/10 сц. 09; вход `follow` наборов ответов не несёт | М11/10 | М11/10 Н1.6 `yields`, Н3 «следовать» 1а |

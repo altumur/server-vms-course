@@ -9,26 +9,26 @@
 # spec остаётся зарезервированным. Тексты принятых ADR не переписываются. Продукт — долг «Сборке» с меткой ADR-0086 (Р7).
 # Строка: old<TAB>new<TAB>kind<TAB>owner<TAB>consumers. owner — где имя определено; consumers — кто его называет.
 old	new	kind	owner	consumers
-platform/spec/<sub>	platform/manifest/<sub>	ключ строки хранилища	М10/2 Н1.5	М10/3–11; Platform/02-installer, 04-controller, 05-resource; catalog.tsv
-platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	М10/2 Н1.5	М10/3, 4, 5, 8, 9, 10, 11; Platform/02-installer, 04-controller; catalog.tsv
-platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	М10/2	читатели уроков М10/3–6, 8, 9 после своей правки поведения
+platform/spec/<sub>	platform/manifest/<sub>	ключ строки хранилища	P/02.3 Н1.5	М10/3–11; Platform/02-installer, 04-controller, 05-resource; catalog.tsv
+platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	P/02.3 Н1.5	М10/3, 4, 5, 8, 9, 10, 11; Platform/02-installer, 04-controller; catalog.tsv
+platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	P/02.2	читатели уроков М10/3–6, 8, 9 после своей правки поведения
 spec_rev	manifest_rev	поле строк <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent и объекта <sub>/controller/pass	М10/4 Н1.1, Н1.2, Н1.5	М10/3; приёмка М10/05, М10/09; catalog.tsv; id-map.tsv
 spec_behind	manifest_behind	счётчик отчёта прохода (объект <sub>/controller/pass)	М10/4 Н1.2	лекция М10/4; id-map.tsv
-GET /spec	GET /manifest	дверь консоли кластера и консоли домена	М10/2 Н2	М10/9; М11/8 Н1.8; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка М10/02, М10/09, М11/08; id-map.tsv
+GET /spec	GET /manifest	дверь консоли кластера и консоли домена	М10/9 Н2 «GET /spec»	М10/9; М11/8 Н1.8; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, М10/09, М11/08; id-map.tsv
 GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	М10/9 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js
-SpecView	ManifestView	схема OpenAPI ответа двери	М10/2 Н2 (02-*.api.openapi.yaml)	М10/9; приёмка М10/02, М10/09; id-map.tsv
-w2cctl spec put	w2cctl manifest put	команда установщика	М10/2 Н3, М10/11	Platform/02-installer/lifecycle.md; приёмка М10/02; catalog.tsv (ops); id-map.tsv
-w2cctl spec status	w2cctl manifest status	команда установщика	М10/2 Н3	Platform/02-installer/lifecycle.md
-spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стенда» через admin.sock	приёмка М10/01 README	приёмка М10/02, М10/11; Platform/02-installer/lifecycle.md; module-design.md
+SpecView	ManifestView	схема OpenAPI ответа двери	М10/9 Н2 «GET /spec» (09-the-console.api.openapi.yaml)	М10/9; приёмка P/02, М10/09; id-map.tsv
+w2cctl spec put	w2cctl manifest put	команда установщика	P/02.3 Н3, P/02.4	Platform/02-installer/lifecycle.md; приёмка P/02; catalog.tsv (ops); id-map.tsv
+w2cctl spec status	w2cctl manifest status	команда установщика	P/02.3 Н3	Platform/02-installer/lifecycle.md
+spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стенда» через admin.sock	приёмка М10/01 README	приёмка P/02, М10/11; Platform/02-installer/lifecycle.md; module-design.md
 {spec}	{manifest}	подстановка «Стенда»	приёмка М10/01 README	приёмка М10/03, М10/10
 {specs}	{manifests}	подстановка команды вывода прав	приёмка М10/01 README	Platform/02-installer/lifecycle.md
-SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	М10/11 Н1.2	М10/6; приёмка М10/01; Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
-/opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	М10/11 Н1.2	Platform/02-installer/lifecycle.md
+SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; приёмка М10/01; Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
+/opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	P/02.4 Н1.2	Platform/02-installer/lifecycle.md
 <spec:…>	<manifest:…>	обозначение части ключа каталога данных из манифеста	Platform/common/data/catalog.tsv (форма — inbox 2026-10-18-каталог-данных-форма.md)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; абзацы «Данные»
 console.spec(name)	console.manifest(name)	вызов модуля консоли	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем
 getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	код модуля консоли (входит в выгрузку)	Source/w2cplatform/console.js	—
 from: "spec"	from: "manifest"	слово источника значения в выводе resolve	М11/11 Н3 resolve	приёмка М11/11 (векторы resolve)
-—	manifest	зарезервированное имя (рядом со spec: имя подсистемы, unit.rows, имя таблицы)	М10/2 Н1.2, Н1.2а	корпус урока 2: отрицательные случаи k38_sub_manifest, m49_table_manifest и допустимый сосед (ADR-0086 доп. (1) Р3)
-«спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	проза	М10/2	все уроки, лекции, README и инструкции М10, М11, Platform/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, глоссарий (статья «Манифест подсистемы»)
-«Спека подсистемы и строгий загрузчик»	«Манифест подсистемы и строгий загрузчик»	заголовок урока 2	М10/2	Platform/module-design.md (уже с целевым именем), README
+—	manifest	зарезервированное имя (рядом со spec: имя подсистемы, unit.rows, имя таблицы)	P/02.1 Н1.2, Н1.2а	корпус P/02.1: отрицательные случаи k38_sub_manifest, m49_table_manifest и допустимый сосед (ADR-0086 доп. (1) Р3)
+«спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	проза	P/02.1	все уроки, лекции, README и инструкции М10, М11, Platform/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, глоссарий (статья «Манифест подсистемы»)
+«Спека подсистемы и строгий загрузчик»	«Манифест подсистемы и строгий загрузчик»	заголовок урока P/02	P/02.1	Platform/module-design.md (уже с целевым именем), README
 spec (в текстах и исключениях check_spec и навыка lesson-spec)	manifest	строки проверок и навыка	skills/ («Архитектор»)	—

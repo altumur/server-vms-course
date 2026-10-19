@@ -18,31 +18,15 @@
 
 ### Н1.1 Объявление вида
 
+Перенесено в [P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md) (стадия B; глава позднего слоя, вводит урок 8).
+
+Вычисляемые значения `target_fields` (выдача, Н3):
+
 ```yaml
-domain.tokens.<вид>:            # раздел спеки (М10/2 Н1.2а); вид ^[a-z][a-z0-9_-]{0,31}$, не person; вид уникален в каталоге
-  lifetime:  число > 0, секунды
-  claims:    [<имя>…] — непусто, без повторов, без iss, sub, iat, exp, jti, kind
-  grant:     [<роль>…] — непусто, без повторов: роли воркеров, которым вид выдаётся
-  # область — одна из: placement; unit; placement и unit; scenario один
-  placement: {sub, caller, ref_claim, target_fields, audience_claim}
-    sub:           подсистема записей назначения (урок 6 Н1.1)
-    caller:        cluster | origin | copies — поле записи, где должен стоять член-заявитель
-    target_fields: [cluster | origin | copies | centre | star_centre …] без повторов — откуда аудитория
-  unit:      {sub?, caller?, ref_claim, target_fields, audience_claim}
-    sub?:          подсистема единицы (нет — своя; своя требует domain.ref)
-    caller?:       self (умолчание) | poll_home
-    target_fields: [poll_home | centre …] без повторов
-  scenario:  {doc, items, name, enabled, trigger, target, act, placement?, ref_claim, trigger_claim, acts_claim, up_claim,
-              audience_claim}            # требует domain.ref
-    doc:           подсистема общего документа (урок 11 Н1.2: shared.<doc>); items — имя массива в нём (одно имя)
-    name, enabled, trigger, target, act: пути полей элемента ^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$
-    placement?:    подсистема, чьи записи назначения называют дом цели
-  claims_bind:   ref_claim, audience_claim (у scenario ещё trigger_claim, acts_claim, up_claim) — имена из claims, разные
 computed:   centre, star_centre, poll_home — не поля записи и не поля единиц: вычисляются по топологии (урок 4 Н1.2)
             centre — topology.centre; star_centre — centre, если cluster записи в star, иначе ничего (в аудиторию не
             добавляет и не отказ); cluster в star, а centre нет — 409 no_centre;
             poll_home(член) — via[член], иначе centre, иначе держатель
-refusals:   отказ загрузки refused:value с путём (М10/2 Н4) на каждое нарушение выше; вид в двух спеках каталога — refused:catalogue
 ```
 
 ### Н1.2 Местная дверь агента
@@ -189,14 +173,14 @@ token урока 2 с expect {kind: <вид>, cluster: <свой кластер>
 
 Каталог `Source/tests/testdata/acceptance/М11_Domain/07/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/07/README.md)):
 команда `issue` на входах `inputs/` и стенд урока 3 с местной дверью агента (каталог `testsub` и `testsub2`, как урок 5). Отказы объявления — случаи `m57_tokens_*`
-корпуса М10/2.
+корпуса главы P/02.1 ([P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md)).
 
 ```yaml
 issue:      вход {domain, sub, kind, decl: <объявление вида> | null, role, member, body, members: [<член>…], holder,
                   placements: {"<sub>/<ref>": {cluster, origin, copies} | "garbled"}, topology: {centre?, star, via},
                   units: {<sub>: {<ref>: [<член>…]}}, shared: {<doc>: {<items>: [...]}} | null, now}
             вывод {result: ok, claims: <payload Н1.4 без jti>} | {result: refused, status, reason}
-exit:       0 — вычислено; 2 — вход не по форме, в том числе decl не по форме загрузки Н1.1 (lifetime ≤ 0 или не число,
+exit:       0 — вычислено; 2 — вход не по форме, в том числе decl не по форме загрузки P/02.1 Н1.2б (lifetime ≤ 0 или не число,
             claims или grant пусты, область не по форме): такое объявление загрузчик отверг бы (добавлено сверкой М11, T4);
             запись placements без copies — не вход не по форме, а нечитаемая запись (Н3 шаг 5)
 ```
@@ -219,7 +203,6 @@ exit:       0 — вычислено; 2 — вход не по форме, в т
 
 ## Чеклист готовности
 
-- [ ] **М11/7-01** объявление вида Н1.1 и отказы загрузки — случаи `m57_tokens_*` корпуса М10/2 (Н5 М10/2)
 - [ ] **М11/7-02** местная дверь: роль из личности соединения, тело, без очереди — сц. 01, 02; 413 `TOKEN_BODY` — сц. 02 шаги 7–8 (4096 байт — проходит к держателю и `no_assignment`, 4097 — 413 у местной двери); `TOKEN_HOLDER_BODY` у держателя — чтением: стенд не шлёт держателю тело мимо агента;
   ожидание TOKEN_WAIT и обрыв — чтением (стенд не держит процесс `domain` без ответа)
 - [ ] **М11/7-03** дверь держателя и ответ `m1` — сц. 01; проверка `request_id` и `exp` агентом (502 `invalid token reply`) —

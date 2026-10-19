@@ -27,7 +27,7 @@ HTTP-контракт — в [OpenAPI](spec/11-shared-settings-and-alarms.api.op
 - [Урок 3](03-agent-and-reports.md) — ответ держателя и отчёт члена; [урок 10](10-holder-transfer-and-keepers.md) —
   подпись выпускающим, резервная копия, заморозка.
 - [М10/8](../М10_Platform/08-events-resource-requests.md) — события, класс `alarm`, индекс.
-- [М10/2](../М10_Platform/02-the-spec-and-the-strict-loader.md) — `inherit` и `merge`.
+- [P/02.1](../Platform/02-installer/02-installer.md) — `inherit` и `merge`.
 
 ## Что общее, говорит спека
 

@@ -1,0 +1,7 @@
+# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты спек»): роль, действие, ключ, allow | deny.
+role	action	key	expect
+vadomain	read	va/vault	allow
+vaworker	read	va/vault	deny
+vacontroller	read	va/vault	deny
+console	read	va/vault	deny
+vadomain	read	va/items/u1	allow

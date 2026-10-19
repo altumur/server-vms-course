@@ -33,7 +33,7 @@ domain/placement/<sub>/<ref>:   строка хранилища держател
 domain/placement:   {rev} — счётчик, +1 на каждую запись и удаление назначения
 writer:     процесс domain по двери Н2 консоли домена (урок 3 Н1.8); агенту запрещено (М10/6 domainagent)
 readers:    процесс domain (вид урока 1, теневой отчёт урока 1 Н1.6, ответ агенту — Н1.2); воркер на держателе — через
-            чтение domain/placed/<sub>/ (М10/6 Н3 шаг 3 даёт и domain/placement/<sub>/)
+            чтение domain/placed/<sub>/ (P/02.5 Н3 шаг 3 даёт и domain/placement/<sub>/)
 executors:  исполнители ref — cluster и copies; origin — не исполнитель
 ref:        не проверяется на существование: назначение может опередить единицу (теневой отчёт — orphaned через
             SHADOW_STALL); в пути — остаток после <sub>/ байт в байт, процент-формы не декодируются (`a%20b` — ref
@@ -69,7 +69,7 @@ doors:      POST /domain/<sub>/<rows> {cluster, <поля>}        — созд�
             <sub> не из каталога (спеки нет или она без domain.ref, урок 1 Н1.2 no_ref) — 404, до разбора тела, у всех
             трёх (добавлено сверкой М11, A5)
             POST: cluster нет, не строка или пустая строка — 400, до поиска (добавлено сверкой М11, A4)
-fields:     только поля domain.edit спеки (М10/2 Н1.2а); платформенные (cluster, worker, server, placement, epoch,
+fields:     только поля domain.edit спеки (P/02.1 Н1.2а); платформенные (cluster, worker, server, placement, epoch,
             observed_revision, phase, revision) и поля вне domain.edit — 400; пустое тело PUT — 400; значения — по
             спеке (М10/3 Н3 шаг 4 формы) — 400; POST дополнительно принимает обязательное поле domain.ref спеки, даже
             если его нет в domain.edit (у testsub edit — [start, labels], ref — name); у PUT исключения нет: ref — в пути

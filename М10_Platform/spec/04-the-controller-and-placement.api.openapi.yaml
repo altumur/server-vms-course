@@ -16,7 +16,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     get:
       summary: Effective policy
       responses:
@@ -504,7 +504,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     get:
       summary: Units without an eligible worker
       responses:
@@ -580,7 +580,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: id
       in: path
@@ -752,7 +752,7 @@ components:
         - pattern: ^[^/]+/\.{1,2}$
         - pattern: '[\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
     SubsystemName:
-      description: Имя загружаемой подсистемы по М10/2 Н1.2.
+      description: Имя загружаемой подсистемы по P/02.1 Н1.2.
       type: string
       minLength: 1
       maxLength: 32

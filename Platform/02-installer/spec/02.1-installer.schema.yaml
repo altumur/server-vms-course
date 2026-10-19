@@ -1,13 +1,13 @@
-# Проверка рядом с нормой (ADR-0085), не норма; правится вместе с нормой урока 2.
-# Норма — проза 02-the-spec-and-the-strict-loader.norms.md (Н1.1–Н1.4); реализации эту схему не исполняют и в выгрузку
-# генераторам она не идёт. Байты правит «Спецификация» той же правкой, что норму урока 2 (ADR-0080 доп. 16).
+# Проверка рядом с нормой (ADR-0085), не норма; правится вместе с нормой главы 2.1.
+# Норма — проза 02.1-installer.norms.md (Н1.1–Н1.4); реализации эту схему не исполняют и в выгрузку
+# генераторам она не идёт. Байты правит «Спецификация» той же правкой, что норму главы 2.1 (ADR-0080 доп. 16).
 # Исполняет check_spec (skills/lesson-spec/scripts/spec_schema/run.py) на корпусе
-# Source/tests/testdata/acceptance/М10_Platform/02: вердикт против verdicts.tsv, класс против classes.tsv.
+# Platform/02-installer/acceptance/1: вердикт против verdicts.tsv, класс против classes.tsv.
 # Происхождение: пилот /Users/murat/w2c/cammeta-schema-pilot (REPORT.md, schema/PROFILE.md), нормы cammeta-specs 8300b3c.
 #
-# Форма спеки подсистемы <name>.subsystem.yaml (М10/2 Н1.2, Н1.2а, Н1.3): JSON Schema draft 2020-12, записана в YAML.
+# Форма спеки подсистемы <name>.subsystem.yaml (P/02.1 Н1.2, Н1.2а, Н1.3): JSON Schema draft 2020-12, записана в YAML.
 # description каждого раздела — урок-владелец смысла. Ссылки Н1.4 и отношения между значениями —
-# 02-the-spec-and-the-strict-loader.references.tsv. Порядок слоёв (Н3): текст → имя → ключи → значения → ссылки.
+# 02.1-installer.references.tsv. Порядок слоёв (Н3): текст → имя → ключи → значения → ссылки.
 #
 # ==== Профиль: что разрешено писать в схеме и как прогонщик её исполняет ====
 #
@@ -102,12 +102,12 @@
 # ==== Схема ====
 $schema: https://json-schema.org/draft/2020-12/schema
 $id: https://w2c.example/m10/02/subsystem.schema.json
-description: М10/2 Н1.2 — корень, закрытый набор разделов
+description: P/02.1 Н1.2 — корень, закрытый набор разделов
 type: object
 required: [name, unit, placement]
 additionalProperties: false
 properties:
-  name: {$ref: '#/$defs/subName', description: М10/2 Н1.2}
+  name: {$ref: '#/$defs/subName', description: P/02.1 Н1.2}
   unit:
     description: М10/3 Н1.1
     type: object
@@ -161,7 +161,7 @@ properties:
   rights: {$ref: '#/$defs/rights'}
   secrets: {$ref: '#/$defs/secrets'}
   worker:
-    description: М10/5, М10/6 Н1.4, М10/8 Н1.5
+    description: М10/5, P/02.5 Н1.4, М10/8 Н1.5
     type: object
     additionalProperties: false
     properties:
@@ -217,7 +217,7 @@ properties:
   metrics: {$ref: '#/$defs/metrics'}
   domain: {$ref: '#/$defs/domain'}
 allOf:
-  # unplaced.delete_after — только с named id (ADR-0067; М10/2 Н1.2а placement)
+  # unplaced.delete_after — только с named id (ADR-0067; P/02.1 Н1.2а placement)
   - if: {required: [placement], properties: {placement: {required: [unplaced]}}}
     then: {properties: {unit: {properties: {id: {not: {const: numeric}}}}}}
 
@@ -232,13 +232,13 @@ $defs:
   strList: {type: array, items: {type: string}}
   name: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
   subName:
-    description: М10/2 Н1.2 — 21 зарезервированное слово
+    description: P/02.1 Н1.2 — 21 зарезервированное слово
     $ref: '#/$defs/name'
     not:
       enum: [platform, spec, policy, drain, servers, where, unplaceable, console, audit, events, marks,
              requests, asked, session, mounts, healthz, metrics, resources, schema, domain, api]
   tableName:
-    description: М10/2 Н1.2а «Запрещённые имена»; М10/3 Н1.1, М10/4, М10/5, М10/8, М10/9, М10/10, М11
+    description: P/02.1 Н1.2а «Запрещённые имена»; М10/3 Н1.1, М10/4, М10/5, М10/8, М10/9, М10/10, М11
     $ref: '#/$defs/name'
     not:
       enum: [platform, spec, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned,
@@ -250,13 +250,13 @@ $defs:
     $ref: '#/$defs/tableName'
     not: {enum: [cluster, worker, ts]}
   grantList:
-    description: "М10/7 Н1.3, М10/6 Н1.4 — без *, !, delete:"
+    description: "P/02.5 Н1.3, P/02.5 Н1.4 — без *, !, delete:"
     type: array
     items: {$ref: '#/$defs/grantPath'}
   grantName: {type: string, not: {pattern: '^!|^delete:|\*'}}
   grantPath: {$ref: '#/$defs/grantName', pattern: /}
 
-  # ---- поле: М10/2 Н1.3, смысл — М10/3 Н1.2; формы url — М10/7 Н1.1
+  # ---- поле: P/02.1 Н1.3, смысл — М10/3 Н1.2; формы url — М10/7 Н1.1
   unitFields:
     description: М10/3 Н1.2; platform_fields запрещены (value)
     type: object
@@ -323,7 +323,7 @@ $defs:
   fieldType: {enum: [string, int, float, bool, list, json, url, blob]}
   fieldEnum: {type: array, minItems: 1, uniqueItems: true}
   fieldByType:
-    description: М10/2 Н1.3 — default/inherit по типу поля; enum только у string и bool; формы url только у url
+    description: P/02.1 Н1.3 — default/inherit по типу поля; enum только у string и bool; формы url только у url
     allOf:
       - if: {properties: {type: {const: string}}}
         then: {properties: {default: {type: [string, 'null']}, inherit: {type: [string, 'null']},
@@ -556,7 +556,7 @@ $defs:
       - if: {required: [free], properties: {free: {const: true}}}
         then: {required: [ttl]}
 
-  # ---- rights: М10/6 Н1.5; secrets: М10/7 Н1.3
+  # ---- rights: М10/6 Н1.5; secrets: P/02.5 Н1.3
   rights:
     description: М10/6 Н1.5
     type: object
@@ -588,7 +588,7 @@ $defs:
             of: {$ref: '#/$defs/str'}
           oneOf: [{required: [sub]}, {required: [of]}]
   secrets:
-    description: М10/7 Н1.3
+    description: P/02.5 Н1.3
     type: object
     additionalProperties: false
     properties:
@@ -749,7 +749,7 @@ $defs:
       tables: {$ref: '#/$defs/strList'}
       reports: {$ref: '#/$defs/strList'}
       shared:
-        description: М11/11 Н1.1
+        description: P/02.1 Н1.2б
         type: array
         uniqueItems: true
         items:
@@ -777,7 +777,7 @@ $defs:
             prefix: {$ref: '#/$defs/str'}
           anyOf: [{required: [keys]}, {required: [prefix]}]
       books:
-        description: М11/5 Н1.1
+        description: P/02.1 Н1.2б
         type: object
         propertyNames: {pattern: '^[a-z0-9][a-z0-9_-]*$'}
         additionalProperties: {$ref: '#/$defs/book'}
@@ -793,12 +793,12 @@ $defs:
             exclusive_with: {const: domain/users}
             grant: {enum: [view, edit, admin]}
       tokens:
-        description: М11/7 Н1.1
+        description: P/02.1 Н1.2б
         type: object
         propertyNames: {$ref: '#/$defs/name', not: {const: person}}
         additionalProperties: {$ref: '#/$defs/token'}
       witness:
-        description: М11/11 Н1.8
+        description: P/02.1 Н1.2б
         type: object
         required: [report, member_field]
         additionalProperties: false

@@ -271,7 +271,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: rows
       in: path
@@ -364,7 +364,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: table
       in: path
@@ -521,7 +521,7 @@ paths:
         description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
         variables:
           origin: {default: 'http://localhost', description: 'Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.'}
-          sub: {default: testsub, description: 'Имя загруженной спеки по М10/2; пример заменяется выбранным именем из /mounts.'}
+          sub: {default: testsub, description: 'Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.'}
     parameters:
     - name: table
       in: path
@@ -883,7 +883,7 @@ components:
         additionalProperties:
           $ref: '#/components/schemas/M2_JsonValue'
     M4_SubsystemName:
-      description: Имя загружаемой подсистемы по М10/2 Н1.2.
+      description: Имя загружаемой подсистемы по P/02.1 Н1.2.
       type: string
       minLength: 1
       maxLength: 32

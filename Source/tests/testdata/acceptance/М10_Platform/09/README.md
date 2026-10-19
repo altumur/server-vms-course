@@ -51,7 +51,7 @@ acceptance-entry inputs`). Процессов ресурса и воркеров
 | `hb-t-1-belt-slow.json` | `testsub2/heartbeats/t-1` | `jam: "stuck"` (слово из `heartbeat.strings`), `belt.state: "slow"` — слово не из `heartbeat.strings` (C20) |
 
 Сц. 12 шаг 6: два нечитаемых пульса (`w-7`, `W-9`) — `testsub_heartbeats_garbled 2`. Шаг 7 пишет строку
-`platform/servers/srv-a` ролью `console` (урок 6 Н1.4).
+`platform/servers/srv-a` ролью `console` (P/02.5 Н1.4).
 
 ## Дополнительная проверка класса ошибок прогона 36 (Kimi)
 

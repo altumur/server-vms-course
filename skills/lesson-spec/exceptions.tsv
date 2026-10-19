@@ -5,7 +5,6 @@
 М10_Platform/04	scenarios-format	own	формат урока 3 плюс коды 2xx/4xx; проверяется по README приёмки
 М10_Platform/05	no-openapi	-	своей HTTP-двери нет (ADR-0082 доп. 13)
 М10_Platform/05	scenarios-format	own	двери store/console и директивы процессов @start/@sig*; проверяется по README приёмки
-М10_Platform/06	scenarios-format	own	@as/@header, ожидание кода без тела; проверяется по README приёмки
 М10_Platform/07	no-openapi	-	своей HTTP-двери нет, дельта 503 к POST/PUT М10/3 (ADR-0082 доп. 14)
 М10_Platform/07	scenarios-format	own	двери console/store, @key, проверки подстрок и отсутствия; проверяется по README приёмки
 М10_Platform/08	scenarios-format	own	три двери, @start/@until/@key, JSON Lines и байты; проверяется по README приёмки
@@ -22,8 +21,6 @@
 М11_Domain/03	scenarios-format	own	стенд нескольких кластеров (двери holder, member; директивы @install, @join, @start agent, @domain, @on, @restart domain, @cut, @mend, @clock) и команды-векторы agent-sig, seal-member, accept; проверяется по README приёмки
 М11_Domain/04	acceptance-entry	inputs	входы команды accept урока 3 с дорогой (via, heard_ago); проверяется по README приёмки
 М11_Domain/04	scenarios-format	own	стенд с ретранслятором (двери holder, member; директивы @domain <кластеры>, @start agent <к> via relay, @stop agent, @cut, @mend) и векторы accept; проверяется по README приёмки
-М10_Platform/02	acceptance-entry	puts.tsv	установки spec put по порядку в свежее хранилище: код и rev (без изменений, A=B каталога, metrics.prefix); проверяется по README приёмки
-М10_Platform/02	acceptance-entry	puts	файлы установок puts.tsv; проверяется по README приёмки
 М10_Platform/09	acceptance-entry	probe-x.subsystem.yaml	третья спека стенда урока 9 (имя с «-», metrics.prefix); проверяется по README приёмки
 М11_Domain/05	acceptance-entry	inputs	входы команды assemble (копии членов с вкладами, состояния, список членов, тестовые ключи); проверяется по README приёмки
 М11_Domain/05	scenarios-format	own	стенд нескольких кластеров с testsub2 (двери holder, member; директивы урока 3) и векторы assemble; проверяется по README приёмки
@@ -41,11 +38,16 @@
 М11_Domain/12	no-openapi	-	своей HTTP-двери нет: 409 too many members, 413 whole too large, 503 standby — в OpenAPI уроков 3 и 10
 М11_Domain/12	scenarios-format	own	стенд урока 3: спокойный член, members_rev, domain/agent и sign_failures, второй процесс domain (директивы урока 3 и @start domain second); проверяется по README приёмки
 М10_Platform/04	acceptance-entry	inputs	подложные слоты и пульсы для @put object сценария дренажа (units и safe по назначению и status); проверяется по README приёмки
-М10_Platform/06	acceptance-entry	variants	варианты спек и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав; проверяется по README приёмки
 М10_Platform/09	acceptance-entry	inputs	пульсы для @put object (наблюдения консоли); проверяется по README приёмки
 М10_Platform/10	acceptance-entry	inputs	пульсы для @put object (pending_writes, большие целые, build); проверяется по README приёмки
-М10_Platform/06	no-openapi	-	двери прав (GET /v1/rights, /v1/list) — у процесса хранилища P/01 (01-store.api.openapi.yaml); до переноса уроков 2 и 6 своих HTTP-дверей у урока нет
+М10_Platform/06	no-openapi	-	двери прав (GET /v1/rights, /v1/list) — у процесса хранилища P/01 (01-store.api.openapi.yaml); у урока остался Н1.5 о правах (М10/6-10) без своих дверей
 М10_Platform/11	no-openapi	-	служебные двери демона хранилища — у P/01 (01-store.api.openapi.yaml); до переноса уроков 2 и 6 своих HTTP-дверей у урока нет
 P/01	scenarios-format	2/own	@as/@header, ожидание кода без тела (сценарии главы 1.2 из М10/06); проверяется по README приёмки
 P/01	scenarios-format	3/own	директивы процессов, @manual, подстроки ответа (сценарии главы 1.3 из М10/11); проверяется по README приёмки
 P/01	acceptance-entry	3/inputs	копии хранилища JSON Lines (верные и по одной на каждый отказ copy) для @backup/@import; проверяется по README приёмки
+М10_Platform/06	no-acceptance	-	вся приёмка урока перенесена: сценарии прав хранилища — в P/01.2, вывод прав из спек и варианты — в P/02.5; у урока остался Н1.5 (М10/6-10) без своих сценариев
+P/02	acceptance-entry	3/puts.tsv	установки spec put по порядку в свежее хранилище: код и rev (без изменений, A=B каталога, metrics.prefix) (глава 2.3 из М10/02); проверяется по README приёмки
+P/02	acceptance-entry	3/puts	файлы установок puts.tsv (глава 2.3 из М10/02); проверяется по README приёмки
+P/02	scenarios-format	5/own	@as/@header, ожидание кода без тела (сценарии главы 2.5 из М10/06); проверяется по README приёмки
+P/02	acceptance-entry	5/variants	варианты спек и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав (глава 2.5 из М10/06); проверяется по README приёмки
+P/02	no-openapi	-	своих HTTP-дверей у установщика нет; GET /spec — временно М10/9 до главы 6.5

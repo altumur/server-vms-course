@@ -1,4 +1,4 @@
-# Ожидаемые эффективные права варианта (README приёмки 06, «Варианты спек»): роль, действие, ключ, allow | deny.
+# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты спек»): роль, действие, ключ, allow | deny.
 role	action	key	expect
 console	write	va/requests/r1	allow
 console	write	va/asked/a1	deny

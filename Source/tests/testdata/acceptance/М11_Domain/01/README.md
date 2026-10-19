@@ -77,7 +77,7 @@
 **Окружение пересылки** (урок 8): консоль каждого кластера получает `CLUSTERS` — адреса консолей всех кластеров стенда
 (`hold=<url>,m1=<url>,m2=<url>[,relay=<url>]`, без посредников); процесс `domain` — `DOMAIN_CONSOLE_URL`, адрес двери
 консоли домена; `SIGNER_URL` — только консоли `hold`. Комплекта TLS у стенда нет: двери на петле по `http://`
-(М10/11 Н1.6). `Idempotency-Key` у `POST`, `PUT`, `DELETE` пути `/domain/…` двери `member <кластер> console` раннер
+(P/02.4 Н1.6). `Idempotency-Key` у `POST`, `PUT`, `DELETE` пути `/domain/…` двери `member <кластер> console` раннер
 ставит, как у двери `holder`.
 
 ## Входы
