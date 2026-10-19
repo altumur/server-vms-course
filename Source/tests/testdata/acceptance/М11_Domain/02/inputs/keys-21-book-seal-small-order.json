@@ -1,0 +1,10 @@
+{
+ "held": null,
+ "offered": {
+  "doc": "{\"book_seal\": \"0000000000000000000000000000000000000000000000000000000000000000\", \"current\": \"t1\", \"domain\": \"acme\", \"issuing\": [\"i1\"], \"keys\": {\"t1\": \"dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_issuing\": [], \"root\": \"34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684\", \"sig\": \"viCY6DyJ3x85LxMCrGzNjq5js1U0mFJwH5-1_GSztiAv8ZcvyGPXZpd_5Xfmu7yZe4VLZWMbcRn8jD6uAJvSAA\"}"
+ },
+ "pinned": {
+  "domain": "acme",
+  "pub": "34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684"
+ }
+}

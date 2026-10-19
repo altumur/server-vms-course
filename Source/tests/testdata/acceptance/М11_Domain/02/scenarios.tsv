@@ -20,6 +20,7 @@ scenario	step	request	expect
 03-key-set-form	5	keys inputs/keys-16-row-extra-item.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	6	keys inputs/keys-17-duplicate-key.json	ok {"result": "refused", "reason": "not_a_set"}
 03-key-set-form	7	keys inputs/keys-19-no-book-seal-bad-signature.json	ok {"result": "refused", "reason": "bad_signature"}
+03-key-set-form	8	keys inputs/keys-21-book-seal-small-order.json	ok {"result": "refused", "reason": "no_book_seal"}
 04-token-keys	1	token inputs/token-01-current.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 04-token-keys	2	token inputs/token-02-retiring-before-until.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 04-token-keys	3	token inputs/token-03-retiring-after-until.json	ok {"result": "refused", "reason": "unknown_key"}
@@ -42,6 +43,7 @@ scenario	step	request	expect
 07-token-revoked	3	token inputs/token-12-revoked-unreadable.json	ok {"result": "refused", "reason": "no_revocations"}
 07-token-revoked	4	token inputs/token-26-revoked-exp-word.json	ok {"result": "refused", "reason": "no_revocations"}
 07-token-revoked	5	token inputs/token-27-revoked-exp-leading-zero.json	ok {"result": "refused", "reason": "no_revocations"}
+07-token-revoked	6	token inputs/token-29-revoked-exp-not-finite.json	ok {"result": "refused", "reason": "no_revocations"}
 12-token-kind-and-audience	1	token inputs/token-18-audience-ok.json	ok {"result": "ok", "payload": {"sub": "alice", "jti": "0123456789abcdef"}}
 12-token-kind-and-audience	2	token inputs/token-19-wrong-audience.json	ok {"result": "refused", "reason": "wrong_audience"}
 12-token-kind-and-audience	3	token inputs/token-20-wrong-kind.json	ok {"result": "refused", "reason": "wrong_kind"}
@@ -65,3 +67,4 @@ scenario	step	request	expect
 10-envelope-form	6	seal inputs/seal-12-zero-eph.json	ok {"result": "refused", "reason": "not_an_envelope"}
 10-envelope-form	7	seal inputs/seal-16-noncanonical-ct.json	ok {"result": "refused", "reason": "not_an_envelope"}
 11-seal-round	1	seal-round inputs/seal-round-01.json	ok {"result": "ok", "opened": ["s3cret-ü", "s3cret-ü"], "distinct": true}
+11-seal-round	2	seal-round inputs/seal-round-02-small-order.json	ok {"result": "refused", "reason": "not_an_envelope"}

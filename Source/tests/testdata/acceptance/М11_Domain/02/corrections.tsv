@@ -5,3 +5,4 @@ date	sample	fix	languages
 2026-10-18	02/scenarios.tsv; inputs	прогон 41, мутации №6: iat = now + 60 — ok	all
 2026-10-18	02/scenarios.tsv; inputs	прогон 41, мутации №9, №10: запись отзыва не «<jti>:<число JSON>» — no_revocations; аудитория по audience_claim, а не по aud	all
 2026-10-18	02/scenarios.tsv; inputs	прогон 41, мутации класс подписей: подпись набора 63 байта; exp строкой — bad_claims	all
+2026-10-19	03 шаг 8, 07 шаг 6, 11 шаг 2; inputs keys-21, token-29, seal-round-02	сверка М11 01–04 (S1, T3): book_seal малого порядка — no_book_seal и not_an_envelope у seal-round, exp отзыва не конечное — no_revocations	all

@@ -1,0 +1,9 @@
+{
+ "book_seal": "0100000000000000000000000000000000000000000000000000000000000000",
+ "item": "a1",
+ "member": "m1",
+ "plain": "s3cret-ü",
+ "pointer": "/feed/token_secret",
+ "seed": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a",
+ "source_path": "testsub2/notes/n1"
+}
