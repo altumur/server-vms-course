@@ -162,7 +162,7 @@ paths:
                 recovery: {type: string, description: Текст файла восстановления урока 2 Н1.1.}
                 stolen: {type: boolean}
                 copy: {$ref: '#/components/schemas/Pair'}
-                why: {type: string, minLength: 1}
+                why: {type: string, minLength: 1, pattern: '\S', description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18).'}
       responses:
         '200':
           description: Новый срок
@@ -183,6 +183,18 @@ paths:
                     type: array
                     items: {$ref: '#/components/schemas/MemberName'}
                   sentence: {type: string}
+                  sealed:
+                    type: array
+                    minItems: 1
+                    description: 'Н1.8 шаг 7: элементы state, чей секрет не открылся, — не восстановлены; по (key, item). Нет таких — поля нет (добавлено сверкой М11, H15).'
+                    items:
+                      type: object
+                      required: [key, item, why]
+                      additionalProperties: false
+                      properties:
+                        key: {type: string, minLength: 1}
+                        item: {type: string}
+                        why: {type: string, minLength: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
@@ -352,4 +364,6 @@ components:
       properties:
         path: {type: string}
         key: {type: string}
-        value: {type: string, description: 'Значение элемента; секрет — "<secret: differs>".'}
+        value:
+          type: ['string', 'null']
+          description: 'Значение элемента как хранится; секрет изменён — "<secret: differs>"; null — элемента нет в state смещённого (удаление, и у секрета); "" — пустое значение (Н1.6 stranded; решение «Архитектора» по cammeta-go М11-10 № 16).'
