@@ -11,7 +11,8 @@
      второй документ;
   T  корень не отображение; N  сверх короткого списка (профиль §8), в том числе значение ключа на следующей
      строке не блочной коллекцией и простое слово с `?` в начале.
-Не отказ: ключ любой длины (_Scanner), одиночный `-` значением блочного ключа — слово (RE_DASH_VALUE).
+Не отказ: ключ любой длины (_Scanner), одиночный `-` значением блочного ключа — слово (RE_DASH_VALUE), одиночный
+`-` с пробелом в потоке — слово (_quote_flow_dashes, свод Т16).
 Числа: целое по модулю > 2^53−1 и не-конечное float — не отказ текста, а запись в numbers (класс value).
 """
 import math
@@ -50,6 +51,45 @@ class _Scanner(Scanner):
                     raise ScannerError("while scanning a simple key", key.mark, "could not find expected ':'",
                                        self.reader.get_mark())
                 del self.possible_simple_keys[level]
+
+
+# Н1.1 string, свод Т16: одиночный `-` в потоке — слово и с пробелом после (`[ - , a ]`, `[a, - ]`, `{u: - }`); без
+# пробела (`[-, a]`) YAML и так читает его словом. С пробелом сканер YAML даёт знак элемента блочного списка, а парсер
+# отказывает. Такой знак — элемент списка (после `[` или `,`) или значение отображения (после `:`), за ним на той же
+# строке только пробелы и `,`, `]` или `}` — до парсера берётся в кавычки; номера строк не сдвигаются.
+_FLOW_DASH_BEFORE = {"[": ("FlowSequenceStartToken", "FlowEntryToken"), "{": ("ValueToken",)}
+_FLOW_DASH_AFTER = ("FlowEntryToken", "FlowSequenceEndToken", "FlowMappingEndToken")
+
+
+def _quote_flow_dashes(text):
+    if not re.search(r"-[ ]+[,\]}]", text):
+        return text
+    y = YAML(typ="safe", pure=True)
+    y.version = (1, 2)
+    y.Scanner = _Scanner
+    try:
+        tokens = list(y.scan(text))
+    except (YAMLError, ValueError):          # отказ скажет разбор
+        return text
+    lines = text.split("\n")
+    flow, marks = [], []
+    for i, t in enumerate(tokens):
+        name = type(t).__name__
+        if name in ("FlowSequenceStartToken", "FlowMappingStartToken"):
+            flow.append("[" if name == "FlowSequenceStartToken" else "{")
+        elif name in ("FlowSequenceEndToken", "FlowMappingEndToken"):
+            if flow:
+                flow.pop()
+        elif name == "BlockEntryToken" and flow and 0 < i < len(tokens) - 1:
+            prev, nxt = type(tokens[i - 1]).__name__, tokens[i + 1]
+            a, b = t.start_mark, nxt.start_mark
+            if (prev in _FLOW_DASH_BEFORE[flow[-1]] and type(nxt).__name__ in _FLOW_DASH_AFTER and a.line == b.line
+                    and not lines[a.line][a.column + 1:b.column].strip(" ")):
+                marks.append((a.line, a.column))
+    for ln, col in reversed(marks):
+        s = lines[ln]
+        lines[ln] = s[:col] + '"-"' + s[col + 1:]
+    return "\n".join(lines)
 
 
 class TextRefused(Exception):
@@ -110,6 +150,7 @@ def load_text_map(data):
         i = text.find("\r", i + 1)
     text = text.replace("\r\n", "\n")
     text = "\n".join(RE_DASH_VALUE.sub(r'\1"-"\2', s) for s in text.split("\n"))
+    text = _quote_flow_dashes(text)
     lines = text.split("\n")
     y = YAML(typ="safe", pure=True)
     y.version = (1, 2)

@@ -202,6 +202,53 @@ class CanonicalTests(Base):
         self.assertIsNone(self.canon("name: A\n"))
 
 
+class TextLayerTests(unittest.TestCase):
+    """Слой текста P/02.1 Н1.1 под построенным загрузчиком."""
+
+    def load(self, text):
+        from spec_schema import textlayer
+        return textlayer.load_text(text.encode("utf-8"))[0]
+
+    def refused(self, text):
+        from spec_schema import textlayer
+        with self.assertRaises(textlayer.TextRefused):
+            textlayer.load_text(text.encode("utf-8"))
+
+    def test_lone_dash_in_flow_is_a_word(self):
+        # Т16, норма 02.1:69: одиночный `-` в потоке — слово, и с пробелом после него.
+        self.assertEqual(self.load("r: [-, a]\n"), {"r": ["-", "a"]})
+        self.assertEqual(self.load("r: [ - , a ]\n"), {"r": ["-", "a"]})
+        self.assertEqual(self.load("r: [a, - ]\n"), {"r": ["a", "-"]})
+        self.assertEqual(self.load("r: {u: - }\n"), {"r": {"u": "-"}})
+        self.assertEqual(self.load("r: [[ - ], {u: - , v: [a, -  ,b]}]\n"),
+                         {"r": [["-"], {"u": "-", "v": ["a", "-", "b"]}]})
+        self.assertEqual(self.load('r: "[ - ]"\nb: |\n  [ - ]\n# [ - ]\n'), {"r": "[ - ]", "b": "[ - ]\n"})
+
+    def test_other_dashes_in_flow_stay_refused(self):
+        # Не одиночный `-`: `- a`, `- -`, ключ `-`, знак перед комментарием и переводом строки, TAB — отказ, как прежде.
+        for text in ("r: [- a]\n", "r: [ - - ]\n", "r: {- : a}\n", "r: {a: 1, - }\n", "r: [a, - # c\n  ]\n",
+                     "r: [-\t]\n", "r: [a: - ]\n"):
+            self.refused(text)
+
+    def test_course_corpus_text_refusals_hold(self):
+        # Прежние отказы корпуса P/02.1 не сдвинулись: вердикт и класс text — как в таблицах приёмки.
+        course = Path(__file__).resolve().parents[3]
+        spec, corpus = course / "Platform/02-installer/spec", course / "Platform/02-installer/acceptance/1"
+        loader = Loader(*(spec / f"02.1-installer.{name}" for name in ("form.yaml", "references.tsv", "scalars.tsv")))
+        rows = lambda name: [l.split("\t") for l in (corpus / name).read_text().splitlines()   # noqa: E731
+                             if l and not l.startswith("#")]
+        verdicts = {c: v for c, v in rows("verdicts.tsv")}
+        text = [c for c, k in rows("classes.tsv") if k == "text"]
+        self.assertGreater(len(text), 20)
+        for case in text:
+            got = loader.judge((corpus / "cases" / (case + ".subsystem.yaml")).read_bytes())
+            self.assertEqual((verdicts[case], got["class"]), ("refused", "text"), case)
+        for case, verdict in verdicts.items():
+            if "dash" in case:
+                got = loader.judge((corpus / "cases" / (case + ".subsystem.yaml")).read_bytes())
+                self.assertEqual(got["verdict"], verdict, case)
+
+
 class DialectVectors(unittest.TestCase):
     """Ф9 и В3 — векторами построителя, не корпусом (доп. (6)): в форме манифеста они недостижимы."""
 
