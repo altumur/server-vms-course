@@ -332,22 +332,22 @@ door.routes, доступным подписантом и подтверждён
 ### /metrics — текст
 
 ```
-на подсистему (<sub>_…; здесь и во всех рядах модуля <sub> — metrics.prefix урока 2 «GET /spec»): workers_live; worker_headroom{worker,server}; headroom; worker_load{worker}; spare_workers;
+на подсистему (<sub>_…; здесь и во всех рядах модуля <sub> — metrics.prefix урока 2 «GET /spec»): workers_live; worker_headroom{worker,server}; headroom; worker_load{worker};
   epoch_conflicts{worker}; failover_seconds{kind=worst|last,worker}; failovers_unmeasured; heartbeats_garbled;
   heartbeat_skew_seconds_max|min; workers_hung; workers_unjudged; units_unjudged; reconcile_last_pass_age_seconds;
   reconcile_last_success_age_seconds; reconcile_pass_seconds; reconcile_failures; units_unplaced; units_diverged;
   reach_moves_total; reach_unplaced_total; unplaced_deleted_total; servers_decommissioned_total; slots_released_total;
   decommission_requests_standing; name_conflicts; groups_waiting; servers_labels_unread; workers_needed{labels};
-  units_short{labels}; spare_offers{labels}; spares_withheld{labels}; server_labels{server,labels,source};
+  units_short{labels}; workers_wanted{server}; workers_withheld{labels}; server_labels{server,labels,source};
   worker_fenced{worker}; worker_store_errors{worker}; worker_pass_failures{worker}; snapshot_age_seconds;
   snapshot_ahead_shards; snapshot_garbled_shards (урок 10 Н1.3; сверка python и go М10/6–11, T6); audit_failures; garbled_rows; idempotency_store_failures; requests_ledger_garbled;
   <running> (console.running); ряды metrics: спеки (<sub>_<name>, gauge | counter | histogram)
-  # всегда, и при нуле (пульсы прочитаны, хранилище ответило): workers_live, headroom, spare_workers,
+  # всегда, и при нуле (пульсы прочитаны, хранилище ответило): workers_live, headroom,
   # failovers_unmeasured, heartbeats_garbled, reconcile_last_pass_age_seconds, reconcile_last_success_age_seconds,
   # units_unplaced, decommission_requests_standing, snapshot_age_seconds, snapshot_ahead_shards, snapshot_garbled_shards
   # и счётчики самой консоли
   # audit_failures, garbled_rows, idempotency_store_failures, requests_ledger_garbled; ряды с метками — по своим
-  # объектам; ряды из отчёта прохода и нехватки (reconcile_pass_seconds, reconcile_failures, units_short, spare_offers,
+  # объектам; ряды из отчёта прохода и нехватки (reconcile_pass_seconds, reconcile_failures, units_short, workers_withheld,
   # workers_needed …) — при прочитанном отчёте; нехватка, отчёт или пульс, которых не прочесть, ряд снимают, а не
   # роняют ответ (Н0 урока 1 «Устойчивость выдачи»; сверка python и go М10/6–11, C2, C8)
   # heartbeat_skew_seconds_max|min — ts пульса минус стенные часы консоли при чтении: плюс — часы писателя впереди
@@ -356,8 +356,11 @@ door.routes, доступным подписантом и подтверждён
   # reconcile_last_pass_age_seconds — сколько секунд прошло по монотонным часам консоли с последней смены объекта
   # <sub>/controller/pass (урок 4 Н1.2), которую консоль видела; объекта нет или смены консоль ещё не видела — −1
   # («неизвестно», не 0: первый взгляд возраста не даёт); reconcile_last_success_age_seconds — то же от последней увиденной
-  # смены его поля last_success, успешного прохода не было или смены не видели — −1; второй читает скрипт запасных
-  # (урок 11 Н1.5 правило 2: −1 — ничего не запускать)
+  # смены его поля last_success, успешного прохода не было или смены не видели — −1
+  # workers_wanted{server} — want строки заказа <sub>/want/<server> (урок 4 Н1.1), по ряду на каждую читаемую строку;
+  # строка не читается — ряда нет; его читает скрипт сервера (урок 11 Н1.5): нет ряда — ничего не запускать и не
+  # останавливать; workers_withheld{labels} — сколько процессов набора контроллер не заказал, потому что подходящего
+  # сервера нет (отчёт прохода, урок 4 Н1.2 withheld); ряды заказа — ADR-0084
   # failover_seconds{kind=last,worker} — started − previous_hb последнего пульса воркера (урок 5 Н1.1: previous_hb —
   # ts пульса, который воркер застал под своим именем), если оба — конечные числа и разность ≥ 0, иначе −1; kind=worst —
   # наибольшее last, которое эта консоль видела у воркера с её старта, не видела — −1; failovers_unmeasured — число
@@ -433,11 +436,11 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | 02 | `/spec` — форма SpecView с `running_gauge`, `workers_gauge`, `display` как написано; `/mounts` — `{root: testsub}` | Н2, урок 2 |
 | 03 | сессия открытой консоли: `GET /session` → `{open: true}`; `POST /session` → 400; `DELETE /session` → `{out: true}` и снимает куки `w2c_token`, `w2c_glass` | Н1.3, Н2 (сверка python и go М10/6–11, C34) |
 | 04 | `/servers` → `{policy: {servers: shared}, servers: {}}`; `/unplaceable` пуст; `/where/<id>` у неразмещённой — 404 с `reason` | Н2, Н3 |
-| 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live`; `/testsub/metrics` — ряды «всегда» Н3 (`spare_workers`, `failovers_unmeasured`, `audit_failures`, `garbled_rows`, `idempotency_store_failures`, `requests_ledger_garbled`) | Н3 (сверка python и go М10/6–11, C8) |
+| 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live`; `/testsub/metrics` — ряды «всегда» Н3 (`failovers_unmeasured`, `audit_failures`, `garbled_rows`, `idempotency_store_failures`, `requests_ledger_garbled`) | Н3 (сверка python и go М10/6–11, C8) |
 | 06 | отказы: неизвестный путь 404 `no such path`; метод 405; `/counters/c4/x` 404; смонтированная `/testsub2/` 404; методы, кроме `PUT`, на двери байтов `/testsub2/tallies/t1/mask` — 405; `/testsub/asked/…` без `per_person` — 404; `POST /testsub2/` — 405; `/where/<table>/<place>?unit=` не по форме id — 400 | Н4, Н2 (сверка python и go М10/6–11: C26, C27, C28, C6) |
 | 07 | нечитаемая строка intent (`state` не `active`/`idle`) — `/where/<id>` 503, не 404 | Н3 `/where`, урок 4 Н1.5 (сверка python и go М10/6–11, C5) |
 | 08 | нечитаемый пульс воркера (`@spoil object`) — `/servers` и `/metrics` 200, `testsub_heartbeats_garbled 1` | Н2, Н0 урока 1 «Устойчивость выдачи» (сверка python и go М10/6–11, C3) |
-| 09 | нехватка у `testsub2` (`offers: true`, воркеров нет) — `/testsub2/metrics` 200 с `testsub2_units_short` | Н3 `/metrics` (сверка python и go М10/6–11, C2) |
+| 09 | нехватка у `testsub2` (`grows: true`, воркеров нет) — `/testsub2/metrics` 200 с `testsub2_units_short` | Н3 `/metrics` (сверка python и go М10/6–11, C2) |
 | 10 | живой ресурс — ряды `w2c_resource_waits`, `w2c_resource_mirror_failures_total`, `w2c_resource_restore_left` по полям его пульса; `/resources` с `waits`, `mirror`, `restore` | Н3 `/metrics`, Н2 (сверка python и go М10/6–11, C9, C10) |
 | 11 | пульсы ресурса со входа (`@put object`): `pass_stalled` в `/resources` как есть; лишнее поле, `server` ≠ ключу, нет `url` — пульса в `/resources` нет, ряд `w2c_resource_heartbeats_garbled` (сверка python и go М10/6–11, C11, C12) | Н2 «Выдачи» |
 | 12 | пульсы воркеров со входа: метки сервера из узла, затем из строки `platform/servers/<s>` (`labels_source`), `WorkerRow.labels` — метки сервера; `worker` ≠ ключу и `W-N` — воркера нет, `testsub_heartbeats_garbled 2`; `server: ""` — сервер `?`; слово `belt.state` не из `heartbeat.strings` — в `status` нет (сверка python и go М10/6–11, C14–C16, C20) | Н2 «Выдачи», Н3 `/servers` |
