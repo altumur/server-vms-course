@@ -1,6 +1,23 @@
 """Проход ссылок (ADR-0085): строки 02-…references.tsv над деревом, прошедшим схему. Словарь check — CHECKS."""
-PLATFORM_SHOWN = {"worker", "server", "revision", "observed_revision", "phase", "id"}
-OBJECT_FAMILIES = {"heartbeats", "contenders", "snapshot", "controller", "blobs", "commands", "*"}
+from pathlib import Path
+
+
+def _platform_list(name):
+    """Закрытый список платформы из Source/tests/testdata/platform_lists.tsv (байты — «Спецификация»), не из кода."""
+    for base in Path(__file__).resolve().parents:
+        table = base / "Source" / "tests" / "testdata" / "platform_lists.tsv"
+        if table.is_file():
+            rows = (line.split("\t") for line in table.read_text(encoding="utf-8").splitlines()
+                    if line and not line.startswith("#"))
+            words = {row[1] for row in rows if len(row) == 2 and row[0] == name}
+            if not words:
+                raise RuntimeError(f"platform_lists.tsv names no {name}")
+            return words
+    raise RuntimeError("platform_lists.tsv not found above spec_schema/")
+
+
+PLATFORM_SHOWN = _platform_list("platform_shown")
+OBJECT_FAMILIES = _platform_list("object_families")
 
 
 # Слова прохода: по ветке в ok(); новое слово в references.tsv — новая ветка здесь.
