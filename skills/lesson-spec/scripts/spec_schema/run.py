@@ -1,7 +1,7 @@
 """Прогонщик проверки формы спеки (ADR-0085): текст YAML → форма схемой → ссылки → вердикт и класс.
 
 Проверка рядом с нормой, не норма: норма урока М10/2 — проза. Схема, ссылки и профиль —
-М10_Platform/spec/02-the-spec-and-the-strict-loader.schema.yaml (профиль — её шапка) и .references.tsv.
+Platform/02-installer/spec/02.1-installer.schema.yaml (профиль — её шапка) и .references.tsv (переехали с главой 2.1).
 
     python run.py [--schema S] [--references R] FILE...   # JSON-строка на файл: {file, verdict, class, layer, errors}
     python run.py [--schema S] [--references R] @LIST     # файлы списком
@@ -27,7 +27,7 @@ else:                                               # запуск файлом:
     import textlayer  # noqa: E402
 
 COURSE = Path(__file__).resolve().parents[4]
-LESSON = "М10_Platform/spec/02-the-spec-and-the-strict-loader"
+LESSON = "Platform/02-installer/spec/02.1-installer"
 SCHEMA = COURSE / f"{LESSON}.schema.yaml"
 REFERENCES = COURSE / f"{LESSON}.references.tsv"
 

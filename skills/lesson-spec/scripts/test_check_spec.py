@@ -585,10 +585,10 @@ properties:
         result = self.check()
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["schema_cases"], 2)
-        # The course schema of М10/2 refuses an unknown root key in an accepted corpus case, class key.
+        # The course schema of chapter 2.1 refuses an unknown root key in an accepted corpus case, class key.
         from spec_schema.run import Runner
         course = Path(__file__).resolve().parents[3]
-        corpus = course / "Source/tests/testdata/acceptance/М10_Platform/02"
+        corpus = course / "Platform/02-installer/acceptance/1"
         case = corpus / "cases/base.subsystem.yaml"
         self.assertIn("\nbase\tok\n", (corpus / "verdicts.tsv").read_text())
         runner = Runner()
