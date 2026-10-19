@@ -70,6 +70,8 @@ def resolve_plain(s):
     if RE_BOOL.match(s):
         return s[0] in "tT"
     if RE_INT.match(s):
+        if len(s.lstrip("+-").lstrip("0")) > 16:        # > 2^53−1 заведомо; int() Python падает после 4300 знаков (Н1.1)
+            return NonFinite(s)
         return int(s)
     if RE_FLOAT.match(s):
         return float(s)
@@ -221,6 +223,9 @@ def _build(events, lines):
                     raise TextRefused("S", line, "block scalar indentation indicator")
         if plain and ev.value.startswith("?"):
             raise TextRefused("N", line, "plain scalar starting with '?'")
+        # Н1.1 comment: `слово# c` — «#» после знака, а не пробела, перед пробелом — не комментарий, а строка без ключа.
+        if plain and re.search(r"[^ \t]#(?:[ \t]|$)", ev.value):
+            raise TextRefused("N", line, "'#' after a word is not a comment")
         if is_key:
             if not plain or ev.value != "<<":
                 pass
