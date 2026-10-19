@@ -208,6 +208,12 @@ paths:
       summary: Удалить единицу члена (правка хранится)
       parameters:
         - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody:
+        required: false
+        description: 'Тело пустое или {}; иное — 400 (Н1.3; добавлено сверкой М11, A1)'
+        content:
+          application/json:
+            schema: {type: object, maxProperties: 0, additionalProperties: false}
       responses:
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}

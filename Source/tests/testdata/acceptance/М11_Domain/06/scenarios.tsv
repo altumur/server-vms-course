@@ -138,3 +138,19 @@ scenario	step	request	expect
 08-unit-door-window	8	@until 60 holder GET /domain	200 {"outcomes": {"m1": [{"id": "$id", "status": 401, "result": "refused"}]}}
 08-unit-door-window	9	member m1 console GET /counters	200 {"configured": [{"id": "c8", "start": 1}]}
 08-unit-door-window	10	@clock m1 0	ok
+09-forms-of-edits	1	@domain	ok
+09-forms-of-edits	2	member m1 console POST /counters {"name": "c9", "start": 1}	201
+09-forms-of-edits	3	member m1 console POST /counters {"name": "c11", "start": 1}	201
+09-forms-of-edits	4	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c11"}, {"ref": "c9"}]
+09-forms-of-edits	5	holder POST /domain/testsub/counters {"name": "c10", "start": 1}	400
+09-forms-of-edits	6	holder POST /domain/testsub/counters {"cluster": 1, "name": "c10", "start": 1}	400
+09-forms-of-edits	7	holder PUT /domain/nosuch/counters/c9 {"start": 2}	404
+09-forms-of-edits	8	holder DELETE /domain/testsub/counters/c9 {"start": 1}	400
+09-forms-of-edits	9	holder PUT /domain/placement/testsub/c9 {"cluster": ""}	400
+09-forms-of-edits	10	holder PUT /domain/placement/testsub/a/b {"cluster": "m1"}	400
+09-forms-of-edits	11	holder PUT /domain/placement/testsub/a%20b {"cluster": "m1"}	200
+09-forms-of-edits	12	holder GET /domain/placement	200 {"records": {"testsub/a%20b": {"cluster": "m1"}}}
+09-forms-of-edits	13	@cut m1	ok
+09-forms-of-edits	14	holder @header Idempotency-Key: a3-asked PUT /domain/testsub/counters/c11 {"start": 5}	202 {"kept": "e-a5231d61506d", "cluster": "m1"}
+09-forms-of-edits	15	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"e-a5231d61506d": "~/domain/testsub/counters/c11?cluster=m1"}}
+09-forms-of-edits	16	@mend m1	ok

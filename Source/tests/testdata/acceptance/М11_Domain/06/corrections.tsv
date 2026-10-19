@@ -6,3 +6,4 @@ date	sample	fix	languages
 2026-10-18	06/scenarios.tsv; inputs	прогон 41, мутации №27/67, №28, №29: копия назначения у члена из origin; вторая ждущая правка той же единицы с base + 1 — обе performed; правка с 409 exists — исход refused (сц. 07)	all
 2026-10-18	06/scenarios.tsv; inputs	прогон 41, мутации класс сроков: окно двери единиц 60 с — исход 401 refused (сц. 08)	all
 2026-10-18	03-kept-and-applied 14–16	прогон 41 K41-12: DELETE двери правки не вызывался — шаги удаления правкой, исход performed	all
+2026-10-19	09-forms-of-edits 1–16	сверка М11 05–08 (A1, A3–A7): DELETE с телом 400, POST без cluster или не строкой 400, sub не из каталога 404, назначение cluster "" 400, ref с «/» 400 и a%20b буквально, asked.path с ?cluster=<член>	all
