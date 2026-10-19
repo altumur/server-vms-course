@@ -336,6 +336,9 @@ memory:       воркер не стартует, если CAPACITY × unit_mb +
 ca:           один центр на установку; w2c-ca.sh init | issue <server> <роль> | revoke <server|pem> | crl | own <dir> <роль> [группа]
 cert:         CN <роль>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<роль> — ровно одна роль; serverAuth + clientAuth;
               825 дней; центр 10 лет; роли configstore и configstore-door — ни с какой другой
+sig:          подписи сертификатов центра, промежуточных и листов — закрытый список: ECDSA P-256 и P-384 с SHA-256 или
+              SHA-384, RSA ≥ 2048 бит — PKCS#1 v1.5 и PSS с SHA-256 или SHA-384, Ed25519; иная подпись —
+              цепочка не проверяется (М11/8 Н3 peer шаг 4 — bad_chain; рукопожатие — отказ); добавлено сверкой М11, D14
 kit:          /etc/w2c/tls/ca.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key (ключ 0600 владельцу-пользователю юнита либо 0640 root:<группа пользователя юнита> по ADR-0075 доп.3; каталог 0750)
 revoke:       серийники в revoked — копируются на каждый сервер; процессы перечитывают по содержимому; configstore leave у лидера
 roles:        configstore, configstore-door (демоны — всегда с -tls); resource, console, domain, domainconsole, domainagent (и дверь
