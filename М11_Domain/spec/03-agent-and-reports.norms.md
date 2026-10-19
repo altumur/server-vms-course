@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/members` — `Entry.since`; стук `knock` — `last`; метка приёма — `received_at` (`sent_at` — как пришёл в публикации, Н1.2).
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `domain/members` — `Entry.since`; стук `knock` — `last`; метка приёма — `received_at` (`sent_at` — как пришёл в публикации, Н1.2).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/member-key`, `domain/members`, `domain/member-list`, `domain/member`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reports/<rev>.delta`, `domain/members/<член>/reported`;
@@ -253,14 +253,14 @@ answers:   отказы процесса — его: 409 deposed, 503 frozen (у
 
 ## Н2 Двери
 
-HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-reports.api.openapi.yaml). Разбор запроса — М10/1 Н2.1
+HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-reports.api.openapi.yaml). Разбор запроса — P/01.1 Н2.1
 с отступлениями М10/9 Н2 «Разбор запроса консоли»; тело — JSON-объект, иначе 400.
 
 Двери держателя для агентов (`POST /api/member/<член>`, `GET /api/carry/<член>`) — класс `signed` серверной стороны TLS урока 8 Н1.6 `server`: сертификат клиента не требуется и прав не даёт, личность — подпись Н1.4.
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| POST `/api/member/<член>` | процесс `domain` держателя (дверь `SIGNER_URL`, урок 2 Н1.3) | 200 carry (Н1.5) | по порядку: 413 больше BODY_LIMIT; 400 не публикация Н1.2 (в том числе вложенность JSON глубже JSON_DEPTH М10/1 Н1 — 128; сверка М11, A12); не член — подпись ключом из тела (`key`): неверна — 401, верна — стук (Н1.1 knock) и 404 «no member called <член>»; член — держатель, чья Entry ещё без key (Н3 «держатель в списке» шаг 1): подпись ключом из тела (`key`) — верна → шаг 2 того прохода, иначе 401; прочий член — 403 ключа нет в записи или он не тот, 403 отозван (`revoked_keys`, `revoked_members` набора); 401 подпись ключом записи (Н1.4); 409 `rebase`, `same_sent_at`, `not_ready` (Н3 «принять»); 409 `deposed` (урок 10 Н1.6); 413 `whole too large`, 503 `standby` (урок 12; добавлено М11/12) |
+| POST `/api/member/<член>` | процесс `domain` держателя (дверь `SIGNER_URL`, урок 2 Н1.3) | 200 carry (Н1.5) | по порядку: 413 больше BODY_LIMIT; 400 не публикация Н1.2 (в том числе вложенность JSON глубже JSON_DEPTH P/01.1 Н1 — 128; сверка М11, A12); не член — подпись ключом из тела (`key`): неверна — 401, верна — стук (Н1.1 knock) и 404 «no member called <член>»; член — держатель, чья Entry ещё без key (Н3 «держатель в списке» шаг 1): подпись ключом из тела (`key`) — верна → шаг 2 того прохода, иначе 401; прочий член — 403 ключа нет в записи или он не тот, 403 отозван (`revoked_keys`, `revoked_members` набора); 401 подпись ключом записи (Н1.4); 409 `rebase`, `same_sent_at`, `not_ready` (Н3 «принять»); 409 `deposed` (урок 10 Н1.6); 413 `whole too large`, 503 `standby` (урок 12; добавлено М11/12) |
 | GET `/api/carry/<член>` | процесс `domain` держателя | 200 carry; поколения не меняет | 404 не член; 403 в записи нет ключа (держатель до первого отчёта своего агента: «no member key in the list yet») или он отозван; 401 подпись над пустым телом; 409 `deposed` (урок 10); 503 `standby` (урок 12; добавлено М11/12) |
 | GET `/domain/members` | консоль домена (`domainconsole`) | 200 `{rev, members, knocking}` | 404 `no domain here` (вида нет); 401/403 — урок 9 |
 | POST `/domain/members` `{name, fingerprint}` | консоль домена → процесс `domain` (Н1.8) | 200 `{rev, members}` после записи по CAS | 400 нет `name` или `fingerprint` не 16 hex, или `name` — держатель; 404 не стучится; 409 — Н4 |

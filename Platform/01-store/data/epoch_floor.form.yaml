@@ -1,0 +1,14 @@
+# Семья platform/epoch_floor — пол выдачи эпох (P/01.3; P/01.3 Н1.3 floor, М10/3 Н1.5). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    floor:
+      ref: common.uint53
+      whole: true
+      description: нижняя граница выдачи после восстановления; generation << 32
+    generation_at:
+      ref: common.time
+      description: момент подъёма пола
+  required: [floor, generation_at]

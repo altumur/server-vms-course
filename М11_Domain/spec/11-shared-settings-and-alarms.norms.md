@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`; объект истории `domain/alarm-history/<член>` — `events[].t`,
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`; объект истории `domain/alarm-history/<член>` — `events[].t`,
 `cut_before` (писатель — не больше трёх знаков дроби; добавлено сверкой М11, A22).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):

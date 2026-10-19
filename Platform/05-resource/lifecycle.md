@@ -8,7 +8,7 @@
 [М10/8]: ../../М10_Platform/spec/08-events-resource-requests.norms.md
 [М10/10]: ../../М10_Platform/spec/10-schema-drain-snapshot-limits.norms.md
 [М10/11]: ../../М10_Platform/spec/11-the-platform-on-a-box-and-a-cluster.norms.md
-[Стенд]: ../../Source/tests/testdata/acceptance/М10_Platform/01/README.md
+[Стенд]: ../common/acceptance/README.md
 [каталог]: ../common/data/catalog.tsv
 
 ## Запуск

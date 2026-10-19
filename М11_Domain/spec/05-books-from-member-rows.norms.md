@@ -137,7 +137,7 @@ domain/view.books:   {"<sub>/<книга>": {conflicts, dropped, undelivered}}  
 ### Н1.6 Переносимые книги, `kept` и воркер подсистемы на домене
 
 ```yaml
-domain_worker:   воркер подсистемы на держателе, роль <sub>domain (слово secrets.readers — domainworker, М10/6 Н1.1);
+domain_worker:   воркер подсистемы на держателе, роль <sub>domain (слово secrets.readers — domainworker, P/01.2 Н1.1);
                  один: слот domain/<sub>/worker (аренда М10/3 Н1.4); есть у спеки, где есть kept или переносимая книга
 carried_book:    domain.books.<книга>: {} | {show} — строки domain/<sub>/<книга>/<член> у держателя пишет воркер на домене;
                  доставка, member_row и дверь — как у собираемой (Н1.4, Н2)

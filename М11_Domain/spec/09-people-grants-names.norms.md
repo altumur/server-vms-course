@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/users/<имя>` — `at`; строка гранта — `until` (`0` — без срока); копия `domain/grants` — `as_of`.
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `domain/users/<имя>` — `at`; строка гранта — `until` (`0` — без срока); копия `domain/grants` — `as_of`.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/users/<имя>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/grants`, `domain/break-glass/<кластер>`, `domain/names/<sub>/<книга>`, `domain/deleting/<имя>`;

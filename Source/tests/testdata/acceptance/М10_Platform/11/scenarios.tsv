@@ -15,25 +15,9 @@ scenario	step	request	expect
 03-schema-processes	1	@start resource	ok
 03-schema-processes	2	@start controller	ok
 03-schema-processes	3	@until 30 console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "processes": {"resource/srv-a": {"schema": 1, "build": "@any", "live": true}}}
-04-store-metrics	1	store GET /metrics	200 ~configstore_raft_term
-04-store-metrics	2	store GET /metrics	200 ~configstore_raft_voters_expected
 05-power-pull	1	@manual на тестовом кластере с заранее наблюдёнными пульсами, исправным хранилищем и свободной ёмкостью выдернуть питание сервера; проверить перенос по допускам М10/4 (ориентир 90 с + проход, не общий deadline), новую эпоху, сохранность архива на томе; у соседей только подтверждённые зеркальные копии	manual
 05-power-pull	2	@manual вернуть сервер: демон рестартует по member.json без повторного join, ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад, кроме объявленного home (урок 4 шаг 7)	manual
 06-recover	1	@manual на отдельном тестовом кластере остановить/отсечь все прежние демоны и писателей; сохранить исходные каталоги; подтвердить upper; одним оператором выполнить recover на остановленном демоне; новый floor выше upper, старые узлы отсечены, новые эпохи не повторяются; при неизвестном upper/неполной изоляции отказ, в том числе с force	manual
-07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ (размер сверх объявленного не берёт и -force); дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
-08-floor-replay	1	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f"}
-08-floor-replay	2	@restart store	ok
-08-floor-replay	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f", "again": true}
-08-floor-replay	4	admin POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f1"}	400 {"kind": "badrequest"}
-08-floor-replay	5	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}
-08-floor-replay	6	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f2"}	409 {"kind": "refused"}
-08-floor-replay	7	admin POST /v1/write {"op": "floor", "floor": 1000, "id": "f3"}	409 {"kind": "refused"}
-08-floor-replay	8	@as console store POST /v1/write {"op": "floor", "floor": 8589934592, "id": "f4"}	403 {"kind": "forbidden"}
-08-floor-replay	9	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "4294967296"}}
-08-floor-replay	10	admin POST /v1/write {"op": "floor", "floor": 2.0e1, "id": "f5"}	400 {"kind": "badrequest"}
-08-floor-replay	11	admin POST /v1/write {"op": "floor", "floor": 18446744073709551615, "id": "f6"}	400 {"kind": "badrequest"}
-08-floor-replay	12	admin POST /v1/write {"op": "floor", "floor": 9007194959773696, "id": "f7"}	200 {"index": "@any"}
-08-floor-replay	13	admin GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "9007194959773696"}}
 09-resource-unreadable-heartbeat	1	@start resource	ok
 09-resource-unreadable-heartbeat	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 09-resource-unreadable-heartbeat	3	@sigterm resource	ok
@@ -42,41 +26,6 @@ scenario	step	request	expect
 09-resource-unreadable-heartbeat	6	@sleep 5	ok
 09-resource-unreadable-heartbeat	7	@as resource store POST /v1/write {"id":"a2","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906"}}	200
 09-resource-unreadable-heartbeat	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
-10-foreign-dir	1	@foreign store nolabel	ok
-10-foreign-dir	2	@foreign store otherlabel	ok
-11-copy	1	@import store inputs/copy-ok.jsonl	ok
-11-copy	2	restored GET /v1/get?key=testsub/next_id	200 {"items": {"n": "2"}}
-11-copy	3	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
-11-copy	4	restored GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "@any", "generation_at": "@time"}}
-11-copy	5	@import store inputs/copy-ok-unordered.jsonl	ok
-11-copy	6	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
-11-copy	7	@backup store c1	ok
-11-copy	8	@import store backup c1	ok
-11-copy	9	restored GET /v1/get?key=platform/spec/testsub	200 {"items": {"rev": "@any"}}
-11-copy	10	restored GET /v1/get?key=platform/spec/testsub2	200 {"items": {"rev": "@any"}}
-11-copy	11	@backup store b2 in-data	refused
-12-copy-refused	1	@import store inputs/bad-format.jsonl	refused
-12-copy-refused	2	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	3	@import store inputs/bad-version.jsonl	refused
-12-copy-refused	4	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	5	@import store inputs/bad-header-extra.jsonl	refused
-12-copy-refused	6	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	7	@import store inputs/bad-no-header.jsonl	refused
-12-copy-refused	8	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	9	@import store inputs/bad-row-extra.jsonl	refused
-12-copy-refused	10	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	11	@import store inputs/bad-row-missing.jsonl	refused
-12-copy-refused	12	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	13	@import store inputs/bad-not-json.jsonl	refused
-12-copy-refused	14	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	15	@import store inputs/bad-not-row.jsonl	refused
-12-copy-refused	16	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	17	@import store inputs/bad-repeat-key.jsonl	refused
-12-copy-refused	18	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	19	@import store inputs/bad-index-above.jsonl	refused
-12-copy-refused	20	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
-12-copy-refused	21	@import store inputs/bad-unreadable.jsonl	refused
-12-copy-refused	22	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
 13-time-reader	1	@start resource	ok
 13-time-reader	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 13-time-reader	3	@sigterm resource	ok
@@ -85,21 +34,7 @@ scenario	step	request	expect
 13-time-reader	6	@sleep 5	ok
 13-time-reader	7	@as resource store POST /v1/write {"id":"a4","op":"put","key":"platform/doors/srv-a","items":{"url":"http://127.0.0.1:1","since":"1","at":"906.654321"}}	200
 13-time-reader	8	@until 30 console GET /servers	200 {"servers": {"srv-a": {"resource": "unreachable"}}}
-14-copy-ids	1	admin POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"index": "$v1"}
-14-copy-ids	2	@backup store c2	ok
-14-copy-ids	3	@import store backup c2	ok
-14-copy-ids	4	restored GET /v1/get?key=other/b10	200 {"items": {"n": "1"}}
-14-copy-ids	5	restored POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"index": "@any", "again": "@absent"}
-14-copy-ids	6	restored POST /v1/write {"id":"b1","op":"put","key":"other/b10","items":{"n":"1"}}	200 {"again": true}
-15-service-doors	1	@as console store POST /v1/join {"id": "x1", "raft": "127.0.0.1:1", "api": "127.0.0.1:2"}	403 {"kind": "forbidden"}
-15-service-doors	2	store POST /v1/leave {"id": ""}	403 {"kind": "forbidden"}
-15-service-doors	3	admin POST /v1/join @big(1048577)	413 {"kind": "toolarge"}
-15-service-doors	4	admin PUT /v1/status @big(1048577)	413 {"kind": "toolarge"}
-15-service-doors	5	admin PUT /v1/status	405
-15-service-doors	6	admin POST /v1/join {"id": "x1", "raft": "", "api": ""}	400 {"kind": "badrequest"}
-15-service-doors	7	admin HEAD /v1/status	405
-15-service-doors	8	admin HEAD /v1/rights	404
-15-service-doors	9	console2 GET /entries	503
+15-service-doors	1	console2 GET /entries	503
 16-presence-lock	1	@start resource	ok
 16-presence-lock	2	@start worker w-1	ok
 16-presence-lock	3	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}

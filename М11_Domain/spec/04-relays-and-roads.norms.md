@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/topology` — `at`; объект `domain/reached` — `ts`.
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `domain/topology` — `at`; объект `domain/reached` — `ts`.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/topology`, `domain/member-topology`, `domain/reached`, `domain/reaches`;
@@ -128,7 +128,7 @@ domain/view.relay_refused: {<ретранслятор>: {<член>: <причи
 
 ## Н2 Двери
 
-HTTP-контракт: [04-relays-and-roads.api.openapi.yaml](04-relays-and-roads.api.openapi.yaml). Разбор запроса — М10/1 Н2.1
+HTTP-контракт: [04-relays-and-roads.api.openapi.yaml](04-relays-and-roads.api.openapi.yaml). Разбор запроса — P/01.1 Н2.1
 с отступлениями М10/9 Н2.
 
 Дверь ретранслятора и пакет `relayed` — класс `signed` серверной стороны TLS урока 8 Н1.6 `server`: сертификат клиента не требуется и прав не даёт, личность — подпись члена.

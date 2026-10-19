@@ -117,7 +117,7 @@ gate:
   scope:    грант на * | unit:<sub>/<id> | labels:<…>; грант на единицу или на её about-единицу
   csrf:     действующий запрос по куке с чужим Origin → 403
   body:     предел тела (≥ 1 MiB; blob PUT /<rows>/<id>/<blob_field> — 32 МиБ, урок 10 Н1.4); chunked → 400; медленно → 408; больше → 413
-            (ответ раннего отказа — урок 1 Н2.1)
+            (ответ раннего отказа — P/01.1 Н2.1)
   refusal:  {detail, error: denied}; 403 → журнал access.denied
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
               /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (М11/9 Н1.2)
@@ -179,11 +179,11 @@ commands:  вид command / command.failed — слово и заметка мо
 
 HTTP-контракт: [09-the-console.api.openapi.yaml](09-the-console.api.openapi.yaml).
 
-**Разбор запроса консоли** — по уроку 1 Н2.1: query как `application/x-www-form-urlencoded` (`+`, `%XX`, пустые пары),
+**Разбор запроса консоли** — по P/01.1 Н2.1: query как `application/x-www-form-urlencoded` (`+`, `%XX`, пустые пары),
 JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`, BOM, не UTF-8, одиночный суррогат — отказ), путь байт в байт
 без нормализации, HTTP по RFC 9112, ранний отказ. Отступления консоли, одни для всех её дверей (уроки 3, 4, 8, 9, 10):
-отказ разбора — 400 ConsoleRefusal `{detail, error}`, а не `Fault {kind}` урока 1; нет маршрута — 404 NoRoute, метод — 405
-(урок 1 даёт 404 на оба); читаемый дверью параметр повторён — 400, кроме `v` модуля — 404 (Н1.1); тело `chunked` — 400
+отказ разбора — 400 ConsoleRefusal `{detail, error}`, а не `Fault {kind}` P/01.1; нет маршрута — 404 NoRoute, метод — 405
+(P/01.1 даёт 404 на оба); читаемый дверью параметр повторён — 400, кроме `v` модуля — 404 (Н1.1); тело `chunked` — 400
 (Н1 `body`); глубина JSON тела — 64 (урок 10 Н1.4). Двери других уроков ссылаются сюда и называют только свои отступления.
 
 Общие коды: неизвестный путь — `404 NoRoute`; неверный метод — `405 {detail: method, error: method}` без заголовка `Allow`
@@ -211,7 +211,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 | `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель (урок 4 Н3 «выбрать»), иначе `false` |
 | `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` урока 4 Н1 (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть (ключи `<sub>/<имя слота>`); нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
 | `WherePlace` без подписанта двери | поля `door` нет совсем (не `null`) |
-| пульс воркера в `/servers` и `/metrics` | нечитаемый (Н0 урока 1 «Устойчивость выдачи»: не JSON-объект, не по форме урока 5 Н1.1), `worker` ≠ имени в ключе или имя ключа не по грамматике имени слота урока 3 Н1.4 (`W-N`) — пульса нет: воркер не показан, пульс считается в `<sub>_heartbeats_garbled`, ответ 200 (сверка python и go М10/6–11, C3, C15) |
+| пульс воркера в `/servers` и `/metrics` | нечитаемый (Н0 P/01.1 «Устойчивость выдачи»: не JSON-объект, не по форме урока 5 Н1.1), `worker` ≠ имени в ключе или имя ключа не по грамматике имени слота урока 3 Н1.4 (`W-N`) — пульса нет: воркер не показан, пульс считается в `<sub>_heartbeats_garbled`, ответ 200 (сверка python и go М10/6–11, C3, C15) |
 | `ServerRow.labels`, `labels_node`, `labels_source` | `labels` — действующие метки сервера: строка `platform/servers/<s>` побеждает метки узла (урок 4 Н2.1); `labels_node` — метки узла из поля `labels` пульсов воркеров сервера; `labels_source` — `console` при читаемой строке, `node` без строки, когда есть прочитанный пульс воркера сервера, иначе `unknown` (сверка python и go М10/6–11, C16) |
 | `WorkerRow.labels` | действующие метки его сервера, как у `ServerRow.labels`, — не поле пульса (сверка python и go М10/6–11, C16) |
 | `ServerRow.placeable`, `why` | `true`, когда на сервере есть живой воркер подсистемы, который проходит пул и ограничения урока 4 Н3 «выбрать» (метки, `requires`); нет такого — `false`, `why` — причина («no eligible live worker») (сверка python и go М10/6–11, C17) |
@@ -251,8 +251,8 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
    включая открытые и /session*; ни одна такая дверь ещё не исполнена
 4. /session* → процедура Н1.3: после установления личности, если запрос действует по куке,
    чужой Origin → 403 до изменения сессии/кук; иначе ответ процедуры
-5. путь → дверь и что она требует (Н1.3 need); пути нет → 404; путь сравнивается байт в байт (урок 1 Н2.1):
-   `/counters/`, `/where/` — не маршруты; query — по урок 1 Н2.1, читаемый дверью параметр повторён → 400 {detail, error}
+5. путь → дверь и что она требует (Н1.3 need); пути нет → 404; путь сравнивается байт в байт (P/01.1 Н2.1):
+   `/counters/`, `/where/` — не маршруты; query — по P/01.1 Н2.1, читаемый дверью параметр повторён → 400 {detail, error}
    (кроме `v` модуля — 404, Н1.1)
 6. кто звонит, если дверь требует личность (Н1.3 identity) → иначе 401
 7. личность выбрана по куке и Origin чужой → 403; затем единицы из пути и требуемая возможность → грант или 403 + журнал
@@ -349,7 +349,7 @@ door.routes, доступным подписантом и подтверждён
   # audit_failures, garbled_rows, idempotency_store_failures, requests_ledger_garbled; ряды с метками — по своим
   # объектам; ряды из отчёта прохода и нехватки (reconcile_pass_seconds, reconcile_failures, units_short, workers_withheld,
   # workers_needed …) — при прочитанном отчёте; нехватка, отчёт или пульс, которых не прочесть, ряд снимают, а не
-  # роняют ответ (Н0 урока 1 «Устойчивость выдачи»; сверка python и go М10/6–11, C2, C8)
+  # роняют ответ (Н0 P/01.1 «Устойчивость выдачи»; сверка python и go М10/6–11, C2, C8)
   # heartbeat_skew_seconds_max|min — ts пульса минус стенные часы консоли при чтении: плюс — часы писателя впереди
   # (сверка python и go М10/6–11, C23); server_labels{server,labels,source} — source словом labels_source ServerRow: console | node | unknown
   # (сверка python и go М10/6–11, C24)
@@ -432,14 +432,14 @@ metrics[]:  закрытый перечень ключей элемента (з�
 
 | № | Сценарий | Нормы |
 |---|---|---|
-| 01 | страница и модуль: `/` 200 html с `PlatformConsole.mount` и CSP; `/platform/console.js?v=1` 200, `?v=2` 404; `/healthz`; страница, модуль и стили байт в байт с опубликованными файлами Н1.1 `module`; `?v=%31` и `?%76=1` — та же версия 1 (query по урок 1 Н2.1) | Н1.1, Н2 (сверка python и go М10/6–11, C1) |
+| 01 | страница и модуль: `/` 200 html с `PlatformConsole.mount` и CSP; `/platform/console.js?v=1` 200, `?v=2` 404; `/healthz`; страница, модуль и стили байт в байт с опубликованными файлами Н1.1 `module`; `?v=%31` и `?%76=1` — та же версия 1 (query по P/01.1 Н2.1) | Н1.1, Н2 (сверка python и go М10/6–11, C1) |
 | 02 | `/spec` — форма SpecView с `running_gauge`, `workers_gauge`, `display` как написано; `/mounts` — `{root: testsub}` | Н2, урок 2 |
 | 03 | сессия открытой консоли: `GET /session` → `{open: true}`; `POST /session` → 400; `DELETE /session` → `{out: true}` и снимает куки `w2c_token`, `w2c_glass` | Н1.3, Н2 (сверка python и go М10/6–11, C34) |
 | 04 | `/servers` → `{policy: {servers: shared}, servers: {}}`; `/unplaceable` пуст; `/where/<id>` у неразмещённой — 404 с `reason` | Н2, Н3 |
 | 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live`; `/testsub/metrics` — ряды «всегда» Н3 (`failovers_unmeasured`, `audit_failures`, `garbled_rows`, `idempotency_store_failures`, `requests_ledger_garbled`) | Н3 (сверка python и go М10/6–11, C8) |
 | 06 | отказы: неизвестный путь 404 `no such path`; метод 405; `/counters/c4/x` 404; смонтированная `/testsub2/` 404; методы, кроме `PUT`, на двери байтов `/testsub2/tallies/t1/mask` — 405; `/testsub/asked/…` без `per_person` — 404; `POST /testsub2/` — 405; `/where/<table>/<place>?unit=` не по форме id — 400 | Н4, Н2 (сверка python и go М10/6–11: C26, C27, C28, C6) |
 | 07 | нечитаемая строка intent (`state` не `active`/`idle`) — `/where/<id>` 503, не 404 | Н3 `/where`, урок 4 Н1.5 (сверка python и go М10/6–11, C5) |
-| 08 | нечитаемый пульс воркера (`@spoil object`) — `/servers` и `/metrics` 200, `testsub_heartbeats_garbled 1` | Н2, Н0 урока 1 «Устойчивость выдачи» (сверка python и go М10/6–11, C3) |
+| 08 | нечитаемый пульс воркера (`@spoil object`) — `/servers` и `/metrics` 200, `testsub_heartbeats_garbled 1` | Н2, Н0 P/01.1 «Устойчивость выдачи» (сверка python и go М10/6–11, C3) |
 | 09 | нехватка у `testsub2` (`grows: true`, воркеров нет) — `/testsub2/metrics` 200 с `testsub2_units_short` | Н3 `/metrics` (сверка python и go М10/6–11, C2) |
 | 10 | живой ресурс — ряды `w2c_resource_waits`, `w2c_resource_mirror_failures_total`, `w2c_resource_restore_left` по полям его пульса; `/resources` с `waits`, `mirror`, `restore` | Н3 `/metrics`, Н2 (сверка python и go М10/6–11, C9, C10) |
 | 11 | пульсы ресурса со входа (`@put object`): `pass_stalled` в `/resources` как есть; лишнее поле, `server` ≠ ключу, нет `url` — пульса в `/resources` нет, ряд `w2c_resource_heartbeats_garbled` (сверка python и go М10/6–11, C11, C12) | Н2 «Выдачи» |
@@ -490,7 +490,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 - [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, число по значению (Н3 «/metrics — текст», ADR-0055) — сц. 05; `failover_seconds`, `failovers_unmeasured` — чтением (стенд урока 9 не перезапускает воркер под прежним именем)
 - [ ] **М10/9-11** общие коды Н4 — сц. 06; полосы и пределы тела — чтением Н3 шаги 1–2 и описания пределов реализации («Решает реализация» п. 2): заполнить полосу и прислать большое тело TSV не умеет
 - [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — проверяется чтением: тест границы реализации (список маршрутов консоли против слов потока и архива); причина — отсутствие маршрута запросом не показать
-- [ ] **М10/9-13** устойчивость выдачи (Н0 урока 1): нечитаемый пульс воркера — 200 и `heartbeats_garbled` — сц. 08; нехватка — 200 с `units_short` — сц. 09; нечитаемый пульс ресурса по закрытому перечню Н2 — сц. 11 (C11); `worker` ≠ ключу и `W-N` — сц. 12 (C15) (сверка python и go М10/6–11)
+- [ ] **М10/9-13** устойчивость выдачи (Н0 P/01.1): нечитаемый пульс воркера — 200 и `heartbeats_garbled` — сц. 08; нехватка — 200 с `units_short` — сц. 09; нечитаемый пульс ресурса по закрытому перечню Н2 — сц. 11 (C11); `worker` ≠ ключу и `W-N` — сц. 12 (C15) (сверка python и go М10/6–11)
 - [ ] **М10/9-14** ряды `w2c_resource_*` из полей `ResourceRow` и ряды «всегда» Н3 — сц. 05, 10; знак skew, `source` — чтением (сверка python и go М10/6–11)
 
 ## Соответствие прежним урокам

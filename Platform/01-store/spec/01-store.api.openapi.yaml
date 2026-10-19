@@ -1,0 +1,773 @@
+# P/01 — двери процесса хранилища: HTTP-контракт. Операции — глава 1.1 (01.1-store.norms.md Н2–Н4), права и /v1/rights —
+# глава 1.2 (01.2-store.norms.md), служебные двери демона /v1/status, /v1/join, /v1/leave, /metrics и op floor — глава 1.3 (01.3-store.norms.md).
+openapi: 3.1.0
+info: {title: Двери процесса хранилища, version: "1"}
+paths:
+  /v1/get:
+    get:
+      summary: прочитать
+      parameters:
+      - name: key
+        in: query
+        required: true
+        schema: {$ref: "#/components/schemas/Key"}
+        description: Разбор query — Н2.1 (application/x-www-form-urlencoded; + — пробел, %2B — плюс); повтор или отсутствие — 400 badrequest, байты не UTF-8 — 400 badkey.
+      responses:
+        "200":
+          description: строка; отсутствующая — items null, index ""
+          content: {application/json: {schema: {$ref: "#/components/schemas/Row"}}}
+        "400": {$ref: "#/components/responses/BadRequestOrKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /v1/list:
+    get:
+      summary: перечислить
+      description: После проверки личности по P/01.2 Н3 «проверить»; право read на значения не требуется.
+      parameters:
+      - name: prefix
+        in: query
+        required: false
+        schema: {type: string}
+        description: Байты после разбора query по Н2.1, UTF-8 не требуется; отсутствие — пустой префикс; повтор — 400 badrequest.
+      responses:
+        "200":
+          description: каждый ключ с данным префиксом и его версия; ключи — в порядке байтов
+          content: {application/json: {schema: {$ref: "#/components/schemas/Listing"}}}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /v1/write:
+    post:
+      summary: Обычная запись P/01.1 или привилегированный подъём пола
+      description: >-
+        Н2 норм: предел чтения тела задаётся отдельно от потолка строки; при его
+        превышении до разбора JSON — 413 toolarge, limit равен пределу тела в байтах.
+        В приёмке предел тела 1048576, потолок строки 524288 байт.
+      requestBody:
+        required: true
+        content: {application/json: {schema: {oneOf: [$ref: '#/components/schemas/Cmd', $ref: '#/components/schemas/FloorCmd']}}}
+      responses:
+        "200":
+          description: сделано; again — ответ прежнего применения записи с этим id
+          content: {application/json: {schema: {$ref: "#/components/schemas/Written"}}}
+        "400": {$ref: "#/components/responses/BadRequestOrKey"}
+        "404": {$ref: "#/components/responses/NoRoute"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409":
+          description: CAS P/01.1 либо floor не возрастает (refused — строка P/01.1 Н4); иной payload с тем же id — 400 badrequest, не 409
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ConflictFault'
+                - $ref: '#/components/schemas/Refused'
+        "412": {$ref: "#/components/responses/Guard"}
+        "413": {$ref: "#/components/responses/TooLarge"}
+        "503": {$ref: "#/components/responses/UnavailableOrAmbiguous"}
+  /v1/rights:
+    get:
+      summary: Загруженный файл прав; только личность admin после проверки допустимости пересылки
+      responses:
+        '200':
+          description: Полный загруженный объект JSON; без оболочки и добавочных полей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RightsFile'
+        '403':
+          description: Не admin либо попытка подмены роли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Файл прав не загружен или нет маршрута.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Хранилище недоступно.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailableFault'
+  /v1/status:
+    get:
+      summary: Локальное наблюдение состава и индексов
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailableFault'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
+  /v1/join:
+    post:
+      summary: Вступление по удостоверенной роли демона
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Не выполнено либо исход изменения состава неизвестен; перечитать status
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/UnavailableFault'
+                - $ref: '#/components/schemas/AmbiguousFault'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
+        '409':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refused'
+        '413':
+          description: Превышен предел чтения тела служебного запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTooLargeFault'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Join'
+  /v1/leave:
+    post:
+      summary: Выход себя или указанного участника
+      responses:
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Не выполнено либо исход изменения состава неизвестен; перечитать status
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/UnavailableFault'
+                - $ref: '#/components/schemas/AmbiguousFault'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
+        '409':
+          description: 'Хранилище коробки без raft: leave последнего голоса (Н1.3 box)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refused'
+        '413':
+          description: Превышен предел чтения тела служебного запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTooLargeFault'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Leave'
+  /metrics:
+    get:
+      summary: Метрики демона
+      responses:
+        '200':
+          description: Prometheus text exposition UTF-8; Н1.3
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '403':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenFault'
+        '404':
+          description: Нет маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '405':
+          description: Неверный метод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestFault'
+        '503':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailableFault'
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                const: 1
+              description: Только у unavailable при пределе соединений (Н4); остальные 503 не обещают срок.
+components:
+  schemas:
+    Key:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - pattern: '^/'
+        - pattern: '(^|/)\.\.(/|(?![\s\S]))'
+      description: >-
+        Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..;
+        ..foo допустим. Предел 1024 байта UTF-8 и меньший файловый предел
+        проверяются отдельно; maxLength не выражает число байтов.
+    Version:
+      type: string
+      pattern: '^(?:0|[1-9][0-9]{0,19})(?![\s\S])'
+      description: Непустая версия по Н1; сравнивается вызывающим только на равенство.
+    VersionOrAbsent:
+      type: string
+      pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'
+      description: Версия или пустая строка, если строки нет.
+    Row:
+      description: Три различимых исхода чтения; unreadable бывает только true у повреждённой строки.
+      unevaluatedProperties: false
+      oneOf:
+      - type: object
+        required: [items, index]
+        additionalProperties: false
+        properties:
+          items: {type: object, additionalProperties: {type: string}}
+          index: {$ref: "#/components/schemas/Version"}
+      - type: object
+        required: [items, index]
+        additionalProperties: false
+        properties:
+          items: {type: "null"}
+          index: {const: ""}
+      - type: object
+        required: [items, index, unreadable]
+        additionalProperties: false
+        properties:
+          items: {type: "null"}
+          index: {$ref: "#/components/schemas/Version"}
+          unreadable: {const: true}
+    Listing:
+      type: object
+      required: [keys]
+      additionalProperties: false
+      properties:
+        keys:
+          type: object
+          propertyNames: {$ref: "#/components/schemas/Key"}
+          additionalProperties: {$ref: "#/components/schemas/Version"}
+      description: Порядок имён keys — по UTF-8-байтам; JSON Schema порядок объекта не проверяет.
+    Cmd:
+      type: object
+      description: "Лишние поля верхнего уровня команды принимаются и не читаются независимо от JSON-типа (Н2, P/01.1-12, сц. 23); закрыт только guard (добавлено ревью стадии A 2)"
+      unevaluatedProperties: true
+      required: [op, key]
+      properties:
+        op: {type: string, enum: [put, delete], description: "op floor — отдельная схема FloorCmd урока 11 на admin-сокете лидера (добавлено P/01.3 Н2)"}
+        key: {$ref: "#/components/schemas/Key"}
+        cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
+        guard:
+          type: object
+          required: [key, index]
+          additionalProperties: false
+          properties:
+            key: {$ref: "#/components/schemas/Key"}
+            index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
+        id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+      oneOf:
+      - properties:
+          op: {const: put}
+          items: {type: object, additionalProperties: {type: string}}
+        required: [items]    # у put обязателен; МОЖЕТ быть пустым объектом
+      - properties:
+          op: {const: delete}
+          items: {}    # у delete не читается: любое JSON-значение или отсутствие — не отказ
+    Written:
+      type: object
+      required: [index]
+      additionalProperties: false
+      properties:
+        index: {$ref: "#/components/schemas/Version"}
+        again: {const: true}
+      description: Первое применение — index; сохранённый повтор добавляет again true.
+    Fault:
+      description: Закрытые формы отказов Н4; конкретный код операции ограничивает допустимые ветви.
+      oneOf:
+      - $ref: "#/components/schemas/BadKeyFault"
+      - $ref: "#/components/schemas/BadRequestFault"
+      - $ref: "#/components/schemas/ForbiddenFault"
+      - $ref: "#/components/schemas/ConflictFault"
+      - $ref: "#/components/schemas/GuardFault"
+      - $ref: "#/components/schemas/RowTooLargeFault"
+      - $ref: "#/components/schemas/BodyTooLargeFault"
+      - $ref: "#/components/schemas/UnavailableFault"
+      - $ref: "#/components/schemas/AmbiguousFault"
+    BadKeyFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: badkey}
+        error: {type: string}
+    BadRequestFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: badrequest}
+        error: {type: string}
+    ForbiddenFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: forbidden}
+        error: {type: string}
+    ConflictFault:
+      type: object
+      required: [kind, error, index]
+      additionalProperties: false
+      properties:
+        kind: {const: conflict}
+        error: {type: string}
+        index: {$ref: "#/components/schemas/VersionOrAbsent"}
+    GuardFault:
+      type: object
+      required: [kind, error, key, index]
+      additionalProperties: false
+      properties:
+        kind: {const: guard}
+        error: {type: string}
+        key: {$ref: "#/components/schemas/Key"}
+        index: {$ref: "#/components/schemas/VersionOrAbsent"}
+    RowTooLargeFault:
+      type: object
+      required: [kind, error, key, size, limit]
+      additionalProperties: false
+      properties:
+        kind: {const: toolarge}
+        error: {type: string}
+        key: {$ref: "#/components/schemas/Key"}
+        size: {type: integer, minimum: 1}
+        limit: {type: integer, minimum: 0}
+      description: key — ключ строки, size — вес items, limit — потолок строки; size больше limit.
+    BodyTooLargeFault:
+      type: object
+      required: [kind, error, limit]
+      additionalProperties: false
+      properties:
+        kind: {const: toolarge}
+        error: {type: string}
+        limit: {type: integer, minimum: 1}
+        size: {type: integer, minimum: 1}
+      description: Без key; size, если выдан, — известный полный размер тела; size больше limit.
+    UnavailableFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: unavailable}
+        error: {type: string}
+    AmbiguousFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: ambiguous}
+        error: {type: string}
+    RightsFile:
+      type: object
+      additionalProperties: false
+      required:
+      - roles
+      properties:
+        comment:
+          type: string
+          description: Необязательная стабильная пометка генератора; не участвует в оценке прав.
+        roles:
+          type: object
+          propertyNames:
+            $ref: '#/components/schemas/RoleName'
+          additionalProperties:
+            $ref: '#/components/schemas/RoleRights'
+      description: Загруженный configstore-rights.json. Совпадение с генератором, группами и читателями — смысловая проверка Н1/Н3, не JSON Schema.
+    RoleName:
+      type: string
+      pattern: ^[a-z][a-z0-9_-]{0,63}(?![\s\S])
+      not:
+        enum:
+        - admin
+        - configstore
+        - configstore-door
+    RoleRights:
+      type: object
+      additionalProperties: false
+      required:
+      - group
+      - read
+      - write
+      properties:
+        group:
+          type: string
+          minLength: 1
+        read:
+          type: array
+          items:
+            type: string
+        write:
+          type: array
+          items:
+            type: string
+        delete:
+          type: array
+          items:
+            type: string
+      description: 'delete отсутствует — пустой список, удалять нельзя (P/01.2 Н1.2, решение b60d983e); генератор выводит delete явно у каждой роли. Образцы и отрицания — Н1.2/Н1.3.'
+    Empty:
+      type: object
+      required: []
+      additionalProperties: false
+      properties: {}
+    FloorCmd:
+      type: object
+      required:
+      - op
+      - floor
+      - id
+      additionalProperties: false
+      properties:
+        op:
+          const: floor
+        floor:
+          type: integer
+          minimum: 1
+          maximum: 9007194959773696
+        id:
+          type: string
+          pattern: ^[0-9a-f]{1,64}(?![\s\S])
+    Join:
+      type: object
+      required:
+      - id
+      - raft
+      - api
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/MemberId'
+        raft:
+          type: string
+          minLength: 1
+        api:
+          type: string
+          minLength: 1
+        force:
+          type: boolean
+    Leave:
+      type: object
+      required:
+      - id
+      additionalProperties: false
+      properties:
+        id:
+          anyOf:
+          - $ref: '#/components/schemas/MemberId'
+          - const: ''
+    MemberId:
+      type: string
+      pattern: ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\s\S])
+    Refused:
+      type: object
+      required:
+      - kind
+      - error
+      additionalProperties: false
+      properties:
+        kind:
+          const: refused
+        error:
+          type: string
+    Status:
+      type: object
+      required:
+      - id
+      - state
+      - leader
+      - leader_id
+      - term
+      - commit
+      - applied
+      - voters
+      - members
+      - tls
+      - max_value
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/MemberId'
+        state:
+          enum:
+          - Leader
+          - Follower
+          - Candidate
+          - Shutdown
+          - Door
+        leader:
+          type: string
+          description: Адрес -api лидера, как в members; пусто, если лидер неизвестен или запущен без -api.
+        leader_id:
+          type: string
+          description: id лидера; пусто, если лидер неизвестен.
+        term:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        commit:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        applied:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        voters:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberId'
+        members:
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 1
+          propertyNames:
+            $ref: '#/components/schemas/MemberId'
+        base:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        again:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        tls:
+          type: boolean
+        max_value:
+          type: integer
+          minimum: 1
+        role:
+          type: string
+        last_snapshot:
+          type: integer
+          minimum: 0
+          maximum: 18446744073709551615
+        out:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberId'
+      allOf:
+      - if:
+          properties:
+            state:
+              const: Door
+        then:
+          required:
+          - role
+          properties:
+            role:
+              const: door
+            term:
+              const: 0
+            commit:
+              const: 0
+            applied:
+              const: 0
+  responses:
+    BadKey:
+      description: Неверный целевой ключ или непустой ключ стража.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadKeyFault"
+    BadRequest:
+      description: Запрос не по форме (Н2.1); kind badrequest.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadRequestFault"
+    BadRequestOrKey:
+      description: Неверная форма запроса или команды либо ключ; классификация — Н2.1 и Н4.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: "#/components/schemas/BadRequestFault"
+            - $ref: "#/components/schemas/BadKeyFault"
+    Forbidden:
+      description: Личность не допускается по P/01.2 Н3 «проверить» либо allowed P/01.2 Н1.3 отказал в чтении, записи, удалении или чтении стража; list не требует права read.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenFault"
+    Conflict:
+      description: Версия строки не совпала с cas; index — текущая версия или отсутствие.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConflictFault"
+    Guard:
+      description: Страж не совпал; key и index относятся к строке-стражу.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GuardFault"
+    TooLarge:
+      description: Превышен вес строки либо предел тела; поля различают причины.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: "#/components/schemas/RowTooLargeFault"
+            - $ref: "#/components/schemas/BodyTooLargeFault"
+    Unavailable:
+      description: Операция не сделана; срок ожидания лидера или местной блокировки либо предел соединений.
+      headers:
+        Retry-After:
+          schema: {type: integer, const: 1}
+          description: Только при пределе соединений двери (М10/11 Н4); иначе отсутствует.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnavailableFault"
+    NoRoute:
+      description: Нет маршрута или метода на нём (Н2.1); kind badrequest. Неразбираемый HTTP — 400 badrequest, не 414, 431, 501 или 505.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadRequestFault"
+    UnavailableOrAmbiguous:
+      description: Запись не сделана либо исход неизвестен; вид определяет способ повтора.
+      headers:
+        Retry-After:
+          schema: {type: integer, const: 1}
+          description: Только у unavailable при пределе соединений двери (М10/11 Н4); иначе отсутствует.
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: "#/components/schemas/UnavailableFault"
+            - $ref: "#/components/schemas/AmbiguousFault"

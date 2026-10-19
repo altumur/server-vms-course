@@ -1,0 +1,3 @@
+# Исходы нечитаемой строки platform/configstore-doors/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	outcome	priority	unit	norm
+	метрика configstore_doors: норма исхода не называет; нынешнее поведение обеих реализаций — строки не читаются, метрика 0	1	строка	P/01.3 Н1.3 door

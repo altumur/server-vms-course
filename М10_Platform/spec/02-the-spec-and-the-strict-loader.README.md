@@ -18,7 +18,7 @@
 | [02-the-spec-and-the-strict-loader.norms.md](02-the-spec-and-the-strict-loader.norms.md) | канон: текст, документ, поля, ссылки, хранение, проходы, отказы и приёмка | 1 |
 | [02-the-spec-and-the-strict-loader.api.openapi.yaml](02-the-spec-and-the-strict-loader.api.openapi.yaml) | HTTP-форма `GET /spec` и `SpecView` | 2 — при расхождении прав канон |
 | [README приёмки](../../Source/tests/testdata/acceptance/М10_Platform/02/README.md), `verdicts.tsv`, `diagnostics.tsv`, `cases/`, `corrections.tsv` рядом с ним | общие входы, ожидаемые вердикты и диагностические сведения | 3 — проверяют канон, не дополняют его |
-| [Нормы урока 1](01-storage.norms.md) | нормативные слова и операции хранилища для Н3 | по ссылкам канона |
+| [Нормы P/01.1](../../Platform/01-store/spec/01.1-store.norms.md) | нормативные слова и операции хранилища для Н3 | по ссылкам канона |
 | Грамматики уроков-владельцев, перечисленных в Н1.2 | допустимые ключи внутри разделов спеки | по ссылкам канона; сводный перечень не выводится из кода реализации |
 | [Лекция](../02-the-spec-and-the-strict-loader.md) | мотивация и примеры для человека | не норма |
 

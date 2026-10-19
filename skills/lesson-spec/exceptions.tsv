@@ -41,7 +41,11 @@
 М11_Domain/12	no-openapi	-	своей HTTP-двери нет: 409 too many members, 413 whole too large, 503 standby — в OpenAPI уроков 3 и 10
 М11_Domain/12	scenarios-format	own	стенд урока 3: спокойный член, members_rev, domain/agent и sign_failures, второй процесс domain (директивы урока 3 и @start domain second); проверяется по README приёмки
 М10_Platform/04	acceptance-entry	inputs	подложные слоты и пульсы для @put object сценария дренажа (units и safe по назначению и status); проверяется по README приёмки
-М10_Platform/11	acceptance-entry	inputs	копии хранилища JSON Lines (верные и по одной на каждый отказ copy) для @backup/@import; проверяется по README приёмки
 М10_Platform/06	acceptance-entry	variants	варианты спек и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав; проверяется по README приёмки
 М10_Platform/09	acceptance-entry	inputs	пульсы для @put object (наблюдения консоли); проверяется по README приёмки
 М10_Platform/10	acceptance-entry	inputs	пульсы для @put object (pending_writes, большие целые, build); проверяется по README приёмки
+М10_Platform/06	no-openapi	-	двери прав (GET /v1/rights, /v1/list) — у процесса хранилища P/01 (01-store.api.openapi.yaml); до переноса уроков 2 и 6 своих HTTP-дверей у урока нет
+М10_Platform/11	no-openapi	-	служебные двери демона хранилища — у P/01 (01-store.api.openapi.yaml); до переноса уроков 2 и 6 своих HTTP-дверей у урока нет
+P/01	scenarios-format	2/own	@as/@header, ожидание кода без тела (сценарии главы 1.2 из М10/06); проверяется по README приёмки
+P/01	scenarios-format	3/own	директивы процессов, @manual, подстроки ответа (сценарии главы 1.3 из М10/11); проверяется по README приёмки
+P/01	acceptance-entry	3/inputs	копии хранилища JSON Lines (верные и по одной на каждый отказ copy) для @backup/@import; проверяется по README приёмки

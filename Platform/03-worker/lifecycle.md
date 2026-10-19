@@ -80,7 +80,7 @@ SIGTERM», Н4), [М10/3](../../М10_Platform/spec/03-units-slots-epochs-lease.n
 
 ## Стенд
 
-«Стенд» — [README приёмки М10/01](../../Source/tests/testdata/acceptance/М10_Platform/01/README.md): `@start worker [<sub>]
+«Стенд» — [README приёмки М10/01](../common/acceptance/README.md): `@start worker [<sub>]
 <имя>` — имя подстановкой `{name}` (аргумент), `{sub}`; окружение от `{data}` (`PLATFORM_DIR`), `BOX_ID` стенда,
 `SERVER_NAME`, `PLATFORM_STORE` сокета роли, переменная `slot.name_env`, если спека её объявила; `@sigterm`, `@sigkill`;
 воркеры по заказу — директива `@grow` (исполняет ряд `workers_wanted` вместо скрипта).

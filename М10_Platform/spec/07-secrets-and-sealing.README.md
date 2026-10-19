@@ -9,7 +9,7 @@
 
 - Канон — [нормы](07-secrets-and-sealing.norms.md).
 - HTTP-входы — [единицы М10/3](03-units-slots-epochs-lease.api.openapi.yaml) и
-  [хранилище М10/1](01-storage.api.openapi.yaml); применение тел — Н2 этого урока.
+  [хранилище P/01.1](../../Platform/01-store/spec/01-store.api.openapi.yaml); применение тел — Н2 этого урока.
 - [Приёмка](../../Source/tests/testdata/acceptance/М10_Platform/07/README.md) — таблицы и сценарии.
 - [Лекция](../07-secrets-and-sealing.md) — объяснение причин и границ.
 

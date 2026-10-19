@@ -18,3 +18,4 @@ date	sample	fix	languages
 2026-10-18	variants/v1-base/expect.tsv	domainconsole читает platform/spec/va и /rev — сторона читателя спеки (журнал cammeta-go М11-03 № 1)	all
 2026-10-18	README «Варианты спек», п. 3	allow — только подтверждённый успех (200 Row / 200 Written), deny — 403, иное — неопределённый исход, как у вектора оценщика (класс RA1-16)	all
 2026-10-19	variants/v1-base/expect.tsv	ADR-0084: строки заказа <s>/want/<сервер> пишет и удаляет только <s>controller; воркер и консоль — deny	all
+2026-10-19	перенос	сценарии 05-epoch-never-deleted, 06-list-without-read, 07-guard-needs-read, 08-role-header, 10-rights-door перенесены в Platform/01-store/acceptance/2 (стадия B); README и Н5 пересчитаны: 7 сценариев / 51 шаг	all

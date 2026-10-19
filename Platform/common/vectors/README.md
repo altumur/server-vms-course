@@ -20,8 +20,8 @@
 | маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
 | секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | М10/7 Н1.3, М10/6 Н1.4 |
 | корпус спеки | `Source/tests/testdata/acceptance/М10_Platform/02/` (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | М10/2 | М10/2 Н1, Н4, Н5 |
-| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | М10/6 | М10/6 Н1.2 `pattern`, Н1.3 |
-| копия хранилища | `Source/tests/testdata/acceptance/М10_Platform/11/inputs/` | М10/11 | М10/11 Н1.3 `copy` |
+| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | М10/6 | P/01.2 Н1.2 `pattern`, Н1.3 |
+| копия хранилища | `Source/tests/testdata/acceptance/М10_Platform/11/inputs/` | М10/11 | P/01.3 Н1.3 `copy` |
 | вывод прав из спеки (по смыслу) | `Source/tests/testdata/acceptance/М10_Platform/06/variants/` | М10/6 | М10/6 Н1.4, Н3 |
 | текстовые формы значений (`values_by_type`) | векторов нет — шаги приёмки М10/03; пакет — с переносом урока 6 | М10/3 | М10/3 Н1.2 |
 | id события | векторов нет — норма формы; пакет — с переносом урока 5 | М10/8 | М10/8 Н1.2 `id` |

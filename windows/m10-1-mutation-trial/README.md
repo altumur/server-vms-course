@@ -33,7 +33,7 @@ PYTHONDONTWRITEBYTECODE=1 /Users/murat/w2c/vms-nightly/venv/bin/python windows/m
 
 ## Что именно запускалось
 
-- Общие [scenarios.tsv](../../Source/tests/testdata/acceptance/М10_Platform/01/scenarios.tsv) и [README](../../Source/tests/testdata/acceptance/М10_Platform/01/README.md) не изменены. Все 98 шагов, включая `ASSERT`, выполнены; ни одного заблокированного шага или ошибки транспорта.
+- Общие [scenarios.tsv](../../Platform/01-store/acceptance/1/scenarios.tsv) и [README](../../Platform/common/acceptance/README.md) не изменены. Все 98 шагов, включая `ASSERT`, выполнены; ни одного заблокированного шага или ошибки транспорта.
 - Каждую реализацию обслуживает отдельный Python-процесс с настоящим `StoreDaemon`, настоящим unix HTTP и сокетом роли `acceptance`. Права роли: read/write/delete только `acc/*`. Из runner не вызывается `storemachine.answer` или `StoreMachine.apply` напрямую.
 - `$a` связывает **фактическое значение любого JSON-типа**. Следующий запрос получает то же значение: числовая версия не превращена принудительно в строку. Проверка Н1 «версия на проводе — строка» хранится отдельным слоем `shape` и не участвует в kill ratio.
 - JSON-тело сравнивается целиком; текст `error` игнорируется, если его нет в ожидании. Поэтому лишнее поле `fault` в сц. 17 отмечено отдельным несовпадением точного JSON, а не неправильным HTTP-кодом.

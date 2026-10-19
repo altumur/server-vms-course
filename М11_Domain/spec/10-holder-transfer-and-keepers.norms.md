@@ -9,7 +9,7 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../М10_Platform/spec/01-storage.norms.md#время-в-строке): `domain/holder` — `at`.
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `domain/holder` — `at`.
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
@@ -131,7 +131,7 @@ member:          агент: sha256 текста = pointer.sha256, функци�
                  sha256}; иначе строка domain/backup-refused {why, term, rev}; резервную копию у члена не выбрасывает никто —
                  последний запасной путь
 in_report:       domain/backup-taken — объект отчёта члена (урок 3 Н1.2 member_objects, добавлено М11/10): JSON-объект
-                 {term, rev, sha256} — term и rev целые JSON (не строки строки хранилища М10/1), sha256 — hex; иная форма —
+                 {term, rev, sha256} — term и rev целые JSON (не строки строки хранилища P/01.1), sha256 — hex; иная форма —
                  у держателя copies {garbled} (Н1.3), пары нет. Сборки до этой нормы, где хранитель нёс строки, с держателем
                  по норме не сходятся: передача к такому хранителю — «called off» (Н1.7 шаг 3) до перехода обеих сторон
                  (добавлено сверкой М11, X1)
