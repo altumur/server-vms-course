@@ -11,6 +11,7 @@ console	write	platform/epoch_floor	deny
 console	read	domain/grants	allow
 console	read	domain/grants/c1	deny
 console	read	domain/view	deny
+console	write	va/want/srv-a	deny
 vacontroller	write	va/placement/u1	allow
 vacontroller	write	va/controller/placement_turn	allow
 vacontroller	delete	va/controller/placement_turn	deny
@@ -18,6 +19,8 @@ vacontroller	delete	va/items/u1	allow
 vacontroller	write	va/items/u1	deny
 vacontroller	read	va/idem/k1	deny
 vacontroller	delete	va/epoch/	deny
+vacontroller	write	va/want/srv-a	allow
+vacontroller	delete	va/want/srv-a	allow
 vaworker	write	va/slots/w-1	allow
 vaworker	write	va/epoch/u1	allow
 vaworker	delete	va/epoch/u1	deny
@@ -27,6 +30,7 @@ vaworker	read	va/items/u1	allow
 vaworker	read	va/idem/k1	deny
 vaworker	read	platform/epoch_floor	allow
 vaworker	read	domain/holder	allow
+vaworker	write	va/want/srv-a	deny
 resource	write	platform/doors/srv-a	allow
 resource	read	va/retention	allow
 resource	read	va/alarms_retention	allow

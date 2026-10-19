@@ -17,3 +17,4 @@ date	sample	fix	languages
 2026-10-18	variants/v1-base/expect.tsv	domainconsole читает platform/schema (проверка схемы при старте процессов домена, М11/12 Н1.8; журнал cammeta-python)	all
 2026-10-18	variants/v1-base/expect.tsv	domainconsole читает platform/spec/va и /rev — сторона читателя спеки (журнал cammeta-go М11-03 № 1)	all
 2026-10-18	README «Варианты спек», п. 3	allow — только подтверждённый успех (200 Row / 200 Written), deny — 403, иное — неопределённый исход, как у вектора оценщика (класс RA1-16)	all
+2026-10-19	variants/v1-base/expect.tsv	ADR-0084: строки заказа <s>/want/<сервер> пишет и удаляет только <s>controller; воркер и консоль — deny	all
