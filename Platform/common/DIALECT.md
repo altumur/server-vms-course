@@ -141,7 +141,8 @@
 
 Строка: `kind<TAB>pattern<TAB>norm`; первая совпавшая сверху. `kind`: `null`, `true`, `false`, `int`, `float`,
 `nonfinite`, `string`. Строки `limit<TAB>int_max=N` и `limit<TAB>float_max=X` — пределы: целое по модулю больше
-`int_max`, дробное вне `float_max` и `nonfinite` — отказ `value` на пути значения. Набор — core YAML 1.2.2 и отклонения
+`int_max`, дробное вне `float_max` и `nonfinite` — отказ формы на пути значения; класс — по § 5 (`x-class` ближайшего
+пройденного места, иначе `value`; решение Ф1 свода журналов, ревью стадии B 1–2, п. 6). Набор — core YAML 1.2.2 и отклонения
 P/02.1 Н1.1 (ADR-0087 доп. (1) Р3).
 
 ## 8. Схемы семей данных

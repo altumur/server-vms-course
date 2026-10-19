@@ -43,7 +43,7 @@ settle=30. Воркер `testsub2` несёт учебный обработчи�
 
 ## scenarios.tsv
 
-Формат — [словарь директив и дверей «Стенда» общего README приёмки](../../../../../../Platform/common/acceptance/README.md#словарь-директив-и-дверей): двери `console`, `resource`, `store`, директивы `@start`, `@until`, формы запроса `@header`, `@raw`. Всего 121 шаг: 113 HTTP, шесть @start, @sleep и @sigterm. Шаги 05/7–8 — строка стоит через 20 с после `performed`
+Формат — [словарь директив и дверей «Стенда» общего README приёмки](../../../../../../Platform/common/acceptance/README.md#словарь-директив-и-дверей): двери `console`, `resource`, `store`, директивы `@start`, `@until`, формы запроса `@header`, `@raw`. Всего 130 шагов: 120 HTTP (с @until и @as), шесть @start, два @append, @sleep и @sigterm. Шаги 05/7–8 — строка стоит через 20 с после `performed`
 (нижняя граница settle с запасом); 05/11–13 — пульс через дверь объектов: обязательные поля и последний пульс при SIGTERM
 с пустым `status` (мутационная проверка 7cecaf2 № 24, 26, 37).
 
