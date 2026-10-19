@@ -1,0 +1,796 @@
+# Форма спеки подсистемы <name>.subsystem.yaml (P/02.1 Н1.2, Н1.2а, Н1.2б, Н1.3) на диалекте Platform/common/DIALECT.md.
+# Источник главы P/02.1 (ADR-0087): из него строятся загрузчики реализаций и раздел формы в нормах главы.
+# Ссылки Н1.4 и отношения между значениями — references.tsv; таблица скаляров Н1.1 — scalars.tsv.
+# owner — урок, где ключ получает смысл; description — пояснение для урока.
+dialect: m10-form/1
+
+root:
+  description: корень — отображение с закрытым набором разделов
+  owner: P/02.1 Н1.2
+  type: object
+  required: [name, unit, placement]
+  properties:
+    name:
+      ref: subName
+      x-class: name
+      owner: P/02.1 Н1.2
+    unit:
+      type: object
+      owner: 3 Н1.1
+      required: [rows, id]
+      properties:
+        rows: {ref: rowsName, owner: 3 Н1.1}
+        id: {type: string, owner: 3 Н1.3, description: "`numeric` или несекретное поле типа string (Н1.4)"}
+        fields: {ref: unitFields, owner: 3 Н1.2, default: {}}
+    placement: {ref: placement, owner: 4 Н1.3}
+    tables: {ref: tables, owner: 10 Н1.6, default: {}, default_text: таблиц нет}
+    requests: {ref: requests, owner: 8 Н1.5}
+    holds:
+      owner: 8
+      description: все ключи необязательны
+      type: object
+      properties:
+        table: {type: string, description: таблица}
+        unit: {type: string, description: поле таблицы}
+        since: {type: string, description: поле таблицы}
+        until: {type: string, description: поле таблицы}
+        released: {type: string, description: поле таблицы}
+        longest: {type: number, exclusive_minimum: 0, description: секунды}
+    events:
+      owner: 8
+      type: object
+      default: {}
+      properties:
+        suppress:
+          description: вид события → правило подавления
+          type: object
+          names:
+            key: {type: string}
+            value:
+              type: object
+              required: [window]
+              properties:
+                window: {type: number, exclusive_minimum: 0, description: секунды}
+                by:
+                  type: array
+                  min_items: 1
+                  items: {type: string, not_enum: [t, id, repeats, since, until]}
+                  default_text: все поля строки, кроме этих
+        older_epochs: {enum: [fenced, earlier-run], default: fenced}
+    about:
+      owner: 8 Н1.2; 3 Н1.3
+      type: object
+      required: [sub, field]
+      properties:
+        sub: {ref: name, description: "имя подсистемы по грамматике `name`; существование — не проверка загрузчика"}
+        field: {type: string, description: "поле с `fixed: true`"}
+    snapshot:
+      owner: 10 Н1.3
+      type: array
+      items: {type: string}
+      description: "список полей без `*_secret`, blob и `server`; `[]` — ни одного"
+      default_text: все поля, кроме этих
+    rights: {ref: rights, owner: 6 Н1.5, default: {}}
+    secrets: {ref: secrets, owner: P/02.5 Н1.3, default: {}}
+    worker:
+      owner: P/02.5 Н1.4; 8 Н1.5
+      type: object
+      default: {}
+      properties:
+        writes: {ref: strList, owner: P/02.5 Н1.4, description: "собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (урок 7 Н3 «перезапечатать при старте»)", default: [], default_text: таблиц воркера нет}
+        reads: {ref: grantList, owner: P/02.5 Н1.4, description: "`<семья>/<имя>` или префиксы с `/`"}
+        requests: {ref: strList, owner: 8 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
+        deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этой спеки — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
+    slot:
+      owner: 3 Н1.4
+      type: object
+      default: {}
+      properties:
+        prefix: {type: string, pattern: '[a-z]{1,8}', default: w}
+        name_env: {type: string, pattern: '[A-Z][A-Z0-9_]*', default_text: имя не берётся из окружения}
+    lease:
+      owner: 3 Н1.6
+      type: object
+      default: {unconfirmed_max: 'off'}
+      required: [unconfirmed_max]
+      properties:
+        unconfirmed_max:
+          variants:
+            - {type: string, enum: [forever, 'off']}
+            - {type: integer, minimum: 1}
+    heartbeat:
+      owner: 5 Н1.1
+      type: object
+      default: {}
+      properties:
+        strings:
+          type: array
+          description: имена полей пульса, не из `platform_strings` урока 5 Н1.1
+          items: {type: string, not_enum: [worker, server, url, instance, labels, fetched, events]}
+          default: []
+          default_text: строковых полей нет
+    objects:
+      owner: 8 Н1.1
+      type: object
+      properties:
+        rows: {ref: strList, description: семьи строк-объектов}
+        door: {ref: strList, description: семьи двери объектов}
+    door:
+      owner: 9 Н3; 11 Н1.8
+      type: object
+      default: {}
+      properties:
+        routes: {ref: strList, owner: 9 Н3, default: [], default_text: двери нет}
+        pass: {ref: strList, owner: 11 Н1.8, default: [], default_text: передачи нет}
+    servers: {ref: servers, owner: 9 Н1.2}
+    display: {ref: display, owner: 9 Н1.2, default: {}}
+    console:
+      owner: 9 Н1.2
+      type: object
+      properties:
+        running: {type: string, description: "`name` метрики из `metrics[]`", default_text: "`running_gauge: null`"}
+    metrics: {ref: metrics, owner: 9 Н1.2; М13}
+    domain: {ref: domain, owner: М11}
+
+defs:
+  strList: {type: array, items: {type: string}}
+  name: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
+  subName:
+    description: "не из 21 зарезервированного слова; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"
+    type: string
+    pattern: '[a-z][a-z0-9_-]{0,31}'
+    not_enum: [platform, spec, policy, drain, servers, where, unplaceable, console, audit, events, marks, requests, asked, session, mounts, healthz, metrics, resources, schema, domain, api]
+  tableName:
+    description: имя по Н1.2, не из перечня запрещённых имён таблиц
+    type: string
+    pattern: '[a-z][a-z0-9_-]{0,31}'
+    not_enum: [platform, spec, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands]
+  rowsName:
+    description: имя по Н1.2, не из перечня запрещённых имён таблиц и не `cluster`, `worker`, `ts`
+    type: string
+    pattern: '[a-z][a-z0-9_-]{0,31}'
+    not_enum: [platform, spec, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, cluster, worker, ts]
+  grantName:
+    description: "без буквального `*`, начального `!` и `delete:`"
+    type: string
+    not_pattern: '!.*|delete:.*|.*\*.*'
+  grantList:
+    type: array
+    items:
+      type: string
+      description: "с `/`; без буквального `*`, начального `!` и `delete:`"
+      pattern: '.*/.*'
+      not_pattern: '!.*|delete:.*|.*\*.*'
+
+  # ---- поле: P/02.1 Н1.3; смысл — урок 3 Н1.2, формы url — урок 7 Н1.1
+  unitFields:
+    type: object
+    ordered: true
+    names:
+      key:
+        type: string
+        description: "не из `platform_fields` урока 3"
+        not_enum: [id, revision, deleted, worker, placement, epoch, phase, observed_revision]
+      value: {ref: unitField}
+  unitField:
+    type: object
+    properties:
+      type: {ref: fieldType}
+      required: {type: boolean, default: false, owner: 3 Н3}
+      fixed: {type: boolean, default: false, owner: 3 Н1.3}
+      default: {type: any, owner: 3 Н1.2, description: "одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть"}
+      inherit: {type: any, owner: 3 Н1.2, description: "как `default`; последнее звено цепи наследования; только у поля единицы"}
+      merge: {enum: [union, override], owner: М11/11 Н1.5, description: "сведение цепи наследования; только с `inherit`; `union` — только у `type: list`"}
+      enum: {ref: fieldEnum}
+      unique:
+        owner: 3 Н1.3
+        description: "`canonical` — сравнение по канонической форме URL (урок 3 Н1.3), только у url; не у list"
+        variants:
+          - {type: boolean, enum: [true]}
+          - {type: string, enum: [canonical]}
+      ref: {ref: refTarget}
+      must_match: {ref: mustMatch}
+      schema: {ref: jsonSchemaLite, owner: 3 Н1.2; 10 Н1.6}
+      bound_to: {ref: boundTo}
+      credentials: {ref: credentials}
+      secret_in: {ref: secretIn}
+      schemes: {ref: schemes}
+    rules:
+      - {when: {present: [default]}, forbid: [inherit]}
+      - {when: {absent: [inherit]}, forbid: [merge]}
+      - {when: {absent: [ref]}, forbid: [must_match]}
+      - {when: {is_not: {type: [list]}}, check: {merge: {not_enum: [union]}}}
+      - {when: {is: {type: [list]}}, forbid: [unique]}
+      - {when: {is_not: {type: [url]}}, check: {unique: {not_enum: [canonical]}}}
+      - {when: {name_pattern: '.*_secret'}, check: {type: {enum: [string]}}}
+      - {when: {name_not_pattern: '.*_secret'}, forbid: [bound_to]}
+      - {when: {name_not_pattern: '[A-Za-z_][A-Za-z0-9_]{0,63}', is: {type: [blob]}}, reject: "имя blob — 1–64 ASCII [A-Za-z_][A-Za-z0-9_]*"}
+      - {ref: fieldByType}
+      - {ref: inheritByType}
+  tableField:
+    type: object
+    properties:
+      type: {ref: fieldType}
+      required: {type: boolean, default: false}
+      default: {type: any}
+      enum: {ref: fieldEnum}
+      ref: {ref: refTarget}
+      must_match: {ref: mustMatch}
+      schema: {ref: jsonSchemaLite}
+      bound_to: {ref: boundTo}
+      credentials: {ref: credentials}
+      secret_in: {ref: secretIn}
+      schemes: {ref: schemes}
+    rules:
+      - {when: {absent: [ref]}, forbid: [must_match]}
+      - {when: {name_pattern: '.*_secret'}, check: {type: {enum: [string]}}}
+      - {when: {name_not_pattern: '.*_secret'}, forbid: [bound_to]}
+      - {when: {is: {type: [blob]}}, reject: blob — только в unit.fields}
+      - {ref: fieldByType}
+  fieldType:
+    enum: [string, int, float, bool, list, json, url, blob]
+    default: string
+    owner: 3 Н1.2
+    description: "поле `*_secret` — только string"
+  fieldEnum:
+    type: array
+    min_items: 1
+    unique_items: true
+    owner: 3 Н3
+    description: "значения типа поля; только у string и bool"
+  # Правила поля по типу (P/02.1 Н1.3): default — одно значение типа поля; enum — только у string и bool;
+  # формы url — только у url. Общий список правил unitField и tableField (rules: [{ref: …}] — вставка списка).
+  fieldByType:
+    rules:
+      - when: {is: {type: [string]}}
+        check: {default: {type: [string, 'null']}, enum: {type: array, items: {type: string}}}
+      - when: {is: {type: [int]}}
+        check: {default: {type: [integer, 'null']}}
+      - when: {is: {type: [float]}}
+        check: {default: {type: [number, 'null']}}
+      - when: {is: {type: [bool]}}
+        check: {default: {type: [boolean, 'null']}, enum: {type: array, items: {type: boolean}}}
+      - when: {is: {type: [list]}}
+        check: {default: {type: [array, 'null'], items: {type: string}}}
+      - when: {is: {type: [url]}}
+        check: {default: {type: [string, 'null']}}
+      - when: {is: {type: [blob]}}
+        check: {required: {enum: [false]}}
+        forbid: [default]
+      - when: {is: {type: [int, float, list, json, url, blob]}}
+        forbid: [enum]
+      - when: {is_not: {type: [url]}}
+        forbid: [credentials, secret_in, schemes]
+  # Правила inherit по типу (P/02.1 Н1.3): inherit — одно значение типа поля, у blob его нет. Только у unitField:
+  # у поля таблицы ключа inherit нет (правило не называет ключ, которого у отображения нет — ADR-0087 доп. (1) Р2).
+  inheritByType:
+    rules:
+      - when: {is: {type: [string, url]}}
+        check: {inherit: {type: [string, 'null']}}
+      - when: {is: {type: [int]}}
+        check: {inherit: {type: [integer, 'null']}}
+      - when: {is: {type: [float]}}
+        check: {inherit: {type: [number, 'null']}}
+      - when: {is: {type: [bool]}}
+        check: {inherit: {type: [boolean, 'null']}}
+      - when: {is: {type: [list]}}
+        check: {inherit: {type: [array, 'null'], items: {type: string}}}
+      - when: {is: {type: [blob]}}
+        forbid: [inherit]
+  refTarget:
+    owner: 3 Н1.3
+    description: "`<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет"
+    type: string
+    pattern: '[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}'
+  mustMatch:
+    owner: 3 Н1.3
+    description: "`{<поле цели>: <поле этой строки>}`; ключи не проверяются"
+    type: object
+    names: {key: {type: string}, value: {type: string}}
+  boundTo:
+    owner: 7 Н1.1
+    description: "имя поля или список имён полей этой строки, не секретов"
+    variants:
+      - {type: string}
+      - {type: array, items: {type: string}}
+  credentials:
+    owner: 7 Н1.1
+    type: object
+    required: [login, secret]
+    properties:
+      login: {type: string, description: поле строки не url и не секрет}
+      secret: {type: string, description: "поле `*_secret`"}
+  secretIn:
+    owner: 7 Н1.1
+    type: array
+    items:
+      description: "элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}`"
+      type: object
+      properties:
+        param: {ref: strList}
+        login: {ref: strList}
+        regex: {type: string}
+        in:
+          variants:
+            - {type: string, enum: [path, query, authority, fragment]}
+            - {type: array, items: {enum: [path, query, authority, fragment]}}
+        schemes: {ref: strList}
+        decoded: {type: boolean}
+        nested: {ref: strList}
+      rules:
+        - {one_of: [param, regex, nested]}
+        - {when: {absent: [param]}, forbid: [login]}
+        - {when: {absent: [regex]}, forbid: [in, schemes, decoded]}
+  schemes:
+    owner: 7 Н1.1; 3 Н4
+    description: "имя схемы → `{host?, fragment?, none?}`"
+    type: object
+    names:
+      key: {type: string, pattern: '[a-z][a-z0-9+.-]*'}
+      value:
+        type: object
+        properties:
+          host: {enum: [authority, path], default: authority, description: "`authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`)"}
+          fragment: {enum: [none], default_text: "`#` начинает фрагмент", description: "`none`: `#` — обычный знак, не начало фрагмента (урок 7 А2)"}
+          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` урока 3 Н4); проверка «нет хоста» урока 3 Н4 к такой ссылке не применяется, `group_by` урока 4 её в группу не берёт"}
+  jsonSchemaLite:
+    owner: 3 Н1.2; 10 Н1.4
+    description: "JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32"
+    type: object
+    properties:
+      properties: {type: object, names: {key: {type: string}, value: {ref: jsonSchemaLite}}}
+      additionalProperties: {ref: subSchemaLite}
+      items: {ref: subSchemaLite}
+      if: {ref: subSchemaLite}
+      then: {ref: subSchemaLite}
+      else: {ref: subSchemaLite}
+      not: {ref: subSchemaLite}
+      allOf: {type: array, items: {ref: subSchemaLite}}
+      anyOf: {type: array, items: {ref: subSchemaLite}}
+      oneOf: {type: array, items: {ref: subSchemaLite}}
+    names:
+      key:
+        enum: [type, enum, const, properties, required, additionalProperties, items, minItems, maxItems, minLength, maxLength, minimum, maximum, exclusiveMinimum, exclusiveMaximum, pattern, if, then, else, allOf, anyOf, oneOf, not]
+      value: {type: any}
+  subSchemaLite:
+    variants:
+      - {type: boolean}
+      - {ref: jsonSchemaLite}
+
+  # ---- placement: М10/4 Н1.3
+  placement:
+    type: object
+    required: [capacity]
+    properties:
+      capacity:
+        type: object
+        required: [default]
+        properties:
+          from: {type: string, default: capacity, description: поле пульса}
+          default: {type: integer, minimum: 0}
+          unit_mb: {type: number, exclusive_minimum: 0, owner: 5 Н1.2, default_text: "бюджет памяти не проверяется (урок 5 Н1.2 `memory`)"}
+          base_mb: {type: number, minimum: 0, owner: 5 Н1.2, default: 0, description: "бюджет памяти — одна формула урока 5 Н1.2 `memory`, проверка — урок 5 Н3 «старт()», шаг 1"}
+      headroom:
+        type: object
+        default: {}
+        properties: {from: {type: string, default: headroom, description: поле пульса}}
+      weight:
+        type: object
+        default: {}
+        default_text: вес 1 у всех
+        description: "без `field` вес — `default`, без `default` — 1"
+        properties:
+          field: {type: string, description: поле типа int}
+          default: {type: integer, minimum: 1, default: 1}
+      constraint: {enum: [none, labels-subset], default: none}
+      tie_break: {enum: [most-free-capacity], default: most-free-capacity}
+      servers: {enum: [shared, distinct], default: shared}
+      place_by: {type: string, default: server, description: "`server` или поле пульса"}
+      places:
+        type: object
+        required: [table]
+        properties:
+          table: {type: string, description: таблица}
+          where: {type: object, opaque: true, description: "ключи — поля таблицы"}
+          server_field: {type: string, description: поле таблицы}
+          lease: {enum: [strict]}
+      spread_by: {type: string, description: поле}
+      group_by:
+        type: object
+        required: [field]
+        properties:
+          field: {type: string, description: поле}
+          cut_at: {enum: [host], description: "только у поля url: у поля иного типа — `refused:reference` (тип — свойство цели `group_by.field`, как у `unit.id`)"}
+      near:
+        type: object
+        required: [sub]
+        properties:
+          sub: {type: string, description: подсистема (каталог)}
+          by: {type: string, description: поле этой единицы}
+          of: {type: string, description: поле соседа}
+          prefer: {type: object, opaque: true, description: "поля соседа (каталог)"}
+      home: {type: string, description: "поле или слово `near` (тогда `near` обязателен)"}
+      affinity:
+        type: object
+        properties:
+          field: {type: string, description: поле}
+          table: {type: string, description: таблица}
+          server_field: {type: string, description: поле таблицы}
+          strict: {type: object, opaque: true, description: "ключи — поля таблицы"}
+      requires: {enum: [none, resource], default: none}
+      grows: {type: boolean, default: false, description: роль растёт по требованию (ADR-0084)}
+      retire_when:
+        type: object
+        required: [field, in]
+        properties:
+          field: {type: string, description: поле}
+          in: {type: array, description: список значений}
+      rebalance:
+        type: object
+        default: {}
+        properties: {dead_band: {type: number, minimum: 0, default: 0.1}}
+      unplaced:
+        type: object
+        default_text: не удалять
+        required: [delete_after]
+        properties:
+          delete_after: {type: integer, minimum: 1, description: "только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067)"}
+
+  # ---- tables: М10/10 Н1.6
+  tables:
+    description: отображение named (имя → таблица) или список имён
+    type: [object, array]
+    names:
+      key: {ref: tableName}
+      value: {ref: table}
+    items: {ref: tableName}
+  table:
+    type: object
+    properties:
+      key: {type: string, description: "несекретное поле string или шаблон `{поле}` / `{поле:int}` (Н1.4)"}
+      fields:
+        type: object
+        default: {}
+        ordered: true
+        description: "поле по таблице «Поле»; поля `held_by`, `garbled`, `by`, `at`, `made_at` запрещены"
+        names:
+          key: {type: string, not_enum: [held_by, garbled, by, at, made_at]}
+          value: {ref: tableField}
+      schema: {ref: jsonSchemaLite}
+      stamp: {type: array, items: {enum: [by, at, made_at]}}
+      journal:
+        type: object
+        default_text: "`<т>.written`, `<т>.deleted`"
+        properties: {written: {type: string}, deleted: {type: string}}
+
+  # ---- requests: М10/8 Н1.5, ADR-0054
+  requests:
+    type: object
+    properties:
+      schema: {ref: jsonSchemaLite}
+      valid_for: {type: number, minimum: 0}
+      most_valid: {type: number, minimum: 0}
+      per_person: {type: integer, minimum: 1, default_text: предела нет}
+      settle: {type: number, minimum: 0, default: 60, description: секунды}
+      ttl: {type: number, minimum: 0, description: "0 — без предела"}
+      key: {type: string, pattern: '.*\{[^{}]+\}.*', description: "шаблон rid хотя бы с одним `{…}` (Н1.4): без подстановки все просьбы получили бы один id", default_text: "`r-<sha16(Idempotency-Key)>`"}
+      outcome: {enum: [mark, fetched], default: mark, description: "смысл — урок 8, ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)"}
+      stamp: {type: array, items: {enum: [by, at, group, about]}}
+      journal: {type: string, description: вид журнала}
+      elsewhere: {ref: strList}
+      free: {type: boolean, default: false}
+    rules:
+      - {when: {present: [per_person]}, require: [ttl]}
+      - {when: {is: {free: [false]}}, require: [valid_for, most_valid]}
+      - {when: {is: {free: [true]}}, require: [ttl]}
+
+  # ---- rights: М10/6 Н1.5; secrets: М10/7 Н1.3
+  rights:
+    type: object
+    properties:
+      routes:
+        type: object
+        default: {}
+        default_text: "записи требуют `admin`"
+        properties: {view: {ref: strList, description: семьи}, edit: {ref: strList, description: семьи}}
+      cluster_rows: {type: boolean, default: false}
+      unit_of: {type: object, names: {key: {type: string}, value: {type: string}}, description: "`{таблица: поле таблицы}`"}
+      reach:
+        type: object
+        properties:
+          group: {ref: strList}
+          cluster: {ref: strList}
+          requests: {ref: strList}
+      names:
+        type: array
+        items:
+          type: object
+          required: [field, unit]
+          properties:
+            field: {type: string}
+            unit: {type: string}
+            sub: {type: string}
+            of: {type: string}
+          rules:
+            - {one_of: [sub, of]}
+  secrets:
+    type: object
+    properties:
+      readers:
+        type: object
+        description: "точное имя строки или префикс с `/` → роли"
+        default: {}
+        default_text: своих секретных строк нет
+        names:
+          key: {ref: grantName}
+          value:
+            type: array
+            min_items: 1
+            items: {enum: [console, controller, worker, domainworker, domain, domainagent, resource, domainconsole]}
+      reads: {ref: grantList, description: "`<семья>/<имя>` или префиксы с `/`, как `worker.reads`"}
+
+  # ---- servers, display, metrics: М10/9 Н1.2
+  servers:
+    type: object
+    properties:
+      show:
+        type: array
+        items:
+          type: object
+          required: [table, by]
+          properties:
+            table: {type: string, description: таблица}
+            by: {type: string, description: поле таблицы}
+            title: {type: string}
+            columns: {ref: strList, description: поля таблицы}
+      status:
+        type: array
+        items:
+          type: object
+          required: [field]
+          properties:
+            field:
+              type: string
+              description: путь в пульсе, первый сегмент не ключ пульса платформы (урок 5 Н1.1)
+              not_pattern: '(worker|ts|status|server|instance|labels|url|fetched|events|conflicts|started|previous_hb|previous_instance|previous_server|fenced|schema|build|pending_writes|server_unsaid|stood_in|stand_in_renewals)(\..*)?'
+            title: {type: string}
+            of: {type: string, description: таблица}
+  strMap: {type: object, names: {key: {type: string}, value: {type: string}}}
+  display:
+    type: object
+    properties:
+      unit: {type: string, default: единица}
+      units: {type: string, default: единица}
+      units_count: {type: string, default: единица}
+      section: {type: string}
+      general: {type: string}
+      fields: {ref: strMap, description: "имя поля → подпись"}
+      field_help: {ref: strMap, description: "имя поля → подсказка"}
+      options: {type: object, names: {key: {type: string}, value: {ref: strMap}}, description: "поле → `{значение: строка}`"}
+      form:
+        type: array
+        default_text: один блок со всеми полями
+        items:
+          type: object
+          properties:
+            title: {type: string}
+            state: {type: boolean}
+            placement: {type: boolean}
+            fields: {ref: strList, description: поля и платформенные имена}
+            note: {type: string}
+            status:
+              type: array
+              items:
+                type: object
+                required: [field]
+                properties: {field: {type: string}, since: {type: string}, title: {type: string}}
+      events: {type: boolean, default: true, default_text: вкладка есть}
+      kinds: {ref: strMap, description: "вид события → строка"}
+      keys:
+        owner: М11/9 Н1.8
+        description: "id семьи ключей домена → подписи"
+        type: object
+        names:
+          key: {type: string}
+          value:
+            type: object
+            required: [title, about]
+            properties: {title: {type: string}, about: {type: string}, absent: {type: string}}
+      tree:
+        type: object
+        properties:
+          group_by: {type: string, description: поле}
+          nested_by: {type: string, description: строка-разделитель}
+          columns:
+            type: array
+            items:
+              type: object
+              required: [field]
+              properties:
+                field: {type: string, description: поле или платформенное имя}
+                title: {type: string}
+                width: {type: integer, minimum: 1}
+          children: {type: boolean}
+          group_title: {type: string}
+          group_hint: {type: string}
+          filter: {type: string}
+          no_group: {type: string}
+          contents_title: {type: string}
+          group_word: {type: string}
+          no_group_suffix: {type: string}
+          pick_note: {type: string}
+          new_root: {type: string}
+          new_sub: {type: string}
+          add_here: {type: string}
+          new_group_note: {type: string}
+          remove: {type: string}
+          not_in: {type: string}
+          add_to: {type: string}
+          no_others: {type: string}
+          new_group: {type: string}
+  metrics:
+    type: array
+    items:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, pattern: '[a-z_][a-z0-9_]*', description: повтор допустим}
+        type: {enum: [gauge, counter, histogram]}
+        from: {type: string}
+        agg: {type: string}
+        equals:
+          variants:
+            - {type: string}
+            - {type: boolean}
+            - {type: array, items: {type: string}}
+        when: {type: string}
+        default: {type: [number, string]}
+        live: {type: boolean}
+        unheld: {type: boolean}
+        labels: {type: object, opaque: true}
+        count: {type: string, pattern: 'table [a-z][a-z0-9_-]{0,31}', description: "`table <таблица этой спеки>`"}
+        where: {type: object, opaque: true, description: "ключи — поля, при `count` — поля таблицы"}
+        unless:
+          type: object
+          required: [table]
+          properties: {table: {type: string}, where: {type: object, opaque: true}}
+        buckets: {type: array, items: {type: number}}
+        label: {type: string}
+        values: {ref: strList}
+
+  # ---- domain: форма — здесь; смысл и класс отказа — уроки М11
+  domain:
+    type: object
+    properties:
+      ref: {type: string}
+      view: {ref: nonSecretList}
+      edit: {ref: nonSecretList}
+      kept: {ref: strList}
+      tables: {ref: strList}
+      reports: {ref: strList}
+      shared:
+        owner: М11/11 Н1.1
+        x-class: value
+        description: "элемент — имя поля единицы (не секрет; наследует или это `display.tree.group_by`) или документ `{name, type: json, schema}`: name — не имя поля единицы, значение документа проверяется по schema"
+        type: array
+        unique_items: true
+        items:
+          variants:
+            - {type: string, not_pattern: '.*_secret'}
+            - type: object
+              required: [name, type, schema]
+              properties:
+                name: {type: string, pattern: '[a-z][a-z0-9_-]*'}
+                type: {enum: [json]}
+                schema: {ref: jsonSchemaLite}
+      keys:
+        owner: М11/9 Н1.8
+        type: array
+        items:
+          type: object
+          required: [id]
+          properties:
+            id: {ref: name}
+            keys: {ref: strList}
+            prefix: {type: string}
+          rules:
+            - {any_of: [keys, prefix]}
+      books:
+        owner: М11/5 Н1.1
+        x-class: value
+        type: object
+        names:
+          key: {type: string, pattern: '[a-z0-9][a-z0-9_-]*'}
+          value: {ref: book}
+      names:
+        owner: М11/9 Н1.7
+        x-class: reference
+        type: object
+        names:
+          key: {type: string, pattern: '[a-z0-9][a-z0-9_-]*/'}
+          value:
+            type: object
+            required: [exclusive_with]
+            properties:
+              exclusive_with: {enum: [domain/users]}
+              grant: {enum: [view, edit, admin]}
+      tokens:
+        owner: М11/7 Н1.1
+        x-class: value
+        type: object
+        names:
+          key: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}', not_enum: [person], description: "вид токена; вид уникален в каталоге (Н3, `refused:catalogue`)"}
+          value: {ref: token}
+      witness:
+        owner: М11/11 Н1.8
+        type: object
+        required: [report, member_field]
+        properties: {report: {type: string}, member_field: {type: string, description: "fixed-поле единицы, несущее имя члена"}}
+  nonSecretList: {type: array, items: {type: string, not_pattern: '.*_secret'}}
+  book:
+    type: object
+    description: "`{}` — переносимая книга: пишет воркер подсистемы на домене (М11/5 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?}` — собираемая книга из строк членов"
+    properties:
+      from: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?', description: "`<sub>/<строка>` — одиночная строка или `<sub>/<строка>/` — семья строк под слотами; `<sub>` — своя подсистема"}
+      key: {type: string, not_pattern: '.*_secret', description: "имя несекретного поля входа: значение — непустая строка, ключ книги"}
+      pick: {enum: [unique, all]}
+      to: {type: string, not_pattern: '.*_secret', description: "имя несекретного поля входа, не `key`: член или список членов — получатели элемента"}
+      show:
+        description: "что видит дверь (М11/5 Н2)"
+        type: array
+        min_items: 1
+        unique_items: true
+        items: {type: string, not_pattern: '.*_secret'}
+    rules:
+      - {when: {present: [from]}, require: [key, pick, to]}
+      - {when: {absent: [from]}, forbid: [key, pick, to]}
+  fieldPath: {type: string, pattern: '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*'}
+  token:
+    type: object
+    required: [lifetime, claims, grant]
+    properties:
+      lifetime: {type: number, exclusive_minimum: 0, description: секунды}
+      claims:
+        type: array
+        min_items: 1
+        unique_items: true
+        items: {type: string, not_enum: [iss, sub, iat, exp, jti, kind]}
+      grant: {type: array, min_items: 1, unique_items: true, items: {type: string}, description: "роли воркеров, которым вид выдаётся"}
+      placement:
+        type: object
+        required: [sub, caller, ref_claim, target_fields, audience_claim]
+        properties:
+          sub: {type: string, description: "подсистема записей назначения (М11/6 Н1.1)"}
+          caller: {enum: [cluster, origin, copies], description: "поле записи, где должен стоять член-заявитель"}
+          ref_claim: {type: string}
+          target_fields: {type: array, unique_items: true, items: {enum: [cluster, origin, copies, centre, star_centre]}, description: откуда аудитория}
+          audience_claim: {type: string}
+      unit:
+        type: object
+        required: [ref_claim, target_fields, audience_claim]
+        properties:
+          sub: {type: string, description: "подсистема единицы; нет — своя (своя требует `domain.ref`)"}
+          caller: {enum: [self, poll_home], default_text: "`self`"}
+          ref_claim: {type: string}
+          target_fields: {type: array, unique_items: true, items: {enum: [poll_home, centre]}}
+          audience_claim: {type: string}
+      scenario:
+        type: object
+        required: [doc, items, name, enabled, trigger, target, act, ref_claim, trigger_claim, acts_claim, up_claim, audience_claim]
+        properties:
+          doc: {type: string, description: "подсистема общего документа (М11/11 Н1.2: `shared.<doc>`)"}
+          items: {type: string, pattern: '[a-z][a-z0-9_]*', description: имя массива в документе}
+          name: {ref: fieldPath}
+          enabled: {ref: fieldPath}
+          trigger: {ref: fieldPath}
+          target: {ref: fieldPath}
+          act: {ref: fieldPath}
+          placement: {type: string, description: "подсистема, чьи записи назначения называют дом цели"}
+          ref_claim: {type: string}
+          trigger_claim: {type: string}
+          acts_claim: {type: string}
+          up_claim: {type: string}
+          audience_claim: {type: string}
+    rules:
+      - {any_of: [placement, unit, scenario]}
+      - {when: {present: [scenario]}, forbid: [placement, unit]}

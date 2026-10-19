@@ -1,4 +1,5 @@
-# Р2 (ADR-0087 доп. (3)): два пути одного отказа — канонический порядок по байтам JSON Pointer; норма М10/2 Н1.4, Н4
+# Р2 (ADR-0087 доп. (3)): два пути одного отказа — канонический порядок по байтам JSON Pointer; норма P/02.1 Н1.4, Н4.
+# Строка servers.show проверяется раньше about.field, путь /about/field меньше по байтам — в выводе он первый.
 name: probe
 unit:
   rows: counters
@@ -34,4 +35,5 @@ display:
       status:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
+about: {sub: testsub, field: nosuch}
 servers: {show: [{table: nosuch, by: x}]}

@@ -1,96 +1,113 @@
-# Проверка рядом с нормой (ADR-0085), не норма; правится вместе с нормой главы 2.1.
-# Ссылки P/02.1 Н1.4 и отношения между значениями, которых JSON Schema 2020-12 не выражает — данными; в выгрузку
-# генераторам не идёт. Профиль и классы — шапка 02.1-installer.schema.yaml (§6, §9).
-# Строка: path<TAB>check<TAB>class<TAB>norm. Проход — skills/lesson-spec/scripts/spec_schema/refs.py (словарь CHECKS).
-# path: сегменты через «.»; «*» — значение любого ключа отображения; «[]» — каждый элемент списка;
-#       «{}» — имя каждого ключа отображения (значением служит само имя). Нет пути в документе — строка не применяется.
-# check: слово словаря прохода, «:аргумент» — его параметр.
-# class: reference (ссылка Н1.4) или value (отношение между значениями: шаг 4, класс value).
-path	check	class	norm
-unit.id	unit_id	reference	P/02.1 Н1.4; М10/3 Н1.3
-unit.fields.*.must_match.*	row_field	reference	М10/3 Н1.3
-unit.fields.*.bound_to	row_fields_nonsecret	reference	М10/7 Н1.1
-unit.fields.*.bound_to[]	row_fields_nonsecret	reference	М10/7 Н1.1
-unit.fields.*.credentials.login	row_field_login	reference	М10/7 Н1.1
-unit.fields.*.credentials.secret	row_field_secret	reference	М10/7 Н1.1
-unit.fields.*.default	in_enum	value	P/02.1 Н1.2а default
-unit.fields.*.inherit	in_enum	value	P/02.1 Н1.2а inherit
-unit.fields.*.schema	schema_depth:32	value	М10/10 Н1.4
-tables.{}	not_unit_rows	value	P/02.1 Н1.2а имя таблицы
-tables[]	not_unit_rows	value	P/02.1 Н1.2а имя таблицы
-tables.*.key	table_key	reference	P/02.1 Н1.4; М10/10 Н1.6
-tables.*.fields.*.must_match.*	row_field	reference	М10/3 Н1.3
-tables.*.fields.*.bound_to	row_fields_nonsecret	reference	М10/7 Н1.1
-tables.*.fields.*.bound_to[]	row_fields_nonsecret	reference	М10/7 Н1.1
-tables.*.fields.*.credentials.login	row_field_login	reference	М10/7 Н1.1
-tables.*.fields.*.credentials.secret	row_field_secret	reference	М10/7 Н1.1
-tables.*.fields.*.default	in_enum	value	P/02.1 Н1.2а default
-tables.*.fields.*.schema	schema_depth:32	value	М10/10 Н1.4
-tables.*.schema	schema_depth:32	value	М10/10 Н1.4
-snapshot[]	unit_field	reference	P/02.1 Н1.4
-snapshot[]	snapshot_member	value	P/02.1 Н1.2; М10/10 Н1.3
-placement.spread_by	unit_field	reference	P/02.1 Н1.4
-placement.group_by.field	unit_field	reference	P/02.1 Н1.4
-placement.group_by.cut_at	group_by_url	reference	P/02.1 Н1.2а group_by
-placement.retire_when.field	unit_field	reference	P/02.1 Н1.4
-placement.weight.field	int_unit_field	reference	P/02.1 Н1.4
-placement.near.by	unit_field	reference	P/02.1 Н1.4
-placement.home	home	reference	P/02.1 Н1.4
-placement.places.table	table	reference	P/02.1 Н1.4
-placement.places.server_field	table_field:table	reference	P/02.1 Н1.4
-placement.places.where.{}	table_field:..table	reference	P/02.1 Н1.4
-placement.affinity.field	unit_field	reference	P/02.1 Н1.4
-placement.affinity.table	table	reference	P/02.1 Н1.4
-placement.affinity.server_field	table_field:table	reference	P/02.1 Н1.4
-placement.affinity.strict.{}	table_field:..table	reference	P/02.1 Н1.4
-placement.unplaced.delete_after	unplaced	value	ADR-0067; P/02.1 Н1.2а unplaced
-holds.table	table	reference	P/02.1 Н1.4
-holds.unit	table_field:table	reference	P/02.1 Н1.4
-holds.since	table_field:table	reference	P/02.1 Н1.4
-holds.until	table_field:table	reference	P/02.1 Н1.4
-holds.released	table_field:table	reference	P/02.1 Н1.4
-metrics[].where.{}	metric_where	reference	P/02.1 Н1.4
-metrics[].unless.table	table	reference	P/02.1 Н1.4
-metrics[].unless.where.{}	table_field:..table	reference	P/02.1 Н1.4
-metrics[].count	table_count	reference	P/02.1 Н1.4
-rights.unit_of.{}	table	reference	М10/6 Н1.5
-rights.unit_of.*	table_field:@key	reference	P/02.1 Н1.4
-rights.reach.group	requires:placement.group_by	reference	P/02.1 Н1.4
-servers.show[].table	table	reference	P/02.1 Н1.4
-servers.show[].by	table_field:table	reference	P/02.1 Н1.4
-servers.show[].columns[]	table_field:..table	reference	P/02.1 Н1.4
-servers.status[].of	table	reference	P/02.1 Н1.4
-display.fields.{}	display_name	reference	P/02.1 Н1.4
-display.field_help.{}	display_name	reference	P/02.1 Н1.4
-display.options.{}	option_name	reference	P/02.1 Н1.4
-display.options.*.{}	option_value	reference	P/02.1 Н1.4
-display.form[].fields[]	form_name	reference	P/02.1 Н1.4
-display.tree.group_by	unit_field	reference	P/02.1 Н1.4
-display.tree.columns[].field	form_name	reference	P/02.1 Н1.4
-display.keys.{}	domain_key_id	reference	М11/9 Н1.8
-requests.key	request_key	reference	P/02.1 Н1.4; М10/8 Н1.5
-requests.outcome	outcome_key	reference	P/02.1 Н1.4; ADR-0054
-requests.stamp[]	stamp_group	reference	P/02.1 Н1.4
-requests.valid_for	le:most_valid	value	P/02.1 Н1.2а requests
-requests.schema	schema_depth:32	value	М10/10 Н1.4
-console.running	metric	reference	P/02.1 Н1.4
-about.field	fixed_unit_field	reference	P/02.1 Н1.4
-door.routes	unique	reference	P/02.1 Н1.4
-door.pass[]	door_pass	reference	P/02.1 Н1.4; М10/11 Н1.8
-objects.rows[]	object_family	reference	P/02.1 Н1.4; М10/8 Н1.1
-worker.writes[]	own_table	reference	P/02.1 Н1.4; P/02.5 Н1.4
-worker.writes[]	table_without_secret	value	P/02.1 Н1.2а worker.writes
-worker.deletes[]	unit_rows	reference	P/02.1 Н1.4; ADR-0067
-worker.requests[]	not_self	reference	P/02.1 Н1.4
-worker.reads	no_nested_prefix	value	P/02.5 Н1.4
-secrets.readers	no_nested_prefix	value	P/02.5 Н1.3
-secrets.reads	no_nested_prefix	value	P/02.5 Н1.3
-domain.books.*.from	own_sub	value	P/02.1 Н1.2б
-domain.books.*.to	ne:key	value	P/02.1 Н1.2б
-domain.books.{}	not_in:domain.kept	value	P/02.1 Н1.2б
-domain.names.{}	book_with_from	reference	М11/9 Н1.7
-domain.tokens.*	token_claims	value	P/02.1 Н1.2б
-domain.keys	unique_by:id	value	М11/9 Н1.8
-domain.shared[]	shared_item	value	P/02.1 Н1.2б
-domain.shared[].schema	schema_depth:32	value	М10/10 Н1.4
-domain.witness.member_field	fixed_unit_field	value	P/02.1 Н1.2б
+# Ссылки P/02.1 Н1.4 и отношения между значениями (класс value) — данными, на языке Platform/common/DIALECT.md § 6.
+# Строка: path<TAB>relation<TAB>class<TAB>norm. Проход — только если форма чиста (Н3: значения раньше ссылок).
+path	relation	class	norm
+unit.id	. in {numeric} | keys(unit.fields ? type = string & name !~ ".*_secret")	reference	P/02.1 Н1.4; М10/3 Н1.3
+unit.fields.$f.must_match.*	. in keys(unit.fields)	reference	М10/3 Н1.3
+unit.fields.$f.bound_to	. in keys(unit.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
+unit.fields.$f.bound_to[]	. in keys(unit.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
+unit.fields.$f.credentials.login	. in keys(unit.fields ? name !~ ".*_secret" & type != url)	reference	М10/7 Н1.1
+unit.fields.$f.credentials.secret	. in keys(unit.fields ? name ~ ".*_secret")	reference	М10/7 Н1.1
+unit.fields.$f.default	when exists @unit.fields.$f.enum : . in values(unit.fields.$f.enum[])	value	P/02.1 Н1.2а default
+unit.fields.$f.inherit	when exists @unit.fields.$f.enum : . in values(unit.fields.$f.enum[])	value	P/02.1 Н1.2а inherit
+unit.fields.$f.schema	depth . <= 32	value	М10/10 Н1.4
+unit.fields.bytes	empty keys(unit.fields ? type = blob)	value	P/02.1 Н1.3 (bytes рядом с blob)
+tables.{}	. != @unit.rows	value	P/02.1 Н1.2а имя таблицы
+tables[]	. != @unit.rows	value	P/02.1 Н1.2а имя таблицы
+tables.$t.key	template . plain keys(tables.$t.fields ? type = string & name !~ ".*_secret") int keys(tables.$t.fields ? type in {int, float} & name !~ ".*_secret") bare	reference	P/02.1 Н1.4; М10/10 Н1.6
+tables.$t.fields.name	@tables.$t.key = name	value	P/02.1 Н1.3 (поле name таблицы)
+tables.$t.fields.name	@tables.$t.fields.name.type = string	value	P/02.1 Н1.3 (поле name таблицы)
+tables.$t.fields.$f.must_match.*	. in keys(tables.$t.fields)	reference	М10/3 Н1.3
+tables.$t.fields.$f.bound_to	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
+tables.$t.fields.$f.bound_to[]	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
+tables.$t.fields.$f.credentials.login	. in keys(tables.$t.fields ? name !~ ".*_secret" & type != url)	reference	М10/7 Н1.1
+tables.$t.fields.$f.credentials.secret	. in keys(tables.$t.fields ? name ~ ".*_secret")	reference	М10/7 Н1.1
+tables.$t.fields.$f.default	when exists @tables.$t.fields.$f.enum : . in values(tables.$t.fields.$f.enum[])	value	P/02.1 Н1.2а default
+tables.$t.fields.$f.schema	depth . <= 32	value	М10/10 Н1.4
+tables.$t.schema	depth . <= 32	value	М10/10 Н1.4
+snapshot[]	. in keys(unit.fields)	reference	P/02.1 Н1.4
+snapshot[]	. !~ ".*_secret"	value	P/02.1 Н1.2; М10/10 Н1.3
+snapshot[]	. not in {server} | keys(unit.fields ? type = blob)	value	P/02.1 Н1.2; М10/10 Н1.3
+placement.spread_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.group_by.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.group_by.cut_at	@placement.group_by.field in keys(unit.fields ? type = url)	reference	P/02.1 Н1.2а group_by
+placement.retire_when.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.weight.field	. in keys(unit.fields ? type = int)	reference	P/02.1 Н1.4
+placement.near.by	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.home	when . = near : exists @placement.near	reference	P/02.1 Н1.4
+placement.home	when . != near : . in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.places.table	. in keys(tables)	reference	P/02.1 Н1.4
+placement.places.server_field	when @placement.places.table in keys(tables) : . in keys(tables.{@placement.places.table}.fields)	reference	P/02.1 Н1.4
+placement.places.where.{}	when @placement.places.table in keys(tables) : . in keys(tables.{@placement.places.table}.fields)	reference	P/02.1 Н1.4
+placement.affinity.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.affinity.table	. in keys(tables)	reference	P/02.1 Н1.4
+placement.affinity.server_field	when @placement.affinity.table in keys(tables) : . in keys(tables.{@placement.affinity.table}.fields)	reference	P/02.1 Н1.4
+placement.affinity.strict.{}	when @placement.affinity.table in keys(tables) : . in keys(tables.{@placement.affinity.table}.fields)	reference	P/02.1 Н1.4
+placement.unplaced.delete_after	@unit.id != numeric	value	ADR-0067; P/02.1 Н1.2а unplaced
+placement.unplaced.delete_after	empty keys(unit.fields ? fixed = true & name != @unit.id)	value	ADR-0067; P/02.1 Н1.2а unplaced
+placement.unplaced.delete_after	when exists @about.field : @about.field = @unit.id	value	ADR-0067; P/02.1 Н1.2а unplaced
+holds.table	. in keys(tables)	reference	P/02.1 Н1.4
+holds.unit	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
+holds.since	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
+holds.until	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
+holds.released	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
+metrics[$i].where.{}	when absent @metrics[$i].count : . in keys(unit.fields)	reference	P/02.1 Н1.4
+metrics[$i].where.{}	when exists @metrics[$i].count & split(@metrics[$i].count " " 1) in keys(tables) : . in keys(tables.{split(@metrics[$i].count " " 1)}.fields)	reference	P/02.1 Н1.4
+metrics[$i].unless.table	. in keys(tables)	reference	P/02.1 Н1.4
+metrics[$i].unless.where.{}	when @metrics[$i].unless.table in keys(tables) : . in keys(tables.{@metrics[$i].unless.table}.fields)	reference	P/02.1 Н1.4
+metrics[].count	split(. " " 1) in keys(tables)	reference	P/02.1 Н1.4
+rights.unit_of.{}	. in keys(tables)	reference	М10/6 Н1.5
+rights.unit_of.$t	when $t in keys(tables) : . in keys(tables.$t.fields)	reference	P/02.1 Н1.4
+rights.reach.group	exists @placement.group_by	reference	P/02.1 Н1.4
+servers.show[$i].table	. in keys(tables)	reference	P/02.1 Н1.4
+servers.show[$i].by	when @servers.show[$i].table in keys(tables) : . in keys(tables.{@servers.show[$i].table}.fields)	reference	P/02.1 Н1.4
+servers.show[$i].columns[]	when @servers.show[$i].table in keys(tables) : . in keys(tables.{@servers.show[$i].table}.fields)	reference	P/02.1 Н1.4
+servers.status[].of	. in keys(tables)	reference	P/02.1 Н1.4
+display.fields.{}	. in keys(unit.fields) | keys(tables.*.fields) | values(display.form[].status[].field) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
+display.field_help.{}	. in keys(unit.fields) | keys(tables.*.fields) | values(display.form[].status[].field) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
+display.options.{}	. in values(display.form[].status[].field) | keys(unit.fields ? has enum)	reference	P/02.1 Н1.4
+display.options.$o.{}	when $o in keys(unit.fields) & $o not in values(display.form[].status[].field) : . in text(unit.fields.$o.enum[])	reference	P/02.1 Н1.4
+display.form[].fields[]	. in keys(unit.fields) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
+display.tree.group_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
+display.tree.columns[].field	. in keys(unit.fields) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
+display.keys.{}	. in values(domain.keys[].id)	reference	М11/9 Н1.8
+requests.key	template . plain keys(requests.schema.properties ? type = string & name !~ ".*_secret") int keys(requests.schema.properties ? type in {integer, number} & name !~ ".*_secret")	reference	P/02.1 Н1.4; М10/8 Н1.5
+requests.outcome	when . = fetched : exists @requests.key	reference	P/02.1 Н1.4; ADR-0054
+requests.stamp[]	when . = group : exists @placement.group_by	reference	P/02.1 Н1.4
+requests.valid_for	when exists @requests.most_valid : . <= @requests.most_valid	value	P/02.1 Н1.2а requests
+requests.schema	depth . <= 32	value	М10/10 Н1.4
+console.running	. in values(metrics[].name)	reference	P/02.1 Н1.4
+about.field	. in keys(unit.fields ? fixed = true)	reference	P/02.1 Н1.4
+door.routes	unique values(door.routes[])	reference	P/02.1 Н1.4
+door.pass[]	. not in values(door.routes[]) | {@unit.rows, where}	reference	P/02.1 Н1.4; М10/11 Н1.8
+objects.rows[]	split(. "/" 0) not in {heartbeats, contenders, snapshot, controller, blobs, commands, "*"}	reference	P/02.1 Н1.4; М10/8 Н1.1
+worker.writes[]	. in keys(tables)	reference	P/02.1 Н1.4; P/02.5 Н1.4
+worker.writes[]	empty keys(tables.{.}.fields ? name ~ ".*_secret")	value	P/02.1 Н1.2а worker.writes
+worker.deletes[]	. = @unit.rows	reference	P/02.1 Н1.4; ADR-0067
+worker.requests[]	. != @name	reference	P/02.1 Н1.4
+worker.reads	prefix_free values(worker.reads[])	value	P/02.5 Н1.4
+secrets.readers	prefix_free keys(secrets.readers)	value	P/02.5 Н1.3
+secrets.reads	prefix_free values(secrets.reads[])	value	P/02.5 Н1.3
+domain.tokens.$k.scenario	exists @domain.ref	value	P/02.1 Н1.2б
+domain.tokens.$k.unit	when absent @domain.ref : exists @domain.tokens.$k.unit.sub	value	P/02.1 Н1.2б
+domain.tokens.$k.placement.ref_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.placement.audience_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.unit.ref_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.unit.audience_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario.ref_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario.audience_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario.trigger_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario.acts_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario.up_claim	. in values(domain.tokens.$k.claims[])	value	P/02.1 Н1.2б
+domain.tokens.$k.placement	unique {@domain.tokens.$k.placement.ref_claim, @domain.tokens.$k.placement.audience_claim}	value	P/02.1 Н1.2б
+domain.tokens.$k.unit	unique {@domain.tokens.$k.unit.ref_claim, @domain.tokens.$k.unit.audience_claim}	value	P/02.1 Н1.2б
+domain.tokens.$k.scenario	unique {@domain.tokens.$k.scenario.ref_claim, @domain.tokens.$k.scenario.audience_claim, @domain.tokens.$k.scenario.trigger_claim, @domain.tokens.$k.scenario.acts_claim, @domain.tokens.$k.scenario.up_claim}	value	P/02.1 Н1.2б
+domain.books.$b.from	split(. "/" 0) = @name	value	P/02.1 Н1.2б
+domain.books.$b.to	. != @domain.books.$b.key	value	P/02.1 Н1.2б
+domain.books.{}	. not in values(domain.kept[])	value	P/02.1 Н1.2б
+domain.names.{}	split(. "/" 0) in keys(domain.books ? has from)	reference	М11/9 Н1.7
+domain.keys	unique values(domain.keys[].id)	value	М11/9 Н1.8
+domain.shared	unique values(domain.shared[]) | values(domain.shared[].name)	value	P/02.1 Н1.2б
+domain.shared[].name	. not in keys(unit.fields)	value	P/02.1 Н1.2б
+domain.shared[]	. in keys(unit.fields ? has inherit) | {@display.tree.group_by}	value	P/02.1 Н1.2б
+domain.shared[].schema	depth . <= 32	value	М10/10 Н1.4
+domain.witness.member_field	. in keys(unit.fields ? fixed = true)	value	P/02.1 Н1.2б

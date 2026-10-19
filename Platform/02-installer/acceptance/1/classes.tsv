@@ -145,3 +145,7 @@ profile_table_key_bool	text
 profile_table_key_null	text
 profile_table_key_float	text
 profile_table_key_integer_string_pair	text
+c9_seq_dash_dash	value
+c9_xclass_number_overflow	reference
+c9_is_not_null	value
+c9_one_of_rule_order	value
