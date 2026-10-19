@@ -224,7 +224,7 @@ def _build(events, lines):
         if plain and ev.value.startswith("?"):
             raise TextRefused("N", line, "plain scalar starting with '?'")
         # Н1.1 comment: `слово# c` — «#» после знака, а не пробела, перед пробелом — не комментарий, а строка без ключа.
-        if plain and re.search(r"[^ \t]#(?:[ \t]|$)", ev.value):
+        if plain and re.search(r"[^ \t]#[ \t]", ev.value):   # `a#b`, `C#` — слово (свод Т28)
             raise TextRefused("N", line, "'#' after a word is not a comment")
         if is_key:
             if not plain or ev.value != "<<":
