@@ -31,7 +31,7 @@ scenario	step	request	expect
 02-road-through-the-relay	16	holder GET /domain	200 {"as_of": "$c"}
 02-road-through-the-relay	17	@sleep 70	ok
 02-road-through-the-relay	18	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t1"}
-02-road-through-the-relay	19	@sleep 65	ok
+02-road-through-the-relay	19	@sleep 15	ok
 02-road-through-the-relay	20	member m2 resource GET /v1/objects/domain/reached?scope=local	200 {"ts": "$t2"}
 02-road-through-the-relay	21	ASSERT $t2 - $c < 5	ok
 02-road-through-the-relay	22	@mend relay	ok

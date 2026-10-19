@@ -21,7 +21,7 @@ scenario	step	request	expect
 02-emergency-move	10	holder@m1 GET /domain/grants	200 {"grants": {"m2": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "root"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
 02-emergency-move	11	@start domain	ok
 02-emergency-move	12	@until 60 member hold console GET /api/held	200 {"term": 2}
-02-emergency-move	13	@sleep 10	ok
+02-emergency-move	13	@until 30 member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 02-emergency-move	14	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
 02-emergency-move	15	signer POST /api/login {"user": "root", "password": "w2c test root password"}	409 {"error": "deposed", "detail": "~edits go there", "holder": {"holder": "m1"}}
 02-emergency-move	16	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
@@ -85,7 +85,7 @@ scenario	step	request	expect
 07-ask-sig	12	ask-sig inputs/ask-sig-12-pub-not-hex.json	@exit 2
 08-forged-record-ignored	1	@domain	ok
 08-forged-record-ignored	2	member hold store POST /v1/write {"op": "put", "key": "domain/holder", "items": {"doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"restored_from\":{\"rev\":3,\"term\":1},\"sig\":\"NVTpK7Z0xhNCh6_EPdMRYlvykN3206nq21CsAvVU4sDZYGXfPB9jh5bcg5o01QArLj1nDxb1ekwElPX_TkWfDg\",\"term\":2,\"url\":\"http://m1.test:9999\"}"}}	200
-08-forged-record-ignored	3	@sleep 15	ok
+08-forged-record-ignored	3	@sleep 6	ok
 08-forged-record-ignored	4	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
 08-forged-record-ignored	5	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}
 09-move-live-holder	1	@domain	ok
@@ -94,7 +94,7 @@ scenario	step	request	expect
 09-move-live-holder	4	@start domain on m1	ok
 09-move-live-holder	5	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
 09-move-live-holder	6	@until 60 member hold console GET /api/held	200 {"term": 2, "holder": {"holder": "m1"}}
-09-move-live-holder	7	@sleep 10	ok
+09-move-live-holder	7	@until 30 member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 09-move-live-holder	8	holder PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed", "detail": "~edits go there"}
 09-move-live-holder	9	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 09-move-live-holder	10	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "$k2"}}
@@ -144,7 +144,7 @@ scenario	step	request	expect
 12-handover-then-move	5	@start domain on m2	ok
 12-handover-then-move	6	@move m2 why=the stand moves the domain after a handover	200 {"term": 3, "holder": "m2"}
 12-handover-then-move	7	@until 60 member m1 console GET /api/held	200 {"term": 3, "holder": {"holder": "m2"}}
-12-handover-then-move	8	@sleep 10	ok
+12-handover-then-move	8	@until 30 member m1 store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 3"}}
 12-handover-then-move	9	holder@m1 PUT /domain/topology {"base_rev": 0}	409 {"error": "deposed"}
 12-handover-then-move	10	member m1 store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 3"}}
 12-handover-then-move	11	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}

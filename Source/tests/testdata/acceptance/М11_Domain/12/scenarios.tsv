@@ -8,13 +8,13 @@ scenario	step	request	expect
 01-quiet-member	6	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "$t1"}
 01-quiet-member	7	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}, "index": "$i1"}
 01-quiet-member	8	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}, "index": "$k1"}
-01-quiet-member	9	@sleep 30	ok
+01-quiet-member	9	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
 01-quiet-member	10	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
 01-quiet-member	11	member m1 store GET /v1/get?key=domain/member-list	200 {"index": "$i1"}
 01-quiet-member	12	member m1 store GET /v1/get?key=domain/keys	200 {"index": "$k1"}
 01-quiet-member	13	member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
 02-members-only-to-the-lagging	1	@domain m1	ok
-02-members-only-to-the-lagging	2	@sleep 10	ok
+02-members-only-to-the-lagging	2	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}}
 02-members-only-to-the-lagging	3	@carry m1	ok {"cluster": "m1", "members": "@absent"}
 02-members-only-to-the-lagging	4	@start agent m2	ok
 02-members-only-to-the-lagging	5	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2"}]}
@@ -64,6 +64,6 @@ scenario	step	request	expect
 06-fresh-and-unchanged	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "root", "cap": "view", "scope": "unit:testsub/1"}]}	200
 06-fresh-and-unchanged	4	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"centre\":\"hold\""}, "index": "$mt"}
 06-fresh-and-unchanged	5	@until 30 member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "~unit:testsub/1", "as_of": "$a1"}, "index": "$g1"}
-06-fresh-and-unchanged	6	@sleep 20	ok
+06-fresh-and-unchanged	6	@sleep 10	ok
 06-fresh-and-unchanged	7	member m1 store GET /v1/get?key=domain/member-topology	200 {"index": "$mt"}
 06-fresh-and-unchanged	8	member m1 store GET /v1/get?key=domain/grants	200 {"items": {"as_of": "$a1"}, "index": "$g1"}

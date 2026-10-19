@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-19	10 шаг 19, 13 шаги 20–21; inputs agent-sig-19, accept-20, accept-21	сверка М11 01–04 (M1, A1, A18): ключ члена малого порядка подписи не даёт; heard только при stored с mark.sha256; rev = 2^53 − 1 — 503 rev_exhausted	all
 2026-10-19	13-accept 22–26; inputs accept-22…26	сверка М11 05–08 (D10): tls_ca и tls_ca_certs — любые списки строк в форме публикации, прочее — журнал domain.member.ca.refused, отчёт принимается	all
 2026-10-19	01-cold-start-and-acceptance 13	гонка (cammeta-python): шаг ждёт одну строку, а читает соседнюю, записанную позже (domain/member-list после domain/member; строка книги у члена после вида держателя; вид нового держателя после его записи срока) — @until 30	all
+2026-10-19	@sleep	сны по ADR-0080 доп. (17) п. 4: ожидание события — @until по признаку, проверка отсутствия и время перед действием — наименьшей длиной с причиной в README («Сны»)	all
