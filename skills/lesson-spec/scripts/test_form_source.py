@@ -183,6 +183,14 @@ class LoaderTests(Base):
         got = self.judge("name: a\nfields:\n  f:\n    size: " + "9" * 4301 + "\n")
         self.assertEqual((got["class"], got["paths"]), ("value", [["fields", "f", "size"]]))
 
+    def test_number_out_of_range_takes_the_nearest_x_class(self):
+        # Ф1: класс числа вне пределов — x-class ближайшего места на пути, иначе value; раздел говорит так же.
+        got = self.judge("name: 1e999\n")
+        self.assertEqual((got["class"], got["paths"]), ("name", [["name"]]))
+        section = build_section(*self.paths())
+        self.assertIn("ближайшего на пути (перечень в начале раздела), иначе `refused:value`", section)
+        self.assertNotIn("nonfinite — `refused:value`", section)
+
 
 class CanonicalTests(Base):
     """ADR-0089 доп. (1): умолчания внутри присутствующего, ordered — массив в порядке автора, JCS (Р13 — без обёртки)."""
