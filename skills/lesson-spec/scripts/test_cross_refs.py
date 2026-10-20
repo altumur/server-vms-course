@@ -123,6 +123,33 @@ class CrossRefTests(unittest.TestCase):
         self.assert_error("reference to a lesson read later: P/06 is not read before P/05",
                           self.check(self.resource))
 
+    def late_door(self, chapter, header, ref="../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Name",
+                  where="paths"):
+        self.write("08-domain/spec/08-domain.api.openapi.yaml", contract(components={"Name": {"type": "string"}}))
+        norms = self.platform / f"06-console/spec/06.{chapter}-console.norms.md"
+        norms.write_text(f"# P/06.{chapter}\n\nКанон главы. {header}\n", encoding="utf-8")
+        doc = contract({"$ref": ref} if where == "paths" else {"$ref": "#/components/schemas/Name"},
+                       {"Name": {"$ref": ref}} if where == "components" else None)
+        doc["paths"]["/events"]["description"] = f"Глава 6.{chapter} — пересылка подписанту."
+        self.write("06-console/spec/06-console.api.openapi.yaml", doc)
+
+    def test_late_layer_door_refers_to_the_lesson_that_introduces_it(self):
+        for header in ["**Глава позднего слоя: вводит урок 8**", "**Глава позднего слоя: вводят уроки 8 и 10**"]:
+            with self.subTest(header=header):
+                self.late_door(7, header)
+                result = self.check()
+                self.assertEqual(result.errors, [])
+                self.assertEqual(result.stats["openapi_cross_refs"], 1)
+
+    def test_late_layer_reference_is_narrow(self):
+        cases = {"another lesson": (7, "**Глава позднего слоя: вводит урок 10**", "paths"),
+                 "early chapter": (5, "Глава раннего слоя.", "paths"),
+                 "outside a door": (7, "**Глава позднего слоя: вводит урок 8**", "components")}
+        for name, (chapter, header, where) in cases.items():
+            with self.subTest(name):
+                self.late_door(chapter, header, where=where)
+                self.assert_error("reference to a lesson read later: P/08 is not read before P/06")
+
     def test_common_refers_to_common_only(self):
         self.write("common/contracts/view.openapi.yaml", contract(components={"View": {"$ref": EVENT}}))
         self.write("06-console/spec/06-console.api.openapi.yaml", contract(

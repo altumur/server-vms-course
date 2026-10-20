@@ -1168,6 +1168,9 @@ class Check:
     # A cross-file $ref between Platform contracts (decision on the lesson 6 transfer plan, В7): a relative
     # <path>.openapi.yaml#<JSON Pointer> inside Platform/, to the contract of a lesson with a smaller number or to a
     # common contract (Platform/common/); a common contract refers to common contracts only. No cycles between files.
+    # A later lesson L only from a door of a late-layer chapter that L introduces (decision on commit 10, chapter 6.7):
+    # the $ref sits under paths/<door> whose description starts «Глава N.K», and the header of N.K-….norms.md says
+    # «Глава позднего слоя: вводит урок L» (or «вводят уроки L1 и L2»); such a chapter is read after 8–10 (step 15).
     def cross_ref(self, source, ref, at, crossed):
         url = urlsplit(ref)
         if url.scheme or url.netloc or url.query or not url.path:
@@ -1196,8 +1199,11 @@ class Check:
         if source_lesson == "common" and lesson != "common":
             raise ValueError(f"a common contract refers to lesson {lesson:02}; common contracts refer to common ones")
         if source_lesson != "common" and lesson != "common" and lesson >= source_lesson:
-            raise ValueError(f"reference to a lesson read later: P/{lesson:02} is not read before "
-                             f"P/{source_lesson:02} (allowed: a smaller lesson number or Platform/common/)")
+            chapter = self.door_chapter(source, source_lesson, at)
+            if lesson == source_lesson or lesson not in self.late_chapters(source.parent).get(chapter, ()):
+                raise ValueError(f"reference to a lesson read later: P/{lesson:02} is not read before "
+                                 f"P/{source_lesson:02} (allowed: a smaller lesson number, Platform/common/, or a "
+                                 f"door under paths/ of a late-layer chapter that lesson {lesson} introduces)")
         if not target.is_file():
             raise ValueError(f"file not found: {self.name(target)}")
         if target in self.loading:
@@ -1210,6 +1216,26 @@ class Check:
             self.stats["openapi_cross_refs"] += 1
         crossed.append(target)
         return self.contracts[target][0], "#" + url.fragment, lambda where: f"{self.name(target)}:{where}"
+
+    # The chapter K of the door that holds a $ref: paths/<door> whose description starts «Глава N.K»; else None.
+    def door_chapter(self, source, lesson, at):
+        tokens = at.split(":", 1)[-1].removeprefix("#").split("/")
+        if len(tokens) < 3 or tokens[0] or tokens[1] != "paths":
+            return None
+        door = (self.contracts[source][0] or {}).get("paths", {}).get(tokens[2].replace("~1", "/").replace("~0", "~"))
+        found = re.match(r"Глава ([0-9]+)\.([0-9]+)(?![0-9.])", str((door or {}).get("description", "")))
+        return int(found[2]) if found and int(found[1]) == lesson else None
+
+    # Late-layer chapters of a lesson: K → the lessons that introduce it, from the header of NN.K-<процесс>.norms.md.
+    def late_chapters(self, spec):
+        chapters = {}
+        for norms in sorted(spec.glob("[0-9][0-9].*-*.norms.md")):
+            key = re.match(r"[0-9]{2}\.([0-9]+)-", norms.name)
+            head = "\n".join(norms.read_text(encoding="utf-8").splitlines()[:12])
+            late = re.search(r"Глава позднего слоя: ввод(?:ит|ят) урок(?:и)? ([0-9]+(?:(?:, | и )[0-9]+)*)", head)
+            if key and late:
+                chapters[int(key[1])] = {int(n) for n in re.findall(r"[0-9]+", late[1])}
+        return chapters
 
     def name(self, path):
         try:
