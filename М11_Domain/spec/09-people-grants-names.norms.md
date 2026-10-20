@@ -250,8 +250,9 @@ door:      GET /domain/keys у консоли кластера (своя, не �
 ### Н1.9 Двери людей и первый администратор
 
 ```yaml
-pass:      правки /domain/users…, /domain/break-glass…, /domain/grants/…, /domain/revoke консоль домена передаёт процессу
-           domain по уроку 3 Н1.8; процесс проверяет токен и domain/grants/domain сам (ADR-0032)
+pass:      двери /domain/users… и /domain/break-glass… при любом методе, и GET (разбор ревью стадии A 8–10, № 2), правки
+           /domain/grants/… и /domain/revoke консоль домена передаёт процессу domain по уроку 3 Н1.8; процесс проверяет
+           токен и domain/grants/domain сам (ADR-0032)
 first:     команда держателя domain first-admin <имя> (пароль — stdin, Н1.1 PASSWORD_MIN): только пока domain/users пуст —
            пишет человека и строку {subject: <имя>, cap: admin, scope: *, until: 0, by: <имя>} в domain/grants/domain;
            люди есть — отказ, код ≠ 0
