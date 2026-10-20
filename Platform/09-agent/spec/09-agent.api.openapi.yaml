@@ -105,7 +105,8 @@ paths:
         '502':
           $ref: '#/components/responses/InvalidReply'
         '503':
-          description: 'У агента: держатель не ответил за TOKEN_WAIT — unavailable (договор «Дверь» no_queue; воркер просит заново);
+          description: 'У агента: вверх не ответили за TOKEN_WAIT (держатель или ретранслятор; 502 did not answer ретранслятора — тоже
+            503) — unavailable (договор «Дверь» no_queue; воркер просит заново);
             или standby держателя как пришёл (P/08.10 Н1.7)'
           content:
             application/json:
