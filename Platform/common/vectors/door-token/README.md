@@ -41,7 +41,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | Файл | Вход → ожидание |
 |---|---|
 | [`issue.tsv`](issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
-| [`verify.tsv`](verify.tsv), 60 строк: 8 `ok`, 52 `forbidden` | `keys` — значение строки `door/keys` текстом JSON; `token`; `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — путь запроса к двери держателя, его первый сегмент сравнивается с элементами `routes` → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
+| [`verify.tsv`](verify.tsv), 64 строки: 8 `ok`, 56 `forbidden` | `keys` — значение строки `door/keys` текстом JSON; `token`; `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — путь запроса к двери держателя, его первый сегмент сравнивается с элементами `routes` → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
 
 ## Отказы
 
@@ -53,11 +53,12 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 |---|---|
 | четыре части | `three_parts`, `five_parts`, `token_empty` |
 | `door1` | `prefix_door2`, `prefix_upper` |
-| `kid` в `door/keys` (нечитаемая строка — `kid` не найден, [исход семьи](../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object` |
+| `kid` в `door/keys` (нечитаемая строка — `kid` не найден, [исход семьи](../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (чужая запись не по форме — нечитаема вся строка; разбор ревью стадии B 6–7, № 8) |
 | подпись | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `claims_swapped` |
 | части — строгий base64url без «=», хвостовые биты последнего знака — нули | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims ровно `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
 | типы claims: `user`, `unit`, `holder` — строки; `routes` — массив строк без повторов; `expires` — целое ≤ 2^53−1 (решение «Архитектора» 2026-10-20, Kimi SB67-01) | `user_number`, `unit_number`, `holder_null`, `routes_not_array`, `routes_item_number`, `routes_dup`, `expires_string`, `expires_float`, `expires_over_2_53` |
+| текст claims по I-JSON: строгий UTF-8, имя поля не повторяется, имена байт в байт (разбор ревью стадии B 6–7, № 8) | `claims_bad_utf8`, `claims_dup_key`, `claims_name_case` |
 | элемент `routes` — сегмент по грамматике `name` `[a-z][a-z0-9_-]{0,31}`; целое JSON — только запись без точки и порядка (решение «Архитектора» 2026-10-20) | `routes_item_slash`, `routes_item_upper`, `expires_point_zero`, `expires_exponent` |
 | `now < expires` (граница `now = expires` — отказ) | `expired_boundary`, `expired_after` |
 | `unit` и `holder` свои | `other_unit`, `other_sub`, `other_holder` |
