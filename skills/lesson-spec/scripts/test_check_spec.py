@@ -1481,6 +1481,19 @@ class PlatformCatalogTests(unittest.TestCase):
         self.assertEqual(len(stale), 2, result.errors)
         self.assertEqual(len(result.errors), 2, result.errors)
 
+    def test_schema_spec_is_a_form_given_by_the_manifest(self):
+        rows = self.ROWS + [
+            ["<sub>/<spec:unit.rows>/<id>", "row", "М10/8", "put=console", "<s>worker", "-", "1", "spec", "М10/8 Н1.2"],
+            ["s/<spec:domain.books>/<x>", "row", "М10/8", "put=console", "console", "-", "1", "spec", "М10/8 Н1.2"],
+            ["s/<spec:tables>/<x>", "file", "М10/8", "put=console", "console", "-", "1", "spec", "М10/8 Н1.2"],
+        ]
+        self.write_catalog(rows)
+        self.write_norms(self.DATA[:2] + ["- читает: `c/read/<x>`, `<sub>/<spec:unit.rows>/<id>`."], ["P/03-01", "P/03-02"])
+        errors = self.check().errors
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(all("schema spec is for a row or object whose key names one of" in e for e in errors), errors)
+        self.assertFalse(any("<spec:unit.rows>" in e for e in errors), errors)
+
 
 if __name__ == "__main__":
     unittest.main()

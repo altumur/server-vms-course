@@ -376,6 +376,9 @@ PROCESS_ROLES = {
     "configstore": {"configstore-door"},
     "w2cctl": {"admin"},
 }
+# `schema` = `spec`: the form of the row is given by the subsystem manifest (its spec key in the catalog key); no family
+# in data/ (ADR-0083 доп. (11), решение «Архитектора» по ревью стадии B 3–5). Only for keys with one of these spec keys.
+SPEC_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domain.kept"}
 # id-map of the old norms (ADR-0083, module-design «Прослеживаемость»): the column `new` holds checklist ids P/NN[.K]-MM
 # (and scenario and vector addresses, which these checks do not read).
 IDMAP = Path("Platform/common/id-map.tsv")
@@ -742,9 +745,14 @@ class Check:
                     raise ValueError("when is - or a spec key")
                 if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
                     raise ValueError("version is an integer ≥ 1")
-                if row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
+                if row["schema"] == "spec":
+                    named = {v[5:] for v in re.findall(r"<(spec:[^<>]*)>", row["key"])}
+                    if not named & SPEC_FORMS or row["kind"] not in {"row", "object"}:
+                        raise ValueError(f"schema spec is for a row or object whose key names one of "
+                                         f"{', '.join(sorted(SPEC_FORMS))} (<spec:…>)")
+                elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
-                if row["schema"] != "-":
+                elif row["schema"] != "-":
                     family_place(row)
                 norm = re.match(LESSON, row["norm"])
                 if not norm or self.lesson_norms(norm.group(0)) is None:
@@ -1523,7 +1531,7 @@ class Check:
         self.stats["families_without_section"] += 0
         if self.catalog is None:
             return
-        rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] != "-"]
+        rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] not in ("-", "spec")]
         lines = text.split("\n") if text is not None else []
         if not rows and not any(line in (FAMILIES_BEGIN, FAMILIES_END) for line in lines):
             return
