@@ -1,0 +1,27 @@
+# Семья <sub>/want/<сервер> — заказ числа процессов роли на сервере (P/04; P/04 Н1.1, Н3 «нехватка(), заказать()…»;
+# ADR-0084 и доп. (1)). Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога.
+# Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    want:
+      type: integer
+      minimum: 1
+      maximum: 99
+      description: абсолютная цель числа процессов роли на сервере, базовый `<prefix>-<сервер>-1` входит
+    at:
+      ref: common.time
+      description: момент записи; диагностика — сроки по наблюдению версии строки (Н1.4 сроки)
+    by:
+      type: string
+      description: экземпляр контроллера; диагностика — полномочие даёт cas и страж placement_turn
+    why:
+      type: string
+      writer: {not_enum: ['']}
+      description: непустая причина; грамматика Н3 «нехватка(), заказать()…»
+    retiring:
+      type: string
+      pattern: '[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*'
+      description: воркер, выбранный к сокращению (Н3 «сократить»); имя слота P/03.2 Н1.4
+  required: [want, at, by, why]

@@ -28,7 +28,7 @@
 - **[Урок 10](10-recworker.md)** — регистратор, `place_by: volume`, `home` как предпочтение.
 - **[Урок 26](26-a-backup-archive-of-our-own.md)** — резервная запись, `when: offline`, дверь архива.
 - **[М10/3](../М10_Platform/03-units-slots-epochs-lease.md)**, шаг 11 — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
-- **[М10/4](../М10_Platform/04-the-controller-and-placement.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
+- **[P/04](../Platform/04-controller/04-controller.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
 - **[М10/7](../М10_Platform/07-secrets-and-sealing.md)** — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
 
 ## Чему вы научитесь

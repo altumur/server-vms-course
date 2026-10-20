@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка М10/5: стенд testsub под раннером. Формат и директивы — README.
+# Приёмка P/04: контроллер — размещение, судьба слота, заказ и сокращение на стенде testsub и testsub2 под раннером. Перенесено из М10/05 (стадия B). Формат — README.
 07-tie-first-by-name	1	@start controller	ok
 07-tie-first-by-name	2	@start worker w-2	ok
 07-tie-first-by-name	3	@start worker w-1	ok
@@ -11,12 +11,14 @@ scenario	step	request	expect
 11-group-by-without-value	1	@start controller testsub2	ok
 11-group-by-without-value	2	@start worker testsub2 t-1	ok
 11-group-by-without-value	3	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1"}}
-11-group-by-without-value	4	console2 POST /tallies {"name": "ta", "of": "c1"}	201
-11-group-by-without-value	5	console2 POST /tallies {"name": "tb", "of": "c1"}	201
-11-group-by-without-value	6	@as console store POST /v1/write {"id":"a1","op":"put","key":"testsub2/tallies/tc","items":{"id":"tc","revision":"1","name":"tc","of":"c1","feed":"::not a url"},"cas":""}	200
-11-group-by-without-value	7	@until 30 console2 GET /where/ta	200 {"worker": "t-1"}
-11-group-by-without-value	8	@until 30 console2 GET /where/tb	200 {"worker": "t-1"}
-11-group-by-without-value	9	@until 30 console2 GET /where/tc	200 {"worker": "t-1"}
+11-group-by-without-value	4	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+11-group-by-without-value	5	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+11-group-by-without-value	6	console2 POST /tallies {"name": "ta", "of": "c1"}	201
+11-group-by-without-value	7	console2 POST /tallies {"name": "tb", "of": "c1"}	201
+11-group-by-without-value	8	@as console store POST /v1/write {"id":"a1","op":"put","key":"testsub2/tallies/tc","items":{"id":"tc","revision":"1","name":"tc","of":"c1","feed":"::not a url"},"cas":""}	200
+11-group-by-without-value	9	@until 30 console2 GET /where/ta	200 {"worker": "t-1"}
+11-group-by-without-value	10	@until 30 console2 GET /where/tb	200 {"worker": "t-1"}
+11-group-by-without-value	11	@until 30 console2 GET /where/tc	200 {"worker": "t-1"}
 12-sigkill-presence	1	@start controller	ok
 12-sigkill-presence	2	@start resource	ok
 12-sigkill-presence	3	@start worker w-1	ok
@@ -140,3 +142,26 @@ scenario	step	request	expect
 16-shrink	30	@until 60 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1", "retiring": "@absent"}}
 16-shrink	31	@until 90 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "true"}}
 16-shrink	32	store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
+17-distinct-one-shelf	1	@start resource	ok
+17-distinct-one-shelf	2	@start controller testsub2 shrink_after=20	ok
+17-distinct-one-shelf	3	console POST /counters {"name": "c1"}	201
+17-distinct-one-shelf	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+17-distinct-one-shelf	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+17-distinct-one-shelf	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+17-distinct-one-shelf	7	console2 POST /tallies {"name": "t1", "of": "c1"}	201
+17-distinct-one-shelf	8	console2 POST /tallies {"name": "t2", "of": "c1"}	201
+17-distinct-one-shelf	9	console2 POST /tallies {"name": "t3", "of": "c1"}	201
+17-distinct-one-shelf	10	console2 POST /tallies {"name": "t4", "of": "c1"}	201
+17-distinct-one-shelf	11	console2 POST /tallies {"name": "t5", "of": "c1"}	201
+17-distinct-one-shelf	12	console2 POST /tallies {"name": "t6", "of": "c1"}	201
+17-distinct-one-shelf	13	console2 POST /tallies {"name": "t7", "of": "c1"}	201
+17-distinct-one-shelf	14	console2 POST /tallies {"name": "t8", "of": "c1"}	201
+17-distinct-one-shelf	15	@until 30 console2 GET /where/t8	200 {"worker": "t-srv-a-1"}
+17-distinct-one-shelf	16	console2 POST /tallies {"name": "t9", "of": "c1"}	201
+17-distinct-one-shelf	17	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "why": "@any"}}
+17-distinct-one-shelf	18	@grow srv-a	ok
+17-distinct-one-shelf	19	@until 30 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
+17-distinct-one-shelf	20	@until 30 console2 GET /unplaceable	200 [{"id": "t9", "why": "~no free shelf"}]
+17-distinct-one-shelf	21	@sleep 40	ok
+17-distinct-one-shelf	22	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "retiring": "@absent"}}
+17-distinct-one-shelf	23	store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}

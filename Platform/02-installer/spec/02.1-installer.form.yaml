@@ -332,7 +332,7 @@ defs:
         properties:
           host: {enum: [authority, path], default: authority, description: "`authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`)"}
           fragment: {enum: [none], default_text: "`#` начинает фрагмент", description: "`none`: `#` — обычный знак, не начало фрагмента (урок 7 А2)"}
-          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` урока 3 Н4); проверка «нет хоста» урока 3 Н4 к такой ссылке не применяется, `group_by` урока 4 её в группу не берёт"}
+          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` урока 3 Н4); проверка «нет хоста» урока 3 Н4 к такой ссылке не применяется, `group_by` P/04 Н1.3 её в группу не берёт"}
   jsonSchemaLite:
     owner: 3 Н1.2; 10 Н1.4
     description: "JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32"
@@ -357,7 +357,7 @@ defs:
       - {type: boolean}
       - {ref: jsonSchemaLite}
 
-  # ---- placement: М10/4 Н1.3
+  # ---- placement: P/04 Н1.3
   placement:
     type: object
     required: [capacity]

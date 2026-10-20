@@ -36,7 +36,7 @@
 
 Пульсы заданной формы кладёт `@put object <ключ> inputs/<файл>` мимо писателя (строка реестра `М10_Platform/09
 acceptance-entry inputs`). Процессов ресурса и воркеров в этих сценариях нет. Первый взгляд консоли на пульс — свежий
-(урок 4 Н1 `resource_state`, урок 3 Н2 `worker_state`).
+([P/04 Н1.4](../../../../../../Platform/04-controller/spec/04-controller.norms.md) `resource_state`, урок 3 Н2 `worker_state`).
 
 | Файл | Ключ | Что в нём |
 |---|---|---|

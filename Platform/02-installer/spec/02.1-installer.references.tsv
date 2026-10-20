@@ -25,8 +25,8 @@ tables.$t.fields.$f.default	when exists @tables.$t.fields.$f.enum : . in values(
 tables.$t.fields.$f.schema	depth . <= 32	value	М10/10 Н1.4
 tables.$t.schema	depth . <= 32	value	М10/10 Н1.4
 snapshot[]	. in keys(unit.fields)	reference	P/02.1 Н1.4
-snapshot[]	. !~ ".*_secret"	value	P/02.1 Н1.2; М10/10 Н1.3
-snapshot[]	. not in {server} | keys(unit.fields ? type = blob)	value	P/02.1 Н1.2; М10/10 Н1.3
+snapshot[]	. !~ ".*_secret"	value	P/02.1 Н1.2; P/04 Н1.3а
+snapshot[]	. not in {server} | keys(unit.fields ? type = blob)	value	P/02.1 Н1.2; P/04 Н1.3а
 placement.spread_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
 placement.group_by.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
 placement.group_by.cut_at	@placement.group_by.field in keys(unit.fields ? type = url)	reference	P/02.1 Н1.2а group_by

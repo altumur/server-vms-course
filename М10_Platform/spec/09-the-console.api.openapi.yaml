@@ -2089,7 +2089,7 @@ components:
             $ref: '#/components/schemas/JsonValue'
         places:
           type: object
-          description: placement.places спеки, как загружен (смысл — урок 4 Н1.3); отсутствует, если раздела нет.
+          description: placement.places спеки, как загружен (смысл — P/04 Н1.3); отсутствует, если раздела нет.
           additionalProperties:
             $ref: '#/components/schemas/JsonValue'
         domain:
@@ -2435,7 +2435,7 @@ components:
             $ref: '#/components/schemas/M2_JsonValue'
         places:
           type: object
-          description: placement.places спеки, как загружен (урок 4); отсутствует, если раздела нет.
+          description: placement.places спеки, как загружен (P/04 Н1.3); отсутствует, если раздела нет.
           additionalProperties:
             $ref: '#/components/schemas/M2_JsonValue'
         domain:
@@ -3016,7 +3016,7 @@ components:
         capacity:
           type: ['number', 'null']
           minimum: 0
-          description: Поле пульса placement.capacity.from — число как в пульсе, дробное без округления; нет поля — capacity.default; не число — null (урок 4 Н1.3; журнал cammeta-go, урок 9 № 5).
+          description: Поле пульса placement.capacity.from — число как в пульсе, дробное без округления; нет поля — capacity.default; не число — null (P/04 Н1.3; журнал cammeta-go, урок 9 № 5).
         labels:
           type: array
           items:

@@ -205,19 +205,19 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 |---|---|
 | `/metrics` у root | ряды всех подсистем каталога и ряды платформы `w2c_*` (Н3); у `/<sub>/metrics` — ряды только этой подсистемы, без `w2c_*` |
 | ряд `<sub>_<console.running>` | число единиц из прочитанных пульсов воркеров; пульсы прочитаны и живых нет — `0`; неответ хранилища — 503 на весь `/metrics` |
-| `ServerRow.resource` | состояние ресурса урока 4 Н1 `resource_state` (наблюдатель — консоль, её часы); своего вывода нет |
+| `ServerRow.resource` | состояние ресурса [P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) `resource_state` (наблюдатель — консоль, её часы); своего вывода нет |
 | `WorkerRow.state` | как `worker_state` урока 3 Н2 («`rows` в `GET /{rows}`»): `live` при возрасте пульса ≤ 45 с, иначе `stale` |
-| `WorkerRow.capacity` | поле пульса `placement.capacity.from` — конечное число как в пульсе, дробное без округления; поля нет — `capacity.default`; поле не число — `null`: воркер не принимает новых единиц (урок 4 Н1.3; журнал cammeta-go, урок 9 № 5) |
-| `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель (урок 4 Н3 «выбрать»), иначе `false` |
-| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` урока 4 Н1 (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть (ключи `<sub>/<имя слота>`); нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
+| `WorkerRow.capacity` | поле пульса `placement.capacity.from` — конечное число как в пульсе, дробное без округления; поля нет — `capacity.default`; поле не число — `null`: воркер не принимает новых единиц ([P/04 Н1.3](../../Platform/04-controller/spec/04-controller.norms.md); журнал cammeta-go, урок 9 № 5) |
+| `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель ([P/04 Н3 «выбрать»](../../Platform/04-controller/spec/04-controller.norms.md)), иначе `false` |
+| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` [P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть (ключи `<sub>/<имя слота>`); нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
 | `WherePlace` без подписанта двери | поля `door` нет совсем (не `null`) |
 | пульс воркера в `/servers` и `/metrics` | нечитаемый (Н0 P/01.1 «Устойчивость выдачи»: не JSON-объект, не по форме P/03.4 Н1.1), `worker` ≠ имени в ключе или имя ключа не по грамматике имени слота P/03.2 Н1.4 (`W-N`) — пульса нет: воркер не показан, пульс считается в `<sub>_heartbeats_garbled`, ответ 200 (сверка python и go М10/6–11, C3, C15) |
 | `ServerRow.labels`, `labels_node`, `labels_source` | `labels` — действующие метки сервера: строка `platform/servers/<s>` побеждает метки узла (урок 4 Н2.1); `labels_node` — метки узла из поля `labels` пульсов воркеров сервера; `labels_source` — `console` при читаемой строке, `node` без строки, когда есть прочитанный пульс воркера сервера, иначе `unknown` (сверка python и go М10/6–11, C16) |
 | `WorkerRow.labels` | действующие метки его сервера, как у `ServerRow.labels`, — не поле пульса (сверка python и go М10/6–11, C16) |
-| `ServerRow.placeable`, `why` | `true`, когда на сервере есть живой воркер подсистемы, который проходит пул и ограничения урока 4 Н3 «выбрать» (метки, `requires`); нет такого — `false`, `why` — причина («no eligible live worker») (сверка python и go М10/6–11, C17) |
-| `ServerRow.decommissionable` | `true`, когда запрос вывода без `gone` сейчас был бы принят (урок 4 Н3 «вывести_сервер»: ни ресурс, ни воркер, ни слот сервера не слышны `LOST_AFTER`, ресурс когда-то слышали); пустой сервер под этим условием — `true`; иначе `false`, причина — `decommission_refusal` (сверка python и go М10/6–11, C18) |
+| `ServerRow.placeable`, `why` | `true`, когда на сервере есть живой воркер подсистемы, который проходит пул и ограничения [P/04 Н3 «выбрать»](../../Platform/04-controller/spec/04-controller.norms.md) (метки, `requires`); нет такого — `false`, `why` — причина («no eligible live worker») (сверка python и go М10/6–11, C17) |
+| `ServerRow.decommissionable` | `true`, когда запрос вывода без `gone` сейчас был бы принят ([P/04 Н3 «вывести_сервер»](../../Platform/04-controller/spec/04-controller.norms.md): ни ресурс, ни воркер, ни слот сервера не слышны `LOST_AFTER`, ресурс когда-то слышали); пустой сервер под этим условием — `true`; иначе `false`, причина — `decommission_refusal` (сверка python и go М10/6–11, C18) |
 | `WorkerRow.released`, `slot_until`, `slot_garbled` | строки слота нет — трёх полей нет; строка нечитаема или не по форме P/03.2 Н1.4 — `slot_garbled: true`, `slot_until: null`, `released` нет; читаема — `released` и `slot_until` из неё, `slot_garbled: false` (сверка python и go М10/6–11, C19); `released` — `true` только при `"true"`; при `"taking"` (захват в работе, урок 3 Н1.4) — `released: false` и `slot_taking: true`, иначе поля `slot_taking` нет (добавлено пилотом Quint, F2) |
-| пульс ресурса в `/resources`, `/servers`, `/metrics` | нечитаемый — не JSON-объект; `server` ≠ серверу в ключе; нет обязательного поля `ResourceRow` (кроме `state`, его выводит консоль) или поле не своего типа — кроме `schema` и `build`: у них исход поля урока 10 Н1.1 (`schema` не целым знаком — схема неизвестна, `build` не строка — `""`), пульс остаётся читаемым, как пульс воркера (добавлено описью семей; проверяется чтением — сценария `/resources` с таким пульсом нет, исход поля — сц. 12 урока 10); поле вне `ResourceRow` (его поля — закрытый перечень полей пульса, которые пишет ресурс урока 8 Н1.4). Нечитаемый пульс в `/resources` не входит, жизни не подтверждает (урок 4 Н1 `resource_state`) и считается в `w2c_resource_heartbeats_garbled`; ответ 200 (сверка python и go М10/6–11, C11) |
+| пульс ресурса в `/resources`, `/servers`, `/metrics` | нечитаемый — не JSON-объект; `server` ≠ серверу в ключе; нет обязательного поля `ResourceRow` (кроме `state`, его выводит консоль) или поле не своего типа — кроме `schema` и `build`: у них исход поля урока 10 Н1.1 (`schema` не целым знаком — схема неизвестна, `build` не строка — `""`), пульс остаётся читаемым, как пульс воркера (добавлено описью семей; проверяется чтением — сценария `/resources` с таким пульсом нет, исход поля — сц. 12 урока 10); поле вне `ResourceRow` (его поля — закрытый перечень полей пульса, которые пишет ресурс урока 8 Н1.4). Нечитаемый пульс в `/resources` не входит, жизни не подтверждает ([P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) `resource_state`) и считается в `w2c_resource_heartbeats_garbled`; ответ 200 (сверка python и go М10/6–11, C11) |
 
 `/resources` — объект по имени сервера с полными `ResourceRow`: обязательны `server, ts, url, schema, build, usage, usage_at, space, volumes, units, mirrors, short, state`; диагностические расширения перечислены в контракте. Это наблюдение пульсов ресурса, а не удостоверение доступности каждого объекта. `/where/<table>/<place>?unit=<id>` возвращает `{worker, place, server, door?}` либо 404 `{unreachable}` с одноимённым значением заголовка `X-Unreachable`. Неизвестная таблица — 404 до проверки `unit`, известная без `unit` — 400.
 
@@ -311,7 +311,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
          слот → released, slot_taking, slot_until (null — нечитаем), slot_garbled; удержания → holds;
          судьба контроллера (отчёт прохода) → hung, hung_since, hung_why, presence_unknown; соперники → name_conflict;
          servers.status → status {поле: значение как есть}
-серверы: ресурс (пульс + дверь) → resource по `resource_state` урока 4 Н1, resource_heard_at, space;
+серверы: ресурс (пульс + дверь) → resource по `resource_state` P/04 Н1.4, resource_heard_at, space;
          platform/servers/<s> → labels, labels_source console | node | unknown; дренаж; вывод и его отказ; достижимость
          (placeable, why — по меткам и requires); lost — единицы ушедшего
 неизвестный сервер — "?": и в /servers, и в `unreachable` /where/<table>/<place> — `place@?` (сверка python и go М10/6–11, C14, C25); реестра машин нет
@@ -322,7 +322,7 @@ required:false, default:null, без inherit/enum. Остальные default/in
 ### `/where/<id>`
 
 ```
-прочитать intent → placement нужной единицы → intent по М10/4 Н1.5; версия intent изменилась → повторить;
+прочитать intent → placement нужной единицы → intent по P/04 Н1.5; версия intent изменилась → повторить;
 обязательное чтение не подтверждено → 503. При неизменном active и id в members взять target/reason intent,
 иначе worker/reason строки placement; отсутствие placement не отменяет target активного intent.
 эффективный worker "" или нет → 404 {reason: why единицы из поля unplaceable последнего отчёта прохода, без неё —
@@ -393,13 +393,13 @@ door.routes, доступным подписантом и подтверждён
   # (сверка python и go М10/6–11, C23); server_labels{server,labels,source} — source словом labels_source ServerRow: console | node | unknown
   # (сверка python и go М10/6–11, C24)
   # reconcile_last_pass_age_seconds — сколько секунд прошло по монотонным часам консоли с последней смены объекта
-  # <sub>/controller/pass (урок 4 Н1.2), которую консоль видела; объекта нет или смены консоль ещё не видела — −1
+  # <sub>/controller/pass (P/04 Н1.2), которую консоль видела; объекта нет или смены консоль ещё не видела — −1
   # («неизвестно», не 0: первый взгляд возраста не даёт); reconcile_last_success_age_seconds — то же от последней увиденной
   # смены его поля last_success, успешного прохода не было или смены не видели — −1
-  # workers_wanted{server} — want строки заказа <sub>/want/<server> (урок 4 Н1.1), по ряду на каждую читаемую строку;
+  # workers_wanted{server} — want строки заказа <sub>/want/<server> (P/04 Н1.1), по ряду на каждую читаемую строку;
   # строка не читается — ряда нет; его читает скрипт сервера (P/02.4 Н1.5): нет ряда — ничего не запускать и не
   # останавливать; workers_withheld{labels} — сколько процессов набора контроллер не заказал, потому что подходящего
-  # сервера нет (отчёт прохода, урок 4 Н1.2 withheld); ряды заказа — ADR-0084
+  # сервера нет (отчёт прохода, P/04 Н1.2 withheld); ряды заказа — ADR-0084
   # failover_seconds{kind=last,worker} — started − previous_hb последнего пульса воркера (P/03.4 Н1.1: previous_hb —
   # ts пульса, который воркер застал под своим именем), если оба — конечные числа и разность ≥ 0, иначе −1; kind=worst —
   # наибольшее last, которое эта консоль видела у воркера с её старта, не видела — −1; failovers_unmeasured — число
@@ -478,7 +478,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 | 04 | `/servers` → `{policy: {servers: shared}, servers: {}}`; `/unplaceable` пуст; `/where/<id>` у неразмещённой — 404 с `reason` | Н2, Н3 |
 | 05 | `/metrics` — текст с `testsub_workers_live 0`, `testsub_units_unplaced`, `testsub_counters_running`, `w2c_resources_live`; `/testsub/metrics` — ряды «всегда» Н3 (`failovers_unmeasured`, `audit_failures`, `garbled_rows`, `idempotency_store_failures`, `requests_ledger_garbled`) | Н3 (сверка python и go М10/6–11, C8) |
 | 06 | отказы: неизвестный путь 404 `no such path`; метод 405; `/counters/c4/x` 404; смонтированная `/testsub2/` 404; методы, кроме `PUT`, на двери байтов `/testsub2/tallies/t1/mask` — 405; `/testsub/asked/…` без `per_person` — 404; `POST /testsub2/` — 405; `/where/<table>/<place>?unit=` не по форме id — 400 | Н4, Н2 (сверка python и go М10/6–11: C26, C27, C28, C6) |
-| 07 | нечитаемая строка intent (`state` не `active`/`idle`) — `/where/<id>` 503, не 404 | Н3 `/where`, урок 4 Н1.5 (сверка python и go М10/6–11, C5) |
+| 07 | нечитаемая строка intent (`state` не `active`/`idle`) — `/where/<id>` 503, не 404 | Н3 `/where`, [P/04 Н1.5](../../Platform/04-controller/spec/04-controller.norms.md) (сверка python и go М10/6–11, C5) |
 | 08 | нечитаемый пульс воркера (`@spoil object`) — `/servers` и `/metrics` 200, `testsub_heartbeats_garbled 1` | Н2, Н0 P/01.1 «Устойчивость выдачи» (сверка python и go М10/6–11, C3) |
 | 09 | нехватка у `testsub2` (`grows: true`, воркеров нет) — `/testsub2/metrics` 200 с `testsub2_units_short` | Н3 `/metrics` (сверка python и go М10/6–11, C2) |
 | 10 | живой ресурс — ряды `w2c_resource_waits`, `w2c_resource_mirror_failures_total`, `w2c_resource_restore_left` по полям его пульса; `/resources` с `waits`, `mirror`, `restore` | Н3 `/metrics`, Н2 (сверка python и go М10/6–11, C9, C10) |
@@ -525,7 +525,7 @@ metrics[]:  закрытый перечень ключей элемента (з�
 - [ ] **М10/9-06** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется чтением: вызовы модуля и их порядок — по Н1.4 `reads`/`writes`/`never`/`order`; причина — модуль один у всех реализаций, двери порядок загрузки не показывают
 - [ ] **М10/9-07** контракт оболочки Н1.5: `api` с ключом логического действия и повторами только по контракту владельца, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери); причина — TSV говорит с дверями, страницу не исполняет
 - [ ] **М10/9-08** `/servers`, `/resources` и `WorkerRow` по Н2/Н3 — сц. 04; стенд приёмки P/03 (прежде урока 5); ResourceRow — чтением обязательных полей Н2: сц.04/6 видит только пустой объект
-- [ ] **М10/9-09** `/where`: эффективное размещение через intent/placement/intent по М10/4 (чтением по README приёмки 09, в TSV только отсутствие); 404 с `reason`, `door` только по view, токен Ed25519 120 (байты токена, `door/signer`, `door/keys` — чтением: у стенда нет двери держателя, которая проверяет токен) с, журнал `door.issued` — сц. 04; стенд М12A; where(table,place) — чтением этого Н3: TSV04 проверяет лишь неизвестную таблицу, не удержание и токен (проверка токена держателем — [P/03.4-08](../../Platform/03-worker/spec/03.4-worker.norms.md), часть 3.4 по `note` id-map; стадия B)
+- [ ] **М10/9-09** `/where`: эффективное размещение через intent/placement/intent по [P/04 Н1.5](../../Platform/04-controller/spec/04-controller.norms.md) (чтением по README приёмки 09, в TSV только отсутствие); 404 с `reason`, `door` только по view, токен Ed25519 120 (байты токена, `door/signer`, `door/keys` — чтением: у стенда нет двери держателя, которая проверяет токен) с, журнал `door.issued` — сц. 04; стенд М12A; where(table,place) — чтением этого Н3: TSV04 проверяет лишь неизвестную таблицу, не удержание и токен (проверка токена держателем — [P/03.4-08](../../Platform/03-worker/spec/03.4-worker.norms.md), часть 3.4 по `note` id-map; стадия B)
 - [ ] **М10/9-10** `/metrics` по Н3: ряды подсистемы, платформенные `w2c_*` один раз, число по значению (Н3 «/metrics — текст», ADR-0055) — сц. 05; `failover_seconds`, `failovers_unmeasured` — чтением (стенд урока 9 не перезапускает воркер под прежним именем)
 - [ ] **М10/9-11** общие коды Н4 — сц. 06; полосы и пределы тела — чтением Н3 шаги 1–2 и описания пределов реализации («Решает реализация» п. 2): заполнить полосу и прислать большое тело TSV не умеет
 - [ ] **М10/9-12** байты мимо консоли: ни одного маршрута потока/архива в консоли платформы (ADR-0015) — проверяется чтением: тест границы реализации (список маршрутов консоли против слов потока и архива); причина — отсутствие маршрута запросом не показать

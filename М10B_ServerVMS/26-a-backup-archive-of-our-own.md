@@ -23,7 +23,7 @@
 - **Урок 8** ([видимость, хранение, таймлайн](08-visibility-retention-timeline.md)) — читатель видит только закрытые блоки; `Archive.seal`.
 - **[Урок 15](15-the-archive-we-did-not-write.md)** — держатель публикует сводку покрытия, а не индекс.
 - **[Урок 16](16-backfill-from-the-edge.md)** — дозапись: наше покрытие, дыры вычитанием, бюджет, «только дыры», последовательность на отрезок, и шаг 10 — память о пустом, отданное как садящееся, конец видимого, дыры только внутри записанного.
-- **[М10/4](../М10_Platform/04-the-controller-and-placement.md)** — фильтры и предпочтения размещения; `near` и `home: near`, `affinity`; словарь деклараций — [М10/2](../Platform/02-installer/02-installer.md), шаг 20.
+- **[P/04](../Platform/04-controller/04-controller.md)** — фильтры и предпочтения размещения; `near` и `home: near`, `affinity`; словарь деклараций — [М10/2](../Platform/02-installer/02-installer.md), шаг 20.
 - **[Урок 25](25-automation.md)** — запись по событию: строка с `until`.
 
 ## Чему вы научитесь
@@ -265,7 +265,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 
 Ни демукса, ни конвейера, ни переписанных меток. Исполнитель здесь не участвует вовсе: тест проверяет, что `primary.actuator.fetched == []`.
 
-**Режется по дыре.** Дверь отдаёт кадры диапазона `[М10/4](../М10_Platform/04-the-controller-and-placement.md); ADR 0002 — правило в спеке, а не код подсистемы, который платформа вызывает):
+**Режется по дыре.** Дверь отдаёт кадры диапазона `[P/04](../Platform/04-controller/04-controller.md); ADR 0002 — правило в спеке, а не код подсистемы, который платформа вызывает):
 
 ```yaml
   # …and a FILTER where the volume is a standby (`affinity`; М10B Lesson 26 — it was `volumes.admit_recording`, a hook,
@@ -306,7 +306,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
   near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
 ```
 
-`home.kind` — поле `kind` строки тома, которую называет `home` записи. Платформа по-прежнему не знает, что такое резерв: она ставит первым найденного, у которого предпочтение сошлось, а при равенстве — по имени, чтобы два прохода пришли к одному серверу ([М10/4](../М10_Platform/04-the-controller-and-placement.md), шаг 6). Тест: `test_the_camera_stands_beside_the_backup_recording` — `holder_near("1") == ("r-2", "srv-b")`.
+`home.kind` — поле `kind` строки тома, которую называет `home` записи. Платформа по-прежнему не знает, что такое резерв: она ставит первым найденного, у которого предпочтение сошлось, а при равенстве — по имени, чтобы два прохода пришли к одному серверу ([P/04](../Platform/04-controller/04-controller.md), шаг 6). Тест: `test_the_camera_stands_beside_the_backup_recording` — `holder_near("1") == ("r-2", "srv-b")`.
 
 **Какие тома резервные, читается раз на взгляд, а не раз на запись.** Предпочтение платформа считает внутри одного взгляда на heartbeat'ы регистраторов (`NearIndex`, урок 11 М10A): строки томов — один раз, строка каждой записи — один раз, когда её ранжируют, а одну найденную не ранжируют вовсе (масштабный проход). Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`.
 

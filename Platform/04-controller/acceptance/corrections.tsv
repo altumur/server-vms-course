@@ -1,0 +1,4 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 07-tie-first-by-name, 11-group-by-without-value, 12-sigkill-presence, 13-capture-taking, 14-grow-on-order, 15-order-not-raised, 16-shrink из М10/05 (стадия B)	all
+2026-10-20	11/scenarios.tsv: шаги 4–5	полка s-1 на сервере t-1 и ожидание строки удержания testsub2/holds/s-1: при distinct единицы получает только хранитель непустого места (ADR-0084 доп. (2) Р15); прежние шаги 4–9 — 6–11; разбор ревью стадии A 3–5, № 7	all
+2026-10-20	17-distinct-one-shelf	новый сценарий: distinct, одна полка — один пробный процесс, no free shelf, живой без места при ждущих не сокращается (ADR-0084 доп. (3) Р16′; разбор ревью стадии A 3–5, № 1)	all

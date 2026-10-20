@@ -55,3 +55,5 @@ P/03	scenarios-format	2/own	двери store/console и директивы пр�
 P/03	scenarios-format	3/own	двери store/console и директивы процессов @start/@sleep/@until (сценарии главы 3.3 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	4/own	двери store/console и директивы процессов @start/@sigterm/@until (сценарий главы 3.4 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	6/own	три двери, @start/@until/@key, JSON Lines и байты (сценарии главы 3.6 из М10/08); проверяется по README приёмки
+P/04	no-openapi	-	своей HTTP-двери у контроллера нет: двери политики, дренажа, меток, вывода сервера, /unplaceable, /where — консоли (М10/4 до урока 6; план переноса урока 4, п. 8)
+P/04	scenarios-format	own	двери store/console/console2/resource и директивы процессов @start/@sig*/@grow/@as (сценарии из М10/05); проверяется по README приёмки

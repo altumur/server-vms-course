@@ -11,7 +11,7 @@
 Канон — [нормы](12-small-members-and-one-node.norms.md). Своего HTTP-контракта у урока нет: его ответы дописаны в
 контракты уроков [3](03-agent-and-reports.api.openapi.yaml), [7](07-worker-tokens.api.openapi.yaml),
 [9](09-people-grants-names.api.openapi.yaml), [10](10-holder-transfer-and-keepers.api.openapi.yaml) с пометкой
-«добавлено М11/12». Очередь процесса — алгоритм `placement_turn` М10/4 Н3; юниты — P/02.4 Н1.1.
+«добавлено М11/12». Очередь процесса — алгоритм `placement_turn` [P/04 Н3](../../Platform/04-controller/spec/04-controller.norms.md); юниты — P/02.4 Н1.1.
 [Приёмка](../../Source/tests/testdata/acceptance/М11_Domain/12/README.md) — стенд урока 3; [лекция](../12-small-members-and-one-node.md)
 объясняет причины. При противоречии записать место и контрпример и передать «Спецификации»; инструкция не вводит новый
 отказ.

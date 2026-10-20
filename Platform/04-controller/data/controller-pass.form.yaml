@@ -1,0 +1,141 @@
+# Семья <sub>/controller/pass — отчёт прохода контроллера (P/04; P/04 Н1.2). Источник формы объекта (ADR-0088; разбор
+# ревью стадии A 3–5, № 16: names_given, hung_move_after). Экземпляр — {key, object}; ключ — грамматика колонки key
+# каталога. Слова — Platform/common/DIALECT.md. Поля ниже ДОЛЖНЫ быть (short, wants — только при placement.grows: true);
+# реализация МОЖЕТ добавлять свои счётчики (имена вне properties). Запись spec_rev и rev судьбы нормой не названа —
+# число или десятичная строка.
+dialect: data-form/1
+defs:
+  slot_name:
+    type: string
+    pattern: '[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*'
+    description: имя слота P/03.2 Н1.4
+  count:
+    ref: common.uint53
+    description: счётчик ≥ 0
+  server_name:
+    type: string
+    pattern: '[a-z0-9]+(-[a-z0-9]+)*'
+    description: имя сервера — грамматика SERVER_NAME (P/02.4 Н1.2)
+  labels:
+    type: array
+    items: {type: string}
+    description: набор меток — каноническая запись по возрастанию (Н3 «порядок наборов»)
+root:
+  type: object
+  properties:
+    at: {ref: common.time, description: "момент конца прохода"}
+    ok: {type: boolean}
+    error: {type: string, description: "текст последней ошибки или пустая строка"}
+    failures: {ref: count}
+    last_success: {ref: common.time, description: "момент конца последнего успешного прохода"}
+    seconds: {type: number, minimum: 0, description: "длительность прохода"}
+    spec_rev: {type: [integer, string], description: "ревизия спеки контроллера"}
+    spec_behind: {ref: count, description: "строк, решённых более новой спекой"}
+    names_given:
+      type: object
+      names:
+        key: {ref: slot_name}
+        value:
+          type: string
+          not_enum: ['']
+          description: версия строки слота (index P/01.1 Н1, непрозрачная строка), при которой имя отдано (Н3 «судьба» names_given)
+      description: имена, отданные судьбой; читает воркер при захвате (P/03.2 Н3 «захватить»)
+    hung_move_after: {type: number, minimum: 0, description: "секунды предела зависания, действующего у этого контроллера (Н1.4 HUNG_MOVE_AFTER); читает воркер"}
+    fates:
+      type: object
+      names:
+        key: {ref: slot_name}
+        value:
+          type: object
+          properties:
+            fate: {type: string, enum: [alive, wait, hung, hung_moved, unsure, unsure_moved, move, release]}
+            server: {type: string}
+            why: {type: string}
+            rev: {type: [integer, string], description: "версия суждения о слоте"}
+            since: {ref: common.time, description: "момент входа слота в этот fate на часах контроллера"}
+          required: [fate, server, why, rev, since]
+      description: только занятые неотданные слоты (holder непуст, released false)
+    diverged: {ref: count}
+    unplaced: {ref: count}
+    garbled: {ref: count}
+    snapshot_rows_garbled: {ref: count}
+    reach_moves_total: {ref: count}
+    slots_released_total: {ref: count}
+    unplaced_deleted_total: {ref: count}
+    servers_decommissioned_total: {ref: count}
+    workers_hung: {ref: count}
+    workers_hung_moved_total: {ref: count}
+    workers_unsure_moved_total: {ref: count}
+    name_conflicts: {ref: count}
+    unplaceable:
+      type: object
+      names:
+        key: {ref: common.named_id}
+        value: {type: string, not_enum: [''], description: "непустая причина — why /unplaceable и reason 404 `/where/<id>`"}
+    short:
+      type: array
+      items:
+        type: object
+        properties:
+          labels: {ref: labels}
+          units: {ref: count, description: "ждущих единиц веса"}
+          workers: {ref: count, description: "нужно процессов сверх живых и ёмкости в пути"}
+          groups: {ref: count, description: "ждущих групп"}
+          ordered: {ref: count, description: "заказано этим проходом"}
+          withheld: {type: string, description: "слова, почему не заказано"}
+        required: [labels, units, workers, ordered]
+      description: только при placement.grows true
+    wants:
+      type: object
+      names:
+        key: {ref: server_name}
+        value:
+          type: object
+          properties:
+            want: {type: integer, minimum: 1, maximum: 99}
+            live: {ref: count, description: "живые процессы роли сервера"}
+            pending: {ref: count, description: "ёмкость в пути"}
+            retiring: {ref: slot_name}
+            why: {type: string}
+            state: {type: string, enum: [ok, raising, raise_failed, no_base]}
+          required: [want, live, pending, why, state]
+      description: только при placement.grows true
+    raise_failed:
+      type: object
+      names:
+        key: {ref: server_name}
+        value:
+          type: object
+          properties:
+            since: {ref: common.time, description: "момент снятия заказа"}
+            times: {ref: count, description: "отказов подряд"}
+          required: [since, times]
+  required:
+    - at
+    - ok
+    - error
+    - failures
+    - last_success
+    - seconds
+    - spec_rev
+    - spec_behind
+    - names_given
+    - hung_move_after
+    - fates
+    - diverged
+    - unplaced
+    - garbled
+    - snapshot_rows_garbled
+    - reach_moves_total
+    - slots_released_total
+    - unplaced_deleted_total
+    - servers_decommissioned_total
+    - workers_hung
+    - workers_hung_moved_total
+    - workers_unsure_moved_total
+    - name_conflicts
+    - unplaceable
+    - raise_failed
+  names:
+    key: {type: string}
+    value: {type: any, description: "свои счётчики реализации (Н1.2 — МОЖЕТ добавлять)"}

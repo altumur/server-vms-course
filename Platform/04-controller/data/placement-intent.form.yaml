@@ -1,0 +1,38 @@
+# Семья <sub>/controller/placement_intent — принятое общее решение для members (P/04; P/04 Н1.5, Н3 «принять и довести
+# решение»). Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. После создания строка не удаляется (Н1.5).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    state:
+      type: string
+      enum: [active, idle]
+      description: active — решение ещё доводится; idle — все строки завершённого решения доведены
+    spec_rev:
+      type: string
+      pattern: '[1-9][0-9]*'
+      description: ревизия спеки принятого решения
+    members:
+      encoding: json
+      type: array
+      items:
+        ref: common.named_id
+        description: id единицы решения (М10/3 Н1.3)
+      unique_items: true
+      description: JSON-массив всех id решения; уникальны, отсортированы (порядок — правило урока, не формы); только при active
+    target:
+      type: string
+      pattern: '([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?'
+      description: одна цель всей группы — имя воркера (слот P/03.2 Н1.4); "" — снять размещение; только при active
+    reason:
+      type: string
+      not_enum: ['']
+      description: непустая причина; только при active
+    at:
+      ref: common.time
+      description: стенные секунды принятия решения; только при active
+  required: [state, spec_rev]
+  rules:
+    - when: {is: {state: [active]}}
+      require: [members, target, reason, at]
