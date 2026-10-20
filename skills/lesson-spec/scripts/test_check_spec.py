@@ -672,6 +672,37 @@ properties:
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("spec variable", errors[0])
 
+    def test_catalog_when_is_a_manifest_key_path_or_a_header_word(self):
+        form = self.root / "Platform/02-installer/spec/02.1-installer.form.yaml"
+        form.parent.mkdir(parents=True, exist_ok=True)
+        form.write_text("dialect: m10-form/1\nroot:\n  type: object\n  properties:\n"
+                        "    domain:\n      type: object\n      properties:\n"
+                        "        kept: {type: array, items: {type: string}}\n"
+                        "        books:\n          type: object\n          names:\n            key: {type: string}\n"
+                        "            value:\n              type: object\n              properties:\n"
+                        "                from: {type: string}\n"
+                        "    loose: {type: object, opaque: true}\ndefs: {}\n", encoding="utf-8")
+
+        def row(key, when):
+            return [key, "row", "М12A/1", "put=console", "*", when, "1", "-", "М12A/1 Н1"]
+        rows = [row("a/<x>", "domain.kept"), row("b/<x>", "domain.books.any_book.from"), row("c/<x>", "domain.worker"),
+                row("d/<x>", "-"), row("e/<x>", "domain.nope"), row("f/<x>", "domain.helper"), row("g/<x>", "loose.x")]
+        self.write_catalog(*rows)
+        path = self.root / "Platform/common/data/catalog.tsv"
+        path.write_text(path.read_text().replace(
+            "# catalog\n", "# catalog\n# when — путь ключа спеки или производное слово из закрытого перечня: "
+                           "domain.worker — воркер на домене (решение; пояснение); unused.word — нигде не стоит.\n"))
+        self.data("- владеет: " + ", ".join(f"`{r[0]}`" for r in rows) + ";")
+        errors = self.check().errors
+        when = [e for e in errors if "when " in e]
+        self.assertEqual(len(when), 3, errors)
+        self.assertIn("line 8: when domain.nope is neither a key path of", when[0])
+        self.assertIn("(domain.worker, unused.word)", when[0])
+        self.assertIn("line 9: when domain.helper is neither", when[1])
+        self.assertIn("line 10: when loose.x is neither", when[2])
+        path.write_text(path.read_text().replace("unused.word", "domain.kept"))
+        self.assertIn("derived when word domain.kept is also a key path", "\n".join(self.check().errors))
+
     def test_data_paragraph_must_match_catalog(self):
         self.write_catalog(self.SLOT)
         self.data("- владеет: `nothing/here`;", "- пишет: `<sub>/slots/<имя>` (delete);")

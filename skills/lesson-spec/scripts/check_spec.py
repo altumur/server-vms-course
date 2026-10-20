@@ -362,6 +362,11 @@ def unit_entries(text):
 # Data contract catalog (ADR-0083 доп. (2) п. 1–2, form decisions/inbox/2026-10-18-каталог-данных-форма.md).
 CATALOG = Path("Platform/common/data/catalog.tsv")
 CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
+# `when` resolves against the manifest form source (P/02.1); the closed list of derived words stands in the catalog
+# header: `# when — … закрытого перечня: <слово> — <пояснение>[; <слово> — <пояснение>]…` (решение «Архитектора»
+# 2026-10-20, коммит курса 9ca4837ad).
+MANIFEST_FORM = Path("Platform/02-installer/spec/02.1-installer.form.yaml")
+WHEN_WORDS = re.compile(r"(?:перечня:|;)\s*([a-z_]+(?:\.[a-z_]+)*) — ")
 CATALOG_KINDS = {"row", "object", "file", "dir"}
 CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
 ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)"
@@ -729,6 +734,8 @@ class Check:
             self.error(path, f"expected header {' '.join(CATALOG_FIELDS)}")
             return
         self.catalog = {}
+        words = self.when_words(path)
+        when_key = self.manifest_key(path, words)
         for line, cols in rows[1:]:
             row = dict(zip(CATALOG_FIELDS, cols))
             try:
@@ -744,6 +751,9 @@ class Check:
                 row["reader_roles"] = None if row["readers"] == "*" else parse_roles(row["readers"], "readers")
                 if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]):
                     raise ValueError("when is - or a spec key")
+                if row["when"] != "-" and row["when"] not in words and not when_key(row["when"]):
+                    raise ValueError(f"when {row['when']} is neither a key path of {MANIFEST_FORM} nor a derived "
+                                     f"word of the catalog header ({', '.join(sorted(words)) or 'none'})")
                 if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
                     raise ValueError("version is an integer ≥ 1")
                 if row["schema"] == "spec":
@@ -775,6 +785,34 @@ class Check:
                 if la == lb and (rb.fullmatch(sa) or ra.fullmatch(sb)):
                     self.error(path, f"keys {a['key']} and {b['key']} overlap with equal narrowness")
         self.stats["catalog_rows"] += len(self.catalog)
+
+    # The closed list of derived `when` words from the header line `# when — …` of the catalog.
+    def when_words(self, path):
+        text = self.read(path) or ""
+        heads = [line for line in text.splitlines() if line.startswith("# when — ")]
+        return set(WHEN_WORDS.findall(heads[0])) if heads else set()
+
+    # `when` as a key path of the manifest form source: segments go by the keys of mappings, under `names` any segment.
+    # Returns the predicate (key path → exists); a missing or broken source refuses every path.
+    def manifest_key(self, path, words):
+        source = self.root / MANIFEST_FORM
+        form = None
+        if source.is_file():
+            if str(SCRIPTS) not in sys.path:
+                sys.path.insert(0, str(SCRIPTS))
+            try:
+                from form_source.source import ANY, SourceError, load_form
+                form = load_form(source)
+            except ImportError as exc:
+                self.error(path, f"when needs the form source loader (ruamel.yaml), missing: {exc}; run: {SCHEMA_INSTALL}")
+            except SourceError as exc:
+                self.error(source, f"form source: {exc}")
+        if form is None:
+            return lambda key: False
+        for word in sorted(words):
+            if form.node_at(word.split(".")) not in (None, ANY):
+                self.error(path, f"derived when word {word} is also a key path of {MANIFEST_FORM}")
+        return lambda key: form.node_at(key.split(".")) not in (None, ANY)
 
     # Paragraph «Данные» in Н1 of a lesson against the catalog: what the lesson owns, writes and reads.
     def data_paragraph(self, path, text, prefix, lesson=None):
