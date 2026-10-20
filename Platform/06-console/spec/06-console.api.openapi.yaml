@@ -5478,6 +5478,8 @@ components:
         action:
           type: string
           minLength: 1
+          description: Значение поля action тела просьбы, не имя обработчика; у тела без action поля нет (договор просьбы
+            «Метка»; разбор ревью стадии B 6–7, № 16).
         error:
           type: string
           maxLength: 200
@@ -5489,21 +5491,12 @@ components:
             outcome:
               const: performed
         then:
-          required:
-          - action
           not:
             required:
             - error
         else:
           required:
           - error
-      - if:
-          properties:
-            outcome:
-              const: refused
-        then:
-          required:
-          - action
     ClosedBegun:
       type: object
       required:

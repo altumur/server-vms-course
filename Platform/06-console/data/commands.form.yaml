@@ -35,7 +35,7 @@ root:
       description: исход — закрытый перечень (ADR-0054); нет поля — begun без исхода (исполняется)
     action:
       type: string
-      description: действие, которое держатель вызвал; обязателен при performed/refused после вызова, при unknown необязателен
+      description: значение поля action тела просьбы (договор просьбы «Просьба» action), не имя обработчика; у тела с action обязателен при performed/refused после вызова, при unknown необязателен; у тела без action поля нет (разбор ревью стадии B 6–7, № 16)
     ended_at:
       ref: common.time
       description: когда закрыт исход

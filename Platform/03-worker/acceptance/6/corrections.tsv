@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-20	перенос	сценарии 05-request-performed, 07-append-by-data из М10/08 (стадия B)	all
+2026-10-20	05-request-performed шаг 6	метка без поля action: тело {unit, add} поля action не имеет, в метке action — значение поля action тела, не имя обработчика (разбор ревью стадии B 6–7, № 16; правка поведения)	all
