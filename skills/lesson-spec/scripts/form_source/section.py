@@ -16,6 +16,15 @@ def code(x):
     return "`%s`" % x
 
 
+def key(k):
+    """Подпись ключа: пустой ключ — `""`, иначе — сам ключ (без пустого места в пути и в обратных кавычках)."""
+    return '""' if k == "" else k
+
+
+def key_code(k):
+    return "`%s`" % key(k)
+
+
 def cell(s):
     return str(s).replace("|", "\\|").replace("\n", " ")
 
@@ -138,7 +147,7 @@ class Section:
                 return "отображение, opaque"
             s = "отображение"
             if n.properties is not None:
-                s += " `{%s}`" % ", ".join(k if k in n.required else k + "?" for k in n.properties)
+                s += " `{%s}`" % ", ".join(key(k) if k in n.required else key(k) + "?" for k in n.properties)
             if n.names is not None:
                 s += (" и прочие" if n.properties else "") + " имена автора: имя — %s, значение — %s" % (
                     self.kind(n.names[0]), self.kind(n.names[1]))
@@ -147,7 +156,7 @@ class Section:
                 if n.max_items is not None:
                     s += "; не больше %d имён" % n.max_items
             elif n.required and n.properties is None:
-                s += "; обязательны " + ", ".join(code(k) for k in n.required)
+                s += "; обязательны " + ", ".join(key_code(k) for k in n.required)
             return s
         return {"string": "строка", "integer": "целое", "number": "число", "boolean": "bool", "null": "null",
                 "any": "любое значение", "time": "время (P/01.1 Н0 «Время в строке»)"}[t]
@@ -191,7 +200,7 @@ class Section:
         if not own and t.rules:
             rules.append((path, t))
         for k, c in (t.properties or {}).items():
-            self.walk("%s.%s" % (path, k) if path else k, t, k, c, rows, rules, stack)
+            self.walk("%s.%s" % (path, key(k)) if path else key(k), t, k, c, rows, rules, stack)
         if t.names is not None:
             self.walk("%s.<имя>" % path, None, None, t.names[1], rows, rules, stack)
         if t.items is not None:
@@ -216,29 +225,29 @@ class Section:
         w = r.when
         cond = []
         for k in w.get("present", []):
-            cond.append("есть `%s`" % k)
+            cond.append("есть %s" % key_code(k))
         for k in w.get("absent", []):
-            cond.append("нет `%s`" % k)
+            cond.append("нет %s" % key_code(k))
         for k, v in (w.get("is") or {}).items():
-            cond.append("`%s` — %s" % (k, ", ".join(code(x) for x in v)))
+            cond.append("%s — %s" % (key_code(k), ", ".join(code(x) for x in v)))
         for k, v in (w.get("is_not") or {}).items():
-            cond.append("`%s` не %s" % (k, ", ".join(code(x) for x in v)))
+            cond.append("%s не %s" % (key_code(k), ", ".join(code(x) for x in v)))
         if "name_pattern" in w:
             cond.append("имя целиком `%s`" % w["name_pattern"])
         if "name_not_pattern" in w:
             cond.append("имя не целиком `%s`" % w["name_not_pattern"])
         act = []
         if r.require:
-            act.append("обязательны " + ", ".join(code(k) for k in r.require) + " (путь — недостающий ключ)")
+            act.append("обязательны " + ", ".join(key_code(k) for k in r.require) + " (путь — недостающий ключ)")
         if r.forbid:
-            act.append("запрещены " + ", ".join(code(k) for k in r.forbid) + " (путь — запрещённый ключ)")
+            act.append("запрещены " + ", ".join(key_code(k) for k in r.forbid) + " (путь — запрещённый ключ)")
         if r.one_of:
-            act.append("ровно один из " + ", ".join(code(k) for k in r.one_of)
+            act.append("ровно один из " + ", ".join(key_code(k) for k in r.one_of)
                        + " (нет — путь отображения; больше — путь второго по списку)")
         if r.any_of:
-            act.append("хотя бы один из " + ", ".join(code(k) for k in r.any_of) + " (путь отображения)")
+            act.append("хотя бы один из " + ", ".join(key_code(k) for k in r.any_of) + " (путь отображения)")
         for k, c in r.check.items():
-            act.append("`%s` — ещё и %s" % (k, self.kind(c)))
+            act.append("%s — ещё и %s" % (key_code(k), self.kind(c)))
         if r.reject:
             act.append("отказ с путём отображения: %s" % r.reject)
         if r.xclass:

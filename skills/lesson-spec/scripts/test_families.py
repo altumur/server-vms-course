@@ -229,6 +229,59 @@ class Outcomes(FamiliesBase):
         got = judge.judge({"seen": "1", "tags": "a,b,c"})
         self.assertEqual([o.priority for o in outcomes_for(fam.outcomes, got["paths"])], [0])
 
+    def test_star_is_any_name_or_element(self):
+        """`*` в пути исхода (DIALECT § 9): любое имя автора (кроме ключей properties) или любой элемент списка; на
+        ином месте — ошибка; при выборе исхода совпадает с одним сегментом."""
+        (self.data / "slot.form.yaml").write_text("""dialect: data-form/1
+root:
+  type: object
+  properties:
+    seq: {type: integer}
+    members:
+      type: object
+      properties:
+        fixed: {type: string}
+      names:
+        key: {type: string}
+        value:
+          type: object
+          properties:
+            at: {type: integer}
+    tags: {type: array, items: {type: string}}
+    free: {type: any}
+    doc:
+      type: object
+      properties:
+        x: {type: string}
+  names:
+    key: {type: string, pattern: 'e-[0-9]+'}
+    value: {type: integer}
+""", encoding="utf-8")
+        head = "path\toutcome\tpriority\tunit\tnorm\n\tвсё\t9\tстрока\tn\n"
+        for p in ("/free/*", "/doc/*", "/seq/*", "/*/*"):
+            self.write(head + "%s\tx\t1\tэлемент\tn\n" % p)
+            with self.subTest(path=p), self.assertRaisesRegex(SourceError, r"segment \* only at names or items"):
+                self.family()
+        self.write(head + "/members/*\tчлен пропускается\t1\tэлемент\tn\n/members/*/at\tat члена\t0\tполе\tn\n"
+                   "/tags/*\tэлемент списка\t1\tэлемент\tn\n/*\tправка\t2\tэлемент\tn\n/seq\tseq\t3\tстрока\tn\n")
+        fam = self.family()
+        pick = lambda *paths: [o.outcome for o in outcomes_for(fam.outcomes, list(paths))]   # noqa: E731
+        self.assertEqual(pick("/members/m1"), ["член пропускается"])
+        self.assertEqual(pick("/members/m1/at"), ["at члена"])
+        self.assertEqual(pick("/members/~1x/at", "/members/m2"), ["at члена"])
+        self.assertEqual(pick("/members/fixed"), ["всё"])        # ключ properties — не имя автора
+        self.assertEqual(pick("/members"), ["всё"])              # само отображение — не его элемент
+        self.assertEqual(pick("/tags/3"), ["элемент списка"])
+        self.assertEqual(pick("/e-1"), ["правка"])
+        self.assertEqual(pick("/seq"), ["seq"])                  # /* не берёт ключ properties корня
+        self.assertEqual(pick("/doc/x"), ["всё"])
+        got = Judge(fam.form, "reader").judge({"seq": "1", "e-1": "z"})
+        self.assertEqual(got["paths"], ["/e-1"])
+        self.assertEqual(pick(*got["paths"]), ["правка"])
+        # Строка таблицы исходов — путь как записан.
+        text = build_families_section(self.norms, self.root, [fam])
+        self.assertIn("| `/members/*` | член пропускается | 1 | элемент | n |", text)
+
 
 class Codec(FamiliesBase):
     def judge(self, mode, **row):
@@ -313,6 +366,32 @@ root:
                                                   encoding="utf-8")
         text = build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.2"))
         self.assertIn("| `.<имя>` | любое значение | необязателен |  | прочее |", text)
+
+    def test_empty_key_is_labelled(self):
+        """Ключ `""` в properties подписан `""` в пути строки таблицы, во вложенных путях и в правилах (не пусто)."""
+        (self.data / "slot.form.yaml").write_text("""dialect: data-form/1
+root:
+  type: object
+  properties:
+    "":
+      type: object
+      properties:
+        missing: {type: array, items: {type: string}}
+      required: [missing]
+      description: полнота
+    missing: {type: string}
+  required: [""]
+  names:
+    key: {type: string, pattern: '.+'}
+    value: {type: string}
+""", encoding="utf-8")
+        a = build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.2"))
+        self.assertEqual(a, build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.2")))
+        self.assertIn('| `""` | отображение `{missing}` | обязателен |  | полнота |', a)
+        self.assertIn('| `"".missing` | список, элемент — строка | обязателен |', a)
+        self.assertIn('| `"".missing[]` | строка |', a)
+        self.assertIn("| `missing` | строка | необязателен |", a)
+        self.assertNotIn("| `` |", a)
 
     def test_no_family_no_section(self):
         with self.assertRaisesRegex(SourceError, "owns no family"):

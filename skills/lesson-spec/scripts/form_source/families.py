@@ -73,19 +73,55 @@ def schema_place(row):
 
 
 class Outcome:
-    def __init__(self, no, path, outcome, priority, unit, norm):
+    """wild — {номер сегмента `*`: ключи `properties` того места} (DIALECT § 9): `*` — любое имя автора, кроме них,
+    или любой элемент списка."""
+
+    def __init__(self, no, path, outcome, priority, unit, norm, wild=None):
         self.no, self.path, self.outcome, self.priority, self.unit, self.norm = no, path, outcome, priority, unit, norm
+        self.segs, self.wild = unpointer(path) if path else [], wild or {}
+
+    def covers(self, q):
+        """Путь исхода — префикс пути отказа q (JSON Pointer); `*` совпадает с одним сегментом своего места."""
+        if not self.path:
+            return True
+        qs = unpointer(q) if q.startswith("/") else None
+        if qs is None or len(qs) < len(self.segs):
+            return False
+        return all(qs[i] not in self.wild[i] if i in self.wild else qs[i] == s for i, s in enumerate(self.segs))
 
 
 def unpointer(p):
     return [s.replace("~1", "/").replace("~0", "~") for s in p.split("/")[1:]]
 
 
-def place(form, p):
-    """Узел формы по пути отказа JSON Pointer (индекс списка — цифры); None — такого места нет."""
+def star(form, n):
+    """Место сегмента `*` пути исхода: (узел значения, ключи properties) у `names`, (элемент, ∅) у `items`; при
+    вариантах — первый вариант с таким местом; None — у места нет ни `names`, ни `items`."""
+    t = form.deref(n)
+    if t.variants:
+        return next((c for c in (star(form, v) for v in t.variants) if c is not None), None)
+    if t.names is not None:
+        return t.names[1], frozenset(t.properties or ())
+    if t.items is not None:
+        return t.items, frozenset()
+    return None
+
+
+def place(form, p, wild=None):
+    """Узел формы по пути отказа JSON Pointer (индекс списка — цифры); None — такого места нет. Сегмент `*` — любое
+    имя автора или любой элемент (DIALECT § 9): только на месте `names` или `items`; wild получает ключи properties
+    этого места по номеру сегмента."""
     n = form.root
-    for s in unpointer(p):
+    for i, s in enumerate(unpointer(p)):
         t = form.deref(n)
+        if s == "*":
+            hit = star(form, n)
+            if hit is None:
+                return None
+            n, keys = hit
+            if wild is not None:
+                wild[i] = keys
+            continue
         if t.items is not None and re.fullmatch(r"0|[1-9][0-9]*", s):
             s = "*"
         n = form.child(n, s)
@@ -109,7 +145,11 @@ def load_outcomes(path, form):
         if p in seen:
             raise SourceError("%s:%d: path %r repeated" % (name, no, p))
         seen.add(p)
-        if p and (not p.startswith("/") or place(form, p) is None):
+        wild = {}
+        if p and (not p.startswith("/") or place(form, p, wild) is None):
+            if p.startswith("/") and "*" in unpointer(p):
+                raise SourceError("%s:%d: path %r is not a place of the schema (segment * only at names or items)"
+                                  % (name, no, p))
             raise SourceError("%s:%d: path %r is not a place of the schema" % (name, no, p))
         if not re.fullmatch(r"0|[1-9][0-9]*", priority):
             raise SourceError("%s:%d: priority must be an integer ≥ 0" % (name, no))
@@ -117,7 +157,7 @@ def load_outcomes(path, form):
             raise SourceError("%s:%d: unit is one of %s" % (name, no, ", ".join(UNITS)))
         if not outcome.strip() or not norm.strip():
             raise SourceError("%s:%d: outcome and norm must be said" % (name, no))
-        out.append(Outcome(no, p, outcome, int(priority), unit, norm))
+        out.append(Outcome(no, p, outcome, int(priority), unit, norm, wild))
     if "" not in seen:
         raise SourceError("%s: no outcome for the whole row or object (empty path; ADR-0088 доп. (1) Р7)" % name)
     return out
@@ -485,9 +525,10 @@ class Judge(Loader):
 
 
 def outcomes_for(outcomes, paths):
-    """Исходы набора путей отказа (DIALECT § 9): строки, чей путь — префикс хоть одного пути отказа; из них
-    действуют строки с наименьшим приоритетом (в порядке файла). Нет отказа — нет исхода."""
-    hit = [o for o in outcomes if any(o.path == "" or q == o.path or q.startswith(o.path + "/") for q in paths)]
+    """Исходы набора путей отказа (DIALECT § 9): строки, чей путь — префикс хоть одного пути отказа (`*` — любой один
+    сегмент своего места, Outcome.covers); из них действуют строки с наименьшим приоритетом (в порядке файла). Нет
+    отказа — нет исхода."""
+    hit = [o for o in outcomes if any(o.covers(q) for q in paths)]
     if not paths or not hit:
         return []
     low = min(o.priority for o in hit)
