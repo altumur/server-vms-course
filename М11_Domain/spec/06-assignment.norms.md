@@ -13,7 +13,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/placed`, `domain/placed/<sub>/<ref>`, `domain/pending/<член>`, `domain/outcomes`, `domain/outcomes/<член>`;
-- пишет: `domain/view` (put);
+- пишет: `domain/view` (cas);
 - читает: `domain/members`, `<sub>/<spec:unit.rows>/<id>`.
 
 Общее уроков 2 и 3 Н1 действует. Назначение пишет только оператор: размещение единиц доменом по достижимости — долг в

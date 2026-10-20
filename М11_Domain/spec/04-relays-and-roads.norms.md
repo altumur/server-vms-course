@@ -13,7 +13,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/topology`, `domain/member-topology`, `domain/reached`, `domain/reaches`;
-- пишет: `domain/view` (put);
+- пишет: `domain/view` (cas);
 - читает: `domain/members`, `domain/keys`.
 
 Общее уроков 2 и 3 Н1 действует (hex, base64url, JCS, закрытые формы; публикация, поколение, метка, подпись агента,

@@ -12,7 +12,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/keys`, `domain/root`, `domain/signer`, `domain/signer-pending`, `domain/book-seal`, `domain/revoked`, `<файл восстановления домена>`;
-- пишет: `domain/view` (put).
+- пишет: `domain/view` (cas).
 
 Общее для всех форм урока: hex — строчные `0-9a-f`; base64url — алфавит RFC 4648 §5 без `=`, запись каноническая: длина
 ≢ 1 (mod 4), лишние биты последнего знака — нули, повторное кодирование байтов даёт тот же текст; иначе — не base64url;

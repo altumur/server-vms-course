@@ -13,7 +13,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/member-key`, `domain/members`, `domain/member-list`, `domain/member`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reports/<rev>.delta`, `domain/members/<член>/reported`;
-- пишет: `domain/keys` (cas), `domain/revoked` (cas), `domain/view` (put);
+- пишет: `domain/keys` (cas), `domain/revoked` (cas), `domain/view` (cas);
 - читает: `domain/root`, `<sub>/heartbeats/<имя>`, `<sub>/snapshot/<воркер>`.
 
 Общее урока 2 Н1 действует: hex строчный, base64url без `=`, JCS — RFC 8785, формы JSON закрыты, повтор ключа — форма не

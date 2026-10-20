@@ -11,7 +11,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `<sub>/<spec:domain.books.from>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`;
-- пишет: `domain/view` (put);
+- пишет: `domain/view` (cas);
 - читает: `<sub>/slots/<имя>`, `domain/book-seal`, `domain/members/<член>/reports/<rev>`.
 
 Строки слота книги, переносимые книги, воркер и пульс на домене — во владении [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) (разбор ревью стадии B 3–5, № 35).
