@@ -1126,5 +1126,134 @@ class FamiliesChapterTests(unittest.TestCase):
         self.assertTrue(any("is not NN-<процесс>/data/<семья>.form.yaml" in e for e in self.check().errors))
 
 
+class ProcessNamesTests(unittest.TestCase):
+    """Platform/lessons.tsv process and unit against the lifecycle heads and the unit block of P/02.4 Н1.1."""
+
+    UNITS = '''# P/02.4 — Установщик: нормы
+
+## Н1 Форма
+
+### Н1.1 Процессы и юниты
+
+```yaml
+units:                                        # на каждом сервере
+  common:    долгоживущие службы (все, кроме w2c-workers.service, Type=oneshot): запуск через раннер
+             (w2c-run.sh) с umask 0007
+  configstore.service:    User=configstore; UMask=0077
+  configstore-admin.socket, configstore-<роль>.socket: по юниту на admin и на каждую роль файла прав
+  w2c-controller@.service: User=w2c; роль <sub>controller, группа w2c-<sub>controller; W2C_ROLE; Type=notify;
+                          WatchdogSec=360 (СЛЕДУЕТ)
+  w2c-workers.service/.timer: скрипт воркеров по заказу; один на сервер — все роли сервера; роль w2c-workers
+  w2c-domain.service:      роль domain; w2c-run.sh domain; User=w2c;
+                          SECRETS_KEY; SIGNER_HOST/PORT 0.0.0.0:8445
+watchdog:  роль nobody; w2c-run.sh nobody
+```
+'''
+    LESSONS = ("# lesson\tdir\ttitle\tprocess\tunit\n"
+               "01\t01-store\tХранилище\tconfigstore\tconfigstore.service\n"
+               "02\t02-installer\tУстановщик\tw2cctl\t-\n"
+               "04\t04-controller\tКонтроллер\t<sub>controller\tw2c-controller@.service\n"
+               "07\t07-console-module\tМодуль консоли\t-\t-\n"
+               "08\t08-domain\tПроцесс domain\tdomain\tw2c-domain.service\n")
+    HEADS = {
+        "01-store": "# Хранилище — жизненный цикл\n\nКонтракт процесса `configstore`: запуск,\nвыход.\n",
+        "02-installer": "# Установщик — жизненный цикл\n\nКонтракт установщика `w2cctl` и его команд.\n",
+        "04-controller": "# Контроллер — жизненный цикл\n\nКонтракт процесса `<sub>controller`.\n",
+        "08-domain": "# Процесс `domain` — жизненный цикл\n\nКонтракт процесса.\n\n- раннер `w2c-run.sh domain`\n",
+    }
+
+    API = PlatformLessonTests.API
+    check = PlatformLessonTests.check
+    replace = CheckSpecTests.replace
+
+    def setUp(self):
+        PlatformLessonTests.setUp(self)
+        (self.root / "Platform/lessons.tsv").write_text(self.LESSONS)
+        installer = self.root / "Platform/02-installer/spec"
+        installer.mkdir(parents=True)
+        self.units = installer / "02.4-installer.norms.md"
+        self.units.write_text(self.UNITS)
+        for name, head in self.HEADS.items():
+            (self.root / "Platform" / name).mkdir(exist_ok=True)
+            (self.root / "Platform" / name / "lifecycle.md").write_text(head)
+
+    def process_errors(self):
+        result = Check(self.root)
+        result.process_names()
+        return result
+
+    def test_names_agree(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["process_names"], 4)
+
+    def test_role_is_not_the_process(self):
+        self.replace(self.units, "роль domain;", "роль signer;")
+        errors = self.process_errors().errors
+        self.assertTrue(any("w2c-domain.service роль signer, lessons.tsv gives process domain" in e for e in errors),
+                        errors)
+        self.assertTrue(any("w2c-domain.service роль signer is not a process of lessons.tsv" in e for e in errors),
+                        errors)
+
+    def test_runner_argument_is_not_the_process(self):
+        self.replace(self.units, "w2c-run.sh domain;", "w2c-run.sh signer;")
+        errors = self.process_errors().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("line 16: w2c-domain.service w2c-run.sh signer, lessons.tsv gives process domain", errors[0])
+
+    def test_template_role_compares_as_a_string(self):
+        self.replace(self.units, "роль <sub>controller,", "роль <s>controller,")
+        errors = self.process_errors().errors
+        self.assertTrue(any("w2c-controller@.service роль <s>controller" in e for e in errors), errors)
+
+    def test_head_without_the_name(self):
+        self.replace(self.root / "Platform/01-store/lifecycle.md", "`configstore`", "хранилища")
+        errors = self.process_errors().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("01-store/lifecycle.md: the head (title and first paragraph) does not name the process "
+                      "`configstore`", errors[0])
+
+    def test_name_after_the_head_does_not_count(self):
+        self.replace(self.root / "Platform/08-domain/lifecycle.md", "# Процесс `domain`", "# Процесс")
+        errors = self.process_errors().errors
+        self.assertTrue(any("does not name the process `domain`" in e for e in errors), errors)
+
+    def test_process_without_lifecycle(self):
+        (self.root / "Platform/02-installer/lifecycle.md").unlink()
+        errors = self.process_errors().errors
+        self.assertTrue(any("lesson 02 has process w2cctl but no lifecycle.md" in e for e in errors), errors)
+
+    def test_unit_not_found(self):
+        self.replace(self.root / "Platform/lessons.tsv", "w2c-domain.service", "w2c-signer.service")
+        errors = self.process_errors().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("Н1.1 units: no entry w2c-signer.service: (lesson 08", errors[0])
+
+    def test_unit_role_without_a_lesson(self):
+        self.replace(self.units, "watchdog:", "  w2c-extra.service: роль extra; w2c-run.sh extra\nwatchdog:")
+        errors = self.process_errors().errors
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("w2c-extra.service роль extra is not a process of lessons.tsv", errors[0])
+
+    def test_empty_value_is_an_error(self):
+        self.replace(self.root / "Platform/lessons.tsv", "w2cctl\t-", "w2cctl\t")
+        errors = self.process_errors().errors
+        self.assertTrue(any("lesson 02: process and unit are required" in e for e in errors), errors)
+
+    def test_no_columns_is_skipped(self):
+        (self.root / "Platform/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\n01\t01-store\tХранилище\n08\t08-domain\tПроцесс domain\n")
+        self.replace(self.units, "w2c-run.sh domain;", "w2c-run.sh signer;")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["process_names"], "absent")
+
+    def test_one_column_is_a_header_error(self):
+        (self.root / "Platform/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\tprocess\n01\t01-store\tХранилище\tconfigstore\n")
+        errors = self.process_errors().errors
+        self.assertTrue(any("lessons.tsv: header expected" in e for e in errors), errors)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -263,6 +263,69 @@ def family_place(row):
         raise ValueError(f"schema {row['schema']} is not in the lesson of its owner {row['owner']}")
 
 
+# Lessons of the Platform module: Platform/lessons.tsv. Columns process (the lesson's process: role and argument of
+# the runner w2c-run.sh) and unit (its systemd unit in P/02.4 Н1.1) are checked against the lifecycle heads and the
+# unit block; `-` — no process or no unit. Without both columns (transition) the check is skipped.
+LESSONS = Path("Platform/lessons.tsv")
+LESSONS_BASE = ["lesson", "dir", "title"]
+LESSONS_NAMES = ["process", "unit"]
+UNITS_NORMS = Path("Platform/02-installer/spec/02.4-installer.norms.md")
+# Entries of the unit block that are not the unit of one process; exempt from «every `.service` entry with a role is
+# the process of a lesson».
+UNITS_EXEMPT = {
+    "common",                       # общее всех долгоживущих юнитов, не юнит
+    "w2c-workers.service/.timer",   # скрипт воркеров по заказу (Н1.5): один на сервер, все роли сервера, своей роли нет
+}
+UNIT_ENTRY = re.compile(r"^  ([^\s:#][^:]*?):(?=\s|$)(.*)$")
+UNIT_ROLE = re.compile(r"(?<![\w-])роль\s+([^\s;,()]+)")
+UNIT_RUNNER = re.compile(r"(?<![\w-])w2c-run\.sh\s+([^\s;,()]+)")
+
+
+def lifecycle_head(text):
+    """The head of a lifecycle.md: the title and the first paragraph after it, up to a blank line, a list, a heading
+    or a table."""
+    lines = text.splitlines()
+    head, started = lines[:1], False
+    for line in lines[1:]:
+        stripped = line.strip()
+        if not stripped:
+            if started:
+                break
+            continue
+        if re.match(r"(#|[-*+] |[0-9]+[.)] |\|)", stripped):
+            break
+        head.append(line)
+        started = True
+    return "\n".join(head)
+
+
+def unit_entries(text):
+    """The unit block of P/02.4 Н1.1: `units:` of the first yaml block after the heading «Н1.1»; each entry
+    `  <имя>[, <имя>]: …` (indent two) with its continuation lines (deeper indent) → (line, names, text)."""
+    heading = re.search(r"^#{2,6} Н1\.1\b.*$", text, re.M)
+    if not heading:
+        return None
+    rest = text[heading.end():]
+    fence = re.search(r"^```ya?ml\n(.*?)^```", rest, re.M | re.S)
+    if not fence:
+        return None
+    first = text[:heading.end()].count("\n") + rest[:fence.start(1)].count("\n") + 1
+    entries, inside = [], False
+    for offset, line in enumerate(fence.group(1).splitlines()):
+        if line and not line[0].isspace():
+            inside = line.split("#", 1)[0].strip() == "units:"
+            continue
+        if not inside or not line.strip():
+            continue
+        match = UNIT_ENTRY.match(line)
+        if match:
+            names = [n.strip() for n in match.group(1).split(",")]
+            entries.append([first + offset, names, match.group(2)])
+        elif entries and line.startswith("   "):
+            entries[-1][2] += "\n" + line
+    return [tuple(e) for e in entries]
+
+
 # Data contract catalog (ADR-0083 доп. (2) п. 1–2, form decisions/inbox/2026-10-18-каталог-данных-форма.md).
 CATALOG = Path("Platform/common/data/catalog.tsv")
 CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
@@ -422,6 +485,8 @@ class Check:
         self.registry = {}
         self.used = set()
         self.catalog = None
+        self.lessons = None
+        self.processes_checked = False
         if exceptions is not None:
             self.load_exceptions(exceptions)
         if (self.root / CATALOG).exists():
@@ -450,8 +515,7 @@ class Check:
         module, _, number = address.partition("/")
         number, _, chapter = number.partition(".")
         if module == "P":
-            lessons = self.root / "Platform/lessons.tsv"
-            names = dict(row for _, row in [(n, c[:2]) for n, c in self.tsv(lessons, 3)]) if lessons.exists() else {}
+            names = {row["lesson"]: row["dir"] for _, row in self.lessons_table()[1]}
             dirs = [self.root / "Platform" / names[number]] if number in names else []
         else:
             dirs = sorted(self.root.glob(f"{module}_*"))
@@ -465,6 +529,92 @@ class Check:
             if found:
                 return found[0]
         return None
+
+    def lessons_table(self):
+        """Platform/lessons.tsv → (has the process and unit columns, [(line, {column: value})]); columns by its header
+        `# lesson<TAB>dir<TAB>title[<TAB>process<TAB>unit]`. Read once."""
+        if self.lessons is not None:
+            return self.lessons
+        path = self.root / LESSONS
+        self.lessons = (False, [])
+        if not path.exists():
+            return self.lessons
+        text = self.read(path) or ""
+        header = next((line[1:].strip().split("\t") for line in text.splitlines() if line.startswith("# lesson\t")),
+                      LESSONS_BASE)
+        if header not in (LESSONS_BASE, LESSONS_BASE + LESSONS_NAMES):
+            self.error(path, f"header expected {' '.join(LESSONS_BASE)} [{' '.join(LESSONS_NAMES)}], "
+                             f"got {' '.join(header)}")
+            header = LESSONS_BASE
+        rows = [(n, dict(zip(header, cols))) for n, cols in self.tsv(path, len(header))]
+        self.lessons = (header != LESSONS_BASE, rows)
+        return self.lessons
+
+    # Process names (Platform/lessons.tsv process, unit): the lifecycle head of a lesson with a process names it in
+    # backquotes; its unit is an entry of the P/02.4 Н1.1 unit block whose `роль` and `w2c-run.sh` argument are the
+    # process; every other `.service` entry with a role is the process of some lesson. Once per run.
+    def process_names(self):
+        self.processes_checked = True
+        present, rows = self.lessons_table()
+        if not present:
+            if rows:
+                self.stats["process_names"] = "absent"
+            return
+        table, units_path = self.root / LESSONS, self.root / UNITS_NORMS
+        entries, processes, checked = None, set(), 0
+
+        def units():
+            nonlocal entries
+            if entries is None:
+                text = self.read(units_path) if units_path.exists() else None
+                entries = (unit_entries(text) if text is not None else None) or []
+                if not entries:
+                    self.error(units_path, "no unit block: `units:` in the yaml block of «Н1.1»")
+            return entries
+
+        for line, row in rows:
+            process, unit = row["process"], row["unit"]
+            if not process or not unit:
+                self.error(table, f"line {line}: lesson {row['lesson']}: process and unit are required (`-` — none)")
+                continue
+            if process != "-":
+                processes.add(process)
+            if process == "-" and unit == "-":
+                continue
+            checked += 1
+            if process != "-":
+                lifecycle = self.root / "Platform" / row["dir"] / "lifecycle.md"
+                if not lifecycle.exists():
+                    self.error(lifecycle, f"lesson {row['lesson']} has process {process} but no lifecycle.md")
+                else:
+                    text = self.read(lifecycle)
+                    if text is not None and f"`{process}`" not in lifecycle_head(text):
+                        self.error(lifecycle, f"the head (title and first paragraph) does not name the process "
+                                              f"`{process}` (lessons.tsv line {line})")
+            if unit == "-":
+                continue
+            found = [e for e in units() if unit in e[1]]
+            if not found:
+                if entries:
+                    self.error(units_path, f"Н1.1 units: no entry {unit}: (lesson {row['lesson']}, lessons.tsv line "
+                                           f"{line})")
+                continue
+            entry_line, _, body = found[0]
+            if process == "-":
+                continue
+            for word, pattern in (("роль", UNIT_ROLE), ("w2c-run.sh", UNIT_RUNNER)):
+                for value in pattern.findall(body):
+                    if value != process:
+                        self.error(units_path, f"line {entry_line}: {unit} {word} {value}, lessons.tsv gives "
+                                               f"process {process} (lesson {row['lesson']})")
+        for entry_line, names, body in (units() if units_path.exists() else []):
+            if any(name in UNITS_EXEMPT for name in names) or not any(n.endswith(".service") for n in names):
+                continue
+            for role in UNIT_ROLE.findall(body):
+                if role not in processes:
+                    self.error(units_path, f"line {entry_line}: {', '.join(names)} роль {role} is not a process of "
+                                           f"lessons.tsv")
+        self.stats["process_names"] = checked
 
     def load_catalog(self, path):
         rows = self.tsv(path, len(CATALOG_FIELDS))
@@ -1209,6 +1359,8 @@ class Check:
     # chapter acceptance/K/ (or acceptance/). Each chapter is checked as a lesson of its own; the lecture and the
     # instruction count the whole lesson. An ADR-0085 pair next to chapter norms checks that chapter's corpus.
     def platform_lesson(self, lesson):
+        if not self.processes_checked:
+            self.process_names()
         stem = lesson.stem
         if not re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", stem) or lesson.parent.name != stem:
             self.error(lesson, "expected Platform/NN-<процесс>/NN-<процесс>.md")
