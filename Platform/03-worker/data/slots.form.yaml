@@ -1,20 +1,21 @@
 # Семья <sub>/slots/<имя> — строка слота воркера (P/03.2; P/03.2 Н1.4). Источник формы строки (ADR-0088).
 # Экземпляр — {key, row}; ключ — грамматика колонки key каталога (имя слота Н1.4). Слова — Platform/common/DIALECT.md.
-# Читатель отказывает только по until и gen — порванная строка Н1.4 torn; holder, released, server читаются как есть.
+# Читатель отказывает только по until и gen — порванная строка Н1.4 torn; holder, released, server читаются как есть;
+# нет released — как released ≠ "false", нет holder — как holder = "" (разбор ревью стадии B 3–5, № 6).
 dialect: data-form/1
 root:
   type: object
   properties:
     holder:
       type: string
-      description: "экземпляр держателя `<коробка>:<pid>:<6 hex случайности>` или \"\"; коробка держателя — часть до первого «:»"
+      description: "экземпляр держателя `<коробка>:<pid>:<6 hex случайности>` или \"\"; коробка держателя — часть до первого «:»; поля нет — как \"\" (разбор ревью стадии B 3–5, № 6)"
     until:
       ref: common.time
       description: "часы писателя + 45; показ и расхождение, не свежесть: held и lapsed — по возрасту наблюдаемой версии у судьи; конечный until в прошлом или будущем не делает строку порванной"
     released:
       type: string
       writer: {enum: ['true', 'false', 'taking']}
-      description: "\"true\" | \"false\" | \"taking\" — первая запись захвата (Н3 «захватить» шаг 3); всякое «released» без значения — released ≠ \"false\""
+      description: "\"true\" | \"false\" | \"taking\" — первая запись захвата (Н3 «захватить» шаг 3); всякое «released» без значения — released ≠ \"false\"; поля нет — как released ≠ \"false\": не held, для захвата — как released (разбор ревью стадии B 3–5, № 6)"
     gen:
       type: integer
       minimum: 0
