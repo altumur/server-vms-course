@@ -152,3 +152,5 @@ c9_one_of_rule_order	value
 name_reserved_platform	name
 door_routes_segment_slash	value
 door_routes_segment_upper	value
+m51_books_to_secret	value
+m51_books_key_not_string	value
