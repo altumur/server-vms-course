@@ -32,7 +32,8 @@ document:        объект держателя domain/shared-docs/rev-<rev> �
   term, rev:     срок держателя (урок 10) и номер правки; порядок — (term, rev), term старше
   by:            имя, доказанное сторожевой; после переноса — "domain"
   signature:     выпускающий ключ, как запись срока (урок 10 Н1.1, проверка — record); неподписанный не принимается никогда
-pointer:         domain/shared {doc: JCS {term, rev, sha256, object}} у держателя; sha256 — hex sha256 текста объекта
+pointer:         domain/shared {doc: JCS {term, rev, sha256, object}} у держателя; sha256 — hex sha256 текста объекта;
+                 object — ключ этого объекта, строка "domain/shared-docs/rev-<rev>" с rev указателя (разбор ревью стадии A 8–10, № 26)
 write:           сначала объект, затем указатель по CAS (две правки одновременно — одна получает 409); держатель хранит
                  последние 5 объектов; объект ревизии пишется, только если его нет или его байты те же — иначе правке 409
                  «the shared settings changed while this edit was made — look again» и объект не трогается: проигравшая

@@ -14,7 +14,7 @@
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
 - владеет: `domain/agent`, `domain/signer-turn`;
-- пишет: `domain/member-list` (cas), `domain/reached` (put), `domain/grants` (put), `domain/members` (cas), `domain/view` (put), `domain/members/<член>/reported` (put), `domain/alarm-history/<член>` (put);
+- пишет: `domain/member-list` (cas), `domain/reached` (put), `domain/grants` (cas), `domain/members` (cas), `domain/view` (put), `domain/members/<член>/reported` (put), `domain/alarm-history/<член>` (put);
 - читает: `domain/member-key`, `domain/signer`.
 
 Общее уроков 1–11 Н1 действует. Член отчитывается сам (урок 3): домен не открывает к нему соединений, молчание — возраст
