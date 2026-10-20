@@ -434,7 +434,7 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/NotStandby'}
     Forwarded:
-      description: 'Отказ пересылки консоли кластера или передачи консолью домена процессу (урок 8 Н3 «переслать», Н1.4; урок 3 Н1.8): one hop, no domain here, no console known, did not answer, answer too large, answer broke off, domain console not known, the list of members does not read; 503 — ещё frozen (урок 10 Н1.7) и standby (урок 12 Н1.7). Добавлено прогоном 41'
+      description: 'Отказ перехода 1 (пересылка консоли кластера) или 2 (передача консолью домена процессу), а не этой двери: коды и слова — Platform/common/contracts/forwarding.md «Отказы по переходам», слова перехода 1 — OpenAPI урока 8 (Refusal); здесь не перечисляются (разбор ревью стадии A 8–10, решение 3). 503 frozen (урок 10 Н1.7) и standby (урок 12 Н1.7) — коды процесса domain (переход 3). Добавлено прогоном 41'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
