@@ -80,10 +80,10 @@ root:
           labels: {ref: labels}
           units: {ref: count, description: "ждущих единиц веса"}
           workers: {ref: count, description: "нужно процессов сверх живых и ёмкости в пути"}
-          groups: {ref: count, description: "ждущих групп"}
+          groups: {ref: count, description: "ждущих групп; всегда, 0 тоже (разбор ревью стадии B 3–5, № 13)"}
           ordered: {ref: count, description: "заказано этим проходом"}
           withheld: {type: string, description: "слова, почему не заказано"}
-        required: [labels, units, workers, ordered]
+        required: [labels, units, workers, groups, ordered]
       description: только при placement.grows true
     wants:
       type: object
