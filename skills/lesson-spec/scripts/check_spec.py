@@ -272,7 +272,7 @@ def pointer(document, ref):
 
 # Files a desktop leaves in any directory; never part of a lesson (not tracked by git).
 IGNORED = {".DS_Store"}
-EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance"}
+EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
 
@@ -366,6 +366,25 @@ CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
 ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)"
 LESSON = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]{1,2}|P/[0-9]{2}(?:\.[0-9]+)?)"
 DATA_LINE = re.compile(r"^- (владеет|пишет|читает):\s*(.*?);?\s*$")
+# The roles of a lesson's process among the catalog participants and readers (участник — роль файла прав, форма
+# каталога): the process of Platform/lessons.tsv by this table, else the process name itself; and always
+# `proc:<каталог урока>`. `<s>domain` — воркер подсистемы на домене (P/03.7), `admin` — установщик `w2cctl`,
+# `configstore-door` — демон хранилища.
+PROCESS_ROLES = {
+    "<sub>worker": {"<s>worker", "<s>domain"},
+    "<sub>controller": {"<s>controller"},
+    "configstore": {"configstore-door"},
+    "w2cctl": {"admin"},
+}
+# id-map of the old norms (ADR-0083, module-design «Прослеживаемость»): the column `new` holds checklist ids P/NN[.K]-MM
+# (and scenario and vector addresses, which these checks do not read).
+IDMAP = Path("Platform/common/id-map.tsv")
+IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
+NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\.[1-9])?)-[0-9]+"
+# A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
+# part of it stays.
+MOVED_SECTION = re.compile(r"^Перенесено в\b")
+STAYS = re.compile(r"[Оо]стаётся здесь")
 
 
 def parse_roles(text, what):
@@ -507,6 +526,53 @@ def composition_members(node):
             yield from composition_members(value)
 
 
+def outline(text):
+    """Norms text → (h2 headings, checklist ids): an id is the strong text that opens a list item of «Чеклист
+    готовности» after `[ ]`/`[x]`."""
+    tokens = MarkdownIt("commonmark").parse(text)
+    headings, ids, stack = [], [], []
+    section = None
+    for pos, token in enumerate(tokens):
+        if token.type == "heading_open" and token.tag == "h1" and token.level == 0:
+            section = None
+        if token.type == "heading_open" and token.tag == "h2" and token.level == 0:
+            inline = tokens[pos + 1]
+            section = "".join(child.content for child in inline.children or []
+                              if child.type in {"text", "code_inline"}).strip()
+            headings.append(section)
+        if (token.type == "inline" and section == "Чеклист готовности" and
+                len(stack) == 3 and stack[0] in {"bullet_list_open", "ordered_list_open"} and
+                stack[1:] == ["list_item_open", "paragraph_open"]):
+            children = [child for child in token.children or []
+                        if child.type != "text" or child.content]
+            if (len(children) >= 4 and children[0].type == "text" and
+                    re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
+                    children[1].type == "strong_open" and children[2].type == "text" and
+                    children[3].type == "strong_close" and re.fullmatch(NORM_ID, children[2].content)):
+                ids.append(children[2].content)
+        if token.nesting == 1:
+            stack.append(token.type)
+        elif token.nesting == -1:
+            stack.pop()
+    return headings, ids
+
+
+def section_body(text, name):
+    """The text of the section `Нx[.y]` of old norms (heading `## Нx …` or `### Нx.y …`) up to the next heading,
+    stripped; None if there is no such heading."""
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        match = re.match(r"(#{2,4}) (Н[0-9](?:\.[0-9]+[а-я]?)?)(?:\s|$)", line)
+        if match and match.group(2) == name:
+            body = []
+            for rest in lines[i + 1:]:
+                if re.match(r"#{1,6} ", rest):
+                    break
+                body.append(rest)
+            return "\n".join(body).strip()
+    return None
+
+
 class Check:
     def __init__(self, root, exceptions=None, strict_coverage=False):
         self.root = root.resolve()
@@ -519,6 +585,8 @@ class Check:
         self.catalog = None
         self.lessons = None
         self.processes_checked = False
+        self.catalog_checked = False
+        self.idmap = None
         self.contracts = {}                          # OpenAPI file → (document or None, checked without errors)
         self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
@@ -669,8 +737,7 @@ class Check:
                 if not re.fullmatch(LESSON, row["owner"]):
                     raise ValueError("owner is a lesson address (М10/3, М11/6, P/03)")
                 row["ops"] = parse_ops(row["ops"])
-                if row["readers"] != "*":
-                    parse_roles(row["readers"], "readers")
+                row["reader_roles"] = None if row["readers"] == "*" else parse_roles(row["readers"], "readers")
                 if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]):
                     raise ValueError("when is - or a spec key")
                 if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
@@ -688,6 +755,7 @@ class Check:
                 self.error(path, f"line {line}: {exc}")
                 continue
             row["pattern"] = key_pattern(row["key"])
+            row["line"] = line
             self.catalog[(row["key"], row["kind"])] = row
         patterns = list(self.catalog.values())
         for i, a in enumerate(patterns):
@@ -702,9 +770,10 @@ class Check:
     # Paragraph «Данные» in Н1 of a lesson against the catalog: what the lesson owns, writes and reads.
     def data_paragraph(self, path, text, prefix, lesson=None):
         """`lesson` — the lesson address of a chapter (P/01 for P/01.3): its rows may be claimed by any chapter;
-        returns what the paragraph says the file owns."""
+        returns what the paragraph says: {"владеет": {key}, "пишет": {key: operation}, "читает": {key}}."""
+        said = {"владеет": set(), "пишет": {}, "читает": set()}
         if self.catalog is None:
-            return set()
+            return said
         owned = {key for (key, _), row in self.catalog.items() if row["owner"] == prefix}
         shared = {key for (key, _), row in self.catalog.items() if lesson and row["owner"] == lesson}
         by_key = {}
@@ -715,8 +784,7 @@ class Check:
         if start is None:
             if owned:
                 self.error(path, f"no «Данные» paragraph, the catalog says it owns {sorted(owned)}")
-            return set()
-        said = {"владеет": set(), "пишет": {}, "читает": set()}
+            return said
         for line in lines[start + 1:]:
             match = DATA_LINE.match(line)
             if not match:
@@ -735,7 +803,207 @@ class Check:
             self.error(path, f"«Данные»: owns {sorted(said['владеет'])}, the catalog says {sorted(owned)}"
                              + (f" (and the lesson's {sorted(shared)})" if shared else ""))
         self.stats["data_paragraphs"] += 1
-        return said["владеет"]
+        return said
+
+    def lesson_roles(self, number):
+        """Roles of the process of Platform lesson NN among the catalog participants and readers (PROCESS_ROLES and
+        `proc:<каталог>`); empty without its row in Platform/lessons.tsv."""
+        row = next((r for _, r in self.lessons_table()[1] if r.get("lesson") == number), None)
+        if row is None or not row.get("dir"):
+            return set()
+        roles = {f"proc:{row['dir']}"}
+        process = row.get("process") or "-"
+        if process != "-":
+            roles |= PROCESS_ROLES.get(process, {process})
+        return roles
+
+    @staticmethod
+    def in_lesson(owner, key):
+        """`P/03.2` and `P/03` are in the lesson `P/03`."""
+        return owner == key or owner.startswith(key + ".")
+
+    # Paragraphs «Данные» of a moved lesson against the catalog by the roles of its process (разбор ревью стадии B 3–5,
+    # №10): a row the process writes (a role of it among the participants of an operation) is in «пишет» of some
+    # chapter; a row it reads (a role among the readers; `*` names no reader) — in «читает» or «пишет»; rows of the
+    # lesson itself — in «владеет» (data_paragraph). Back: a key in «пишет» has that operation with a role of the process
+    # among its participants; a key in «читает» has a role of the process among its readers or participants, readers
+    # `*`, or the lesson as owner.
+    def data_roles(self, lesson, key, number, saids):
+        if self.catalog is None:
+            return
+        roles = self.lesson_roles(number)
+        if not roles:
+            return
+        process = ", ".join(sorted(roles))
+        writes, named = set(), set()
+        for _, said in saids:
+            writes |= set(said["пишет"])
+            named |= said["читает"] | set(said["пишет"]) | said["владеет"]
+        by_key = {}
+        for row in self.catalog.values():
+            by_key.setdefault(row["key"], []).append(row)
+        for k, rows in by_key.items():
+            if any(self.in_lesson(r["owner"], key) for r in rows):
+                continue
+            ops = sorted({op for r in rows for op, who in r["ops"].items() if who & roles})
+            if ops and k not in writes:
+                self.error(lesson, f"«Данные»: no chapter writes {k}, the catalog gives {', '.join(ops)} to the "
+                                   f"process ({process})")
+            elif not ops and k not in named and any(r["reader_roles"] and r["reader_roles"] & roles for r in rows):
+                self.error(lesson, f"«Данные»: no chapter reads {k}, the catalog names the process ({process}) "
+                                   f"among its readers")
+        for norms, said in saids:
+            for k, op in said["пишет"].items():
+                rows = by_key.get(k, [])
+                if rows and op and any(op in r["ops"] for r in rows) and                         not any(r["ops"].get(op, set()) & roles for r in rows):
+                    self.error(norms, f"«Данные»: writes {k} ({op}), the catalog does not give {op} to the process "
+                                      f"({process})")
+            for k in said["читает"]:
+                rows = by_key.get(k, [])
+                if rows and not any(r["reader_roles"] is None or r["reader_roles"] & roles or self.in_lesson(r["owner"], key)
+                                    or any(who & roles for who in r["ops"].values()) for r in rows):
+                    self.error(norms, f"«Данные»: reads {k}, the catalog names the process ({process}) neither among "
+                                      f"its readers nor among its participants")
+        self.stats["data_roles"] += 1
+
+    def id_map_rows(self):
+        """Platform/common/id-map.tsv → [(line, {column: value})]; empty without the file. Read once."""
+        if self.idmap is None:
+            path = self.root / IDMAP
+            rows = self.tsv(path, len(IDMAP_FIELDS), IDMAP_FIELDS) if path.exists() else []
+            self.idmap = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows]
+        return self.idmap
+
+    # The checklist of a moved chapter against id-map (разбор ревью стадии B 3–5, №36): each id of the checklist is a
+    # `new` of id-map, and each `new` of the chapter (P/NN.K-MM, P/NN-MM without chapters) is in the checklist, unless
+    # its `old` id is still in the checklist of an old lesson (the norm moves with that lesson: a late-layer chapter,
+    # ADR-0083 module-design «Глава позднего слоя»).
+    def id_map_chapter(self, norms, prefix, ids):
+        rows = self.id_map_rows()
+        if not rows:
+            return
+        news = {}
+        for line, row in rows:
+            if re.fullmatch(NORM_ID, row["new"]):
+                news.setdefault(row["new"], []).append((line, row["old"]))
+        for value in ids:
+            if value not in news:
+                self.error(norms, f"checklist id {value} is not in the column new of {IDMAP}")
+        for value, entries in sorted(news.items()):
+            if not re.fullmatch(re.escape(prefix) + r"-[0-9]+", value) or value in ids:
+                continue
+            for line, old in entries:
+                if old not in self.old_ids():
+                    self.error(norms, f"{IDMAP} line {line}: new {value} is not in the checklist, and its old {old} "
+                                      "is in no old lesson's checklist")
+        self.stats["id_map_ids"] += len(ids)
+
+    def old_ids(self):
+        """Checklist ids of the old lessons (М*_*/spec/NN-*.norms.md). Read once."""
+        if getattr(self, "_old_ids", None) is None:
+            self._old_ids = set()
+            for path in sorted(self.root.glob("М*_*/spec/[0-9][0-9]-*.norms.md")):
+                text = self.read(path)
+                if text is not None:
+                    self._old_ids |= set(outline(text)[1])
+        return self._old_ids
+
+    def platform_ids(self):
+        """Checklist ids of every Platform norms file (spec/NN-<процесс>.norms.md, spec/NN.K-<процесс>.norms.md)."""
+        ids = set()
+        for path in sorted((self.root / "Platform").glob("[0-9][0-9]-*/spec/*.norms.md")):
+            if re.fullmatch(r"[0-9]{2}(?:\.[1-9])?-[^.]+\.norms\.md", path.name):
+                text = self.read(path)
+                if text is not None:
+                    ids |= set(outline(text)[1])
+        return ids
+
+    def norm_moved(self, norm):
+        """The norm cell of a catalog row has moved: each of its addresses is a Platform lesson or names sections of an
+        old lesson that keep only a pointer («Перенесено в», without «Остаётся здесь»). An old address without a
+        section, or with a section that is not found, has not moved."""
+        parts = list(re.finditer(LESSON, norm))
+        if not parts:
+            return False
+        for i, match in enumerate(parts):
+            address = match.group(0)
+            if address.startswith("P/"):
+                continue
+            tail = norm[match.end():parts[i + 1].start() if i + 1 < len(parts) else len(norm)]
+            sections = re.findall(r"(?<![\w.])Н[0-9](?:\.[0-9]+[а-я]?)?(?![\w.])", tail)
+            path = self.lesson_norms(address)
+            text = self.read(path) if sections and path is not None else None
+            if text is None:
+                return False
+            for section in sections:
+                body = section_body(text, section)
+                if body is None or not MOVED_SECTION.match(body) or STAYS.search(body):
+                    return False
+        return True
+
+    # The catalog against the moved lessons, once per run. №35 (разбор ревью стадии B 3–5): the owner of a row is not an
+    # old lesson that has moved — every id of it in id-map has its `new` in a Platform checklist, or the row's norm has
+    # moved (norm_moved). В1 (ADR-0083 доп. (11)): a row or JSON object read or written by the process of a moved lesson
+    # (a Platform lesson with a lecture; owner — this lesson, or a role of its process among the participants or
+    # readers) has `schema`, or the exception no-schema (lesson — the row's owner, value — the key) with its reason;
+    # the exception for a row that has a schema or is touched by no moved lesson is stale.
+    def catalog_lessons(self):
+        self.catalog_checked = True
+        if self.catalog is None:
+            return
+        path = self.root / CATALOG
+        moved = {}
+        for _, row in self.lessons_table()[1]:
+            directory = row.get("dir")
+            if directory and (self.root / "Platform" / directory / f"{directory}.md").exists():
+                moved[row["lesson"]] = self.lesson_roles(row["lesson"])
+        ids = self.platform_ids()
+        old = {}
+        for _, row in self.id_map_rows():
+            match = re.fullmatch(r"(М[0-9]+[A-ZА-Я]*/[0-9]+)-[0-9]+", row["old"])
+            if match:
+                old.setdefault(match.group(1), []).append(row["new"] in ids)
+        done = {address for address, landed in old.items() if all(landed)}
+        rows = sorted(self.catalog.values(), key=lambda r: r["line"])
+        for row in rows:
+            owner = row["owner"]
+            if owner.startswith("P/"):
+                continue
+            if owner in done:
+                why = f"every id of {owner} in {IDMAP} is in a Platform checklist"
+            elif self.norm_moved(row["norm"]):
+                why = f"its norm «{row['norm']}» has moved to Platform"
+            else:
+                continue
+            self.error(path, f"line {row['line']}: owner {owner} of {row['key']} is a moved lesson ({why}); "
+                             "readdress it by id-map")
+            self.stats["moved_owners"] += 1
+        need = {}
+        for row in rows:
+            if row["kind"] not in ("row", "object"):
+                continue
+            touched = set(r for r in (row["reader_roles"] or set())) | set().union(*row["ops"].values())
+            lessons = sorted(n for n, roles in moved.items()
+                             if self.in_lesson(row["owner"], f"P/{n}") or roles & touched)
+            if lessons:
+                need.setdefault(row["key"], []).append((row, lessons))
+        for key, entries in need.items():
+            without = [(row, lessons) for row, lessons in entries if row["schema"] == "-"]
+            owner = entries[0][0]["owner"]
+            registered = (owner, "no-schema", key) in self.registry
+            if without and registered:
+                self.except_(path, owner, "no-schema", key,
+                             "read or written by " + ", ".join(sorted({f"P/{n}" for _, ls in without for n in ls})))
+                continue
+            for row, lessons in without:
+                self.error(path, f"line {row['line']}: {key} ({row['kind']}) is read or written by the process of "
+                                 f"{', '.join(f'P/{n}' for n in lessons)} and has no schema: a family in data/ or the "
+                                 f"exception no-schema {owner} {key} (ADR-0083 доп. (11))")
+        for exc in sorted(r for r in self.registry if r[1] == "no-schema" and r not in self.used):
+            self.used.add(exc)
+            self.error(path, f"stale exception no-schema {exc[0]} {exc[2]}: the row has a schema, is not in the "
+                             "catalog under this owner, or no moved lesson reads or writes it")
+        self.stats["schema_needed"] = sum(len(e) for e in need.values())
 
     def exception(self, lesson, kind, value="-"):
         return self.registry.get((lesson, kind, value))
@@ -885,32 +1153,7 @@ class Check:
             return path
 
     def norms(self, path, text, prefix):
-        tokens = MarkdownIt("commonmark").parse(text)
-        headings, ids, stack = [], [], []
-        section = None
-        for pos, token in enumerate(tokens):
-            if token.type == "heading_open" and token.tag == "h1" and token.level == 0:
-                section = None
-            if token.type == "heading_open" and token.tag == "h2" and token.level == 0:
-                inline = tokens[pos + 1]
-                section = "".join(child.content for child in inline.children or []
-                                  if child.type in {"text", "code_inline"}).strip()
-                headings.append(section)
-            if (token.type == "inline" and section == "Чеклист готовности" and
-                    len(stack) == 3 and stack[0] in {"bullet_list_open", "ordered_list_open"} and
-                    stack[1:] == ["list_item_open", "paragraph_open"]):
-                children = [child for child in token.children or []
-                            if child.type != "text" or child.content]
-                if (len(children) >= 4 and children[0].type == "text" and
-                        re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
-                        children[1].type == "strong_open" and children[2].type == "text" and
-                        children[3].type == "strong_close" and
-                        re.fullmatch(r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\.[1-9])?)-[0-9]+", children[2].content)):
-                    ids.append(children[2].content)
-            if token.nesting == 1:
-                stack.append(token.type)
-            elif token.nesting == -1:
-                stack.pop()
+        headings, ids = outline(text)
         headers = [match.group(1) for heading in headings
                    if (match := re.match(r"(Н[0-5])(?:\s|$)", heading))]
         if headers != [f"Н{i}" for i in range(6)]:
@@ -1448,7 +1691,8 @@ class Check:
             self.except_(contract, key, "no-openapi", "-")
 
     def stale(self, key, where):
-        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used):
+        # no-schema rows belong to the catalog, not to a lesson: catalog_lessons() names the stale ones.
+        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used and r[1] != "no-schema"):
             self.error(where, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
 
     def lesson(self, lesson):
@@ -1507,6 +1751,8 @@ class Check:
     def platform_lesson(self, lesson):
         if not self.processes_checked:
             self.process_names()
+        if not self.catalog_checked:
+            self.catalog_lessons()
         stem = lesson.stem
         if not re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", stem) or lesson.parent.name != stem:
             self.error(lesson, "expected Platform/NN-<процесс>/NN-<процесс>.md")
@@ -1520,7 +1766,7 @@ class Check:
             self.error(whole, "a lesson has either one norms file or chapter norms, not both")
         parts = [(p.name.split("-", 1)[0].split(".")[1], p) for p in chapters] or [(None, whole)]
         instructions = spec / f"{stem}.README.md"
-        texts, all_ids, owned, total_choices = {}, [], set(), 0
+        texts, all_ids, owned, total_choices, saids = {}, [], set(), 0, []
         totals = {"scenarios": None, "verdicts": None}
         for path in [lesson, instructions]:
             text = self.read(path)
@@ -1544,7 +1790,10 @@ class Check:
             if text is not None:
                 self.markdown(norms, text)
                 ids = self.norms(norms, text, prefix)
-                owned |= self.data_paragraph(norms, text, prefix, key if chapter else None)
+                said = self.data_paragraph(norms, text, prefix, key if chapter else None)
+                owned |= said["владеет"]
+                saids.append((norms, said))
+                self.id_map_chapter(norms, prefix, ids)
                 chapter_texts[norms] = text
             where = acceptance / chapter if chapter else acceptance
             verdicts, classes = None, {}
@@ -1596,6 +1845,7 @@ class Check:
             shared = {k for (k, _), row in self.catalog.items() if row["owner"] == key}
             for missing in sorted(shared - owned):
                 self.error(lesson, f"«Данные»: no chapter owns {missing}, the catalog gives it to {key}")
+        self.data_roles(lesson, key, number, saids)
         # The lecture and the instruction count the whole lesson: sums over the chapters.
         for path, text in texts.items():
             self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],

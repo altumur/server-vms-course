@@ -1321,5 +1321,166 @@ class CanonicalChapterTests(unittest.TestCase):
         self.assertEqual((check.errors, check.stats["canonical"]), ([], "absent"))
 
 
+
+
+class PlatformCatalogTests(unittest.TestCase):
+    """A moved lesson against the catalog and id-map (разбор ревью стадии B 3–5, №10, №35, №36; ADR-0083 доп. (11)):
+    «Данные» by the roles of its process, the owner of a row is not a moved lesson, the checklist against id-map, a row
+    of a moved process has a schema or the exception no-schema."""
+
+    HEADER = "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n"
+    ROWS = [
+        # своя строка урока
+        ["w/own/<x>", "file", "P/03", "put=<s>worker", "console", "-", "1", "-", "P/03 Н1"],
+        # чужая строка: процесс урока читает
+        ["c/read/<x>", "row", "P/04", "put=<s>controller", "<s>worker, console", "-", "1", "04-controller/data/r.form.yaml", "P/04 Н1"],
+        # чужая строка: процесс урока пишет (cas)
+        ["c/write/<x>", "row", "P/04", "put=<s>controller; cas=<s>worker(своя)", "console", "-", "1", "04-controller/data/w.form.yaml", "P/04 Н1"],
+        # процесс урока не читает и не пишет
+        ["c/other/<x>", "row", "P/04", "put=<s>controller", "console", "-", "1", "04-controller/data/o.form.yaml", "P/04 Н1"],
+        # читатели * — никого не обязывают
+        ["c/any/<x>", "row", "P/04", "put=<s>controller", "*", "-", "1", "04-controller/data/a.form.yaml", "P/04 Н1"],
+    ]
+    DATA = ["- владеет: `w/own/<x>`;", "- пишет: `c/write/<x>` (cas);", "- читает: `c/read/<x>`."]
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        (self.root / "Platform/common/data").mkdir(parents=True)
+        (self.root / "Platform/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\tprocess\tunit\n03\t03-worker\tВоркер\t<sub>worker\t-\n"
+            "04\t04-controller\tКонтроллер\t<sub>controller\t-\n")
+        self.dir = self.root / "Platform/03-worker"
+        (self.dir / "spec").mkdir(parents=True)
+        (self.dir / "lifecycle.md").write_text("# Воркер\n\nПроцесс `<sub>worker`.\n")
+        self.lesson = self.dir / "03-worker.md"
+        self.lesson.write_text("# Worker\n")
+        (self.dir / "spec/03-worker.README.md").write_text("# Instructions\n")
+        (self.dir / "spec/03-worker.api.openapi.yaml").write_text(PlatformLessonTests.API)
+        acceptance = self.dir / "acceptance"
+        acceptance.mkdir()
+        (acceptance / "README.md").write_text("# Acceptance\n")
+        (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (acceptance / "scenarios.tsv").write_text("# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
+        self.norms = self.dir / "spec/03-worker.norms.md"
+        controller = self.root / "Platform/04-controller"
+        (controller / "spec").mkdir(parents=True)
+        (controller / "lifecycle.md").write_text("# Контроллер\n\nПроцесс `<sub>controller`.\n")
+        (controller / "spec/04-controller.norms.md").write_text("# P/04\n")
+        (controller / "data").mkdir()
+        for name in "rwoa":
+            (controller / f"data/{name}.form.yaml").write_text("dialect: data-form/1\n")
+        old = self.root / "М10_Platform/spec"
+        old.mkdir(parents=True)
+        (old / "08-old.norms.md").write_text(
+            "## Н1 Форма\n\n### Н1.1 Объект\n\nПеренесено в P/03 Н1 (стадия B).\n\n### Н1.2 Событие\n\nФорма события.\n\n"
+            "### Н1.3 Индекс\n\nПеренесено в P/03 Н1. Остаётся здесь индекс.\n\n"
+            "## Чеклист готовности\n- [ ] **М10/8-01** ещё здесь\n")
+        (old / "09-moved.norms.md").write_text("## Н1 Форма\n\n### Н1.1 x\n\nФорма.\n")
+        self.write_norms(self.DATA, ["P/03-01", "P/03-02"])
+        self.write_idmap([("М10/9-01", "P/03-01"), ("М10/9-02", "P/03-02")])
+        self.write_catalog(self.ROWS)
+
+    def write_norms(self, data, ids):
+        self.norms.write_text("## Н0 Section\n## Н1 Section\n**Данные** ([каталог](../../common/data/catalog.tsv)):\n" +
+                              "".join(line + "\n" for line in data) + "\n" +
+                              "\n".join(f"## Н{i} Section" for i in range(2, 6)) +
+                              "\n## Решает реализация\n## Чеклист готовности\n" +
+                              "".join(f"- [ ] **{i}** Example — проверяется чтением\n" for i in ids))
+
+    def write_idmap(self, rows):
+        (self.root / "Platform/common/id-map.tsv").write_text(
+            "# id-map\nold\tnew\tchapter\tsubject\tnote\n" + "".join(f"{o}\t{n}\t3\tx\t-\n" for o, n in rows))
+
+    def write_catalog(self, rows):
+        (self.root / "Platform/common/data/catalog.tsv").write_text(
+            "# catalog\n" + self.HEADER + "".join("\t".join(row) + "\n" for row in rows))
+
+    def check(self, registry=None):
+        path = None
+        if registry is not None:
+            path = self.root / "exceptions.tsv"
+            path.write_text("".join("\t".join(row) + "\n" for row in registry))
+        result = Check(self.root, path)
+        result.lesson(self.lesson)
+        return result
+
+    def test_pass(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual((result.stats["data_roles"], result.stats["id_map_ids"]), (1, 2))
+
+    def test_data_names_what_the_process_reads_and_writes(self):
+        self.write_norms(["- владеет: `w/own/<x>`."], ["P/03-01", "P/03-02"])
+        errors = "\n".join(self.check().errors)
+        self.assertIn("no chapter writes c/write/<x>, the catalog gives cas to the process", errors)
+        self.assertIn("no chapter reads c/read/<x>, the catalog names the process", errors)
+        self.assertNotIn("c/other/<x>", errors)
+        self.assertNotIn("c/any/<x>", errors)
+
+    def test_data_names_only_what_the_catalog_gives_the_process(self):
+        self.write_norms(self.DATA[:2] + ["- читает: `c/read/<x>`, `c/other/<x>`, `c/any/<x>`.",
+                                          "- пишет: `c/other/<x>` (put)."], ["P/03-01", "P/03-02"])
+        errors = "\n".join(self.check().errors)
+        self.assertIn("reads c/other/<x>, the catalog names the process (<s>domain, <s>worker, proc:03-worker) neither", errors)
+        self.assertIn("writes c/other/<x> (put), the catalog does not give put to the process", errors)
+        self.assertNotIn("reads c/any/<x>", errors)
+
+    def test_owner_is_not_a_moved_lesson(self):
+        rows = self.ROWS + [
+            ["m/moved/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "М10/8 Н1.1"],
+            ["m/stays/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "М10/8 Н1.2"],
+            ["m/part/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "М10/8 Н1.3"],
+            ["m/new/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "P/03 Н1"],
+            ["m/mixed/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "P/03 Н1, М10/8 Н1.2"],
+            ["m/lesson/<x>", "row", "М10/9", "put=console", "console", "-", "1", "-", "М10/9 Н1.1"],
+        ]
+        self.write_catalog(rows)
+        errors = [e for e in self.check().errors if "is a moved lesson" in e]
+        said = "\n".join(errors)
+        self.assertEqual(len(errors), 3, errors)
+        self.assertIn("owner М10/8 of m/moved/<x> is a moved lesson (its norm «М10/8 Н1.1» has moved", said)
+        self.assertIn("owner М10/8 of m/new/<x>", said)
+        self.assertIn("owner М10/9 of m/lesson/<x> is a moved lesson (every id of М10/9", said)
+
+    def test_checklist_against_id_map(self):
+        self.write_norms(self.DATA, ["P/03-01", "P/03-02", "P/03-05"])
+        self.write_idmap([("М10/9-01", "P/03-01"), ("М10/9-02", "P/03-02"), ("- (новая)", "P/03-03"),
+                          ("М10/8-01", "P/03-04"), ("М10/8-01", "P/03.1-01"), ("М10/9-01", "P/03 сц. 01")])
+        errors = "\n".join(self.check().errors)
+        self.assertIn("checklist id P/03-05 is not in the column new of Platform/common/id-map.tsv", errors)
+        self.assertIn("new P/03-03 is not in the checklist, and its old - (новая) is in no old lesson's checklist", errors)
+        self.assertNotIn("P/03-04", errors)                    # М10/8-01 is still in the checklist of М10/8
+        self.assertNotIn("P/03.1-01", errors)                  # another chapter
+
+    def test_row_of_a_moved_process_has_a_schema_or_the_exception(self):
+        rows = self.ROWS + [
+            ["u/<x>", "row", "М10/8", "put=console", "<s>worker, console", "-", "1", "-", "М10/8 Н1.2"],
+            ["f/<x>", "file", "М10/8", "put=console", "<s>worker", "-", "1", "-", "М10/8 Н1.2"],
+            ["n/<x>", "row", "М10/8", "put=console", "console", "-", "1", "-", "М10/8 Н1.2"],
+            ["w/row/<x>", "row", "P/03", "put=<s>worker", "console", "-", "1", "-", "P/03 Н1"],
+        ]
+        self.write_catalog(rows)
+        data = ["- владеет: `w/own/<x>`, `w/row/<x>`;", self.DATA[1], "- читает: `c/read/<x>`, `u/<x>`, `f/<x>`."]
+        self.write_norms(data, ["P/03-01", "P/03-02"])
+        result = self.check()
+        errors = "\n".join(result.errors)
+        self.assertIn("u/<x> (row) is read or written by the process of P/03 and has no schema", errors)
+        self.assertIn("w/row/<x> (row) is read or written by the process of P/03 and has no schema", errors)
+        self.assertNotIn("f/<x> (file)", errors)
+        self.assertNotIn("n/<x>", errors)
+        result = self.check([("М10/8", "no-schema", "u/<x>", "форма — М10/8 Н1.2 до переноса урока 6"),
+                             ("P/03", "no-schema", "w/row/<x>", "семья — следующей правкой")])
+        self.assertEqual(result.errors, [])
+        self.assertTrue(any(line.startswith("М10/8 no-schema u/<x>: форма") for line in result.excepted), result.excepted)
+        result = self.check([("М10/8", "no-schema", "u/<x>", "x"), ("P/03", "no-schema", "w/row/<x>", "x"),
+                             ("P/04", "no-schema", "c/read/<x>", "a schema now"),
+                             ("М10/8", "no-schema", "n/<x>", "no moved process")])
+        stale = [e for e in result.errors if "stale exception no-schema" in e]
+        self.assertEqual(len(stale), 2, result.errors)
+        self.assertEqual(len(result.errors), 2, result.errors)
+
+
 if __name__ == "__main__":
     unittest.main()
