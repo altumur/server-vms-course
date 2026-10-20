@@ -1,12 +1,13 @@
-# Уроки модуля «Платформа»: номер — адрес владельца (P/NN), каталог — NN-<процесс>. Читает check_spec.
-# lesson	dir	title
-01	01-store	Хранилище
-02	02-installer	Спека и установщик
-03	03-worker	Воркер (SDK)
-04	04-controller	Контроллер
-05	05-resource	Ресурс
-06	06-console	Консоль кластера
-07	07-console-module	Модуль консоли
-08	08-domain	Процесс domain
-09	09-agent	Агент (9.1) и режим ретранслятора (9.2)
-10	10-domain-console	Консоль домена
+# Уроки модуля «Платформа»: номер — адрес владельца (P/NN), каталог — NN-<процесс>; process — имя процесса урока (роль и
+# аргумент раннера w2c-run.sh), unit — его юнит в P/02.4 Н1.1 («-» — нет). Читает check_spec.
+# lesson	dir	title	process	unit
+01	01-store	Хранилище	configstore	configstore.service
+02	02-installer	Спека и установщик	w2cctl	-
+03	03-worker	Воркер (SDK)	<sub>worker	<dep>-<sub>worker@.service
+04	04-controller	Контроллер	<sub>controller	w2c-controller@.service
+05	05-resource	Ресурс	resource	w2c-resource.service
+06	06-console	Консоль кластера	console	w2c-console.service
+07	07-console-module	Модуль консоли	-	-
+08	08-domain	Процесс domain	domain	w2c-domain.service
+09	09-agent	Агент (9.1) и режим ретранслятора (9.2)	domainagent	w2c-domainagent.service
+10	10-domain-console	Консоль домена	domainconsole	w2c-domainconsole.service

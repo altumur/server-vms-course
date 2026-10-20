@@ -1,6 +1,6 @@
 # Спека и установщик — жизненный цикл (урок P/02)
 
-Контракт жизненного цикла установщика и его команд (ADR-0083 доп. (2) п. 1): установка и обновление, установка спеки,
+Контракт жизненного цикла установщика `w2cctl` и его команд (ADR-0083 доп. (2) п. 1): установка и обновление, установка спеки,
 вывод прав, центр сертификатов, скрипт воркеров по заказу. Стадия A — поверх нынешних норм М10 и М11. Нормы здесь не
 пересказываются: каждая строка ведёт к своей норме.
 
@@ -20,11 +20,11 @@
 | обновление сервера за сервером | `POST /drain` → `safe: true` → остановить, обновить, запустить → `DELETE /drain`; последним — подъём схемы | P/02.4 Н1.7 `upgrade`, М10/10 |
 | `w2cctl spec put <файл>` | установка одной спеки: загрузка, полный каталог, строка, затем метка `/rev` | P/02.3 Н3 «Смена спеки» |
 | `w2cctl spec status [-rights]` | состояние строк спек; с `-rights` — и файла прав | P/02.4 Н1.9, P/02.5 |
-| `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `signer`, `domainconsole`, `domainagent`, `workers`, `rights`; окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
+| `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `domain`, `domainconsole`, `domainagent`, `workers`, `rights`; окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
 | `w2cctl rights -deployment <имя> [--check <файл>]` | вывод прав из `SPEC_DIR`; `--check` — по смыслу | P/02.5 Н2, Н3 |
 | `w2c-ca.sh init \| issue \| revoke \| crl \| own` | центр и комплекты ролей | P/02.4 Н1.6 |
 | `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | [договор запечатывания](../common/contracts/sealing.md), P/02.4 Н1.9 |
-| `w2cctl mirror \| space \| retention \| epoch \| tls status \| heartbeat \| domain move` | строки оператора и проверки | P/02.4 Н1.9 |
+| `w2cctl mirror \| space \| retention \| tls status \| domain move` | строки оператора и проверки | P/02.4 Н1.9 |
 | `w2c-workers.sh` | скрипт воркеров по заказу: `w2c-workers.service` (`Type=oneshot`, `Restart=no`, `User=w2c-workers` без групп, один на сервер) и `.timer` (`OnBootSec` 1–2 мин, `OnUnitActiveSec` 1 мин); ряды `<sub>_workers_wanted{server}` → `start`/`stop` экземпляров `<prefix>-<SERVER_NAME>-<n>`, n 2…99 (ADR-0084) | P/02.4 Н1.1, Н1.5 |
 | кластер из одного со встроенной спекой | процесс коробки сам пишет строку спеки и метку — правом `admin`, как установщик | P/02.3 Н1.5, P/02.4 Н1.10 |
 
@@ -86,7 +86,7 @@
 
 | Что | Как | Норма |
 |---|---|---|
-| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domain-console.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446; местная дверь — умолчание 8448) | М11/12 Н1.8, P/02.4 Н1.1 |
+| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446; местная дверь — умолчание 8448) | М11/12 Н1.8, P/02.4 Н1.1 |
 | установка домена | команда оператора, один раз на домен | М11/2 Н3 «установка домена» |
 
 ## Открыто

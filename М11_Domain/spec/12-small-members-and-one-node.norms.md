@@ -176,9 +176,9 @@ rights:     domain/signer-turn пишет только роль domain (её с�
 порт, `sd_notify` они не шлют (P/02.4 Н1.1 `notify`; решение «Архитектора», второй пилот).
 
 ```yaml
-w2c-domain.service:          роль domain; w2c-run.sh signer; User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets;
+w2c-domain.service:          роль domain; w2c-run.sh domain; User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets;
                              SECRETS_KEY (credential); SIGNER_HOST/PORT 0.0.0.0:8445 — агенты членов ходят сюда (урок 3)
-w2c-domain-console.service:  роль domainconsole; w2c-run.sh domainconsole; кольца нет, w2c-secrets нет;
+w2c-domainconsole.service:   роль domainconsole; w2c-run.sh domainconsole; кольца нет, w2c-secrets нет;
                              DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 — консоли членов пересылают сюда (урок 8)
 w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; User=w2c; SupplementaryGroups=w2c-store w2c-events
                              w2c-secrets; SECRETS_KEY (credential) — ключ члена и конверты кольца (М10/7 holders); своего
