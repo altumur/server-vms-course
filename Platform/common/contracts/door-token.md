@@ -40,7 +40,7 @@ token:      door1.<kid>.<claims>.<sig> — ровно четыре части ч
 
 ```yaml
 door/keys:  {<kid>: <64 строчных hex открытого ключа>} — несекретная строка; консоль добавляет свой kid при создании
-            door/signer; проверяющий: четыре части, door1, kid в door/keys, подпись, claims ровно {user, unit, holder,
+            door/signer, при старте и при выдаче, если его нет (P/06.5 Н3; разбор ревью стадии B 6–7, № 3); проверяющий: четыре части, door1, kid в door/keys, подпись, claims ровно {user, unit, holder,
             routes, expires} с типами по договору, now < expires, unit и holder — свои, первый сегмент пути запроса к двери держателя — элемент
             routes байт в байт, сырым — иначе отказ двери держателя: 403 {"error": "forbidden"} без причины
 ```
