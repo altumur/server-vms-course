@@ -278,38 +278,9 @@ HTTP-контракт: [03-agent-and-reports.api.openapi.yaml](03-agent-and-repo
 
 ### принять(mark, stored, body, via, heard_ago) — держатель, на POST /api/member/<член> после подписи
 
-`via` — дорога: нет — прямо, иначе имя ретранслятора (урок 4 Н1.3); `heard_ago` — монотонные секунды с последнего
-приёма этого члена по любой дороге (нет — не слышал); приём — исходы `generation`, `heard` (с записью метки или без) и
-`same`; `ignored` и отказы приёмом не считаются.
-
-```
-0. приём одного члена — один за раз в процессе domain (мьютекс); подпись, член и ключ уже проверены (Н2)
-1. body — не JSON-объект по форме Н1.2                                             → 400 not_a_publication
-2. mark есть и body.sent_at = mark.sent_at (одни часы члена на всех дорогах, урок 4 Н1.3): sha256(body) ≠
-   mark.request_sha256 → 409 same_sent_at; mark.via = via → same (ничего не писать, метку не освежать); иначе → heard
-   (повтор другой дорогой: поколения нет, метка — по правилу освежения шага 6; добавлено М11/4)
-2а. mark есть, mark.via ≠ via, body.sent_at < mark.sent_at и heard_ago < ROAD_QUIET (урок 4 Н1.3) → ignored
-   (ничего не писать: прежняя дорога жива, а это тело старше по часам члена)
-3. base > 0 и (mark нет, или mark.via ≠ via, или base ≠ mark.rev, или stored не читается или не с mark.sha256) → 409 rebase
-4. objects' = (base > 0 ? объекты stored : {}) ∪ body.objects − body.deleted; объекты вне member_objects отбросить
-4а. JCS(whole') больше BODY_LIMIT → 413 {error: "whole too large", detail}; ничего не писать (урок 12 Н1.5; добавлено М11/12)
-5. нет шарда снимка какой-то спеки каталога с domain.ref                           → 409 not_ready
-6. mark есть, stored читается и с mark.sha256, и whole' без sent_at = whole stored без sent_at (JCS) → heard
-   (stored не читается или не с mark.sha256 — шаг 7: испорченное поколение заменяется новым; добавлено сверкой М11, A1):
-   метку этот процесс не писал, или писал не меньше MARK_REFRESH назад (монотонные), или body.stale ≠ mark.stale
-   (сравниваются отсортированные списки ключей; сверка М11, A8) →
-   переписать метку: поля поколения прежние; поля последнего запроса — sent_at, received_at, request_sha256, via, stale,
-   sign_failures — этого запроса; иначе ничего не писать
-7. иначе → generation: rev = (mark ? mark.rev : 0) + 1; mark.rev = 2^53 − 1 → 503 {error: "refused", reason: "rev_exhausted",
-   detail: "<член>'s generations reached 2^53 − 1: the mark cannot grow"}, ничего не меняется (добавлено сверкой М11, A18); записать reports/<rev> = JCS(whole'), затем reports/<rev>.delta = body,
-   затем метку {rev, sha256, base, delta_sha256, signature?, key, keys_rev?, pinned?, sent_at, received_at,
-   request_sha256 (= delta_sha256), via?, stale, sign_failures?};
-   убрать reports/<rev−2> и его .delta и объекты выше rev
-```
-
-`sent_at` ниже `mark.sent_at` на той же дороге принимается: порядок на одной дороге задаёт дорога, часы члена, шагнувшие
-назад, берутся сразу; между двумя дорогами — шаг 2а (урок 4). Ответ на шаги 2 (same, heard), 2а, 6, 7 — carry (Н1.5); его `rev` —
-`rev` метки, если `mark.via` = дорога ответа, иначе 0 (другая дорога шлёт целое). Сбой между шагами 7: объект выше метки ничей (Н1.3), следующий приём пишет поверх.
+Абзац о `via` и `heard_ago`, шаги 0–7 и абзац о `sent_at`, ответе и сбое — [договор приёма отчёта](../../Platform/common/contracts/accept.md) «Функция
+«принять»» (владелец P/08, глава 8.3; участник — ретранслятор 9.2; перенесено туда без изменения, номера шагов прежние;
+разбор ревью стадии A 8–10, № 13 / решение 2). Векторы — [`common/vectors/accept`](../../Platform/common/vectors/accept/README.md).
 
 ### прочитать копию (урок 1 Н3 шаг 2; урок 5, урок 10)
 
