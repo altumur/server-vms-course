@@ -69,7 +69,7 @@ null`); сц. 12 — роли домена.
 
 | Вариант | Спеки | Что проверяет |
 |---|---|---|
-| `v1-base` | `va` без `requests`, с `delete_after` | роли платформы и спеки; `requests/*` консоли нет (R8); пустой `<y>` и `never` эпохи (R12); `retention` ресурса (R2); `domain/grants` консоли — точный ключ, `domain/grants/c1` и `domain/view` — нет (R5); `domain/holder` воркера (R7); роли `vadomain` нет |
+| `v1-base` | `va` без `requests`, с `delete_after` | роли платформы и спеки; `requests/*` консоли нет (R8); пустой `<y>` и `never` эпохи (R12); `retention` ресурса (R2); `domain/grants` консоли — точный ключ, `domain/grants/c1` и `domain/view` — нет (R5); `domain/holder` воркера (R7); роли `vadomain` нет; `door/signer` читает консоль, не воркер, без объявления в спеке (разбор ревью стадии B 6–7, № 36) |
 | `v2-requests` | `va` с `requests`, `vb` с `worker.requests: [va]` | `requests/*` консоли только у `va`; подача `vbworker` в `va`; метки `objects/va/commands/*` (R8, R9) |
 | `v3-objects-rows` | `va` с `objects.rows: [marks/]` | `marks/` → `objects/va/marks/*` (R10) |
 | `v4-domain-kept` | `va` с `domain.kept: [ledger, badges/]` | `vadomain` пишет слот и `kept`; `domainagent` — по форме объявления и без слота и пульса воркера на домене (R4, R3) |

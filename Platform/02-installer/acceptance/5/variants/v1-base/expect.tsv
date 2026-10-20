@@ -12,6 +12,7 @@ console	read	domain/grants	allow
 console	read	domain/grants/c1	deny
 console	read	domain/view	deny
 console	write	va/want/srv-a	deny
+console	read	door/signer	allow
 vacontroller	write	va/placement/u1	allow
 vacontroller	write	va/controller/placement_turn	allow
 vacontroller	delete	va/controller/placement_turn	deny
@@ -31,6 +32,7 @@ vaworker	read	va/idem/k1	deny
 vaworker	read	platform/epoch_floor	allow
 vaworker	read	domain/holder	allow
 vaworker	write	va/want/srv-a	deny
+vaworker	read	door/signer	deny
 resource	write	platform/doors/srv-a	allow
 resource	read	va/retention	allow
 resource	read	va/alarms_retention	allow
