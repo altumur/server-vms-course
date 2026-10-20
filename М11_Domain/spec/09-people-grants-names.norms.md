@@ -297,7 +297,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | GET `/domain/users` | `domain` (через консоль домена) | view | 200 `{users: [{name, how, disabled, at, by}]}` по `name` | 401/403 |
 | POST `/domain/users` `{name, password}` | `domain` | admin | 201 `{user}` | 400 bad body, bad name, bad password; 401/403 — Н1.5; 409 exists, name taken; 413 too large; 503 names unknown; 503 standby (урок 12) |
 | PUT `/domain/users/<имя>` `{password?, disabled?}` | `domain` | admin | 200 `{user, disabled}` | 400 bad body (пусто, лишнее, типы), bad password; 401/403 — Н1.5; 404 no such person; 409 last admin; 413 too large; 503 standby (урок 12) |
-| DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 401/403 — Н1.5; 404 no such person; 409 last admin; 503 standby (урок 12) |
+| DELETE `/domain/users/<имя>` | `domain` | admin | 200 `{user, deleted: true, grants_changed: [<кластер>…]}` | 401/403 — Н1.5; 404 no such person; 409 last admin; 503 unavailable — три конфликта CAS строки грантов, Н3 шаг 9 (разбор ревью стадии A 8–10, № 38); 503 standby (урок 12) |
 | GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
 | PUT `/domain/grants/<кластер>` `{lines: [{subject, cap, scope, until?}]}` | консоль домена → `domain` | admin | 200 `{cluster, lines}` после CAS; `until` нет — 0 | 400 bad line (форма, повтор, имя); 400 grant too wide; 400 unknown subject; 409 being deleted; 409 last admin; 409 «the grants kept changing; look again» после трёх конфликтов CAS (`refused`); 401/403 — Н1.5; 413 too large; 503 names unknown; 503 standby (урок 12) |
 | GET `/domain/break-glass` | `domain` | view | 200 `{clusters: {<кластер>: {set_at}}}` | 401/403 |
@@ -330,7 +330,10 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 8. last_admin (Н1.3)                                                → 409 last admin
 9. записать строку (CAS по прочитанной версии); disabled — затем domain/disabled; DELETE: записать метку
    domain/deleting/<имя> → удалить строку человека → снять строки subject = <имя> во всех domain/grants/* (CAS) →
-   удалить метку; ответ — после снятия метки (журнал cammeta-go, М11-09 № 1; решение «Архитектора»)
+   удалить метку; ответ — после снятия метки (журнал cammeta-go, М11-09 № 1; решение «Архитектора»); конфликт CAS строки
+   грантов — перечитать её и повторить не больше трёх раз (как шаг 6 «гранты»); исчерпано — 503 {error: "unavailable",
+   detail: "the grants kept changing; the deletion is finished by the next pass"}, метка остаётся, строки грантов
+   доводит сверка ниже (разбор ревью стадии A 8–10, № 38)
 ```
 
 Обрыв шага 9 между строкой человека и `domain/disabled` или строками грантов: вход человеку уже закрыт (строка), а члены
@@ -381,7 +384,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `last admin` | 409 | у двери домена не останется администратора |
 | `too many attempts` | 429 | предел Н1.10, `Retry-After` |
 | `names unknown` | 503 | индекс не known, а правка создаёт человека или строку гранта не человека домена |
-| `unavailable` | 503 | строка аварийной учётки этого кластера не открывается (Н1.6 шаг 4) |
+| `unavailable` | 503 | строка аварийной учётки этого кластера не открывается (Н1.6 шаг 4); DELETE человека: три конфликта CAS строки грантов, метка остаётся (Н3 «дверь людей» шаг 9; разбор ревью стадии A 8–10, № 38) |
 | `too large` | 413 | тело больше `LOGIN_BODY` у `/api/login`, больше 1 МиБ у дверей людей |
 | `deposed` | 409 | смещённый держатель (урок 10 Н1.6), тело с `holder` |
 | `refused` | 409 | «the grants kept changing; look again» после трёх конфликтов CAS |
