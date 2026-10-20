@@ -1735,8 +1735,8 @@ components:
       type: string
       minLength: 1
       maxLength: 64
-      pattern: '^[^\s\x00-\x1f\x7f:|()"/]+$'
-      description: 'Имя человека (P/08.4 Н1.1): без пробельных, управляющих U+0000–U+001F, U+007F и : | ( ) " /; не break-glass и
+      pattern: '^[^\x00-\x20\x7f\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000:|()"/]+$'
+      description: 'Имя человека (P/08.4 Н1.1): без пробельных (свойство White_Space Unicode 15.0.0), управляющих U+0000–U+001F, U+007F и : | ( ) " /; не break-glass и
         не субъект индекса имён — 400 bad name по норме, не по схеме.'
     Cap:
       enum: [view, edit, admin]
