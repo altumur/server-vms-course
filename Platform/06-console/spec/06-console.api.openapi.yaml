@@ -550,7 +550,7 @@ paths:
       in: path
       required: true
       schema:
-        $ref: '#/components/schemas/UnitId'
+        $ref: '#/components/schemas/TableRowName'
     get:
       summary: Прочитать одну строку таблицы
       responses:
@@ -2830,6 +2830,23 @@ paths:
       снова. Framing и фактические байты запроса проверяются до отправки; неполное тело не передаётся; ответ буферизуется
       в пределах 4 МиБ до заголовков клиенту; перенаправлению консоль не следует; автоматического повтора нет. Ниже — местные
       отказы консоли; код ответа воркера передаётся как получен (default).'
+    servers:
+    - url: '{origin}'
+      description: Короткий путь выбирает CONSOLE_ROOT (разбор ревью стадии B 6–7, № 7).
+      variables:
+        origin:
+          default: http://localhost
+          description: Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.
+    - url: '{origin}/{sub}'
+      description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT; door.pass — её спеки (разбор ревью стадии
+        B 6–7, № 7).
+      variables:
+        origin:
+          default: http://localhost
+          description: Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.
+        sub:
+          default: testsub2
+          description: Имя загруженной спеки по P/02.1; пример заменяется выбранным именем из /mounts.
     parameters:
     - name: pass
       in: path
@@ -4198,7 +4215,10 @@ components:
           type: string
           minLength: 1
         expires:
-          type: number
+          type: integer
+          maximum: 9007199254740991
+          description: Целые стенные секунды выдачи + 120 — то же число, что expires в claims токена (договор токена двери;
+            разбор ревью стадии B 6–7, № 10).
         routes:
           type: array
           items:
@@ -5723,13 +5743,25 @@ components:
             pattern: _secret(?![\s\S])
         additionalProperties:
           $ref: '#/components/schemas/SecretFreeValue'
+    TableRowName:
+      type: string
+      minLength: 1
+      not:
+        anyOf:
+        - enum:
+          - .
+          - ..
+        - pattern: /
+      description: 'Имя строки таблицы — глава 6.1 Н1.6 (`<sub>/<t>/<имя>`) и Н3 «таблица — записать строку» шаг 1: имя из
+        key не пусто, без `/`, не `.` и не `..`; грамматика id единицы (Н1.3, UnitId) к нему не применяется (разбор ревью
+        стадии B 6–7, № 1). Предел — полный ключ хранилища (P/01.1).'
     TableRow:
       type: object
       required:
       - name
       properties:
         name:
-          $ref: '#/components/schemas/UnitId'
+          $ref: '#/components/schemas/TableRowName'
         held_by:
           anyOf:
           - $ref: '#/components/schemas/WorkerName'
@@ -5801,7 +5833,7 @@ components:
       additionalProperties: false
       properties:
         deleted:
-          $ref: '#/components/schemas/UnitId'
+          $ref: '#/components/schemas/TableRowName'
     SnapshotUnit:
       type: object
       required:

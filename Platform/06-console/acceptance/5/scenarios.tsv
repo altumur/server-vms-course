@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/06.5: наблюдения консоли — testsub (root) и testsub2 (смонтирована) без домена; сц. 01–12 из М10/09, 13–16 из М10/11, 03 и 17 — из М10/10 (стадия B). Формат — README.
+# Приёмка P/06.5: наблюдения консоли — testsub (root) и testsub2 (смонтирована) без домена; сц. 01, 02, 04–12 из М10/09, 13–16 из М10/11, 03 и 17 — из М10/10 (стадия B; разбор ревью стадии B 6–7, № 22). Формат — README.
 01-page-and-module	1	GET /	200 ~PlatformConsole.mount
 01-page-and-module	2	GET /	200 @header Content-Security-Policy: ~script-src
 01-page-and-module	3	GET /platform/console.js?v=1	200 ~PlatformConsole
@@ -29,6 +29,7 @@ scenario	step	request	expect
 04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
 04-servers-where	5	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
 04-servers-where	6	GET /resources	200 {}
+04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "@any"}
 05-metrics	1	GET /metrics	200 ~testsub_workers_live 0
 05-metrics	2	GET /metrics	200 ~testsub_units_unplaced
 05-metrics	3	GET /metrics	200 ~testsub_counters_running
@@ -79,6 +80,8 @@ scenario	step	request	expect
 12-worker-pulse-inputs	8	GET /servers	200 {"servers": {"srv-a": {"labels": ["c"], "labels_node": ["a", "b"], "labels_source": "console", "workers": [{"worker": "w-1", "labels": ["c"]}]}}}
 12-worker-pulse-inputs	9	@put object testsub2/heartbeats/t-1 inputs/hb-t-1-belt-slow.json	ok
 12-worker-pulse-inputs	10	GET /testsub2/servers	200 {"servers": {"srv-a": {"workers": [{"worker": "t-1", "status": {"jam": "stuck", "belt.state": "@absent"}}]}}}
+12-worker-pulse-inputs	11	@put object testsub/heartbeats/w-1 inputs/hb-w-1-observed-fraction.json	ok
+12-worker-pulse-inputs	12	@until 10 GET /counters	200 {"rows": [{"id": "c12a", "worker": "w-1", "observed_revision": 1}]}
 13-time-reader	1	@start resource	ok
 13-time-reader	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 13-time-reader	3	@sigterm resource	ok

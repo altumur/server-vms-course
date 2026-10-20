@@ -477,7 +477,7 @@ defs:
       outcome: {enum: [mark, fetched], default: mark, description: "смысл — P/06.4 Н1.5 (`mark`), глава 3.6 (дозапись `fetched`), ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)"}
       stamp: {type: array, items: {enum: [by, at, group, about]}}
       journal: {type: string, description: вид журнала}
-      elsewhere: {ref: strList}
+      elsewhere: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора спеки: чеклист и `check_spec` для спек курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
       free: {type: boolean, default: false}
     rules:
       - {when: {present: [per_person]}, require: [ttl]}
@@ -500,7 +500,7 @@ defs:
         properties:
           group: {ref: strList}
           cluster: {ref: strList}
-          requests: {ref: strList}
+          requests: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора спеки: чеклист и `check_spec` для спек курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
       names:
         type: array
         items:

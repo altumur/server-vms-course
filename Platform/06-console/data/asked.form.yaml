@@ -14,7 +14,7 @@ root:
         not_pattern: 'free-.*'
         not_enum: ['.', '..']
         max_bytes: 200
-        description: rid по грамматике P/06.4 Н1.5 `rid` (векторы vectors/rid/)
+        description: rid по грамматике договора просьбы и её метки `rid` (векторы vectors/rid/; разбор ревью стадии B 6–7, № 24)
       description: зарезервированные/неотвеченные rid человека — список (P/06.1 Н1.2 `list`; кодек array; rid с запятой — массив JSON); "" — ни одного
     by:
       type: string

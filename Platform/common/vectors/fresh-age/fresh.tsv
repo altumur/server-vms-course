@@ -1,0 +1,10 @@
+# Свежесть: возраст наблюдаемой версии → свеж при LOST_AFTER = 45 с (договор наблюдения «Свежесть: LOST_AFTER»). Форма — README рядом.
+case	age	fresh	note
+zero	0	true	первый взгляд, новая версия или изменённые байты — возраст 0: свеж
+below-int	44	true	LOST_AFTER − 1: свеж
+below-fraction	44.9	true	чуть меньше LOST_AFTER: свеж
+equal-int	45	true	ровно LOST_AFTER: свеж — отношение ≤ (разбор ревью стадии A 6–7, № 1; было «<» у части дверей консоли)
+equal-fraction	45.0	true	ровно LOST_AFTER дробной записью: то же число, свеж
+above-tiny	45.000001	false	больше LOST_AFTER на микросекунду: не свеж
+above-fraction	45.1	false	чуть больше LOST_AFTER: не свеж
+above-int	46	false	LOST_AFTER + 1: не свеж

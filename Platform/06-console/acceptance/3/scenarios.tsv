@@ -1,7 +1,7 @@
 scenario	step	request	expect
 # Приёмка P/06.3: дверь сессии консоли testsub без воркеров и домена; сценарий 03 перенесён из М10/09 (стадия B). Формат — README.
 03-open-session	1	GET /session	200 {"open": true, "login_url": "/api/login"}
-03-open-session	2	POST /session {"token": "x"}	400
+03-open-session	2	POST /session {"token": "x"}	400 {"detail": "@any", "error": "this console is open"}
 03-open-session	3	DELETE /session	200 {"out": true}
 03-open-session	4	DELETE /session	200 @header Set-Cookie: ~w2c_token
 03-open-session	5	DELETE /session	200 @header Set-Cookie: ~w2c_glass

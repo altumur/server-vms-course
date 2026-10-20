@@ -75,16 +75,22 @@ scenario	step	request	expect
 12-pulse-number-forms	5	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": "dev"}}}
 12-pulse-number-forms	6	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-missing.json	ok
 12-pulse-number-forms	7	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	8	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-fraction.json	ok
-12-pulse-number-forms	9	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	10	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-minus-zero.json	ok
+12-pulse-number-forms	8	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	9	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	10	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-fraction.json	ok
 12-pulse-number-forms	11	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	12	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-2p63.json	ok
-12-pulse-number-forms	13	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	14	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	15	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	16	@put object testsub/heartbeats/w-1 inputs/hb-w-1-schema-fraction.json	ok
-12-pulse-number-forms	17	@until 10 console GET /schema	200 {"can_raise_to": 0, "processes": {"testsub/w-1": {"schema": null}}}
-12-pulse-number-forms	18	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
-12-pulse-number-forms	19	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": ""}}}
-12-pulse-number-forms	20	console DELETE /drain	2xx
+12-pulse-number-forms	12	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	13	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	14	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-minus-zero.json	ok
+12-pulse-number-forms	15	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	16	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	17	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	18	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-2p63.json	ok
+12-pulse-number-forms	19	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	20	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	21	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	22	@put object testsub/heartbeats/w-1 inputs/hb-w-1-schema-fraction.json	ok
+12-pulse-number-forms	23	@until 10 console GET /schema	200 {"can_raise_to": 0, "processes": {"testsub/w-1": {"schema": null}}}
+12-pulse-number-forms	24	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
+12-pulse-number-forms	25	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": ""}}}
+12-pulse-number-forms	26	console DELETE /drain	2xx
