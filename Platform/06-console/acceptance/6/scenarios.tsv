@@ -31,6 +31,7 @@ scenario	step	request	expect
 05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404
 05-server-labels	4	GET /servers/srv-a/labels?labels=a,,b	400
 05-server-labels	5	PUT /servers/srv-a/labels {"labels": ["vlan:a", "vlan:a"]}	400
+05-server-labels	6	GET /servers/srv-a/labels?labels=a,a	400
 06-decommission	1	POST /servers/srv-nobody/decommission {"why": "test"}	404
 07-drain-units	1	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 07-drain-units	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok

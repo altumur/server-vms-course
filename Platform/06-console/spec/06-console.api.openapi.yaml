@@ -3297,6 +3297,8 @@ paths:
       - name: labels
         in: query
         required: false
+        description: Метки через запятую, без повторов; повтор метки — 400 (решение «Архитектора» 2026-10-20, разбор ревью
+          стадии B 6–7).
         schema:
           type: string
           pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
@@ -3380,6 +3382,8 @@ paths:
       - name: labels
         in: query
         required: false
+        description: Метки через запятую, без повторов; повтор метки — 400 (решение «Архитектора» 2026-10-20, разбор ревью
+          стадии B 6–7).
         schema:
           type: string
           pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
