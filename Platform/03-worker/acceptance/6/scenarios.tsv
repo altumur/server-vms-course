@@ -48,3 +48,6 @@ scenario	step	request	expect
 07-append-by-data	31	console2 POST /tallies {"name": "free-a", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
 07-append-by-data	32	console POST /testsub2/requests {"unit": "free-a", "from": 1, "to": 2}	400 {"detail": "~unit"}
 07-append-by-data	33	store GET /v1/get?key=testsub2/requests/free-a-1-2	200 {"items": null}
+07-append-by-data	34	console POST /testsub2/requests {"unit": "t1", "from": 8, "to": 8, "action": "recount"}	202 {"queued": "t1-8-8"}
+07-append-by-data	35	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "6", "ranges": "0-3,7-8"}}
+07-append-by-data	36	@until 90 store GET /v1/get?key=testsub2/requests/t1-8-8	200 {"items": null}
