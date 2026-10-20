@@ -25,7 +25,7 @@ spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стен�
 SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; приёмка М10/01; Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
 /opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	P/02.4 Н1.2	Platform/02-installer/lifecycle.md
 <spec:…>	<manifest:…>	обозначение части ключа каталога данных из манифеста	Platform/common/data/catalog.tsv (форма — inbox 2026-10-18-каталог-данных-форма.md)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; абзацы «Данные»
-console.spec(name)	console.manifest(name)	вызов модуля консоли	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем
+console.spec(name)	console.manifest(name)	вызов модуля консоли	P/07 Н1.5 `words` (`spec(name)`); описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем
 getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	код модуля консоли (входит в выгрузку)	Source/w2cplatform/console.js	—
 from: "spec"	from: "manifest"	слово источника значения в выводе resolve	М11/11 Н3 resolve	приёмка М11/11 (векторы resolve)
 —	manifest	зарезервированное имя (рядом со spec: имя подсистемы, unit.rows, имя таблицы)	P/02.1 Н1.2, Н1.2а	корпус P/02.1: отрицательные случаи k38_sub_manifest, m49_table_manifest и допустимый сосед (ADR-0086 доп. (1) Р3)

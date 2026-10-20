@@ -40,8 +40,6 @@ P/03	scenarios-format	6/own	три двери, @start/@until/@key, JSON Lines и
 P/04	no-openapi	-	своей HTTP-двери у контроллера нет: двери политики, дренажа, меток, вывода сервера, /unplaceable, /where — консоли (P/06, глава 6.6; план переноса урока 4, п. 8)
 P/04	scenarios-format	own	двери store/console/console2/resource и директивы процессов @start/@sig*/@grow/@as (сценарии из М10/05; из М10/10 сц. 03, 08 — @as console store, @time); проверяется по README приёмки
 P/05	scenarios-format	own	двери resource/console/store, @start/@until/@key/@append/@put/@spoil, @start worker/@sigkill (сц. 16 из М10/11), JSON Lines и байты (сценарии из М10/08, М10/10, М10/11); проверяется по README приёмки
-М10_Platform/09	no-openapi	-	двери консоли — в контракте урока 6 (06-console.api.openapi.yaml); до коммита урока 7 у урока остались Н1.4, Н1.5 о модуле (М10/9-06, -07) без своих дверей
-М10_Platform/09	no-acceptance	-	вся приёмка урока перенесена: сценарии — в P/06.3, P/06.5; модуль (Н1.4, Н1.5) проверяется чтением и jsdom-тестом до коммита урока 7
 P/06	scenarios-format	1/own	двери console/console2/store, @key/@nokey/@header/@raw/@big, @start resource/@until, ожидание кода без тела и подстроки ответа (сценарии главы 6.1 из М10/03, М10/10); проверяется по README приёмки
 P/06	scenarios-format	2/own	двери console/store, @key, @as, @restart console, проверки подстрок и отсутствия (сценарии главы 6.2 из М10/07); проверяется по README приёмки
 P/06	scenarios-format	3/own	общие двери консоли без префикса, @header с подстрокой (сценарий главы 6.3 из М10/09); проверяется по README приёмки
@@ -52,3 +50,5 @@ P/06	acceptance-entry	2/fields.yaml	объявления полей cam.source �
 P/06	acceptance-entry	5/probe-x.subsystem.yaml	третья спека стенда главы 6.5 (имя с «-», metrics.prefix; из М10/09); проверяется по README приёмки
 P/06	acceptance-entry	5/inputs	пульсы для @put object (наблюдения консоли, глава 6.5 из М10/09); проверяется по README приёмки
 P/06	acceptance-entry	6/inputs	пульсы воркера w-1 для @put object (дренаж, pending_writes, schema, build; глава 6.6 из М10/04 и М10/10); проверяется по README приёмки
+P/07	no-openapi	-	своей HTTP-двери у модуля нет: двери, которые он зовёт, — контракт урока 6 (06-console.api.openapi.yaml); публикация модуля — глава 6.5 (план переноса урока 7)
+P/07	no-acceptance	-	модуль проверяется чтением и jsdom-тестом владельца спецификации Source/tests/console (Н5); публикацию и ?v=1 наблюдает сц. 01 приёмки главы 6.5 (разбор ревью стадии A 6–7, № 31)

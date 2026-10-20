@@ -1481,7 +1481,7 @@ paths:
                 minLength: 1
               description: Обязателен; минимум по Н1.1.
   /platform/console.js:
-    description: Глава 6.5 (06.5-console.norms.md) — публикация модуля байт в байт; договор модуля — М10/9 Н1.4, Н1.5 до переноса урока P/07.
+    description: Глава 6.5 (06.5-console.norms.md) — публикация модуля байт в байт; договор модуля — P/07 (07-console-module.norms.md).
     get:
       summary: Модуль платформы
       responses:
