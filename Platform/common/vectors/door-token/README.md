@@ -16,7 +16,7 @@ Ed25519) и проверка у держателя по строке `door/keys`
 - `issue.tsv` — выпуск(`seed_hex`, `kid`, `claims`) даёт `claims_jcs` и `token` байт в байт. Ed25519 (RFC 8032)
   детерминирован: тот же seed и та же строка дают ту же подпись.
 - `verify.tsv` — проверка(`keys`, `token`, `now`, `unit`, `holder`, `path`) даёт `ok` и прочитанные claims, равные
-  колонке `claims`, или `forbidden`.
+  колонке `claims` по значению JSON (не по тексту), или `forbidden` (чтение коммитов «cammeta-acceptance» 2026-10-20).
 
 ## Ключи
 
