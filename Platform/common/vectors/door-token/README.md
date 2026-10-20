@@ -41,7 +41,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | Файл | Вход → ожидание |
 |---|---|
 | [`issue.tsv`](issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
-| [`verify.tsv`](verify.tsv), 76 строк: 12 `ok`, 64 `forbidden` | `keys` — значение строки `door/keys` текстом JSON; `authorization` — заголовок `Authorization` целиком, пусто — заголовка нет (прежде колонка `token`; у большинства строк — `Bearer <token>`; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)); `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — цель запроса к двери держателя: путь URL, у части строк с query (`?t=<token>`); первый сегмент пути URL без query сравнивается с элементами `routes` (разбор ревью стадии B 6–7, № 9) → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
+| [`verify.tsv`](verify.tsv), 78 строк: 12 `ok`, 66 `forbidden` | `keys` — значение строки `door/keys` текстом JSON; `authorization` — заголовок `Authorization` целиком, пусто — заголовка нет (прежде колонка `token`; у большинства строк — `Bearer <token>`; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)); `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — цель запроса к двери держателя: путь URL, у части строк с query (`?t=<token>`); первый сегмент пути URL без query сравнивается с элементами `routes` (разбор ревью стадии B 6–7, № 9) → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
 
 ## Отказы
 
@@ -54,7 +54,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | четыре части | `three_parts`, `five_parts`, `token_empty` |
 | `door1` | `prefix_door2`, `prefix_upper` |
 | `kid` в `door/keys` (нечитаемая строка — `kid` не найден, [исход семьи](../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (чужая запись не по форме — нечитаема вся строка; разбор ревью стадии B 6–7, № 8) |
-| подпись — строго по RFC 8032 §5.1.7, в том числе `0 ≤ S < L` (разбор ревью стадии B 6–7, № 12) | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `sig_s_not_reduced`, `claims_swapped` |
+| подпись — строго по RFC 8032 §5.1.7, в том числе `0 ≤ S < L` (разбор ревью стадии B 6–7, № 12) | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `sig_s_not_reduced`, `claims_swapped`; без кофактора, A или R малого порядка — отказ (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7): `key_small_order`, `sig_r_small_order` |
 | части — строгий base64url без «=», хвостовые биты последнего знака — нули | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims ровно `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
 | типы claims: `user`, `unit`, `holder` — строки; `routes` — массив строк без повторов; `expires` — целое ≤ 2^53−1 (решение «Архитектора» 2026-10-20, Kimi SB67-01) | `user_number`, `unit_number`, `holder_null`, `routes_not_array`, `routes_item_number`, `routes_dup`, `expires_string`, `expires_float`, `expires_over_2_53` |
@@ -68,6 +68,9 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 Строки `ok_query_token` и `ok_query_one_segment` — контроль пути без query: токен в `?t=`, сегмент — до «?» (№ 9);
 `ok_auth_not_bearer_query` — схема не Bearer, токен из `?t=`; `ok_bearer_over_query` — при Bearer query не читается ((решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)). Строка `ok_expires_max` — контроль границы типа: `expires` = 2^53−1 даёт `ok`. Строка `claims_not_jcs` ждёт `ok`: выпускающий обязан писать claims в JCS, а проверяющий канон не проверяет, потому что
 подпись покрывает байты части claims (решение «Архитектора» 2026-10-20, векторы door-token).
+
+Строки `key_small_order` и `sig_r_small_order` удовлетворяют уравнению [S]B = R + [k]A; проверка OpenSSL (pyca cryptography) их принимает,
+отказ даёт только условие договора «A или R малого порядка — отказ» (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7).
 
 Векторы получены эталонными Ed25519 (RFC 8032) и JCS (RFC 8785, проверен на [`jcs`](../../../01-store/vectors/jcs/README.md))
 по договору, не по коду реализаций; при расхождении прав договор, вектор правит «Спецификация».
