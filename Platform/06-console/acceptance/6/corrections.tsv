@@ -1,0 +1,7 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 01-unplaced, 02-unplaceable, 03-policy, 04-drain, 05-server-labels, 06-decommission, 07-drain-units и вход inputs/hb-w-1-no-status.json из М10/04 (стадия B)	all
+2026-10-20	перенос	сценарии 01-schema, 02-drain-strand, 09-drain-unreadable-pulse, 12-pulse-number-forms и входы inputs/hb-w-1-*.json из М10/10 (стадия B)	all
+2026-10-20	перенос	сценарий 03-schema-processes из М10/11 (стадия B)	all
+2026-10-20	08-schema	сценарий 01-schema из М10/10 переименован в 08-schema: номер 01 занят 01-unplaced из М10/04 (Н5 сверяет номера); шаги без изменений	all
+2026-10-20	10-drain-strand	сценарий 02-drain-strand из М10/10 переименован в 10-drain-strand: номер 02 занят 02-unplaceable из М10/04; шаги без изменений	all
+2026-10-20	11-schema-processes	сценарий 03-schema-processes из М10/11 переименован в 11-schema-processes: номер 03 занят 03-policy из М10/04; шаги без изменений	all

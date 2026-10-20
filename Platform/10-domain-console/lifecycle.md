@@ -22,7 +22,7 @@
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS` | состояние, дверь хранилища, корень объектов | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
 | `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда | `0.0.0.0:8444` | М11/12 Н1.8 |
 | `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок | — | М11/3 Н1.8; [М11/2 Н1.3](../../М11_Domain/spec/02-root-keys-and-revocation.norms.md) |
-| `LOGIN_URL` | вход людей | `/api/login` | [М11/9 Н1.2](../../М11_Domain/spec/09-people-grants-names.norms.md) `login_url`; М10/9 Н1.3 |
+| `LOGIN_URL` | вход людей | `/api/login` | [М11/9 Н1.2](../../М11_Domain/spec/09-people-grants-names.norms.md) `login_url`; [P/06.3](../06-console/spec/06.3-console.norms.md) Н1.3 |
 | `CLUSTER`, `BOX_ID`, `SERVER_NAME` | кластер, коробка, сервер | P/02.4 Н1.2 | P/02.4 Н1.2 |
 
 TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](../../М11_Domain/spec/08-doors-between-clusters.norms.md) `roles`).
@@ -37,7 +37,7 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
   [`common/data/catalog.tsv`](../common/data/catalog.tsv), читатель `domainconsole`.
 - Кольца нет (М11/12 Н1.8).
 - Страница держателя — та же страница модуля консоли, `sections: [domain]` (М11/8 Н1.8); поставка модуля — с бинарником
-  консоли, не из `$CAMMETA_SPECS` (М10/9 Н1.1 `module`).
+  консоли, не из `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
 - Журнал роли — `<корень событий>/audit/domainconsole/e1/…` ([договор журнала событий](../common/contracts/event-journal.md) `journal`).
 
 ## Коды выхода
@@ -62,6 +62,6 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
 
 ## Открыто
 
-- Сторожевая консоли домена и её окружение (`open`, следы домена) — нормы М10/9 Н1.3 и М11/2 Н1.8, урок 6 в части
+- Сторожевая консоли домена и её окружение (`open`, следы домена) — нормы [P/06.3](../06-console/spec/06.3-console.norms.md) Н1.3 и Н1.8 (прежде М11/2 Н1.8), урок 6 в части
   консоли кластера; для консоли домена отдельной строки окружения нет.
 - Сторона читателя спеки, проверка схемы при старте и готовность по порту — [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md) (Решено «Архитектором» 2026-10-18 (второй пилот)).

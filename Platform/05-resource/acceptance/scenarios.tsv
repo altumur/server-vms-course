@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/05: стенд testsub с ресурсом srv-a и консолью. Перенесено из М10/08 (сц. 01, 02, 08), М10/11 (сц. 01 → 09) и М10/10 (сц. 10) (стадия B). Формат и директивы — README.
+# Приёмка P/05: стенд testsub с ресурсом srv-a и консолью. Перенесено из М10/08 (сц. 01, 02, 08), М10/11 (сц. 01 → 09, 16) и М10/10 (сц. 10) (стадия B). Формат и директивы — README.
 01-objects-door	1	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {}}
 01-objects-door	2	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=nowhere	400
 01-objects-door	3	resource GET /v1/objects/testsub/counters/c1?scope=local	403
@@ -64,3 +64,10 @@ scenario	step	request	expect
 10-body-copy	5	resource PUT /v1/objects/testsub2/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw peer-copy	400
 10-body-copy	6	resource @header X-Written: 1 PUT /v1/objects/testsub2/blobs/sha256-190267417AED3196E75D1C9133AC48F349A10F8A19BE88C9E413B8E7A2B9DC16 @raw peer-copy	405
 10-body-copy	7	resource @header X-Written: 1 PUT /v1/objects/testsub/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw peer-copy	405
+16-presence-lock	1	@start resource	ok
+16-presence-lock	2	@start worker w-1	ok
+16-presence-lock	3	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+16-presence-lock	4	@sigkill w-1	ok
+16-presence-lock	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": []}
+16-presence-lock	6	@start worker w-1	ok
+16-presence-lock	7	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}

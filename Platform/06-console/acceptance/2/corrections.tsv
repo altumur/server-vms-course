@@ -1,0 +1,2 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 01-sealed, 02-mask-and-envelope-in, 03-keep-and-bound, 04-password-in-address, 05-tables, 06-readers, 07-nested-replace, 08-feed-anew, 09-unreadable-row-start и файл полей fields.yaml из М10/07 (стадия B); таблицы secret_in.tsv и log_mask.tsv — векторы 06-console/vectors/secret-in/ и log-mask/	all

@@ -1,0 +1,12 @@
+# Семья <sub>/policy — политика мест подсистемы (P/06.6; P/06.6 Н1.1, Н2.1 `/policy`). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Пишет консоль дверью
+# PUT /policy (строго: только servers из shared | distinct); читают контроллер (P/04 Н1.1) и консоль.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    servers:
+      type: string
+      enum: [shared, distinct]
+      description: политика мест подсистемы; строка побеждает `placement.servers` спеки (P/04 Н1.3 `servers`)
+  required: [servers]

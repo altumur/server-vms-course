@@ -70,7 +70,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -206,7 +206,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -301,7 +301,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -415,7 +415,7 @@ paths:
         '401': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела

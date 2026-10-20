@@ -24,7 +24,7 @@ HTTP-контракт — в [OpenAPI](spec/05-books-from-member-rows.api.openap
 - [Урок 1](01-what-a-cluster-cannot-know.md) — состояния членов; книга — наблюдение.
 - [Урок 2](02-root-keys-and-revocation.md) — конверт `x25519:v1` и ключ приёма книг.
 - [Урок 3](03-agent-and-reports.md) — отчёт, поколение, ответ держателя и конверт `m1`.
-- [М10/3](../М10_Platform/03-units-slots-epochs-lease.md) — запись под слотом; [М10/7](../М10_Platform/07-secrets-and-sealing.md) — кольцо и маска.
+- [P/03](../Platform/03-worker/03-worker.md), глава 3.2 — запись под слотом; [P/06](../Platform/06-console/06-console.md), глава 6.2 — кольцо и маска.
 
 ## Книга — правило в спеке
 

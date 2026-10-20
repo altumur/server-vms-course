@@ -13,7 +13,7 @@ root:
       description: момент старта ресурса
     at:
       ref: common.time
-      description: момент последней отметки, каждые 15 с; судят по смене версии строки, не по значению (P/04 Н1 resource_state)
+      description: момент последней отметки, каждые 15 с; судят по смене версии строки, не по значению (resource_state договора наблюдения)
   required: [url, since, at]
   names:
     key:

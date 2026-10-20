@@ -4,34 +4,35 @@
 векторы. Байты пишет «Спецификация»; соответствие продукта — его приёмкой по этим таблицам (ADR-0080 доп. 16, ADR-0083;
 «Паритет» снят). Владелец — урок, который вводит алгоритм первым (записка модуля, «Векторы»).
 
-На стадии A таблицы паритета лежат на прежнем месте, `Source/tests/testdata/`: их читает и продукт (`sync-course.sh`).
-Они переезжают в каталог урока-владельца, `NN-<процесс>/vectors/<алгоритм>/`, вместе с уроком на стадии B. Тогда же продукт один раз переключает пути.
-Новые векторы стадии A лежат здесь сразу.
+Таблицы паритета стадии A лежали в `Source/tests/testdata/`; на стадии B они переехали в каталог урока-владельца,
+`NN-<процесс>/vectors/<алгоритм>/`, вместе с уроком (урок 6 — `fault`, `group_of`, `rid`, `requests_body`, `secret_in`,
+`log_mask`, `platform_lists`; с ними `canonical_json` — в P/01; прежние файлы сняты), и продукт один раз переключил пути. Общие векторы лежат здесь.
 
 | Вектор | Где сейчас | Владелец (стадия A) | Норма |
 |---|---|---|---|
-| JCS | `Source/tests/testdata/canonical_json.tsv` | М10/1 | ADR-0072, RFC 8785 |
-| словарь `fault` отказов дверей | `Source/tests/testdata/fault.tsv` | М10/3 | двери М10/3, 4, 9, 10 |
-| `cut_at: host` | `Source/tests/testdata/group_of.tsv` | P/04 | P/04 Н1.3 `group_by` |
-| `rid` | `Source/tests/testdata/rid.tsv` | М10/8 | М10/8 Н1.5 |
-| сериализация тела просьбы | `Source/tests/testdata/requests_body.tsv` | М10/8 | М10/8 Н1.5, ADR-0072 |
-| digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | М10/8 | М10/8 Н1.5 `digest` |
-| секреты в адресе | `Source/tests/testdata/secret_in.tsv` | М10/7 | М10/7 Н1.1а |
-| маска лога | `Source/tests/testdata/log_mask.tsv` | М10/7 | М10/7 Н1.4 |
-| секретные строки платформы | `Source/tests/testdata/platform_lists.tsv` | М10/7 | P/02.5 Н1.3, P/02.5 Н1.4 |
+| JCS | [`01-store/vectors/jcs/`](../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
+| словарь `fault` отказов дверей | [`06-console/vectors/fault/`](../../06-console/vectors/fault/) | P/06.1 | двери P/06 (главы 6.1, 6.5, 6.6) |
+| `cut_at: host` | [`04-controller/vectors/group-of/`](../../04-controller/vectors/group-of/) | P/04 | P/04 Н1.3 `group_by` |
+| `rid` | [`06-console/vectors/rid/`](../../06-console/vectors/rid/) | P/06.4 | P/06.4 Н1.5 |
+| сериализация тела просьбы | [`06-console/vectors/requests-body/`](../../06-console/vectors/requests-body/) | P/06.4 | P/06.4 Н1.5, ADR-0072 |
+| digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | P/06.4 | P/06.4 Н1.5 `digest` |
+| секреты в адресе | [`06-console/vectors/secret-in/`](../../06-console/vectors/secret-in/) | P/06.2 | P/06.2 Н1.1а |
+| маска лога | [`06-console/vectors/log-mask/`](../../06-console/vectors/log-mask/) | P/06.2 | P/06.2 Н1.4 |
+| секретные строки платформы | [`02-installer/vectors/platform-lists/`](../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 Н1.3, P/02.5 Н1.4 |
 | корпус спеки | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 Н1, Н4, Н5 |
 | оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 Н1.2 `pattern`, Н1.3 |
 | копия хранилища | [`01-store/acceptance/3/inputs/`](../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 Н1.3 `copy` |
 | вывод прав из спеки (по смыслу) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 Н1.4, Н3 |
-| текстовые формы значений (`values_by_type`) | векторов нет — шаги приёмки М10/03; пакет — с переносом урока 6 | М10/3 | М10/3 Н1.2 |
+| текстовые формы значений (`values_by_type`) | [`06-console/vectors/values-by-type/`](../../06-console/vectors/values-by-type/) | P/06.1 | P/06.1 Н1.2 |
 | id события | векторов нет — норма формы; кандидат пакета — после урока 5 | P/05 | [договор журнала событий](../contracts/event-journal.md) `id` |
-| разбор адреса | частью — `secret_in.tsv`, `group_of.tsv`; отдельного пакета нет | М10/7 | М10/7 Н1.1а, P/02.1 Н1.2а `schemes` |
+| разбор адреса | частью — пакеты `secret-in`, `group-of`; отдельного пакета нет | P/06.2 | P/06.2 Н1.1а, P/02.1 Н1.2а `schemes` |
 | конверт `enc:v2`, путь AAD, открытие, файл кольца | [`sealing/`](sealing/README.md) | common | [договор запечатывания](../contracts/sealing.md) |
+| SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` |
 | «принять консолью» | векторов нет — шаги приёмки М11/08 | М11/8 | М11/8 Н3 |
 | `view`, `keys`, `token`, `seal`, `accept`, `assemble`, `issue`, `peer`, `may`, `record`, `follow`, `ask-sig`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | P/04 | P/04 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |
-| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | М10/11 | P/02.4 Н1.5 rules 2–4 |
+| скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | P/02.4 | P/02.4 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | P/04 | P/04 Н3 «порядок наборов» |
 | снятие заказа по сроку, номер выше want, сокращение по выдержке, пробный процесс при `distinct` | шагом приёмки — [P/04](../../04-controller/acceptance/README.md) сц. 14–17 | P/04 | P/04 Н3; ADR-0084 |
 | `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — М11/10 сц. 09; вход `follow` наборов ответов не несёт | М11/10 | М11/10 Н1.6 `yields`, Н3 «следовать» 1а |

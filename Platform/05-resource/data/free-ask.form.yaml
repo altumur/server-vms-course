@@ -1,6 +1,6 @@
 # Семья <sub>/requests/free-<server>-<volume> — просьба ресурса освободить место (P/05; P/05 Н1.4 free_ask; ADR-0059).
 # Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова —
-# Platform/common/DIALECT.md. Своя форма: без unit, digest и схемы семьи requests (М10/8 Н1.5); строка с unit под этим
+# Platform/common/DIALECT.md. Своя форма: без unit, digest и схемы семьи requests (P/06.4 Н1.5); строка с unit под этим
 # ключом — не форма ресурса (обычная просьба), её ресурс не трогает.
 dialect: data-form/1
 root:

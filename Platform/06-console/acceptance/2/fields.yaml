@@ -1,0 +1,47 @@
+# Объявления полей приёмки P/06.2: правила, которыми читаются векторы secret-in (поле в столбце field) и log-mask.
+# Данные приёмки, не ссылка на каталог VMS (ADR-0001); совпадают с unit.fields.source спеки cam и
+# tables.volumes.fields.url спеки rec на 2026-10-17. Форма ключей — P/02.1 Н1.2а и P/06.2 Н1.1. README — рядом.
+cam.source:
+  type: url
+  schemes:
+    driverpack:
+      host: path
+      none: [file]
+    ipint: {fragment: none}
+    rtsp: {}
+    rtsps: {}
+    http: {}
+    https: {}
+    cfw:
+      none: [local]
+  credentials: {login: cred_username, secret: cred_secret}
+  secret_in:
+  - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, =accesskeyid, =awsaccesskeyid]
+    login: [user, usr, username, userid, login, loginuse, loginname, uname, account, =accesskeyid, =awsaccesskeyid]
+  - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
+  - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
+  - param: [password*, passwd*, pwd*, psw*, secret*, '*password', '*passwd', '*pwd', '*secret', '*token']
+  - {regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)', in: path}
+  - {regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)', in: query}
+  - regex: (?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)
+    in: [path, query]
+  - regex: (?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)
+    in: [path, query]
+  - {regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)', in: path}
+  - regex: ^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)
+    in: path
+    schemes: [driverpack]
+  - regex: ^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@
+    in: path
+    schemes: [driverpack]
+  - regex: ^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@
+    in: path
+    schemes: [driverpack]
+  - nested: [src, url]
+rec.volumes.url:
+  type: url
+  credentials: {login: access_key, secret: access_secret}
+  secret_in:
+  - param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]
+  - param: [password*, passwd*, pwd*, secret*, '*password', '*passwd', '*pwd', '*secret', '*token']
+  - nested: [src, url]

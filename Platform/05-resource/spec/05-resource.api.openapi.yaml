@@ -1,10 +1,11 @@
 # P/05 — двери ресурса сервера: HTTP-контракт. Канон — 05-resource.norms.md (Н1.1, Н1.3, Н1.6, Н2–Н4). Пути и схемы
 # перенесены из контракта М10/8 (08-events-resource-requests.api.openapi.yaml; стадия B, без изменения поведения):
 # /v1/objects, /v1/objects/{key}, GET /events ресурса, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
-# /mirrored/…. Двери консоли (/marks, /{sub}/requests, /{sub}/asked/{sha16}, слияние GET и HEAD /events) остаются в
-# контракте М10/8 (урок 6); схемы ответа /events, общие обеим дверям (EventRow, UnitRef, SafeSegment, ObjectKey, Sha256,
-# Subsystem), — здесь, М10/8 ссылается на них ($ref). PUT /v1/objects/{sub}/blobs/{digest} (копия тела у ресурса) —
-# перенесён из контракта М10/10 (решение «Спецификации» по В2 переноса); дверь байтов консоли PUT /{rows}/{id}/{blob_field} — М10/10.
+# /mirrored/…. Двери консоли (/marks, /{sub}/requests, /{sub}/asked/{sha16}, слияние GET и HEAD /events) — в
+# контракте P/06 (06-console.api.openapi.yaml, глава 6.4); схемы ответа /events, общие обеим дверям (EventRow, UnitRef,
+# SafeSegment, ObjectKey, Sha256, Subsystem), — здесь, P/06 ссылается на них ($ref). PUT /v1/objects/{sub}/blobs/{digest}
+# (копия тела у ресурса) — перенесён из контракта М10/10 (решение «Спецификации» по В2 переноса); дверь байтов консоли
+# PUT /{rows}/{id}/{blob_field} — P/06 (глава 6.1).
 openapi: 3.1.0
 info:
   title: P/05 — двери ресурса сервера
@@ -139,7 +140,7 @@ paths:
           - cluster
           default: local
     put:
-      summary: Только отказ PUT не-блоба; полная дверь PUT /v1/objects/{sub}/blobs/{digest} — М10/10 Н2
+      summary: Только отказ PUT не-блоба; полная дверь PUT /v1/objects/{sub}/blobs/{digest} — Н2
       responses:
         '400':
           description: Неверный ключ/scope
@@ -272,7 +273,7 @@ paths:
           description: Целая копия принята; тела ответа нет
   /events:
     get:
-      summary: 'Ресурс: локальный индекс (Н1.3, Н3 «запрос (ресурс)»); слияние консоли — контракт М10/8 (урок 6)'
+      summary: 'Ресурс: локальный индекс (Н1.3, Н3 «запрос (ресурс)»); слияние консоли — контракт P/06 (глава 6.4)'
       responses:
         '200':
           description: ResourceEvents
@@ -637,7 +638,7 @@ paths:
 components:
   schemas:
     SubsystemName:
-      description: Имя загружаемой подсистемы по P/02.1 Н1.2 (схема M4_SubsystemName контракта М10/10).
+      description: Имя загружаемой подсистемы по P/02.1 Н1.2 (подлинник; контракт P/06 ссылается на него, $ref).
       type: string
       minLength: 1
       maxLength: 32
@@ -691,7 +692,7 @@ components:
       minLength: 3
       pattern: ^[a-z][a-z0-9_-]{0,31}(?:\.alarms)?/[^/|",\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+(?![\s\S])
       description: Полная ссылка <дерево>/<единица>, также console/<экземпляр> и audit/<роль>; экземпляр заранее ограничен профилем договора журнала событий. Без точных . и ..
-        во второй части; для адресата единицы дополнительно действует UnitId (контракт М10/8, М10/3 Н1.3); существование проверяется там, где
+        во второй части; для адресата единицы дополнительно действует UnitId (контракт P/06, глава 6.1 Н1.3); существование проверяется там, где
         этого требует маршрут.
       not:
         pattern: /\.{1,2}(?![\s\S])
@@ -820,7 +821,7 @@ components:
         пуст только у платформенной строки без адресата. Все JSON-числа конечны. epoch_is и fenced ставит консоль при
         слиянии (у ресурса их нет); согласованность epoch_is/fenced — Н1.3.
     ResourceEventRow:
-      description: Строка ответа ресурса — без epoch_is и fenced (их ставит консоль при слиянии, М10/8 Н3 «слияние»).
+      description: Строка ответа ресурса — без epoch_is и fenced (их ставит консоль при слиянии, P/06.4 Н3 «слияние»).
       type: object
       additionalProperties: true
       allOf:

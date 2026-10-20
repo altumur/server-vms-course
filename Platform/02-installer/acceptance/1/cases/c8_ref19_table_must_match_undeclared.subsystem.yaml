@@ -1,4 +1,4 @@
-# значение must_match поля таблицы называет необъявленное поле nozone этой таблицы; норма М10/2 Н1.4, М10/3 Н1.3; строка 19 references.tsv
+# значение must_match поля таблицы называет необъявленное поле nozone этой таблицы; норма М10/2 Н1.4, P/06.1 Н1.3; строка 19 references.tsv
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

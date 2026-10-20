@@ -9,9 +9,9 @@ root:
       type: array
       items:
         ref: common.named_id
-        description: id единицы (М10/3 Н1.3); числовой id — тоже по этой грамматике
+        description: id единицы (P/06.1 Н1.3); числовой id — тоже по этой грамматике
       unique_items: true
-      description: id назначенных единиц по правилу списка М10/3 Н1.2 (через запятую, иначе массив JSON; кодек array), отсортирован; "" — ни одной
+      description: id назначенных единиц по правилу списка P/06.1 Н1.2 (через запятую, иначе массив JSON; кодек array), отсортирован; "" — ни одной
     rev:
       type: string
       pattern: '[1-9][0-9]*'

@@ -9,18 +9,18 @@
 # spec остаётся зарезервированным. Тексты принятых ADR не переписываются. Продукт — долг «Сборке» с меткой ADR-0086 (Р7).
 # Строка: old<TAB>new<TAB>kind<TAB>owner<TAB>consumers. owner — где имя определено; consumers — кто его называет.
 old	new	kind	owner	consumers
-platform/spec/<sub>	platform/manifest/<sub>	ключ строки хранилища	P/02.3 Н1.5	М10/3–11; Platform/02-installer, 04-controller, 05-resource; catalog.tsv
-platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	P/02.3 Н1.5	М10/3, 4, 5, 8, 9, 10, 11; Platform/02-installer, 04-controller; catalog.tsv
-platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	P/02.2	читатели уроков М10/3–6, 8, 9 после своей правки поведения
-spec_rev	manifest_rev	поле строк <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent и объекта <sub>/controller/pass	P/04 Н1.1, Н1.2, Н1.5	М10/3; приёмка P/04, М10/09; catalog.tsv; id-map.tsv
+platform/spec/<sub>	platform/manifest/<sub>	ключ строки хранилища	P/02.3 Н1.5	Platform/02-installer, 03-worker, 04-controller, 05-resource, 06-console; catalog.tsv
+platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	P/02.3 Н1.5	Platform/02-installer, 04-controller, 05-resource, 06-console; catalog.tsv
+platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	P/02.2	читатели уроков P/03–P/06 после своей правки поведения
+spec_rev	manifest_rev	поле строк <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent и объекта <sub>/controller/pass	P/04 Н1.1, Н1.2, Н1.5	Platform/03-worker, 06-console; приёмка P/04, P/06.5; catalog.tsv; id-map.tsv
 spec_behind	manifest_behind	счётчик отчёта прохода (объект <sub>/controller/pass)	P/04 Н1.2	лекция P/04; id-map.tsv
-GET /spec	GET /manifest	дверь консоли кластера и консоли домена	М10/9 Н2 «GET /spec»	М10/9; М11/8 Н1.8; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, М10/09, М11/08; id-map.tsv
-GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	М10/9 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js
-SpecView	ManifestView	схема OpenAPI ответа двери	М10/9 Н2 «GET /spec» (09-the-console.api.openapi.yaml)	М10/9; приёмка P/02, М10/09; id-map.tsv
+GET /spec	GET /manifest	дверь консоли кластера и консоли домена	P/06.5 Н2 «GET /spec»	P/02.1, P/06.5; М11/8 Н1.8; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, P/06.5, М11/08; id-map.tsv
+GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	P/06.5 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js
+SpecView	ManifestView	схема OpenAPI ответа двери	P/06.5 Н2 «GET /spec» (06-console.api.openapi.yaml)	P/02.1, P/06; приёмка P/02, P/06.5; id-map.tsv
 w2cctl spec put	w2cctl manifest put	команда установщика	P/02.3 Н3, P/02.4	Platform/02-installer/lifecycle.md; приёмка P/02; catalog.tsv (ops); id-map.tsv
 w2cctl spec status	w2cctl manifest status	команда установщика	P/02.3 Н3	Platform/02-installer/lifecycle.md
-spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стенда» через admin.sock	приёмка М10/01 README	приёмка P/02, М10/11; Platform/02-installer/lifecycle.md; module-design.md
-{spec}	{manifest}	подстановка «Стенда»	приёмка М10/01 README	приёмка М10/03, М10/10
+spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стенда» через admin.sock	приёмка М10/01 README	приёмка P/01, P/02; Platform/02-installer/lifecycle.md; module-design.md
+{spec}	{manifest}	подстановка «Стенда»	приёмка М10/01 README	приёмка P/06.1, P/06.6
 {specs}	{manifests}	подстановка команды вывода прав	приёмка М10/01 README	Platform/02-installer/lifecycle.md
 SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; приёмка М10/01; Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
 /opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	P/02.4 Н1.2	Platform/02-installer/lifecycle.md

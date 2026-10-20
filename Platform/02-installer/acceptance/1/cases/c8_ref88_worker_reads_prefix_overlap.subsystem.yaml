@@ -1,4 +1,4 @@
-# два префикса worker.reads, один начало другого; норма М10/2 Н1.2а, М10/6 Н1.4; строка 88 references.tsv
+# два префикса worker.reads, один начало другого; норма М10/2 Н1.2а, P/02.5 Н1.4; строка 88 references.tsv
 name: probe
 unit:
   rows: counters

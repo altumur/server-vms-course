@@ -33,7 +33,7 @@ paths:
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -56,7 +56,7 @@ paths:
       - name: table
         in: path
         required: true
-        description: places.table спеки (М10/4 Н2).
+        description: places.table спеки (P/04 Н1.3; дверь — P/06.5).
         schema: {type: string, minLength: 1}
       - name: place
         in: path
@@ -65,7 +65,7 @@ paths:
       - name: unit
         in: query
         required: false
-        description: '<id> единицы спеки <sub> (форма М10/9 Н2 where) — передаётся как пришёл.'
+        description: '<id> единицы спеки <sub> (форма P/06.5 Н2 where) — передаётся как пришёл.'
         schema: {type: string}
     get:
       summary: where места у консоли другого члена (Н1.5)
@@ -78,7 +78,7 @@ paths:
         '502': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -164,7 +164,7 @@ paths:
                   name: {const: ''}
                   rows: {type: 'null'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -173,7 +173,7 @@ paths:
       summary: Подсистемы каталога держателя (Н1.8)
       responses:
         '200':
-          description: Описания подсистем — как /mounts консоли кластера (М10/9 Н2), без media
+          description: Описания подсистем — как /mounts консоли кластера (P/06.5 Н2), без media
           content:
             application/json:
               schema:
@@ -187,9 +187,9 @@ paths:
                     additionalProperties:
                       type: object
                       additionalProperties: true
-                      description: Описание подсистемы М10/9 Н2 /mounts; форма и закрытость — контракт урока М10/9.
+                      description: Описание подсистемы P/06.5 Н2 /mounts; форма и закрытость — SpecView контракта P/06 (06-console.api.openapi.yaml).
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -207,7 +207,7 @@ components:
       schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
   responses:
     AsItCame:
-      description: Ответ консоли члена как пришёл — статус, Content-Type, X-Unreachable, тело (М10/4 Where или отказ его сторожевой)
+      description: Ответ консоли члена как пришёл — статус, Content-Type, X-Unreachable, тело (Where контракта P/06 или отказ его сторожевой)
     Refused:
       description: Отказ пересылки (Н4) — или ответ другой стороны как пришёл
       content:
@@ -215,7 +215,7 @@ components:
           schema: {$ref: '#/components/schemas/Refusal'}
     AtNotFound:
       description: '404 /domain/at/… — отказ пересылки (Н4) или ответ консоли члена как пришёл (Н1.5 answer): NotPlaced двери
-        where М10/4 или её NoRoute (форма ConsoleRefusal М10/4 — частный случай Refusal)'
+        where контракта P/06 или её NoRoute (форма ConsoleRefusal контракта P/06 — частный случай Refusal)'
       content:
         application/json:
           schema:
@@ -224,7 +224,7 @@ components:
               - {$ref: '#/components/schemas/MemberNotPlaced'}
     AtBadRequest:
       description: '400 /domain/at/… — отказ пересылки (Н4) или ответ консоли члена как пришёл (Н1.5 answer); 400 двери where
-        М10/4 — BadBody формы ConsoleRefusal {error, detail}, частный случай Refusal, поэтому одна схема покрывает обе стороны
+        контракта P/06 — BadBody формы ConsoleRefusal {error, detail}, частный случай Refusal, поэтому одна схема покрывает обе стороны
         (oneOf двух равных форм был бы неразрешим)'
       content:
         application/json:
@@ -243,7 +243,7 @@ components:
         holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
     MemberNotPlaced:
       type: object
-      description: Ответ 404 двери where консоли члена как пришёл — форма NotPlaced контракта М10/4.
+      description: Ответ 404 двери where консоли члена как пришёл — форма NotPlaced контракта P/06 (06-console.api.openapi.yaml).
       required: [reason]
       additionalProperties: false
       properties:

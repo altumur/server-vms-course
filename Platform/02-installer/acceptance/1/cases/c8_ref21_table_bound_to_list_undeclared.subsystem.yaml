@@ -1,4 +1,4 @@
-# элемент списка bound_to поля таблицы называет необъявленное поле nofeed; норма М10/2 Н1.4, М10/7 Н1.1; строка 21 references.tsv
+# элемент списка bound_to поля таблицы называет необъявленное поле nofeed; норма М10/2 Н1.4, P/06.2 Н1.1; строка 21 references.tsv
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

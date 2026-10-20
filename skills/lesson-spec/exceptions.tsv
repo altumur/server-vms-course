@@ -1,15 +1,6 @@
 # Разрешённые отступления от структурной проверки (ADR-0080 доп. 14).
 # Столбцы: урок (модуль/NN), вид (no-openapi | scenarios-format | acceptance-entry), значение, причина.
 # Строка, которая проверяемому уроку больше не нужна, — ошибка проверки: её снимают в той же правке.
-М10_Platform/03	scenarios-format	own	заголовок TSV, @key/@nokey, ожидание кода без тела; проверяется по README приёмки
-М10_Platform/04	scenarios-format	own	формат урока 3 плюс коды 2xx/4xx; проверяется по README приёмки
-М10_Platform/07	no-openapi	-	своей HTTP-двери нет, дельта 503 к POST/PUT М10/3 (ADR-0082 доп. 14)
-М10_Platform/07	scenarios-format	own	двери console/store, @key, проверки подстрок и отсутствия; проверяется по README приёмки
-М10_Platform/08	scenarios-format	own	три двери, @start/@until/@key, JSON Lines и байты; проверяется по README приёмки
-М10_Platform/09	scenarios-format	own	общие двери и подстроки ответа; проверяется по README приёмки
-М10_Platform/10	scenarios-format	own	двери консоли, контроллера и ресурса, @raw/@big/@until/@any, подстроки ответа; проверяется по README приёмки
-М10_Platform/11	scenarios-format	own	директивы процессов, @manual, подстроки ответа; проверяется по README приёмки
-М10_Platform/07	acceptance-entry	fields.yaml	объявления полей cam.source и rec.volumes.url для secret_in.tsv как данные приёмки (ADR-0001); проверяется по README приёмки
 М11_Domain/01	scenarios-format	own	приёмка — чистая функция: команда view реализации читает входной JSON проходов и печатает {view, shadow}; проверяется по README приёмки
 М11_Domain/01	acceptance-entry	inputs	каталог входов команды view (копии членов, назначения, часы держателя); проверяется по README приёмки
 М11_Domain/02	acceptance-entry	inputs	каталог входов команд keys, token, seal (наборы, токены, конверты и тестовые ключи); проверяется по README приёмки
@@ -19,7 +10,6 @@
 М11_Domain/03	scenarios-format	own	стенд нескольких кластеров (двери holder, member; директивы @install, @join, @start agent, @domain, @on, @restart domain, @cut, @mend, @clock) и команды-векторы agent-sig, seal-member, accept; проверяется по README приёмки
 М11_Domain/04	acceptance-entry	inputs	входы команды accept урока 3 с дорогой (via, heard_ago); проверяется по README приёмки
 М11_Domain/04	scenarios-format	own	стенд с ретранслятором (двери holder, member; директивы @domain <кластеры>, @start agent <к> via relay, @stop agent, @cut, @mend) и векторы accept; проверяется по README приёмки
-М10_Platform/09	acceptance-entry	probe-x.subsystem.yaml	третья спека стенда урока 9 (имя с «-», metrics.prefix); проверяется по README приёмки
 М11_Domain/05	acceptance-entry	inputs	входы команды assemble (копии членов с вкладами, состояния, список членов, тестовые ключи); проверяется по README приёмки
 М11_Domain/05	scenarios-format	own	стенд нескольких кластеров с testsub2 (двери holder, member; директивы урока 3) и векторы assemble; проверяется по README приёмки
 М11_Domain/06	scenarios-format	own	стенд нескольких кластеров: назначение, копии, правки выключенному члену и исходы (двери holder, member; директивы урока 3); проверяется по README приёмки
@@ -35,24 +25,30 @@
 М11_Domain/11	scenarios-format	own	стенд нескольких кластеров: общий документ и тревоги членов (двери holder, member; директивы урока 3) и векторы resolve, alarms; проверяется по README приёмки
 М11_Domain/12	no-openapi	-	своей HTTP-двери нет: 409 too many members, 413 whole too large, 503 standby — в OpenAPI уроков 3 и 10
 М11_Domain/12	scenarios-format	own	стенд урока 3: спокойный член, members_rev, domain/agent и sign_failures, второй процесс domain (директивы урока 3 и @start domain second); проверяется по README приёмки
-М10_Platform/04	acceptance-entry	inputs	подложные слоты и пульсы для @put object сценария дренажа (units и safe по назначению и status); проверяется по README приёмки
-М10_Platform/09	acceptance-entry	inputs	пульсы для @put object (наблюдения консоли); проверяется по README приёмки
-М10_Platform/10	acceptance-entry	inputs	пульсы для @put object (pending_writes, большие целые, build); проверяется по README приёмки
-М10_Platform/06	no-openapi	-	двери прав (GET /v1/rights, /v1/list) — у процесса хранилища P/01 (01-store.api.openapi.yaml); у урока остался Н1.5 о правах (М10/6-10) без своих дверей
-М10_Platform/11	no-openapi	-	служебные двери демона хранилища — у P/01 (01-store.api.openapi.yaml); до переноса уроков 2 и 6 своих HTTP-дверей у урока нет
 P/01	scenarios-format	2/own	@as/@header, ожидание кода без тела (сценарии главы 1.2 из М10/06); проверяется по README приёмки
 P/01	scenarios-format	3/own	директивы процессов, @manual, подстроки ответа (сценарии главы 1.3 из М10/11); проверяется по README приёмки
 P/01	acceptance-entry	3/inputs	копии хранилища JSON Lines (верные и по одной на каждый отказ copy) для @backup/@import; проверяется по README приёмки
-М10_Platform/06	no-acceptance	-	вся приёмка урока перенесена: сценарии прав хранилища — в P/01.2, вывод прав из спек и варианты — в P/02.5; у урока остался Н1.5 (М10/6-10) без своих сценариев
 P/02	scenarios-format	5/own	@as/@header, ожидание кода без тела (сценарии главы 2.5 из М10/06); проверяется по README приёмки
 P/02	acceptance-entry	5/variants	варианты спек и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав (глава 2.5 из М10/06); проверяется по README приёмки
-P/02	no-openapi	-	своих HTTP-дверей у установщика нет; GET /spec — временно М10/9 до главы 6.5
+P/02	no-openapi	-	своих HTTP-дверей у установщика нет; GET /spec — у консоли (P/06, глава 6.5)
 P/01	acceptance-entry	2/inputs	готовый файл прав стенда глав 1.2 и 1.3 (форма P/01.2 Н1.2); проверяется по README приёмки
 P/03	no-openapi	-	своей HTTP-двери у воркера нет (глава 3.1 Н2; план переноса урока 3, п. 8)
 P/03	scenarios-format	2/own	двери store/console и директивы процессов @start/@sig*, ожидания @not (сценарии главы 3.2 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	3/own	двери store/console и директивы процессов @start/@sleep/@until (сценарии главы 3.3 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	4/own	двери store/console и директивы процессов @start/@sigterm/@until (сценарий главы 3.4 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	6/own	три двери, @start/@until/@key, JSON Lines и байты (сценарии главы 3.6 из М10/08); проверяется по README приёмки
-P/04	no-openapi	-	своей HTTP-двери у контроллера нет: двери политики, дренажа, меток, вывода сервера, /unplaceable, /where — консоли (М10/4 до урока 6; план переноса урока 4, п. 8)
-P/04	scenarios-format	own	двери store/console/console2/resource и директивы процессов @start/@sig*/@grow/@as (сценарии из М10/05); проверяется по README приёмки
-P/05	scenarios-format	own	двери resource/console/store, @start/@until/@key/@append/@put/@spoil, JSON Lines и байты (сценарии из М10/08, М10/10, М10/11); проверяется по README приёмки
+P/04	no-openapi	-	своей HTTP-двери у контроллера нет: двери политики, дренажа, меток, вывода сервера, /unplaceable, /where — консоли (P/06, глава 6.6; план переноса урока 4, п. 8)
+P/04	scenarios-format	own	двери store/console/console2/resource и директивы процессов @start/@sig*/@grow/@as (сценарии из М10/05; из М10/10 сц. 03, 08 — @as console store, @time); проверяется по README приёмки
+P/05	scenarios-format	own	двери resource/console/store, @start/@until/@key/@append/@put/@spoil, @start worker/@sigkill (сц. 16 из М10/11), JSON Lines и байты (сценарии из М10/08, М10/10, М10/11); проверяется по README приёмки
+М10_Platform/09	no-openapi	-	двери консоли — в контракте урока 6 (06-console.api.openapi.yaml); до коммита урока 7 у урока остались Н1.4, Н1.5 о модуле (М10/9-06, -07) без своих дверей
+М10_Platform/09	no-acceptance	-	вся приёмка урока перенесена: сценарии — в P/06.3, P/06.5; модуль (Н1.4, Н1.5) проверяется чтением и jsdom-тестом до коммита урока 7
+P/06	scenarios-format	1/own	двери console/console2/store, @key/@nokey/@header/@raw/@big, @start resource/@until, ожидание кода без тела и подстроки ответа (сценарии главы 6.1 из М10/03, М10/10); проверяется по README приёмки
+P/06	scenarios-format	2/own	двери console/store, @key, @as, @restart console, проверки подстрок и отсутствия (сценарии главы 6.2 из М10/07); проверяется по README приёмки
+P/06	scenarios-format	3/own	общие двери консоли без префикса, @header с подстрокой (сценарий главы 6.3 из М10/09); проверяется по README приёмки
+P/06	scenarios-format	4/own	двери console/resource/store, @until/@key/@header, JSON Lines и байты (сценарии главы 6.4 из М10/08); проверяется по README приёмки
+P/06	scenarios-format	5/own	двери без префикса, console/console2/resource/store, @start/@sigkill/@sigterm/@spoil/@put/@as/@sleep/@until, подстроки ответа, @header/@file/@any/@absent/@time (сценарии главы 6.5 из М10/09, М10/10, М10/11); проверяется по README приёмки
+P/06	scenarios-format	6/own	двери console/console2/resource/store, без префикса — консоль; @start/@as/@put/@spoil/@until, ожидания 2xx/4xx (сценарии главы 6.6 из М10/04, М10/10, М10/11); проверяется по README приёмки
+P/06	acceptance-entry	2/fields.yaml	объявления полей cam.source и rec.volumes.url для векторов secret-in и log-mask как данные приёмки (ADR-0001; глава 6.2 из М10/07); проверяется по README приёмки
+P/06	acceptance-entry	5/probe-x.subsystem.yaml	третья спека стенда главы 6.5 (имя с «-», metrics.prefix; из М10/09); проверяется по README приёмки
+P/06	acceptance-entry	5/inputs	пульсы для @put object (наблюдения консоли, глава 6.5 из М10/09); проверяется по README приёмки
+P/06	acceptance-entry	6/inputs	пульсы воркера w-1 для @put object (дренаж, pending_writes, schema, build; глава 6.6 из М10/04 и М10/10); проверяется по README приёмки

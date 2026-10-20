@@ -57,9 +57,9 @@ order:           1. заморозка, смещение — урок 10 (503 fr
                     rev N; the edit was made against rev M — look again"}
                  4. содержание — все отказы одним 400 через «; »: «shared settings for '<sub>': no subsystem on the domain
                     shares a field by that name»; «'<имя>' is not in its domain.shared [<имена domain.shared спеки через «, », по возрастанию>]»; тип поля — та же проверка
-                    формы, что у двери единиц (М10/3 Н3 шаг 4), на одном этом поле, слово отказа — её; значение документа
-                    против его schema (слова схемы); значение, которое М10/7 запечатал бы (имя *_secret на любой глубине,
-                    находка пароля в адресе по М10/7 Н1.1а), — «'<имя>': the shared document is signed, not sealed» (сверка М11, A6)
+                    формы, что у двери единиц (P/06.1 Н3 «создать» шаг 4), на одном этом поле, слово отказа — её; значение документа
+                    против его schema (слова схемы); значение, которое консоль запечатала бы (P/06.2 Н3) (имя *_secret на любой глубине,
+                    находка пароля в адресе по P/06.2 Н1.1а), — «'<имя>': the shared document is signed, not sealed» (сверка М11, A6)
                  5. новый документ: прежний shared, поверх — значения правки; null — снять имя; пустая подсистема —
                     снять; rev + 1, term — свой, at, by; прежний документ (объект, который называет указатель) не читается
                     или не с его sha256 — 503 {error: "refused", detail: "the shared document at rev N does not read: nothing
@@ -98,7 +98,7 @@ door:            GET /domain/shared/<sub>[?unit=<id>] у консоли клас
 refusals:        подсистема без domain.shared — 404 {error: "no such shared settings", detail: "'<sub>' shares no field with the
                  domain"}; ?unit= пустой или повторён — 400 {error: "refused", detail: "a unit id is required"} (как урок 1
                  Н4 ?cluster=; добавлено сверкой М11, A11); единицы нет — в том числе единица другой спеки (её разрешает своя
-                 консоль; решение «Архитектора» по сверке М11) — или id не по грамматике М10/3 (в том числе `..` после
+                 консоль; решение «Архитектора» по сверке М11) — или id не по грамматике P/06.1 Н1.3 (в том числе `..` после
                  декодирования) — 404 {error: "no such unit"}; документ не
                  проходит record — значения без домена, journal domain.shared.refused
 ```
@@ -127,7 +127,7 @@ door:          GET /domain/shared у консоли домена (view) → 200 
 page:          объект отчёта domain/alarms (урок 3 Н1.2 member_objects, добавлено М11/11):
                {from, to, events, truncated}
   events:      строки индекса P/05 Н1.3 класса alarm всех спек каталога: GET /events?class=alarm&from=<to − ALARM_WINDOW>
-               &to=<now>&limit=ALARM_PAGE&keep=newest у своей консоли (М10/8 merge) — {id, subsystem, unit, of, t, kind, …}
+               &to=<now>&limit=ALARM_PAGE&keep=newest у своей консоли (P/06.4 Н1.3 merge) — {id, subsystem, unit, of, t, kind, …}
   event:       строка страницы — форма строки индекса P/05 Н1.3: id — непустая строка (обязателен), class = alarm, kind —
                непустая строка, unit — строка, t — число; строка не по этой форме (в том числе без id) — страница не по
                форме: у держателя член unreadable (Н3 alarms шаг 1; решение «Архитектора» по сверке М11, H14, A15)
@@ -142,7 +142,7 @@ urgent:        раз в секунду агент читает только ф�
 rebuild:       страница собирается при старте агента и когда фронт новее to; иначе отчёт несёт прежнюю страницу — спокойный
                член поколений не порождает (урок 12 Н1.2)
 URGENT_GAP:    1           # с
-identity:      агент ходит к /events своей консоли подписью агента (урок 3 Н1.4; М10/9 Н1.3 identity шаг 2, добавлено М11/11)
+identity:      агент ходит к /events своей консоли подписью агента (урок 3 Н1.4; P/06.3 Н1.3 identity шаг 2, добавлено М11/11)
 ```
 
 ### Н1.8 Список тревог у держателя

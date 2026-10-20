@@ -26,7 +26,7 @@
 - **Урок 4** — `live_url` в heartbeat'е: то, на что подписывается шлюз.
 - **Урок 10** — `source` из чужого heartbeat'а: здесь тот же приём.
 - **М10A, уроки 7 и 8** — слот, эпоха, аренда и цикл воркера: у шлюза они те же, платформенные.
-- **[М10/9](../М10_Platform/09-the-console.md), шаг 12** — дверь держателя: `/where` с токеном, `DoorKeeper.admit`, строка, которую создаёт право `view` (`rights.routes`).
+- **[P/06](../Platform/06-console/06-console.md), глава 6.5** (прежде М10/9, шаг 12) — дверь держателя: `/where` с токеном, `DoorKeeper.admit`, строка, которую создаёт право `view` (`rights.routes`).
 - **Два пакета GStreamer, а не один.** `webrtcbin` — из `gst-plugins-bad`, но ICE он берёт из **libnice**, который ставится отдельно (`brew install libnice-gstreamer`, `apt install gstreamer1.0-nice`). Без него элемент регистрируется, создаётся — и **молча не отдаёт sink-pad**: ветвь зрителя не собирается, ошибки нет. Причина видна одной строкой только под `GST_DEBUG=webrtcbin:4`: `libnice elements are not available`.
 
 ## Чему вы научитесь

@@ -1,4 +1,4 @@
-# worker.writes[0] называет unit.rows; норма М10/2 Н1.4, М10/6 Н1.4; строка 84 references.tsv
+# worker.writes[0] называет unit.rows; норма М10/2 Н1.4, P/02.5 Н1.4; строка 84 references.tsv
 name: probe
 unit:
   rows: counters

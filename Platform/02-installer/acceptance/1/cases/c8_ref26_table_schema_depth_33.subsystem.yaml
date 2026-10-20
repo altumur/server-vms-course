@@ -1,4 +1,4 @@
-# schema таблицы глубиной 33 (> 32); норма М10/10 Н1.4, М10/10 Н1.6; строка 26 references.tsv
+# schema таблицы глубиной 33 (> 32); норма P/06.1 Н1.4, P/06.1 Н1.6; строка 26 references.tsv
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

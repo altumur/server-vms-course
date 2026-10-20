@@ -1,0 +1,34 @@
+scenario	step	request	expect
+# Приёмка P/06.4: стенд testsub с ресурсом srv-a; сценарии 03, 04, 06 перенесены из М10/08 (стадия B). Формат — README.
+03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
+03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
+03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
+03-operator-mark	4	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "@absent", "fenced": "@absent"}]}
+03-operator-mark	5	console POST /marks {"note": "no unit"}	400
+03-operator-mark	6	console POST /counters {"name": "c6", "start": 1}	201
+03-operator-mark	7	console POST /marks {"unit": "testsub/c6", "note": "extra ok", "text": "ignored"}	2xx
+03-operator-mark	8	@until 15 console GET /events?unit=testsub/c6&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c6", "text": "@absent"}]}
+03-operator-mark	9	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "user": "operator"}]}
+03-operator-mark	10	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "subsystem": "console", "unit": "~console/ ~:"}]}
+04-request-reaped	1	console POST /counters {"name": "c4", "start": 1}	201
+04-request-reaped	2	console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
+04-request-reaped	3	@key(2) console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
+04-request-reaped	4	store GET /v1/get?key=testsub/requests/$rid	200 {"items": {"unit": "c4", "add": "5", "valid_until": "@time"}}
+04-request-reaped	5	store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": null}
+04-request-reaped	6	@until 150 store GET /v1/get?key=objects/testsub/commands/$rid	200 {"items": {"outcome": "expired", "ended_by": "reaper"}}
+04-request-reaped	7	@until 90 store GET /v1/get?key=testsub/requests/$rid	200 {"items": null}
+04-request-reaped	8	@until 15 resource GET /events?kind=request.asked&limit=1	200 {"events": [{"kind": "request.asked", "sub": "testsub", "target": "c4", "bucket": "$b"}]}
+04-request-reaped	9	resource GET /buckets/audit/console	200 @header Content-Type: ~application/x-ndjson
+04-request-reaped	10	resource @header Range: bytes=-5 GET /events/$b	206
+04-request-reaped	11	resource @header Range: bytes=5-2 GET /events/$b	416
+04-request-reaped	12	console @header Idempotency-Key: . POST /testsub/requests {"unit": "c4", "add": 3}	202
+04-request-reaped	13	console @header Idempotency-Key: a,b POST /testsub/requests {"unit": "c4", "add": 4}	202
+04-request-reaped	14	console POST /testsub/requests {"unit": "c4", "add": 2, "valid_until": 0}	202 {"queued": "$r0"}
+04-request-reaped	15	store GET /v1/get?key=testsub/requests/$r0	200 {"items": {"unit": "c4", "valid_until": "0"}}
+06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
+06-request-refused	2	console POST /testsub/requests {"add": 5}	400
+06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404
+06-request-refused	4	console POST /testsub/requests {"unit": "c5", "add": "five"}	400
+06-request-refused	5	console POST /testsub/requests {bad	400 {"fault": "@absent"}
+06-request-refused	6	console POST /testsub/requests {"unit": "c5", "add": 5, "valid_until": null}	400
+06-request-refused	7	console POST /testsub/requests {"unit": "nosuch", "add": 5, "valid_until": 99999999999}	400

@@ -18,7 +18,7 @@ root:
       type: array
       items:
         ref: common.named_id
-        description: id единицы решения (М10/3 Н1.3)
+        description: id единицы решения (P/06.1 Н1.3)
       unique_items: true
       description: JSON-массив всех id решения; уникальны, отсортированы (порядок — правило урока, не формы); только при active
     target:

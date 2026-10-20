@@ -1,29 +1,29 @@
 # Ссылки P/02.1 Н1.4 и отношения между значениями (класс value) — данными, на языке Platform/common/DIALECT.md § 6.
 # Строка: path<TAB>relation<TAB>class<TAB>norm. Проход — только если форма чиста (Н3: значения раньше ссылок).
 path	relation	class	norm
-unit.id	. in {numeric} | keys(unit.fields ? type = string & name !~ ".*_secret")	reference	P/02.1 Н1.4; М10/3 Н1.3
-unit.fields.$f.must_match.*	. in keys(unit.fields)	reference	М10/3 Н1.3
-unit.fields.$f.bound_to	. in keys(unit.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
-unit.fields.$f.bound_to[]	. in keys(unit.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
-unit.fields.$f.credentials.login	. in keys(unit.fields ? name !~ ".*_secret" & type != url)	reference	М10/7 Н1.1
-unit.fields.$f.credentials.secret	. in keys(unit.fields ? name ~ ".*_secret")	reference	М10/7 Н1.1
+unit.id	. in {numeric} | keys(unit.fields ? type = string & name !~ ".*_secret")	reference	P/02.1 Н1.4; P/06.1 Н1.3
+unit.fields.$f.must_match.*	. in keys(unit.fields)	reference	P/06.1 Н1.3
+unit.fields.$f.bound_to	. in keys(unit.fields ? name !~ ".*_secret")	reference	P/06.2 Н1.1
+unit.fields.$f.bound_to[]	. in keys(unit.fields ? name !~ ".*_secret")	reference	P/06.2 Н1.1
+unit.fields.$f.credentials.login	. in keys(unit.fields ? name !~ ".*_secret" & type != url)	reference	P/06.2 Н1.1
+unit.fields.$f.credentials.secret	. in keys(unit.fields ? name ~ ".*_secret")	reference	P/06.2 Н1.1
 unit.fields.$f.default	when exists @unit.fields.$f.enum : . in values(unit.fields.$f.enum[])	value	P/02.1 Н1.2а default
 unit.fields.$f.inherit	when exists @unit.fields.$f.enum : . in values(unit.fields.$f.enum[])	value	P/02.1 Н1.2а inherit
-unit.fields.$f.schema	depth . <= 32	value	М10/10 Н1.4
+unit.fields.$f.schema	depth . <= 32	value	P/06.1 Н1.4
 unit.fields.bytes	empty keys(unit.fields ? type = blob)	value	P/02.1 Н1.3 (bytes рядом с blob)
 tables.{}	. != @unit.rows	value	P/02.1 Н1.2а имя таблицы
 tables[]	. != @unit.rows	value	P/02.1 Н1.2а имя таблицы
-tables.$t.key	template . plain keys(tables.$t.fields ? type = string & name !~ ".*_secret") int keys(tables.$t.fields ? type in {int, float} & name !~ ".*_secret") bare	reference	P/02.1 Н1.4; М10/10 Н1.6
+tables.$t.key	template . plain keys(tables.$t.fields ? type = string & name !~ ".*_secret") int keys(tables.$t.fields ? type in {int, float} & name !~ ".*_secret") bare	reference	P/02.1 Н1.4; P/06.1 Н1.6
 tables.$t.fields.name	@tables.$t.key = name	value	P/02.1 Н1.3 (поле name таблицы)
 tables.$t.fields.name	@tables.$t.fields.name.type = string	value	P/02.1 Н1.3 (поле name таблицы)
-tables.$t.fields.$f.must_match.*	. in keys(tables.$t.fields)	reference	М10/3 Н1.3
-tables.$t.fields.$f.bound_to	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
-tables.$t.fields.$f.bound_to[]	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	М10/7 Н1.1
-tables.$t.fields.$f.credentials.login	. in keys(tables.$t.fields ? name !~ ".*_secret" & type != url)	reference	М10/7 Н1.1
-tables.$t.fields.$f.credentials.secret	. in keys(tables.$t.fields ? name ~ ".*_secret")	reference	М10/7 Н1.1
+tables.$t.fields.$f.must_match.*	. in keys(tables.$t.fields)	reference	P/06.1 Н1.3
+tables.$t.fields.$f.bound_to	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	P/06.2 Н1.1
+tables.$t.fields.$f.bound_to[]	. in keys(tables.$t.fields ? name !~ ".*_secret")	reference	P/06.2 Н1.1
+tables.$t.fields.$f.credentials.login	. in keys(tables.$t.fields ? name !~ ".*_secret" & type != url)	reference	P/06.2 Н1.1
+tables.$t.fields.$f.credentials.secret	. in keys(tables.$t.fields ? name ~ ".*_secret")	reference	P/06.2 Н1.1
 tables.$t.fields.$f.default	when exists @tables.$t.fields.$f.enum : . in values(tables.$t.fields.$f.enum[])	value	P/02.1 Н1.2а default
-tables.$t.fields.$f.schema	depth . <= 32	value	М10/10 Н1.4
-tables.$t.schema	depth . <= 32	value	М10/10 Н1.4
+tables.$t.fields.$f.schema	depth . <= 32	value	P/06.1 Н1.4
+tables.$t.schema	depth . <= 32	value	P/06.1 Н1.4
 snapshot[]	. in keys(unit.fields)	reference	P/02.1 Н1.4
 snapshot[]	. !~ ".*_secret"	value	P/02.1 Н1.2; P/04 Н1.3а
 snapshot[]	. not in {server} | keys(unit.fields ? type = blob)	value	P/02.1 Н1.2; P/04 Н1.3а
@@ -55,7 +55,7 @@ metrics[$i].where.{}	when exists @metrics[$i].count & split(@metrics[$i].count "
 metrics[$i].unless.table	. in keys(tables)	reference	P/02.1 Н1.4
 metrics[$i].unless.where.{}	when @metrics[$i].unless.table in keys(tables) : . in keys(tables.{@metrics[$i].unless.table}.fields)	reference	P/02.1 Н1.4
 metrics[].count	split(. " " 1) in keys(tables)	reference	P/02.1 Н1.4
-rights.unit_of.{}	. in keys(tables)	reference	М10/6 Н1.5
+rights.unit_of.{}	. in keys(tables)	reference	P/06.3 Н1.5
 rights.unit_of.$t	when $t in keys(tables) : . in keys(tables.$t.fields)	reference	P/02.1 Н1.4
 rights.reach.group	exists @placement.group_by	reference	P/02.1 Н1.4
 servers.show[$i].table	. in keys(tables)	reference	P/02.1 Н1.4
@@ -70,15 +70,15 @@ display.form[].fields[]	. in keys(unit.fields) | {worker, server, revision, obse
 display.tree.group_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
 display.tree.columns[].field	. in keys(unit.fields) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
 display.keys.{}	. in values(domain.keys[].id)	reference	М11/9 Н1.8
-requests.key	template . plain keys(requests.schema.properties ? type = string & name !~ ".*_secret") int keys(requests.schema.properties ? type in {integer, number} & name !~ ".*_secret")	reference	P/02.1 Н1.4; М10/8 Н1.5
+requests.key	template . plain keys(requests.schema.properties ? type = string & name !~ ".*_secret") int keys(requests.schema.properties ? type in {integer, number} & name !~ ".*_secret")	reference	P/02.1 Н1.4; P/06.4 Н1.5
 requests.outcome	when . = fetched : exists @requests.key	reference	P/02.1 Н1.4; ADR-0054
 requests.stamp[]	when . = group : exists @placement.group_by	reference	P/02.1 Н1.4
 requests.valid_for	when exists @requests.most_valid : . <= @requests.most_valid	value	P/02.1 Н1.2а requests
-requests.schema	depth . <= 32	value	М10/10 Н1.4
+requests.schema	depth . <= 32	value	P/06.1 Н1.4
 console.running	. in values(metrics[].name)	reference	P/02.1 Н1.4
 about.field	. in keys(unit.fields ? fixed = true)	reference	P/02.1 Н1.4
 door.routes	unique values(door.routes[])	reference	P/02.1 Н1.4
-door.pass[]	. not in values(door.routes[]) | {@unit.rows, where}	reference	P/02.1 Н1.4; М10/11 Н1.8
+door.pass[]	. not in values(door.routes[]) | {@unit.rows, where}	reference	P/02.1 Н1.4; P/06.5 Н1.8
 objects.rows[]	split(. "/" 0) not in {heartbeats, contenders, snapshot, controller, blobs, commands, "*"}	reference	P/02.1 Н1.4; P/05 Н1.1
 worker.writes[]	. in keys(tables)	reference	P/02.1 Н1.4; P/02.5 Н1.4
 worker.writes[]	empty keys(tables.{.}.fields ? name ~ ".*_secret")	value	P/02.1 Н1.2а worker.writes
@@ -109,5 +109,5 @@ domain.keys	unique values(domain.keys[].id)	value	М11/9 Н1.8
 domain.shared	unique values(domain.shared[]) | values(domain.shared[].name)	value	P/02.1 Н1.2б
 domain.shared[].name	. not in keys(unit.fields)	value	P/02.1 Н1.2б
 domain.shared[]	. in keys(unit.fields ? has inherit) | {@display.tree.group_by}	value	P/02.1 Н1.2б
-domain.shared[].schema	depth . <= 32	value	М10/10 Н1.4
+domain.shared[].schema	depth . <= 32	value	P/06.1 Н1.4
 domain.witness.member_field	. in keys(unit.fields ? fixed = true)	value	P/02.1 Н1.2б

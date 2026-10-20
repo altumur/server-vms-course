@@ -1,0 +1,7 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 01-page-and-module, 02-spec-and-mounts, 04-servers-where, 05-metrics, 06-refusals, 07-unreadable-intent, 08-unreadable-worker-heartbeat, 09-shortage-metrics, 10-resource-pulse-rows, 11-resource-pulse-inputs, 12-worker-pulse-inputs, входы inputs/ и probe-x.subsystem.yaml из М10/09 (стадия B); 03-open-session — в приёмку главы 6.3	all
+2026-10-20	перенос	сценарии 02-resource-silent, 09-resource-unreadable-heartbeat, 13-time-reader, 15-service-doors (шаг 1) из М10/11 (стадия B)	all
+2026-10-20	14-resource-silent	сценарий 02-resource-silent из М10/11 переименован в 14-resource-silent: номер 02 занят 02-spec-and-mounts из М10/09 (Н5 сверяет номера); шаги без изменений	all
+2026-10-20	16-resource-unreadable-heartbeat	сценарий 09-resource-unreadable-heartbeat из М10/11 переименован в 16-resource-unreadable-heartbeat: номер 09 занят 09-shortage-metrics из М10/09 (Н5 сверяет номера); шаги без изменений	all
+2026-10-20	перенос	сценарии 03-snapshot, 08-snapshot-garbled из М10/10 целиком (стадия B; разбор ревью стадии A 6–7, № 32): предмет главы — шаг /metrics консоли (03 шаг 5, 08 шаги 7–9), шаги контроллера — подготовка (их предмет — приёмка P/04, сц. 03, 08)	all
+2026-10-20	17-snapshot-garbled	сценарий 08-snapshot-garbled из М10/10 переименован в 17-snapshot-garbled: номер 08 занят 08-unreadable-worker-heartbeat из М10/09 (Н5 сверяет номера); шаги без изменений	all

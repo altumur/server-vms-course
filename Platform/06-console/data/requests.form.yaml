@@ -1,0 +1,34 @@
+# Семья <sub>/requests/<rid> — строка просьбы (P/06.4; P/06.4 Н1.5). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога (rid — P/06.4 Н1.5 `rid`, векторы vectors/rid/). Слова —
+# Platform/common/DIALECT.md. Поля тела — по requests.schema спеки (семья манифеста не названа: схема их не перечисляет,
+# имена автора); <sub>/requests/free-<server>-<volume> — не эта форма (семья free-ask P/05). Писатель — консоль (дверь)
+# или воркер (worker.requests другой спеки, глава 3.6).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    unit:
+      ref: common.named_id
+      description: id единицы-адресата (P/06.1 Н1.3); ДОЛЖЕН — у просьбы ресурса его нет, по этому их и различают
+    valid_until:
+      ref: common.time
+      description: срок; когда у спеки valid_for или клиент прислал свой срок; 0 и прошедшее — срок, уже вышедший (expired), а не «без срока»
+    digest:
+      ref: common.sha256_hex
+      description: ДОЛЖЕН у всякой исполняемой просьбы — у поданной дверью JCS тела клиента без valid_until, у поданной воркером JCS полей тела строки без unit, valid_until и штампов (векторы vectors/request-digest/)
+    by:
+      type: string
+      description: штамп requests.stamp — кто подал (человек, доказанный сторожевой; без домена — operator)
+    at:
+      ref: common.time
+      description: штамп requests.stamp — когда подано
+    group:
+      type: string
+      description: штамп requests.stamp — группа единицы
+    filed:
+      type: string
+      description: экземпляр воркера, подавшего строку (worker.requests); ДОЛЖЕН у поданной воркером, у поданной дверью отсутствует
+  required: [unit, digest]
+  names:
+    key: {type: string}
+    value: {type: string, description: "поля тела по requests.schema спеки и поле about штампа: строка — как есть, иное значение — канонический JSON (JCS, ADR-0072; векторы vectors/requests-body/); имя и значение проверяет схема спеки у писателя"}

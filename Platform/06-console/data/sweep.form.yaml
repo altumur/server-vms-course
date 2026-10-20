@@ -1,0 +1,22 @@
+# Семья <sub>/sweep — партия отметок уборки тел (P/06.1; P/06.1 Н1.5 sweep, Н3 «уборка тел»). Источник формы строки
+# (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    at:
+      ref: common.time
+      description: >-
+        стенные секунды первой отметки партии — диагностическое время, не скользящий срок (Н3 «уборка тел»); при пустой
+        партии не читается
+    digests:
+      type: array
+      items:
+        type: string
+        pattern: 'sha256-[0-9a-f]{64}'
+        description: дайджест тела без ссылок из строк (Н1.5 object)
+      writer: {max_items: 64}
+      description: >-
+        отмеченные дайджесты по правилу списка Н1.2 (через запятую); пустая партия — "" (или строки нет); писатель
+        отмечает не больше SWEEP_LIMIT 64 за проход
+  required: [digests]

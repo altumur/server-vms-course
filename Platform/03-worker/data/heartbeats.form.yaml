@@ -35,7 +35,7 @@ root:
             description: revision строки, под которой единица сейчас запущена; целое (М11/1 Н1.6 claim)
           why:
             type: string
-            description: "причина платформы, когда единица не идёт (sealed — урок 7 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)"
+            description: "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)"
         required: [id, phase, epoch, revision, observed_revision]
         names:
           key: {type: string}
@@ -51,10 +51,10 @@ root:
       description: метки узла через запятую
     url:
       type: string
-      description: "url двери — строка платформы (platform_strings Н1.1; добавлено М10/9, Н3 «`/where/<id>`»)"
+      description: "url двери — строка платформы (platform_strings Н1.1; добавлено М10/9, P/06.5 Н3 «`/where/<id>`»)"
     fetched:
       type: string
-      description: "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (М10/8)"
+      description: "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (глава 3.6)"
     events:
       type: string
       description: строка платформы (platform_strings Н1.1)
@@ -66,7 +66,7 @@ root:
       description: момент старта
     previous_hb:
       ref: common.time
-      description: "число ts застанного под своим именем при старте пульса, если было (журнал cammeta-go, урок 9 № 6: по нему консоль считает failover_seconds, М10/9 Н3)"
+      description: "число ts застанного под своим именем при старте пульса, если было (журнал cammeta-go, урок 9 № 6: по нему консоль считает failover_seconds, P/06.5 Н3)"
     previous_instance:
       type: string
       description: instance застанного пульса, если был
@@ -82,14 +82,14 @@ root:
       minimum: 1
       maximum: 9007199254740991
       whole: true
-      description: "схема сборки (М10/10 Н1.1 heartbeat): целое JSON без дробной части и экспоненты, ≥ 1"
+      description: "схема сборки (P/06.6 Н1.1а heartbeat): целое JSON без дробной части и экспоненты, ≥ 1"
     build:
       type: string
-      description: слово сборки для человека (М10/10 Н1.1 heartbeat)
+      description: слово сборки для человека (P/06.6 Н1.1а heartbeat)
     pending_writes:
       ref: common.uint53
       whole: true
-      description: "М10/10 Н1.2 pending_writes: целое JSON без дробной части и экспоненты, 0 ≤ x ≤ 2^53 − 1; базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe"
+      description: "P/06.6 Н1.2 pending_writes: целое JSON без дробной части и экспоненты, 0 ≤ x ≤ 2^53 − 1; базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe"
     server_unsaid:
       type: string
       enum: ["this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"]

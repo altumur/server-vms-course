@@ -17,17 +17,17 @@ root:
         type: string
         pattern: '[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*'
         description: имя отданного слота P/03.2 Н1.4
-      description: имена отданных слотов по правилу списка М10/3 Н1.2; "" — ни одного; имена, не число (Д7)
+      description: имена отданных слотов по правилу списка P/06.1 Н1.2; "" — ни одного; имена, не число (Д7)
     units:
       type: array
       items:
         ref: common.named_id
-        description: id снятой единицы М10/3 Н1.3
-      description: id снятых единиц по правилу списка М10/3 Н1.2; "" — ни одной
+        description: id снятой единицы P/06.1 Н1.3
+      description: id снятых единиц по правилу списка P/06.1 Н1.2; "" — ни одной
     holds:
       type: array
       items:
         type: string
         description: имя места удержания P/03.2 Н1.3 (`<sub>/holds/<место>`)
-      description: места удержаний по правилу списка М10/3 Н1.2; "" — ни одного
+      description: места удержаний по правилу списка P/06.1 Н1.2; "" — ни одного
   required: [asked_at, at, slots, units, holds]

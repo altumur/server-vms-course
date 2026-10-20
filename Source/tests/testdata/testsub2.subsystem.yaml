@@ -118,7 +118,7 @@ requests:
     type: object
     required: [unit, from, to]
     additionalProperties: false
-    properties: {unit: {type: string}, from: {type: integer}, to: {type: integer}}
+    properties: {unit: {type: string}, from: {type: integer}, to: {type: integer}, action: {type: string}}
   key: "{unit}-{from:int}-{to:int}"
   outcome: fetched
   per_person: 3

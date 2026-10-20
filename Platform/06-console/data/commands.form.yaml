@@ -1,0 +1,68 @@
+# Семья objects/<sub>/commands/<rid> — метка просьбы обычного профиля (P/06.4; P/06.4 Н1.5 `mark`; ADR-0054). Источник
+# формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога (rid — P/06.4 Н1.5 `rid`).
+# Слова — Platform/common/DIALECT.md. Строка-объект, создание-однажды (P/05 Н1.1 row_object); у дозаписи ADR-0054 метки
+# нет. Три формы по Н1.5: begun (до вызова), begun + answer (ответ начавшего или закрытие чужой begun с ended_by),
+# no_begun (без begun: expired | refused). Пишут держатель (глава 3.6: begun, answer, no_begun до вызова, unknown по
+# индексу, уборка после kept) и жнец консоли (no_begun expired создание-однажды, unknown по индексу поверх чужой begun).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    instance:
+      type: string
+      description: begun — экземпляр держателя, начавшего вызов
+    slot:
+      type: string
+      description: begun — слот держателя
+    unit:
+      ref: common.named_id
+      description: id единицы — тот же, что у строки просьбы; повтор сравнивает unit и digest
+    of:
+      type: string
+      description: begun — единица-адресат `<sub>/<id>` (необязателен)
+    at:
+      ref: common.time
+      description: begun.at — когда держатель начал
+    digest:
+      ref: common.sha256_hex
+      description: тот же digest, что у строки просьбы (Н1.5 `digest`); переносится и в no_begun
+    valid_until:
+      ref: common.time
+      description: begun.valid_until — срок строки просьбы, если он был (необязателен)
+    outcome:
+      type: string
+      enum: [performed, refused, unknown, expired]
+      description: исход — закрытый перечень (ADR-0054); нет поля — begun без исхода (исполняется)
+    action:
+      type: string
+      description: действие, которое держатель вызвал; обязателен при performed/refused после вызова, при unknown необязателен
+    ended_at:
+      ref: common.time
+      description: когда закрыт исход
+    error:
+      type: string
+      description: причина, ≤ 200 знаков — ДОЛЖЕН у refused и unknown, нет у performed
+    late:
+      type: string
+      enum: ['true']
+      description: исход начавшего, пришедший после unknown (жнеца или другого держателя)
+    ended_by:
+      type: string
+      enum: [reaper, holder]
+      description: кто закрыл чужую или безначальную просьбу; у ответа начавшего поля нет
+  required: [unit, digest]
+  rules:
+    - when: {absent: [outcome]}
+      require: [instance, slot, at]
+    - when: {present: [outcome]}
+      require: [ended_at]
+    - when: {is: {outcome: [performed]}}
+      forbid: [error]
+    - when: {is: {outcome: [refused, unknown]}}
+      require: [error]
+    - when: {is: {outcome: [expired]}}
+      require: [ended_by]
+  names:
+    key: {type: string}
+    value: {type: any, description: "поля сверх Н1.5 mark: норма их не называет; писатель пишет ровно поля своей формы"}
+  writer: {max_items: 0}

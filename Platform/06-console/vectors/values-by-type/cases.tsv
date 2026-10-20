@@ -1,0 +1,74 @@
+# Текстовые формы значений по типам — элемент строки единицы <sub>/<rows>/<id> и его JSON (P/06.1 Н1.2 values_by_type,
+# absent; Н2; Н4). Форма — README рядом. Стадия B (разбор ревью стадии A 6–7, № 33): ожидания выведены из нормы и шагов
+# приёмки P/06.1 (сц. — номер сценария acceptance/1).
+case	type	dir	json	row	note
+s-plain	string	both	"c1"	"c1"	как есть; сц. 01 шаг 1
+s-empty	string	both	""	""	пустая форма string (Н1.2, таблица пустых форм)
+s-space	string	both	"a b"	"a b"	как есть; сц. 06 шаг 9
+s-comma	string	both	"a,b"	"a,b"	у string запятая — просто знак; правило запятой — только у list
+s-number	string	write	5	@refuse	не строка — 400 с именем поля (Н4)
+s-null	string	write	null	@refuse	null у поля без inherit, кроме json, — 400 по типу (Н2); сц. 19 шаг 7 (таблица)
+u-plain	url	both	"https://h.example/a"	"https://h.example/a"	url — как есть; сц. 19 шаг 1 (таблица, та же форма)
+i-five	int	both	5	"5"	десятичная запись; сц. 01 шаг 1
+i-zero	int	both	0	"0"	пустая форма int; сц. 02 шаг 1
+i-min	int	both	-9007199254740991	"-9007199254740991"	граница −(2^53 − 1); сц. 08 шаг 10
+i-max	int	both	9007199254740991	"9007199254740991"	граница 2^53 − 1
+i-minus-zero	int	write	-0	"0"	число -0 хранится как 0 (Н1.2; JCS); пробы сверки README приёмки
+i-over	int	write	9007199254740992	@refuse not_number	за 2^53 − 1; сц. 08 шаг 9
+i-one-point-zero	int	write	1.0	@refuse not_number	у int — JSON-число без дробной части; сц. 12 шаг 4
+i-exp	int	write	1e2	@refuse not_number	у int — без экспоненты; сц. 12 шаг 5
+i-fraction	int	write	1.5	@refuse not_number	дробь у int; сц. 08 шаг 2
+i-string	int	write	"7"	@refuse not_number	число строкой; сц. 08 шаг 1
+i-bool	int	write	true	@refuse not_number	булево у int; сц. 08 шаг 4
+i-garbled	int	read	@unreadable	"many"	элемент не читается своим типом; у строки таблицы — {name, garbled: true} (Н2 «Двери тел и таблиц»; сц. 19 шаги 11–12)
+f-one	float	both	1	"1"	кратчайшая запись без экспоненты
+f-one-point-zero	float	write	1.0	"1"	1.0 и 1 — одно число JSON
+f-half	float	both	0.5	"0.5"	десятичная запись
+f-minus-half	float	both	-0.5	"-0.5"	отрицательная дробь
+f-tenth	float	both	0.1	"0.1"	кратчайшая запись, а не 0.1000000000000000055…
+f-shortest	float	both	0.30000000000000004	"0.30000000000000004"	кратчайшая запись, восстанавливающая число
+f-big	float	both	1e21	"1000000000000000000000"	без экспоненты
+f-small	float	both	1e-7	"0.0000001"	без экспоненты
+f-digits	float	both	123456789012345680000	"123456789012345680000"	17 значащих цифр, дальше нули
+f-stamp	float	both	1760700000.5	"1760700000.5"	пример штампа at строки таблицы и at строки sweep (Н1.5, Н1.6)
+f-stamp-whole	float	both	1760690000	"1760690000"	пример made_at строки таблицы (Н1.6)
+f-minus-zero	float	write	-0.0	"0"	число -0 хранится как 0 (Н1.2; JCS)
+f-string	float	write	"1.5"	@refuse not_number	не число у float (Н4)
+f-garbled	float	read	@unreadable	"x"	элемент не читается своим типом
+b-true	bool	both	true	"true"	"true" | "false" (Н1.2)
+b-false	bool	both	false	"false"	пустая форма bool
+b-number	bool	write	1	@refuse	не булево — 400 (Н4)
+b-garbled	bool	read	@unreadable	"yes"	только "true" | "false"
+l-empty	list	both	[]	""	[] хранится как "" (Н1.2); сц. 01 шаг 1 (labels: [])
+l-one-empty	list	both	[""]	"[\"\"]"	[""] — JSON-текст '[""]' (Н1.2): отличим от []
+l-one	list	both	["a"]	"a"	один элемент без запятой
+l-two	list	both	["a","b"]	"a,b"	элементы через запятую; сц. 03 шаг 3
+l-comma	list	both	["a,b","c"]	@json ["a,b","c"]	запятая в элементе — массив JSON; сц. 09 шаг 1
+l-bracket	list	both	["[x","y"]	@json ["[x","y"]	текст начинается с [ — массив JSON; сц. 09 шаг 2
+l-empty-item	list	both	["a","","b"]	@json ["a","","b"]	пустой элемент — массив JSON
+l-read-spaced	list	read	["a","b"]	"[\"a\", \"b\"]"	ведущий [ — разбор массива JSON (Н1.2 «При чтении»)
+l-string	list	write	"a"	@refuse	список строкой; сц. 08 шаг 3
+l-non-string	list	write	[1]	@refuse	иной JSON-элемент — отказ типа поля (Н1.2, Н4)
+lb-words	list:labels	both	["gpu","vlan:cctv-a","a.b_c-1"]	"gpu,vlan:cctv-a,a.b_c-1"	метки по азбуке (common/contracts/labels.md); сц. 12 шаг 7
+lb-empty	list:labels	both	[]	""	нет меток — пустой набор
+lb-bang	list:labels	write	["gpu!"]	@refuse	знак вне азбуки меток; сц. 12 шаг 6
+lb-comma	list:labels	write	["a,b"]	@refuse	у меток запятая — 400; сц. 09 шаг 3
+lb-empty-item	list:labels	write	[""]	@refuse	пустой элемент у меток не допустим (Н1.2)
+j-canonical	json	both	{"a":2,"b":1}	"{\"a\":2,\"b\":1}"	канонический JSON (ADR-0072)
+j-reorder	json	write	{"b":1,"a":2}	"{\"a\":2,\"b\":1}"	порядок ключей — по JCS
+j-nested	json	write	{"z":{"b":true,"a":[]}}	"{\"z\":{\"a\":[],\"b\":true}}"	JCS на любой глубине
+j-number	json	write	1.0	"1"	число — по JCS (ES6)
+j-string	json	both	"x"	"\"x\""	строка JSON — текст JSON со своими кавычками
+j-array	json	both	[1,"a",null]	"[1,\"a\",null]"	null внутри значения остаётся
+j-null	json	write	null	@absent	json: null — элемента нет (Н1.2 absent)
+j-absent	json	read	@unset	@absent	элемента нет — в ответе поля нет (Н2)
+bl-empty	blob	both	""	""	пустая форма blob; при создании — только ""
+bl-digest	blob	both	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	дайджест байтов hello-blob (сц. 15 шаг 3); в строку его вводит только дверь байтов (Н2)
+bl-not-digest	blob	write	"not-a-digest"	@refuse	не дайджест; сц. 15 шаг 1
+sec-empty	secret	both	""	""	пустой секрет остаётся пустым (Н2)
+sec-value	secret	write	"s3cret"	@sealed	непустой секрет хранится конвертом enc:v2 (договор запечатывания)
+sec-read	secret	read	"***"	@sealed	клиент значения не получает: маска (глава 6.2 Н1.1)
+in-unset	int:inherit	write	@unset	@absent	поле с inherit не задано — элемента нет; сц. 10 шаг 1
+in-null	int:inherit	write	null	@absent	null у поля с inherit — «не задано»; сц. 10 шаг 3
+in-absent	int:inherit	read	@unset	@absent	в ответе поля нет; сц. 10 шаги 1, 3
+in-value	int:inherit	both	2	"2"	заданное значение — как у типа; сц. 10 шаг 2

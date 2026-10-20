@@ -1,5 +1,9 @@
 scenario	step	request	expect
-# Приёмка P/04: контроллер — размещение, судьба слота, заказ и сокращение на стенде testsub и testsub2 под раннером. Перенесено из М10/05 (стадия B). Формат — README.
+# Приёмка P/04: контроллер — размещение, судьба слота, заказ и сокращение, снимок на стенде testsub и testsub2 под раннером. Перенесено из М10/05 (стадия B), сц. 03, 08 — из М10/10 (без шагов /metrics консоли: они — глава 6.5). Формат — README.
+03-snapshot	1	@start controller	ok
+03-snapshot	2	@start resource	ok
+03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
+03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@time", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
 07-tie-first-by-name	1	@start controller	ok
 07-tie-first-by-name	2	@start worker w-2	ok
 07-tie-first-by-name	3	@start worker w-1	ok
@@ -8,6 +12,12 @@ scenario	step	request	expect
 07-tie-first-by-name	6	@sleep 12	ok
 07-tie-first-by-name	7	console POST /counters {"name": "t7", "start": 1}	201
 07-tie-first-by-name	8	@until 30 store GET /v1/get?key=testsub/placement/t7	200 {"items": {"worker": "w-1"}}
+08-snapshot-garbled	1	@start controller	ok
+08-snapshot-garbled	2	@start resource	ok
+08-snapshot-garbled	3	@as console store POST /v1/write {"id":"c7","op":"put","key":"testsub/counters/s7","items":{"id":"s7","revision":"1","name":"s7","start":"notint"},"cas":""}	200
+08-snapshot-garbled	4	console POST /counters {"name": "s8", "start": 2}	201
+08-snapshot-garbled	5	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"worker": null, "counters": [{"id": "s8", "revision": 1, "name": "s8", "start": 2, "worker": null}]}
+08-snapshot-garbled	6	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"snapshot_rows_garbled": 1}
 11-group-by-without-value	1	@start controller testsub2	ok
 11-group-by-without-value	2	@start worker testsub2 t-1	ok
 11-group-by-without-value	3	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1"}}

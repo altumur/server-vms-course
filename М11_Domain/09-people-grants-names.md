@@ -28,7 +28,7 @@ HTTP-контракт — в [OpenAPI](spec/09-people-grants-names.api.openapi.y
 - [Урок 2](02-root-keys-and-revocation.md) — токен домена, `kind`, отзыв; [урок 3](03-agent-and-reports.md) — ответ
   держателя агенту и `sealed`.
 - [Урок 5](05-books-from-member-rows.md) — книги и их получатели; [урок 8](08-doors-between-clusters.md) — пересылка.
-- [М10/9](../М10_Platform/09-the-console.md) — сторожевая консоли и `/session`.
+- [P/06](../Platform/06-console/06-console.md), глава 6.3 — сторожевая консоли и `/session`.
 
 ## Делегировать власть, не раздавать секрет
 

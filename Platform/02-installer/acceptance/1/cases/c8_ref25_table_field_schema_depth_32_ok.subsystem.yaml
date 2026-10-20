@@ -1,4 +1,4 @@
-# schema поля таблицы глубиной ровно 32 — граница, проходит; норма М10/10 Н1.4; пара строки 25 references.tsv
+# schema поля таблицы глубиной ровно 32 — граница, проходит; норма P/06.1 Н1.4; пара строки 25 references.tsv
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

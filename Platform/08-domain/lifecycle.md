@@ -23,7 +23,7 @@
 |---|---|---|---|
 | `W2C_ROLE` | роль `domain` | юнит | P/02.4 Н1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | состояние, дверь хранилища, корни объектов и событий | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
-| `SECRETS_KEY` | кольцо (credential): ключи держателя, `book_seal` — конверты кольца | — | [М11/2 Н1.3, Н1.4](../../М11_Domain/spec/02-root-keys-and-revocation.norms.md); М10/7 Н1.2 |
+| `SECRETS_KEY` | кольцо (credential): ключи держателя, `book_seal` — конверты кольца | — | [М11/2 Н1.3, Н1.4](../../М11_Domain/spec/02-root-keys-and-revocation.norms.md); [P/06.2](../06-console/spec/06.2-console.norms.md) Н1.2 (`holders`); [договор запечатывания](../common/contracts/sealing.md) |
 | `SIGNER_HOST`, `SIGNER_PORT` | дверь процесса: отчёты агентов, вход людей, правки консоли домена | `0.0.0.0:8445` | М11/12 Н1.8 |
 | `SIGNER_URL` | адрес этой двери, который пишет запись срока `domain/holder.url`; у держателя из нескольких узлов — адрес, доходящий до любого узла | — | [М11/10 Н1.1](../../М11_Domain/spec/10-holder-transfer-and-keepers.norms.md), М11/12 Н1.7 `url` |
 | `DOMAIN_CONSOLE_URL` | адрес двери консоли домена — поле `view.url` | — (нет — `domain console not known` у консолей) | [М11/8 Н1.3](../../М11_Domain/spec/08-doors-between-clusters.norms.md) |

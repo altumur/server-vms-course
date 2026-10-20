@@ -1,0 +1,25 @@
+# Семья <sub>/asked/<sha16(имя)> — учёт человека: зарезервированные и неотвеченные rid (P/06.4; P/06.4 Н1.5 `ledger`,
+# Н3 «подать просьбу» шаг 3, «жнец» asked; ADR-0060). Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ —
+# грамматика колонки key каталога (16 строчных hex — sha256(имя)[:16]). Слова — Platform/common/DIALECT.md. Писатель и
+# читатель — консоль; запись — по cas.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    rids:
+      type: array
+      items:
+        type: string
+        pattern: '[^/\\"''\x{0000}-\x{001F}\x{007F}-\x{009F}\x{2028}\x{2029}]+'
+        not_pattern: 'free-.*'
+        not_enum: ['.', '..']
+        max_bytes: 200
+        description: rid по грамматике P/06.4 Н1.5 `rid` (векторы vectors/rid/)
+      description: зарезервированные/неотвеченные rid человека — список (P/06.1 Н1.2 `list`; кодек array; rid с запятой — массив JSON); "" — ни одного
+    by:
+      type: string
+      description: человек, чей это учёт (без домена — operator)
+    at:
+      ref: common.time
+      description: штамп записи учёта
+  required: [rids, by, at]

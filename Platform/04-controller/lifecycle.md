@@ -7,7 +7,7 @@
 [P/02.4]: ../02-installer/spec/02.4-installer.norms.md
 [P/02.5]: ../02-installer/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
-[М10/10]: ../../М10_Platform/spec/10-schema-drain-snapshot-limits.norms.md
+[P/06.6]: ../06-console/spec/06.6-console.norms.md
 [Стенд]: ../common/acceptance/README.md
 [каталог]: ../common/data/catalog.tsv
 
@@ -61,7 +61,7 @@
   `platform/decommission/*`, `platform/drain`, слоты `<sub>/slots/<имя>`, места `<sub>/holds/<место>` ([каталог]);
   очередь размещения и intent (`<sub>/controller/placement_turn`, `placement_intent`) он и пишет, и читает ([P/04] Н1.5).
 - **Слова сборки** (`BUILD`) у контроллера нет в выдаче: пульса он не пишет и в `processes` `/schema` не входит
-  ([М10/10] Н2 `GET /schema`).
+  ([P/06.6] Н2.3 `GET /schema`).
 - **Не пишет** в корень событий, кроме своего журнала `audit/<sub>controller/e1/…` (договор журнала событий `journal`).
 
 ## Коды выхода

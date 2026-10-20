@@ -1,0 +1,13 @@
+# Чтение fetched: rid сообщён, если среди имён через «,» есть rid или SaidID(rid) (P/03.4 Н1.1 `said_id` read). Форма — README рядом.
+case	fetched	rid	reported	note
+exact	"cmd-1"	"cmd-1"	true	имя равно rid
+second	"cmd-1,cmd-2"	"cmd-2"	true	rid — второе имя
+no-prefix	"cmd-12"	"cmd-1"	false	сравнение имени целиком, не префикс
+empty	""	"cmd-1"	false	пустой fetched — ничего не сообщено
+empty-element	"x,,cmd-1"	"cmd-1"	true	пустой элемент — не имя, остальные читаются
+no-trim	"cmd-1, cmd-2"	"cmd-2"	false	пробелы не снимаются: « cmd-2» — не cmd-2 (писатель пишет без пробелов)
+hashed	"x,#c0f8bd4dbc2b0c03107c"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	длинный rid — по SaidID
+raw-long	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	читатель принимает и сам rid, не только SaidID
+comma-raw	"a,b"	"a,b"	false	rid с запятой сам по себе не читается: разбит на a и b
+comma-hashed	"#1eb7c54d52831bbfe894"	"a,b"	true	rid с запятой — по SaidID
+other-hash	"#7a538607fdaab9296995"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	false	чужой хэш — не сообщён

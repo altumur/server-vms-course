@@ -1,0 +1,25 @@
+# SaidID(rid) — имя просьбы в поле fetched пульса воркера (P/03.4 Н1.1 `said_id`). Форма — README рядом.
+case	rid	said	note
+plain-ascii	"cmd-1"	"cmd-1"	печатный ASCII до 40 знаков — как есть
+plain-40	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	ровно 40 кодовых точек — как есть
+hashed-41	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"#c0f8bd4dbc2b0c03107c"	41 кодовая точка — хэш
+plain-40-cyrillic	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	40 кодовых точек, 80 байт UTF-8 — как есть: считаются точки, не байты
+hashed-41-cyrillic	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	"#8400dc5cc484765228a5"	41 кодовая точка кириллицы — хэш
+plain-40-astral	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	40 точек вне BMP (So), 160 байт — как есть: не единицы UTF-16
+hashed-41-astral	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	"#b92150a6b2d80d09f1fb"	41 точка вне BMP — хэш
+plain-40-combining	"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"	"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"	20 букв с комбинируемым знаком (Mn) — 40 точек — как есть: считаются точки, не графемы
+hashed-42-combining	"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"	"#4d90d92b2aa5f9a0017b"	42 точки — хэш, хотя графем 21
+hashed-hash-start	"#abc"	"#00e16e1d31c0ba2b3b3d"	начинается с «#» — хэш (имя «#…» занято хэшами)
+hashed-hash-only	"#"	"#334359b90efed75da5f0"	один «#» — хэш
+plain-hash-inside	"a#b"	"a#b"	«#» не первым — как есть
+hashed-comma	"a,b"	"#1eb7c54d52831bbfe894"	запятая — разделитель fetched — хэш
+plain-space	"a b"	"a b"	пробел U+0020 — как есть
+plain-trailing-space	"a "	"a "	конечный пробел U+0020 сохраняется — как есть
+hashed-nbsp	"a\u00a0b"	"#9507017c6d887511a5a6"	NBSP U+00A0 (Zs, не U+0020) — хэш
+hashed-zwsp	"a\u200bb"	"#8df62aef5f92e4c30c0c"	U+200B (Cf) — хэш
+hashed-private-use	"a\ue000b"	"#d9d5739bdbae40785a88"	U+E000 (Co) — хэш
+hashed-unassigned	"a\u0378b"	"#c62e28fa179124c97732"	U+0378 (Cn, не назначен) — хэш
+plain-arabic-digit	"٣"	"٣"	цифра вне ASCII (Nd) — как есть
+plain-punct-symbols	"a:b;c(d)[e]{f}<g>@h$i%j^k&l*m+n=o|p~q`r!"	"a:b;c(d)[e]{f}<g>@h$i%j^k&l*m+n=o|p~q`r!"	пунктуация и символы ASCII (P, S) — как есть
+plain-dots	"a.b"	"a.b"	точка внутри — как есть
+hashed-200-bytes	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"#c2a908d98f5df987ade4"	наибольший rid (200 байт) — хэш

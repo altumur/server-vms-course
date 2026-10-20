@@ -31,7 +31,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -61,7 +61,7 @@ paths:
         in: query
         required: false
         schema: {type: string, minLength: 1}
-        description: Только единицы этого члена; повтор параметра — 400 по М10/9 Н2.
+        description: Только единицы этого члена; повтор параметра — 400 по P/06.5 Н2.
     get:
       summary: Единицы подсистемы в виде домена
       responses:
@@ -88,7 +88,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -124,7 +124,7 @@ paths:
         '502': {$ref: '#/components/responses/Forwarded'}
         '503': {$ref: '#/components/responses/Forwarded'}
     head:
-      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (М10/9 Н2)'
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
       responses:
         '200':
           description: как у GET, без тела
@@ -158,7 +158,7 @@ components:
               - properties:
                   error: {enum: [no domain here, no console known], description: 'no console known — пересылка урока 8 Н3 шаг 9 (добавлено М11/8)'}
     BadQuery:
-      description: Запрос не по форме (М10/9 Н2 «Разбор запроса консоли»)
+      description: Запрос не по форме (P/06.5 Н2 «Разбор запроса консоли»)
       content:
         application/json:
           schema:

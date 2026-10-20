@@ -1,0 +1,8 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 01-create, 02-exists, 03-update, 04-platform-fields, 05-required, 06-name-grammar, 07-delete, 08-types, 09-list-comma, 10-inherit-absent, 11-bad-path, 12-input-forms, 13-idempotency-key-limits, 14-if-match из М10/03 (стадия B)	all
+2026-10-20	перенос	сценарии 04-blob, 05-ceilings, 06-tables, 07-table-ref, 11-table-feed из М10/10 (стадия B)	all
+2026-10-20	15-blob	сценарий 04-blob из М10/10 переименован в 15-blob: номер 04 занят 04-platform-fields из М10/03 (Н5 сверяет номера); шаги без изменений	all
+2026-10-20	16-ceilings	сценарий 05-ceilings из М10/10 переименован в 16-ceilings: номер 05 занят 05-required из М10/03; шаги без изменений	all
+2026-10-20	17-tables	сценарий 06-tables из М10/10 переименован в 17-tables: номер 06 занят 06-name-grammar из М10/03; шаги без изменений	all
+2026-10-20	18-table-ref	сценарий 07-table-ref из М10/10 переименован в 18-table-ref: номер 07 занят 07-delete из М10/03; шаги без изменений	all
+2026-10-20	19-table-feed	сценарий 11-table-feed из М10/10 переименован в 19-table-feed: номер 11 занят 11-bad-path из М10/03; шаги без изменений	all

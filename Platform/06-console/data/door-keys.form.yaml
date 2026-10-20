@@ -1,0 +1,17 @@
+# Семья door/keys — открытые ключи подписи токенов двери (P/06.5; P/06.5 Н3 «Токен двери — байты»).
+# Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. Несекретная строка: пишет консоль вместе с door/signer и добавляет свой kid (cas); читает
+# держатель при проверке токена (P/03.4 Н3 «токен двери у держателя»).
+dialect: data-form/1
+root:
+  type: object
+  properties: {}
+  names:
+    key:
+      type: string
+      pattern: '[a-z0-9-]{1,32}'
+      description: "kid — имя ключа подписи, 1–32 знака [a-z0-9-] (как kid строки door/signer)"
+    value:
+      type: string
+      pattern: '[0-9a-f]{64}'
+      description: 64 строчных hex открытого ключа Ed25519 (RFC 8032)

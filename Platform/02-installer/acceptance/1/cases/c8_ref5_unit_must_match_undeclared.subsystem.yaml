@@ -1,4 +1,4 @@
-# значение must_match поля единицы называет необъявленное поле nozone; норма М10/2 Н1.4, М10/3 Н1.3; строка 5 references.tsv
+# значение must_match поля единицы называет необъявленное поле nozone; норма М10/2 Н1.4, P/06.1 Н1.3; строка 5 references.tsv
 name: probe
 unit:
   rows: counters

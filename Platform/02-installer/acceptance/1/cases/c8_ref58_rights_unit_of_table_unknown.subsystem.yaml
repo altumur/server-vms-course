@@ -1,4 +1,4 @@
-# ключ rights.unit_of не таблица из tables; норма М10/2 Н1.4, М10/6 Н1.5; строка 58 references.tsv
+# ключ rights.unit_of не таблица из tables; норма М10/2 Н1.4, P/06.3 Н1.5; строка 58 references.tsv
 name: probe
 unit:
   rows: counters

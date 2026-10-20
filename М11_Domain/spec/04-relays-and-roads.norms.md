@@ -129,7 +129,7 @@ domain/view.relay_refused: {<ретранслятор>: {<член>: <причи
 ## Н2 Двери
 
 HTTP-контракт: [04-relays-and-roads.api.openapi.yaml](04-relays-and-roads.api.openapi.yaml). Разбор запроса — P/01.1 Н2.1
-с отступлениями М10/9 Н2.
+с отступлениями [P/06.5](../../Platform/06-console/spec/06.5-console.norms.md) Н2.
 
 Дверь ретранслятора и пакет `relayed` — класс `signed` серверной стороны TLS урока 8 Н1.6 `server`: сертификат клиента не требуется и прав не даёт, личность — подпись члена.
 

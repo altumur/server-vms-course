@@ -16,17 +16,17 @@ root:
       owner: P/02.1 Н1.2
     unit:
       type: object
-      owner: 3 Н1.1
+      owner: P/06.1 Н1.1
       required: [rows, id]
       properties:
-        rows: {ref: rowsName, owner: 3 Н1.1}
-        id: {type: string, owner: 3 Н1.3, description: "`numeric` или несекретное поле типа string (Н1.4)"}
-        fields: {ref: unitFields, owner: 3 Н1.2, default: {}}
-    placement: {ref: placement, owner: 4 Н1.3}
-    tables: {ref: tables, owner: 10 Н1.6, default: {}, default_text: таблиц нет}
-    requests: {ref: requests, owner: 8 Н1.5}
+        rows: {ref: rowsName, owner: P/06.1 Н1.1}
+        id: {type: string, owner: P/06.1 Н1.3, description: "`numeric` или несекретное поле типа string (Н1.4)"}
+        fields: {ref: unitFields, owner: P/06.1 Н1.2, default: {}}
+    placement: {ref: placement, owner: P/04 Н1.3}
+    tables: {ref: tables, owner: P/06.1 Н1.6, default: {}, default_text: таблиц нет}
+    requests: {ref: requests, owner: P/06.4 Н1.5}
     holds:
-      owner: 8
+      owner: P/06.4 Н1.5
       description: все ключи необязательны
       type: object
       properties:
@@ -37,7 +37,7 @@ root:
         released: {type: string, description: поле таблицы}
         longest: {type: number, exclusive_minimum: 0, description: секунды}
     events:
-      owner: 8
+      owner: P/03.6 Н1.2; P/06.4 Н1.2
       type: object
       default: {}
       properties:
@@ -58,28 +58,28 @@ root:
                   default_text: все поля строки, кроме этих
         older_epochs: {enum: [fenced, earlier-run], default: fenced}
     about:
-      owner: 8 Н1.2; 3 Н1.3
+      owner: P/05 Н1.2; P/06.1 Н1.3
       type: object
       required: [sub, field]
       properties:
         sub: {ref: name, description: "имя подсистемы по грамматике `name`; существование — не проверка загрузчика"}
         field: {type: string, description: "поле с `fixed: true`"}
     snapshot:
-      owner: 10 Н1.3
+      owner: P/04 Н1.3а
       type: array
       items: {type: string}
       description: "список полей без `*_secret`, blob и `server`; `[]` — ни одного"
       default_text: все поля, кроме этих
-    rights: {ref: rights, owner: 6 Н1.5, default: {}}
+    rights: {ref: rights, owner: P/06.3 Н1.5, default: {}}
     secrets: {ref: secrets, owner: P/02.5 Н1.3, default: {}}
     worker:
-      owner: P/02.5 Н1.4; 8 Н1.5
+      owner: P/02.5 Н1.4; P/06.4 Н1.5
       type: object
       default: {}
       properties:
-        writes: {ref: strList, owner: P/02.5 Н1.4, description: "собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (урок 7 Н3 «перезапечатать при старте»)", default: [], default_text: таблиц воркера нет}
+        writes: {ref: strList, owner: P/02.5 Н1.4, description: "собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (P/06.2 Н3 «перезапечатать при старте»)", default: [], default_text: таблиц воркера нет}
         reads: {ref: grantList, owner: P/02.5 Н1.4, description: "`<семья>/<имя>` или префиксы с `/`"}
-        requests: {ref: strList, owner: 8 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
+        requests: {ref: strList, owner: P/06.4 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
         deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этой спеки — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
     slot:
       owner: P/03.2 Н1.4
@@ -110,26 +110,26 @@ root:
           default: []
           default_text: строковых полей нет
     objects:
-      owner: 8 Н1.1
+      owner: P/05 Н1.1
       type: object
       properties:
         rows: {ref: strList, description: семьи строк-объектов}
         door: {ref: strList, description: семьи двери объектов}
     door:
-      owner: 9 Н3; 11 Н1.8
+      owner: P/06.5 Н3; P/06.5 Н1.8
       type: object
       default: {}
       properties:
-        routes: {ref: strList, owner: 9 Н3, default: [], default_text: двери нет}
-        pass: {ref: strList, owner: 11 Н1.8, default: [], default_text: передачи нет}
-    servers: {ref: servers, owner: 9 Н1.2}
-    display: {ref: display, owner: 9 Н1.2, default: {}}
+        routes: {ref: strList, owner: P/06.5 Н3, default: [], default_text: двери нет}
+        pass: {ref: strList, owner: P/06.5 Н1.8, default: [], default_text: передачи нет}
+    servers: {ref: servers, owner: P/06.5 Н1.2}
+    display: {ref: display, owner: P/06.5 Н1.2, default: {}}
     console:
-      owner: 9 Н1.2
+      owner: P/06.5 Н1.2
       type: object
       properties:
         running: {type: string, description: "`name` метрики из `metrics[]`", default_text: "`running_gauge: null`"}
-    metrics: {ref: metrics, owner: 9 Н1.2; М13}
+    metrics: {ref: metrics, owner: P/06.5 Н1.2; М13}
     domain: {ref: domain, owner: М11}
 
 defs:
@@ -162,35 +162,35 @@ defs:
       pattern: '.*/.*'
       not_pattern: '!.*|delete:.*|.*\*.*'
 
-  # ---- поле: P/02.1 Н1.3; смысл — урок 3 Н1.2, формы url — урок 7 Н1.1
+  # ---- поле: P/02.1 Н1.3; смысл — P/06.1 Н1.2, формы url — P/06.2 Н1.1
   unitFields:
     type: object
     ordered: true
     names:
       key:
         type: string
-        description: "не из `platform_fields` урока 3"
+        description: "не из `platform_fields` P/06.1 Н1.2"
         not_enum: [id, revision, deleted, worker, placement, epoch, phase, observed_revision]
       value: {ref: unitField}
   unitField:
     type: object
     properties:
       type: {ref: fieldType}
-      required: {type: boolean, default: false, owner: 3 Н3}
-      fixed: {type: boolean, default: false, owner: 3 Н1.3}
-      default: {type: any, owner: 3 Н1.2, description: "одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть"}
-      inherit: {type: any, owner: 3 Н1.2, description: "как `default`; последнее звено цепи наследования; только у поля единицы"}
+      required: {type: boolean, default: false, owner: P/06.1 Н3}
+      fixed: {type: boolean, default: false, owner: P/06.1 Н1.3}
+      default: {type: any, owner: P/06.1 Н1.2, description: "одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть"}
+      inherit: {type: any, owner: P/06.1 Н1.2, description: "как `default`; последнее звено цепи наследования; только у поля единицы"}
       merge: {enum: [union, override], owner: М11/11 Н1.5, description: "сведение цепи наследования; только с `inherit`; `union` — только у `type: list`"}
       enum: {ref: fieldEnum}
       unique:
-        owner: 3 Н1.3
-        description: "`canonical` — сравнение по канонической форме URL (урок 3 Н1.3), только у url; не у list"
+        owner: P/06.1 Н1.3
+        description: "`canonical` — сравнение по канонической форме URL (P/06.1 Н1.3), только у url; не у list"
         variants:
           - {type: boolean, enum: [true]}
           - {type: string, enum: [canonical]}
       ref: {ref: refTarget}
       must_match: {ref: mustMatch}
-      schema: {ref: jsonSchemaLite, owner: 3 Н1.2; 10 Н1.6}
+      schema: {ref: jsonSchemaLite, owner: P/06.1 Н1.2; P/06.1 Н1.6}
       bound_to: {ref: boundTo}
       credentials: {ref: credentials}
       secret_in: {ref: secretIn}
@@ -230,13 +230,13 @@ defs:
   fieldType:
     enum: [string, int, float, bool, list, json, url, blob]
     default: string
-    owner: 3 Н1.2
+    owner: P/06.1 Н1.2
     description: "поле `*_secret` — только string"
   fieldEnum:
     type: array
     min_items: 1
     unique_items: true
-    owner: 3 Н3
+    owner: P/06.1 Н3
     description: "значения типа поля; только у string и bool"
   # Правила поля по типу (P/02.1 Н1.3): default — одно значение типа поля; enum — только у string и bool;
   # формы url — только у url. Общий список правил unitField и tableField (rules: [{ref: …}] — вставка списка).
@@ -278,30 +278,30 @@ defs:
       - when: {is: {type: [blob]}}
         forbid: [inherit]
   refTarget:
-    owner: 3 Н1.3
+    owner: P/06.1 Н1.3
     description: "`<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет"
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}'
   mustMatch:
-    owner: 3 Н1.3
+    owner: P/06.1 Н1.3
     description: "`{<поле цели>: <поле этой строки>}`; ключи не проверяются"
     type: object
     names: {key: {type: string}, value: {type: string}}
   boundTo:
-    owner: 7 Н1.1
+    owner: P/06.2 Н1.1
     description: "имя поля или список имён полей этой строки, не секретов"
     variants:
       - {type: string}
       - {type: array, items: {type: string}}
   credentials:
-    owner: 7 Н1.1
+    owner: P/06.2 Н1.1
     type: object
     required: [login, secret]
     properties:
       login: {type: string, description: поле строки не url и не секрет}
       secret: {type: string, description: "поле `*_secret`"}
   secretIn:
-    owner: 7 Н1.1
+    owner: P/06.2 Н1.1
     type: array
     items:
       description: "элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}`"
@@ -322,7 +322,7 @@ defs:
         - {when: {absent: [param]}, forbid: [login]}
         - {when: {absent: [regex]}, forbid: [in, schemes, decoded]}
   schemes:
-    owner: 7 Н1.1; 3 Н4
+    owner: P/06.2 Н1.1; P/06.1 Н4
     description: "имя схемы → `{host?, fragment?, none?}`"
     type: object
     names:
@@ -331,11 +331,11 @@ defs:
         type: object
         properties:
           host: {enum: [authority, path], default: authority, description: "`authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`)"}
-          fragment: {enum: [none], default_text: "`#` начинает фрагмент", description: "`none`: `#` — обычный знак, не начало фрагмента (урок 7 А2)"}
-          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` урока 3 Н4); проверка «нет хоста» урока 3 Н4 к такой ссылке не применяется, `group_by` P/04 Н1.3 её в группу не берёт"}
+          fragment: {enum: [none], default_text: "`#` начинает фрагмент", description: "`none`: `#` — обычный знак, не начало фрагмента (P/06.2 Н1.1а А2)"}
+          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` P/06.1 Н4); проверка «нет хоста» P/06.1 Н4 к такой ссылке не применяется, `group_by` P/04 Н1.3 её в группу не берёт"}
   jsonSchemaLite:
-    owner: 3 Н1.2; 10 Н1.4
-    description: "JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32"
+    owner: P/02.1 Н1.2
+    description: "JSON Schema 2020-12; ключевые слова — перечень `names.key` этого определения (иное — value), глубина ≤ 32 (разбор ревью стадии A 6–7, № 11)"
     type: object
     properties:
       properties: {type: object, names: {key: {type: string}, value: {ref: jsonSchemaLite}}}
@@ -436,7 +436,7 @@ defs:
         properties:
           delete_after: {type: integer, minimum: 1, description: "только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067)"}
 
-  # ---- tables: М10/10 Н1.6
+  # ---- tables: P/06.1 Н1.6
   tables:
     description: отображение named (имя → таблица) или список имён
     type: [object, array]
@@ -463,7 +463,7 @@ defs:
         default_text: "`<т>.written`, `<т>.deleted`"
         properties: {written: {type: string}, deleted: {type: string}}
 
-  # ---- requests: М10/8 Н1.5, ADR-0054
+  # ---- requests: P/06.4 Н1.5, ADR-0054
   requests:
     type: object
     properties:
@@ -474,7 +474,7 @@ defs:
       settle: {type: number, minimum: 0, default: 60, description: секунды}
       ttl: {type: number, minimum: 0, description: "0 — без предела"}
       key: {type: string, pattern: '.*\{[^{}]+\}.*', description: "шаблон rid хотя бы с одним `{…}` (Н1.4): без подстановки все просьбы получили бы один id", default_text: "`r-<sha16(Idempotency-Key)>`"}
-      outcome: {enum: [mark, fetched], default: mark, description: "смысл — урок 8, ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)"}
+      outcome: {enum: [mark, fetched], default: mark, description: "смысл — P/06.4 Н1.5 (`mark`), глава 3.6 (дозапись `fetched`), ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)"}
       stamp: {type: array, items: {enum: [by, at, group, about]}}
       journal: {type: string, description: вид журнала}
       elsewhere: {ref: strList}
@@ -484,7 +484,7 @@ defs:
       - {when: {is: {free: [false]}}, require: [valid_for, most_valid]}
       - {when: {is: {free: [true]}}, require: [ttl]}
 
-  # ---- rights: М10/6 Н1.5; secrets: М10/7 Н1.3
+  # ---- rights: P/06.3 Н1.5; secrets: P/02.5 Н1.3
   rights:
     type: object
     properties:
@@ -529,7 +529,7 @@ defs:
             items: {enum: [console, controller, worker, domainworker, domain, domainagent, resource, domainconsole]}
       reads: {ref: grantList, description: "`<семья>/<имя>` или префиксы с `/`, как `worker.reads`"}
 
-  # ---- servers, display, metrics: М10/9 Н1.2
+  # ---- servers, display, metrics: P/06.5 Н1.2
   servers:
     type: object
     properties:

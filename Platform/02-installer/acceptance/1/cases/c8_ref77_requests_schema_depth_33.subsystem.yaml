@@ -1,4 +1,4 @@
-# requests.schema глубже 32 (33 вложенных отображения); норма М10/10 Н1.4, М10/2 Н1.2а; строка 77 references.tsv
+# requests.schema глубже 32 (33 вложенных отображения); норма P/06.1 Н1.4, М10/2 Н1.2а; строка 77 references.tsv
 name: probe
 unit:
   rows: counters

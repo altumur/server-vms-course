@@ -24,7 +24,7 @@ HTTP-контракт — в [OpenAPI](spec/03-agent-and-reports.api.openapi.yam
 
 - [Урок 1](01-what-a-cluster-cannot-know.md) — копия, метка как «смена», LOST_AFTER.
 - [Урок 2](02-root-keys-and-revocation.md) — корень, набор, функция `keys`, конверт `x25519:v1`.
-- [P/03](../Platform/03-worker/03-worker.md), глава 3.4, и [М10/10](../М10_Platform/10-schema-drain-snapshot-limits.md) —
+- [P/03](../Platform/03-worker/03-worker.md), глава 3.4, и [P/04](../Platform/04-controller/04-controller.md), «Снимок — по шарду на воркера» —
   пульс воркера и шарды снимка: то, что агент несёт.
 - [P/05](../Platform/05-resource/05-resource.md) — объекты: целиком или никак.
 

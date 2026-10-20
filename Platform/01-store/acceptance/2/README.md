@@ -7,7 +7,7 @@
 прав стенда — готовый вход [`inputs/rights.json`](inputs/rights.json) (форма P/01.2 Н1.2): роли `console`,
 `testsubcontroller`, `testsubworker`, `testsub2worker` и образцы, нужные шагам, — подмножество вывода прав P/02.5 Н1.4 для
 `testsub` и `testsub2` (`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`. Раннер кладёт его
-в `{rights}` до запуска хранилища; генератор прав главе не нужен — глава проверяет оценщик, а не вывод. Сценарии перенесены из приёмки [М10/6](../../../../Source/tests/testdata/acceptance/М10_Platform/06/README.md)
+в `{rights}` до запуска хранилища; генератор прав главе не нужен — глава проверяет оценщик, а не вывод. Сценарии перенесены из приёмки М10/06
 (стадия B) с прежними номерами, шагами и текстами; сценарии вывода прав из спеки — в [приёмке P/02.5](../../../02-installer/acceptance/5/README.md).
 
 ## scenarios.tsv

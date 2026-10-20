@@ -1,0 +1,134 @@
+scenario	step	request	expect
+# Приёмка P/06.1: дверь единиц консоли testsub (counters, id: name) — сц. 01–14 из М10/03; тела и таблицы консоли testsub и testsub2 — сц. 15–19 из М10/10 (04, 05, 06, 07, 11) (стадия B). Формат — README.
+01-create	1	POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "name": "c1", "start": 5, "labels": [], "revision": 1, "worker": null}
+01-create	2	@key(1) POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "revision": 1}
+01-create	3	@key(1) POST /counters {"name": "c1", "start": 6}	422 {"error": "key reused"}
+01-create	4	@nokey POST /counters {"name": "c1x", "start": 5}	400 {"error": "~Idempotency-Key"}
+02-exists	1	POST /counters {"name": "c2"}	201 {"id": "c2", "start": 0}
+02-exists	2	POST /counters {"name": "c2"}	409 {"error": "exists"}
+03-update	1	POST /counters {"name": "c3", "start": 1}	201 {"revision": 1}
+03-update	2	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
+03-update	3	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
+03-update	4	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
+03-update	5	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
+03-update	6	PUT /counters/c3 {"start": null}	400
+03-update	7	GET /counters	200 {"configured": [{"id": "c3", "start": 7, "revision": 4}]}
+04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
+04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
+04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
+04-platform-fields	4	PUT /counters/c2 {"epoch": 9}	400 {"error": "~may not set"}
+05-required	1	POST /counters {"start": 1}	400 {"error": "~needs a name"}
+05-required	2	POST /counters {"name": "", "start": 1}	400
+06-name-grammar	1	POST /counters {"name": "a/b"}	400
+06-name-grammar	2	POST /counters {"name": "a,b"}	400
+06-name-grammar	3	POST /counters {"name": "a|b"}	400
+06-name-grammar	4	POST /counters {"name": "a\"b"}	400
+06-name-grammar	5	POST /counters {"name": "."}	400
+06-name-grammar	6	POST /counters {"name": ".."}	400
+06-name-grammar	7	POST /counters {"name": "a\\b"}	400
+06-name-grammar	8	POST /counters {"name": "a.b"}	201 {"id": "a.b"}
+06-name-grammar	9	POST /counters {"name": "a b"}	201 {"id": "a b"}
+06-name-grammar	10	PUT /counters/a%20b {"start": 1}	200 {"id": "a b", "start": 1}
+06-name-grammar	11	PUT /counters/%FF {"start": 1}	400
+07-delete	1	POST /counters {"name": "c7", "start": 1}	201 {"revision": 1}
+07-delete	2	PUT /counters/c7 {"start": 2}	200 {"revision": 2}
+07-delete	3	PUT /counters/c7 {"start": 3}	200 {"revision": 3}
+07-delete	4	DELETE /counters/c7	200 {"deleted": "c7"}
+07-delete	5	DELETE /counters/c7	404 {"error": "no such unit"}
+07-delete	6	PUT /counters/c7 {"start": 4}	404 {"error": "no such unit"}
+07-delete	7	POST /counters {"name": "c7", "start": 9}	201 {"id": "c7", "start": 9, "revision": 4}
+08-types	1	POST /counters {"name": "c8", "start": "7"}	400 {"fault": "not_number"}
+08-types	2	POST /counters {"name": "c8", "start": 1.5}	400 {"fault": "not_number"}
+08-types	3	POST /counters {"name": "c8", "labels": "a"}	400
+08-types	4	POST /counters {"name": "c8", "start": true}	400 {"fault": "not_number"}
+08-types	5	POST /counters {"name": "c8", "start": 8}	201 {"start": 8}
+08-types	6	POST /counters {"name": "c8s", "labels": ["\ud800"]}	400 {"fault": "not_json"}
+08-types	7	@key(6) POST /counters {"name": "c8s", "labels": ["a"]}	201 {"id": "c8s"}
+08-types	8	POST /counters {"name": "c8e", "start": 1e400}	400 {"fault": "not_json"}
+08-types	9	POST /counters {"name": "c8i", "start": 9007199254740992}	400 {"fault": "not_number"}
+08-types	10	POST /counters {"name": "c8j", "start": -9007199254740991}	201 {"start": -9007199254740991}
+08-types	11	POST /counters {"name": "c8x", "step": "b", "start": "a"}	400 {"error": "~start"}
+09-list-comma	1	POST /counters {"name": "c9", "marks": ["a,b", "c"]}	201 {"marks": ["a,b", "c"]}
+09-list-comma	2	PUT /counters/c9 {"marks": ["[x", "y"]}	200 {"marks": ["[x", "y"], "revision": 2}
+09-list-comma	3	POST /counters {"name": "c9b", "labels": ["a,b"]}	400
+10-inherit-absent	1	POST /counters {"name": "c10"}	201 {"id": "c10", "step": "@absent", "marks": "@absent"}
+10-inherit-absent	2	PUT /counters/c10 {"step": 2}	200 {"step": 2, "revision": 2}
+10-inherit-absent	3	PUT /counters/c10 {"step": null}	200 {"step": "@absent", "revision": 3}
+11-bad-path	1	PUT /counters/c2/x {"start": 1}	404
+11-bad-path	2	PUT /counters/nosuch {"start": 1}	404 {"error": "no such unit"}
+11-bad-path	3	DELETE /counters/nosuch	404 {"error": "no such unit"}
+11-bad-path	4	GET /counters/	404
+12-input-forms	1	@key(a) POST /counters {"name": "c12", "start": 1}	201 {"id": "c12", "revision": 1}
+12-input-forms	2	@key(a) POST /counters {"start": 1, "name": "c12"}	201 {"id": "c12", "revision": 1}
+12-input-forms	3	@key(a) POST /testsub/counters {"name":"c12","start":1}	201 {"id": "c12", "revision": 1}
+12-input-forms	4	POST /counters {"name": "c12b", "start": 1.0}	400 {"fault": "not_number"}
+12-input-forms	5	POST /counters {"name": "c12b", "start": 1e2}	400 {"fault": "not_number"}
+12-input-forms	6	POST /counters {"name": "c12b", "labels": ["gpu!"]}	400
+12-input-forms	7	POST /counters {"name": "c12b", "labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}	201 {"labels": ["gpu", "vlan:cctv-a", "a.b_c-1"]}
+13-idempotency-key-limits	1	@header Idempotency-Key: @big(200) POST /counters {"name": "k1"}	201 {"id": "k1"}
+13-idempotency-key-limits	2	@header Idempotency-Key: @big(200) POST /counters {"name": "k1"}	201 {"id": "k1", "revision": 1}
+13-idempotency-key-limits	3	@header Idempotency-Key: @big(201) POST /counters {"name": "k2"}	400
+13-idempotency-key-limits	4	@header Idempotency-Key: яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя POST /counters {"name": "k3"}	201 {"id": "k3"}
+13-idempotency-key-limits	5	@header Idempotency-Key: яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя POST /counters {"name": "k4"}	400
+13-idempotency-key-limits	6	@header Idempotency-Key: .. POST /counters {"name": "k5"}	400
+13-idempotency-key-limits	7	@header Idempotency-Key: a/b POST /counters {"name": "k6"}	400
+13-idempotency-key-limits	8	POST /counters {"name": "k2"}	201 {"id": "k2", "revision": 1}
+13-idempotency-key-limits	9	POST /counters {"name": "k4"}	201 {"id": "k4", "revision": 1}
+13-idempotency-key-limits	10	POST /counters {"name": "k5"}	201 {"id": "k5", "revision": 1}
+13-idempotency-key-limits	11	@header Idempotency-Key: d1 @header Idempotency-Key: d1 POST /counters {"name": "k7"}	400
+14-if-match	1	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
+14-if-match	2	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
+14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
+14-if-match	4	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
+14-if-match	5	@header If-Match: two PUT /counters/m14 {"start": 3}	400
+14-if-match	6	@header If-Match: 2 @header If-Match: 2 PUT /counters/m14 {"start": 3}	400
+14-if-match	7	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
+14-if-match	8	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
+14-if-match	9	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
+15-blob	1	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
+15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
+15-blob	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
+15-blob	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "$d", "revision": "2"}}
+15-blob	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 3}
+15-blob	6	console2 PUT /tallies/t1/nosuch @raw x	404 {"error": "no such blob field"}
+15-blob	7	console2 PUT /tallies/nosuch/mask @raw x	404 {"error": "no such unit"}
+15-blob	8	console2 PUT /tallies/t1 {"mask": "sha256-0000000000000000000000000000000000000000000000000000000000000000"}	400
+15-blob	9	console2 PUT /tallies/t1 {"mask": "$d"}	200 {"mask": "$d"}
+15-blob	10	console2 GET /tallies/t1/mask	405
+15-blob	11	console2 DELETE /tallies/t1/mask	405
+15-blob	12	console2 @header If-Match: 999 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d"}
+16-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long", "error": "~the ceiling is 4000"}
+16-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
+16-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413 {"detail": "~this door takes at most"}
+16-ceilings	4	console2 POST /tallies {"name": "t5a", "of": "c1", "rule": "@big(3998)"}	201
+16-ceilings	5	console2 POST /tallies {"name": "t5b", "of": "c1", "rule": "@big(3999)"}	400 {"fault": "too_long"}
+17-tables	1	console2 POST /shelves {"zone": "z1"}	400
+17-tables	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "zone": "z1", "kind": "plain", "admits": true, "held_by": null, "feed": "@absent"}}
+17-tables	3	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "zone": "z1", "held_by": null}]}
+17-tables	4	console2 GET /shelves/sh1	200 {"name": "sh1", "kind": "plain"}
+17-tables	5	console2 PATCH /shelves/sh1 {"zone": "z2"}	405
+17-tables	6	console2 POST /shelves {"name": "a/b", "zone": "z1"}	400
+17-tables	7	console2 DELETE /shelves/sh1	200 {"deleted": "sh1"}
+17-tables	8	console2 GET /shelves/sh1	404
+17-tables	9	console2 DELETE /shelves/sh1	404
+17-tables	10	@start resource	ok
+17-tables	11	@until 20 console GET /events?kind=shelf.declared	200 {"events": [{"kind": "shelf.declared", "sub": "testsub2", "target": "shelves/sh1", "was": false}]}
+17-tables	12	console GET /events?kind=shelf.withdrawn	200 {"events": [{"kind": "shelf.withdrawn", "sub": "testsub2", "target": "shelves/sh1"}]}
+18-table-ref	1	console2 POST /shelves {"name": "sh7", "zone": "z1"}	201
+18-table-ref	2	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh7", "zone": "z1"}	201 {"shelf": "sh7"}
+18-table-ref	3	console2 POST /shelves {"name": "sh7", "zone": "z2"}	409 {"fault": "must_match"}
+18-table-ref	4	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
+18-table-ref	5	console2 GET /tallies	200 {"configured": [{"id": "t7", "shelf": "sh7", "zone": "z1"}]}
+19-table-feed	1	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a"}	201 {"row": {"feed": "https://h.example/a"}}
+19-table-feed	2	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b"}	400 {"error": "~must be given anew"}
+19-table-feed	3	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b", "feed_secret": ""}	400 {"error": "~must be given anew"}
+19-table-feed	4	console2 GET /shelves/sh8	200 {"feed": "https://h.example/a"}
+19-table-feed	5	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a", "feed_secret": ""}	201 {"row": {"feed": "https://h.example/a"}}
+19-table-feed	6	console2 POST /shelves {"name": "sh9", "zone": "z1", "feed": "ftp://h.example/a"}	400 {"fault": "bad_url"}
+19-table-feed	7	console2 POST /shelves {"name": "sh9", "zone": null}	400
+19-table-feed	8	console2 POST /notches {"of": "c1", "from": -0.5, "to": 2}	201 {"row": {"name": "c1-0-2"}}
+19-table-feed	9	console2 POST /shelves {"name": "a/b", "zone": 5}	400 {"error": "~name"}
+19-table-feed	10	console2 POST /shelves {"zone": 5, "nope": 1}	400 {"error": "~the body does not fill it in"}
+19-table-feed	11	@as console store POST /v1/write {"id":"e1","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
+19-table-feed	12	console2 GET /shelves/shx	200 {"name": "shx", "garbled": true}
+19-table-feed	13	console2 POST /shelves {"name": "sh10", "zone": "z1", "over": "shx"}	409 {"fault": "garbled"}
