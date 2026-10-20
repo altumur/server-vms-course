@@ -176,13 +176,15 @@ rights:     domain/signer-turn пишет только роль domain (её с�
 порт, `sd_notify` они не шлют (P/02.4 Н1.1 `notify`; решение «Архитектора», второй пилот).
 
 ```yaml
-w2c-domain.service:          роль domain; w2c-run.sh domain; User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets;
-                             SECRETS_KEY (credential); SIGNER_HOST/PORT 0.0.0.0:8445 — агенты членов ходят сюда (урок 3)
-w2c-domainconsole.service:   роль domainconsole; w2c-run.sh domainconsole; кольца нет, w2c-secrets нет;
+w2c-domain.service:          роль domain; w2c-run.sh domain; W2C_ROLE=domain (разбор ревью стадии A 8–10, № 33); User=w2c;
+                             SupplementaryGroups=w2c-store w2c-events w2c-secrets; SECRETS_KEY (credential); SIGNER_HOST/PORT
+                             0.0.0.0:8445 — агенты членов ходят сюда (урок 3)
+w2c-domainconsole.service:   роль domainconsole; w2c-run.sh domainconsole; W2C_ROLE=domainconsole; User=w2c;
+                             SupplementaryGroups=w2c-store w2c-events (разбор ревью стадии A 8–10, № 33); кольца нет, w2c-secrets нет;
                              DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 — консоли членов пересылают сюда (урок 8)
-w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; User=w2c; SupplementaryGroups=w2c-store w2c-events
-                             w2c-secrets; SECRETS_KEY (credential) — ключ члена и конверты кольца (P/06.2 Н1.2 holders); своего
-                             порта нет; дверь ретранслятора — урок 4 (RELAY_PORT 8446)
+w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; W2C_ROLE=domainagent (разбор ревью стадии A 8–10, № 33);
+                             User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets; SECRETS_KEY (credential) — ключ члена и
+                             конверты кольца (P/06.2 Н1.2 holders); своего порта нет; дверь ретранслятора — урок 4 (RELAY_PORT 8446)
 local_door:  местная дверь агента (урок 7 Н1.2) — выбор реализации; если TCP — порты 8444–8447 не занимать, умолчание 8448
 ```
 

@@ -5,9 +5,10 @@
 
 ## Запуск
 
-- Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`; кольца и группы
-  `w2c-secrets` нет — [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md); общее юнитов —
-  P/02.4 Н1.1 `common` ([P/02.4](../02-installer/spec/02.4-installer.norms.md)).
+- Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`, `W2C_ROLE=domainconsole`,
+  `User=w2c`, группы `w2c-store w2c-events` (разбор ревью стадии A 8–10, № 33); кольца и группы `w2c-secrets` нет —
+  [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md); общее юнитов — P/02.4 Н1.1 `common`
+  ([P/02.4](../02-installer/spec/02.4-installer.norms.md)).
 - У кластера-держателя, рядом с процессом `domain`. Строк держателя консоль не пишет: правки передаёт процессу
   `domain` ([М11/3 Н1.8](../../М11_Domain/spec/03-agent-and-reports.norms.md)); очередь `domain/signer-turn` ей не нужна
   (М11/12 Н1.7 `guard`).
