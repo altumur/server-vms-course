@@ -52,7 +52,8 @@ README приёмки [М11/01](../01/README.md). Раннер ходит чел
 
 Набор `keys` у всех входов один: `domain: acme`, `rev: 2`, подпись корня.
 
-- `record-*` — `{keys, row}`: `row` — строка `{doc}` записи срока.
+- `record-*` — `{keys, row}`: `row` — строка `{doc}` записи срока; те же случаи — таблица пакета
+  [`record`](../../../../../../Platform/common/vectors/record/README.md) (разбор ревью стадии A 8–10, № 13).
 - `follow-*` — `{keys, held, answers}`:
   - `held` — своя строка `domain/holder` или `null`;
   - `answers` — строка `holder` из `/api/held` каждой консоли (или из 409 `deposed`); `null` — не ответила.
