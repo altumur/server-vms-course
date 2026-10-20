@@ -130,25 +130,10 @@ unreadable:    строка, которая не читается, прав не
 
 ### Н1.4 Право — функция `may`
 
-```yaml
-input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: [<имя>…], user, glass, cap, unit, now}
-  unit:    null — дверь без единицы; "*" — право на всё; {sub, id, labels: [<метка>…], about?: {sub, id, labels}}
-  glass:   true — сессия аварийного входа (Н1.6)
-output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
-```
-
-```
-1. glass                                                                → allow
-2. user ∈ disabled                                                      → deny disabled
-3. grants = null                                                        → deny no_grant
-4. as_of ≠ null и now − as_of > GRANT_LIFETIME                          → deny stale
-5. строки: subject = user, until = 0 или now < until
-6. unit = null и cap = view: хоть одна строка                           → allow
-7. строка с rank(cap строки) ≥ rank(cap) и область покрывает unit        → allow
-   * — любую (и "*"); unit:<s>/<i> — unit с (sub, id) = (s, i) или его about с (s, i);
-   labels:L — все метки L у about, если about есть, иначе у самого unit; null и "*" ни одна область, кроме *, не покрывает
-8.                                                                      → deny no_grant
-```
+Вход, вывод и шаги 1–8 — [договор права](../../Platform/common/contracts/may.md) «Функция `may`» (перенесено туда без
+изменения; номера шагов прежние; владелец P/08, глава 8.4; исполняют сторожевые P/06.3, 6.7, урок 10 и процесс `domain`;
+решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10). Векторы —
+[`common/vectors/may`](../../Platform/common/vectors/may/README.md).
 
 ### Н1.5 Сторожевая с грантами
 
@@ -388,7 +373,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 | `open` | 400 | аварийный вход у открытой консоли |
 | `bad body` у аварийного входа | 400 | `who`, `why` пусты или не строки |
 
-Слова `may`: `disabled`, `stale`, `no_grant`.
+Слова `may` — [договор права](../../Platform/common/contracts/may.md) «Слова отказа».
 
 ---
 

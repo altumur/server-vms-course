@@ -60,9 +60,9 @@ api:       console.api(method, path, body) → ответ | throw {status, body,
            PUT и таблицы без памяти повторов автоматически не повторяются: при неизвестном исходе сначала чтение.
            Завершённый ответ закрывает действие; отказ до памяти заявки разбирается по контракту владельца, не кэшируется как успех
 may:       console.may(cap, ref) → bool по grants сессии и правилу scope P/06.3 Н1.3 (* | unit:<sub>/<id> | labels:<…>; грант на
-           единицу или на её about-единицу; ранг cap — view < edit < admin, М11/9 Н1.4 шаг 7); via: break-glass (grants []) — true,
-           как сервер у аварийной сессии (М11/9 Н1.4 шаг 1, glass → allow); true без grants только при open: true; в закрытой или
-           неизвестной (/session не ответила) сессии отсутствие grants — false; сервер проверяет всегда (разбор ревью стадии B 6–7, № 28)
+           единицу или на её about-единицу; ранг cap — view < edit < admin, договор права common/contracts/may.md шаг 7);
+           via: break-glass (grants []) — true, как сервер у аварийной сессии (договор права common/contracts/may.md шаг 1,
+           glass → allow); true без grants только при open: true; в закрытой или неизвестной (/session не ответила) сессии отсутствие grants — false; сервер проверяет всегда (разбор ревью стадии B 6–7, № 28)
 events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout")
 where:     where(ref) → {worker, server, door: {url, token, expires, routes} | null, reason}
            библиотека превращает отсутствующее поле door HTTP-ответа в null для оболочки; HTTP Where остаётся формой P/06.5 (контракт урока 6)

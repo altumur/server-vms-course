@@ -516,7 +516,7 @@ components:
         by: {type: string}
     MayInput:
       type: object
-      description: Вход функции may (Н1.4).
+      description: Вход функции may (Н1.4; Platform/common/contracts/may.md).
       required: [grants, as_of, disabled, user, glass, cap, unit, now]
       additionalProperties: false
       properties:
@@ -571,7 +571,7 @@ components:
       properties:
         result: {enum: [allow, deny]}
         reason: {enum: [disabled, stale, no_grant]}
-      description: reason — только при deny (Н1.4)
+      description: reason — только при deny (Н1.4; Platform/common/contracts/may.md)
       if: {properties: {result: {const: allow}}}
       then: {not: {required: [reason]}}
       else: {required: [reason]}
