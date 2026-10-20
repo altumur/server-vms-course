@@ -1,6 +1,7 @@
 # Разрешённые отступления от структурной проверки (ADR-0080 доп. 14).
 # Столбцы: урок (модуль/NN, P/NN; у no-schema — owner строки каталога), вид (no-openapi | scenarios-format |
-# acceptance-entry | no-acceptance | no-schema), значение (у no-schema — key строки каталога), причина.
+# acceptance-entry | no-acceptance | no-schema | data-paragraph), значение (у no-schema и data-paragraph — key строки
+# каталога), причина.
 # Строка, которая проверяемому уроку больше не нужна, — ошибка проверки: её снимают в той же правке.
 М11_Domain/01	scenarios-format	own	приёмка — чистая функция: команда view реализации читает входной JSON проходов и печатает {view, shadow}; проверяется по README приёмки
 М11_Domain/01	acceptance-entry	inputs	каталог входов команды view (копии членов, назначения, часы держателя); проверяется по README приёмки

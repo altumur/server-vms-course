@@ -1481,6 +1481,31 @@ class PlatformCatalogTests(unittest.TestCase):
         self.assertEqual(len(stale), 2, result.errors)
         self.assertEqual(len(result.errors), 2, result.errors)
 
+    def test_late_layer_rows_and_the_data_paragraph_exception(self):
+        rows = self.ROWS + [
+            ["d/late/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "spec", "М11/3 Н1"],
+            ["d/named/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "spec", "М11/3 Н1"],
+        ]
+        old = self.root / "М11_Domain/spec"
+        old.mkdir(parents=True)
+        (old / "03-x.norms.md").write_text("# М11/3\n")
+        rows = [[c.replace("<x>", "<spec:unit.rows>") if c.startswith("d/") else c for c in r] for r in rows]
+        self.write_catalog(rows)
+        late, named = "d/late/<spec:unit.rows>", "d/named/<spec:unit.rows>"
+        text = self.norms.read_text()
+        self.norms.write_text(text.replace("## Н2 Section", f"Читает `{named}` позже.\n## Н2 Section"))
+        result = self.check()
+        self.assertEqual([e for e in result.errors if "«Данные»" in e],
+                         [f"Platform/03-worker/03-worker.md: «Данные»: no chapter reads {named}, the catalog names the "
+                          "process (<s>domain, <s>worker, proc:03-worker) among its readers"])
+        self.assertEqual(result.stats["data_late_layer"], 1)
+        result = self.check([("P/03", "data-paragraph", named, "читает при переносе урока 8")])
+        self.assertEqual(result.errors, [])
+        self.assertTrue(any(line.startswith(f"P/03 data-paragraph {named}: читает") for line in result.excepted))
+        result = self.check([("P/03", "data-paragraph", named, "x"), ("P/03", "data-paragraph", "c/read/<x>", "agrees")])
+        self.assertEqual(result.errors, ["Platform/03-worker/acceptance: stale exception data-paragraph c/read/<x>: "
+                                         "this lesson does not need it"])
+
     def test_schema_spec_is_a_form_given_by_the_manifest(self):
         rows = self.ROWS + [
             ["<sub>/<spec:unit.rows>/<id>", "row", "М10/8", "put=console", "<s>worker", "-", "1", "spec", "М10/8 Н1.2"],

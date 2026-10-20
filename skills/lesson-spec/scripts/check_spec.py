@@ -272,7 +272,8 @@ def pointer(document, ref):
 
 # Files a desktop leaves in any directory; never part of a lesson (not tracked by git).
 IGNORED = {".DS_Store"}
-EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema"}
+EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema",
+                   "data-paragraph"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
 
@@ -835,7 +836,9 @@ class Check:
     # chapter; a row it reads (a role among the readers; `*` names no reader) — in «читает» or «пишет»; rows of the
     # lesson itself — in «владеет» (data_paragraph). Back: a key in «пишет» has that operation with a role of the process
     # among its participants; a key in «читает» has a role of the process among its readers or participants, readers
-    # `*`, or the lesson as owner.
+    # `*`, or the lesson as owner. «There» skips a row whose owner is an M11 lesson (not yet moved) that no norms file of
+    # the lesson names (until lessons 8–10 move), and a row with the exception data-paragraph (lesson P/NN, value — the
+    # key); the exception that is not needed is stale (решение «Архитектора» по ревью стадии B 3–5, №10).
     def data_roles(self, lesson, key, number, saids):
         if self.catalog is None:
             return
@@ -850,16 +853,24 @@ class Check:
         by_key = {}
         for row in self.catalog.values():
             by_key.setdefault(row["key"], []).append(row)
+        texts = [self.read(norms) or "" for norms, _ in saids]
         for k, rows in by_key.items():
             if any(self.in_lesson(r["owner"], key) for r in rows):
                 continue
             ops = sorted({op for r in rows for op, who in r["ops"].items() if who & roles})
             if ops and k not in writes:
-                self.error(lesson, f"«Данные»: no chapter writes {k}, the catalog gives {', '.join(ops)} to the "
-                                   f"process ({process})")
+                message = f"«Данные»: no chapter writes {k}, the catalog gives {', '.join(ops)} to the process ({process})"
             elif not ops and k not in named and any(r["reader_roles"] and r["reader_roles"] & roles for r in rows):
-                self.error(lesson, f"«Данные»: no chapter reads {k}, the catalog names the process ({process}) "
-                                   f"among its readers")
+                message = f"«Данные»: no chapter reads {k}, the catalog names the process ({process}) among its readers"
+            else:
+                continue
+            if all(r["owner"].startswith("М11/") for r in rows) and not any(k in text for text in texts):
+                self.stats["data_late_layer"] += 1
+                continue
+            if self.exception(key, "data-paragraph", k) is not None:
+                self.except_(lesson, key, "data-paragraph", k)
+                continue
+            self.error(lesson, message)
         for norms, said in saids:
             for k, op in said["пишет"].items():
                 rows = by_key.get(k, [])
