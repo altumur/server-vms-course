@@ -15,7 +15,7 @@ root:
     released:
       type: string
       writer: {enum: ['true', 'false', 'taking']}
-      description: "как у слота; отпустить — \"true\" (только упорядоченная остановка)"
+      description: "как у слота; отпустить — \"true\" (только упорядоченная остановка, под стражем своего слота до его отдачи — разбор ревью стадии B 3–5, № 4)"
     gen:
       type: integer
       minimum: 0
