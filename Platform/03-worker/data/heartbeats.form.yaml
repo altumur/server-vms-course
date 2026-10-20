@@ -1,0 +1,115 @@
+# Семья <sub>/heartbeats/<имя> — пульс воркера, объект (P/03.4; P/03.4 Н1.1). Источник формы объекта (ADR-0088 п. 8).
+# Экземпляр — {key, object}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Поля, имена которых
+# называет спека (<capacity.from>, <headroom.from>, <place_by>), и слова подсистемы — имена автора (names); правила, которые
+# схема не выражает (worker равен имени в ключе, server_unsaid только при places.server_field и неизвестном сервере, fenced и
+# stood_in — только в своих случаях, запас по весам урока 4 Н1.3, said_id, ритм), — проза Н1.1.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    worker:
+      type: string
+      description: имя слота; ДОЛЖЕН; равен имени в ключе
+    ts:
+      ref: common.time
+      description: стенные секунды писателя; ДОЛЖЕН; для показа и расхождения часов, не для свежести (ADR-0049)
+    status:
+      type: array
+      description: ДОЛЖЕН; по элементу на единицу, которую воркер ведёт
+      items:
+        type: object
+        properties:
+          id:
+            description: id единицы
+          phase:
+            type: string
+            description: слова подсистемы; платформа знает одно — running (счётчик running, соседство near)
+          epoch:
+            type: integer
+            description: "эпоха единицы; целое (М11/1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)"
+          revision:
+            type: integer
+            description: revision строки единицы; целое (М11/1 Н1.6 claim)
+          observed_revision:
+            type: integer
+            description: revision строки, под которой единица сейчас запущена; целое (М11/1 Н1.6 claim)
+          why:
+            type: string
+            description: "причина платформы, когда единица не идёт (sealed — урок 7 Н3 «открыть»), как fates.why урока 4, не error (второй пилот, Н-7)"
+        required: [id, phase, epoch, revision, observed_revision]
+        names:
+          key: {type: string}
+          value: {type: any, description: "слова подсистемы; учебный обработчик testsub — одно слово n, текущее значение счётчика (второй пилот, Н-7)"}
+    server:
+      type: string
+      description: "сервер; ДОЛЖЕН; \"\" ровно когда сервер неизвестен (ADR-0029)"
+    instance:
+      type: string
+      description: экземпляр; ДОЛЖЕН
+    labels:
+      type: string
+      description: метки узла через запятую
+    url:
+      type: string
+      description: "url двери — строка платформы (platform_strings Н1.1; добавлено М10/9, Н3 «`/where/<id>`»)"
+    fetched:
+      type: string
+      description: "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (М10/8)"
+    events:
+      type: string
+      description: строка платформы (platform_strings Н1.1)
+    conflicts:
+      ref: common.uint53
+      description: Σ конфликтов аренд + перенесённых; метрика `<sub>_epoch_conflicts`
+    started:
+      ref: common.time
+      description: момент старта
+    previous_hb:
+      ref: common.time
+      description: "число ts застанного под своим именем при старте пульса, если было (журнал cammeta-go, урок 9 № 6: по нему консоль считает failover_seconds, М10/9 Н3)"
+    previous_instance:
+      type: string
+      description: instance застанного пульса, если был
+    previous_server:
+      type: string
+      description: server застанного пульса, если был
+    fenced:
+      type: boolean
+      enum: [true]
+      description: только пока отсечён и имя ещё моё; после отдать_имя пульс не пишется
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 9007199254740991
+      whole: true
+      description: "схема сборки (М10/10 Н1.1 heartbeat): целое JSON без дробной части и экспоненты, ≥ 1"
+    build:
+      type: string
+      description: слово сборки для человека (М10/10 Н1.1 heartbeat)
+    pending_writes:
+      ref: common.uint53
+      whole: true
+      description: "М10/10 Н1.2 pending_writes: целое JSON без дробной части и экспоненты, 0 ≤ x ≤ 2^53 − 1; базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe"
+    server_unsaid:
+      type: string
+      enum: ["this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"]
+      description: ровно эта строка (ADR-0029); только когда сервер не назван, а спека требует places.server_field
+    stood_in:
+      type: object
+      description: "только в пульсе подмены (Н3); ts пульса — время этого повтора (журнал cammeta-go, урок 5 № 2)"
+      properties:
+        step:
+          description: "stood_in.step (Н1.1 {step, for, as_of})"
+        for:
+          description: "stood_in.for (Н1.1 {step, for, as_of})"
+        as_of:
+          ref: common.time
+          description: ts последнего пульса цикла, который подмена повторяет (возраст состояния подсистемы), у следующих повторов тот же
+      required: [step, for, as_of]
+    stand_in_renewals:
+      ref: common.pos53
+      description: число продлений подменой; только когда > 0
+  required: [worker, ts, status, server, instance]
+  names:
+    key: {type: string}
+    value: {type: any, description: "поля, имена которых называет спека: `<capacity.from>` — ёмкость (умолчание capacity), `<headroom.from>` — запас = ёмкость − Σ весов назначения (умолчание headroom), `<place_by>` — место, которое воркер держит, \"\" — не держит; остальное — слова подсистемы, которые платформа не читает (heartbeat.strings называет строки)"}

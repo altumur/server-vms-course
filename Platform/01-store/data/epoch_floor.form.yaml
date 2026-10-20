@@ -1,4 +1,4 @@
-# Семья platform/epoch_floor — пол выдачи эпох (P/01.3; P/01.3 Н1.3 floor, М10/3 Н1.5). Источник формы строки (ADR-0088).
+# Семья platform/epoch_floor — пол выдачи эпох (P/01.3; P/01.3 Н1.3 floor, P/03.2 Н1.5). Источник формы строки (ADR-0088).
 # Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
 dialect: data-form/1
 root:

@@ -1,0 +1,22 @@
+scenario	step	request	expect
+# Приёмка P/03.3: цикл сверки воркера, стенд testsub под раннером. Перенесено из М10/05 (стадия B). Формат — README.
+02-unit	1	@start controller	ok
+02-unit	2	@start worker w-1	ok
+02-unit	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+02-unit	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+02-unit	5	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "reason": "@any", "spec_rev": "@any"}}
+02-unit	6	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
+02-unit	7	@until 30 console GET /counters	200 {"rows": [{"id": "c1", "phase": "running", "worker": "w-1", "server": "srv-a", "worker_state": "live"}]}
+02-unit	8	console PUT /counters/c1 {"start": 2}	200 {"revision": 2}
+02-unit	9	@sleep 12	ok
+02-unit	10	store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
+06-deleted	1	@start controller	ok
+06-deleted	2	@start worker w-1	ok
+06-deleted	3	console POST /counters {"name": "c6", "start": 1}	201
+06-deleted	4	@until 30 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "1"}}
+06-deleted	5	console DELETE /counters/c6	200 {"deleted": "c6"}
+06-deleted	6	@until 30 store GET /v1/get?key=testsub/placement/c6	200 {"items": {"worker": "", "reason": "deleted"}}
+06-deleted	7	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": ""}}
+06-deleted	8	@sleep 12	ok
+06-deleted	9	console POST /counters {"name": "c6", "start": 5}	201 {"revision": 2}
+06-deleted	10	@until 40 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "2"}}

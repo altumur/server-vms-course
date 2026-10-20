@@ -30,7 +30,7 @@
 ## Что нужно знать заранее
 
 - [М10/4](../М10_Platform/04-the-controller-and-placement.md) — контроллер и пульсы; срок LOST_AFTER.
-- [М10/5](../М10_Platform/05-the-worker-under-its-slot.md) — пульс воркера: `status[]` с `revision` и `observed_revision`.
+- [P/03](../Platform/03-worker/03-worker.md), глава 3.4 — пульс воркера: `status[]` с `revision` и `observed_revision`.
 - [М10/10](../М10_Platform/10-schema-drain-snapshot-limits.md) — шарды снимка `<sub>/snapshot/<воркер>`: копия строк
   единиц, которая уходит из кластера.
 - [М10/3](../М10_Platform/03-units-slots-epochs-lease.md) — эпоха единицы, монотонная в своём кластере.

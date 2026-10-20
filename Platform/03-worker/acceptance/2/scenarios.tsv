@@ -1,0 +1,59 @@
+scenario	step	request	expect
+# Приёмка P/03.2: стенд testsub под раннером — слот, никто, имя. Перенесено из М10/05 (стадия B). Формат и директивы — README.
+01-start	1	@start controller	ok
+01-start	2	@start worker w-1	ok
+01-start	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u0", "released": "false", "gen": "1", "server": "srv-a"}}
+01-start	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "@not($u0)"}}
+01-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
+01-start	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"until": "@not($u1)"}}
+01-start	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "until": "$u2"}}
+01-start	8	ASSERT $u1 != $u2	ok
+04-two-copies	1	@start controller	ok
+04-two-copies	2	@start worker w-1	ok
+04-two-copies	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1"}}
+04-two-copies	4	console POST /counters {"name": "c4", "start": 1}	201
+04-two-copies	5	@until 30 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "1"}}
+04-two-copies	6	@start worker w-1	ok
+04-two-copies	7	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
+04-two-copies	8	ASSERT $h1 != $h2	ok
+04-two-copies	9	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
+04-two-copies	10	@sleep 12	ok
+04-two-copies	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
+05-sigkill	1	@start controller	ok
+05-sigkill	2	@start worker w-1	ok
+05-sigkill	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false", "until": "@time"}}
+05-sigkill	4	@sigkill w-1	ok
+05-sigkill	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
+05-sigkill	6	@sleep 20	ok
+05-sigkill	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
+08-two-specs	1	@start controller	ok
+08-two-specs	2	@start worker w-1	ok
+08-two-specs	3	@start worker testsub2 t-1	ok
+08-two-specs	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
+08-two-specs	5	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
+08-two-specs	6	console POST /counters {"name": "c8", "start": 1}	201
+08-two-specs	7	@until 30 console GET /counters	200 {"rows": [{"id": "c8", "phase": "running", "worker": "w-1", "worker_state": "live"}]}
+08-two-specs	8	@sleep 12	ok
+08-two-specs	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
+08-two-specs	10	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
+09-bad-given-name	1	@start worker W-1	ok
+09-bad-given-name	2	@start worker x-1	ok
+09-bad-given-name	3	@sleep 12	ok
+09-bad-given-name	4	store GET /v1/get?key=testsub/slots/W-1	200 {"items": null}
+09-bad-given-name	5	store GET /v1/get?key=testsub/slots/x-1	200 {"items": null}
+09-bad-given-name	6	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+10-name-taken-once	1	@start resource	ok
+10-name-taken-once	2	@start controller	ok
+10-name-taken-once	3	@start worker w-1	ok
+10-name-taken-once	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1"}}
+10-name-taken-once	5	console POST /counters {"name": "c4", "start": 1}	201
+10-name-taken-once	6	@until 30 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "1"}}
+10-name-taken-once	7	@start worker w-1	ok
+10-name-taken-once	8	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
+10-name-taken-once	9	ASSERT $h1 != $h2	ok
+10-name-taken-once	10	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
+10-name-taken-once	11	@sleep 12	ok
+10-name-taken-once	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
+10-name-taken-once	13	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
+10-name-taken-once	14	@sleep 12	ok
+10-name-taken-once	15	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}

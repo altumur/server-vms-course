@@ -82,14 +82,14 @@ root:
         requests: {ref: strList, owner: 8 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
         deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этой спеки — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
     slot:
-      owner: 3 Н1.4
+      owner: P/03.2 Н1.4
       type: object
       default: {}
       properties:
         prefix: {type: string, pattern: '[a-z]{1,8}', default: w}
         name_env: {type: string, pattern: '[A-Z][A-Z0-9_]*', default_text: имя не берётся из окружения}
     lease:
-      owner: 3 Н1.6
+      owner: P/03.2 Н1.6
       type: object
       default: {unconfirmed_max: 'off'}
       required: [unconfirmed_max]
@@ -99,13 +99,13 @@ root:
             - {type: string, enum: [forever, 'off']}
             - {type: integer, minimum: 1}
     heartbeat:
-      owner: 5 Н1.1
+      owner: P/03.4 Н1.1
       type: object
       default: {}
       properties:
         strings:
           type: array
-          description: имена полей пульса, не из `platform_strings` урока 5 Н1.1
+          description: имена полей пульса, не из `platform_strings` P/03.4 Н1.1
           items: {type: string, not_enum: [worker, server, url, instance, labels, fetched, events]}
           default: []
           default_text: строковых полей нет
@@ -368,8 +368,8 @@ defs:
         properties:
           from: {type: string, default: capacity, description: поле пульса}
           default: {type: integer, minimum: 0}
-          unit_mb: {type: number, exclusive_minimum: 0, owner: 5 Н1.2, default_text: "бюджет памяти не проверяется (урок 5 Н1.2 `memory`)"}
-          base_mb: {type: number, minimum: 0, owner: 5 Н1.2, default: 0, description: "бюджет памяти — одна формула урока 5 Н1.2 `memory`, проверка — урок 5 Н3 «старт()», шаг 1"}
+          unit_mb: {type: number, exclusive_minimum: 0, owner: P/03.4 Н1.2, default_text: "бюджет памяти не проверяется (P/03.4 Н1.2 `memory`)"}
+          base_mb: {type: number, minimum: 0, owner: P/03.4 Н1.2, default: 0, description: "бюджет памяти — одна формула P/03.4 Н1.2 `memory`, проверка — P/03.4 Н3 «старт() — шаг бюджета»"}
       headroom:
         type: object
         default: {}
@@ -551,7 +551,7 @@ defs:
           properties:
             field:
               type: string
-              description: путь в пульсе, первый сегмент не ключ пульса платформы (урок 5 Н1.1)
+              description: путь в пульсе, первый сегмент не ключ пульса платформы (P/03.4 Н1.1)
               not_pattern: '(worker|ts|status|server|instance|labels|url|fetched|events|conflicts|started|previous_hb|previous_instance|previous_server|fenced|schema|build|pending_writes|server_unsaid|stood_in|stand_in_renewals)(\..*)?'
             title: {type: string}
             of: {type: string, description: таблица}
@@ -729,7 +729,7 @@ defs:
   nonSecretList: {type: array, items: {type: string, not_pattern: '.*_secret'}}
   book:
     type: object
-    description: "`{}` — переносимая книга: пишет воркер подсистемы на домене (М11/5 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?}` — собираемая книга из строк членов"
+    description: "`{}` — переносимая книга: пишет воркер подсистемы на домене (P/03.7 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?}` — собираемая книга из строк членов"
     properties:
       from: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?', description: "`<sub>/<строка>` — одиночная строка или `<sub>/<строка>/` — семья строк под слотами; `<sub>` — своя подсистема"}
       key: {type: string, not_pattern: '.*_secret', description: "имя несекретного поля входа: значение — непустая строка, ключ книги"}

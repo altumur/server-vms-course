@@ -1,0 +1,42 @@
+# Семья <sub>/contenders/<имя>/<коробка> — объект метки соперника (P/03.2; P/03.2 Н1.4а). Источник формы объекта
+# (ADR-0088). Экземпляр — {key, object}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+# Запись — put объектов урока 8 Н1.1, чтение — GET /v1/objects/{key} урока 8 Н2. Возраст (старше CONTENDER_FRESH не
+# читается) и since в пределах состояния — правила Н1.4а прозой, не форма.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    name:
+      type: string
+      writer: {pattern: '-|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*'}
+      description: "искомое имя; при поиске без заданного имени — \"-\""
+    state:
+      type: string
+      writer: {enum: [refused, nameless, waiting]}
+      description: "refused — NameOnAnotherBox по таблице захвата Н3 «захватить», включая занятую неотданную lapsed-строку другой коробки; nameless — своего прежнего захвата больше нет; waiting — своего захвата ещё не было и кандидата нет без NameOnAnotherBox; приоритет refused выше двух остальных"
+    box:
+      type: string
+      description: коробка воркера (Н3 «старт()» шаг 2)
+    hostname:
+      type: string
+      description: имя узла воркера
+    server:
+      type: string
+      description: сервер воркера
+    instance:
+      type: string
+      description: "экземпляр воркера `<коробка>:<pid>:<6 hex>`"
+    holder:
+      type: string
+      description: "текущий держатель искомого имени; при поиске без заданного имени — \"\""
+    holder_box:
+      type: string
+      description: коробка текущего держателя
+    since:
+      description: "момент входа в состояние; сохраняется в пределах одного состояния; форма времени нормой «Время» не названа"
+    at:
+      description: "момент записи метки (переписывается каждые CONTEND_EVERY); форма времени нормой «Время» не названа"
+  names:
+    key: {type: string}
+    value: {type: any, description: "поля сверх Н1.4а: норма их не называет; писатель пишет ровно поля Н1.4а"}
+  writer: {max_items: 0}

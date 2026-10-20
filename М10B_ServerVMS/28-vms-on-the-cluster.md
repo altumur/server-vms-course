@@ -19,7 +19,7 @@
 - **[М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md)** — зачем второй сервер, стенд модуля, heartbeat воркера поле за полем.
 - **[М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md)** и **[М10/3](../М10_Platform/03-units-slots-epochs-lease.md)** — юниты на каждом сервере, имя как слот, запасные.
 - **[М10/8](../М10_Platform/08-events-resource-requests.md)** — что остаётся на сервере: объекты — файлы своего сервера, читаемые через его ресурс.
-- **[М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md)** и **[М10/5](../М10_Platform/05-the-worker-under-its-slot.md)** — перенос по двум молчаниям; два экземпляра одного воркера и отсечение.
+- **[М10/11](../М10_Platform/11-the-platform-on-a-box-and-a-cluster.md)** и **[P/03](../Platform/03-worker/03-worker.md)** (прежде М10/5) — перенос по двум молчаниям; два экземпляра одного воркера и отсечение.
 - **[М10/3](../М10_Platform/03-units-slots-epochs-lease.md)**, шаг 11 — место и захват; строгая аренда места — ADR 0029.
 - **[Урок 10](10-recworker.md)**, **[урок 24](24-an-interval-in-the-browser.md)**, **[урок 26](26-a-backup-archive-of-our-own.md)**, **[урок 27](27-volumes.md)** — регистратор и его тома, куски у двери записи, резервная запись, виды томов.
 - **М9, урок 7** — формула `B + n·I`.

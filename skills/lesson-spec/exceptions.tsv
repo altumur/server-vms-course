@@ -3,8 +3,6 @@
 # Строка, которая проверяемому уроку больше не нужна, — ошибка проверки: её снимают в той же правке.
 М10_Platform/03	scenarios-format	own	заголовок TSV, @key/@nokey, ожидание кода без тела; проверяется по README приёмки
 М10_Platform/04	scenarios-format	own	формат урока 3 плюс коды 2xx/4xx; проверяется по README приёмки
-М10_Platform/05	no-openapi	-	своей HTTP-двери нет (ADR-0082 доп. 13)
-М10_Platform/05	scenarios-format	own	двери store/console и директивы процессов @start/@sig*; проверяется по README приёмки
 М10_Platform/07	no-openapi	-	своей HTTP-двери нет, дельта 503 к POST/PUT М10/3 (ADR-0082 доп. 14)
 М10_Platform/07	scenarios-format	own	двери console/store, @key, проверки подстрок и отсутствия; проверяется по README приёмки
 М10_Platform/08	scenarios-format	own	три двери, @start/@until/@key, JSON Lines и байты; проверяется по README приёмки
@@ -52,3 +50,8 @@ P/02	scenarios-format	5/own	@as/@header, ожидание кода без тел
 P/02	acceptance-entry	5/variants	варианты спек и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав (глава 2.5 из М10/06); проверяется по README приёмки
 P/02	no-openapi	-	своих HTTP-дверей у установщика нет; GET /spec — временно М10/9 до главы 6.5
 P/01	acceptance-entry	2/inputs	готовый файл прав стенда глав 1.2 и 1.3 (форма P/01.2 Н1.2); проверяется по README приёмки
+P/03	no-openapi	-	своей HTTP-двери у воркера нет (глава 3.1 Н2; план переноса урока 3, п. 8)
+P/03	scenarios-format	2/own	двери store/console и директивы процессов @start/@sig*, ожидания @not (сценарии главы 3.2 из М10/05); проверяется по README приёмки
+P/03	scenarios-format	3/own	двери store/console и директивы процессов @start/@sleep/@until (сценарии главы 3.3 из М10/05); проверяется по README приёмки
+P/03	scenarios-format	4/own	двери store/console и директивы процессов @start/@sigterm/@until (сценарий главы 3.4 из М10/05); проверяется по README приёмки
+P/03	scenarios-format	6/own	три двери, @start/@until/@key, JSON Lines и байты (сценарии главы 3.6 из М10/08); проверяется по README приёмки
