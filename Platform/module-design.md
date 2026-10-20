@@ -157,7 +157,7 @@ Platform/
 | `accept` — приём отчёта, дороги (`Platform/common/vectors/accept/`) | общий договор приёма отчёта (`common/contracts/accept.md`), владелец 8.3; участник 9.2 |
 | `assemble` | 8.5 |
 | `issue` | 8.7 |
-| `may` грантов | 8.4 |
+| `may` грантов | общий договор [`may.md`](common/contracts/may.md), пакет `common/vectors/may/`; владелец 8.4; участники 6.3, 6.7, 10 (ADR-0083 доп. (14)) |
 | `record` (`Platform/common/vectors/record/`) | общий договор записи срока (`common/contracts/record.md`), владелец 8.8; участники 6.7, 8.7, 9.1 |
 | `ask-sig` (`Platform/common/vectors/ask-sig/`) | общий договор подписи просьбы (`common/contracts/ask-sig.md`), владелец 8.8; участник 6.7 |
 | `follow` | 9.1 (исполняет агент; разбор ревью стадии A 8–10, № 8) |
