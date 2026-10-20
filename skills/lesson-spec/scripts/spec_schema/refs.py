@@ -2,18 +2,23 @@
 from pathlib import Path
 
 
+# Пакет векторов урока 2.5 (план урока 6, В8); прежнее место — до коммита урока 6, затем строка снимается.
+TABLES = (("Platform", "02-installer", "vectors", "platform-lists", "cases.tsv"),
+          ("Source", "tests", "testdata", "platform_lists.tsv"))
+
+
 def _platform_list(name):
-    """Закрытый список платформы из Source/tests/testdata/platform_lists.tsv (байты — «Спецификация»), не из кода."""
+    """Закрытый список платформы из пакета platform-lists (байты — «Спецификация»), не из кода."""
     for base in Path(__file__).resolve().parents:
-        table = base / "Source" / "tests" / "testdata" / "platform_lists.tsv"
-        if table.is_file():
+        table = next((base.joinpath(*parts) for parts in TABLES if base.joinpath(*parts).is_file()), None)
+        if table is not None:
             rows = (line.split("\t") for line in table.read_text(encoding="utf-8").splitlines()
                     if line and not line.startswith("#"))
             words = {row[1] for row in rows if len(row) == 2 and row[0] == name}
             if not words:
                 raise RuntimeError(f"platform_lists.tsv names no {name}")
             return words
-    raise RuntimeError("platform_lists.tsv not found above spec_schema/")
+    raise RuntimeError("platform-lists/cases.tsv not found above spec_schema/")
 
 
 PLATFORM_SHOWN = _platform_list("platform_shown")
