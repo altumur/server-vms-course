@@ -1,0 +1,13 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    start: {type: int, default: 0}
+    mode: {type: string}
+placement:
+  capacity: {from: capacity, default: 4}
+display:
+  unit: counter
+  units: counters

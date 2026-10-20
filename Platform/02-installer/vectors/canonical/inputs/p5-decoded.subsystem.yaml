@@ -1,0 +1,16 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    feed:
+      type: url
+      credentials: {login: feed_user, secret: feed_secret}
+      secret_in:
+        - regex: '^\?k=(?P<secret>.+)$'
+          in: [query]
+    feed_user: {type: string}
+    feed_secret: {type: string}
+placement:
+  capacity: {from: capacity, default: 4}

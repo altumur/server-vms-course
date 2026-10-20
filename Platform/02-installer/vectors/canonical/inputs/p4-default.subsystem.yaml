@@ -1,0 +1,17 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    start: {type: int, default: 0}
+    step: {type: int, inherit: 1}
+    picture: {type: blob}
+    labels: {type: list}
+placement:
+  capacity: {from: capacity, default: 4}
+tables:
+  shelves:
+    fields:
+      zone: {type: string}
+      size: {type: int, default: 1}

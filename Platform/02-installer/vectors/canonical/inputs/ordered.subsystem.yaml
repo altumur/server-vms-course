@@ -1,0 +1,16 @@
+name: probe
+unit:
+  rows: counters
+  id: zeta
+  fields:
+    zeta: {type: string, required: true}
+    alpha: {type: int, default: 0}
+    mid: {type: list}
+placement:
+  capacity: {from: capacity, default: 4}
+tables:
+  shelves:
+    fields:
+      zone: {type: string}
+      area: {type: string}
+      kind: {type: string}

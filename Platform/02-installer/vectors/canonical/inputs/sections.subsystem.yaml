@@ -1,0 +1,8 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {from: capacity, default: 4}

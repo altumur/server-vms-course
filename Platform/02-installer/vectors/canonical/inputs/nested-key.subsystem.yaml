@@ -1,0 +1,21 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    note: {}
+placement:
+  capacity: {from: capacity, default: 4}
+  constraint: labels-subset
+requests:
+  schema: {type: object}
+  valid_for: 30
+  most_valid: 600
+display:
+  unit: counter
+  units: counters
+  form:
+    - fields: [name]
+lease: {unconfirmed_max: 600}
+snapshot: [name]

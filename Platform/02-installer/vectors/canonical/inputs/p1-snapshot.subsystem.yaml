@@ -1,0 +1,13 @@
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    start: {type: int, default: 0}
+    pass_secret: {type: string}
+    picture: {type: blob}
+    server: {type: string}
+    labels: {type: list}
+placement:
+  capacity: {from: capacity, default: 4}
