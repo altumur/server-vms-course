@@ -10,7 +10,7 @@ import jsonschema
 from form_source import Loader, SourceError, build_section
 from form_source.canonical import (BEGIN, END, STEPS, build_view_section, canonical, ecma, jcs, schema_text,
                                    steps_of, tree_of, unique_names, view_schema)
-from form_source.vectors import (ACCEPTANCE, CORPUS, NORMS, SCHEMA_FILE, SOURCE, VECTORS, Chapter, accepted_inputs,
+from form_source.vectors import (ACCEPTANCE, CORPUS, NORMS, SOURCE, VECTORS, Chapter, accepted_inputs,
                                  generate, mutants, probe)
 
 COURSE = Path(__file__).resolve().parents[3]
@@ -41,7 +41,7 @@ def spec(fields=FIELDS, tail=""):
 class StepsTests(unittest.TestCase):
     def test_every_step_has_its_places_in_the_lesson_form(self):
         self.assertEqual([s.name for s in steps_of(LOADER.form)], [s.name for s in STEPS])
-        self.assertEqual([s.name for s in STEPS], ["С1", "С2", "С3", "П1", "П2", "П3", "П4", "П5"])
+        self.assertEqual([s.name for s in STEPS], ["tables", "bound_to", "in", "П1", "П2", "П3", "П4", "П5"])
 
     def test_sugar(self):
         v = view(spec(tail="tables: [a, b]\n"))
@@ -84,7 +84,7 @@ class StepsTests(unittest.TestCase):
     def test_skipping_a_step_changes_the_view(self):
         text = spec(tail="tables: [a]\n")
         for s in STEPS:
-            if s.name in ("С3", "П5"):
+            if s.name in ("in", "П5"):
                 continue
             self.assertNotEqual(view(text), view(text, (s.name,)), s.name)
 
@@ -141,7 +141,7 @@ class SchemaTests(unittest.TestCase):
         self.assertTrue(self.bad(lambda v: v.update(extra=1)))                         # закрыт, как форма
         self.assertTrue(self.bad(lambda v: v.pop("snapshot")))                         # П1 — обязателен
         self.assertTrue(self.bad(lambda v: v["placement"].pop("weight")))              # умолчание — обязателен
-        self.assertTrue(self.bad(lambda v: v.update(tables=["a"])))                    # С1 — одна форма
+        self.assertTrue(self.bad(lambda v: v.update(tables=["a"])))                    # сахар tables — одна форма
         self.assertTrue(self.bad(lambda v: v["unit"]["fields"][0].pop("default")))     # П4
         self.assertTrue(self.bad(lambda v: v["unit"]["fields"][0]["secret_in"][0].pop("decoded")))   # П5 при regex
         self.assertTrue(self.bad(lambda v: v["unit"]["fields"][0].pop("name")))
@@ -163,7 +163,7 @@ class SectionTests(unittest.TestCase):
         s = build_view_section(LOADER.form)
         self.assertTrue(s.startswith("### Форма канонического вида (построена из источника)\n"))
         for line in ("| П5 | P/02.2-03 |", "| `snapshot` | список, элемент — строка | есть всегда (шаг П1) |",
-                     "порядок автора, `name` без повторов (ordered)", "сахар приведён (С1)",
+                     "порядок автора, `name` без повторов (ordered)", "сахар приведён (`tables`)",
                      "если есть `regex`: обязательны `decoded`."):
             self.assertIn(line, s)
         self.assertNotIn("default_text", s)
@@ -178,7 +178,7 @@ class MutantTests(unittest.TestCase):
         built = [jcs(canonical(form, typed)).encode()]
         alive = probe(form, [typed], built)
         self.assertIn("default defs.fieldType", alive)
-        self.assertIn("step С1", alive)
+        self.assertIn("step tables", alive)
         trees = [typed, untyped]
         alive = probe(form, trees, [jcs(canonical(form, t)).encode() for t in trees])
         self.assertNotIn("default defs.fieldType", alive)
@@ -290,7 +290,7 @@ class ChapterTests(LayoutBase):
         self.assertTrue(any("expect must be expect/e2.json" in m for m in got))
         self.assertTrue(any("refuses the input" in m for m in got))
 
-    def test_section_and_schema_file(self):
+    def test_section(self):
         norms = self.root / NORMS
         norms.write_text("# 2.2\n")
         got = self.chapter()
@@ -302,11 +302,6 @@ class ChapterTests(LayoutBase):
         self.assertEqual(self.messages(), [])
         norms.write_text("# 2.2\n%s\n%s%s\n" % (BEGIN, section.replace("П5", "П6"), END))
         self.assertTrue(any("section differs" in m for m in self.messages()))
-        norms.write_text("# 2.2\n%s\n%s%s\n" % (BEGIN, section, END))
-        (self.root / SCHEMA_FILE).write_text("{}\n")
-        self.assertTrue(any("the schema differs" in m for m in self.messages()))
-        (self.root / SCHEMA_FILE).write_text(schema_text(LOADER.form))
-        self.assertEqual(self.messages(), [])
 
 
 class PutsTests(LayoutBase):

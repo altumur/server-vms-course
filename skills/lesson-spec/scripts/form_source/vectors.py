@@ -19,7 +19,6 @@ from .source import SourceError, all_nodes
 LESSON = Path("Platform/02-installer")
 SOURCE = LESSON / "spec/02.1-installer"
 NORMS = LESSON / "spec/02.2-installer.norms.md"
-SCHEMA_FILE = LESSON / "spec/02.2-installer.canonical.schema.json"     # необязателен: если есть — построенный
 CORPUS = LESSON / "acceptance/1"
 ACCEPTANCE = LESSON / "acceptance/2"
 VECTORS = LESSON / "vectors/canonical"
@@ -206,7 +205,7 @@ class Chapter:
     def __init__(self, root, strict=False):
         self.root, self.strict = Path(root), strict
         self.errors, self.stats = [], {}
-        self.validator = self.schema = None
+        self.validator = self.schema = self.ld = None
         self.vectors = {}                                    # case → ожидаемые байты (для puts.tsv)
 
     def error(self, path, message):
@@ -227,7 +226,6 @@ class Chapter:
             self.error(Path(str(SOURCE) + ".form.yaml"), "canonical: steps %s have no place in the form" % ", ".join(missing))
         self.views()
         self.section()
-        self.schema_file()
         self.cases()
         if (self.root / ACCEPTANCE / "puts.tsv").exists():
             self.stats["canonical_puts"] = self.puts(ACCEPTANCE)
@@ -294,12 +292,6 @@ class Chapter:
             at = next((i for i, (a, b) in enumerate(zip(old, new)) if a != b), min(len(old), len(new)))
             self.error(NORMS, "canonical: the section differs from the built one at its line %d (rebuild: python "
                               "skills/lesson-spec/scripts/form_source/build_canonical.py section %s)" % (at + 1, NORMS))
-
-    def schema_file(self):
-        path = self.root / SCHEMA_FILE
-        if path.exists() and path.read_text(encoding="utf-8") != schema_text(self.ld.form):
-            self.error(SCHEMA_FILE, "canonical: the schema differs from the built one (rebuild: python "
-                                    "skills/lesson-spec/scripts/form_source/build_canonical.py schema %s)" % SCHEMA_FILE)
 
     def cases(self):
         vec = self.root / VECTORS
@@ -426,6 +418,9 @@ class Chapter:
             if want == "-":
                 if m.group(1) == "0":
                     self.error(where, "line %d: after a successful install the view exists: canonical names its vector" % no)
+                continue
+            if getattr(self, "ld", None) is None:
+                self.error(where, "line %d: the canonical column needs the form source of 2.1" % no)
                 continue
             if want not in self.vectors:
                 self.error(where, "line %d: canonical %r is not a case of %s/cases.tsv" % (no, want, VECTORS))

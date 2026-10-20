@@ -2,7 +2,7 @@
 JSON Schema, раздел «Форма канонического вида» норм главы 2.2.
 
 Проекция (P/02.2-01…03) — по порядку:
-1. сахар урока 2 (С1–С3, P/02.2-02) — на дереве загрузчика;
+1. сахар урока 2 (`tables`, `bound_to`, `in`; P/02.2-02) — на дереве загрузчика;
 2. умолчания источника — только внутри присутствующего родителя или родителя со своим default (Р10);
 3. вычисляемые умолчания урока 2 (П1–П5, P/02.2-03) — на дереве с умолчаниями, до `ordered`;
 4. отображение `ordered` — массив `{"name": ключ, …}` в порядке автора (Р14), прочие — по ключам JCS;
@@ -160,21 +160,21 @@ def _require(f, path, key, step):
 def _form_tables(f):
     _narrow(f, ("tables",), ["object"])
     n = f.deref(f.node_at(("tables",)))
-    n.notes.update({"x-step": "С1", "description": "имя → таблица (список имён приведён шагом С1)"})
+    n.notes.update({"x-step": "tables", "description": "имя → таблица (список имён приведён шагом сахара `tables`)"})
 
 
 def _form_bound_to(f):
     for p in FIELDS:
         _narrow(f, p + ("bound_to",), ["array"])
-        f.node_at(p + ("bound_to",)).notes["x-step"] = "С2"
+        f.node_at(p + ("bound_to",)).notes["x-step"] = "bound_to"
     f.deref(f.node_at(FIELDS[0] + ("bound_to",))).notes["description"] = \
-        "список имён полей этой строки, не секретов (одно имя приведено шагом С2)"
+        "список имён полей этой строки, не секретов (одно имя приведено шагом сахара `bound_to`)"
 
 
 def _form_secret_in(f):
     for p in FIELDS:
         _narrow(f, p + ("secret_in", "*", "in"), ["array"])
-        f.node_at(p + ("secret_in", "*", "in")).notes["x-step"] = "С3"
+        f.node_at(p + ("secret_in", "*", "in")).notes["x-step"] = "in"
 
 
 def _form_snapshot(f):
@@ -207,11 +207,11 @@ def _form_decoded(f):
 
 
 STEPS = [
-    Step("С1", "sugar", "P/02.2-02", "`tables` списком имён", "`{<имя>: {}}` на каждое имя, по порядку списка",
+    Step("tables", "sugar", "P/02.2-02", "`tables` списком имён", "`{<имя>: {}}` на каждое имя, по порядку списка",
          [("tables",)], _tables_list, _form_tables),
-    Step("С2", "sugar", "P/02.2-02", "`bound_to` одним именем (поля единицы и таблиц)", "список из одного имени",
+    Step("bound_to", "sugar", "P/02.2-02", "`bound_to` одним именем (поля единицы и таблиц)", "список из одного имени",
          [p + ("bound_to",) for p in FIELDS], _bound_to, _form_bound_to),
-    Step("С3", "sugar", "P/02.2-02", "`in` элемента `secret_in` одним словом", "список из одного слова",
+    Step("in", "sugar", "P/02.2-02", "`in` элемента `secret_in` одним словом", "список из одного слова",
          [p + ("secret_in", "*", "in") for p in FIELDS], _secret_in_word, _form_secret_in),
     Step("П1", "computed", "P/02.2-03", "нет `snapshot`",
          "имена `unit.fields` в порядке автора без `*_secret`, полей `type: blob` и `server`; явный `[]` остаётся",
@@ -479,20 +479,22 @@ class ViewSection(Section):
     def __init__(self, form):
         super().__init__(SimpleNamespace(form=view_form(form), rows=[], scalars=None))
         self.steps = steps_of(form)
+        self.phases = {s.name: s.phase for s in self.steps}
 
     def need(self, parent, k, n):
         if parent is None:
             return ""
         step = self.f.note(n, "x-step")
+        phase = self.phases.get(step)
         if k in self.f.deref(parent).required:
-            why = "шаг %s" % step if step and step[0] == "П" else "умолчание формы" if n.notes.get("x-default") else ""
+            why = "шаг %s" % step if phase == "computed" else "умолчание формы" if n.notes.get("x-default") else ""
             out = "есть всегда" + (" (%s)" % why if why else "")
-        elif step and step[0] == "П":
+        elif phase == "computed":
             out = "есть по правилу отображения (шаг %s)" % step
         else:
             out = "есть, если сказан в спеке"
-        if step and step[0] == "С":
-            out += "; сахар приведён (%s)" % step
+        if phase == "sugar":
+            out += "; сахар приведён (`%s`)" % step
         return out
 
     def rule_text(self, r):
@@ -517,7 +519,8 @@ class ViewSection(Section):
                "Закрытый перечень: сахар — до умолчаний формы, вычисляемые умолчания — после них, до `ordered`.", "",
                "| Шаг | Норма | Когда | Что в виде |", "|---|---|---|---|"]
         for s in self.steps:
-            out.append("| %s | %s | %s | %s |" % (s.name, s.norm, cell(s.what), cell(s.result)))
+            out.append("| %s | %s | %s | %s |" % ("`%s`" % s.name if s.phase == "sugar" else s.name, s.norm,
+                                                 cell(s.what), cell(s.result)))
         rows, rules = [], []
         self.expand("", f.root, rows, rules, (), own=True)
         out += ["", "#### Корень", ""] + self.table(rows) + [""]
