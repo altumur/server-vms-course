@@ -26,6 +26,7 @@ scenario	step	request	expect
 04-drain	11	POST /drain?server=..	400
 04-drain	12	POST /drain?server=a%20b	400
 04-drain	13	POST /drain?server=@big(254)	400
+04-drain	14	store GET /v1/get?key=platform/drain	200 {"items": {"server": ""}}
 05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400
 05-server-labels	2	PUT /servers/srv-a/labels {"labels": ["vlan a"]}	400
 05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404
