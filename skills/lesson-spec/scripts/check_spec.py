@@ -292,7 +292,7 @@ def family_place(row):
         raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>.form.yaml (ADR-0088 п. 1)")
     if row["kind"] not in {"row", "object", "file"}:
         raise ValueError("a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, ADR-0083 доп. (11))")
-    if not re.fullmatch(rf"P/{match.group(1)}(\.[1-9])?", row["owner"]):
+    if not re.fullmatch(rf"P/{match.group(1)}(\.(?:0|[1-9][0-9]?))?", row["owner"]):
         raise ValueError(f"schema {row['schema']} is not in the lesson of its owner {row['owner']}")
 
 
@@ -389,7 +389,15 @@ SPEC_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domai
 # (and scenario and vector addresses, which these checks do not read).
 IDMAP = Path("Platform/common/id-map.tsv")
 IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
-NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\.[1-9])?)-[0-9]+"
+def chapter_key(path):
+    """Порядок глав по номеру, а не по строке: 8.0, 8.1, …, 8.9, 8.10."""
+    m = re.match(r"[0-9]{2}\.([0-9]+)-", path.name)
+    return (int(m.group(1)) if m else -1, path.name)
+
+
+# Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
+CHAPTER = r"(?:0|[1-9][0-9]?)"
+NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
 # part of it stays.
 MOVED_SECTION = re.compile(r"^Перенесено в\b")
@@ -636,8 +644,8 @@ class Check:
             found = [f for f in found if re.fullmatch(r"[0-9]{2}-[^.]+\.norms\.md", f.name)]
             if module == "P":
                 # A lesson split into chapters: the named chapter, else the first one.
-                chapters = sorted((directory / "spec").glob(f"{int(number):02}.{chapter or '[1-9]'}-*.norms.md"))
-                found += [f for f in chapters if re.fullmatch(r"[0-9]{2}\.[1-9]-[^.]+\.norms\.md", f.name)]
+                chapters = sorted((directory / "spec").glob(f"{int(number):02}.{chapter or '*'}-*.norms.md"), key=chapter_key)
+                found += [f for f in chapters if re.fullmatch(r"[0-9]{2}\." + CHAPTER + r"-[^.]+\.norms\.md", f.name)]
             if found:
                 return found[0]
         return None
@@ -969,7 +977,7 @@ class Check:
         """Checklist ids of every Platform norms file (spec/NN-<процесс>.norms.md, spec/NN.K-<процесс>.norms.md)."""
         ids = set()
         for path in sorted((self.root / "Platform").glob("[0-9][0-9]-*/spec/*.norms.md")):
-            if re.fullmatch(r"[0-9]{2}(?:\.[1-9])?-[^.]+\.norms\.md", path.name):
+            if re.fullmatch(r"[0-9]{2}(?:\." + CHAPTER + r")?-[^.]+\.norms\.md", path.name):
                 text = self.read(path)
                 if text is not None:
                     ids |= set(outline(text)[1])
@@ -1818,7 +1826,8 @@ class Check:
         key = f"P/{number}"
         spec, acceptance = lesson.parent / "spec", lesson.parent / "acceptance"
         whole = spec / f"{stem}.norms.md"
-        chapters = sorted(p for p in spec.glob(f"{number}.[1-9]-{process}.norms.md"))
+        chapters = sorted((p for p in spec.glob(f"{number}.*-{process}.norms.md")
+                           if re.fullmatch(rf"{number}\." + CHAPTER + rf"-{re.escape(process)}\.norms\.md", p.name)), key=chapter_key)
         if whole.exists() and chapters:
             self.error(whole, "a lesson has either one norms file or chapter norms, not both")
         parts = [(p.name.split("-", 1)[0].split(".")[1], p) for p in chapters] or [(None, whole)]

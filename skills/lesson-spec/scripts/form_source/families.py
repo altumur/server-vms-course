@@ -51,7 +51,7 @@ def read_catalog(root):
 
 def chapter_prefix(norms):
     """`spec/02.3-installer.norms.md` → `P/02.3`; `spec/02-installer.norms.md` → `P/02`."""
-    m = re.fullmatch(r"([0-9]{2})(?:\.([1-9]))?-[a-z][a-z-]*\.norms\.md", Path(norms).name)
+    m = re.fullmatch(r"([0-9]{2})(?:\.(0|[1-9][0-9]?))?-[a-z][a-z-]*\.norms\.md", Path(norms).name)
     if not m:
         raise SourceError("%s: not the norms of a Platform lesson or chapter" % norms)
     return "P/%s" % m.group(1) + (".%s" % m.group(2) if m.group(2) else "")
@@ -66,7 +66,7 @@ def schema_place(row):
     if row["kind"] not in KIND_WORD:
         raise SourceError("catalog %s: a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, "
                           "ADR-0083 доп. (11))" % row["key"])
-    if not re.fullmatch(r"P/%s(\.[1-9])?" % m.group(1), row["owner"]):
+    if not re.fullmatch(r"P/%s(\.(?:0|[1-9][0-9]?))?" % m.group(1), row["owner"]):
         raise SourceError("catalog %s: schema %s is not in the lesson of its owner %s" % (row["key"], row["schema"],
                                                                                      row["owner"]))
     return m.group(1), m.group(2)

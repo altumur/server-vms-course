@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import yaml
 
-from check_spec import Check, UniqueLoader, pointer, references
+from check_spec import chapter_key, Check, UniqueLoader, pointer, references
 
 
 class CheckSpecTests(unittest.TestCase):
@@ -958,6 +958,26 @@ paths:
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["norm_ids"], 2)
         self.assertEqual(result.stats["lessons"], 1)
+
+    def test_chapters_zero_and_two_digits(self):
+        """Главы 0 и 10 (урок 8: 8.0, 8.10) разбираются и идут по номеру, не по строке."""
+        for chapter in ("0", "10"):
+            (self.spec / f"01.{chapter}-store.norms.md").write_text(
+                "\n".join(f"## Н{i} Section" for i in range(6)) +
+                "\n## Решает реализация\n## Чеклист готовности\n" +
+                f"- [ ] **P/01.{chapter}-01** Example — проверяется чтением\n")
+            acceptance = self.dir / "acceptance" / chapter
+            acceptance.mkdir(parents=True)
+            (acceptance / "README.md").write_text("# Acceptance\n")
+            (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+            (acceptance / "scenarios.tsv").write_text(
+                "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["norm_ids"], 4)
+        names = [p.name for p in sorted(self.spec.glob("01.*-store.norms.md"), key=chapter_key)]
+        self.assertEqual(names, ["01.0-store.norms.md", "01.1-store.norms.md", "01.2-store.norms.md",
+                                 "01.10-store.norms.md"])
 
     def test_foreign_chapter_id(self):
         path = self.spec / "01.1-store.norms.md"
