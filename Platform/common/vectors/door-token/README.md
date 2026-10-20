@@ -40,8 +40,8 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`issue.tsv`](issue.tsv) | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
-| [`verify.tsv`](verify.tsv) | `keys` — значение строки `door/keys` текстом JSON; `token`; `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — путь запроса к двери держателя, его первый сегмент сравнивается с элементами `routes` → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
+| [`issue.tsv`](issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
+| [`verify.tsv`](verify.tsv), 56 строк: 8 `ok`, 48 `forbidden` | `keys` — значение строки `door/keys` текстом JSON; `token`; `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — путь запроса к двери держателя, его первый сегмент сравнивается с элементами `routes` → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
 
 ## Отказы
 
@@ -57,11 +57,12 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | подпись | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `claims_swapped` |
 | части — строгий base64url без «=», хвостовые биты последнего знака — нули | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims ровно `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
+| типы claims: `user`, `unit`, `holder` — строки; `routes` — массив строк без повторов; `expires` — целое ≤ 2^53−1 (решение «Архитектора» 2026-10-20, Kimi SB67-01) | `user_number`, `unit_number`, `holder_null`, `routes_not_array`, `routes_item_number`, `routes_dup`, `expires_string`, `expires_float`, `expires_over_2_53` |
 | `now < expires` (граница `now = expires` — отказ) | `expired_boundary`, `expired_after` |
 | `unit` и `holder` свои | `other_unit`, `other_sub`, `other_holder` |
 | первый сегмент пути запроса, сырым без раскодирования `%XX`, — элемент `routes` байт в байт | `route_not_in_routes`, `route_segment_prefix`, `route_second_segment`, `route_root`, `route_case`, `route_percent` |
 
-Строка `claims_not_jcs` ждёт `ok`: выпускающий обязан писать claims в JCS, а проверяющий канон не проверяет, потому что
+Строка `ok_expires_max` — контроль границы типа: `expires` = 2^53−1 даёт `ok`. Строка `claims_not_jcs` ждёт `ok`: выпускающий обязан писать claims в JCS, а проверяющий канон не проверяет, потому что
 подпись покрывает байты части claims (решение «Архитектора» 2026-10-20, векторы door-token).
 
 Векторы получены эталонными Ed25519 (RFC 8032) и JCS (RFC 8785, проверен на [`jcs`](../../../01-store/vectors/jcs/README.md))
