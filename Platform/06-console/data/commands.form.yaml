@@ -4,6 +4,8 @@
 # нет. Три формы по Н1.5: begun (до вызова), begun + answer (ответ начавшего или закрытие чужой begun с ended_by),
 # no_begun (без begun: expired | refused). Пишут держатель (глава 3.6: begun, answer, no_begun до вызова, unknown по
 # индексу, уборка после kept) и жнец консоли (no_begun expired создание-однажды, unknown по индексу поверх чужой begun).
+# Набор ключей закрыт; ended_by, begun-поля и action — по формам договора; error ≤ 200 кодовых точек (решение «Архитектора»
+# 2026-10-20, разбор ревью стадии B 6–7).
 dialect: data-form/1
 root:
   type: object
@@ -41,7 +43,8 @@ root:
       description: когда закрыт исход
     error:
       type: string
-      description: причина, ≤ 200 знаков — ДОЛЖЕН у refused и unknown, нет у performed
+      pattern: '.{0,200}'
+      description: причина, ≤ 200 кодовых точек Unicode (договор просьбы «Метка», предел error) — ДОЛЖЕН у refused и unknown, нет у performed и expired
     late:
       type: string
       enum: ['true']
@@ -62,7 +65,21 @@ root:
       require: [error]
     - when: {is: {outcome: [expired]}}
       require: [ended_by]
-  names:
-    key: {type: string}
-    value: {type: any, description: "поля сверх Н1.5 mark: норма их не называет; писатель пишет ровно поля своей формы"}
-  writer: {max_items: 0}
+    # формы метки строго по договору просьбы «Метка» и «Три формы метки» (решение «Архитектора» 2026-10-20, разбор ревью
+    # стадии B 6–7): набор ключей закрыт (properties без names — лишнее поле — отказ key)
+    - when: {is: {outcome: [performed]}}
+      require: [instance, slot, at]
+      forbid: [ended_by]
+    - when: {is: {outcome: [unknown]}}
+      require: [instance, slot, at]
+    - when: {is: {outcome: [expired]}}
+      forbid: [instance, slot, at, of, valid_until, action, late, error]
+    - when: {is: {outcome: [refused]}, absent: [instance]}
+      require: [ended_by]
+      forbid: [slot, at, of, valid_until, action, late]
+      check: {ended_by: {type: string, enum: [holder]}}
+    - when: {is: {outcome: [refused]}, present: [instance]}
+      require: [slot, at]
+      forbid: [ended_by]
+    - when: {present: [ended_by]}
+      forbid: [action, late]
