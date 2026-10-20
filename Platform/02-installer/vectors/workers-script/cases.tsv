@@ -1,4 +1,4 @@
-# Что запускает и останавливает скрипт воркеров по заказу (P/02.4 Н1.5 rules 2–4; ADR-0084 доп. (1) Р1, Р4).
+# Что запускает и останавливает скрипт воркеров по заказу (P/02.4 Н1.5 rules 2–4; ADR-0084 доп. (1) Р1, Р4, доп. (4) Р26).
 # Форма — README рядом. Стадия A (A6).
 case	input	expect	note
 start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3 — два заказанных к базовому
@@ -7,7 +7,7 @@ start-smallest-free	{"want": "3", "running": [3]}	{"start": [2], "stop": []}	с�
 start-gaps	{"want": "5", "running": [2, 4]}	{"start": [3, 5], "stop": []}	дыры заполняются наименьшими
 steady	{"want": "2", "running": [2]}	{"start": [], "stop": []}	цель достигнута — ничего
 stop-largest	{"want": "2", "running": [2, 5, 10]}	{"start": [], "stop": [5, 10]}	лишние — наибольшие номера
-stop-integer	{"want": "2", "running": [9, 10]}	{"start": [], "stop": [10]}	номер целым: остановить 10, не 9
+stop-integer	{"want": "2", "running": [9, 10]}	{"start": [2], "stop": [9, 10]}	номер целым и номерами: 9 и 10 выше want — остановить оба, недостающий 2 — запустить (ADR-0084 доп. (4) Р26)
 want-one	{"want": "1", "running": [2, 3]}	{"start": [], "stop": [2, 3]}	want 1 — остаётся только базовый
 next-after-nine	{"want": "10", "running": [2, 3, 4, 5, 6, 7, 8, 9]}	{"start": [10], "stop": []}	после 9 — 10
 no-series	{"want": null, "running": [2, 3]}	{"start": [], "stop": []}	ряда нет — ничего не запускать и не останавливать (Р1)
@@ -29,3 +29,4 @@ memory-room	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "W
 memory-below-target	{"want": "5", "running": [], "memory": {"HOST_MEMORY_MB": "4096", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3, 4], "stop": []}	потолок 4 с базовым — к нему три, не четыре (rules 4)
 memory-only-base	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "1024", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	потолок 1 — только базовый, стартов нет
 memory-no-capacity	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024"}}	{"start": [], "stop": []}	нет CAPACITY — не целое > 0 — пропуск (rules 4; сверка М10/3–5, V2)
+hole-above	{"want": "3", "running": [2, 5]}	{"start": [3], "stop": [5]}	номера, не счёт: 5 выше want — остановить, 3 недостаёт — запустить, хотя работающих два (ADR-0084 доп. (4) Р26)
