@@ -5,3 +5,4 @@ date	sample	fix	languages
 2026-10-20	08-schema	сценарий 01-schema из М10/10 переименован в 08-schema: номер 01 занят 01-unplaced из М10/04 (Н5 сверяет номера); шаги без изменений	all
 2026-10-20	10-drain-strand	сценарий 02-drain-strand из М10/10 переименован в 10-drain-strand: номер 02 занят 02-unplaceable из М10/04; шаги без изменений	all
 2026-10-20	11-schema-processes	сценарий 03-schema-processes из М10/11 переименован в 11-schema-processes: номер 03 занят 03-policy из М10/04; шаги без изменений	all
+2026-10-20	05-server-labels	шаг 5: повтор метки в PUT /servers/srv-a/labels — 400 (разбор ревью стадии B 6–7, № 40; правка поведения)	all

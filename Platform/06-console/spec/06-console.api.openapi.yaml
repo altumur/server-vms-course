@@ -4954,6 +4954,8 @@ components:
       properties:
         labels:
           type: array
+          uniqueItems: true
+          description: Без повторов; повтор метки — 400 (азбука меток; разбор ревью стадии B 6–7, № 40).
           items:
             $ref: '#/components/schemas/Label'
     LabelProbe:
