@@ -1142,6 +1142,14 @@ class FamiliesChapterTests(unittest.TestCase):
                                                   "  sealed: true\n")
         self.assertTrue(any("words outside the dialect" in e for e in self.check().errors))
 
+    def test_file_takes_a_schema_only_for_json_content(self):
+        catalog = self.root / "Platform/common/data/catalog.tsv"
+        catalog.write_text(catalog.read_text().replace("<sub>/slots/<id>\trow\t", "<sub>/slots/<id>\tfile\t"))
+        errors = self.check().errors
+        self.assertTrue(any("a file schema is for JSON content" in e for e in errors), errors)
+        catalog.write_text(catalog.read_text().replace("<sub>/slots/<id>\tfile\t", "<sub>/slots/<id>\tdir\t"))
+        self.assertTrue(any("a schema is only for row, JSON object and JSON file" in e for e in self.check().errors))
+
     def test_catalog_row_without_file_or_out_of_place(self):
         (self.data / "slot.form.yaml").unlink()
         self.assertTrue(any("schema 03-worker/data/slot.form.yaml is not a file under Platform/" in e

@@ -283,13 +283,14 @@ FAMILIES_COMMON = Path("Platform/common/data/common.form.yaml")
 
 
 def family_place(row):
-    """A catalog schema is NN-<процесс>/data/<семья>.form.yaml of the owner lesson, for row and JSON object only
-    (ADR-0088 п. 1, доп. (1) Р2); the same rule as form_source.families.schema_place, without the text layer."""
+    """A catalog schema is NN-<процесс>/data/<семья>.form.yaml of the owner lesson, for row, JSON object and JSON file
+    only (ADR-0088 п. 1, доп. (1) Р2; file — ADR-0083 доп. (11), JSON content is checked when the family builds); the same
+    rule as form_source.families.schema_place, without the text layer."""
     match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+\.form\.yaml", row["schema"])
     if not match:
         raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>.form.yaml (ADR-0088 п. 1)")
-    if row["kind"] not in {"row", "object"}:
-        raise ValueError("a schema is only for row and JSON object (ADR-0088 доп. (1) Р2)")
+    if row["kind"] not in {"row", "object", "file"}:
+        raise ValueError("a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, ADR-0083 доп. (11))")
     if not re.fullmatch(rf"P/{match.group(1)}(\.[1-9])?", row["owner"]):
         raise ValueError(f"schema {row['schema']} is not in the lesson of its owner {row['owner']}")
 

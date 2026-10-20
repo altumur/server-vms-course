@@ -125,7 +125,7 @@ class Catalog(FamiliesBase):
         rows = read_catalog(self.root)
         self.assertEqual(schema_place(rows[0]), ("03", "slot"))
         for change, why in ((dict(owner="P/04.1"), "not in the lesson of its owner"),
-                            (dict(kind="file"), "only for row and JSON object"),
+                            (dict(kind="dir"), "only for row, JSON object and JSON file"),
                             (dict(schema="03-worker/slot.form.yaml"), "is not NN-")):
             with self.assertRaisesRegex(SourceError, why):
                 schema_place(dict(rows[0], **change))
@@ -137,6 +137,56 @@ class Catalog(FamiliesBase):
         (self.data / "slot.form.yaml").unlink()
         with self.assertRaisesRegex(SourceError, "is not a file"):
             self.family()
+
+
+LOCK = """dialect: data-form/1
+root:
+  type: object
+  encoding: json
+  properties:
+    instance: {type: string}
+    pid: {type: integer, minimum: 1, whole: true}
+  required: [instance, pid]
+"""
+
+
+class JsonFile(FamiliesBase):
+    """Файл с содержимым JSON — семья (ADR-0083 доп. (11), замок присутствия): корень схемы с `encoding` разбирает
+    текст файла; файл без JSON схемы не имеет."""
+
+    def setUp(self):
+        super().setUp()
+        (self.data / "slot.form.yaml").write_text(LOCK, encoding="utf-8")
+        (self.data / "slot.outcomes.tsv").write_text("path\toutcome\tpriority\tunit\tnorm\n\tживой процесс без номера"
+                                                     "\t0\tстрока\tP/05 Н1.4\n", encoding="utf-8")
+        catalog = self.root / "Platform/common/data/catalog.tsv"
+        catalog.write_text(catalog.read_text().replace("<sub>/slots/<id>\trow\t", "<root>/<x>.lock\tfile\t"))
+
+    def test_judge_and_section(self):
+        fam = self.family()
+        self.assertEqual(fam.kind, "file")
+        for mode in ("writer", "reader"):
+            judge = Judge(fam.form, mode)
+            self.assertEqual(judge.judge(b'{"instance":"a","pid":7}', "file")["verdict"], "ok")
+            self.assertEqual(judge.judge('{"instance":"a","pid":0}', "file")["paths"], ["/pid"])
+            self.assertEqual(judge.judge(b"", "file")["verdict"], "refused")
+            self.assertEqual(judge.judge(b"\xff", "file")["verdict"], "refused")
+        text = build_families_section(self.norms, self.root, [fam])
+        for piece in ("Форма строк и объектов и файлов JSON", "файла — `{key, file}`", "#### `<root>/<x>.lock` — файл",
+                      "| `pid` | целое; ≥ 1;", "Исходы нечитаемого файла:", "| файл целиком |"):
+            self.assertIn(piece, text)
+
+    def test_file_without_json_has_no_schema(self):
+        (self.data / "slot.form.yaml").write_text(LOCK.replace("  encoding: json\n", ""), encoding="utf-8")
+        with self.assertRaisesRegex(SourceError, "a file schema is for JSON content"):
+            self.family()
+
+    def test_rows_and_objects_keep_their_text(self):
+        catalog = self.root / "Platform/common/data/catalog.tsv"
+        catalog.write_text(catalog.read_text().replace("<root>/<x>.lock\tfile\t", "<sub>/slots/<id>\tobject\t"))
+        text = build_families_section(self.norms, self.root, [self.family()])
+        self.assertIn("Форма строк и объектов, которыми", text)
+        self.assertNotIn("{key, file}", text)
 
 
 class Outcomes(FamiliesBase):

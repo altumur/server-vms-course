@@ -28,8 +28,8 @@ DIALECT = Path("Platform/common/DIALECT.md")
 SCHEMA_PATH = re.compile(r"([0-9]{2})-[a-z][a-z-]*/data/([^/]+)\.form\.yaml")
 OUTCOME_HEADER = ["path", "outcome", "priority", "unit", "norm"]
 UNITS = ("строка", "поле", "элемент")
-KIND_WORD = {"row": "строка", "object": "объект"}
-UNREADABLE = {"row": "нечитаемой строки", "object": "нечитаемого объекта"}
+KIND_WORD = {"row": "строка", "object": "объект", "file": "файл"}
+UNREADABLE = {"row": "нечитаемой строки", "object": "нечитаемого объекта", "file": "нечитаемого файла"}
 INT_MAX = 2 ** 53 - 1
 
 
@@ -64,7 +64,8 @@ def schema_place(row):
         raise SourceError("catalog %s: schema %s is not NN-<процесс>/data/<семья>.form.yaml (ADR-0088 п. 1)"
                           % (row["key"], row["schema"]))
     if row["kind"] not in KIND_WORD:
-        raise SourceError("catalog %s: a schema is only for row and JSON object (ADR-0088 доп. (1) Р2)" % row["key"])
+        raise SourceError("catalog %s: a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, "
+                          "ADR-0083 доп. (11))" % row["key"])
     if not re.fullmatch(r"P/%s(\.[1-9])?" % m.group(1), row["owner"]):
         raise SourceError("catalog %s: schema %s is not in the lesson of its owner %s" % (row["key"], row["schema"],
                                                                                      row["owner"]))
@@ -143,6 +144,10 @@ def load_family(root, row, common=None):
     t = form.deref(form.root)
     if row["kind"] == "row" and not (t.types == ["object"] and t.properties is not None):
         raise SourceError("%s: the root of a row schema is an object of properties (items)" % schema.name)
+    # Файл со схемой — файл с содержимым JSON (ADR-0083 доп. (11), замок присутствия): корень схемы — разбор текста
+    # файла, `encoding: json` или `jcs`; файл без JSON схемы не имеет.
+    if row["kind"] == "file" and t.encoding not in ("json", "jcs"):
+        raise SourceError("%s: a file schema is for JSON content: its root has encoding: json or jcs" % schema.name)
     outcomes_path = schema.with_name(name + ".outcomes.tsv")
     return Family(row, schema, outcomes_path, form, load_outcomes(outcomes_path, form))
 
@@ -200,13 +205,16 @@ def build_families_section(norms, root, families):
     if not families:
         raise SourceError("%s: the chapter owns no family with a schema in the catalog" % Path(norms).name)
     link = lambda t: _link(norms, root, t)   # noqa: E731
+    files = any(fam.kind == "file" for fam in families)
     out = ["### Семьи данных (построены из источника)", "",
-           "Форма строк и объектов, которыми глава владеет по [каталогу](%s), — из схем семей на [диалекте](%s) "
-           "(ADR-0088). Экземпляр строки — `{key, row}`, объекта — `{key, object}`; ключ — грамматика колонки `key` "
-           "каталога. Поля `row` — значения `items` после [кодека](%s): писатель пишет строго, читатель читает терпимо "
+           "Форма строк и объектов%s, которыми глава владеет по [каталогу](%%s), — из схем семей на [диалекте](%%s) "
+           "(ADR-0088). Экземпляр строки — `{key, row}`, объекта — `{key, object}`%s; ключ — грамматика колонки `key` "
+           "каталога. Поля `row` — значения `items` после [кодека](%%s): писатель пишет строго, читатель читает терпимо "
            "(DIALECT § 8). Ключ вне таблицы — отказ `key`, иной отказ — `value`. Нечитаемо — строка не раскодировалась "
            "или не прошла схему в режиме читателя; исход — по таблице исходов семьи (DIALECT § 9): путь — префикс пути "
            "отказа (пустой — строка целиком), при нескольких путях отказа действует исход с наименьшим приоритетом."
+           % (" и файлов JSON" if files else "",
+              ", файла — `{key, file}` (текст файла UTF-8; корень схемы — его разбор, `encoding`)" if files else "")
            % (link(CATALOG), link(DIALECT), link(CODEC)), ""]
     for fam in families:
         r = fam.row
@@ -411,10 +419,17 @@ class Judge(Loader):
                 self.fail(out, p, "value", "max_items: names")
 
     def judge(self, value, kind="row"):
-        """value — `row` (объект строк items) или `object` (значение JSON) → {verdict, paths, why}."""
+        """value — `row` (объект строк items), `object` (значение JSON) или `file` (байты или текст файла JSON; корень
+        схемы с `encoding` его разбирает) → {verdict, paths, why}."""
         out, self._decoded = [], set()
         if kind == "row":
             value = self.decode_row(value, out)
+        elif kind == "file" and isinstance(value, bytes):
+            try:
+                value = value.decode("utf-8")
+            except UnicodeDecodeError:
+                self.fail(out, [], "value", "file: not UTF-8")
+                value = None
         if value is not None:
             self.node(self.form.root, value, [], None, out)
         paths = canonical_paths([p for _, p, _ in out])
