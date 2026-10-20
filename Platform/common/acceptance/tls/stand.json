@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "server": "localhost",
+  "defaults": {
+    "ca": {"key": "ec-p256", "sig": "sha256", "not_before": -3600, "days": 3650},
+    "leaf": {"key": "ec-p256", "sig": "sha256", "not_before": -3600, "days": 825, "eku": ["serverAuth", "clientAuth"]}
+  },
+  "clusters": {
+    "hold": ["domain", "domainconsole", "console", "domainagent"],
+    "m1": ["domain", "domainconsole", "console", "domainagent"],
+    "m2": ["domain", "domainconsole", "console", "domainagent"],
+    "m3": ["domain", "domainconsole", "console", "domainagent"]
+  },
+  "foreign": ["console"],
+  "negative": {
+    "m2-no-role": {"issuer": "m2", "role": "console", "uri": null},
+    "m2-expired": {"issuer": "m2", "role": "console", "not_before": -172800, "days": 1},
+    "m2-sig-sha512": {"issuer": "m2", "role": "console", "sig": "sha512"},
+    "m2-server-only": {"issuer": "m2", "role": "console", "eku": ["serverAuth"]}
+  }
+}
