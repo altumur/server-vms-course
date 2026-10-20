@@ -1,0 +1,482 @@
+### Форма канонического вида (построена из источника)
+
+Значение `spec` строки `platform/spec/<sub>/canonical/1` — JSON (JCS, ADR-0072) этой формы; форма построена из формы спеки главы 2.1 (ADR-0089 п. 3). Отображение без имён автора закрыто: ключа вне таблицы нет. «Есть всегда» — ключ с умолчанием формы спеки или шагом проекции; «есть, если сказан в спеке» — ключ без умолчания, его отсутствие и есть значение. Отображение `ordered` — список объектов `{name, …}` в порядке автора. Правил и отношений формы спеки здесь нет: принятую спеку проверил установщик.
+
+#### Шаги урока 2
+
+Закрытый перечень: сахар — до умолчаний формы, вычисляемые умолчания — после них, до `ordered`.
+
+| Шаг | Норма | Когда | Что в виде |
+|---|---|---|---|
+| С1 | P/02.2-02 | `tables` списком имён | `{<имя>: {}}` на каждое имя, по порядку списка |
+| С2 | P/02.2-02 | `bound_to` одним именем (поля единицы и таблиц) | список из одного имени |
+| С3 | P/02.2-02 | `in` элемента `secret_in` одним словом | список из одного слова |
+| П1 | P/02.2-03 | нет `snapshot` | имена `unit.fields` в порядке автора без `*_secret`, полей `type: blob` и `server`; явный `[]` остаётся |
+| П2 | P/02.2-03 | нет `tables.<т>.journal` или одного из его ключей | `written` — `"<т>.written"`, `deleted` — `"<т>.deleted"`; сказанный ключ остаётся |
+| П3 | P/02.2-03 | нет `display.form` | `[{"fields": [<имена unit.fields в порядке автора>]}]` |
+| П4 | P/02.2-03 | нет `default` у описателя поля (единицы и таблиц) | `null` (и у `blob`, и при `inherit`) |
+| П5 | P/02.2-03 | нет `decoded` у элемента `secret_in` с `regex` | `true` |
+
+#### Корень
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `name` | строка; не из: `platform`, `spec`, `policy`, `drain`, `servers`, `where`, `unplaceable`, `console`, `audit`, `events`, `marks`, `requests`, `asked`, `session`, `mounts`, `healthz`, `metrics`, `resources`, `schema`, `domain`, `api`; целиком `[a-z][a-z0-9_-]{0,31}` | есть всегда | P/02.1 Н1.2 | не из 21 зарезервированного слова; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене |
+| `unit` | отображение `{rows, id, fields}` | есть всегда | 3 Н1.1 |  |
+| `unit.rows` | строка; не из: `platform`, `spec`, `next_id`, `slots`, `epoch`, `idem`, `policy`, `placement`, `workers`, `controller`, `decommissioned`, `holds`, `requests`, `asked`, `sweep`, `servers`, `where`, `unplaceable`, `drain`, `events`, `marks`, `console`, `audit`, `session`, `mounts`, `healthz`, `metrics`, `resources`, `schema`, `domain`, `api`, `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands`, `cluster`, `worker`, `ts`; целиком `[a-z][a-z0-9_-]{0,31}` | есть всегда | 3 Н1.1 | имя по Н1.2, не из перечня запрещённых имён таблиц и не `cluster`, `worker`, `ts` |
+| `unit.id` | строка | есть всегда | 3 Н1.3 | `numeric` или несекретное поле типа string (Н1.4) |
+| `unit.fields` | список, элемент — отображение `{name, type, required, fixed, default, inherit?, merge?, enum?, unique?, ref?, must_match?, schema?, bound_to?, credentials?, secret_in?, schemes?}`; порядок автора, `name` без повторов (ordered) | есть всегда (умолчание формы) | 3 Н1.2 |  |
+| `unit.fields[]` | отображение `{name, type, required, fixed, default, inherit?, merge?, enum?, unique?, ref?, must_match?, schema?, bound_to?, credentials?, secret_in?, schemes?}` |  |  |  |
+| `unit.fields[].name` | строка; не из: `id`, `revision`, `deleted`, `worker`, `placement`, `epoch`, `phase`, `observed_revision` | есть всегда |  | ключ автора: не из `platform_fields` урока 3 |
+| `unit.fields[].type` | по определению `fieldType` | есть всегда (умолчание формы) | 3 Н1.2 | поле `*_secret` — только string |
+| `unit.fields[].required` | bool | есть всегда (умолчание формы) | 3 Н3 |  |
+| `unit.fields[].fixed` | bool | есть всегда (умолчание формы) | 3 Н1.3 |  |
+| `unit.fields[].default` | любое значение | есть всегда (шаг П4) | 3 Н1.2 | одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть |
+| `unit.fields[].inherit` | любое значение | есть, если сказан в спеке | 3 Н1.2 | как `default`; последнее звено цепи наследования; только у поля единицы |
+| `unit.fields[].merge` | одно из: `union`, `override` | есть, если сказан в спеке | М11/11 Н1.5 | сведение цепи наследования; только с `inherit`; `union` — только у `type: list` |
+| `unit.fields[].enum` | по определению `fieldEnum` | есть, если сказан в спеке | 3 Н3 | значения типа поля; только у string и bool |
+| `unit.fields[].unique` | (bool; одно из: `true`) или (строка; одно из: `canonical`) | есть, если сказан в спеке | 3 Н1.3 | `canonical` — сравнение по канонической форме URL (урок 3 Н1.3), только у url; не у list |
+| `unit.fields[].ref` | по определению `refTarget` | есть, если сказан в спеке | 3 Н1.3 | `<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет |
+| `unit.fields[].must_match` | по определению `mustMatch` | есть, если сказан в спеке | 3 Н1.3 | `{<поле цели>: <поле этой строки>}`; ключи не проверяются |
+| `unit.fields[].schema` | по определению `jsonSchemaLite` | есть, если сказан в спеке | 3 Н1.2; 10 Н1.6 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `unit.fields[].bound_to` | по определению `boundTo` | есть, если сказан в спеке; сахар приведён (С2) | 7 Н1.1 | список имён полей этой строки, не секретов (одно имя приведено шагом С2) |
+| `unit.fields[].credentials` | по определению `credentials` | есть, если сказан в спеке | 7 Н1.1 |  |
+| `unit.fields[].secret_in` | по определению `secretIn` | есть, если сказан в спеке | 7 Н1.1 |  |
+| `unit.fields[].schemes` | по определению `schemes` | есть, если сказан в спеке | 7 Н1.1; 3 Н4 | имя схемы → `{host?, fragment?, none?}` |
+| `placement` | отображение `{capacity, headroom, weight, constraint, tie_break, servers, place_by, places?, spread_by?, group_by?, near?, home?, affinity?, requires, grows, retire_when?, rebalance, unplaced?}` | есть всегда | 4 Н1.3 |  |
+| `placement.capacity` | отображение `{from, default, unit_mb?, base_mb}` | есть всегда |  |  |
+| `placement.capacity.from` | строка | есть всегда (умолчание формы) |  | поле пульса |
+| `placement.capacity.default` | целое; ≥ 0 | есть всегда |  |  |
+| `placement.capacity.unit_mb` | число; > 0 | есть, если сказан в спеке | P/03.4 Н1.2 |  |
+| `placement.capacity.base_mb` | число; ≥ 0 | есть всегда (умолчание формы) | P/03.4 Н1.2 | бюджет памяти — одна формула P/03.4 Н1.2 `memory`, проверка — P/03.4 Н3 «старт() — шаг бюджета» |
+| `placement.headroom` | отображение `{from}` | есть всегда (умолчание формы) |  |  |
+| `placement.headroom.from` | строка | есть всегда (умолчание формы) |  | поле пульса |
+| `placement.weight` | отображение `{field?, default}` | есть всегда (умолчание формы) |  | без `field` вес — `default`, без `default` — 1 |
+| `placement.weight.field` | строка | есть, если сказан в спеке |  | поле типа int |
+| `placement.weight.default` | целое; ≥ 1 | есть всегда (умолчание формы) |  |  |
+| `placement.constraint` | одно из: `none`, `labels-subset` | есть всегда (умолчание формы) |  |  |
+| `placement.tie_break` | одно из: `most-free-capacity` | есть всегда (умолчание формы) |  |  |
+| `placement.servers` | одно из: `shared`, `distinct` | есть всегда (умолчание формы) |  |  |
+| `placement.place_by` | строка | есть всегда (умолчание формы) |  | `server` или поле пульса |
+| `placement.places` | отображение `{table, where?, server_field?, lease?}` | есть, если сказан в спеке |  |  |
+| `placement.places.table` | строка | есть всегда |  | таблица |
+| `placement.places.where` | отображение, opaque | есть, если сказан в спеке |  | ключи — поля таблицы |
+| `placement.places.server_field` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `placement.places.lease` | одно из: `strict` | есть, если сказан в спеке |  |  |
+| `placement.spread_by` | строка | есть, если сказан в спеке |  | поле |
+| `placement.group_by` | отображение `{field, cut_at?}` | есть, если сказан в спеке |  |  |
+| `placement.group_by.field` | строка | есть всегда |  | поле |
+| `placement.group_by.cut_at` | одно из: `host` | есть, если сказан в спеке |  | только у поля url: у поля иного типа — `refused:reference` (тип — свойство цели `group_by.field`, как у `unit.id`) |
+| `placement.near` | отображение `{sub, by?, of?, prefer?}` | есть, если сказан в спеке |  |  |
+| `placement.near.sub` | строка | есть всегда |  | подсистема (каталог) |
+| `placement.near.by` | строка | есть, если сказан в спеке |  | поле этой единицы |
+| `placement.near.of` | строка | есть, если сказан в спеке |  | поле соседа |
+| `placement.near.prefer` | отображение, opaque | есть, если сказан в спеке |  | поля соседа (каталог) |
+| `placement.home` | строка | есть, если сказан в спеке |  | поле или слово `near` (тогда `near` обязателен) |
+| `placement.affinity` | отображение `{field?, table?, server_field?, strict?}` | есть, если сказан в спеке |  |  |
+| `placement.affinity.field` | строка | есть, если сказан в спеке |  | поле |
+| `placement.affinity.table` | строка | есть, если сказан в спеке |  | таблица |
+| `placement.affinity.server_field` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `placement.affinity.strict` | отображение, opaque | есть, если сказан в спеке |  | ключи — поля таблицы |
+| `placement.requires` | одно из: `none`, `resource` | есть всегда (умолчание формы) |  |  |
+| `placement.grows` | bool | есть всегда (умолчание формы) |  | роль растёт по требованию (ADR-0084) |
+| `placement.retire_when` | отображение `{field, in}` | есть, если сказан в спеке |  |  |
+| `placement.retire_when.field` | строка | есть всегда |  | поле |
+| `placement.retire_when.in` | список | есть всегда |  | список значений |
+| `placement.rebalance` | отображение `{dead_band}` | есть всегда (умолчание формы) |  |  |
+| `placement.rebalance.dead_band` | число; ≥ 0 | есть всегда (умолчание формы) |  |  |
+| `placement.unplaced` | отображение `{delete_after}` | есть, если сказан в спеке |  |  |
+| `placement.unplaced.delete_after` | целое; ≥ 1 | есть всегда |  | только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067) |
+| `tables` | отображение имена автора: имя — строка; не из: `platform`, `spec`, `next_id`, `slots`, `epoch`, `idem`, `policy`, `placement`, `workers`, `controller`, `decommissioned`, `holds`, `requests`, `asked`, `sweep`, `servers`, `where`, `unplaceable`, `drain`, `events`, `marks`, `console`, `audit`, `session`, `mounts`, `healthz`, `metrics`, `resources`, `schema`, `domain`, `api`, `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands`; целиком `[a-z][a-z0-9_-]{0,31}`, значение — отображение `{key?, fields, schema?, stamp?, journal}` | есть всегда (умолчание формы); сахар приведён (С1) | 10 Н1.6 | имя → таблица (список имён приведён шагом С1) |
+| `tables.<имя>` | отображение `{key?, fields, schema?, stamp?, journal}` |  |  |  |
+| `tables.<имя>.key` | строка | есть, если сказан в спеке |  | несекретное поле string или шаблон `{поле}` / `{поле:int}` (Н1.4) |
+| `tables.<имя>.fields` | список, элемент — отображение `{name, type, required, default, enum?, ref?, must_match?, schema?, bound_to?, credentials?, secret_in?, schemes?}`; порядок автора, `name` без повторов (ordered) | есть всегда (умолчание формы) |  | поле по таблице «Поле»; поля `held_by`, `garbled`, `by`, `at`, `made_at` запрещены |
+| `tables.<имя>.fields[]` | отображение `{name, type, required, default, enum?, ref?, must_match?, schema?, bound_to?, credentials?, secret_in?, schemes?}` |  |  |  |
+| `tables.<имя>.fields[].name` | строка; не из: `held_by`, `garbled`, `by`, `at`, `made_at` | есть всегда |  | ключ автора |
+| `tables.<имя>.fields[].type` | по определению `fieldType` | есть всегда (умолчание формы) | 3 Н1.2 | поле `*_secret` — только string |
+| `tables.<имя>.fields[].required` | bool | есть всегда (умолчание формы) |  |  |
+| `tables.<имя>.fields[].default` | любое значение | есть всегда (шаг П4) |  |  |
+| `tables.<имя>.fields[].enum` | по определению `fieldEnum` | есть, если сказан в спеке | 3 Н3 | значения типа поля; только у string и bool |
+| `tables.<имя>.fields[].ref` | по определению `refTarget` | есть, если сказан в спеке | 3 Н1.3 | `<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет |
+| `tables.<имя>.fields[].must_match` | по определению `mustMatch` | есть, если сказан в спеке | 3 Н1.3 | `{<поле цели>: <поле этой строки>}`; ключи не проверяются |
+| `tables.<имя>.fields[].schema` | по определению `jsonSchemaLite` | есть, если сказан в спеке | 3 Н1.2; 10 Н1.4 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `tables.<имя>.fields[].bound_to` | по определению `boundTo` | есть, если сказан в спеке; сахар приведён (С2) | 7 Н1.1 | список имён полей этой строки, не секретов (одно имя приведено шагом С2) |
+| `tables.<имя>.fields[].credentials` | по определению `credentials` | есть, если сказан в спеке | 7 Н1.1 |  |
+| `tables.<имя>.fields[].secret_in` | по определению `secretIn` | есть, если сказан в спеке | 7 Н1.1 |  |
+| `tables.<имя>.fields[].schemes` | по определению `schemes` | есть, если сказан в спеке | 7 Н1.1; 3 Н4 | имя схемы → `{host?, fragment?, none?}` |
+| `tables.<имя>.schema` | по определению `jsonSchemaLite` | есть, если сказан в спеке | 3 Н1.2; 10 Н1.4 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `tables.<имя>.stamp` | список, элемент — одно из: `by`, `at`, `made_at` | есть, если сказан в спеке |  |  |
+| `tables.<имя>.stamp[]` | одно из: `by`, `at`, `made_at` |  |  |  |
+| `tables.<имя>.journal` | отображение `{written, deleted}` | есть всегда (шаг П2) |  |  |
+| `tables.<имя>.journal.written` | строка | есть всегда (шаг П2) |  |  |
+| `tables.<имя>.journal.deleted` | строка | есть всегда (шаг П2) |  |  |
+| `requests` | отображение `{schema?, valid_for?, most_valid?, per_person?, settle, ttl?, key?, outcome, stamp?, journal?, elsewhere?, free}` | есть, если сказан в спеке | 8 Н1.5 |  |
+| `requests.schema` | по определению `jsonSchemaLite` | есть, если сказан в спеке | 3 Н1.2; 10 Н1.4 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `requests.valid_for` | число; ≥ 0 | есть, если сказан в спеке |  |  |
+| `requests.most_valid` | число; ≥ 0 | есть, если сказан в спеке |  |  |
+| `requests.per_person` | целое; ≥ 1 | есть, если сказан в спеке |  |  |
+| `requests.settle` | число; ≥ 0 | есть всегда (умолчание формы) |  | секунды |
+| `requests.ttl` | число; ≥ 0 | есть, если сказан в спеке |  | 0 — без предела |
+| `requests.key` | строка; целиком `.*\{[^{}]+\}.*` | есть, если сказан в спеке |  | шаблон rid хотя бы с одним `{…}` (Н1.4): без подстановки все просьбы получили бы один id |
+| `requests.outcome` | одно из: `mark`, `fetched` | есть всегда (умолчание формы) |  | смысл — урок 8, ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4) |
+| `requests.stamp` | список, элемент — одно из: `by`, `at`, `group`, `about` | есть, если сказан в спеке |  |  |
+| `requests.stamp[]` | одно из: `by`, `at`, `group`, `about` |  |  |  |
+| `requests.journal` | строка | есть, если сказан в спеке |  | вид журнала |
+| `requests.elsewhere` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `requests.free` | bool | есть всегда (умолчание формы) |  |  |
+| `holds` | отображение `{table?, unit?, since?, until?, released?, longest?}` | есть, если сказан в спеке | 8 | все ключи необязательны |
+| `holds.table` | строка | есть, если сказан в спеке |  | таблица |
+| `holds.unit` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `holds.since` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `holds.until` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `holds.released` | строка | есть, если сказан в спеке |  | поле таблицы |
+| `holds.longest` | число; > 0 | есть, если сказан в спеке |  | секунды |
+| `events` | отображение `{suppress?, older_epochs}` | есть всегда (умолчание формы) | 8 |  |
+| `events.suppress` | отображение имена автора: имя — строка, значение — отображение `{window, by?}` | есть, если сказан в спеке |  | вид события → правило подавления |
+| `events.suppress.<имя>` | отображение `{window, by?}` |  |  |  |
+| `events.suppress.<имя>.window` | число; > 0 | есть всегда |  | секунды |
+| `events.suppress.<имя>.by` | список, не короче 1, элемент — строка; не из: `t`, `id`, `repeats`, `since`, `until` | есть, если сказан в спеке |  |  |
+| `events.suppress.<имя>.by[]` | строка; не из: `t`, `id`, `repeats`, `since`, `until` |  |  |  |
+| `events.older_epochs` | одно из: `fenced`, `earlier-run` | есть всегда (умолчание формы) |  |  |
+| `about` | отображение `{sub, field}` | есть, если сказан в спеке | 8 Н1.2; 3 Н1.3 |  |
+| `about.sub` | по определению `name` | есть всегда |  | имя подсистемы по грамматике `name`; существование — не проверка загрузчика |
+| `about.field` | строка | есть всегда |  | поле с `fixed: true` |
+| `snapshot` | список, элемент — строка | есть всегда (шаг П1) | 10 Н1.3 | список полей без `*_secret`, blob и `server`; `[]` — ни одного |
+| `snapshot[]` | строка |  |  |  |
+| `rights` | отображение `{routes, cluster_rows, unit_of?, reach?, names?}` | есть всегда (умолчание формы) | 6 Н1.5 |  |
+| `rights.routes` | отображение `{view?, edit?}` | есть всегда (умолчание формы) |  |  |
+| `rights.routes.view` | по определению `strList` | есть, если сказан в спеке |  | семьи |
+| `rights.routes.edit` | по определению `strList` | есть, если сказан в спеке |  | семьи |
+| `rights.cluster_rows` | bool | есть всегда (умолчание формы) |  |  |
+| `rights.unit_of` | отображение имена автора: имя — строка, значение — строка | есть, если сказан в спеке |  | `{таблица: поле таблицы}` |
+| `rights.unit_of.<имя>` | строка |  |  |  |
+| `rights.reach` | отображение `{group?, cluster?, requests?}` | есть, если сказан в спеке |  |  |
+| `rights.reach.group` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `rights.reach.cluster` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `rights.reach.requests` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `rights.names` | список, элемент — отображение `{field, unit, sub?, of?}` | есть, если сказан в спеке |  |  |
+| `rights.names[]` | отображение `{field, unit, sub?, of?}` |  |  |  |
+| `rights.names[].field` | строка | есть всегда |  |  |
+| `rights.names[].unit` | строка | есть всегда |  |  |
+| `rights.names[].sub` | строка | есть, если сказан в спеке |  |  |
+| `rights.names[].of` | строка | есть, если сказан в спеке |  |  |
+| `secrets` | отображение `{readers, reads?}` | есть всегда (умолчание формы) | P/02.5 Н1.3 |  |
+| `secrets.readers` | отображение имена автора: имя — строка; не целиком `!.*\|delete:.*\|.*\*.*`, значение — список, не короче 1, элемент — одно из: `console`, `controller`, `worker`, `domainworker`, `domain`, `domainagent`, `resource`, `domainconsole` | есть всегда (умолчание формы) |  | точное имя строки или префикс с `/` → роли |
+| `secrets.readers.<имя>` | список, не короче 1, элемент — одно из: `console`, `controller`, `worker`, `domainworker`, `domain`, `domainagent`, `resource`, `domainconsole` |  |  |  |
+| `secrets.readers.<имя>[]` | одно из: `console`, `controller`, `worker`, `domainworker`, `domain`, `domainagent`, `resource`, `domainconsole` |  |  |  |
+| `secrets.reads` | по определению `grantList` | есть, если сказан в спеке |  | `<семья>/<имя>` или префиксы с `/`, как `worker.reads` |
+| `worker` | отображение `{writes, reads?, requests?, deletes}` | есть всегда (умолчание формы) | P/02.5 Н1.4; 8 Н1.5 |  |
+| `worker.writes` | по определению `strList` | есть всегда (умолчание формы) | P/02.5 Н1.4 | собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (урок 7 Н3 «перезапечатать при старте») |
+| `worker.reads` | по определению `grantList` | есть, если сказан в спеке | P/02.5 Н1.4 | `<семья>/<имя>` или префиксы с `/` |
+| `worker.requests` | по определению `strList` | есть, если сказан в спеке | 8 Н1.5 | другие подсистемы (своя — отказ; принимает ли — каталог, Н3) |
+| `worker.deletes` | по определению `strList` | есть всегда (умолчание формы) | P/02.5 Н1.4 | семьи единиц этой спеки — только `unit.rows` (ADR-0067 доп. 2026-10-17) |
+| `slot` | отображение `{prefix, name_env?}` | есть всегда (умолчание формы) | P/03.2 Н1.4 |  |
+| `slot.prefix` | строка; целиком `[a-z]{1,8}` | есть всегда (умолчание формы) |  |  |
+| `slot.name_env` | строка; целиком `[A-Z][A-Z0-9_]*` | есть, если сказан в спеке |  |  |
+| `lease` | отображение `{unconfirmed_max}` | есть всегда (умолчание формы) | P/03.2 Н1.6 |  |
+| `lease.unconfirmed_max` | (строка; одно из: `forever`, `off`) или (целое; ≥ 1) | есть всегда |  |  |
+| `heartbeat` | отображение `{strings}` | есть всегда (умолчание формы) | P/03.4 Н1.1 |  |
+| `heartbeat.strings` | список, элемент — строка; не из: `worker`, `server`, `url`, `instance`, `labels`, `fetched`, `events` | есть всегда (умолчание формы) |  | имена полей пульса, не из `platform_strings` P/03.4 Н1.1 |
+| `heartbeat.strings[]` | строка; не из: `worker`, `server`, `url`, `instance`, `labels`, `fetched`, `events` |  |  |  |
+| `objects` | отображение `{rows?, door?}` | есть, если сказан в спеке | 8 Н1.1 |  |
+| `objects.rows` | по определению `strList` | есть, если сказан в спеке |  | семьи строк-объектов |
+| `objects.door` | по определению `strList` | есть, если сказан в спеке |  | семьи двери объектов |
+| `door` | отображение `{routes, pass}` | есть всегда (умолчание формы) | 9 Н3; 11 Н1.8 |  |
+| `door.routes` | по определению `strList` | есть всегда (умолчание формы) | 9 Н3 |  |
+| `door.pass` | по определению `strList` | есть всегда (умолчание формы) | 11 Н1.8 |  |
+| `servers` | отображение `{show?, status?}` | есть, если сказан в спеке | 9 Н1.2 |  |
+| `servers.show` | список, элемент — отображение `{table, by, title?, columns?}` | есть, если сказан в спеке |  |  |
+| `servers.show[]` | отображение `{table, by, title?, columns?}` |  |  |  |
+| `servers.show[].table` | строка | есть всегда |  | таблица |
+| `servers.show[].by` | строка | есть всегда |  | поле таблицы |
+| `servers.show[].title` | строка | есть, если сказан в спеке |  |  |
+| `servers.show[].columns` | по определению `strList` | есть, если сказан в спеке |  | поля таблицы |
+| `servers.status` | список, элемент — отображение `{field, title?, of?}` | есть, если сказан в спеке |  |  |
+| `servers.status[]` | отображение `{field, title?, of?}` |  |  |  |
+| `servers.status[].field` | строка; не целиком `(worker\|ts\|status\|server\|instance\|labels\|url\|fetched\|events\|conflicts\|started\|previous_hb\|previous_instance\|previous_server\|fenced\|schema\|build\|pending_writes\|server_unsaid\|stood_in\|stand_in_renewals)(\..*)?` | есть всегда |  | путь в пульсе, первый сегмент не ключ пульса платформы (P/03.4 Н1.1) |
+| `servers.status[].title` | строка | есть, если сказан в спеке |  |  |
+| `servers.status[].of` | строка | есть, если сказан в спеке |  | таблица |
+| `display` | отображение `{unit, units, units_count, section?, general?, fields?, field_help?, options?, form, events, kinds?, keys?, tree?}` | есть всегда (умолчание формы) | 9 Н1.2 |  |
+| `display.unit` | строка | есть всегда (умолчание формы) |  |  |
+| `display.units` | строка | есть всегда (умолчание формы) |  |  |
+| `display.units_count` | строка | есть всегда (умолчание формы) |  |  |
+| `display.section` | строка | есть, если сказан в спеке |  |  |
+| `display.general` | строка | есть, если сказан в спеке |  |  |
+| `display.fields` | по определению `strMap` | есть, если сказан в спеке |  | имя поля → подпись |
+| `display.field_help` | по определению `strMap` | есть, если сказан в спеке |  | имя поля → подсказка |
+| `display.options` | отображение имена автора: имя — строка, значение — по определению `strMap` | есть, если сказан в спеке |  | поле → `{значение: строка}` |
+| `display.options.<имя>` | по определению `strMap` |  |  |  |
+| `display.form` | список, элемент — отображение `{title?, state?, placement?, fields?, note?, status?}` | есть всегда (шаг П3) |  |  |
+| `display.form[]` | отображение `{title?, state?, placement?, fields?, note?, status?}` |  |  |  |
+| `display.form[].title` | строка | есть, если сказан в спеке |  |  |
+| `display.form[].state` | bool | есть, если сказан в спеке |  |  |
+| `display.form[].placement` | bool | есть, если сказан в спеке |  |  |
+| `display.form[].fields` | по определению `strList` | есть, если сказан в спеке |  | поля и платформенные имена |
+| `display.form[].note` | строка | есть, если сказан в спеке |  |  |
+| `display.form[].status` | список, элемент — отображение `{field, since?, title?}` | есть, если сказан в спеке |  |  |
+| `display.form[].status[]` | отображение `{field, since?, title?}` |  |  |  |
+| `display.form[].status[].field` | строка | есть всегда |  |  |
+| `display.form[].status[].since` | строка | есть, если сказан в спеке |  |  |
+| `display.form[].status[].title` | строка | есть, если сказан в спеке |  |  |
+| `display.events` | bool | есть всегда (умолчание формы) |  |  |
+| `display.kinds` | по определению `strMap` | есть, если сказан в спеке |  | вид события → строка |
+| `display.keys` | отображение имена автора: имя — строка, значение — отображение `{title, about, absent?}` | есть, если сказан в спеке | М11/9 Н1.8 | id семьи ключей домена → подписи |
+| `display.keys.<имя>` | отображение `{title, about, absent?}` |  |  |  |
+| `display.keys.<имя>.title` | строка | есть всегда |  |  |
+| `display.keys.<имя>.about` | строка | есть всегда |  |  |
+| `display.keys.<имя>.absent` | строка | есть, если сказан в спеке |  |  |
+| `display.tree` | отображение `{group_by?, nested_by?, columns?, children?, group_title?, group_hint?, filter?, no_group?, contents_title?, group_word?, no_group_suffix?, pick_note?, new_root?, new_sub?, add_here?, new_group_note?, remove?, not_in?, add_to?, no_others?, new_group?}` | есть, если сказан в спеке |  |  |
+| `display.tree.group_by` | строка | есть, если сказан в спеке |  | поле |
+| `display.tree.nested_by` | строка | есть, если сказан в спеке |  | строка-разделитель |
+| `display.tree.columns` | список, элемент — отображение `{field, title?, width?}` | есть, если сказан в спеке |  |  |
+| `display.tree.columns[]` | отображение `{field, title?, width?}` |  |  |  |
+| `display.tree.columns[].field` | строка | есть всегда |  | поле или платформенное имя |
+| `display.tree.columns[].title` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.columns[].width` | целое; ≥ 1 | есть, если сказан в спеке |  |  |
+| `display.tree.children` | bool | есть, если сказан в спеке |  |  |
+| `display.tree.group_title` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.group_hint` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.filter` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.no_group` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.contents_title` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.group_word` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.no_group_suffix` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.pick_note` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.new_root` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.new_sub` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.add_here` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.new_group_note` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.remove` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.not_in` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.add_to` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.no_others` | строка | есть, если сказан в спеке |  |  |
+| `display.tree.new_group` | строка | есть, если сказан в спеке |  |  |
+| `console` | отображение `{running?}` | есть, если сказан в спеке | 9 Н1.2 |  |
+| `console.running` | строка | есть, если сказан в спеке |  | `name` метрики из `metrics[]` |
+| `metrics` | список, элемент — отображение `{name, type?, from?, agg?, equals?, when?, default?, live?, unheld?, labels?, count?, where?, unless?, buckets?, label?, values?}` | есть, если сказан в спеке | 9 Н1.2; М13 |  |
+| `metrics[]` | отображение `{name, type?, from?, agg?, equals?, when?, default?, live?, unheld?, labels?, count?, where?, unless?, buckets?, label?, values?}` |  |  |  |
+| `metrics[].name` | строка; целиком `[a-z_][a-z0-9_]*` | есть всегда |  | повтор допустим |
+| `metrics[].type` | одно из: `gauge`, `counter`, `histogram` | есть, если сказан в спеке |  |  |
+| `metrics[].from` | строка | есть, если сказан в спеке |  |  |
+| `metrics[].agg` | строка | есть, если сказан в спеке |  |  |
+| `metrics[].equals` | (строка) или (bool) или (список, элемент — строка) | есть, если сказан в спеке |  |  |
+| `metrics[].equals ⟨вариант 3⟩[]` | строка |  |  |  |
+| `metrics[].when` | строка | есть, если сказан в спеке |  |  |
+| `metrics[].default` | число или строка | есть, если сказан в спеке |  |  |
+| `metrics[].live` | bool | есть, если сказан в спеке |  |  |
+| `metrics[].unheld` | bool | есть, если сказан в спеке |  |  |
+| `metrics[].labels` | отображение, opaque | есть, если сказан в спеке |  |  |
+| `metrics[].count` | строка; целиком `table [a-z][a-z0-9_-]{0,31}` | есть, если сказан в спеке |  | `table <таблица этой спеки>` |
+| `metrics[].where` | отображение, opaque | есть, если сказан в спеке |  | ключи — поля, при `count` — поля таблицы |
+| `metrics[].unless` | отображение `{table, where?}` | есть, если сказан в спеке |  |  |
+| `metrics[].unless.table` | строка | есть всегда |  |  |
+| `metrics[].unless.where` | отображение, opaque | есть, если сказан в спеке |  |  |
+| `metrics[].buckets` | список, элемент — число | есть, если сказан в спеке |  |  |
+| `metrics[].buckets[]` | число |  |  |  |
+| `metrics[].label` | строка | есть, если сказан в спеке |  |  |
+| `metrics[].values` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `domain` | отображение `{ref?, view?, edit?, kept?, tables?, reports?, shared?, keys?, books?, names?, tokens?, witness?}` | есть, если сказан в спеке | М11 |  |
+| `domain.ref` | строка | есть, если сказан в спеке |  |  |
+| `domain.view` | по определению `nonSecretList` | есть, если сказан в спеке |  |  |
+| `domain.edit` | по определению `nonSecretList` | есть, если сказан в спеке |  |  |
+| `domain.kept` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `domain.tables` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `domain.reports` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `domain.shared` | список, без повторов, элемент — (строка; не целиком `.*_secret`) или (отображение `{name, type, schema}`) | есть, если сказан в спеке | М11/11 Н1.1 | элемент — имя поля единицы (не секрет; наследует или это `display.tree.group_by`) или документ `{name, type: json, schema}`: name — не имя поля единицы, значение документа проверяется по schema |
+| `domain.shared[]` | (строка; не целиком `.*_secret`) или (отображение `{name, type, schema}`) |  |  |  |
+| `domain.shared[] ⟨вариант 2⟩.name` | строка; целиком `[a-z][a-z0-9_-]*` | есть всегда |  |  |
+| `domain.shared[] ⟨вариант 2⟩.type` | одно из: `json` | есть всегда |  |  |
+| `domain.shared[] ⟨вариант 2⟩.schema` | по определению `jsonSchemaLite` | есть всегда | 3 Н1.2; 10 Н1.4 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `domain.keys` | список, элемент — отображение `{id, keys?, prefix?}` | есть, если сказан в спеке | М11/9 Н1.8 |  |
+| `domain.keys[]` | отображение `{id, keys?, prefix?}` |  |  |  |
+| `domain.keys[].id` | по определению `name` | есть всегда |  |  |
+| `domain.keys[].keys` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `domain.keys[].prefix` | строка | есть, если сказан в спеке |  |  |
+| `domain.books` | отображение имена автора: имя — строка; целиком `[a-z0-9][a-z0-9_-]*`, значение — отображение `{from?, key?, pick?, to?, show?}` | есть, если сказан в спеке | М11/5 Н1.1 |  |
+| `domain.books.<имя>` | отображение `{from?, key?, pick?, to?, show?}` |  |  | `{}` — переносимая книга: пишет воркер подсистемы на домене (P/03.7 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?}` — собираемая книга из строк членов |
+| `domain.books.<имя>.from` | строка; целиком `[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?` | есть, если сказан в спеке |  | `<sub>/<строка>` — одиночная строка или `<sub>/<строка>/` — семья строк под слотами; `<sub>` — своя подсистема |
+| `domain.books.<имя>.key` | строка; не целиком `.*_secret` | есть, если сказан в спеке |  | имя несекретного поля входа: значение — непустая строка, ключ книги |
+| `domain.books.<имя>.pick` | одно из: `unique`, `all` | есть, если сказан в спеке |  |  |
+| `domain.books.<имя>.to` | строка; не целиком `.*_secret` | есть, если сказан в спеке |  | имя несекретного поля входа, не `key`: член или список членов — получатели элемента |
+| `domain.books.<имя>.show` | список, не короче 1, без повторов, элемент — строка; не целиком `.*_secret` | есть, если сказан в спеке |  | что видит дверь (М11/5 Н2) |
+| `domain.books.<имя>.show[]` | строка; не целиком `.*_secret` |  |  |  |
+| `domain.names` | отображение имена автора: имя — строка; целиком `[a-z0-9][a-z0-9_-]*/`, значение — отображение `{exclusive_with, grant?}` | есть, если сказан в спеке | М11/9 Н1.7 |  |
+| `domain.names.<имя>` | отображение `{exclusive_with, grant?}` |  |  |  |
+| `domain.names.<имя>.exclusive_with` | одно из: `domain/users` | есть всегда |  |  |
+| `domain.names.<имя>.grant` | одно из: `view`, `edit`, `admin` | есть, если сказан в спеке |  |  |
+| `domain.tokens` | отображение имена автора: имя — строка; не из: `person`; целиком `[a-z][a-z0-9_-]{0,31}`, значение — отображение `{lifetime, claims, grant, placement?, unit?, scenario?}` | есть, если сказан в спеке | М11/7 Н1.1 |  |
+| `domain.tokens.<имя>` | отображение `{lifetime, claims, grant, placement?, unit?, scenario?}` |  |  |  |
+| `domain.tokens.<имя>.lifetime` | число; > 0 | есть всегда |  | секунды |
+| `domain.tokens.<имя>.claims` | список, не короче 1, без повторов, элемент — строка; не из: `iss`, `sub`, `iat`, `exp`, `jti`, `kind` | есть всегда |  |  |
+| `domain.tokens.<имя>.claims[]` | строка; не из: `iss`, `sub`, `iat`, `exp`, `jti`, `kind` |  |  |  |
+| `domain.tokens.<имя>.grant` | список, не короче 1, без повторов, элемент — строка | есть всегда |  | роли воркеров, которым вид выдаётся |
+| `domain.tokens.<имя>.grant[]` | строка |  |  |  |
+| `domain.tokens.<имя>.placement` | отображение `{sub, caller, ref_claim, target_fields, audience_claim}` | есть, если сказан в спеке |  |  |
+| `domain.tokens.<имя>.placement.sub` | строка | есть всегда |  | подсистема записей назначения (М11/6 Н1.1) |
+| `domain.tokens.<имя>.placement.caller` | одно из: `cluster`, `origin`, `copies` | есть всегда |  | поле записи, где должен стоять член-заявитель |
+| `domain.tokens.<имя>.placement.ref_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.placement.target_fields` | список, без повторов, элемент — одно из: `cluster`, `origin`, `copies`, `centre`, `star_centre` | есть всегда |  | откуда аудитория |
+| `domain.tokens.<имя>.placement.target_fields[]` | одно из: `cluster`, `origin`, `copies`, `centre`, `star_centre` |  |  |  |
+| `domain.tokens.<имя>.placement.audience_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.unit` | отображение `{sub?, caller?, ref_claim, target_fields, audience_claim}` | есть, если сказан в спеке |  |  |
+| `domain.tokens.<имя>.unit.sub` | строка | есть, если сказан в спеке |  | подсистема единицы; нет — своя (своя требует `domain.ref`) |
+| `domain.tokens.<имя>.unit.caller` | одно из: `self`, `poll_home` | есть, если сказан в спеке |  |  |
+| `domain.tokens.<имя>.unit.ref_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.unit.target_fields` | список, без повторов, элемент — одно из: `poll_home`, `centre` | есть всегда |  |  |
+| `domain.tokens.<имя>.unit.target_fields[]` | одно из: `poll_home`, `centre` |  |  |  |
+| `domain.tokens.<имя>.unit.audience_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario` | отображение `{doc, items, name, enabled, trigger, target, act, placement?, ref_claim, trigger_claim, acts_claim, up_claim, audience_claim}` | есть, если сказан в спеке |  |  |
+| `domain.tokens.<имя>.scenario.doc` | строка | есть всегда |  | подсистема общего документа (М11/11 Н1.2: `shared.<doc>`) |
+| `domain.tokens.<имя>.scenario.items` | строка; целиком `[a-z][a-z0-9_]*` | есть всегда |  | имя массива в документе |
+| `domain.tokens.<имя>.scenario.name` | по определению `fieldPath` | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.enabled` | по определению `fieldPath` | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.trigger` | по определению `fieldPath` | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.target` | по определению `fieldPath` | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.act` | по определению `fieldPath` | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.placement` | строка | есть, если сказан в спеке |  | подсистема, чьи записи назначения называют дом цели |
+| `domain.tokens.<имя>.scenario.ref_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.trigger_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.acts_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.up_claim` | строка | есть всегда |  |  |
+| `domain.tokens.<имя>.scenario.audience_claim` | строка | есть всегда |  |  |
+| `domain.witness` | отображение `{report, member_field}` | есть, если сказан в спеке | М11/11 Н1.8 |  |
+| `domain.witness.report` | строка | есть всегда |  |  |
+| `domain.witness.member_field` | строка | есть всегда |  | fixed-поле единицы, несущее имя члена |
+
+#### Определения
+
+**`strList`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<strList>` | список, элемент — строка |  |  |  |
+| `<strList>[]` | строка |  |  |  |
+
+**`name`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<name>` | строка; целиком `[a-z][a-z0-9_-]{0,31}` |  |  |  |
+
+**`grantList`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<grantList>` | список, элемент — строка; целиком `.*/.*`; не целиком `!.*\|delete:.*\|.*\*.*` |  |  |  |
+| `<grantList>[]` | строка; целиком `.*/.*`; не целиком `!.*\|delete:.*\|.*\*.*` |  |  | с `/`; без буквального `*`, начального `!` и `delete:` |
+
+**`fieldType`** — поле `*_secret` — только string
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<fieldType>` | одно из: `string`, `int`, `float`, `bool`, `list`, `json`, `url`, `blob` |  | 3 Н1.2 |  |
+
+**`fieldEnum`** — значения типа поля; только у string и bool
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<fieldEnum>` | список, не короче 1, без повторов |  | 3 Н3 |  |
+
+**`refTarget`** — `<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<refTarget>` | строка; целиком `[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}` |  | 3 Н1.3 |  |
+
+**`mustMatch`** — `{<поле цели>: <поле этой строки>}`; ключи не проверяются
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<mustMatch>` | отображение имена автора: имя — строка, значение — строка |  | 3 Н1.3 |  |
+| `<mustMatch>.<имя>` | строка |  |  |  |
+
+**`boundTo`** — список имён полей этой строки, не секретов (одно имя приведено шагом С2)
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<boundTo>` | список, элемент — строка |  | 7 Н1.1 |  |
+| `<boundTo>[]` | строка |  |  |  |
+
+**`credentials`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<credentials>` | отображение `{login, secret}` |  | 7 Н1.1 |  |
+| `<credentials>.login` | строка | есть всегда |  | поле строки не url и не секрет |
+| `<credentials>.secret` | строка | есть всегда |  | поле `*_secret` |
+
+**`secretIn`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<secretIn>` | список, элемент — отображение `{param?, login?, regex?, in?, schemes?, decoded?, nested?}` |  | 7 Н1.1 |  |
+| `<secretIn>[]` | отображение `{param?, login?, regex?, in?, schemes?, decoded?, nested?}` |  |  | элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}` |
+| `<secretIn>[].param` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `<secretIn>[].login` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `<secretIn>[].regex` | строка | есть, если сказан в спеке |  |  |
+| `<secretIn>[].in` | список, элемент — одно из: `path`, `query`, `authority`, `fragment` | есть, если сказан в спеке; сахар приведён (С3) |  |  |
+| `<secretIn>[].in[]` | одно из: `path`, `query`, `authority`, `fragment` |  |  |  |
+| `<secretIn>[].schemes` | по определению `strList` | есть, если сказан в спеке |  |  |
+| `<secretIn>[].decoded` | bool | есть по правилу отображения (шаг П5) |  |  |
+| `<secretIn>[].nested` | по определению `strList` | есть, если сказан в спеке |  |  |
+
+Правила:
+
+- `<secretIn>[]`: если есть `regex`: обязательны `decoded`.
+
+**`schemes`** — имя схемы → `{host?, fragment?, none?}`
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<schemes>` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9+.-]*`, значение — отображение `{host, fragment?, none?}` |  | 7 Н1.1; 3 Н4 |  |
+| `<schemes>.<имя>` | отображение `{host, fragment?, none?}` |  |  |  |
+| `<schemes>.<имя>.host` | одно из: `authority`, `path` | есть всегда (умолчание формы) |  | `authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`) |
+| `<schemes>.<имя>.fragment` | одно из: `none` | есть, если сказан в спеке |  | `none`: `#` — обычный знак, не начало фрагмента (урок 7 А2) |
+| `<schemes>.<имя>.none` | по определению `strList` | есть, если сказан в спеке |  | значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` урока 3 Н4); проверка «нет хоста» урока 3 Н4 к такой ссылке не применяется, `group_by` P/04 Н1.3 её в группу не берёт |
+
+**`jsonSchemaLite`** — JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<jsonSchemaLite>` | отображение `{properties?, additionalProperties?, items?, if?, then?, else?, not?, allOf?, anyOf?, oneOf?}` и прочие имена автора: имя — одно из: `type`, `enum`, `const`, `properties`, `required`, `additionalProperties`, `items`, `minItems`, `maxItems`, `minLength`, `maxLength`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `pattern`, `if`, `then`, `else`, `allOf`, `anyOf`, `oneOf`, `not`, значение — любое значение |  | 3 Н1.2; 10 Н1.4 |  |
+| `<jsonSchemaLite>.properties` | отображение имена автора: имя — строка, значение — по определению `jsonSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.properties.<имя>` | по определению `jsonSchemaLite` |  | 3 Н1.2; 10 Н1.4 | JSON Schema; ключевые слова — перечень урока 3 Н1.2 (иное — value), глубина ≤ 32 |
+| `<jsonSchemaLite>.additionalProperties` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.items` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.if` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.then` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.else` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.not` | по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.allOf` | список, элемент — по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.allOf[]` | по определению `subSchemaLite` |  |  |  |
+| `<jsonSchemaLite>.anyOf` | список, элемент — по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.anyOf[]` | по определению `subSchemaLite` |  |  |  |
+| `<jsonSchemaLite>.oneOf` | список, элемент — по определению `subSchemaLite` | есть, если сказан в спеке |  |  |
+| `<jsonSchemaLite>.oneOf[]` | по определению `subSchemaLite` |  |  |  |
+| `<jsonSchemaLite>.<имя>` | любое значение |  |  |  |
+
+**`subSchemaLite`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<subSchemaLite>` | (bool) или (по определению `jsonSchemaLite`) |  |  |  |
+
+**`strMap`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<strMap>` | отображение имена автора: имя — строка, значение — строка |  |  |  |
+| `<strMap>.<имя>` | строка |  |  |  |
+
+**`nonSecretList`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<nonSecretList>` | список, элемент — строка; не целиком `.*_secret` |  |  |  |
+| `<nonSecretList>[]` | строка; не целиком `.*_secret` |  |  |  |
+
+**`fieldPath`**
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `<fieldPath>` | строка; целиком `[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*` |  |  |  |
