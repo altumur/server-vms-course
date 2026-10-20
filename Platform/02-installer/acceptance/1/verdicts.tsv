@@ -563,3 +563,7 @@ c9_xclass_number_overflow	refused
 c9_is_not_null	refused
 c9_one_of_rule_order	refused
 c9_flow_lone_dash_spaced	ok
+# Сегменты door.routes — по грамматике name (решение «Архитектора» 2026-10-20, векторы door-token)
+door_routes_segment_slash	refused
+door_routes_segment_upper	refused
+door_routes_names	ok

@@ -120,7 +120,7 @@ root:
       type: object
       default: {}
       properties:
-        routes: {ref: strList, owner: P/06.5 Н3, default: [], default_text: двери нет}
+        routes: {type: array, items: {ref: name}, owner: P/06.5 Н3, default: [], default_text: двери нет, description: "сегменты двери держателя — по грамматике `name` (без «/»); первый сегмент пути запроса сравнивается с элементом байт в байт (договор токена двери; решение «Архитектора» 2026-10-20)"}
         pass: {ref: strList, owner: P/06.5 Н1.8, default: [], default_text: передачи нет}
     servers: {ref: servers, owner: P/06.5 Н1.2}
     display: {ref: display, owner: P/06.5 Н1.2, default: {}}
