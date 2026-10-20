@@ -136,6 +136,8 @@ Platform/
 | digest просьбы — свои векторы: вид отправителя (клиент, воркер), нормализованный вход, SHA-256 | 6, участник 3.6 |
 | id события | 5 |
 | `cut_at: host` (`group_of.tsv`) | 4 |
+| нехватка набора меток и заказ по серверам (`Platform/04-controller/vectors/order/`) | 4 |
+| жертва сокращения (`Platform/04-controller/vectors/shrink-victim/`) | 4 |
 | словарь `fault` (`fault.tsv`) | 6, участники 4, 10 |
 | секреты и маска (`secret_in.tsv`, `log_mask.tsv`) | 6.2, участники 2.1 (объявления `credentials` и `secret_in` в загрузчике) и 2.4 (разбор адреса) |
 | секретные строки платформы (`platform_lists.tsv`) | 2.5 |
@@ -143,8 +145,9 @@ Platform/
 | оценщик прав | 1.2 |
 | вывод прав | 2.5 |
 | разбор адреса | 2.4 |
+| скрипт воркеров по заказу (`Platform/02-installer/vectors/workers-script/`) | 2.4 |
 | копия хранилища | 1.3 |
-| `enc:v2` и кольцо | 3.5 |
+| `enc:v2`, путь AAD, открытие и кольцо (`Platform/common/vectors/sealing/`) | общий договор запечатывания (`common/contracts/sealing.md`), участники 2.4, 3.5, 6.2 и уроки 8–10 |
 | `view` | 8.1 |
 | корень и набор, `keys(pinned, held, offered)`, `x25519:v1`, `token` | 8.2 |
 | подпись агента, `accept` | 8.3 |
