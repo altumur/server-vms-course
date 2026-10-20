@@ -175,7 +175,9 @@ OLD_KEYS:      3600        # с — until прежнего current при пла
 ### token(keys, revoked, now, token) → ok payload | refused <слово>
 
 Шаги 1–11 (с `expect` получателя), граница `now = exp + 60` и поведение двери при нечитаемой `domain/revoked` — [договор токена домена](../../Platform/common/contracts/domain-token.md)
-«Проверка» (перенесено туда без изменения; номера шагов прежние; разбор ревью стадии B 3–5, В1).
+«Проверка» (перенесено туда без изменения; номера шагов прежние; разбор ревью стадии B 3–5, В1). После переноса там же —
+обязательный ключ `cluster` в `expect` (`null` — только при `kind: person`), шаг 10 при `cluster: null` и проверяющие с их
+`expect` (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10).
 
 ### seal(book_seal, plain, aad) и open(seed_secret, envelope, aad) → ok plain | refused <слово>
 
@@ -307,6 +309,8 @@ token:       вход {keys: <doc по форме Н1.2 — принятый н�
              now: <конечное число — стенные секунды проверяющего>, token: <как пришёл>,
              expect?: {kind: <строка>, cluster: <член> | null, audience_claim?: <имя поля — непустая строка, умолчание aud>}}
              # audience_claim пустой или не строка — вход не по форме, код 2 (добавлено сверкой М11, T4)
+             # cluster — обязательный ключ expect; null только при kind person; иначе вход не по форме, код 2
+             # (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10)
              вывод {result: ok, payload} | {result: refused, reason: no_revocations | not_a_token | unknown_key | bad_signature |
                    bad_claims | expired | future | revoked | wrong_kind | wrong_audience}
 seal:        вход {seed: <hex 32 байт>, envelope: <как пришёл>, member, source_path, item, pointer: <строки>}   # open Н3

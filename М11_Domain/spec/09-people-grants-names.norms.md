@@ -139,13 +139,16 @@ unreadable:    строка, которая не читается, прав не
 
 ```yaml
 cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token урока 2 по набору и domain/revoked
-           этого кластера (отказ — 401 {error: denied, detail: "token refused: <слово>"}, форма P/06.3); затем may (Н1.4) с
+           этого кластера с expect {kind: person, cluster: null} — договор токена домена «Токен» (решение «Архитектора»
+           2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10); отказ — 401 {error: denied, detail:
+           "token refused: <слово>"}, форма P/06.3; затем may (Н1.4) с
            grants = doc строки domain/grants (копия этого кластера), as_of — её as_of, disabled — domain/disabled этого
            хранилища (есть только у держателя), cap и unit — need P/06.3 Н1.3; deny — 403 {error: denied, detail:
            "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
            its agent has not reached the domain»
-domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /spec,
-           /mounts и двери урока с GET; admin — остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin;
+domain:    консоль домена и процесс domain: токен — с тем же expect {kind: person, cluster: null}; may с
+           grants = domain/grants/domain, as_of null; view — GET /domain*, /spec, /mounts и двери урока с GET; admin —
+           остальные двери /domain/* (уроки 3, 4, 6, 8, 9); unit = "*" у admin;
            кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле (Н1.2 revoke)
 body_unit: need, чья единица в теле (P/06.3 Н1.3: /marks, POST /<sub>/requests), решается до чтения тела — unit = "*";
            у сторожевой домена действует эта предпроверка до тела, проверки P/06.3 после тела (rights.unit_of, reach,
@@ -300,7 +303,7 @@ HTTP-контракт: [09-people-grants-names.api.openapi.yaml](09-people-grant
 
 ```
 1. тело больше 1 МиБ                                                → 413 too large
-2. токен (token урока 2, kind person) и may по domain/grants/domain  → 401 / 403 {error: denied}
+2. токен (token урока 2, expect {kind: person, cluster: null}) и may по domain/grants/domain  → 401 / 403 {error: denied}
 3. тело не по форме двери                                           → 400 bad body
 4. имя не по Н1.1 (POST)                                            → 400 bad name
 5. пароль короче PASSWORD_MIN (GLASS_MIN у break-glass)              → 400 bad password
