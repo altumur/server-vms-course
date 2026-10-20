@@ -14,6 +14,8 @@ example-p3-display-form	Platform/02-installer/vectors/canonical/inputs/p3-displa
 example-p4-default	Platform/02-installer/vectors/canonical/inputs/p4-default.subsystem.yaml	expect/example-p4-default.json	П4: `default` описателя — сказанное значение; не сказан, сказан `inherit`, `type: blob` — `null`; у полей единицы и таблицы (Н1.1 computed)
 example-p5-decoded	Platform/02-installer/vectors/canonical/inputs/p5-decoded.subsystem.yaml	expect/example-p5-decoded.json	П5: элемент `secret_in` вида regex без `decoded` — `true` (Н1.1 computed)
 example-ordered	Platform/02-installer/vectors/canonical/inputs/ordered.subsystem.yaml	expect/example-ordered.json	ordered: `unit.fields` и `tables.<т>.fields` — массив `{name, …}` в порядке автора, не по алфавиту (Н1.1 ordered)
+example-sugared	Platform/02-installer/acceptance/2/puts/sugared.subsystem.yaml	expect/example-sugared.json	приёмка 2.2 сц. 07: сахар `tables: [shelves]` и `bound_to: feed`, без `snapshot` и `display` — П1, П3, П4 вместе (Н1.1)
+example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.subsystem.yaml	expect/example-view-at-ceiling.json	приёмка 2.2 сц. 06: вид 524205 байт — вес строки вида с rev из одной цифры ровно потолок 524288 (Н1.2 ceiling)
 corpus-base	Platform/02-installer/acceptance/1/cases/base.subsystem.yaml	expect/corpus-base.json	принятый случай корпуса 2.1
 corpus-blob_required_false	Platform/02-installer/acceptance/1/cases/blob_required_false.subsystem.yaml	expect/corpus-blob_required_false.json	принятый случай корпуса 2.1
 corpus-block_scalar_hides_lease	Platform/02-installer/acceptance/1/cases/block_scalar_hides_lease.subsystem.yaml	expect/corpus-block_scalar_hides_lease.json	принятый случай корпуса 2.1

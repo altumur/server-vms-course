@@ -1,0 +1,83 @@
+# testsub.subsystem.yaml — a subsystem that exists only for the platform's own tests (tests/test_boundary.py; the
+# product's `w2cplatform/testdata/testsub.subsystem.yaml` is the same subsystem).
+#
+# The platform knows the subsystems by their specs and by nothing else. This one has nothing to do with the
+# product: a unit is a named counter a worker keeps. If the platform's pieces come up on this file alone —
+# the controller from the spec, the contract's keys, slots, epochs, the console, the resource — they come up
+# without the product. Later steps of the boundary plan add an `about:` section here.
+name: testsub
+unit:
+  rows: counters                     # testsub/counters/<name>
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int,    default: 0}
+    labels: {type: list}
+    step:   {type: int,  inherit: 1}                 # a counter's step: the counter's own, else the domain's, else 1
+    marks:  {type: list, inherit: [], merge: union}  # marks the domain adds to every counter's own
+placement:
+  capacity:   {from: capacity, default: 4}
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+  unplaced:   {delete_after: 3600}   # a counter nobody holds for an hour is deleted by the controller (ADR-0067)
+# A request to a counter's holder: add to it (the platform's request family, `w2cplatform/worker.py`, `requests.py`).
+requests:
+  schema:
+    type: object
+    required: [unit, add]
+    additionalProperties: false
+    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
+  valid_for: 30
+  most_valid: 600
+snapshot: [name, start]
+# testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
+# member, a ledger for the domain as a whole, served at `/domain/testsub/ledger`, and a family of badges, one row each
+# (`domain/testsub/badges/<name>`); a tally carries a token of its own kind.
+domain:
+  ref: name
+  view: [start]
+  books: {tallies: {show: [n]}}
+  kept: [ledger, badges/]              # `badges/`: a family of rows
+  tables: [ledger]
+  tokens:
+    probe:
+      lifetime: 60
+      claims: [ref, aud]
+      grant: [testsubworker]
+      unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}
+    tally:
+      lifetime: 600
+      claims: [counter, aud]
+      grant: [testsubworker]
+      placement: {sub: testsub, caller: origin, ref_claim: counter, target_fields: [cluster, copies], audience_claim: aud}
+  edit: [start, labels]                # what the domain's door lets into an edit of a member's counter
+  # the fields whose domain-wide value the domain holds, and a document it holds whole — no counter's field: the
+  # rounds the site counts in, what each may be its schema's
+  shared:
+    - step
+    - marks
+    - name: rounds
+      type: json
+      schema:
+        type: array
+        maxItems: 16
+        items:
+          type: object
+          required: [counter, every]
+          additionalProperties: false
+          properties:
+            counter: {type: string, minLength: 1}
+            every:   {type: integer, minimum: 1}
+  # its key families, for a page that lists the domain's keys (their words below, display.keys)
+  keys:
+    - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}
+    - {id: ledger, keys: [domain/testsub/ledger]}
+display:
+  keys:
+    tallies: {title: tallies, about: "a member's tally book: domain/testsub/tallies/<member> at the holder, domain/testsub/tallies at home"}
+    ledger: {title: ledger, about: the ledger the holder keeps for the domain, absent: nothing ledgered yet}
+metrics:
+  - {name: counters_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+console:
+  running: counters_running

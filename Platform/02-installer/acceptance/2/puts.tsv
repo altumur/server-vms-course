@@ -1,0 +1,12 @@
+# Приёмка P/02.2: установки spec put с каноническим видом (Н3; окно 2.2, п. 8). Строка: case<TAB>puts<TAB>expect<TAB>canonical.
+# puts — файлы puts/<имя>.subsystem.yaml через пробел и директивы @view-delete, @view-spoil между ними; expect — код
+# последней установки и rev строки platform/spec/<name> после неё; canonical — вектор vectors/canonical (байты spec вида)
+# или «-» (вида нет). Правила — README.
+case	puts	expect	canonical
+first	testsub	0 1	course-testsub
+same_twice	testsub testsub	0 1	course-testsub
+view_deleted	testsub @view-delete testsub	0 2	course-testsub
+view_spoiled	testsub @view-spoil testsub	0 2	course-testsub
+view_over_ceiling	probe view-over	2 1	example-sections
+view_at_ceiling	probe view-at-ceiling	0 2	example-view-at-ceiling
+sugared	sugared	0 1	example-sugared
