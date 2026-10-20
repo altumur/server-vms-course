@@ -1,0 +1,76 @@
+scenario	step	request	expect
+# Приёмка P/08.4: стенд домена hold, m1, m2 с людьми и грантами (двери holder, member, signer; @admin при @install domain, @person); сценарии 01, 02, 04, 08, 09, 10 перенесены из М11/09 (стадия B). Формат — README.
+01-login-people-grants	1	@domain	ok
+01-login-people-grants	2	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"token": "@any", "until": "@any", "user": "root"}
+01-login-people-grants	3	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+01-login-people-grants	4	signer POST /api/login {"user": "nobody", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+01-login-people-grants	5	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+01-login-people-grants	6	holder POST /domain/users {"name": "bob", "password": "short"}	400 {"error": "bad password"}
+01-login-people-grants	7	holder POST /domain/users {"name": "a|b", "password": "ann password 1"}	400 {"error": "bad name"}
+01-login-people-grants	8	holder POST /domain/users {"name": "a|b", "password": "short"}	400 {"error": "bad name"}
+01-login-people-grants	9	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	409 {"error": "exists"}
+01-login-people-grants	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+01-login-people-grants	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "owner", "scope": "*"}]}	400 {"error": "bad line"}
+01-login-people-grants	12	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "root", "cap": "view", "scope": "*", "until": 4102444800.1234565}]}	200 {"cluster": "m2", "lines": [{"subject": "root", "cap": "admin", "until": 0}, {"subject": "root", "cap": "view", "until": 4102444800.123}]}
+01-login-people-grants	13	@person ann ann password 1	ok
+01-login-people-grants	14	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+01-login-people-grants	15	member m1 console GET /counters	200 {"configured": [{"id": "c1-m1"}]}
+01-login-people-grants	16	member m1 console PUT /counters/c1-m1 {"start": 5}	403 {"error": "denied"}
+01-login-people-grants	17	member m2 console GET /counters	403 {"error": "denied"}
+01-login-people-grants	18	holder GET /domain/users	403 {"error": "denied"}
+01-login-people-grants	19	@person -	ok
+01-login-people-grants	20	member m1 console GET /counters	401
+01-login-people-grants	21	holder GET /domain	401
+02-disable-revoke-last-admin	1	@domain	ok
+02-disable-revoke-last-admin	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+02-disable-revoke-last-admin	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+02-disable-revoke-last-admin	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
+02-disable-revoke-last-admin	5	member m1 console @header Authorization: Bearer @spoil($ta) GET /counters	401
+02-disable-revoke-last-admin	6	holder @header Authorization: Bearer @spoil($ta) GET /domain/users	401
+02-disable-revoke-last-admin	7	holder POST /domain/revoke {"token": "@spoil($ta)"}	401 {"error": "refused"}
+02-disable-revoke-last-admin	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
+02-disable-revoke-last-admin	9	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+02-disable-revoke-last-admin	10	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+02-disable-revoke-last-admin	11	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	403 {"error": "denied"}
+02-disable-revoke-last-admin	12	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
+02-disable-revoke-last-admin	13	holder PUT /domain/users/ann {"disabled": false}	200 {"user": "ann", "disabled": false}
+02-disable-revoke-last-admin	14	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
+02-disable-revoke-last-admin	15	holder POST /domain/revoke {"token": "$ta"}	200 {"revoked": "@any"}
+02-disable-revoke-last-admin	16	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	401
+02-disable-revoke-last-admin	17	holder POST /domain/revoke {"token": "not a token"}	401 {"error": "refused"}
+02-disable-revoke-last-admin	18	holder DELETE /domain/users/root	409 {"error": "last admin"}
+02-disable-revoke-last-admin	19	holder PUT /domain/grants/domain {"lines": []}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	20	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	21	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*", "until": 4102444800}]}	409 {"error": "last admin"}
+02-disable-revoke-last-admin	22	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
+02-disable-revoke-last-admin	23	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+04-login-limit	1	@domain	ok
+04-login-limit	2	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-limit	3	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-limit	4	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-limit	5	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-limit	6	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-limit	7	signer POST /api/login {"user": "root", "password": "w2c test root password"}	429 {"error": "too many attempts"}
+08-grant-by-kept	1	@domain	ok
+08-grant-by-kept	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+08-grant-by-kept	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200
+08-grant-by-kept	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
+08-grant-by-kept	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200
+08-grant-by-kept	6	holder @header Authorization: Bearer $ta PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+08-grant-by-kept	7	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0, "by": "ann"}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0, "by": "root"}]}}
+09-deleting-mark	1	@domain	ok
+09-deleting-mark	2	holder POST /domain/users {"name": "dz", "password": "dz password 1"}	201
+09-deleting-mark	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "dz", "cap": "view", "scope": "*"}]}	200
+09-deleting-mark	4	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/dz", "items": {}}	200
+09-deleting-mark	5	@until 20 holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin"}]}}
+09-deleting-mark	6	@until 20 member hold store GET /v1/get?key=domain/deleting/dz	200 {"items": null}
+10-deleting-any-mark	1	@domain	ok
+10-deleting-any-mark	2	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/a|b", "items": {}}	200
+10-deleting-any-mark	3	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/aa", "items": {"x": "1"}}	200
+10-deleting-any-mark	4	@until 20 member hold store GET /v1/get?key=domain/deleting/aa	200 {"items": null}
+10-deleting-any-mark	5	@until 20 member hold store GET /v1/get?key=domain/deleting/a%7Cb	200 {"items": null}
+10-deleting-any-mark	6	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/zz", "items": {}}	200
+10-deleting-any-mark	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zz", "cap": "view", "scope": "*"}]}	409 {"error": "being deleted"}
+10-deleting-any-mark	8	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	409 {"error": "exists"}
+10-deleting-any-mark	9	@until 20 member hold store GET /v1/get?key=domain/deleting/zz	200 {"items": null}
+10-deleting-any-mark	10	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	201

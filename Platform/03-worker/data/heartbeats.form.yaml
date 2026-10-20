@@ -30,17 +30,17 @@ root:
             type: integer
             minimum: 1
             whole: true
-            description: "эпоха единицы; целый знак ≥ 1 (М11/1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)"
+            description: "эпоха единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)"
           revision:
             type: integer
             minimum: 1
             whole: true
-            description: revision строки единицы; целый знак ≥ 1 (М11/1 Н1.6 claim)
+            description: revision строки единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim)
           observed_revision:
             type: integer
             minimum: 0
             whole: true
-            description: revision строки, под которой единица сейчас запущена; целый знак ≥ 0 (М11/1 Н1.6 claim)
+            description: revision строки, под которой единица сейчас запущена; целый знак ≥ 0 (P/08.1 Н1.6 claim)
           why:
             type: string
             description: "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)"

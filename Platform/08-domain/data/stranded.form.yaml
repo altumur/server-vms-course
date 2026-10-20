@@ -1,0 +1,50 @@
+# Семья domain/stranded — брошенное смещённого держателя (P/08.8 Н1.6 stranded). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Пишет смещённый
+# процесс domain один раз при смене держателя (put, страж domain/signer-turn). Чего форма не выражает — порядок items по
+# (path, key), состав элементов (отличие от base по открытым значениям, правки domain/pending/* только сдвинувшиеся),
+# value секрета "<secret: differs>" и null удаления — проза Н1.6 stranded.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    doc:
+      encoding: jcs
+      type: object
+      description: текст JCS брошенного; ровно один элемент строки
+      properties:
+        term:
+          ref: common.pos53
+          description: срок (Н1.6 stranded)
+        holder:
+          type: string
+          pattern: '[a-z0-9-]{1,64}'
+          description: имя члена-держателя (Н1.6 stranded; P/08.1 Н1.1 member)
+        base:
+          type: object
+          properties:
+            term: {ref: common.pos53}
+            rev: {ref: common.pos53}
+          required: [term, rev]
+          description: >-
+            резервная копия, от которой считается отличие: из которой восстановлен новый срок, если это резервная копия
+            этого держателя (restored_from записи), иначе его последняя
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+                description: ключ строки state (Н1.5 state)
+              key:
+                type: string
+                description: элемент строки; имя элемента — Idempotency-Key повтора правки (Н1.6 apply)
+              value:
+                type: [string, 'null']
+                description: >-
+                  значение элемента как хранится (текст); секрет изменён — "<secret: differs>"; null — элемента нет в state
+                  смещённого (удаление, и у секрета); "" — запись пустого значения
+            required: [path, key, value]
+          description: элементы state, которые отличаются от base, по (path, key)
+      required: [term, holder, base, items]
+  required: [doc]

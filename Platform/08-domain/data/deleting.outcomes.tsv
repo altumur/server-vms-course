@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/deleting/<имя> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+	по полям метка нечитаемой не бывает: метка — любая строка под domain/deleting/, что бы ни лежало в items (сверка М11, P1); пока стоит — имя занято (POST /domain/users — 409 exists, новая строка гранта с этим subject — 409 being deleted, метка — раньше проверок имён, P3); <имя> ключа не по грамматике Н1.1 — сверка при старте и каждым проходом удаляет метку с журналом domain.deleting.dropped {key, reason: "not a name"}, строк грантов не ищет, проход из-за неё не стоит	0	строка	P/08.4 Н1.1 domain/deleting; Н3 «дверь людей» шаги 5а, 7, 9 и сверка; Н3 «гранты» шаг 3а

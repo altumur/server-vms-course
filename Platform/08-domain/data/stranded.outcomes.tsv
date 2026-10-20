@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/stranded (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+	строка целиком нечитаема: процесс domain (`POST /domain/stranded/apply` — элемент ищется в items; поле вида term.stranded, Н1.3), консоль домена и агент — норма исхода не называет (нынешнее поведение по тексту норм; долг сверки свидетелей: сверить с реализациями и записать нынешнее поведение по DIALECT §9 до выпуска)	0	строка	P/08.8 Н1.6 stranded, apply; Н1.3 stranded

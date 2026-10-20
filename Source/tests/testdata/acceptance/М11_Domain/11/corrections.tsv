@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-19	01-shared-edit-and-read 2	решение «Архитектора» по сверке М11 09–12 (A5): доставка до первого документа — term 0, rev 0, holding [], behind {}, refused {}, «rev 0 on 0 of T members»	all
 2026-10-19	03-resolve 11, 04-alarms 15	ожидание @exit 2 (словарь М10/01, решение «Архитектора» по сверке М11, H14): форма доверенного входа — код 2, у обеих реализаций по норме	all
 2026-10-19	04-alarms 6; inputs alarms-06	cammeta-go М11-11 № 12: у m2 с last_report sent_at null — по Н5 (H14) вход не по форме, код 2, а шаг ждёт unreadable; sent_at числом, page garbled оставлен. Прочие входы векторов М11 сверены с правилами кода 2 — иных несостыковок нет (коды 2 — только у шагов @exit 2)	all
+2026-10-20	перенос	сценарии 01-shared-edit-and-read → Platform/08-domain/acceptance/9 (стадия B)	all

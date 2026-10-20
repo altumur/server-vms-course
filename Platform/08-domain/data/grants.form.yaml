@@ -1,0 +1,14 @@
+# Семья domain/grants/<кластер> — строка грантов у держателя (P/08.4; P/08.4 Н1.3). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога: <кластер> — имя члена по грамматике главы 8.3 или domain
+# (Н1.3). Слова — Platform/common/DIALECT.md. Пишет процесс domain по CAS (дверь грантов, снятие строк человека при
+# удалении, первый администратор — Н3 «гранты», «дверь людей», Н1.9 first) под стражем domain/signer-turn. Форма doc —
+# common.grants_doc: та же у копии члена domain/grants {doc, as_of}, которую пишет агент (семья урока P/09; решение
+# «Архитектора» 2026-10-20 по планам 8–10, п. 3).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    doc:
+      ref: common.grants_doc
+      description: текст JCS {lines} — строки грантов кластера (или двери домена у domain/grants/domain)
+  required: [doc]

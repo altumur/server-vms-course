@@ -7,11 +7,12 @@
 
 - Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`, `W2C_ROLE=domainconsole`,
   `User=w2c`, группы `w2c-store w2c-events` (разбор ревью стадии A 8–10, № 33); кольца и группы `w2c-secrets` нет —
-  [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md); общее юнитов — P/02.4 Н1.1 `common`
+  [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md); общее юнитов — P/02.4 Н1.1 `common`
   ([P/02.4](../02-installer/spec/02.4-installer.norms.md)).
 - У кластера-держателя, рядом с процессом `domain`. Строк держателя консоль не пишет: правки передаёт процессу
-  `domain` ([М11/3 Н1.8](../../М11_Domain/spec/03-agent-and-reports.norms.md)); очередь `domain/signer-turn` ей не нужна
-  (М11/12 Н1.7 `guard`).
+  `domain` ([М11/3 Н1.8](../../М11_Domain/spec/03-agent-and-reports.norms.md) — передача, до переноса урока 10; приём —
+  [P/08.0 Н1.8](../08-domain/spec/08.0-domain.norms.md)); очередь `domain/signer-turn` ей не нужна
+  ([P/08.10 Н1.7](../08-domain/spec/08.10-domain.norms.md) `guard`).
 
 ## Окружение
 
@@ -21,9 +22,9 @@
 |---|---|---|---|
 | `W2C_ROLE` | роль `domainconsole` | юнит | P/02.4 Н1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS` | состояние, дверь хранилища, корень объектов | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
-| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда | `0.0.0.0:8444` | М11/12 Н1.8 |
-| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок | — | М11/3 Н1.8; [М11/2 Н1.3](../../М11_Domain/spec/02-root-keys-and-revocation.norms.md) |
-| `LOGIN_URL` | вход людей | `/api/login` | [М11/9 Н1.2](../../М11_Domain/spec/09-people-grants-names.norms.md) `login_url`; [P/06.3](../06-console/spec/06.3-console.norms.md) Н1.3 |
+| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда | `0.0.0.0:8444` | [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) |
+| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок | — | М11/3 Н1.8 (передача; приём — P/08.0 Н1.8); [P/08.2 Н1.3](../08-domain/spec/08.2-domain.norms.md) |
+| `LOGIN_URL` | вход людей | `/api/login` | [P/08.4 Н1.2](../08-domain/spec/08.4-domain.norms.md) `login_url`; [P/06.3](../06-console/spec/06.3-console.norms.md) Н1.3 |
 | `CLUSTER`, `BOX_ID`, `SERVER_NAME` | кластер, коробка, сервер | P/02.4 Н1.2 | P/02.4 Н1.2 |
 
 TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](../../М11_Domain/spec/08-doors-between-clusters.norms.md) `roles`).
@@ -36,7 +37,7 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
 
 - Читает строки держателя (`domain/*` кроме `!domain/signer*`, P/02.5 Н1.4); своих семей не пишет — каталог данных
   [`common/data/catalog.tsv`](../common/data/catalog.tsv), читатель `domainconsole`.
-- Кольца нет (М11/12 Н1.8).
+- Кольца нет ([P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md)).
 - Страница держателя — та же страница модуля консоли, `sections: [domain]` (М11/8 Н1.8); поставка модуля — с бинарником
   консоли, не из `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
 - Журнал роли — `<корень событий>/audit/domainconsole/e1/…` ([договор журнала событий](../common/contracts/event-journal.md) `journal`).
@@ -51,12 +52,12 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
 ## Сигналы и готовность
 
 - Процесс `domain` своей коробки ждущий или недоступен — правки получают его ответ (`503 standby`) как есть
-  (М11/12 Н1.7 `standby`; М11/3 Н1.8).
+  ([P/08.10 Н1.7](../08-domain/spec/08.10-domain.norms.md) `standby`; [P/08.0 Н1.8](../08-domain/spec/08.0-domain.norms.md) `answers`).
 - Перезапуск — по юниту (P/02.4 Н1.1 `common`).
 
 ## Стенд
 
-Стенд нескольких кластеров М11 (README приёмки М11/01): `@start domain` поднимает процессы `domain` и консоли домена на
+Стенд нескольких кластеров ([общий README приёмки](../common/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start domain` поднимает процессы `domain` и консоли домена на
 `hold`; дверь `holder <запрос>` — консоль домена на `hold`, `holder@<кластер>` — на другом кластере после переноса;
 `Idempotency-Key` у `POST`, `PUT`, `DELETE` — по правилу `@key`. `{data}` — `PLATFORM_DIR` кластера ([общий README
 приёмки](../common/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
@@ -66,4 +67,4 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
 - Сторожевая консоли домена и её окружение (`open`, следы домена) — [договор сторожевой и передачи](../common/contracts/gate-and-pass.md)
   (владелец P/06, участник — этот урок; разбор ревью стадии A 8–10, № 14 / решение 3) и [P/06.3](../06-console/spec/06.3-console.norms.md) Н1.8 (прежде М11/2 Н1.8), урок 6 в части
   консоли кластера; для консоли домена отдельной строки окружения нет.
-- Сторона читателя спеки, проверка схемы при старте и готовность по порту — [М11/12 Н1.8](../../М11_Domain/spec/12-small-members-and-one-node.norms.md) (Решено «Архитектором» 2026-10-18 (второй пилот)).
+- Сторона читателя спеки, проверка схемы при старте и готовность по порту — [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) (Решено «Архитектором» 2026-10-18 (второй пилот)).

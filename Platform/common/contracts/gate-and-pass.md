@@ -9,15 +9,15 @@
 
 | Что | Консоль кластера (P/06) | Консоль домена (P/10) |
 |---|---|---|
-| сторожевая (раздел «Сторожевая») | целиком; гранты — копия `domain/grants` этого кластера (М11/9 Н1.5 `cluster`) | `gate`, `identity`, `x_user`, `caps`, `scope`, `csrf`, `body`, `refusal`; гранты — `domain/grants/domain`, `need` — М11/9 Н1.5 `domain`, `body_unit` |
+| сторожевая (раздел «Сторожевая») | целиком; гранты — копия `domain/grants` этого кластера (М11/9 Н1.5 `cluster`) | `gate`, `identity`, `x_user`, `caps`, `scope`, `csrf`, `body`, `refusal`; гранты — `domain/grants/domain`, `need` — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`, `body_unit` |
 | `/session`, `/healthz` (раздел «Сторожевая» `session`) | да | да (М11/8 Н1.8 `session`; `grants` — М11/9 Н1.5 `session`) |
 | следы домена, «петля — operator» | [P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.8 (поздний слой) | P/06.3 Н1.8 (10 lifecycle «Открыто») |
 | передача `door.pass` (раздел «Передача») | живому воркеру подсистемы с дверью ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н1.8 «Живой воркер с дверью») | воркеру на домене этой подсистемы по его пульсу (М11/8 Н1.7 `route`, `address`, `absent`) |
 | пересылка `/domain/*` в другой процесс | [договор пересылки](forwarding.md) | [договор пересылки](forwarding.md) |
 
 Перенесено из P/06.3 Н1.3 (блок `gate`, `open_routes`, `session` целиком) и P/06.5 Н1.8 (блок `spec`, `rule`, `codes`) без
-изменения поведения; в главах-источниках — указатели. Что значат гранты и вход людей домена — урок P/08 (до переноса —
-М11/9); разбор запроса консоли и порядок проверок на запросе — [P/06.5](../../06-console/spec/06.5-console.norms.md) Н2, Н3
+изменения поведения; в главах-источниках — указатели. Что значат гранты и вход людей домена — урок P/08
+([глава 8.4](../../08-domain/spec/08.4-domain.norms.md)); разбор запроса консоли и порядок проверок на запросе — [P/06.5](../../06-console/spec/06.5-console.norms.md) Н2, Н3
 «запрос → ответ (консоль)»; ключи `rights:` спеки — P/06.3 Н1.5; отказы сторожевой — P/06.3 Н4; отказы передачи — P/06.5 Н4.
 Ссылки «Н1.x» в перенесённом тексте — главы-источника (Н1.5, Н1.8 — P/06.3; Н4 — P/06.5); «глава 6.K» — глава урока P/06.
 
@@ -36,7 +36,7 @@ gate:
   identity: # по порядку
     1. кука аварийного входа w2c_glass (сессия в памяти, 15 мин)
     2. X-Agent-Signature — агент домена: только двери единиц и GET /events?class=alarm (фронт и страница тревог — М11/11 Н1.7; форма и окно UNIT_WINDOW 60 с — договор подписи агента common/contracts/agent-signature.md; разбор ревью стадии A 8–10, № 13)
-    3. Authorization: Bearer <токен> | кука w2c_token → домен: {user, until, grants} (токен — договор токена домена «Проверка» с expect {kind: person, cluster: null} (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10), владелец М11/2 — разбор ревью стадии B 3–5, В1; гранты — М11/9 Н1.5; may — договор права may.md)
+    3. Authorization: Bearer <токен> | кука w2c_token → домен: {user, until, grants} (токен — договор токена домена «Проверка» с expect {kind: person, cluster: null} (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10), владелец P/08.2 — разбор ревью стадии B 3–5, В1; гранты — М11/9 Н1.5; may — договор права may.md)
     4. отладочная личность (ADR-0050): задан W2C_DEBUG_PERSON=<имя>, запрос без токена и без куки, адрес TCP-соединения
        127.0.0.1 или ::1 (заголовки адреса не читаются) → этот человек со своими grants из domain/grants; человека нет
        или он выключен — как без входа; с другого адреса — как без переменной; доверенный прокси на петле и заданная
@@ -50,7 +50,7 @@ gate:
     /marks, POST /{sub}/requests     → edit на единицу тела
     DELETE /{sub}/asked/*            → admin на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
-    POST /domain/move                → admin на * (аварийный перенос домена сюда, М11/10 Н1.8)
+    POST /domain/move                → admin на * (аварийный перенос домена сюда, P/08.8 Н1.8)
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes
     таблицы                          → по rights.routes (view | edit | admin)
@@ -62,13 +62,13 @@ gate:
             (ответ раннего отказа — P/01.1 Н2.1)
   refusal:  {detail, error: denied}; 403 → журнал access.denied
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
-              /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (М11/9 Н1.2)
+              /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (P/08.4 Н1.2)
 session:
   GET  /session  → открыта: {open: true, login_url}; закрыта анонимному: {open: false, login_url};
                    доказанной личности: {open: false, login_url, user, until, via, grants: [{cap, scope}], debug?}
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; POST /session/break-glass {who, why, password} → {user, until} + кука w2c_glass; 429 по пределу
-  login_url: дверь домена /api/login (М11/9 Н1.2) — консоль пересылает её домену (open_routes, М11/8 таблица пересылки);
+  login_url: дверь домена /api/login (P/08.4 Н1.2) — консоль пересылает её домену (open_routes, договор пересылки «Двери домена»);
              консоль токенов людей не выдаёт; значение — LOGIN_URL окружения (P/02.4 Н1.2), не задано — "/api/login"
              (строка, не null, и у открытой консоли)
   via:       шаг identity, которым доказана личность этой сессии: break-glass — кука аварийного входа (п. 1; grants — [],

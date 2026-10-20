@@ -2,87 +2,18 @@ openapi: 3.1.0
 info:
   title: M11/3 agent reports, the holder's answer and members
   version: '1'
-  description: 'Normative shapes: 03-agent-and-reports.norms.md N1.1-N1.7, N2. /api/* — doors of the holder''s domain
-    process (SIGNER_URL, M11/2 N1.3), signed by the member''s agent (N1.4); /domain/members — doors of the domain
+  description: 'Normative shapes: 03-agent-and-reports.norms.md N1.1-N1.7, N2. /domain/members — doors of the domain
     console (people: grants M11/9). Request parsing: M10/1 N2.1 with M10/9 N2. Mark and Generation are objects of the
-    holder (M10/8 N1.1), not routes.'
+    holder (M10/8 N1.1), not routes.
+    Двери процесса `domain` (`/api/member/{member}`, `/api/carry/{member}`, `POST /domain/members`,
+    `/domain/members/{name}`) перенесены в OpenAPI урока P/08 (`Platform/08-domain/spec/08-domain.api.openapi.yaml`;
+    перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
-    description: Дверь процесса domain держателя (/api/*) или консоль домена (/domain/*).
+    description: Консоль домена (/domain/*).
     variables:
       origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
 paths:
-  /api/member/{member}:
-    parameters:
-      - $ref: '#/components/parameters/Member'
-    post:
-      summary: Отчёт агента члена — поколение или «слышал»; ответ — то, что агент уносит домой
-      parameters:
-        - $ref: '#/components/parameters/AgentSignature'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Publication'
-      responses:
-        '200':
-          description: Принято (поколение, «слышал» или тот же отчёт снова)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Carry'
-        '400':
-          $ref: '#/components/responses/RefusedWord'
-        '401':
-          $ref: '#/components/responses/RefusedWord'
-        '403':
-          $ref: '#/components/responses/RefusedPlain'
-        '404':
-          $ref: '#/components/responses/RefusedPlain'
-        '409':
-          description: rebase, same_sent_at или not_ready (Н3 «принять»); deposed смещённого держателя с записью нового (урок 10 Н1.6; добавлено М11/10)
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - unevaluatedProperties: false
-                    allOf:
-                      - $ref: '#/components/schemas/Refusal'
-                      - properties:
-                          error: {const: refused}
-                          reason: {enum: [rebase, same_sent_at, not_ready]}
-                        required: [reason]
-                  - $ref: '#/components/schemas/Deposed'
-        '413':
-          description: 'Тело больше BODY_LIMIT или целое поколение больше BODY_LIMIT — {error: "whole too large"} (урок 12 Н1.5; добавлено М11/12)'
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/Refusal'}
-        '503':
-          $ref: '#/components/responses/StandbyOrExhausted'
-  /api/carry/{member}:
-    parameters:
-      - $ref: '#/components/parameters/Member'
-    get:
-      summary: Ответ держателя без отчёта (до первого снимка, ретранслятор)
-      parameters:
-        - $ref: '#/components/parameters/AgentSignature'
-      responses:
-        '200':
-          description: Ответ держателя
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Carry'
-        '401':
-          $ref: '#/components/responses/RefusedWord'
-        '403':
-          $ref: '#/components/responses/RefusedPlain'
-        '404':
-          $ref: '#/components/responses/RefusedPlain'
-        '503':
-          $ref: '#/components/responses/Standby'
   /domain/members:
     get:
       summary: Список членов и стучащиеся
@@ -119,81 +50,7 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
-    post:
-      summary: Принять стучащегося по отпечатку его ключа
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, fingerprint]
-              additionalProperties: false
-              properties:
-                name: {$ref: '#/components/schemas/MemberName'}
-                fingerprint: {type: string, pattern: '^[0-9a-f]{16}$'}
-      responses:
-        '200':
-          description: Список после записи
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MembersDoc'
-        '400':
-          $ref: '#/components/responses/Refused'
-        '401':
-          $ref: '#/components/responses/Refused'
-        '403':
-          $ref: '#/components/responses/Refused'
-        '404':
-          $ref: '#/components/responses/Refused'
-        '409':
-          description: 'Н3 «принять члена» шаги 2–6; список полон — detail «too many members: the list holds 500»; Entry больше 820 байт — «the entry of <name> would exceed 820 bytes» (урок 12 Н1.5; добавлено М11/12)'
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/Refusal'}
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Forwarded'}
-  /domain/members/{name}:
-    parameters:
-      - name: name
-        in: path
-        required: true
-        schema: {$ref: '#/components/schemas/MemberName'}
-    delete:
-      summary: Член уходит из домена
-      responses:
-        '200':
-          description: Список после записи
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MembersDoc'
-        '400':
-          $ref: '#/components/responses/Refused'
-        '401':
-          $ref: '#/components/responses/Refused'
-        '403':
-          $ref: '#/components/responses/Refused'
-        '404':
-          $ref: '#/components/responses/Refused'
-        '409': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Forwarded'}
 components:
-  parameters:
-    Member:
-      name: member
-      in: path
-      required: true
-      schema: {$ref: '#/components/schemas/MemberName'}
-    AgentSignature:
-      name: X-Agent-Signature
-      in: header
-      required: true
-      description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)»; окно 300 с в обе стороны — Platform/common/contracts/agent-signature.md.'
-      schema: {type: string, pattern: '^(0|[1-9][0-9]{0,15})\.[A-Za-z0-9_-]{86}$'}
   responses:
     Forwarded:
       description: 'Отказ перехода 1 (пересылка консоли кластера) или 2 (передача консолью домена процессу), а не этой двери: коды и слова — Platform/common/contracts/forwarding.md «Отказы по переходам», слова перехода 1 — OpenAPI урока 8 (Refusal); здесь не перечисляются (разбор ревью стадии A 8–10, решение 3). 503 frozen (урок 10 Н1.7) и standby (урок 12 Н1.7) — коды процесса domain (переход 3). Добавлено прогоном 41'
@@ -206,64 +63,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Refusal'
-    RefusedWord:
-      description: 'Отказ двери агентов со словом (Н4): {error: refused, reason, detail} — у 400 not_a_publication, у 401 слово подписи Н1.4 (добавлено сверкой М11)'
-      content:
-        application/json:
-          schema:
-            unevaluatedProperties: false
-            allOf:
-              - $ref: '#/components/schemas/Refusal'
-              - properties:
-                  error: {const: refused}
-                  reason: {type: string, minLength: 1}
-                required: [reason]
-    RefusedPlain:
-      description: 'Отказ двери агентов без слова (Н4): {error: refused, detail} (добавлено сверкой М11)'
-      content:
-        application/json:
-          schema:
-            unevaluatedProperties: false
-            allOf:
-              - $ref: '#/components/schemas/Refusal'
-              - properties:
-                  error: {const: refused}
-    StandbyOrExhausted:
-      description: 'standby (урок 12 Н1.7) или исчерпан номер поколения — {error: refused, reason: rev_exhausted, detail} (Н3 «принять» шаг 7; добавлено сверкой М11, A18)'
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - $ref: '#/components/schemas/StandbyBody'
-              - unevaluatedProperties: false
-                allOf:
-                  - $ref: '#/components/schemas/Refusal'
-                  - properties:
-                      error: {const: refused}
-                      reason: {const: rev_exhausted}
-                    required: [reason]
-    Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
-      content:
-        application/json:
-          schema: {$ref: '#/components/schemas/StandbyBody'}
   schemas:
-    StandbyBody:
-      type: object
-      required: [error, detail]
-      additionalProperties: false
-      properties:
-        error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
-    Deposed:
-      type: object
-      required: [error, holder]
-      additionalProperties: false
-      description: Отказ смещённого держателя (урок 10 Н1.6; добавлено М11/10)
-      properties:
-        error: {const: deposed}
-        detail: {type: string}
-        holder: {type: object, additionalProperties: true, description: 'документ записи срока нового держателя как объект (форма — HolderRecord контракта урока 10)'}
     Refusal:
       type: object
       required: [error, detail]
@@ -280,56 +80,6 @@ components:
     Hex32:
       type: string
       pattern: '^[0-9a-f]{64}$'
-    Publication:
-      type: object
-      description: Н1.2. base 0 или нет — тело целое; deleted — только при base > 0. Поля уроков 6, 8, 12 — их нормы.
-      required: [sent_at, objects, key]
-      additionalProperties: false
-      properties:
-        sent_at: {type: number}
-        objects:
-          type: object
-          additionalProperties: true
-          description: Открыт намеренно — ключи и значения задают member_objects (Н1.2) и уроки 4, 5, 10, 11; прочее держатель отбрасывает молча.
-        base: {type: integer, minimum: 0}
-        deleted:
-          type: array
-          items: {type: string, minLength: 1}
-        key: {$ref: '#/components/schemas/Hex32'}
-        keys_rev: {type: integer, minimum: 1}
-        pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
-        stale:
-          type: array
-          items: {type: string}
-          description: Пульсы, не менявшиеся дольше LOST_AFTER на часах агента; вне дельты (Н1.2).
-        outcomes:
-          type: object
-          description: 'Урок 6 Н1.5: элементы строки domain/outcomes члена — {<id>: <исход>}, исход JSON-объектом.'
-          additionalProperties: {$ref: '#/components/schemas/Outcome'}
-        tls_ca:
-          type: array
-          description: 'Урок 8 Н1.6: отпечатки ca.pem и ca.next.pem кластера по возрастанию; вне дельты. Форма — любой список строк: длину, повтор и вид отпечатка проверяет держатель (on_accept), несходящееся — журнал domain.member.ca.refused, отчёт принимается (решение «Архитектора» по сверке М11, D10).'
-          items: {type: string}
-        tls_ca_certs:
-          type: array
-          description: 'Урок 8 Н1.6: PEM сертификатов центров tls_ca в том же порядке, sha256(DER) — отпечаток на том же месте; только вместе с tls_ca; вне дельты. Форма — любой список строк, прочее — on_accept (сверка М11, D10).'
-          items: {type: string}
-        sign_failures:
-          type: object
-          minProperties: 1
-          additionalProperties: false
-          description: 'Урок 12 Н1.6 (добавлено М11/12): запросы, которые агент с запуска не отправил, потому что не смог подписать; вне дельты.'
-          properties:
-            domain: {type: integer, minimum: 1}
-            console: {type: integer, minimum: 1}
-        members_rev:
-          type: object
-          required: [term, rev]
-          additionalProperties: false
-          description: 'Урок 12 Н1.4 (добавлено М11/12): {term, rev} документа domain/member-list, который член держит; вне дельты.'
-          properties:
-            term: {type: integer, minimum: 1}
-            rev: {type: integer, minimum: 1}
     Generation:
       type: object
       description: Объект domain/members/<член>/reports/<rev> (Н1.3), JCS.
@@ -377,139 +127,6 @@ components:
           properties:
             domain: {type: integer, minimum: 1}
             console: {type: integer, minimum: 1}
-    Carry:
-      type: object
-      description: Н1.5. Поля уроков 4, 5, 6, 9, 10, 11 — их нормы.
-      required: [cluster, rev, every]
-      additionalProperties: false
-      properties:
-        cluster: {$ref: '#/components/schemas/MemberName'}
-        rev: {type: integer, minimum: 0}
-        every: {type: number, minimum: 1, maximum: 3600}
-        keys:
-          type: object
-          required: [doc]
-          additionalProperties: false
-          properties:
-            doc: {type: string}
-        revoked:
-          type: object
-          required: [jtis]
-          additionalProperties: false
-          properties:
-            jtis: {type: string}
-        members:
-          type: object
-          required: [doc]
-          additionalProperties: false
-          description: 'Только отставшему: members_rev публикации нет или не равен (term, rev) держателя (урок 12 Н1.4; добавлено М11/12); нет поля — без изменений.'
-          properties:
-            doc: {type: string}
-        holder:
-          type: object
-          required: [doc]
-          additionalProperties: false
-          description: Строка domain/holder держателя (урок 10 Н1.1).
-          properties:
-            doc: {type: string}
-        sealed:
-          type: string
-          description: 'Конверт m1:<eph>:<nonce>:<ct> и его содержимое — Platform/common/contracts/domain-envelopes.md.'
-          pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'
-        topology:
-          type: object
-          required: [doc]
-          additionalProperties: false
-          description: Урок 4 Н1.2 — строка domain/topology держателя.
-          properties:
-            doc: {type: string}
-        domain_age: {type: number, minimum: 0, description: 'Урок 4 Н1.4: добавляет ретранслятор.'}
-        placement:
-          type: object
-          required: [rev, records]
-          additionalProperties: false
-          description: Урок 6 Н1.2 — назначения, которые называют этого члена.
-          properties:
-            rev: {type: integer, minimum: 1}
-            records:
-              type: object
-              description: '{"<sub>/<ref>": запись урока 6 Н1.1}'
-              additionalProperties: {$ref: '#/components/schemas/Placement'}
-        pending:
-          type: array
-          description: Урок 6 Н1.4 — ждущие правки этого члена по seq.
-          items: {$ref: '#/components/schemas/Edit'}
-        shared:
-          type: object
-          required: [pointer]
-          additionalProperties: false
-          description: Общий документ (урок 11 Н1.4); doc — только когда копия члена отстала.
-          properties:
-            pointer:
-              type: object
-              required: [term, rev, sha256]
-              additionalProperties: false
-              properties:
-                term: {type: integer, minimum: 1}
-                rev: {type: integer, minimum: 1}
-                sha256: {$ref: '#/components/schemas/Hex32'}
-            doc: {type: string}
-        backup:
-          type: object
-          required: [pointer, doc]
-          additionalProperties: false
-          description: Копия хранителю (урок 10 Н1.5).
-          properties:
-            pointer:
-              type: object
-              required: [term, rev, sha256]
-              additionalProperties: false
-              properties:
-                term: {type: integer, minimum: 1}
-                rev: {type: integer, minimum: 1}
-                sha256: {$ref: '#/components/schemas/Hex32'}
-            doc: {type: string}
-    Placement:
-      type: object
-      required: [cluster, origin, copies, reason, at, rev]
-      additionalProperties: false
-      description: Урок 6 Н1.1.
-      properties:
-        cluster: {$ref: '#/components/schemas/MemberName'}
-        origin: {type: string, description: '"" — нет'}
-        copies:
-          type: array
-          items: {$ref: '#/components/schemas/MemberName'}
-        reason: {type: string}
-        at: {type: number}
-        rev: {type: integer, minimum: 1}
-    Edit:
-      type: object
-      required: [id, seq, what, method, path, body, key, at, asked]
-      additionalProperties: false
-      description: Урок 6 Н1.4.
-      properties:
-        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
-        seq: {type: integer, minimum: 1, description: 'порядок приёма (урок 6 Н1.4; прогон 41 R41-09)'}
-        what: {type: string}
-        method: {enum: [POST, PUT, DELETE]}
-        path: {type: string, minLength: 1}
-        body:
-          type: object
-          additionalProperties: true
-          description: Открыт намеренно — поля domain.edit спеки (урок 6 Н1.3); DELETE — {}.
-        key: {type: string, minLength: 1, maxLength: 200}
-        at: {type: number}
-        base: {type: integer, minimum: 0}
-        asked:
-          type: object
-          required: [method, path, body]
-          additionalProperties: false
-          description: 'запрос двери домена, как его принял процесс (урок 6 Н1.4; урок 10 Н1.6 apply)'
-          properties:
-            method: {enum: [POST, PUT, DELETE]}
-            path: {type: string, minLength: 1}
-            body: {type: object, additionalProperties: true, description: Открыт намеренно — тело двери домена урока 6 Н2.}
     Outcome:
       type: object
       required: [id, status, result, at, what, kept_at]

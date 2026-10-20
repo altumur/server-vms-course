@@ -1,0 +1,17 @@
+# Семья domain/outcomes/<член> — исходы правок члена у держателя (P/08.6; P/08.6 Н1.6). Источник формы строки (ADR-0088
+# п. 8). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Элемент <id> —
+# исход, текст JSON: форма общая со строкой исходов члена domain/outcomes (P/09.1) — определение common.domain_outcome
+# (решение «Архитектора» по планам переноса 8–10, п. 3). Пишет только процесс domain по CAS (settle, Н1.6), не больше
+# OUTCOMES_LIMIT 50 — последние по (at, id) убывая; id исхода равен имени элемента — правило settle, не формы.
+dialect: data-form/1
+root:
+  type: object
+  properties: {}
+  names:
+    key:
+      type: string
+      pattern: 'e-[0-9a-f]{12}'
+      description: id правки, чей это исход (Н1.4 id)
+    value:
+      ref: common.domain_outcome
+  writer: {max_items: 50}

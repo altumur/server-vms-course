@@ -1,0 +1,114 @@
+scenario	step	request	expect
+# Приёмка P/08.3: стенд домена hold, m1, m2 (сц. 15, 16 — и relay); сценарии из М11/03, М11/04, М11/08, М11/12 (стадия B). Формат — README.
+01-cold-start-and-acceptance	1	@install domain	ok
+01-cold-start-and-acceptance	2	@start domain	ok
+01-cold-start-and-acceptance	3	@start agent hold	ok
+01-cold-start-and-acceptance	4	@start agent m1	ok
+01-cold-start-and-acceptance	5	@until 30 holder GET /domain/members	200 {"members": {"hold": {"how": "holder", "key": "@any"}}, "knocking": [{"name": "m1", "fingerprint": "$fp1", "pinned": "none"}]}
+01-cold-start-and-acceptance	6	member m1 store GET /v1/get?key=domain/keys	200 {"items": null}
+01-cold-start-and-acceptance	7	holder POST /domain/members {"name": "m1", "fingerprint": "0000000000000000"}	409 {"error": "refused"}
+01-cold-start-and-acceptance	8	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "admitted", "by": "root", "key": "@any"}}}
+01-cold-start-and-acceptance	9	@join m1	ok
+01-cold-start-and-acceptance	10	@until 30 member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}}
+01-cold-start-and-acceptance	11	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "@any"}}
+01-cold-start-and-acceptance	12	@until 30 member m1 store GET /v1/get?key=domain/member	200 {"items": {"cluster": "m1"}}
+01-cold-start-and-acceptance	13	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m1\""}}
+01-cold-start-and-acceptance	14	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}], "knocking": [], "reports": {"m1": {"pinned": "this"}}}
+02-another-root-and-leave	1	@install domain	ok
+02-another-root-and-leave	2	@start domain	ok
+02-another-root-and-leave	3	@start agent hold	ok
+02-another-root-and-leave	4	@start agent m2	ok
+02-another-root-and-leave	5	@join m2 inputs/other-root.json	ok
+02-another-root-and-leave	6	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "another"}]}
+02-another-root-and-leave	7	holder POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	409 {"error": "refused", "detail": "~another key than the one compared"}
+02-another-root-and-leave	8	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	409 {"error": "refused", "detail": "~another root"}
+02-another-root-and-leave	9	member m2 store GET /v1/get?key=domain/keys	200 {"items": null}
+02-another-root-and-leave	10	@join m2	refused
+02-another-root-and-leave	11	holder POST /domain/members {"name": "hold", "fingerprint": "0000000000000000"}	400
+02-another-root-and-leave	12	holder DELETE /domain/members/m9	404
+02-another-root-and-leave	13	@start agent m1	ok
+02-another-root-and-leave	14	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
+02-another-root-and-leave	15	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"key": "@any"}}}
+02-another-root-and-leave	16	holder DELETE /domain/members/m1	200 {"members": {"m1": "@absent", "hold": "@any"}}
+02-another-root-and-leave	17	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2"}]}
+03-generations-and-mark	1	@domain	ok
+03-generations-and-mark	2	@sleep 20	ok
+03-generations-and-mark	3	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "keys_rev": "@any", "pinned": "@any"}
+03-generations-and-mark	4	member m1 console POST /counters {"name": "c3"}	201
+03-generations-and-mark	5	@until 30 member m1 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200
+03-generations-and-mark	6	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "$sa"}
+03-generations-and-mark	7	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "@not($sa)"}
+03-generations-and-mark	8	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "$sb"}
+03-generations-and-mark	9	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"sent_at": "@not($sb)"}
+03-generations-and-mark	10	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r2", "base": "@not(0)"}
+03-generations-and-mark	11	ASSERT $r1 != $r2	ok
+03-generations-and-mark	12	resource GET /v1/objects/domain/members/m1/reports/$r2?scope=local	200 {"objects": {"testsub/snapshot/w-1": "@any"}, "key": "@any"}
+03-generations-and-mark	13	resource GET /v1/objects/domain/members/m1/reports/$r2.delta?scope=local	200
+03-generations-and-mark	14	@sleep 20	ok
+03-generations-and-mark	15	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "$s3"}
+03-generations-and-mark	16	@until 40 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r3", "sent_at": "@not($s3)"}
+04-tls-ca-to-the-entry	1	@domain	ok
+04-tls-ca-to-the-entry	2	@env m1 W2C_TLS_DIR=inputs/kit-m1-one	ok
+04-tls-ca-to-the-entry	3	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	4	member hold store GET /v1/get?key=domain/members/m1/ca-certs	200 {"items": {"certs": "~BEGIN CERTIFICATE"}}
+04-tls-ca-to-the-entry	5	@until 30 member m2 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"}}
+04-tls-ca-to-the-entry	6	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "0000000000000000000000000000000000000000000000000000000000000000"]}	400
+04-tls-ca-to-the-entry	7	holder POST /domain/members/m1/ca {"ca": ["zz"]}	400
+04-tls-ca-to-the-entry	8	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}	400
+04-tls-ca-to-the-entry	9	holder POST /domain/members/nobody/ca {"ca": []}	404
+04-tls-ca-to-the-entry	10	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}}}
+04-tls-ca-to-the-entry	11	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	12	@env m1 W2C_TLS_DIR=inputs/kit-m1-two	ok
+04-tls-ca-to-the-entry	13	@until 30 holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	14	@env m1 W2C_TLS_DIR	ok
+04-tls-ca-to-the-entry	15	@sleep 12	ok
+04-tls-ca-to-the-entry	16	holder GET /domain/members	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+04-tls-ca-to-the-entry	17	holder POST /domain/members/m1/ca {"ca": []}	200 {"members": {"m1": {"ca": "@absent"}}}
+04-tls-ca-to-the-entry	18	member hold store GET /v1/get?key=domain/members/m1/ca-certs	200 {"items": null}
+05-clock	1	@domain	ok
+05-clock	2	@clock m1 -100	ok
+05-clock	3	@sleep 60	ok
+05-clock	4	holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}]}
+05-clock	5	@clock m1 +400	ok
+05-clock	6	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}
+05-clock	7	@clock m1 0	ok
+05-clock	8	@until 40 holder GET /domain	200 {"complete": true}
+14-knock-needs-signature	1	@install domain	ok
+14-knock-needs-signature	2	@start domain	ok
+14-knock-needs-signature	3	@start agent hold	ok
+14-knock-needs-signature	4	@clock m1 +400	ok
+14-knock-needs-signature	5	@sleep 10	ok
+14-knock-needs-signature	6	holder GET /domain/members	200 {"knocking": []}
+14-knock-needs-signature	7	@clock m1 0	ok
+14-knock-needs-signature	8	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m1", "pinned": "none"}]}
+15-topology	1	@domain m1 relay	ok
+15-topology	2	holder GET /domain/topology	200 {"rev": 0, "star": [], "via": {}}
+15-topology	3	holder PUT /domain/topology {"centre": "hold"}	400
+15-topology	4	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~through itself"}
+15-topology	5	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "hold"}}	409 {"detail": "~domain holder"}
+15-topology	6	holder PUT /domain/topology {"base_rev": 0, "via": {"hold": "relay"}}	409 {"detail": "~reaches the domain in place"}
+15-topology	7	holder PUT /domain/topology {"base_rev": 0, "via": {"m9": "relay"}}	409 {"detail": "~not a cluster of this domain"}
+15-topology	8	holder PUT /domain/topology {"base_rev": 0, "star": ["m1"]}	409 {"detail": "~there is no centre"}
+15-topology	9	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay", "relay": "m1"}}	409 {"detail": "~one relay between a member and the domain"}
+15-topology	10	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
+15-topology	11	holder PUT /domain/topology {"base_rev": 0, "via": {}}	409 {"detail": "~at rev 1"}
+15-topology	12	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m1"}}	409 {"detail": "~at rev 1"}
+15-topology	13	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"via\":{\"m1\":\"relay\"}"}}
+16-second-road	1	@domain m1 relay	ok
+16-second-road	2	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200
+16-second-road	3	@stop agent m1	ok
+16-second-road	4	@start agent m1 via relay	ok
+16-second-road	5	@until 40 holder GET /domain	200 {"reports": {"m1": {"via": "relay"}}}
+16-second-road	6	@stop agent m1	ok
+16-second-road	7	@start agent m1	ok
+16-second-road	8	@until 40 holder GET /domain	200 {"complete": true, "reports": {"m1": {"via": "@absent"}}}
+17-members-only-to-the-lagging	1	@domain m1	ok
+17-members-only-to-the-lagging	2	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}}
+17-members-only-to-the-lagging	3	@sleep 10	ok
+17-members-only-to-the-lagging	4	@carry m1	ok {"cluster": "m1", "members": "@absent"}
+17-members-only-to-the-lagging	5	@start agent m2	ok
+17-members-only-to-the-lagging	6	@until 30 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2"}]}
+17-members-only-to-the-lagging	7	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200 {"members": {"m2": {"key": "@any"}}}
+17-members-only-to-the-lagging	8	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m2\""}}
+17-members-only-to-the-lagging	9	@sleep 10	ok
+17-members-only-to-the-lagging	10	@carry m1	ok {"cluster": "m1", "members": "@absent"}

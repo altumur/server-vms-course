@@ -1,7 +1,8 @@
 # М11/7 — Токены воркеров через агента: нормы
 
 Канон урока. [Лекция](../07-worker-tokens.md), [HTTP-контракт](07-worker-tokens.api.openapi.yaml),
-[инструкция](07-worker-tokens.README.md), [приёмка](../../Source/tests/testdata/acceptance/М11_Domain/07/README.md).
+[инструкция](07-worker-tokens.README.md); приёмка — [P/08.7](../../Platform/08-domain/acceptance/7/README.md) и вектор
+[`issue`](../../Platform/08-domain/vectors/issue/README.md) (каталог приёмки М11/07 снят переносом урока 8).
 
 ## Н0 Словарь слов
 
@@ -9,25 +10,16 @@
 
 ## Н1 Форма
 
-**Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- читает: `domain/placement/<sub>/<ref>`, `domain/members`, `domain/topology`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/members/<член>/reports/<rev>`, `domain/signer`, `domain/keys`, `domain/revoked`.
+**Данные** — что читает выдача, перенесено в [P/08.7 Н1](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8).
 
-Общее уроков 2 и 3 Н1 действует. Токен воркера — токен домена урока 2 Н1.6 с `kind` вида спеки. Ключ подписи держателя
-воркеру не выдаётся, ключ члена — тоже. Токен у воркера (просьба через агента, только в памяти) и проверка у получателя —
-[P/03.7 Н1.5](../../Platform/03-worker/spec/03.7-worker.norms.md) (стадия B).
+Выдача токена держателем — [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8); токен у воркера и проверка у получателя —
+[P/03.7 Н1.5](../../Platform/03-worker/spec/03.7-worker.norms.md).
 
 ### Н1.1 Объявление вида
 
 Перенесено в [P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md) (стадия B; глава позднего слоя, вводит урок 8).
 
-Вычисляемые значения `target_fields` (выдача, Н3):
-
-```yaml
-computed:   centre, star_centre, poll_home — не поля записи и не поля единиц: вычисляются по топологии (урок 4 Н1.2)
-            centre — topology.centre; star_centre — centre, если cluster записи в star, иначе ничего (в аудиторию не
-            добавляет и не отказ); cluster в star, а centre нет — 409 no_centre;
-            poll_home(член) — via[член], иначе centre, иначе держатель
-```
+Вычисляемые значения `target_fields` и блок `computed` — перенесено в [P/08.7 Н1.1](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8).
 
 ### Н1.2 Местная дверь агента
 
@@ -38,25 +30,14 @@ computed:   centre, star_centre, poll_home — не поля записи и н�
 ### Н1.3 Дверь держателя
 
 ```yaml
-door:       POST /api/tokens/<член>/<sub>/<вид> у процесса domain; подпись агента (урок 3 Н1.4); через ретранслятор —
-            байт в байт, той же подписью (урок 4)
-body:       {request_id, role, ref, by?} — role — роль, которую агент удостоверил; формы как Н1.2; больше TOKEN_HOLDER_BODY — 413
-TOKEN_HOLDER_BODY: 4608    # = TOKEN_BODY + 512 на то, что добавляет агент (role и обвязка JSON): тело ровно TOKEN_BODY у местной
-                           # двери у держателя не получает 413; меряются байты тела, как пришли (журнал cammeta-go, М11-07 № 4)
-answer:     200 {sealed: <m1 урока 3 Н1.5>} — внутри текст JSON {request_id, token, exp}
 agent:      открыть m1; request_id ≠ запрошенного или exp ≤ now — 502 {error: "invalid token reply"}; иначе отдать
 ```
 
+Строки `door`, `body`, `TOKEN_HOLDER_BODY`, `answer` — перенесено в [P/08.7 Н1.3](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8).
+
 ### Н1.4 Утверждения
 
-```yaml
-payload:    {iss: <домен>, sub: <член-заявитель>, kind: <вид>, iat: now, exp: now + lifetime, jti: 16 hex,
-             <ref_claim>: ref, <audience_claim>: [<член>…] по возрастанию, без повторов,
-             scenario: <trigger_claim>: by, <acts_claim>: [<act>…] без повторов по тексту JCS, по возрастанию байтов UTF-8
-             этого текста, <up_claim>?: centre}
-names:     ref_claim и audience_claim — из области, которая дала аудиторию (placement без записи упал на unit — из unit)
-signed:     ключом токенов держателя (current набора, урок 2 Н1.2), JCS header и payload (урок 2 Н1.6)
-```
+Перенесено в [P/08.7 Н1.4](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8).
 
 ### Н1.5 Проверка у получателя
 
@@ -71,51 +52,16 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
 | Дверь | Кто | Успех | Отказы |
 |---|---|---|---|
 | POST `/tokens/<sub>/<вид>` | агент, личность — роль | 200 `{request_id, token, exp}` | 401 личности роли нет; 404 нет маршрута; 400 тело; 413; код держателя — как пришёл; 502 ответ не открылся или не тот; 503 до держателя не дотянуться |
-| POST `/api/tokens/<член>/<sub>/<вид>` | процесс `domain` | 200 `{sealed}` | урок 3 Н2 (подпись и член); 413 больше TOKEN_HOLDER_BODY; Н3 «выдать» — `{error: "refused", reason, detail}`; 409 `deposed` (урок 10 Н1.6); 503 `standby` (урок 12 Н1.7; добавлено М11/12) |
+
+Дверь держателя — [P/08.7 Н2](../../Platform/08-domain/spec/08.7-domain.norms.md); HTTP-форма — [OpenAPI урока 8](../../Platform/08-domain/spec/08-domain.api.openapi.yaml).
 
 ---
 
 ## Н3 Проход
 
-### выдать (процесс domain) — по порядку, первое правило даёт исход
+### выдать (процесс domain)
 
-```
-0. процесс смещён (урок 10 Н1.6) — ключей токенов у него нет                → 409 deposed (с holder)
-1. член, ключ, подпись — урок 3 Н2                                       → 404 / 403 / 401
-2. тело не по форме Н1.3 — закрытое {request_id, role, ref, by?}          → 400 bad_request
-3. вид не объявлен спекой sub, или без области, или role ∉ grant          → 403 not_granted
-4. by есть без scenario или нет у scenario                               → 400 by_misplaced
-5. область:
-   placement — запись <placement.sub>/<ref>:
-     нечитаема (в том числе без поля copies или поле не по форме урока 6 Н1.1; добавлено сверкой М11, T2)
-                                                                         → 403 assignment_unreadable
-     нет: есть unit — к unit; иначе                                      → 403 no_assignment
-     имя записи (cluster, origin, copies) не член, или член ≠ поле caller → 403 outside_scope
-       (origin "" — не имя: на членство не проверяется, в аудиторию не входит; caller origin при "" — outside_scope)
-     аудитория: значения target_fields по Н1.1 computed: centre без centre → 409 no_centre; star_centre — только
-       при cluster записи в star (вне star ничего не добавляет, отказа нет), cluster в star без centre → 409 no_centre
-       (добавлено сверкой М11)
-   unit — владельцы ref (члены, чьи копии заявляют единицу с этим ref в units подсистемы unit.sub, урок 1):
-     caller self: владелец — ровно этот член; caller poll_home: владелец один  → иначе 403 unit_not_unique
-     caller poll_home: poll_home(владелец) ≠ член                         → 403 not_poll_home
-     аудитория: значения target_fields — poll_home → poll_home(владелец), centre → centre (без centre → 409 no_centre)
-   scenario — by:
-     владельцы by и ref — в units подсистемы вида (sub спеки, объявившей вид)
-     владелец by один: член или член за этим ретранслятором (via[владелец] = член)  → иначе 403 trigger_not_reported
-     общий документ doc (урок 11 Н1.2, проверенный record урока 10) → массив items; нет        → 403 no_shared_doc
-     элементы: имя — строка, которая встречается в массиве один раз; enabled отсекает только false (нет поля —
-       включён); target = ref, trigger = by; нет поля по пути act — элемент пропускается → acts; нет ни одного → 403 no_item
-     дом: запись <placement>/<ref> — её cluster (в star — centre); записи нет — poll_home(единственного владельца ref)
-       запись нечитаема, или cluster в star без centre — дома нет, к владельцу не переходить  → нет → 403 no_home
-     аудитория (правила по порядку; дом посчитан раньше): подъём ретранслятора (заявитель — via владельца by) — [centre];
-                заявитель за ретранслятором R: R = дом — [R], иначе [R] и up = centre;
-                иначе — {дом} и centre, если он есть; у подъёма и за ретранслятором ≠ дом centre нужен → нет → 409 no_centre
-6. аудитория пуста или с не членом                                       → 403 no_audience
-7. утверждения Н1.4, подпись, m1 члену                                   → 200
-```
-
-Ничего не пишется: выдача — чтение записей, топологии, копий и документа. `detail` отказа называет причину словами, без
-значений документа и токенов.
+Перенесено в [P/08.7 Н3](../../Platform/08-domain/spec/08.7-domain.norms.md) «выдать» (стадия B; урок 8).
 
 ### проверить у получателя
 
@@ -125,25 +71,7 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
 
 ## Н4 Отказы
 
-| Слово | Код | Когда |
-|---|---|---|
-| `bad_request` | 400 | тело не по форме |
-| `by_misplaced` | 400 | `by` не у `scenario` или его нет у `scenario` |
-| `not_granted` | 403 | вида нет, области нет, роль не в `grant` |
-| `assignment_unreadable` | 403 | запись назначения нечитаема |
-| `no_assignment` | 403 | записи нет, `unit` не объявлен |
-| `outside_scope` | 403 | имя записи не член; член не в поле `caller` |
-| `unit_not_unique` | 403 | у ref не ровно один владелец (или у `self` — не этот член) |
-| `not_poll_home` | 403 | член — не ближайшая дверь владельца |
-| `trigger_not_reported` | 403 | `by` заявляет не член (и не член за ним) |
-| `no_shared_doc` | 403 | проверенного документа нет |
-| `no_item` | 403 | подходящих включённых элементов нет |
-| `no_home` | 403 | дом цели не определить |
-| `no_audience` | 403 | аудитория пуста или с не членом |
-| `no_centre` | 409 | нужен центр, его нет в топологии |
-| `deposed` | 409 | процесс смещён (урок 10 Н1.6), тело с `holder` |
-| `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
-| — | 413 `{error: "refused", detail}` | тело больше TOKEN_BODY у местной двери агента, больше TOKEN_HOLDER_BODY у двери держателя — до подписи и разбора; тело отказа — общая форма урока 3 Н4 (добавлено сверкой М11, D11) |
+Перенесено в [P/08.7 Н4](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B; урок 8).
 
 Отказы местной двери «у агента» (401/404/400, 502 `invalid token reply`, 503 `unavailable`) — [договор местной двери
 токенов](../../Platform/common/contracts/local-token-door.md) «Отказы» (разбор ревью стадии A 8–10, № 1 / решение 1).
@@ -153,33 +81,15 @@ HTTP-контракт: [07-worker-tokens.api.openapi.yaml](07-worker-tokens.api.
 
 ## Н5 Приёмка
 
-Каталог `Source/tests/testdata/acceptance/М11_Domain/07/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/07/README.md)):
-команда `issue` на входах `inputs/` и стенд урока 3 с местной дверью агента (каталог `testsub` и `testsub2`, как урок 5). Отказы объявления — случаи `m57_tokens_*`
-корпуса главы P/02.1 ([P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md)).
+Каталог `Source/tests/testdata/acceptance/М11_Domain/07/` снят переносом урока 8 (решение о планах переноса 8–10, п. 17).
 
-```yaml
-issue:      вход {domain, sub, kind, decl: <объявление вида> | null, role, member, body, members: [<член>…], holder,
-                  placements: {"<sub>/<ref>": {cluster, origin, copies} | "garbled"}, topology: {centre?, star, via},
-                  units: {<sub>: {<ref>: [<член>…]}}, shared: {<doc>: {<items>: [...]}} | null, now}
-            вывод {result: ok, claims: <payload Н1.4 без jti>} | {result: refused, status, reason}
-exit:       0 — вычислено; 2 — вход не по форме, в том числе decl не по форме загрузки P/02.1 Н1.2б (lifetime ≤ 0 или не число,
-            claims или grant пусты, область не по форме): такое объявление загрузчик отверг бы (добавлено сверкой М11, T4);
-            запись placements без copies — не вход не по форме, а нечитаемая запись (Н3 шаг 5)
-```
-
-| № | Сценарий | Нормы |
-|---|---|---|
-| 01 | стенд: `tally` члену из `origin` назначения — токен; принят кластером из `aud`, отвергнут кластером вне `aud` (`wrong_audience`) и с чужим видом (`wrong_kind`) | Н1.2–Н1.5, урок 2 |
-| 02 | стенд: роль не в `grant`, член не `origin`, назначения нет — 403 со словом; `<sub>` не из каталога — 404 у агента (сверка М11, T8) | Н1.2, Н3 |
-| 03 | `issue`: placement, unit (`self`, `poll_home`), переход placement → unit, scenario (прямо, за ретранслятором, подъём, дом по назначению), все слова отказов; запись без `copies` — `assignment_unreadable` (сверка М11, T2) | Н3 |
+Перенесено в [P/08.7 Н5](../../Platform/08-domain/spec/08.7-domain.norms.md): сц. 01, 02 — приёмка главы 8.7 ([acceptance/7](../../Platform/08-domain/acceptance/7/README.md)), сц. 03 снят — те же случаи в векторе [`issue`](../../Platform/08-domain/vectors/issue/README.md); «Решает реализация» п. 1 — P/08.7 (стадия B; урок 8).
 
 ---
 
 ## Решает реализация
 
-1. **команду `issue`** — шаблон с `{input}`; каталог `AGENT_TOKEN_DIR` агента на стенде — для двери `token` словаря
-   М11/01; адрес и личность роли — [договор местной двери токенов](../../Platform/common/contracts/local-token-door.md)
-   «Сокет роли» (разбор ревью стадии A 8–10, № 1 / решение 1: прежде — выбор реализации);
+1. перенесено в [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) «Решает реализация» п. 1 (стадия B; урок 8);
 2. перенесено в [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) «Решает реализация» п. 1 (стадия B).
 
 ---
@@ -187,16 +97,15 @@ exit:       0 — вычислено; 2 — вход не по форме, в т
 ## Чеклист готовности
 
 - Пункт М11/7-01 перенесён в [P/02.1](../../Platform/02-installer/spec/02.1-installer.norms.md) как P/02.1-28 (поздний слой; стадия B; [id-map](../../Platform/common/id-map.tsv); разбор ревью стадии A 8–10, № 11).
-- [ ] **М11/7-02** местная дверь: роль из личности соединения, тело, без очереди — сц. 01, 02; 413 `TOKEN_BODY` — сц. 02 шаги 7–8 (4096 байт — проходит к держателю и `no_assignment`, 4097 — 413 у местной двери); `TOKEN_HOLDER_BODY` у держателя — чтением: стенд не шлёт держателю тело мимо агента;
+- [ ] **М11/7-02** местная дверь: роль из личности соединения, тело, без очереди — сц. 01, 02 приёмки главы 8.7; 413 `TOKEN_BODY` — сц. 02 шаги 7–8 приёмки главы 8.7 (4096 байт — проходит к держателю и `no_assignment`, 4097 — 413 у местной двери);
   ожидание TOKEN_WAIT и обрыв — чтением (стенд не держит процесс `domain` без ответа)
-- [ ] **М11/7-03** дверь держателя и ответ `m1` — сц. 01; проверка `request_id` и `exp` агентом (502 `invalid token reply`) —
-  чтением (честный держатель стенда не подделывает ответ)
-- [ ] **М11/7-04** выдача Н3 по порядку и слова отказов — сц. 02, 03; `<sub>` не из каталога — 404 у агента, сц. 02 шаг 12; `Transfer-Encoding` у местной двери — 400, `decl` не по форме загрузки — код 2 — чтением (сверка М11, T4, T7, T8)
-- [ ] **М11/7-05** утверждения Н1.4: `sub` — член, аудитория по возрастанию, `acts` по JCS, `up` — сц. 03
+- Пункт М11/7-03 перенесён в [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) как P/08.7-01 (проверка ответа агентом — глава 9.1, до переноса урока 9 — здесь: «проверка `request_id` и `exp` агентом (502) — чтением»; стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/7-04 перенесён в [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) как P/08.7-02 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/7-05 перенесён в [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) как P/08.7-03 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
 - Пункты М11/7-06, М11/7-07 перенесены в [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) как P/03.7-03, P/03.7-04 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
 - [ ] **М11/7-08** через ретранслятор — байт в байт — чтением (стенд урока 4 его дорогу проверяет)
 
 ## Соответствие прежним урокам
 
 Прежнего урока о токенах воркеров в М12A нет (токены книг вёл `domainpart`, урок 4 М12A — токены людей — урок 9).
-Урок нормирует ADR-0074 доп. (5), C4, C6, C6b и решение «Архитектора» по вопросам М11/7. Исторические исходники сохранены в Git. Абзац Н1 о токене у воркера (со слов «токен просит воркер»), Н1.5, Н3 «проверить у получателя» с «Гонками», строка Н4 `wrong_kind`/`wrong_audience`, п. 2 «Решает реализация» и пункты М11/7-06, -07 перенесены в [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) (стадия B).
+Урок нормирует ADR-0074 доп. (5), C4, C6, C6b и решение «Архитектора» по вопросам М11/7. Исторические исходники сохранены в Git. Абзац Н1 о токене у воркера (со слов «токен просит воркер»), Н1.5, Н3 «проверить у получателя» с «Гонками», строка Н4 `wrong_kind`/`wrong_audience`, п. 2 «Решает реализация» и пункты М11/7-06, -07 перенесены в [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) (стадия B). Н1 «Данные», `computed` Н1.1, Н1.3 без `agent`, Н1.4, строка Н2 двери держателя, Н3 «выдать», Н4, Н5, п. 1 «Решает реализация» и пункты М11/7-03…05 перенесены в [P/08.7](../../Platform/08-domain/spec/08.7-domain.norms.md) (стадия B, урок 8).

@@ -1,0 +1,124 @@
+scenario	step	request	expect
+# Приёмка P/08.6: стенд нескольких кластеров hold, m1, m2 — назначение, хранимые правки и исходы у держателя; сценарии 01, 02, 03, 05, 09 перенесены из М11/06 (стадия B). Формат — README.
+01-placement	1	@domain	ok
+01-placement	2	holder GET /domain/placement	200 {"rev": 0, "records": {}}
+01-placement	3	holder PUT /domain/placement/nosuch/c1 {"cluster": "m1"}	404
+01-placement	4	holder PUT /domain/placement/nosuch/c1 {"cluster": "m9"}	404
+01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409
+01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400
+01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 1}
+01-placement	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 1}
+01-placement	9	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 2}
+01-placement	10	@until 30 member m1 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": {"cluster": "m1", "rev": "2"}}
+01-placement	11	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "1"}}
+01-placement	12	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1"}}
+01-placement	13	member m2 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": null}
+01-placement	14	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+01-placement	15	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+01-placement	16	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": null}
+01-placement	17	holder DELETE /domain/placement/testsub/c1	404
+01-placement	18	holder PUT /domain/placement/testsub/c3 {"cluster": "m1", "origin": "m2"}	200 {"cluster": "m1", "origin": "m2"}
+01-placement	19	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c3	200 {"items": {"cluster": "m1", "origin": "m2"}}
+02-edit-refusals	1	@domain	ok
+02-edit-refusals	2	member m1 console POST /counters {"name": "c1"}	201
+02-edit-refusals	3	@until 60 holder GET /domain/testsub/counters	200 [{"ref": "c1", "cluster": "m1"}]
+02-edit-refusals	4	holder PUT /domain/testsub/counters/c9 {"start": 2}	404 {"error": "refused"}
+02-edit-refusals	5	holder PUT /domain/testsub/counters/c1 {"step": 2}	400
+02-edit-refusals	6	holder PUT /domain/testsub/counters/c1 {}	400
+02-edit-refusals	7	holder PUT /domain/testsub/counters/c1 {"revision": 3}	400
+02-edit-refusals	8	holder PUT /domain/testsub/counters/c1 {"note_secret": "a"}	400 {"error": "~never through a kept edit"}
+02-edit-refusals	9	holder PUT /domain/testsub/counters/c1?cluster=m9 {"start": 2}	404 {"error": "no such member"}
+02-edit-refusals	10	member m2 console POST /counters {"name": "c1"}	201
+02-edit-refusals	11	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c1": ["m1", "m2"]}}}
+02-edit-refusals	12	holder PUT /domain/testsub/counters/c1 {"start": 2}	503 {"error": "refused", "detail": "~m2"}
+02-edit-refusals	13	@cut m2	ok
+02-edit-refusals	14	@until 70 holder GET /domain	200 {"members": [{"name": "hold"}, {"name": "m1"}, {"name": "m2", "state": "silent"}]}
+02-edit-refusals	15	holder PUT /domain/testsub/counters/c7 {"start": 1}	503 {"error": "refused", "detail": "~m2"}
+03-kept-and-applied	1	@domain	ok
+03-kept-and-applied	2	member m1 console POST /counters {"name": "c3", "start": 1}	201
+03-kept-and-applied	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c3"}]
+03-kept-and-applied	4	@cut m1	ok
+03-kept-and-applied	5	holder PUT /domain/testsub/counters/c3 {"start": 5}	202 {"kept": "$id", "cluster": "m1", "what": "start"}
+03-kept-and-applied	6	@key(5) holder PUT /domain/testsub/counters/c3 {"start": 5}	202 {"kept": "$id"}
+03-kept-and-applied	7	@key(5) holder PUT /domain/testsub/counters/c3 {"start": 6}	422
+03-kept-and-applied	8	holder PUT /domain/testsub/counters/c3 {"start": 7}	202 {"kept": "$id2"}
+03-kept-and-applied	9	@until 10 holder GET /domain	200 {"pending": {"m1": 2}}
+03-kept-and-applied	10	member m1 console GET /counters	200 {"configured": [{"id": "c3", "start": 1}]}
+03-kept-and-applied	11	@mend m1	ok
+03-kept-and-applied	12	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c3", "start": 7}]}
+03-kept-and-applied	13	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id2", "status": 200, "result": "performed"}, {"id": "$id", "status": 200, "result": "performed", "what": "start"}]}}
+03-kept-and-applied	14	holder DELETE /domain/testsub/counters/c3	202 {"kept": "$id3", "cluster": "m1", "what": ""}
+03-kept-and-applied	15	@until 60 member m1 console GET /counters	200 {"configured": []}
+03-kept-and-applied	16	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id3", "status": 200, "result": "performed"}, {"id": "$id2", "status": 200, "result": "performed"}, {"id": "$id", "status": 200, "result": "performed", "what": "start"}]}}
+05-kept-full	1	@domain	ok
+05-kept-full	2	member m1 console POST /counters {"name": "c5", "start": 0}	201
+05-kept-full	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c5"}]
+05-kept-full	4	@cut m1	ok
+05-kept-full	5	holder PUT /domain/testsub/counters/c5 {"start": 1}	202
+05-kept-full	6	holder PUT /domain/testsub/counters/c5 {"start": 2}	202
+05-kept-full	7	holder PUT /domain/testsub/counters/c5 {"start": 3}	202
+05-kept-full	8	holder PUT /domain/testsub/counters/c5 {"start": 4}	202
+05-kept-full	9	holder PUT /domain/testsub/counters/c5 {"start": 5}	202
+05-kept-full	10	holder PUT /domain/testsub/counters/c5 {"start": 6}	202
+05-kept-full	11	holder PUT /domain/testsub/counters/c5 {"start": 7}	202
+05-kept-full	12	holder PUT /domain/testsub/counters/c5 {"start": 8}	202
+05-kept-full	13	holder PUT /domain/testsub/counters/c5 {"start": 9}	202
+05-kept-full	14	holder PUT /domain/testsub/counters/c5 {"start": 10}	202
+05-kept-full	15	holder PUT /domain/testsub/counters/c5 {"start": 11}	202
+05-kept-full	16	holder PUT /domain/testsub/counters/c5 {"start": 12}	202
+05-kept-full	17	holder PUT /domain/testsub/counters/c5 {"start": 13}	202
+05-kept-full	18	holder PUT /domain/testsub/counters/c5 {"start": 14}	202
+05-kept-full	19	holder PUT /domain/testsub/counters/c5 {"start": 15}	202
+05-kept-full	20	holder PUT /domain/testsub/counters/c5 {"start": 16}	202
+05-kept-full	21	holder PUT /domain/testsub/counters/c5 {"start": 17}	202
+05-kept-full	22	holder PUT /domain/testsub/counters/c5 {"start": 18}	202
+05-kept-full	23	holder PUT /domain/testsub/counters/c5 {"start": 19}	202
+05-kept-full	24	holder PUT /domain/testsub/counters/c5 {"start": 20}	202
+05-kept-full	25	holder PUT /domain/testsub/counters/c5 {"start": 21}	202
+05-kept-full	26	holder PUT /domain/testsub/counters/c5 {"start": 22}	202
+05-kept-full	27	holder PUT /domain/testsub/counters/c5 {"start": 23}	202
+05-kept-full	28	holder PUT /domain/testsub/counters/c5 {"start": 24}	202
+05-kept-full	29	holder PUT /domain/testsub/counters/c5 {"start": 25}	202
+05-kept-full	30	holder PUT /domain/testsub/counters/c5 {"start": 26}	202
+05-kept-full	31	holder PUT /domain/testsub/counters/c5 {"start": 27}	202
+05-kept-full	32	holder PUT /domain/testsub/counters/c5 {"start": 28}	202
+05-kept-full	33	holder PUT /domain/testsub/counters/c5 {"start": 29}	202
+05-kept-full	34	holder PUT /domain/testsub/counters/c5 {"start": 30}	202
+05-kept-full	35	holder PUT /domain/testsub/counters/c5 {"start": 31}	202
+05-kept-full	36	holder PUT /domain/testsub/counters/c5 {"start": 32}	202
+05-kept-full	37	holder PUT /domain/testsub/counters/c5 {"start": 33}	202
+05-kept-full	38	holder PUT /domain/testsub/counters/c5 {"start": 34}	202
+05-kept-full	39	holder PUT /domain/testsub/counters/c5 {"start": 35}	202
+05-kept-full	40	holder PUT /domain/testsub/counters/c5 {"start": 36}	202
+05-kept-full	41	holder PUT /domain/testsub/counters/c5 {"start": 37}	202
+05-kept-full	42	holder PUT /domain/testsub/counters/c5 {"start": 38}	202
+05-kept-full	43	holder PUT /domain/testsub/counters/c5 {"start": 39}	202
+05-kept-full	44	holder PUT /domain/testsub/counters/c5 {"start": 40}	202
+05-kept-full	45	holder PUT /domain/testsub/counters/c5 {"start": 41}	202
+05-kept-full	46	holder PUT /domain/testsub/counters/c5 {"start": 42}	202
+05-kept-full	47	holder PUT /domain/testsub/counters/c5 {"start": 43}	202
+05-kept-full	48	holder PUT /domain/testsub/counters/c5 {"start": 44}	202
+05-kept-full	49	holder PUT /domain/testsub/counters/c5 {"start": 45}	202
+05-kept-full	50	holder PUT /domain/testsub/counters/c5 {"start": 46}	202
+05-kept-full	51	holder PUT /domain/testsub/counters/c5 {"start": 47}	202
+05-kept-full	52	holder PUT /domain/testsub/counters/c5 {"start": 48}	202
+05-kept-full	53	holder PUT /domain/testsub/counters/c5 {"start": 49}	202
+05-kept-full	54	holder PUT /domain/testsub/counters/c5 {"start": 50}	202
+05-kept-full	55	holder PUT /domain/testsub/counters/c5 {"start": 51}	409 {"error": "kept_full"}
+05-kept-full	56	@until 10 holder GET /domain	200 {"pending": {"m1": 50}}
+09-forms-of-edits	1	@domain	ok
+09-forms-of-edits	2	member m1 console POST /counters {"name": "c9", "start": 1}	201
+09-forms-of-edits	3	member m1 console POST /counters {"name": "c11", "start": 1}	201
+09-forms-of-edits	4	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c11"}, {"ref": "c9"}]
+09-forms-of-edits	5	holder POST /domain/testsub/counters {"name": "c10", "start": 1}	400
+09-forms-of-edits	6	holder POST /domain/testsub/counters {"cluster": 1, "name": "c10", "start": 1}	400
+09-forms-of-edits	7	holder PUT /domain/nosuch/counters/c9 {"start": 2}	404
+09-forms-of-edits	8	holder DELETE /domain/testsub/counters/c9 {"start": 1}	400
+09-forms-of-edits	9	holder PUT /domain/placement/testsub/c9 {"cluster": ""}	400
+09-forms-of-edits	10	holder PUT /domain/placement/testsub/a/b {"cluster": "m1"}	400
+09-forms-of-edits	11	holder PUT /domain/placement/testsub/a%20b {"cluster": "m1"}	200
+09-forms-of-edits	12	holder GET /domain/placement	200 {"records": {"testsub/a%20b": {"cluster": "m1"}}}
+09-forms-of-edits	13	@cut m1	ok
+09-forms-of-edits	14	holder @header Idempotency-Key: a3-asked PUT /domain/testsub/counters/c11 {"start": 5}	202 {"kept": "e-a5231d61506d", "cluster": "m1"}
+09-forms-of-edits	15	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"e-a5231d61506d": "~/domain/testsub/counters/c11?cluster=m1"}}
+09-forms-of-edits	16	@mend m1	ok

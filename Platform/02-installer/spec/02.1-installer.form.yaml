@@ -130,7 +130,7 @@ root:
       properties:
         running: {type: string, description: "`name` метрики из `metrics[]`", default_text: "`running_gauge: null`"}
     metrics: {ref: metrics, owner: P/06.5 Н1.2; М13}
-    domain: {ref: domain, owner: М11}
+    domain: {ref: domain, owner: P/08}
 
 defs:
   strList: {type: array, items: {type: string}}
@@ -658,18 +658,18 @@ defs:
         label: {type: string}
         values: {ref: strList}
 
-  # ---- domain: форма — здесь; смысл и класс отказа — уроки М11
+  # ---- domain: форма — здесь; смысл и класс отказа — главы урока P/08 (до переноса уроков 9, 10 — М11)
   domain:
     type: object
     properties:
-      ref: {type: string}
-      view: {ref: nonSecretList}
-      edit: {ref: nonSecretList}
-      kept: {ref: strList}
-      tables: {ref: strList}
-      reports: {ref: strList}
+      ref: {type: string, owner: P/08.1 Н1.2}
+      view: {ref: nonSecretList, owner: P/08.1 Н1.4}
+      edit: {ref: nonSecretList, owner: P/08.6 Н1.3}
+      kept: {ref: strList, owner: P/03.7 Н1.6}
+      tables: {ref: strList, owner: P/03.7 Н1.6}
+      reports: {ref: strList, owner: М11/5 Н1.2}
       shared:
-        owner: М11/11 Н1.1
+        owner: P/08.9 Н1.2
         x-class: value
         description: "элемент — имя поля единицы (не секрет; наследует или это `display.tree.group_by`) или документ `{name, type: json, schema}`: name — не имя поля единицы, значение документа проверяется по schema"
         type: array
@@ -696,14 +696,14 @@ defs:
           rules:
             - {any_of: [keys, prefix]}
       books:
-        owner: М11/5 Н1.1
+        owner: P/08.5
         x-class: value
         type: object
         names:
           key: {type: string, pattern: '[a-z0-9][a-z0-9_-]*'}
           value: {ref: book}
       names:
-        owner: М11/9 Н1.7
+        owner: P/08.5 Н1.7
         x-class: reference
         type: object
         names:
@@ -715,7 +715,7 @@ defs:
               exclusive_with: {enum: [domain/users]}
               grant: {enum: [view, edit, admin]}
       tokens:
-        owner: М11/7 Н1.1
+        owner: P/08.7
         x-class: value
         type: object
         names:
@@ -760,7 +760,7 @@ defs:
         type: object
         required: [sub, caller, ref_claim, target_fields, audience_claim]
         properties:
-          sub: {type: string, description: "подсистема записей назначения (М11/6 Н1.1)"}
+          sub: {type: string, description: "подсистема записей назначения (P/08.6 Н1.1)"}
           caller: {enum: [cluster, origin, copies], description: "поле записи, где должен стоять член-заявитель"}
           ref_claim: {type: string}
           target_fields: {type: array, unique_items: true, items: {enum: [cluster, origin, copies, centre, star_centre]}, description: откуда аудитория}
@@ -778,7 +778,7 @@ defs:
         type: object
         required: [doc, items, name, enabled, trigger, target, act, ref_claim, trigger_claim, acts_claim, up_claim, audience_claim]
         properties:
-          doc: {type: string, description: "подсистема общего документа (М11/11 Н1.2: `shared.<doc>`)"}
+          doc: {type: string, description: "подсистема общего документа (P/08.9 Н1.2: `shared.<doc>`)"}
           items: {type: string, pattern: '[a-z][a-z0-9_]*', description: имя массива в документе}
           name: {ref: fieldPath}
           enabled: {ref: fieldPath}

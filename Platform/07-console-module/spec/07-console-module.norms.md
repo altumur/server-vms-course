@@ -33,9 +33,9 @@ ADR-0083 доп. (1): без изменения поведения): Н1.4 и Н
 ```yaml
 reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
-         /events, /metrics (только running_gauge и workers_gauge), /domain/* (М11/8 Н1.2), /api/held (М11/8 Н1.9, форма — М11/10 Н1.4), /domain/shared/<sub> (М11/11 Н1.5)
+         /events, /metrics (только running_gauge и workers_gauge), /domain/* (договор пересылки «Двери домена»), /api/held (М11/8 Н1.9, форма — М11/10 Н1.4), /domain/shared/<sub> (М11/11 Н1.5)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
-         POST/DELETE /servers/<s>/decommission, /domain/* (М11/8 Н1.2), POST/DELETE /session, /session/break-glass, login_url
+         POST/DELETE /servers/<s>/decommission, /domain/* (договор пересылки «Двери домена»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (М11/10), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
 order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (М11/11 Н1.5) → /drain → /schema
          → /domain (+ /domain/alarms; М11/11 Н1.8) → /api/held (М11) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
@@ -86,8 +86,8 @@ commands:  вид command / command.failed — слово и заметка мо
 Н1.2б). Их смысл нормируют уроки М11 до переноса уроков 8 и 10; сверку с ними делает перенос уроков 8–10 (разбор ревью
 стадии A 6–7, № 27, № 30):
 
-- Н1.4: `reads` — `/domain/*` (М11/8 Н1.2), `/api/held` (М11/8 Н1.9, форма — М11/10 Н1.4), `/domain/shared/<sub>` (М11/11
-  Н1.5); `writes` — `/domain/*` (М11/8 Н1.2); `order` — `/domain/shared/<sub>`, `/domain` (+ `/domain/alarms`; М11/11 Н1.8),
+- Н1.4: `reads` — `/domain/*` ([договор пересылки](../../common/contracts/forwarding.md) «Двери домена»), `/api/held` (М11/8 Н1.9, форма — М11/10 Н1.4), `/domain/shared/<sub>` (М11/11
+  Н1.5); `writes` — `/domain/*` ([договор пересылки](../../common/contracts/forwarding.md) «Двери домена»); `order` — `/domain/shared/<sub>`, `/domain` (+ `/domain/alarms`; М11/11 Н1.8),
   `/api/held`; `never` — `/api/backup` (М11/10);
 - Н1.5: `objects` — `member:<m>`, `domain`, `person:<name>`; `events` — поле `domain` у `refresh`; `adds` — виды `member`,
   `domain` у `addTab`;

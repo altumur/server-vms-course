@@ -1,0 +1,47 @@
+# Семья domain/alarm-history/<член> — история тревог члена у держателя (P/08.9; P/08.9 Н1.9). Источник формы объекта
+# (ADR-0088 п. 8). Экземпляр — {key, object}; ключ — грамматика колонки key каталога (<член> — имя члена). Слова —
+# Platform/common/DIALECT.md. Строка истории — строка страницы тревог члена (форма строки — М11/11 Н1.7 event, глава 9.1;
+# строка индекса P/05 Н1.3), как принята: t — на часах домена, t_src — как пришло. Правила, которые схема не выражает
+# (скользящая неделя HISTORY_DAYS, самые новые, без повторов по same_line, движение cut_before, один писатель), — проза
+# Н1.9; список тревог (урок P/10) историю только читает.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    events:
+      type: array
+      writer: {max_items: 2000}
+      description: "строки страницы, как приняты; не больше HISTORY_LINES = 2000 строк, самые новые (Н1.9 history)"
+      items:
+        type: object
+        description: "строка страницы тревог члена, как принята (Н1.9 events); прочие поля строки индекса P/05 Н1.3 — имена автора"
+        properties:
+          id:
+            type: string
+            not_enum: ['']
+            description: "id строки индекса — непустая строка (М11/11 Н1.7 event)"
+          class:
+            type: string
+            enum: [alarm]
+            description: "класс строки индекса — alarm (М11/11 Н1.7 event)"
+          kind:
+            type: string
+            not_enum: ['']
+            description: "непустая строка (М11/11 Н1.7 event)"
+          unit:
+            type: string
+            description: "единица строки индекса (М11/11 Н1.7 event)"
+          t:
+            ref: common.time
+            description: "время строки на часах домена (урок P/10, М11/11 Н1.8 clock: t + (received_at − sent_at) последнего принятого отчёта, который несёт эту страницу)"
+          t_src:
+            type: number
+            description: "t строки, как пришло — по часам члена; same_line сравнивает по нему (Н1.9 same_line)"
+        required: [id, class, kind, unit, t, t_src]
+        names:
+          key: {type: string}
+          value: {type: any, description: "прочие поля строки индекса P/05 Н1.3 ({subsystem, of, …}) — как пришли"}
+    cut_before:
+      ref: common.time
+      description: "с какого момента член держится целиком: число (часы домена), при создании истории — 0, не null; не убывает (Н1.9 history, cut; сверка М11, A13, A14)"
+  required: [events, cut_before]

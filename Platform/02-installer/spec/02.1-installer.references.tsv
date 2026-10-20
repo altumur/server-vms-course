@@ -104,7 +104,7 @@ domain.tokens.$k.scenario	unique {@domain.tokens.$k.scenario.ref_claim, @domain.
 domain.books.$b.from	split(. "/" 0) = @name	value	P/02.1 Н1.2б
 domain.books.$b.to	. != @domain.books.$b.key	value	P/02.1 Н1.2б
 domain.books.{}	. not in values(domain.kept[])	value	P/02.1 Н1.2б
-domain.names.{}	split(. "/" 0) in keys(domain.books ? has from)	reference	М11/9 Н1.7
+domain.names.{}	split(. "/" 0) in keys(domain.books ? has from)	reference	P/08.5 Н1.7
 domain.keys	unique values(domain.keys[].id)	value	М11/9 Н1.8
 domain.shared	unique values(domain.shared[]) | values(domain.shared[].name)	value	P/02.1 Н1.2б
 domain.shared[].name	. not in keys(unit.fields)	value	P/02.1 Н1.2б

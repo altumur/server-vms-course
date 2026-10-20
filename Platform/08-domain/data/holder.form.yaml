@@ -1,0 +1,69 @@
+# Семья domain/holder — запись срока держателя (P/08.8; договор записи срока «Запись срока `domain/holder`»). Источник формы
+# строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+# Форма — строка domain/holder и блок doc договора common/contracts/record.md (В10 плана переноса урока 8: семья строится
+# по форме договора, колонка norm — договор). Пишет процесс domain держателя (claim, запись срока цели при передаче —
+# P/08.8 Н1.1, Н1.7 шаг 6), у члена — агент «следованием» (P/09.1; до переноса — М11/10 Н3). Подписанное — до терпимости
+# (DIALECT § 8): подпись проверяет функция record по исходным байтам doc. Типы — шаг 1 функции record (not_a_record); чего
+# форма не выражает — domain ≠ домену набора (шаг 2, another_domain), kid в revoked_issuing или вне issuing (шаги 3, 4),
+# kid ≠ первым 16 hex issuer и подпись (шаг 5, bad_signature) — проверяет функция record, поэтому domain, kid и sig у
+# читателя формой не ограничены.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    doc:
+      encoding: jcs
+      type: object
+      description: "текст JCS документа записи срока; ровно один элемент строки; закрытый набор полей — лишнее поле: not_a_record (record шаг 1)"
+      properties:
+        domain:
+          writer: {pattern: '[a-z0-9-]{1,64}'}
+          description: "имя домена (P/08.2 Н1.1); ≠ домену набора — функция record шаг 2 (another_domain), не форма"
+        term:
+          ref: common.pos53
+          description: срок — целое ≥ 1
+        holder:
+          type: string
+          pattern: '[a-z0-9-]{1,64}'
+          description: имя члена-держателя (P/08.1 Н1.1 member)
+        url:
+          type: string
+          not_enum: ['']
+          description: >-
+            адрес двери процесса domain держателя — SIGNER_URL окружения этого процесса, без него http://localhost:8445;
+            у держателя из нескольких узлов — адрес, который доходит до любого узла кластера (P/08.10 Н1.7); непустая строка
+        ca:
+          type: array
+          items:
+            ref: common.sha256_hex
+            description: отпечаток центра держателя — sha256 hex DER-сертификата центра (P/08.3; М11/8 Н1.6 fingerprint)
+          min_items: 1
+          max_items: 2
+          unique_items: true
+          description: "центр держателя, 1–2 отпечатка без повторов (ADR-0075 уточнение 2); нет — у держателя центра нет"
+        at:
+          type: number
+          description: "стенные секунды подписи; число JSON (record шаг 1: at — число)"
+        restored_from:
+          type: object
+          properties:
+            term: {ref: common.pos53}
+            rev: {ref: common.pos53}
+          required: [term, rev]
+          description: "{term, rev} резервной копии, из которой восстановлен этот срок (P/08.8 Н1.5); срок 1 — без поля"
+        issuer:
+          type: string
+          pattern: '[0-9a-f]{64}'
+          description: hex открытого ключа выпускающего, 32 байта (P/08.2 Н1.3 issuing_key_secret)
+        kid:
+          type: string
+          writer: {pattern: '[0-9a-f]{16}'}
+          description: "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма"
+        sig:
+          type: string
+          writer: {pattern: '[A-Za-z0-9_-]{85}[AQgw]'}
+          description: >-
+            base64url без = подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url, не 64
+            байта или не сходится — функция record шаг 5 (bad_signature), не форма
+      required: [domain, term, holder, url, at, issuer, kid, sig]
+  required: [doc]

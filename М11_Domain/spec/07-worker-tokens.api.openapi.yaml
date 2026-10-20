@@ -5,7 +5,9 @@ info:
   description: 'Normative shapes: 07-worker-tokens.norms.md N1.2-N1.4, N2. /tokens/{sub}/{kind} is the member agent''s
     local door (the role is the identity of the connection, never the body; transport, address and refusals —
     Platform/common/contracts/local-token-door.md: Unix socket <AGENT_TOKEN_DIR>/<role>.sock); /api/tokens/... is the
-    holder''s domain process door, signed by the agent (M11/3 N1.4). Request parsing: M10/1 N2.1.'
+    holder''s domain process door, signed by the agent (M11/3 N1.4). Request parsing: M10/1 N2.1.
+    Двери процесса `domain` (`/api/tokens/{member}/{sub}/{kind}`) перенесены в OpenAPI урока P/08
+    (`Platform/08-domain/spec/08-domain.api.openapi.yaml`; перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
     description: Местная дверь агента или дверь процесса domain держателя.
@@ -37,45 +39,6 @@ paths:
         '413': {$ref: '#/components/responses/Refused'}
         '502': {$ref: '#/components/responses/InvalidReply'}
         '503': {$ref: '#/components/responses/Unavailable'}
-  /api/tokens/{member}/{sub}/{kind}:
-    parameters:
-      - name: member
-        in: path
-        required: true
-        schema: {$ref: '#/components/schemas/MemberName'}
-      - {$ref: '#/components/parameters/Sub'}
-      - {$ref: '#/components/parameters/Kind'}
-    post:
-      summary: Агент просит токен у держателя
-      parameters:
-        - name: X-Agent-Signature
-          in: header
-          required: true
-          description: Подпись агента (Platform/common/contracts/agent-signature.md).
-          schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: {$ref: '#/components/schemas/HolderAsk'}
-      responses:
-        '200':
-          description: Ответ, запечатанный члену конвертом m1
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [sealed]
-                additionalProperties: false
-                properties:
-                  sealed: {type: string, pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Standby'}
 components:
   parameters:
     Sub:
@@ -116,19 +79,7 @@ components:
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
-    Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
-      content:
-        application/json:
-          schema: {$ref: '#/components/schemas/StandbyBody'}
   schemas:
-    StandbyBody:
-      type: object
-      required: [error, detail]
-      additionalProperties: false
-      properties:
-        error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]
@@ -142,9 +93,6 @@ components:
                  no_centre, no_signature, not_a_signature, out_of_window, bad_signature]
         detail: {type: string}
         holder: {type: object, additionalProperties: true, description: 'у 409 deposed — документ записи срока нового держателя как объект (урок 10 Н1.6, форма — HolderRecord контракта урока 10; добавлено М11/10)'}
-    MemberName:
-      type: string
-      pattern: '^[a-z0-9-]{1,64}$'
     RequestId:
       type: string
       pattern: '^[A-Za-z0-9_-]{1,64}$'
@@ -154,15 +102,6 @@ components:
       additionalProperties: false
       properties:
         request_id: {$ref: '#/components/schemas/RequestId'}
-        ref: {type: string, minLength: 1}
-        by: {type: string, minLength: 1}
-    HolderAsk:
-      type: object
-      required: [request_id, role, ref]
-      additionalProperties: false
-      properties:
-        request_id: {$ref: '#/components/schemas/RequestId'}
-        role: {type: string, minLength: 1}
         ref: {type: string, minLength: 1}
         by: {type: string, minLength: 1}
     Given:

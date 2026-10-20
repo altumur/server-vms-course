@@ -9,7 +9,9 @@ info:
     console hop are this contract''s (Refusal, N4), the hops and their codes — Platform/common/contracts/forwarding.md.
     Any other path under /domain/ is 404 "not a domain route". This contract holds the doors of this lesson:
     a member''s where by its name, the admin''s CA door, the holder''s page doors and the refusals of forwarding.
-    Request parsing: M10/9 N2.'
+    Request parsing: M10/9 N2.
+    Двери процесса `domain` (`/domain/members/{member}/ca`) перенесены в OpenAPI урока P/08
+    (`Platform/08-domain/spec/08-domain.api.openapi.yaml`; перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
     description: Консоль кластера (/domain/at, пересылка) или консоль домена держателя (ca, страница).
@@ -96,60 +98,6 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
-  /domain/members/{member}/ca:
-    parameters:
-      - name: member
-        in: path
-        required: true
-        schema: {$ref: '#/components/schemas/MemberName'}
-    post:
-      summary: Администратор заменяет отпечатки центра члена (Н1.6 admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [ca]
-              additionalProperties: false
-              properties:
-                ca:
-                  type: array
-                  maxItems: 2
-                  uniqueItems: true
-                  description: '[] — снять отпечатки и строку ca-certs.'
-                  items: {$ref: '#/components/schemas/Fingerprint'}
-                ca_certs:
-                  type: array
-                  maxItems: 2
-                  description: 'Н1.6 admin: PEM сертификатов центров в порядке ca, sha256(DER) — отпечаток на том же месте; пишутся в domain/members/<член>/ca-certs до Entry.ca.'
-                  items: {type: string, minLength: 1}
-      responses:
-        '200':
-          description: Список членов после записи по CAS (урок 3 Н2)
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [rev, members]
-                additionalProperties: false
-                properties:
-                  rev: {type: integer, minimum: 1}
-                  members:
-                    type: object
-                    propertyNames: {$ref: '#/components/schemas/MemberName'}
-                    additionalProperties:
-                      type: object
-                      additionalProperties: true
-                      description: Entry урока 3 Н1.1 с полем ca (Н1.6); форма и закрытость — Entry контракта урока 3.
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused'}
   /spec:
     get:
       summary: Спека консоли домена — корня нет (Н1.8)

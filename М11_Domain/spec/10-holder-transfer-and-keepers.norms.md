@@ -2,6 +2,11 @@
 
 Канон урока. [Лекция](../10-holder-transfer-and-keepers.md), [HTTP-контракт](10-holder-transfer-and-keepers.api.openapi.yaml),
 [инструкция](10-holder-transfer-and-keepers.README.md), [приёмка](../../Source/tests/testdata/acceptance/М11_Domain/10/README.md).
+Канон Н1.4, Н1.9, строки `member` Н1.5, Н3 «следовать» и «проверить резервную копию», команды `follow` и пунктов
+М11/10-04, -09 — до переноса уроков 9 и 10 (стадия B). Остальное перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) (стадия B; урок 8): вступление
+Н1, Н1.1–Н1.3, Н1.5 без `member`, Н1.6–Н1.8, строки Н2 `/api/prepare`, `/api/take`, `/domain/move`, `/domain/handover`,
+`/domain/stranded/apply`, «Гонки» Н3, строки Н4 процесса, сц. 02–04, 08–10, 12, пп. 2, 3 «Решает реализация», пункты
+М11/10-01…03, -05…08, -10, -11. После переноса урока 10 файл снимается целиком.
 
 ## Н0 Словарь слов
 
@@ -9,52 +14,30 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `domain/holder` — `at`.
+**Время.** Полей времени у оставшихся строк нет; `domain/holder` — [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1 «Время» (стадия B; урок 8).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/backup`, `domain/backup-taken`, `domain/backup-refused`, `domain/stranded`;
-- пишет: `domain/signer` (put), `domain/signer-pending` (put), `domain/members` (cas);
-- читает: `domain/member-key`, `domain/member-list`, `domain/members/<член>/ca-certs`, `domain/pending/<член>`, `domain/outcomes/<член>`, `domain/placement/<sub>/<ref>`, `domain/topology`, `domain/users/<имя>`, `domain/grants/<кластер>`, `domain/disabled`, `domain/book-seal`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- владеет: `domain/backup`, `domain/backup-taken`, `domain/backup-refused`;
+- читает: `domain/member-list`.
 
-Общее уроков 1–9 Н1 действует. Держатель держит **срок** — номер, который растёт только переносом или передачей; аренды,
-продления и автоматической смены держателя нет. Голосовать нечем: ни один raft не охватывает кластеры. Держатель пишет
-только своё хранилище; члены узнают нового держателя сами, по записи, которую проверяют своим набором (ADR-0066, решение
-«Архитектора» по вопросам М11/10).
+Строки владеет агент хранителя (до переноса урока 9); читатель `domain/member-list` — консоль кластера (`/api/backup` Н1.9; до переноса урока 10).
+
+Владение `domain/holder`, `domain/keepers/<член>`, `domain/backups/rev-<rev>`, `domain/stranded`, записи `domain/signer`,
+`domain/signer-pending`, `domain/members` и чтения процесса `domain` — [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1 «Данные» (стадия B; урок 8).
+
+Вступление Н1 перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1 (стадия B; урок 8).
 
 ### Н1.1 Запись срока `domain/holder`
 
-Строка `domain/holder` и форма документа (`doc`: `domain`, `term`, `holder`, `url`, `ca?`, `at`, `restored_from?`, `issuer`,
-`kid`, `sig`) — [договор записи срока](../../Platform/common/contracts/record.md) «Запись срока `domain/holder`» (владелец P/08, глава 8.8; разбор ревью стадии
-A 8–10, № 13 / решение 2). Здесь — кто пишет и чем проверяют:
-
-```yaml
-claim:           процесс domain после установки (срок 1), переноса и приёма передачи пишет запись своего срока; запись,
-                 равная лежащей, не пишется; затем вносит себя в список членов (урок 3 Н3 «держатель в списке»)
-check:           функция record (Н3) по набору этого кластера
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.1 (`claim`, `check`; форма — договор записи срока; стадия B; урок 8).
 
 ### Н1.2 Список членов при смене держателя
 
-```yaml
-holder:          Entry {how: "holder", since, key} — держатель; форма одна, урока 3 Н1.1 (без by); claim переписывает свою
-                 Entry на эту форму, если в списке из резервной копии она иная (урок 3 Н3 «держатель в списке» шаг 1)
-former:          Entry {how: "held the domain until term <N>", since, key} — прежний держатель, N — срок, на котором он
-                 держал; ключ — holder_member_key резервной копии, из которой восстановлен срок (Н1.5); стоит, пока его не удалил
-                 администратор (урок 3 DELETE); при stolen — нет: ключ прежнего — в revoked_members набора (урок 2)
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.2 (стадия B; урок 8).
 
 ### Н1.3 Вид держателя: поле `term`
 
-```yaml
-domain/view.term:  {term, holder, url, backup, backup_holders, copies, frozen_for?, stranded?}   # урок 1 Н1.4, добавлено М11/10
-  backup:          {term, rev} последней резервной копии | null
-  backup_holders:  [<член>…] — выбранные хранители (отбор — Н1.5), выводятся по возрастанию имени
-  copies:          {<член>: {term, rev} | {garbled: <почему>}} — строка domain/backup-taken из копии каждого члена у
-                   держателя (урок 3);
-                   не хранит — нет ключа
-  frozen_for?:     имя цели идущей передачи (Н1.7)
-  stranded?:       число элементов domain/stranded этого кластера (Н1.6), если он смещён
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.3 (стадия B; урок 8).
 
 ### Н1.4 `GET /api/held` у консоли кластера
 
@@ -72,228 +55,38 @@ open:       без токена (P/06.3 Н1.3 open_routes): запись и на
 
 ### Н1.5 Резервная копия и хранители
 
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.5 (стадия B; урок 8). Остаётся здесь строка `member` ниже (агент хранителя — урок 9).
+
 ```yaml
-document:        объект держателя domain/backups/rev-<rev> (P/05 Н1.1) — JCS {term, rev, holder, at, members, state,
-                 objects, backup_key_rev, holder_member_key?, issuer, kid, sig}; подпись — как Н1.1
-  members:       имена списка членов
-  state:         {<ключ строки>: {<элемент>: <значение>}} — строки, что домен решил и чего нет ни у кого больше:
-                 domain/members, domain/members/<член>/ca-certs (урок 8 Н1.6), domain/topology, domain/placement, domain/placement/*, domain/pending/*,
-                 domain/outcomes/*, domain/grants/*, domain/users/*, domain/deleting/* (метка удаления урока 9 Н1.1: новый
-                 держатель доводит удаление; добавлено сверкой М11, X14), domain/break-glass/*, domain/disabled,
-                 domain/book-seal, domain/revoked (иначе перенос оживил бы отозванные токены), domain/shared (указатель
-                 общего документа, урок 11 Н1.2), строки kept и переносимых книг спек каталога (P/03.7 Н1.6: их пишет
-                 воркер на домене, из строк членов они не собираются)
-  objects:       {<ключ объекта>: <JSON>} — текущий общий документ domain/shared-docs/rev-<rev> (урок 11 Н1.2) и история тревог
-                 domain/alarm-history/<член> каждого члена (урок 11 Н1.9; добавлено М11/11)
-  secrets:       каждый *_secret на любой глубине значения элемента state, в том числе внутри JSON элемента (обход с полным
-                 путём, как договор запечатывания «Путь AAD» и P/06.2 Н3 «создать/править» шаг 4), — конверт ключа резервной копии (ниже), не кольца
-                 держателя; objects секретов не несут (общий документ и история тревог: секрет в shared не грузится,
-                 P/06.2 Н1.4, P/02.1 Н1.3а domain) (журнал cammeta-go, М11-10 № 6; решение «Архитектора»)
-  sealed:        элемент, чей *_secret кольцо держателя не открывает, — Sealed (P/03.5 Н1.2): в резервную копию не
-                 входит, журнал domain.backup.sealed {key, item}; проход и следующие копии идут (добавлено сверкой М11, H3)
-  not_in:        domain/signer (ключи едут только передачей, Н1.7), domain/keys (набор у каждого члена), индекс имён и
-                 собираемые книги (пересобирает проход из отчётов членов), поколения отчётов, domain/stranded
-backup_key:      HMAC-SHA256(ключ: root_key файла восстановления (урок 2 Н1.1), данные: "w2c domain backup secrets" 0x00
-                 ‖ ASCII backup_key_rev) — 32 байта; backup_key_rev — целое ≥ 1, при установке 1
-  at_holder:     domain/signer.backup_key_secret и backup_key_rev (урок 2 Н1.3, добавлено М11/10) — пишет установка
-  envelope:      enc:v2 договора запечатывания этим ключом; AAD — UTF-8(<ключ строки>) 0x00 UTF-8(<полный JSON Pointer от корня строки>):
-                 /<элемент>/…/<поле>_secret, экранирование ~0/~1 и индексы массивов — договор запечатывания «Путь AAD»; у секрета верхнего
-                 уровня это прежнее /<элемент>; контекст один, подбора нет
-  kid:           писатель ставит b<backup_key_rev> (b1, b2 …; грамматика kid договора запечатывания, с кольцевыми k<N> не совпадает);
-                 читатель выводит ключ из backup_key_rev документа; kid конверта ≠ b<backup_key_rev> документа — Sealed
-                 «sealed with key <kid>» (P/03.5 Н1.2 open_without), открыть не пробует; локальное кольцо для этих
-                 конвертов не используется никогда (журнал cammeta-go, М11-10 № 6; решение «Архитектора»)
-rev:             растёт только при смене содержимого — JCS state с открытыми секретами, objects, backup_key_rev,
-                 holder_member_key; не чаще BACKUP_EVERY; держатель хранит последние 5 документов
-first:           первая резервная копия — в первом проходе держателя, без ожидания BACKUP_EVERY (это предел, не задержка); затем — при
-                 смене содержимого, не чаще раза в BACKUP_EVERY
-force:           резервная копия вне очереди BACKUP_EVERY (Н1.7 шаг 2): rev растёт, только если содержимое сменилось; прежнее
-                 содержимое — указатели на прежний rev
-BACKUP_EVERY:    30         # с
-BACKUP_HOLDERS:  2          # члены ok (урок 1), кроме держателя, по убыванию hex sha256(UTF-8 «<держатель>/<член>»)
-keepers:         domain/keepers/<член> {term, rev, sha256} у держателя — указатель выбранного хранителя; sha256 — hex
-                 sha256 JCS документа; указатель невыбранного держатель снимает
-carry:           ответ держателя агенту (урок 3 Н1.5) несёт backup: {pointer: {term, rev, sha256}, doc: <текст JCS>}, когда
-                 указатель члена есть и ≠ его domain/backup-taken из копии члена у держателя
 member:          агент: sha256 текста = pointer.sha256, функция record-подпись документа (Н3 «проверить резервную копию»),
                  term ≥ своей резервной копии → объект domain/backup = doc, затем строка domain/backup-taken {term, rev,
                  sha256}; иначе строка domain/backup-refused {why, term, rev}; резервную копию у члена не выбрасывает никто —
                  последний запасной путь
-in_report:       domain/backup-taken — объект отчёта члена (урок 3 Н1.2 member_objects, добавлено М11/10): JSON-объект
-                 {term, rev, sha256} — term и rev целые JSON (не строки строки хранилища P/01.1), sha256 — hex; иная форма —
-                 у держателя copies {garbled} (Н1.3), пары нет. Сборки до этой нормы, где хранитель нёс строки, с держателем
-                 по норме не сходятся: передача к такому хранителю — «called off» (Н1.7 шаг 3) до перехода обеих сторон
-                 (добавлено сверкой М11, X1)
-limit:           резервную копию открывает её ключ, выведенный из корня: украденный файл восстановления открывает и все резервные копии
-                 (рядом с пределом урока 2 «файл восстановления — всё»)
 ```
-
-Договор запечатывания — [`Platform/common/contracts/sealing.md`](../../Platform/common/contracts/sealing.md) (конверт `enc:v2`, путь AAD, грамматика `kid`; дополнение Kimi к разбору ревью стадии A 6–7, SA67-Б4).
 
 ### Н1.6 Смещённый держатель
 
-```yaml
-yields:      процесс domain уступает, когда в его хранилище запись domain/holder большего срока — или того же срока с другим
-             держателем — проходит record по набору следования агента этого кластера (её пишет он сам при передаче, Н1.7
-             шаг 6, или приносит свой агент при переносе, Н3 «следовать»); запись своего срока чужого держателя проходит
-             этот record, только когда кластер принял набор того переноса — то есть проиграл: у победителя чужой
-             выпускающий неизвестен; слову соседа и непроверенной записи — нет (того же срока — добавлено моделью Quint
-             М11, G4, YIELD_SAME_TERM)
-switch:      у кластера держателя строки domain/keys, domain/revoked, domain/holder, своя domain/break-glass/<кластер> и
-             указатель domain/shared пишет процесс domain, а агент этого кластера их не пишет — пока запись domain/holder
-             своего хранилища проходит record по набору следования агента (Н3 «следовать» 1а; добавлено моделью Quint М11,
-             G1) и называет держателем этот кластер (урок 3 Н1.6 holder_cluster). Условие агента —
-             только по записи: «domain/signer не forgotten» — условие процесса domain, domain/signer агенту не открыт; forget
-             наступает только после записи чужого большего срока (yields), потому запись «держатель — этот кластер» и забытые
-             ключи вместе не бывают. Точка смены одна — запись domain/holder большего срока, прошедшая record: при плановой
-             передаче её пишет процесс прежнего держателя (Н1.7 шаг 6), при переносе — агент «следованием» (его
-             единственная запись в эти строки до точки). С неё процесс уступает и этих строк больше не пишет, агент пишет
-             их как у любого члена. Процесс видит точку при первой своей проверке после неё (проверка — на каждом проходе и
-             каждом запросе): окно — до следующей проверки, не дольше прохода; его правки в окне попадают в stranded
-             (добавлено моделью Quint М11, SW). У цели — зеркально: claim нового срока (Н1.1) — точка, с неё агент цели их не пишет
-             (запись, называющая цель, пришла раньше claim — агент уже не пишет эти строки, их пишет процесс с claim)
-start:       после перезапуска — сначала смотрит запись своего хранилища; больший срок — стартует смещённым и не пишет claim.
-             Смещён, когда запись хранилища проходит record и: ключи подписанта есть, а запись — другого держателя и срока
-             больше того, что этот процесс держал (срок свой неизвестен — любого); или ключи забыты (forget) и запись чужая
-refusal:     смещённый процесс на каждую правку и каждый вход людей (POST /api/login, аварийный вход — урок 9; правки консоли
-             домена идут через него, урок 3 Н1.8; консоль отдаёт ответ как пришёл; вход — решение «Архитектора» по сверке
-             М11, H19) — 409 {error: "deposed", detail: "<n> held the domain at
-             term N; <h> holds it at term M — edits go there", holder: <документ записи нового держателя как объект>};
-             на отчёт агента — 409 {error: "deposed", holder: <тот же документ>}
-forget:      domain/signer := {forgotten: "deposed by term <M>"} — ключи держателя стёрты (обещание, Н1.7 limit);
-             безусловно: не ждёт ни прохода, ни резервной копии, ни читаемости state (Sealed-элементы, Н1.5 sealed)
-             (добавлено сверкой М11, H3)
-stranded:    domain/stranded {doc: JCS {term, holder, base: {term, rev}, items: [{path, key, value}] по (path, key)}} — один раз при смене:
-             элементы state (Н1.5), которые отличаются от base — резервной копии, из которой восстановлен новый срок, если это
-             резервная копия этого держателя (restored_from записи), иначе его последней; value — значение элемента как
-             хранится (текст), секрет — "<secret: differs>"; сравнение — по открытым значениям;
-             строка domain/pending/* засчитывается, только если правка сдвинулась (нет в base или иной at);
-             элемент, который есть в base и которого нет в state смещённого держателя, входит со значением value: null —
-             представление удаления; пустая строка "" — запись пустого значения; секрет: изменён — "<secret: differs>",
-             удалён — null (решение «Архитектора» по cammeta-go М11-10 № 16; сверка М11, H7)
-apply:       POST /domain/stranded/apply {path, key} у консоли домена смещённого (admin; правку исполняет процесс, урок 3
-             Н1.8): элемент domain/pending/<член> — повторить правку урока 6 у нового держателя: asked правки (урок 6 Н1.4)
-             как есть — метод, путь с query (?cluster= и прочее — как в asked), тело, Idempotency-Key = key (имя элемента,
-             не поле правки; добавлено сверкой М11, H8), Authorization вызвавшего — консоли кластера нового
-             держателя CLUSTERS[holder записи] пересылкой урока 8 (с X-W2C-Via: <CLUSTER>; та пересылает своей консоли
-             домена, урок 8 Н1.3); ответ — как пришёл (коды двери урока 6 и пересылки); иной элемент, в том числе
-             элемент с value: null (удаление) и элемент строки domain/pending/<член>, который не правка (seq и прочие
-             служебные, урок 6 Н1.4), — 400 {error: "redo it on the new holder", detail} до пересылки; не смещён — 409;
-             элемента нет — 404 (решение «Архитектора» по cammeta-go М11-10 № 16; сверка М11, H7)
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.6 (`yields`, `switch`, `start`, `refusal`, `forget`, `stranded`, `apply`; стадия B; урок 8). Сторона
+агента точки смены — Н3 «следовать» 1а (урок 9).
 
 ### Н1.7 Плановая передача
 
-```yaml
-door:        POST /domain/handover {to} у консоли домена (admin, урок 9) → процесс domain тем же путём; срок ответа 90 с
-target:      член списка с консолью в CLUSTERS, не держатель; иначе 400
-order:       1. заморозка: frozen_for = to; правки людей и подписанта — 503 {error: "frozen", detail: "<h> is handing the
-                domain over to <to>; edits are refused until it has — seconds, not minutes — and then go there"}; приём
-                отчётов и закрытие правок отчётами идут. Заморозку держит процесс domain: правки людей идут через него
-                (урок 3 Н1.8), консоль домена отдаёт его 503 как пришёл
-             2. резервная копия с force: указатели хранителей и to
-             3. ждать отчёт to с этой парой в domain/backup-taken — не дольше HANDOVER_WAIT; нет — снять заморозку,
-                409 {error: "called off", detail: "<to> did not take backup rev R; the handover is called off and <h> is
-                still the holder"}, журнал domain.handover.called_off
-             4. POST <консоль to>/api/prepare — заголовки X-W2C-Time, X-W2C-Signature: подпись ключом токенов над
-                prepare|<to>|<время> (Н3 ask-sig); 10 с; ответ {cluster, seal} — X25519 цели (hex); подготовленный ключ —
-                domain/signer-pending цели {seed_secret} (урок 2 Н1.3), служит один раз
-             5. POST <консоль to>/api/take {grant, keys_sealed}; 90 с:
-                grant — {doc: JCS {grant: "handover", domain, to, from, term, rev, at, issuer, kid, sig}} — подпись Н1.1;
-                keys_sealed — конверт x25519:v1 (урок 2 Н1.5) к seal с AAD «take|<to>» текста JSON {token_key_secret,
-                issuing_key_secret, kid, serial, backup_key_secret, backup_key_rev} — закрытый набор: *_secret — hex 32
-                байт, kid и serial — строки (урок 2 Н1.3), backup_key_rev — целое JSON ≥ 1 (не строка); иной тип — ключи
-                не открываются (take, 403) (добавлено сверкой М11, X2)
-                take не ответил за 90 с, оборвался или отказал — снять заморозку, 409 {error: "called off", detail: "<to> did
-                not take the domain (<why>): the handover is called off and <h> is still the holder"}, журнал
-                domain.handover.called_off — одно слово called off для исходов шагов 3 и 5 (добавлено моделью Quint М11,
-                HF); цель всё же взяла срок — прежний уступает при первой встрече её записи (Н1.6, «Гонки»)
-             6. ответ цели — её запись срока; держатель проверяет её record, записывает в domain/holder своего хранилища
-                (точка смены, Н1.6 switch) и уступает (Н1.6); журнал domain.handover
-                {to, term, rev, by}
-take:        цель по порядку: подписант держит домен — 409; тела нет по форме — 400; ничего не подготовлено — 409
-             «nothing is prepared on <me>: the holder asks POST /api/prepare first»; ключи не открываются — 403; открытые
-             ключи не те, что в domain/keys цели (kid ≠ current, открытый ключ токенов ≠ keys[kid], serial ∉ issuing или
-             ≠ первым 16 hex открытого выпускающего) — 403 «the keys handed over are not the keys of the set <me> holds»,
-             ничего не меняется (добавлено сверкой М11, H4); grant не
-             проходит record-подпись по набору цели или называет не её — 403; её domain/backup-taken ≠ {term, rev}
-             гранта — 409 «<me> did not take backup rev R of term T: the handover restores from nothing older»;
-             затем — перенос Н1.8 шаги 5–8 из этой резервной копии с этими ключами: соседей цель не спрашивает, новый срок =
-             1 + max(term гранта, term своей записи); журнал domain.taken (Sealed-элементы шага 7 — в его поле
-             sealed; сверка М11, H15)
-             подготовленный ключ (Н1.7 шаг 4) тратит take, дошедший до открытия ключей, — удачный или нет; отказы раньше
-             (подписант держит домен, тело не по форме, ничего не подготовлено) его не тратят (решение «Архитектора» по
-             сверке М11, X12)
-HANDOVER_WAIT: 30         # с = 6 × REPORT_EVERY
-limit:       передача копирует ключи подписанта на цель; что прежний их забыл (forget) — обещание, не доказательство. Если
-             прежнему держателю нельзя доверять (кража, утечка коробки), путь один — аварийный перенос со stolen (Н1.8): он
-             меняет выпускающий ключ, ключ токенов и ключ приёма книг (урок 2 «после кражи»)
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.7 (стадия B; урок 8); дверь консоли домена `POST /domain/handover` — урок P/10.
 
 ### Н1.8 Аварийный перенос
 
-```yaml
-door:        POST /domain/move {recovery, stolen?, copy?, why?} у консоли кластера цели → процесс domain тем же путём
-             (урок 8 Н1.9); срок 90 с; w2cctl domain move <дверь> <файл> [stolen] [copy=<term>.<rev>] [why=<слова>] (why без copy — перенос «из
-             ничего», Н1.8 шаг 6);
-             личность — по режиму консоли (P/06.3 Н1.3 identity) и грант admin кластера-цели (урок 8 Н1.9 шаг 3); в день
-             потери домена его дают копия грантов (срок — GRANT_LIFETIME, урок 9 Н1.3) или аварийный вход (урок 9 Н1.6);
-             файл восстановления доказывает домен, а не человека
-  recovery:  текст файла восстановления урока 2 Н1.1 {domain, root_key, root_pub}
-  copy:      {term, rev} — восстановить ровно эту резервную копию; без why — 400; why — строка хотя бы с одним
-             непробельным знаком, иначе как нет (400; добавлено сверкой М11, H18)
-order:       1. тело не по форме — 400 {error: "refused", detail: "a move is {recovery: <the recovery file, as its text>,
-                stolen?: true | false, copy?: {term, rev} with why: <words>} — a planned handover is the holder's (POST
-                /domain/handover)"}
-             2. перенос уже идёт — 503 «a move is under way here already: seconds, not minutes»
-             3. этот кластер держит домен — 409 «<c> holds the domain at term N: there is nothing to move here»
-             4. файл не читается или root_pub не от root_key, или не root набора этого кластера — 403 «the recovery file is
-                not this domain's»
-             5. соседи — консоли CLUSTERS, кроме своей (своё хранилище читается прямо; сверка М11, H17): GET /api/held каждого; резервная копия — GET /api/backup с подписью члена этого кластера
-                (Н3 ask-sig; ключ — domain/member-key, урок 3 Н1.1 readers); не ответил — пропущен; ответил без резервной копии — ignored;
-                keys ответов /api/held — функцией keys урока 2 Н3 по закреплённому корню в набор переноса (как следование
-                1а); записи и резервные копии шагов 6 и 8 проверяются им (добавлено моделью Quint М11, RB)
-             6. ни одной записи срока и ни одной резервной копии (ни у соседей, ни своей) — 409 {error: "refused",
-                detail: "nothing to restore from: no neighbour and not this cluster keeps a record of the holder or a
-                backup — a new domain is installed, not moved"}; иначе
-                выбор резервной копии: copy — ровно она у любого соседа (и своя), иначе 409 «nothing was restored: no neighbour gave
-                the copy named, term T rev R (…)»; без copy — наибольшая (term, rev) из проверенных, а нет ни одной (ни
-                сосед, ни своё хранилище резервной копии не дали) — без неё, только при явном why («из ничего»): state не
-                восстанавливается, список членов — копия domain/member-list этого кластера, он — holder, ответ 200 с
-                restored_from: null; без why — всегда 409 {error: "refused"}: при своей записи срока ≥ 1 и соседе, который
-                не ответил, — detail "nothing was restored: <n> did not answer" (добавлено моделью Quint М11, ER); иначе (своей
-                записи нет или все ответили) — detail "nothing to restore from: no backup copy anywhere — say why to move
-                from nothing" (разбор ревью стадии A 8–10, № 34); сосед
-                объявил в /api/held резервную копию новее, а не отдал (401, 403, 503) — или отдал 200, но копия не прошла
-                проверку набором переноса (кроме revoked_issuer — свой 409 ниже; добавлено моделью Quint М11, RB) — 409
-                «nothing was restored: the newest copy this move
-                could read is …, and <n> keeps term T rev R and did not give it (<why>) — restoring it would roll the
-                domain back. Make the newer copy readable here, or name the copy to restore (copy: {term, rev}) and say
-                why»; резервная копия (своя или соседа), чей record — revoked_issuer, названная copy или новее выбранной,
-                — 409 {error: "refused", detail: «nothing was restored: the copy term T rev R is signed by a revoked
-                issuer (<kid>) — restoring it would undo the revocation»}, ничего не меняется (добавлено сверкой М11, H16)
-             7. восстановить state: секреты — ключом резервной копии из файла, затем кольцом этого кластера; секрет, что не
-                открылся (чужой kid, AAD, не конверт — Н1.5 kid), — его элемент Sealed: не восстанавливается, перенос
-                идёт, ответ называет его в sealed (добавлено сверкой М11, H15); ключи — из файла:
-                stolen — шаги урока 2 «смена после кражи» (новые ключ токенов, выпускающий, ключ приёма книг, набор);
-                без stolen — новые ключ токенов и выпускающий, набор с аварийным rev (урок 2 Н1.2 emergency) с ними в keys/issuing, прежние ключи
-                токенов — until now + OLD_KEYS, прежний выпускающий — в revoked_issuing
-             8. новый срок = 1 + max(term записей и резервных копий из ответов соседей и своей); claim с restored_from; прежний —
-                Н1.2; общий документ — из первой резервной копии, чья сумма совпала (урок 11)
-answer:      200 {term, holder, restored_from: {term, rev} | null, ignored: [<член>…], sentence, sealed?: [{key, item, why}…]}
-             # sealed — Sealed-элементы шага 7 по (key, item); нет таких — поля нет (добавлено сверкой М11, H15)
-journal:     domain.moved {term, restored_from, stolen, copy, why, by} — только при copy или stolen
-```
+Перенесено в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н1.8 (стадия B; урок 8); дверь `POST /domain/move` у консоли кластера цели (личность, грант admin)
+— P/06.7-17, урок 10.
 
 ### Н1.9 `GET /api/backup` у консоли кластера
 
 ```yaml
-ask:        заголовки X-W2C-Member, X-W2C-Time, X-W2C-Signature (Н3 ask-sig, ask = backup)
+ask:        заголовки X-W2C-Member, X-W2C-Time, X-W2C-Signature (договор подписи просьбы, ask = backup)
 order:      нет заголовков — 401 {error: "refused", detail: «the backup a cluster keeps is the domain's state: a member
             signs its ask (X-W2C-Member, X-W2C-Time, X-W2C-Signature)»}; прочие отказы — тоже error "refused"; список членов не читается — 503; член не в domain/member-list этого кластера или
             без ключа — 403 «<m> is no member with a key on <c>'s list of members»; ключ отозван (revoked_keys записи,
             revoked_members набора) — 403 «<m>'s key was revoked by the domain's root»; ask-sig не ok — 401 со словом
-answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текст документа> | null, shared: <текст общего документа, урок 11 Н1.2> | null};
+answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текст документа> | null, shared: <текст общего документа, P/08.9 Н1.2> | null};
             резервная копия не читается — 503 «the copy <c> keeps did not read (…): not "none" — ask again»
 ```
 
@@ -302,17 +95,15 @@ answer:     200 {cluster, pointer: {term, rev, sha256} | null, backup: <текс
 ## Н2 Двери
 
 HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-holder-transfer-and-keepers.api.openapi.yaml). Тело отказа
-— `{error, detail}`. Двери `/domain/*` консоли домена — строки таблицы пересылки урока 8 (добавлено М11/10).
+— `{error, detail}`. Двери `/domain/*` консоли домена — строки [договора пересылки](../../Platform/common/contracts/forwarding.md) «Двери домена» (добавлено М11/10).
 
 | Дверь | Кто | Успех | Отказы |
 |---|---|---|---|
 | GET `/api/held` | консоль кластера | Н1.4 | 503 |
 | GET `/api/backup` | консоль кластера | Н1.9 | Н1.9 |
-| POST `/api/prepare` | консоль кластера → процесс `domain` (урок 8 Н1.9) | `{cluster, seal}` | 400 подпись не та форма (ask-sig `missing`, `bad_time`); 403 не ключом токенов текущего набора или вне окна (`bad_signature`, `skew`); `detail` — слово; 409 этот кластер держит домен; 503 standby (урок 12) |
-| POST `/api/take` `{grant, keys_sealed}` | консоль кластера → процесс `domain` | запись срока цели `{record}` | Н1.7 take; 503 standby (урок 12) |
-| POST `/domain/move` | консоль кластера → процесс `domain` | Н1.8 | Н1.8; 503 standby (урок 12) |
-| POST `/domain/handover` `{to}` | консоль домена → процесс `domain` | `{term, rev, to, stranded: []}` | 400 цель; 401/403; 409 deposed, called off; 404 `no signer here` (урок 8 Н1.9); 502 консоль домена или пересылка не дождалась (урок 8 Н1.2 «Ожидание» 100 с); 503 frozen, «a handover is under way already»; 503 standby (урок 12) |
-| POST `/domain/stranded/apply` `{path, key}` | консоль домена смещённого → процесс `domain` | ответ двери урока 6 нового держателя как пришёл | Н1.6 apply; коды двери урока 6 и пересылки урока 8 — как пришли |
+
+Двери процесса `domain` (`/api/prepare`, `/api/take`, `/domain/move`, `/domain/handover`, `/domain/stranded/apply`) —
+[P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н2 (стадия B; урок 8).
 
 ---
 
@@ -320,14 +111,14 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 
 ### record(keys, row, виды) — запись срока или документ с подписью Н1.1, по порядку
 
-Абзац о видах и шаги 1–6 — [договор записи срока](../../Platform/common/contracts/record.md) «Функция `record`» (перенесено туда без изменения; номера шагов
+Абзац о видах и шаги 1–6 — [договор записи срока](../../Platform/common/contracts/record.md) «Функция `record`» (владелец [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md); перенесено туда без изменения; номера шагов
 прежние; разбор ревью стадии A 8–10, № 13 / решение 2). Векторы — [`common/vectors/record`](../../Platform/common/vectors/record/README.md).
 
 ### следовать (агент члена, в каждом проходе раньше отчёта)
 
 ```
 1. ответы: GET /api/held каждой консоли CLUSTERS (срок 3 с; не ответила — пропуск), запись из 409 deposed прошлого отчёта
-   и carry.holder прошлого ответа (урок 3 Н1.5) — наравне: каждая проходит шаги 2–4
+   и carry.holder прошлого ответа (P/08.3 Н1.5) — наравне: каждая проходит шаги 2–4
 1а. keys ответов /api/held — функцией keys урока 2 Н3 по закреплённому корню в набор следования — память агента, с
    начала — строка domain/keys своего хранилища (перенос без stolen меняет выпускающий: новый набор приходит так, раньше
    ответа нового держателя); набор ответа берётся, только если запись срока того же ответа проходит record этим набором и
@@ -350,7 +141,7 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 ### ask-sig — подпись просьбы
 
 Сообщения `backup` и `prepare`, форма `X-W2C-Time`, `X-W2C-Signature` и порядок проверки (`missing`, `bad_time`, `skew`,
-`bad_signature`) — [договор подписи просьбы](../../Platform/common/contracts/ask-sig.md) (перенесено туда без изменения; разбор ревью стадии A 8–10, № 13 /
+`bad_signature`) — [договор подписи просьбы](../../Platform/common/contracts/ask-sig.md) (владелец [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md); перенесено туда без изменения; разбор ревью стадии A 8–10, № 13 /
 решение 2). Векторы — [`common/vectors/ask-sig`](../../Platform/common/vectors/ask-sig/README.md).
 
 ### проверить резервную копию (агент хранителя)
@@ -362,20 +153,7 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 4. записать объект domain/backup, затем строку domain/backup-taken
 ```
 
-**Гонки.** Две записи одного срока у двух держателей бывают не только при одновременных переносах, но и когда держатель
-этого срока не ответил переносу (Н1.8 шаг 5): члены идут за той, чей выпускающий есть в их наборе следования (набор
-позднего переноса новее и прежнего выпускающего не знает), а держатель, в чьём хранилище оказалась запись своего срока
-другого держателя, уступает (Н1.6 yields); шаг 3 «никуда» — только когда обе записи проходят record одним набором,
-оператор разбирается (добавлено моделью Quint М11, G4). Перенос на отрезанный член с меньшим сроком и новым набором
-членов назад не уводит (SET_GUARD, шаг 1а): он остаётся одиноким держателем меньшего срока и уступает, когда услышит
-больший (G7). Передача и
-отчёты: держатель в заморозке принимает отчёты; цель берёт только резервную копию, названную грантом. Перенос в двух местах сразу — у
-каждого свой новый срок; члены идут за большим, меньший уступает при первой встрече своей записи. Поздний ответ
-`/api/held` старого держателя агент не берёт (`term` меньше своего). Обрыв передачи: держатель упал до шага 5 Н1.7 —
-передачи нет; заморозку держит процесс, и она уходит с ним; подготовленный ключ цели служит один раз и следующей
-передаче не годится. После шага 5, до шага 6 — у цели запись большего срока: члены идут за ней («следовать» шаг 3),
-прежний уступает при первой встрече её записи (Н1.6). Обрыв переноса до `claim` (Н1.8 шаг 8) — срока нет; повтор
-переноса начинается с шага 1, восстановление пишет поверх.
+**Гонки** — [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н3 (стадия B; урок 8).
 
 ---
 
@@ -383,14 +161,12 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 
 | `error` | Код | Когда |
 |---|---|---|
-| `deposed` | 409 | держатель смещён: правки и отчёты; `holder` — запись нового |
-| `frozen` | 503 | идёт плановая передача |
-| `called off` | 409 | цель не взяла резервную копию передачи |
-| `refused` | 400, 401, 403, 404, 409, 503 | формы и отказы переноса, передачи и приёма (Н1.6–Н1.9): 401 `/api/backup` без заголовков или ask-sig не ok (`detail` — слово); 404 apply без элемента; 409 «nothing to restore from», apply не смещён; 503 «a move is under way here already» |
+| `refused` | 401 | `/api/backup` без заголовков или ask-sig не ok (`detail` — слово; Н1.9) |
 | `no signer here`, `did not answer` | 404, 502 | пересылка подписанту (урок 8 Н1.9) |
-| `standby` | 503 | процесс `domain` — ждущий (урок 12 Н1.7) |
 | `unavailable` | 503 | хранилище не ответило (`/api/held`, `/api/backup`) |
-| `redo it on the new holder` | 400 | брошенное, кроме правки члена |
+
+Строки `deposed`, `frozen`, `called off`, `refused` процесса (формы и отказы переноса, передачи, `apply`), `standby`,
+`redo it on the new holder` — [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н4 (стадия B; урок 8).
 
 Слова `record` — [договор записи срока](../../Platform/common/contracts/record.md) «Слова отказа». Слова `ask-sig` — [договор подписи
 просьбы](../../Platform/common/contracts/ask-sig.md) «Слова отказа».
@@ -400,73 +176,60 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 ## Н5 Приёмка
 
 Каталог `Source/tests/testdata/acceptance/М11_Domain/10/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/10/README.md)):
-стенд урока 3 с подписантом и на `m1` и команды `record`, `follow`, `ask-sig` на входах `inputs/`.
+стенд урока 3 с подписантом и на `m1` — сц. 01, 11; команда `follow` на входах `inputs/` — сц. 06.
+Сц. 02–04, 08–10, 12 — приёмка [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) ([`Platform/08-domain/acceptance/8/`](../../Platform/08-domain/acceptance/8/README.md);
+стадия B; урок 8). Сц. 05, 07 сняты: те же случаи — [`common/vectors/record`](../../Platform/common/vectors/record/README.md),
+[`common/vectors/ask-sig`](../../Platform/common/vectors/ask-sig/README.md); формы команд `record`, `ask-sig` и их коды выхода —
+[P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) Н5 (стадия B; урок 8).
 
 ```yaml
-record:    вход {keys: <документ набора>, row: {doc}}; вывод {result: ok, term, holder} | {result: refused, reason}
 follow:    вход {keys, held: {doc} | null, answers: {<кластер>: {doc} | null}};
            вывод {result: follow, term, holder, url} | {result: stay, reason: holding | larger | none | two_holders,
            term?} и refused: {<кластер>: <слово record>}; term у stay — срок своей записи, если она прошла record, иначе
            поля нет — при любой причине, и у two_holders: спорный срок term не подменяет
-ask-sig:   вход {ask: backup | prepare, cluster, member?, pub, header: {member?, time?, signature?}, now};
-           вывод {result: ok} | {result: refused, reason}
-exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу словаря М11/01 («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14):
-           keys у record и follow — доверенный документ набора урока 2 Н1.2 закрытой формы: поля нет (revoked_issuing,
+exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу «Стенда домена» общего README приёмки («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14):
+           keys у follow — доверенный документ набора урока 2 Н1.2 закрытой формы: поля нет (revoked_issuing,
            sig, domain), issuing не список, keys null — 2; подпись набора проверена при записи (урок 2 Н3 keys), функция её
-           не проверяет — испорченный sig не отказ; у record нет row, лишнее поле, вход не объект — 2; row (null, строка,
-           {}, doc не JSON или числом, лишнее поле row) — 0 not_a_record;
+           не проверяет — испорченный sig не отказ;
            у follow нет held или answers, answers не объект, лишнее поле — 2; held не {doc} (строка, массив) — своя запись не
            прошла record: 0, stay без term или follow; answers.<к> не {doc} и не null — 0, refused.<к>: not_a_record;
-           answers: {}, held: {} — 0; ключ answers не имя кластера — посчитан как ответ;
-           у ask-sig pub не hex 32 байт, cluster не имя кластера, ask не backup | prepare, now не число или нет, нет header,
-           header не объект, header.time не строка, лишнее поле в header или во входе — 2
+           answers: {}, held: {} — 0; ключ answers не имя кластера — посчитан как ответ
 ```
 
 | № | Сценарий | Нормы |
 |---|---|---|
 | 01 | стенд: `/api/held` у членов, хранители `m1`, `m2`, пара резервной копии в `/api/held` и `view.term`; `/api/backup` без подписи — 401 | Н1.3–Н1.5, Н1.9 |
-| 02 | стенд: аварийный перенос на `m1` по файлу — срок 2, `restored_from`; гранты восстановлены; члены следуют; вернувшийся `hold` смещён — 409 `deposed`, ключи забыты, прежний в списке | Н1.1, Н1.2, Н1.6, Н1.8 |
-| 03 | стенд: перенос с `copy` без `why` — 400; резервную копию никто не держит — 409; перенос с `why` — 200; 409 без `why` («из ничего», «сосед не ответил», ER) — чтением: `m1` — хранитель и держит свою копию (Н1.5 first, BACKUP_HOLDERS) | Н1.8 |
-| 04 | стенд: плановая передача `hold` → `m1` — срок 2 у членов, `stranded` пуст, `hold` смещён | Н1.7 |
-| 05 | `record`: верная запись, чужой домен, отозванный и неизвестный выпускающий, kid ≠ issuer, подпись, не запись; общий документ урока 11, типы документа резервной копии, повтор в `ca` — не запись (сверка М11, H9, H11, H12) | Н3 record |
 | 06 | `follow`: больший срок, меньший, равный, два держателя, тот же держатель с новым `url`, поддельная запись, ответов нет; своя `held` — документ резервной копии или грант — не своя запись (сверка М11, H10) | Н3 следовать |
-| 07 | `ask-sig`: верная просьба резервной копии и подготовки, нет заголовка, время не по форме, сдвиг 301 с, чужая подпись | Н3 ask-sig |
-| 08 | запись срока большего срока, не проходящая `record`, положенная мимо следования, держателя не смещает: правки идут, ключи не забыты (мутационная проверка, класс record) | Н1.6 `yields`, Н3 record |
-| 09 | стенд: перенос при живом прежнем держателе — его агент берёт набор переноса в набор следования, `hold` уступает и забывает ключи, `domain/keys` у `hold` — набор переноса (модель Quint М11, G1) | Н1.6 switch, Н3 «следовать» 1а |
-| 10 | стенд: перенос на член со старым набором — копия соседа проверена набором переноса, срок 3, `restored_from` (2, r2), правка второго срока цела (модель Quint М11, RB) | Н1.8 шаги 5, 6, 8 |
 | 11 | стенд: отзыв после последней резервной копии после переноса не оживает — 401 (модель Quint М11, RV; урок 3 Н1.6) | Н1.5 state, Н1.8; урок 3 Н1.6 |
-| 12 | стенд: передача, затем перенос — срок 3, оба прежних смещены и забыли ключи (модель Quint М11) | Н1.6, Н1.7, Н1.8 |
 
 ---
 
 ## Решает реализация
 
-1. **команды `record`, `follow`, `ask-sig`** — шаблоны с `{input}`;
-2. **как раннер поднимает подписанта на другом кластере и переносит домен** — директивы `@start domain on`, `@stop domain`,
-   `@move` словаря М11/01;
-3. **хранилище документов резервной копии** у держателя (объекты P/05) и сколько из пяти держать сверх нормы.
+1. **команда `follow`** — шаблон с `{input}` (`record`, `ask-sig` — [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) «Решает реализация» п. 1; их сц. 05, 07 сняты переносом урока 8);
+2. и 3. перенесены в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) «Решает реализация» пп. 2, 3 (стадия B; урок 8).
 
 ---
 
 ## Чеклист готовности
 
-- [ ] **М11/10-01** запись срока Н1.1 и `record` — сц. 05; `claim` и держатель в списке — сц. 02, 04
-- [ ] **М11/10-02** прежний держатель в списке, при `stolen` — в `revoked_members` — сц. 02; `stolen` — чтением (урок 2 сц. кражи)
-- [ ] **М11/10-03** `view.term` — сц. 01
-- [ ] **М11/10-04** `/api/held` Н1.4 — сц. 01, 02; негодный Bearer — тоже 200 — чтением (X13)
-- [ ] **М11/10-05** резервная копия Н1.5: состав (в том числе `domain/revoked` и `domain/deleting/*` — отзыв не оживает
-  после переноса; сверка М11, X3, X14 — чтением), её ключ, ревизия по содержимому, хранители, указатели, агент хранителя — сц. 01, 02; ключ резервной копии и его предел — чтением; секреты состояния на любой глубине, AAD полным путём, kid `b<backup_key_rev>` и отказ чужому kid — чтением: стенд не пишет запечатанных `*_secret` в `kept` и переносимые книги (`testsub` `kept: [ledger, badges/]` секретов не несёт), команды запечатывания у «Стенда» нет
-- [ ] **М11/10-06** смещённый Н1.6: уступает по проверенной записи, 409 `deposed` полной формой у правки и входа людей, забывает ключи — сц. 02, 04 (вход — сц. 02 шаг 15, H19); брошенное и `apply` — чтением; уступка записи того же срока другого держателя (G4) — чтением; сц. 09, 12
-- [ ] **М11/10-07** плановая передача Н1.7 по порядку, заморозка, отмена — сц. 04; заморозка и отмена — чтением; предел — чтением; подготовленный ключ тратит take, дошедший до открытия ключей (X12) — чтением; исход шага 5 — `called off` одним словом (HF) — чтением
-- [ ] **М11/10-08** аварийный перенос Н1.8 по порядку, новый срок по записям и резервным копиям, выбор резервной копии — сц. 02, 03; «новее не прочитана» — чтением; копии проверяются набором переноса (RB) — сц. 10; «из ничего» только с why, молчащий сосед — 409 (ER) — чтением
-- [ ] **М11/10-09** следование Н3 — сц. 02, 04, 06; набор следования и SET_GUARD (G1, G7) — сц. 09, чтением (вход вектора follow наборов ответов не несёт)
-- [ ] **М11/10-10** `ask-sig` и `/api/backup` Н1.9 — сц. 01, 07
-- [ ] **М11/10-11** точка смены писателя Н1.6 `switch`: передача — запись процесса прежнего держателя, сц. 04; перенос —; окно точки смены — до следующей проверки, не дольше прохода (SW) — чтением
-  запись агента «следованием», сц. 02; агент кластера держателя до точки строк процесса не пишет — чтением
+- Пункт М11/10-01 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-01 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/10-02 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-02 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/10-03 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-03 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- [ ] **М11/10-04** `/api/held` Н1.4 — сц. 01; сц. 02 приёмки P/08.8; негодный Bearer — тоже 200 — чтением (X13)
+- Пункт М11/10-05 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-04 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/10-06 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-05 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/10-07 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-06 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
+- Пункт М11/10-08 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-07 (стадия B; [id-map](../../Platform/common/id-map.tsv)); дверь `POST /domain/move` у консоли кластера цели — P/06.7-17, урок 10.
+- [ ] **М11/10-09** следование Н3 — сц. 06; сц. 02, 04, 09 приёмки P/08.8; набор следования и SET_GUARD (G1, G7) — сц. 09 приёмки P/08.8, чтением (вход вектора follow наборов ответов не несёт)
+- Пункт М11/10-10 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-08 (стадия B; [id-map](../../Platform/common/id-map.tsv)); дверь `GET /api/backup` Н1.9 — P/06.7-16, урок 10 (норма здесь до его переноса).
+- Пункт М11/10-11 перенесён в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) как P/08.8-09 (стадия B; [id-map](../../Platform/common/id-map.tsv)); сторона агента — урок 9.
 
 ## Соответствие прежним урокам
 
 Нормирует то, что рассказывали шаги 1–7 `М12A_Domain/14-a-domain-holder-on-one-node.md`: срок, что держит только
 держатель (резервная копия), перенос, следование за большим сроком, возвращение старого держателя, брошенное, плановая передача.
 Шаг 9 (корень вне держателя) — урок 2; шаги 8 и 10 (камера-держатель, два процесса держателя) — [урок 12](12-small-members-and-one-node.norms.md) (лекция, Н1.7, Н1.8). ADR-0066 и его
-дополнения, ADR-0075 уточнение 2, решение по `2026-10-15-first-holder-claim-diff`. Исторические исходники сохранены в Git.
+дополнения, ADR-0075 уточнение 2, решение по `2026-10-15-first-holder-claim-diff`. Исторические исходники сохранены в Git. Вступление Н1, Н1.1–Н1.3, Н1.5
+без `member`, Н1.6–Н1.8, строки Н2 и Н4 процесса, «Гонки» Н3, сц. 02–04, 08–10, 12, пп. 2, 3 «Решает реализация» и
+пункты М11/10-01…03, -05…08, -10, -11 перенесены в [P/08.8](../../Platform/08-domain/spec/08.8-domain.norms.md) (стадия B, урок 8).

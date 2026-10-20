@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/signer-turn (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+	строка целиком нечитаема: процесс domain — ждущий (каждая дверь — 503 standby), журнал; очередь не берётся и не продлевается, CAS поверх нечитаемой строки нет (Н3 «очередь процесса domain» шаг 1)	0	строка	P/08.10 Н1.7 standby, Н3 «очередь процесса domain» шаг 1

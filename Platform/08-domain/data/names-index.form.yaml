@@ -1,0 +1,39 @@
+# Семья domain/names/<sub>/<книга> — индекс имён книги с domain.names у держателя (P/08.5; P/08.5 Н1.7). Источник формы
+# строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога: <sub> — подсистема каталога, <книга> —
+# книга с from, объявленная в domain.names.<книга>/ спеки (P/02.1 Н1.2б). Слова — Platform/common/DIALECT.md. Пишет только
+# процесс domain после сборки книг прохода (Н3 «сборка книги») под стражем domain/signer-turn; копии у члена нет. Порядок
+# членов (по возрастанию), «из всех читаемых вкладов» и «unseen — не missing» — правила Н1.7, не форма.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    "":
+      encoding: jcs
+      type: object
+      properties:
+        missing:
+          type: array
+          items:
+            ref: common.domain_member
+          unique_items: true
+          description: члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution, secret_unopened), по возрастанию; пуст — индекс known (Н1.7 known)
+      required: [missing]
+      description: текст JCS {missing} — полнота индекса
+  names:
+    key:
+      type: string
+      pattern: '.+'
+      description: subject — значение key вклада книги (Н1.7 subject), непустая строка
+    value:
+      encoding: jcs
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            ref: common.domain_member
+          unique_items: true
+          description: члены, заявившие этот key, по возрастанию — из всех читаемых вкладов, включая спорные unique и недоставленные; значений и секретов нет
+      required: [members]
+      description: текст JCS {members}
+  required: [""]

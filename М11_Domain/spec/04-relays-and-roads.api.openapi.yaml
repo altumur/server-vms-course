@@ -5,52 +5,15 @@ info:
   description: 'Normative shapes: 04-relays-and-roads.norms.md N1.2, N1.4, N2. /api/relay — door of the holder''s domain
     process; /api/member and /api/carry on a relay — the same forms as the holder''s (M11/3 contract), answered from the
     relay''s memory with domain_age, codes — N2 of this lesson; /domain/topology — the domain console (grants M11/9). Request parsing: M10/1 N2.1
-    with M10/9 N2. Publication, Carry and the agent signature — M11/3 contract.'
+    with M10/9 N2. Publication, Carry and the agent signature — OpenAPI of P/08 (/api/member, /api/carry).
+    Двери процесса `domain` (`/api/relay/{relay}`, `PUT /domain/topology`) перенесены в OpenAPI урока P/08
+    (`Platform/08-domain/spec/08-domain.api.openapi.yaml`; перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
     description: Дверь процесса domain держателя, дверь ретранслятора или консоль домена.
     variables:
       origin: {default: 'http://localhost', description: 'Origin без завершающего /; пример адреса, не настройка.'}
 paths:
-  /api/relay/{relay}:
-    parameters:
-      - name: relay
-        in: path
-        required: true
-        schema: {$ref: '#/components/schemas/MemberName'}
-    post:
-      summary: Пакет ретранслятора — отчёты членов за ним и стуки
-      parameters:
-        - name: X-Agent-Signature
-          in: header
-          required: true
-          description: Подпись агента ретранслятора (Platform/common/contracts/agent-signature.md).
-          schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Batch'
-      responses:
-        '200':
-          description: Ответ ретранслятору
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RelayAnswer'
-        '400':
-          $ref: '#/components/responses/Refused'
-        '401':
-          $ref: '#/components/responses/Refused'
-        '403':
-          $ref: '#/components/responses/Refused'
-        '404':
-          $ref: '#/components/responses/Refused'
-        '409': {$ref: '#/components/responses/Refused'}
-        '413':
-          $ref: '#/components/responses/Refused'
-        '503': {$ref: '#/components/responses/Standby'}
   /domain/topology:
     get:
       summary: Топология домена
@@ -87,40 +50,8 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
-    put:
-      summary: Правка топологии против прочитанной ревизии
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TopologyEdit'
-      responses:
-        '200':
-          description: Документ после записи
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Topology'
-        '400':
-          $ref: '#/components/responses/Refused'
-        '401':
-          $ref: '#/components/responses/Refused'
-        '403':
-          $ref: '#/components/responses/Refused'
-        '404': {$ref: '#/components/responses/Forwarded'}
-        '409':
-          $ref: '#/components/responses/Refused'
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Forwarded'}
 components:
   responses:
-    Standby:
-      description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (урок 12 Н1.7; добавлено М11/12)'
-      content:
-        application/json:
-          schema: {$ref: '#/components/schemas/StandbyBody'}
     Forwarded:
       description: 'Отказ перехода 1 (пересылка консоли кластера) или 2 (передача консолью домена процессу), а не этой двери: коды и слова — Platform/common/contracts/forwarding.md «Отказы по переходам», слова перехода 1 — OpenAPI урока 8 (Refusal); здесь не перечисляются (разбор ревью стадии A 8–10, решение 3). 503 frozen (урок 10 Н1.7) и standby (урок 12 Н1.7) — коды процесса domain (переход 3). Добавлено прогоном 41'
       content:
@@ -133,13 +64,6 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
   schemas:
-    StandbyBody:
-      type: object
-      required: [error, detail]
-      additionalProperties: false
-      properties:
-        error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]
@@ -152,50 +76,6 @@ components:
     MemberName:
       type: string
       pattern: '^[a-z0-9-]{1,64}$'
-    Batch:
-      type: object
-      required: [relayed]
-      additionalProperties: false
-      properties:
-        relayed:
-          type: object
-          propertyNames: {$ref: '#/components/schemas/MemberName'}
-          additionalProperties:
-            type: object
-            additionalProperties: true
-            description: Публикация М11/3 Н1.2 (целое или изменение против rev этой дороги); форма и закрытость — Publication контракта урока 3.
-        knocks:
-          type: object
-          propertyNames: {$ref: '#/components/schemas/MemberName'}
-          additionalProperties:
-            type: object
-            required: [publication, signature]
-            additionalProperties: false
-            properties:
-              publication: {type: string, maxLength: 262144}
-              signature: {type: string}
-    RelayAnswer:
-      type: object
-      required: [relay_for, relayed, refused, keys]
-      additionalProperties: false
-      properties:
-        relay_for:
-          type: array
-          items: {$ref: '#/components/schemas/MemberName'}
-        relayed:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties: true
-            description: Carry М11/3 Н1.5; rev — для дороги этого ретранслятора; форма и закрытость — Carry контракта урока 3.
-        refused:
-          type: object
-          additionalProperties: {type: string}
-        keys:
-          type: object
-          additionalProperties:
-            type: string
-            pattern: '^$|^[0-9a-f]{64}$'
     Topology:
       type: object
       required: [rev, star, via]
@@ -213,21 +93,3 @@ components:
           additionalProperties: {$ref: '#/components/schemas/MemberName'}
         by: {type: string}
         at: {type: number}
-    TopologyEdit:
-      type: object
-      required: [base_rev]
-      additionalProperties: false
-      properties:
-        base_rev: {type: integer, minimum: 0}
-        centre: {$ref: '#/components/schemas/MemberName'}
-        star:
-          type: array
-          items: {$ref: '#/components/schemas/MemberName'}
-        via:
-          type: object
-          propertyNames: {$ref: '#/components/schemas/MemberName'}
-          additionalProperties:
-            description: 'ретранслятор; "" — член уходит из via (Н1.2 put_order)'
-            anyOf:
-              - {$ref: '#/components/schemas/MemberName'}
-              - {const: ''}

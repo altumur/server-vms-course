@@ -1,0 +1,12 @@
+# Семья domain/topology — топология домена у держателя (P/08.3; P/08.3 Н1.2). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md. Форма doc — общая с
+# копией члена domain/member-topology (common.domain_topology_doc; решение «Архитектора» 2026-10-20 «Планы переноса 8–10», п. 3).
+# Пишет процесс domain по двери PUT /domain/topology, CAS; строки нет — rev 0, star [], via {}.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    doc:
+      ref: common.domain_topology_doc
+      description: "текст JCS {rev, centre?, star, via, by?, at?}"
+  required: [doc]

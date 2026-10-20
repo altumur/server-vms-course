@@ -5,7 +5,9 @@ info:
   description: 'Normative shapes: 11-shared-settings-and-alarms.norms.md N1.2-N1.9, N2, N4. /domain/shared and
     /domain/alarms are the domain console''s (a PUT is passed to the domain process, ADR-0032); /domain/shared/{sub} is a
     cluster console''s own. A cluster console hands the domain console''s doors on by the forwarding table of lesson 8.
-    Request parsing: M10/9 N2.'
+    Request parsing: M10/9 N2.
+    Двери процесса `domain` (`PUT /domain/shared`) перенесены в OpenAPI урока P/08
+    (`Platform/08-domain/spec/08-domain.api.openapi.yaml`; перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
     description: Консоль домена или консоль кластера — по двери.
@@ -68,45 +70,6 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
-    put:
-      summary: Правка общего документа (Н1.3)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [base_rev, shared]
-              additionalProperties: false
-              properties:
-                base_rev: {type: integer, minimum: 0}
-                shared:
-                  type: object
-                  additionalProperties:
-                    type: object
-                    additionalProperties: true
-                    description: 'Имена domain.shared спеки → значение или null; что можно — спека (Н1.1), не схема контракта.'
-      responses:
-        '200':
-          description: Новая ревизия
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [term, rev, by]
-                additionalProperties: false
-                properties:
-                  term: {type: integer, minimum: 1}
-                  rev: {type: integer, minimum: 1}
-                  by: {type: string}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Forwarded'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused503'}
   /domain/shared/{sub}:
     parameters:
       - name: sub
@@ -207,14 +170,6 @@ paths:
           description: как у GET, без тела
 components:
   responses:
-    Refused503:
-      description: '503 frozen (урок 10), standby процесса domain (урок 12 Н1.7) или refused — прежний документ не читается, ничего не записано (Н1.3 шаг 5; добавлено сверкой М11, A7)'
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - {$ref: '#/components/schemas/StandbyBody'}
-              - {$ref: '#/components/schemas/NotStandby'}
     Forwarded:
       description: 'Отказ перехода 1 (пересылка консоли кластера) или 2 (передача консолью домена процессу), а не этой двери: коды и слова — Platform/common/contracts/forwarding.md «Отказы по переходам», слова перехода 1 — OpenAPI урока 8 (Refusal); здесь не перечисляются (разбор ревью стадии A 8–10, решение 3). 503 frozen (урок 10 Н1.7) и standby (урок 12 Н1.7) — коды процесса domain (переход 3). Добавлено прогоном 41'
       content:
@@ -226,17 +181,6 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
   schemas:
-    NotStandby:
-      allOf:
-        - {$ref: '#/components/schemas/Refusal'}
-        - {properties: {error: {not: {const: standby}}}}
-    StandbyBody:
-      type: object
-      required: [error, detail]
-      additionalProperties: false
-      properties:
-        error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

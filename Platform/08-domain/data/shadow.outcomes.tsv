@@ -1,0 +1,4 @@
+# Исходы нечитаемого объекта domain/shadow (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+	отчёт не читается — как отчёта нет: консоль домена на `GET /domain/shadow` отвечает 404 `{error: "no domain here"}` (М11/1 Н2; двери — урок P/10); процесс `domain` объект не читает — отчёт строит проход из памяти (Н3 шаг 7)	0	строка	P/08.1 Н3 шаг 7; М11/1 Н2 (двери — урок P/10)

@@ -147,7 +147,7 @@ pass:
 ```yaml
 <sub>/snapshot/<воркер> | <sub>/snapshot/unplaced:     # объекты; писатель — контроллер; имя воркера unplaced — отказ
   {cluster, worker: <имя> | null, ts, <rows>: [{id, revision, <поля snapshot:>, worker, server}]}
-cluster:  имя установки — CLUSTER окружения (P/02.4 Н1.2; имя члена домена, М11/1 Н1.1); не задано — "local" (вне домена)
+cluster:  имя установки — CLUSTER окружения (P/02.4 Н1.2; имя члена домена, [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.1); не задано — "local" (вне домена)
 fields:   snapshot: спеки (P/02.1): нет ключа — все поля кроме *_secret и blob; [] — ни одного поля (id, revision, worker, server
           остаются); авторское поле server также исключено по умолчанию; секрет, blob или server в явном списке — спека не грузится; адреса — с маской
           P/06.2 Н1.1а, той же, что в выдаче консоли (пароль → ***)

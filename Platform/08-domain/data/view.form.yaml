@@ -1,0 +1,197 @@
+# Семья domain/view — вид домена, объект держателя (P/08.1; P/08.1 Н1.4 и поля вида Н1.2а, Н1.6а, Н1.7). Источник
+# формы объекта (ADR-0088 п. 8). Экземпляр — {key, object}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. Поле books — форма главы 8.5 (Н1.5). Поля вида других глав (pending и outcomes — 8.6,
+# term — 8.8, shared — 8.9, url — М11/8 Н1.3 до переноса урока 10) здесь — отображения без проверки: их форма — в
+# главах-владельцах смысла. Имя члена, ключ и запись члена — общие определения common.domain_member,
+# common.domain_member_key, common.domain_member_entry (решение «Архитектора» 2026-10-20 по планам 8–10, п. 3).
+# Правила, которые схема не выражает (complete ⟺ все члены ok и contested пуст; порядок members, units, knocking;
+# единицы спорного ref не в units; age — один знак после точки), — проза Н1.3–Н1.4.
+dialect: data-form/1
+defs:
+  fingerprint:
+    type: string
+    pattern: '[0-9a-f]{16}'
+    description: отпечаток ключа — hex(sha256(открытый ключ)[:8]), 16 знаков (глава 8.2, М11/2 Н1.1 fingerprint)
+  age:
+    type: number
+    minimum: 0
+    description: секунды, один знак после точки (Н1.4 round)
+  unit:
+    type: object
+    properties:
+      sub: {ref: common.sub_name, description: "подсистема"}
+      id: {ref: common.named_id, description: "id единицы в её кластере (строкой; Н1.4 Unit id)"}
+      ref: {type: string, not_enum: [''], description: "значение поля domain.ref строки единицы (Н1.2)"}
+      cluster: {ref: common.domain_member, description: "член, в копии которого единица"}
+      worker: {type: string, not_enum: [''], description: "из пульса или из строки шарда; нет — поля нет; пульс без поля worker — имя из ключа пульса"}
+      server: {type: string, not_enum: [''], description: "поле server пульса или строки шарда; нет — поля нет"}
+      phase: {type: string, not_enum: [''], description: "status[].phase пульса (P/03.4 Н1.1); у configured — unobserved"}
+      age: {ref: age, description: "у live/stale — с последней смены пульса, у configured — с последней смены метки"}
+      state: {type: string, enum: [live, stale, configured, silent], description: "Н1.3 unit_state"}
+      view:
+        type: object
+        opaque: true
+        description: поля, названные domain.view спеки (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)
+    required: [sub, id, ref, cluster, phase, age, state]
+  knock:
+    type: object
+    description: стучащийся (глава 8.3, М11/3 Н1.1 knock)
+    properties:
+      name: {ref: common.domain_member}
+      last: {ref: common.time, description: "стенные секунды держателя последнего стука"}
+      times: {ref: common.pos53, description: "число стуков этим ключом"}
+      key: {ref: common.domain_member_key}
+      fingerprint: {ref: fingerprint}
+      pinned: {type: string, enum: [this, another, none]}
+      keys_rev: {type: [integer, 'null'], minimum: 1, maximum: 9007199254740991, description: "rev набора, который член держит, или null"}
+    required: [name, last, times, key, fingerprint, pinned, keys_rev]
+root:
+  type: object
+  properties:
+    as_of: {ref: common.time, description: "стенные секунды держателя на конце прохода"}
+    holder: {ref: common.domain_member, description: "имя держателя"}
+    complete: {type: boolean, description: "true ⟺ каждый член ok и contested пуст"}
+    members:
+      type: array
+      description: по name
+      items:
+        type: object
+        properties:
+          name: {ref: common.domain_member}
+          state: {type: string, enum: [ok, unseen, silent, never], description: "Н1.3 member_state"}
+          age:
+            variants:
+              - {ref: age}
+              - {type: 'null', description: "у never"}
+            description: секунды с последней смены метки, которую видел этот процесс, без смены — с первого взгляда; у never — null
+        required: [name, state, age]
+    units:
+      type: object
+      description: каждая спека каталога с domain.ref (Н1.2), ключ есть и у пустой; порядок — по (cluster, id, worker)
+      names:
+        key: {ref: common.sub_name}
+        value: {type: array, items: {ref: unit}}
+    contested:
+      type: object
+      description: ref, который заявляют два члена и больше; ключ есть у каждой спеки с domain.ref, без спорных — {}
+      names:
+        key: {ref: common.sub_name}
+        value:
+          type: object
+          names:
+            key: {type: string, not_enum: ['']}
+            value: {type: array, min_items: 2, unique_items: true, items: {ref: common.domain_member}}
+    trust:
+      type: object
+      description: набор, которому верит держатель (Н1.2а; глава 8.2)
+      properties:
+        rev: {ref: common.pos53, description: "rev набора domain/keys"}
+        root: {ref: fingerprint, description: "отпечаток корня"}
+        book_seal: {ref: fingerprint, description: "отпечаток ключа приёма книг"}
+      required: [rev, root, book_seal]
+    member_list:
+      type: object
+      description: doc строки domain/members, прочитанный проходом (Н1.7; форма — глава 8.3, М11/3 Н1.1)
+      properties:
+        rev: {ref: common.pos53}
+        term: {ref: common.pos53, description: "срок держателя, записавшего строку (глава 8.8)"}
+        members:
+          type: object
+          names:
+            key: {ref: common.domain_member}
+            value: {ref: common.domain_member_entry}
+      required: [rev, members]
+    knocking:
+      type: array
+      items: {ref: knock}
+      description: по name (Н1.7)
+    reports:
+      type: object
+      description: поля метки reported каждого члена (Н1.7)
+      names:
+        key: {ref: common.domain_member}
+        value:
+          type: object
+          properties:
+            rev: {ref: common.pos53}
+            base: {ref: common.uint53, description: "0 — пришло целое"}
+            received_at: {ref: common.time, description: "стенные секунды держателя приёма"}
+            sent_at: {type: number, description: "sent_at публикации, как пришёл"}
+            via: {ref: common.domain_member, description: "ретранслятор — дорога метки (Н1.6а)"}
+            keys_rev: {ref: common.pos53}
+            pinned: {type: string, enum: [this, another, none]}
+            sign_failures:
+              type: object
+              description: "поле последнего принятого запроса (P/08.3-11; М11/12 Н1.6)"
+              properties:
+                domain: {ref: common.pos53}
+                console: {ref: common.pos53}
+          required: [rev, base, received_at, sent_at, pinned]
+    topology:
+      type: object
+      description: doc строки domain/topology, прочитанный проходом; нет строки — {rev 0, star [], via {}} (Н1.6а; форма — глава 8.3, М11/4 Н1.2)
+      properties:
+        rev: {ref: common.uint53}
+        centre: {ref: common.domain_member}
+        star: {type: array, unique_items: true, items: {ref: common.domain_member}}
+        via:
+          type: object
+          names:
+            key: {ref: common.domain_member}
+            value: {ref: common.domain_member}
+        by: {type: string}
+        at: {ref: common.time}
+      required: [rev, star, via]
+    relay_refused:
+      type: object
+      description: последние отказы пакетов этого процесса (Н1.6а)
+      names:
+        key: {ref: common.domain_member, description: "ретранслятор"}
+        value:
+          type: object
+          names:
+            key: {ref: common.domain_member, description: "член"}
+            value: {type: string, description: "причина"}
+    books:
+      type: object
+      names:
+        key:
+          type: string
+          pattern: '[a-z][a-z0-9_-]{0,31}/[a-z0-9][a-z0-9_-]*'
+          description: "`<sub>/<книга>` — каждая собираемая книга каталога (P/02.1 Н1.2б domain.books с from)"
+        value:
+          type: object
+          properties:
+            conflicts:
+              type: array
+              items: {type: string}
+              unique_items: true
+              description: ключи unique с двумя вкладами и больше, по возрастанию
+            dropped:
+              type: object
+              names:
+                key: {ref: common.domain_member, description: член-вкладчик}
+                value: {type: string, enum: [bad_contribution, secret_unopened]}
+              description: снятые вклады (без значений и секретов)
+            undelivered:
+              type: object
+              names:
+                key: {ref: common.domain_member, description: член-вкладчик}
+                value:
+                  type: array
+                  items: {type: string}
+                  unique_items: true
+                  description: получатели to вне списка членов, по возрастанию
+            person_names:
+              type: array
+              items: {type: string}
+              unique_items: true
+              description: у книги с domain.names — ключи, которые — имена людей, не доставлены (Н1.7 reverse), по возрастанию
+          required: [conflicts, dropped, undelivered]
+      description: "`{\"<sub>/<книга>\": {conflicts, dropped, undelivered, person_names?}}` — диагностика сборки книг (P/08.5 Н1.5)"
+    pending: {type: object, opaque: true, description: "поле главы 8.6 (М11/6 Н1.6 view.pending)"}
+    outcomes: {type: object, opaque: true, description: "поле главы 8.6 (М11/6 Н1.6 view.outcomes)"}
+    url: {type: string, description: "DOMAIN_CONSOLE_URL процесса domain (М11/8 Н1.3 view.url; до переноса урока 10)"}
+    term: {type: object, opaque: true, description: "поле главы 8.8 (М11/10 Н1.3 view.term)"}
+    shared: {type: object, opaque: true, description: "поле главы 8.9 (М11/11 Н1.6 view.shared)"}
+  required: [as_of, holder, complete, members, units, contested]

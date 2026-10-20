@@ -1,0 +1,41 @@
+scenario	step	request	expect
+# Приёмка P/08.1: стенд нескольких кластеров hold, m1, m2 — вид и теневой отчёт держателя с настоящими отчётами членов. Формат — README.
+04-cut-and-mend	1	@domain	ok
+04-cut-and-mend	2	@cut m1	ok
+04-cut-and-mend	3	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}
+04-cut-and-mend	4	@mend m1	ok
+04-cut-and-mend	5	@until 40 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}]}
+06-view-on-the-stand	1	@domain	ok
+06-view-on-the-stand	2	member m1 console POST /counters {"name": "c1"}	201
+06-view-on-the-stand	3	member m2 console POST /counters {"name": "c2"}	201
+06-view-on-the-stand	4	@until 60 holder GET /domain/testsub/counters	200 [{"id": "c1", "ref": "c1", "cluster": "m1", "state": "live"}, {"id": "c2", "ref": "c2", "cluster": "m2", "state": "live"}]
+06-view-on-the-stand	5	holder GET /domain/testsub/counters?cluster=m2	200 [{"ref": "c2"}]
+06-view-on-the-stand	6	holder GET /domain/testsub/counters?cluster=m9	404 {"error": "no such member"}
+06-view-on-the-stand	7	holder GET /domain	200 {"complete": true, "contested": {"testsub": {}}}
+06-view-on-the-stand	8	@until 10 holder GET /domain/shadow	200 {"counts": {"unmanaged": 2}, "may_write": false}
+07-view-unseen-and-silent	1	@domain	ok
+07-view-unseen-and-silent	2	@cut m1	ok
+07-view-unseen-and-silent	3	@restart domain	ok
+07-view-unseen-and-silent	4	@until 15 holder GET /domain	200 {"complete": false, "members": [{"name": "hold"}, {"name": "m1", "state": "unseen"}, {"name": "m2"}]}
+07-view-unseen-and-silent	5	@until 70 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}
+07-view-unseen-and-silent	6	@mend m1	ok
+07-view-unseen-and-silent	7	@until 40 holder GET /domain	200 {"complete": true}
+08-view-configured-and-stale	1	@domain	ok
+08-view-configured-and-stale	2	@on m1 @sigkill w-1	ok
+08-view-configured-and-stale	3	member m1 console POST /counters {"name": "c8"}	201
+08-view-configured-and-stale	4	@until 40 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c8", "state": "configured", "phase": "unobserved"}]
+08-view-configured-and-stale	5	member m2 console POST /counters {"name": "c9"}	201
+08-view-configured-and-stale	6	@until 40 holder GET /domain/testsub/counters?cluster=m2	200 [{"ref": "c9", "state": "live"}]
+08-view-configured-and-stale	7	@on m2 @sigkill w-1	ok
+08-view-configured-and-stale	8	@until 80 holder GET /domain/testsub/counters?cluster=m2	200 [{"ref": "c9", "state": "stale"}]
+09-view-contested	1	@domain	ok
+09-view-contested	2	member m1 console POST /counters {"name": "c5"}	201
+09-view-contested	3	member m2 console POST /counters {"name": "c5"}	201
+09-view-contested	4	@until 60 holder GET /domain	200 {"complete": false, "contested": {"testsub": {"c5": ["m1", "m2"]}}}
+09-view-contested	5	holder GET /domain/testsub/counters	200 []
+15-shadow-and-executors	1	@domain	ok
+15-shadow-and-executors	2	holder PUT /domain/placement/testsub/c6 {"cluster": "m1", "copies": ["m2"]}	200
+15-shadow-and-executors	3	holder PUT /domain/placement/testsub/c8 {"cluster": "m1"}	200
+15-shadow-and-executors	4	member m1 console POST /counters {"name": "c6"}	201
+15-shadow-and-executors	5	member m2 console POST /counters {"name": "c6"}	201
+15-shadow-and-executors	6	@until 120 holder GET /domain/shadow	200 {"counts": {"conflict": 0, "orphaned": 1, "unmanaged": 0}}

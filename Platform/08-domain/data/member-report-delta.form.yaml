@@ -1,0 +1,71 @@
+# Семья domain/members/<член>/reports/<rev>.delta — тело публикации как получено, то, что подписал агент (P/08.3; P/08.3
+# Н1.3 delta, Н1.3а bytes; договор приёма отчёта, шаг 7). Источник формы объекта (ADR-0088; план переноса урока 8, В10:
+# схема тела двери POST /api/member). Экземпляр — {key, object}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. Форма — публикация М11/3 Н1.2 (глава 9.1; схема тела двери — OpenAPI урока): набор полей
+# закрыт; поля вне дельты (stale, tls_ca, tls_ca_certs, sign_failures, members_rev) не по своей форме не делают
+# публикацию не публикацией — поле не взято, отчёт принят (М11/3 Н1.2 out_of_delta) — поэтому здесь они любые.
+# Через ретранслятор — JCS записи relayed[<член>] пакета (Н1.3а bytes). Вложенность не глубже JSON_DEPTH 128 (P/01.1 Н1).
+dialect: data-form/1
+defs:
+  root_fingerprint:
+    type: string
+    pattern: '[0-9a-f]{16}'
+    description: отпечаток корня domain/root члена (P/08.2 Н1.1)
+  outcome:
+    type: object
+    opaque: true
+    description: исход правки домена у члена — форма М11/6 Н1.5 (глава 9.1)
+  out_of_delta:
+    type: any
+    description: поле вне дельты — форма своей нормы; не по ней — поле не взято, журнал держателя, отчёт принят (М11/3 Н1.2 out_of_delta)
+root:
+  type: object
+  properties:
+    sent_at:
+      type: number
+      description: конечное число — стенные секунды агента в момент отправки
+    objects:
+      type: object
+      opaque: true
+      description: что изменилось против base (целое при base 0)
+    base:
+      ref: common.uint53
+      description: rev поколения у держателя, против которого изменения; нет или 0 — тело целое
+    deleted:
+      type: array
+      items:
+        type: string
+        not_enum: ['']
+      description: ключи, которых больше нет против base; только при base > 0
+    key:
+      ref: common.domain_member_key
+      description: ключ члена — тот, что в domain/member-key
+    keys_rev:
+      ref: common.pos53
+      description: rev набора domain/keys, который член держит
+    pinned:
+      ref: root_fingerprint
+    outcomes:
+      type: object
+      names:
+        key:
+          type: string
+          not_enum: ['']
+        value:
+          ref: outcome
+    stale:
+      ref: out_of_delta
+    tls_ca:
+      ref: out_of_delta
+    tls_ca_certs:
+      ref: out_of_delta
+    sign_failures:
+      ref: out_of_delta
+    members_rev:
+      ref: out_of_delta
+  required: [sent_at, objects, key]
+  rules:
+    - when: {absent: [base]}
+      forbid: [deleted]
+    - when: {is: {base: [0]}}
+      forbid: [deleted]

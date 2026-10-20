@@ -3,7 +3,10 @@ info:
   title: M11/6 assignment and kept edits
   version: '1'
   description: 'Normative shapes: 06-assignment.norms.md N1.1-N1.6, N2. Doors of the domain console; a member console
-    forwards them (M11/8). Request parsing: M10/1 N2.1 with M10/9 N2; grants: M11/9 (admin to change, view to read).'
+    forwards them (M11/8). Request parsing: M10/1 N2.1 with M10/9 N2; grants: M11/9 (admin to change, view to read).
+    Двери процесса `domain` (`PUT, DELETE /domain/placement/{sub}/{ref}`, `/domain/{sub}/{rows}`,
+    `/domain/{sub}/{rows}/{ref}`) перенесены в OpenAPI урока P/08
+    (`Platform/08-domain/spec/08-domain.api.openapi.yaml`; перенос урока 8, стадия B).'
 servers:
   - url: '{origin}'
     description: Консоль домена или консоль члена, которая пересылает двери.
@@ -85,146 +88,6 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
-    put:
-      summary: Назначить (только оператор)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [cluster]
-              additionalProperties: false
-              properties:
-                cluster: {$ref: '#/components/schemas/MemberName'}
-                origin:
-                  description: 'член-владелец источника; "" — снять источник (Н1.1; прогон 41 R41-10)'
-                  oneOf:
-                    - {$ref: '#/components/schemas/MemberName'}
-                    - {const: ''}
-                copies:
-                  type: array
-                  uniqueItems: true
-                  items: {$ref: '#/components/schemas/MemberName'}
-                reason: {type: string}
-      responses:
-        '200':
-          description: Запись после правки; то же содержимое — прежняя rev
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/Placement'}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused503'}
-    delete:
-      summary: Снять назначение
-      responses:
-        '200':
-          description: Снято
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [deleted]
-                additionalProperties: false
-                properties:
-                  deleted: {type: string}
-        '400': {$ref: '#/components/responses/Forwarded'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Forwarded'}
-  /domain/{sub}/{rows}:
-    parameters:
-      - {$ref: '#/components/parameters/Sub'}
-      - {$ref: '#/components/parameters/Rows'}
-    post:
-      summary: Создать единицу на члене (правка хранится)
-      parameters:
-        - {$ref: '#/components/parameters/IdempotencyKey'}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [cluster]
-              additionalProperties: true
-              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
-              properties:
-                cluster: {$ref: '#/components/schemas/MemberName'}
-      responses:
-        '202': {$ref: '#/components/responses/Kept'}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '422': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Forwarded'}
-  /domain/{sub}/{rows}/{ref}:
-    parameters:
-      - {$ref: '#/components/parameters/Sub'}
-      - {$ref: '#/components/parameters/Rows'}
-      - {$ref: '#/components/parameters/Ref'}
-      - name: cluster
-        in: query
-        required: false
-        schema: {$ref: '#/components/schemas/MemberName'}
-    put:
-      summary: Править поля domain.edit единицы члена (правка хранится)
-      parameters:
-        - {$ref: '#/components/parameters/IdempotencyKey'}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              minProperties: 1
-              additionalProperties: true
-              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
-      responses:
-        '202': {$ref: '#/components/responses/Kept'}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '422': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused503'}
-    delete:
-      summary: Удалить единицу члена (правка хранится)
-      parameters:
-        - {$ref: '#/components/parameters/IdempotencyKey'}
-      requestBody:
-        required: false
-        description: 'Тело пустое или {}; иное — 400 (Н1.3; добавлено сверкой М11, A1)'
-        content:
-          application/json:
-            schema: {type: object, maxProperties: 0, additionalProperties: false}
-      responses:
-        '202': {$ref: '#/components/responses/Kept'}
-        '400': {$ref: '#/components/responses/Refused'}
-        '401': {$ref: '#/components/responses/Refused'}
-        '403': {$ref: '#/components/responses/Refused'}
-        '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
-        '413': {$ref: '#/components/responses/Forwarded'}
-        '422': {$ref: '#/components/responses/Refused'}
-        '502': {$ref: '#/components/responses/Forwarded'}
-        '503': {$ref: '#/components/responses/Refused503'}
 components:
   parameters:
     Sub:
@@ -232,30 +95,12 @@ components:
       in: path
       required: true
       schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
-    Rows:
-      name: rows
-      in: path
-      required: true
-      schema: {type: string, minLength: 1}
     Ref:
       name: ref
       in: path
       required: true
       schema: {type: string, minLength: 1}
-    IdempotencyKey:
-      name: Idempotency-Key
-      in: header
-      required: true
-      schema: {type: string, minLength: 1, maxLength: 200}
   responses:
-    Refused503:
-      description: '503 урока (счётчик не записался; правка: ref не найден при неполном ответе, contested) или standby процесса domain (урок 12 Н1.7)'
-      content:
-        application/json:
-          schema:
-            oneOf:
-              - {$ref: '#/components/schemas/StandbyBody'}
-              - {$ref: '#/components/schemas/NotStandby'}
     Forwarded:
       description: 'Отказ перехода 1 (пересылка консоли кластера) или 2 (передача консолью домена процессу), а не этой двери: коды и слова — Platform/common/contracts/forwarding.md «Отказы по переходам», слова перехода 1 — OpenAPI урока 8 (Refusal); здесь не перечисляются (разбор ревью стадии A 8–10, решение 3). 503 frozen (урок 10 Н1.7) и standby (урок 12 Н1.7) — коды процесса domain (переход 3). Добавлено прогоном 41'
       content:
@@ -266,31 +111,7 @@ components:
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
-    Kept:
-      description: Правка хранится до члена (Н1.4)
-      content:
-        application/json:
-          schema:
-            type: object
-            required: [kept, cluster, what, note]
-            additionalProperties: false
-            properties:
-              kept: {type: string, pattern: '^e-[0-9a-f]{12}$'}
-              cluster: {$ref: '#/components/schemas/MemberName'}
-              what: {type: string}
-              note: {type: string}
   schemas:
-    NotStandby:
-      allOf:
-        - {$ref: '#/components/schemas/Refusal'}
-        - {properties: {error: {not: {const: standby}}}}
-    StandbyBody:
-      type: object
-      required: [error, detail]
-      additionalProperties: false
-      properties:
-        error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
     Refusal:
       type: object
       required: [error]

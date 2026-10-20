@@ -1,0 +1,44 @@
+scenario	step	request	expect
+# Приёмка P/08.5: стенд hold, m1, m2 с testsub и testsub2, учебный писатель вкладов, люди и гранты (сц. 11). Перенесено из М11/05 (сц. 01, 03, 05) и М11/09 (05 → 11-names-index) (стадия B). Формат и директивы — README.
+01-roll-delivered	1	@domain	ok
+01-roll-delivered	2	member m1 console2 POST /tallies {"name": "t1", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"], "note_secret": "s3cret-1"}	201 {"note_secret": "***"}
+01-roll-delivered	3	@until 90 member m2 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": {"entries": [{"ref": "t1", "member": "m1", "item": "t-1/t1", "note_secret": "@absent", "to": "@absent"}], "missing": []}}
+01-roll-delivered	4	member m1 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": "@absent"}
+01-roll-delivered	5	member hold console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t1": "@absent"}
+01-roll-delivered	6	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "~enc:v2:"}}
+01-roll-delivered	7	member m2 store GET /v1/get?key=domain/testsub2/rolls	200 {"items": {"t1": "!contains s3cret-1"}}
+01-roll-delivered	8	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "~enc:v2:"}}
+01-roll-delivered	9	store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": {"t1": "!contains s3cret-1"}}
+01-roll-delivered	10	member m2 console GET /domain/testsub2/books/nosuch	404 {"error": "no such book shown"}
+01-roll-delivered	11	holder GET /domain	200 {"reports": {"m1": {"rev": "$r1"}}}
+01-roll-delivered	12	resource GET /v1/objects/domain/members/m1/reports/$r1?scope=local	200 {"objects": {"testsub2/rolls/t-1": {"t1": {"note_secret": "$e1"}}}}
+01-roll-delivered	13	@sleep 12	ok
+01-roll-delivered	14	holder GET /domain	200 {"reports": {"m1": {"rev": "$r2"}}}
+01-roll-delivered	15	resource GET /v1/objects/domain/members/m1/reports/$r2?scope=local	200 {"objects": {"testsub2/rolls/t-1": {"t1": {"note_secret": "$e1"}}}}
+01-roll-delivered	16	holder DELETE /domain/members/m2	200
+01-roll-delivered	17	@until 30 store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": null}
+01-roll-delivered	18	member m2 console GET /domain/testsub2/books/%72olls	404 {"error": "no such book shown"}
+03-silent-contributor	1	@domain	ok
+03-silent-contributor	2	member m2 console2 POST /tallies {"name": "t3", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
+03-silent-contributor	3	@until 90 member m1 console GET /domain/testsub2/books/rolls	200 {"t3": {"entries": [{"member": "m2", "ref": "t3"}]}}
+03-silent-contributor	4	@cut m2	ok
+03-silent-contributor	5	@until 80 member m1 console GET /domain/testsub2/books/rolls	200 {"": {"missing": [{"member": "m2", "why": "silent"}]}, "t3": "@absent"}
+03-silent-contributor	6	@mend m2	ok
+03-silent-contributor	7	@until 60 member m1 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t3": {"entries": [{"member": "m2"}]}}
+05-recipient-not-member	1	@domain	ok
+05-recipient-not-member	2	member m1 console2 POST /tallies {"name": "t6", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m9"]}	201
+05-recipient-not-member	3	@until 90 holder GET /domain	200 {"books": {"testsub2/rolls": {"undelivered": {"m1": ["m9"]}}}}
+05-recipient-not-member	4	@until 30 member m2 console GET /domain/testsub2/books/rolls	200 {"t6": "@absent"}
+11-names-index	1	@domain	ok
+11-names-index	2	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+11-names-index	3	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
+11-names-index	4	holder POST /domain/users {"name": "t7", "password": "t7 password 1"}	409 {"error": "name taken"}
+11-names-index	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "scope": "*"}]}	400 {"error": "grant too wide"}
+11-names-index	6	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t7": "@absent"}}
+11-names-index	7	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
+11-names-index	8	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"t7": "@any"}}
+11-names-index	9	@stop agent m1	ok
+11-names-index	10	@until 120 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[\"m1\"]}"}}
+11-names-index	11	holder POST /domain/users {"name": "newbie", "password": "newbie password"}	503 {"error": "names unknown"}
+11-names-index	12	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200
+11-names-index	13	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zed", "cap": "view", "scope": "*"}]}	503 {"error": "names unknown"}

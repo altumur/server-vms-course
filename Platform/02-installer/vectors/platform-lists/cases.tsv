@@ -6,7 +6,7 @@
 #   secret_roles       the roles secrets.readers may name
 #   secret_readers     the platform's own secret rows and who reads them, <row or prefix>=<role> (`<row>=` — nobody but
 #                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10. The domain's backups
-#                      are objects, not secret rows (М11/10 Н1.5; review 41): no row of them here
+#                      are objects, not secret rows (P/08.8 Н1.5; review 41): no row of them here
 #   platform_shown     the platform's own unit fields a spec may name where it shows a unit: display.tree.columns[].field
 #                      and display.form[].fields[] (М10/2 Н1.3)
 #   object_families    the platform's object families under objects/<sub>/: a spec's objects.rows[] names none of them;

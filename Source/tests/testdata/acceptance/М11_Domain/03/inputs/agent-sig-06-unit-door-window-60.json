@@ -1,9 +1,0 @@
-{
- "body": "{\"start\":2}",
- "header": "1760000000000.R7Gh4O-IoragICo28rBIlggROJHEPvCEvk7-uqZTPI_elyz7nPlLJBznfqtVPhn38Bqw8BzXtemR15Vq971iCQ",
- "key": "b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62",
- "method": "PUT",
- "now": 1760000061.0,
- "path": "/counters/c1",
- "window": 60
-}
