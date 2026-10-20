@@ -28,6 +28,8 @@
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | состояние, дверь хранилища, корни объектов и событий | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
 | `SECRETS_KEY` | кольцо (credential): ключ члена, книги и аварийные строки — конверты кольца | — | М11/12 Н1.8; [P/06.2](../06-console/spec/06.2-console.norms.md) Н1.2 (`holders`) |
 | `CLUSTER` | имя своего члена | `local` | P/02.4 Н1.2; М11/3 Н1.1 |
+| `CLUSTERS` | консоли кластеров членов `<имя>=<url>[,…]`: «следовать» — `GET /api/held` каждой | нет или пусто — пустой список | [М11/8 Н1.3](../../М11_Domain/spec/08-doors-between-clusters.norms.md) (форма); [М11/10 Н3](../../М11_Domain/spec/10-holder-transfer-and-keepers.norms.md) «следовать» шаг 1 (разбор ревью стадии A 8–10, № 32) |
+| `REACHES` | сети члена — слова `domain/reaches` через запятую; пусто — как не задана | не задана — сети интерфейсов | [М11/4 Н1.5](../../М11_Domain/spec/04-relays-and-roads.norms.md) `networks` (разбор ревью стадии A 8–10, № 32) |
 | `DOMAIN_URL` | дверь процесса `domain` держателя — дорога отчёта | — | [М11/3 Н3](../../М11_Domain/spec/03-agent-and-reports.norms.md) «проход агента»; М11/4 Н1.3 |
 | `RELAY_URL` | дверь ретранслятора — дорога вместо `DOMAIN_URL` у члена за ретранслятором | — | М11/4 Н1.1 `door`, Н1.3 |
 | `DOMAIN_CA`, `RELAY_CA` | отпечаток центра держателя / ретранслятора при первом контакте, пока запись члена не называет `ca` | — | [М11/8 Н1.6](../../М11_Domain/spec/08-doors-between-clusters.norms.md) `first` |

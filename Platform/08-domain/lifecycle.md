@@ -28,6 +28,7 @@
 | `SIGNER_URL` | адрес этой двери, который пишет запись срока `domain/holder.url`; у держателя из нескольких узлов — адрес, доходящий до любого узла | — | [М11/10 Н1.1](../../М11_Domain/spec/10-holder-transfer-and-keepers.norms.md), М11/12 Н1.7 `url` |
 | `DOMAIN_CONSOLE_URL` | адрес двери консоли домена — поле `view.url` | — (нет — `domain console not known` у консолей) | [М11/8 Н1.3](../../М11_Domain/spec/08-doors-between-clusters.norms.md) |
 | `CLUSTER` | имя кластера установки — имя члена-держателя | `local` | P/02.4 Н1.2 |
+| `CLUSTERS` | консоли кластеров членов `<имя>=<url>[,…]`: цель плановой передачи, повтор правки смещённого, соседи аварийного переноса | нет или пусто — пустой список | [М11/8 Н1.3](../../М11_Domain/spec/08-doors-between-clusters.norms.md) (форма); [М11/10](../../М11_Domain/spec/10-holder-transfer-and-keepers.norms.md) Н1.6 `apply`, Н1.7 `target`, Н1.8 шаг 5 (разбор ревью стадии A 8–10, № 32) |
 | `BOX_ID`, `SERVER_NAME` | коробка и сервер; экземпляр `<коробка>:<pid>:<6 hex>` — holder очереди | P/02.4 Н1.2 | М11/12 Н1.7 `turn` |
 
 TLS: комплект роли `domain` по `W2C_ROLE` (P/02.4 Н1.6; [М11/8 Н1.6](../../М11_Domain/spec/08-doors-between-clusters.norms.md) `roles`).
