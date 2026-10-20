@@ -7,8 +7,9 @@
 # /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared. Своих путей у глав 8.0, 8.1, 8.2, 8.5, 8.10 нет: 8.0 —
 # параметр X-W2C-Client и ответы deposed, frozen, standby; 8.1 — схемы вида и теневого отчёта (их отдаёт консоль домена,
 # урок P/10 ссылается $ref), вход и вывод команды view; 8.10 — 409 и 413 потолков у путей 8.3, 503 standby у каждой двери.
-# Свои двери процесса — 7 операций; двери, которые процессу передают, — 21 (консоль домена — 20, консоль кластера —
-# POST /domain/move); у каждой операции — operationId: OpenAPI урока 10 ссылается на ответы этих операций (решение
+# Свои двери процесса (класс signed: /api/member, /api/carry, /api/relay, /api/tokens) — 4 операции; двери, которые процессу
+# передают, — 24 и 2 HEAD (консоль домена — 21 и HEAD у GET /domain/users, /domain/break-glass; консоль кластера — 3:
+# /api/prepare, /api/take, POST /domain/move; глава 8.0 Н2; разбор ревью стадии B 8–10, № 22: М-6); у каждой операции — operationId: OpenAPI урока 10 ссылается на ответы этих операций (решение
 # «Архитектора» 2026-10-20 по планам 8–10, п. 9). Контракт несёт только коды процесса (переход 3 договора пересылки
 # Platform/common/contracts/forwarding.md «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3): коды Н3 дверей,
 # 401/403 своей проверки личности и гранта (глава 8.4 Н1.5), 409 deposed (глава 8.8), 503 frozen (глава 8.8) и standby
@@ -16,7 +17,9 @@
 # чтения тела, сторожевая консоли) — OpenAPI 06 (глава 6.7) и 10, здесь не перечисляются; ответа Forwarded нет.
 # Слито из контрактов М11/1, М11/3, М11/4, М11/6, М11/7, М11/8, М11/9, М11/10, М11/11 (стороны процесса domain) — стадия B,
 # без изменения поведения; контракт приведён к нормам глав (сверка контракта с нормами P/08, перенос урока 8): Publication —
-# поля вне дельты не строже 8.3 Н1.2 out_of_delta; MembersDoc — с term (8.3 Н1.1); у дверей людей (8.4 Н2) 413 и 503
+# поля вне дельты не строже 8.3 Н1.2 out_of_delta; MembersDoc — с term (8.3 Н1.1; форма строки, не ответ двери),
+# MembersAnswer {rev, members} — ответ 200 дверей членов 8.3 Н2 (дополнение «Архитектора» к № 8 разбора ревью стадии B 8–10),
+# MembersView — без обязательного term (P/10 Н2; разбор ревью стадии B 8–10, № 8); у дверей людей (8.4 Н2) 413 и 503
 # standby/unavailable — коды процесса; у дверей правок — 503 frozen (8.8 Н1.7), у GET дверей людей — 503 standby (8.0 Н2);
 # TopologyEdit.centre — "" и null снимают центр (8.3 Н1.2); Entry.how — три формы 8.3 Н1.1; HolderRecord — url непустой,
 # ca без повторов (договор записи срока, функция record шаг 1); PersonName — пробельные по Unicode White_Space, не \s
@@ -260,7 +263,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MembersDoc'
+                $ref: '#/components/schemas/MembersAnswer'
         '400':
           $ref: '#/components/responses/Refused'
         '401':
@@ -293,7 +296,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MembersDoc'
+                $ref: '#/components/schemas/MembersAnswer'
         '400':
           $ref: '#/components/responses/Refused'
         '401':
@@ -339,7 +342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MembersDoc'
+                $ref: '#/components/schemas/MembersAnswer'
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -419,6 +422,9 @@ paths:
                 additionalProperties: false
                 properties:
                   deleted: {type: string}
+        '400':
+          description: 'ref не по грамматике имени P/06.1 Н1.3 named, в том числе с «/» (глава 8.6 Н1.1 ref; разбор ревью стадии B 8–10, № 7).'
+          $ref: '#/components/responses/Refused'
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
         '404': {$ref: '#/components/responses/Refused'}
@@ -1354,7 +1360,7 @@ components:
         - type: object
           required: [age]
           properties:
-            age: {type: number, minimum: 0, description: 'поле двери урока P/10: секунды с прохода держателя'}
+            age: {type: number, minimum: 0, description: 'поле двери урока P/10: секунды с as_of по стенным часам консоли домена, один знак после точки (P/10 Н1.2а; разбор ревью стадии B 8–10, № 22: М-7)'}
             trust: {description: 'P/08.1 Н1.2а: {rev, root, book_seal}; отпечаток — глава 8.2 Н1.1'}
             member_list: {description: 'P/08.1 Н1.7: {rev, members}'}
             knocking: {description: 'P/08.1 Н1.7: [knock…]'}
@@ -1658,10 +1664,26 @@ components:
     MembersDoc:
       type: object
       required: [rev, term, members]
-      description: 'Документ domain/members {rev, term, members} (P/08.3 Н1.1; term — срок держателя, записавшего строку, P/08.8 Н1.1)'
+      additionalProperties: false
+      description: 'Документ domain/members {rev, term, members} (P/08.3 Н1.1; term — срок держателя, записавшего строку, P/08.8 Н1.1) —
+        форма строки (семья members, common.domain_members_doc; текстом — Carry.members), ответом двери не служит: ответ
+        дверей членов — MembersAnswer (дополнение «Архитектора» к № 8 разбора ревью стадии B 8–10).'
       properties:
         rev: {type: integer, minimum: 1}
         term: {type: integer, minimum: 1}
+        members:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties: {$ref: '#/components/schemas/Entry'}
+    MembersAnswer:
+      type: object
+      required: [rev, members]
+      additionalProperties: false
+      description: 'Ответ 200 дверей POST, DELETE /domain/members и POST /domain/members/{member}/ca — {rev, members}, закрытая
+        форма (P/08.3 Н2); не MembersDoc: MembersDoc — форма строки domain/members, ответом двери не служит (дополнение
+        «Архитектора» к № 8 разбора ревью стадии B 8–10).'
+      properties:
+        rev: {type: integer, minimum: 1}
         members:
           type: object
           propertyNames: {$ref: '#/components/schemas/MemberName'}
@@ -1680,16 +1702,21 @@ components:
         pinned: {enum: [this, another, none]}
         keys_rev: {type: ['integer', 'null'], minimum: 1}
     MembersView:
-      description: 'Ответ GET /domain/members консоли домена (урок P/10): список и стучащиеся'
-      unevaluatedProperties: false
-      allOf:
-        - $ref: '#/components/schemas/MembersDoc'
-        - type: object
-          required: [knocking]
-          properties:
-            knocking:
-              type: array
-              items: {$ref: '#/components/schemas/Knock'}
+      type: object
+      required: [rev, members, knocking]
+      additionalProperties: false
+      description: 'Ответ GET /domain/members консоли домена (урок P/10 Н2): {rev, members, knocking} — список и стучащиеся;
+        term — необязательное поле (форма М11/3; разбор ревью стадии B 8–10, № 8).'
+      properties:
+        rev: {type: integer, minimum: 1}
+        term: {type: integer, minimum: 1}
+        members:
+          type: object
+          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          additionalProperties: {$ref: '#/components/schemas/Entry'}
+        knocking:
+          type: array
+          items: {$ref: '#/components/schemas/Knock'}
     Topology:
       type: object
       required: [rev, star, via]

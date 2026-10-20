@@ -16,10 +16,13 @@
 Перенесено из М11/8 Н1.6 (строки `client`, `first`; строка `revoke` — сторона клиента, решение «Спецификации» при
 переносе урока 10), Н3 «peer(chain, fingerprints, role, host, now)» (шаги 1–9 и абзац
 после них) и Н4 (слова `peer`) без изменения поведения; номера шагов прежние. Отпечаток
-центра, публикация и запись члена (`fingerprint`, `tls_ca`, `tls_ca_certs`, `Entry.ca`, строка `ca-certs`, `on_accept`,
-`admin`) — [P/08.3 Н1.6](../../08-domain/spec/08.3-domain.norms.md); серверная сторона класса `signed` — [договор
-сертификата роли](role-certificate.md); роли процессов (`roles`) — [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.4 (и [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.7), класс `role`
-(`server.role`) — урок P/10 Н1.4, ответ пересылки на отказ — P/06.7 Н4 `did not answer`. Ссылки в перенесённом тексте: «Н1.x», «Н3» —
+центра, поля публикации `tls_ca`, `tls_ca_certs`, форма `Entry.ca`, `W2C_TLS_DIR`, роли процессов домена и ожидаемая
+роль сервера `role` у агента и ретранслятора (держатель — `domain`, ретранслятор — `domainagent`) — [договор сертификата
+роли](role-certificate.md) «Комплект кластера, роли домена, центр между кластерами» (`fingerprint`, `tls_ca`,
+`tls_ca_certs`, `Entry.ca`, `domain_roles`, `peer_role`; разбор ревью стадии B 8–10, № 4); серверная сторона класса
+`signed` — там же; запись `Entry.ca` у держателя (`on_accept`, строка `ca-certs`, `admin`) — сторона держателя, P/08.3
+Н1.6. Класс `role` (`server.role`) — участник, урок P/10 Н1.4 (таблица выше); ответ пересылки на отказ — P/06.7 Н4
+`did not answer`. Ссылки в перенесённом тексте: «Н1.x», «Н3» —
 урока М11/8 (Н1.6 — P/06.7 Н1.7 и строки этого договора, Н3 — P/06.7 Н3); «урок N» — урок М11/N; подписи —
 [договор сертификата роли](role-certificate.md) `sig`. Форма функции — вход строки пакета [`peer`](../vectors/peer/README.md) (прежде команда `peer` приёмки М11/8 Н5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.

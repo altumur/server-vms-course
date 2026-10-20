@@ -17,7 +17,8 @@
 ## Прогон
 
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода. Код
-выхода 0 — вычислено (в том числе отказ словом); строк с кодом 2 (вход не по форме) в таблице нет.
+выхода 0 — вычислено (в том числе отказ словом); `@exit 2` — вход не по форме: код выхода 2, вывод не сравнивается
+(словарь «Стенда» [общего README приёмки](../../acceptance/README.md)); таких строк две — `token-30`, `token-31` (ниже).
 
 ## Ключи
 
@@ -48,19 +49,26 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 29 строк: 8 `ok`, 21 отказ | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
+| [`cases.tsv`](cases.tsv), 31 строка: 8 `ok`, 21 отказ, 2 `@exit 2` | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
 
 Границы: `now = exp + 60` — `ok`, `exp + 61` — `expired`; `now = iat − 60` — `ok`, `iat − 61` — `future`; `expect` с
 `cluster: null` (`person`) — аудитория не проверяется.
+
+Форма `expect` ([договор](../../contracts/domain-token.md) «Проверка», `expect`; п. 7 записки о планах 8–10, правка
+`0c9521c66`): ключ `cluster` обязателен, `null` — только при `kind: person`. Строки `token-30-expect-no-cluster` (вход
+`token-18` без ключа `cluster`) и `token-31-null-cluster-not-person` (вход `token-18` с `cluster: null` при `kind: tally`) —
+`@exit 2`; токен и прочие поля входа — байты `token-18` (разбор ревью стадии B 8–10, № 13).
 
 ## Кандидаты
 
 - нечитаемая хранилищем строка `domain/revoked` у двери («проверить нечем», договор «Проверка») — свойство двери, не
   функции: проверяется стендом;
-- вход не по форме команды (`audience_claim` пустой, набор `keys` не по форме) — код 2: строк нет, кандидат пакета.
+- вход не по форме команды (`audience_claim` пустой, набор `keys` не по форме) — код 2: строк нет, кандидат пакета (форма
+  `expect.cluster` — строки `token-30`, `token-31`).
 
 Векторы проверены эталонным Ed25519 (RFC 8032) и разбором JSON с запретом повтора ключа по тексту договора (шаги 1–11
-«Проверки»), не по коду реализаций: все 29 ожиданий совпали с выводом оракула. При расхождении прав договор, вектор
+«Проверки»), не по коду реализаций: все 29 ожиданий совпали с выводом оракула; строки `token-30`, `token-31` (`@exit 2`)
+добавлены по тексту договора, `expect`. При расхождении прав договор, вектор
 правит «Спецификация».
 
 ## Журнал источника
@@ -81,3 +89,4 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | 2026-10-20 | перенос | сценарии 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience из М11/02 (стадия B) — строки векторов common/vectors/domain-token/cases.tsv (29), входы inputs/token-*.json — ячейки input без изменения байтов; ожидания сверены оракулом по тексту договора токена домена «Проверка» |
 | 2026-10-20 | перенос | сценарии 01-key-set-forward, 02-key-set-root, 03-key-set-form, 08-envelope-opens, 09-envelope-does-not-open, 10-envelope-form, 11-seal-round из М11/02 сняты (стадия B): те же случаи — common/vectors/keys (21), common/vectors/domain-envelopes x25519-open.tsv (16), x25519-round.tsv (2) (план переноса урока 8 В1; решение «Архитектора», ADR-0083 доп. (14), п. 17) |
 | 2026-10-20 | история М11/02 | строки corrections.tsv приёмки М11/02 до переноса — целиком в начале журнала, с прежними путями и номерами (их разрешает Platform/common/id-map.tsv) |
+| 2026-10-20 | token-30, token-31 | разбор ревью стадии B 8–10, № 13 (п. 7 записки о планах 8–10, правка 0c9521c66): expect без ключа cluster и cluster: null при kind ≠ person — @exit 2; вход — token-18 с изменённым expect |

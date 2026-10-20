@@ -585,7 +585,15 @@ paths:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1placement~1{sub}~1{ref}/delete/responses/200'
         '400':
-          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementDelete, ответ 400 (ref не по грамматике имени; разбор ревью стадии B 8–10, № 7)'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
         '401':
           description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
             клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId

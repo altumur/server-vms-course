@@ -13,6 +13,10 @@ vectors/README.md          указатель всех векторов по у�
 vectors/sealing/           векторы договора запечатывания (общие, без урока-владельца)
 vectors/domain-envelopes/  векторы договора конвертов домена (бывшие входы приёмки М11/2, М11/3)
 vectors/domain-token/      векторы договора токена домена (бывшие входы приёмки М11/2 token-*)
+vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  векторы общих договоров домена: набор ключей, подпись агента,
+                           приём отчёта, запись срока, подпись просьбы, право may, клиент peer (бывшие входы приёмки М11;
+                           разбор ревью стадии B 8–10, № 22)
+contracts/gate-and-pass.api.openapi.yaml  общие формы тел договора сторожевой и передачи (Denied; ссылаются P/06, P/08, P/10)
 testdata/                  testsub*.yaml — сквозной пример (переезжает из Source/tests/testdata на стадии B)
 acceptance/system/         сквозные сценарии нескольких микромодулей
 acceptance/matrix/         смешанные сборки

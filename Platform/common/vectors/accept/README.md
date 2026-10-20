@@ -16,7 +16,20 @@
 
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода по
 словарю «Стенда» ([общий README приёмки](../../acceptance/README.md)): `"@absent"` — поля нет, `"@any"` — поле есть с любым
-значением. Метка `mark` — по форме [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.3, её `sha256` — от JCS `stored` (в `accept-05` — нет).
+значением. Форма входа и вывода, смысл полей (`catalog`, `refreshed_ago`, `refresh`, `whole`, `status`) и код выхода 2 —
+[договор](../../contracts/accept.md) «Форма функции»; метка `mark` — по форме договора «Поколение, метка, пределы», её
+`sha256` — от JCS `stored`, кроме `accept-05-rebase-stored-not-mark` и `accept-20-whole-over-broken-stored` урока 3: там
+`stored` нарочно не с `mark.sha256` (разбор ревью стадии B 8–10, № 22, Claude М-18).
+
+Входы зависят от байтов спеки каталога (P/08.3 Н5; разбор ревью стадии A 8–10, № 37; разбор ревью стадии B 8–10, № 22,
+Kimi SB810-06): у всех строк `catalog` — `["testsub"]`, ключи объектов — `testsub/*`; `domain.ref` спеки решает шаги 4
+(`member_objects`) и 5 (`not_ready`):
+
+| Спека | Файл | sha256 |
+|---|---|---|
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `769c5a472b74307c5dc5b697a76dc6eaede09e3c69c47e8808d862d0d0cb9165` |
+
+Смена этих байтов — повод перепроверить таблицу.
 
 ## Файлы
 
@@ -24,7 +37,20 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 35 строк (26 урока 3, 9 урока 4) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`) |
+| [`cases.tsv`](cases.tsv), 35 строк (26 урока 3, 9 урока 4) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
+
+## Кандидаты
+
+Разбор ревью стадии B 8–10, № 6 (Claude П-2):
+
+- **шаг 4а, `whole_too_large`** (`{"result":"refused","status":413,"reason":"whole_too_large"}`) — строки нет: вход должен
+  дать JCS целого `whole'` больше `BODY_LIMIT` (16 MiB). Тело больше предела отсекает дверь до функции (413 тела), а
+  объекты вне `member_objects` отбрасываются, поэтому вход — мегабайты: большое `stored` при `base > 0` (`mark` с его
+  `sha256`) и малая дельта; ячейка `input` такого размера в таблице непригодна. Нужна форма входа пакета, которой нет: вход
+  из файла рядом с таблицей или правило порождения входа (повтор объекта до размера) — решение «Спецификации» по форме
+  пакета; затем `mark.sha256` — sha256 JCS этого `stored`;
+- **код выхода 2** (лишнее поле входа, метка без `stale`) — строк нет: `expect` `@exit 2`, как у пакетов `record`, `may`.
 
 Векторы — входы приёмки, прошедшей у двух реализаций-свидетелей; эталонной пересборкой не проверялись (поколение и метка
-опираются на формы [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2, P/08.3 Н1.3). При расхождении прав договор, вектор правит «Спецификация».
+опираются на разделы договора «Поколение, метка, пределы» и «Публикация члена»; владельцы текста — P/08.3 Н1.3,
+[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2). При расхождении прав договор, вектор правит «Спецификация».

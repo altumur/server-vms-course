@@ -12,7 +12,9 @@
 # ответ консоли домена как пришёл — ForwardAnswer (как PassAnswer у door.pass); у пересылки подписанту ответ процесса —
 # $ref на операции OpenAPI урока P/08 (решение «Архитектора» по планам 8–10, п. 9); схемы записи срока, пары, указателя и
 # имени члена — $ref на OpenAPI урока P/08, копий нет. Общие коды консоли (глава 6.5 Н2, Н4) перечислены у своих дверей
-# главы 6.7, как у прочих.
+# главы 6.7, как у прочих: 429 — у каждой двери пересылки, 405 — у /domain/move, как у /api/held, /domain/keys (разбор ревью
+# стадии B 8–10, № 12). Вход людей POST /api/login — дверь пересылки перехода 1 (глава 6.7 Н1.2 process; разбор ревью
+# стадии B 8–10, № 11).
 # Слито из контрактов М10/3, М10/4, М10/8 (консольная половина), М10/9 (без договора модуля — P/07; путь
 # /platform/console.js остаётся консоли), М10/10 (без двери ресурса — P/05; /drain М10/10 совпадал с М10/4) — стадия B,
 # без изменения поведения, кроме правок разбора ревью стадии A 6–7: № 16, № 24 — копии M2_*, M3_*, M4_* сведены к
@@ -3900,6 +3902,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -3920,6 +3924,8 @@ paths:
         '408':
           description: как у GET, без тела
         '413':
+          description: как у GET, без тела
+        '429':
           description: как у GET, без тела
         '502':
           description: как у GET, без тела
@@ -3957,6 +3963,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -3978,6 +3986,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -3999,6 +4009,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -4020,6 +4032,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -4041,6 +4055,8 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -4061,6 +4077,8 @@ paths:
         '408':
           description: как у GET, без тела
         '413':
+          description: как у GET, без тела
+        '429':
           description: как у GET, без тела
         '502':
           description: как у GET, без тела
@@ -4100,6 +4118,8 @@ paths:
           $ref: '#/components/responses/Denied'
         '404':
           $ref: '#/components/responses/AtNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -4116,6 +4136,8 @@ paths:
         '403':
           description: как у GET, без тела
         '404':
+          description: как у GET, без тела
+        '429':
           description: как у GET, без тела
         '502':
           description: как у GET, без тела
@@ -4164,6 +4186,8 @@ paths:
           $ref: '#/components/responses/Denied'
         '404':
           $ref: '#/components/responses/AtNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/ForwardFailed'
         '503':
@@ -4180,6 +4204,8 @@ paths:
         '403':
           description: как у GET, без тела
         '404':
+          description: как у GET, без тела
+        '429':
           description: как у GET, без тела
         '502':
           description: как у GET, без тела
@@ -4287,6 +4313,33 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
+  /api/login:
+    description: 'Глава 6.7 Н1.2 process — вход людей POST /api/login: строка таблицы «Двери домена» договора пересылки
+      (Platform/common/contracts/forwarding.md; Личность «—» — открытая строка, сторожевая пересылающей консоли её не
+      спрашивает; open_routes договора сторожевой) — переход 1: страница ходит к своей консоли, консоль кластера пересылает
+      вход в консоль домена своей коробки (holds, view.url) или консоль кластера держателя (CLUSTERS) и отдаёт ответ как
+      пришёл. Здесь — только коды перехода 1; ответ консоли домена (операция passLogin OpenAPI урока P/10) и процесса domain
+      (операция login OpenAPI урока P/08) — как пришёл, этот контракт их не перечисляет (договор пересылки «Отказы по
+      переходам»; разбор ревью стадии A 8–10, решение 3; разбор ревью стадии B 8–10, № 11).'
+    post:
+      summary: 'Пересылка: вход людей домена'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
   /api/held:
     description: 'Глава 6.7 Н1.12 (из М11/10 Н1.4) — запись срока, набор и пара резервной копии этого кластера; открытая дверь
       (open_routes договора сторожевой): Authorization не читается, негодный Bearer — тоже 200 (X13).'
@@ -4465,6 +4518,8 @@ paths:
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1prepare/post/responses/409'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/SignerFailed'
         '503':
@@ -4512,6 +4567,8 @@ paths:
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/responses/409'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/SignerFailed'
         '503':
@@ -4564,12 +4621,16 @@ paths:
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
         '404':
           $ref: '#/components/responses/SignerNotHere'
+        '405':
+          $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1move/post/responses/409'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '502':
           $ref: '#/components/responses/SignerFailed'
         '503':

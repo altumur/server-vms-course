@@ -21,6 +21,9 @@ scenario	step	request	expect
 01-login-people-grants	19	@person -	ok
 01-login-people-grants	20	member m1 console GET /counters	401
 01-login-people-grants	21	holder GET /domain	401
+01-login-people-grants	22	@person root w2c test root password	ok
+01-login-people-grants	23	holder POST /domain/users {"name": "a\u0085b", "password": "ann password 1"}	400 {"error": "bad name"}
+01-login-people-grants	24	holder POST /domain/users {"name": "a\ufeffb", "password": "ann password 1"}	201 {"user": "a\ufeffb"}
 02-disable-revoke-last-admin	1	@domain	ok
 02-disable-revoke-last-admin	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 02-disable-revoke-last-admin	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200

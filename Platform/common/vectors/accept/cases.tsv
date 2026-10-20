@@ -1,5 +1,5 @@
 # Функция «принять» (договор приёма отчёта, «Функция принять»): accept(catalog, mark, stored, body, refreshed_ago, via?, heard_ago?) →
-# generation | heard | same | ignored | refused. input — вход команды accept текстом JSON (М11/3 Н5, поля via и heard_ago — М11/4): catalog — спеки
+# generation | heard | same | ignored | refused. input — вход команды accept текстом JSON (договор приёма отчёта «Форма функции»; прежде М11/3 Н5, поля via и heard_ago — М11/4): catalog — спеки
 # каталога, mark — метка или null, stored — целое поколение метки или null, body — текст публикации как получен, refreshed_ago — монотонные с
 # с последней записи метки этим процессом или null. expect — подмножество вывода. Строки — входы приёмки М11/3 inputs/accept-*.json (сц. 13)
 # и М11/4 inputs/accept-*.json (сц. 06).

@@ -161,7 +161,7 @@ paths:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
         '413':
-          description: 'Тело больше BODY_LIMIT (P/08.3 Н1.3; P/09.2 Н4)'
+          description: 'Тело больше BODY_LIMIT (16 MiB — договор приёма отчёта «Поколение, метка, пределы»; P/08.3 Н1.3; P/09.2 Н4)'
           content:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
@@ -298,7 +298,8 @@ components:
       type: object
       required: [error]
       additionalProperties: false
-      description: 'У агента: держатель не ответил за TOKEN_WAIT (договор «Дверь» no_queue, «Отказы»)'
+      description: 'У агента: вверх не ответили за TOKEN_WAIT — держатель или ретранслятор; 502 did not answer ретранслятора
+        — тоже 503 (договор «Дверь» no_queue, «Отказы»; разбор ревью стадии B 8–10, № 22, Claude М-4)'
       properties:
         error: {const: unavailable}
         detail: {type: string}
