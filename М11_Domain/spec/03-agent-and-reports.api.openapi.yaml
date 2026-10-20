@@ -192,7 +192,7 @@ components:
       name: X-Agent-Signature
       in: header
       required: true
-      description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)» (Н1.4); окно 300 с в обе стороны.'
+      description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)»; окно 300 с в обе стороны — Platform/common/contracts/agent-signature.md.'
       schema: {type: string, pattern: '^(0|[1-9][0-9]{0,15})\.[A-Za-z0-9_-]{86}$'}
   responses:
     Forwarded:

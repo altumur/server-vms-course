@@ -29,7 +29,8 @@
 ## Входы
 
 - `agent-sig-*` — вход `agent-sig` (Н5): `key` — hex ключа члена, `method`, `path`, `body` — текст тела, `header` —
-  значение `X-Agent-Signature`, `now` — стенные секунды проверяющего, `window` — окно двери (300 или 60);
+  значение `X-Agent-Signature`, `now` — стенные секунды проверяющего, `window` — окно двери (300 или 60); те же случаи —
+  таблица пакета [`agent-sig`](../../../../../../Platform/common/vectors/agent-sig/README.md) (разбор ревью стадии A 8–10, № 13);
 - `seal-member-*` — вход `seal-member`: `seed` — `seed_secret` члена, `sealed` — конверт;
 - `seal-member-round-*` — `key`, `seed`, `plain` (входы `seal-member-*` — те же случаи, что `m1-open.tsv` и `m1-round.tsv`
   пакета [`domain-envelopes`](../../../../../../Platform/common/vectors/domain-envelopes/README.md); разбор ревью стадии A 8–10, № 12);

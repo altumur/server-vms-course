@@ -24,7 +24,7 @@ paths:
         - name: X-Agent-Signature
           in: header
           required: true
-          description: Подпись агента ретранслятора (М11/3 Н1.4).
+          description: Подпись агента ретранслятора (Platform/common/contracts/agent-signature.md).
           schema: {type: string}
       requestBody:
         required: true
