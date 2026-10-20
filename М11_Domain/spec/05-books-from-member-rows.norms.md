@@ -10,9 +10,11 @@
 ## Н1 Форма
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `<sub>/<spec:domain.books.from>`, `<sub>/<spec:domain.books.from>/<слот>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`, `domain/<sub>/<spec:domain.kept>`, `domain/<sub>/<spec:domain.kept>/*`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`;
+- владеет: `<sub>/<spec:domain.books.from>`, `domain/<sub>/<spec:domain.books>`, `domain/<sub>/<spec:domain.books>/<член>`;
 - пишет: `domain/view` (put);
 - читает: `<sub>/slots/<имя>`, `domain/book-seal`, `domain/members/<член>/reports/<rev>`.
+
+Строки слота книги, переносимые книги, воркер и пульс на домене — во владении [P/03.7](../../Platform/03-worker/spec/03.7-worker.norms.md) (разбор ревью стадии B 3–5, № 35).
 
 Общее уроков 2 и 3 Н1 действует. Книга — наблюдение, не власть: `from` прав записи не даёт, писателя назначает
 размещение ([P/04](../../Platform/04-controller/spec/04-controller.norms.md)), секреты запечатаны, `show` скрытого не раскрывает, широковещания нет (ADR-0074).

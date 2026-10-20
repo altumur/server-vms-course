@@ -28,7 +28,10 @@
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `.gone/<ключ>`, `objects/<sub>/<spec:objects.rows>`, `objects/<sub>/<spec:objects.rows>/*`;
 - пишет: `<sub>/blobs/sha256-<hex>` (put);
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<spec:tables>/<имя>`.
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<spec:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
+
+Ключ своего комплекта ресурс читает при `RESOURCE_TLS=1` (Н1.4 `door.mode` `mtls`, `cert_until`; «Допуск к дверям
+ресурса»; [договор сертификата роли](../../common/contracts/role-certificate.md) `kit`) (разбор ревью стадии B 3–5, № 10).
 
 Копии тел ресурс кладёт соседу (put) и удаляет свою копию старше надгробия (delete); надгробия подтверждает (cas) и
 снимает (delete) — Н1.1 «Тела у ресурса», «Надгробия».
@@ -450,6 +453,24 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Путь отказа | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|
 | строка целиком | не своя форма (есть unit, чужие server/volume, испорченная форма): ресурс — не трогать, журнал free_ask.key_taken, пропустить (Н3 «проход ресурса» relieve); держатель-воркер — строка без unit с {free, volume, server} как обычная просьба не рассматривается (глава 3.6 «взгляд держателя»); консоль — строка ресурса без живого хозяина снимается по ttl (P/06.4 Н3 «жнец») | 0 | строка | P/05 Н1.4 free_ask, Н3 relieve; P/06.4 Н3 «жнец» |
+
+#### `.gone/<ключ>` — объект
+
+Схема — [`gone.form.yaml`](../data/gone.form.yaml), исходы — [`gone.outcomes.tsv`](../data/gone.outcomes.tsv); версия формы 1; норма — P/05 Н1.1 «Надгробия»; P/06.1 Н3 «уборка тел».
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `written` | время (P/01.1 Н0 «Время в строке») | обязателен |  | момент удаления тела у удалившего |
+| `peers` | список, элемент — строка; целиком `.+` | обязателен |  | соседи кольца, у которых могла быть копия тела |
+| `peers[]` | строка; целиком `.+` | необязателен |  |  |
+| `acked` | список, элемент — строка; целиком `.+` | обязателен |  | соседи из `peers`, подтвердившие удаление (404 на GET копии) |
+| `acked[]` | строка; целиком `.+` | необязателен |  |  |
+
+Исходы нечитаемого объекта:
+
+| Путь отказа | Исход | Приоритет | Единица | Норма |
+|---|---|---|---|---|
+| объект целиком | объект целиком нечитаем: сосед копию не роняет, удаливший подтверждений не дописывает и надгробие не снимает — неизвестный исход не подтверждение (нынешнее поведение; норма исхода не называет) | 0 | строка | P/05 Н1.1 «Надгробия» |
 <!-- families:end -->
 
 ---

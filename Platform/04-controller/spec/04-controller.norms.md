@@ -26,8 +26,14 @@
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`;
-- пишет: `<sub>/slots/<имя>` (cas), `<sub>/<spec:unit.rows>/<id>` (delete);
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/holds/<место>`, `<sub>/<spec:unit.rows>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`.
+- пишет: `<sub>/slots/<имя>` (cas), `<sub>/<spec:unit.rows>/<id>` (delete), `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий или объектов>/<путь>/%h<sha256>.name` (create);
+- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/holds/<место>`, `<sub>/<spec:unit.rows>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`, `<sub>/<spec:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
+
+Таблицы мест и связей (`places.table`, `affinity.table`, Н1.3) контроллер читает строками `<sub>/<spec:tables>/<имя>`;
+журнал `unit.unplaced_deleted` (Н3 «проход()», шаг 8) и тревоги (`workers.raise_failed` — Н1.4, hung/unsure — шаг 3) пишет в
+`audit/<роль>` и `audit.alarms/<роль>`, файл `%h<sha256>.name` — по [договору журнала
+событий](../../common/contracts/event-journal.md) (`journal`, `writer`, «Имена файлов»); ключ своего комплекта — для
+дверей ресурса по HTTPS ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) `roles`) (разбор ревью стадии B 3–5, № 10).
 
 Строки `<sub>/policy`, `platform/servers/<сервер>`, `platform/drain`, `platform/decommission/<сервер>` (пишет консоль, P/06.6) и
 `platform/doors/<сервер>` (пишет ресурс, P/05) в Н1.1 — форма, которую читает контроллер; владелец строки —

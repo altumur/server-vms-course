@@ -1,0 +1,21 @@
+# Семья .gone/<ключ> — надгробие удалённого тела, объект (P/05; P/05 Н1.1 «Надгробия»; разбор ревью стадии B 3–5, В1).
+# Источник формы объекта (ADR-0088 п. 8). Экземпляр — {key, object}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. Пишет консоль у своего хранилища объектов (put, P/06.1 Н3 «уборка тел»), подтверждения
+# дописывает ресурс (cas acked). Правила, которые схема не выражает (acked ⊆ peers, хранение не меньше 7 дней, снятие при
+# новой записи ключа), — проза Н1.1.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    written:
+      ref: common.time
+      description: момент удаления тела у удалившего
+    peers:
+      type: array
+      items: {type: string, pattern: '.+'}
+      description: соседи кольца, у которых могла быть копия тела
+    acked:
+      type: array
+      items: {type: string, pattern: '.+'}
+      description: соседи из `peers`, подтвердившие удаление (404 на GET копии)
+  required: [written, peers, acked]
