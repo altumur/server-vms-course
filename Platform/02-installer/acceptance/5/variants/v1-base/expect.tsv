@@ -9,7 +9,7 @@ console	write	platform/doors/srv-a	deny
 console	delete	va/epoch/u1	deny
 console	write	platform/epoch_floor	deny
 console	read	domain/grants	allow
-console	read	domain/grants/c1	deny
+console	read	domain/grants/c1	allow
 console	read	domain/view	deny
 console	write	va/want/srv-a	deny
 console	read	door/signer	allow
