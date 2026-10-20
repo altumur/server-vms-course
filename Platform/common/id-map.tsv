@@ -228,9 +228,9 @@ old	new	chapter	subject	note
 М11/2-01	P/08.2-01	8.2	корень только в файле восстановления	-
 М11/2-02	P/08.2-02	8.2	набор ключей: форма, подпись корня, book_seal	-
 М11/2-03	P/08.2-03	8.2	закрепление корня при установке и приёме	join у члена — 9.1
-М11/2-04	P/08.2-04	8.2	keys: только вперёд, holding, took	вектор keys; читают 9.1, 9.2
+М11/2-04	P/08.2-04	8.2	keys: только вперёд, holding, took	договор набора ключей домена common/contracts/keys.md «Функция keys»; исполняют 9.1, P/06.3, 8.8; читает 9.2; векторы — common/vectors/keys (разбор ревью стадии A 8–10, № 13 / решение 2)
 М11/2-05	P/08.2-05	8.2	проверка токена по порядку Н3	вектор token; у получателя — 3.late, сессия — 6.late
-М11/2-06	P/08.2-06	8.2	domain/revoked: форма, снятие, нечитаемая строка	-
+М11/2-06	P/08.2-06	8.2	domain/revoked: форма, снятие, нечитаемая строка	договор набора ключей домена common/contracts/keys.md «Отзывы»: у члена merge и prune исполняет 9.1 (разбор ревью стадии A 8–10, № 3, № 13)
 М11/2-07	P/08.2-07	8.2	окно отзыва без связи	-
 М11/2-08	P/08.2-08	8.2	конверт x25519:v1: байты, AAD, слова отказа	договор конвертов домена common/contracts/domain-envelopes.md «Конверт x25519:v1»; запечатывает 9.1, несёт 9.2, открывает 8.5; векторы — common/vectors/domain-envelopes x25519-open (разбор ревью стадии A 8–10, № 12)
 М11/2-09	P/08.2-09	8.2	запечатывание недетерминировано	договор конвертов домена common/contracts/domain-envelopes.md «Конверт x25519:v1» seal; запечатывает агент — 9.1 (вклад в отчёте), держатель 8.8 — keys_sealed; круг — common/vectors/domain-envelopes x25519-round (разбор ревью стадии A 8–10, № 12)
@@ -531,3 +531,5 @@ P/04 Н1.4 LOST_AFTER, договор наблюдения «Свежесть» 
 М11/2 Н1.5, М11/3 Н1.5 (входы приёмки М11/02 seal-*, М11/03 seal-member-*; разбор ревью стадии A 8–10, № 12)	common vectors/domain-envelopes	common	открытие и круг x25519:v1 и m1: x25519-open, x25519-round, m1-open, m1-round	договор common/contracts/domain-envelopes.md; строки — входы приёмки М11/2 сц. 08–11, М11/3 сц. 11–12 без изменения байтов
 М11/3 Н1.4 (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/agent-signature	common	подпись агента X-Agent-Signature: байты, окна MEMBER_WINDOW и UNIT_WINDOW, предел повтора, проверка agent-sig и слова отказа	владелец P/09 (глава 9.1); проверяют 8.3, 8.7, 9.2, P/06.3 Н1.3; часть М11/3-08
 М11/3 Н1.4 (входы приёмки М11/03 agent-sig-*; разбор ревью стадии A 8–10, № 12, № 13)	common vectors/agent-sig	common	проверка подписи агента agent-sig: окно, байты, формы, ключ малого порядка	договор common/contracts/agent-signature.md; строки — входы приёмки М11/3 сц. 10 без изменения байтов
+М11/2 Н1.2 row, doc, writer_forms, only_forward; Н1.6 domain/revoked; Н3 keys; М11/3 Н1.6 from_carry revoked (разбор ревью стадии A 8–10, № 13 / решение 2, № 3)	common contracts/keys	common	набор ключей домена: строка domain/keys, функция keys, отзывы domain/revoked, merge у члена и prune	владелец P/08 (глава 8.2); участники 9.1, 9.2, P/06.3, 8.8; части М11/2-02, -04, -06, М11/3-09
+М11/2 Н3 keys (входы приёмки М11/02 keys-*; разбор ревью стадии A 8–10, № 13)	common vectors/keys	common	функция keys: took, holding, older, no_pin, another_root, bad_signature, not_a_set, no_book_seal	договор common/contracts/keys.md; строки — входы приёмки М11/2 сц. 01–03 без изменения байтов

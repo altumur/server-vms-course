@@ -18,7 +18,8 @@
 `inputs/<случай>.json`; имя начинается с команды. Формы — Н5 норм урока:
 
 - `keys-*` — вход `keys`: `pinned` — строка `domain/root` или `null`, `held` — документ набора, которому член уже верит,
-  или `null`, `offered` — строка `domain/keys` как пришла (`doc` — текст, его и проверяют);
+  или `null`, `offered` — строка `domain/keys` как пришла (`doc` — текст, его и проверяют); те же случаи — таблица пакета
+  [`keys`](../../../../../../Platform/common/vectors/keys/README.md) (разбор ревью стадии A 8–10, № 13);
 - `token-*` — вход `token`: `keys` — принятый документ набора, `revoked` — строка `domain/revoked` как прочитана или `null`
   (строки нет), `now` — стенные секунды проверяющего, `token`;
 - `seal-*` — вход `seal`: `seed` — `seed_secret` ключа приёма книг, `envelope` и контекст AAD (`member`, `source_path`,
