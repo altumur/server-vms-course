@@ -204,8 +204,14 @@ def references(document, external=None, place=lambda where: where):
     yield from walk(document, "document", document, "#", place)
 
 
-# Built sections between their markers: the form of ADR-0087 and the data families of ADR-0088.
-FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->"}
+# Built sections between their markers: the form of ADR-0087, the data families of ADR-0088 and the form of the
+# canonical view of ADR-0089 (chapter 2.2).
+FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->",
+                "<!-- canonical:begin -->", "<!-- canonical:end -->"}
+# Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
+# the view column. Chapter 2.3 keeps its registry rows (P/02 acceptance-entry 3/puts.tsv, 3/puts) until they are taken
+# out together with adding ("P/02", "3/") here.
+PUTS_CHAPTERS = {("P/02", "2/")}
 
 
 def markdown_links(tokens):
@@ -1326,6 +1332,27 @@ class Check:
             return
         self.stats["families_with_section"] += len(rows)
 
+    # Chapter 2.2 «Канонический вид» (ADR-0089): the view of every accepted corpus case and course spec passes the built
+    # schema, the built section stands in the norms between its markers, the vectors canonical are the built bytes and
+    # hold every default, ordered and step of the projection (mutants, strict with --strict-coverage), puts.tsv of
+    # acceptance/2/ names vectors. Without any file of the chapter it is skipped: COUNTS says canonical=absent.
+    def canonical_chapter(self):
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from form_source.vectors import Chapter, present
+        except ImportError as exc:
+            self.error(self.root / "Platform/02-installer", f"canonical check needs ruamel.yaml (text layer Н1.1), missing: {exc}; run: {SCHEMA_INSTALL}")
+            return
+        if not present(self.root):
+            self.stats["canonical"] = "absent"
+            return
+        chapter = Chapter(self.root, self.strict_coverage).run()
+        for path, message in chapter.errors:
+            self.error(self.root / path, message)
+        for name, value in chapter.stats.items():
+            self.stats[name] = value
+
     # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module (lesson 1
     # moves it there), the М10 one until then, and the module's own.
     def stands(self, module=None):
@@ -1344,6 +1371,9 @@ class Check:
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases"}
+        puts = (key, entry) in PUTS_CHAPTERS
+        if puts:
+            supported |= {"puts.tsv", "puts"}
         extra = {value[len(entry):] for (lesson_key, kind, value) in self.registry
                  if lesson_key == key and kind == "acceptance-entry" and value.startswith(entry)}
         own_format = False                          # an excepted entry checked by the README of the acceptance
@@ -1360,7 +1390,7 @@ class Check:
                     own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
-                elif item.name != "cases" and not item.is_file():
+                elif item.name not in ("cases", "puts") and not item.is_file():
                     self.error(item, "acceptance table/document must be a file")
         except OSError as exc:
             self.error(acceptance, str(exc))
@@ -1392,6 +1422,8 @@ class Check:
                     self.error(acceptance, f"{table} without verdicts.tsv")
         if (acceptance / "cases").exists() and not (acceptance / "verdicts.tsv").is_file():
             self.error(acceptance, "cases/ without verdicts.tsv")
+        if puts and (acceptance / "puts.tsv").is_file():
+            formats += 1                            # checked with the vectors of the chapter (canonical_chapter)
         if not formats and not own_format:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
         return texts, scenarios, verdict_counts, verdicts, classes
@@ -1544,6 +1576,8 @@ class Check:
                                         (old[0] + value[0], old[1] + value[1], old[2] | {f"{chapter}/{n}" for n in value[2]}))
                     else:
                         totals[name] = value if old is None else tuple(a + b for a, b in zip(old, value))
+        if stem == "02-installer":
+            self.canonical_chapter()
         if self.catalog is not None and chapters:
             shared = {k for (k, _), row in self.catalog.items() if row["owner"] == key}
             for missing in sorted(shared - owned):

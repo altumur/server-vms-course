@@ -1255,5 +1255,36 @@ watchdog:  роль nobody; w2c-run.sh nobody
         self.assertTrue(any("lessons.tsv: header expected" in e for e in errors), errors)
 
 
+class CanonicalChapterTests(unittest.TestCase):
+    """Глава 2.2 (ADR-0089): puts.tsv и puts/ поддержаны у acceptance/2/ урока P/02, у иных глав — нет; без файлов главы
+    проверка пропускается (canonical=absent)."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.acceptance = self.root / "acc"
+        (self.acceptance / "puts").mkdir(parents=True)
+        (self.acceptance / "README.md").write_text("# Acceptance\n")
+        (self.acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (self.acceptance / "puts.tsv").write_text("case\tputs\texpect\tcanonical\n")
+
+    def errors(self, key, entry):
+        check = Check(self.root)
+        check.acceptance(self.acceptance, key, entry)
+        return check.errors
+
+    def test_puts_supported_only_in_chapter_2_2(self):
+        self.assertEqual(self.errors("P/02", "2/"), [])
+        errors = self.errors("P/02", "3/")
+        self.assertTrue(any("puts.tsv: unsupported acceptance entry" in e for e in errors), errors)
+        self.assertTrue(any("no supported acceptance table" in e for e in errors), errors)
+
+    def test_absent_chapter_is_counted(self):
+        check = Check(self.root)
+        check.canonical_chapter()
+        self.assertEqual((check.errors, check.stats["canonical"]), ([], "absent"))
+
+
 if __name__ == "__main__":
     unittest.main()
