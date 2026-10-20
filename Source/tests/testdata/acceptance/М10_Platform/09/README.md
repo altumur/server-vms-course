@@ -23,7 +23,7 @@
 - **Дверь хранилища.** Сц. 07 пишет строку intent мимо контроллера: `@as testsubcontroller store` — сокет роли
   контроллера `testsub` по файлу прав установки (урок 6). Контроллера `testsub` в сц. 07 нет, строку никто не
   перепишет.
-- **Порча пульса.** Сц. 08 портит пульс директивой `@spoil object`: после неё пульс нечитаем (урок 8 Н1.1). Воркер до
+- **Порча пульса.** Сц. 08 портит пульс директивой `@spoil object`: после неё пульс нечитаем (P/05 Н1.1). Воркер до
   этого убит (`@sigkill`): его пульс остаётся объектом и больше не пишется.
 - **Куки.** Сц. 03 шаги 4–5: ответ `DELETE /session` несёт два заголовка `Set-Cookie`. Ожидание `@header` ищет подстроку
   в каждом значении повторённого заголовка.
@@ -40,7 +40,7 @@ acceptance-entry inputs`). Процессов ресурса и воркеров
 
 | Файл | Ключ | Что в нём |
 |---|---|---|
-| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса урока 8 Н1.4 с `pass_stalled: 12.5` (C12) |
+| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса P/05 Н1.4 с `pass_stalled: 12.5` (C12) |
 | `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | тот же пульс и поле `bogus` вне `ResourceRow` (C11) |
 | `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ серверу ключа (C11) |
 | `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | нет обязательного `url` (C11) |

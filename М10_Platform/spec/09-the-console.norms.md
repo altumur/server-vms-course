@@ -209,7 +209,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 | `WorkerRow.state` | как `worker_state` урока 3 Н2 («`rows` в `GET /{rows}`»): `live` при возрасте пульса ≤ 45 с, иначе `stale` |
 | `WorkerRow.capacity` | поле пульса `placement.capacity.from` — конечное число как в пульсе, дробное без округления; поля нет — `capacity.default`; поле не число — `null`: воркер не принимает новых единиц ([P/04 Н1.3](../../Platform/04-controller/spec/04-controller.norms.md); журнал cammeta-go, урок 9 № 5) |
 | `WorkerRow.idle_by_policy` | `true`, когда при `servers: distinct` воркер на месте не хранитель ([P/04 Н3 «выбрать»](../../Platform/04-controller/spec/04-controller.norms.md)), иначе `false` |
-| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` [P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса урока 8 Н1.4 как есть (ключи `<sub>/<имя слота>`); нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
+| `/resources` | серверы с прочитанным пульсом ресурса; `state` — `live` или `silent` по пульсу, как в `resource_state` [P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) (строку двери `/resources` не учитывает); `workers`, `running`, `unknown`, `instances`, `pass_stalled` — из пульса ресурса [P/05 Н1.4](../../Platform/05-resource/spec/05-resource.norms.md) как есть (ключи `<sub>/<имя слота>`); нечитаемый пульс в ответ не входит, его считает `w2c_resource_heartbeats_garbled` |
 | `WherePlace` без подписанта двери | поля `door` нет совсем (не `null`) |
 | пульс воркера в `/servers` и `/metrics` | нечитаемый (Н0 P/01.1 «Устойчивость выдачи»: не JSON-объект, не по форме P/03.4 Н1.1), `worker` ≠ имени в ключе или имя ключа не по грамматике имени слота P/03.2 Н1.4 (`W-N`) — пульса нет: воркер не показан, пульс считается в `<sub>_heartbeats_garbled`, ответ 200 (сверка python и go М10/6–11, C3, C15) |
 | `ServerRow.labels`, `labels_node`, `labels_source` | `labels` — действующие метки сервера: строка `platform/servers/<s>` побеждает метки узла (урок 4 Н2.1); `labels_node` — метки узла из поля `labels` пульсов воркеров сервера; `labels_source` — `console` при читаемой строке, `node` без строки, когда есть прочитанный пульс воркера сервера, иначе `unknown` (сверка python и go М10/6–11, C16) |
@@ -217,7 +217,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 | `ServerRow.placeable`, `why` | `true`, когда на сервере есть живой воркер подсистемы, который проходит пул и ограничения [P/04 Н3 «выбрать»](../../Platform/04-controller/spec/04-controller.norms.md) (метки, `requires`); нет такого — `false`, `why` — причина («no eligible live worker») (сверка python и go М10/6–11, C17) |
 | `ServerRow.decommissionable` | `true`, когда запрос вывода без `gone` сейчас был бы принят ([P/04 Н3 «вывести_сервер»](../../Platform/04-controller/spec/04-controller.norms.md): ни ресурс, ни воркер, ни слот сервера не слышны `LOST_AFTER`, ресурс когда-то слышали); пустой сервер под этим условием — `true`; иначе `false`, причина — `decommission_refusal` (сверка python и go М10/6–11, C18) |
 | `WorkerRow.released`, `slot_until`, `slot_garbled` | строки слота нет — трёх полей нет; строка нечитаема или не по форме P/03.2 Н1.4 — `slot_garbled: true`, `slot_until: null`, `released` нет; читаема — `released` и `slot_until` из неё, `slot_garbled: false` (сверка python и go М10/6–11, C19); `released` — `true` только при `"true"`; при `"taking"` (захват в работе, урок 3 Н1.4) — `released: false` и `slot_taking: true`, иначе поля `slot_taking` нет (добавлено пилотом Quint, F2) |
-| пульс ресурса в `/resources`, `/servers`, `/metrics` | нечитаемый — не JSON-объект; `server` ≠ серверу в ключе; нет обязательного поля `ResourceRow` (кроме `state`, его выводит консоль) или поле не своего типа — кроме `schema` и `build`: у них исход поля урока 10 Н1.1 (`schema` не целым знаком — схема неизвестна, `build` не строка — `""`), пульс остаётся читаемым, как пульс воркера (добавлено описью семей; проверяется чтением — сценария `/resources` с таким пульсом нет, исход поля — сц. 12 урока 10); поле вне `ResourceRow` (его поля — закрытый перечень полей пульса, которые пишет ресурс урока 8 Н1.4). Нечитаемый пульс в `/resources` не входит, жизни не подтверждает ([P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) `resource_state`) и считается в `w2c_resource_heartbeats_garbled`; ответ 200 (сверка python и go М10/6–11, C11) |
+| пульс ресурса в `/resources`, `/servers`, `/metrics` | нечитаемый — не JSON-объект; `server` ≠ серверу в ключе; нет обязательного поля `ResourceRow` (кроме `state`, его выводит консоль) или поле не своего типа — кроме `schema` и `build`: у них исход поля урока 10 Н1.1 (`schema` не целым знаком — схема неизвестна, `build` не строка — `""`), пульс остаётся читаемым, как пульс воркера (добавлено описью семей; проверяется чтением — сценария `/resources` с таким пульсом нет, исход поля — сц. 12 урока 10); поле вне `ResourceRow` (его поля — закрытый перечень полей пульса, которые пишет ресурс, P/05 Н1.4). Нечитаемый пульс в `/resources` не входит, жизни не подтверждает ([P/04 Н1.4](../../Platform/04-controller/spec/04-controller.norms.md) `resource_state`) и считается в `w2c_resource_heartbeats_garbled`; ответ 200 (сверка python и go М10/6–11, C11) |
 
 `/resources` — объект по имени сервера с полными `ResourceRow`: обязательны `server, ts, url, schema, build, usage, usage_at, space, volumes, units, mirrors, short, state`; диагностические расширения перечислены в контракте. Это наблюдение пульсов ресурса, а не удостоверение доступности каждого объекта. `/where/<table>/<place>?unit=<id>` возвращает `{worker, place, server, door?}` либо 404 `{unreachable}` с одноимённым значением заголовка `X-Unreachable`. Неизвестная таблица — 404 до проверки `unit`, известная без `unit` — 400.
 
@@ -407,23 +407,23 @@ door.routes, доступным подписантом и подтверждён
   # Ряды диагностические: свежесть и аренды по ним не судят (журнал cammeta-go, урок 9 № 6)
 metrics[]:  закрытый перечень ключей элемента (загрузчик P/02.1 отказывает иным): name, type, from, agg, equals, when, default,
             live, labels, count, where, unheld, unless {table, where}, buckets, label, values; смысл и грамматика значений — М13
-платформы, один раз (root); источник — пульсы ресурсов урока 8 Н1.4 и уборка просьб этой консоли:
+платформы, один раз (root); источник — пульсы ресурсов P/05 Н1.4 и уборка просьб этой консоли:
   w2c_resources_live — ресурсов, чей пульс менялся < 45 с; w2c_resource_heartbeats_garbled — нечитаемых пульсов ресурсов
   с запуска процесса консоли; w2c_resource_full{server} — 1, когда space.full пульса ≥ 1 (том заполнен: used = total), иначе 0; space.full — доля
-  урока 8 Н1.4, отдаётся как есть (журнал cammeta-go, урок 9 № 8); w2c_resource_short_bytes{server} — поле
+  P/05 Н1.4, отдаётся как есть (журнал cammeta-go, урок 9 № 8); w2c_resource_short_bytes{server} — поле
   short: сколько байтов отметка просила освободить и не смогла; w2c_resource_waits{server} — ожиданий /events/wait сейчас,
-  w2c_resource_waits_held_total, _full_total, _replaced_total{server} — с запуска ресурса (поле waits, урок 8 Н3
+  w2c_resource_waits_held_total, _full_total, _replaced_total{server} — с запуска ресурса (поле waits, P/05 Н1.6
   «/events/wait»); w2c_resource_rows_garbled{server,table} — нечитаемых строк таблиц, прочитанных ресурсом;
   w2c_resource_restore_left{server}, w2c_resource_restore_failures_total{server} — поле restore (восстановление
-  событий с копий соседей, урок 8 Н1.4 mirror); w2c_resource_mirror_failures_total{server},
-  w2c_resource_mirror_too_big_total{server} — поле mirror (урок 8 Н1.4 mirror, PEER_FAILS);
+  событий с копий соседей, P/05 Н1.4 «Восстановление бакетов»); w2c_resource_mirror_failures_total{server},
+  w2c_resource_mirror_too_big_total{server} — поле mirror (P/05 Н1.4 mirror, PEER_FAILS);
   w2c_requests_expired_total{sub}, w2c_requests_unknown_total{sub} — просьб, которые уборка этой консоли закрыла
   expired и unknown с запуска процесса (урок 8 Н3 sweep); у спеки без requests этих рядов нет (сверка python и go М10/6–11, C39)
   # источники — поля ResourceRow (Н2) живого и читаемого пульса, как есть (сверка python и go М10/6–11, C9, C10): waits — waits.waiting;
   # waits_held_total, _full_total, _replaced_total — waits.held, waits.full, waits.replaced; rows_garbled{table} —
   # garbled_rows.<table>; restore_left — число соседей restore с done: false; restore_failures_total — сумма
   # restore.<сосед>.failures; mirror_failures_total — mirror.failed; mirror_too_big_total — mirror.skipped (бакет больше
-  # 64 MiB, урок 8 Н1.4 mirror); поля нет в пульсе — ряда этого сервера нет
+  # 64 MiB, P/05 Н1.4 mirror); поля нет в пульсе — ряда этого сервера нет
 значения — по значению, не по написанию в пульсе: целое — целым (61, не 61.0; age тоже 10), нецелое — кратчайшей
   записью, читаемой обратно в то же число (7.5; экспонента допустима: 1e+21, 1e-07); одно правило для отсчёта,
   le корзины и слова equals (ADR-0055); подписи экранированы

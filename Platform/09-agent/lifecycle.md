@@ -53,7 +53,7 @@ TLS: комплект роли `domainagent` по `W2C_ROLE`; дверь рет�
   «Решает реализация» п. 1 [М11/4](../../М11_Domain/spec/04-relays-and-roads.norms.md)).
 - Местная дверь токенов — выбор реализации; если TCP — порты 8444–8447 не занимать, умолчание `8448` (М11/12 Н1.8
   `local_door`; [М11/7 Н1.2](../../М11_Domain/spec/07-worker-tokens.norms.md)); токены — только в памяти просящего.
-- Журнал роли — `<корень событий>/audit/domainagent/e1/…` (М10/8 Н1.2 `journal`).
+- Журнал роли — `<корень событий>/audit/domainagent/e1/…` ([договор журнала событий](../common/contracts/event-journal.md) `journal`).
 
 ## Коды выхода
 

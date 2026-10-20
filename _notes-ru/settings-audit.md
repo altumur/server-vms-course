@@ -317,7 +317,7 @@ def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> 
 - [`М12A_Domain/where-the-database-lives.md`](../М12A_Domain/where-the-database-lives.md) — семь ревизий, «detail is local, summary is domain» и предсказание четвёртого типа данных
 - [`М12A_Domain/04-who-may-call-it.md`](../М12A_Domain/04-who-may-call-it.md) — токены, гранты, ограниченный отказ, break-glass
 - [`М13_Observability/module-design.md`](../М13_Observability/module-design.md) — `unreachable` как первоклассное состояние; логи локальные, структурированные, без секретов
-- [М10/8](../М10_Platform/08-events-resource-requests.md) — бакеты, эпоха в пути, принятая потеря открытого бакета
-- [М10/8](../М10_Platform/08-events-resource-requests.md) — почему событийная база не источник истины
+- [P/05](../Platform/05-resource/05-resource.md) — бакеты, эпоха в пути, принятая потеря открытого бакета
+- [P/05](../Platform/05-resource/05-resource.md) — почему событийная база не источник истины
 - [Nomad `audit` block](https://developer.hashicorp.com/nomad/docs/configuration/audit) — Enterprise · [issue #7759](https://github.com/hashicorp/nomad/issues/7759) — «не поддерживается в OSS, ставьте reverse proxy»
 - Код: `w2cplatform/spec.py`, `w2cplatform/console.py`, `w2cplatform/events.py`, `w2cplatform/eventdatabase.py`, `w2cplatform/resource.py`, `domain/tokens.py`, `domain/agent.py`, `domain/identity.py`

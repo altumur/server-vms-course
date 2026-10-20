@@ -659,107 +659,6 @@ paths:
               description: Обязателен для error=busy, не обещает срок восстановления прочих отказов.
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
-  /v1/objects/{sub}/blobs/{digest}:
-    parameters:
-    - name: sub
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/M4_SubsystemName'
-    - name: digest
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: ^sha256-[0-9a-f]{64}(?![\s\S])
-    put:
-      summary: 'Дверь ресурса: принять полную копию blob'
-      parameters:
-      - name: Content-Length
-        in: header
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 67108864
-      - name: X-Written
-        in: header
-        required: true
-        schema:
-          type: string
-          pattern: ^[0-9]+(?:\.[0-9]+)?(?![\s\S])
-      requestBody:
-        required: true
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '400':
-          description: Неверный путь, framing или чтение
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '404':
-          description: Нет пути
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '405':
-          description: Метод/семья не допускает PUT; ключ не blob-формы (заглавные hex, без sha256-) или подсистема без blob-поля — обычный объект, его пишет владелец (Н1.5 mirror)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '408':
-          description: Медленное тело
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '409':
-          description: Надгробие новее копии
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '411':
-          description: Нет длины
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '413':
-          description: Больше предела
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '422':
-          description: Байты не соответствуют digest
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '503':
-          description: Хранилище недоступно
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/M8_ResourceError'
-        '403':
-          description: Недопустимая роль/семья
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/M8_ResourceError'
-                - $ref: '#/components/schemas/M8_ResourceDenied'
-        '204':
-          description: Целая копия принята; тела ответа нет
 components:
   schemas:
     M3_Unit:
@@ -795,7 +694,7 @@ components:
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
         дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
-        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        Дополнительно проверяются объявленные ограничения файлового профиля (договор журнала событий «Имена файлов в общих деревьях»): id должен помещаться в каталог бакета,
         имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M3_ClientFields:
       type: object
@@ -918,33 +817,6 @@ components:
       minLength: 1
       not:
         pattern: '[/\\]'
-    M8_Sha256:
-      type: string
-      pattern: ^[0-9a-f]{64}(?![\s\S])
-    M8_ResourceError:
-      type: object
-      required:
-      - error
-      additionalProperties: false
-      properties:
-        error:
-          type: string
-          minLength: 1
-    M8_ResourceDenied:
-      type: object
-      required:
-      - detail
-      - error
-      additionalProperties: false
-      properties:
-        detail:
-          type: string
-          minLength: 1
-        error:
-          const: refused
-        role:
-          type: string
-          minLength: 1
     ProcessBuild:
       type: object
       required:
@@ -1052,7 +924,7 @@ components:
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
         дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
-        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        Дополнительно проверяются объявленные ограничения файлового профиля (договор журнала событий «Имена файлов в общих деревьях»): id должен помещаться в каталог бакета,
         имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M4_SubsystemDrain:
       type: object
@@ -1096,7 +968,7 @@ components:
         pattern: '[^a-z0-9-]'
       description: 'Имя слота по P/03.2 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных латинских
         букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранной спеки проверяется отдельно.
-        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        Дополнительно проверяются объявленные ограничения файлового профиля (договор журнала событий «Имена файлов в общих деревьях»): id должен помещаться в каталог бакета,
         имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     M4_ConsoleRefusal:
       type: object

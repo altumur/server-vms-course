@@ -1,0 +1,5 @@
+date	sample	fix	languages
+2026-10-20	перенос	сценарии 01-objects-door, 02-events-query, 08-resource-paths из М10/08 (стадия B)	all
+2026-10-20	перенос	сценарий 01-resource-door из М10/11 (стадия B)	all
+2026-10-20	09-resource-door	сценарий 01-resource-door из М10/11 переименован в 09-resource-door: номер 01 занят 01-objects-door из М10/08 (Н5 сверяет номера); шаги без изменений	all
+2026-10-20	перенос	сценарий 10-body-copy из М10/10 (стадия B; решение «Спецификации» по В2: копия тела у ресурса — P/05)	all

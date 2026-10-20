@@ -26,7 +26,7 @@ HTTP-контракт — в [OpenAPI](spec/03-agent-and-reports.api.openapi.yam
 - [Урок 2](02-root-keys-and-revocation.md) — корень, набор, функция `keys`, конверт `x25519:v1`.
 - [P/03](../Platform/03-worker/03-worker.md), глава 3.4, и [М10/10](../М10_Platform/10-schema-drain-snapshot-limits.md) —
   пульс воркера и шарды снимка: то, что агент несёт.
-- [М10/8](../М10_Platform/08-events-resource-requests.md) — объекты: целиком или никак.
+- [P/05](../Platform/05-resource/05-resource.md) — объекты: целиком или никак.
 
 ## Приём — с двух сторон
 

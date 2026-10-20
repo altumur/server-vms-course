@@ -2394,7 +2394,7 @@ Idempotency-Key: 3f9c1e2a-…
 - [`settings-audit.md`](./settings-audit.md) — продолжение этого документа: как отследить, кто и когда менял настройку, и как построить по этому отчёт по домену
 - [`whose-architecture.md`](./whose-architecture.md) — ответ на «почему не как у всех, не база данных»: сравнение механизмов с Kubernetes, Chubby, Kafka и с тем, как устроены Milestone и Genetec
 - [`ARCHITECTURE.md`](../ARCHITECTURE.md) — §1.3 (слой может быть недоступен), §1.5 (какое хранилище под какую форму данных), §1.11 (`publish-then-point`), §1.12 (контроллер, воркер, консоль)
-- [М10/8](../М10_Platform/08-events-resource-requests.md) — признаки объекта, «целиком или никак»
+- [P/05](../Platform/05-resource/05-resource.md) — признаки объекта, «целиком или никак»
 - [М10/9](../М10_Platform/09-the-console.md) — почему страница опрашивает, а не слушает, и где это перестанет работать
 - `М11_Cluster/02-workers-resources-and-the-controller-as-jobs.md` — 64 KiB и raft, арифметика heartbeat'ов
 - [`М12A_Domain/module-design.md`](../М12A_Domain/module-design.md) — модель чтения для UI: из снапшота и heartbeat'ов, никогда из Variables

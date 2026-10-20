@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки platform/mirror (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+/copies	copies — 1 (зеркало тел); прочие поля строки читаются	0	поле	P/05 Н1.1 mirror
+	строка целиком нечитаема: зеркало тел — copies 1 (P/05 Н1.1 mirror); зеркало бакетов — шаг mirror прохода не исполняется (нынешнее поведение; норма исхода не называет)	1	строка	P/05 Н1.4 mirror, Н3 mirror, Н1.1 mirror

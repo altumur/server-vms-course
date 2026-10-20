@@ -1,185 +1,28 @@
 openapi: 3.1.0
 info:
-  title: М10/8 — двери объектов, событий, ресурса и просьб
+  title: 'М10/8 — двери консоли: события, отметки и просьбы'
   version: '1'
-  description: 'Канон — 08-events-resource-requests.norms.md. Разные серверы: ресурс и консоль. Н2 разделяет JSON,
-    байты и отсутствие тела; допуск ролей и TLS — Н2 «Допуск к дверям ресурса», P/02.4 Н1.6 и договор сертификата роли (ADR-0075), гранты — М10/9 Н1.3 `need`, внутренний API не нормируется. Формы реализации
+  description: 'Канон — 08-events-resource-requests.norms.md. Двери консоли; двери ресурса (`/v1/objects`, `/events` ресурса,
+    `/events/wait`, `/buckets`, `/events/{path}`, `/mirror`, `/mirrored`) — P/05 (05-resource.api.openapi.yaml, стадия B). Н2 разделяет JSON
+    и отсутствие тела; гранты — М10/9 Н1.3 `need`, внутренний API не нормируется. Формы реализации
     могут расходиться: контракт не утверждает, что какая-либо реализация ему проверена.'
 paths:
-  /v1/objects:
-    get:
-      summary: 'Ресурс: список доступных объектов'
-      responses:
-        '200':
-          description: Полный список доступной семьи
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ObjectListing'
-        '400':
-          description: Неверный scope/prefix
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '503':
-          description: Листинг не удался
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '403':
-          description: Семья не выдаётся, строка-объект или отказ личности
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/ResourceError'
-                - $ref: '#/components/schemas/ResourceDenied'
-      parameters:
-      - name: prefix
-        in: query
-        required: false
-        schema:
-          type: string
-        description: Начало относительного ключа; пустота разрешена. Проверка по Н1.1, отдельная от полного
-          ключа. Обычный список не показывает надгробий .gone/; prefix=.gone/ — только чтение надгробий
-          {written, peers, acked} (урок 10 Н1.5 delete; журнал cammeta-go, урок 10 № 2).
-      - name: scope
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - local
-          - cluster
-          default: local
-  /v1/objects/{key}:
-    parameters:
-    - name: key
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/ObjectKey'
-    get:
-      summary: 'Ресурс: прочитать объект'
-      responses:
-        '200':
-          description: Байты выбранной копии
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-          headers:
-            X-Written:
-              schema:
-                type: string
-              description: 'Обязателен: время записи выбранной копии в секундах, десятичный текст.'
-            X-Server:
-              schema:
-                $ref: '#/components/schemas/SafeSegment'
-              description: 'Обязателен: сервер выбранной копии.'
-            X-Missing:
-              schema:
-                type: string
-              description: 'Если есть неответившие: имена через запятую.'
-        '400':
-          description: Неверный key/scope
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '403':
-          description: Семья не выдаётся, строка-объект или отказ личности
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/ResourceError'
-                - $ref: '#/components/schemas/ResourceDenied'
-        '404':
-          description: Объект не найден среди ответивших
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-          headers:
-            X-Missing:
-              schema:
-                type: string
-              description: Неответившие серверы через запятую, если есть.
-        '503':
-          description: Не удалось прочитать копию
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '413':
-          description: Выбранное тело больше 64 МиБ; до успешных заголовков, без усечения
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-      parameters:
-      - name: scope
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - local
-          - cluster
-          default: local
-    put:
-      summary: Только отказ PUT не-блоба; полная дверь PUT /v1/objects/{sub}/blobs/{digest} — М10/10 Н2
-      responses:
-        '400':
-          description: Неверный ключ/scope
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '405':
-          description: Этот ключ не blob; другой объект пишет его писатель
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-      parameters:
-      - name: scope
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - local
-          - cluster
-          default: local
   /events:
     get:
-      summary: 'Ресурс: локальный индекс; консоль: слияние'
+      summary: 'Консоль: слияние ответов ресурсов (GET /events ресурса — P/05, 05-resource.api.openapi.yaml)'
       responses:
         '200':
-          description: ResourceEvents у ресурса, ConsoleEvents у консоли
+          description: ConsoleEvents
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventsAnswer'
+                $ref: '#/components/schemas/ConsoleEvents'
         '400':
-          description: 'Неверные параметры/чтение тела: ресурс — ResourceError, консоль — TextError (Н2, Н3 «запрос»)'
+          description: 'Неверные параметры/чтение тела — TextError (Н2; параметры — P/05 Н1.3)'
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/ResourceError'
-                - $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/TextError'
         '408':
           description: 'Консоль: чтение тела медленно'
           content:
@@ -205,7 +48,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TextError'
         '405':
-          description: 'Метод не поддержан: консоль — TextError; ресурс (в том числе HEAD и POST, Н2) — без тела (сверка python и go М10/6–11, E17)'
+          description: 'Метод не поддержан: консоль — TextError (ресурс — без тела, P/05 Н2)'
           content:
             application/json:
               schema:
@@ -217,19 +60,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleDenied'
         '403':
-          description: Отказ доступа
+          description: 'Консоль: отказ доступа'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Denied'
+                $ref: '#/components/schemas/ConsoleDenied'
         '503':
-          description: 'Ресурс: busy либо индекса нет; консоль: общий отказ двери'
+          description: 'Консоль: общий отказ двери'
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/ResourceError'
-                - $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/TextError'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
@@ -295,7 +136,7 @@ paths:
           - occurred
           default: t
     head:
-      summary: 'HEAD: только консоль (М10/9 Н2), код и заголовки GET без тела; у ресурса HEAD — 405'
+      summary: 'HEAD: консоль (М10/9 Н2), код и заголовки GET без тела (у ресурса HEAD — 405, P/05 Н2)'
       parameters:
       - name: from
         in: query
@@ -359,7 +200,7 @@ paths:
         '200':
           description: Консоль — как GET с ConsoleEvents; HEAD не содержит тела
         '400':
-          description: Неверные параметры/чтение тела; HEAD не содержит тела
+          description: 'Консоль: неверные параметры/чтение тела; HEAD не содержит тела'
         '408':
           description: 'Консоль: чтение тела медленно; HEAD не содержит тела'
         '413':
@@ -368,289 +209,17 @@ paths:
           description: 'Консоль: предел входа; HEAD не содержит тела'
         '404':
           description: 'Консоль: путь недоступен; HEAD не содержит тела'
-        '405':
-          description: 'Ресурс: HEAD не объявлен (М10/8 Н2); HEAD не содержит тела'
         '401':
           description: 'Консоль: личность не установлена; HEAD не содержит тела'
         '403':
           description: Отказ доступа; HEAD не содержит тела
         '503':
-          description: 'Ресурс: busy либо индекса нет; консоль: общий отказ двери; HEAD не содержит тела'
+          description: 'Консоль: общий отказ двери; HEAD не содержит тела'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
               schema:
                 const: '1'
-  /events/wait:
-    get:
-      summary: 'Ресурс: подсказка перечитать, без строк событий (ADR-0038)'
-      responses:
-        '200':
-          description: Изменение, тишина, очередь полна либо прежний запрос вытеснен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WaitAnswer'
-        '400':
-          description: Неверный want/client/since/timeout
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-        '503':
-          description: Общая полоса ресурса занята
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceError'
-          headers:
-            Retry-After:
-              description: При busy обязателен со значением 1.
-              schema:
-                const: '1'
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-      parameters:
-      - name: want
-        in: query
-        required: true
-        schema:
-          $ref: '#/components/schemas/Want'
-      - name: timeout
-        in: query
-        required: false
-        schema:
-          type: number
-          exclusiveMinimum: 0
-          maximum: 30
-          default: 30
-      - name: since
-        in: query
-        required: false
-        schema:
-          type: string
-          pattern: ^(?:0|[1-9][0-9]*)(?![\s\S])
-          description: Десятичный uint64, по умолчанию 0. Проверка диапазона обязательна.
-      - name: client
-        in: query
-        required: false
-        schema:
-          type: string
-          minLength: 1
-          maxLength: 128
-          pattern: ^[!-~]+(?![\s\S])
-  /buckets/{sub}/{unit}:
-    parameters:
-    - name: sub
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Subsystem'
-    - name: unit
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/SafeSegment'
-    get:
-      summary: 'Ресурс: перечень бакетов единицы'
-      responses:
-        '200':
-          description: 'UTF-8 JSON Lines: по одному BucketInfo на LF, без внешнего массива; пустой перечень — пустое
-            тело'
-          content:
-            application/x-ndjson:
-              schema:
-                type: string
-                x-line-schema:
-                  $ref: '#/components/schemas/BucketInfo'
-        '500':
-          description: Чтение каталога или метаданных не удалось; до успешных заголовков, тело отсутствует. Перечень неизвестен, не пуст.
-        '404':
-          description: Неверный путь/неизвестная единица; тело отсутствует
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-  /events/{path}:
-    parameters:
-    - name: path
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/ObjectKey'
-      description: Относительный путь с суффиксом .events.jsonl, также .mirror/<server>/... для восстановления;
-        сегменты . и .. запрещены.
-    get:
-      summary: 'Ресурс: поток файла бакета'
-      responses:
-        '200':
-          description: Полный файл до зафиксированного размера
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-          headers:
-            X-Sum:
-              schema:
-                $ref: '#/components/schemas/Sha256'
-              description: SHA-256 полного возвращаемого тела, обязателен.
-        '206':
-          description: Один диапазон файла
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-          headers:
-            Content-Range:
-              schema:
-                type: string
-              description: 'Обязателен: bytes start-end/size.'
-        '404':
-          description: Нет доступного обычного файла бакета; тело отсутствует
-        '416':
-          description: Диапазон не удовлетворяется
-          content:
-            text/plain:
-              schema:
-                type: string
-          headers:
-            Content-Range:
-              schema:
-                type: string
-              description: 'Обязателен: bytes */size.'
-        '500':
-          description: Не удалось подготовить полное тело/его сумму; тело отсутствует
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-      parameters:
-      - name: Range
-        in: header
-        required: false
-        schema:
-          type: string
-          pattern: ^bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*)(?![\s\S])
-        description: В профиле урока один диапазон; множественные/условные запросы вне профиля.
-  /mirror/{server}/{path}:
-    parameters:
-    - name: server
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/SafeSegment'
-    - name: path
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/ObjectKey'
-    put:
-      summary: 'Ресурс: принять целую копию закрытого бакета'
-      responses:
-        '204':
-          description: Копия проверена и опубликована; тело отсутствует
-        '400':
-          description: Неверные путь/сумма, нет X-Sum или оборванное тело; тело отсутствует
-        '408':
-          description: Тело пришло слишком медленно; тело отсутствует
-        '413':
-          description: Больше 67108864 байт; тело отсутствует
-        '422':
-          description: SHA-256 тела не совпала; тело отсутствует
-        '500':
-          description: Ошибка файла/публикации; тело отсутствует
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-      parameters:
-      - name: X-Sum
-        in: header
-        required: true
-        schema:
-          $ref: '#/components/schemas/Sha256'
-      requestBody:
-        required: true
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-  /mirrored/{server}:
-    parameters:
-    - name: server
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/SafeSegment'
-    get:
-      summary: 'Ресурс: перечень копий сервера'
-      responses:
-        '200':
-          description: Полный перечень копий
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MirroredListing'
-        '500':
-          description: Чтение каталога или метаданных не удалось; до успешных заголовков, тело отсутствует. Перечень неизвестен, не пуст.
-        '404':
-          description: Копий этого сервера нет; тело отсутствует
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
-  /mirrored/{server}/{path}:
-    parameters:
-    - name: server
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/SafeSegment'
-    - name: path
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/ObjectKey'
-    get:
-      summary: 'Ресурс: целая копия бакета'
-      responses:
-        '200':
-          description: Байты копии
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-          headers:
-            X-Sum:
-              schema:
-                $ref: '#/components/schemas/Sha256'
-              description: Обязателен, сумма возвращаемой копии.
-        '404':
-          description: Нет такой копии; тело отсутствует
-        '500':
-          description: Не удалось прочитать/проверить копию; тело отсутствует
-        '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceDenied'
   /marks:
     post:
       summary: 'Консоль: отметка оператора'
@@ -919,12 +488,14 @@ components:
         - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric
         дополнительно требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.
-        Дополнительно проверяются объявленные ограничения файлового профиля М10/8: id должен помещаться в каталог бакета,
+        Дополнительно проверяются объявленные ограничения файлового профиля (договор журнала событий «Имена файлов в общих деревьях»): id должен помещаться в каталог бакета,
         имя слота — в компонент heartbeats; предел полного ключа их не отменяет.'
     Subsystem:
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли.
       type: string
       pattern: ^[a-z][a-z0-9_-]{0,31}(?![\s\S])
     SafeSegment:
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли.
       type: string
       minLength: 1
       not:
@@ -937,14 +508,15 @@ components:
       type: string
       minLength: 1
       pattern: ^(?!/)(?!.*(?:^|/)\.{1,2}(?:/|$))[^/\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+(?:/[^/\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)*(?![\s\S])
-      description: Непустой относительный ключ; каждый сегмент непуст и не точка или две точки. Проверка смысла ключа
-        — Н1.1; схема не проверяет символические ссылки диска. Все компоненты и полный путь с корнем должны помещаться
-        в объявленный файловый профиль Н1.1; иначе 400 до файловой операции.
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли. Непустой относительный ключ; каждый сегмент непуст и не точка или две точки. Проверка смысла
+        ключа — P/05 Н1.1; схема не проверяет символические ссылки диска. Все компоненты и полный путь с корнем должны
+        помещаться в объявленный файловый профиль (договор журнала событий «Имена файлов в общих деревьях»); иначе 400 до
+        файловой операции.
     UnitRef:
       type: string
       minLength: 3
       pattern: ^[a-z][a-z0-9_-]{0,31}(?:\.alarms)?/[^/|",\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+(?![\s\S])
-      description: Полная ссылка <дерево>/<единица>, также console/<экземпляр> и audit/<роль>; экземпляр заранее ограничен профилем Н1.2. Без точных . и ..
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли. Полная ссылка <дерево>/<единица>, также console/<экземпляр> и audit/<роль>; экземпляр заранее ограничен профилем договора журнала событий. Без точных . и ..
         во второй части; для адресата единицы дополнительно действует UnitId; существование проверяется там, где
         этого требует маршрут.
       not:
@@ -972,52 +544,9 @@ components:
         не заменяет отдельную проверку байтов. Предел полного ключа с префиксом проверяется отдельно по P/01.1 Н1;
         определённый отказ хранилища badkey преобразуется по М10/3 Н3–Н4.
     Sha256:
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли.
       type: string
       pattern: ^[0-9a-f]{64}(?![\s\S])
-    ObjectEntry:
-      type: object
-      required:
-      - written
-      - server
-      - size
-      additionalProperties: false
-      properties:
-        written:
-          type: number
-        server:
-          $ref: '#/components/schemas/SafeSegment'
-        size:
-          type: integer
-          minimum: 0
-    ObjectListing:
-      type: object
-      required:
-      - server
-      - objects
-      additionalProperties: false
-      properties:
-        server:
-          $ref: '#/components/schemas/SafeSegment'
-        objects:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ObjectEntry'
-          propertyNames:
-            $ref: '#/components/schemas/ObjectKey'
-        missing:
-          type: array
-          items:
-            $ref: '#/components/schemas/SafeSegment'
-          uniqueItems: true
-    ResourceError:
-      type: object
-      required:
-      - error
-      additionalProperties: false
-      properties:
-        error:
-          type: string
-          minLength: 1
     TextError:
       type: object
       required:
@@ -1028,21 +557,6 @@ components:
         detail:
           type: string
         error:
-          type: string
-          minLength: 1
-    ResourceDenied:
-      type: object
-      required:
-      - detail
-      - error
-      additionalProperties: false
-      properties:
-        detail:
-          type: string
-          minLength: 1
-        error:
-          const: refused
-        role:
           type: string
           minLength: 1
     ConsoleDenied:
@@ -1057,10 +571,6 @@ components:
           minLength: 1
         error:
           const: denied
-    Denied:
-      oneOf:
-      - $ref: '#/components/schemas/ResourceDenied'
-      - $ref: '#/components/schemas/ConsoleDenied'
     RequestError:
       type: object
       required:
@@ -1094,7 +604,7 @@ components:
           type: string
           minLength: 1
           pattern: ^e1-(?:[0-9a-f]{2})+-(?:[0-9a-f]{2})+-(?:0|[1-9][0-9]*)-(?:[0-9a-f]{2})+-[1-9][0-9]*(?![\s\S])
-          description: Hex UTF-8 дерева, единицы и уникального экземпляра; эпоха и номер десятичные. Генерация и отсутствие повторного номера — Н1.2.
+          description: Hex UTF-8 дерева, единицы и уникального экземпляра; эпоха и номер десятичные. Генерация и отсутствие повторного номера — договор журнала событий (Н1.2).
         subsystem:
           type: string
           minLength: 1
@@ -1134,20 +644,11 @@ components:
           type: number
         until:
           type: number
-      description: Поля подсистемы открыты; перечисленные поля платформы имеют эти типы и не переопределяются. of
-        пуст только у платформенной строки без адресата. Все JSON-числа конечны. epoch_is и fenced ставит консоль при
-        слиянии (у ресурса их нет); согласованность epoch_is/fenced — Н1.3.
-    ResourceEventRow:
-      description: Строка ответа ресурса — без epoch_is и fenced (их ставит консоль при слиянии, Н3).
-      type: object
-      additionalProperties: true
-      allOf:
-      - $ref: '#/components/schemas/EventRow'
-      properties:
-        epoch_is: false
-        fenced: false
+      description: Форма — P/05 (05-resource.api.openapi.yaml), здесь копия для дверей консоли. Поля подсистемы открыты; перечисленные поля платформы имеют эти типы и не переопределяются.
+        of пуст только у платформенной строки без адресата. Все JSON-числа конечны. epoch_is и fenced ставит консоль при
+        слиянии (у ресурса их нет); согласованность epoch_is/fenced — P/05 Н1.3.
     ConsoleEventRow:
-      description: Строка ответа консоли — с epoch_is и fenced (Н1.3, Н3 «слияние»).
+      description: Строка ответа консоли — с epoch_is и fenced (P/05 Н1.3, Н3 «слияние»).
       type: object
       additionalProperties: true
       allOf:
@@ -1155,30 +656,6 @@ components:
       required:
       - epoch_is
       - fenced
-    ResourceEvents:
-      type: object
-      required:
-      - events
-      - state
-      - truncated
-      additionalProperties: false
-      properties:
-        events:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResourceEventRow'
-        state:
-          const: live
-        truncated:
-          description: Число подходящих уникальных по id строк, не вошедших в локальный limit после дедупликации.
-          type: integer
-          minimum: 0
-        partial:
-          const: true
-        lines_garbled:
-          description: Число пропущенных нечитаемых строк бакетов и файлов не на месте (Н1.3; P/01.1 Н0 «Устойчивость выдачи»); поля нет, когда пропусков нет.
-          type: integer
-          minimum: 1
     ConsoleEvents:
       type: object
       required:
@@ -1213,157 +690,6 @@ components:
           additionalProperties:
             type: string
             pattern: ^(?:did not answer|silent|said .+)(?![\s\S])
-    EventsAnswer:
-      oneOf:
-      - $ref: '#/components/schemas/ResourceEvents'
-      - $ref: '#/components/schemas/ConsoleEvents'
-    WaitPart:
-      type: string
-      minLength: 1
-      maxLength: 64
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]*(?![\s\S])
-    Want:
-      type: string
-      minLength: 3
-      description: 'Список через запятую: <sub>/<kind>[/<unit>]. Каждая часть — WaitPart; пустые элементы и пробелы
-        не допускаются.'
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?(?:,[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?)*(?![\s\S])
-    Touched:
-      type: string
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?![\s\S])
-    WaitChanged:
-      type: object
-      required:
-      - changed
-      - seq
-      - touched
-      additionalProperties: false
-      properties:
-        changed:
-          const: true
-        seq:
-          type: integer
-          minimum: 0
-          maximum: 18446744073709551615
-        touched:
-          type: array
-          items:
-            $ref: '#/components/schemas/Touched'
-          minItems: 1
-          uniqueItems: true
-    WaitQuiet:
-      type: object
-      required:
-      - changed
-      - seq
-      additionalProperties: false
-      properties:
-        changed:
-          const: false
-        seq:
-          type: integer
-          minimum: 0
-          maximum: 18446744073709551615
-    WaitFull:
-      type: object
-      required:
-      - changed
-      - seq
-      - full
-      additionalProperties: false
-      properties:
-        changed:
-          const: false
-        seq:
-          type: integer
-          minimum: 0
-          maximum: 18446744073709551615
-        full:
-          const: true
-    WaitReplaced:
-      type: object
-      required:
-      - changed
-      - seq
-      - replaced
-      additionalProperties: false
-      properties:
-        changed:
-          const: false
-        seq:
-          type: integer
-          minimum: 0
-          maximum: 18446744073709551615
-        replaced:
-          const: true
-    WaitAnswer:
-      oneOf:
-      - $ref: '#/components/schemas/WaitChanged'
-      - $ref: '#/components/schemas/WaitQuiet'
-      - $ref: '#/components/schemas/WaitFull'
-      - $ref: '#/components/schemas/WaitReplaced'
-    BucketInfo:
-      type: object
-      required:
-      - kind
-      - subsystem
-      - unit
-      - epoch
-      - start
-      - end
-      - path
-      - events
-      additionalProperties: false
-      properties:
-        kind:
-          const: events
-        subsystem:
-          type: string
-          minLength: 1
-        unit:
-          $ref: '#/components/schemas/SafeSegment'
-        epoch:
-          type: integer
-          minimum: 0
-        start:
-          type: number
-        end:
-          type: number
-        path:
-          $ref: '#/components/schemas/ObjectKey'
-        events:
-          type: integer
-          minimum: 0
-        sha256:
-          $ref: '#/components/schemas/Sha256'
-    MirroredCopy:
-      type: object
-      required:
-      - path
-      - written
-      - size
-      - sum
-      additionalProperties: false
-      properties:
-        path:
-          $ref: '#/components/schemas/ObjectKey'
-        written:
-          type: number
-        size:
-          type: integer
-          minimum: 0
-        sum:
-          $ref: '#/components/schemas/Sha256'
-    MirroredListing:
-      type: object
-      required:
-      - copies
-      additionalProperties: false
-      properties:
-        copies:
-          type: array
-          items:
-            $ref: '#/components/schemas/MirroredCopy'
     MarkInput:
       type: object
       required:

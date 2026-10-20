@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки <sub>/requests/free-<server>-<volume> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+	не своя форма (есть unit, чужие server/volume, испорченная форма): ресурс — не трогать, журнал free_ask.key_taken, пропустить (Н3 «проход ресурса» relieve); держатель-воркер — строка без unit с {free, volume, server} как обычная просьба не рассматривается (глава 3.6 «взгляд держателя»); консоль — строка ресурса без живого хозяина снимается по ttl (М10/8 Н3 жнец)	0	строка	P/05 Н1.4 free_ask, Н3 relieve; М10/8 Н3 «жнец»

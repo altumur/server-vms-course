@@ -176,7 +176,7 @@ paths:
                       type: object
                       required: [t, kind, class, member]
                       additionalProperties: true
-                      description: Строка индекса М10/8 Н1.3 класса alarm плюс member, t_src, from_history; строка молчания — Н1.8 silence_line. Поля строки события задают подсистемы.
+                      description: Строка индекса P/05 Н1.3 класса alarm плюс member, t_src, from_history; строка молчания — Н1.8 silence_line. Поля строки события задают подсистемы.
                   members:
                     type: object
                     additionalProperties: {$ref: '#/components/schemas/MemberAlarms'}

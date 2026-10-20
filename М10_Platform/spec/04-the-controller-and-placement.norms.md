@@ -11,7 +11,7 @@
 **Время.** Поля времени оставшихся строк урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`. Поля времени строк и объектов контроллера перенесены в [P/04 Н1](../../Platform/04-controller/spec/04-controller.norms.md) «Время» (стадия B).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`;
+- владеет: `<sub>/policy`, `platform/servers/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`;
 - читает: `platform/spec/<sub>`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `platform/resources/<server>/heartbeat`, `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`.
 
 Строки «владеет» — по каталогу до переноса P/05 и P/06: пишут консоль дверями Н2 и ресурс сервера, контроллер их читает
@@ -30,7 +30,7 @@ platform/servers/<сервер>:                # писатель — конс�
 platform/doors/<сервер>:                  # писатель — ресурс сервера (ADR-0045)
   url: <адрес двери>; since: <момент старта>; at: <момент последней отметки, каждые 15 с>
   room.<sub>: <десятичное ≥ 0>          # сколько ещё процессов роли <sub>worker сервер поднимет: память минус живые
-                                          # замки присутствия, не больше свободных номеров 2…99 (урок 8 Н1.4 room; ADR-0084)
+                                          # замки присутствия, не больше свободных номеров 2…99 (P/05 Н1.4 room, договор замка присутствия «Счёт room»; ADR-0084)
                                           # элемента нет, не читается или unknown — сервер не кандидат в заказ
 platform/drain:                           # писатель — консоль; одна строка на кластер
   server: <сервер>; at: <момент>

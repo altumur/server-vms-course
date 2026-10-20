@@ -1,0 +1,6 @@
+# Исходы нечитаемого пульса ресурса platform/resources/<server>/heartbeat (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	outcome	priority	unit	norm
+/schema	схема процесса неизвестна: в processes двери /schema — schema: null; пульс остаётся читаемым	0	поле	М10/10 Н1.1 heartbeat, Н2; М10/9 Н2 «Выдачи»
+/build	build читается как ""; пульс остаётся читаемым	0	поле	М10/10 Н1.1 heartbeat; М10/9 Н2 «Выдачи»
+	пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (P/04 Н1 resource_state: unreachable при свежей строке двери, иначе по порядку правил); присутствия процессов не даёт; консоль — в /resources не входит, считается в w2c_resource_heartbeats_garbled, ответ 200; restore соседа — пульс соседа не читается (Н1.4 «Восстановление бакетов»: необходимы все известные двери)	1	строка	P/04 Н1 resource_state; М10/9 Н2 «Выдачи»; P/05 Н1.4

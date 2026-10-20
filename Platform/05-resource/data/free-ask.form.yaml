@@ -1,0 +1,24 @@
+# Семья <sub>/requests/free-<server>-<volume> — просьба ресурса освободить место (P/05; P/05 Н1.4 free_ask; ADR-0059).
+# Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова —
+# Platform/common/DIALECT.md. Своя форма: без unit, digest и схемы семьи requests (М10/8 Н1.5); строка с unit под этим
+# ключом — не форма ресурса (обычная просьба), её ресурс не трогает.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    free:
+      type: number
+      exclusive_minimum: 0
+      description: need = used − total·low − Σ freeing из пульсов, байты; need ≤ 0 — строка снимается, не пишется
+    volume:
+      type: string
+      pattern: '[A-Za-z0-9_]{1,64}'
+      description: имя тома из ASCII A-Z/a-z/0-9/_, 1–64 байта, без дефиса; на коробке один том — events
+    server:
+      type: string
+      pattern: '.+'
+      description: свой сервер — непустой сегмент ключа P/01.1, дефисы допустимы; совпадает с `<server>` ключа
+    at:
+      ref: common.time
+      description: штамп записи
+  required: [free, volume, server, at]

@@ -72,13 +72,6 @@ scenario	step	request	expect
 09-drain-unreadable-pulse	7	console POST /drain?server=srv-a	2xx
 09-drain-unreadable-pulse	8	console GET /drain	200 {"draining": "srv-a", "safe": false, "would_strand": {"testsub": ["d9"]}, "subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
 09-drain-unreadable-pulse	9	console DELETE /drain	2xx
-10-body-copy	1	@start resource	ok
-10-body-copy	2	resource @header X-Written: 1700000000.5 PUT /v1/objects/testsub2/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw peer-copy	204
-10-body-copy	3	resource GET /v1/objects/testsub2/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16?scope=local	200 ~peer-copy
-10-body-copy	4	resource @header X-Written: 1 PUT /v1/objects/testsub2/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw other	422
-10-body-copy	5	resource PUT /v1/objects/testsub2/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw peer-copy	400
-10-body-copy	6	resource @header X-Written: 1 PUT /v1/objects/testsub2/blobs/sha256-190267417AED3196E75D1C9133AC48F349A10F8A19BE88C9E413B8E7A2B9DC16 @raw peer-copy	405
-10-body-copy	7	resource @header X-Written: 1 PUT /v1/objects/testsub/blobs/sha256-190267417aed3196e75d1c9133ac48f349a10f8a19be88c9e413b8e7a2b9dc16 @raw peer-copy	405
 11-table-feed	1	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a"}	201 {"row": {"feed": "https://h.example/a"}}
 11-table-feed	2	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b"}	400 {"error": "~must be given anew"}
 11-table-feed	3	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b", "feed_secret": ""}	400 {"error": "~must be given anew"}

@@ -1,7 +1,7 @@
 # Урок 11 — Процесс ресурса
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** ни строки кода ресурса — он платформенный (`python3 -m w2cplatform resource`, [М10/8](../М10_Platform/08-events-resource-requests.md)). Вы напишете то, что VMS говорит ему декларациями: общие сроки событий и тревог (`cam/retention` и `cam/alarms_retention`), удержания (`holds:` в `rec.subsystem.yaml` и `about:` в спеках, чьи единицы — про камеру), ответ регистратора на просьбу освободить место (`requests: {free: true}` и `freeing` в heartbeat'е).
+**Вы напишете:** ни строки кода ресурса — он платформенный (`python3 -m w2cplatform resource`, [P/05](../Platform/05-resource/05-resource.md)). Вы напишете то, что VMS говорит ему декларациями: общие сроки событий и тревог (`cam/retention` и `cam/alarms_retention`), удержания (`holds:` в `rec.subsystem.yaml` и `about:` в спеках, чьи единицы — про камеру), ответ регистратора на просьбу освободить место (`requests: {free: true}` и `freeing` в heartbeat'е).
 **Время:** ~35 минут.
 
 ## Зачем этот урок
@@ -16,7 +16,7 @@
 
 ## Что нужно знать заранее
 
-- **[М10/8](../М10_Platform/08-events-resource-requests.md)** — `Resource`: heartbeat, `pass_`, `retain`, `holds.kept`, `relieve`, `mirror`, `restore`, `serve`, `host.run_resource`.
+- **[P/05](../Platform/05-resource/05-resource.md)** — `Resource`: heartbeat, `pass_`, `retain`, `holds.kept`, `relieve`, `mirror`, `restore`, `serve`, `host.run_resource`.
 - **М10A, урок 13** — `EventIndex`: дерево бакетов, прочитанное там, где лежит.
 - **М10A, урок 12** — бакеты событий, дерево тревог `<sub>.alarms`, `tree_owner`.
 - **М10A, урок 9** — `about`, `holds`: словарь спеки.

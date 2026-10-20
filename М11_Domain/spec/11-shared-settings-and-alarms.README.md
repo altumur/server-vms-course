@@ -10,7 +10,7 @@
 
 Канон — [нормы](11-shared-settings-and-alarms.norms.md). [HTTP-контракт](11-shared-settings-and-alarms.api.openapi.yaml)
 выражает формы дверей урока. Подпись и её проверку задаёт урок 10 (`record`), заморозку — урок 10, индекс событий —
-М10/8. [Приёмка](../../Source/tests/testdata/acceptance/М11_Domain/11/README.md) — стенд урока 3 и векторы `resolve`, `alarms`;
+P/05. [Приёмка](../../Source/tests/testdata/acceptance/М11_Domain/11/README.md) — стенд урока 3 и векторы `resolve`, `alarms`;
 [лекция](../11-shared-settings-and-alarms.md) объясняет причины. При противоречии записать место и контрпример и передать
 «Спецификации»; инструкция не вводит новый отказ.
 

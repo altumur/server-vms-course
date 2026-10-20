@@ -231,7 +231,7 @@ epoch     = 1
 PUT vms/heartbeats/w-srv-a-1
 ```
 
-и ложится в `/data/platform/objects/vms/heartbeats/w-srv-a-1` на `srv-a` (`OBJECTS=cluster:///data/platform/objects?resource=http://127.0.0.1:8090`, урок М11 [М10/8](../../М10_Platform/08-events-resource-requests.md)). Ни консенсуса, ни версии, ни потолка в 64 КиБ: у объекта один писатель, и он переписывает его целиком. Содержимое — 761 байт в юните (на стенде 822: путь `archive` там длиннее):
+и ложится в `/data/platform/objects/vms/heartbeats/w-srv-a-1` на `srv-a` (`OBJECTS=cluster:///data/platform/objects?resource=http://127.0.0.1:8090`, урок М11 [P/05](../../Platform/05-resource/05-resource.md)). Ни консенсуса, ни версии, ни потолка в 64 КиБ: у объекта один писатель, и он переписывает его целиком. Содержимое — 761 байт в юните (на стенде 822: путь `archive` там длиннее):
 
 ```json
 {

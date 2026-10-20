@@ -110,7 +110,7 @@ fresh:          агент помнит по каждому пульсу, ког
 ### Н1.3 Поколение и метка
 
 ```yaml
-generation:     domain/members/<член>/reports/<rev>   # объект держателя (М10/8 Н1.1): целое поколение, JCS
+generation:     domain/members/<член>/reports/<rev>   # объект держателя (P/05 Н1.1): целое поколение, JCS
   whole:        {sent_at, objects, key, keys_rev?, pinned?, outcomes?}   # objects — все объекты члена после применения
                 изменения; outcomes — урок 6 Н1.5: смена исходов — новое поколение, агент шлёт поле в каждой
                 публикации, пока строка domain/outcomes не пуста; нет поля — исходов нет

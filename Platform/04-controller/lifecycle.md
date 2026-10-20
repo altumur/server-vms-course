@@ -8,7 +8,6 @@
 [P/02.5]: ../02-installer/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
 [М10/10]: ../../М10_Platform/spec/10-schema-drain-snapshot-limits.norms.md
-[М10/8]: ../../М10_Platform/spec/08-events-resource-requests.norms.md
 [Стенд]: ../common/acceptance/README.md
 [каталог]: ../common/data/catalog.tsv
 
@@ -28,7 +27,7 @@
 | `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (профиль коробки одной реализации) | [P/02.4] Н1.2 |
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | [P/02.4] Н1.2 |
 | `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов: отчёт прохода, шарды снимка | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2 «Канал настройки» |
-| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «Канал настройки», [М10/8] Н1.2 `journal` |
+| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «Канал настройки», [договор журнала событий](../common/contracts/event-journal.md) `journal` |
 | `SERVER_NAME` | свой сервер; не по грамматике суффикса слота — код 2 | короткий hostname | [P/02.4] Н1.2 |
 | `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [P/02.4] Н1.2 |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | сроки судьбы зависшего слота и бюджет достижимости | 900, 10 | [P/02.4] Н1.2, [P/04] Н1.4, «Решает реализация» п. 4 |
@@ -52,9 +51,9 @@
   `<sub>/controller/placement_intent`, `<sub>/decommissioned/<сервер>`; участие в `<sub>/slots/<имя>` (предложение) и `<sub>/<spec:unit.rows>/<id>`
   (`delete_after`).
 - **Объекты** в корне объектов: отчёт прохода `<sub>/controller/pass` ([P/04] Н1.2), шарды снимка
-  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). Имена файлов — одно кодирование урока 8 Н1.1.
+  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). Имена файлов — одно кодирование ([договор журнала событий](../common/contracts/event-journal.md) «Имена файлов в общих деревьях»).
 - **Объекты кластера** (пульсы воркеров и ресурсов, отчёты) контроллер читает через ресурс своего сервера (дверь
-  объектов урока 8, `scope`); без ресурса на своём сервере — только свой каталог; стенд, которому нужны пульсы других
+  объектов [P/05](../05-resource/spec/05-resource.norms.md), `scope`); без ресурса на своём сервере — только свой каталог; стенд, которому нужны пульсы других
   серверов, ставит ресурс на сервер контроллера ([P/04] Н3 «проход()» шаг 0; ADR-0084 доп. (2) Р17; разбор ревью стадии A
   3–5, № 22).
 - **Читает**: пульсы воркеров `<sub>/heartbeats/<имя>`, пульс ресурса `platform/resources/<server>/heartbeat`,
@@ -63,7 +62,7 @@
   очередь размещения и intent (`<sub>/controller/placement_turn`, `placement_intent`) он и пишет, и читает ([P/04] Н1.5).
 - **Слова сборки** (`BUILD`) у контроллера нет в выдаче: пульса он не пишет и в `processes` `/schema` не входит
   ([М10/10] Н2 `GET /schema`).
-- **Не пишет** в корень событий, кроме своего журнала `audit/<sub>controller/e1/…` (урок 8 Н1.2 `journal`).
+- **Не пишет** в корень событий, кроме своего журнала `audit/<sub>controller/e1/…` (договор журнала событий `journal`).
 
 ## Коды выхода
 
@@ -96,5 +95,5 @@
 
 ## Открыто
 
-- Исход прохода, когда ресурс сервера нечитаем, контроллер выводит из пульса ресурса и замка присутствия (урок 8 Н1.4);
+- Исход прохода, когда ресурс сервера нечитаем, контроллер выводит из пульса ресурса и замка присутствия (P/05 Н1.4, [договор замка присутствия](../common/contracts/presence-lock.md));
   второй пилот подтвердил заменяемость контроллера на общем состоянии — открытых строк жизненного цикла у него нет.

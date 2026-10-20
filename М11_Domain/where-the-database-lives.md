@@ -332,7 +332,7 @@ So the verdict *one database, and it belongs to a Node* became **no database at 
 
 - [PostgreSQL HA: repmgr vs Patroni vs pg_auto_failover](https://tomasz-gintowt.medium.com/postgresql-high-availability-repmgr-vs-patroni-vs-pg-auto-failover-a16fd0bfbc1e) — external dependencies of each, witness versus monitor versus DCS, and the closing argument that a system the team understands beats a more advanced one it does not
 - `worker-and-process-model.md` (retired, not in the repository) — camera lifecycle must survive a control-plane outage, which is the rule this record generalises
-- [М10/8](../М10_Platform/08-events-resource-requests.md) — events in buckets on the resource, copied to a peer; footage stays on the disks that recorded it
+- [P/05](../Platform/05-resource/05-resource.md) — events in buckets on the resource, copied to a peer; footage stays on the disks that recorded it
 - [М10/3](../М10_Platform/03-units-slots-epochs-lease.md) — the epoch row per unit and the fencing it gives
 - [P/01.1](../Platform/01-store/01-store.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
 
