@@ -4512,6 +4512,8 @@ paths:
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1prepare/post/responses/403'
         '404':
           $ref: '#/components/responses/SignerNotHere'
+        '405':
+          $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
@@ -4561,6 +4563,8 @@ paths:
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/responses/403'
         '404':
           $ref: '#/components/responses/SignerNotHere'
+        '405':
+          $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':

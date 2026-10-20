@@ -54,7 +54,7 @@
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `<sub>/<spec:domain.witness.report>/<имя>`;
 - пишет: `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append);
-- читает: `platform/spec/<sub>`, `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/member-list`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- читает: `platform/spec/<sub>`, `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Строк держателя консоль домена не пишет: правки передаёт процессу `domain` (Н1.3; приём — [P/08.0](../../08-domain/spec/08.0-domain.norms.md)
 Н1.8), права `domainconsole` — чтение `domain/*` ([P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4). Семья
@@ -66,8 +66,8 @@
 Что читает каждая дверь: вид, теневой отчёт, список членов, топологию, назначения, гранты, общий документ — двери чтения
 Н1.2 (формы строк — их главы урока P/08); `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
 `domain/grants/<кластер>` — сторожевая (Н1.5; ключи и токен — [договор токена домена](../../common/contracts/domain-token.md),
-`may` — [договор права](../../common/contracts/may.md)); `domain/member-list`, `domain/members`, строки
-`domain/members/<член>/ca-certs` — дверь роли (Н1.4 `server.role`); `domain/<sub>/worker` и пульс `domain/<sub>/heartbeat` —
+`may` — [договор права](../../common/contracts/may.md)); `domain/members` и строки
+`domain/members/<член>/ca-certs` — дверь роли (Н1.4 `server.role`; копию `domain/member-list` консоль домена не читает — разбор ревью стадии B 8–10, вопрос 4); `domain/<sub>/worker` и пульс `domain/<sub>/heartbeat` —
 `door.pass` на домене (Н1.6); отчёт члена, метка `reported` (`received_at`, `sent_at`), история и `domain/members` — список
 тревог (Н1.8); строки спеки и `platform/schema` — старт (Н1.1); ключ сертификата сервера роли `domainconsole` — дверь роли
 TLS. Журнал роли — `audit/domainconsole`, тревога `session.debug_open` (отладочная личность, Н1.5) — `audit.alarms/domainconsole`
