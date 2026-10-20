@@ -280,6 +280,10 @@ class Chapter:
         lines = path.read_text(encoding="utf-8").split("\n")
         begins = [i for i, x in enumerate(lines) if x == BEGIN]
         ends = [i for i, x in enumerate(lines) if x == END]
+        if not begins and not ends:                          # переход: нормы без раздела — счёт, не ошибка
+            self.stats["canonical_section"] = "absent"
+            return
+        self.stats["canonical_section"] = "present"
         if len(begins) != 1 or len(ends) != 1 or ends[0] < begins[0]:
             self.error(NORMS, "canonical: the norms hold the built section once, between %s and %s (P/02.2-05)" % (BEGIN, END))
             return

@@ -293,6 +293,9 @@ class ChapterTests(LayoutBase):
     def test_section_and_schema_file(self):
         norms = self.root / NORMS
         norms.write_text("# 2.2\n")
+        got = self.chapter()
+        self.assertEqual((got.errors, got.stats["canonical_section"]), ([], "absent"))      # переход
+        norms.write_text("# 2.2\n%s\n" % BEGIN)
         self.assertTrue(any("hold the built section once" in m for m in self.messages()))
         section = build_view_section(Chapter(self.root).run().ld.form)
         norms.write_text("# 2.2\n%s\n%s%s\n" % (BEGIN, section, END))
