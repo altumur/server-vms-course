@@ -22,7 +22,8 @@ NORMS = LESSON / "spec/02.2-installer.norms.md"
 CORPUS = LESSON / "acceptance/1"
 ACCEPTANCE = LESSON / "acceptance/2"
 VECTORS = LESSON / "vectors/canonical"
-COURSE_SPECS = (Path("Source/vms"), Path("Source/tests/testdata"))
+# Спеки курса, которые идут в выгрузку: testsub*. Спеки VMS (Source/vms) — материал М12, в выгрузку не идут.
+COURSE_SPECS = (Path("Source/tests/testdata"),)
 HEADER = ["case", "input", "expect", "note"]
 CASE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 GENERATED = ("corpus-", "course-")
