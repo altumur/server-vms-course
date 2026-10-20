@@ -4789,8 +4789,12 @@ components:
         url:
           type: string
         schema:
-          type: integer
-          minimum: 1
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+          description: null — схема ресурса неизвестна (schema пульса не целым знаком; глава 6.5 Н2, глава 6.6 Н1.1а
+            heartbeat; разбор ревью стадии B 6–7, № 6).
         build:
           type: string
         usage:
