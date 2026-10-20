@@ -62,7 +62,7 @@ unit:
       type: json
     mask:
       type: blob
-      required: false     # необязательный blob допустим (урок 2 Н1.3)
+      required: false     # необязательный blob допустим (P/02.1 Н1.3; разбор ревью стадии B 3–5, № 34)
     shelf:
       type: string
       ref: testsub2/shelves

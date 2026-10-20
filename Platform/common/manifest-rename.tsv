@@ -20,9 +20,9 @@ SpecView	ManifestView	схема OpenAPI ответа двери	P/06.5 Н2 «GE
 w2cctl spec put	w2cctl manifest put	команда установщика	P/02.3 Н3, P/02.4	Platform/02-installer/lifecycle.md; приёмка P/02; catalog.tsv (ops); id-map.tsv
 w2cctl spec status	w2cctl manifest status	команда установщика	P/02.3 Н3	Platform/02-installer/lifecycle.md
 spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стенда» через admin.sock	приёмка М10/01 README	приёмка P/01, P/02; Platform/02-installer/lifecycle.md; module-design.md
-{spec}	{manifest}	подстановка «Стенда»	приёмка М10/01 README	приёмка P/06.1, P/06.6
-{specs}	{manifests}	подстановка команды вывода прав	приёмка М10/01 README	Platform/02-installer/lifecycle.md
-SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; приёмка М10/01; Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
+{spec}	{manifest}	подстановка «Стенда»	общий README приёмки (common/acceptance/README.md; разбор ревью стадии B 3–5, № 33)	приёмка P/06.1, P/06.6
+{specs}	{manifests}	подстановка команды вывода прав	общий README приёмки (common/acceptance/README.md; разбор ревью стадии B 3–5, № 33)	Platform/02-installer/lifecycle.md
+SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; общий README приёмки (разбор ревью стадии B 3–5, № 33); Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
 /opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	P/02.4 Н1.2	Platform/02-installer/lifecycle.md
 <spec:…>	<manifest:…>	обозначение части ключа каталога данных из манифеста	Platform/common/data/catalog.tsv (форма — inbox 2026-10-18-каталог-данных-форма.md)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; абзацы «Данные»
 console.spec(name)	console.manifest(name)	вызов модуля консоли	P/07 Н1.5 `words` (`spec(name)`); описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем

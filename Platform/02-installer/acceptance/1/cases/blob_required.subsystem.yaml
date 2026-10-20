@@ -62,7 +62,7 @@ unit:
       type: json
     mask:
       type: blob
-      required: true      # blob не бывает обязательным: дайджест приходит дверью байтов после создания (урок 2 Н1.3)
+      required: true      # blob не бывает обязательным: дайджест приходит дверью байтов после создания (P/02.1 Н1.3; разбор ревью стадии B 3–5, № 34)
     shelf:
       type: string
       ref: testsub2/shelves

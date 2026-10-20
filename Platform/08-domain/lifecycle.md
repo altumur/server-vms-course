@@ -69,7 +69,7 @@ TLS: комплект роли `domain` по `W2C_ROLE` (P/02.4 Н1.6; [М11/8 �
 Стенд нескольких кластеров М11 (README приёмки М11/01, «Стенд нескольких кластеров»): `@install domain` — установка
 с `{domain}` и `{recovery}`; `@start domain` — процессы `domain` и консоли домена на `hold`; `@start domain on
 <кластер>` — без установки; `@start domain second` — вторая копия с тем же `{data}`; `@move` — перенос. Дверь `signer` —
-через посредника раннера (`DOMAIN_URL` агентов). `{data}` — `PLATFORM_DIR` кластера (README приёмки М10/01 «Стенд»).
+через посредника раннера (`DOMAIN_URL` агентов). `{data}` — `PLATFORM_DIR` кластера ([общий README приёмки](../common/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
 
 ## Открыто
 

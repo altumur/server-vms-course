@@ -75,7 +75,7 @@
 
 ## Стенд
 
-«Стенд» — [README приёмки М10/01](../common/acceptance/README.md):
+«Стенд» — [общий README приёмки](../common/acceptance/README.md) (разбор ревью стадии B 3–5, № 33):
 - команда хранилища получает `{data}` (`PLATFORM_DIR`, хранилище — `{data}/configstore`), `{socket}` (`admin.sock`,
   сокеты ролей рядом), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; спек не кладёт;
 - `{rights}`: в P/01.1 — файл роли `acc`, в приёмках, перенесённых из М10/4–11, — вывод прав из спек стенда командой вывода прав;

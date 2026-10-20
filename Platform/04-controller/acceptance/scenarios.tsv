@@ -172,6 +172,6 @@ scenario	step	request	expect
 17-distinct-one-shelf	18	@grow srv-a	ok
 17-distinct-one-shelf	19	@until 30 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
 17-distinct-one-shelf	20	@until 30 console2 GET /unplaceable	200 [{"id": "t9", "why": "~no free shelf"}]
-17-distinct-one-shelf	21	@sleep 40	ok
+17-distinct-one-shelf	21	@sleep 25	ok
 17-distinct-one-shelf	22	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "retiring": "@absent"}}
 17-distinct-one-shelf	23	store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}

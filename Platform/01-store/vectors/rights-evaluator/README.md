@@ -3,7 +3,7 @@
 Владелец — урок P/01, глава 1.2 (на стадии A норма — P/01.2 Н1.2 `pattern`, Н1.3 «Оценщик»). Вход — файл прав
 `rights.json`, выход — `expect.tsv`: строка `role action key expect`, `expect` — `allow` или `deny`.
 
-**Прогон.** Раннер запускает свежее хранилище с `rights.json` как `{rights}` («Стенд» README приёмки М10/01) и на
+**Прогон.** Раннер запускает свежее хранилище с `rights.json` как `{rights}` («Стенд» [общего README приёмки](../../../common/acceptance/README.md); разбор ревью стадии B 3–5, № 33) и на
 каждую строку делает пробу сокетом роли: `read` — `GET /v1/get?key=<key>`, `write` — `POST /v1/write` `put`, `delete` —
 `POST /v1/write` `delete` (без `cas`; отсутствующая строка удаляется успешно, М10/1 Н3). Исход пробы:
 - `deny` — `403 forbidden`;

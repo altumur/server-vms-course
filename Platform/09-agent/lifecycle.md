@@ -75,7 +75,7 @@ TLS: комплект роли `domainagent` по `W2C_ROLE`; дверь рет�
 Стенд нескольких кластеров М11 (README приёмки М11/01): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
 посредник раннера; `@start agent <кластер> via <ретранслятор>` — `RELAY_URL` вместо `DOMAIN_URL`; `@join <кластер>
 [<файл>]` — команда `join` с файлом восстановления; `@clock` — `W2C_WALL_OFFSET`. `{data}` — `PLATFORM_DIR` кластера
-(README приёмки М10/01 «Стенд»).
+([общий README приёмки](../common/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
 
 ## Открыто
 

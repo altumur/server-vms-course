@@ -57,8 +57,8 @@ TLS: комплект роли `domainconsole` по `W2C_ROLE` ([М11/8 Н1.6](.
 
 Стенд нескольких кластеров М11 (README приёмки М11/01): `@start domain` поднимает процессы `domain` и консоли домена на
 `hold`; дверь `holder <запрос>` — консоль домена на `hold`, `holder@<кластер>` — на другом кластере после переноса;
-`Idempotency-Key` у `POST`, `PUT`, `DELETE` — по правилу `@key`. `{data}` — `PLATFORM_DIR` кластера (README приёмки
-М10/01 «Стенд»).
+`Idempotency-Key` у `POST`, `PUT`, `DELETE` — по правилу `@key`. `{data}` — `PLATFORM_DIR` кластера ([общий README
+приёмки](../common/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
 
 ## Открыто
 
