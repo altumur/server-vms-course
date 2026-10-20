@@ -275,7 +275,7 @@ components:
         now: {type: number}
     PeerOutput:
       type: object
-      description: Вывод команды peer (Н3 «peer»).
+      description: Вывод команды peer (Н3 «peer»; Platform/common/contracts/peer.md).
       required: [result]
       additionalProperties: false
       properties:

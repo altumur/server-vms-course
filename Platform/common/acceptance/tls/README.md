@@ -6,7 +6,7 @@
 логические двери и клиенты, закрытый исход пробы и ожидания. Директивы — словарь Стенда М11 (README приёмки
 [М11/01](../../../../Source/tests/testdata/acceptance/М11_Domain/01/README.md), урок М11/8). Профиль реализации объявляет
 `keys.tls_stand: 1`; без него проверки этого стенда не исполнены (не GREEN). Нормы — М11/8 Н1.4, Н1.6 (`server`, `client`,
-`on_accept`, `admin`) и Н3 «peer»; договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md);
+`on_accept`, `admin`) и Н3 «peer» ([договор `peer`](../../contracts/peer.md)); договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md);
 перенос — М11/10 Н1.8. Пункт 3 и «держатель прежней сборки» из п. 7 — проверка чтением (Н5 уроков 8–10 при переносе).
 
 ## Комплекты: [`stand.json`](stand.json)

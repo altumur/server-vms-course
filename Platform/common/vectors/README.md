@@ -38,7 +38,8 @@
 | подпись просьбы `X-W2C-*`: функция `ask-sig` | [`ask-sig/`](ask-sig/README.md) | common (владелец P/08, глава 8.8) | [договор подписи просьбы](../contracts/ask-sig.md); разбор ревью стадии A 8–10, № 13 |
 | приём отчёта: функция «принять» (`accept`), дороги | [`accept/`](accept/README.md) | common (владелец P/08, глава 8.3) | [договор приёма отчёта](../contracts/accept.md); разбор ревью стадии A 8–10, № 13 |
 | право по грантам: функция `may` | [`may/`](may/README.md) | common (владелец P/08, глава 8.4) | [договор права](../contracts/may.md); решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1 |
-| `view`, `token`, `assemble`, `issue`, `peer`, `follow`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
+| клиент о сервере другого кластера: функция `peer` | [`peer/`](peer/README.md) | common (владелец P/09) | [договор `peer`](../contracts/peer.md); решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2 |
+| `view`, `token`, `assemble`, `issue`, `follow`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | P/04 | P/04 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |
 | разрешено ли сокращение: условие и порядок причин отказа (жертва, живые без места при ждущих, выдержка, в пути, гистерезис) | [`04-controller/vectors/shrink-allowed/`](../../04-controller/vectors/shrink-allowed/) | P/04 | P/04 Н3 «сократить (шаг 9а)», условие; Р3, Р13′, Р16′, Р16‴, Р22, Р28 (решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5) |
