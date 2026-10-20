@@ -1256,7 +1256,7 @@ watchdog:  роль nobody; w2c-run.sh nobody
 
 
 class CanonicalChapterTests(unittest.TestCase):
-    """Глава 2.2 (ADR-0089): puts.tsv и puts/ поддержаны у acceptance/2/ урока P/02, у иных глав — нет; без файлов главы
+    """Глава 2.2 (ADR-0089): puts.tsv и puts/ поддержаны у acceptance/2/ и 3/ урока P/02, у иных глав — нет; без файлов главы
     проверка пропускается (canonical=absent)."""
 
     def setUp(self):
@@ -1274,9 +1274,10 @@ class CanonicalChapterTests(unittest.TestCase):
         check.acceptance(self.acceptance, key, entry)
         return check.errors
 
-    def test_puts_supported_only_in_chapter_2_2(self):
+    def test_puts_supported_only_in_chapters_2_2_and_2_3(self):
         self.assertEqual(self.errors("P/02", "2/"), [])
-        errors = self.errors("P/02", "3/")
+        self.assertEqual(self.errors("P/02", "3/"), [])
+        errors = self.errors("P/01", "2/")
         self.assertTrue(any("puts.tsv: unsupported acceptance entry" in e for e in errors), errors)
         self.assertTrue(any("no supported acceptance table" in e for e in errors), errors)
 

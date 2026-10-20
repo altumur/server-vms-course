@@ -209,9 +209,8 @@ def references(document, external=None, place=lambda where: where):
 FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->",
                 "<!-- canonical:begin -->", "<!-- canonical:end -->"}
 # Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
-# the view column. Chapter 2.3 keeps its registry rows (P/02 acceptance-entry 3/puts.tsv, 3/puts) until they are taken
-# out together with adding ("P/02", "3/") here.
-PUTS_CHAPTERS = {("P/02", "2/")}
+# the view column, chapter 2.3 in three columns.
+PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
 
 
 def markdown_links(tokens):
@@ -1335,7 +1334,8 @@ class Check:
     # Chapter 2.2 «Канонический вид» (ADR-0089): the view of every accepted corpus case and course spec passes the built
     # schema, the built section stands in the norms between its markers, the vectors canonical are the built bytes and
     # hold every default, ordered and step of the projection (mutants, strict with --strict-coverage), puts.tsv of
-    # acceptance/2/ names vectors. Without any file of the chapter it is skipped: COUNTS says canonical=absent.
+    # acceptance/2/ names vectors. Without any file of the chapter it is skipped: COUNTS says canonical=absent. The
+    # three-column puts.tsv of the other PUTS_CHAPTERS (2.3) is checked here too (puts_cases).
     def canonical_chapter(self):
         if str(SCRIPTS) not in sys.path:
             sys.path.insert(0, str(SCRIPTS))
@@ -1344,10 +1344,15 @@ class Check:
         except ImportError as exc:
             self.error(self.root / "Platform/02-installer", f"canonical check needs ruamel.yaml (text layer Н1.1), missing: {exc}; run: {SCHEMA_INSTALL}")
             return
-        if not present(self.root):
-            self.stats["canonical"] = "absent"
-            return
-        chapter = Chapter(self.root, self.strict_coverage).run()
+        chapter = Chapter(self.root, self.strict_coverage)
+        if present(self.root):
+            chapter.run()                           # puts.tsv of acceptance/2/ — with the vectors
+        else:
+            chapter.stats["canonical"] = "absent"
+        for key, entry in sorted(PUTS_CHAPTERS):
+            where = Path("Platform/02-installer/acceptance") / entry.rstrip("/")
+            if key == "P/02" and entry != "2/" and (self.root / where / "puts.tsv").is_file():
+                chapter.stats["puts_cases"] = chapter.stats.get("puts_cases", 0) + chapter.puts(where)
         for path, message in chapter.errors:
             self.error(self.root / path, message)
         for name, value in chapter.stats.items():

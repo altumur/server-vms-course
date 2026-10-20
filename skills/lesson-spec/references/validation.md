@@ -112,19 +112,19 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 ## Канонический вид (ADR-0089, глава 2.2)
 
 Проекция принятой спеки по источнику формы главы 2.1 — [`scripts/form_source/canonical.py`](../scripts/form_source/canonical.py):
-сахар урока 2 (С1 `tables` списком, С2 `bound_to` одним именем, С3 `in` элемента `secret_in` одним словом), умолчания
+сахар урока 2 (`tables` списком, `bound_to` одним именем, `in` элемента `secret_in` одним словом — имена норм Н1.1), умолчания
 источника внутри присутствующего родителя (Р10), вычисляемые умолчания (П1 `snapshot`, П2 `tables.<т>.journal`,
 П3 `display.form`, П4 `default` описателя поля, П5 `decoded` у `secret_in` с `regex`), `ordered` — список `{name, …}` в
 порядке автора; байты — JCS. Перечень шагов закрыт (`STEPS`); шаг действует, если его места есть в форме. Из той же
 формы строятся форма вида (ключ с умолчанием или шагом — обязателен, сахар — одна форма, правил формы спеки нет) и её
-JSON Schema 2020-12; повтор `name` в списке `ordered` схема называет словом `x-unique-by`, проверяет его скрипт.
+JSON Schema 2020-12 (файлом в спеке не хранится: реализации строят её из источника, команда `schema` — для чтения); повтор `name` в списке `ordered` схема называет словом `x-unique-by`, проверяет его скрипт.
 Векторы, проба мутаций и `puts.tsv` главы — [`scripts/form_source/vectors.py`](../scripts/form_source/vectors.py).
 Байты норм, векторов и приёмки — «Спецификация», построитель — «Архитектор».
 
 ```sh
 # из корня раскладки (курс или выгрузка)
 python skills/lesson-spec/scripts/form_source/build_canonical.py section   # раздел в нормы 2.2 между маркерами (без них — stdout)
-python skills/lesson-spec/scripts/form_source/build_canonical.py schema [<файл>]   # JSON Schema вида
+python skills/lesson-spec/scripts/form_source/build_canonical.py schema   # JSON Schema вида в stdout (не хранится)
 python skills/lesson-spec/scripts/form_source/build_canonical.py vectors   # cases.tsv (строки corpus-*, course-*) и expect/
 ```
 
@@ -132,10 +132,10 @@ python skills/lesson-spec/scripts/form_source/build_canonical.py vectors   # cas
 |---|---|
 | Переход: нет ни `spec/02.2-installer.norms.md`, ни `vectors/canonical/`, ни `acceptance/2/` урока 2 — проверка пропускается, `canonical=absent` в `COUNTS`; иначе `canonical=present` | — |
 | Каждый шаг `STEPS` находит свои места в форме главы 2.1; построенная схема проходит метасхему 2020-12; вид каждого `ok` случая корпуса 2.1 и каждой спеки курса (`Source/vms/`, `Source/tests/testdata/`) проходит схему, без повтора `name` (`canonical_views`) | Согласие шагов с прозой норм 2.2 |
-| Раздел: если в нормах главы 2.2 есть строки `<!-- canonical:begin -->` и `<!-- canonical:end -->` (одна пара), текст между ними — построенный байт в байт; без маркеров (переход) — не ошибка, `canonical_section=absent` в `COUNTS`. `spec/02.2-installer.canonical.schema.json`, если он есть, — построенный байт в байт | Связующий текст норм |
+| Раздел: если в нормах главы 2.2 есть строки `<!-- canonical:begin -->` и `<!-- canonical:end -->` (одна пара), текст между ними — построенный байт в байт; без маркеров (переход) — не ошибка, `canonical_section=absent` в `COUNTS`. | Связующий текст норм |
 | Векторы `vectors/canonical/`: только `README.md` (обязателен), `cases.tsv`, `expect/`, `inputs/`. `cases.tsv` — заголовок `case<TAB>input<TAB>expect<TAB>note`; `case` уникален, `[A-Za-z0-9][A-Za-z0-9_.-]*`; `input` — путь файла спеки от корня раскладки (без `..`), загрузчик 2.1 его принимает; `expect` — ровно `expect/<case>.json`, байты — построенный вид (JCS, без перевода строки). Каждый принятый вход корпуса и курса — вход хотя бы одной строки; лишний файл `expect/`, `inputs/` — ошибка (`canonical_vectors`) | Строки-примеры по правилам записки умолчаний — чтением |
 | Проба мутаций: снять каждый `default` и каждый `ordered` источника, пропустить каждый шаг; мутант, на котором все векторы дают прежние байты, выжил (`canonical_mutants`, `canonical_mutants_killed`); с `--strict-coverage` выживший — ошибка: нужна строка-пример | — |
-| `acceptance/2/puts.tsv` (поддержан у главы 2.2, `PUTS_CHAPTERS`): заголовок `case<TAB>puts<TAB>expect<TAB>canonical` (три колонки — форма главы 2.3); `case` — `[a-z0-9_]+`, уникален; `puts` — имена `puts/<имя>.subsystem.yaml` через пробел, между ними директивы `@view-delete` (admin `delete` вида) и `@view-spoil` (admin `put` вида с иным `spec`), первым и последним — файл; `expect` — `<0\|2> <rev\|->`; `canonical` — `-` (вида нет) или `case` вектора: при коде 0 — вид последнего файла, при коде 2 — вид одного из файлов строки; при коде 0 `-` — ошибка. Каждый файл `puts/` ставит хоть одна строка (`canonical_puts`) | Порядок записи, `rev`, `toolarge` и граница потолка — сценариями и чтением |
+| `puts.tsv` глав 2.2 и 2.3 урока P/02 (`PUTS_CHAPTERS`, без строк реестра): заголовок `case<TAB>puts<TAB>expect<TAB>canonical` у 2.2, `case<TAB>puts<TAB>expect` у 2.3; `case` — `[a-z0-9_]+`, уникален; `puts` — имена `puts/<имя>.subsystem.yaml` через пробел, между ними директивы `@view-delete` (admin `delete` вида) и `@view-spoil` (admin `put` вида с иным `spec`), первым и последним — файл; `expect` — `<0\|2> <rev\|->`; `canonical` — `-` (вида нет) или `case` вектора: при коде 0 — вид последнего файла, при коде 2 — вид одного из файлов строки; при коде 0 `-` — ошибка. Каждый файл `puts/` ставит хоть одна строка (`canonical_puts` — 2.2, `puts_cases` — 2.3) | Порядок записи, `rev`, `toolarge` и граница потолка — сценариями и чтением |
 
 ## Каталог данных (ADR-0083)
 
@@ -202,7 +202,7 @@ paths)` — исходы по DIALECT § 9: строки, чей путь — п
 
 В каталоге приёмки урока обязательны `README.md` и `corrections.tsv` и хотя бы одна из таблиц
 `scenarios.tsv` или `verdicts.tsv`. Допустимы ещё `diagnostics.tsv` и `classes.tsv` (только при `verdicts.tsv`)
-и `cases/` (только при `verdicts.tsv`, имена — ровно `<case>.subsystem.yaml` из таблицы); у главы 2.2 урока P/02 —
+и `cases/` (только при `verdicts.tsv`, имена — ровно `<case>.subsystem.yaml` из таблицы); у глав 2.2 и 2.3 урока P/02 —
 `puts.tsv` и `puts/` ([канонический вид](#канонический-вид-adr-0089-глава-22)).
 Любой другой файл или каталог — `unsupported acceptance entry`.
 
