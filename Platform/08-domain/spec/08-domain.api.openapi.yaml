@@ -888,8 +888,8 @@ paths:
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/move:
     description: 'Глава 8.8 Н1.8, Н2; процессу цели передаёт консоль кластера (пересылка подписанту) — X-W2C-Client процесс здесь
-      не читает; личность и грант admin кластера-цели проверяет консоль кластера (глава P/06.7; до переноса урока 10 — М11/8
-      Н1.9 шаг 3).'
+      не читает; личность и грант admin кластера-цели проверяет консоль кластера (OpenAPI урока 6 POST /domain/move;
+      глава P/06.7).'
     post:
       operationId: move
       summary: Аварийный перенос сюда по файлу восстановления (Н1.8)
@@ -1134,10 +1134,10 @@ components:
           schema: {$ref: '#/components/schemas/TokenRefusal'}
     Denied:
       description: 'Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny — 403; форма
-        {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied)'
+        {error: denied, detail} — P/06.3 Н4 denied (договор сторожевой и передачи, общая форма Denied)'
       content:
         application/json:
-          schema: {$ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'}
+          schema: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'}
     Standby:
       description: 'Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby; добавлено М11/12)'
       content:
@@ -1345,7 +1345,7 @@ components:
               items:
                 $ref: '#/components/schemas/MemberName'
       description: 'Вид домена (P/08.1 Н1.4). Поля других глав (trust — 8.1 Н1.2а; member_list, knocking, reports — 8.1 Н1.7;
-        topology, relay_refused — 8.1 Н1.6а; books — 8.5; pending, outcomes — 8.6; url — М11/8 Н1.3, урок 10; term — 8.8;
+        topology, relay_refused — 8.1 Н1.6а; books — 8.5; pending, outcomes — 8.6; url — глава P/06.7 (адрес пересылки); term — 8.8;
         shared — 8.9) задают их главы; отданный вид (ServedView) закрыт и называет их.'
     ServedView:
       unevaluatedProperties: false
@@ -1372,7 +1372,7 @@ components:
                 type: array
                 items: {$ref: '#/components/schemas/Outcome'}
               description: 'P/08.6 Н1.6: {<член>: [<исход>…]} — строка domain/outcomes/<член> по (at, id) убывая'
-            url: {type: string, description: 'М11/8 Н1.3 (урок P/10): адрес консоли домена (DOMAIN_CONSOLE_URL процесса domain)'}
+            url: {type: string, description: 'адрес консоли домена (DOMAIN_CONSOLE_URL процесса domain; читает пересылка консоли кластера — глава P/06.7)'}
             term: {description: P/08.8 Н1.3}
             shared:
               $ref: '#/components/schemas/Delivery'

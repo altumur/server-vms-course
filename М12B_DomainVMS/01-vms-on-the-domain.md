@@ -17,8 +17,8 @@
 ## Что нужно знать заранее
 
 - **М10A, урок 9, шаг 20** — [словарь спеки](../Platform/02-installer/02-installer.md): закрытое множество ключей, отказ при загрузке.
-- **М11, уроки 1, 8; P/08.6** — дверь держателя: [список единиц](../М11_Domain/01-what-a-cluster-cannot-know.md), [правка через домен](../Platform/08-domain/spec/08.6-domain.norms.md), [пересылка консолью кластера](../М11_Domain/08-doors-between-clusters.md).
-- **М11, урок 3** — [агент](../М11_Domain/03-agent-and-reports.md): несёт строку `<путь>/<кластер>` в `<путь>`.
+- **P/08.1, P/10, P/08.6, P/06.7** — дверь держателя: [список единиц](../Platform/10-domain-console/spec/10-domain-console.norms.md) (вид — [P/08.1](../Platform/08-domain/spec/08.1-domain.norms.md)), [правка через домен](../Platform/08-domain/spec/08.6-domain.norms.md), [пересылка консолью кластера](../Platform/06-console/spec/06.7-console.norms.md).
+- **P/09.1** — [агент](../Platform/09-agent/spec/09.1-agent.norms.md): несёт строку `<путь>/<кластер>` в `<путь>`.
 - **P/08, глава 8.9** — [общие настройки](../Platform/08-domain/08-domain.md): подписанный документ за указателем.
 - **P/08, глава 8.8** — [передача держателя и хранители](../Platform/08-domain/08-domain.md): копия и перенос; [глава 8.10](../Platform/08-domain/spec/08.10-domain.norms.md) — держатель на одном узле.
 

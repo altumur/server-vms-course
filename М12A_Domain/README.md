@@ -9,10 +9,10 @@
 
 | № | Остаток | К чему | Платформенное — нормативно |
 |---|---|---|---|
-| 3 | [Шлюз живого видео и одна подписка](03-the-api-and-what-it-refuses.md) | М12 | [М11/1](../М11_Domain/01-what-a-cluster-cannot-know.md), [М11/3](../М11_Domain/03-agent-and-reports.md), [P/08.6](../Platform/08-domain/spec/08.6-domain.norms.md), [М11/8](../М11_Domain/08-doors-between-clusters.md) |
+| 3 | [Шлюз живого видео и одна подписка](03-the-api-and-what-it-refuses.md) | М12 | [P/08.1](../Platform/08-domain/spec/08.1-domain.norms.md), [P/10](../Platform/10-domain-console/spec/10-domain-console.norms.md), [P/08.3](../Platform/08-domain/spec/08.3-domain.norms.md), [P/09.1](../Platform/09-agent/spec/09.1-agent.norms.md), [P/08.6](../Platform/08-domain/spec/08.6-domain.norms.md), [P/06.7](../Platform/06-console/spec/06.7-console.norms.md) |
 | 5 | [Упаковка, обновления и лицензия](05-packaging-updates-and-the-licence.md) | М13 (ADR-0080 доп. 4) | — |
-| 10 | [Камера как кластер из одного](10-a-cluster-of-one.md) | М12 | [P/02.4 Н1.10](../Platform/02-installer/spec/02.4-installer.norms.md), [P/08.10](../Platform/08-domain/spec/08.10-domain.norms.md), [P/09.1 Н1.11](../Platform/09-agent/spec/09.1-agent.norms.md), [М11/3](../М11_Domain/03-agent-and-reports.md) |
-| 12 | [Сценарии между камерами](12-shared-settings-without-a-database.md) | М12 | [М11/11](../М11_Domain/11-shared-settings-and-alarms.md) |
-| 13 | [Свидетель молчания у VMS](13-alarms-from-every-member.md) | М12 | [М11/11](../М11_Domain/11-shared-settings-and-alarms.md) |
+| 10 | [Камера как кластер из одного](10-a-cluster-of-one.md) | М12 | [P/02.4 Н1.10](../Platform/02-installer/spec/02.4-installer.norms.md), [P/08.10](../Platform/08-domain/spec/08.10-domain.norms.md), [P/09.1 Н1.11](../Platform/09-agent/spec/09.1-agent.norms.md) |
+| 12 | [Сценарии между камерами](12-shared-settings-without-a-database.md) | М12 | [P/08.9](../Platform/08-domain/spec/08.9-domain.norms.md), [P/06.7 Н1.14](../Platform/06-console/spec/06.7-console.norms.md) |
+| 13 | [Свидетель молчания у VMS](13-alarms-from-every-member.md) | М12 | [P/09.1 Н1.10](../Platform/09-agent/spec/09.1-agent.norms.md), [P/10 Н1.8](../Platform/10-domain-console/spec/10-domain-console.norms.md), [P/08.9 Н1.9](../Platform/08-domain/spec/08.9-domain.norms.md) |
 
 Размещение по достижимости (шаги 4–5 прежнего урока 1) — долг урока М11/6 в `ХОД-Спецификация.md`.

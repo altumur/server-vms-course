@@ -1,8 +1,0 @@
-{
- "field": {
-  "name": "step",
-  "type": "int",
-  "inherit": 1
- },
- "domain": null
-}

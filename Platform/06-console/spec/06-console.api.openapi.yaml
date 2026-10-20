@@ -1,10 +1,18 @@
 # P/06 — двери процесса консоли кластера: HTTP-контракт (одна дверь процесса — один контракт урока, план урока 6 В6).
 # Главы ссылаются на свои пути (описание каждого пути называет главу): 6.1 — /{rows}, /{rows}/{id},
-# /{rows}/{id}/{blob_field}, /{table}, /{table}/{name}; 6.3 — /session, /session/break-glass; 6.4 — /events (слияние
-# консолью), /marks, /{sub}/requests, /{sub}/asked/{sha16}; 6.5 — страницы, /platform/*, /healthz, /spec, /{sub}/spec,
-# /mounts, /servers, /resources, /where, /metrics, /{sub}/…, door.pass /{pass}; 6.6 — /policy, /drain,
-# /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema. Глава 6.7 (поздний слой) отложена до
-# уроков 8–10 (разбор ревью стадии A 6–7, № 27): /domain/* и /api/* — двери М11, не заглушки этого контракта.
+# /{rows}/{id}/{blob_field}, /{table}, /{table}/{name}; 6.3 — /session (форма сессии и кука w2c_glass у /session/break-glass);
+# 6.4 — /events (слияние консолью), /marks, /{sub}/requests, /{sub}/asked/{sha16}; 6.5 — страницы, /platform/*, /healthz,
+# /spec, /{sub}/spec, /mounts, /servers, /resources, /where, /metrics, /{sub}/…, door.pass /{pass}; 6.6 — /policy, /drain,
+# /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (поздний слой, вводят уроки 8 и 10) —
+# /session/break-glass (порядок двери), /domain/{sub}/books/{book}, пересылка /domain и /domain/{route} (переход 1 договора
+# пересылки), /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, пересылка
+# подписанту /api/prepare, /api/take, /domain/move. Пути главы 6.7 слиты из контрактов М11/5, М11/8, М11/9, М11/10, М11/11
+# (сторона консоли кластера; перенос урока 10, стадия B, без изменения поведения): у пересылки — только коды перехода 1
+# (договор пересылки Platform/common/contracts/forwarding.md «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3),
+# ответ консоли домена как пришёл — ForwardAnswer (как PassAnswer у door.pass); у пересылки подписанту ответ процесса —
+# $ref на операции OpenAPI урока P/08 (решение «Архитектора» по планам 8–10, п. 9); схемы записи срока, пары, указателя и
+# имени члена — $ref на OpenAPI урока P/08, копий нет. Общие коды консоли (глава 6.5 Н2, Н4) перечислены у своих дверей
+# главы 6.7, как у прочих.
 # Слито из контрактов М10/3, М10/4, М10/8 (консольная половина), М10/9 (без договора модуля — P/07; путь
 # /platform/console.js остаётся консоли), М10/10 (без двери ресурса — P/05; /drain М10/10 совпадал с М10/4) — стадия B,
 # без изменения поведения, кроме правок разбора ревью стадии A 6–7: № 16, № 24 — копии M2_*, M3_*, M4_* сведены к
@@ -18,7 +26,7 @@ openapi: 3.1.0
 info:
   title: P/06 — двери консоли кластера
   version: '1'
-  description: 'Канон — нормы глав 06.1…06.6-console.norms.md; Н2 «Разбор запроса консоли» и общие коды (глава 6.5 Н2, Н4)
+  description: 'Канон — нормы глав 06.1…06.7-console.norms.md; Н2 «Разбор запроса консоли» и общие коды (глава 6.5 Н2, Н4)
     действуют у каждой двери, их ответы перечислены у каждой операции явно. Короткие пути единиц, таблиц, blob-полей, /policy,
     /unplaceable, /where/{id} выбирают CONSOLE_ROOT; пара servers {origin}/{sub} явно выбирает загруженную подсистему, включая
     root. /spec, /servers, /where/{table}/{place}, /metrics объявлены и с префиксом /{sub}. Общие /drain, /schema, /session,
@@ -800,9 +808,9 @@ paths:
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
   /session/break-glass:
-    description: Глава 6.3 — дверь аварийного входа у консоли кластера (сторожевая главы 6.3, session); порядок проверок,
-      предел и учёт попыток — P/08.4 Н1.10 (свой счёт двери консоли); порядок двери — М11/9 Н1.6 (поздний слой; глава 6.7 — переносом уроков 8–10, разбор ревью стадии A
-      6–7, № 27; разбор ревью стадии A 8–10, № 41).
+    description: Глава 6.7 Н1.10 (поздний слой; из М11/9 Н1.6) — дверь аварийного входа у консоли кластера по порядку,
+      GLASS_SESSION, GLASS_SESSIONS_MAX и журнал; предел и учёт попыток — P/08.4 Н1.10 (свой счёт двери консоли); сессия, кука
+      w2c_glass и форма ответа — глава 6.3 Н1.3 session (разбор ревью стадии A 8–10, № 40 / решение 8, № 41).
     post:
       summary: Аварийный вход
       responses:
@@ -3740,6 +3748,845 @@ paths:
                 const: '1'
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
+  /domain/{sub}/books/{book}:
+    description: 'Глава 6.7 Н1.1 (06.7-console.norms.md; из М11/5 Н2) — дверь книги этого члена у консоли кластера (члена и
+      держателя): кластер держит домен — строка domain/<sub>/<книга>/<CLUSTER>, иначе копия domain/<sub>/<книга>; поля вне
+      show и секреты в ответе не бывают; сегмент книги сравнивается с именем книги спеки байт в байт. Своя дверь консоли, не
+      пересылается.'
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-z][a-z0-9_-]{0,31}$
+    - name: book
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-z0-9][a-z0-9_-]*$
+    get:
+      summary: Книга этого члена
+      responses:
+        '200':
+          description: '"" — неполнота книги, остальные ключи — записи по (member, item) с полями show'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Книга этого члена (глава 6.7 Н1.1; сборка — P/08.5 Н1.3).
+                required:
+                - ''
+                properties:
+                  '':
+                    type: object
+                    required:
+                    - missing
+                    additionalProperties: false
+                    properties:
+                      missing:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - member
+                          - why
+                          additionalProperties: false
+                          properties:
+                            member:
+                              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+                            why:
+                              enum:
+                              - unseen
+                              - silent
+                              - never
+                              - no_copy
+                              - bad_contribution
+                              - secret_unopened
+                additionalProperties:
+                  type: object
+                  required:
+                  - entries
+                  - missing
+                  additionalProperties: false
+                  properties:
+                    entries:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - member
+                        - item
+                        additionalProperties: true
+                        description: Поля show входа плюс member и item; секретов и полей вне show нет. Открыт намеренно — поля show задаёт
+                          спека.
+                        properties:
+                          member:
+                            $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+                          item:
+                            type: string
+                            minLength: 1
+                    missing:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - member
+                        - why
+                        additionalProperties: false
+                        properties:
+                          member:
+                            $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+                          why:
+                            enum:
+                            - unseen
+                            - silent
+                            - never
+                            - no_copy
+                            - bad_contribution
+                            - secret_unopened
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/BookNotShown'
+        '405':
+          $ref: '#/components/responses/Method'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ConsoleUnavailable'
+    head:
+      summary: 'HEAD: книга этого члена'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain:
+    description: 'Глава 6.7 Н1.2–Н1.5, Н3 «переслать» — GET /domain: строка таблицы «Двери домена» договора пересылки
+      (Platform/common/contracts/forwarding.md), переход 1: консоль кластера пересылает в консоль домена своей коробки
+      (holds, view.url) или консоль кластера держателя (CLUSTERS) и отдаёт ответ как пришёл. Здесь — только коды перехода 1;
+      ответ консоли домена (вид, переход 2) — OpenAPI урока P/10, коды процесса domain (переход 3) — OpenAPI урока P/08; этот
+      контракт их не перечисляет (договор пересылки «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3).'
+    get:
+      summary: 'Пересылка: вид домена'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    head:
+      summary: 'HEAD: пересылка как HEAD; тот же код и заголовки, без тела'
+      responses:
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '408':
+          description: как у GET, без тела
+        '413':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+        default:
+          description: ответ консоли домена на HEAD как пришёл, без тела
+  /domain/{route}:
+    description: 'Глава 6.7 Н1.2–Н1.5, Н3 «переслать» — прочие строки таблицы «Двери домена» договора пересылки, переход 1:
+      пара (метод, путь) из таблицы пересылается в консоль домена, ответ — как пришёл; прочее под /domain/ (кроме своих дверей
+      консоли: books, at, keys, shared/<sub>, /domain/move) — 404 not a domain route без звонка; сегмент «.» или «..», в том числе
+      процент-формой, — тоже 404. Здесь — только коды перехода 1; ответы консоли домена и процесса domain — OpenAPI уроков P/10
+      и P/08 по строке таблицы, этот контракт их не перечисляет (договор пересылки «Отказы по переходам»; решение 3).'
+    parameters:
+    - name: route
+      in: path
+      required: true
+      description: Хвост пути после /domain/ — строка таблицы «Двери домена» (один или несколько сегментов; шаблона из
+        нескольких сегментов OpenAPI не задаёт, путь длиннее одного сегмента пересылается так же); query — как пришёл.
+      schema:
+        type: string
+        minLength: 1
+    get:
+      summary: 'Пересылка: GET строки таблицы'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    post:
+      summary: 'Пересылка: POST строки таблицы'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    put:
+      summary: 'Пересылка: PUT строки таблицы'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    patch:
+      summary: 'Пересылка: PATCH строки таблицы (метод «любой» — строки door.pass)'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    delete:
+      summary: 'Пересылка: DELETE строки таблицы'
+      responses:
+        '400':
+          $ref: '#/components/responses/ForwardBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/ForwardNotFound'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+        default:
+          $ref: '#/components/responses/ForwardAnswer'
+    head:
+      summary: 'HEAD: пересылка как HEAD у строки с GET; тот же код и заголовки, без тела'
+      responses:
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '408':
+          description: как у GET, без тела
+        '413':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+        default:
+          description: ответ консоли домена на HEAD как пришёл, без тела
+  /domain/at/{cluster}/{sub}/where/{id}:
+    description: 'Глава 6.7 Н1.6, Н3 «у члена» (из М11/8 Н1.5) — where единицы у консоли другого члена: пересылка на
+      CLUSTERS[кластер]/<sub>/where/<id> с X-W2C-Via, ответ консоли члена как пришёл (дверь выдала консоль члена своим
+      ключом, пересылающая её не переподписывает). Только GET и HEAD; иной метод или форма — 404 not a route handed to a
+      member.'
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      description: Имя члена домена (глава 6.7 Н1.6 member; P/08.3 Н1.1).
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    - $ref: '#/components/parameters/AtSub'
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    get:
+      summary: where единицы у консоли другого члена (Н1.6)
+      responses:
+        '200':
+          $ref: '#/components/responses/AtAnswer'
+        '400':
+          $ref: '#/components/responses/AtBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/AtNotFound'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (глава 6.5 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/at/{cluster}/{sub}/where/{table}/{place}:
+    description: 'Глава 6.7 Н1.6, Н3 «у члена» (из М11/8 Н1.5) — where места у консоли другого члена; query (?unit=) — как
+      пришёл.'
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      description: Имя члена домена (глава 6.7 Н1.6 member; P/08.3 Н1.1).
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    - $ref: '#/components/parameters/AtSub'
+    - name: table
+      in: path
+      required: true
+      description: places.table спеки (P/04 Н1.3; дверь — глава 6.5).
+      schema:
+        type: string
+        minLength: 1
+    - name: place
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    - name: unit
+      in: query
+      required: false
+      description: <id> единицы спеки <sub> (форма главы 6.5 Н2 where) — передаётся как пришёл.
+      schema:
+        type: string
+    get:
+      summary: where места у консоли другого члена (Н1.6)
+      responses:
+        '200':
+          $ref: '#/components/responses/AtAnswer'
+        '400':
+          $ref: '#/components/responses/AtBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/AtNotFound'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (глава 6.5 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/keys:
+    description: 'Глава 6.7 Н1.11 (из М11/9 Н1.8) — строки и семьи ключей домена в хранилище этого кластера; своя дверь
+      консоли кластера, не пересылается; view.'
+    get:
+      summary: Строки и семьи ключей домена этого кластера
+      responses:
+        '200':
+          description: Имена полей без значений; открытый набор
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainKeys'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '405':
+          $ref: '#/components/responses/Method'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ConsoleUnavailable'
+    head:
+      summary: 'HEAD: строки и семьи ключей домена'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/shared/{sub}:
+    description: 'Глава 6.7 Н1.14, Н3 resolve (из М11/11 Н1.5) — значения общих полей domain.shared спеки для этого кластера
+      и единицы: единица → домен → inherit; документ этого кластера — у члена объект domain/shared (копия), у держателя —
+      объект domain/shared-docs/rev-<rev>, который называет указатель. Своя дверь консоли кластера, не пересылается; view.'
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-z][a-z0-9_-]{0,31}$
+    - name: unit
+      in: query
+      required: false
+      description: id единицы спеки <sub>; пустой или повторён — 400 refused, нет такой (в том числе единица другой спеки) или
+        не по грамматике главы 6.1 Н1.3 — 404 no such unit.
+      schema:
+        type: string
+        minLength: 1
+    get:
+      summary: Значения общих полей для этого кластера и единицы (Н1.14)
+      responses:
+        '200':
+          description: '{sub, term, rev, fields}'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedValues'
+        '400':
+          $ref: '#/components/responses/SharedRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/SharedNotFound'
+        '405':
+          $ref: '#/components/responses/Method'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ConsoleUnavailable'
+    head:
+      summary: 'HEAD: значения общих полей'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /api/held:
+    description: 'Глава 6.7 Н1.12 (из М11/10 Н1.4) — запись срока, набор и пара резервной копии этого кластера; открытая дверь
+      (open_routes договора сторожевой): Authorization не читается, негодный Bearer — тоже 200 (X13).'
+    get:
+      summary: Запись срока, набор и пара резервной копии этого кластера
+      responses:
+        '200':
+          description: Все ключи всегда
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Ответ GET /api/held (глава 6.7 Н1.12); все ключи всегда.
+                required:
+                - cluster
+                - holder
+                - term
+                - keys
+                - backup
+                additionalProperties: false
+                properties:
+                  cluster:
+                    $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+                  holder:
+                    oneOf:
+                    - type: 'null'
+                    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/HolderRecord'
+                  term:
+                    type:
+                    - integer
+                    - 'null'
+                    minimum: 1
+                  keys:
+                    type:
+                    - object
+                    - 'null'
+                    additionalProperties: true
+                    description: Документ domain/keys (P/08.2 Н1.2); форма и закрытость — договор набора ключей домена.
+                  backup:
+                    oneOf:
+                    - type: 'null'
+                    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Pair'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '405':
+          $ref: '#/components/responses/Method'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/HeldUnavailable'
+    head:
+      summary: 'HEAD: запись срока, набор и пара резервной копии'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /api/backup:
+    description: 'Глава 6.7 Н1.13 (из М11/10 Н1.9) — резервная копия этого кластера подписанному члену: заголовки
+      X-W2C-Member, X-W2C-Time, X-W2C-Signature (договор подписи просьбы Platform/common/contracts/ask-sig.md, ask = backup);
+      открытая дверь сторожевой (open_routes), подпись проверяет сама.'
+    get:
+      summary: Резервная копия этого кластера подписанному члену
+      parameters:
+      - name: X-W2C-Member
+        in: header
+        required: false
+        description: нет — 401 (Н1.13)
+        schema:
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+      - name: X-W2C-Time
+        in: header
+        required: false
+        description: нет — 401; не по форме — 401 bad_time (договор подписи просьбы)
+        schema:
+          type: string
+      - name: X-W2C-Signature
+        in: header
+        required: false
+        description: нет — 401; не base64url или не 64 байта — 401 bad_signature
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Указатель, документ резервной копии и общий документ
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Ответ GET /api/backup (глава 6.7 Н1.13).
+                required:
+                - cluster
+                - pointer
+                - backup
+                - shared
+                additionalProperties: false
+                properties:
+                  cluster:
+                    $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+                  pointer:
+                    oneOf:
+                    - type: 'null'
+                    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Pointer'
+                  backup:
+                    type:
+                    - string
+                    - 'null'
+                    description: Текст JCS документа резервной копии (P/08.8 Н1.5).
+                  shared:
+                    type:
+                    - string
+                    - 'null'
+                    description: Текст общего документа (P/08.9 Н1.2); до него — null.
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/BackupRefused'
+        '403':
+          $ref: '#/components/responses/BackupRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/HeldUnavailable'
+    head:
+      summary: 'HEAD: резервная копия этого кластера'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '405':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /api/prepare:
+    description: 'Глава 6.7 Н1.8 (из М11/8 Н1.9) — пересылка подписанту: консоль кластера передаёт дверь процессу domain своей
+      коробки (SIGNER_URL); путь, тело, X-W2C-Member, X-W2C-Time, X-W2C-Signature и Idempotency-Key — как пришли; личности не
+      спрашивает (подпись — договор подписи просьбы); срок 10 с. Здесь — коды перехода 1 (400 one hop, 413, 404 no signer here,
+      502 did not answer); ответ процесса — как пришёл, операция handoverPrepare OpenAPI урока P/08.'
+    post:
+      summary: 'Пересылка подписанту: цель готовит ключ передачи'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1prepare/post/responses/200'
+        '400':
+          description: 'Пересылка подписанту (глава 6.7 Н1.8 order): пришёл X-W2C-Via — one hop; тело — общий отказ разбора и
+            транспорта (глава 6.5 Н4). Ответ процесса domain с кодом 400 передаётся как пришёл (операция OpenAPI урока P/08).'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/DomainRefusal'
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '403':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1prepare/post/responses/403'
+        '404':
+          $ref: '#/components/responses/SignerNotHere'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1prepare/post/responses/409'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/SignerFailed'
+        '503':
+          description: 'Пересылка подписанту: общий 503 консоли (busy, denied — сторожевая главы 6.3, shut; глава 6.5 Н4) или ответ
+            процесса domain с кодом 503 как пришёл (операции handoverPrepare, handoverTake, move OpenAPI урока P/08: standby, frozen, перенос уже идёт).'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GuardUnavailable'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+  /api/take:
+    description: 'Глава 6.7 Н1.8 (из М11/8 Н1.9) — пересылка подписанту, как /api/prepare; срок 90 с. Ответ процесса — как
+      пришёл, операция handoverTake OpenAPI урока P/08.'
+    post:
+      summary: 'Пересылка подписанту: цель принимает домен'
+      requestBody:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/requestBody'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/responses/200'
+        '400':
+          description: 'Пересылка подписанту (глава 6.7 Н1.8 order): пришёл X-W2C-Via — one hop; тело — общий отказ разбора и
+            транспорта (глава 6.5 Н4). Ответ процесса domain с кодом 400 передаётся как пришёл (операция OpenAPI урока P/08).'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/DomainRefusal'
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '403':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/responses/403'
+        '404':
+          $ref: '#/components/responses/SignerNotHere'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1take/post/responses/409'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/SignerFailed'
+        '503':
+          description: 'Пересылка подписанту: общий 503 консоли (busy, denied — сторожевая главы 6.3, shut; глава 6.5 Н4) или ответ
+            процесса domain с кодом 503 как пришёл (операции handoverPrepare, handoverTake, move OpenAPI урока P/08: standby, frozen, перенос уже идёт).'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GuardUnavailable'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+  /domain/move:
+    description: 'Глава 6.7 Н1.8 (из М11/8 Н1.9; P/06.7-17) — аварийный перенос сюда: консоль кластера цели спрашивает
+      личность и грант admin этого кластера (сторожевая по режиму консоли; need договора сторожевой: POST /domain/move →
+      admin на *) и передаёт дверь процессу domain своей коробки (SIGNER_URL); срок 90 с. Ответ процесса — как пришёл,
+      операция move OpenAPI урока P/08 (тело, шаги переноса и отказы — P/08.8 Н1.8).'
+    post:
+      summary: 'Пересылка подписанту: аварийный перенос сюда'
+      requestBody:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1move/post/requestBody'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1move/post/responses/200'
+        '400':
+          description: 'Пересылка подписанту (глава 6.7 Н1.8 order): пришёл X-W2C-Via — one hop; тело — общий отказ разбора и
+            транспорта (глава 6.5 Н4). Ответ процесса domain с кодом 400 передаётся как пришёл (операция OpenAPI урока P/08).'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/DomainRefusal'
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: 'POST /domain/move (глава 6.7 Н1.8 order шаг 3): гранта admin этого кластера нет — сторожевая главы 6.3
+            (denied). Ответ процесса domain с кодом 403 передаётся как пришёл (операция move OpenAPI урока P/08).'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '404':
+          $ref: '#/components/responses/SignerNotHere'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1move/post/responses/409'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/SignerFailed'
+        '503':
+          description: 'Пересылка подписанту: общий 503 консоли (busy, denied — сторожевая главы 6.3, shut; глава 6.5 Н4) или ответ
+            процесса domain с кодом 503 как пришёл (операции handoverPrepare, handoverTake, move OpenAPI урока P/08: standby, frozen, перенос уже идёт).'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GuardUnavailable'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
 components:
   parameters:
     IfMatch:
@@ -3759,6 +4606,14 @@ components:
         type: string
         minLength: 1
         pattern: ^[^/]+$
+    AtSub:
+      name: sub
+      in: path
+      required: true
+      description: Спека каталога этой консоли (глава 6.7 Н1.6 routes).
+      schema:
+        type: string
+        pattern: ^[a-z][a-z0-9_-]{0,31}$
   schemas:
     SpecView:
       type: object
@@ -3937,12 +4792,7 @@ components:
       description: Общая форма отказа консоли (глава 6.5 Н4) `{detail, error}`; это не диагностика загрузчика и не Fault
         хранилища.
     Denied:
-      unevaluatedProperties: false
-      allOf:
-      - $ref: '#/components/schemas/ConsoleRefusal'
-      - properties:
-          error:
-            const: denied
+      $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'
     NoRoute:
       unevaluatedProperties: false
       allOf:
@@ -4411,8 +5261,8 @@ components:
           minLength: 1
         password:
           type: string
-          description: Пустая строка проходит разбор тела и получает 401 на сверке пароля в счёт предела попыток (М11/9
-            Н1.6 door, шаги 2 и 5; разбор ревью стадии A 6–7, № 29; разбор ревью стадии A 8–10, № 41); who и why — непустые.
+          description: Пустая строка проходит разбор тела и получает 401 на сверке пароля в счёт предела попыток (глава
+            6.7 Н1.10, шаги 2 и 5; прежде М11/9 Н1.6 door; разбор ревью стадии A 6–7, № 29; разбор ревью стадии A 8–10, № 41); who и why — непустые.
     LoggedIn:
       type: object
       required:
@@ -5900,6 +6750,90 @@ components:
             pattern: takes GET, POST and DELETE of one row(?![\s\S])
           error:
             const: method
+    DomainRefusal:
+      type: object
+      required:
+      - error
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          minLength: 1
+          description: Слово Н4 главы 6.7 (not a domain route, one hop, no domain here, no console known, did not answer,
+            no signer here, no such book shown, …).
+        detail:
+          type: string
+      description: Отказ своих дверей главы 6.7 и перехода 1 договора пересылки `{error, detail}` (глава 6.7 Н4; из М11/5, М11/8,
+        М11/9, М11/10, М11/11).
+    DomainKeys:
+      type: object
+      description: Ответ GET /domain/keys (глава 6.7 Н1.11).
+      required:
+      - rows
+      - families
+      - keyset
+      additionalProperties: false
+      properties:
+        rows:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        families:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        keyset:
+          type:
+          - string
+          - 'null'
+          description: doc строки domain/keys как есть.
+    Resolved:
+      type: object
+      description: Запись поля в ответе GET /domain/shared/<sub> (глава 6.7 Н1.14 record, Н3 resolve).
+      required:
+      - from
+      additionalProperties: false
+      properties:
+        value:
+          description: Значение поля или документа.
+        groups:
+          type: array
+          items:
+            type: string
+        from:
+          type: string
+        inherit:
+          description: inherit спеки.
+        merge:
+          const: union
+    SharedValues:
+      type: object
+      description: Ответ GET /domain/shared/<sub> (глава 6.7 Н1.14).
+      required:
+      - sub
+      - term
+      - rev
+      - fields
+      additionalProperties: false
+      properties:
+        sub:
+          type: string
+        term:
+          type:
+          - integer
+          - 'null'
+        rev:
+          type:
+          - integer
+          - 'null'
+        fields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Resolved'
   responses:
     BadBody:
       description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -6102,6 +7036,167 @@ components:
       content:
         '*/*':
           schema: {}
+    BookNotShown:
+      description: 'Дверь книги (глава 6.7 Н1.1, Н4): спека не объявляет книгу или книга без show («carried and not shown»), книга
+        ещё не доставлена («not delivered yet»); общий отказ «нет маршрута» — глава 6.5 Н2.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - unevaluatedProperties: false
+              allOf:
+              - $ref: '#/components/schemas/DomainRefusal'
+              - properties:
+                  error:
+                    const: no such book shown
+            - $ref: '#/components/schemas/NoRoute'
+    ForwardBadRequest:
+      description: 'Переход 1 (глава 6.7 Н3 «переслать», Н4): пришёл X-W2C-Via, а пересылать надо в другой кластер — one hop;
+        тело — общий отказ разбора и транспорта (глава 6.5 Н4). Ответ консоли домена с кодом 400 передаётся как пришёл.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - $ref: '#/components/schemas/ConsoleRefusal'
+    ForwardNotFound:
+      description: 'Переход 1 (глава 6.7 Н4): not a domain route (путь вне таблицы и не свой, сегмент «.»/«..» — до личности и
+        без звонка), no domain here, no console known. Ответ консоли домена с кодом 404 передаётся как пришёл.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainRefusal'
+    ForwardFailed:
+      description: 'Переход 1 (глава 6.7 Н4): did not answer (нет ответа за FORWARD_WAIT — столбец «Ожидание» строки, сеть,
+        отказ peer; detail «<кластер>''s console did not answer[: <слово peer>]»), answer too large (больше FORWARD_MAX 1 МиБ),
+        answer broke off. Ответ консоли домена с кодом 502 передаётся как пришёл.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainRefusal'
+    ForwardUnavailable:
+      description: 'Переход 1 (глава 6.7 Н4): domain console not known, the list of members does not read, CLUSTERS does not
+        read; общий 503 консоли (busy, denied — глава 6.5 Н4). Ответ консоли домена с кодом 503 передаётся как пришёл.'
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema:
+            type: string
+            const: '1'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - $ref: '#/components/schemas/ConsoleRefusal'
+    ForwardAnswer:
+      description: 'Ответ консоли домена как пришёл (глава 6.7 Н1.5; договор пересылки «Пересылка — одна функция» answer):
+        статус, Content-Type, X-Unreachable и тело без разбора и обёртки. Формы и коды — операция OpenAPI урока P/10 по строке
+        таблицы «Двери домена» (переход 2) и OpenAPI урока P/08 (переход 3); этот контракт их не перечисляет (договор пересылки
+        «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3).'
+      content:
+        '*/*':
+          schema: {}
+    AtAnswer:
+      description: Ответ консоли члена как пришёл (глава 6.7 Н1.6 answer) — статус, Content-Type, X-Unreachable, тело (Where
+        главы 6.5 или отказ её сторожевой).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Where'
+    AtNotFound:
+      description: '404 /domain/at/… — отказ пересылки (глава 6.7 Н4: not a route handed to a member, not another member, no such
+        member, no console known) или ответ консоли члена как пришёл (Н1.6 answer): NotPlaced двери where главы 6.5 или её
+        NoRoute (форма ConsoleRefusal — частный случай DomainRefusal).'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - $ref: '#/components/schemas/NotPlaced'
+    AtBadRequest:
+      description: '400 /domain/at/… — отказ пересылки (one hop) или ответ консоли члена как пришёл; 400 двери where — BadBody
+        формы ConsoleRefusal {error, detail}, частный случай DomainRefusal, поэтому одна схема покрывает обе стороны.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainRefusal'
+    SharedRefused:
+      description: 'GET /domain/shared/<sub> (глава 6.7 Н1.14 refusals): ?unit= пустой или повторён — {error: refused, detail: "a
+        unit id is required"}; общий отказ разбора запроса — глава 6.5 Н2.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - $ref: '#/components/schemas/ConsoleRefusal'
+    SharedNotFound:
+      description: 'GET /domain/shared/<sub> (глава 6.7 Н1.14 refusals): подсистема без domain.shared — no such shared settings;
+        ?unit= — нет такой единицы, в том числе единица другой спеки, или id не по грамматике главы 6.1 Н1.3 — no such unit;
+        общий отказ «нет маршрута» — глава 6.5 Н2.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - $ref: '#/components/schemas/NoRoute'
+    HeldUnavailable:
+      description: '/api/held, /api/backup (глава 6.7 Н1.12, Н1.13): хранилище не ответило, список членов или резервная копия
+        не читается — {error: unavailable, detail}; полоса занята — busy с Retry-After 1 (глава 6.5 Н4).'
+      headers:
+        Retry-After:
+          description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+          schema:
+            type: string
+            const: '1'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - unevaluatedProperties: false
+              allOf:
+              - $ref: '#/components/schemas/DomainRefusal'
+              - properties:
+                  error:
+                    const: unavailable
+            - $ref: '#/components/schemas/Unavailable'
+    BackupRefused:
+      description: 'GET /api/backup (глава 6.7 Н1.13 order): 401 — нет заголовков подписи или ask-sig не ok (detail — слово
+        договора подписи просьбы); 403 — член не в domain/member-list этого кластера или без ключа, ключ отозван; error —
+        refused.'
+      content:
+        application/json:
+          schema:
+            unevaluatedProperties: false
+            allOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - properties:
+                error:
+                  const: refused
+    SignerNotHere:
+      description: 'Пересылка подписанту (глава 6.7 Н1.8 codes): нет SIGNER_URL — {error: "no signer here", detail: "<кластер>
+        runs no signer of the domain (SIGNER_URL): the domain cannot be handed here"}.'
+      content:
+        application/json:
+          schema:
+            unevaluatedProperties: false
+            allOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - properties:
+                error:
+                  const: no signer here
+    SignerFailed:
+      description: 'Пересылка подписанту (глава 6.7 Н1.8 codes): подписант своей коробки не ответил за срок (10 с у prepare, 90 с
+        у take и move) — {error: "did not answer", detail: "this box''s signer did not answer"}.'
+      content:
+        application/json:
+          schema:
+            unevaluatedProperties: false
+            allOf:
+            - $ref: '#/components/schemas/DomainRefusal'
+            - properties:
+                error:
+                  const: did not answer
 x-mounting: Маршруты подсистемы /spec, /servers, /unplaceable, /where, /metrics имеют и префикс /<sub> (у /unplaceable и
   /where/{id} — парой servers). /session, /mounts и /platform общие; страница у смонтированной подсистемы даёт 404 MountedPage.
   Имена читаются из каталога, неизвестный sub — NoRoute.

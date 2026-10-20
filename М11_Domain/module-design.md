@@ -27,6 +27,11 @@
 
 ## Уроки
 
+**Уроки М11 сняты (стадия B, ADR-0083 доп. (1), (14)):** перенесено в [Platform/08-domain](../Platform/08-domain/README.md),
+[09-agent](../Platform/09-agent/README.md), [10-domain-console](../Platform/10-domain-console/README.md) и
+[06-console, глава 6.7](../Platform/06-console/spec/06.7-console.norms.md) (стадия B); прежние id — [`id-map.tsv`](../Platform/common/id-map.tsv),
+тексты — история Git. Таблица ниже — нарезка модуля, как она была.
+
 Порядок — порядок зависимости: каждый урок пользуется только словами предыдущих и М10.
 
 | № | Урок (файл) | Норма | Прежние уроки (ADR-0080 доп. 4) | Основания |

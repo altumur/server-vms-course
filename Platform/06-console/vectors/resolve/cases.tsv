@@ -1,0 +1,17 @@
+# Функция resolve (P/06.7 Н1.14, Н3 resolve, Н5 resolve): resolve(field, unit, domain) → {value, from} | {groups, from}.
+# input — вход команды resolve текстом JSON: field — {name, type, inherit?, merge?, document?, group_by?}, unit — значение строки
+# единицы (нет ключа — значения нет), domain — {term, rev, value} значения в документе или null. expect — подмножество вывода или «@exit 2» (вход не по форме).
+# Строки — входы приёмки М11/11 inputs/resolve-*.json, сц. 03 (сняты переносом урока 10).
+# Строка: case<TAB>input<TAB>expect<TAB>note.
+case	input	expect	note
+resolve-01-unit-own	{"field":{"name":"step","type":"int","inherit":1},"unit":3,"domain":{"term":1,"rev":3,"value":5}}	{"value":3,"from":"unit"}	М11/11 сц. 03-resolve шаг 1
+resolve-02-domain	{"field":{"name":"step","type":"int","inherit":1},"domain":{"term":1,"rev":3,"value":5}}	{"value":5,"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 2
+resolve-03-spec	{"field":{"name":"step","type":"int","inherit":1},"domain":null}	{"value":1,"from":"spec"}	М11/11 сц. 03-resolve шаг 3
+resolve-04-union	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":1,"rev":3,"value":["site","east"]}}	{"value":["east","mine","site"],"from":"unit + domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 4
+resolve-05-union-no-unit	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"domain":{"term":1,"rev":3,"value":["east"]}}	{"value":["east"],"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 5
+resolve-06-union-no-domain	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":null}	{"value":["mine"],"from":"unit"}	М11/11 сц. 03-resolve шаг 6
+resolve-07-document	{"field":{"name":"rounds","type":"json","document":true},"domain":{"term":1,"rev":3,"value":[{"counter":"c1","every":5}]}}	{"value":[{"counter":"c1","every":5}],"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 7
+resolve-08-document-none	{"field":{"name":"rounds","type":"json","document":true},"domain":null}	{"value":null,"from":"none"}	М11/11 сц. 03-resolve шаг 8
+resolve-09-groups	{"field":{"name":"folder","type":"string","group_by":true},"domain":{"term":1,"rev":3,"value":["east","west"]}}	{"groups":["east","west"],"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 9
+resolve-10-override-list	{"field":{"name":"marks","type":"list","inherit":[],"merge":"override"},"unit":["mine"],"domain":{"term":1,"rev":3,"value":["site"]}}	{"value":["mine"],"from":"unit"}	М11/11 сц. 03-resolve шаг 10
+resolve-11-term-zero	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":0,"rev":3,"value":["site","east"]}}	@exit 2	М11/11 сц. 03-resolve шаг 11

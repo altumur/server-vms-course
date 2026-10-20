@@ -3,12 +3,12 @@
 Стенд, словарь директив и дверей — раздел «Стенд домена» [общего README приёмки](../../../common/acceptance/README.md#стенд-домена)
 (до слияния — словарь М11 README приёмки М11/01).
 Норма главы — [`08.8-domain.norms.md`](../../spec/08.8-domain.norms.md) Н5. Сценарии и текст ниже перенесены из приёмки
-[М11/10](../../../../Source/tests/testdata/acceptance/М11_Domain/10/README.md) (стадия B, ADR-0083 доп. (1): без
+М11/10 (стадия B, ADR-0083 доп. (1): без
 изменения поведения); номера сценариев и шаги — прежние. Сценарии 05 (`record`) и 07 (`ask-sig`) сняты — те же случаи в
 пакетах [`common/vectors/record`](../../../common/vectors/record/README.md) и
 [`common/vectors/ask-sig`](../../../common/vectors/ask-sig/README.md) (план переноса урока 8, В1); сценарий 06 (`follow`) снят — пакет
-[`follow`](../../../09-agent/vectors/follow/README.md), 11 — [приёмка главы 9.1](../../../09-agent/acceptance/1/README.md); 01 (→ глава P/06.7)
-остаётся в приёмке М11/10 до урока 10.
+[`follow`](../../../09-agent/vectors/follow/README.md), 11 — [приёмка главы 9.1](../../../09-agent/acceptance/1/README.md); 01 —
+[приёмка главы 6.7](../../../06-console/acceptance/7/README.md) сц. 15.
 
 ## Стенд
 

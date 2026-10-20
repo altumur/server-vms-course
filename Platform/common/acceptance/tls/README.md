@@ -8,8 +8,8 @@ README приёмки М11/01). Профиль реализации объявл
 (не GREEN). Нормы: серверная сторона класса `signed` — договор сертификата роли «Серверная сторона: класс `signed`»
 ([P/08.0 Н1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02); отпечатки центра члена, `on_accept`, `admin` —
 [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md); `client`, `first` и функция `peer` — [договор `peer`](../../contracts/peer.md);
-пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` (М11/8 Н1.6 `server.role`) — до переноса
-урока 10; договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md); перенос —
+пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` — [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
+(P/10-11); договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md); перенос —
 [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md). Пункт 3 и «держатель прежней сборки» из п. 7 — проверка чтением
 ([P/08.4 Н5](../../../08-domain/spec/08.4-domain.norms.md) и [P/08.3 Н5](../../../08-domain/spec/08.3-domain.norms.md)).
 
@@ -34,7 +34,7 @@ README приёмки М11/01). Профиль реализации объявл
 
 ## Двери и клиенты пробы `@tls`
 
-| Дверь | Что | Класс (договор сертификата роли «Серверная сторона»; `role` — М11/8 Н1.6 до урока 10) |
+| Дверь | Что | Класс (договор сертификата роли «Серверная сторона»; `role` — P/10 Н1.4 `server.role`) |
 |---|---|---|
 | `holder` | консоль домена на `hold` — приём пересылки от консоли члена (`X-Operator: console`) | `role` |
 | `signer` | процесс `domain` на `hold` — `POST /api/member/<член>`, `GET /api/carry/<член>` | `signed` |
@@ -68,12 +68,12 @@ README приёмки М11/01). Профиль реализации объявл
 `@tls-setup …/stand.json`, `@domain m1 m2` (или `m1 m2 m3`), затем `@until` записи члена: у `m2` — `Entry.ca` с
 отпечатком центра `m2` и строка `domain/members/m2/ca-certs` (`on_accept`, приём отчёта с `tls_ca`, `tls_ca_certs`).
 
-**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; М11/8 Н1.6 `server.role` — урок P/10): после строки `ca-certs` и `Entry.ca`
+**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): после строки `ca-certs` и `Entry.ca`
 дверь `holder`, клиент `m2-console`, пересылаемый запрос с `X-Operator: console` → `{"handshake": "ok"}`, `http` — ответ
 двери по сторожевой (не 401/403 со словами `no_role`, `wrong_role`, `bad_chain`).
 
 **П. 2 — серверная сторона** (строки двери `signer` — класс `signed`, P/08.0-02, договор сертификата роли; строки
-`holder` — класс `role`, М11/8 Н1.6 `server.role` до урока P/10):
+`holder` — класс `role`, P/10 Н1.4 `server.role`):
 
 | Дверь | Клиент | Ожидание | Норма |
 |---|---|---|---|
@@ -93,7 +93,7 @@ README приёмки М11/01). Профиль реализации объявл
 `holder` / `m2-console` — `{"handshake": "alert", "http": null}`; возврат `{"ca": [<отпечаток m2>], "ca_certs": [<PEM m2>]}` →
 снова `{"handshake": "ok"}`.
 
-**П. 8 — возобновление** (М11/8 Н1.6 `server.role`: сессий не возобновляет; решение «Архитектора» 2026-10-20 — проходят
+**П. 8 — возобновление** (P/10 Н1.4 `server.role`: сессий не возобновляет; решение «Архитектора» 2026-10-20 — проходят
 оба исхода):
 
 1. Положительный контроль до пробы: контрольный сервер оснастки выдаёт сессию, клиент предъявляет её и получает
@@ -110,7 +110,7 @@ README приёмки М11/01). Профиль реализации объявл
 
 Подготовка: `@clusters hold m1 m2 m3`, `@domain m1 m2 m3`; хранители при `BACKUP_HOLDERS` 2 — по хеш-порядку `m3`, `m1`
 (подтвердить на живом состоянии — строки `domain/keepers/<член>` держателя, [P/08.8 Н1.5](../../../08-domain/spec/08.8-domain.norms.md)); цель без своей резервной копии —
-`m2`; `@until` у `m2` записи срока ≥ 1 (следование, М11/10 Н3) и резервной копии у обоих хранителей; затем `@stop domain`.
+`m2`; `@until` у `m2` записи срока ≥ 1 (следование, [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н3) и резервной копии у обоих хранителей; затем `@stop domain`.
 
 - **«Сосед не ответил»** (ER, добавлено моделью Quint М11): `@cut-route m2 hold console`, `@cut-route m2 m1 console`,
   `@cut-route m2 m3 console` — ни один сосед не отвечает (держатель держит свою копию `domain/backups/rev-N` и иначе отдал бы

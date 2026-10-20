@@ -180,7 +180,7 @@ defs:
       fixed: {type: boolean, default: false, owner: P/06.1 Н1.3}
       default: {type: any, owner: P/06.1 Н1.2, description: "одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть"}
       inherit: {type: any, owner: P/06.1 Н1.2, description: "как `default`; последнее звено цепи наследования; только у поля единицы"}
-      merge: {enum: [union, override], owner: М11/11 Н1.5, description: "сведение цепи наследования; только с `inherit`; `union` — только у `type: list`"}
+      merge: {enum: [union, override], owner: P/06.7 Н1.14, description: "сведение цепи наследования; только с `inherit`; `union` — только у `type: list`"}
       enum: {ref: fieldEnum}
       unique:
         owner: P/06.1 Н1.3
@@ -587,7 +587,7 @@ defs:
       events: {type: boolean, default: true, default_text: вкладка есть}
       kinds: {ref: strMap, description: "вид события → строка"}
       keys:
-        owner: М11/9 Н1.8
+        owner: P/06.7 Н1.11
         description: "id семьи ключей домена → подписи"
         type: object
         names:
@@ -658,7 +658,7 @@ defs:
         label: {type: string}
         values: {ref: strList}
 
-  # ---- domain: форма — здесь; смысл и класс отказа — главы урока P/08 (до переноса уроков 9, 10 — М11)
+  # ---- domain: форма — здесь; смысл и класс отказа — главы урока P/08 (и главы P/06.7, P/09.1, урок P/10)
   domain:
     type: object
     properties:
@@ -684,7 +684,7 @@ defs:
                 type: {enum: [json]}
                 schema: {ref: jsonSchemaLite}
       keys:
-        owner: М11/9 Н1.8
+        owner: P/06.7 Н1.11
         type: array
         items:
           type: object
@@ -722,7 +722,7 @@ defs:
           key: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}', not_enum: [person], description: "вид токена; вид уникален в каталоге (Н3, `refused:catalogue`)"}
           value: {ref: token}
       witness:
-        owner: М11/11 Н1.8
+        owner: P/10 Н1.8
         type: object
         required: [report, member_field]
         properties: {report: {type: string}, member_field: {type: string, description: "fixed-поле единицы, несущее имя члена"}}
@@ -736,7 +736,7 @@ defs:
       pick: {enum: [unique, all]}
       to: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}', not_pattern: '.*_secret', description: "имя несекретного поля входа по грамматике `name`, не `key`: член или список членов — получатели элемента (разбор ревью стадии A 8–10, № 42; решение «Архитектора» 2026-10-20)"}
       show:
-        description: "что видит дверь (М11/5 Н2)"
+        description: "что видит дверь (P/06.7 Н1.1)"
         type: array
         min_items: 1
         unique_items: true

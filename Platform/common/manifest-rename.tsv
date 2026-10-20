@@ -14,7 +14,7 @@ platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	P/02.3 �
 platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	P/02.2	читатели уроков P/03–P/06 после своей правки поведения
 spec_rev	manifest_rev	поле строк <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent и объекта <sub>/controller/pass	P/04 Н1.1, Н1.2, Н1.5	Platform/03-worker, 06-console; приёмка P/04, P/06.5; catalog.tsv; id-map.tsv
 spec_behind	manifest_behind	счётчик отчёта прохода (объект <sub>/controller/pass)	P/04 Н1.2	лекция P/04; id-map.tsv
-GET /spec	GET /manifest	дверь консоли кластера и консоли домена	P/06.5 Н2 «GET /spec»	P/02.1, P/06.5; М11/8 Н1.8; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, P/06.5, М11/08; id-map.tsv
+GET /spec	GET /manifest	дверь консоли кластера и консоли домена	P/06.5 Н2 «GET /spec»	P/02.1, P/06.5; P/10 Н1.7; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, P/06.5, P/10; id-map.tsv
 GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	P/06.5 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js
 SpecView	ManifestView	схема OpenAPI ответа двери	P/06.5 Н2 «GET /spec» (06-console.api.openapi.yaml)	P/02.1, P/06; приёмка P/02, P/06.5; id-map.tsv
 w2cctl spec put	w2cctl manifest put	команда установщика	P/02.3 Н3, P/02.4	Platform/02-installer/lifecycle.md; приёмка P/02; catalog.tsv (ops); id-map.tsv
@@ -27,7 +27,7 @@ SPEC_DIR	MANIFEST_DIR	переменная окружения установщи
 <spec:…>	<manifest:…>	обозначение части ключа каталога данных из манифеста	Platform/common/data/catalog.tsv (форма — inbox 2026-10-18-каталог-данных-форма.md)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; абзацы «Данные»
 console.spec(name)	console.manifest(name)	вызов модуля консоли	P/07 Н1.5 `words` (`spec(name)`); описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем
 getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	код модуля консоли (входит в выгрузку)	Source/w2cplatform/console.js	—
-from: "spec"	from: "manifest"	слово источника значения в выводе resolve	М11/11 Н3 resolve	приёмка М11/11 (векторы resolve)
+from: "spec"	from: "manifest"	слово источника значения в выводе resolve	P/06.7 Н3 resolve	векторы 06-console/vectors/resolve
 —	manifest	зарезервированное имя (рядом со spec: имя подсистемы, unit.rows, имя таблицы)	P/02.1 Н1.2, Н1.2а	корпус P/02.1: отрицательные случаи k38_sub_manifest, m49_table_manifest и допустимый сосед (ADR-0086 доп. (1) Р3)
 «спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	проза	P/02.1	все уроки, лекции, README и инструкции М10, М11, Platform/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, глоссарий (статья «Манифест подсистемы»)
 «Спека подсистемы и строгий загрузчик»	«Манифест подсистемы и строгий загрузчик»	заголовок урока P/02	P/02.1	Platform/module-design.md (уже с целевым именем), README

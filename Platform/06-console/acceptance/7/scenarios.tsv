@@ -1,0 +1,75 @@
+scenario	step	request	expect
+# Приёмка P/06.7: стенд домена hold, m1, m2 (пересылка консолью кластера, /domain/at, /domain/keys, дверь книги, аварийный вход, /api/held и /api/backup); сценарии из М11/05, М11/08, М11/09, М11/10 (стадия B). Формат — README.
+01-forward-to-holder	1	@domain	ok
+01-forward-to-holder	2	holder GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
+01-forward-to-holder	3	member m1 console GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
+01-forward-to-holder	4	member hold console GET /domain	200 {"holder": "hold", "complete": true}
+01-forward-to-holder	5	member m1 console GET /domain/members	200 {"members": {"hold": {"how": "holder"}, "m1": {"how": "admitted"}}}
+01-forward-to-holder	6	member m1 console PUT /domain/placement/testsub/c1 {"cluster": "m2"}	200 {"cluster": "m2", "rev": "@any"}
+01-forward-to-holder	7	holder GET /domain/placement/testsub/c1	200 {"cluster": "m2"}
+01-forward-to-holder	8	member m1 console GET /domain/nowhere	404 {"error": "not a domain route"}
+01-forward-to-holder	9	member m1 console DELETE /domain/topology	404 {"error": "not a domain route"}
+01-forward-to-holder	10	member m1 console PUT /domain/topology {"base_rev": 0, "via": "@big(1100000)"}	413
+01-forward-to-holder	11	@person -	ok
+01-forward-to-holder	12	member m1 console @header X-Operator: console GET /domain/users	401
+02-one-hop-and-addresses	1	@domain m1	ok
+02-one-hop-and-addresses	2	member m2 console GET /domain	404 {"error": "no domain here"}
+02-one-hop-and-addresses	3	member m1 console @header X-W2C-Via: m2 GET /domain	400 {"error": "one hop"}
+02-one-hop-and-addresses	4	member hold console @header X-W2C-Via: m2 GET /domain	200 {"holder": "hold"}
+02-one-hop-and-addresses	5	member m1 console POST /api/take {}	404 {"error": "no signer here"}
+02-one-hop-and-addresses	6	@env m1 CLUSTERS=	ok
+02-one-hop-and-addresses	7	member m1 console GET /domain	404 {"error": "no console known", "detail": "no console of hold is known here (CLUSTERS)"}
+02-one-hop-and-addresses	8	@env m1 CLUSTERS=hold	ok
+02-one-hop-and-addresses	9	member m1 console GET /domain	503 {"error": "CLUSTERS does not read"}
+02-one-hop-and-addresses	10	@env m1 CLUSTERS	ok
+02-one-hop-and-addresses	11	@env m2 CLUSTERS=hold	ok
+02-one-hop-and-addresses	12	member m2 console GET /domain	404 {"error": "no domain here"}
+02-one-hop-and-addresses	13	@env m2 CLUSTERS	ok
+02-one-hop-and-addresses	14	@on hold @sigterm console	ok
+02-one-hop-and-addresses	15	member m1 console GET /domain	502 {"error": "did not answer"}
+03-where-at-a-member	1	@domain	ok
+03-where-at-a-member	2	member m2 console POST /counters {"name": "c2"}	201
+03-where-at-a-member	3	@until 30 member m2 console GET /where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
+03-where-at-a-member	4	member m1 console GET /domain/at/m2/testsub/where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
+03-where-at-a-member	5	member m2 console GET /testsub/where/c2	200 {"worker": "$w", "server": "$s", "reason": "$r"}
+03-where-at-a-member	6	member m1 console @header X-W2C-Via: hold GET /domain/at/m2/testsub/where/c2	400 {"error": "one hop"}
+03-where-at-a-member	7	member m1 console DELETE /domain/at/m2/testsub/where/c2	404 {"error": "not a route handed to a member"}
+03-where-at-a-member	8	member m1 console GET /domain/at/m2/testsub/counters	404 {"error": "not a route handed to a member"}
+03-where-at-a-member	9	member m1 console GET /domain/at/m2/nosuch/where/c2	404 {"error": "not a route handed to a member"}
+03-where-at-a-member	10	member m1 console GET /domain/at/m1/testsub/where/c2	404 {"error": "not another member"}
+03-where-at-a-member	11	member m1 console GET /domain/at/m9/testsub/where/c2	404 {"error": "no such member"}
+03-where-at-a-member	12	member m1 console GET /domain/at/hold/testsub/where/c2	404 {"reason": "@any"}
+03-where-at-a-member	13	@on m2 @sigterm console	ok
+03-where-at-a-member	14	member m1 console GET /domain/at/m2/testsub/where/c2	502 {"error": "did not answer"}
+06-domain-keys	1	@domain	ok
+06-domain-keys	2	@until 60 member m1 console GET /domain/keys	200 {"rows": {"domain/keys": ["doc"], "domain/member-list": ["doc"]}, "families": {"tallies": [], "ledger": []}, "keyset": "@any"}
+13-notes-unique	1	@domain	ok
+13-notes-unique	2	member m1 console2 POST /tallies {"name": "t5", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+13-notes-unique	3	member m2 console2 POST /tallies {"name": "t5", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
+13-notes-unique	4	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"conflicts": ["t5"]}}}
+13-notes-unique	5	@until 30 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t5": "@absent"}}
+14-break-glass	1	@domain	ok
+14-break-glass	2	holder PUT /domain/break-glass/m1 {"password": "short pw"}	400 {"error": "bad password"}
+14-break-glass	3	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}
+14-break-glass	4	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@any"}}}
+14-break-glass	5	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "@any"}}
+14-break-glass	6	@person -	ok
+14-break-glass	7	member m1 console POST /session/break-glass {"who": "carol", "why": "", "password": "glass password 12"}	400 {"error": "bad body"}
+14-break-glass	8	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	401 {"error": "denied", "detail": "break-glass: wrong password"}
+14-break-glass	9	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "glass password 12"}	200 {"user": "break-glass(carol)", "until": "@any"}
+14-break-glass	10	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	401 {"error": "denied", "detail": "break-glass: wrong password"}
+14-break-glass	11	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	401 {"error": "denied", "detail": "break-glass: wrong password"}
+14-break-glass	12	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	401 {"error": "denied", "detail": "break-glass: wrong password"}
+14-break-glass	13	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	401 {"error": "denied", "detail": "break-glass: wrong password"}
+14-break-glass	14	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "wrong password"}	429 {"error": "too many attempts"}
+14-break-glass	15	member m1 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "glass password 12"}	429 {"error": "too many attempts"}
+14-break-glass	16	member m2 console POST /session/break-glass {"who": "carol", "why": "uplink down", "password": "glass password 12"}	403 {"error": "denied", "detail": "~no emergency account"}
+15-held-and-copies	1	@domain	ok
+15-held-and-copies	2	@sleep 35	ok
+15-held-and-copies	3	member m1 console GET /api/held	200 {"cluster": "m1", "term": 1, "holder": {"holder": "hold", "term": 1}, "keys": "@any"}
+15-held-and-copies	4	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+15-held-and-copies	5	@until 60 member m2 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+15-held-and-copies	6	member hold console GET /api/held	200 {"cluster": "hold", "term": 1, "backup": null}
+15-held-and-copies	7	@until 60 holder GET /domain	200 {"term": {"term": 1, "holder": "hold", "backup": {"term": 1, "rev": "$r"}, "backup_holders": ["m1", "m2"], "copies": {"m1": {"term": 1, "rev": "$r"}, "m2": {"term": 1, "rev": "$r"}}}}
+15-held-and-copies	8	member m1 console GET /api/backup	401 {"error": "refused", "detail": "~a member signs its ask"}
+15-held-and-copies	9	member m1 console @header X-W2C-Member: m1 GET /api/backup	401 {"error": "refused"}

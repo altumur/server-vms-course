@@ -69,7 +69,7 @@ display.options.$o.{}	when $o in keys(unit.fields) & $o not in values(display.fo
 display.form[].fields[]	. in keys(unit.fields) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
 display.tree.group_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
 display.tree.columns[].field	. in keys(unit.fields) | {worker, server, revision, observed_revision, phase, id}	reference	P/02.1 Н1.4
-display.keys.{}	. in values(domain.keys[].id)	reference	М11/9 Н1.8
+display.keys.{}	. in values(domain.keys[].id)	reference	P/06.7 Н1.11
 requests.key	template . plain keys(requests.schema.properties ? type = string & name !~ ".*_secret") int keys(requests.schema.properties ? type in {integer, number} & name !~ ".*_secret")	reference	P/02.1 Н1.4; P/06.4 Н1.5
 requests.outcome	when . = fetched : exists @requests.key	reference	P/02.1 Н1.4; ADR-0054
 requests.stamp[]	when . = group : exists @placement.group_by	reference	P/02.1 Н1.4
@@ -105,7 +105,7 @@ domain.books.$b.from	split(. "/" 0) = @name	value	P/02.1 Н1.2б
 domain.books.$b.to	. != @domain.books.$b.key	value	P/02.1 Н1.2б
 domain.books.{}	. not in values(domain.kept[])	value	P/02.1 Н1.2б
 domain.names.{}	split(. "/" 0) in keys(domain.books ? has from)	reference	P/08.5 Н1.7
-domain.keys	unique values(domain.keys[].id)	value	М11/9 Н1.8
+domain.keys	unique values(domain.keys[].id)	value	P/06.7 Н1.11
 domain.shared	unique values(domain.shared[]) | values(domain.shared[].name)	value	P/02.1 Н1.2б
 domain.shared[].name	. not in keys(unit.fields)	value	P/02.1 Н1.2б
 domain.shared[]	. in keys(unit.fields ? has inherit) | {@display.tree.group_by}	value	P/02.1 Н1.2б

@@ -1,0 +1,19 @@
+scenario	step	request	expect
+# Приёмка P/10: стенд hold, m1, m2 — консоль домена: список тревог с молчащим членом (сц. 02 из М11/11) и страница держателя (сц. 05 из М11/08); номера и шаги прежние (стадия B). Формат — README.
+02-silent-member	1	@domain	ok
+02-silent-member	2	@stop agent m2	ok
+02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
+02-silent-member	4	@until 90 holder GET /domain/shared	200 {"delivery": {"silent": ["m2"]}}
+02-silent-member	5	@until 30 holder GET /domain/alarms	200 {"complete": false, "members": {"m2": {"state": "silent"}}, "sentence": "~m2 silent since"}
+02-silent-member	6	holder GET /domain/alarms?since=yesterday	400 {"error": "refused"}
+02-silent-member	7	holder GET /domain/alarms?since=2&until=1	400 {"error": "refused"}
+02-silent-member	8	@start agent m2	ok
+02-silent-member	9	@until 60 holder GET /domain/shared	200 {"delivery": {"holding": ["hold", "m1", "m2"], "silent": []}}
+02-silent-member	10	@until 30 holder GET /domain/alarms	200 {"complete": true, "sentence": "every member answered"}
+02-silent-member	11	member m1 console @header X-Agent-Signature: 1760000000000.AAAA GET /events?class=alarm	401
+05-the-holders-page	1	@domain	ok
+05-the-holders-page	2	holder GET /	200 @header Content-Type: ~text/html
+05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
+05-the-holders-page	4	holder GET /spec	200 {"name": "", "rows": null}
+05-the-holders-page	5	holder GET /mounts	200 {"root": "", "mounts": {"testsub": "@any"}}
+05-the-holders-page	6	holder GET /session	200 {"open": false, "user": "root", "login_url": "/api/login"}

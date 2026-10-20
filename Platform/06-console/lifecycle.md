@@ -47,7 +47,7 @@
 | `CLUSTER` | имя кластера | `local` | [P/02.4] Н1.2 |
 | `BUILD` | слово сборки в `/schema` | `dev` | [P/02.4] Н1.2, [P/06.6] Н2.3 |
 | `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/console` | `/etc/w2c/tls` | [P/02.4] Н1.2, Н1.6 |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | домен (поздний слой урока 6 — глава 6.7, отложена до уроков 8–10; разбор ревью стадии B 6–7, № 22) | — | [P/02.4] Н1.2 |
+| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | домен (поздний слой урока 6 — [глава 6.7](spec/06.7-console.norms.md): `CLUSTERS` — Н1.4, `SIGNER_URL` — Н1.8, `DOMAIN_CA`/`RELAY_CA` — договор peer; `LOGIN_URL` — договор сторожевой `login_url`) | — | [P/02.4] Н1.2 |
 | `W2C_ENV` | файл общих настроек | `/etc/w2c/w2c.env` | [P/02.4] Н1.2 |
 
 ## Флаги

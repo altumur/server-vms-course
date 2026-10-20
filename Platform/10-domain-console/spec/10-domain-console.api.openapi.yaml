@@ -1,0 +1,2506 @@
+# P/10 — двери консоли домена (domainconsole, порт 8444): HTTP-контракт урока (план переноса урока 10, § 4). Слито из
+# контрактов М11/1, М11/3, М11/4, М11/6, М11/8, М11/9, М11/11 (пути консоли домена; М11/4, М11/6 — из истории, сняты
+# коммитом 9) — стадия B, без изменения поведения. Коды — только перехода 2 договора пересылки
+# Platform/common/contracts/forwarding.md «Отказы по переходам» (разбор ревью стадии A 8–10, решение 3): дверь роли TLS
+# (401/403 no_role, wrong_role, bad_chain; отказ рукопожатия — без ответа HTTP), сторожевая (401/403 denied, 503 shut),
+# 404 not a domain route, 400/408/413 тела, 502 передачи, door.pass и отказы своих чтений; коды перехода 1 (консоль
+# кластера) здесь не перечисляются, ответа Forwarded нет. Двери, которые консоль передаёт процессу domain, — без голого
+# default: ответы процесса — $ref на операцию и компоненты OpenAPI урока P/08 (решение «Архитектора» по планам 8–10, п. 9),
+# совпавший код — anyOf своего тела и тела процесса. Страница, модуль, /session, /healthz — $ref на пути OpenAPI P/06
+# (В7 плана урока 6). Схемы вида, единиц, теневого отчёта, списка членов, топологии, назначения, строки гранта, общего
+# документа и доставки — OpenAPI P/08 ($ref), копий нет.
+openapi: 3.1.0
+info:
+  title: P/10 — двери консоли домена
+  version: '1'
+  description: Канон — нормы 10-domain-console.norms.md (Н1.2 двери чтения, Н1.3 передача, Н1.4 дверь роли, Н1.5 сторожевая,
+    Н1.6 door.pass, Н1.7 страница, Н1.8 тревоги, Н4 отказы). Закрытый список дверей домена — договор пересылки «Двери домена».
+    Разбор запроса — P/01.1 Н2.1 с отступлениями P/06.5 Н2. Внутренний API не нормируется; контракт не утверждает, что какая-либо
+    реализация ему проверена.
+servers:
+- url: '{origin}'
+  description: Консоль домена держателя (DOMAIN_CONSOLE_HOST/PORT, P/02.4 Н1.12).
+  variables:
+    origin:
+      'default': 'http://localhost:8444'
+      description: Origin без завершающего /; пример адреса (стенд одной машины), не настройка.
+paths:
+  /domain:
+    get:
+      summary: Вид домена (Н1.2а)
+      description: Отвечает консоль домена сама (P/10-01).
+      responses:
+        '200':
+          description: Объект domain/view последнего прохода держателя и age
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/ServedView'
+        '400': &id001
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401': &id002
+          $ref: '#/components/responses/Unauthenticated'
+        '403': &id003
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503': &id004
+          $ref: '#/components/responses/GuardShut'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  '/domain/{sub}/{rows}':
+    get:
+      summary: Единицы подсистемы в виде домена (Н1.2а)
+      description: Отвечает консоль домена сама (P/10-01); POST — передача процессу.
+      responses:
+        '200':
+          description: Единицы подсистемы по (cluster, id)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Unit'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/ViewNotFound'
+        '503': *id004
+      parameters: &id005
+      - name: cluster
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+        description: Только единицы этого члена; повтор или пусто — 400 (P/06.5 Н2).
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+      parameters: *id005
+    parameters:
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Rows'
+    post:
+      operationId: passEditCreate
+      summary: 'Передача процессу domain: Создать единицу на члене (правка хранится) (OpenAPI P/08, operationId editCreate)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию editCreate OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1{sub}~1{rows}/post/requestBody/content/application~1json/schema'
+      responses:
+        '202':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Kept'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editCreate, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editCreate, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editCreate, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId editCreate, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editCreate,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  /domain/shadow:
+    get:
+      summary: Теневой отчёт последнего прохода (Н1.2а)
+      description: Отвечает консоль домена сама (P/10-01).
+      responses:
+        '200':
+          description: Теневой отчёт
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/ShadowReport'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/members:
+    get:
+      summary: Список членов и стучащиеся (Н1.2б)
+      description: Отвечает консоль домена сама (P/10-07); POST — передача процессу.
+      responses:
+        '200':
+          description: Список и стучащиеся
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MembersView'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    post:
+      operationId: passMembersAdmit
+      summary: 'Передача процессу domain: Принять стучащегося по отпечатку его ключа (OpenAPI P/08, operationId membersAdmit)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию membersAdmit OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members/post/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members/post/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersAdmit, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersAdmit, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersAdmit, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId membersAdmit, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members/post/responses/409'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersAdmit,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/topology:
+    get:
+      summary: Топология домена (Н1.2в)
+      description: 'Из строки domain/topology, не из вида: сразу после PUT — новый rev (P/10-08, T1); PUT — передача процессу.'
+      responses:
+        '200':
+          description: Документ топологии
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Topology'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    put:
+      operationId: passTopologyPut
+      summary: 'Передача процессу domain: Правка топологии против прочитанной ревизии (OpenAPI P/08, operationId topologyPut)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию topologyPut OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TopologyEdit'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1topology/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            topologyPut, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            topologyPut, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            topologyPut, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId topologyPut,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/placement:
+    get:
+      summary: Все назначения (Н1.2г)
+      description: Отвечает консоль домена сама (P/10-09).
+      responses:
+        '200':
+          description: Счётчик и записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacementList'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  '/domain/placement/{sub}/{ref}':
+    get:
+      summary: Одно назначение (Н1.2г)
+      description: Отвечает консоль домена сама (P/10-09); PUT и DELETE — передача процессу.
+      responses:
+        '200':
+          description: Запись
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Placement'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/NoPlacement'
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    parameters:
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Ref'
+    put:
+      operationId: passPlacementPut
+      summary: 'Передача процессу domain: Назначить (только оператор) (OpenAPI P/08, operationId placementPut)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию placementPut OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/PlacementEdit'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1placement~1{sub}~1{ref}/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementPut, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementPut, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementPut, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId placementPut, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementPut,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+    delete:
+      operationId: passPlacementDelete
+      summary: 'Передача процессу domain: Снять назначение (OpenAPI P/08, operationId placementDelete)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию placementDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1placement~1{sub}~1{ref}/delete/responses/200'
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementDelete, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            placementDelete, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId placementDelete, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementDelete,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/grants:
+    get:
+      summary: Строки грантов (Н1.2д)
+      description: Отвечает консоль домена сама (P/10-12); право view.
+      responses:
+        '200':
+          description: Строки по кластерам и domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantsView'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/shared:
+    get:
+      summary: Документ, доставка и объявленное (Н1.2е)
+      description: Отвечает консоль домена сама (P/10-14); PUT — передача процессу.
+      responses:
+        '200':
+          description: '{doc, delivery, declared}'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedView'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    put:
+      operationId: passSharedPut
+      summary: 'Передача процессу domain: Правка общего документа (P/08.9 Н1.3) (OpenAPI P/08, operationId sharedPut)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию sharedPut OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/SharedEdit'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1shared/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            sharedPut, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            sharedPut, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            sharedPut, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId sharedPut, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId sharedPut,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  /domain/alarms:
+    get:
+      summary: Тревоги членов (Н1.8)
+      description: Функция alarms (Н3) на страницах последних отчётов, истории и свидетелях (P/10-06).
+      responses:
+        '200':
+          description: '{since, until, events, members, complete, sentence}'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmsView'
+        '400':
+          $ref: '#/components/responses/AlarmsWindow'
+        '401': *id002
+        '403': *id003
+        '503': *id004
+      parameters: &id006
+      - name: since
+        in: query
+        required: false
+        schema:
+          type: number
+        description: Число по грамматике числа JSON целиком; умолчание — now − сутки (Н1.8 door).
+      - name: until
+        in: query
+        required: false
+        schema:
+          type: number
+        description: Число по грамматике числа JSON целиком; умолчание — now (Н1.8 door).
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+      parameters: *id006
+  /spec:
+    get:
+      summary: Спека консоли домена — корня нет (Н1.7 spec)
+      description: Страница держателя (P/10-04).
+      responses:
+        '200':
+          description: Консоль домена без корневой подсистемы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecNoRoot'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /mounts:
+    get:
+      summary: Подсистемы каталога держателя (Н1.7 mounts)
+      description: Страница держателя (P/10-04).
+      responses:
+        '200':
+          description: Описания подсистем — как /mounts консоли кластера (P/06.5 Н2), без media
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MountsNoRoot'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '503': *id004
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1'
+  /index.html:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1index.html'
+  /platform/console.js:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1platform~1console.js'
+  /platform/console.css:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1platform~1console.css'
+  /session:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1session'
+  /healthz:
+    $ref: '../../06-console/spec/06-console.api.openapi.yaml#/paths/~1healthz'
+  /api/login:
+    post:
+      operationId: passLogin
+      summary: 'Передача процессу domain: Вход человека (Н1.2) (OpenAPI P/08, operationId login)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию login OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1login/post/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1login/post/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            login, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — дверь роли TLS без сертификата клиента (Н1.4 server.role, error no_role); строка открыта
+            — сторожевая её не спрашивает. Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId login,
+            ответ 401 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '403':
+          description: 'дверь роли TLS: no_role, wrong_role, bad_chain (Н1.4 server.role); строка открыта — сторожевая её
+            не спрашивает'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleRefusal'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId login, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '429':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/TooMany'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby'
+  '/domain/members/{name}':
+    parameters:
+    - name: name
+      in: path
+      required: true
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    delete:
+      operationId: passMembersRemove
+      summary: 'Передача процессу domain: Член уходит из домена (OpenAPI P/08, operationId membersRemove)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию membersRemove OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members~1{name}/delete/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersRemove, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersRemove, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            membersRemove, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId membersRemove, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersRemove,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  '/domain/members/{member}/ca':
+    parameters:
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member'
+    post:
+      operationId: passMemberCaSet
+      summary: 'Передача процессу domain: Администратор заменяет отпечатки центра члена (Н1.6 admin) (OpenAPI P/08, operationId
+        memberCaSet)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию memberCaSet OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members~1{member}~1ca/post/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members~1{member}~1ca/post/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            memberCaSet, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            memberCaSet, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            memberCaSet, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId memberCaSet, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId memberCaSet,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  '/domain/{sub}/{rows}/{ref}':
+    parameters:
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Rows'
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Ref'
+    - name: cluster
+      in: query
+      required: false
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    put:
+      operationId: passEditUpdate
+      summary: 'Передача процессу domain: Править поля domain.edit единицы члена (правка хранится) (OpenAPI P/08, operationId
+        editUpdate)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию editUpdate OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1{sub}~1{rows}~1{ref}/put/requestBody/content/application~1json/schema'
+      responses:
+        '202':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Kept'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editUpdate, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editUpdate, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editUpdate, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId editUpdate, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editUpdate,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+    delete:
+      operationId: passEditDelete
+      summary: 'Передача процессу domain: Удалить единицу члена (правка хранится) (OpenAPI P/08, operationId editDelete)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию editDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1{sub}~1{rows}~1{ref}/delete/requestBody/content/application~1json/schema'
+      responses:
+        '202':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Kept'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editDelete, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editDelete, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            editDelete, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId editDelete, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editDelete,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  /domain/users:
+    get:
+      operationId: passUsersList
+      summary: 'Передача процессу domain: Люди домена (Н1.1) (OpenAPI P/08, operationId usersList)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию usersList OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/get/responses/200'
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            usersList, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            usersList, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersList,
+            ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
+            добавлено М11/12))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
+    head:
+      operationId: passUsersListHead
+      summary: 'Передача процессу domain: HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2) (OpenAPI P/08, operationId
+        usersListHead)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию usersListHead OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/head/responses/200'
+        '400':
+          description: тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5 Н2, Н4; договор
+            сторожевой и передачи body); HEAD не содержит тела
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            usersListHead, ответ 401 (как у GET, без тела); HEAD не содержит тела'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            usersListHead, ответ 403 (как у GET, без тела); HEAD не содержит тела'
+        '404':
+          description: путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой и без передачи
+            (договор пересылки «Двери домена»); HEAD не содержит тела
+        '408':
+          description: тело читается медленно (P/06.5 Н4); HEAD не содержит тела
+        '413':
+          description: тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body); HEAD не содержит тела
+        '502':
+          description: 'передача процессу domain: обрыв или молчание — слова договора пересылки «Пересылка — одна функция»
+            answer (Н1.3 pass); HEAD не содержит тела'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersListHead,
+            ответ 503 (как у GET, без тела); HEAD не содержит тела'
+    post:
+      operationId: passUserCreate
+      summary: 'Передача процессу domain: Завести человека (Н1.1, Н3) (OpenAPI P/08, operationId userCreate)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию userCreate OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/post/requestBody/content/application~1json/schema'
+      responses:
+        '201':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/post/responses/201'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userCreate, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userCreate, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userCreate, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId userCreate, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userCreate,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  '/domain/users/{name}':
+    parameters:
+    - name: name
+      in: path
+      required: true
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/PersonName'
+    put:
+      operationId: passUserUpdate
+      summary: 'Передача процессу domain: Сменить пароль или выключить (Н1.1) (OpenAPI P/08, operationId userUpdate)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию userUpdate OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/put/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userUpdate, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userUpdate, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userUpdate, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId userUpdate, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId userUpdate, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userUpdate,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+    delete:
+      operationId: passUserDelete
+      summary: 'Передача процессу domain: Удалить человека и его строки грантов (Н1.1) (OpenAPI P/08, operationId userDelete)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию userDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/delete/responses/200'
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userDelete, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            userDelete, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may —
+            deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId userDelete, ответ 404 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userDelete,
+            ответ 503 (unavailable — три конфликта CAS строки грантов, метка остаётся (Н3 «дверь людей» шаг 9; разбор ревью
+            стадии A 8–10, № 38); frozen (P/08.8 Н1.7); standby (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/delete/responses/503/content/application~1json/schema'
+  '/domain/grants/{cluster}':
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      description: Имя члена по грамматике главы 8.3 Н1.1 или domain.
+      schema:
+        type: string
+        pattern: '^[a-z0-9-]{1,64}$'
+    put:
+      operationId: passGrantsPut
+      summary: 'Передача процессу domain: Записать строку грантов кластера целиком (Н1.3, Н3) (OpenAPI P/08, operationId grantsPut)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию grantsPut OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1grants~1{cluster}/put/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1grants~1{cluster}/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            grantsPut, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            grantsPut, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            grantsPut, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId grantsPut, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId grantsPut,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  /domain/break-glass:
+    get:
+      operationId: passBreakGlassList
+      summary: 'Передача процессу domain: У каких кластеров задан аварийный пароль (Н1.6) (OpenAPI P/08, operationId breakGlassList)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию breakGlassList OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass/get/responses/200'
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassList, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassList, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassList,
+            ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
+            добавлено М11/12))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
+    head:
+      operationId: passBreakGlassListHead
+      summary: 'Передача процессу domain: HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2) (OpenAPI P/08, operationId
+        breakGlassListHead)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию breakGlassListHead OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass/head/responses/200'
+        '400':
+          description: тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5 Н2, Н4; договор
+            сторожевой и передачи body); HEAD не содержит тела
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassListHead, ответ 401 (как у GET, без тела); HEAD не содержит тела'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassListHead, ответ 403 (как у GET, без тела); HEAD не содержит тела'
+        '404':
+          description: путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой и без передачи
+            (договор пересылки «Двери домена»); HEAD не содержит тела
+        '408':
+          description: тело читается медленно (P/06.5 Н4); HEAD не содержит тела
+        '413':
+          description: тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body); HEAD не содержит тела
+        '502':
+          description: 'передача процессу domain: обрыв или молчание — слова договора пересылки «Пересылка — одна функция»
+            answer (Н1.3 pass); HEAD не содержит тела'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassListHead,
+            ответ 503 (как у GET, без тела); HEAD не содержит тела'
+  '/domain/break-glass/{cluster}':
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z0-9-]{1,64}$'
+    put:
+      operationId: passBreakGlassSet
+      summary: 'Передача процессу domain: Задать аварийный пароль кластера (Н1.6) (OpenAPI P/08, operationId breakGlassSet)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию breakGlassSet OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass~1{cluster}/put/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass~1{cluster}/put/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassSet, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassSet, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            breakGlassSet, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassSet, ответ 413 (Отказ двери (Н4 главы
+            двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassSet,
+            ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
+            отказаны (P/08.8 Н1.7 order шаг 1))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/revoke:
+    post:
+      operationId: passTokenRevoke
+      summary: 'Передача процессу domain: Отозвать токен (Н1.2) (OpenAPI P/08, operationId tokenRevoke)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию tokenRevoke OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1revoke/post/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1revoke/post/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            tokenRevoke, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — дверь роли TLS без сертификата клиента (Н1.4 server.role, error no_role); строка открыта
+            — сторожевая её не спрашивает. Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId tokenRevoke,
+            ответ 401 (Токен не прошёл функцию token договора токена домена — {error: refused, detail: <слово token>} (Н1.2
+            revoke))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1revoke/post/responses/401/content/application~1json/schema'
+        '403':
+          description: 'дверь роли TLS: no_role, wrong_role, bad_chain (Н1.4 server.role); строка открыта — сторожевая её
+            не спрашивает'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleRefusal'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          description: 'Переход 2 — тело больше предела консоли (P/06.5 Н4; договор сторожевой и передачи body). Переход 3
+            — ответ процесса domain как пришёл: OpenAPI P/08, operationId tokenRevoke, ответ 413 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen'
+  /domain/handover:
+    post:
+      operationId: passHandover
+      summary: 'Передача процессу domain: Плановая передача (Н1.7) (OpenAPI P/08, operationId handover)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию handover OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
+        по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1handover/post/requestBody/content/application~1json/schema'
+      responses:
+        '200':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1handover/post/responses/200'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            handover, ответ 400 (Отказ двери (Н4 главы двери))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            handover, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            handover, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny
+            — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId handover,
+            ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
+            (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
+            here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
+            domain (P/08.10 Н1.7))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+  /domain/stranded/apply:
+    post:
+      operationId: passStrandedApply
+      summary: 'Передача процессу domain: Повторить брошенную правку у нового держателя (Н1.6 apply) (OpenAPI P/08, operationId
+        strandedApply)'
+      description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
+        Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
+        (переход 3) — ссылкой на операцию strandedApply OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки
+        «Отказы по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1stranded~1apply/post/requestBody/content/application~1json/schema'
+      responses:
+        '202':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1stranded~1apply/post/responses/202'
+        '400':
+          description: 'Переход 2 — тело или запрос не прочитаны — общий отказ разбора запроса консоли или chunked (P/06.5
+            Н2, Н4; договор сторожевой и передачи body). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            strandedApply, ответ 400 (redo it on the new holder — элемент не правка (Н1.6 apply), до пересылки)'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1stranded~1apply/post/responses/400/content/application~1json/schema'
+        '401':
+          description: 'Переход 2 — нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата
+            клиента (Н1.4 server.role, error no_role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            strandedApply, ответ 401 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole401'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '403':
+          description: 'Переход 2 — отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role,
+            wrong_role, bad_chain (Н1.4 server.role). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId
+            strandedApply, ответ 403 (Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may
+            — deny — 403; форма {error: denied, detail} — P/06.3 Н4 denied (OpenAPI урока 6, Denied))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
+        '404':
+          description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
+            и без передачи (договор пересылки «Двери домена»). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08,
+            operationId strandedApply, ответ 404 (Элемента нет (Н1.6 apply))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/NotADomainRoute'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1stranded~1apply/post/responses/404/content/application~1json/schema'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '409':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1stranded~1apply/post/responses/409'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '#/components/responses/PassBroke'
+        '503':
+          description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
+            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId strandedApply,
+            ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
+            добавлено М11/12))'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
+  '/domain/{sub}/{pass}':
+    description: 'door.pass на домене (Н1.6, P/10-03): маршрут /domain/<sub>/<сегмент>[/…], чей сегмент в door.pass спеки
+      <sub>, консоль домена передаёт воркеру на домене этой подсистемы (адрес — пульс domain/<sub>/heartbeat) путём /<сегмент>[/…]
+      с query, клиентом роли domainconsole; заголовки, тело, ответ и коды — договор сторожевой и передачи «Передача door.pass».
+      Ответ воркера — как получен (default: это ответ воркера, не процесса domain; решение п. 9 о передаче процессу его не
+      касается). Один сегмент пути различает загруженная спека: unit.rows — /domain/{sub}/{rows}, door.pass — этот путь (как
+      /{rows} и /{pass} OpenAPI P/06); путь длиннее одного сегмента передаётся так же.'
+    parameters:
+    - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+    - name: pass
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+      description: Сегмент из door.pass спеки подсистемы (P/02.1); совпавший с books, placement, members, topology, shadow,
+        at — не передаётся.
+    get:
+      summary: 'door.pass на домене: GET к воркеру на домене'
+      responses:
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassFailed'
+        '503':
+          $ref: '#/components/responses/PassUnavailableOrShut'
+        'default':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassAnswer'
+    post:
+      summary: 'door.pass на домене: POST к воркеру на домене'
+      responses:
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassFailed'
+        '503':
+          $ref: '#/components/responses/PassUnavailableOrShut'
+        'default':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassAnswer'
+    put:
+      summary: 'door.pass на домене: PUT к воркеру на домене'
+      responses:
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassFailed'
+        '503':
+          $ref: '#/components/responses/PassUnavailableOrShut'
+        'default':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassAnswer'
+    patch:
+      summary: 'door.pass на домене: PATCH к воркеру на домене'
+      responses:
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassFailed'
+        '503':
+          $ref: '#/components/responses/PassUnavailableOrShut'
+        'default':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassAnswer'
+    delete:
+      summary: 'door.pass на домене: DELETE к воркеру на домене'
+      responses:
+        '400':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotADomainRoute'
+        '408':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
+        '413':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
+        '502':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassFailed'
+        '503':
+          $ref: '#/components/responses/PassUnavailableOrShut'
+        'default':
+          $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/PassAnswer'
+    head:
+      summary: 'door.pass на домене: HEAD к воркеру на домене'
+      responses:
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '408':
+          description: как у GET, без тела
+        '413':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+        'default':
+          description: как у GET, без тела
+components:
+  responses:
+    Unauthenticated:
+      description: нет личности — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS без сертификата клиента
+        (Н1.4 server.role, error no_role)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GateOrRole401'
+    Forbidden:
+      description: 'отказ доступа — сторожевая консоли домена (Н1.5, error denied) или дверь роли TLS: no_role, wrong_role,
+        bad_chain (Н1.4 server.role)'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GateOrRole403'
+    GuardShut:
+      description: сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой и передачи shut;
+        P/06.3 Н1.8)
+      content:
+        application/json:
+          schema:
+            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+    NotADomainRoute:
+      description: путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой и без передачи
+        (договор пересылки «Двери домена»)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotADomainRoute'
+    PassBroke:
+      description: 'передача процессу domain: обрыв или молчание — слова договора пересылки «Пересылка — одна функция» answer
+        (Н1.3 pass)'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    NoDomain:
+      description: Вида нет или он не читается — no domain here (Н1.2а, Н1.2б, Н1.2в)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NoDomainBody'
+    ViewNotFound:
+      description: 'По порядку Н1.2а: нет такой спеки; not in the directory — у спеки нет domain.ref; rows не её; no domain
+        here; no such member — член не в списке; путь с . или .. — not a domain route'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    NoPlacement:
+      description: Нет записи; нет спеки или без domain.ref (Н1.2г); путь с . или .. — not a domain route
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
+    AlarmsWindow:
+      description: 'since или until не конечные числа по грамматике числа JSON, повтор параметра или since > until (Н1.8 door);
+        общий отказ разбора запроса — P/06.5 Н2'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/AlarmsRefused'
+            - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+    PassUnavailableOrShut:
+      description: 'door.pass: воркера на домене этой подсистемы не слышно — {error: unavailable, detail: «no worker of <sub>
+        with a door is heard»} (Н1.6 absent; договор сторожевой и передачи codes); сторожевая shut; ответ воркера с кодом
+        503 — как получен'
+      content:
+        application/json:
+          schema:
+            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+  schemas:
+    Refusal:
+      type: object
+      required:
+      - error
+      additionalProperties: false
+      description: 'Отказ консоли домена (Н4): error — слово, detail — пояснение.'
+      properties:
+        error:
+          type: string
+          minLength: 1
+        detail:
+          type: string
+    RoleRefusal:
+      type: object
+      required:
+      - error
+      additionalProperties: false
+      description: Отказ двери роли TLS до сторожевой (Н1.4 server.role; слова договора peer).
+      properties:
+        error:
+          enum:
+          - no_role
+          - wrong_role
+          - bad_chain
+        detail:
+          type: string
+    GateOrRole401:
+      oneOf:
+      - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+      - unevaluatedProperties: false
+        allOf:
+        - $ref: '#/components/schemas/RoleRefusal'
+        - properties:
+            error:
+              const: no_role
+    GateOrRole403:
+      oneOf:
+      - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+      - $ref: '#/components/schemas/RoleRefusal'
+    NotADomainRoute:
+      unevaluatedProperties: false
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      - properties:
+          error:
+            const: not a domain route
+    NoDomainBody:
+      unevaluatedProperties: false
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      - properties:
+          error:
+            const: no domain here
+    AlarmsRefused:
+      unevaluatedProperties: false
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      - properties:
+          error:
+            const: refused
+          detail:
+            const: since and until are times, in seconds
+    PlacementList:
+      type: object
+      required:
+      - rev
+      - records
+      additionalProperties: false
+      properties:
+        rev:
+          type: integer
+          minimum: 0
+        records:
+          type: object
+          additionalProperties:
+            $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Placement'
+          description: 'Ключ — "<sub>/<ref>".'
+    GrantsView:
+      type: object
+      required:
+      - grants
+      additionalProperties: false
+      properties:
+        grants:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Line'
+    SharedView:
+      type: object
+      required:
+      - doc
+      - delivery
+      - declared
+      additionalProperties: false
+      properties:
+        doc:
+          oneOf:
+          - type: 'null'
+          - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/SharedDoc'
+        delivery:
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Delivery'
+        declared:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+              - name
+              - type
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                schema:
+                  type: object
+                  additionalProperties: true
+                  description: JSON Schema документа из спеки (P/02.1 Н1.2б) как объявлена.
+    AlarmsView:
+      type: object
+      required:
+      - since
+      - until
+      - events
+      - members
+      - complete
+      - sentence
+      additionalProperties: false
+      properties:
+        since:
+          type: number
+        until:
+          type: number
+        events:
+          type: array
+          items:
+            type: object
+            required:
+            - t
+            - kind
+            - class
+            - member
+            additionalProperties: true
+            description: Строка индекса P/05 Н1.3 класса alarm плюс member, t_src, from_history; строка молчания — Н1.8 silence_line.
+              Поля строки события задают подсистемы.
+        members:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MemberAlarms'
+        complete:
+          type: boolean
+        sentence:
+          type: string
+    MemberAlarms:
+      type: object
+      required:
+      - state
+      additionalProperties: false
+      properties:
+        state:
+          enum:
+          - ok
+          - silent
+          - not_reporting
+          - never
+          - unreadable
+        truncated:
+          const: true
+        known_until:
+          type: number
+        silent_since:
+          type: number
+        alive_at:
+          type: number
+        alive_via:
+          type: string
+        history_cut_before:
+          type: number
+    SpecNoRoot:
+      type: object
+      required:
+      - name
+      - rows
+      additionalProperties: false
+      properties:
+        name:
+          const: ''
+        rows:
+          type: 'null'
+    MountsNoRoot:
+      type: object
+      required:
+      - root
+      - mounts
+      additionalProperties: false
+      properties:
+        root:
+          const: ''
+        mounts:
+          type: object
+          additionalProperties:
+            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/SpecView'
+          description: Описание подсистемы P/06.5 Н2 /mounts; форма — SpecView контракта P/06.

@@ -1,0 +1,22 @@
+# Договор сторожевой и передачи (gate-and-pass.md) — общие формы его тел. Только components: дверей у договора нет; на эти
+# схемы ссылаются контракты консоли кластера (P/06), процесса domain (P/08) и консоли домена (P/10) — одна форма на провод,
+# копий нет. Вынесено из OpenAPI урока 6 переносом урока 10 (стадия B): форма отказа сторожевой нужна и процессу domain
+# (P/08.4 Н1.5), а ссылка 08 → 06 вместе с дверями главы позднего слоя 6.7 (06 → 08) дала бы цикл между файлами.
+openapi: 3.1.0
+info:
+  title: Сторожевая и передача — общие формы
+  version: '1'
+  description: 'Формы тел договора Platform/common/contracts/gate-and-pass.md (владелец P/06, глава 6.3; участники P/08.4, P/10).'
+components:
+  schemas:
+    Denied:
+      type: object
+      required: [detail, error]
+      additionalProperties: false
+      description: 'Отказ сторожевой `{detail, error: denied}` (договор «Сторожевая» refusal; P/06.3 Н4 denied): 401 — личности
+        нет, 403 — гранта нет; у двери процесса domain — P/08.4 Н1.5'
+      properties:
+        detail:
+          type: string
+        error:
+          const: denied
