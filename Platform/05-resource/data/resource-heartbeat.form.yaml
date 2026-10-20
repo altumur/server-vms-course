@@ -103,11 +103,11 @@ root:
     door:
       type: object
       properties:
-        addr: {type: string}
-        mode: {type: string, enum: [http, https]}
-        cert_until: {type: number}
+        addr: {type: string, description: "адрес двери ресурса — RESOURCE_HOST:RESOURCE_PORT"}
+        mode: {type: string, enum: [loopback, mtls], description: "loopback — без RESOURCE_TLS, только петля; mtls — RESOURCE_TLS=1, взаимный TLS (ADR-0075)"}
+        cert_until: {type: number, description: "стенные секунды конца срока сертификата сервера своего комплекта (W2C_TLS_DIR); при mtls"}
       required: [addr, mode]
-      description: состояние двери ресурса (М10/9 ResourceRow DoorState)
+      description: "состояние двери ресурса (М10/9 ResourceRow DoorState); пишет ресурс в каждом пульсе (P/05 Н1.4; ADR-0075 доп. (3); разбор ревью стадии B 3–5, № 28)"
     garbled_rows:
       type: object
       names:
