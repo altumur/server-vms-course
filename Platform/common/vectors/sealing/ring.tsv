@@ -11,3 +11,8 @@ short_hex	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4\n"	
 inline_comment	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea # main\n"	unreadable
 dup_kid	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\nk1 32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7\n"	unreadable
 kid_starts_hash	"#k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	unreadable
+crlf	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\r\nk2 32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7\r\n"	current k1; keys k1, k2
+nbsp_kid	"k\u00a01 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k 1; keys k 1
+upper_hex	"k1 29DD2B4A883861ADF8AE1964E2FE81FEF69656092AA8EEC807A182C06FEDC4EA\n"	current k1; keys k1
+rotate	"k2 32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7\nk10 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k2; keys k2, k10; rotate k11
+rotate_other_name	"main 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current main; keys main; rotate refused

@@ -5,8 +5,8 @@ root:
   type: object
   properties:
     rev:
-      type: string
-      pattern: '[1-9][0-9]*'
+      ref: common.pos53
+      whole: true
       description: то же число, что rev строки; пишется после строки, никогда не понижается
     sha256:
       ref: common.sha256_hex
