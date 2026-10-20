@@ -271,8 +271,10 @@ order:       1. тело не по форме — 400 {error: "refused", detail:
                 the copy named, term T rev R (…)»; без copy — наибольшая (term, rev) из проверенных, а нет ни одной (ни
                 сосед, ни своё хранилище резервной копии не дали) — без неё, только при явном why («из ничего»): state не
                 восстанавливается, список членов — копия domain/member-list этого кластера, он — holder, ответ 200 с
-                restored_from: null; без why, при своей записи срока ≥ 1 и соседе, который не ответил, — 409 {error:
-                "refused", detail: "nothing was restored: <n> did not answer"} (добавлено моделью Quint М11, ER); сосед
+                restored_from: null; без why — всегда 409 {error: "refused"}: при своей записи срока ≥ 1 и соседе, который
+                не ответил, — detail "nothing was restored: <n> did not answer" (добавлено моделью Quint М11, ER); иначе (своей
+                записи нет или все ответили) — detail "nothing to restore from: no backup copy anywhere — say why to move
+                from nothing" (разбор ревью стадии A 8–10, № 34); сосед
                 объявил в /api/held резервную копию новее, а не отдал (401, 403, 503) — или отдал 200, но копия не прошла
                 проверку набором переноса (кроме revoked_issuer — свой 409 ниже; добавлено моделью Quint М11, RB) — 409
                 «nothing was restored: the newest copy this move
