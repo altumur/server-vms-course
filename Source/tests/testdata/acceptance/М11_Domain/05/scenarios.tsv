@@ -1,12 +1,7 @@
 scenario	step	request	expect
-# Приёмка М11/5: стенд hold, m1, m2 с testsub и testsub2 (сц. 02, 04); сц. 01, 03, 05 — приёмка главы 8.5, 06 снят — вектор assemble урока 8 (стадия B). Формат — README.
+# Приёмка М11/5: стенд hold, m1, m2 с testsub и testsub2 (сц. 02); сц. 01, 03, 05 — приёмка главы 8.5, 06 снят — вектор assemble урока 8; сц. 04 → P/09.1 сц. 13 (стадия B). Формат — README.
 02-notes-unique	1	@domain	ok
 02-notes-unique	2	member m1 console2 POST /tallies {"name": "t5", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 02-notes-unique	3	member m2 console2 POST /tallies {"name": "t5", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
 02-notes-unique	4	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"conflicts": ["t5"]}}}
 02-notes-unique	5	@until 30 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t5": "@absent"}}
-04-slot-liveness	1	@domain	ok
-04-slot-liveness	2	member m1 console2 POST /tallies {"name": "t4", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
-04-slot-liveness	3	@until 90 member m2 console GET /domain/testsub2/books/rolls	200 {"t4": {"entries": [{"member": "m1"}]}}
-04-slot-liveness	4	@on m1 @sigkill t-1	ok
-04-slot-liveness	5	@until 150 member m2 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t4": "@absent"}

@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка М11/10: стенд hold, m1, m2 с подписантом и на m1 (копия и хранители, отзыв после переноса) и векторы follow на входах inputs/; сц. 02–04, 08–10, 12 — приёмка главы 8.8, 05, 07 сняты — векторы common/vectors/record, ask-sig (стадия B). Формат — README.
+# Приёмка М11/10: стенд hold, m1, m2 с подписантом и на m1 (копия и хранители); сц. 02–04, 08–10, 12 — приёмка главы 8.8, 05, 07 сняты — векторы common/vectors/record, ask-sig; сц. 11 → P/09.1 сц. 11, 06 снят — вектор 09-agent/vectors/follow (стадия B). Формат — README.
 01-held-and-copies	1	@domain	ok
 01-held-and-copies	2	@sleep 35	ok
 01-held-and-copies	3	member m1 console GET /api/held	200 {"cluster": "m1", "term": 1, "holder": {"holder": "hold", "term": 1}, "keys": "@any"}
@@ -9,35 +9,3 @@ scenario	step	request	expect
 01-held-and-copies	7	@until 60 holder GET /domain	200 {"term": {"term": 1, "holder": "hold", "backup": {"term": 1, "rev": "$r"}, "backup_holders": ["m1", "m2"], "copies": {"m1": {"term": 1, "rev": "$r"}, "m2": {"term": 1, "rev": "$r"}}}}
 01-held-and-copies	8	member m1 console GET /api/backup	401 {"error": "refused", "detail": "~a member signs its ask"}
 01-held-and-copies	9	member m1 console @header X-W2C-Member: m1 GET /api/backup	401 {"error": "refused"}
-06-follow	1	follow inputs/follow-01-larger-term.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
-06-follow	2	follow inputs/follow-02-held-larger.json	ok {"result": "stay", "reason": "larger", "term": 2, "refused": {}}
-06-follow	3	follow inputs/follow-03-holding.json	ok {"result": "stay", "reason": "holding", "term": 2, "refused": {}}
-06-follow	4	follow inputs/follow-04-two-holders.json	ok {"result": "stay", "reason": "two_holders", "term": 1, "refused": {}}
-06-follow	5	follow inputs/follow-05-moved-its-door.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:9443", "refused": {}}
-06-follow	6	follow inputs/follow-06-forged-larger.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m2": "unknown_issuer"}}
-06-follow	7	follow inputs/follow-07-nobody-answers.json	ok {"result": "stay", "reason": "none", "refused": {}}
-06-follow	8	follow inputs/follow-08-forged-only.json	ok {"result": "stay", "reason": "none", "refused": {"m9": "unknown_issuer"}}
-06-follow	9	follow inputs/follow-09-same-term-other-holder.json	ok {"result": "follow", "term": 2, "holder": "m2", "url": "http://m2.test:8443"}
-06-follow	10	follow inputs/follow-10-tampered-answer.json	ok {"result": "stay", "reason": "holding", "term": 1, "refused": {"m1": "bad_signature"}}
-06-follow	11	follow inputs/follow-11-held-is-a-backup.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
-06-follow	12	follow inputs/follow-12-held-is-a-grant.json	ok {"result": "follow", "term": 2, "holder": "m1", "url": "http://m1.test:8443", "refused": {}}
-11-revoked-not-revived	1	@domain	ok
-11-revoked-not-revived	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
-11-revoked-not-revived	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
-11-revoked-not-revived	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t0"}
-11-revoked-not-revived	5	holder POST /domain/revoke {"token": "$t0"}	200 {"revoked": "@any"}
-11-revoked-not-revived	6	@sleep 65	ok
-11-revoked-not-revived	7	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
-11-revoked-not-revived	8	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	200
-11-revoked-not-revived	9	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201
-11-revoked-not-revived	10	@sleep 6	ok
-11-revoked-not-revived	11	holder GET /domain	200 {"term": {"backup": {"term": 1, "rev": "$r"}}}
-11-revoked-not-revived	12	@until 20 member m2 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
-11-revoked-not-revived	13	holder POST /domain/revoke {"token": "$ta"}	200 {"revoked": "@any"}
-11-revoked-not-revived	14	@until 20 member m1 console @header Authorization: Bearer $ta GET /counters	401
-11-revoked-not-revived	15	holder GET /domain	200 {"term": {"backup": {"term": 1, "rev": "$r"}}}
-11-revoked-not-revived	16	@stop domain	ok
-11-revoked-not-revived	17	@start domain on m2	ok
-11-revoked-not-revived	18	@move m2	200 {"term": 2, "holder": "m2", "restored_from": {"term": 1, "rev": "$r"}}
-11-revoked-not-revived	19	@until 60 member m1 console GET /api/held	200 {"term": 2, "holder": {"holder": "m2"}}
-11-revoked-not-revived	20	@until 30 member m1 console @header Authorization: Bearer $ta GET /counters	401

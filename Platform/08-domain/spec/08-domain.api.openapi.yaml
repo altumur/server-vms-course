@@ -124,7 +124,7 @@ paths:
         '503':
           $ref: '#/components/responses/Standby'
   /api/relay/{relay}:
-    description: 'Глава 8.3 Н2, Н3 «держатель на POST /api/relay» (сторона держателя; сторона ретранслятора — P/09.2).'
+    description: 'Глава 8.3 Н2, Н3 «держатель на POST /api/relay» (сторона держателя; сторона ретранслятора — P/09.2 Н2, Н3).'
     parameters:
       - name: relay
         in: path
@@ -162,7 +162,7 @@ paths:
           $ref: '#/components/responses/Refused'
         '503': {$ref: '#/components/responses/Standby'}
   /api/tokens/{member}/{sub}/{kind}:
-    description: 'Глава 8.7 (08.7-domain.norms.md) Н1.3, Н2, Н3 «выдать»; местная дверь агента — договор местной двери токенов (P/09.1).'
+    description: 'Глава 8.7 (08.7-domain.norms.md) Н1.3, Н2, Н3 «выдать»; местная дверь агента — договор местной двери токенов (P/09.1 Н1.6; OpenAPI урока 9, тег local-door).'
     parameters:
       - $ref: '#/components/parameters/Member'
       - {$ref: '#/components/parameters/Sub'}
@@ -182,12 +182,7 @@ paths:
           description: 'Ответ, запечатанный члену конвертом m1; содержимое — договор конвертов домена «Содержимое sealed»'
           content:
             application/json:
-              schema:
-                type: object
-                required: [sealed]
-                additionalProperties: false
-                properties:
-                  sealed: {type: string, pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
+              schema: {$ref: '#/components/schemas/TokenSealed'}
         '400': {$ref: '#/components/responses/TokenRefused'}
         '401': {$ref: '#/components/responses/TokenRefused'}
         '403': {$ref: '#/components/responses/TokenRefused'}
@@ -1210,6 +1205,13 @@ components:
               what: {type: string}
               note: {type: string}
   schemas:
+    TokenSealed:
+      type: object
+      required: [sealed]
+      additionalProperties: false
+      description: 'Ответ двери токенов держателя — токен, запечатанный члену конвертом m1 (договор конвертов домена «Содержимое sealed»); ретранслятор несёт его байт в байт (P/09.2)'
+      properties:
+        sealed: {type: string, pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
     # --- общие формы отказов процесса (глава 8.0 Н4; 8.8; 8.10) ---
     Refusal:
       type: object
@@ -1455,7 +1457,7 @@ components:
                     objects:
                       type: object
                       additionalProperties: true
-                      description: Объекты копии по ключам P/03.4 Н1.1 и P/04 Н1.3а. Открыт намеренно — копия несёт и семьи других уроков (М11/3 Н1.2 member_objects, глава 9.1); вид берёт названные.
+                      description: Объекты копии по ключам P/03.4 Н1.1 и P/04 Н1.3а. Открыт намеренно — копия несёт и семьи других уроков (P/09.1 Н1.2 member_objects); вид берёт названные.
                     stale:
                       type: array
                       items: {type: string}
@@ -1509,7 +1511,7 @@ components:
     # --- глава 8.3: публикация, ответ держателя, пакет ретранслятора, список, топология ---
     Publication:
       type: object
-      description: 'Тело POST /api/member — публикация М11/3 Н1.2 (подлинник формы тела; агент — глава 9.1). base 0 или нет — тело
+      description: 'Тело POST /api/member — публикация P/09.1 Н1.2 (подлинник формы тела; агент — глава 9.1). base 0 или нет — тело
         целое; deleted — только при base > 0. Поля вне дельты (stale, tls_ca, tls_ca_certs, sign_failures, members_rev) — любое
         значение: не по форме своей нормы — поле не взято, журнал держателя, отчёт принят (P/08.3 Н1.2 out_of_delta, семья
         member-report-delta; сверка контракта с нормами P/08, перенос урока 8).'
@@ -1520,7 +1522,7 @@ components:
         objects:
           type: object
           additionalProperties: true
-          description: Открыт намеренно — ключи и значения задают member_objects (М11/3 Н1.2) и главы 8.3 Н1.2, 8.5, 8.8, 8.9; прочее держатель отбрасывает молча.
+          description: Открыт намеренно — ключи и значения задают member_objects (P/09.1 Н1.2) и главы 8.3 Н1.2, 8.5, 8.8, 8.9; прочее держатель отбрасывает молча.
         base: {type: integer, minimum: 0}
         deleted:
           type: array
@@ -1539,7 +1541,7 @@ components:
         tls_ca_certs:
           description: 'Вне дельты (out_of_delta): форма — список строк, PEM сертификатов центров tls_ca в том же порядке, sha256(DER) — отпечаток на том же месте; только вместе с tls_ca (P/08.3 Н1.6); не список строк — поле не взято, прочее — on_accept (сверка М11, D10).'
         sign_failures:
-          description: 'Вне дельты (out_of_delta): форма — {domain?: целое ≥ 1, console?: целое ≥ 1}, не пусто — запросы, которые агент с запуска не отправил, потому что не смог подписать (P/08.3 Н1.6а; сторона агента — М11/12 Н1.6, глава 9.1); не по ней — поле не взято.'
+          description: 'Вне дельты (out_of_delta): форма — {domain?: целое ≥ 1, console?: целое ≥ 1}, не пусто — запросы, которые агент с запуска не отправил, потому что не смог подписать (P/08.3 Н1.6а; сторона агента — P/09.1 Н1.12); не по ней — поле не взято.'
         members_rev:
           description: 'Вне дельты (out_of_delta): форма — {term: целое ≥ 1, rev: целое ≥ 1} документа domain/member-list, который член держит (P/08.3 Н1.4а); не по ней — поле не взято.'
     Carry:
@@ -1579,7 +1581,7 @@ components:
           description: 'P/08.3 Н1.2 — строка domain/topology держателя (Topology текстом JCS).'
           properties:
             doc: {type: string}
-        domain_age: {type: number, minimum: 0, description: 'Добавляет ретранслятор (М11/4 Н1.4, глава 9.2).'}
+        domain_age: {type: number, minimum: 0, description: 'Добавляет ретранслятор (P/09.2 Н1.4).'}
         placement: {$ref: '#/components/schemas/CarryPlacement'}
         pending:
           type: array
@@ -1591,7 +1593,7 @@ components:
       type: object
       required: [relayed]
       additionalProperties: false
-      description: 'Пакет ретранслятора (М11/4 Н1.4; подлинник формы тела — ретранслятор P/09.2 читает отсюда).'
+      description: 'Пакет ретранслятора (P/09.2 Н1.4; подлинник формы тела — ретранслятор P/09.2 читает отсюда).'
       properties:
         relayed:
           type: object

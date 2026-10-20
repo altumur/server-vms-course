@@ -1,0 +1,303 @@
+# P/09 — двери процесса domainagent: HTTP-контракт (один файл урока, «своя часть» главы — тегом; план переноса урока 9
+# § 4 «OpenAPI», В9). Тег local-door — глава 9.1 (09.1-agent.norms.md): POST /tokens/{sub}/{kind}, местная дверь токенов
+# агента члена; канон двери — договор Platform/common/contracts/local-token-door.md (сокет роли, личность, тело,
+# TOKEN_BODY, TOKEN_WAIT, отказы «у агента»), здесь — только HTTP-форма: путь, тела, коды. Тег relay — глава 9.2
+# (09.2-agent.norms.md): дверь ретранслятора (RELAY=1) — POST /api/member/{member}, GET /api/carry/{member},
+# POST /api/tokens/{member}/{sub}/{kind}. Свои двери процесса — 4 операции, у каждой — operationId.
+# Тела, которые ретранслятор несёт, и тела держателя, которые агент отдаёт «как пришли», — относительным $ref на OpenAPI
+# процесса domain (../../08-domain/spec/08-domain.api.openapi.yaml; план 9 В3: одна форма на провод, копий нет):
+# Publication, Carry, HolderAsk, Refusal, TokenRefusal, Deposed, StandbyBody, RequestId, параметры Member, Sub, Kind,
+# AgentSignature, ответ TokenRefused. Коды переходов держателя этот контракт не перечисляет (разбор ревью стадии A 8–10,
+# решение 3): у двери токенов ретранслятора они — операция holderToken OpenAPI 08; у местной двери агент отдаёт код и тело
+# держателя как пришли — их формы ссылкой на OpenAPI 08. Свои коды двери ретранслятора — P/09.2 Н2, тело — общий Refusal
+# OpenAPI 08 (без сужения). Отказы местной двери — договор «Отказы» и P/09.1 Н4.
+# Из контракта М11/7 (07-worker-tokens.api.openapi.yaml) перенесён путь /tokens/{sub}/{kind} со схемами LocalAsk, Given,
+# ответами Unavailable, InvalidReply — стадия B, без изменения поведения; Sub, Kind, RequestId — ссылкой на OpenAPI 08
+# (та же форма); копия Refusal М11/7 (перечень reason) заменена ссылкой на TokenRefusal, Deposed, StandbyBody OpenAPI 08 и
+# своей формой AgentRefusal для отказов самого агента. Контракт М11/4 путей двери ретранслятора не имел (только описание
+# «те же формы, что у держателя; коды — Н2 урока»): пути тега relay записаны по P/09.2 Н2.
+openapi: 3.1.0
+info:
+  title: P/09 — двери процесса domainagent
+  version: '1'
+  description: 'Канон — нормы глав 09.1-agent.norms.md (Н1.6, Н2, Н4) и 09.2-agent.norms.md (Н1.1, Н1.4, Н1.6, Н2, Н4),
+    договор местной двери токенов. Разбор запроса — P/01.1 Н2.1 (у двери ретранслятора — с отступлениями P/06.5 Н2).
+    Агент в процессе платформы (P/09.1 Н1.11) местной двери не слушает: вызов, а не дверь — тело, ответ и отказы те же
+    (договор местной двери токенов «Вызов в процессе»). Двери, которые агент зовёт клиентом, — у их владельцев: держатель
+    POST /api/member, GET /api/carry, POST /api/tokens, POST /api/relay — OpenAPI урока 8; GET /api/held — урок 10; двери
+    единиц и /events — OpenAPI урока 6. Внутренний API не нормируется; контракт не утверждает, что какая-либо реализация
+    ему проверена.'
+tags:
+  - name: local-door
+    description: 'Глава 9.1 (09.1-agent.norms.md) Н1.6, Н2, Н4; договор местной двери токенов (Platform/common/contracts/local-token-door.md).
+      Дверь держателя, куда агент несёт просьбу, — /api/tokens/{member}/{sub}/{kind} OpenAPI урока 8 (P/08.7).'
+  - name: relay
+    description: 'Глава 9.2 (09.2-agent.norms.md) Н1.1, Н1.4, Н1.6, Н2, Н4 — дверь ретранслятора (RELAY=1). Класс signed серверной
+      стороны TLS (09.2 Н1.6; договор сертификата роли «Серверная сторона: класс signed»): сертификат клиента не требуется и
+      прав не даёт, личность — подпись члена (договор подписи агента). Формы тел — OpenAPI процесса domain (Publication,
+      Carry, HolderAsk); коды держателя у двери токенов — как пришли (операция holderToken OpenAPI 08), здесь не перечисляются.'
+paths:
+  /tokens/{sub}/{kind}:
+    servers:
+      - url: 'http://localhost'
+        description: 'Местная дверь агента: Unix-сокет потока <AGENT_TOKEN_DIR>/<роль>.sock (AGENT_TOKEN_DIR, умолчание
+          /run/w2c/domainagent; <роль> — <sub>worker), по нему HTTP/1.1; личность соединения — роль сокета, в теле роль не
+          называется. OpenAPI 3.1 сокета не выражает: url — пример, не адрес. Канон — Platform/common/contracts/local-token-door.md
+          «Сокет роли», «Дверь».'
+    description: 'Глава 9.1 Н1.6, Н2; договор местной двери токенов «Дверь», «Отказы». Агент подписывает просьбу ключом члена
+      (P/09.1 Н1.3) и несёт держателю (P/08.7) или через ретранслятор (глава 9.2) байт в байт; ответ держателя открывает
+      сам (P/09.1 Н1.6 agent).'
+    parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Kind'
+    post:
+      tags: [local-door]
+      operationId: localToken
+      summary: Воркер просит токен у агента своего кластера
+      requestBody:
+        required: true
+        description: 'Больше TOKEN_BODY (4 KiB, байты тела, как пришли) — 413; заголовок Transfer-Encoding — 400 (договор «Дверь»
+          body, request, TOKEN_BODY).'
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/LocalAsk'}
+      responses:
+        '200':
+          description: 'Токен — только этому соединению: m1 ответа держателя открыт, request_id тот же, exp > now (договор
+            «Дверь» answer; P/09.1 Н1.6 agent)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Given'}
+        '400':
+          description: 'У агента: тело не по форме, заголовок Transfer-Encoding (договор «Дверь» request, «Отказы»); или код и
+            тело держателя как пришли (P/08.7 Н4)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
+        '401':
+          description: 'У агента: личности роли нет (договор «Отказы»); или код и тело держателя как пришли — слова договора
+            подписи агента (P/08.7 Н4)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
+        '403':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/TokenRefused'
+        '404':
+          description: 'У агента: нет маршрута — <sub> пути не спека каталога, к держателю запрос не идёт (договор «Дверь»
+            request, «Отказы»); или код и тело держателя как пришли (P/08.7 Н4)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
+        '409':
+          description: 'Код и тело держателя как пришли: no_centre (P/08.7 Н3 «выдать») или deposed (P/08.8 Н1.6)'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenRefusal'
+                  - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Deposed'
+        '413':
+          description: 'Тело больше TOKEN_BODY у агента — {error: "refused", detail} (P/08.7 Н4, общая форма P/08.3 Н4); или код
+            и тело держателя как пришли'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
+        '502':
+          $ref: '#/components/responses/InvalidReply'
+        '503':
+          description: 'У агента: держатель не ответил за TOKEN_WAIT — unavailable (договор «Дверь» no_queue; воркер просит заново);
+            или standby держателя как пришёл (P/08.10 Н1.7)'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/UnavailableBody'
+                  - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/StandbyBody'
+  /api/member/{member}:
+    servers:
+      - url: '{origin}'
+        description: 'Дверь ретранслятора — агент с RELAY=1 (RELAY_HOST, умолчание 0.0.0.0; RELAY_PORT, умолчание 8446; P/09.2
+          Н1.1 door); https:// класса signed (P/09.2 Н1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+    description: 'Глава 9.2 Н2, Н3, Н4; приём — функция «принять» над памятью ретранслятора (договор приёма отчёта
+      Platform/common/contracts/accept.md; владелец P/08.3).'
+    parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member'
+    post:
+      tags: [relay]
+      operationId: relayMemberReport
+      summary: Отчёт члена за ретранслятором — ответ держателя из памяти ретранслятора
+      parameters:
+        - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Publication'}
+      responses:
+        '200':
+          description: 'carry держателя для члена из памяти ретранслятора, rev — копии ретранслятора, с domain_age (P/09.2 Н1.4, Н2)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
+        '400':
+          description: 'Тело — не публикация (P/09.2 Н4; как у двери держателя, P/08.3 Н4)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+        '401':
+          description: 'Подпись (договор подписи агента; ключ — из keys ответа пакета); незнакомец с неверной подписью своим
+            ключом (P/09.2 Н2, Н3)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+        '403':
+          $ref: '#/components/responses/RelayForbidden'
+        '409':
+          description: 'rebase — база не та (договор приёма отчёта над памятью ретранслятора; P/09.2 Н2, Н4)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+        '413':
+          description: 'Тело больше BODY_LIMIT (P/08.3 Н1.3; P/09.2 Н4)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+        '503':
+          $ref: '#/components/responses/RelayNothingYet'
+  /api/carry/{member}:
+    servers:
+      - url: '{origin}'
+        description: 'Дверь ретранслятора — агент с RELAY=1 (RELAY_HOST, умолчание 0.0.0.0; RELAY_PORT, умолчание 8446; P/09.2
+          Н1.1 door); https:// класса signed (P/09.2 Н1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+    description: 'Глава 9.2 Н2.'
+    parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member'
+    get:
+      tags: [relay]
+      operationId: relayMemberCarry
+      summary: Ответ держателя из памяти ретранслятора без отчёта
+      parameters:
+        - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature'
+      responses:
+        '200':
+          description: 'carry из памяти ретранслятора с domain_age (P/09.2 Н1.4, Н2)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
+        '401':
+          description: 'Подпись (договор подписи агента; ключ — из keys ответа пакета; P/09.2 Н2 «как выше»)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+        '403':
+          $ref: '#/components/responses/RelayForbidden'
+        '503':
+          $ref: '#/components/responses/RelayNothingYet'
+  /api/tokens/{member}/{sub}/{kind}:
+    servers:
+      - url: '{origin}'
+        description: 'Дверь ретранслятора — агент с RELAY=1 (RELAY_HOST, умолчание 0.0.0.0; RELAY_PORT, умолчание 8446; P/09.2
+          Н1.1 door); https:// класса signed (P/09.2 Н1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin без завершающего /; пример адреса, не настройка.'}
+    description: 'Глава 9.2 Н1.1 not_author, Н2: просьба токена байт в байт к держателю (P/08.7), ответ — как пришёл; коды
+      держателя — операция holderToken OpenAPI 08 (переход держателя), здесь не перечисляются.'
+    parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member'
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Kind'
+    post:
+      tags: [relay]
+      operationId: relayToken
+      summary: Просьба токена воркера через ретранслятор — байт в байт
+      parameters:
+        - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/HolderAsk'}
+      responses:
+        '200':
+          description: 'Ответ держателя как пришёл — {sealed}, конверт m1 члену; ретранслятор его не открывает (P/09.2 Н1.1
+            not_author; форма — схема TokenSealed OpenAPI 08)'
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenSealed'
+        '502':
+          description: 'Держатель не ответил — did not answer, как пересылка (договор пересылки «Пересылка — одна функция»
+            answer; решение «Архитектора» по сверке М11, Y8; P/09.2 Н2, Н4)'
+          content:
+            application/json:
+              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+components:
+  responses:
+    InvalidReply:
+      description: 'У агента: m1 не открылся, не тот request_id или exp ≤ now (P/09.1 Н1.6 agent; договор «Отказы»)'
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: invalid token reply}
+              detail: {type: string}
+    RelayForbidden:
+      description: '«<член> does not reach the domain through this relay: the domain''s topology says so, not the relay» —
+        незнакомец с верной подписью своим ключом запомнен стуком (P/09.2 Н3); ключа нет — принят до ключей (P/09.2 Н2, Н4)'
+      content:
+        application/json:
+          schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+    RelayNothingYet:
+      description: '«the relay has nothing from the domain for <член> yet» — до первого ответа держателя; незнакомцу — тоже, без
+        стука (P/09.2 Н2, Н3, Н4)'
+      content:
+        application/json:
+          schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+  schemas:
+    LocalAsk:
+      type: object
+      required: [request_id, ref]
+      additionalProperties: false
+      description: 'Тело местной двери (договор «Дверь» body); роль в теле не называется.'
+      properties:
+        request_id: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId'}
+        ref: {type: string, minLength: 1}
+        by: {type: string, minLength: 1}
+    Given:
+      type: object
+      required: [request_id, token, exp]
+      additionalProperties: false
+      description: 'Ответ местной двери (договор «Дверь» answer) — текст JSON из m1 ответа держателя (P/08.7 Н1.3 answer).'
+      properties:
+        request_id: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId'}
+        token: {type: string, minLength: 1}
+        exp: {type: number}
+    AgentRefusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      description: 'Отказ самого агента у местной двери: 400, 401, 404 — без слова (договор «Отказы»); 413 — {error: "refused",
+        detail} (P/08.7 Н4)'
+      properties:
+        error: {type: string, minLength: 1}
+        detail: {type: string}
+    AgentOrHolderRefusal:
+      description: 'Отказ агента (AgentRefusal) или тело держателя как пришло (TokenRefusal OpenAPI 08; P/08.7 Н4)'
+      anyOf:
+        - $ref: '#/components/schemas/AgentRefusal'
+        - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenRefusal'
+    UnavailableBody:
+      type: object
+      required: [error]
+      additionalProperties: false
+      description: 'У агента: держатель не ответил за TOKEN_WAIT (договор «Дверь» no_queue, «Отказы»)'
+      properties:
+        error: {const: unavailable}
+        detail: {type: string}

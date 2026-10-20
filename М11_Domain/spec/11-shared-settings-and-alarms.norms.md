@@ -10,13 +10,14 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): объект страницы `domain/alarms` — `from`, `to`. Объект истории `domain/alarm-history/<член>` — [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) Н1 «Время» (стадия B; урок 8).
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке). Объект страницы `domain/alarms` (`from`, `to`) — [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) Н1 «Время» (стадия B; урок 9). Объект истории `domain/alarm-history/<член>` — [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) Н1 «Время» (стадия B; урок 8).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/shared` (объект копии у члена — до коммита 9), `domain/shared-refused`, `domain/alarms`, `<sub>/<spec:domain.witness.report>/<имя>`;
+- владеет: `<sub>/<spec:domain.witness.report>/<имя>` (урок P/10; решение «Архитектора» по планам переноса 8–10, п. 8);
 - читает: `domain/holder`, `domain/shared` (строка — P/08.9), `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`.
 
 Строка `domain/shared`, объекты `domain/shared-docs/rev-<rev>` и `domain/alarm-history/<член>` держателя — [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) (стадия B; урок 8).
+Объект копии `domain/shared` у члена, `domain/shared-refused`, `domain/alarms` — перенесено в [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) Н1 «Данные» (стадия B; урок 9).
 
 Общее уроков 1–10 Н1 действует. Домен не знает ни одного поля подсистемы (ADR-0010): что общее, объявляет спека, а
 значение домена разрешается **при чтении**, не записью в строки. Тревоги членов домен собирает из их отчётов: к члену он
@@ -37,20 +38,7 @@
 
 ### Н1.4 Доставка члену
 
-`carry` и `holder_self` (сторона держателя) перенесены в [P/08.9 Н1.4](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-06 (стадия B; урок 8); здесь —
-сторона агента до урока 9.
-
-```yaml
-member:          агент по порядку (Н3 «взять документ»); затем объект domain/shared = текст, затем строка
-                 domain/shared {doc: JCS {term, rev, sha256}}; отказ — строка domain/shared-refused {doc: JCS {term, rev,
-                 reason, at}}; прежний документ остаётся; взятый документ снимает строку domain/shared-refused с парой не
-                 новее своей (добавлено сверкой М11, A4)
-in_report:       строки domain/shared и domain/shared-refused — объекты отчёта (урок 3 Н1.2 member_objects, добавлено М11/11)
-                 одной формой: значение объекта — разобранный doc строки, {term, rev, sha256} и {term, rev, reason, at},
-                 term и rev — целые JSON (как domain/backup-taken урока 10; решение «Архитектора» по сверке М11, A3);
-                 у кластера держателя строка domain/shared — указатель держателя, и агент несёт его doc целиком:
-                 {term, rev, sha256, object} (добавлено пилотом схем семей данных, Д1)
-```
+`carry` и `holder_self` (сторона держателя) перенесены в [P/08.9 Н1.4](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-06 (стадия B; урок 8); сторона агента — [P/09.1 Н1.10](../../Platform/09-agent/spec/09.1-agent.norms.md) (стадия B; урок 9).
 
 ### Н1.5 Значение при чтении
 
@@ -59,7 +47,7 @@ resolve:         функция Н3 — значение поля для еди�
 door:            GET /domain/shared/<sub>[?unit=<id>] у консоли кластера (своя, не пересылается; view) →
                  200 {sub, term, rev, fields: {<имя>: <запись>}} — по каждому элементу domain.shared этой спеки
   record:        поле — {value, from, inherit, merge?} (merge — только union); group_by — {groups, from}; документ — {value, from}
-  term, rev:     документа этого кластера: у члена — объект domain/shared (копия, взятая Н3), у держателя — объект, который
+  term, rev:     документа этого кластера: у члена — объект domain/shared (копия, взятая P/09.1 Н3 «взять документ»), у держателя — объект, который
                  называет указатель; документа нет — null, значения — без домена
 refusals:        подсистема без domain.shared — 404 {error: "no such shared settings", detail: "'<sub>' shares no field with the
                  domain"}; ?unit= пустой или повторён — 400 {error: "refused", detail: "a unit id is required"} (как урок 1
@@ -83,27 +71,7 @@ door:          GET /domain/shared у консоли домена (view) → 200 
 
 ### Н1.7 Страница тревог члена
 
-```yaml
-page:          объект отчёта domain/alarms (урок 3 Н1.2 member_objects, добавлено М11/11):
-               {from, to, events, truncated}
-  events:      строки индекса P/05 Н1.3 класса alarm всех спек каталога: GET /events?class=alarm&from=<to − ALARM_WINDOW>
-               &to=<now>&limit=ALARM_PAGE&keep=newest у своей консоли (P/06.4 Н1.3 merge) — {id, subsystem, unit, of, t, kind, …}
-  event:       строка страницы — форма строки индекса P/05 Н1.3: id — непустая строка (обязателен), class = alarm, kind —
-               непустая строка, unit — строка, t — число; строка не по этой форме (в том числе без id) — страница не по
-               форме: у держателя член unreadable (Н3 alarms шаг 1; решение «Архитектора» по сверке М11, H14, A15)
-  from, to:    окно страницы по стенным часам члена; to — момент сборки
-  truncated:   truncated ответа индекса > 0
-ALARM_WINDOW:  86400       # с
-ALARM_PAGE:    100
-urgent:        раз в секунду агент читает только фронт — GET /events?class=alarm&limit=1&keep=newest своей консоли; t
-               строки > to прошлой страницы — собрать страницу и отправить отчёт сейчас, вне очередного прохода, но не
-               чаще URGENT_GAP после прошлого срочного; цена — одно чтение строки индекса в секунду на член, не больше
-               (P/08.10 Н1.9: сотни членов)
-rebuild:       страница собирается при старте агента и когда фронт новее to; иначе отчёт несёт прежнюю страницу — спокойный
-               член поколений не порождает (урок 12 Н1.2)
-URGENT_GAP:    1           # с
-identity:      агент ходит к /events своей консоли подписью агента (урок 3 Н1.4; P/06.3 Н1.3 identity шаг 2, добавлено М11/11)
-```
+Перенесено в [P/09.1 Н1.10](../../Platform/09-agent/spec/09.1-agent.norms.md) (стадия B; урок 9).
 
 ### Н1.8 Список тревог у держателя
 
@@ -117,13 +85,13 @@ member_state:  ok | silent | not_reporting | never | unreadable
   silent:      последний отчёт старше LOST_AFTER (вид урока 1, 45 с); silent_since = последний отчёт + LOST_AFTER
   not_reporting: silent, а свидетель слышал единицу члена позже последнего отчёта
   never:       отчёта не было ни разу
-  unreadable:  страница не по форме Н1.7 (у функции alarms — и вход "garbled")
+  unreadable:  страница не по форме P/09.1 Н1.10 (у функции alarms — и вход "garbled")
 silence_line:  молчащий член — строка тревоги {t: silent_since, kind: silent | not_reporting, class: alarm, member,
                subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?} — всегда, пока молчит
 witness:       domain.witness {report, member_field} (P/02.1 Н1.2б): объекты <sub>/<report>/<имя> = {ts, cluster, units: {<член>:
                секунды с последнего раза}} у кластеров и в отчётах; семья — ключи <sub>/<report>/<имя> (имя после «/»), агент
-               несёт каждый объект семьи как объект отчёта (урок 3 Н1.2 member_objects), объект <sub>/<report> без имени —
-               не свидетель (добавлено сверкой М11, A2); member_field — fixed поле единицы, несущее имя члена
+               несёт каждый объект семьи как объект отчёта (P/09.1 Н1.2 member_objects), объект <sub>/<report> без имени —
+               не свидетель (добавлено сверкой М11, A2; сторона агента — P/09.1 Н1.10); member_field — fixed поле единицы, несущее имя члена
                (отказ загрузки — P/02.1 Н1.2б); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report; при равном — меньший alive_via в байтах UTF-8
                (добавлено сверкой М11, A17)
@@ -158,15 +126,7 @@ HTTP-контракт: [11-shared-settings-and-alarms.api.openapi.yaml](11-share
 
 ### взять документ (агент члена, после записи срока урока 10)
 
-```
-1. shared ответа нет, или (term, rev) указателя ≤ своей строки domain/shared   → ничего (up to date | holding newer)
-2. doc нет                                                                       → ничего: придёт следующим ответом
-3. sha256 текста ≠ pointer.sha256                                                → refused «the object does not match the pointer's checksum»
-4. record (договор записи срока, Platform/common/contracts/record.md) по своему набору с видом «общий документ» (P/02.1 Н1.2б document; добавлено описью семей) не ok
-                                                                                 → refused «<слово record>»
-5. (term, rev) документа ≠ указателю                                             → refused «the object is term T rev R, the pointer says otherwise»
-6. записать объект, затем строку (Н1.4)
-```
+Перенесено в [P/09.1 Н3](../../Platform/09-agent/spec/09.1-agent.norms.md) «взять документ» (стадия B; урок 9).
 
 ### resolve(field, unit, domain)
 
@@ -189,12 +149,12 @@ label:  "domain term T rev R"
 нём — вход не по форме, код 2 (H14). Одно другому не противоречит (добавлено сверкой М11, cammeta-python М11-11 № 20).
 
 ```
-вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <Н1.7> |
+вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <P/09.1 Н1.10> |
          "garbled" | null, history: <P/08.9 Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
 1. каждый член:
    last_report нет и page нет                         → never
    last_report нет, а page есть                       → вход не по форме (код 2): страница приходит только с отчётом
-   page = "garbled" или не по форме Н1.7              → unreadable; не по форме — и строка без id, class ≠ alarm, kind
+   page = "garbled" или не по форме P/09.1 Н1.10      → unreadable; не по форме — и строка без id, class ≠ alarm, kind
                                                         пустой, unit не строка, from > to (добавлено сверкой М11, A15)
    now − last_report > lost_after                     → silent; свидетель с ts − units[член] > last_report — not_reporting
    иначе                                              → ok
@@ -215,8 +175,7 @@ label:  "domain term T rev R"
    (время — UTC часов домена)
 ```
 
-**Гонки.** Член без связи держит свою ревизию и значения домена по ней; вернувшись, берёт новую. Шторм тревог — страница
-с `truncated`, отчёт не чаще `URGENT_GAP`. Правка и перенос — [P/08.9 Н3](../../Platform/08-domain/spec/08.9-domain.norms.md) «Гонки» (стадия B; урок 8).
+**Гонки.** Член без связи и шторм тревог — перенесено в [P/09.1 Н3](../../Platform/09-agent/spec/09.1-agent.norms.md) «Гонки» (стадия B; урок 9). Правка и перенос — [P/08.9 Н3](../../Platform/08-domain/spec/08.9-domain.norms.md) «Гонки» (стадия B; урок 8).
 
 ---
 
@@ -237,7 +196,8 @@ label:  "domain term T rev R"
 Каталог `Source/tests/testdata/acceptance/М11_Domain/11/` ([README](../../Source/tests/testdata/acceptance/М11_Domain/11/README.md)):
 сц. 02 — стенд урока 3 (каталог `testsub`: поля `step`, `marks`, документ `rounds`); сц. 01 перенесён в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) Н5
 (стадия B; урок 8); команды `resolve`, `alarms` на входах
-`inputs/`. Отказы `domain.shared`, `merge` и `domain.witness` — случаи `m61_*` корпуса главы P/02.1 ([P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md)).
+`inputs/`; сц. 05, 06 перенесены в [приёмку P/09.1](../../Platform/09-agent/acceptance/1/README.md) как 05, 14, вход `shared-doc-unsigned.json` — туда же
+(стадия B; урок 9). Всего 3 сценария / 37 шагов. Отказы `domain.shared`, `merge` и `domain.witness` — случаи `m61_*` корпуса главы P/02.1 ([P/02.1 Н1.2б](../../Platform/02-installer/spec/02.1-installer.norms.md)).
 
 ```yaml
 resolve:   вход {field, unit?, domain}; вывод {value, from} | {groups, from}
@@ -246,7 +206,7 @@ exit:      0 — вычислено; 2 — вход не по форме (шаг
            Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, history или свидетель не по форме P/08.9 Н1.9
            и Н1.8 (history без cut_before или с cut_before null — тоже, P/08.9 Н1.9 A13), страница-объект без received_at и sent_at,
            нет received_at или sent_at у члена с отчётом, history строкой, свидетель без ts, witnesses не список, now не
-           число, лишнее поле; страница не объект ([], число) или не по форме Н1.7 — 0 unreadable, не 2; page null при
+           число, лишнее поле; страница не объект ([], число) или не по форме P/09.1 Н1.10 — 0 unreadable, не 2; page null при
            last_report, received_at и sent_at null у never — 0;
            у resolve: term, rev не целые ≥ 1 (целое по значению: 1.0 = 1, урок 2 Н1), пустое field.name, неизвестный
            field.type, неизвестный merge, при merge union любое из трёх значений (unit, domain.value, inherit) не список —
@@ -259,16 +219,16 @@ exit:      0 — вычислено; 2 — вход не по форме (шаг
 | 02 | стенд: агент `m2` выключен — в доставке `silent`, строка тревоги `silent` в `/domain/alarms`; вернулся — взял документ | Н1.6, Н1.8 |
 | 03 | `resolve`: своё, домена, объединение, спеки, документ, группы, домена нет | Н3 resolve |
 | 04 | `alarms`: все ответили; шторм `truncated`; молчит — последний отчёт; свидетель — `not_reporting`; ни разу; страница не читается; история без повторов и `history_cut_before`; окно; `cut_before` 0, строка не `alarm`, повтор в странице, ничья свидетелей (сверка М11, A13, A15–A17) | Н3 alarms, Н1.8, P/08.9 Н1.9 |
-| 05 | неподписанный документ, положенный мимо правки: член не берёт — `domain/shared-refused` `not_a_record` (мутационная проверка 2026-10-18) | P/08.9 Н1.2 `signature`, Н3 «взять документ» |
-| 06 | указатель с чужой суммой: член не берёт документ — `domain/shared-refused` «does not match the pointer» (мутационная проверка, класс сумм) | Н3 «взять документ» шаг 3 |
+
+Сц. 05 и 06 перенесены переносом урока 9 в [приёмку P/09.1](../../Platform/09-agent/acceptance/1/README.md) как 05 и 14
+(стадия B).
 
 ---
 
 ## Решает реализация
 
 1. **команды `resolve` и `alarms`** — шаблоны с `{input}`;
-2. **как агент собирает страницу** — запрос к индексу своей консоли или к ресурсам напрямую, лишь бы форма и фронт Н1.7
-   сохранялись.
+2. перенесено в [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) «Решает реализация» п. 7 (стадия B; урок 9).
 
 ---
 
@@ -277,10 +237,9 @@ exit:      0 — вычислено; 2 — вход не по форме (шаг
 - Пункт М11/11-01 перенесён в [P/02.1](../../Platform/02-installer/spec/02.1-installer.norms.md) как P/02.1-29 (поздний слой; стадия B; [id-map](../../Platform/common/id-map.tsv); разбор ревью стадии A 8–10, № 11).
 - Пункт М11/11-02 перенесён в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-01 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
 - Пункт М11/11-03 перенесён в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-02 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
-- [ ] **М11/11-04** доставка Н1.4: `doc` только при расхождении, проверка агента, никогда назад, отказ — P/08.9 сц. 01, сц. 02; подделка — урок 10 `record`; форма строк в отчёте и снятие отказа взятым документом (A3, A4) — чтением; сторона держателя перенесена в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-06 (стадия B)
+- Пункты М11/11-04, -07 перенесены в [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) как P/09.1-12, -13 (стадия B; урок 9; [id-map](../../Platform/common/id-map.tsv)); сторона держателя М11/11-04 — [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-06 (стадия B).
 - [ ] **М11/11-05** значение при чтении Н1.5 — P/08.9 сц. 01, сц. 03; `?unit=` другой спеки — 404 `no such unit`, чтением (каталог стенда урока 11 — одна спека)
 - Пункт М11/11-06 перенесён в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-03 (стадия B; [id-map](../../Platform/common/id-map.tsv)); дверь `GET /domain/shared`, `declared` — Н1.6 `door` здесь до урока P/10 (P/10-14).
-- [ ] **М11/11-07** страница тревог Н1.7, фронт раз в секунду, срочный отчёт — чтением (стенд тревог не поднимает)
 - [ ] **М11/11-08** список Н1.8: состояния, строка молчания, свидетель, строгость страницы, ничья свидетелей — сц. 02, 04; семья свидетелей в отчёте, грамматика since/until (A2, A12) — чтением (М11/11-08 → P/10-06; было P/08.9-04; план урока 8 В2)
 - Пункт М11/11-09 перенесён в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) как P/08.9-05 (стадия B; [id-map](../../Platform/common/id-map.tsv)).
 
@@ -290,4 +249,7 @@ exit:      0 — вычислено; 2 — вход не по форме (шаг
 — М12) и `М12A_Domain/13-alarms-from-every-member.md` (шаги 1–7). ADR-0010, ADR-0032, решения C6 «точный документ»,
 C6 «testsub2». Исторические исходники сохранены в Git. Н1 «Время» (история) и вводный абзац Н1, Н1.2, Н1.3, Н1.9 целиком,
 Н1.4 `carry` и `holder_self`, Н1.6 `domain/view.shared`, строка Н2 `PUT /domain/shared`, строки Н4 правки, «Гонки» Н3 о
-правке и переносе, сц. 01 и пункты М11/11-02, -03, -06, -09 (часть -04) перенесены в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) (стадия B, урок 8).
+правке и переносе, сц. 01 и пункты М11/11-02, -03, -06, -09 (часть -04) перенесены в [P/08.9](../../Platform/08-domain/spec/08.9-domain.norms.md) (стадия B, урок 8). Н1 «Время» (страница),
+владение копией `domain/shared`, `domain/shared-refused`, `domain/alarms`, Н1.4 `member`, `in_report`, Н1.7, Н3 «взять документ»,
+«Гонки» о члене без связи и шторме, сц. 05, 06 (там 05, 14), п. 2 «Решает реализация» и пункты М11/11-04, -07 перенесены в
+[P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) (стадия B, урок 9).

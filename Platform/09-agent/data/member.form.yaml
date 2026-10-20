@@ -1,0 +1,15 @@
+# Семья domain/member — имя своего члена и его открытый ключ (P/09.1; P/09.1 Н1.1 domain/member, Н1.4 from_carry).
+# Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — точное имя domain/member. Слова — Platform/common/DIALECT.md.
+# Несекретно. Пишет только агент, создание-однажды, когда функция keys приняла набор (took или holding) и строки нет — и у
+# кластера держателя. По pub консоль кластера проверяет X-Agent-Signature своего агента (Н1.3; P/06.3 Н1.3).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    cluster:
+      ref: common.domain_member
+      description: имя своего члена — CLUSTER установки (P/08.1 Н1.1 member)
+    pub:
+      ref: common.domain_member_key
+      description: hex открытого ключа члена — pub строки domain/member-key
+  required: [cluster, pub]

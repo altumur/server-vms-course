@@ -1,0 +1,20 @@
+# Семья domain/backup-refused — отказ хранителя взять резервную копию (P/09.1; P/09.1 Н1.9 member, Н3 «проверить резервную
+# копию»). Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ — точное имя domain/backup-refused. Слова —
+# Platform/common/DIALECT.md. Пишет только агент хранителя (put), когда документ не прошёл проверку; why — слова шагов 1–3
+# (слово record — договор записи срока «Слова отказа»), перечень форма не закрывает.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    why:
+      type: string
+      not_enum: ['']
+      description: >-
+        причина: «not the copy the pointer names» (шаг 1), слово record (шаг 2), «older than the copy kept here» (шаг 3)
+    term:
+      ref: common.pos53
+      description: срок отказанной резервной копии (pointer ответа)
+    rev:
+      ref: common.pos53
+      description: ревизия отказанной резервной копии (pointer ответа)
+  required: [why, term, rev]

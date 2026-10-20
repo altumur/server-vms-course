@@ -1,0 +1,11 @@
+# Семья domain/placed — счётчик копий назначений у члена (P/09.1; P/09.1 Н1.5 member). Источник формы строки (ADR-0088).
+# Экземпляр — {key, row}; ключ — точное имя domain/placed. Слова — Platform/common/DIALECT.md. Пишет только агент по CAS:
+# после копий записей, когда carry.placement.rev больше rev строки (отката нет).
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    rev:
+      ref: common.pos53
+      description: carry.placement.rev ответа, по которому записаны копии (P/08.6 Н1.2 carry.placement)
+  required: [rev]

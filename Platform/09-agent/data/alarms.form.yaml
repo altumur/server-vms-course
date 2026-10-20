@@ -1,0 +1,48 @@
+# Семья domain/alarms — страница тревог члена (P/09.1; P/09.1 Н1.10 page, event). Источник формы объекта (ADR-0088 п. 8).
+# Экземпляр — {key, object}; ключ — точное имя domain/alarms. Слова — Platform/common/DIALECT.md. Пишет только агент (put)
+# при старте и когда фронт новее to; объект отчёта (Н1.2 member_objects). Строка страницы — форма строки индекса P/05 Н1.3
+# (Н1.10 event); её же хранит история тревог держателя domain/alarm-history/<член> (P/08.9 Н1.9) с t на часах домена и t_src.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    from:
+      ref: common.time
+      description: начало окна страницы по стенным часам члена — to − ALARM_WINDOW
+    to:
+      ref: common.time
+      description: момент сборки страницы
+    events:
+      type: array
+      writer: {max_items: 100}
+      description: "строки индекса класса alarm всех спек каталога, не больше ALARM_PAGE = 100, самые новые (Н1.10 events)"
+      items:
+        type: object
+        description: "строка страницы — форма строки индекса P/05 Н1.3 (Н1.10 event); прочие поля — имена автора"
+        properties:
+          id:
+            type: string
+            not_enum: ['']
+            description: id строки индекса — непустая строка, обязателен
+          class:
+            type: string
+            enum: [alarm]
+            description: класс строки индекса — alarm
+          kind:
+            type: string
+            not_enum: ['']
+            description: непустая строка
+          unit:
+            type: string
+            description: единица строки индекса
+          t:
+            type: number
+            description: время строки по часам члена
+        required: [id, class, kind, unit, t]
+        names:
+          key: {type: string}
+          value: {type: any, description: "прочие поля строки индекса P/05 Н1.3 ({subsystem, of, …}) — как в индексе"}
+    truncated:
+      type: boolean
+      description: truncated ответа индекса > 0
+  required: [from, to, events, truncated]

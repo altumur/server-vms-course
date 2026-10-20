@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка М11/11: стенд hold, m1, m2 (общий документ, доставка, молчащий член в списке тревог) и векторы resolve, alarms на входах inputs/; сц. 01 → P/08.9 (стадия B). Формат — README.
+# Приёмка М11/11: стенд hold, m1, m2 (общий документ, доставка, молчащий член в списке тревог) и векторы resolve, alarms на входах inputs/; сц. 01 → P/08.9; сц. 05, 06 → P/09.1 сц. 05, 14 (стадия B). Формат — README.
 02-silent-member	1	@domain	ok
 02-silent-member	2	@stop agent m2	ok
 02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
@@ -37,13 +37,3 @@ scenario	step	request	expect
 04-alarms	13	alarms inputs/alarms-13-same-line-in-page.json	ok {"events": [{"id": "e1-1", "kind": "door.forced", "member": "m1"}], "members": {"m1": {"state": "ok"}}, "complete": true}
 04-alarms	14	alarms inputs/alarms-14-witness-tie.json	ok {"members": {"m1": {"state": "not_reporting", "alive_at": 1759999960.0, "alive_via": "m2/w-1"}}}
 04-alarms	15	alarms inputs/alarms-15-lost-after-negative.json	@exit 2
-05-unsigned-document	1	@domain	ok
-05-unsigned-document	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
-05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200
-05-unsigned-document	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~not_a_record"}}
-05-unsigned-document	5	member m1 store GET /v1/get?key=domain/shared	200 {"items": null}
-05-unsigned-document	6	member hold console GET /domain/shared/testsub	200 {"fields": {"step": {"value": 1, "from": "spec"}}}
-06-pointer-checksum	1	@domain	ok
-06-pointer-checksum	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
-06-pointer-checksum	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
-06-pointer-checksum	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~does not match the pointer"}}

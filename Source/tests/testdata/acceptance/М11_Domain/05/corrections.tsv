@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-19	02-notes-unique 5, 05-recipient-not-member 4	гонка (cammeta-python): шаг ждёт одну строку, а читает соседнюю, записанную позже (domain/member-list после domain/member; строка книги у члена после вида держателя; вид нового держателя после его записи срока) — @until 30	all
 2026-10-19	@sleep	сны по ADR-0080 доп. (17) п. 4: ожидание события — @until по признаку, проверка отсутствия и время перед действием — наименьшей длиной с причиной в README («Сны»)	all
 2026-10-20	перенос	сценарии 01-roll-delivered, 03-silent-contributor, 05-recipient-not-member → Platform/08-domain/acceptance/5; 06-assemble и inputs/assemble-*.json сняты — те же случаи в Platform/08-domain/vectors/assemble (стадия B)	all
+2026-10-20	перенос	сценарий 04-slot-liveness → Platform/09-agent/acceptance/1 как 13-slot-liveness (стадия B, урок 9)	all

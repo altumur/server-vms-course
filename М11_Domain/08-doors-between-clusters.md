@@ -26,7 +26,7 @@ HTTP-контракт — в [OpenAPI](spec/08-doors-between-clusters.api.openap
 
 - [P/06](../Platform/06-console/06-console.md), главы 6.3 и 6.5 — консоль, сторожевая, предел тела, `door.pass`; [P/02](../Platform/02-installer/02-installer.md), глава 2.4 — комплект роли.
 - [Урок 1](01-what-a-cluster-cannot-know.md) — вид домена; [урок 3](03-agent-and-reports.md) — список членов и публикация.
-- [Урок 6](06-assignment.md) — двери назначения и правок.
+- [P/08](../Platform/08-domain/08-domain.md), глава 8.6 — двери назначения и правок.
 
 ## Одна дверь кластера
 

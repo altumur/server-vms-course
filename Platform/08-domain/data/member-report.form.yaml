@@ -11,7 +11,7 @@ defs:
   outcome:
     type: object
     opaque: true
-    description: исход правки домена у члена — форма М11/6 Н1.5 (глава 9.1)
+    description: исход правки домена у члена — форма P/09.1 Н1.5
 root:
   type: object
   properties:
@@ -21,7 +21,7 @@ root:
     objects:
       type: object
       opaque: true
-      description: все объекты члена после применения изменения — только member_objects (М11/3 Н1.2); ключ — ключ объекта, значение — JSON объекта
+      description: все объекты члена после применения изменения — только member_objects (P/09.1 Н1.2); ключ — ключ объекта, значение — JSON объекта
     key:
       ref: common.domain_member_key
       description: ключ члена из публикации
@@ -39,5 +39,5 @@ root:
           not_enum: ['']
         value:
           ref: outcome
-      description: исходы правок домена (М11/6 Н1.5); нет поля — исходов нет
+      description: исходы правок домена (P/09.1 Н1.5); нет поля — исходов нет
   required: [sent_at, objects, key]

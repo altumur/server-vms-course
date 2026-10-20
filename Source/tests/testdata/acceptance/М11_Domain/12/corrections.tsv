@@ -1,9 +1,0 @@
-date	sample	fix	languages
-2026-10-18	12/scenarios.tsv; inputs	прогон 41, мутации №59: сц. 05 — MEMBERS_MAX обе стороны	all
-2026-10-18	12/scenarios.tsv; inputs	прогон 41, мутации №14/64, №57, №58, №60: сц. 06 — строка дома без изменений не переписывается, as_of не чаще FRESH_EVERY; 03/6 — счёт "1"; 04/7 — @until 20 (отдача по SIGTERM)	all
-2026-10-18	03-unreadable-member-key 6	решение «Архитектора» 2026-10-18 «время в строке» (Н0 М10/1): писатель — дробная до 3 знаков; ожидание @time вместо @any — изменение поведения	all
-2026-10-18	01-quiet-member 2–13	окно спокойного члена — после резервной копии урока 10: BACKUP_EVERY и проход после @domain, domain/backup-taken m1 = domain/keepers/m1 держателя, отчёт принят; @domain копии не ждёт (cammeta-python М11-12 № 9; решение «Архитектора»)	all
-2026-10-19	03-unreadable-member-key 12–19	сверка М11 09–12 (N1, N2): ключ члена читается каждый проход — порча на ходу без @stop agent даёт счёт и silent; после перезапуска с верным ключом строки domain/agent прошлого запуска нет	all
-2026-10-19	@sleep	сны по ADR-0080 доп. (17) п. 4: ожидание события — @until по признаку, проверка отсутствия и время перед действием — наименьшей длиной с причиной в README («Сны»)	all
-2026-10-19	02-members-only-to-the-lagging шаг 3	ревью стадии B 1–2 п. 2: @carry читает последний ответ, ещё несущий members, — после @until списка возвращён @sleep 10 (шаг 3), прежние шаги 3–9 — 4–10	all
-2026-10-20	перенос	сценарии 02-members-only-to-the-lagging → Platform/08-domain/acceptance/3 как 17-members-only-to-the-lagging; 04-one-domain-process, 05-members-max → Platform/08-domain/acceptance/10 (стадия B)	all

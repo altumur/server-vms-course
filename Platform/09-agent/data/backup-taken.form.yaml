@@ -1,0 +1,9 @@
+# Семья domain/backup-taken — пара взятой резервной копии у хранителя (P/09.1; P/09.1 Н1.9 member). Источник формы строки
+# (ADR-0088). Экземпляр — {key, row}; ключ — точное имя domain/backup-taken. Слова — Platform/common/DIALECT.md. Форма пары
+# {term, rev, sha256} общая с указателем держателя domain/keepers/<член> (P/08.8 Н1.5 keepers) — common.domain_backup_pointer
+# (решение «Архитектора» 2026-10-20 «Планы переноса 8–10», п. 3); term и rev в items — десятичный текст (кодек), в отчёте — объект с целыми JSON (P/08.8 Н1.5 in_report). Пишет
+# только агент хранителя — после объекта domain/backup.
+dialect: data-form/1
+root:
+  ref: common.domain_backup_pointer
+  description: "пара взятой резервной копии и сумма её текста {term, rev, sha256} (Н1.9 member)"

@@ -1,0 +1,17 @@
+# Семья domain/reaches — сети, до которых дотягивается член (P/09.1; P/09.1 Н1.7 domain/reaches). Источник формы объекта
+# (ADR-0088 п. 8). Экземпляр — {key, object}; ключ — точное имя domain/reaches. Слова — Platform/common/DIALECT.md. Пишет
+# только агент (put); агент несёт объект в отчёте (Н1.2 member_objects), вид держателя хранит его как есть. Порядок по
+# возрастанию и состав сетей (слова REACHES или «net:<cidr>» интерфейсов без /31, /32, link-local, туннельных, мостовых,
+# контейнерных) — проза Н1.7, не форма.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    networks:
+      type: array
+      items:
+        type: string
+        description: слово REACHES окружения агента (например vlan:site-a) или `net:<cidr>` сети интерфейса
+      unique_items: true
+      description: сети члена, по возрастанию, без повторов
+  required: [networks]

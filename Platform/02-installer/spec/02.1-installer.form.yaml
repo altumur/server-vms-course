@@ -667,7 +667,7 @@ defs:
       edit: {ref: nonSecretList, owner: P/08.6 Н1.3}
       kept: {ref: strList, owner: P/03.7 Н1.6}
       tables: {ref: strList, owner: P/03.7 Н1.6}
-      reports: {ref: strList, owner: М11/5 Н1.2}
+      reports: {ref: strList, owner: P/09.1 Н1.2}
       shared:
         owner: P/08.9 Н1.2
         x-class: value

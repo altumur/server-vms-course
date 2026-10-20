@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка М11/8: стенд hold, m1, m2 (пересылка консолью кластера, /domain/at, страница держателя) и векторы peer на входах inputs/; сц. 04 (tls_ca → ca) — приёмка главы 8.3 (стадия B). Формат — README.
+# Приёмка М11/8: стенд hold, m1, m2 (пересылка консолью кластера, /domain/at, страница держателя); сц. 04 (tls_ca → ca) — приёмка главы 8.3; сц. 06 и inputs/peer-*.json сняты — вектор common/vectors/peer (стадия B). Формат — README.
 01-forward-to-holder	1	@domain	ok
 01-forward-to-holder	2	holder GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
 01-forward-to-holder	3	member m1 console GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
@@ -47,28 +47,3 @@ scenario	step	request	expect
 05-the-holders-page	4	holder GET /spec	200 {"name": "", "rows": null}
 05-the-holders-page	5	holder GET /mounts	200 {"root": "", "mounts": {"testsub": "@any"}}
 05-the-holders-page	6	holder GET /session	200 {"open": false, "user": "root", "login_url": "/api/login"}
-06-peer	1	peer inputs/peer-01-ok.json	ok {"result": "ok"}
-06-peer	2	peer inputs/peer-02-anchor-intermediate.json	ok {"result": "ok"}
-06-peer	3	peer inputs/peer-03-anchor-root-through-intermediate.json	ok {"result": "ok"}
-06-peer	4	peer inputs/peer-04-two-fingerprints-either.json	ok {"result": "ok"}
-06-peer	5	peer inputs/peer-05-no-fingerprint.json	ok {"result": "refused", "reason": "foreign_ca"}
-06-peer	6	peer inputs/peer-06-foreign-ca.json	ok {"result": "refused", "reason": "foreign_ca"}
-06-peer	7	peer inputs/peer-07-leaf-not-signed-by-anchor.json	ok {"result": "refused", "reason": "bad_chain"}
-06-peer	8	peer inputs/peer-08-expired.json	ok {"result": "refused", "reason": "expired"}
-06-peer	9	peer inputs/peer-09-no-san-uri.json	ok {"result": "refused", "reason": "no_role"}
-06-peer	10	peer inputs/peer-10-two-roles.json	ok {"result": "refused", "reason": "no_role"}
-06-peer	11	peer inputs/peer-11-wrong-role.json	ok {"result": "refused", "reason": "wrong_role"}
-06-peer	12	peer inputs/peer-12-wrong-name.json	ok {"result": "refused", "reason": "wrong_name"}
-06-peer	13	peer inputs/peer-13-ip-host.json	ok {"result": "refused", "reason": "ip_address"}
-06-peer	14	peer inputs/peer-14-leaf-only.json	ok {"result": "refused", "reason": "foreign_ca"}
-06-peer	15	peer inputs/peer-15-not-a-pem.json	ok {"result": "refused", "reason": "bad_chain"}
-06-peer	16	peer inputs/peer-16-intermediate-missing.json	ok {"result": "refused", "reason": "bad_chain"}
-06-peer	17	peer inputs/peer-17-anchor-expired.json	ok {"result": "refused", "reason": "expired"}
-06-peer	18	peer inputs/peer-19-leaf-not-signed-by-named-ca.json	ok {"result": "refused", "reason": "bad_chain"}
-06-peer	19	peer inputs/peer-20-intermediate-not-ca.json	ok {"result": "refused", "reason": "bad_chain"}
-06-peer	20	peer inputs/peer-21-leaf-not-yet-valid.json	ok {"result": "refused", "reason": "expired"}
-06-peer	21	peer inputs/peer-22-anchor-rsa.json	ok {"result": "ok"}
-06-peer	22	peer inputs/peer-23-anchor-ed25519.json	ok {"result": "ok"}
-06-peer	23	peer inputs/peer-24-anchor-p384-sha384.json	ok {"result": "ok"}
-06-peer	24	peer inputs/peer-25-empty-role.json	ok {"result": "refused", "reason": "no_role"}
-06-peer	25	peer inputs/peer-26-host-with-zone.json	ok {"result": "refused", "reason": "ip_address"}

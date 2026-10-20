@@ -12,3 +12,4 @@ date	sample	fix	languages
 2026-10-19	06-peer 21–25; inputs peer-22…26	сверка М11 05–08 (D14, D15): закрытый список подписей — якорь RSA, Ed25519, P-384/SHA-384 принят; пустая роль — no_role; IPv6 с зоной — ip_address	all
 2026-10-19	@sleep	сны по ADR-0080 доп. (17) п. 4: ожидание события — @until по признаку, проверка отсутствия и время перед действием — наименьшей длиной с причиной в README («Сны»)	all
 2026-10-20	перенос	сценарии 04-tls-ca-to-the-entry → Platform/08-domain/acceptance/3 (стадия B)	all
+2026-10-20	перенос	сценарий 06-peer и inputs/peer-*.json сняты — те же случаи в Platform/common/vectors/peer (стадия B, урок 9)	all

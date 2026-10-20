@@ -43,16 +43,17 @@
 | вид домена и теневой отчёт: функция `view` | [`08-domain/vectors/view/`](../../08-domain/vectors/view/README.md) | P/08.1 | [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3–Н1.6, Н3 |
 | сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/spec/08.5-domain.norms.md) Н1.3, Н3 |
 | выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../08-domain/vectors/issue/README.md) | P/08.7 | [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н3 |
-| `follow`, `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
+| следование: функция `follow` | [`09-agent/vectors/follow/`](../../09-agent/vectors/follow/README.md) | P/09.1 | [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» |
+| `resolve`, `alarms` | входы приёмки `Source/tests/testdata/acceptance/М11_Domain/NN/inputs/` | уроки М11 | Н3 уроков М11 |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | P/04 | P/04 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |
 | разрешено ли сокращение: условие и порядок причин отказа (жертва, живые без места при ждущих, выдержка, в пути, гистерезис) | [`04-controller/vectors/shrink-allowed/`](../../04-controller/vectors/shrink-allowed/) | P/04 | P/04 Н3 «сократить (шаг 9а)», условие; Р3, Р13′, Р16′, Р16‴, Р22, Р28 (решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5) |
 | скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | P/02.4 | P/02.4 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | P/04 | P/04 Н3 «порядок наборов» |
 | снятие заказа по сроку, номер выше want, сокращение по выдержке, пробный процесс при `distinct` | шагом приёмки — [P/04](../../04-controller/acceptance/README.md) сц. 14–17 | P/04 | P/04 Н3; ADR-0084 |
-| `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — [P/08.8](../../08-domain/acceptance/8/README.md) сц. 09; вход `follow` наборов ответов не несёт | P/08.8 | [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `yields`; М11/10 Н3 «следовать» 1а (→ P/09.1) |
+| `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — [P/08.8](../../08-domain/acceptance/8/README.md) сц. 09; вход `follow` наборов ответов не несёт | P/08.8 | [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `yields`; [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» 1а |
 | `put_at` по индексу до подтверждения очереди, CAS своей строки очереди (G6, T6) | чтением — стенд не останавливает процесс между шагами | P/08.10 | [P/08.10](../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3 «очередь процесса domain» |
 
-Векторы М11 — входы команд стенда своих уроков. Пакетами они станут при переносе уроков 9, 10 (урок 8 — пакеты `view`,
-`assemble`, `issue` урока и общие пакеты выше; их сценарии и входы в приёмке М11 сняты переносом урока 8). Строки «векторов нет»
+Векторы М11 — входы команд стенда своих уроков. Пакетами они станут при переносе урока 10 (урок 8 — пакеты `view`,
+`assemble`, `issue` урока и общие пакеты выше, урок 9 — пакет `follow`; их сценарии и входы в приёмке М11 сняты переносами). Строки «векторов нет»
 — алгоритмы записки модуля, у которых пока только шаги приёмки (ревью стадии A, Gemini 4.5).

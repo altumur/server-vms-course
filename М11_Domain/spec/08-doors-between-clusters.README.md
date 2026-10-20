@@ -10,7 +10,7 @@
 
 Канон — [нормы](08-doors-between-clusters.norms.md). [HTTP-контракт](08-doors-between-clusters.api.openapi.yaml)
 выражает формы дверей урока и отказов пересылки; двери, которые пересылаются, — контракты их уроков (1, 3, 4, 6).
-[Приёмка](../../Source/tests/testdata/acceptance/М11_Domain/08/README.md) — стенд урока 3 и векторы `peer`;
+[Приёмка](../../Source/tests/testdata/acceptance/М11_Domain/08/README.md) — стенд урока 3; векторы `peer` — пакет [`common/vectors/peer`](../../Platform/common/vectors/peer/README.md) (бывший сц. 06; стадия B, урок 9);
 [лекция](../08-doors-between-clusters.md) объясняет причины. При противоречии записать место и контрпример и передать
 «Спецификации»; инструкция не вводит новый отказ.
 
@@ -49,8 +49,8 @@
 
 ## Готово, когда
 
-- Сценарии приёмки 01–03, 05, 06 проходят (сц. 04 — приёмка [P/08.3](../../Platform/08-domain/acceptance/3/README.md)).
-- Описание реализации называет команду `peer`, окружение стенда (`CLUSTERS`, `DOMAIN_CONSOLE_URL`) и перезапуск по `@env`.
+- Сценарии приёмки 01–03, 05 проходят (сц. 04 — приёмка [P/08.3](../../Platform/08-domain/acceptance/3/README.md); сц. 06 снят — пакет `common/vectors/peer`, команда `peer` — [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) «Решает реализация» п. 1; стадия B, урок 9).
+- Описание реализации называет окружение стенда (`CLUSTERS`, `DOMAIN_CONSOLE_URL`) и перезапуск по `@env`.
 
 ## При расхождении
 

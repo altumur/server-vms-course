@@ -5,8 +5,9 @@
 
 Перенесено в [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) (стадия B; урок 8): Н1.1, Н1.2, Н1.3 без `member_copy`/`holder_copy`, Н1.4, Н1.5 `domain`, Н1.6
 (строка, `writer`, `GLASS_MIN`, `carry` — сторона держателя), Н1.9 (`first`, `member`), Н1.10, Н2 (строки дверей процесса,
-журнал), Н3, Н4 (строки процесса), Н5 (сц. 01, 02, 04, 08, 09, 10). Н1.7 и сц. 05 — [P/08.5](../../Platform/08-domain/spec/08.5-domain.norms.md). Здесь до
-переноса уроков 9 и 10 остаются: Н1.3 `member_copy`, `holder_copy` (урок 9); Н1.5 `cluster`, `session`, `body_unit`,
+журнал), Н3, Н4 (строки процесса), Н5 (сц. 01, 02, 04, 08, 09, 10). Н1.7 и сц. 05 — [P/08.5](../../Platform/08-domain/spec/08.5-domain.norms.md). Н1.3
+`member_copy`, `holder_copy`, время и владение копией — [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) Н1, Н1.4 (стадия B; урок 9). Здесь до
+переноса урока 10 остаются: Н1.5 `cluster`, `session`, `body_unit`,
 `agent`, Н1.6 `door`, `GLASS_SESSION`, `GLASS_SESSIONS_MAX`, `journal`, Н1.8, Н1.9 `pass` (урок 10, глава 6.7); строки Н2
 `GET /domain/grants`, `POST /session/break-glass`, `GET /domain/keys`; строки Н4 `open`, `bad body` у аварийного входа,
 `unavailable`; сц. 03, 06 (сц. 07 снят — векторы `common/vectors/may`).
@@ -17,15 +18,15 @@
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке): копия `domain/grants` — `as_of`. Строки держателя (`domain/users/<имя>` — `at`, строка гранта — `until`) — [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1 «Время» (стадия B; урок 8).
+**Время.** Поля времени строк и объектов урока — время по [канону Н0](../../Platform/01-store/spec/01.1-store.norms.md#время-в-строке). Копия `domain/grants` у члена (`as_of`) — [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) Н1 «Время» (стадия B; урок 9). Строки держателя (`domain/users/<имя>` — `at`, строка гранта — `until`) — [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1 «Время» (стадия B; урок 8).
 
 **Данные** ([каталог](../../Platform/common/data/catalog.tsv)):
-- владеет: `domain/grants` (копия у члена);
 - читает: `domain/member`, `domain/keys`, `domain/revoked`, `domain/disabled`, `domain/break-glass/<кластер>`.
 
 Строки держателя (`domain/users/<имя>`, `domain/deleting/<имя>`, `domain/disabled`, `domain/grants/<кластер>`,
 `domain/break-glass/<кластер>`, запись `domain/revoked`) — [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1 «Данные»; `domain/names/<sub>/<книга>` —
-[P/08.5](../../Platform/08-domain/spec/08.5-domain.norms.md) (стадия B; урок 8).
+[P/08.5](../../Platform/08-domain/spec/08.5-domain.norms.md) (стадия B; урок 8). Копия `domain/grants` у члена (владеет агент) — [P/09.1](../../Platform/09-agent/spec/09.1-agent.norms.md) Н1 «Данные»
+(стадия B; урок 9).
 
 Общее уроков 1–8 Н1 действует. Люди живут у держателя; токен человека называет субъект и ничего больше (урок 2 Н1.6,
 `kind: person`, без `aud`). Что человеку можно, решает каждый кластер по своим грантам, которые несёт агент; проверка —
@@ -43,21 +44,8 @@
 
 ### Н1.3 Гранты
 
-Перенесено в [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1.3 (P/08.4-04; стадия B; урок 8), с абзацами «Окно отзыва» и «Числа заявлены заранее»; здесь
-до переноса урока 9 — `member_copy`, `holder_copy` (сторона агента).
-
-```yaml
-member_copy:   агент пишет у своего кластера точный ключ domain/grants {doc, as_of} — doc как пришёл, as_of — момент, когда
-               держатель собрал ответ: стенные секунды приёма минус domain_age (урок 4; прямой ответ — 0), назад не уходит;
-               doc сменился — записать сразу; тот же doc — освежить as_of не чаще FRESH_EVERY (урок 12 Н1.2 fresh); ответ
-               из памяти ретранслятора as_of не двигает; поля нет в открывшемся конверте — строку удалить (урок 3 Н1.6
-               sealed). Как domain/outcomes
-               урока 6: копия члена — точный ключ, строки держателя — семья domain/grants/<кластер>; агенту —
-               !domain/grants/* без !domain/grants (P/02.5 Н1.4)
-holder_copy:   у кластера держателя копию domain/grants пишет его агент из ответа своего держателя, как у любого члена:
-               одно правило чтения, второго писателя нет (ADR-0032); до первого ответа агенту строки нет — прав нет,
-               вход — аварийный (Н1.6), как у члена до первого ответа
-```
+Перенесено в [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1.3 (P/08.4-04; стадия B; урок 8), с абзацами «Окно отзыва» и «Числа заявлены заранее». `member_copy`, `holder_copy` (сторона агента) —
+перенесено в [P/09.1 Н1.4](../../Platform/09-agent/spec/09.1-agent.norms.md) (стадия B; урок 9).
 
 ### Н1.4 Право — функция `may`
 
@@ -91,7 +79,7 @@ agent:     подпись агента своего кластера (урок 3
 ### Н1.6 Аварийный вход
 
 Сторона держателя (строка `domain/break-glass/<кластер>`, `writer`, `GLASS_MIN`, `carry`) — [P/08.4](../../Platform/08-domain/spec/08.4-domain.norms.md) Н1.6 (P/08.4-08;
-стадия B; урок 8); сторона агента в `carry` — урок 9.
+стадия B; урок 8); сторона агента в `carry` — [P/09.1 Н1.4](../../Platform/09-agent/spec/09.1-agent.norms.md) `break_glass` (P/09.1-29).
 
 ```yaml
 door:          POST /session/break-glass {who, why, password} у консоли кластера (P/06.3 Н1.3) — по порядку:

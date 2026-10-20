@@ -30,7 +30,7 @@ defs:
     description: >-
       id единицы по полю (P/06.1 Н1.3 named): непустой; без / \ | " запятой, управляющих (Cc), разделителей строк и
       абзацев (Zl, Zp) и цифр вне 0–9 (Nd не ASCII); категории — Unicode 15.0.0
-  # Урок P/08 «Процесс domain»: формы, общие у семьи держателя и копии агента (урок P/09) — решение «Архитектора»
+  # Урок P/08 «Процесс domain»: формы, общие у семьи держателя и копии агента (глава P/09.1) — решение «Архитектора»
   # 2026-10-20 по планам переноса 8–10, п. 3 (ADR-0083 доп. (14)); внутри файла ссылка — ref: <имя>.
   # имя члена — глава 8.1
   domain_member:
@@ -41,7 +41,7 @@ defs:
   domain_member_key:
     type: string
     pattern: '[0-9a-f]{64}'
-    description: hex открытого ключа Ed25519 члена, 32 байта (ключ члена М11/3 Н1.1 pub; Entry.key P/08.3 Н1.1)
+    description: hex открытого ключа Ed25519 члена, 32 байта (ключ члена P/09.1 Н1.1 pub; Entry.key P/08.3 Н1.1)
   domain_member_entry:
     type: object
     properties:
@@ -101,8 +101,8 @@ defs:
         description: записи членов, держатель в счёте; не больше MEMBERS_MAX 500 (P/08.10 Н1.5)
     required: [rev, term, members]
     description: >-
-      doc строки domain/members держателя (P/08.3 Н1.1) и её копии domain/member-list у члена — текст JCS (М11/3 Н1.1,
-      глава 9.1)
+      doc строки domain/members держателя (P/08.3 Н1.1) и её копии domain/member-list у члена — текст JCS (P/09.1 Н1.1,
+      Н1.4)
   domain_topology_doc:
     encoding: jcs
     type: object
@@ -135,8 +135,8 @@ defs:
         description: когда записал (стенные секунды консоли)
     required: [rev, star, via]
     description: >-
-      doc строки domain/topology держателя (P/08.3 Н1.2) и её копии domain/member-topology у члена — текст JCS (М11/4
-      Н1.2, глава 9.1)
+      doc строки domain/topology держателя (P/08.3 Н1.2) и её копии domain/member-topology у члена — текст JCS (P/09.1
+      Н1.4)
   # люди и гранты — глава 8.4 (копия агента domain/grants)
   person_name:
     type: string
@@ -185,7 +185,7 @@ defs:
           строки по (subject, cap, scope) в байтах UTF-8, затем until по числу, без повторов по (subject, cap, scope,
           until) — порядок и повтор — правило строки (P/08.4 Н1.3 lines), не форма
     required: [lines]
-    description: текст JCS {lines} строки грантов (P/08.4 Н1.3); копия члена несёт его как пришёл (урок P/09)
+    description: текст JCS {lines} строки грантов (P/08.4 Н1.3); копия члена несёт его как пришёл (P/09.1 Н1.4 member_copy)
   # строка собранной книги — глава 8.5 (копия агента domain/<sub>/<spec:domain.books>)
   book_missing:
     type: array
@@ -208,7 +208,7 @@ defs:
     description: >-
       строка собранной книги (P/08.5 Н1.3 result): элемент "" — текст JSON {missing}, элемент `<key>` — текст JSON
       {entries, missing} только с элементами, где получатель в to; у держателя секреты value — конверты кольца держателя
-      enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (глава 9.1, М11/5 Н1.4 member_row); ключи элементов —
+      enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (P/09.1 Н1.4 member_row); ключи элементов —
       произвольно
     properties:
       "":
@@ -283,7 +283,7 @@ defs:
     required: [cluster, origin, copies, reason, at, rev]
     description: >-
       запись назначения — строка держателя `domain/placement/<sub>/<ref>` (P/08.6 Н1.1) и её копия у члена
-      `domain/placed/<sub>/<ref>` («элементы записи как у держателя», P/09.1; до переноса урока 9 — М11/6 Н1.2)
+      `domain/placed/<sub>/<ref>` («элементы записи как у держателя», P/09.1 Н1.5 member)
   domain_outcome:
     encoding: json
     type: object
@@ -314,7 +314,7 @@ defs:
     required: [id, status, result, at, what, kept_at]
     description: >-
       исход правки — текст JSON элемента `<id>` строки исходов: у держателя domain/outcomes/<член> (P/08.6 Н1.6), у члена
-      domain/outcomes (P/09.1; до переноса урока 9 — М11/6 Н1.5 outcome)
+      domain/outcomes (P/09.1 Н1.5 outcome)
   # резервная копия — глава 8.8 (хранитель: domain/backup-taken, объект domain/backup)
   domain_backup_pointer:
     type: object
@@ -406,7 +406,7 @@ defs:
   # общий документ — глава 8.9 (копия агента: объект domain/shared)
   shared_doc:
     type: object
-    description: "общий документ домена (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/shared-docs/rev-<rev>`) и у члена (объект domain/shared — копия, взятая агентом); подпись — выпускающим, проверка — функция record договора записи срока (вид «общий документ»)"
+    description: "общий документ домена (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/shared-docs/rev-<rev>`) и у члена (объект domain/shared — копия, взятая агентом, P/09.1 Н1.10); подпись — выпускающим, проверка — функция record договора записи срока (вид «общий документ»)"
     properties:
       domain:
         type: string

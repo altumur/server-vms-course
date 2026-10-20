@@ -8,10 +8,10 @@
 09-agent.md                     лекция
 spec/09[.K]-agent.norms.md       нормы (главы — .K)
 spec/09-agent.api.openapi.yaml   двери
-spec/09-agent.library.md         договор библиотеки (если есть)
 spec/09-agent.README.md          инструкция реализации
 lifecycle.md                    флаги, окружение, коды выхода, юниты
 data/<семья>.form.yaml          схемы семей, которыми урок владеет (диалект ADR-0087; ADR-0088)
-vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
-acceptance/[K/]                 приёмка
+vectors/follow/                 векторы следования за держателем, функция follow (9.1)
+acceptance/1/                   приёмка главы 9.1 (агент члена)
+acceptance/2/                   приёмка главы 9.2 (режим ретранслятора)
 ```
