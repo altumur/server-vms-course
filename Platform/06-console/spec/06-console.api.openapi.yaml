@@ -4966,6 +4966,9 @@ components:
       properties:
         would_move:
           type: array
+          uniqueItems: true
+          description: Единицы, которые уйдут с сервера (не придут на него), по возрастанию байтов UTF-8 ссылки — глава 6.6
+            Н2.1 (разбор ревью стадии B 6–7, № 33).
           items:
             $ref: '#/components/schemas/SubsystemUnitRef'
     LabelsWritten:
@@ -4976,6 +4979,9 @@ components:
       properties:
         will_move:
           type: array
+          uniqueItems: true
+          description: Единицы, которые уйдут с сервера (не придут на него), по возрастанию байтов UTF-8 ссылки — глава 6.6
+            Н2.1 (разбор ревью стадии B 6–7, № 33).
           items:
             $ref: '#/components/schemas/SubsystemUnitRef'
     DecommissionInput:
