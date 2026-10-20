@@ -18,21 +18,29 @@ root:
       description: ДОЛЖЕН; по элементу на единицу, которую воркер ведёт
       items:
         type: object
+        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase, epoch, revision или observed_revision; id не по грамматике id единицы (P/06.1 Н1.3); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
         properties:
           id:
-            description: id единицы
+            ref: common.named_id
+            description: id единицы — по грамматике P/06.1 Н1.3 (форма держит named; у спеки с unit.id numeric — ещё numeric, проза Н1.3)
           phase:
             type: string
             description: слова подсистемы; платформа знает одно — running (счётчик running, соседство near)
           epoch:
             type: integer
-            description: "эпоха единицы; целое (М11/1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)"
+            minimum: 1
+            whole: true
+            description: "эпоха единицы; целый знак ≥ 1 (М11/1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)"
           revision:
             type: integer
-            description: revision строки единицы; целое (М11/1 Н1.6 claim)
+            minimum: 1
+            whole: true
+            description: revision строки единицы; целый знак ≥ 1 (М11/1 Н1.6 claim)
           observed_revision:
             type: integer
-            description: revision строки, под которой единица сейчас запущена; целое (М11/1 Н1.6 claim)
+            minimum: 0
+            whole: true
+            description: revision строки, под которой единица сейчас запущена; целый знак ≥ 0 (М11/1 Н1.6 claim)
           why:
             type: string
             description: "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)"
