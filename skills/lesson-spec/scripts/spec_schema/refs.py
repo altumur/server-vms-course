@@ -2,9 +2,8 @@
 from pathlib import Path
 
 
-# Пакет векторов урока 2.5 (план урока 6, В8); прежнее место — до коммита урока 6, затем строка снимается.
-TABLES = (("Platform", "02-installer", "vectors", "platform-lists", "cases.tsv"),
-          ("Source", "tests", "testdata", "platform_lists.tsv"))
+# Пакет векторов урока 2.5 (план урока 6, В8).
+TABLES = (("Platform", "02-installer", "vectors", "platform-lists", "cases.tsv"),)
 
 
 def _platform_list(name):
@@ -16,7 +15,7 @@ def _platform_list(name):
                     if line and not line.startswith("#"))
             words = {row[1] for row in rows if len(row) == 2 and row[0] == name}
             if not words:
-                raise RuntimeError(f"platform_lists.tsv names no {name}")
+                raise RuntimeError(f"platform-lists/cases.tsv names no {name}")
             return words
     raise RuntimeError("platform-lists/cases.tsv not found above spec_schema/")
 
