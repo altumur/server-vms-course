@@ -284,6 +284,36 @@ class SectionText(FamiliesBase):
             self.assertIn(piece, a)
         self.assertTrue(a.endswith("|\n"))
 
+    def test_names_value_keeps_the_grammar_of_the_name(self):
+        """№22 ревью стадии B 3–5: у корня семьи строки отображения нет — грамматика имени и его пояснение идут в
+        строку значения; простое имя-строка без пояснения строку не меняет; вложенное — пояснение имени."""
+        (self.data / "slot.form.yaml").write_text("""dialect: data-form/1
+root:
+  type: object
+  properties:
+    at: {ref: common.time}
+    plain:
+      type: object
+      names:
+        key: {type: string, description: имя набора}
+        value: {type: string}
+  names:
+    key:
+      type: string
+      writer: {pattern: '(room|live)\\.[a-z]+'}
+      description: "`room.<sub>` и `live.<sub>`"
+    value: {type: string, description: счёт}
+""", encoding="utf-8")
+        text = build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.2"))
+        self.assertIn("| `.<имя>` | имя — строка; только у писателя: целиком `(room\\|live)\\.[a-z]+`; значение — строка "
+                      "| необязателен |  | имя: `room.<sub>` и `live.<sub>`; счёт |", text)
+        self.assertIn("| `plain.<имя>` | строка | необязателен |  | имя: имя набора |", text)
+        (self.data / "slot.form.yaml").write_text("dialect: data-form/1\nroot:\n  type: object\n  properties: {at: {ref: common.time}}\n  names:\n"
+                                                  "    key: {type: string}\n    value: {type: any, description: прочее}\n",
+                                                  encoding="utf-8")
+        text = build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.2"))
+        self.assertIn("| `.<имя>` | любое значение | необязателен |  | прочее |", text)
+
     def test_no_family_no_section(self):
         with self.assertRaisesRegex(SourceError, "owns no family"):
             build_families_section(self.norms, self.root, chapter_families(self.root, "P/03.1"))

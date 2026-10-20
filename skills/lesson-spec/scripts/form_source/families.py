@@ -171,6 +171,32 @@ class FamilySection(Section):
         super().__init__(SimpleNamespace(form=form, rows=[], scalars=None))
         self.own = [k for k in self.own if not k.startswith("common.") or (k in self.recursive and self.uses.get(k))]
 
+    def expand(self, path, n, rows, rules, stack, own=False):
+        """Строка значения имён автора (`names`) несёт и имя (разбор ревью стадии B 3–5, №22): у корня семьи строки
+        отображения нет, и грамматика имени, отличная от простой строки, идёт в «Тип и границы» строки значения
+        («имя — …; значение — …», как у вложенного отображения); своё пояснение имени (`description` узла `key`, не
+        определения по ссылке) — в «Смысл» на любой глубине."""
+        before = len(rows)
+        super().expand(path, n, rows, rules, stack, own)
+        if n.ref is not None and n.ref in self.own and not own:
+            return
+        t = self.f.deref(n)
+        if t.names is None:
+            return
+        label = "%s.<имя>" % path
+        at = next((i for i in range(before, len(rows)) if rows[i][0] == label), None)
+        if at is None:
+            return
+        key = t.names[0]
+        p, kind, need, owner, desc, xclass = rows[at]
+        name = self.kind(key)
+        if not path and name != "строка":
+            kind = "имя — %s; значение — %s" % (name, kind)
+        note = key.notes.get("description")          # своё пояснение имени, не определения по ссылке
+        if note:
+            desc = "имя: %s; %s" % (note, desc) if desc else "имя: %s" % note
+        rows[at] = (p, kind, need, owner, desc, xclass)
+
     def body(self):
         f = self.f
         rows, rules = [], []
