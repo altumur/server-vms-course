@@ -5,30 +5,30 @@
 [чеклист](review-checklist.md); этот файл описывает только границы инструмента.
 
 ```sh
-# весь модуль в курсе
+# все уроки в курсе: перенесённые Platform/ и М11
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
   --with jsonschema --with ruamel.yaml --with regress python \
-  skills/lesson-spec/scripts/check_spec.py М10_Platform/[0-9][0-9]-*.md
+  skills/lesson-spec/scripts/check_spec.py Platform/0*-*/0*.md М11_Domain/[0-9]*.md
 # выгрузка cammeta-specs: --root — её корень, уроки — её пути, реестр — того же коммита курса
 S=/Users/murat/w2c/cammeta-specs
 uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
-  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/М10_Platform/[0-9][0-9]-*.md
+  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/Platform/0*-*/0*.md $S/М11_Domain/[0-9]*.md
 ```
 
 `--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
 `exceptions.tsv` навыка). Для выгрузки реестр берётся того же коммита курса, что её `COURSE_COMMIT`:
 строка реестра для файла, которого в выгрузке ещё нет, даёт «stale exception». В окружении с `PyYAML`,
 `openapi-spec-validator`, `markdown-it-py`, `jsonschema`, `ruamel.yaml` и `regress` можно запускать `python3`
-напрямую. Последние три нужны [схеме формы](#схема-формы-спеки-adr-0085) урока М10/2; в выгрузке схемы нет, и там
-они не используются.
+напрямую. Последние три нужны [схеме формы](#схема-формы-спеки-adr-0085) (ADR-0085); после перехода главы P/02.1 на источник формы её нет ни у
+одной главы, в выгрузке — тоже, и там они не используются.
 
 **Урок модуля «Платформа»** (`Platform/`, ADR-0083) — тот же вызов с путём лекции:
-`check_spec.py Platform/01-store/01-store.md`. Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
+`check_spec.py Platform/01-store/01-store.md` (все — `Platform/0*-*/0*.md`). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
 у урока без глав — `spec/NN-<процесс>.norms.md`, id `P/NN-MM`); каждая глава проверяется как урок: Н0–Н5, чеклист,
-«Данные», своя приёмка `acceptance/K/` (тот же набор таблиц, что у М10). Одна инструкция `spec/NN-<процесс>.README.md`
+«Данные», своя приёмка `acceptance/K/` (тот же набор таблиц, что у М11). Одна инструкция `spec/NN-<процесс>.README.md`
 и один OpenAPI на урок. Счёты лекции и инструкции — суммы по главам. Ключ реестра — `P/NN`, значение
-`acceptance-entry` — `K/имя`. Стенд директив — `Platform/common/acceptance/README.md` (и прежний стенд М10, пока он
-есть). У главы с корпусом урока 2 — пара схемы ADR-0085 (`spec/NN.K-<процесс>.schema.yaml`, `.references.tsv`) до
+`acceptance-entry` — `K/имя`. Стенд директив — `Platform/common/acceptance/README.md` (прежний стенд М10 снят: скрипт
+читает его, только если файл есть). У главы с корпусом урока 2 — пара схемы ADR-0085 (`spec/NN.K-<процесс>.schema.yaml`, `.references.tsv`) до
 перехода, после — [источник формы](#источник-формы-спеки-adr-0087); оба у одной главы — ошибка.
 
 ## Итог
@@ -84,7 +84,7 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 
 ## Схема формы спеки (ADR-0085)
 
-Если рядом с нормами урока лежат `spec/<урок>.schema.yaml` и `spec/<урок>.references.tsv` (сейчас — только М10/2),
+Если рядом с нормами урока лежат `spec/<урок>.schema.yaml` и `spec/<урок>.references.tsv` (после перехода P/02.1 на источник формы — ни у одной главы),
 скрипт прогоняет каждый случай `verdicts.tsv` урока через прогонщик [`scripts/spec_schema/run.py`](../scripts/spec_schema/run.py):
 слой текста (`textlayer.py`), схему JSON Schema 2020-12 и проход ссылок (`refs.py`). Схема — проверка рядом с нормой,
 не норма: норма — проза Н1.1–Н1.4; профиль схемы — её шапка. Байты схемы и ссылок правит «Спецификация» той же правкой,
