@@ -1547,11 +1547,19 @@ class Check:
                 chapter_texts[norms] = text
             where = acceptance / chapter if chapter else acceptance
             verdicts, classes = None, {}
+            # A lesson without acceptance of its own (a browser library, P/07) carries the no-acceptance exception, as
+            # lesson() does; an acceptance directory next to that exception makes it stale.
+            no_acceptance = not chapter and self.exception(key, "no-acceptance") is not None
             if where.is_dir():
+                if no_acceptance:
+                    self.used.add((key, "no-acceptance", "-"))
+                    self.error(where, "stale exception no-acceptance: the lesson has an acceptance directory")
                 more, scenarios, verdict_counts, verdicts, classes = self.acceptance(where, key, f"{chapter}/" if chapter else "")
                 chapter_texts.update(more)
                 if scenarios is not None:
                     self.directives(where / "scenarios.tsv", self.stands())
+            elif no_acceptance:
+                self.except_(acceptance, key, "no-acceptance", "-")
             elif not chapter:
                 self.error(acceptance, "no acceptance directory")
             # The ADR-0085 pair moves with the chapter that owns the corpus (ADR-0086 Р4) until the lesson takes its

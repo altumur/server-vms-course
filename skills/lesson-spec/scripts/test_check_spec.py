@@ -896,6 +896,32 @@ paths:
         result.lesson(self.lesson)
         return result
 
+    def library_lesson(self, acceptance=False):
+        """A lesson without chapters and without acceptance of its own (P/07, a browser library)."""
+        lesson_dir = self.root / "Platform/07-module"
+        (lesson_dir / "spec").mkdir(parents=True)
+        (lesson_dir / "07-module.md").write_text("# Module\n")
+        (lesson_dir / "spec/07-module.README.md").write_text("# Instructions\n")
+        (lesson_dir / "spec/07-module.norms.md").write_text(
+            "\n".join(f"## Н{i} Section" for i in range(6)) +
+            "\n## Решает реализация\n## Чеклист готовности\n- [ ] **P/07-01** Example — проверяется чтением\n")
+        if acceptance:
+            (lesson_dir / "acceptance").mkdir()
+        registry = self.root / "exceptions.tsv"
+        registry.write_text("P/07\tno-openapi\t-\tlibrary\nP/07\tno-acceptance\t-\tlibrary in a browser\n")
+        result = Check(self.root, registry)
+        result.lesson(lesson_dir / "07-module.md")
+        return result
+
+    def test_lesson_without_acceptance_takes_the_exception(self):
+        result = self.library_lesson()
+        self.assertFalse(any("no acceptance directory" in e for e in result.errors), result.errors)
+        self.assertFalse(any("stale exception" in e for e in result.errors), result.errors)
+
+    def test_no_acceptance_with_a_directory_is_stale(self):
+        result = self.library_lesson(acceptance=True)
+        self.assertTrue(any("stale exception no-acceptance" in e for e in result.errors), result.errors)
+
     def test_two_chapters_pass(self):
         result = self.check()
         self.assertEqual(result.errors, [])
