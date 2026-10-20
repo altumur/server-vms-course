@@ -179,21 +179,14 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   members?:     строка domain/members {doc} (Н1.1) — только отставшему: members_rev публикации нет или ≠ (term, rev)
                 (урок 12 Н1.4; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (урок 10 Н1.1)
-  sealed?:      конверт m1 (ниже) с JSON-объектом секретного члену: grants — урок 9 Н1.3, break_glass — урок 9 Н1.6;
-                books — урок 5; только когда секретное есть — пустого конверта нет (добавлено сверкой М11, D8)
+  sealed?:      конверт m1 с JSON-объектом секретного члену — договор конвертов домена «Содержимое sealed» (разбор ревью
+                стадии A 8–10, № 12)
   <поля уроков>: placement, pending — урок 6 Н1.2, Н1.4; topology — урок 4; shared — урок 11 Н1.4; backup — урок 10 Н1.5
-envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 2 Н1.5: четыре части через «:», 2–4 — base64url без «=»
-  recipient:    X25519 ключа члена: u = (1 + y)/(1 − y) mod 2^255 − 19 из y открытого Ed25519 (старший бит сброшен),
-                little-endian (RFC 7748 §4.1); закрытый — первые 32 байта SHA-512(seed_secret) как скаляр X25519
-  eph:          32 байта — одноразовый X25519; nonce — 12 случайных байт; ct — AES-256-GCM с тегом 16, не короче 16
-  key:          HKDF-SHA256(ikm = X25519(eph, recipient), salt = eph ‖ recipient, info = "w2c carry to a member", L = 32)
-  aad:          UTF-8("m1" + hex открытого ключа члена)
-  plain:        UTF-8 текста JSON-объекта
 ```
 
-Отказ открытия — слово, значение не повторяется: `not_m1` (текст не начинается с `m1:`), `not_an_envelope` (частей не
-четыре, часть не base64url без `=`, `eph` не 32 байта, `nonce` не 12, `ct` короче 16, нулевой общий секрет),
-`does_not_open` (AEAD не открылся или не UTF-8). Подбор иных форм запрещён.
+Конверт `m1` (получатель, ключ, AAD, слова отказа `not_m1`, `not_an_envelope`, `does_not_open`) и содержимое `sealed` —
+[договор конвертов домена](../../Platform/common/contracts/domain-envelopes.md) «Конверт `m1`», «Содержимое `sealed`» (владелец P/08, глава 8.3; открывает агент 9.1;
+разбор ревью стадии A 8–10, № 12). Векторы — [`common/vectors/domain-envelopes`](../../Platform/common/vectors/domain-envelopes/README.md).
 
 ### Н1.6 Что агент пишет дома
 

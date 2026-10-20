@@ -1,0 +1,16 @@
+# Открытие m1 (договор конвертов домена, «Конверт m1»): open(seed_hex, sealed) → значение или слово.
+# seed_hex — seed_secret ключа члена (Ed25519); sealed — как пришёл. expect — значение JSON-строкой или слово not_m1 | not_an_envelope | does_not_open.
+# Строки — входы приёмки М11/3 inputs/seal-member-*.json (case — имя файла), ожидания — сц. 11 scenarios.tsv.
+# Строка: case<TAB>seed_hex<TAB>sealed<TAB>expect<TAB>note.
+case	seed_hex	sealed	expect	note
+seal-member-01-opens	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	"{\"grants\":{\"alice\":[\"view\"]}}"	контроль: ключ члена m1 — значение (текст JSON)
+seal-member-02-empty	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:Q9ZHlWf0IuvK2Ln0CBvMcIKul55ZtnI5ihqhB_9BR2Y:AAECAwQFBgcICQoL:Fn29Q1ITj9M_I6BdNyINUQ	""	пустое значение
+seal-member-03-other-member	8d4d3ebc0a45db1c1eb5d097be76dbf0e324a2a3d489cfa4afc50f6fe64e44ef	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	does_not_open	зерно члена m2 — не открывается
+seal-member-04-aad-other-key	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:0qx82jVfrWfnNSLLVnXclkWqpel9RmhdV2SxC2csKnI:AAECAwQFBgcICQoL:XP6Xd4U5cBRN0oPJvnrY0rU	does_not_open	запечатано с AAD другого члена — не открывается
+seal-member-05-tag	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m2:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LdcWTKJkYoKJUrrEsAFDd-g	not_m1	тег m2: вместо m1:
+seal-member-06-three-parts	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL	not_an_envelope	три части вместо четырёх
+seal-member-07-padding	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK=	not_an_envelope	ct с «=»
+seal-member-08-short-nonce	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQo:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	not_an_envelope	nonce 11 байт
+seal-member-09-flipped	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxL	does_not_open	изменён последний знак ct — AEAD не открывается
+seal-member-10-zero-eph	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	not_an_envelope	eph — нулевая точка: нулевой общий секрет
+seal-member-11-product-form	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1.0000000000000000000000000000000000000000000000000000000000000000.LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	not_m1	форма с точками (прежний продукт) — не m1:

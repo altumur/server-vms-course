@@ -1,0 +1,7 @@
+# Круг x25519:v1 (договор конвертов домена, «Конверт x25519:v1» seal): реализация дважды запечатывает plain к book_seal с контекстом
+# и открывает оба конверта зерном seed_hex. ok — оба открылись в plain и конверты различны (новые eph и nonce); иначе слово запечатывания.
+# plain — JSON-строка. Строки — входы приёмки М11/2 inputs/seal-round-*.json, ожидания — сц. 11.
+# Строка: case<TAB>book_seal_hex<TAB>seed_hex<TAB>plain<TAB>member<TAB>source_path<TAB>item<TAB>pointer<TAB>expect<TAB>note.
+case	book_seal_hex	seed_hex	plain	member	source_path	item	pointer	expect	note
+seal-round-01	bcd5fdec0a3585c7b8793b352a0322a72c6aa1801c1874dac9e7cebfc2c8f970	1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a	"s3cret-ü"	m1	testsub2/notes/n1	a1	/feed/token_secret	ok	круг: два своих конверта различны и оба открываются
+seal-round-02-small-order	0100000000000000000000000000000000000000000000000000000000000000	1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a	"s3cret-ü"	m1	testsub2/notes/n1	a1	/feed/token_secret	not_an_envelope	book_seal малого порядка — конверта нет

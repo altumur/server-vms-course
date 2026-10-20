@@ -103,7 +103,8 @@ domain/grants/<кластер>:  {doc: <текст JCS {lines}>}   # у держ
 domain/grants/domain: гранты двери домена (консоль домена и процесс domain); ни один агент их не несёт
 last_admin:    правка domain/grants/domain или людей, после которой нет строки {cap: admin, scope: *, until: 0} человека,
                который есть и не disabled, — 409 last admin
-carry:         ответ держателя агенту (урок 3 Н1.5) несёт в sealed поле grants: {doc} — строка domain/grants/<член>
+carry:         ответ держателя агенту (урок 3 Н1.5) несёт в sealed поле grants (форма — договор конвертов домена «Содержимое
+               sealed»; разбор ревью стадии A 8–10, № 12) — строка domain/grants/<член>
                без строк, чей subject в domain/disabled (ADR-0051); строки нет — поля нет
 member_copy:   агент пишет у своего кластера точный ключ domain/grants {doc, as_of} — doc как пришёл, as_of — момент, когда
                держатель собрал ответ: стенные секунды приёма минус domain_age (урок 4; прямой ответ — 0), назад не уходит;
@@ -176,7 +177,8 @@ agent:     подпись агента своего кластера (урок 3
 domain/break-glass/<кластер>: {pwhash_secret, set_at}    # у держателя; pwhash_secret — та же форма Н1.1
   writer:      процесс domain по двери PUT /domain/break-glass/<кластер> {password} (admin домена); пароль ≥ GLASS_MIN
 GLASS_MIN:     12          # символов
-carry:         sealed ответа агенту — поле break_glass: {pwhash_secret, set_at}; у члена — domain/break-glass/<член>
+carry:         sealed ответа агенту — поле break_glass (форма — договор конвертов домена «Содержимое sealed»; разбор ревью
+               стадии A 8–10, № 12); у члена — domain/break-glass/<член>
                (секрет запечатан его кольцом); поля нет в открывшемся конверте — агент удаляет строку (не открылся —
                не трогает, урок 3 Н1.6 sealed). У кластера держателя строка
                domain/break-glass/<держатель> — его собственная (пишет процесс domain): агент держателя её не пишет и не

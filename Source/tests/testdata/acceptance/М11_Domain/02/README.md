@@ -25,6 +25,10 @@
   `item`, `pointer`);
 - `seal-round-*` — вход `seal-round`: открытый `book_seal`, его `seed`, значение и контекст.
 
+Входы `seal-*` и `seal-round-*` — те же случаи, что таблицы `x25519-open.tsv` и `x25519-round.tsv` пакета
+[`domain-envelopes`](../../../../../../Platform/common/vectors/domain-envelopes/README.md) ([договор конвертов
+домена](../../../../../../Platform/common/contracts/domain-envelopes.md); разбор ревью стадии A 8–10, № 12).
+
 Ключи входов тестовые и открыты здесь: зерно каждого — `sha256("w2c test <слово>")`, слова — `root 1` (корень домена `acme`),
 `root 2` (чужой корень), `token key 1…3` (ключи токенов `t1…t3`), `book seal 1`, `book seal 2` (ключи приёма книг),
 `member m1` (ключ члена в `revoked_members`), `eph 1…3` (одноразовые пары конвертов векторов; `nonce` — байты 0…11).

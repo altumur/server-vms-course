@@ -414,7 +414,7 @@ components:
             doc: {type: string}
         sealed:
           type: string
-          description: 'Конверт m1:<eph>:<nonce>:<ct> (Н1.5).'
+          description: 'Конверт m1:<eph>:<nonce>:<ct> и его содержимое — Platform/common/contracts/domain-envelopes.md.'
           pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'
         topology:
           type: object

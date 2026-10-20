@@ -31,7 +31,8 @@
 - `agent-sig-*` — вход `agent-sig` (Н5): `key` — hex ключа члена, `method`, `path`, `body` — текст тела, `header` —
   значение `X-Agent-Signature`, `now` — стенные секунды проверяющего, `window` — окно двери (300 или 60);
 - `seal-member-*` — вход `seal-member`: `seed` — `seed_secret` члена, `sealed` — конверт;
-- `seal-member-round-*` — `key`, `seed`, `plain`;
+- `seal-member-round-*` — `key`, `seed`, `plain` (входы `seal-member-*` — те же случаи, что `m1-open.tsv` и `m1-round.tsv`
+  пакета [`domain-envelopes`](../../../../../../Platform/common/vectors/domain-envelopes/README.md); разбор ревью стадии A 8–10, № 12);
 - `accept-*` — вход `accept`: `catalog`, `mark`, `stored` (целое поколение метки), `body` (текст публикации как
   получен), `refreshed_ago`. Метка `mark` — по Н1.3, её `sha256` — от JCS `stored` (в случае 05 — нет).
 

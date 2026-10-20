@@ -1,0 +1,6 @@
+# Круг m1 (договор конвертов домена, «Конверт m1»): реализация дважды запечатывает plain к открытому ключу члена key_hex (Ed25519)
+# и открывает оба зерном seed_hex. ok — оба открылись в plain и конверты различны. plain — JSON-строка.
+# Строки — входы приёмки М11/3 inputs/seal-member-round-*.json, ожидания — сц. 12.
+# Строка: case<TAB>key_hex<TAB>seed_hex<TAB>plain<TAB>expect<TAB>note.
+case	key_hex	seed_hex	plain	expect	note
+seal-member-round-01	b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	"{\"grants\":{}}"	ok	круг: два своих конверта различны и оба открываются
