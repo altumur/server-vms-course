@@ -52,7 +52,7 @@ paths:
       summary: Резервная копия этого кластера подписанному члену (Н1.9)
       parameters:
         - {name: X-W2C-Member, in: header, required: false, description: 'нет — 401 (Н1.9)', schema: {$ref: '#/components/schemas/MemberName'}}
-        - {name: X-W2C-Time, in: header, required: false, description: 'нет — 401; не по форме — 401 bad_time (Н3 ask-sig)', schema: {type: string}}
+        - {name: X-W2C-Time, in: header, required: false, description: 'нет — 401; не по форме — 401 bad_time (Platform/common/contracts/ask-sig.md)', schema: {type: string}}
         - {name: X-W2C-Signature, in: header, required: false, description: 'нет — 401; не base64url или не 64 байта — 401 bad_signature', schema: {type: string}}
       responses:
         '200':

@@ -58,7 +58,8 @@ README приёмки [М11/01](../01/README.md). Раннер ходит чел
   - `held` — своя строка `domain/holder` или `null`;
   - `answers` — строка `holder` из `/api/held` каждой консоли (или из 409 `deposed`); `null` — не ответила.
 - `ask-sig-*` — `{ask, cluster, member?, pub, header, now}`: `pub` — открытый ключ подписавшего (член или ключ токенов),
-  `header` — заголовки `X-W2C-*` без префикса.
+  `header` — заголовки `X-W2C-*` без префикса; те же случаи — таблица пакета
+  [`ask-sig`](../../../../../../Platform/common/vectors/ask-sig/README.md) (разбор ревью стадии A 8–10, № 13).
 
 `now` — 1760000000.
 

@@ -349,16 +349,9 @@ HTTP-контракт: [10-holder-transfer-and-keepers.api.openapi.yaml](10-hold
 
 ### ask-sig — подпись просьбы
 
-```
-message:  backup|<кластер>|<член>|<время>   (просьба резервной копии; ключ члена)
-          prepare|<цель>|<время>            (подготовка передачи; ключ токенов current набора)
-time:     X-W2C-Time — десятичная запись стенных секунд с тремя знаками после точки: (0|[1-9][0-9]*)\.[0-9]{3}
-signature: X-W2C-Signature — base64url без «=» подписи Ed25519 над UTF-8(message)
-check:    по порядку: заголовка нет или он пуст — missing (prepare — X-W2C-Time, X-W2C-Signature; backup — ещё
-          X-W2C-Member; пустой — добавлено сверкой М11, H13);
-          время не по форме — bad_time; |now − время| > 300 — skew; подпись не base64url без «=», не 64 байта или не
-          сходится — bad_signature; иначе ok
-```
+Сообщения `backup` и `prepare`, форма `X-W2C-Time`, `X-W2C-Signature` и порядок проверки (`missing`, `bad_time`, `skew`,
+`bad_signature`) — [договор подписи просьбы](../../Platform/common/contracts/ask-sig.md) (перенесено туда без изменения; разбор ревью стадии A 8–10, № 13 /
+решение 2). Векторы — [`common/vectors/ask-sig`](../../Platform/common/vectors/ask-sig/README.md).
 
 ### проверить резервную копию (агент хранителя)
 
@@ -399,8 +392,8 @@ check:    по порядку: заголовка нет или он пуст �
 | `unavailable` | 503 | хранилище не ответило (`/api/held`, `/api/backup`) |
 | `redo it on the new holder` | 400 | брошенное, кроме правки члена |
 
-Слова `record` — [договор записи срока](../../Platform/common/contracts/record.md) «Слова отказа». Слова `ask-sig`:
-`missing`, `bad_time`, `skew`, `bad_signature`.
+Слова `record` — [договор записи срока](../../Platform/common/contracts/record.md) «Слова отказа». Слова `ask-sig` — [договор подписи
+просьбы](../../Platform/common/contracts/ask-sig.md) «Слова отказа».
 
 ---
 

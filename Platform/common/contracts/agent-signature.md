@@ -45,7 +45,8 @@ replay:         кэша повторов нет: те же байты в окн
 этих дверей нет: тройка `X-W2C-Member/Time/Signature` — у просьб без члена в пути (урок 10).
 
 Форма функции — вход команды `agent-sig` приёмки М11/3 Н5: `{key, method, path, body, header, now, window}` →
-`{result: ok}` | `{result: refused, reason}`; `path` с «?» — вход не по форме.
+`{result: ok}` | `{result: refused, reason}`; `path` с «?» — вход не по форме. Тройка урока 10 — [договор подписи
+просьбы](ask-sig.md).
 
 ## Векторы
 

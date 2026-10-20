@@ -318,7 +318,7 @@ old	new	chapter	subject	note
 М11/10-07	P/08.8-06	8.8	плановая передача, заморозка, отмена	дверь — 10
 М11/10-08	P/08.8-07	8.8	аварийный перенос, выбор копии	двери — 10, /domain/move — 6.late
 М11/10-09	P/09.1-11	9.1	следование агента за держателем	вектор follow
-М11/10-10	P/08.8-08	8.8	ask-sig и GET /api/backup	вектор ask-sig; /api/backup — 6.late
+М11/10-10	P/08.8-08	8.8	ask-sig и GET /api/backup	договор подписи просьбы common/contracts/ask-sig.md; проверяют 6.7 (/api/backup) и 8.8 (/api/prepare); векторы — common/vectors/ask-sig (разбор ревью стадии A 8–10, № 13 / решение 2); /api/backup — 6.late
 М11/10-11	P/08.8-09	8.8	точка смены писателя switch	сторона агента — 9.1
 М11/11-01	P/02.1-29	2.1	объявление domain.shared, merge, witness, m61	глава позднего слоя 2.1, вводит 8.9
 М11/11-02	P/08.9-01	8.9	общий документ: форма, подпись, указатель	-
@@ -535,3 +535,5 @@ P/04 Н1.4 LOST_AFTER, договор наблюдения «Свежесть» 
 М11/2 Н3 keys (входы приёмки М11/02 keys-*; разбор ревью стадии A 8–10, № 13)	common vectors/keys	common	функция keys: took, holding, older, no_pin, another_root, bad_signature, not_a_set, no_book_seal	договор common/contracts/keys.md; строки — входы приёмки М11/2 сц. 01–03 без изменения байтов
 М11/10 Н1.1 domain/holder doc; Н3 record; Н4 слова record (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/record	common	запись срока domain/holder и подпись выпускающего: функция record, виды, слова отказа	владелец P/08 (глава 8.8); участники 9.1, 6.7, 8.7, 8.9; части М11/10-01, М11/11-04
 М11/10 Н3 record (входы приёмки М11/10 record-*; разбор ревью стадии A 8–10, № 13)	common vectors/record	common	функция record: три вида, домен, выпускающий, подпись, формы	договор common/contracts/record.md; строки — входы приёмки М11/10 сц. 05 без изменения байтов
+М11/10 Н3 ask-sig; Н4 слова ask-sig (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/ask-sig	common	подпись просьбы X-W2C-Member, X-W2C-Time, X-W2C-Signature: сообщения backup и prepare, проверка ask-sig, слова отказа	владелец P/08 (глава 8.8); участник 6.7; часть М11/10-10
+М11/10 Н3 ask-sig (входы приёмки М11/10 ask-sig-*; разбор ревью стадии A 8–10, № 13)	common vectors/ask-sig	common	функция ask-sig: missing, bad_time, skew, bad_signature, граница окна	договор common/contracts/ask-sig.md; строки — входы приёмки М11/10 сц. 07 без изменения байтов
