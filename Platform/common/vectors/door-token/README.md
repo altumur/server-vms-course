@@ -58,15 +58,15 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | части — строгий base64url без «=», хвостовые биты последнего знака — нули | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims ровно `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
 | типы claims: `user`, `unit`, `holder` — строки; `routes` — массив строк без повторов; `expires` — целое ≤ 2^53−1 (решение «Архитектора» 2026-10-20, Kimi SB67-01) | `user_number`, `unit_number`, `holder_null`, `routes_not_array`, `routes_item_number`, `routes_dup`, `expires_string`, `expires_float`, `expires_over_2_53` |
-| текст claims по I-JSON: строгий UTF-8, имя поля не повторяется, имена байт в байт (разбор ревью стадии B 6–7, № 8); без суррогатов и некодов ((решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)) | `claims_bad_utf8`, `claims_dup_key`, `claims_name_case`, `claims_lone_surrogate`, `claims_noncharacter` |
-| место токена: `Authorization: Bearer`, иначе единственный `?t=`; иная схема — как нет заголовка ((решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)) | `no_token`, `query_t_repeated`, `auth_not_bearer_no_query` |
+| текст claims по I-JSON: строгий UTF-8, имя поля не повторяется, имена байт в байт (разбор ревью стадии B 6–7, № 8); без суррогатов и некодов (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7) | `claims_bad_utf8`, `claims_dup_key`, `claims_name_case`, `claims_lone_surrogate`, `claims_noncharacter` |
+| место токена: `Authorization: Bearer`, иначе единственный `?t=`; иная схема — как нет заголовка (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7) | `no_token`, `query_t_repeated`, `auth_not_bearer_no_query` |
 | элемент `routes` — сегмент по грамматике `name` `[a-z][a-z0-9_-]{0,31}`; целое JSON — только запись без точки и порядка (решение «Архитектора» 2026-10-20) | `routes_item_slash`, `routes_item_upper`, `expires_point_zero`, `expires_exponent` |
 | `now < expires` (граница `now = expires` — отказ) | `expired_boundary`, `expired_after` |
 | `unit` и `holder` свои | `other_unit`, `other_sub`, `other_holder` |
 | первый сегмент пути запроса, сырым без раскодирования `%XX`, — элемент `routes` байт в байт; путь — без query (разбор ревью стадии B 6–7, № 9) | `route_not_in_routes`, `route_segment_prefix`, `route_second_segment`, `route_root`, `route_case`, `route_percent`, `route_query_only`, `route_in_query` |
 
 Строки `ok_query_token` и `ok_query_one_segment` — контроль пути без query: токен в `?t=`, сегмент — до «?» (№ 9);
-`ok_auth_not_bearer_query` — схема не Bearer, токен из `?t=`; `ok_bearer_over_query` — при Bearer query не читается ((решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)). Строка `ok_expires_max` — контроль границы типа: `expires` = 2^53−1 даёт `ok`. Строка `claims_not_jcs` ждёт `ok`: выпускающий обязан писать claims в JCS, а проверяющий канон не проверяет, потому что
+`ok_auth_not_bearer_query` — схема не Bearer, токен из `?t=`; `ok_bearer_over_query` — при Bearer query не читается (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7). Строка `ok_expires_max` — контроль границы типа: `expires` = 2^53−1 даёт `ok`. Строка `claims_not_jcs` ждёт `ok`: выпускающий обязан писать claims в JCS, а проверяющий канон не проверяет, потому что
 подпись покрывает байты части claims (решение «Архитектора» 2026-10-20, векторы door-token).
 
 Строки `key_small_order` и `sig_r_small_order` удовлетворяют уравнению [S]B = R + [k]A; проверка OpenSSL (pyca cryptography) их принимает,
