@@ -371,7 +371,7 @@ m51_books_to_is_key	refused
 m51_books_two_segments	refused
 m51_books_unknown_key	refused
 m51_books_kept_same_name	refused
-m51_books_key_to_any_name_ok	ok
+m51_books_key_to_not_name	refused
 m51_books_to_secret	refused
 m51_books_key_not_string	refused
 m57_tokens_caller_word	refused
