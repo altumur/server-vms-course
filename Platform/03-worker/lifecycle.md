@@ -10,7 +10,8 @@
 [P/02.4](../02-installer/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение, Н1.5
 воркеры по заказу), [P/02.3](../02-installer/spec/02.3-installer.norms.md) (Н3 «Старт процесса», «Смена
 спеки»), [P/06.6](../06-console/spec/06.6-console.norms.md) (Н1.1а строка схемы),
-[договор замка присутствия](../common/contracts/presence-lock.md), [договор журнала событий](../common/contracts/event-journal.md) (бакеты).
+[договор замка присутствия](../common/contracts/presence-lock.md), [договор журнала событий](../common/contracts/event-journal.md) (бакеты),
+[договор местной двери токенов](../common/contracts/local-token-door.md) (просьба токена, глава 3.7).
 
 ## Запуск
 
@@ -40,6 +41,7 @@
 | `RESOURCE_ROOT` / `EVENTS` | корень событий: бакеты и замок присутствия | `<PLATFORM_DIR>/events` | P/02.4 Н1.2, P/05 Н1.4, договор замка присутствия |
 | `SECRETS_KEY` | кольцо — у держателей секретов | — | P/03.5 Н1.2 |
 | `W2C_ROLE`, `W2C_TLS_DIR` | роль и комплект; команды раннера у воркера нет, проверка «`W2C_ROLE` ≠ роли команды» к нему неприменима (разбор ревью стадии B 3–5, № 29) | `<sub>worker`; `/etc/w2c/tls` | P/02.4 Н1.1, Н1.2, Н1.6 |
+| `AGENT_TOKEN_DIR` | каталог сокетов местной двери токенов агента: воркер просит токен в `<AGENT_TOKEN_DIR>/<W2C_ROLE>.sock` (глава 3.7 Н1.5) | `/run/w2c/domainagent` | [договор местной двери токенов](../common/contracts/local-token-door.md) «Сокет роли» (разбор ревью стадии A 8–10, № 1 / решение 1) |
 | `CAPACITY`, `WORKER_MEMORY_MB` | ёмкость и бюджет памяти | — | P/02.4 Н1.2, Н1.5 `memory` |
 | `BUILD` | слово сборки в пульсе (глава 6.6) | `dev` | P/02.4 Н1.2, P/06.6 Н1.1а |
 | `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения | `/etc/w2c/w2c.env`; путь юнита | P/02.4 Н1.2 |

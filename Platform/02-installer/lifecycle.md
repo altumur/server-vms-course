@@ -86,7 +86,7 @@
 
 | Что | Как | Норма |
 |---|---|---|
-| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446; местная дверь — умолчание 8448) | М11/12 Н1.8, P/02.4 Н1.1 |
+| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446); `w2c-domainagent-token-<роль>.socket` — местная дверь токенов, `<AGENT_TOKEN_DIR>/<роль>.sock` | М11/12 Н1.8, P/02.4 Н1.1, [договор местной двери токенов](../common/contracts/local-token-door.md) (разбор ревью стадии A 8–10, решение 1) |
 | установка домена | команда оператора, один раз на домен | М11/2 Н3 «установка домена» |
 
 ## Открыто

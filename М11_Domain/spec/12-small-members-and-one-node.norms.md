@@ -183,9 +183,10 @@ w2c-domainconsole.service:   роль domainconsole; w2c-run.sh domainconsole; W
                              SupplementaryGroups=w2c-store w2c-events (разбор ревью стадии A 8–10, № 33); кольца нет, w2c-secrets нет;
                              DOMAIN_CONSOLE_HOST/PORT 0.0.0.0:8444 — консоли членов пересылают сюда (урок 8)
 w2c-domainagent.service:     роль domainagent; w2c-run.sh domainagent; W2C_ROLE=domainagent (разбор ревью стадии A 8–10, № 33);
-                             User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets; SECRETS_KEY (credential) — ключ члена и
-                             конверты кольца (P/06.2 Н1.2 holders); своего порта нет; дверь ретранслятора — урок 4 (RELAY_PORT 8446)
-local_door:  местная дверь агента (урок 7 Н1.2) — выбор реализации; если TCP — порты 8444–8447 не занимать, умолчание 8448
+                             User=w2c; SupplementaryGroups=w2c-store w2c-events w2c-secrets; SECRETS_KEY (credential) — ключ члена и конверты кольца (P/06.2 Н1.2 holders); своего
+                             порта нет; дверь ретранслятора — урок 4 (RELAY_PORT 8446)
+local_door:  местная дверь агента (урок 7) — договор local-token-door «Сокет роли»: Unix-сокет <AGENT_TOKEN_DIR>/<роль>.sock,
+             юниты w2c-domainagent-token-<роль>.socket (разбор ревью стадии A 8–10, № 1 / решение 1)
 ```
 
 ### Н1.9 Цена
@@ -304,7 +305,9 @@ SIGTERM активного между продлением и записью с�
 
 1. **какие компоненты живут в процессе кластера из одного** и с какими ролями (Н1.3);
 2. **число записей на носитель коробки в сутки** без изменений — назвать в описании (Н1.2);
-3. **транспорт местной двери агента** (урок 7) и её порт, если TCP (Н1.8).
+3. ~~**транспорт местной двери агента** (урок 7) и её порт, если TCP (Н1.8)~~ — нормировано: [договор местной двери
+   токенов](../../Platform/common/contracts/local-token-door.md) «Сокет роли» (разбор ревью стадии A 8–10, № 1 / решение 1);
+   TCP с сертификатом роли для воркера на другом сервере кластера — открытый вопрос договора, место — Н5 урока P/09.
 
 ---
 

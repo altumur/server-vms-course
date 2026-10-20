@@ -3,8 +3,9 @@ info:
   title: M11/7 worker tokens through the agent
   version: '1'
   description: 'Normative shapes: 07-worker-tokens.norms.md N1.2-N1.4, N2. /tokens/{sub}/{kind} is the member agent''s
-    local door (the role is the identity of the connection, never the body); /api/tokens/... is the holder''s domain
-    process door, signed by the agent (M11/3 N1.4). Request parsing: M10/1 N2.1.'
+    local door (the role is the identity of the connection, never the body; transport, address and refusals —
+    Platform/common/contracts/local-token-door.md: Unix socket <AGENT_TOKEN_DIR>/<role>.sock); /api/tokens/... is the
+    holder''s domain process door, signed by the agent (M11/3 N1.4). Request parsing: M10/1 N2.1.'
 servers:
   - url: '{origin}'
     description: Местная дверь агента или дверь процесса domain держателя.
