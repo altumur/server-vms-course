@@ -227,11 +227,12 @@ server:       серверная сторона дверей между клас
 ```yaml
 route:    /domain/<sub>/<сегмент>[/…], <сегмент> ∈ door.pass спеки <sub> (P/06.5 Н1.8) — консоль домена передаёт воркеру
           на домене этой подсистемы (P/03.7 Н1.6: держатель слота domain/<sub>/worker, роль <sub>domain) путь
-          /<сегмент>[/…] и query; заголовки, тело, ответ, коды — P/06.5 Н1.8; клиент — роли domainconsole; путь с
+          /<сегмент>[/…] и query; заголовки, тело, ответ, коды — договор сторожевой и передачи «Передача door.pass» (разбор ревью
+          стадии A 8–10, № 14); клиент — роли domainconsole; путь с
           сегментом `.`/`..` воркеру не передаётся — 404 not a domain route (Н1.2; добавлено сверкой М11, D4)
 address:  url пульса воркера на домене — объект domain/<sub>/heartbeat (P/03.7 Н1.6 heartbeat)
 absent:   воркера на домене этой подсистемы не слышно — 503 {error: "unavailable", detail: "no worker of <sub> with a
-          door is heard"} (слова P/06.5 Н1.8)
+          door is heard"} (слова договора сторожевой и передачи, codes)
 member:   консоль кластера пересылает эти пути консоли домена строкой таблицы Н1.2
 ```
 
@@ -243,7 +244,8 @@ page:     GET /, /index.html — опубликованная страница �
           /platform/console.css — байты опубликованного модуля как есть (P/06.5 Н1.1)
 spec:     GET /spec → {"name": "", "rows": null} — корня нет
 mounts:   GET /mounts → {"root": "", "mounts": {<sub>: <описание P/06.5 Н2 /mounts>}} по каталогу держателя, без media
-session:  /session, /healthz — как у консоли кластера (P/06.3 Н1.3)
+session:  /session, /healthz — как у консоли кластера (договор сторожевой и передачи «Сторожевая» session; разбор ревью
+          стадии A 8–10, № 14)
 module:   какие двери модуль зовёт в режиме domain, и что его узлы member:<член>, domain — свойство опубликованного модуля
           (console.js — данные спецификации; поздний слой P/07 Н1.6, описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a), не реализаций; проверка — тест модуля у его
           владельца; приёмка урока — только двери страницы
@@ -278,7 +280,7 @@ HTTP-контракт: [08-doors-between-clusters.api.openapi.yaml](08-doors-bet
 | прочее под `/domain/` (кроме своих: `books`, `at`, `keys`, `shared/<sub>`, двери переноса Н1.9) | консоль кластера | — | 404 `not a domain route` |
 | GET `/domain/at/<кластер>/<sub>/where/…` | консоль кластера | ответ консоли члена как пришёл | Н3 «у члена» |
 | POST `/domain/members/<член>/ca` `{ca}` | консоль домена → процесс `domain` (урок 3 Н1.8) | 200 `{rev, members}` после записи по CAS | 400 не список, не 64 hex, повтор, больше двух; 404 не член; 409 «the list of members kept changing; look again» после трёх конфликтов CAS; 401/403 — урок 9 |
-| `/domain/<sub>/<сегмент pass>…` | консоль домена | ответ воркера на домене как пришёл | [P/06.5](../../Platform/06-console/spec/06.5-console.norms.md) Н1.8 |
+| `/domain/<sub>/<сегмент pass>…` | консоль домена | ответ воркера на домене как пришёл | [договор сторожевой и передачи](../../Platform/common/contracts/gate-and-pass.md) «Передача» |
 | GET `/`, `/spec`, `/mounts`, `/session` | консоль домена | Н1.8 | [P/06.5](../../Platform/06-console/spec/06.5-console.norms.md); `/session` — [P/06.3](../../Platform/06-console/spec/06.3-console.norms.md) |
 | POST `/api/prepare`, `/api/take`, `/domain/move` | консоль кластера | ответ подписанта как пришёл | Н1.9 |
 
