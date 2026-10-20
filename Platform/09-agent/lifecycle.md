@@ -74,7 +74,7 @@ TLS: комплект роли `domainagent` по `W2C_ROLE`; клиент дв�
 | Код | Когда | Норма |
 |---|---|---|
 | 2 | отказ старта по спеке, правам, схеме — без перезапуска | P/02.4 Н1.1 `common` |
-| ≠ 0 | `RELAY_URL` на `https://` без `RELAY_MEMBER` — агент не стартует | [договор `peer`](../common/contracts/peer.md) `first`; [P/09.1 Н1.7](spec/09.1-agent.norms.md) |
+| 2 | `RELAY_URL` на `https://` без `RELAY_MEMBER` — агент не стартует: отказ настройки ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `common`; решение «Архитектора» по планам переноса 8–10, ADR-0083 доп. (14) п. 10; план 9 В8) | [договор `peer`](../common/contracts/peer.md) `first`; [P/09.1 Н1.7](spec/09.1-agent.norms.md) |
 
 ## Сигналы и готовность
 
