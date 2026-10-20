@@ -69,8 +69,8 @@
 
 | Процесс | Юнит | Пользователь, роль | Что пишет | Ключи домена |
 |---|---|---|---|---|
-| подписывающий | `w2c-domain.service` (`w2c-run.sh signer`) | `w2c`, `domain` | весь проход держателя: вид, закрытые правки, неделя тревог, копия; четыре операции с ключами (ADR 0032) | да |
-| консоль домена | `w2c-domain-console.service` (`w2c-run.sh domainconsole`) | `w2c`, `domainconsole` | что решает человек без ключа: члены, топология, гранты, правка снова | нет |
+| подписывающий | `w2c-domain.service` (`w2c-run.sh domain`) | `w2c`, `domain` | весь проход держателя: вид, закрытые правки, неделя тревог, копия; четыре операции с ключами (ADR 0032) | да |
+| консоль домена | `w2c-domainconsole.service` (`w2c-run.sh domainconsole`) | `w2c`, `domainconsole` | что решает человек без ключа: члены, топология, гранты, правка снова | нет |
 | агент | `w2c-domainagent.service` (`w2c-run.sh domainagent`) | `w2c`, `domainagent` | свои копии `domain/*`, отчёт | нет |
 | воркер VMS | `vms-domainpart.service` (`w2c-run.sh vms domainpart`) | `vms`, `camdomain` | `domain/cam/*`; пульс `domain/cam/heartbeat` | нет; просит токены через сокет |
 
