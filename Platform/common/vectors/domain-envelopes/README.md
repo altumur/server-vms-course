@@ -17,6 +17,19 @@
 запечатывания вектор открытия не проверяет: оно недетерминировано (новые `eph` и `nonce`), его проверяет круг и открытие
 чужих конвертов.
 
+Команды и формы вывода — те же, что у приёмки М11 (М11/2 Н5, М11/3 Н5); сравнение — подмножество полей, ячейка `expect`
+задаёт `result` (и значение или слово отказа) (чтение коммитов «cammeta-acceptance» 2026-10-20):
+
+| Таблица | Команда | Вывод |
+|---|---|---|
+| `x25519-open.tsv` | `seal` | `{result: ok, plain}` или `{result: refused, reason}` |
+| `x25519-round.tsv` | `seal-round` | `{result: ok, envelopes: [<конверт>, <конверт>], opened: [<plain>, <plain>], distinct}` или `{result: refused, reason}` |
+| `m1-open.tsv` | `seal-member` | `{result: ok, plain}` или `{result: refused, reason}` |
+| `m1-round.tsv` | `seal-member-round` | `{result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}` |
+
+У кругов `ok` — оба конверта открылись в `plain` и различны (`distinct: true`); форма конвертов — по договору: `envelopes` —
+«Конверт `x25519:v1`», `sealed` — «Конверт m1».
+
 ## Ключи
 
 Зёрна — 32 байта `sha256("w2c test <слово>")` (как ключи [векторов запечатывания](../sealing/README.md) и
