@@ -11,7 +11,7 @@ b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",t
   servers:{show:[{table:"entries",by:"server",title:"Discovered",columns:["name","size","identity"]}]}};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{workers:[],resource:"live"}},policy:{}};
-b.FIX["/entries"]={entries:[{name:"one",server:"s-1",size:7,identity:"serial-one"},
+b.FIX["/testsub/entries"]={entries:[{name:"one",server:"s-1",size:7,identity:"serial-one"},
   {name:"other",server:"s-2",size:9,identity:"serial-other"}]};
 (async()=>{
   const w=b.boot(),errors=[];w.addEventListener("error",e=>errors.push(String(e.error||e.message)));
@@ -20,6 +20,6 @@ b.FIX["/entries"]={entries:[{name:"one",server:"s-1",size:7,identity:"serial-one
   const out={readStillShown:!!table&&/Discovered/.test(table.textContent)&&/serial-one/.test(table.textContent)&&/7/.test(table.textContent),
     otherServerExcluded:!!table&&!/serial-other/.test(table.textContent),
     noMutationControls:!!table&&!table.querySelector("form,input,textarea,select,button"),
-    noMutationRequests:!w.__calls.some(call=>call.path.startsWith("/entries")),noErrors:errors.length===0,errors};
+    noMutationRequests:!w.__calls.some(call=>call.path.startsWith("/testsub/entries")),noErrors:errors.length===0,errors};
   b.report(out);fs.unlinkSync(TMP);w.close();process.exit(Object.values(out).some(value=>value===false)?1:0);
 })();

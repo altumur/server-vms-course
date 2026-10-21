@@ -1,6 +1,6 @@
 // Контракт платформенного модуля (server-vms-course/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, v1) на фиктивной подсистеме:
-// минимальная оболочка (модуль и mount), словарь, закрытый список маршрутов, выбор, display и about из спеки,
-// may по грантам, правка без маски, вызовы оболочки в библиотеку.
+// минимальная оболочка (модуль и mount), словарь, выбор, display и about из спеки, where с door или null, правка без
+// маски, вызовы оболочки в библиотеку. Закрытый список вызовов и порядок (P/07 Н1.4) — module-calls.test.js.
 const fs=require("fs"),path=require("path");
 const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"pc-module-"+process.pid+".html");
@@ -16,13 +16,12 @@ b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"subthings",rows:"parts",id:"
 b.FIX["/things"]={configured:[{id:1,name:"one",labels:["a"],key_secret:"***",enabled:true},{id:2,name:P,labels:[],key_secret:"",enabled:true}],rows:[{id:1,worker:"w-1",server:"s-1",phase:"running"}]};
 b.FIX["/sub/parts"]={configured:[{id:"p1",thing:"1",size:3}],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{resource:"live",workers:[{worker:"w-1",load:1,capacity:5,state:"live"}],placeable:true}},policy:{}};
-b.FIX["/where/1"]={worker:"w-1",server:"s-1",reason:"most free",door:"http://s-1:9/"};
+b.FIX["/where/1"]={worker:"w-1",server:"s-1",reason:"most free",door:{url:"http://s-1:9/",token:"t",expires:9,routes:["read"]}};
+b.FIX["/sub/where/p1"]={worker:"w-2",server:"s-1",reason:"most free"};
 b.FIX["/events"]={events:[{t:1,kind:"x.y",subsystem:"testsub",unit:"1",note:P}],state:"live"};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 w.confirm=()=>true;
-// закрытый список маршрутов (§2): каждый запрос модуля сверяется
-const seen=[];const f0=w.fetch;w.fetch=(u,i)=>{seen.push(String(u).split("?")[0].replace(/^https?:\/\/[^/]+/,""));return f0(u,i)};
 await b.ready(700);const d=w.document,ev=w.eval.bind(w),out={};
 const pc=w.pc;await pc.ready;
 // словарь по исходнику модуля, с долгом из platform-words.debt
@@ -56,9 +55,12 @@ out.secretEmpty=form.elements.key_secret.type==="password"&&form.elements.key_se
 form.elements.name.value="uno";let n=w.__calls.length;form.dispatchEvent(new w.Event("submit",{cancelable:true}));await b.ready(120);
 let c=w.__calls.slice(n).find(x=>x.method==="PUT");
 out.onlyChanged=!!c&&c.path==="/things/1"&&c.body.name==="uno"&&!("key_secret" in c.body)&&!("labels" in c.body)&&!!c.key;
-// where() отдаёт door, модуль туда не ходит
+// where() отдаёт door объектом Door, без поля door в ответе — null (P/07 Н1.5 where); модуль туда не ходит
 const wh=await pc.where("unit:testsub/1");
-out.whereGivesDoor=wh&&wh.door==="http://s-1:9/";
+out.whereGivesDoor=!!wh&&!!wh.door&&wh.door.url==="http://s-1:9/"&&JSON.stringify(wh.door.routes)==='["read"]'&&wh.reason==="most free";
+const wn=await pc.where("unit:subthings/p1");
+out.whereNoDoorIsNull=!!wn&&wn.door===null&&wn.worker==="w-2";
+out.holderDoorNotCalled=!w.__log.some(x=>x.url.startsWith("http://s-1:9"));
 // вызовы оболочки
 pc.addTab("unit",{id:"t",label:"Extra",render:(host,ref)=>{host.textContent="tab for "+ref}});
 pc.addMenu("unit",ref=>[{label:"Do it",run:()=>{w.__ran=ref}}]);
@@ -78,16 +80,12 @@ pc.select("unit:testsub/1");await b.ready(80);
 out.decorInTitle=!!main().querySelector(".pc-hd .ici-starbx");
 // серверы и единицы воркера
 (d.querySelector('.pc-rail [data-s="units"]').click(),d.querySelector('.pc-layout').click(),d.querySelector('[data-layout="servers"]').click());
-pc.select("worker:w-1");await b.ready(50);
+pc.select("worker:testsub/w-1");await b.ready(50);
 out.workerUnits=/one/.test(main().textContent)&&/thing/.test(main().textContent);
 // вредная строка — текстом
 out.neverRan=w.__pwned===undefined&&!d.querySelector("img");
-// маршруты
-const allowed=/^\/(spec|mounts|session|servers(\/.*)?|policy|drain|schema|unplaceable|where\/.*|events|marks|metrics|things(\/.*)?|sub\/(spec|parts(\/.*)?|unplaceable|where\/.*)|domain(\/.*)?|api\/held)$/;   // /api/held: the one process door it reads (§10a)
-const foreign=[...new Set(seen)].filter(p=>!allowed.test(p));
-out.onlyListedRoutes=foreign.length===0;out.foreign=foreign.join(",");
 out.errors=errs;
-b.report(out,["errors","hits","foreign"]);
+b.report(out,["errors","hits"]);
 try{fs.unlinkSync(TMP)}catch(e){}
 process.exit(0);
 })();

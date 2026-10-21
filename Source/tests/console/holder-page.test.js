@@ -16,7 +16,7 @@ const b=require("./boot");
 function fixtures(P,deposed){
   for(const k of Object.keys(b.FIX))delete b.FIX[k];
   const p=s=>P+s;
-  b.FIX["/session"]={open:false,user:p("u"),login_url:"/api/login"};
+  b.FIX["/session"]={open:false,user:p("u"),login_url:"/api/login",until:9,via:"token",grants:[{cap:"admin",scope:"*"}]};
   b.FIX["/spec"]={name:"",rows:null};
   b.FIX["/mounts"]={root:"",mounts:{testsub:{name:"testsub",rows:"things",id:"name",fields:[{name:"name",type:"string"},{name:"start",type:"bool"}],
     display:{unit:"штука",units:"штуки",fields:{start:"Пуск"},kinds:{"thing.lost":"штука потеряна"}},domain:{edit:["start"],view:["start"],shared:["tags","depth","on"]}}}};

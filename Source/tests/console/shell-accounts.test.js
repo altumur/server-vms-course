@@ -19,8 +19,8 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
     await w.platformConsole.ready;
     const pc=w.platformConsole,d=w.document,original=w.fetch;
     pc.retryWaits=[];w.confirm=()=>true;
-    // Turn off the independent module poll, so the held-response assertions control repaint explicitly.
-    const poll=d.querySelector(".pc-poll");poll.value="0";poll.dispatchEvent(new w.Event("change"));
+    // Turn off the independent module poll (every poll_s of the page), so the held-response assertions control repaint explicitly.
+    for(let id=1;id<10000;id++)w.clearInterval(id);
     const attack=`wall\"'><img src=x onerror=window.__accountXSS=1>`;
     let metadata=[{name:"wall"},{name:attack,disabled:true,at:1700000000,by:attack,password_secret:"NEVER-RENDER"}];
     const calls=[];

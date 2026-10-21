@@ -1,4 +1,4 @@
-// Модуль: создание единицы (общая форма по типам, POST, новая выбирается), пользователь и «Выйти», аварийный вход,
+// Модуль: создание единицы (общая форма по типам, POST, новая выбирается), пользователь и «Выйти» (событие logout), аварийный вход,
 // «Повторить» у тоста — запись, исчерпавшая повторы, уходит снова тем же ключом.
 const fs=require("fs"),path=require("path");
 const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -7,7 +7,7 @@ fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script>
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-b.FIX["/session"]={open:false,user:"ann",login_url:"http://holder/api/login"};
+b.FIX["/session"]={open:false,user:"ann",login_url:"http://holder/api/login",until:9,via:"token",grants:[{cap:"admin",scope:"*"}]};
 b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"labels",type:"list"},{name:"enabled",type:"bool",default:true}]};
 b.FIX["/things"]={configured:[{id:1,name:"one"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
@@ -44,7 +44,9 @@ rb.click();await b.ready(150);
 const keys2=sent.slice(before).filter(x=>x[0]==="POST"&&x[1]==="/things").map(x=>x[3]);
 out.retrySameKey=keys.length===4&&keys2.length===5&&keys2.every(k=>k===keys[0]);
 // выход
+let heard=0;pc.on("logout",()=>{heard++});
 d.querySelector(".pc-logout").click();await b.ready(80);
+out.logoutEvent=heard===1;   // P/07 Н1.5 events: on("logout")
 out.logoutDeletes=sent.some(x=>x[0]==="DELETE"&&x[1]==="/session");
 // аварийный вход
 b.FIX["/session"]={open:false,login_url:"http://holder/api/login"};

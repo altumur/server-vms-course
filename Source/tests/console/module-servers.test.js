@@ -73,13 +73,13 @@ out.gonePosted=w.__calls.slice(n).some(x=>x.path==="/servers/s-quiet/decommissio
 pc.select("server:s-hung");await b.ready(30);
 out.labelsUnknown=/cannot be read/.test(main());
 // слот воркера
-pc.select("worker:w-4");await b.ready(30);
+pc.select("worker:testsub/w-4");await b.ready(30);
 out.releasedGarbled=/released/.test(main())&&/cannot be read/.test(main());
-pc.select("worker:w-5");await b.ready(30);
+pc.select("worker:testsub/w-5");await b.ready(30);
 out.hung=/hung/.test(main())&&/two writers/.test(main());
-pc.select("worker:w-6");await b.ready(30);
+pc.select("worker:testsub/w-6");await b.ready(30);
 out.presence=/alive or not — unknown/.test(main())&&/lists no processes/.test(main());
-pc.select("worker:w-7");await b.ready(30);
+pc.select("worker:testsub/w-7");await b.ready(30);
 out.nameConflict=/Name conflict: the name is held by inst-a/.test(main())&&/refused: the name is taken — spare-7 \(box-z\)/.test(main());
 out.noWorkerActions=![...d.querySelectorAll(".pc-main button:not(.pc-star):not(.pc-fullbtn)")].length;
 // bound_to: сменили addr при заданном ключе — без нового ключа не уходит

@@ -9,8 +9,8 @@
 // to show (bytes, players, its own tables) adds it through the calls below; those are the page calling this
 // library inside itself, not the platform calling a subsystem.
 //
-// `display` and `about` are the spec's alone; the session's grants are /session's. `may` says yes when the
-// session names no grants: the server decides.
+// `display` and `about` are the spec's alone; the session's grants are /session's. `may` is a hint by them — yes
+// without grants only at an open console; the server decides every request anyway.
 (function () {
   "use strict";
   const VERSION = 1;
@@ -20,7 +20,6 @@
     en: {
       // the frame: header, rail, panel, footer, sign-in
       unsaved: "Unsaved changes of the selected object", discarded: "Cancelled",
-      serverUnsaid: "server not named",
       newRoot: "group", newSub: "subgroup", newGroupTop: "A new group", newGroupIn: "A new group inside «{p}»", groupNameEmpty: "Give the group a name",
       groupExists: "There is such a group already", newGroupNoteT: "The group is made — put a {u} in it, or it will not be kept", addHereT: "Add a {u} here",
       noRows: "No rows",
@@ -71,7 +70,7 @@
       workerServer: "Worker · server", state: "State", whyAsking: "Why here — asking the controller…", notPlacedYet: "Not placed anywhere yet.",
       placement: "Placement", noReason: "Placement: the controller's decision is not recorded.", inNoGroup: "In no group — it goes to «{g}».",
       noOtherGroups: "no other groups", newGroup: "New group", removeShort: "Remove",
-      workersCap: "Workers", theme: "Theme", dark: "Dark", light: "Light", pollW: "Refresh", pollEvery: "every {n} s", manual: "by hand",
+      workersCap: "Workers", theme: "Theme", dark: "Dark", light: "Light",
       refreshNow: "Refresh now", hint: "Only the selected object is saved", discard: "Cancel", hwSection: "Units", byGroups: "By groups",
       byGroupsHint: "Groups from the list field → units", byServers: "By servers", byServersHint: "Servers → workers and what they carry",
       filterPh: "Filter by name…", byName: "By name…", noLink: "no link", resOnline: "{a} of {b} resources online", subsystemW: "subsystem",
@@ -175,7 +174,6 @@
     },
     ru: {
       unsaved: "Несохранённые изменения выбранного объекта", discarded: "Отменено",
-      serverUnsaid: "сервер не назван",
       newRoot: "группа", newSub: "подгруппа", newGroupTop: "Новая группа", newGroupIn: "Новая группа внутри «{p}»", groupNameEmpty: "Укажите имя группы",
       groupExists: "Такая группа уже есть", newGroupNoteT: "Группа создана — добавьте в неё: {u}, иначе она не сохранится", addHereT: "Добавить сюда: {u}",
       noRows: "Нет строк",
@@ -226,7 +224,7 @@
       workerServer: "Воркер · сервер", state: "Состояние", whyAsking: "Почему здесь — спрашиваем у контроллера…", notPlacedYet: "Пока никуда не размещена.",
       placement: "Размещение", noReason: "Размещение: контроллер не назвал причину.", inNoGroup: "Не в группе — попадёт в «{g}».",
       noOtherGroups: "других групп нет", newGroup: "Новая группа", removeShort: "Убрать",
-      workersCap: "Воркеры", theme: "Тема", dark: "Тёмная", light: "Светлая", pollW: "Обновление", pollEvery: "каждые {n} с", manual: "вручную",
+      workersCap: "Воркеры", theme: "Тема", dark: "Тёмная", light: "Светлая",
       refreshNow: "Обновить сейчас", hint: "Сохраняется только выбранный объект", discard: "Отменить", hwSection: "Объекты", byGroups: "По группам",
       byGroupsHint: "Группы из поля-списка → единицы", byServers: "По серверам", byServersHint: "Серверы → воркеры и то, что они несут",
       filterPh: "Фильтр по имени…", byName: "По имени…", noLink: "нет связи", resOnline: "{a} из {b} ресурсов на связи", subsystemW: "подсистема",
@@ -387,46 +385,56 @@
     C.on = (evt, fn) => { (listeners[evt] = listeners[evt] || []).push(fn); return C; };
     const emit = (evt, ...a) => (listeners[evt] || []).forEach(fn => { try { fn(...a); } catch (e) { console.error(e); } });
 
-    // -- requests: one Idempotency-Key per submission, retried with it until the answer is final ------------
-    // The same request with the same body keeps its key until it has a final answer (2xx, or a 4xx other than
-    // 409 "in flight"); a network error, a timeout, a 5xx and 409 "in flight" are retried with it, then handed
-    // back as "not lost — retry".
-    const keys = new Map();
-    let lastRetry = null;   // the write that ran out of retries: a toast saying its failure offers to send it again
+    // -- requests: one Idempotency-Key per action (P/07 Н1.5 api) ------------------------------------------------
+    // A call of api is one action of a person: its POST or PUT carries a new key, and only its own repeats keep it, with
+    // the same body. A lost answer — a network error, a timeout, a 5xx, 409 «in flight» — is repeated only at a door
+    // whose owner remembers repeats (a POST of units, /<rows> or /<sub>/<rows>: P/06.1), after the answer's Retry-After
+    // or 2, 3, 5 s; after the third repeat the action is handed back with `retry`, and «Retry» of the toast sends it once
+    // more with its key. Any other write is not repeated: its outcome unknown, the module reads first, then says so.
+    // A final answer closes the action.
+    let lastRetry = null;   // the write that ran out of repeats: a toast saying its failure offers to send it again
     const newKey = () => (crypto.randomUUID ? crypto.randomUUID() : "k-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
     C.retryWaits = [2000, 3000, 5000];
     C.timeoutMs = 20000;
-    C.api = async function api(method, path, body) {
-      const keyed = method === "POST" || method === "PUT";
+    const remembers = (method, path) => method === "POST" && st.subs.some(s => path === s.base + "/" + s.spec.rows);
+    const failure = (msg, r, d) => { const e = new Error(msg); e.status = r ? r.status : undefined; e.body = d; return e; };
+    async function send(method, path, body, key) {
       const text = body === undefined ? undefined : JSON.stringify(body);
-      const sig = method + " " + path + " " + (text || "");
       const hd = {};
       if (text !== undefined) hd["Content-Type"] = "application/json";
-      if (keyed) { if (!keys.has(sig)) keys.set(sig, newKey()); hd["Idempotency-Key"] = keys.get(sig); }
+      if (key) hd["Idempotency-Key"] = key;
+      const again = remembers(method, path), write = method !== "GET" && method !== "HEAD";
       for (let i = 0; ; i++) {
         let r = null, d = null, lost = "";
-        if (!keyed) r = await fetch(path, { method, headers: hd, body: text });
-        else {
-          const ac = typeof AbortController === "function" ? new AbortController() : null;
-          const t = ac ? setTimeout(() => ac.abort(), C.timeoutMs) : 0;
-          try { r = await fetch(path, { method, headers: hd, body: text, signal: ac ? ac.signal : undefined }); }
-          catch (e) { lost = e && e.name === "AbortError" ? "timeout" : "network"; }
-          finally { clearTimeout(t); }
-        }
+        const ac = typeof AbortController === "function" ? new AbortController() : null;
+        const t = ac ? setTimeout(() => ac.abort(), C.timeoutMs) : 0;
+        try { r = await fetch(path, { method, headers: hd, body: text, signal: ac ? ac.signal : undefined }); }
+        catch (e) { lost = e && e.name === "AbortError" ? "timeout" : "network"; }
+        finally { clearTimeout(t); }
         if (r) { try { d = await r.json(); } catch (e) { d = null; } }
         const said = d && (d.detail || d.error);
         const inFlight = !!r && r.status === 409 && /in.?flight/i.test(String(said || ""));
-        if (!keyed || (r && r.status < 500 && !inFlight)) {
-          if (keyed) keys.delete(sig);
+        if (r && r.status < 500 && !inFlight) {
           if (r.status === 401) showLogin(said || "");
-          if (!r.ok) { const e = new Error(said || String(r.status)); e.status = r.status; e.body = d; throw e; }
+          if (!r.ok) throw failure(said || String(r.status), r, d);
           return d;
         }
-        if (i >= C.retryWaits.length) { const e = new Error((lost || said || String(r && r.status)) + " — not lost: retry sends it again with the same key"); e.retry = { method, path, body }; lastRetry = { ...e.retry, msg: e.message }; throw e; }
-        const after = Number(d && d.retry_after);
-        await sleep(after > 0 ? Math.min(5000, Math.max(1000, after * 1000)) : C.retryWaits[i]);
+        const why = lost || said || String(r.status);
+        if (!again) {
+          // read first: the module's data again, without repainting a card of the page's own under the page's action
+          if (write) { try { await load(true); } catch (e) { /* the read says what it can */ } throw failure(why + " — outcome unknown: read before doing it again", r, d); }
+          throw failure(why, r, d);
+        }
+        if (i >= C.retryWaits.length) {
+          const e = failure(why + " — not lost: retry sends it again with the same key", r, d);
+          e.retry = { method, path, body }; lastRetry = { ...e.retry, key, msg: e.message }; throw e;
+        }
+        const ra = r && r.headers && typeof r.headers.get === "function" ? r.headers.get("Retry-After") : null;
+        const after = ra === null || ra === undefined || String(ra).trim() === "" ? NaN : Number(ra);
+        await sleep(Number.isFinite(after) && after >= 0 ? after * 1000 : C.retryWaits[i]);
       }
-    };
+    }
+    C.api = (method, path, body) => send(method, path, body, method === "POST" || method === "PUT" ? newKey() : "");
     // a read refused for who is asking says why (the door's detail: a debug entry no grant names, an expired token) under
     // the sign-in, not only «sign in»
     const getJSON = async path => { const r = await fetch(path); if (r.status === 401) { let why = ""; try { const d = await r.clone().json(); why = d.detail || d.error || ""; } catch (e) { /* no body */ } showLogin(why); } if (!r.ok) throw new Error(path + ": " + r.status); return r.json(); };
@@ -479,16 +487,42 @@
     C.addEventNote = fn => { (shell.eventNotes = shell.eventNotes || []).push(fn); return C; };
     C.eventNote = eventNote;
 
-    // -- rights: the session's grants, when it names them -----------------------------------------------------
-    // may(action, ref): action is view | edit | admin. Without grants in /session the answer is yes — the
-    // server checks every request anyway; this only does not offer a person what would be refused.
+    // -- rights: a hint by the session's grants (P/07 Н1.5 may; the rule — contract may.md) -------------------------
+    // may(cap, ref): cap is view | edit | admin. An open console names no grants — yes; a break-glass session (via
+    // break-glass, grants []) — yes, as the server allows it; a closed or unknown session (/session did not answer)
+    // without grants — no. With grants: a line of rank ≥ cap whose scope covers the unit — * any; unit:<sub>/<id> the unit
+    // or its about-unit; labels:L every label of L on the about-unit, if any, else on the unit; a ref that is not a unit
+    // only *, and view of it — any line. The server checks every request anyway; this only does not offer a person what
+    // would be refused.
     const RANK = { view: 1, edit: 2, admin: 3 };
-    C.may = (action, ref) => {
-      const g = st.session && st.session.grants;
-      if (!Array.isArray(g)) return true;
-      const need = RANK[action] || 3;
-      const unit = String(ref || "").startsWith("unit:") ? String(ref).slice(5) : null;
-      return g.some(x => (RANK[x.cap] || 0) >= need && (x.scope === "*" || (unit && x.scope === "unit:" + unit)));
+    const labelsOf2 = row => (row && Array.isArray(row.labels) ? row.labels.map(String) : []);
+    function grantUnit(ref) {
+      if (ref === "*") return "*";
+      const m = /^unit:([^/]+)\/(.+)$/.exec(String(ref || "")); if (!m) return null;
+      const sub = st.subs.find(s => s.name === m[1]);
+      const row = sub ? (st.units[sub.name] || []).find(u => String(u.id) === m[2]) || null : null;
+      const u = { sub: m[1], id: m[2], labels: labelsOf2(row) }, a = sub && aboutOf(sub);
+      if (a && row && row[a.field] != null) {
+        const pr = (st.units[a.sub] || []).find(x => String(x.id) === String(row[a.field])) || null;
+        u.about = { sub: a.sub, id: String(row[a.field]), labels: labelsOf2(pr) };
+      }
+      return u;
+    }
+    function covers(scope, u) {
+      if (scope === "*") return true;
+      if (!u || u === "*") return false;
+      if (scope.startsWith("unit:")) return [u, u.about].some(x => x && scope === "unit:" + x.sub + "/" + x.id);
+      if (scope.startsWith("labels:")) { const have = (u.about || u).labels; return scope.slice(7).split(",").every(l => have.includes(l)); }
+      return false;
+    }
+    C.may = (cap, ref) => {
+      const s = st.session; if (!s) return false;
+      if (s.via === "break-glass") return true;
+      const g = s.grants;
+      if (!Array.isArray(g)) return s.open === true;
+      const need = RANK[cap] || 3, u = grantUnit(ref);
+      if (u === null && need === 1 && g.length > 0) return true;
+      return g.some(x => (RANK[x.cap] || 0) >= need && covers(String(x.scope || ""), u));
     };
 
     // -- the page's calls into the library ------------------------------------------------------------------
@@ -529,6 +563,9 @@
 
     // -- refs ------------------------------------------------------------------------------------------------
     const unitRef = (sub, id) => "unit:" + sub.name + "/" + id;
+    // a worker of /servers — the root subsystem's (CONSOLE_ROOT): worker:<sub>/<w>
+    const workerRef = w => "worker:" + st.root + "/" + w;
+    const workerOf = ref => { const r = String(ref || ""), p = "worker:" + st.root + "/"; return st.root && r.startsWith(p) ? r.slice(p.length) : r.startsWith("worker:") ? "" : null; };
     function parseUnit(ref) {
       const m = /^unit:([^/]+)\/(.+)$/.exec(String(ref || "")); if (!m) return null;
       const sub = st.subs.find(s => s.name === m[1]); if (!sub) return null;
@@ -537,7 +574,7 @@
     function objectOf(ref) {
       const u = parseUnit(ref); if (u) return u.row;
       if (String(ref).startsWith("server:")) return st.servers[String(ref).slice(7)] || null;
-      if (String(ref).startsWith("worker:")) { const n = String(ref).slice(7); for (const s2 of Object.values(st.servers)) for (const w2 of s2.workers || []) if (w2.worker === n) return w2; return null; }
+      const wk = workerOf(ref); if (wk !== null) { for (const s2 of Object.values(st.servers)) for (const w2 of s2.workers || []) if (w2.worker === wk) return w2; return null; }
       if (String(ref).startsWith("member:")) return ((st.dom && st.dom.members) || []).find(m => m.name === String(ref).slice(7)) || null;
       if (ref === "domain") return st.dom;
       return null;
@@ -556,7 +593,6 @@
             <span class="bd off pc-debug" hidden>${h(W.debugBadge)}</span>
             <div class="upop pc-upop"><div class="uhead"><span class="uav">◐</span><b class="pc-uinst">—</b></div>
               <label>${h(W.theme)}<select class="pc-theme"><option value="dark">${h(W.dark)}</option><option value="light">${h(W.light)}</option></select></label>
-              <label>${h(W.pollW)}<select class="pc-poll"><option value="5">${h(W.pollEvery.replace("{n}", 5))}</option><option value="15">${h(W.pollEvery.replace("{n}", 15))}</option><option value="0">${h(W.manual)}</option></select></label>
               <button type="button" class="btn s w pc-reload" style="margin-top:2px">${h(W.refreshNow)}</button>
               <button type="button" class="btn s w pc-logout" style="display:none">${h(W.logout)}</button></div></div>
         </div></header>
@@ -573,14 +609,13 @@
       <div class="pc-toast" hidden></div>`;
     const $ = s => root.querySelector(s);
     const show = (el, on) => { el.hidden = !on; el.classList.toggle("open", !!on); };
-    // the theme and the refresh rate are the person's, kept in this browser
+    // the theme is the person's, kept in this browser
     const keep = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } return v; };
     const setTheme = v => { document.documentElement.dataset.theme = v === "light" ? "light" : "dark"; keep("pc.theme", document.documentElement.dataset.theme); $(".pc-theme").value = document.documentElement.dataset.theme; };
     setTheme(keep("pc.theme") || "dark");
     $(".pc-theme").onchange = e => setTheme(e.target.value);
     let pollTimer = null;
-    const setPoll = s => { s = Number(s); clearInterval(pollTimer); pollTimer = s > 0 ? setInterval(load, s * 1000) : null; keep("pc.poll", String(s)); $(".pc-poll").value = [5, 15, 0].includes(s) ? String(s) : "5"; };
-    $(".pc-poll").onchange = e => setPoll(e.target.value);
+    const setPoll = s => { clearInterval(pollTimer); pollTimer = setInterval(load, s * 1000); };
     $(".pc-reload").onclick = () => load();
     const userMenu = on => { show($(".pc-upop"), on); $(".pc-upop").hidden = false; $(".pc-ubtn").classList.toggle("on", on); $(".pc-ubtn").setAttribute("aria-expanded", on ? "true" : "false"); };
     $(".pc-ubtn").onclick = e => { e.stopPropagation(); userMenu(!$(".pc-upop").classList.contains("open")); };
@@ -609,7 +644,7 @@
         f.elements.password.value = ""; show($(".pc-login"), false); await loadSession(); await load(); C.toast(W.glassOn);
       } catch (err) { $(".pc-login-e").textContent = err.message; }
     };
-    C.logout = async () => { try { await fetch("/session", { method: "DELETE" }); } catch (e) { /* gone anyway */ } st.session = null; await loadSession(); if (!st.session || !st.session.open) showLogin(""); paintHeader(); };
+    C.logout = async () => { try { await fetch("/session", { method: "DELETE" }); } catch (e) { /* gone anyway */ } st.session = null; await loadSession(); if (!st.session || !st.session.open) showLogin(""); paintHeader(); emit("logout"); };
     // Full screen: the inspector over everything; the same button or Esc brings it back.
     C.fullScreen = on => { st.full = on === undefined ? !st.full : !!on; $(".pc").classList.toggle("pc-full", st.full); const b = $(".pc-hd .pc-fullbtn"); if (b) b.textContent = st.full ? "⤡" : "⤢"; return C; };
     document.addEventListener("keydown", e => { if (e.key === "Escape" && st.full) C.fullScreen(false); });
@@ -631,12 +666,12 @@
     C.confirm = (q, more) => window.confirm(q + (more ? "\n\n" + more : ""));
     C.toast = msg => {
       const t = $(".pc-toast"); t.textContent = msg; t.hidden = false; clearTimeout(t._t);
-      // the same request, the same body — so the same key: what the server already did is answered, not done twice
+      // the same action, its body and its key: what the server already did is answered, not done twice
       const rt = lastRetry && String(msg).includes(lastRetry.msg) ? lastRetry : null;
       if (rt) {
         lastRetry = null;
         const b = document.createElement("button"); b.type = "button"; b.className = "btn s pc-retry"; b.textContent = W.retry;
-        b.onclick = async () => { t.hidden = true; C.toast(W.retrying); try { await C.api(rt.method, rt.path, rt.body); await load(); paintMain(); C.toast(W.done); } catch (e) { C.toast(W.refused + ": " + e.message); } };
+        b.onclick = async () => { t.hidden = true; C.toast(W.retrying); try { await send(rt.method, rt.path, rt.body, rt.key); await load(); paintMain(); C.toast(W.done); } catch (e) { C.toast(W.refused + ": " + e.message); } };
         t.appendChild(b);
       }
       t._t = setTimeout(() => { t.hidden = true; }, rt ? 20000 : 3000);
@@ -664,7 +699,7 @@
       $(".pc-hload").classList.toggle("stale", !!st.loadErr);
       $(".pc-uinst").textContent = r0 ? W.subsystemW + " " + r0.name : "—";
       const s = st.session || {};
-      $(".pc-uname").textContent = s.user ? s.user + (s.glass ? " · " + W.glass : "") : s.open ? W.open : "—";
+      $(".pc-uname").textContent = s.user ? s.user + (s.via === "break-glass" ? " · " + W.glass : "") : s.open ? W.open : "—";
       paintDebug(s);
     }
 
@@ -903,10 +938,10 @@
       return Object.keys(st.servers).sort().map(n => {
         const s = st.servers[n], ref = "server:" + n, q = st.q.trim().toLowerCase();
         const workers = (s.workers || []).map(w => {
-          const wref = "worker:" + w.worker, list = carried(w.worker), vis = list.filter(x => !filtering() || unitMatches(x.s, x.u));
+          const wref = workerRef(w.worker), list = carried(w.worker), vis = list.filter(x => !filtering() || unitMatches(x.s, x.u));
           if (filtering() && !String(w.worker).toLowerCase().includes(q) && !vis.length) return "";
           const open = list.length > 0 && (st.open.has(wref) || filtering());
-          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap) + (w.server_unsaid ? tagHtml(W.serverUnsaid, w.server_unsaid) : ""), cnt: list.length, has: list.length > 0, open, off: w.state === "stale" })
+          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap), cnt: list.length, has: list.length > 0, open, off: w.state === "stale" })
             + (open ? (filtering() ? vis : list).map(x => unitRow(x.s, x.u, depth + 2)).join("") : "");
         }).join("") + extraRows(nodesOf("server", ref, s), depth + 1);
         if (filtering() && !n.toLowerCase().includes(q) && !workers) return "";
@@ -1049,7 +1084,7 @@
       }
       if (r.startsWith("server:") || r.startsWith("member:") || r === "unplaced") return srv;
       if (r === "domain") return domainOnly ? [] : [[W.byServers, "layout:servers"]];
-      if (r.startsWith("worker:")) { const n = Object.keys(st.servers).find(k => (st.servers[k].workers || []).some(w => w.worker === r.slice(7))); return n ? srv.concat([[n, "server:" + n]]) : srv; }
+      if (r.startsWith("worker:")) { const wk = workerOf(r), n = Object.keys(st.servers).find(k => (st.servers[k].workers || []).some(w => w.worker === wk)); return n ? srv.concat([[n, "server:" + n]]) : srv; }
       if (/^(person|grants):/.test(r)) return [[cap(W.access), "section:access"]];
       return null;
     }
@@ -1173,7 +1208,7 @@
       if (u) return paintUnit(el, ref, u);
       if (String(ref).startsWith("new:")) return paintNew(el, String(ref).slice(4));
       if (ref.startsWith("server:")) return paintServer(el, ref, ref.slice(7));
-      if (ref.startsWith("worker:")) return paintWorker(el, ref, ref.slice(7));
+      if (ref.startsWith("worker:")) return paintWorker(el, ref, workerOf(ref));
       if (String(ref).startsWith("group:")) return paintGroup(el, ref);
       if (ref === "domain") return paintDomain(el, ref);
       if (ref === "unplaced") return paintUnplaced(el);
@@ -1542,7 +1577,7 @@
           host.innerHTML = card(h(cap(t.title || t.table)), rows.length ? `<table><tr>${cols.map(c => `<th>${h(fieldTitle(sub, c))}</th>`).join("")}</tr>${rows.map(r => `<tr>${cols.map(c => `<td>${h(isSecret(c) ? (r[c] ? MASK : "") : Array.isArray(r[c]) ? r[c].join(", ") : r[c] ?? "")}</td>`).join("")}</tr>`).join("")}</table>` : `<p class="sub">${h(W.noRows)}</p>`, `<span class="sub" style="font-weight:400">${rows.length}</span>`);
         };
         draw([]);
-        getJSON(sub.base + "/" + t.table).then(d => { if (!host.isConnected) return; const all = (d && d[t.table]) || []; draw(all.filter(r => String(r[t.by || "server"]) === server)); }).catch(() => {});
+        getJSON((sub.base || "/" + sub.name) + "/" + t.table).then(d => { if (!host.isConnected) return; const all = (d && d[t.table]) || []; draw(all.filter(r => String(r[t.by || "server"]) === server)); }).catch(() => {});
       }
     }
     const mc = (l, v) => `<div class="mc"><span>${h(l)}</span><b>${h(v)}</b></div>`;
@@ -1560,7 +1595,7 @@
           ${s.resource_heard_at ? `<p class="sub" style="margin-top:8px">${h(W.heard)} ${h(fmt(s.resource_heard_at))}</p>` : ""}`)}
         ${heldCard()}
         <section class="pc-drain"></section><section class="pc-decom"></section><section class="pc-labels"></section>
-        ${card(h(W.workersCap), workers.map(w => `<div class="it" data-ref="worker:${h(w.worker)}"><span>${ic("svcs")}</span><span>${h(w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`).join("") || `<p class="sub">${h(W.noWorkers)}</p>`, `<span class="sub" style="font-weight:400">${workers.length}</span>`)}`;
+        ${card(h(W.workersCap), workers.map(w => `<div class="it" data-ref="${h(workerRef(w.worker))}"><span>${ic("svcs")}</span><span>${h(w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`).join("") || `<p class="sub">${h(W.noWorkers)}</p>`, `<span class="sub" style="font-weight:400">${workers.length}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
       const mv = el.querySelector('[data-a="move"]');
       if (mv) mv.onclick = async () => {
@@ -1686,8 +1721,7 @@
         ${card(h(cap(W.worker)), `<span class="bd${info.state === "live" ? "" : " off"}">${h(info.state)}</span>
           <div class="mx" style="margin-top:10px">${mc(W.loadW, info.load)}${mc(W.capW, info.capacity)}${mc(W.freeW, Math.max(0, info.capacity - info.load))}</div>
           <div class="g" style="margin-top:10px">${fldRo(cap(W.server), server || "—")}${fldRo(W.labelsW, info.labels || "—")}</div>
-          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}
-          ${info.server_unsaid ? `<div class="nt err" style="margin-top:8px">${h(W.serverUnsaid)}: ${h(info.server_unsaid)}</div>` : ""}`)}
+          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}`)}
         ${slotHtml(info)}
         ${card(h(W.holdsW + " " + (r0 ? unitWord(r0, true) : W.units)), units.map(x => `<div class="it" data-ref="${h(unitRef(x.s, x.u.id))}"><span>${decorOf(unitRef(x.s, x.u.id)).iconHtml || ic("x")}</span><span>${h(label(x.s, x.u))}<small>${h(stateOf(x.u)[0])}</small></span>${stateBadge(x.u)}</div>`).join("") || `<p class="sub">${h(W.carriesNone)}</p>`, `<span class="sub" style="font-weight:400">${units.length}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
@@ -2159,7 +2193,8 @@
       } catch (err) { $(".pc-login-e").textContent = err.message; }
     };
     async function loadSession() {
-      try { const r = await fetch("/session"); st.session = r.ok ? await r.json() : { open: true }; } catch (e) { st.session = { open: true }; }
+      // /session that did not answer leaves the session unknown — closed for may (P/07 Н1.5), not open
+      try { const r = await fetch("/session"); st.session = r.ok ? await r.json() : null; } catch (e) { st.session = null; }
       if (st.session && st.session.open === false && !st.session.user) showLogin("");
       paintHeader();
     }
@@ -2169,6 +2204,7 @@
       const subs = [];
       const rootSpec = await getJSON("/spec");
       if (rootSpec && rootSpec.rows) subs.push({ name: rootSpec.name, base: "", spec: rootSpec });   // the holder has no root (§10a)
+      st.root = rootSpec && rootSpec.rows ? rootSpec.name : null;
       try {
         const m = await getJSON("/mounts");
         for (const [n, spec] of Object.entries(m.mounts || {})) if (spec && spec.rows) subs.push({ name: spec.name || n, base: "/" + n, spec });
@@ -2176,7 +2212,7 @@
       const want = opts.subsystems;
       st.subs = Array.isArray(want) ? subs.filter(s => want.includes(s.name)) : subs;
     }
-    async function load() {
+    async function load(quiet) {
       if (domainOnly) return loadHolder();
       for (const sub of st.subs) {
         try {
@@ -2212,7 +2248,7 @@
       // the hover, the selection stay); a card or tab of the page's own is its data's, refreshed as it says
       const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared, st.domShared]);   // [course leads] st.shared
       const same = fp === st.fp; st.fp = fp;
-      repaint(!same, !same || pageOwnsCard());
+      repaint(!same, quiet ? !same && !pageOwnsCard() : !same || pageOwnsCard());
       emit("refresh", { units: st.units, servers: st.servers, domain: st.dom });
     }
 
@@ -2255,7 +2291,7 @@
       paintRail(); paintAside();
       await load();
       paintMain();
-      setPoll(opts.poll_s != null ? opts.poll_s : keep("pc.poll") != null ? keep("pc.poll") : 5);
+      setPoll(Number(opts.poll_s) > 0 ? Number(opts.poll_s) : 5);   // the page's poll_s (P/06.5 opts), 5 s when it names none
       setInterval(() => { if (st.sel && parseUnit(st.sel)) loadEvents(st.sel); }, 5000);
       return C;
     })();

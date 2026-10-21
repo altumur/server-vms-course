@@ -6,7 +6,7 @@ const PAGE=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"pc-fjson-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`)
-  .replace('PlatformConsole.mount(document.getElementById("app"))','PlatformConsole.mount(document.getElementById("app"), { lang: "ru", poll_s: 0 })'));
+  .replace('PlatformConsole.mount(app)','PlatformConsole.mount(app, { lang: "ru" })'));
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];

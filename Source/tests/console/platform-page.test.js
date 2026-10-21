@@ -20,7 +20,11 @@ b.FIX["/servers"]={servers:{[P]:{workers:[{worker:P,load:1,capacity:2,state:"liv
 const out={};
 // страница: подключение модуля и mount, ничего своего
 const scripts=[...PAGE.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
-out.onlyModuleAndMount=scripts.length===2&&/src="\/platform\/console\.js\?v=1"/.test(scripts[0][1])&&/^\s*window\.platformConsole = PlatformConsole\.mount\(document\.getElementById\("app"\)\);\s*$/.test(scripts[1][2]);
+out.onlyModuleAndMount=scripts.length===2&&/src="\/platform\/console\.js\?v=1"/.test(scripts[0][1])&&/window\.platformConsole = PlatformConsole\.mount\(app\);/.test(scripts[1][2]);
+// version: страница сверяет версию модуля до его использования (P/07 Н1.5 version) — модуль другой версии не монтируется
+out.versionCheckedFirst=/if \(PlatformConsole\.version === 1\) window\.platformConsole = PlatformConsole\.mount\(app\);/.test(scripts[1][2]);
+{const {JSDOM}=require("jsdom");const v2=new JSDOM(PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD.replace("const VERSION = 1;","const VERSION = 2;")}</script>`),{runScripts:"dangerously",url:"http://localhost/",beforeParse(x){x.fetch=()=>{x.__fetched=true;return new Promise(()=>{})}}}).window;
+ out.otherVersionNotMounted=!v2.platformConsole&&/version 2, this page needs 1/.test(v2.document.getElementById("app").textContent)&&!v2.__fetched;v2.close();}
 const bad=["camera","камер","архив","видео","footage","recording","recorder","detector","whep","/timeline","/segment","/rec/","/det/","/auto/","<video","RTCPeerConnection","fetch("]
   .filter(x=>PAGE.toLowerCase().includes(x.toLowerCase()));
 out.noSubsystemWords=bad.length===0;out.found=bad.join(",");

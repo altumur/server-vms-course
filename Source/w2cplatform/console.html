@@ -9,4 +9,9 @@
 <link rel="stylesheet" href="/platform/console.css?v=1">
 <div id="app"></div>
 <script src="/platform/console.js?v=1"></script>
-<script>window.platformConsole = PlatformConsole.mount(document.getElementById("app"));</script>
+<script>
+  // the module's version is the page's before anything of it is used (P/07 Н1.5 version, P/06.5 Н1.1)
+  const app = document.getElementById("app");
+  if (PlatformConsole.version === 1) window.platformConsole = PlatformConsole.mount(app);
+  else app.textContent = "The console module is version " + PlatformConsole.version + ", this page needs 1: reload the page.";
+</script>

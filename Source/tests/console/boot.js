@@ -36,7 +36,9 @@ function boot(opts={}){
       w.requestAnimationFrame=cb=>setTimeout(cb,0);
       Object.defineProperty(w,"innerWidth",{value:1600,configurable:true});
       w.__calls=[];   // что страница отправила не чтением: метод, путь, тело
+      w.__log=[];     // каждый запрос страницы: метод, адрес как есть, время (закрытый список и порядок P/07 Н1.4)
       w.fetch=(url,init)=>{
+        w.__log.push({method:(init&&init.method)||"GET",url:String(url),t:Date.now()});
         const path=String(url).split("?")[0].replace(/^https?:\/\/[^/]+/,"");
         if(init&&init.method&&init.method!=="GET")w.__calls.push({method:init.method,path,body:init.body?JSON.parse(init.body):null,key:(init.headers||{})["Idempotency-Key"]||""});
         const has=Object.prototype.hasOwnProperty.call(FIX,path);

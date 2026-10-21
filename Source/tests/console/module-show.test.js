@@ -10,7 +10,7 @@ function fix(){for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
 b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],servers:{show:[{table:"places",by:"server",title:"places",columns:["name","size","key_secret"]}]},display:{fields:{size:"Size"}}};
 b.FIX["/things"]={configured:[],rows:[]};
-b.FIX["/places"]={places:[{name:"p-1",server:"s-1",size:5,key_secret:"***"},{name:"p-2",server:"s-2",size:7}]};
+b.FIX["/testsub/places"]={places:[{name:"p-1",server:"s-1",size:5,key_secret:"***"},{name:"p-2",server:"s-2",size:7}]};
 b.FIX["/servers"]={servers:{"s-1":{resource:"live",workers:[]}},policy:{}};}
 (async()=>{const out={};
 for(const covers of [false,true]){
