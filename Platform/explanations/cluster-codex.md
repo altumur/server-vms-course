@@ -846,16 +846,16 @@ events/<sub>/<unit>/e<epoch>/<начало-интервала>.events.jsonl
 
 | Тема | Лекция | Канон |
 |---|---|---|
-| Строки, CAS, guard, исходы и повторы записей | [Урок 1](01-storage.md) | [Нормы 1](spec/01-storage.norms.md) |
-| Спека, загрузчик, публикация и смена описания | [Урок 2](02-the-spec-and-the-strict-loader.md) | [Нормы 2](spec/02-the-spec-and-the-strict-loader.norms.md) |
-| Единицы, CRUD, слоты, эпохи и аренды | [Урок 3](03-units-slots-epochs-lease.md) | [Нормы 3](spec/03-units-slots-epochs-lease.norms.md) |
-| Контроллер, допуск, размещение и переезд | [Урок 4](04-the-controller-and-placement.md) | [Нормы 4](spec/04-the-controller-and-placement.norms.md) |
-| Цикл воркера, подмена, места и остановка | [Урок 5](05-the-worker-under-its-slot.md) | [Нормы 5](spec/05-the-worker-under-its-slot.norms.md) |
-| Роли, права и доказательство личности процесса | [Урок 6](06-rights.md) | [Нормы 6](spec/06-rights.norms.md) |
-| Секреты, маски, кольцо и ротация | [Урок 7](07-secrets-and-sealing.md) | [Нормы 7](spec/07-secrets-and-sealing.norms.md) |
-| Объекты, события, ресурс, зеркало и просьбы | [Урок 8](08-events-resource-requests.md) | [Нормы 8](spec/08-events-resource-requests.norms.md) |
-| Консоль, интерфейс, сторожевая и маршруты | [Урок 9](09-the-console.md) | [Нормы 9](spec/09-the-console.norms.md) |
-| Схема, дренаж, снимки, тела, таблицы и пределы | [Урок 10](10-schema-drain-snapshot-limits.md) | [Нормы 10](spec/10-schema-drain-snapshot-limits.norms.md) |
-| Поставка, кластер, сертификаты, обновление и восстановление | [Урок 11](11-the-platform-on-a-box-and-a-cluster.md) | [Нормы 11](spec/11-the-platform-on-a-box-and-a-cluster.norms.md) |
+| Строки, CAS, guard, исходы и повторы записей | [P/01.1](../01-store/01-store.md) | [Нормы P/01.1](../01-store/spec/01.1-store.norms.md) |
+| Спека, загрузчик, публикация и смена описания | [P/02.1](../02-installer/02-installer.md) | [Нормы P/02.1](../02-installer/spec/02.1-installer.norms.md) |
+| Единицы, CRUD, слоты, эпохи и аренды | [P/06.1](../06-console/06-console.md), [P/03.2](../03-worker/03-worker.md) | [Нормы P/06.1](../06-console/spec/06.1-console.norms.md), [нормы P/03.2](../03-worker/spec/03.2-worker.norms.md) |
+| Контроллер, допуск, размещение и переезд | [P/04](../04-controller/04-controller.md) | [Нормы P/04](../04-controller/spec/04-controller.norms.md) |
+| Цикл воркера, подмена, места и остановка | [P/03](../03-worker/03-worker.md) | [Нормы P/03.3](../03-worker/spec/03.3-worker.norms.md) |
+| Роли, права и доказательство личности процесса | [P/01.2](../01-store/01-store.md) | [Нормы P/01.2](../01-store/spec/01.2-store.norms.md) |
+| Секреты, маски, кольцо и ротация | [P/06.2](../06-console/06-console.md) | [Нормы P/06.2](../06-console/spec/06.2-console.norms.md) |
+| Объекты, события, ресурс, зеркало и просьбы | [P/05](../05-resource/05-resource.md), [P/06.4](../06-console/06-console.md) | [Нормы P/05](../05-resource/spec/05-resource.norms.md), [нормы P/06.4](../06-console/spec/06.4-console.norms.md) |
+| Консоль, интерфейс, сторожевая и маршруты | [P/06.5](../06-console/06-console.md), [P/07](../07-console-module/07-console-module.md) | [Нормы P/06.5](../06-console/spec/06.5-console.norms.md), [нормы P/07](../07-console-module/spec/07-console-module.norms.md) |
+| Схема, дренаж, снимки, тела, таблицы и пределы | [P/06.6](../06-console/06-console.md) | [Нормы P/06.6](../06-console/spec/06.6-console.norms.md) |
+| Поставка, кластер, сертификаты, обновление и восстановление | [P/02.4](../02-installer/02-installer.md) | [Нормы P/02.4](../02-installer/spec/02.4-installer.norms.md) |
 
-Рядом с нормами находятся OpenAPI и инструкции реализации. [Проектная записка модуля](module-design.md) объясняет нарезку тем. Каталоги [приёмки М10](../Source/tests/testdata/acceptance/М10_Platform/) содержат проверяемые входы, сценарии и ожидаемые результаты. Документная проверка, успешное исполнение приёмки и проверка реального отказа сервера — разные виды свидетельств; одно не следует автоматически из другого.
+Рядом с нормами находятся OpenAPI и инструкции реализации. [Проектная записка модуля](../module-design.md) объясняет нарезку тем. Каталоги `acceptance/` уроков [`Platform/`](../README.md) содержат проверяемые входы, сценарии и ожидаемые результаты. Документная проверка, успешное исполнение приёмки и проверка реального отказа сервера — разные виды свидетельств; одно не следует автоматически из другого.
