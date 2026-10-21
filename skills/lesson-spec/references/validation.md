@@ -5,14 +5,14 @@
 [чеклист](review-checklist.md); этот файл описывает только границы инструмента.
 
 ```sh
-# все уроки в курсе: перенесённые Platform/ и М11
+# все уроки в курсе: Platform/
 uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
   --with jsonschema --with ruamel.yaml --with regress python \
-  skills/lesson-spec/scripts/check_spec.py Platform/0*-*/0*.md М11_Domain/[0-9]*.md
+  skills/lesson-spec/scripts/check_spec.py Platform/0*-*/0*.md
 # выгрузка cammeta-specs: --root — её корень, уроки — её пути, реестр — того же коммита курса
 S=/Users/murat/w2c/cammeta-specs
 uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
-  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/Platform/0*-*/0*.md $S/М11_Domain/[0-9]*.md
+  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/Platform/0*-*/0*.md
 ```
 
 `--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
@@ -25,10 +25,9 @@ uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
 **Урок модуля «Платформа»** (`Platform/`, ADR-0083) — тот же вызов с путём лекции:
 `check_spec.py Platform/01-store/01-store.md` (все — `Platform/0*-*/0*.md`). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
 у урока без глав — `spec/NN-<процесс>.norms.md`, id `P/NN-MM`); каждая глава проверяется как урок: Н0–Н5, чеклист,
-«Данные», своя приёмка `acceptance/K/` (тот же набор таблиц, что у М11). Одна инструкция `spec/NN-<процесс>.README.md`
+«Данные», своя приёмка `acceptance/K/` (набор таблиц — ниже). Одна инструкция `spec/NN-<процесс>.README.md`
 и один OpenAPI на урок. Счёты лекции и инструкции — суммы по главам. Ключ реестра — `P/NN`, значение
-`acceptance-entry` — `K/имя`. Стенд директив — `Platform/common/acceptance/README.md` (прежний стенд М10 снят: скрипт
-читает его, только если файл есть). У главы с корпусом урока 2 — пара схемы ADR-0085 (`spec/NN.K-<процесс>.schema.yaml`, `.references.tsv`) до
+`acceptance-entry` — `K/имя`. Стенд директив — `Platform/common/acceptance/README.md` и словарь README урока 1 модуля. У главы с корпусом урока 2 — пара схемы ADR-0085 (`spec/NN.K-<процесс>.schema.yaml`, `.references.tsv`) до
 перехода, после — [источник формы](#источник-формы-спеки-adr-0087); оба у одной главы — ошибка.
 
 ## Итог

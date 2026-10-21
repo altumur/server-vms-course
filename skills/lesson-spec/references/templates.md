@@ -12,8 +12,7 @@
 
 - `STEM` — полное имя без расширения, например `03-units-slots-epochs-lease`.
 - `ID_PREFIX` — адрес норм, например `P/03.2` (глава урока «Платформы») или `М11/3`; буква модуля допустима (`М12A/1`).
-- `ACCEPTANCE_LINK` из `spec/` модуля — например `../acceptance/2/README.md` из `Platform/03-worker/spec/` (приёмка главы 3.2) или
-  `../../Source/tests/testdata/acceptance/М11_Domain/03/README.md` из `М11_Domain/spec/`.
+- `ACCEPTANCE_LINK` из `spec/` модуля — например `../acceptance/2/README.md` из `Platform/03-worker/spec/` (приёмка главы 3.2).
 - `N0_LINK` — относительный путь к словарю нормативных слов курса `НОРМАТИВНЫЕ-СЛОВА.md` в корне курса: из `<модуль>/spec/` это `../../НОРМАТИВНЫЕ-СЛОВА.md`, из `Platform/NN-<процесс>/spec/` — `../../../НОРМАТИВНЫЕ-СЛОВА.md`.
   Н0 не копируется.
 

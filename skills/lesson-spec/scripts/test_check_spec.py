@@ -852,8 +852,8 @@ properties:
         self.assertEqual([e for e in errors if "directive" in e][:1] and len([e for e in errors if "directive" in e]), 1,
                          errors)
 
-    def test_directives_join_the_shared_m10_dictionary_and_the_modules_own(self):
-        shared = self.root / "Source/tests/testdata/acceptance/М10_Platform/01/README.md"
+    def test_directives_join_the_shared_platform_dictionary_and_the_modules_own(self):
+        shared = self.root / "Platform/common/acceptance/README.md"
         shared.parent.mkdir(parents=True)
         shared.write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@start` — запустить процесс.\n")
         (self.acceptance / "README.md").write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@cut` — разрыв.\n")

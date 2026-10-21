@@ -630,7 +630,7 @@ class Check:
             self.registry[(lesson, kind, value)] = reason
 
     def lesson_norms(self, address):
-        """`М10/3` → М10_Platform/spec/03-*.norms.md; `P/03` → Platform/NN-<процесс>/spec/03-*.norms.md, каталог — по
+        """`М12A/3` → М12A_*/spec/03-*.norms.md; `P/03` → Platform/NN-<процесс>/spec/03-*.norms.md, каталог — по
         Platform/lessons.tsv (None if absent)."""
         module, _, number = address.partition("/")
         number, _, chapter = number.partition(".")
@@ -1339,8 +1339,8 @@ class Check:
                 if int(said) != len(ids):
                     mismatch(said, len(ids), "checklist ids")
 
-    # Every directive a scenario uses is in a stand dictionary (README of lesson 1, «Словарь директив»): the shared one
-    # of М10 and the module's own, which adds only its new directives.
+    # Every directive a scenario uses is in a stand dictionary («Словарь директив»): the shared one of the Platform
+    # module and the module's own (README of lesson 1), which adds only its new directives.
     def directives(self, table, stands):
         known, found = set(), False
         for stand in dict.fromkeys(stands):
@@ -1356,7 +1356,7 @@ class Check:
             if line and not line.startswith("#"):
                 used |= set(re.findall(r"(?<![\w@])(@[a-z]+)", line))
         for name in sorted(used - known):
-            self.error(table, f"directive {name} is not in a stand dictionary (lesson 1 README of М10 or of the module)")
+            self.error(table, f"directive {name} is not in a stand dictionary (Platform/common/acceptance or lesson 1 README of the module)")
 
     def tsv(self, path, width, header=None):
         text = self.read(path)
@@ -1693,11 +1693,11 @@ class Check:
         for name, value in chapter.stats.items():
             self.stats[name] = value
 
-    # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module (lesson 1
-    # moves it there), the М10 one until then, and the module's own.
+    # The stands whose «Словарь директив» a scenario may use: the shared stand of the Platform module and the module's
+    # own.
     def stands(self, module=None):
         acceptance = self.root / "Source/tests/testdata/acceptance"
-        return [self.root / "Platform/common/acceptance/README.md", acceptance / "М10_Platform/01/README.md"] + \
+        return [self.root / "Platform/common/acceptance/README.md"] + \
                ([acceptance / module / "01/README.md"] if module else [])
 
     # One acceptance directory: the supported tables, each with its format check. `entry` prefixes the value of an
