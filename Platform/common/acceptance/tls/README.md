@@ -89,7 +89,8 @@
 | `signer` | `null` | `{"handshake": "ok"}`, `http` — по подписи запроса (не 401 `no_role`) | `signed`: сертификат клиента не требуется |
 | `signer` | `foreign-console` | `{"handshake": "ok"}`, `http` — как у `null` | `signed`: предъявленный не проверяется |
 
-Смена объединения видна новым соединениям: `holder POST /domain/members/m2/ca {"ca": []}` (грант admin) → следующая проба
+Смена объединения видна новым соединениям: `@stop agent m2`, затем `holder POST /domain/members/m2/ca {"ca": []}` (грант
+admin; агент остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14) → следующая проба
 `holder` / `m2-console` — `{"handshake": "alert", "http": null}`; возврат `{"ca": [<отпечаток m2>], "ca_certs": [<PEM m2>]}` →
 снова `{"handshake": "ok"}`.
 
@@ -101,7 +102,8 @@
 2. `holder` / `m2-console`, `save_session: s1` → `{"handshake": "ok", "reused": false}`; исход (а) `session_available:
    false` или (б) `session_available: true`.
 3. При (б): `holder` / `m2-console`, `resume_session: s1` → `{"handshake": "ok", "reused": false}` (полное рукопожатие).
-4. Снять центр: `holder POST /domain/members/m2/ca {"ca": []}`, без перезапуска сервера.
+4. Снять центр: `@stop agent m2`, затем `holder POST /domain/members/m2/ca {"ca": []}`, без перезапуска сервера (агент
+   остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14).
 5. `holder` / `m2-console` новым соединением → `{"handshake": "alert", "http": null}`; при (б) — и с `resume_session: s1` →
    `{"handshake": "alert", "http": null}` (возобновления нет: билет прошлой сессии центр не возвращает). При (а) предъявление
    не исполняется и исполненным не объявляется.
