@@ -40,6 +40,19 @@
 | `signer` | процесс `domain` на `hold` — `POST /api/member/<член>`, `GET /api/carry/<член>` | `signed` |
 | `member <кластер> console` | консоль кластера (`/domain/at/…`, пересылка) | `signed` для входящих из других кластеров: сертификата клиента не запрашивает, `X-Operator: console` снимает ([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 доп. (18)) |
 
+`@tls-kit <кластер> console <комплект>` — замена комплекта одной консоли кластера (форма согласована «Архитектором» с
+TLS-этапом «cammeta-acceptance» 2026-10-21; ADR-0083 доп. (19) п. 2; разбор ревью ADR-0090, № 22). Раннер останавливает только консоль кластера
+`<кластер>` и запускает её снова с прежними портом, данными и окружением, кроме своего каталога комплекта
+(`W2C_TLS_DIR` этого процесса); процессы `domain`, `domainconsole`, агент и опубликованные `Entry.ca`, `ca-certs` не
+меняются. Комплект `<кластер>` — исходный комплект кластера (возврат). Комплект `foreign` — ротация к чужому центру
+(договор сертификата роли `rotation`): `ca.pem` и `revoked` — исходные кластера, `ca.next.pem` — центр `foreign`,
+`console/server.pem`, `console/server.key` — лист роли `console` центра `foreign` (договор `cert`). Так консоль
+по-прежнему проверяет консоль домена своей коробки своим `ca.pem` (договор пересылки `tls`), а сама предъявляет лист
+чужого центра; сервер отдаёт лист и его центр из `ca.next.pem` (договор сертификата роли «Серверная сторона»). Пока стоит
+`foreign`, клиент стенда проверяет сервер этой консоли (дверь `member <кластер> console`) по центрам комплекта (`ca.pem`
+и `ca.next.pem`), прочие двери — как прежде; другие кластеры к этой консоли в эти шаги не ходят. Ожидание — `ok`: консоль
+слушает снова; неверная форма директивы — класс «данные», остановка, запуск и инструмент — класс «стенд».
+
 Клиент — имя листа: `<кластер>-<роль>` (`m2-console`, `m2-domainagent`, `foreign-console`) или ключ `negative`
 (`m2-no-role`, …); `null` — без сертификата клиента. Клиент проверяет сервер по центру кластера двери (`client` договора `peer`);
 ошибка этой проверки — исход инструмента, не TLS alert.
@@ -116,7 +129,7 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
 
 | Шаг | Ожидание | Норма |
 |---|---|---|
-| `member m2 console GET /domain` (центр `m2` в объединении) | ответ консоли домена как пришёл: не 502, `error` ∉ {`no_role`, `wrong_role`, `bad_chain`} | `answer`, `tls` |
+| `member m2 console GET /domain` (центр `m2` в объединении) | `200` — ответ консоли домена как пришёл (не 401/403 со словами `no_role`, `wrong_role`, `bad_chain`; ADR-0083 доп. (19) п. 2; разбор ревью ADR-0090, № 27) | `answer`, `tls` |
 | после снятия центра `m2` (ниже): проба `holder` / `m2-console` — прямое соединение консоли члена с дверью роли держателя | `{"handshake": "alert", "http": null}` | `server.role`: центр `m2` вне объединения |
 | после того же снятия: `member m2 console GET /domain`; журнал пересылающей | `200` — ответ консоли домена как пришёл, как в строке 1; `domain.forwarded {cluster, path, user, status: 200}` | снятие центра — не снятие членства: переход 1 — класс `signed`, к двери роли идёт консоль кластера держателя (P/10 Н1.4 `server.role`); `journal` |
 | `holder POST /domain/members/m2/ca {"ca": []}`, затем `holder POST /domain/members/m2/ca {"ca": [<отпечаток m2>]}` без `ca_certs` | оба — `200`; строки `ca-certs` нет (снята `[]`), проба `holder` / `m2-console` → `{"handshake": "alert", "http": null}` — член вне объединения, пока сертификатов под отпечатками нет | `admin`: «без ca_certs строка не меняется» |
@@ -137,6 +150,34 @@ cluster: hold, path: /domain, status: 200, id: $positive_forward_id}` — свя
 cluster: hold, path: /domain, user: <имя токена стенда>, status: 200, id: @not($positive_forward_id)}`
 ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.3 `query`, `row`): обе пересылки дают `200`, и без `@not` по `id`
 прежняя запись строки 1 дала бы ложный проход (замечание «cammeta-acceptance» 2026-10-21 к 967baf9ad).
+
+**№ 14, отказ рукопожатия двери роли на переходе 2** (ADR-0083 доп. (19) п. 2; разбор ревью ADR-0090, № 22; данные — «Спецификация», директива
+`@tls-kit` — «cammeta-acceptance»). Норма: договор пересылки `answer` — отказ рукопожатия двери роли на переходе 2 —
+сеть, `502 did not answer` без слова `peer`; `journal` — `status: 502`. Вход — консоль кластера `hold` прямо из стенда:
+запрос идёт по переходу 2 к двери роли своей коробки. Журнал — `@until 30 member hold resource GET
+/events?kind=domain.forwarded&unit=audit/console&keep=newest&limit=1` (дальше — «журнал hold»); `<имя>` — имя токена
+стенда.
+
+| Шаг | Ожидание | Норма |
+|---|---|---|
+| `member hold console GET /domain` (исходный комплект) | `200` | `answer`, `tls` |
+| журнал hold | `200`, `events[0]` ⊇ `{kind: domain.forwarded, cluster: hold, path: /domain, user: <имя>, status: 200, id: $hold_forward_ok}` | `journal` |
+| `@tls-kit hold console foreign` | `ok` | — |
+| `member hold console GET /domain` | `502 {"error": "did not answer", "detail": "!contains peer"}` — дверь роли отказала листу чужого центра рукопожатием | `answer`: отказ рукопожатия — сеть; P/10 Н1.4 `server.role` |
+| журнал hold | `200`, `events[0]` ⊇ `{kind: domain.forwarded, cluster: hold, path: /domain, user: <имя>, status: 502, id: @not($hold_forward_ok)}` | `journal`: отказ рукопожатия двери роли — 502 |
+| `@tls-kit hold console hold` | `ok` | — |
+| `member hold console GET /domain` | `200` | возврат |
+| журнал hold | `200`, `events[0]` ⊇ `{kind: domain.forwarded, cluster: hold, path: /domain, user: <имя>, status: 200, id: @not($hold_forward_ok)}` — запись после возврата (запись отказа — `status: 502`) | `journal` |
+
+**№ 14, класс `signed` у консоли кластера** (ADR-0083 доп. (19) п. 2; разбор ревью ADR-0090, № 23). Норма: [P/06.7 Н1.7](../../../06-console/spec/06.7-console.norms.md)
+`server` — всё входящее из других кластеров на слушателе консоли кластера: сертификата клиента не запрашивает, по центру
+в рукопожатии не отказывает, `X-Operator: console` — не признаёт; снимает всегда (договор пересылки `x_operator`).
+
+| Шаг | Ожидание | Норма |
+|---|---|---|
+| `@tls`: дверь `member m1 console`, клиент `foreign-console`, запрос `GET /domain` | `{"handshake": "ok"}` | `signed`: по центру не отказывает |
+| `@tls`: дверь `member m1 console`, клиент `null`, запрос `GET /domain` | `{"handshake": "ok"}` | `signed`: сертификата клиента не требует |
+| `@person -`, затем `member m1 console @header X-Operator: console GET /domain/users` | `401` — сторожевая: токена нет, заголовок личностью не служит | `x_operator`, P/06.7 Н1.9 |
 
 ## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
 
