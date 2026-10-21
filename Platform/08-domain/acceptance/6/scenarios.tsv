@@ -47,9 +47,10 @@ scenario	step	request	expect
 03-kept-and-applied	11	@mend m1	ok
 03-kept-and-applied	12	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c3", "start": 7}]}
 03-kept-and-applied	13	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id2", "status": 200, "result": "performed"}, {"id": "$id", "status": 200, "result": "performed", "what": "start"}]}}
-03-kept-and-applied	14	holder DELETE /domain/testsub/counters/c3	202 {"kept": "$id3", "cluster": "m1", "what": ""}
-03-kept-and-applied	15	@until 60 member m1 console GET /counters	200 {"configured": []}
-03-kept-and-applied	16	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id3", "status": 200, "result": "performed"}, {"id": "$id2", "status": 200, "result": "performed"}, {"id": "$id", "status": 200, "result": "performed", "what": "start"}]}}
+03-kept-and-applied	14	@until 60 holder GET /domain	200 {"units": {"testsub": [{"id": "c3", "view": {"start": 7}}]}}
+03-kept-and-applied	15	holder DELETE /domain/testsub/counters/c3	202 {"kept": "$id3", "cluster": "m1", "what": ""}
+03-kept-and-applied	16	@until 60 member m1 console GET /counters	200 {"configured": []}
+03-kept-and-applied	17	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id3", "status": 200, "result": "performed"}, {"id": "$id2", "status": 200, "result": "performed"}, {"id": "$id", "status": 200, "result": "performed", "what": "start"}]}}
 05-kept-full	1	@domain	ok
 05-kept-full	2	member m1 console POST /counters {"name": "c5", "start": 0}	201
 05-kept-full	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c5"}]
