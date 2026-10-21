@@ -26,7 +26,7 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../common/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<ключ>` — `written` (пишет консоль, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5).
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
-- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `.gone/<ключ>`, `objects/<sub>/<spec:objects.rows>`, `objects/<sub>/<spec:objects.rows>/*`;
+- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 доп. (16)), `.gone/<ключ>`, `objects/<sub>/<spec:objects.rows>`, `objects/<sub>/<spec:objects.rows>/*`;
 - пишет: `<sub>/blobs/sha256-<hex>` (put);
 - читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<spec:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
 
@@ -41,7 +41,7 @@
 ```yaml
 object:
   rule:      целиком или никак; последний писатель побеждает; по ключу не ищут; размер — предел хранилища (0 = без)
-  api:       put(key, bytes) | get(key) → bytes | null | list(prefix) → [key] (отсортировано, без .tmp) | delete(key)
+  api:       put(key, bytes) | get(key) → bytes | null | list(prefix) → [key] (отсортировано, без служебных имён с `~` — ADR-0083 доп. (16)) | delete(key)
              | put_new(key, bytes) → conflict, если есть  (создание-однажды) | get_at/put_at (запись по прочитанному индексу)
   key:       <семья>/… ; семьи платформы: heartbeats, contenders (P/03.4, P/03.2), controller (P/04), snapshot, blobs (добавлено М10/10),
              commands (договор просьбы и её метки, «Метка» mark; разбор ревью стадии B 6–7, № 24) — спека их не называет
@@ -57,7 +57,8 @@ object:
   door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/* (М11), */heartbeats/*, */contenders/*, */snapshot/*,
              */controller/*, */blobs/*; snapshot и blobs — добавлено М10/10) и objects.door спеки; иное — 403;
              `*` первой части — подсистема каталога спек: `other/heartbeats/x` без спеки other — 403 (сверка python и go М10/6–11, E5)
-  disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога
+  disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога `<каталог>/~lock`, flock(LOCK_EX), файл
+             не удаляется; служебные имена (замок, временное имя) — договор журнала событий «Имена файлов» (ADR-0083 доп. (16))
 ```
 
 Ключ объекта — непустой относительный путь: непустые сегменты, без точных `.`/`..`,
