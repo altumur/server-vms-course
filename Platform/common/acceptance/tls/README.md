@@ -121,8 +121,14 @@
 | `holder POST /domain/members/m2/ca {"ca": [<sha256 DER листа m2-console>], "ca_certs": [<PEM листа m2-console>]}` | `400 {"error": "refused"}` — лист не центр (`CA:true`) | `admin`: «в том числе CA:true (иначе 400)» |
 | `holder POST /domain/members/m2/ca` с теми же `ca`, `ca_certs` дважды | оба — `200`, `rev` второго ответа = `rev` первого + 1 | `admin`: «тот же ca снова — новая запись» |
 
-Какой переход пересылки стенд отказывает рукопожатием (строки 2–3) и как стенд читает журнал пересылающей консоли (строка 3;
-директивы чтения журнала в словаре нет) — решает TLS-этап с «Архитектором»; до того строки 2–3 — данные, не шаги.
+Строки 2–3 — шаги (решение «Архитектора» 2026-10-21 по № 14, способ согласован с TLS-этапом «cammeta-acceptance»).
+Отказ рукопожатием — переход консоли `m2` к двери роли держателя: положительный контроль строки 1 — до снятия; затем
+остановить агент `m2` (`@stop agent m2`: отчёт агента не вернёт центр в объединение) и `holder POST /domain/members/m2/ca
+{"ca": []}`; после этого `member m2 console GET /domain` — строка 2. Журнал пересылающей (строка 3) читается штатной
+дверью ресурса, без новой директивы: `@until 30 member m2 resource GET
+/events?kind=domain.forwarded&unit=audit/console&keep=newest&limit=1` → `200`, `events[0]` ⊇ `{kind: domain.forwarded,
+cluster: hold, path: /domain, user: <имя токена стенда>, status: 502}` ([P/05](../../../05-resource/spec/05-resource.norms.md)
+Н1.3 `query`, `row`).
 
 ## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
 
