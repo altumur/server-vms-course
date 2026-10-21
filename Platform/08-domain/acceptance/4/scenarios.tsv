@@ -54,6 +54,7 @@ scenario	step	request	expect
 04-login-limit	5	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 04-login-limit	6	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 04-login-limit	7	signer POST /api/login {"user": "root", "password": "w2c test root password"}	429 {"error": "too many attempts"}
+04-login-limit	8	signer POST /api/login {"user": "nobody", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 08-grant-by-kept	1	@domain	ok
 08-grant-by-kept	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 08-grant-by-kept	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200
