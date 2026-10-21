@@ -13,6 +13,8 @@ def code(x):
         return "`null`"
     if isinstance(x, bool):
         return "`%s`" % ("true" if x else "false")
+    if x == "":
+        return '`""`'
     return "`%s`" % x
 
 
