@@ -161,7 +161,7 @@
       noUnitsDecl: "no subsystem on the domain declared units", uLive: "running", uStale: "worker silent — last known", uConfigured: "configured, nobody holds it",
       uSilent: "cluster silent — last known", turnOn: "Turn on", turnOff: "Turn off",
       sharedW: "Shared settings", sharedNote: "Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.",
-      sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish",
+      sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish", sfAdd: "＋ Add", sfDel: "Remove", sfNotNumber: "not a number",
       notJson: "Not JSON, nothing sent —", notJsonField: "not JSON, nothing sent", publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
       editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
       alarmTimesTip: "how many times in the day",
@@ -314,7 +314,7 @@
       noUnitsDecl: "ни одна подсистема на домене не объявила единиц", uLive: "идёт", uStale: "воркер молчит — последнее известное", uConfigured: "настроена, никто не держит",
       uSilent: "кластер молчит — последнее известное", turnOn: "Включить", turnOff: "Выключить",
       sharedW: "Общие настройки", sharedNote: "Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.",
-      sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать",
+      sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать", sfAdd: "＋ Добавить", sfDel: "Убрать", sfNotNumber: "не число",
       notJson: "Не JSON, ничего не отправлено —", notJsonField: "не JSON, ничего не отправлено", publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
       editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
       alarmTimesTip: "сколько раз за сутки",
@@ -1933,8 +1933,49 @@
         try { await C.api("PUT", "/domain/" + encodeURIComponent(name) + "/" + encodeURIComponent(sub.spec.rows) + "/" + encodeURIComponent(ref), { [f]: to }); C.toast(W.saved); await load(); } catch (e) { C.toast(W.refused + ": " + e.message); }
       }; });
     }
+    // A form by a shared document's schema (P/07 Н1.6 schema): an object — its properties, an array — its items with
+    // «add» and «remove», a string, a number, an integer, a yes/no, an enum — their fields; what a form cannot say (an
+    // object without properties, a union of types, a value with keys its schema does not name) stays JSON text in its
+    // place. Empty fields are left out; the domain checks the document against the schema on PUT.
+    const sfKind = (s, v) => {
+      if (!s || typeof s !== "object") return "json";
+      if (Array.isArray(s.enum)) return "enum";
+      if (s.type === "object" && s.properties && typeof s.properties === "object" && !Array.isArray(s.properties))
+        return v == null || (typeof v === "object" && !Array.isArray(v) && Object.keys(v).every(k => k in s.properties)) ? "object" : "json";
+      if (s.type === "array" && s.items && typeof s.items === "object" && !Array.isArray(s.items)) return v == null || Array.isArray(v) ? "array" : "json";
+      if (["string", "number", "integer", "boolean"].includes(s.type)) return v == null || typeof v === (s.type === "integer" ? "number" : s.type) ? s.type : "json";
+      return "json";
+    };
+    function sfItem(s, v, dis) { return `<div class="pc-sf-i" style="display:flex;gap:6px;align-items:flex-start;margin:4px 0"><div style="flex:1">${sfHtml(s, v, dis)}</div><button type="button" class="btn s" data-sf="del"${dis}>${h(W.sfDel)}</button></div>`; }
+    function sfHtml(s, v, dis) {
+      const k = sfKind(s, v), o = x => ` data-orig="${h(x)}"`;
+      if (k === "object") {
+        const req = Array.isArray(s.required) ? s.required : [];
+        return `<div class="pc-sf g" data-k="object">${Object.entries(s.properties).map(([n, ps]) => `<div class="pc-sf-p" data-n="${h(n)}"><label>${h((ps && ps.title) || n)}${req.includes(n) ? " *" : ""}</label>${sfHtml(ps, v == null ? undefined : v[n], dis)}</div>`).join("")}</div>`;
+      }
+      if (k === "array") return `<div class="pc-sf" data-k="array" data-items="${h(JSON.stringify(s.items))}">${(v || []).map(x => sfItem(s.items, x, dis)).join("")}<button type="button" class="btn s" data-sf="add"${dis}>${h(W.sfAdd)}</button></div>`;
+      if (k === "enum") { const cur = v === undefined ? "" : JSON.stringify(v); return `<select class="pc-sf" data-k="enum"${o(cur)}${dis}><option value=""${cur === "" ? " selected" : ""}>${h(W.notSetW)}</option>${s.enum.map(x => { const j = JSON.stringify(x); return `<option value="${h(j)}"${j === cur ? " selected" : ""}>${h(typeof x === "string" ? x : j)}</option>`; }).join("")}</select>`; }
+      if (k === "boolean") { const cur = v == null ? "" : String(v); return `<select class="pc-sf" data-k="boolean"${o(cur)}${dis}>${[["", W.notSetW], ["true", W.yesW], ["false", W.noW]].map(([x, l]) => `<option value="${x}"${cur === x ? " selected" : ""}>${h(l)}</option>`).join("")}</select>`; }
+      if (k === "number" || k === "integer") { const cur = v == null ? "" : String(v); return `<input class="pc-sf" data-k="${k}" type="number"${k === "integer" ? ' step="1"' : ' step="any"'} value="${h(cur)}"${o(cur)}${dis}>`; }
+      if (k === "string") { const cur = v == null ? "" : String(v); return `<input class="pc-sf" data-k="string" type="text" value="${h(cur)}"${o(cur)}${dis}>`; }
+      const txt = v === undefined ? "" : JSON.stringify(v, null, 2);
+      return `<textarea class="pc-sf" data-k="json" rows="3" spellcheck="false" style="font-family:ui-monospace,monospace"${o(txt)}${dis}>${h(txt)}</textarea>`;
+    }
+    // the value the form says; an empty field — undefined (left out); a field that is not what its schema says — throws
+    function sfRead(el, where) {
+      const k = el.dataset.k, kids = sel => [...el.children].filter(x => x.matches(sel));
+      if (k === "object") { const out = {}; for (const p of kids(".pc-sf-p")) { const v = sfRead(p.querySelector(":scope > .pc-sf"), where + "/" + p.dataset.n); if (v !== undefined) out[p.dataset.n] = v; } return out; }
+      if (k === "array") return kids(".pc-sf-i").map((it, i) => sfRead(it.querySelector(":scope > div > .pc-sf"), where + "/" + i)).filter(v => v !== undefined);
+      const raw = el.value;
+      if (raw === "" || (k === "json" && raw.trim() === "")) return undefined;
+      if (k === "string") return raw;
+      if (k === "boolean") return raw === "true";
+      if (k === "enum") return JSON.parse(raw);
+      if (k === "number" || k === "integer") { const n = Number(raw); if (!Number.isFinite(n) || (k === "integer" && !Number.isInteger(n))) throw new Error(where + ": " + W.sfNotNumber); return n; }
+      try { return JSON.parse(raw); } catch (e) { throw new Error(where + ": " + W.notJsonField + " — " + e.message); }
+    }
     // The domain's shared settings: the fields each spec shares with the domain (declared: domain.shared with their
-    // types) — a list one value a line, a number, a yes/no; empty takes the domain's value away (null).
+    // types) — a list one value a line, a number, a yes/no, a document by its schema; empty takes the domain's value away (null).
     function sharedCard() {
       const sh = st.domShared; if (!sh) return "";
       if (sh.error) return card(h(W.sharedW), `<p class="sub">${h(W.noShared)}</p>`);
@@ -1943,7 +1984,9 @@
       const input = (sub, f) => {
         const v = ((d.shared || {})[sub] || {})[f.name], nm = h(sub + "/" + f.name), dis = admin ? "" : " disabled";
         if (f.type === "list") { const t = Array.isArray(v) ? v.join("\n") : ""; return `<textarea rows="4" data-sh="${nm}" data-orig="${h(t)}"${dis}>${h(t)}</textarea>`; }
-        // a json document (a spec's shape, checked against its schema where it is kept): its text, indented
+        // a json document with its schema: the form by the schema (P/07 Н1.6 schema)
+        if (f.type === "json" && f.schema && sfKind(f.schema, v) !== "json") return `<div data-sh="${nm}" data-shf="1">${sfHtml(f.schema, v == null ? undefined : v, dis)}</div>`;
+        // a json document the form cannot say: its text, indented
         if (f.type === "json") { const t = v == null ? "" : JSON.stringify(v, null, 2); return `<textarea rows="8" spellcheck="false" style="font-family:ui-monospace,monospace" data-sh="${nm}" data-orig="${h(t)}"${dis}>${h(t)}</textarea>`; }
         if (f.type === "bool") { const t = v == null ? "" : String(v); return `<select data-sh="${nm}" data-orig="${h(t)}"${dis}>${[["", W.notSetW], ["true", W.yesW], ["false", W.noW]].map(([x, l]) => `<option value="${x}"${t === x ? " selected" : ""}>${h(l)}</option>`).join("")}</select>`; }
         const t = v == null ? "" : String(v); return `<input ${f.type === "int" || f.type === "float" ? 'type="number"' : 'type="text"'} data-sh="${nm}" data-orig="${h(t)}" value="${h(t)}"${dis}>`;
@@ -1951,11 +1994,21 @@
       return card(h(W.sharedW), `<p class="sub">${h(W.sharedNote)}</p><p class="sub">${d.rev ? h(W.sharedRev.replace("{r}", d.rev).replace("{t}", d.term ?? "—").replace("{a}", fmt(d.at))) + (d.by ? " · " + h(d.by) : "") : h(W.neverPub)}</p>
         ${d.rev ? `<div class="nt${bad ? " err" : ""}" style="margin-top:8px">${h(dl.sentence || "")}${Object.entries(dl.refused || {}).map(([m, w]) => `<br>${h(m)}: ${h(w)}`).join("")}</div>` : ""}
         ${Object.entries(dec).map(([sub, fields]) => { const s2 = st.subs.find(x => x.name === sub);
-          return `<div class="pc-g" style="margin-top:10px">${h(s2 ? cap(display(s2).section || s2.name) : sub)}</div><div class="g">${(fields || []).map(f => `<div><label>${h(s2 ? fieldTitle(s2, f.name) : f.name)}${f.type === "list" ? " — " + h(W.onePerLine) : f.type === "json" ? " — JSON" : ""}</label>${input(sub, f)}</div>`).join("")}</div>`; }).join("") || `<p class="sub">${h(W.noSharedDecl)}</p>`}
+          return `<div class="pc-g" style="margin-top:10px">${h(s2 ? cap(display(s2).section || s2.name) : sub)}</div><div class="g">${(fields || []).map(f => `<div><label>${h(s2 ? fieldTitle(s2, f.name) : f.name)}${f.type === "list" ? " — " + h(W.onePerLine) : f.type === "json" && !(f.schema && sfKind(f.schema, ((d.shared || {})[sub] || {})[f.name]) !== "json") ? " — JSON" : ""}</label>${input(sub, f)}</div>`).join("")}</div>`; }).join("") || `<p class="sub">${h(W.noSharedDecl)}</p>`}
         <div class="pc-sherr">${st.sharedErr ? `<div class="nt err" style="margin-top:8px">${h(st.sharedErr)}</div>` : ""}</div>
         ${admin && Object.keys(dec).length ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn pri s" data-a="publish">${h(W.publishW)}</button></div>` : ""}`);
     }
     function wireShared(box) {
+      // the form's lists: «add» an item of the items' schema, «remove» one; a mark keeps a poll from drawing it anew
+      if (box && !box.dataset.sfWired) {
+        box.dataset.sfWired = "1";
+        box.addEventListener("click", e => {
+          const t = e.target.closest("[data-sf]"); if (!t || t.disabled) return;
+          if (t.dataset.sf === "add") t.insertAdjacentHTML("beforebegin", sfItem(JSON.parse(t.parentElement.dataset.items), undefined, ""));
+          else t.closest(".pc-sf-i").remove();
+          if (!box.querySelector(".pc-sf-mark")) box.insertAdjacentHTML("beforeend", '<input class="pc-sf-mark" hidden data-orig="0" value="1">');
+        });
+      }
       const b = box && box.querySelector('[data-a="publish"]'); if (!b) return;
       b.onclick = async () => {
         const sh = st.domShared || {}, dec = sh.declared || {}, shared = {}, bad = [];
@@ -1965,13 +2018,18 @@
           shared[sub] = {};
           for (const f of fields || []) {
             const x = [...box.querySelectorAll("[data-sh]")].find(y => y.dataset.sh === sub + "/" + f.name); if (!x) continue;
+            if (x.dataset.shf) {
+              try { const v = sfRead(x.firstElementChild, sub + "/" + f.name); shared[sub][f.name] = v === undefined || (Array.isArray(v) && !v.length) || (v && typeof v === "object" && !Object.keys(v).length) ? null : v; }
+              catch (e) { bad.push(e.message); }
+              continue;
+            }
             const raw = x.value, lines = raw.split("\n").map(y => y.trim()).filter(Boolean);
             if (f.type === "json") { if (raw.trim() === "") shared[sub][f.name] = null; else try { shared[sub][f.name] = JSON.parse(raw); } catch (e) { bad.push(sub + "/" + f.name + ": " + e.message); } continue; }
             shared[sub][f.name] = f.type === "list" ? (lines.length ? lines : null) : f.type === "bool" ? (raw === "" ? null : raw === "true")
               : f.type === "int" || f.type === "float" ? (raw === "" ? null : Number(raw)) : (raw === "" ? null : raw);
           }
         }
-        if (bad.length) return said(W.notJson + " " + bad.join("; "));
+        if (bad.length) return said(W.notJson + " " + bad.join("; "));   // nothing is sent
         try { const d = await C.api("PUT", "/domain/shared", { base_rev: Number((sh.doc || {}).rev) || 0, shared }); st.sharedErr = ""; C.toast(W.publishedRev.replace("{r}", d && d.rev)); }
         catch (e) { return said(e.message); }
         box.querySelectorAll("[data-sh]").forEach(x => { x.dataset.orig = x.value; });
