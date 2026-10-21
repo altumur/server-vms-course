@@ -36,9 +36,9 @@
 
 | Дверь | Что | Класс (договор сертификата роли «Серверная сторона»; `role` — P/10 Н1.4 `server.role`) |
 |---|---|---|
-| `holder` | консоль домена на `hold` — приём пересылки от консоли члена (`X-Operator: console`) | `role` |
+| `holder` | консоль домена на `hold` — приём пересылки с `X-Operator: console`; по маршруту P/06.7 Н1.4 её клиент — консоль кластера `hold`, прямое соединение консоли члена — проба `@tls` (ADR-0083 доп. (18)) | `role` |
 | `signer` | процесс `domain` на `hold` — `POST /api/member/<член>`, `GET /api/carry/<член>` | `signed` |
-| `member <кластер> console` | консоль кластера (`/domain/at/…`, пересылка) | — (клиент — консоль другого кластера) |
+| `member <кластер> console` | консоль кластера (`/domain/at/…`, пересылка) | `signed` для входящих из других кластеров: сертификата клиента не запрашивает, `X-Operator: console` снимает ([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 доп. (18)) |
 
 Клиент — имя листа: `<кластер>-<роль>` (`m2-console`, `m2-domainagent`, `foreign-console`) или ключ `negative`
 (`m2-no-role`, …); `null` — без сертификата клиента. Клиент проверяет сервер по центру кластера двери (`client` договора `peer`);
@@ -111,25 +111,28 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
 **Пересылка через дверь роли и ветки `admin`** (разбор ревью стадии B 8–10, № 14; разбор ревью стадии A 8–10, № 36).
 Данные «Спецификации»; шаги и сценарий пишет TLS-этап «cammeta-acceptance»; до того — долг стенда. Подготовка — как у п. 2.
 Нормы: [договор пересылки](../../contracts/forwarding.md) «Пересылка — одна функция» `answer`, `journal`, `tls`;
+[P/06.7 Н1.7](../../../06-console/spec/06.7-console.norms.md) `server` (переход 1 — класс `signed`);
 [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
 
 | Шаг | Ожидание | Норма |
 |---|---|---|
 | `member m2 console GET /domain` (центр `m2` в объединении) | ответ консоли домена как пришёл: не 502, `error` ∉ {`no_role`, `wrong_role`, `bad_chain`} | `answer`, `tls` |
-| переход пересылки к двери роли отказан рукопожатием (TLS alert) | у пересылающей консоли — `502 {"error": "did not answer"}`, не 401/403 и без слова `peer` | `answer`: отказ рукопожатия — сеть |
-| тот же отказ — журнал пересылающей | `domain.forwarded {cluster, path, user, status: 502}` | `journal` |
+| после снятия центра `m2` (ниже): проба `holder` / `m2-console` — прямое соединение консоли члена с дверью роли держателя | `{"handshake": "alert", "http": null}` | `server.role`: центр `m2` вне объединения |
+| после того же снятия: `member m2 console GET /domain`; журнал пересылающей | `200` — ответ консоли домена как пришёл, как в строке 1; `domain.forwarded {cluster, path, user, status: 200}` | снятие центра — не снятие членства: переход 1 — класс `signed`, к двери роли идёт консоль кластера держателя (P/10 Н1.4 `server.role`); `journal` |
 | `holder POST /domain/members/m2/ca {"ca": []}`, затем `holder POST /domain/members/m2/ca {"ca": [<отпечаток m2>]}` без `ca_certs` | оба — `200`; строки `ca-certs` нет (снята `[]`), проба `holder` / `m2-console` → `{"handshake": "alert", "http": null}` — член вне объединения, пока сертификатов под отпечатками нет | `admin`: «без ca_certs строка не меняется» |
 | `holder POST /domain/members/m2/ca {"ca": [<отпечаток m2>], "ca_certs": [<PEM центра foreign>]}` | `400 {"error": "refused"}`; `Entry.ca` и строка `ca-certs` не меняются | `admin`, Н4: sha256 не сходится |
 | `holder POST /domain/members/m2/ca {"ca": [<sha256 DER листа m2-console>], "ca_certs": [<PEM листа m2-console>]}` | `400 {"error": "refused"}` — лист не центр (`CA:true`) | `admin`: «в том числе CA:true (иначе 400)» |
 | `holder POST /domain/members/m2/ca` с теми же `ca`, `ca_certs` дважды | оба — `200`, `rev` второго ответа = `rev` первого + 1 | `admin`: «тот же ca снова — новая запись» |
 
-Строки 2–3 — шаги (решение «Архитектора» 2026-10-21 по № 14, способ согласован с TLS-этапом «cammeta-acceptance»).
-Отказ рукопожатием — переход консоли `m2` к двери роли держателя: положительный контроль строки 1 — до снятия; затем
-остановить агент `m2` (`@stop agent m2`: отчёт агента не вернёт центр в объединение) и `holder POST /domain/members/m2/ca
-{"ca": []}`; после этого `member m2 console GET /domain` — строка 2. Журнал пересылающей (строка 3) читается штатной
-дверью ресурса, без новой директивы: `@until 30 member m2 resource GET
+Строки 2–3 — шаги (решение «Архитектора» 2026-10-21 по № 14, способ согласован с TLS-этапом «cammeta-acceptance»;
+Т-правка по ADR-0083 доп. (18): прежние «502 у пересылающей» и журнал со `status: 502` сняты — по маршруту P/06.7 Н1.4
+к двери роли держателя идёт консоль кластера `hold`, чей центр в объединении всегда, а не консоль `m2`). Положительный
+контроль строки 1 — до снятия; затем остановить агент `m2` (`@stop agent m2`: отчёт агента не вернёт центр в
+объединение) и `holder POST /domain/members/m2/ca {"ca": []}`; после этого строка 2 — проба `@tls` двери `holder`
+клиентом `m2-console`, строка 3 — `member m2 console GET /domain` → `200`. Журнал пересылающей (строка 3) читается
+штатной дверью ресурса, без новой директивы: `@until 30 member m2 resource GET
 /events?kind=domain.forwarded&unit=audit/console&keep=newest&limit=1` → `200`, `events[0]` ⊇ `{kind: domain.forwarded,
-cluster: hold, path: /domain, user: <имя токена стенда>, status: 502}` ([P/05](../../../05-resource/spec/05-resource.norms.md)
+cluster: hold, path: /domain, user: <имя токена стенда>, status: 200}` ([P/05](../../../05-resource/spec/05-resource.norms.md)
 Н1.3 `query`, `row`).
 
 ## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
