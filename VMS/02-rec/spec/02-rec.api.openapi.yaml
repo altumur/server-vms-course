@@ -64,7 +64,7 @@ paths:
         "200":
           description: спаны по (start_ms, epoch)
           headers:
-            X-Unreachable: {schema: {type: string}, description: регистраторы, чья дверь не ответила или ответила неполно}
+            X-Unreachable: {schema: {type: string}, description: "регистраторы, чья дверь не ответила или ответила неполно"}
             X-Unavailable: {schema: {type: string}, description: "<том>@<сервер> томов этой записи без живого держателя"}
           content:
             application/json:
