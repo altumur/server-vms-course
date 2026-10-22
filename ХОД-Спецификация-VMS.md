@@ -24,7 +24,7 @@
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
   переведена (нормы, приёмка 1, лекция и инструкция — начало, id-map V/02.1-01…07; манифест: `grows: true`, `ends`); влита
   `ea8d23d5b`. V/02.2 — переведена (договор `spec/02-rec.obsd.contract.md`, нормы, id-map V/02.2-01…06; манифест:
-  `parts.obsd`, `shares.obsd` с `part`, `worker.uses: [cam.shm, rec.obsd]`); влита `e1f3eba1d`.
+  `parts.obsd`, `shares.obsd` с `part`, `worker.uses: [cam.shm, rec.obsd]`); влита `e1f3eba1d`. V/02.3 — переведена (нормы, id-map V/02.3-01…07).
 
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
