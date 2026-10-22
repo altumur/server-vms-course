@@ -35,7 +35,7 @@ snapshot: [name, start]
 # (ADR-0091 п. 1) — and feeds testsub2's belt
 worker:
   creates:
-    - {sub: testsub2, rows: tallies, key: "{of}", valid_for: 600}
+    - {sub: testsub2, rows: tallies, key: "{of}"}
   uses: [testsub2.belt]
 # testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
 # member, a ledger for the domain as a whole, served at `/domain/testsub/ledger`, and a family of badges, one row each

@@ -588,8 +588,6 @@ a91_creates_twice	refused
 a91_creates_key_int	refused
 a91_creates_key_literal	refused
 a91_creates_key_adjacent	refused
-a91_creates_valid_for_3601	refused
-a91_creates_valid_for_zero	refused
 a91_creates_without_key	refused
 a91_uses_ok	ok
 a91_uses_self	refused

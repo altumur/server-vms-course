@@ -9,4 +9,4 @@ placement:
   capacity: {default: 4}
 worker:
   creates:
-  - {sub: other, rows: things, key: '{cam}{kind}', valid_for: 60}
+  - {sub: other, rows: things, key: '{cam}{kind}'}

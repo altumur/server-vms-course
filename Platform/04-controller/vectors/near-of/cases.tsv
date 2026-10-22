@@ -1,0 +1,16 @@
+# Сосед единицы по near (P/04 Н1.3; ADR-0091 п. 10). Форма — README.
+case	input	expect	note
+by-of	{"near":{"sub":"s","by":"of","of":"name"},"me":{"id":"t1","of":"c1"},"neighbours":[{"id":"c1","name":"c1"},{"id":"c2","name":"c2"}]}	c1	by и of: моё поле by = поле of соседа
+no-by	{"near":{"sub":"s","of":"cam"},"me":{"id":"cam7"},"neighbours":[{"id":"d2","cam":"cam8"},{"id":"d1","cam":"cam7"}]}	d1	без by — мой id
+no-of	{"near":{"sub":"s","by":"of"},"me":{"id":"t1","of":"c2"},"neighbours":[{"id":"c1"},{"id":"c2"}]}	c2	без of — id соседа
+none	{"near":{"sub":"s","by":"of","of":"name"},"me":{"id":"t1","of":"c9"},"neighbours":[{"id":"c1","name":"c1"}]}		соседа с моим значением нет
+missing-field	{"near":{"sub":"s","by":"of","of":"name"},"me":{"id":"t1"},"neighbours":[{"id":"c1","name":"c1"},{"id":"c2"}]}		моего поля by нет — ничему не равно, и отсутствующему полю соседа тоже
+two-by-id	{"near":{"sub":"s","by":"cam","of":"cam"},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"b","cam":"k"},{"id":"a","cam":"k"}]}	a	без prefer среди двух — по id
+utf8-order	{"near":{"sub":"s","by":"cam","of":"cam"},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"a","cam":"k"},{"id":"Z","cam":"k"}]}	Z	порядок — байты UTF-8: Z раньше a
+prefer-list	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"kind":["rec","dvr"]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"a","cam":"k","kind":"live"},{"id":"b","cam":"k","kind":"dvr"}]}	b	prefer — ИЛИ по списку значений
+prefer-both-by-id	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"kind":["rec"]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"c","cam":"k","kind":"rec"},{"id":"b","cam":"k","kind":"rec"},{"id":"a","cam":"k","kind":"live"}]}	b	два совпавших с prefer — по id среди них, не среди всех
+prefer-and	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"kind":["rec"],"on":[true]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"a","cam":"k","kind":"rec","on":"false"},{"id":"b","cam":"k","kind":"rec","on":"true"},{"id":"c","cam":"k","kind":"live","on":"true"}]}	b	prefer — И по полям; true сравнивается с "true" строки
+prefer-number	{"near":{"sub":"testsub","by":"of","of":"name","prefer":{"start":[0,1]}},"me":{"id":"t1","of":"c1"},"neighbours":[{"id":"c1","name":"c1","start":"5"}]}	c1	prefer не совпал — сосед всё равно выбран (prefer — порядок, не фильтр)
+prefer-none-matched	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"kind":["rec"]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"b","cam":"k","kind":"live"},{"id":"a","cam":"k","kind":"dvr"}]}	a	ни один не совпал с prefer — по id среди всех
+prefer-path	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"home.kind":["reserve"]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"a","cam":"k","home":"h1"},{"id":"b","cam":"k","home":"h2"}],"refs":{"home":"s/homes"},"rows":{"s/homes/h1":{"kind":"plain"},"s/homes/h2":{"kind":"reserve"}}}	b	путь prefer — шаг по полю-ссылке соседа к строке, которую оно называет
+prefer-path-missing	{"near":{"sub":"s","by":"cam","of":"cam","prefer":{"home.kind":["reserve"]}},"me":{"id":"x","cam":"k"},"neighbours":[{"id":"a","cam":"k","home":"h9"},{"id":"b","cam":"k","home":"h2"}],"refs":{"home":"s/homes"},"rows":{"s/homes/h2":{"kind":"reserve"}}}	b	строки цели нет — путь без значения, не совпал

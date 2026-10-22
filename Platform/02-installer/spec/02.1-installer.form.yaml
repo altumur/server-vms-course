@@ -96,12 +96,11 @@ root:
           default_text: чужих строк воркер не заводит
           items:
             type: object
-            required: [sub, rows, key, valid_for]
+            required: [sub, rows, key]
             properties:
               sub: {ref: name, description: "подсистема-адресат; своя — отказ"}
               rows: {ref: name, description: "`unit.rows` адресата"}
               key: {type: string, pattern: '\{[^{}:]+\}(-\{[^{}:]+\})*', description: "подстановки `{поле}` адресата через `-`, без `:int` (P/03.6 Н1.6 `key`)"}
-              valid_for: {type: number, exclusive_minimum: 0, maximum: 3600, description: "секунды: событие старше не исполняется"}
         uses:
           owner: P/02.4 Н1.1
           description: "доли других подсистем `<подсистема>.<доля>` (их `shares`; каталог, Н3) — группа доли в юните воркера"

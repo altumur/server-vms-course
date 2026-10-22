@@ -9,4 +9,4 @@ placement:
   capacity: {default: 4}
 worker:
   creates:
-  - {sub: probe, rows: counters, key: '{start}', valid_for: 60}
+  - {sub: probe, rows: counters, key: '{start}'}
