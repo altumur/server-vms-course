@@ -55,6 +55,7 @@
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |
 | разрешено ли сокращение: условие и порядок причин отказа (жертва, живые без места при ждущих, выдержка, в пути, гистерезис) | [`04-controller/vectors/shrink-allowed/`](../../04-controller/vectors/shrink-allowed/) | P/04 | P/04 Н3 «сократить (шаг 9а)», условие; Р3, Р13′, Р16′, Р16‴, Р22, Р28 (решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5) |
 | командная строка `exec` → argv | [`02-installer/vectors/exec/`](../../02-installer/vectors/exec/) | P/02.1 | P/02.1 `execLine`; ADR-0091 доп. (4)–(6) |
+| счёт `room` и `live` замков присутствия | [`presence-room/`](presence-room/README.md) | common (договор замка присутствия) | [договор замка присутствия](../contracts/presence-lock.md) «Счёт `room`»; PL-EXT-01 |
 | порядок первичной установки манифестов | [`02-installer/vectors/install-order/`](../../02-installer/vectors/install-order/) | P/02.4 | P/02.4 Н1.7 `order`; I02-INSTALL-ORDER |
 | скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | P/02.4 | P/02.4 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | P/04 | P/04 Н3 «порядок наборов» |

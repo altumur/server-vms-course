@@ -1,0 +1,6 @@
+# Счёт room и live (договор замка присутствия «Счёт room»; PL-EXT-01): имена слотов живых замков роли (prefix w, сервер srv-a) и бюджет памяти → room.<sub>, live.<sub>. Форма — README.
+case	input	expect	note
+n-99	{"HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-99"]}	{"room":"13","live":"2,99"}	n = 99 — заказанный слот: в счёт номеров и в live
+n-100	{"HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-100"]}	{"room":"13","live":"2"}	n = 100 — не слот этой установки: как замок без номера — в живые (память), не в счёт номеров и не в live; строка лога
+n-leading-zero	{"HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-02"]}	{"room":"14","live":""}	02 — не каноническая запись: замок без номера
+n-1-base	{"HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1"]}	{"room":"15","live":""}	1 — базовый: в живые, не в счёт номеров n ≥ 2
