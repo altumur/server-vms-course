@@ -310,10 +310,10 @@ components:
       type: object
       required: [error]
       additionalProperties: false
-      description: 'Отказ самого агента у местной двери: 400, 401, 404 — без слова (договор «Отказы»); 413 — {error: "refused",
-        detail} (P/08.7 Н4)'
+      description: 'Отказ самого агента у местной двери (договор «Отказы»; LTD-E02): 400 bad request, 401 unauthorized, 404 not
+        found, 413 refused (P/08.7 Н4), 502 invalid token reply, 503 unavailable; нормативны код и error, detail — слова реализации'
       properties:
-        error: {type: string, minLength: 1}
+        error: {type: string, enum: [bad request, unauthorized, not found, refused, invalid token reply, unavailable]}
         detail: {type: string}
     AgentOrHolderRefusal:
       description: 'Отказ агента (AgentRefusal) или тело держателя как пришло (TokenRefusal OpenAPI 08; P/08.7 Н4)'
