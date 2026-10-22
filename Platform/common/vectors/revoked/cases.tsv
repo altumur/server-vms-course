@@ -16,3 +16,4 @@ bad-colon	"ab:cd\n"	@bad	разделители — неверная строк�
 bad-crlf	"ab\r\ncd\r\n"	@bad	CR — знак вне hex: неверная строка
 bad-nonhex	"ab\nzz\n"	@bad	знак вне hex; верные строки рядом не спасают — прежнее и частичное не используется
 bad-sign	"-1\n"	@bad	знак — неверная строка
+absent	@absent	@bad	нет ни revoked, ни crl.pem — как неверный файл: отказ закрыт (absent)
