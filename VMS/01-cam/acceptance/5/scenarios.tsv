@@ -1,0 +1,10 @@
+scenario	step	request	expect
+# Приёмка V/01.5: дверь держателя на петле без комплекта; камера-файл без архива устройства. Формат — README.
+01-door	1	@start worker cam w-srv-a-1 on srv-a	ok
+01-door	2	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+01-door	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "playback_url": "@absent", "coverage": "@absent", "index_url": "@absent"}]}
+01-door	4	holder w-srv-a-1 GET /devices	200 []
+01-door	5	holder w-srv-a-1 GET /recordings/$c1	404 {"error": "no device archive"}
+01-door	6	holder w-srv-a-1 GET /playback/$c1?from=0&to=10	404 {"error": "no device archive"}
+01-door	7	holder w-srv-a-1 GET /recordings/$c1?from=x	400 {"error": "bad range"}
+01-door	8	holder w-srv-a-1 GET /elsewhere	404 {"error": "no such path"}
