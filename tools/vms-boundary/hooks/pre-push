@@ -1,0 +1,11 @@
+#!/bin/sh
+# Граница комплекта VMS: каждый коммит отправляемого диапазона (tools/vms-boundary/check.py range).
+top=$(git rev-parse --show-toplevel)
+zero=0000000000000000000000000000000000000000
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  if [ "$remote_sha" = "$zero" ]; then base=origin/main; else base=$remote_sha; fi
+  python3 "$top/tools/vms-boundary/check.py" range "$base..$local_sha" --tree || status=1
+done
+exit $status

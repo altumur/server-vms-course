@@ -1,0 +1,3 @@
+#!/bin/sh
+# Граница комплекта VMS: трейлер Session: <сессия> (tools/vms-boundary/check.py).
+exec python3 "$(git rev-parse --show-toplevel)/tools/vms-boundary/check.py" msg "$1"
