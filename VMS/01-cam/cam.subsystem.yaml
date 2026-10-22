@@ -21,7 +21,7 @@ lease: {unconfirmed_max: forever}
 # `heartbeat.strings: [playback_key]`, no `secrets.readers: {door/signer: …}` (ADR-0075, window 2).
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
-worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls]}
+worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, /run/vms-cam-shm, `<id>.shm` per camera; a subscriber on
 # the same server declares `worker.uses: [cam.shm]` (ADR-0091 п. 5).
 shares: {shm: {kind: dir}}
@@ -370,6 +370,9 @@ domain:
   edit: [enabled]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
+    # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per
+    # member, the refs of its cameras that the licence covers; a camera outside is kept, not served.
+    licence: {}
   tokens:
     stream:
       lifetime: 86400
@@ -394,7 +397,23 @@ domain:
   # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
   # them at GET /domain/shared/cam): the folders the page offers, and two that inherit — the site's alarm kinds
   # (added to the camera's own).
-  shared: [folders, alarms]
+  shared:
+    - folders
+    - alarms
+    # The vendor's licence (V/01.7 Н1.1): a document of the shared settings, signed like any; the worker on the domain
+    # checks the vendor's signature and counts.
+    - name: licence
+      type: json
+      schema:
+        type: object
+        required: [domain, units, issued, expires, vendor_sig]
+        additionalProperties: false
+        properties:
+          domain: {type: string, minLength: 1}
+          units: {type: integer, minimum: 0}
+          issued: {type: number}
+          expires: {type: number}
+          vendor_sig: {type: string, minLength: 1}
   keys:
     - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
