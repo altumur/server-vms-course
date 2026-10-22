@@ -1,0 +1,18 @@
+# Файл отзыва revoked (договор сертификата роли revoke file, bad_file). Форма — README.
+case	file	expect	note
+ok	"1a2b\n3c\n"	["3c", "1a2b"]	по строке на серийник; порядок — по значению
+no-final-lf	"ab"	["ab"]	последняя строка без LF
+empty	""	[]	пустой файл — отзывов нет
+leading-zeros	"00ff\n0ab\n"	["ab", "ff"]	ведущие нули не значимы
+upper	"ABCDEF\nff\n"	["ff", "abcdef"]	регистр не важен
+same-value	"ab\n00AB\n"	["ab"]	повтор по значению — один серийник, не ошибка
+zero	"0\n000\n"	["0"]	ноль — «0»
+decimal-looking	"123\n"	["123"]	десятичной записи нет: 123 — серийник 0x123
+skip	"# отозваны 2026-10-23\n\nab\n#cd\n"	["ab"]	пустая строка и строка с «#» — пропуск
+bad-0x	"0xab\n"	@bad	«0x» — неверная строка: файл неверен целиком
+bad-space	"ab \n"	@bad	пробел — неверная строка
+bad-leading-space-comment	" # x\nab\n"	@bad	«#» не в начале строки — неверная строка
+bad-colon	"ab:cd\n"	@bad	разделители — неверная строка
+bad-crlf	"ab\r\ncd\r\n"	@bad	CR — знак вне hex: неверная строка
+bad-nonhex	"ab\nzz\n"	@bad	знак вне hex; верные строки рядом не спасают — прежнее и частичное не используется
+bad-sign	"-1\n"	@bad	знак — неверная строка
