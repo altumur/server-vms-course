@@ -1,7 +1,7 @@
 # V/02 Запись
 
 Статус: **план перевода** (2026-10-23, «Спецификация VMS»; годен — «Архитектор» 2026-10-23); нормы — по главам ниже. Источники — опись
-[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `5a39bd5`. Манифест —
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `6e51975`. Манифест —
 [`rec.subsystem.yaml`](rec.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8).
 
 ## Что такое урок V/02
