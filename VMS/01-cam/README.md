@@ -1,7 +1,7 @@
 # V/01 Камера
 
 Статус: **переводится** — V/01.1 переведена, V/01.7 — заглушка до запроса (2026-10-23); план ниже годен («Архитектор» 2026-10-23). Источники — опись
-[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `afb1c88`.
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `9b1a484`.
 Манифест — [`cam.subsystem.yaml`](cam.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8). Оболочка —
 [`cam.shell.html`](cam.shell.html) (её текст — урок V/08).
 
