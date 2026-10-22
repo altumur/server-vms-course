@@ -1,0 +1,10 @@
+# {id} в умолчании при unit.id name; строка 122 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    label: {type: string, default: 'cam{id}'}
+placement:
+  capacity: {default: 4}

@@ -1,0 +1,10 @@
+# {id} в умолчании поля не string (json); строка 123 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: numeric
+  fields:
+    name: {type: string, required: true}
+    label: {type: json, default: 'cam{id}'}
+placement:
+  capacity: {default: 4}

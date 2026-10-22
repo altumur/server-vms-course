@@ -108,6 +108,7 @@ root:
           default_text: чужих долей нет
           items: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}\.[a-z][a-z0-9_-]{0,31}'}
           unique_items: true
+        stop_timeout: {type: integer, minimum: 20, maximum: 50, default: 20, owner: P/02.4 Н1.1, description: "секунды остановки юнита воркера — `TimeoutStopSec` (macOS — `ExitTimeOut`); верх 50 — единое правило для всех воркеров (ADR-0091 доп. (2) п. 1, доп. (3) п. 4)"}
     slot:
       owner: P/03.2 Н1.4
       type: object
@@ -154,6 +155,7 @@ root:
           required: [kind]
           properties:
             kind: {enum: [socket, dir]}
+            part: {ref: name, description: "часть из `parts` этой подсистемы — производитель доли: каталог и сокет — пользователя и группы части (ADR-0091 доп. (2) п. 4)"}
     parts:
       owner: P/02.4 Н1.1
       description: "части подсистемы со своей службой и пользователем (ADR-0091 п. 5): имя → служба"
@@ -167,6 +169,7 @@ root:
           properties:
             exec: {type: string, description: "команда службы части"}
             volumes: {type: boolean, default: false, description: "тома: точки монтирования `…/<часть>/volumes/<n>` (ADR-0091 п. 4)"}
+            stop_timeout: {type: integer, minimum: 1, default: 20, description: "секунды остановки юнита части — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 доп. (2) п. 1, доп. (3) п. 4)"}
     door:
       owner: P/06.5 Н3; P/06.5 Н1.8
       type: object

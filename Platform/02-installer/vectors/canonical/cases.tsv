@@ -19,7 +19,9 @@ example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
 corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1
 corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	принятый случай корпуса 2.1
+corpus-a91_shares_part_ok	Platform/02-installer/acceptance/1/cases/a91_shares_part_ok.subsystem.yaml	expect/corpus-a91_shares_part_ok.json	принятый случай корпуса 2.1
 corpus-a91_shares_parts_ok	Platform/02-installer/acceptance/1/cases/a91_shares_parts_ok.subsystem.yaml	expect/corpus-a91_shares_parts_ok.json	принятый случай корпуса 2.1
+corpus-a91_stop_timeout_bounds_ok	Platform/02-installer/acceptance/1/cases/a91_stop_timeout_bounds_ok.subsystem.yaml	expect/corpus-a91_stop_timeout_bounds_ok.json	принятый случай корпуса 2.1
 corpus-a91_unit_field_state_without_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_field_state_without_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_field_state_without_unit_state_ok.json	принятый случай корпуса 2.1
 corpus-a91_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_state_ok.json	принятый случай корпуса 2.1
 corpus-a91_uses_ok	Platform/02-installer/acceptance/1/cases/a91_uses_ok.subsystem.yaml	expect/corpus-a91_uses_ok.json	принятый случай корпуса 2.1
@@ -86,6 +88,7 @@ corpus-fields_affinity_known	Platform/02-installer/acceptance/1/cases/fields_aff
 corpus-fields_servers_show_known	Platform/02-installer/acceptance/1/cases/fields_servers_show_known.subsystem.yaml	expect/corpus-fields_servers_show_known.json	принятый случай корпуса 2.1
 corpus-float_finite_defaults	Platform/02-installer/acceptance/1/cases/float_finite_defaults.subsystem.yaml	expect/corpus-float_finite_defaults.json	принятый случай корпуса 2.1
 corpus-float_finite_inherit	Platform/02-installer/acceptance/1/cases/float_finite_inherit.subsystem.yaml	expect/corpus-float_finite_inherit.json	принятый случай корпуса 2.1
+corpus-id_default_numeric_ok	Platform/02-installer/acceptance/1/cases/id_default_numeric_ok.subsystem.yaml	expect/corpus-id_default_numeric_ok.json	принятый случай корпуса 2.1
 corpus-inherit_map	Platform/02-installer/acceptance/1/cases/inherit_map.subsystem.yaml	expect/corpus-inherit_map.json	принятый случай корпуса 2.1
 corpus-int_field_boundaries	Platform/02-installer/acceptance/1/cases/int_field_boundaries.subsystem.yaml	expect/corpus-int_field_boundaries.json	принятый случай корпуса 2.1
 corpus-json_default_map	Platform/02-installer/acceptance/1/cases/json_default_map.subsystem.yaml	expect/corpus-json_default_map.json	принятый случай корпуса 2.1

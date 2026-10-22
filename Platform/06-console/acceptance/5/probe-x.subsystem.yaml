@@ -1,4 +1,5 @@
 # probe-x — третий манифест стенда главы 6.5 (прежде М10/9; разбор ревью стадии B 3–5, № 34): имя с «-», чтобы проверить metrics.prefix (М10/2 Н2: «-» → «_»).
 name: probe-x
-unit: {rows: probes, id: numeric}
+# label — умолчание с {id}: дверь подставляет выданный номер при создании (P/06.1 Н1.2 шаг 3; запрос VMS № 1, сц. 18)
+unit: {rows: probes, id: numeric, fields: {label: {type: string, default: 'probe{id}'}, n: {type: int}}}
 placement: {capacity: {default: 1}}

@@ -88,7 +88,7 @@ worker.deletes[]	. = @unit.rows	reference	P/02.1 Н1.4; ADR-0067
 worker.requests[]	. != @name	reference	P/02.1 Н1.4
 worker.creates[].sub	. != @name	reference	P/02.1 Н1.4; P/03.6 Н1.6
 worker.creates	unique values(worker.creates[].sub)	value	P/02.1 Н1.2а worker.creates
-worker.uses[]	split(. "." 0) != @name	reference	P/02.1 Н1.4; P/02.4 Н1.1
+worker.uses[]	when split(. "." 0) = @name : split(. "." 1) in keys(shares ? has part)	reference	P/02.1 Н1.4; P/02.4 Н1.1
 unit.fields.state	absent @unit.state	value	P/02.1 Н1.3; P/03.6 Н1.7
 unit.state.*	depth . <= 32	value	P/06.1 Н1.4
 worker.reads	prefix_free values(worker.reads[])	value	P/02.5 Н1.4
@@ -118,3 +118,7 @@ domain.shared[].name	. not in keys(unit.fields)	value	P/02.1 Н1.2б
 domain.shared[]	. in keys(unit.fields ? has inherit) | {@display.tree.group_by}	value	P/02.1 Н1.2б
 domain.shared[].schema	depth . <= 32	value	P/06.1 Н1.4
 domain.witness.member_field	. in keys(unit.fields ? fixed = true)	value	P/02.1 Н1.2б
+shares.*.part	. in keys(parts)	reference	P/02.1 Н1.4; P/02.4 Н1.1
+unit.fields.*.default	when @unit.id != numeric : . !~ ".*\{id\}.*"	reference	P/02.1 Н1.3; P/06.1 Н1.2
+unit.fields.$f.default	when @unit.fields.$f.type != string : . !~ ".*\{id\}.*"	reference	P/02.1 Н1.3; P/06.1 Н1.2
+unit.fields.$f.default	when @unit.id = numeric & @unit.fields.$f.type = string : . ~ "([^{}]|\{id\})*"	reference	P/02.1 Н1.3; P/06.1 Н1.2

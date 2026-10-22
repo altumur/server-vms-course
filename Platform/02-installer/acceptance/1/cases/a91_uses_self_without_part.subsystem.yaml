@@ -1,0 +1,13 @@
+# worker.uses — своя доля без part; строка 91 references.tsv, ADR-0091 доп. (2) п. 4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  uses: [probe.belt]
+shares:
+  belt: {kind: socket}

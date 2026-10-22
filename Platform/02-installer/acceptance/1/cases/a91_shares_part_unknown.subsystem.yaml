@@ -1,0 +1,13 @@
+# shares.<доля>.part не из parts; строка 121 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+shares:
+  pump: {kind: socket, part: pumps}
+parts:
+  pump: {exec: /usr/lib/probe/pump}

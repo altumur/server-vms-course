@@ -1,0 +1,13 @@
+# worker.stop_timeout на верхней границе CLOSE_BY 50, parts.<часть>.stop_timeout на нижней 1; ADR-0091 доп. (3) п. 4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  stop_timeout: 50
+parts:
+  pump: {exec: /usr/lib/probe/pump, stop_timeout: 1}

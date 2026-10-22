@@ -113,3 +113,8 @@ scenario	step	request	expect
 17-snapshot-garbled	7	@sigterm controller	ok
 17-snapshot-garbled	8	@spoil object testsub/snapshot/unplaced	ok
 17-snapshot-garbled	9	console GET /metrics	200 ~testsub_snapshot_garbled_shards 1
+18-id-default	1	POST /probe-x/probes {}	201 {"label": "probe1", "revision": 1}
+18-id-default	2	POST /probe-x/probes {"label": "x{id}"}	201 {"label": "x{id}"}
+18-id-default	3	POST /probe-x/probes {"n": 1}	201 {"label": "probe3", "n": 1}
+18-id-default	4	PUT /probe-x/probes/1 {"label": "renamed"}	200 {"label": "renamed", "revision": 2}
+18-id-default	5	PUT /probe-x/probes/1 {"n": 4}	200 {"label": "renamed", "n": 4, "revision": 3}

@@ -1,0 +1,10 @@
+# {id} в умолчании поля string при unit.id numeric — дверь подставляет id; запрос VMS № 1
+name: probe
+unit:
+  rows: counters
+  id: numeric
+  fields:
+    name: {type: string, required: true}
+    label: {type: string, default: 'cam{id}'}
+placement:
+  capacity: {default: 4}

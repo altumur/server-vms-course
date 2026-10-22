@@ -602,3 +602,15 @@ profile_unit_born	refused
 profile_unit_made	refused
 a91_rows_state	refused
 m49_table_state	refused
+a91_stop_timeout_bounds_ok	ok
+a91_stop_timeout_19	refused
+a91_stop_timeout_51	refused
+a91_parts_stop_timeout_zero	refused
+a91_shares_part_ok	ok
+a91_shares_part_unknown	refused
+a91_uses_self_without_part	refused
+id_default_numeric_ok	ok
+id_default_name_id	refused
+id_default_json_field	refused
+id_default_other_brace	refused
+id_default_lone_brace	refused

@@ -175,3 +175,12 @@ a91_parts_without_exec	value
 profile_unit_born	value
 profile_unit_made	value
 a91_rows_state	value
+a91_stop_timeout_19	value
+a91_stop_timeout_51	value
+a91_parts_stop_timeout_zero	value
+a91_shares_part_unknown	reference
+a91_uses_self_without_part	reference
+id_default_name_id	reference
+id_default_json_field	reference
+id_default_other_brace	reference
+id_default_lone_brace	reference

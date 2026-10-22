@@ -1,0 +1,11 @@
+# parts.<часть>.stop_timeout 0 — ниже 1; ADR-0091 доп. (3) п. 4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+parts:
+  pump: {exec: /usr/lib/probe/pump, stop_timeout: 0}
