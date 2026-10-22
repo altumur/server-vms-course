@@ -38,10 +38,9 @@ unit:
   # `PLATFORM_FIELDS`; `new_row` applies the defaults; `row()`/`items()` convert by type; `/spec` sends
   # `{name, type, default, required}` for each so the page builds its forms without knowing the VMS.
   fields:
-    # The name people know the camera by (V/01.1 Н1.1). No default: the platform takes a default literally (P/06.1 Н1.2),
-    # and `cam{id}` with the issued id substituted waits for decisions/inbox/2026-10-23-запрос-vms-id-в-умолчании.md;
-    # a camera without a name is shown by its id (V/08).
-    name:                  {type: string}
+    # The name people know the camera by (V/01.1 Н1.1); without one, `cam<id>` — the door puts the issued id in place
+    # of `{id}` (P/02.1 Н1.3, P/06.1 Н1.2 шаг 3).
+    name:                  {type: string, default: "cam{id}"}
     # the only required field: a create without it is `Refused("a vms unit needs a source")`. The worker
     # passes it verbatim as `driverpacksrc uri=…`; `gstvms/uri.py` accepts `driverpack://file/<name>` and
     # refuses `driverpack://<vendor>/…` as the real DriverPack's.
