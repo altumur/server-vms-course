@@ -1,0 +1,5 @@
+scenario	step	request	expect
+# Приёмка V/01.3: источник driverpack://file — отказ имени из двух сегментов (стенд главы 2). Формат — README.
+01-bad-name	1	@start worker cam w-srv-a-1 on srv-a	ok
+01-bad-name	2	POST /cameras {"name": "nested", "source": "driverpack://file/sub/door.mp4"}	201 {"id": "$c1"}
+01-bad-name	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "device_state": "refused", "reason": "~bad media name", "live_url": "@absent"}]}

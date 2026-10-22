@@ -98,6 +98,7 @@ components:
           schema:
             type: object
             required: [error]
+            additionalProperties: false
             properties:
               error: {type: string}
               detail: {type: string}
@@ -112,6 +113,7 @@ components:
     Device:
       type: object
       required: [device, known]
+      additionalProperties: false
       properties:
         device: {type: string}
         state: {enum: [slow, failed, opening]}
@@ -128,6 +130,17 @@ components:
         reads_stuck:
           type: array
           items: {type: string}
-        can: {type: object}
+        can:
+          description: описание устройства без identity (V/01.4 Н1.4)
+          type: object
+          additionalProperties: false
+          properties:
+            events:
+              type: array
+              items: {type: string}
+            rays: {type: integer, minimum: 0}
+            relays: {type: integer, minimum: 0}
+            ptz: {type: boolean}
+            presets: {type: integer, minimum: 0}
         same_serial_as: {type: string}
         why: {type: string}
