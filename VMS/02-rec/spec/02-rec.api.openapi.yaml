@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: V/02 — дверь архива регистратора
+  version: 1.0.0
+  description: |
+    HTTP-контракт двери архива регистратора `recworker` — глава V/02.5 урока «Запись» модуля VMS. Канон —
+    [нормы главы 5](02.5-rec.norms.md); файл их выражает и не добавляет требований. Процессам — `/spans`,
+    `/samples` (сертификат роли `recworker`, `detjobworker`; без комплекта — петля); странице — `/timeline`,
+    `/segment`, `/keeps` (токен двери консоли, договор токена двери). Иной метод — 405, иной путь — 404.
+servers:
+  - url: http://127.0.0.1:{port}
+    description: без комплекта сертификатов — только петля (P/02.4 Н1.6)
+    variables:
+      port: {default: "0"}
+paths:
+  /spans/{unit}:
+    get:
+      summary: Видимые спаны записи в томе этого регистратора (Н1.4)
+      parameters:
+        - $ref: "#/components/parameters/Unit"
+        - $ref: "#/components/parameters/FromS"
+        - $ref: "#/components/parameters/ToS"
+      responses:
+        "200":
+          description: спаны, подрезанные потолком (Н1.2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Spans"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /samples/{unit}:
+    get:
+      summary: Кадры записи (SMPL подряд) за интервал (Н1.4)
+      parameters:
+        - $ref: "#/components/parameters/Unit"
+        - $ref: "#/components/parameters/FromS"
+        - $ref: "#/components/parameters/ToS"
+        - name: stream
+          in: query
+          required: false
+          description: только этот поток записи — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха»
+          schema: {type: string, pattern: "^[0-9]+(/backfill)?$"}
+      responses:
+        "200":
+          description: записи SMPL подряд (договор obsd); HTTP/1.1 — chunked; пусто — без тела; обрыв после первого байта — без последнего куска
+          content:
+            application/octet-stream:
+              schema: {type: string, format: binary}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /timeline/{recording}:
+    get:
+      summary: Таймлайн записи со всех живых дверей и архива устройства (Н1.5)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/Recording"
+        - $ref: "#/components/parameters/FromS"
+        - $ref: "#/components/parameters/ToS"
+      responses:
+        "200":
+          description: спаны по (start_ms, epoch)
+          headers:
+            X-Unreachable: {schema: {type: string}, description: "регистраторы, чья дверь не ответила или ответила неполно"}
+            X-Unavailable: {schema: {type: string}, description: "<том>@<сервер> томов этой записи без живого держателя"}
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/TimelineSpan"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+  /segment/{recording}/{epoch}/{piece}:
+    get:
+      summary: Кусок fMP4 (Н1.6)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/Recording"
+        - name: epoch
+          in: path
+          required: true
+          description: "e<эпоха>; e0 — копия удержания или (.device) архив устройства"
+          schema: {type: string, pattern: "^e[0-9]+$"}
+        - name: piece
+          in: path
+          required: true
+          description: "<fromMs>-<toMs>.mp4 | .backfill.mp4 | .device.mp4 (только e0)"
+          schema: {type: string, pattern: "^[0-9]+-[0-9]+(\\.backfill|\\.device)?\\.mp4$"}
+      responses:
+        "200":
+          description: fMP4 (ftyp, moov, фрагменты moof+mdat); HTTP/1.1 — chunked
+          headers:
+            X-Unreachable: {schema: {type: string}}
+          content:
+            video/mp4:
+              schema: {type: string, format: binary}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "415": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /keeps/{keep}/verify:
+    post:
+      summary: Сверка копии удержания (глава V/02.7)
+      security: [{doorToken: []}]
+      parameters:
+        - name: keep
+          in: path
+          required: true
+          schema: {type: string}
+        - $ref: "#/components/parameters/RecordingQuery"
+      responses:
+        "200":
+          description: итог сверки копии удержания (смысл — глава V/02.7)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/KeepVerify"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "409": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+components:
+  securitySchemes:
+    doorToken:
+      type: http
+      scheme: bearer
+      description: токен двери консоли (договор токена двери); также ?t=
+  parameters:
+    Unit:
+      name: unit
+      in: path
+      required: true
+      description: id записи (V/02.1)
+      schema: {type: string, minLength: 1}
+    Recording:
+      name: recording
+      in: path
+      required: true
+      schema: {type: string, minLength: 1}
+    RecordingQuery:
+      name: recording
+      in: query
+      required: true
+      schema: {type: string, minLength: 1}
+    FromS:
+      name: from
+      in: query
+      required: false
+      description: секунды Unix, конечное число
+      schema: {type: number}
+    ToS:
+      name: to
+      in: query
+      required: false
+      description: секунды Unix, конечное число
+      schema: {type: number}
+  responses:
+    Refusal:
+      description: отказ (V/02.5 Н4); 503 пределов — с Retry-After
+      headers:
+        Retry-After:
+          required: false
+          schema: {type: integer}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {type: string}
+              detail: {type: string}
+  schemas:
+    Spans:
+      type: object
+      required: [unit, spans, current_epoch, held_since, now]
+      additionalProperties: false
+      properties:
+        unit: {type: string}
+        spans:
+          type: array
+          items:
+            type: object
+            required: [start, end, epoch, source, bytes, fenced]
+            additionalProperties: false
+            properties:
+              start: {type: number}
+              end: {type: number}
+              epoch: {type: integer, minimum: 0}
+              source: {enum: [live, backfill]}
+              bytes: {type: integer, minimum: 0}
+              fenced: {type: boolean}
+        current_epoch: {type: [integer, "null"], minimum: 0}
+        held_since: {type: [number, "null"]}
+        now: {type: number}
+    KeepVerify:
+      type: object
+      required: [keep, integrity, ok, recordings]
+      additionalProperties: false
+      properties:
+        keep: {type: string}
+        integrity: {type: string, description: "ok | broken: … | unknown: …"}
+        ok: {type: boolean}
+        recordings:
+          type: object
+          additionalProperties:
+            type: object
+            required: [sealed, now, samples, result]
+            additionalProperties: false
+            properties:
+              sealed: {type: [string, "null"]}
+              now: {type: [string, "null"]}
+              samples: {type: integer, minimum: 0}
+              result: {enum: [ok, damaged, pending, unverified, empty]}
+              detail: {type: string}
+    TimelineSpan:
+      type: object
+      required: [start_ms, end_ms, epoch]
+      additionalProperties: false
+      properties:
+        start_ms: {type: integer}
+        end_ms: {type: integer}
+        epoch: {type: integer, minimum: 0}
+        source: {enum: [backfill, device]}
+        fenced: {type: boolean}
+        yields: {type: boolean}
