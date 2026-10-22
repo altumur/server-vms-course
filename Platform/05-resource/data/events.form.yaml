@@ -1,0 +1,34 @@
+# Семья бакетов журнала событий <корень событий>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl (P/05 Н1.2;
+# договор журнала событий, Platform/common/contracts/event-journal.md). Файл — строки JSON через LF; экземпляр — {key,
+# file}, где file — текст ОДНОЙ полной строки бакета: схема — форма строки line договора; порванный хвост и неверная
+# строка — договор `bucket` `torn` (EJ-G03). Времена t и occurred — common.time, как все времена (P/01.1 Н0 «Время в
+# строке»): писатель пишет строго, читатель читает терпимо (кодек codec.tsv `time`; догадка стадии C EJ-G07, решение
+# «Архитектора» 2026-10-23). Прочие ключи — слова подсистемы. Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  encoding: json
+  type: object
+  properties:
+    t:
+      ref: common.time
+      description: "секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06)"
+    kind:
+      type: string
+      description: вид события
+    id:
+      type: string
+      description: "`e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий"
+    of:
+      type: string
+      description: "`<sub>/<id>` — единица, про которую; ставит платформа из about"
+    class:
+      type: string
+      enum: [alarm]
+      description: только у тревоги; observation не пишется
+    occurred:
+      ref: common.time
+      description: когда произошло; необязателен
+  required: [t, kind, id]
+  names:
+    key: {type: string}
+    value: {type: any, description: слова подсистемы}
