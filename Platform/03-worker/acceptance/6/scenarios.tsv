@@ -51,3 +51,27 @@ scenario	step	request	expect
 07-append-by-data	34	console POST /testsub2/requests {"unit": "t1", "from": 8, "to": 8, "action": "recount"}	202 {"queued": "t1-8-8"}
 07-append-by-data	35	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "6", "ranges": "0-3,7-8"}}
 07-append-by-data	36	@until 90 store GET /v1/get?key=testsub2/requests/t1-8-8	200 {"items": null}
+# 08-orders (ADR-0091 п. 1): учебный заказчик testsub (Н5) — счётчик со start ≥ 1000 заказывает testsub2/tallies/testsub-<id>; занятая строка не пишется; перезапуск воркера — новое событие, продление; исходы в пульсе
+08-orders	1	@start controller	ok
+08-orders	2	@start worker w-1	ok
+08-orders	3	@as console store POST /v1/write {"id":"o3","op":"put","key":"testsub2/tallies/testsub-c9","items":{"id":"testsub-c9","revision":"1","name":"testsub-c9","of":"c9"},"cas":""}	200
+08-orders	4	console POST /counters {"name": "c8", "start": 1000}	201
+08-orders	5	@until 30 store GET /v1/get?key=testsub2/tallies/testsub-c8	200 {"items": {"name": "testsub-c8", "of": "c8", "revision": "1", "born": "~", "made": "~\"by\":\"testsub\""}}
+08-orders	6	console POST /counters {"name": "c9", "start": 1000}	201
+08-orders	7	console POST /counters {"name": "c7", "start": 1}	201
+08-orders	8	@until 30 store GET /v1/get?key=testsub/epoch/c7	200 {"items": {"epoch": "1"}}
+08-orders	9	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"creates": {"created": 1, "taken": 1}}
+08-orders	10	store GET /v1/get?key=testsub2/tallies/testsub-c9	200 {"items": {"revision": "1", "made": "@absent"}}
+08-orders	11	store GET /v1/get?key=testsub2/tallies/testsub-c7	200 {"items": null}
+08-orders	12	@sigterm w-1	ok
+08-orders	13	@start worker w-1	ok
+08-orders	14	@until 60 store GET /v1/get?key=testsub2/tallies/testsub-c8	200 {"items": {"revision": "2", "made": "~\"by\":\"testsub\""}}
+08-orders	15	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"creates": {"extended": 1, "taken": 1}}
+# 09-state (ADR-0091 п. 3): учебный держатель testsub2 при запуске пишет состояние result {state: open} под своей эпохой; консоль показывает действующее
+09-state	1	@start controller testsub2	ok
+09-state	2	@start worker testsub2 t-1	ok
+09-state	3	@as console store POST /v1/write {"id":"s3","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+09-state	4	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"revision": 1}
+09-state	5	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
+09-state	6	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "1", "born": "~", "value": "{\"state\":\"open\"}"}}
+09-state	7	console2 GET /tallies	200 {"configured": [{"name": "t1", "state": {"result": {"state": "open"}}}]}
