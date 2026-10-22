@@ -56,12 +56,14 @@ paths:
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "409":
-          description: CAS P/01.1 либо floor не возрастает (refused — строка P/01.1 Н4); иной payload с тем же id — 400 badrequest, не 409
+          description: CAS P/01.1, условия времени приёма (expired, early — ADR-0091 п. 1) либо floor не возрастает (refused — строка P/01.1 Н4); иной payload с тем же id — 400 badrequest, не 409
           content:
             application/json:
               schema:
                 oneOf:
                 - $ref: '#/components/schemas/ConflictFault'
+                - $ref: '#/components/schemas/ExpiredFault'
+                - $ref: '#/components/schemas/EarlyFault'
                 - $ref: '#/components/schemas/Refused'
         "412": {$ref: "#/components/responses/Guard"}
         "413": {$ref: "#/components/responses/TooLarge"}
@@ -389,6 +391,8 @@ components:
             key: {$ref: "#/components/schemas/Key"}
             index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
         id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+        not_after: {type: number, minimum: 0, description: "Н1, Н3 «Время приёма»: принято, только пока время приёма ≤ not_after, иначе 409 expired (ADR-0091 п. 1)"}
+        not_before: {type: number, minimum: 0, description: "Н1, Н3 «Время приёма»: принято, только если время приёма > not_before, иначе 409 early (ADR-0091 п. 1)"}
       oneOf:
       - properties:
           op: {const: put}
@@ -412,6 +416,8 @@ components:
       - $ref: "#/components/schemas/BadRequestFault"
       - $ref: "#/components/schemas/ForbiddenFault"
       - $ref: "#/components/schemas/ConflictFault"
+      - $ref: "#/components/schemas/ExpiredFault"
+      - $ref: "#/components/schemas/EarlyFault"
       - $ref: "#/components/schemas/GuardFault"
       - $ref: "#/components/schemas/RowTooLargeFault"
       - $ref: "#/components/schemas/BodyTooLargeFault"
@@ -446,6 +452,22 @@ components:
         kind: {const: conflict}
         error: {type: string}
         index: {$ref: "#/components/schemas/VersionOrAbsent"}
+    ExpiredFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: expired}
+        error: {type: string}
+      description: Время приёма позже not_after (Н4; ADR-0091 п. 1); ничего не записано.
+    EarlyFault:
+      type: object
+      required: [kind, error]
+      additionalProperties: false
+      properties:
+        kind: {const: early}
+        error: {type: string}
+      description: Время приёма не позже not_before (Н4; ADR-0091 п. 1); ничего не записано.
     GuardFault:
       type: object
       required: [kind, error, key, index]
@@ -675,6 +697,10 @@ components:
           type: integer
           minimum: 0
           maximum: 18446744073709551615
+        admission_ahead:
+          type: number
+          exclusiveMinimum: 60
+          description: P/01.3 Н1.3 admission — на сколько секунд время приёма последней записи впереди часов лидера, только сверх 60 с (ADR-0091 п. 1); у ведомого и двери нет.
         out:
           type: array
           items:

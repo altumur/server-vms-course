@@ -154,3 +154,24 @@
 27-method-route	6	GET /v1/get/?key=acc/27-method-route/a	404 {"kind":"badrequest"}
 27-method-route	7	GET //v1/get?key=acc/27-method-route/a	404 {"kind":"badrequest"}
 27-method-route	8	GET /v1/list?prefix=acc/27-method-route/	200 {"keys":{}}
+# 28-admission: 1 (1970) уже прошло, 4102444800 (2100) ещё не настало при любых часах стенда; шаг 9 — 4102444800.0 равно 4102444800 по значению; шаг 10 — not_after в отпечатке; шаг 13 — отказ expired id не занимает
+28-admission	1	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"1"},"cas":"","not_after":4102444800}	200 {"index":"$a"}
+28-admission	2	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"2"},"cas":"$a","not_after":1}	409 {"kind":"expired"}
+28-admission	3	POST /v1/write {"op":"delete","key":"acc/28-admission/c1","cas":"$a","not_before":4102444800}	409 {"kind":"early"}
+28-admission	4	GET /v1/get?key=acc/28-admission/c1	200 {"items":{"n":"1"},"index":"$a"}
+28-admission	5	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"3"},"cas":"0","guard":{"key":"acc/28-admission/s","index":"1"},"not_after":1}	409 {"kind":"expired"}
+28-admission	6	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"3"},"cas":"0","guard":{"key":"acc/28-admission/s","index":"1"},"not_before":4102444800}	409 {"kind":"early"}
+28-admission	7	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"3"},"cas":"0","guard":{"key":"acc/28-admission/s","index":"1"},"not_after":4102444800,"not_before":1}	412 {"kind":"guard","key":"acc/28-admission/s","index":""}
+28-admission	8	POST /v1/write {"op":"put","key":"acc/28-admission/c2","items":{"n":"1"},"cas":"","not_after":4102444800,"id":"2801"}	200 {"index":"$b"}
+28-admission	9	POST /v1/write {"op":"put","key":"acc/28-admission/c2","items":{"n":"1"},"cas":"","not_after":4102444800.0,"id":"2801"}	200 {"index":"$b","again":true}
+28-admission	10	POST /v1/write {"op":"put","key":"acc/28-admission/c2","items":{"n":"1"},"cas":"","not_after":1,"id":"2801"}	400 {"kind":"badrequest"}
+28-admission	11	POST /v1/write {"op":"put","key":"acc/28-admission/c2","items":{"n":"1"},"cas":"","id":"2801"}	400 {"kind":"badrequest"}
+28-admission	12	POST /v1/write {"op":"put","key":"acc/28-admission/c3","items":{"n":"1"},"cas":"","not_after":1,"id":"2802"}	409 {"kind":"expired"}
+28-admission	13	POST /v1/write {"op":"put","key":"acc/28-admission/c3","items":{"n":"1"},"cas":"","not_after":4102444800,"id":"2802"}	200 {"index":"$c"}
+28-admission	14	POST /v1/write {"op":"delete","key":"acc/28-admission/c1","cas":"$a","not_before":1,"not_after":4102444800}	200 {"index":"$d"}
+28-admission	15	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"not_after":"4102444800"}	400 {"kind":"badrequest"}
+28-admission	16	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"not_after":-1}	400 {"kind":"badrequest"}
+28-admission	17	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"not_after":null}	400 {"kind":"badrequest"}
+28-admission	18	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"not_before":true}	400 {"kind":"badrequest"}
+28-admission	19	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"guard":{"key":"/s","index":""},"not_after":-1}	400 {"kind":"badkey"}
+28-admission	20	GET /v1/list?prefix=acc/28-admission/	200 {"keys":{"acc/28-admission/c2":"$b","acc/28-admission/c3":"$c"}}
