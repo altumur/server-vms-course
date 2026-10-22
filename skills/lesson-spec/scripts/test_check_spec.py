@@ -1704,6 +1704,35 @@ class VmsLessonTests(unittest.TestCase):
             "М10B/01 ш.2\tV/01.2-01\t1.2\tдержатель\t-\n", encoding="utf-8")
         self.assertTrue(any("stale stub" in e for e in self.errors()), self.errors())
 
+    VMS_README = ("# Приёмка VMS\n\n## Директивы и двери VMS\n\n| Форма | Смысл | Уроки |\n|---|---|---|\n"
+                  "| `@start worker <sub> <имя> on <сервер>` | воркер | V/01 |\n"
+                  "| `@until <секунды> <запрос>` | повтор | V/01 |\n"
+                  "| `holder <воркер> <МЕТОД> <путь>` | дверь держателя | V/01 |\n"
+                  "| `resource GET /v1/objects/<ключ>` | дверь ресурса | V/01 |\n")
+
+    def scenarios(self, rows):
+        (self.root / "VMS/common/acceptance").mkdir(parents=True, exist_ok=True)
+        (self.root / "VMS/common/acceptance/README.md").write_text(self.VMS_README, encoding="utf-8")
+        (self.dir / "acceptance/1/scenarios.tsv").write_text(
+            "# scenario\tstep\trequest\texpect\n" + "".join(f"01-x\t{i}\t{r}\t{e}\n" for i, (r, e) in enumerate(rows, 1)),
+            encoding="utf-8")
+
+    def test_vms_forms_from_common_readme(self):
+        self.scenarios([("@start worker cam w-srv-a-1 on srv-a", "ok"),
+                        ("@until 30 GET /cameras", "200 {}"),
+                        ("@until 30 resource GET /v1/objects/cam/commands/$rid", "200 {}"),
+                        ("holder w-srv-a-1 GET /devices", "200 []")])
+        self.assertEqual(self.errors(), [])
+
+    def test_vms_forms_refuse_unknown_and_bad_expectation(self):
+        self.scenarios([("@start worker cam w-srv-a-1", "ok"),
+                        ("@start worker cam w-srv-a-1 on srv-a", "200 {}"),
+                        ("keeper w-1 GET /devices", "200 {}")])
+        errors = self.errors()
+        self.assertTrue(any("line 2: unsupported request form" in e for e in errors), errors)
+        self.assertTrue(any("line 3: directive @start expects ok" in e for e in errors), errors)
+        self.assertTrue(any("line 4: unsupported request form" in e for e in errors), errors)
+
     def test_platform_lesson_is_not_touched(self):
         (self.root / "Platform/01-store").mkdir(parents=True)
         check = Check(self.root)

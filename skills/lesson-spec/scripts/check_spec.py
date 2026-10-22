@@ -622,6 +622,7 @@ class Check:
         self.used = set()
         self.catalog = None
         self.lessons = None
+        self.vms_request_forms = None
         self.processes_checked = False
         self.catalog_checked = False
         self.idmap = None
@@ -1408,7 +1409,7 @@ class Check:
 
     # The structure (columns, scenario/step numbering) is checked for every format; the generic grammar of requests
     # and expectations only for the generic one. With `own`, returns how many grammar messages its format silenced.
-    def scenarios(self, path, own=False):
+    def scenarios(self, path, own=False, forms=None):
         steps = Counter()
         silenced = 0
         for line, (scenario, step, request, expect) in self.tsv(path, 4, SCENARIO_HEADER):
@@ -1416,7 +1417,7 @@ class Check:
             if not scenario or step != str(steps[scenario]):
                 self.error(path, f"line {line}: invalid scenario/step sequence")
             before = len(self.errors)
-            self.scenario_form(path, line, request, expect)
+            self.scenario_form(path, line, request, expect, forms)
             if own:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
@@ -1426,7 +1427,56 @@ class Check:
             self.error(path, "empty scenarios table")
         return silenced
 
-    def scenario_form(self, path, line, request, expect):
+    # Request forms a VMS scenario may use besides `<МЕТОД> /<путь>` of the console: the table «Директивы и двери VMS»
+    # of VMS/common/acceptance/README.md (ADR-0090; one rule for every VMS lesson instead of `K/own` rows per chapter).
+    # A form's literal words stay literal; `<МЕТОД>` is an HTTP method, `<путь>` a path from `/`, `<запрос>` (last) a
+    # nested request, any other `<…>` one word. Returns ({directive: (pattern, nested)}, [door patterns]).
+    def vms_forms(self):
+        if self.vms_request_forms is not None:
+            return self.vms_request_forms
+        readme = self.root / VMS_DIR / "common/acceptance/README.md"
+        text = self.read(readme) if readme.exists() else None
+        section = re.search(r"^## Директивы и двери VMS.*?(?=^## |\Z)", text or "", re.S | re.M)
+        directives, doors = {}, []
+        def word(token):
+            parts = re.split(r"(<[^>]+>)", token)
+            out = ""
+            for part in parts:
+                if part == "<МЕТОД>":
+                    out += "(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)"
+                elif part == "<путь>":
+                    out += r"/\S*"
+                elif part.startswith("<") and part.endswith(">"):
+                    out += r"\S+"
+                else:
+                    out += re.escape(part)
+            return out
+        for form in re.findall(r"^\|\s*`([^`]+)`", section.group(0) if section else "", re.M):
+            tokens = form.split()
+            nested = tokens[-1] == "<запрос>"
+            body = " ".join(word(token) for token in (tokens[:-1] if nested else tokens))
+            pattern = re.compile(body + (r" (?P<request>.+)" if nested else ""))
+            if tokens[0].startswith("@"):
+                directives.setdefault(tokens[0], []).append((pattern, nested))
+            else:
+                doors.append(pattern)
+        self.vms_request_forms = (directives, doors)
+        return self.vms_request_forms
+
+    def scenario_form(self, path, line, request, expect, forms=None):
+        if forms is not None:
+            directives, doors = forms
+            name = request.split(" ", 1)[0]
+            for pattern, nested in directives.get(name, []):
+                match = pattern.fullmatch(request)
+                if match and nested:
+                    return self.scenario_form(path, line, match.group("request"), expect, forms)
+                if match:
+                    if expect != "ok":
+                        self.error(path, f"line {line}: directive {name} expects ok")
+                    return
+            if any(pattern.fullmatch(request) for pattern in doors):
+                request = "GET /"                   # a VMS door form; the expectation is checked as for the console
         if request.startswith("ASSERT "):
             if expect or not re.fullmatch(r"ASSERT \$\w+ != \$\w+(?: \$\w+)*", request):
                 self.error(path, f"line {line}: invalid ASSERT or nonempty expectation")
@@ -1774,7 +1824,7 @@ class Check:
             scenarios = scenario_counts(self.read(table) or "")
             # A chapter's own grammar is excepted per chapter (`K/own`), like acceptance-entry.
             own = self.exception(key, "scenarios-format", entry + "own") is not None
-            silenced = self.scenarios(table, own)
+            silenced = self.scenarios(table, own, self.vms_forms() if key.startswith("V/") else None)
             if own and silenced:
                 self.except_(table, key, "scenarios-format", entry + "own", f"{silenced} generic grammar messages")
             formats += 1
