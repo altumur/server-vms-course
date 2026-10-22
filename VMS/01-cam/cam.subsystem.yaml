@@ -29,6 +29,9 @@ secrets:
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
 worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls]}
+# The holder's frames on its own server (V/01.2 Н1.3): a share, /run/vms-cam-shm, `<id>.shm` per camera; a subscriber on
+# the same server declares `worker.uses: [cam.shm]` (ADR-0091 п. 5).
+shares: {shm: {kind: dir}}
 unit:
   # the row directory `cam/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
