@@ -8,3 +8,12 @@ scenario	step	request	expect
 03-sigterm	6	@until 25 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true", "gen": "1"}}
 03-sigterm	7	store GET /v1/get?key=testsub/epoch/c3	200 {"items": {"epoch": "1"}}
 03-sigterm	8	@until 30 store GET /v1/get?key=testsub/placement/c3	200 {"items": {"worker": "", "reason": "~slot w-1 released"}}
+13-pulse-counters	1	@start resource	ok
+13-pulse-counters	2	@start controller	ok
+13-pulse-counters	3	@start worker w-1	ok
+13-pulse-counters	4	console POST /counters {"name": "c13", "start": 1}	201
+13-pulse-counters	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"store_errors": 0, "pass_failures": 0, "was_fenced": false, "unconfirmed": 0, "garbled_rows": 0, "status": [{"id": "c13", "lease": "@absent", "unconfirmed_s": "@absent"}]}
+13-pulse-counters	6	console GET /metrics	200 ~testsub_worker_fenced{worker="w-1"} 0
+13-pulse-counters	7	console GET /metrics	200 ~testsub_worker_store_errors{worker="w-1"} 0
+13-pulse-counters	8	console GET /metrics	200 ~testsub_worker_pass_failures{worker="w-1"} 0
+13-pulse-counters	9	console GET /metrics	200 ~testsub_worker_unconfirmed{worker="w-1"} 0

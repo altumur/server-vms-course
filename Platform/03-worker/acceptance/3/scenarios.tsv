@@ -20,3 +20,13 @@ scenario	step	request	expect
 06-deleted	8	@sleep 12	ok
 06-deleted	9	console POST /counters {"name": "c6", "start": 5}	201 {"revision": 2}
 06-deleted	10	@until 40 store GET /v1/get?key=testsub/epoch/c6	200 {"items": {"epoch": "2"}}
+12-row-unreadable	1	@start controller	ok
+12-row-unreadable	2	@start resource	ok
+12-row-unreadable	3	@start worker w-1	ok
+12-row-unreadable	4	console POST /counters {"name": "c12", "start": 1}	201 {"revision": 1}
+12-row-unreadable	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": 0, "status": [{"id": "c12", "phase": "running", "observed_revision": 1, "why": "@absent"}]}
+12-row-unreadable	6	store GET /v1/get?key=testsub/counters/c12	200 {"index": "$v", "items": {"born": "$b"}}
+12-row-unreadable	7	@as console store POST /v1/write {"id":"e7","op":"put","key":"testsub/counters/c12","items":{"id":"c12","revision":"2","name":"c12","start":"x","labels":"","born":"$b"},"cas":"$v"}	200
+12-row-unreadable	8	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c12", "phase": "running", "observed_revision": 1, "why": "~row unreadable: "}]}
+12-row-unreadable	9	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "@any", "pass_failures": 0}
+12-row-unreadable	10	store GET /v1/get?key=testsub/epoch/c12	200 {"items": {"epoch": "1"}}

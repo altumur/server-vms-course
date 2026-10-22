@@ -48,6 +48,14 @@ root:
             type: boolean
             enum: [true]
             description: "отступ запуска единицы дошёл до RETRY_MAX (глава 3.3 Н1.2 retry; ADR-0091 п. 6); иначе поля нет"
+          lease:
+            type: string
+            enum: [unconfirmed]
+            description: "аренда единицы не подтверждена (глава 3.2 Н1.6 silent); иначе поля нет (запрос VMS «пульс и битая строка»)"
+          unconfirmed_s:
+            type: number
+            minimum: 0
+            description: "секунды без подтверждения аренды единицы, с точностью 0,1 с; только вместе с lease: unconfirmed"
         required: [id, phase, epoch, revision, observed_revision]
         names:
           key: {type: string}
@@ -89,6 +97,21 @@ root:
       type: boolean
       enum: [true]
       description: только пока отсечён и имя ещё моё; после отдать_имя пульс не пишется
+    was_fenced:
+      type: boolean
+      description: "был ли этот экземпляр отсечён с запуска (Н3 «отсечён»); ряд P/06.5 worker_fenced{worker} (запрос VMS «пульс и битая строка»)"
+    store_errors:
+      ref: common.uint53
+      description: "ответов хранилища с ошибкой или без ответа с запуска экземпляра (глава 3.2 таблица отказов: store_errors + 1); ряд worker_store_errors{worker}"
+    pass_failures:
+      ref: common.uint53
+      description: "проходов цикла, оборванных ошибкой, с запуска экземпляра (глава 3.3 Н3); ряд worker_pass_failures{worker}"
+    unconfirmed:
+      ref: common.uint53
+      description: "единиц, чья аренда сейчас не подтверждена (элементы status[] с lease: unconfirmed); ряд worker_unconfirmed{worker}"
+    garbled_rows:
+      ref: common.uint53
+      description: "чтений строк своих единиц, не прочитанных своим типом, с запуска экземпляра (глава 3.3 Н3 шаг 2)"
     schema:
       type: integer
       minimum: 1

@@ -57,3 +57,8 @@ scenario	step	request	expect
 10-name-taken-once	13	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
 10-name-taken-once	14	@sleep 12	ok
 10-name-taken-once	15	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
+11-labels-off-alphabet	1	@start worker w-1 labels=a,b@c	ok
+11-labels-off-alphabet	2	@sleep 12	ok
+11-labels-off-alphabet	3	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+11-labels-off-alphabet	4	@start worker w-2 labels=a,b	ok
+11-labels-off-alphabet	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
