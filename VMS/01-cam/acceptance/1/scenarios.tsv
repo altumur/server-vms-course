@@ -1,0 +1,22 @@
+scenario	step	request	expect
+# Приёмка V/01.1: камера — единица (дверь единиц консоли cam, манифест VMS/01-cam/cam.subsystem.yaml). Формат — README.
+01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "$c1", "name": "", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "folders": [], "revision": 1}
+01-create	2	GET /cameras/$c1	200 {"source": "driverpack://file/door.mp4", "cred_secret": ""}
+02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400
+02-numeric	2	POST /cameras {"name": "gate", "source": "driverpack://file/b.mp4"}	201 {"id": "$c2", "name": "gate"}
+02-numeric	3	POST /cameras {"source": "driverpack://file/c.mp4", "live": "sometimes"}	400
+03-one-channel	1	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/1"}	201 {"id": "$c3"}
+03-one-channel	2	POST /cameras {"source": "RTSP://10.0.0.7/ch/1"}	409 {"error": "conflict", "fault": "unique"}
+03-one-channel	3	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/2"}	201
+04-credentials	1	POST /cameras {"source": "rtsp://admin:hunter2@10.0.0.8/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret ~cred_username"}
+04-credentials	2	POST /cameras {"source": "rtsp://10.0.0.8/ch/1?usr=admin&pwd=hunter2"}	400 {"fault": "bad_url", "error": "~cred_secret"}
+04-credentials	3	POST /cameras {"source": "driverpack://acme/admin:hunter2@10.0.0.9/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret"}
+04-credentials	4	POST /cameras {"source": "rtsp://10.0.0.8/ch/1", "cred_username": "admin", "cred_secret": "hunter2"}	201 {"id": "$c4", "cred_secret": "***"}
+05-bound	1	PUT /cameras/$c4 {"source": "rtsp://10.0.0.8/ch/3"}	400 {"error": "~source changed ~cred_secret must be given anew"}
+05-bound	2	PUT /cameras/$c4 {"source": "rtsp://10.0.0.8/ch/3", "cred_secret": "hunter3"}	200 {"source": "rtsp://10.0.0.8/ch/3"}
+06-schemes	1	POST /cameras {"source": "ftp://10.0.0.10/cam"}	400 {"fault": "bad_url"}
+06-schemes	2	POST /cameras {"source": "ipint://10.0.0.11/ch#1"}	201
+07-devices	1	GET /devices	200
+07-devices	2	POST /devices {"device": "10.0.0.7"}	403 {"error": "denied", "detail": "~written by its worker"}
+07-devices	3	DELETE /devices/10.0.0.7	403 {"error": "denied"}
+07-devices	4	PUT /devices/10.0.0.7 {"device": "10.0.0.7"}	405

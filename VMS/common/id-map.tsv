@@ -1,2 +1,10 @@
 # id-map прежних норм М10B, М12A, М12B → модуль VMS (ADR-0090 доп. (2)); форма — как Platform/common/id-map.tsv.
 old	new	chapter	subject	note
+М10B/01 ш.2–3	V/01.1-01	1.1	камера — cam/cameras/<id>, id numeric, поля оператора и их читатели; name без умолчания до запроса	-
+М10B/01 ш.3 (unique)	V/01.1-02	1.1	один канал — одна камера: unique canonical у двери, второе написание — держатель	V/01.2
+М10B/19 ш.1–2	V/01.1-03	1.1	логин и пароль только в cred_username/cred_secret; schemes, credentials, secret_in; bound_to	-
+М10B/15 ш.1 (таблица)	V/01.1-04	1.1	таблица devices: пишет держатель, консоль только читает; identity не покидает кластер	V/01.4
+М10B/01 ш.5	V/01.1-05	1.1	значения размещения cam с основаниями (group_by хоста, near rec с prefer, grows)	-
+М10B/01 ш.6	V/01.1-06	1.1	снимок cam: состав, маска адреса	-
+М10B/01 ш.3 (reach)	V/01.1-07	1.1	права людей: reach.group, reach.cluster, reach.requests	-
+М10B/01 ш.6 (display); М10B/04 ш.3 (подавление)	V/01.1-08	1.1	слова консоли и events.suppress.io.input	-
