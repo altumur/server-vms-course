@@ -74,8 +74,8 @@ unit:
     home:           {type: string, ref: rec/volumes, must_match: {cam: cam}}
     # WHEN THIS RECORDING STOPS BEING ONE, in unix seconds; 0 — never, which is every recording an
     # operator creates by hand. A scenario asks for ten minutes of a camera, and ten minutes is not a
-    # setting on the row: it is an END. The console's loop deletes the row when the time comes, the
-    # controller unplaces it and the recorder stops its pipeline — the ordinary path for a recording that
+    # setting on the row: it is an END. The controller unplaces it when the time comes and deletes a row made by
+    # a scenario (`placement.ends`, P/04 Н1.3; V/02.1 Н1.3); the recorder stops its pipeline — the ordinary path for a recording that
     # was removed, reached by a clock instead of by a click.
     #
     # It is a field and not a timer because a timer lives in a process: the one that set it would have to
@@ -117,6 +117,8 @@ placement:
                                                      # address and cannot be drained on its own.
   servers:    distinct                               # one recorder per VOLUME carries recordings (the others idle)
   tie_break:  most-free-capacity
+  grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a volume nobody holds asks for one; no spares (ADR-0084)
+  ends:       {field: until, never: 0}               # a recording's end (ADR-0091 п. 2; V/02.1 Н1.3)
   # No `near`. A recorder does not follow a camera around: it is the one thing here that CANNOT move, being
   # pinned to disks (`requires: resource` above), and a fan-out can be read from any server over RTSP. So
   # the recording names the disk and the camera comes to it — `near: rec` in `cam.subsystem.yaml`. The pair

@@ -1,0 +1,16 @@
+scenario	step	request	expect
+# Приёмка V/02.1: запись — единица (дверь единиц и таблиц консоли rec; манифесты cam и rec). Формат — README.
+01-create	1	POST /volumes {"name": "disk-a", "kind": "local", "url": "file:///data/platform/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
+01-create	2	POST /recordings {"name": "7", "cam": "7", "home": "disk-a"}	201 {"id": "7", "cam": "7", "retention_days": 30, "enabled": true, "until": 0, "when": "always"}
+01-create	3	POST /recordings {"name": "8"}	400 {"error": "~needs a cam"}
+01-create	4	POST /recordings {"name": "9", "cam": "9", "retention_days": 0}	400 {"error": "@any"}
+02-fixed	1	POST /recordings {"name": "7b", "cam": "7"}	201 {"id": "7b"}
+02-fixed	2	PUT /recordings/7b {"cam": "8"}	400 {"error": "~cam is fixed"}
+02-fixed	3	POST /recordings {"name": "auto-7", "cam": "7"}	400 {"error": "~made by auto"}
+03-home	1	POST /volumes {"name": "card-7", "kind": "edge", "url": "file:///card", "server": "srv-a", "cam": "7", "quota_bytes": 1000000}	201 {"name": "card-7"}
+03-home	2	POST /recordings {"name": "8-card", "cam": "8", "home": "card-7"}	409 {"error": "conflict", "fault": "must_match"}
+03-home	3	POST /recordings {"name": "7-card", "cam": "7", "home": "card-7", "when": "always"}	201 {"home": "card-7"}
+04-volumes	1	POST /volumes {"name": "net-a", "kind": "network", "url": "s3://bucket/a", "server": "srv-a", "quota_bytes": 1}	400 {"error": "@any"}
+04-volumes	2	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1}	400 {"error": "@any"}
+04-volumes	3	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1, "admits": false}	201 {"name": "inc-a"}
+04-volumes	4	POST /volumes {"name": "disk-b", "kind": "local", "url": "file:///b", "server": "srv-a", "quota_bytes": 1, "cam": "7"}	400 {"error": "@any"}
