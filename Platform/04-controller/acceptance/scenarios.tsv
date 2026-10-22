@@ -175,3 +175,25 @@ scenario	step	request	expect
 17-distinct-one-shelf	21	@sleep 25	ok
 17-distinct-one-shelf	22	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "retiring": "@absent"}}
 17-distinct-one-shelf	23	store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
+# 18-ends-and-state (ADR-0091 пп. 1–3): ends в 2001 — строка заказа (made.keep в 2001) удалена физически, её состояние и осиротевшее ghost сняты; ручная m1 с fixed of — снята, не удалена (expired_kept); нечитаемое состояние m3 — snapshot_state_garbled
+18-ends-and-state	1	@start controller testsub2	ok
+18-ends-and-state	2	@start resource	ok
+18-ends-and-state	3	@as console store POST /v1/write {"id":"f3","op":"put","key":"testsub2/tallies/m1","items":{"id":"m1","revision":"1","name":"m1","of":"c1","until":"1000000000"},"cas":""}	200
+18-ends-and-state	4	@as console store POST /v1/write {"id":"f4","op":"put","key":"testsub2/tallies/testsub-c2","items":{"id":"testsub-c2","revision":"1","name":"testsub-c2","of":"c2","until":"1000000000","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
+18-ends-and-state	5	@as testsub2worker store POST /v1/write {"id":"f5","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+18-ends-and-state	6	@as testsub2worker store POST /v1/write {"id":"f6","op":"put","key":"testsub2/state/result/ghost","items":{"born":"","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+18-ends-and-state	7	@as console store POST /v1/write {"id":"f7","op":"put","key":"testsub2/tallies/m3","items":{"id":"m3","revision":"1","name":"m3","of":"c1","born":"00000000000000000000000000000004"},"cas":""}	200
+18-ends-and-state	8	@as testsub2worker store POST /v1/write {"id":"f8","op":"put","key":"testsub2/state/result/m3","items":{"born":"00000000000000000000000000000004","revision":"1","epoch":"1","value":"not json"},"cas":""}	200
+18-ends-and-state	9	@until 30 store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": null, "index": ""}
+18-ends-and-state	10	@until 30 store GET /v1/get?key=testsub2/state/result/testsub-c2	200 {"items": null}
+18-ends-and-state	11	@until 30 store GET /v1/get?key=testsub2/state/result/ghost	200 {"items": null}
+18-ends-and-state	12	store GET /v1/get?key=testsub2/tallies/m1	200 {"items": {"name": "m1", "until": "1000000000"}}
+18-ends-and-state	13	store GET /v1/get?key=testsub2/state/result/m3	200 {"items": {"value": "not json"}}
+18-ends-and-state	14	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"expired_kept": 1, "snapshot_state_garbled": 1}
+# 19-snapshot-state (ADR-0091 п. 3): действующее состояние result — в шарде снимка (state.result в snapshot манифеста), cursor — нет
+19-snapshot-state	1	@start controller testsub2	ok
+19-snapshot-state	2	@start resource	ok
+19-snapshot-state	3	@as console store POST /v1/write {"id":"g3","op":"put","key":"testsub2/tallies/m2","items":{"id":"m2","revision":"1","name":"m2","of":"c1","born":"00000000000000000000000000000003"},"cas":""}	200
+19-snapshot-state	4	@as testsub2worker store POST /v1/write {"id":"g4","op":"put","key":"testsub2/state/result/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+19-snapshot-state	5	@as testsub2worker store POST /v1/write {"id":"g5","op":"put","key":"testsub2/state/cursor/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"through\":7}"},"cas":""}	200
+19-snapshot-state	6	@until 20 resource GET /v1/objects/testsub2/snapshot/unplaced?scope=local	200 {"worker": null, "tallies": [{"id": "m2", "name": "m2", "state": {"result": {"state": "open"}}, "worker": null}]}
