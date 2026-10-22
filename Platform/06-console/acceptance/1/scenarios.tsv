@@ -148,3 +148,9 @@ scenario	step	request	expect
 20-made	13	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"born": "~", "made": "@absent"}}
 20-made	14	console2 DELETE /tallies/testsub-c2	200 {"deleted": "testsub-c2"}
 20-made	15	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"deleted": "true", "born": "0123456789abcdef0123456789abcdef", "made": "~\"gone\":"}}
+21-worker-table-delete	1	@as testsub2worker store POST /v1/write {"id":"e1","op":"put","key":"testsub2/gauges/g1","items":{"name":"g1","level":"3"},"cas":""}	200
+21-worker-table-delete	2	console2 GET /gauges/g1	200 {"name": "g1", "level": 3}
+21-worker-table-delete	3	console2 POST /gauges {"name": "g2"}	403
+21-worker-table-delete	4	console2 DELETE /gauges/g1	200 {"deleted": "g1"}
+21-worker-table-delete	5	store GET /v1/get?key=testsub2/gauges/g1	200 {"items": null}
+21-worker-table-delete	6	console2 DELETE /gauges/g1	404

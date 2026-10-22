@@ -81,7 +81,8 @@ adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, la
            addAction, addNote, addIcons, icon, unitForm(host, ref), dialog(title, fields, ok), confirm, toast, select,
            selected, refresh, logout, fullScreen, isFav, toggleFav
 cards:     разметка карточки: <h1>, nav.pc-tabs, <h2> → .card, button.pc-hdbtn, span.pc-crumbs[data-crumbs], p.pc-hdsub
-commands:  вид command / command.failed — слово и заметка модуля (action · исход · ответ · «кто: by»; late → «поздно»)
+commands:  вид command / command.failed — слово и заметка модуля (action · исход · ответ · «кто: by»; late → «поздно»); поля события
+           outcome, action, by, late, error, reply пишет база воркера (P/03.6 Н3 «взгляд держателя»)
 ```
 
 Сессия, гранты и вход, по которым судит `may`, — [P/06.3](../../06-console/spec/06.3-console.norms.md) (сторожевая,

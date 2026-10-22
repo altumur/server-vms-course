@@ -9,7 +9,7 @@ name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
 # its worker stops in 30 s at most (`stop_timeout`), and reads the pump's share — its own share, made by its part (ADR-0091
 # доп. (2) пп. 1, 4)
-worker: {reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30}
+worker: {reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30, writes: [gauges]}
 # its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
 # files its resource's door gives out (`resource.door_readable`)
 objects: {rows: [marks/*], door: [tickets/*]}
@@ -102,6 +102,13 @@ tables:
       to:   {type: float, required: true}
       released_at: {type: string}         # not empty: the notch holds nothing (`holds.released`)
     journal: {written: notch.cut, deleted: notch.cleared}
+  # what a tally's holder measures, a row its worker writes whole; the console only reads it, and an operator may delete a
+  # row — the worker writes it again if it is still its own (P/06.1 Н1.6; запрос VMS «команды и строка устройства»)
+  gauges:
+    key: name
+    fields:
+      name:  {type: string, required: true}
+      level: {type: int}
 placement:
   capacity:    {from: capacity, default: 8}
   headroom:    {from: headroom}

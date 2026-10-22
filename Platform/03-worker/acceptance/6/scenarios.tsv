@@ -15,6 +15,7 @@ scenario	step	request	expect
 05-request-performed	13	resource GET /v1/objects/testsub/heartbeats/W-1?scope=local	404
 05-request-performed	14	@sigterm w-1	ok
 05-request-performed	15	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "status": []}
+05-request-performed	16	@until 15 resource GET /events?unit=testsub/c5&kind=command&limit=1	200 {"events": [{"kind": "command", "of": "testsub/c5", "outcome": "performed", "by": "@any", "reply": "@any", "late": "@absent", "error": "@absent"}]}
 07-append-by-data	1	@start controller	ok
 07-append-by-data	2	@start controller testsub2	ok
 07-append-by-data	3	@start worker w-1	ok
