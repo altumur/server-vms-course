@@ -1,0 +1,11 @@
+# parts.<имя> без exec; ADR-0091 п. 5
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+parts:
+  pump: {volumes: true}

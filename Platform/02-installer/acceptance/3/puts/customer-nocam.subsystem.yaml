@@ -1,0 +1,7 @@
+# key не называет fixed-поле cam адресата
+name: cust
+unit: {rows: orders, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  creates:
+    - {sub: target, rows: things, key: "{kind}", valid_for: 600}

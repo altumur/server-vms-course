@@ -22,6 +22,14 @@ root:
         rows: {ref: rowsName, owner: P/06.1 Н1.1}
         id: {type: string, owner: P/06.1 Н1.3, description: "`numeric` или несекретное поле типа string (Н1.4)"}
         fields: {ref: unitFields, owner: P/06.1 Н1.2, default: {}}
+        state:
+          owner: P/03.6 Н1.7
+          description: "состояние единицы — имя → схема строки `<sub>/state/<имя>/<unit>` (ADR-0091 п. 3); `cursor` — курсор единицы"
+          type: object
+          default_text: состояния нет
+          names:
+            key: {ref: name}
+            value: {ref: jsonSchemaLite}
     placement: {ref: placement, owner: P/04 Н1.3}
     tables: {ref: tables, owner: P/06.1 Н1.6, default: {}, default_text: таблиц нет}
     requests: {ref: requests, owner: P/06.4 Н1.5}
@@ -68,8 +76,8 @@ root:
       owner: P/04 Н1.3а
       type: array
       items: {type: string}
-      description: "список полей без `*_secret`, blob и `server`; `[]` — ни одного"
-      default_text: все поля, кроме этих
+      description: "список полей без `*_secret`, blob и `server` и состояний `state.<имя>`; `[]` — ни одного"
+      default_text: все поля, кроме этих, и все состояния, кроме `cursor`
     rights: {ref: rights, owner: P/06.3 Н1.5, default: {}}
     secrets: {ref: secrets, owner: P/02.5 Н1.3, default: {}}
     worker:
@@ -81,6 +89,26 @@ root:
         reads: {ref: grantList, owner: P/02.5 Н1.4, description: "`<семья>/<имя>` или префиксы с `/`"}
         requests: {ref: strList, owner: P/06.4 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
         deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этого манифеста — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
+        creates:
+          owner: P/03.6 Н1.6
+          description: "строки единиц другой подсистемы, которые заводит и продлевает воркер этой (ADR-0091 п. 1); адресат, его `unit.rows` и поля `key` — проверка каталога (Н3)"
+          type: array
+          default_text: чужих строк воркер не заводит
+          items:
+            type: object
+            required: [sub, rows, key, valid_for]
+            properties:
+              sub: {ref: name, description: "подсистема-адресат; своя — отказ"}
+              rows: {ref: name, description: "`unit.rows` адресата"}
+              key: {type: string, pattern: '\{[^{}:]+\}(-\{[^{}:]+\})*', description: "подстановки `{поле}` адресата через `-`, без `:int` (P/03.6 Н1.6 `key`)"}
+              valid_for: {type: number, exclusive_minimum: 0, maximum: 3600, description: "секунды: событие старше не исполняется"}
+        uses:
+          owner: P/02.4 Н1.1
+          description: "доли других подсистем `<подсистема>.<доля>` (их `shares`; каталог, Н3) — группа доли в юните воркера"
+          type: array
+          default_text: чужих долей нет
+          items: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}\.[a-z][a-z0-9_-]{0,31}'}
+          unique_items: true
     slot:
       owner: P/03.2 Н1.4
       type: object
@@ -115,6 +143,31 @@ root:
       properties:
         rows: {ref: strList, description: семьи строк-объектов}
         door: {ref: strList, description: семьи двери объектов}
+    shares:
+      owner: P/02.4 Н1.1
+      description: "общие части подсистемы для воркеров других подсистем (ADR-0091 п. 5): имя → вид"
+      type: object
+      default_text: долей нет
+      names:
+        key: {ref: name}
+        value:
+          type: object
+          required: [kind]
+          properties:
+            kind: {enum: [socket, dir]}
+    parts:
+      owner: P/02.4 Н1.1
+      description: "части подсистемы со своей службой и пользователем (ADR-0091 п. 5): имя → служба"
+      type: object
+      default_text: частей нет
+      names:
+        key: {ref: name}
+        value:
+          type: object
+          required: [exec]
+          properties:
+            exec: {type: string, description: "команда службы части"}
+            volumes: {type: boolean, default: false, description: "тома: точки монтирования `…/<часть>/volumes/<n>` (ADR-0091 п. 4)"}
     door:
       owner: P/06.5 Н3; P/06.5 Н1.8
       type: object
@@ -144,12 +197,12 @@ defs:
     description: имя по Н1.2, не из перечня запрещённых имён таблиц
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
-    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands]
+    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, state]
   rowsName:
     description: имя по Н1.2, не из перечня запрещённых имён таблиц и не `cluster`, `worker`, `ts`
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
-    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, cluster, worker, ts]
+    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, state, cluster, worker, ts]
   grantName:
     description: "без буквального `*`, начального `!` и `delete:`"
     type: string
@@ -170,7 +223,7 @@ defs:
       key:
         type: string
         description: "не из `platform_fields` P/06.1 Н1.2"
-        not_enum: [id, revision, deleted, worker, placement, epoch, phase, observed_revision]
+        not_enum: [id, revision, deleted, worker, placement, epoch, phase, observed_revision, born, made]
       value: {ref: unitField}
   unitField:
     type: object
@@ -423,8 +476,18 @@ defs:
         type: object
         required: [field, in]
         properties:
-          field: {type: string, description: поле}
+          state: {type: string, description: "имя `unit.state`: поле — его (ADR-0091 п. 3)", default_text: поле — строки единицы}
+          field: {type: string, description: "поле строки единицы или, при `state`, поле этого состояния"}
           in: {type: array, description: список значений}
+          delete_after: {type: integer, minimum: 1, description: "секунды от снятия до физического удаления строки (ADR-0091 п. 1)", default_text: не удалять}
+      ends:
+        type: object
+        required: [field]
+        description: "срок единицы: поле ≠ `never` и не позже часов контроллера — снять и удалить (ADR-0091 п. 2)"
+        default_text: срока нет
+        properties:
+          field: {type: string, description: "поле типа int или float — секунды Unix"}
+          never: {type: number, default: 0, description: "значение «без срока»"}
       rebalance:
         type: object
         default: {}

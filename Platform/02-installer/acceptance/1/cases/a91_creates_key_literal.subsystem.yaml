@@ -1,0 +1,12 @@
+# key worker.creates с литералом кроме «-» между подстановками; ADR-0091 п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  creates:
+  - {sub: other, rows: things, key: 'cam{cam}', valid_for: 60}

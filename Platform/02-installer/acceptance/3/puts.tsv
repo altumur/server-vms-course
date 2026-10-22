@@ -9,3 +9,20 @@ other_rows	probe other-rows	2 -
 self_table	self-table	2 -
 other_table	with-table ledger	2 -
 prefix_clash	a-b a_b	2 -
+# ADR-0091: проверки каталога worker.creates, worker.uses и имён ОС (P/02.1 Н3 «загрузить_каталог»)
+creates_ok	target customer	0 1
+creates_no_target	customer	0 1
+target_after_customer	customer target	0 1
+target_after_customer_mismatch	customer-nocam target	2 -
+creates_wrong_rows	target customer-rows	2 -
+creates_numeric_target	target-numeric customer	2 -
+creates_key_without_fixed	target customer-nocam	2 -
+creates_key_optional	target customer-optional	2 -
+creates_key_id_source	target customer-idsrc	2 -
+creates_key_list	target customer-list	2 -
+creates_target_secret_required	target-secret customer	2 -
+creates_nested_prefix	target customer customer-x	2 -
+uses_ok	owner user	0 1
+uses_no_share	owner-noshare user	2 -
+uses_no_owner	user	0 1
+os_name_clash	owner owner-belt	2 -

@@ -1,0 +1,11 @@
+# схема unit.state глубиной 33; строка 93 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+  state:
+    result: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+placement:
+  capacity: {default: 4}

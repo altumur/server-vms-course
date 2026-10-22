@@ -1,0 +1,12 @@
+# поле единицы state при объявленном unit.state; строка 92 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    state: {type: string}
+  state:
+    result: {type: object, properties: {state: {type: string}}}
+placement:
+  capacity: {default: 4}

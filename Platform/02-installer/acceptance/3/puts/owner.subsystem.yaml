@@ -1,0 +1,6 @@
+# владелец доли belt (ADR-0091 п. 5)
+name: owner
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+shares:
+  belt: {kind: socket}

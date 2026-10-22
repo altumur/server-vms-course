@@ -1,0 +1,6 @@
+# потребитель доли owner.belt
+name: user
+unit: {rows: stuff, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  uses: [owner.belt]

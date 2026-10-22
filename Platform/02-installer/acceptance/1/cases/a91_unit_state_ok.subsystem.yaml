@@ -1,0 +1,13 @@
+# unit.state и snapshot со state.<имя>, retire_when по состоянию с delete_after; ADR-0091 п. 3; P/02.1 Н1.2а
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+  state:
+    result: {type: object, properties: {state: {type: string}}}
+placement:
+  capacity: {default: 4}
+  retire_when: {state: result, field: state, in: [done, failed], delete_after: 600}
+snapshot: [name, state.result]

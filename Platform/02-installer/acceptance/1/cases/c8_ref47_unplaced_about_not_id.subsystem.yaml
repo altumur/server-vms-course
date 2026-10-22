@@ -1,5 +1,6 @@
-# delete_after при about.field не по id (поле parent не fixed); норма М10/2 Н1.2а unplaced (ADR-0067), Н1.4 about.field; строка 47 references.tsv
+# delete_after при about.field не по id — принято: строка 47 снята ADR-0091 п. 1 (поправка ADR-0067 доп. 2026-10-10: физически удаляются только
+# строки с made, ручные — нет); parent — fixed, чтобы about.field был по форме (прежде — случай строки 47)
 name: probe
-unit: {rows: things, id: name, fields: {name: {type: string, fixed: true}, parent: {type: string}}}
+unit: {rows: things, id: name, fields: {name: {type: string, fixed: true}, parent: {type: string, fixed: true}}}
 placement: {capacity: {default: 1}, unplaced: {delete_after: 30}}
 about: {sub: cam, field: parent}

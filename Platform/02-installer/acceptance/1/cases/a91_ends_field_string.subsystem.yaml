@@ -1,0 +1,11 @@
+# ends.field — поле string, не int и не float; строка 37 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    until: {type: string}
+placement:
+  capacity: {default: 4}
+  ends: {field: until}

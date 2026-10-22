@@ -1,0 +1,12 @@
+# worker.creates к другой подсистеме, key — подстановки через «-», valid_for на границе 3600; ADR-0091 п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  creates:
+  - {sub: other, rows: things, key: '{cam}-{kind}', valid_for: 3600}

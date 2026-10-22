@@ -17,6 +17,12 @@ example-ordered	Platform/02-installer/vectors/canonical/inputs/ordered.subsystem
 example-sugared	Platform/02-installer/acceptance/2/puts/sugared.subsystem.yaml	expect/example-sugared.json	приёмка 2.2 сц. 07: сахар `tables: [shelves]` и `bound_to: feed`, без `snapshot` и `display` — П1, П3, П4 вместе (Н1.1)
 example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.subsystem.yaml	expect/example-view-at-ceiling.json	приёмка 2.2 сц. 06: вид 524201 байт — вес строки вида с rev из одной цифры ровно потолок 524288 (Н1.2 ceiling)
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
+corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1
+corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	принятый случай корпуса 2.1
+corpus-a91_shares_parts_ok	Platform/02-installer/acceptance/1/cases/a91_shares_parts_ok.subsystem.yaml	expect/corpus-a91_shares_parts_ok.json	принятый случай корпуса 2.1
+corpus-a91_unit_field_state_without_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_field_state_without_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_field_state_without_unit_state_ok.json	принятый случай корпуса 2.1
+corpus-a91_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_state_ok.json	принятый случай корпуса 2.1
+corpus-a91_uses_ok	Platform/02-installer/acceptance/1/cases/a91_uses_ok.subsystem.yaml	expect/corpus-a91_uses_ok.json	принятый случай корпуса 2.1
 corpus-base	Platform/02-installer/acceptance/1/cases/base.subsystem.yaml	expect/corpus-base.json	принятый случай корпуса 2.1
 corpus-blob_required_false	Platform/02-installer/acceptance/1/cases/blob_required_false.subsystem.yaml	expect/corpus-blob_required_false.json	принятый случай корпуса 2.1
 corpus-block_scalar_hides_lease	Platform/02-installer/acceptance/1/cases/block_scalar_hides_lease.subsystem.yaml	expect/corpus-block_scalar_hides_lease.json	принятый случай корпуса 2.1
@@ -65,9 +71,11 @@ corpus-c8_options_enum_text_ok	Platform/02-installer/acceptance/1/cases/c8_optio
 corpus-c8_ref12_unit_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref12_unit_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref12_unit_schema_depth_32_ok.json	принятый случай корпуса 2.1
 corpus-c8_ref25_table_field_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref25_table_field_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref25_table_field_schema_depth_32_ok.json	принятый случай корпуса 2.1
 corpus-c8_ref26_table_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref26_table_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref26_table_schema_depth_32_ok.json	принятый случай корпуса 2.1
+corpus-c8_ref47_unplaced_about_not_id	Platform/02-installer/acceptance/1/cases/c8_ref47_unplaced_about_not_id.subsystem.yaml	expect/corpus-c8_ref47_unplaced_about_not_id.json	принятый случай корпуса 2.1
 corpus-c9_flow_lone_dash_ok	Platform/02-installer/acceptance/1/cases/c9_flow_lone_dash_ok.subsystem.yaml	expect/corpus-c9_flow_lone_dash_ok.json	принятый случай корпуса 2.1
 corpus-c9_flow_lone_dash_spaced	Platform/02-installer/acceptance/1/cases/c9_flow_lone_dash_spaced.subsystem.yaml	expect/corpus-c9_flow_lone_dash_spaced.json	принятый случай корпуса 2.1
 corpus-c9_word_hash_inside_ok	Platform/02-installer/acceptance/1/cases/c9_word_hash_inside_ok.subsystem.yaml	expect/corpus-c9_word_hash_inside_ok.json	принятый случай корпуса 2.1
+corpus-delete_after_with_about	Platform/02-installer/acceptance/1/cases/delete_after_with_about.subsystem.yaml	expect/corpus-delete_after_with_about.json	принятый случай корпуса 2.1
 corpus-display_fields_status_field	Platform/02-installer/acceptance/1/cases/display_fields_status_field.subsystem.yaml	expect/corpus-display_fields_status_field.json	принятый случай корпуса 2.1
 corpus-display_options_bool_enum	Platform/02-installer/acceptance/1/cases/display_options_bool_enum.subsystem.yaml	expect/corpus-display_options_bool_enum.json	принятый случай корпуса 2.1
 corpus-display_options_status_field	Platform/02-installer/acceptance/1/cases/display_options_status_field.subsystem.yaml	expect/corpus-display_options_status_field.json	принятый случай корпуса 2.1
@@ -118,5 +126,6 @@ corpus-requests_outcome_mark_ok	Platform/02-installer/acceptance/1/cases/request
 corpus-secrets_reader_domainconsole	Platform/02-installer/acceptance/1/cases/secrets_reader_domainconsole.subsystem.yaml	expect/corpus-secrets_reader_domainconsole.json	принятый случай корпуса 2.1
 corpus-unit_id_numeric	Platform/02-installer/acceptance/1/cases/unit_id_numeric.subsystem.yaml	expect/corpus-unit_id_numeric.json	принятый случай корпуса 2.1
 corpus-unplaced_delete_after_about_its_id	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_about_its_id.subsystem.yaml	expect/corpus-unplaced_delete_after_about_its_id.json	принятый случай корпуса 2.1
+corpus-unplaced_delete_after_fixed_field	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_fixed_field.subsystem.yaml	expect/corpus-unplaced_delete_after_fixed_field.json	принятый случай корпуса 2.1
 course-testsub	Source/tests/testdata/testsub.subsystem.yaml	expect/course-testsub.json	манифест курса
 course-testsub2	Source/tests/testdata/testsub2.subsystem.yaml	expect/course-testsub2.json	манифест курса

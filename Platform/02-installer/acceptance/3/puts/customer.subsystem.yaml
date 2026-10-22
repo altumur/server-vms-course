@@ -1,0 +1,7 @@
+# заказчик: строки target/things с id cust-<cam>-<kind> (ADR-0091 п. 1)
+name: cust
+unit: {rows: orders, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  creates:
+    - {sub: target, rows: things, key: "{cam}-{kind}", valid_for: 600}

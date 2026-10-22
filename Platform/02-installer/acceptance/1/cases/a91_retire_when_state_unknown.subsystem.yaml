@@ -1,0 +1,12 @@
+# retire_when.state не имя unit.state; строка 36 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+  state:
+    result: {type: object, properties: {state: {type: string}}}
+placement:
+  capacity: {default: 4}
+  retire_when: {state: nope, field: state, in: [done]}

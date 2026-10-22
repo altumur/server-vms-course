@@ -24,13 +24,17 @@ tables.$t.fields.$f.credentials.secret	. in keys(tables.$t.fields ? name ~ ".*_s
 tables.$t.fields.$f.default	when exists @tables.$t.fields.$f.enum : . in values(tables.$t.fields.$f.enum[])	value	P/02.1 Н1.2а default
 tables.$t.fields.$f.schema	depth . <= 32	value	P/06.1 Н1.4
 tables.$t.schema	depth . <= 32	value	P/06.1 Н1.4
-snapshot[]	. in keys(unit.fields)	reference	P/02.1 Н1.4
+snapshot[]	when . !~ "state\..*" : . in keys(unit.fields)	reference	P/02.1 Н1.4
+snapshot[]	when . ~ "state\..*" : split(. "." 1) in keys(unit.state)	reference	P/02.1 Н1.4; P/04 Н1.3а
 snapshot[]	. !~ ".*_secret"	value	P/02.1 Н1.2; P/04 Н1.3а
 snapshot[]	. not in {server} | keys(unit.fields ? type = blob)	value	P/02.1 Н1.2; P/04 Н1.3а
 placement.spread_by	. in keys(unit.fields)	reference	P/02.1 Н1.4
 placement.group_by.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
 placement.group_by.cut_at	@placement.group_by.field in keys(unit.fields ? type = url)	reference	P/02.1 Н1.2а group_by
-placement.retire_when.field	. in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.retire_when.field	when absent @placement.retire_when.state : . in keys(unit.fields)	reference	P/02.1 Н1.4
+placement.retire_when.field	when @placement.retire_when.state in keys(unit.state) : . in keys(unit.state.{@placement.retire_when.state}.properties)	reference	P/02.1 Н1.4; P/04 Н1.3
+placement.retire_when.state	. in keys(unit.state)	reference	P/02.1 Н1.4; P/04 Н1.3
+placement.ends.field	. in keys(unit.fields ? type in {int, float})	reference	P/02.1 Н1.4; P/04 Н1.3
 placement.weight.field	. in keys(unit.fields ? type = int)	reference	P/02.1 Н1.4
 placement.near.by	. in keys(unit.fields)	reference	P/02.1 Н1.4
 placement.home	when . = near : exists @placement.near	reference	P/02.1 Н1.4
@@ -43,8 +47,6 @@ placement.affinity.table	. in keys(tables)	reference	P/02.1 Н1.4
 placement.affinity.server_field	when @placement.affinity.table in keys(tables) : . in keys(tables.{@placement.affinity.table}.fields)	reference	P/02.1 Н1.4
 placement.affinity.strict.{}	when @placement.affinity.table in keys(tables) : . in keys(tables.{@placement.affinity.table}.fields)	reference	P/02.1 Н1.4
 placement.unplaced.delete_after	@unit.id != numeric	value	ADR-0067; P/02.1 Н1.2а unplaced
-placement.unplaced.delete_after	empty keys(unit.fields ? fixed = true & name != @unit.id)	value	ADR-0067; P/02.1 Н1.2а unplaced
-placement.unplaced.delete_after	when exists @about.field : @about.field = @unit.id	value	ADR-0067; P/02.1 Н1.2а unplaced
 holds.table	. in keys(tables)	reference	P/02.1 Н1.4
 holds.unit	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
 holds.since	when @holds.table in keys(tables) : . in keys(tables.{@holds.table}.fields)	reference	P/02.1 Н1.4
@@ -84,6 +86,11 @@ worker.writes[]	. in keys(tables)	reference	P/02.1 Н1.4; P/02.5 Н1.4
 worker.writes[]	empty keys(tables.{.}.fields ? name ~ ".*_secret")	value	P/02.1 Н1.2а worker.writes
 worker.deletes[]	. = @unit.rows	reference	P/02.1 Н1.4; ADR-0067
 worker.requests[]	. != @name	reference	P/02.1 Н1.4
+worker.creates[].sub	. != @name	reference	P/02.1 Н1.4; P/03.6 Н1.6
+worker.creates	unique values(worker.creates[].sub)	value	P/02.1 Н1.2а worker.creates
+worker.uses[]	split(. "." 0) != @name	reference	P/02.1 Н1.4; P/02.4 Н1.1
+unit.fields.state	absent @unit.state	value	P/02.1 Н1.3; P/03.6 Н1.7
+unit.state.*	depth . <= 32	value	P/06.1 Н1.4
 worker.reads	prefix_free values(worker.reads[])	value	P/02.5 Н1.4
 secrets.readers	prefix_free keys(secrets.readers)	value	P/02.5 Н1.3
 secrets.reads	prefix_free values(secrets.reads[])	value	P/02.5 Н1.3

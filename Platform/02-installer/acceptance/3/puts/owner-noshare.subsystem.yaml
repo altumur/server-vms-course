@@ -1,0 +1,4 @@
+# тот же владелец без долей
+name: owner
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}

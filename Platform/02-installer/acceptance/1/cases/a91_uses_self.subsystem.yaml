@@ -1,0 +1,11 @@
+# worker.uses — доля своей подсистемы; строка 91 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  uses: [probe.belt]

@@ -1,0 +1,10 @@
+# поле единицы state без unit.state — допустимо; ADR-0091 п. 3
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    state: {type: string}
+placement:
+  capacity: {default: 4}

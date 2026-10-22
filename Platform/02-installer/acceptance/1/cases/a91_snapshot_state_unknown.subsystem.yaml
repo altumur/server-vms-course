@@ -1,0 +1,12 @@
+# snapshot называет state.<имя> вне unit.state; строка 28 references.tsv; ADR-0091 п. 3
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+  state:
+    result: {type: object, properties: {state: {type: string}}}
+placement:
+  capacity: {default: 4}
+snapshot: [name, state.nope]

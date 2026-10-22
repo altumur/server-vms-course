@@ -1,0 +1,7 @@
+# второй заказчик той же таблицы: префикс cust-x- вложен в cust-
+name: cust-x
+unit: {rows: orders, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  creates:
+    - {sub: target, rows: things, key: "{cam}-{kind}", valid_for: 600}

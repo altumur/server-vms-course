@@ -1,0 +1,14 @@
+# адресат заказа (ADR-0091 п. 1): именованный id, fixed cam, about по cam, необязательный секрет
+name: target
+unit:
+  rows: things
+  id: name
+  fields:
+    name: {type: string, required: true}
+    cam: {type: string, required: true, fixed: true}
+    kind: {type: string, required: true}
+    zone: {type: string}
+    tags: {type: list, required: true}
+    note_secret: {type: string}
+placement: {capacity: {default: 1}}
+about: {sub: cam, field: cam}

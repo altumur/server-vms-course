@@ -1,0 +1,12 @@
+# worker.creates к своей подсистеме; строка 89 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  creates:
+  - {sub: probe, rows: counters, key: '{start}', valid_for: 60}

@@ -1,0 +1,11 @@
+# placement.ends по полю float; never по умолчанию 0; ADR-0091 п. 2
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    until: {type: float, default: 0}
+placement:
+  capacity: {default: 4}
+  ends: {field: until}

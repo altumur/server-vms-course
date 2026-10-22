@@ -1,0 +1,4 @@
+# подсистема owner-belt: её пользователь <dep>-owner-belt совпал бы с группой доли belt подсистемы owner
+name: owner-belt
+unit: {rows: gear, id: numeric}
+placement: {capacity: {default: 1}}

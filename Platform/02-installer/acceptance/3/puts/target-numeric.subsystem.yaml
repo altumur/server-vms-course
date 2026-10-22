@@ -1,0 +1,9 @@
+# адресат с unit.id: numeric — заказ к нему отвергается каталогом (ADR-0091 п. 1)
+name: target
+unit:
+  rows: things
+  id: numeric
+  fields:
+    cam: {type: string, required: true, fixed: true}
+    kind: {type: string, required: true}
+placement: {capacity: {default: 1}}

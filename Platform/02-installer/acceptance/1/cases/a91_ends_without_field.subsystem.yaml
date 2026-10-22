@@ -1,0 +1,11 @@
+# ends без field; P/02.1 Н1.2а ends
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    until: {type: float}
+placement:
+  capacity: {default: 4}
+  ends: {never: 0}

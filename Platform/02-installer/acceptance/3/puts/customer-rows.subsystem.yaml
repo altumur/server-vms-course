@@ -1,0 +1,7 @@
+# заказчик называет не unit.rows адресата
+name: cust
+unit: {rows: orders, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  creates:
+    - {sub: target, rows: stuff, key: "{cam}-{kind}", valid_for: 600}

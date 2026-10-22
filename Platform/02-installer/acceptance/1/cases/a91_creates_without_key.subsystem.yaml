@@ -1,0 +1,12 @@
+# worker.creates без key; P/02.1 Н1.2а
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker:
+  creates:
+  - {sub: other, rows: things, valid_for: 60}

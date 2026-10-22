@@ -1,0 +1,11 @@
+# retire_when.delete_after не целое ≥ 1; P/02.1 Н1.2а, ADR-0091 п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    stage: {type: string}
+placement:
+  capacity: {default: 4}
+  retire_when: {field: stage, in: [done], delete_after: 0}

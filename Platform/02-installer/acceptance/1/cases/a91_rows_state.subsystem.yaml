@@ -1,0 +1,9 @@
+# unit.rows — state: ключи <sub>/state/… занимает состояние единицы; P/02.1 Н1.2а, ADR-0091 п. 3 (С-5)
+name: probe
+unit:
+  rows: state
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}

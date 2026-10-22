@@ -1,0 +1,10 @@
+# платформенное поле made в unit.fields; P/06.1 Н1.2 platform_fields, ADR-0091 п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    made: {type: json}
+placement:
+  capacity: {default: 4}
