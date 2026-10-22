@@ -44,6 +44,10 @@ root:
           why:
             type: string
             description: "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)"
+          stalled:
+            type: boolean
+            enum: [true]
+            description: "отступ запуска единицы дошёл до RETRY_MAX (глава 3.3 Н1.2 retry; ADR-0091 п. 6); иначе поля нет"
         required: [id, phase, epoch, revision, observed_revision]
         names:
           key: {type: string}
@@ -117,7 +121,75 @@ root:
     stand_in_renewals:
       ref: common.pos53
       description: число продлений подменой; только когда > 0
+    command_counts:
+      type: object
+      description: "исходы вызовов действия этим экземпляром с его старта (глава 3.6 Н3 «взгляд держателя»; ADR-0091 п. 6)"
+      properties:
+        performed: {ref: common.uint53}
+        refused: {ref: common.uint53}
+        expired: {ref: common.uint53}
+        unknown: {ref: common.uint53}
+    commands_in_flight:
+      ref: common.pos53
+      description: вызовов действия, ещё не вернувшихся; только когда > 0
+    commands_reanswered:
+      ref: common.pos53
+      description: исходов, записанных снова (late); только когда > 0
+    command_road:
+      type: object
+      description: "по подателю (operator или подсистема): от времени просьбы до вызова"
+      names:
+        key: {type: string}
+        value: {ref: histogram}
+    command_request:
+      type: object
+      description: "по подателю: от подачи строки до вызова"
+      names:
+        key: {type: string}
+        value: {ref: histogram}
+    command_wait:
+      ref: histogram
+      description: от первого взгляда держателя на строку до вызова, по монотонным часам
+    filings:
+      type: object
+      description: "подача просьб воркером (глава 3.6 Н1.5; ADR-0091 п. 7)"
+      properties:
+        filed: {ref: common.uint53}
+        again: {ref: common.uint53}
+        refused: {ref: common.uint53}
+    creates:
+      type: object
+      description: "исходы заказа строк другой подсистемы (глава 3.6 Н1.6; ADR-0091 п. 1, Г-7)"
+      properties:
+        created: {ref: common.uint53}
+        extended: {ref: common.uint53}
+        unchanged: {ref: common.uint53}
+        taken: {ref: common.uint53}
+        gone: {ref: common.uint53}
+        expired: {ref: common.uint53}
+        refused: {ref: common.uint53}
+    made_rows:
+      type: object
+      description: "заказчик: ключей под префиксом `<адресат>/<rows>/<заказчик>-` по последнему перечислению (ADR-0091 п. 1)"
+      names:
+        key: {type: string}
+        value: {ref: common.uint53}
   required: [worker, ts, status, server, instance]
   names:
     key: {type: string}
     value: {type: any, description: "поля, имена которых называет манифест: `<capacity.from>` — ёмкость (умолчание capacity), `<headroom.from>` — запас = ёмкость − Σ весов назначения (умолчание headroom), `<place_by>` — место, которое воркер держит, \"\" — не держит; остальное — слова подсистемы, которые платформа не читает (heartbeat.strings называет строки)"}
+defs:
+  histogram:
+    type: object
+    description: "гистограмма пульса (Н1.1 histogram): buckets — счёты по границам ROAD_BUCKETS, накопительно"
+    properties:
+      buckets:
+        type: array
+        min_items: 10
+        max_items: 10
+        items: {ref: common.uint53}
+      sum: {type: number, minimum: 0}
+      count: {ref: common.uint53}
+      ahead: {ref: common.uint53}
+      behind: {ref: common.uint53}
+    required: [buckets, sum, count]
