@@ -328,10 +328,10 @@ placement:
 # boundary's step 6: it was the VMS's route on the platform's console, `vms_routes`). Not a call: the console does not
 # open devices, and the one process that has this device open is the worker that holds it (М10B, lesson 4). It writes
 # the row; the holder performs it on its next look, says so in its heartbeat, and the row is cleared. Named by its
-# `Idempotency-Key` (or the body's `id`): a retried click is the same command, not a second pulse (the platform review,
+# `Idempotency-Key` (P/06.4; the body has no `id`): a retried click is the same command, not a second pulse (the platform review,
 # M17). Thirty seconds by default (`valid_for`): a door opened a minute after the button is an incident; at most ten
-# minutes — what the holder accepts (`most_valid`, read by `Worker.most_valid`). The console stamps the group the rights were asked on
-# (`group`, the source up to `/ch/`): the holder performs it only there — a camera moved onto a recorder in the ten
+# minutes — what the holder accepts (`most_valid`; V/01.4 Н1.1). The console stamps the group the rights were asked on
+# (`group`, the device's host — `group_by`): the holder performs it only there — a camera moved onto a recorder in the ten
 # minutes a command may wait is not the camera the person had the right to command (the review's eighth pass).
 requests:
   schema:
@@ -340,7 +340,6 @@ requests:
     additionalProperties: false
     properties:
       unit:        {type: string}
-      id:          {type: string}
       action:      {enum: [output, preset]}
       # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (`config.COMMAND_ARG_MAX`; the
       # product's cross-check of the eleventh review; integers past 2^53 are no number a spec holds), at the door as

@@ -1,0 +1,8 @@
+scenario	step	request	expect
+# Приёмка V/01.4: команда камере без устройства — refused (стенд главы 2). Формат — README.
+01-no-device	1	@start worker cam w-srv-a-1 on srv-a	ok
+01-no-device	2	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+01-no-device	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running"}]}
+01-no-device	4	POST /requests {"unit": "$c1", "action": "output", "port": 1}	202 {"queued": "$rid"}
+01-no-device	5	@until 30 resource GET /v1/objects/cam/commands/$rid	200 {"outcome": "refused", "error": "@any"}
+01-no-device	6	POST /requests {"unit": "$c1", "action": "output", "port": "@big(33)"}	400 {"error": "@any"}
