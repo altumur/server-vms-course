@@ -117,10 +117,10 @@ paths:
         - $ref: "#/components/parameters/RecordingQuery"
       responses:
         "200":
-          description: итог сверки (форма — глава V/02.7)
+          description: итог сверки копии удержания (смысл — глава V/02.7)
           content:
             application/json:
-              schema: {type: object}
+              schema: {$ref: "#/components/schemas/KeepVerify"}
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
         "409": {$ref: "#/components/responses/Refusal"}
@@ -199,6 +199,26 @@ components:
         current_epoch: {type: [integer, "null"], minimum: 0}
         held_since: {type: [number, "null"]}
         now: {type: number}
+    KeepVerify:
+      type: object
+      required: [keep, integrity, ok, recordings]
+      additionalProperties: false
+      properties:
+        keep: {type: string}
+        integrity: {type: string, description: "ok | broken: … | unknown: …"}
+        ok: {type: boolean}
+        recordings:
+          type: object
+          additionalProperties:
+            type: object
+            required: [sealed, now, samples, result]
+            additionalProperties: false
+            properties:
+              sealed: {type: [string, "null"]}
+              now: {type: [string, "null"]}
+              samples: {type: integer, minimum: 0}
+              result: {enum: [ok, damaged, pending, unverified, empty]}
+              detail: {type: string}
     TimelineSpan:
       type: object
       required: [start_ms, end_ms, epoch]
