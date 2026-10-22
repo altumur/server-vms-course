@@ -55,6 +55,8 @@ scenario	step	request	expect
 06-fresh-and-unchanged	6	@sleep 10	ok
 06-fresh-and-unchanged	7	member m1 store GET /v1/get?key=domain/member-topology	200 {"index": "$mt"}
 06-fresh-and-unchanged	8	member m1 store GET /v1/get?key=domain/grants	200 {"items": {"as_of": "$a1"}, "index": "$g1"}
+06-fresh-and-unchanged	9	@sleep 65	ok
+06-fresh-and-unchanged	10	member m1 store GET /v1/get?key=domain/grants	200 {"items": {"as_of": "$a1"}, "index": "$g1"}
 07-outcome-refused	1	@domain	ok
 07-outcome-refused	2	member m1 console POST /counters {"name": "c7"}	201
 07-outcome-refused	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c7"}]
