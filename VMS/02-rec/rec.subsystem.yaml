@@ -53,7 +53,7 @@ lease: {unconfirmed_max: forever}
 # primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
 # source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
 # denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
-worker: {exec: /usr/lib/rec/worker, reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+worker: {exec: /usr/lib/rec/worker, reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
