@@ -1,0 +1,18 @@
+# id строки заказа (P/03.6 Н1.6; ADR-0091 п. 1). Форма — README.
+case	input	expect	note
+hyphen-a	{"customer":"testsub","key":"{cam}-{kind}","fields":{"cam":{"type":"string","value":"7"},"kind":{"type":"string","value":"1-x"}}}	testsub-7-1%2Dx	pair hyphen: (7, 1-x)
+hyphen-b	{"customer":"testsub","key":"{cam}-{kind}","fields":{"cam":{"type":"string","value":"7-1"},"kind":{"type":"string","value":"x"}}}	testsub-7%2D1-x	pair hyphen: (7-1, x) — другой id
+plain	{"customer":"testsub","key":"{cam}","fields":{"cam":{"type":"string","value":"7"}}}	testsub-7	строка как есть
+unreserved	{"customer":"testsub","key":"{cam}","fields":{"cam":{"type":"string","value":"A_z.0~"}}}	testsub-A_z.0~	A–Z a–z 0–9 _ . ~ не кодируются
+percent	{"customer":"testsub","key":"{cam}","fields":{"cam":{"type":"string","value":"a b/c%"}}}	testsub-a%20b%2Fc%25	пробел, «/», «%» — %20 %2F %25
+upper-hex	{"customer":"testsub","key":"{cam}","fields":{"cam":{"type":"string","value":"кам"}}}	testsub-%D0%BA%D0%B0%D0%BC	UTF-8 по байтам, hex верхним регистром
+pct2d	{"customer":"testsub","key":"{cam}","fields":{"cam":{"type":"string","value":"-"}}}	testsub-%2D	«-» в значении — %2D, не %2d
+url	{"customer":"testsub","key":"{src}","fields":{"src":{"type":"url","value":"rtsp://h/x?a=1"}}}	testsub-rtsp%3A%2F%2Fh%2Fx%3Fa%3D1	url — как есть, затем кодирование
+int-neg	{"customer":"testsub","key":"{cam}-{n}","fields":{"cam":{"type":"string","value":"7"},"n":{"type":"int","value":-3}}}	testsub-7-%2D3	int — десятичная запись; «-» знака — %2D
+bool	{"customer":"testsub","key":"{cam}-{on}","fields":{"cam":{"type":"string","value":"7"},"on":{"type":"bool","value":true}}}	testsub-7-true	bool — true | false
+float-half	{"customer":"testsub","key":"{cam}-{from}-{to}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":1.5},"to":{"type":"float","value":2}}}	testsub-7-1.5-2	pair interval: [1.5, 2]
+float-other	{"customer":"testsub","key":"{cam}-{from}-{to}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":1},"to":{"type":"float","value":5.2}}}	testsub-7-1-5.2	pair interval: [1, 5.2] — другой id
+float-small	{"customer":"testsub","key":"{cam}-{from}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":5e-07}}}	testsub-7-0.0000005	float без экспоненты: 5e-7 → 0.0000005
+float-big	{"customer":"testsub","key":"{cam}-{from}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":1e+21}}}	testsub-7-1000000000000000000000	float без экспоненты: 1e21
+float-minus-zero	{"customer":"testsub","key":"{cam}-{from}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":-0.0}}}	testsub-7-0	-0 → 0
+float-tie	{"customer":"testsub","key":"{cam}-{from}","fields":{"cam":{"type":"string","value":"7"},"from":{"type":"float","value":1125899906842624.2}}}	testsub-7-1125899906842624.2	два равно близких кратчайших — чётная последняя цифра: …624.2
