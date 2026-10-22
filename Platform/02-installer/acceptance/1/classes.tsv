@@ -194,3 +194,8 @@ a91_exec_shell_char	value
 a91_exec_quote	value
 a91_exec_non_ascii	value
 a91_parts_exec_shell_char	value
+door_routes_role_empty	value
+door_routes_role_no_name	value
+door_routes_role_extra_key	key
+door_routes_role_dup_name	reference
+door_routes_role_repeat	value

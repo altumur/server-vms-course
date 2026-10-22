@@ -79,8 +79,8 @@ requests.valid_for	when exists @requests.most_valid : . <= @requests.most_valid	
 requests.schema	depth . <= 32	value	P/06.1 Н1.4
 console.running	. in values(metrics[].name)	reference	P/02.1 Н1.4
 about.field	. in keys(unit.fields ? fixed = true)	reference	P/02.1 Н1.4
-door.routes	unique values(door.routes[])	reference	P/02.1 Н1.4
-door.pass[]	. not in values(door.routes[]) | {@unit.rows, where}	reference	P/02.1 Н1.4; P/06.5 Н1.8
+door.routes	unique values(door.routes[]) | values(door.routes[].name)	reference	P/02.1 Н1.4
+door.pass[]	. not in values(door.routes[]) | values(door.routes[].name) | {@unit.rows, where}	reference	P/02.1 Н1.4; P/06.5 Н1.8
 objects.rows[]	split(. "/" 0) not in {heartbeats, contenders, snapshot, controller, blobs, commands, "*"}	reference	P/02.1 Н1.4; P/05 Н1.1
 worker.writes[]	. in keys(tables)	reference	P/02.1 Н1.4; P/02.5 Н1.4
 worker.writes[]	empty keys(tables.{.}.fields ? name ~ ".*_secret")	value	P/02.1 Н1.2а worker.writes

@@ -176,7 +176,20 @@ root:
       type: object
       default: {}
       properties:
-        routes: {type: array, items: {ref: name}, owner: P/06.5 Н3, default: [], default_text: двери нет, description: "сегменты двери держателя — по грамматике `name` (без «/»); первый сегмент пути запроса сравнивается с элементом байт в байт (договор токена двери; решение «Архитектора» 2026-10-20)"}
+        routes:
+          type: array
+          owner: P/06.5 Н3; P/03.4 Н1.7
+          default: []
+          default_text: двери нет
+          description: "маршруты двери процесса — первый сегмент пути запроса байт в байт (договор токена двери; решение «Архитектора» 2026-10-20); элемент — имя (допуск `token`: токен двери) или `{name, role}` (допуск по сертификату роли, класс `mixed` договора сертификата роли; ADR-0091 доп. (7), (8))"
+          items:
+            variants:
+              - {ref: name, description: "маршрут с допуском `token` — по грамматике `name` (без «/»)"}
+              - type: object
+                required: [name, role]
+                properties:
+                  name: {ref: name, description: маршрут}
+                  role: {type: array, min_items: 1, unique_items: true, items: {type: string, pattern: '[a-z][a-z0-9_-]*'}, description: "роли, чей предъявленный сертификат допускает к маршруту"}
         pass: {ref: strList, owner: P/06.5 Н1.8, default: [], default_text: передачи нет}
     servers: {ref: servers, owner: P/06.5 Н1.2}
     display: {ref: display, owner: P/06.5 Н1.2, default: {}}

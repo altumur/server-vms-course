@@ -1,0 +1,12 @@
+# {role} без name; ADR-0091 доп. (8) п. 3
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  routes: [{role: [recworker]}]
