@@ -1632,5 +1632,84 @@ class VmsModuleTests(unittest.TestCase):
         self.assertFalse(any("__pycache__" in e for e in errors), errors)
 
 
+
+class VmsLessonTests(unittest.TestCase):
+    """A lesson of the VMS module (ADR-0090 доп. (2)): VMS/NN-<имя>/NN-<имя>.md checked like a Platform lesson with ids
+    V/NN.K-MM, its row in VMS/common/lessons.tsv, id-map VMS/common/id-map.tsv and stub chapters waiting for a request."""
+
+    STUB = ("**Статус: ждёт решения запроса** [`запрос`](../../../decisions/inbox/2026-10-23-запрос-vms-x.md)\n\n" +
+            "\n".join(f"## Н{i} Section" for i in range(6)) + "\n## Решает реализация\n## Чеклист готовности\n")
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        (self.root / "VMS/common").mkdir(parents=True)
+        (self.root / "VMS/common/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\t-\tне переведён\n", encoding="utf-8")
+        (self.root / "VMS/common/id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\nМ10B/01 ш.1\tV/01.1-01\t1.1\tкамера\t-\n", encoding="utf-8")
+        (self.root / "decisions/inbox").mkdir(parents=True)
+        (self.root / "decisions/inbox/2026-10-23-запрос-vms-x.md").write_text("# Запрос\n", encoding="utf-8")
+        self.dir = self.root / "VMS/01-cam"
+        self.spec = self.dir / "spec"
+        self.spec.mkdir(parents=True)
+        self.lesson = self.dir / "01-cam.md"
+        self.lesson.write_text("# Камера\n", encoding="utf-8")
+        (self.spec / "01-cam.README.md").write_text("# Инструкция\n", encoding="utf-8")
+        (self.spec / "01-cam.api.openapi.yaml").write_text(PlatformLessonTests.API, encoding="utf-8")
+        self.norms(1, "V/01.1-01")
+        (self.spec / "01.2-cam.norms.md").write_text(self.STUB, encoding="utf-8")
+        acceptance = self.dir / "acceptance/1"
+        acceptance.mkdir(parents=True)
+        (acceptance / "README.md").write_text("# Приёмка\n", encoding="utf-8")
+        (acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n", encoding="utf-8")
+        (acceptance / "scenarios.tsv").write_text(
+            "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n", encoding="utf-8")
+
+    def norms(self, chapter, value):
+        (self.spec / f"01.{chapter}-cam.norms.md").write_text(
+            "\n".join(f"## Н{i} Section" for i in range(6)) + "\n## Решает реализация\n## Чеклист готовности\n" +
+            f"- [ ] **{value}** Пример — проверяется чтением\n", encoding="utf-8")
+
+    def errors(self):
+        check = Check(self.root)
+        check.lesson(self.lesson)
+        return check.errors
+
+    def test_vms_lesson_with_stub_chapter_passes(self):
+        self.assertEqual(self.errors(), [])
+
+    def test_wrong_id_prefix(self):
+        self.norms(1, "P/01.1-01")
+        self.assertTrue(any("foreign checklist id P/01.1-01" in e for e in self.errors()), self.errors())
+
+    def test_lesson_not_in_lessons_table(self):
+        (self.root / "VMS/common/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n02\t02-rec\tЗапись\t-\tне переведён\n", encoding="utf-8")
+        self.assertTrue(any("is not in VMS/common/lessons.tsv" in e for e in self.errors()), self.errors())
+
+    def test_stub_without_request_link(self):
+        (self.spec / "01.2-cam.norms.md").write_text(self.STUB.replace("2026-10-23-запрос-vms-x.md", "нет.md"),
+                                                     encoding="utf-8")
+        errors = self.errors()
+        self.assertTrue(any("links an existing request" in e for e in errors), errors)
+        self.assertTrue(any("no normative checklist ids" in e for e in errors), errors)
+
+    def test_stale_stub(self):
+        (self.spec / "01.2-cam.norms.md").write_text(self.STUB + "- [ ] **V/01.2-01** Норма — проверяется чтением\n",
+                                                     encoding="utf-8")
+        (self.root / "VMS/common/id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\nМ10B/01 ш.1\tV/01.1-01\t1.1\tкамера\t-\n"
+            "М10B/01 ш.2\tV/01.2-01\t1.2\tдержатель\t-\n", encoding="utf-8")
+        self.assertTrue(any("stale stub" in e for e in self.errors()), self.errors())
+
+    def test_platform_lesson_is_not_touched(self):
+        (self.root / "Platform/01-store").mkdir(parents=True)
+        check = Check(self.root)
+        check.lesson(self.root / "Platform/01-store/01-store.md")
+        self.assertFalse(any("VMS" in e for e in check.errors), check.errors)
+
+
 if __name__ == "__main__":
     unittest.main()

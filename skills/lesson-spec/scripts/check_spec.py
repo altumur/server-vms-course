@@ -402,6 +402,11 @@ VMS_CATALOG = Path("VMS/common/data/catalog.tsv")
 VMS_IDMAP = Path("VMS/common/id-map.tsv")
 VMS_FROZEN = Path("tools/vms-boundary/source-vms.sha256")
 VMS_FROZEN_DIR = Path("Source/vms")
+# A chapter of a VMS lesson that waits for the decision of a request (ADR-0090 доп. (1) «Запрос»): its status line
+# links an existing request file; until the decision it has the sections Н0–Н5 and an empty checklist. A stub with
+# checklist ids is stale: the marker goes with the first norm.
+VMS_STUB = re.compile(r"^\*\*Статус: ждёт решения запроса\*\*", re.M)
+VMS_REQUEST = re.compile(r"\]\(([^()\s]*decisions/inbox/[0-9]{4}-[0-9]{2}-[0-9]{2}-запрос-vms-[^()\s]*\.md)\)")
 
 
 def chapter_key(path):
@@ -412,7 +417,7 @@ def chapter_key(path):
 
 # Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
 CHAPTER = r"(?:0|[1-9][0-9]?)"
-NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|P/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
+NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
 # part of it stays.
 MOVED_SECTION = re.compile(r"^Перенесено в\b")
@@ -620,6 +625,7 @@ class Check:
         self.processes_checked = False
         self.catalog_checked = False
         self.idmap = None
+        self.vms_idmap = {}
         self.contracts = {}                          # OpenAPI file → (document or None, checked without errors)
         self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
@@ -950,8 +956,14 @@ class Check:
                                       f"its readers nor among its participants")
         self.stats["data_roles"] += 1
 
-    def id_map_rows(self):
-        """Platform/common/id-map.tsv → [(line, {column: value})]; empty without the file. Read once."""
+    def id_map_rows(self, table=IDMAP):
+        """Platform/common/id-map.tsv (or the VMS one) → [(line, {column: value})]; empty without the file. Read once."""
+        if table != IDMAP:
+            if table not in self.vms_idmap:
+                path = self.root / table
+                rows = self.tsv(path, len(IDMAP_FIELDS), IDMAP_FIELDS) if path.exists() else []
+                self.vms_idmap[table] = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows]
+            return self.vms_idmap[table]
         if self.idmap is None:
             path = self.root / IDMAP
             rows = self.tsv(path, len(IDMAP_FIELDS), IDMAP_FIELDS) if path.exists() else []
@@ -962,8 +974,8 @@ class Check:
     # `new` of id-map, and each `new` of the chapter (P/NN.K-MM, P/NN-MM without chapters) is in the checklist, unless
     # its `old` id is still in the checklist of an old lesson (the norm moves with that lesson: a late-layer chapter,
     # ADR-0083 module-design «Глава позднего слоя»).
-    def id_map_chapter(self, norms, prefix, ids):
-        rows = self.id_map_rows()
+    def id_map_chapter(self, norms, prefix, ids, table=IDMAP):
+        rows = self.id_map_rows(table)
         if not rows:
             return
         news = {}
@@ -972,13 +984,13 @@ class Check:
                 news.setdefault(row["new"], []).append((line, row["old"]))
         for value in ids:
             if value not in news:
-                self.error(norms, f"checklist id {value} is not in the column new of {IDMAP}")
+                self.error(norms, f"checklist id {value} is not in the column new of {table}")
         for value, entries in sorted(news.items()):
             if not re.fullmatch(re.escape(prefix) + r"-[0-9]+", value) or value in ids:
                 continue
             for line, old in entries:
                 if old not in self.old_ids():
-                    self.error(norms, f"{IDMAP} line {line}: new {value} is not in the checklist, and its old {old} "
+                    self.error(norms, f"{table} line {line}: new {value} is not in the checklist, and its old {old} "
                                       "is in no old lesson's checklist")
         self.stats["id_map_ids"] += len(ids)
 
@@ -1262,13 +1274,13 @@ class Check:
         except ValueError:
             return path
 
-    def norms(self, path, text, prefix):
+    def norms(self, path, text, prefix, allow_empty=False):
         headings, ids = outline(text)
         headers = [match.group(1) for heading in headings
                    if (match := re.match(r"(Н[0-5])(?:\s|$)", heading))]
         if headers != [f"Н{i}" for i in range(6)]:
             self.error(path, "expected Н0–Н5 once, in order")
-        if not ids:
+        if not ids and not allow_empty:
             self.error(path, "no normative checklist ids")
         for value, count in Counter(ids).items():
             if count != 1 or not value.startswith(prefix + "-"):
@@ -1810,6 +1822,8 @@ class Check:
     def lesson(self, lesson):
         if lesson.parent.parent == self.root / "Platform":
             return self.platform_lesson(lesson)
+        if lesson.parent.parent == self.root / VMS_DIR:
+            return self.platform_lesson(lesson, vms=True)
         if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
             self.error(lesson, "expected module/NN-slug.md under repository root")
             return
@@ -1856,21 +1870,51 @@ class Check:
         self.stale(key, acceptance)
         self.stats["lessons"] += 1
 
+    # A VMS lesson is a row of VMS/common/lessons.tsv with its directory (vms_module checks the table's form).
+    def vms_lesson_listed(self, lesson, number, stem):
+        path = self.root / VMS_LESSONS
+        rows = [dict(zip(VMS_LESSONS_FIELDS, cols)) for _, cols in self.tsv(path, len(VMS_LESSONS_FIELDS))] \
+            if path.is_file() else []
+        if not any(row["lesson"] == number and row["dir"] == stem for row in rows):
+            self.error(lesson, f"lesson {stem} is not in {VMS_LESSONS} (ADR-0090 доп. (2))")
+            return False
+        return True
+
+    # A stub chapter of a VMS lesson: the status line «ждёт решения запроса» and a link to an existing request file of
+    # the inbox (decisions/inbox/<дата>-запрос-vms-<тема>.md). A status line without such a link is an error.
+    def vms_stub(self, norms, text):
+        if not VMS_STUB.search(text):
+            return False
+        links = [link for link in VMS_REQUEST.findall(text) if (norms.parent / link).resolve().is_file()]
+        if not links:
+            self.error(norms, "a stub chapter («ждёт решения запроса») links an existing request "
+                              "decisions/inbox/<дата>-запрос-vms-<тема>.md")
+            return False
+        self.stats["vms_stub_chapters"] += 1
+        return True
+
     # A lesson of the Platform module (ADR-0083): Platform/NN-<процесс>/NN-<процесс>.md, norms per chapter
     # spec/NN.K-<процесс>.norms.md (or one spec/NN-<процесс>.norms.md), one instruction and one OpenAPI, acceptance per
     # chapter acceptance/K/ (or acceptance/). Each chapter is checked as a lesson of its own; the lecture and the
     # instruction count the whole lesson. An ADR-0085 pair next to chapter norms checks that chapter's corpus.
-    def platform_lesson(self, lesson):
-        if not self.processes_checked:
+    def platform_lesson(self, lesson, vms=False):
+        """`vms` — a lesson of the VMS module (ADR-0090 доп. (2)): VMS/NN-<имя>/NN-<имя>.md, ids V/NN.K-MM, its row in
+        VMS/common/lessons.tsv, id-map VMS/common/id-map.tsv; the checks of a Platform process (lessons.tsv process and
+        unit, the catalog by the roles of a process, the canonical chapter) do not apply; a chapter waiting for a
+        request is a stub (VMS_STUB)."""
+        if not vms and not self.processes_checked:
             self.process_names()
-        if not self.catalog_checked:
+        if not vms and not self.catalog_checked:
             self.catalog_lessons()
         stem = lesson.stem
-        if not re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", stem) or lesson.parent.name != stem:
-            self.error(lesson, "expected Platform/NN-<процесс>/NN-<процесс>.md")
+        if not re.fullmatch(r"[0-9]{2}-[a-z][a-z0-9-]*" if vms else r"[0-9]{2}-[a-z][a-z-]*", stem) or \
+                lesson.parent.name != stem:
+            self.error(lesson, "expected VMS/NN-<имя>/NN-<имя>.md" if vms else "expected Platform/NN-<процесс>/NN-<процесс>.md")
             return
         number, process = stem[:2], stem[3:]
-        key = f"P/{number}"
+        key = f"V/{number}" if vms else f"P/{number}"
+        if vms and not self.vms_lesson_listed(lesson, number, stem):
+            return
         spec, acceptance = lesson.parent / "spec", lesson.parent / "acceptance"
         whole = spec / f"{stem}.norms.md"
         chapters = sorted((p for p in spec.glob(f"{number}.*-{process}.norms.md")
@@ -1900,13 +1944,17 @@ class Check:
             prefix = f"{key}.{chapter}" if chapter else key
             text = self.read(norms)
             ids, scenarios, verdict_counts, chapter_texts = [], None, None, {}
+            stub = vms and chapter is not None and text is not None and self.vms_stub(norms, text)
             if text is not None:
                 self.markdown(norms, text)
-                ids = self.norms(norms, text, prefix)
+                ids = self.norms(norms, text, prefix, allow_empty=stub)
+                if stub and ids:
+                    self.error(norms, "stale stub: the chapter has checklist ids, its status line «ждёт решения запроса» "
+                                      "goes with the first norm")
                 said = self.data_paragraph(norms, text, prefix, key if chapter else None)
                 owned |= said["владеет"]
                 saids.append((norms, said))
-                self.id_map_chapter(norms, prefix, ids)
+                self.id_map_chapter(norms, prefix, ids, VMS_IDMAP if vms else IDMAP)
                 chapter_texts[norms] = text
             where = acceptance / chapter if chapter else acceptance
             verdicts, classes = None, {}
@@ -1920,7 +1968,8 @@ class Check:
                 more, scenarios, verdict_counts, verdicts, classes = self.acceptance(where, key, f"{chapter}/" if chapter else "")
                 chapter_texts.update(more)
                 if scenarios is not None:
-                    self.directives(where / "scenarios.tsv", self.stands())
+                    self.directives(where / "scenarios.tsv",
+                                    self.stands() + ([self.root / VMS_DIR / "common/acceptance/README.md"] if vms else []))
             elif no_acceptance:
                 self.except_(acceptance, key, "no-acceptance", "-")
             elif not chapter:
@@ -1952,13 +2001,16 @@ class Check:
                                         (old[0] + value[0], old[1] + value[1], old[2] | {f"{chapter}/{n}" for n in value[2]}))
                     else:
                         totals[name] = value if old is None else tuple(a + b for a, b in zip(old, value))
-        if stem == "02-installer":
+        if stem == "02-installer" and not vms:
             self.canonical_chapter()
         if self.catalog is not None and chapters:
             shared = {k for (k, _), row in self.catalog.items() if row["owner"] == key}
             for missing in sorted(shared - owned):
                 self.error(lesson, f"«Данные»: no chapter owns {missing}, the catalog gives it to {key}")
-        self.data_roles(lesson, key, number, saids)
+        if not vms:
+            self.data_roles(lesson, key, number, saids)
+        else:
+            self.stats["vms_lessons_checked"] += 1
         # The lecture and the instruction count the whole lesson: sums over the chapters.
         for path, text in texts.items():
             self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],
