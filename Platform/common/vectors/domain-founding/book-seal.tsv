@@ -1,0 +1,3 @@
+# Ключ приёма книг (договор основания домена, шаг 5): seed_secret hex → book_seal = X25519(seed, 9) hex. Форма — README.
+case	seed_secret	expect	note
+seal	4da9820024fe6eb4c0d2271dd47df3db6f6e35c90dfb5275a5a2813e880301c3	1612736df463789df2fdb32f05a152bc46c76cb98c2b3ab55923879960995547	открытая половина ключа приёма книг набора rev 1 (зажим — при умножении, RFC 7748 §5)
