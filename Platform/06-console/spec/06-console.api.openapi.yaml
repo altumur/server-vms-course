@@ -6067,6 +6067,22 @@ components:
         revision:
           type: integer
           minimum: 1
+        made:
+          type: object
+          required: [by, at, keep]
+          additionalProperties: false
+          readOnly: true
+          description: Строка заказа другой подсистемы (P/06.1 Н1.2 made; ADR-0091 п. 1); ставит библиотека заказчика, клиент не задаёт.
+          properties:
+            by: {type: string}
+            at: {type: number}
+            keep: {type: number}
+            gone: {type: number}
+        state:
+          type: object
+          readOnly: true
+          additionalProperties: true
+          description: Действующие состояния единицы по unit.state (P/06.1 Н2 «Состояние в ответе»; ADR-0091 п. 3); значение — по схеме unit.state.<имя>.
       patternProperties:
         _secret$:
           type: string

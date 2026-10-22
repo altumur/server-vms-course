@@ -132,3 +132,19 @@ scenario	step	request	expect
 19-table-feed	11	@as console store POST /v1/write {"id":"e1","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
 19-table-feed	12	console2 GET /shelves/shx	200 {"name": "shx", "garbled": true}
 19-table-feed	13	console2 POST /shelves {"name": "sh10", "zone": "z1", "over": "shx"}	409 {"fault": "garbled"}
+# 20-made (ADR-0091 пп. 1, 3): префикс заказчика testsub — отказ двери; строка заказа (подготовлена мимо писателя) — поля key неизменяемы, made и born сохраняет правка, made клиент не задаёт; состояние действует по born и revision; born у строки двери; удаление ставит made.gone
+20-made	1	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "~are made by testsub"}
+20-made	2	store GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": null}
+20-made	3	@as console store POST /v1/write {"id":"e3","op":"put","key":"testsub2/tallies/testsub-c2","items":{"id":"testsub-c2","revision":"1","name":"testsub-c2","of":"c2","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
+20-made	4	console2 PUT /tallies/testsub-c2 {"of": "c3"}	400 {"error": "~is fixed"}
+20-made	5	console2 PUT /tallies/testsub-c2 {"made": {"by": "testsub2"}}	400
+20-made	6	console2 PUT /tallies/testsub-c2 {"zone": "z1"}	200 {"zone": "z1", "revision": 2, "made": {"by": "testsub", "at": 1000000000, "keep": 1000000720}}
+20-made	7	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"born": "0123456789abcdef0123456789abcdef", "made": "{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}", "revision": "2"}}
+20-made	8	@as testsub2worker store POST /v1/write {"id":"e8","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200 {"index": "$s"}
+20-made	9	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": "@absent"}]}
+20-made	10	@as testsub2worker store POST /v1/write {"id":"e10","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"2","epoch":"1","value":"{\"state\":\"open\"}"},"cas":"$s"}	200
+20-made	11	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": {"result": {"state": "open"}}}]}
+20-made	12	console2 POST /tallies {"name": "t2", "of": "c2"}	201 {"revision": 1}
+20-made	13	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"born": "~", "made": "@absent"}}
+20-made	14	console2 DELETE /tallies/testsub-c2	200 {"deleted": "testsub-c2"}
+20-made	15	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"deleted": "true", "born": "0123456789abcdef0123456789abcdef", "made": "~\"gone\":"}}
