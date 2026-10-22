@@ -370,7 +370,11 @@ display:
     archive.keep.sealed: сохранённое запечатано
     archive.keep.verified: сохранённое проверено
     archive.keep.copied: сохранённое скопировано
-    archive.keep.lost: сохранённое не удалось скопировать
+    archive.keep.lost: сохранённое потеряно или не скопировано
+    archive.keep.made: поставлена метка «сохранить»
+    archive.keep.lifted: метка «сохранить» снята
+    archive.keep.uncopied: сохранённое ещё не скопировано
+    archive.keep.garbled: метка «сохранить» не читается
 # The recorders on the domain: a member reports, beside its heartbeats and snapshot, when each camera last polled its
 # ingest (`rec/polled/<ingest>`) — the domain's witness that a camera is alive while its agent is silent. Where the ingest
 # takes streams is in the recorder's heartbeat (`ingest`), which the domain has already: no report of its own (ADR-0065,
