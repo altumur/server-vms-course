@@ -53,11 +53,15 @@ lease: {unconfirmed_max: forever}
 # primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
 # source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
 # denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
-worker: {reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+worker: {reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
 about: {sub: cam, field: cam}
+# The archive's engine: a part of rec with its own service (V/02.2; ADR-0091 п. 5) — one daemon per server, its socket a
+# share of the part (the recorders of the server are let in by the part's group); its protocol — spec/02-rec.obsd.contract.md.
+parts: {obsd: {exec: "/usr/local/bin/obsd --socket /run/vms-rec-obsd/obsd.sock", volumes: true, stop_timeout: 60}}
+shares: {obsd: {kind: socket, part: obsd}}
 unit:
   rows: recordings                   # rec/recordings/<name>
   id: name                           # "7", "7-cloud" — the operator's name for THIS recording
