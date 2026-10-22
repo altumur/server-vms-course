@@ -23,7 +23,7 @@
 ## Код курса
 - `Source/` — единственный код курса: `w2cplatform/` платформа (с `cluster/`, `domain/`, `trust/`), `vms/` подсистемы, `deploy/`, `gstvms/`, `tests/`, `traces/`. Тесты: `tests/run.py`, `tests/cluster/run.py`, `tests/domain/run.py`, `tests/domainvms/run.py` в venv python3.12 с pyyaml, cryptography, pysyncobj; jsdom-тесты модуля в `tests/console`.
 - Спеки `Source/vms/*.subsystem.yaml`, `tests/testdata/testsub*.yaml` и общие таблицы `tests/testdata/*.tsv` — данные спецификации, один YAML с продуктом; их байты правит «Спецификация» (ADR-0080 доп. 16).
-- Новые реализации генерируются по спецификации в `/Users/murat/w2c/cammeta-python` и `cammeta-go` из общей папки `/Users/murat/w2c/cammeta-specs` (выгрузка спецификации курса, обновляет «Архитектор» `tools/export.sh`); старые (`Source/`, `vmssubsystem`) — свидетели до сверки (ADR-0080 доп. 16).
+- Новые реализации генерируются по спецификации из общей папки `/Users/murat/w2c/cammeta-specs` (выгрузка спецификации курса, обновляет «Архитектор» `tools/export.sh`): в стадии C — в `cammeta-c-<язык>` (ADR-0083 доп. (22), (23)); прежние `/Users/murat/w2c/cammeta-python`, `cammeta-go` — замороженные свидетели на выгрузке `d27f95d`; старые (`Source/`, `vmssubsystem`) — свидетели (ADR-0080 доп. 16).
 - Тест границы `Source/tests/test_boundary.py` с долгом: долг только уменьшается.
 
 ## Продукт
