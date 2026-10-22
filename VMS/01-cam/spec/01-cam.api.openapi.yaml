@@ -1,0 +1,133 @@
+openapi: 3.1.0
+info:
+  title: V/01 — дверь держателя камеры (архив устройства)
+  version: 1.0.0
+  description: |
+    HTTP-контракт двери держателя `camworker` — главы V/01.5 урока «Камера» модуля VMS. Канон —
+    [нормы главы 5](01.5-cam.norms.md); этот файл их выражает и не добавляет требований: порядок отказов,
+    пределы, куски и бюджет — Н1.5, Н3; личность клиента — Н2 (сертификат роли, класс `role`;
+    без комплекта — только петля). Только `GET`; иной метод — 405, иной путь — 404 `no such path`.
+servers:
+  - url: http://127.0.0.1:{port}
+    description: без комплекта сертификатов — только петля (P/02.4 Н1.6 address.process)
+    variables:
+      port: {default: "0"}
+paths:
+  /devices:
+    get:
+      summary: Устройства группы держателя (V/01.5 Н1.4)
+      responses:
+        "200":
+          description: по элементу на устройство
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/Device"}
+  /recordings/{id}:
+    get:
+      summary: Перечень кусков архива устройства по камере (V/01.5 Н1.3, Н3)
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+      responses:
+        "200":
+          description: куски, подрезанные к [from, to)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [spans]
+                additionalProperties: false
+                properties:
+                  spans:
+                    type: array
+                    items: {$ref: "#/components/schemas/Span"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "501": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /playback/{id}:
+    get:
+      summary: Байты архива устройства за интервал (V/01.5 Н1.3, Н3)
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+      responses:
+        "200":
+          description: |
+            байты устройства как есть; HTTP/1.1 — Transfer-Encoding chunked, без Content-Length; отказ после
+            первого байта — ответ без последнего куска; Range не поддерживается
+          content:
+            video/mp4:
+              schema: {type: string, format: binary}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: id камеры (V/01.1 Н1.1)
+      schema: {type: string, pattern: "^[0-9]+$"}
+    From:
+      name: from
+      in: query
+      required: false
+      description: секунды Unix, включительно; без параметра — от начала архива
+      schema: {type: number}
+    To:
+      name: to
+      in: query
+      required: false
+      description: секунды Unix, не включительно; без параметра — до конца архива
+      schema: {type: number}
+  responses:
+    Refusal:
+      description: отказ (V/01.5 Н4); 503 предела соединений — с заголовком Retry-After 1
+      headers:
+        Retry-After:
+          required: false
+          schema: {type: integer}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: {type: string}
+              detail: {type: string}
+  schemas:
+    Span:
+      type: object
+      required: [from, to]
+      additionalProperties: false
+      properties:
+        from: {type: number}
+        to: {type: number}
+    Device:
+      type: object
+      required: [device, known]
+      properties:
+        device: {type: string}
+        state: {enum: [slow, failed, opening]}
+        since: {type: number}
+        channels: {type: integer, minimum: 0}
+        known:
+          type: array
+          items: {type: string}
+        unimported:
+          type: array
+          items: {type: string}
+        playbacks: {type: integer, minimum: 0}
+        max_playbacks: {type: [integer, "null"], minimum: 0}
+        reads_stuck:
+          type: array
+          items: {type: string}
+        can: {type: object}
+        same_serial_as: {type: string}
+        why: {type: string}
