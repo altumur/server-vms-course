@@ -311,7 +311,7 @@ UNITS_EXEMPT = {
 }
 UNIT_ENTRY = re.compile(r"^  ([^\s:#][^:]*?):(?=\s|$)(.*)$")
 UNIT_ROLE = re.compile(r"(?<![\w-])роль\s+([^\s;,()]+)")
-UNIT_RUNNER = re.compile(r"(?<![\w-])w2c-run\.sh\s+([^\s;,()]+)")
+UNIT_RUNNER = re.compile(r"(?<![\w-])w2c-run\.sh\s+([^\s;,()]+)(?:\s+(<[^\s<>;,()]+>))?")
 
 
 def lifecycle_head(text):
@@ -747,6 +747,12 @@ class Check:
                 continue
             for word, pattern in (("роль", UNIT_ROLE), ("w2c-run.sh", UNIT_RUNNER)):
                 for value in pattern.findall(body):
+                    if isinstance(value, tuple):
+                        # runner command with a subsystem argument names the process by both words:
+                        # `w2c-run.sh worker <sub>` — process `<sub>worker` (ADR-0091 доп. (5) п. 1)
+                        value, arg = value
+                        if arg and process == arg + value:
+                            continue
                     if value != process:
                         self.error(units_path, f"line {entry_line}: {unit} {word} {value}, lessons.tsv gives "
                                                f"process {process} (lesson {row['lesson']})")

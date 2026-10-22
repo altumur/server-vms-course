@@ -1288,6 +1288,18 @@ watchdog:  роль nobody; w2c-run.sh nobody
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("line 16: w2c-domain.service w2c-run.sh signer, lessons.tsv gives process domain", errors[0])
 
+    def test_runner_command_with_subsystem_names_the_process(self):
+        self.replace(self.units, "WatchdogSec=360 (СЛЕДУЕТ)",
+                     "WatchdogSec=360 (СЛЕДУЕТ); запуск — w2c-run.sh controller <sub>")
+        self.assertEqual(self.process_errors().errors, [])
+
+    def test_runner_command_with_other_subsystem_word_is_an_error(self):
+        self.replace(self.units, "WatchdogSec=360 (СЛЕДУЕТ)",
+                     "WatchdogSec=360 (СЛЕДУЕТ); запуск — w2c-run.sh worker <sub>")
+        errors = self.process_errors().errors
+        self.assertTrue(any("w2c-controller@.service w2c-run.sh worker, lessons.tsv gives process <sub>controller"
+                            in e for e in errors), errors)
+
     def test_template_role_compares_as_a_string(self):
         self.replace(self.units, "роль <sub>controller,", "роль <s>controller,")
         errors = self.process_errors().errors
