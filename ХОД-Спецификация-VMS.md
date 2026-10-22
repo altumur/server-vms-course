@@ -23,7 +23,8 @@
 ## Перевод 02-rec
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
   переведена (нормы, приёмка 1, лекция и инструкция — начало, id-map V/02.1-01…07; манифест: `grows: true`, `ends`); влита
-  `ea8d23d5b`.
+  `ea8d23d5b`. V/02.2 — переведена (договор `spec/02-rec.obsd.contract.md`, нормы, id-map V/02.2-01…06; манифест:
+  `parts.obsd`, `shares.obsd` с `part`, `worker.uses: [cam.shm, rec.obsd]`).
 
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
@@ -81,7 +82,8 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
-- «Сборке»: `rec.subsystem.yaml` — `placement.grows: true`, `placement.ends: {field: until, never: 0}`.
+- «Сборке»: `rec.subsystem.yaml` — `placement.grows: true`, `placement.ends: {field: until, never: 0}`; часть `obsd`
+  (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.
