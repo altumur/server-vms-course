@@ -92,7 +92,7 @@ unit:
     # raises the alarm `archive.shallow` (М10B Lesson 18). It does not stop the ring: a larger quota, or fewer
     # recordings on the volume, is the answer.
     min_depth_days: {type: float,  default: 0}
-    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
+    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup or edge volume, V/02.6 Н1.4): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
