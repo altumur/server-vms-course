@@ -4,6 +4,8 @@ one	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	curr
 two_first_current	"k2 32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7\nk1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k2; keys k2, k1
 comments_blank	"# ring\n\n  k1\t29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea  \n"	current k1; keys k1
 bom	"\ufeffk1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k1; keys k1
+double_bom	"\ufeff\ufeffk1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	unreadable
+feff_in_kid	"k\ufeff1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	unreadable
 hash_in_kid	"k#1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k#1; keys k#1
 empty	""	unreadable
 only_comment	"# nothing\n"	unreadable
