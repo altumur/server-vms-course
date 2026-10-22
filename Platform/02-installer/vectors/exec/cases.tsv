@@ -1,0 +1,21 @@
+# Командная строка exec (P/02.1 execLine: worker.exec, parts.<часть>.exec; ADR-0091 доп. (5) п. 2): строка → argv или @refuse. Форма — README.
+case	exec	expect	note
+one-word	"/usr/lib/cam/worker"	["/usr/lib/cam/worker"]	одно слово — абсолютный путь
+args	"/usr/lib/cam/worker --mode=a,b +x @y:z ^w_1.2"	["/usr/lib/cam/worker", "--mode=a,b", "+x", "@y:z", "^w_1.2"]	разрешённые знаки + , . / : = @ ^ _ -
+root	"/"	["/"]	«/» — абсолютный путь
+relative	"usr/lib/cam/worker"	@refuse	первое слово не абсолютный путь
+double-space	"/usr/lib/cam/worker  -v"	@refuse	пустое слово
+leading-space	" /usr/lib/cam/worker"	@refuse	пустое первое слово
+trailing-space	"/usr/lib/cam/worker "	@refuse	пустое последнее слово
+tab	"/usr/lib/cam/worker\t-v"	@refuse	табуляция — не разделитель и не знак слова
+empty	""	@refuse	пустая строка
+dollar	"/usr/lib/cam/worker $HOME"	@refuse	$ — знак оболочки
+quote	"/usr/lib/cam/worker \"a b\""	@refuse	кавычки — argv не группирует
+backslash	"/usr/lib/cam/worker a\\ b"	@refuse	\ — нет экранирования
+semicolon	"/usr/lib/cam/worker;rm"	@refuse	;
+tilde	"/usr/lib/cam/worker ~/x"	@refuse	~
+glob	"/usr/lib/cam/worker *.cfg"	@refuse	*
+hash	"/usr/lib/cam/worker #x"	@refuse	#
+percent	"/usr/lib/cam/worker %i"	@refuse	% — подстановок юнита нет
+non-ascii	"/usr/lib/cam/воркер"	@refuse	не ASCII
+newline	"/usr/lib/cam/worker\n-v"	@refuse	перевод строки
