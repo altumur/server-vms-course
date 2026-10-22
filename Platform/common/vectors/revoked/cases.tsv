@@ -17,3 +17,7 @@ bad-crlf	"ab\r\ncd\r\n"	@bad	CR — знак вне hex: неверная стр
 bad-nonhex	"ab\nzz\n"	@bad	знак вне hex; верные строки рядом не спасают — прежнее и частичное не используется
 bad-sign	"-1\n"	@bad	знак — неверная строка
 absent	@absent	@bad	нет ни revoked, ни crl.pem — как неверный файл: отказ закрыт (absent)
+both-union	{"revoked":"ab\n","crl":["cd","00AB"]}	["ab", "cd"]	оба файла — объединение (both)
+crl-only	{"revoked":"@absent","crl":["cd"]}	["cd"]	есть crl.pem, нет revoked — не ошибка (absent)
+both-revoked-bad	{"revoked":"zz\n","crl":["cd"]}	@bad	неверный revoked при верном crl.pem — отказ закрыт (both)
+both-crl-bad	{"revoked":"ab\n","crl":"@bad"}	@bad	неверный crl.pem при верном revoked — отказ закрыт (both)
