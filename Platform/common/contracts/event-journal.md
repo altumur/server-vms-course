@@ -29,7 +29,9 @@ line:                                        # одна строка JSON в ф�
   # Platform/common/data/codec.tsv time: число, до трёх знаков дроби), читатель читает терпимо (число или строка по
   # кодеку читателя); форма строки — семья events P/05 (05-resource/data/events.form.yaml); векторы чтения —
   # common/vectors/journal bucket.tsv t-* (догадка стадии C EJ-G07, решение «Архитектора» 2026-10-23)
-  <поля>:   слова подсистемы                                       # v не пишется: отсутствие = версия 1
+  <поля>:   слова подсистемы                                       # v не пишется: отсутствие = версия 1; v — дополнительное
+                                                                   # поле, читатель его терпит, писатель пишет строго по форме
+                                                                   # без v (догадка стадии C EJ-G10)
 bucket:
   path:     <root>/<дерево>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl    # root: RESOURCE_ROOT | <PLATFORM_DIR>/events;
                                                                           # дерево — <sub> подсистемы, console или audit (разбор ревью стадии B 6–7, № 35)

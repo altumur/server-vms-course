@@ -28,7 +28,11 @@ root:
     occurred:
       ref: common.time
       description: когда произошло; необязателен
+    v:
+      type: integer
+      minimum: 1
+      description: "версия строки — дополнительное поле: читатель его терпит (DIALECT § 8), писатель не пишет — отсутствие = версия 1 (договор журнала событий line; догадка стадии C EJ-G10)"
   required: [t, kind, id]
   names:
     key: {type: string}
-    value: {type: any, description: слова подсистемы}
+    value: {type: any, description: "слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10)"}
