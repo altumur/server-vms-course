@@ -1,5 +1,5 @@
 // Контракт платформенного модуля (server-vms-course/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, v1) на фиктивной подсистеме:
-// минимальная оболочка (модуль и mount), словарь, выбор, display и about из спеки, where с door или null, правка без
+// минимальная оболочка (модуль и mount), словарь, выбор, display и about из манифеста, where с door или null, правка без
 // маски, вызовы оболочки в библиотеку. Закрытый список вызовов и порядок (P/07 Н1.4) — module-calls.test.js.
 const fs=require("fs"),path=require("path");
 const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -11,7 +11,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"enabled",type:"bool"},{name:"labels",type:"list"},{name:"key_secret",type:"string"}],metrics:{prefix:"testsub",running:"things_running"},display:{unit:"thing",units:"things",field_help:{name:"what to call it"},kinds:{"x.y":"x went y"}}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"enabled",type:"bool"},{name:"labels",type:"list"},{name:"key_secret",type:"string"}],metrics:{prefix:"testsub",running:"things_running"},display:{unit:"thing",units:"things",field_help:{name:"what to call it"},kinds:{"x.y":"x went y"}}};
 b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"subthings",rows:"parts",id:"name",about:{sub:"testsub",field:"thing"},fields:[{name:"thing",type:"string"},{name:"size",type:"int"}]}}};
 b.FIX["/things"]={configured:[{id:1,name:"one",labels:["a"],key_secret:"***",enabled:true},{id:2,name:P,labels:[],key_secret:"",enabled:true}],rows:[{id:1,worker:"w-1",server:"s-1",phase:"running"}]};
 b.FIX["/sub/parts"]={configured:[{id:"p1",thing:"1",size:3}],rows:[]};
@@ -32,12 +32,12 @@ const words=/\b(vms|cams?|cameras?|rec|det|auto|recordings?|recorders?|detectors
 const hit=src.split("\n").map((l,i)=>[i+1,l]).filter(([,l])=>words.test(l.replace(/^\s*\/\/.*$/,"")));
 out.vocabularyClean=hit.length===0;
 out.liveRuleIsByToken=["live_url","LIVE_NAME","/live/","livecontroller"].every(x=>words.test(x))&&!["state === \"live\"","workers_live","live/silent"].some(x=>words.test(x));out.hits=hit.slice(0,3).map(([n,l])=>n+": "+l.trim().slice(0,80)).join(" | ");
-// spec(name): копия спеки для кода страницы — правка копии модуль не трогает; неизвестная подсистема — null
-{const sp=pc.spec("testsub");out.specCopy=!!sp&&sp.rows==="things"&&(sp.rows="x",pc.spec("testsub").rows==="things")&&pc.spec("nope")===null;}
+// manifest(name): копия манифеста для кода страницы — правка копии модуль не трогает; неизвестная подсистема — null
+{const sp=pc.manifest("testsub");out.manifestCopy=!!sp&&sp.rows==="things"&&(sp.rows="x",pc.manifest("testsub").rows==="things")&&pc.manifest("nope")===null;}
 out.version=pc.version===1&&w.PlatformConsole.version===1;
 const tree=()=>d.querySelector(".pc-tree").textContent;
 out.displayWords=d.querySelector(".pc-hunits-l").textContent==="Things";
-// about из спеки: части вложены под единицей 1
+// about из манифеста: части вложены под единицей 1
 ev(`document.querySelector('[data-tw="unit:testsub/1"]').click()`);
 out.aboutNested=!!d.querySelector('[data-ref="unit:subthings/p1"]')&&![...d.querySelectorAll(".pc-tree .pc-g")].some(x=>/parts/.test(x.textContent));
 // выбор и событие select

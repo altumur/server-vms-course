@@ -195,8 +195,8 @@ def load_family(root, row, common=None):
 def chapter_families(root, prefix, catalog=None, common=None):
     """Семьи главы в порядке каталога: [Family]; SourceError — первая, что не строится."""
     catalog = read_catalog(root) if catalog is None else catalog
-    # `spec` — форма строки задаётся манифестом подсистемы, семьи в data/ нет (check_spec SPEC_FORMS).
-    rows = [r for r in catalog if r.get("owner") == prefix and r.get("schema", "-") not in ("-", "spec")]
+    # `manifest` — форма строки задаётся манифестом подсистемы, семьи в data/ нет (check_spec MANIFEST_FORMS).
+    rows = [r for r in catalog if r.get("owner") == prefix and r.get("schema", "-") not in ("-", "manifest")]
     if rows and common is None:
         common = load_common(Path(root) / COMMON)
     return [load_family(root, r, common) for r in rows]

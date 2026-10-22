@@ -21,9 +21,9 @@ JSON файла одной строкой: сняты только незнач�
 по форме `ViewInput`). Каждая строка — отдельный запуск на свежем состоянии: память теневого отчёта между строками не
 переходит. `as_of` вывода — стенные секунды процесса команды, не сравнивается.
 
-## Входы и спеки
+## Входы и манифесты
 
-Форма входа — `ViewInput`, вывода — `ViewOutput` ([контракт урока](../../spec/08-domain.api.openapi.yaml)): `specs` — спеки каталога,
+Форма входа — `ViewInput`, вывода — `ViewOutput` ([контракт урока](../../spec/08-domain.api.openapi.yaml)): `manifests` — манифесты каталога,
 `holder` — имя держателя, `passes` — проходы; в проходе `at` — монотонные секунды держателя, `members.<член>` —
 `{mark, stale?, objects}` (`mark` — `rev` метки `reported` или `null`, `stale` — поле `stale` метки, `objects` — пульсы
 `<sub>/heartbeats/<воркер>` и шарды `<sub>/snapshot/<шард>` копии), `placements` — назначения
@@ -33,10 +33,10 @@ JSON файла одной строкой: сняты только незнач�
 Вход — пульсы после чтения по семье `heartbeats` (P/03.4): форма входа — эта, не семья; пульс без `instance` или с
 `worker` из ключа — положительный вход, строки с ним остаются положительными (P/08.1 Н1.4; решение «Архитектора» 2026-10-20 (Go М11-01 № 7; семья heartbeats, разбор ревью стадии B 6–7, № 14, № 15)).
 
-Ожидания зависят от байтов спек каталога (разбор ревью стадии A 8–10, № 37): `domain.ref`, `domain.view`, `unit.rows` и
-`unit.id` спек `testsub` и `testsub2` из данных спецификации:
+Ожидания зависят от байтов манифестов каталога (разбор ревью стадии A 8–10, № 37): `domain.ref`, `domain.view`, `unit.rows` и
+`unit.id` манифестов `testsub` и `testsub2` из данных спецификации:
 
-| Спека | Файл | sha256 |
+| Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `769c5a472b74307c5dc5b697a76dc6eaede09e3c69c47e8808d862d0d0cb9165` |
 | `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `bcb735667abd02f634c19a451fad686688a2c24fed9725ec58248e162e368e32` |

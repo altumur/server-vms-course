@@ -12,7 +12,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const u=(sub,cluster,unit,o={})=>({sub,cluster,unit,ref:"",name:"",server:cluster,worker:"w",phase:"running",worker_state:"live",...o});
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"srv-box":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};

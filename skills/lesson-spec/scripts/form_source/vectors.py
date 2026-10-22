@@ -2,9 +2,9 @@
 приёмка `puts.tsv` с колонкой вида и проверка главы для check_spec.
 
 Векторы — `Platform/02-installer/vectors/canonical/`: `README.md`, `cases.tsv` (`case<TAB>input<TAB>expect<TAB>note`),
-`expect/<case>.json` — байты `spec` (JCS, UTF-8, без перевода строки в конце), необязательный `inputs/` — входы строк-
-примеров. `input` — путь файла спеки от корня раскладки (`/`, без `..`), принятого загрузчиком главы 2.1; `expect` — ровно
-`expect/<case>.json`. Строки `corpus-<случай>` (каждый `ok` случай корпуса 2.1) и `course-<имя>` (каждая спека курса)
+`expect/<case>.json` — байты `manifest` (JCS, UTF-8, без перевода строки в конце), необязательный `inputs/` — входы строк-
+примеров. `input` — путь файла манифеста от корня раскладки (`/`, без `..`), принятого загрузчиком главы 2.1; `expect` — ровно
+`expect/<case>.json`. Строки `corpus-<случай>` (каждый `ok` случай корпуса 2.1) и `course-<имя>` (каждый манифест курса)
 и все ожидания строит generate(); прочие строки — примеры автора, их порядок и входы генератор сохраняет.
 """
 import json
@@ -22,14 +22,14 @@ NORMS = LESSON / "spec/02.2-installer.norms.md"
 CORPUS = LESSON / "acceptance/1"
 ACCEPTANCE = LESSON / "acceptance/2"
 VECTORS = LESSON / "vectors/canonical"
-# Спеки курса, которые идут в выгрузку: testsub*. Спеки VMS (Source/vms) — материал М12, в выгрузку не идут.
-COURSE_SPECS = (Path("Source/tests/testdata"),)
+# Манифесты курса, которые идут в выгрузку: testsub*. Манифесты VMS (Source/vms) — материал М12, в выгрузку не идут.
+COURSE_MANIFESTS = (Path("Source/tests/testdata"),)
 HEADER = ["case", "input", "expect", "note"]
 CASE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 GENERATED = ("corpus-", "course-")
 VECTOR_ENTRIES = {"README.md", "cases.tsv", "expect", "inputs"}
-COMMENT = ("# Векторы canonical главы P/02.2 (P/02.2-07): байты спеки → байты `spec` канонического вида (без обёртки, Р13).\n"
-           "# Строка: case<TAB>input<TAB>expect<TAB>note; input — путь спеки от корня раскладки, expect — expect/<case>.json.\n"
+COMMENT = ("# Векторы canonical главы P/02.2 (P/02.2-07): байты манифеста → байты `manifest` канонического вида (без обёртки, Р13).\n"
+           "# Строка: case<TAB>input<TAB>expect<TAB>note; input — путь манифеста от корня раскладки, expect — expect/<case>.json.\n"
            "# Строки corpus-*, course-* и все ожидания строит построитель (form_source/build_canonical.py vectors); правила — README.\n")
 PUTS_DIRECTIVES = {"@view-delete", "@view-spoil"}
 PUTS_FILE = re.compile(r"[a-z0-9][a-z0-9_-]*")
@@ -60,7 +60,7 @@ def _tsv(text, width):
 
 
 def accepted_inputs(root):
-    """[(case, путь от корня)]: ok-случаи корпуса 2.1 по verdicts.tsv и спеки курса — по имени, без повторов."""
+    """[(case, путь от корня)]: ok-случаи корпуса 2.1 по verdicts.tsv и манифесты курса — по имени, без повторов."""
     root = Path(root)
     out = []
     verdicts = root / CORPUS / "verdicts.tsv"
@@ -68,7 +68,7 @@ def accepted_inputs(root):
         for _, (case, verdict) in _tsv(verdicts.read_text(encoding="utf-8"), 2):
             if verdict == "ok":
                 out.append(("corpus-" + case, (CORPUS / "cases" / (case + ".subsystem.yaml")).as_posix()))
-    for d in COURSE_SPECS:
+    for d in COURSE_MANIFESTS:
         for p in sorted((root / d).glob("*.subsystem.yaml")):
             out.append(("course-" + p.name[:-len(".subsystem.yaml")], (d / p.name).as_posix()))
     return sorted(out)
@@ -126,7 +126,7 @@ def generate(root):
             raise SourceError("%s: %s" % (VECTORS / "cases.tsv", exc))
     author = [(case, inp, note) for _, case, inp, _, note in rows if not case.startswith(GENERATED)]
     notes = {case: note for _, case, _, _, note in rows if case.startswith(GENERATED)}
-    gen = [(case, inp, notes.get(case) or ("принятый случай корпуса 2.1" if case.startswith("corpus-") else "спека курса"))
+    gen = [(case, inp, notes.get(case) or ("принятый случай корпуса 2.1" if case.startswith("corpus-") else "манифест курса"))
            for case, inp in accepted_inputs(root)]
     out, seen = [], set()
     for case, inp, note in author + gen:
@@ -135,7 +135,7 @@ def generate(root):
         seen.add(case)
         p = input_path(root, inp)
         if p is None or not p.is_file():
-            raise SourceError("cases.tsv: case %s: input %r is not a spec file under the root" % (case, inp))
+            raise SourceError("cases.tsv: case %s: input %r is not a manifest file under the root" % (case, inp))
         b = expected_bytes(ld, p.read_bytes())
         if b is None:
             raise SourceError("cases.tsv: case %s: the loader of 2.1 refuses %s" % (case, inp))
@@ -233,7 +233,7 @@ class Chapter:
         return self
 
     def views(self):
-        """Вид каждого принятого входа (корпус 2.1, спеки курса) проходит построенную схему (ADR-0089 Confirmation)."""
+        """Вид каждого принятого входа (корпус 2.1, манифесты курса) проходит построенную схему (ADR-0089 Confirmation)."""
         try:
             import jsonschema
         except ImportError as exc:
@@ -254,7 +254,7 @@ class Chapter:
             except OSError:
                 continue
             if b is None:
-                continue                                         # отказ — дело проверки корпуса и спек курса
+                continue                                         # отказ — дело проверки корпуса и манифестов курса
             self.view(Path(inp), b)
             n += 1
         self.stats["canonical_views"] = n
@@ -322,14 +322,14 @@ class Chapter:
                 self.error(where, "line %d: expect must be expect/%s.json" % (no, case))
             p = input_path(self.root, inp)
             if p is None or not p.is_file():
-                self.error(where, "line %d: input %r is not a spec file under the root (a path from the root, "
+                self.error(where, "line %d: input %r is not a manifest file under the root (a path from the root, "
                                   "without ..)" % (no, inp))
                 continue
             inputs.add(inp)
             data = p.read_bytes()
             b = expected_bytes(self.ld, data)
             if b is None:
-                self.error(where, "line %d: the loader of 2.1 refuses the input %s: a vector needs an accepted spec" % (no, inp))
+                self.error(where, "line %d: the loader of 2.1 refuses the input %s: a vector needs an accepted manifest" % (no, inp))
                 continue
             self.vectors[case] = b
             if inp not in accepted:

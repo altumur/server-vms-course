@@ -1,8 +1,8 @@
-// Состояние удержаний из биения регистраторов (ADR-0064): спека rec называет в servers.status поля с of: keeps —
+// Состояние удержаний из биения регистраторов (ADR-0064): манифест rec называет в servers.status поля с of: keeps —
 // keeps {<удержание>: {state…}}, incidents_lost {<удержание>: секунды}, incidents_at_risk [<удержание>]. Строки
 // регистраторов — в /rec/servers (корневой /servers знает только своих воркеров). Каждый говорит своё: пишущий
 // запись — here/pushing/pushed/at risk/lost с recording, держатель архива инцидентов — kept/released/garbled.
-// Страница сопоставляет ключи со строками rec/keeps; чего спека не назвала, не читает. Копия продуктового
+// Страница сопоставляет ключи со строками rec/keeps; чего манифест не назвал, не читает. Копия продуктового
 // vmsworker/vms/consoletest/shell-keep-states.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
@@ -15,7 +15,7 @@ for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 const STATUS=[{field:"keeps",title:"удержания",of:"keeps"},{field:"incidents_lost",title:"потеряно",of:"keeps"},{field:"incidents_at_risk",title:"под угрозой",of:"keeps"}];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],servers:{status:STATUS}}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk",retention_days:30,enabled:true}],rows:[]};

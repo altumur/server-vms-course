@@ -8,7 +8,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:false,user:"ann",login_url:"http://holder/api/login",until:9,via:"token",grants:[{cap:"admin",scope:"*"}]};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"labels",type:"list"},{name:"enabled",type:"bool",default:true}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"labels",type:"list"},{name:"enabled",type:"bool",default:true}]};
 b.FIX["/things"]={configured:[{id:1,name:"one"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};

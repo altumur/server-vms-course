@@ -12,7 +12,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true,login_url:"/api/login"};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"sub",rows:"parts",id:"name",fields:[{name:"size",type:"int"}]}}};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/sub/parts"]={configured:[],rows:[]};

@@ -1,4 +1,4 @@
-# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты спек»): роль, действие, ключ, allow | deny.
+# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты манифестов»): роль, действие, ключ, allow | deny.
 role	action	key	expect
 vadomain	write	domain/va/worker	allow
 vadomain	write	domain/va/ledger	allow

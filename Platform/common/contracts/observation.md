@@ -79,7 +79,7 @@ resource_state:
 ```
 прочитать intent → нужные placement → снова intent; версия intent изменилась → повторить чтение;
 только одинаковые версии intent дают результат
-active intent и id в members → решают target/reason/at/spec_rev intent; отсутствие placement не отменяет target активного
+active intent и id в members → решают target/reason/at/manifest_rev intent; отсутствие placement не отменяет target активного
   intent; иначе — worker/reason строки placement
 обязательное чтение не подтверждено → результата нет (у дверей консоли — 503 unavailable); неподтверждённое чтение не
   означает idle

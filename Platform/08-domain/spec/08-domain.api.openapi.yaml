@@ -449,7 +449,7 @@ paths:
               type: object
               required: [cluster]
               additionalProperties: true
-              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
+              description: Открыт намеренно — поля domain.edit манифеста (Н1.3); прочие поля — 400 по норме, не по схеме.
               properties:
                 cluster: {$ref: '#/components/schemas/MemberName'}
       responses:
@@ -485,7 +485,7 @@ paths:
               type: object
               minProperties: 1
               additionalProperties: true
-              description: Открыт намеренно — поля domain.edit спеки (Н1.3); прочие поля — 400 по норме, не по схеме.
+              description: Открыт намеренно — поля domain.edit манифеста (Н1.3); прочие поля — 400 по норме, не по схеме.
       responses:
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}
@@ -1321,7 +1321,7 @@ components:
         view:
           type: object
           additionalProperties: true
-          description: Поля domain.view спеки; секретных нет. Открыт намеренно — набор полей задаёт спека подсистемы, не урок.
+          description: Поля domain.view манифеста; секретных нет. Открыт намеренно — набор полей задаёт манифест подсистемы, не урок.
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]
@@ -1424,14 +1424,14 @@ components:
     ViewInput:
       type: object
       description: 'Не HTTP: вход команды view (P/08.1 Н5; векторы vectors/view) — проходы держателя по порядку.'
-      required: [specs, holder, passes]
+      required: [manifests, holder, passes]
       additionalProperties: false
       properties:
-        specs:
+        manifests:
           type: array
           minItems: 1
           items: {type: string, enum: [testsub, testsub2]}
-          description: Спеки каталога из данных спецификации.
+          description: Манифесты каталога из данных спецификации.
         holder:
           $ref: '#/components/schemas/MemberName'
         passes:
@@ -1912,7 +1912,7 @@ components:
         body:
           type: object
           additionalProperties: true
-          description: Открыт намеренно — поля domain.edit спеки (P/08.6 Н1.3); DELETE — {}.
+          description: Открыт намеренно — поля domain.edit манифеста (P/08.6 Н1.3); DELETE — {}.
         key: {type: string, minLength: 1, maxLength: 200}
         at: {type: number}
         base: {type: integer, minimum: 0}
@@ -2022,7 +2022,7 @@ components:
           additionalProperties:
             type: object
             additionalProperties: true
-            description: Значения, объявленные domain.shared спеки (P/08.9 Н1.1).
+            description: Значения, объявленные domain.shared манифеста (P/08.9 Н1.1).
         issuer: {type: string, pattern: '^[0-9a-f]{64}$'}
         kid: {type: string, pattern: '^[0-9a-f]{16}$'}
         sig: {type: string}
@@ -2038,7 +2038,7 @@ components:
           additionalProperties:
             type: object
             additionalProperties: true
-            description: 'Имена domain.shared спеки → значение или null; что можно — спека (P/08.9 Н1.1), не схема контракта.'
+            description: 'Имена domain.shared манифеста → значение или null; что можно — манифест (P/08.9 Н1.1), не схема контракта.'
     SharedEdited:
       type: object
       required: [term, rev, by]

@@ -7,7 +7,7 @@
 | P | Каталог | Микромодуль |
 |---|---|---|
 | 01 | [`01-store/`](01-store/README.md) | Хранилище |
-| 02 | [`02-installer/`](02-installer/README.md) | Спека и установщик |
+| 02 | [`02-installer/`](02-installer/README.md) | Манифест и установщик |
 | 03 | [`03-worker/`](03-worker/README.md) | Воркер (SDK) |
 | 04 | [`04-controller/`](04-controller/README.md) | Контроллер |
 | 05 | [`05-resource/`](05-resource/README.md) | Ресурс |

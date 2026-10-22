@@ -12,7 +12,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30,enabled:true},{id:"1-b",cam:"1",home:"bk",retention_days:7,enabled:false,when:"offline"}],

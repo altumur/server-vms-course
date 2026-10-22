@@ -31,7 +31,7 @@ UTF-8, LF, поля через TAB. Строки с `#` и пустые проп
 {"unit": <единица>, "v": <body>}`, поле `v` строки читается обратно), и таблица `counters`, чьё поле `doc` — типа `json`
 (`POST /counters {"name": …, "doc": <body>}`, поле `doc` единицы читается обратно); отказ — `fault` ответа 400.
 
-Спека стенда — `Source/tests/testdata/testsub.subsystem.yaml` с двумя изменениями и без прочих (копия во временном
+Манифест стенда — `Source/tests/testdata/testsub.subsystem.yaml` с двумя изменениями и без прочих (копия во временном
 каталоге стенда; исходный файл не меняется):
 - `unit.fields.doc: {type: json}`;
 - `requests.schema` — `{type: object, required: [unit, v], additionalProperties: false, properties: {unit: {type:

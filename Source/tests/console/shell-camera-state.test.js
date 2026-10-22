@@ -13,10 +13,10 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"live",type:"string"}],
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"live",type:"string"}],
   display:{unit:"камера",units:"камеры",events:false,
     form:[{title:"Подключение",fields:["source"]},{title:"Размещение",placement:true,fields:["live"]}]}};
-// слова видов — у спеки rec (её display.kinds), описание — у страницы
+// слова видов — у манифеста rec (его display.kinds), описание — у страницы
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}],
   display:{kinds:{"volume.missing":"каталог тома пропал","archive.volume.shrunk":"том уменьшен","card.failing":"карта камеры сбоит","camera.uplink.short":"канал камеры не успевает"}}}}};
 b.FIX["/rec/recordings"]={configured:[],rows:[]};

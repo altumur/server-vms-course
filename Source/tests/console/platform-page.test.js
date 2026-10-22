@@ -1,6 +1,6 @@
 // Платформенная страница (w2cplatform/console.html) — модуль и mount, больше ничего (контракт модуля, §10):
 // в ней нет своего скрипта, кроме подключения модуля, нет слов и маршрутов подсистем; со страницей работает всё
-// платформенное: единицы из /spec, правка без маски, события, отметка; данные — текстом.
+// платформенное: единицы из /manifest, правка без маски, события, отметка; данные — текстом.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -12,7 +12,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"enabled",type:"bool"},{name:"key_secret",type:"string"}],metrics:{}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"enabled",type:"bool"},{name:"key_secret",type:"string"}],metrics:{}};
 b.FIX["/things"]={configured:[{id:1,name:P,enabled:true,key_secret:"***"}],rows:[{id:1,worker:P,server:P,phase:"running"}]};
 b.FIX["/events"]={events:[{t:100,kind:P,subsystem:P,unit:"1",server:P,note:P}],state:"live"};
 b.FIX["/servers"]={servers:{[P]:{workers:[{worker:P,load:1,capacity:2,state:"live"}],resource:"live",placeable:false,why:P}},policy:{}};

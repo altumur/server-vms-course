@@ -1,6 +1,6 @@
 # Объявления полей приёмки P/06.2: правила, которыми читаются векторы secret-in (поле в столбце field) и log-mask.
-# Данные приёмки, не ссылка на каталог VMS (ADR-0001); совпадают с unit.fields.source спеки cam и
-# tables.volumes.fields.url спеки rec на 2026-10-17. Форма ключей — P/02.1 Н1.2а и P/06.2 Н1.1. README — рядом.
+# Данные приёмки, не ссылка на каталог VMS (ADR-0001); совпадают с unit.fields.source манифеста cam и
+# tables.volumes.fields.url манифеста rec на 2026-10-17. Форма ключей — P/02.1 Н1.2а и P/06.2 Н1.1. README — рядом.
 cam.source:
   type: url
   schemes:

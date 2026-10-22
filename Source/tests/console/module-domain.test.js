@@ -9,7 +9,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[],display:{kinds:{silent:"nobody sees it"}}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[],display:{kinds:{silent:"nobody sees it"}}};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/domain"]={holder:"h",age:2,complete:true,member_list:{rev:3},

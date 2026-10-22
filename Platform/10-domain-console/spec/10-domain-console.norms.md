@@ -52,16 +52,16 @@
 Н1 «Время», страница тревог члена — [глава 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1 «Время».
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
-- владеет: `<sub>/<spec:domain.witness.report>/<имя>`;
+- владеет: `<sub>/<manifest:domain.witness.report>/<имя>`;
 - пишет: `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append);
-- читает: `platform/spec/<sub>`, `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- читает: `platform/manifest/<sub>`, `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Строк держателя консоль домена не пишет: правки передаёт процессу `domain` (Н1.3; приём — [P/08.0](../../08-domain/spec/08.0-domain.norms.md)
 Н1.8), права `domainconsole` — чтение `domain/*` ([P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4). Семья
-объектов свидетеля `<sub>/<spec:domain.witness.report>/<имя>` — у этого урока по протоколу (Н1.8 `witness`; решение
+объектов свидетеля `<sub>/<manifest:domain.witness.report>/<имя>` — у этого урока по протоколу (Н1.8 `witness`; решение
 «Архитектора» по планам переноса 8–10, п. 8): пишет воркер подсистемы (участник), несёт агент в отчёте; консоль домена
 читает свидетелей только из отчётов членов (`domain/members/<член>/reports/<rev>`; держатель — тоже член со своим агентом),
-схемы в `data/` у семьи нет (форма — объявление `domain.witness` спеки, [P/02.1 Н1.2б](../../02-installer/spec/02.1-installer.norms.md)).
+схемы в `data/` у семьи нет (форма — объявление `domain.witness` манифеста, [P/02.1 Н1.2б](../../02-installer/spec/02.1-installer.norms.md)).
 
 Что читает каждая дверь: вид, теневой отчёт, список членов, топологию, назначения, гранты, общий документ — двери чтения
 Н1.2 (формы строк — их главы урока P/08); `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
@@ -69,7 +69,7 @@
 `may` — [договор права](../../common/contracts/may.md)); `domain/members` и строки
 `domain/members/<член>/ca-certs` — дверь роли (Н1.4 `server.role`; копию `domain/member-list` консоль домена не читает — разбор ревью стадии B 8–10, вопрос 4); `domain/<sub>/worker` и пульс `domain/<sub>/heartbeat` —
 `door.pass` на домене (Н1.6); отчёт члена, метка `reported` (`received_at`, `sent_at`), история и `domain/members` — список
-тревог (Н1.8); строки спеки и `platform/schema` — старт (Н1.1); ключ сертификата сервера роли `domainconsole` — дверь роли
+тревог (Н1.8); строки манифеста и `platform/schema` — старт (Н1.1); ключ сертификата сервера роли `domainconsole` — дверь роли
 TLS. Журнал роли — `audit/domainconsole`, тревога `session.debug_open` (отладочная личность, Н1.5) — `audit.alarms/domainconsole`
 ([договор журнала событий](../../common/contracts/event-journal.md), участник `append`, владелец — P/05).
 
@@ -77,8 +77,8 @@ TLS. Журнал роли — `audit/domainconsole`, тревога `session.de
 
 Консоль домена — процесс `domainconsole` у кластера-держателя, рядом с процессом `domain`: юнит
 `w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
-Как процессы платформы, она исполняет сторону читателя строки спеки ([P/02.3](../../02-installer/spec/02.3-installer.norms.md)
-Н3 «Старт процесса», «Смена спеки») и проверку схемы при старте ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н3
+Как процессы платформы, она исполняет сторону читателя строки манифеста ([P/02.3](../../02-installer/spec/02.3-installer.norms.md)
+Н3 «Старт процесса», «Смена манифеста») и проверку схемы при старте ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н3
 «старт консоли — проверка схемы»); готовность — порт, `sd_notify` она не шлёт (текст — P/02.4 Н1.12, из М11/12 Н1.8; здесь —
 часть консоли домена, P/10-15). Окружение, коды выхода и юнит — [жизненный цикл](../lifecycle.md).
 
@@ -94,7 +94,7 @@ TLS. Журнал роли — `audit/domainconsole`, тревога `session.de
 | Дверь | Успех | Отказы |
 |---|---|---|
 | GET `/domain` | 200 — объект `domain/view` ([P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.4) как есть плюс `age` — секунды с `as_of` по стенным часам консоли, один знак после точки | 404 `{error: "no domain here", detail}` — объекта нет или он не читается; 401/403 — Н1.5 |
-| GET `/domain/<sub>/<rows>[?cluster=<член>]` | 200 — `[Unit]` подсистемы из вида, с `cluster` — только этого члена | по порядку: 400 — `cluster` дважды или пуст ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); 404 — нет такой спеки; 404 `{error: "not in the directory"}` — у спеки нет `domain.ref`; 404 — `rows` не её; 404 `{error: "no domain here"}`; 404 `{error: "no such member"}` — член не в списке; прочие параметры не читаются |
+| GET `/domain/<sub>/<rows>[?cluster=<член>]` | 200 — `[Unit]` подсистемы из вида, с `cluster` — только этого члена | по порядку: 400 — `cluster` дважды или пуст ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); 404 — нет такого манифеста; 404 `{error: "not in the directory"}` — у манифеста нет `domain.ref`; 404 — `rows` не его; 404 `{error: "no domain here"}`; 404 `{error: "no such member"}` — член не в списке; прочие параметры не читаются |
 | GET `/domain/shadow` | 200 — теневой отчёт (P/08.1 Н1.6) последнего прохода | 404 `{error: "no domain here"}` |
 
 **Н1.2б Члены (М11/3 Н2).**
@@ -117,7 +117,7 @@ TLS. Журнал роли — `audit/domainconsole`, тревога `session.de
 | Дверь | Успех | Отказы |
 |---|---|---|
 | GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}` | 401/403 — Н1.5 |
-| GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; 404 нет спеки или без `domain.ref` |
+| GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; 404 нет манифеста или без `domain.ref` |
 
 Форма `Placement` и счётчик — [глава 8.6](../../08-domain/spec/08.6-domain.norms.md) Н1.1; правки назначений консоль
 передаёт процессу (Н1.3).
@@ -137,7 +137,7 @@ TLS. Журнал роли — `audit/domainconsole`, тревога `session.de
 door:          GET /domain/shared у консоли домена (view) → 200 {doc, delivery, declared}
   doc:         документ как подписан (объект) | null
   delivery:    view.shared
-  declared:    {<sub>: [{name, type, schema?}]} — элементы domain.shared спек каталога, по name; schema — у документа
+  declared:    {<sub>: [{name, type, schema?}]} — элементы domain.shared манифестов каталога, по name; schema — у документа
                (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a, добавлено М11/11; поздний слой P/07 Н1.6)
 ```
 
@@ -257,7 +257,7 @@ session:   GET /session доказанной личности (P/06.3 Н1.3) —
 ### Н1.6 `door.pass` на домене (М11/8 Н1.7)
 
 ```yaml
-route:    /domain/<sub>/<сегмент>[/…], <сегмент> ∈ door.pass спеки <sub> (P/06.5 Н1.8) — консоль домена передаёт воркеру
+route:    /domain/<sub>/<сегмент>[/…], <сегмент> ∈ door.pass манифеста <sub> (P/06.5 Н1.8) — консоль домена передаёт воркеру
           на домене этой подсистемы (P/03.7 Н1.6: держатель слота domain/<sub>/worker, роль <sub>domain) путь
           /<сегмент>[/…] и query; заголовки, тело, ответ, коды — договор сторожевой и передачи «Передача door.pass» (разбор ревью
           стадии A 8–10, № 14); клиент — роли domainconsole; путь с
@@ -278,7 +278,7 @@ member:   консоль кластера пересылает эти пути �
 page:     GET /, /index.html — опубликованная страница модуля консоли (P/06.5 Н1.1 `module`; контракт модуля — P/07 Н1.5), которая отличается только
           аргументом вызова mount: opts.sections: [domain]; CSP — по тексту отданной страницы (P/06.5); /platform/console.js,
           /platform/console.css — байты опубликованного модуля как есть (P/06.5 Н1.1)
-spec:     GET /spec → {"name": "", "rows": null} — корня нет
+manifest: GET /manifest → {"name": "", "rows": null} — корня нет
 mounts:   GET /mounts → {"root": "", "mounts": {<sub>: <описание P/06.5 Н2 /mounts>}} по каталогу держателя, без media
 session:  /session, /healthz — как у консоли кластера (договор сторожевой и передачи «Сторожевая» session; разбор ревью
           стадии A 8–10, № 14)
@@ -338,7 +338,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | GET `/domain/alarms` | консоль домена сама | Н1.8 | 400; Н4 |
 | прочие строки списка (правки, двери людей при любом методе, `POST /api/login`) | процесс `domain` — консоль передаёт (Н1.3) | ответ процесса как пришёл (главы урока P/08) | Н4; коды процесса — OpenAPI урока P/08 |
 | `/domain/<sub>/<сегмент door.pass>[/…]` | воркер на домене — консоль передаёт (Н1.6) | ответ воркера как пришёл | [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) «Передача» |
-| GET `/`, `/index.html`, `/platform/console.js`, `/platform/console.css`, `/spec`, `/mounts`, `/session`, `/healthz` | консоль домена сама | Н1.7 | [P/06.5](../../06-console/spec/06.5-console.norms.md); `/session` — договор сторожевой и передачи |
+| GET `/`, `/index.html`, `/platform/console.js`, `/platform/console.css`, `/manifest`, `/mounts`, `/session`, `/healthz` | консоль домена сама | Н1.7 | [P/06.5](../../06-console/spec/06.5-console.norms.md); `/session` — договор сторожевой и передачи |
 
 Путь с сегментом `.` или `..` (в том числе в процент-форме) — 404 `not a domain route` до сторожевой, до передачи
 процессу и воркеру на домене (договор пересылки «Двери домена»).
@@ -410,9 +410,9 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | слова договора пересылки `answer` | 502 | передача процессу `domain` (Н1.3 `pass`): обрыв и молчание — как договор пересылки «Пересылка — одна функция» `answer` |
 | `door.pass` | 400, 408, 413, 502, 503 | коды «Передачи» договора сторожевой и передачи (`codes`); воркера на домене не слышно — 503 `unavailable` (Н1.6 `absent`) |
 | `no domain here` | 404 | вид не построен или не читается (Н1.2а, Н1.2б, Н1.2в) |
-| `not in the directory` | 404 | спека без `domain.ref` (Н1.2а) |
+| `not in the directory` | 404 | манифест без `domain.ref` (Н1.2а) |
 | `no such member` | 404 | `?cluster=` не член (Н1.2а) |
-| — | 400 / 404 | запрос: `cluster` дважды или пуст; нет спеки; `rows` не её ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); назначения: нет записи, нет спеки или без `domain.ref` (Н1.2г) |
+| — | 400 / 404 | запрос: `cluster` дважды или пуст; нет манифеста; `rows` не его ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); назначения: нет записи, нет манифеста или без `domain.ref` (Н1.2г) |
 | `refused` | 400 | окно `/domain/alarms` (Н1.8 `door`) |
 
 Слова `peer` — [договор `peer`](../../common/contracts/peer.md) «Слова отказа».
@@ -438,7 +438,7 @@ exit:      0 — вычислено; 2 — вход не по форме (стр
 | № | Сценарий | Нормы |
 |---|---|---|
 | 02 | стенд: агент `m2` выключен — в доставке `silent`, строка тревоги `silent` в `/domain/alarms`; окно не по грамматике и `since > until` — 400; вернулся — взял документ | Н1.8; шаги 04, 09 (доставка) — Н1.2е; шаг 11 (подпись агента у `/events` консоли члена) — сосед на стенде |
-| 05 | стенд: страница держателя — `/`, модуль, `/spec`, `/mounts`, `/session` | Н1.7 |
+| 05 | стенд: страница держателя — `/`, модуль, `/manifest`, `/mounts`, `/session` | Н1.7 |
 
 Двери урока на стенде глав урока P/08 — соседи на стенде (правило «сценарий — главе своего исхода, соседи — на стенде»,
 ADR-0083 доп. (13)):
@@ -455,8 +455,8 @@ ADR-0083 доп. (13)):
 | P/10-14 | сц. 01 шаги 2, 14 приёмки главы 8.9; сц. 02 шаги 04, 09 этого урока |
 
 Проверяются чтением: `door.pass` на домене (Н1.6) — воркера на домене у стенда нет; «принять консолью» и дверь роли
-(Н1.4) — до TLS-стенда; сторона читателя строки спеки при старте (Н1.1) — шага у консоли домена в приёмке нет (план переноса
-урока 10, В9: сценарий смены спеки — отдельной правкой приёмки после переноса); 502 при обрыве и молчании и
+(Н1.4) — до TLS-стенда; сторона читателя строки манифеста при старте (Н1.1) — шага у консоли домена в приёмке нет (план переноса
+урока 10, В9: сценарий смены манифеста — отдельной правкой приёмки после переноса); 502 при обрыве и молчании и
 срок «Ожидание» передачи — стенд не обрывает ответ процесса и не держит процесс дольше срока; что консоль домена не пересчитывает `deposed`, `frozen`,
 `standby` (Н1.3) — стенды глав 8.8, 8.10 через `holder`; журнал роли — приёмка журнал не сравнивает; окно `since`/`until`
 по грамматике числа и семья свидетелей в отчёте (A2, A12).
@@ -483,7 +483,7 @@ TLS-стенд ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md
 - [ ] **P/10-01** двери вида `GET /domain` (с `age` по стенным часам консоли), `/domain/<sub>/<rows>[?cluster=]`, `/domain/shadow` и их отказы `no domain here`, `not in the directory`, `no such member` (Н1.2а) — сосед на стенде глав 8.3 (сц. 05) и 8.1 (сц. 06, 09); содержимое вида — глава 8.1
 - [ ] **P/10-02** передача правок процессу `domain` Н1.3: метод, путь, тело, заголовки как пришли, `X-W2C-Client` ставит консоль (договор пересылки «Адрес клиента»), срок — «Ожидание» строки, ответ как пришёл, 502 при обрыве и молчании — сосед на стенде глав 8.3 (сц. 01, 02), 8.6, 8.8, 8.9; срок и 502 — чтением; приём — P/08.0-01
 - [ ] **P/10-03** `door.pass` на домене Н1.6: `route`, `address`, `absent`, сегменты `.`/`..` — 404; правило и коды — договор сторожевой и передачи «Передача» — чтением (воркера на домене у стенда нет)
-- [ ] **P/10-04** страница держателя Н1.7: `/`, модуль, CSP, `/spec` `{"name": "", "rows": null}`, `/mounts`, `/session`, `/healthz` — сц. 05; вызовы модуля в режиме `domain` — тест модуля у его владельца ([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.6, Н5)
+- [ ] **P/10-04** страница держателя Н1.7: `/`, модуль, CSP, `/manifest` `{"name": "", "rows": null}`, `/mounts`, `/session`, `/healthz` — сц. 05; вызовы модуля в режиме `domain` — тест модуля у его владельца ([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.6, Н5)
 - [ ] **P/10-05** двери людей через консоль домена к процессу `domain` при любом методе, правки грантов и `/domain/revoke` — передача (Н1.3а) — сосед на стенде главы 8.4 (сц. 01, 02); проверка у процесса — P/08.4-09
 - [ ] **P/10-06** список тревог Н1.8: состояния, строка молчания, свидетель, часы `clock`, порядок, строгость страницы, ничья свидетелей, функция `alarms` Н3 — сц. 02, вектор `alarms`; семья свидетелей в отчёте, грамматика `since`/`until` (A2, A12) — чтением; историю пишет глава 8.9 (P/08.9-05)
 - [ ] **P/10-07** `GET /domain/members` → `{rev, members, knocking}` (Н1.2б) — сосед на стенде глав 8.3 (сц. 14 шаг 6, сц. 04 шаг 16) и 8.8 (сц. 02)
@@ -494,7 +494,7 @@ TLS-стенд ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md
 - [ ] **P/10-12** `GET /domain/grants` → `{grants: {<кластер>: [line…]}}` (Н1.2д) — сосед на стенде главы 8.4 (сц. 02, 08)
 - [ ] **P/10-13** сторожевая консоли домена (Н1.5): шаги `identity` 3 и 4, токен `kind: person`, `may` по `domain/grants/domain` (`as_of` null), `need` view/admin по двери, `body_unit`, `grants` в `/session`; участник договора сторожевой и передачи — сосед на стенде главы 8.4 (сц. 01, 02)
 - [ ] **P/10-14** `GET /domain/shared` → `{doc, delivery, declared}` (Н1.2е; `view.shared` строит глава 8.9) — сц. 02 шаги 04, 09; сосед на стенде главы 8.9 (сц. 01 шаги 2, 14)
-- [ ] **P/10-15** старт (Н1.1): сторона читателя строки спеки (P/02.3 Н3), проверка схемы (P/06.6 Н3), готовность — порт (часть консоли домена строки М11/12-08; текст — P/02.4 Н1.12) — чтением (план переноса урока 10, В9)
+- [ ] **P/10-15** старт (Н1.1): сторона читателя строки манифеста (P/02.3 Н3), проверка схемы (P/06.6 Н3), готовность — порт (часть консоли домена строки М11/12-08; текст — P/02.4 Н1.12) — чтением (план переноса урока 10, В9)
 
 ## Соответствие прежним урокам
 

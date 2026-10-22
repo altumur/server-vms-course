@@ -10,7 +10,7 @@ fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script>
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],metrics:{}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],metrics:{}};
 b.FIX["/things"]={configured:[{id:1,name:"one",labels:["a","b"]},{id:2,name:"two"}],rows:[]};
 b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"sub",rows:"parts",id:"name",about:{sub:"testsub",field:"thing"},fields:[{name:"thing",type:"string"},{name:"labels",type:"list"}]}}};
 b.FIX["/sub/parts"]={configured:[{id:"p1",thing:"1",labels:["z"]},{id:"p2",thing:"2",labels:["a"]}],rows:[]};

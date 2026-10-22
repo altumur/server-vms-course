@@ -1,15 +1,15 @@
-# The platform's closed lists a spec is held to, one table for the course and the product
+# The platform's closed lists a manifest is held to, one table for the course and the product
 # (each keeps its copy; the loader's lists of heartbeat strings and secret roles on both sides take it), byte for byte. Owner: «Спецификация»; the
 # product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). ADR-0019, its
 # addition of 2026-10-10 (review 15 minor 15). A row is list, word; each list is a set — its order is not compared.
-#   heartbeat_strings  the platform's own string fields of every heartbeat: a spec's heartbeat.strings names none of them
+#   heartbeat_strings  the platform's own string fields of every heartbeat: a manifest's heartbeat.strings names none of them
 #   secret_roles       the roles secrets.readers may name
 #   secret_readers     the platform's own secret rows and who reads them, <row or prefix>=<role> (`<row>=` — nobody but
-#                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10. The domain's backups
+#                      a manifest that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10. The domain's backups
 #                      are objects, not secret rows (P/08.8 Н1.5; review 41): no row of them here
-#   platform_shown     the platform's own unit fields a spec may name where it shows a unit: display.tree.columns[].field
+#   platform_shown     the platform's own unit fields a manifest may name where it shows a unit: display.tree.columns[].field
 #                      and display.form[].fields[] (М10/2 Н1.3)
-#   object_families    the platform's object families under objects/<sub>/: a spec's objects.rows[] names none of them;
+#   object_families    the platform's object families under objects/<sub>/: a manifest's objects.rows[] names none of them;
 #                      `*` — the family-wide prefix (М10/2 Н1.4)
 heartbeat_strings	worker
 heartbeat_strings	server

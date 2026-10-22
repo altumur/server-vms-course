@@ -34,7 +34,7 @@ def view(text, skip=()):
     return json.loads(jcs(canonical(LOADER.form, tree_of(data), skip)))
 
 
-def spec(fields=FIELDS, tail=""):
+def manifest(fields=FIELDS, tail=""):
     return BASE % (fields, tail)
 
 
@@ -44,31 +44,31 @@ class StepsTests(unittest.TestCase):
         self.assertEqual([s.name for s in STEPS], ["tables", "bound_to", "in", "П1", "П2", "П3", "П4", "П5"])
 
     def test_sugar(self):
-        v = view(spec(tail="tables: [a, b]\n"))
+        v = view(manifest(tail="tables: [a, b]\n"))
         self.assertEqual(list(v["tables"]), ["a", "b"])
         self.assertEqual(v["tables"]["a"], {"fields": [], "journal": {"written": "a.written", "deleted": "a.deleted"}})
         f = {x["name"]: x for x in v["unit"]["fields"]}
         self.assertEqual(f["pass_secret"]["bound_to"], ["login"])
-        v = view(spec("    cam: {type: url, secret_in: [{regex: 'x', in: query}, {param: [p]}]}"))
+        v = view(manifest("    cam: {type: url, secret_in: [{regex: 'x', in: query}, {param: [p]}]}"))
         self.assertEqual(v["unit"]["fields"][0]["secret_in"], [{"decoded": True, "in": ["query"], "regex": "x"},
                                                                 {"param": ["p"]}])
 
     def test_computed(self):
-        v = view(spec())
+        v = view(manifest())
         self.assertEqual(v["snapshot"], ["label", "login"])                                  # П1
         self.assertEqual(v["display"]["form"], [{"fields": ["label", "login", "pass_secret", "pic", "server"]}])   # П3
         self.assertTrue(all(x["default"] is None for x in v["unit"]["fields"]))             # П4, и у blob
-        self.assertEqual(view(spec(tail="snapshot: []\n"))["snapshot"], [])
-        self.assertEqual(view(spec(tail="display: {form: [{title: t}]}\n"))["display"]["form"], [{"title": "t"}])
-        v = view(spec(tail="tables:\n  t:\n    journal: {written: w}\n"))
+        self.assertEqual(view(manifest(tail="snapshot: []\n"))["snapshot"], [])
+        self.assertEqual(view(manifest(tail="display: {form: [{title: t}]}\n"))["display"]["form"], [{"title": "t"}])
+        v = view(manifest(tail="tables:\n  t:\n    journal: {written: w}\n"))
         self.assertEqual(v["tables"]["t"]["journal"], {"written": "w", "deleted": "t.deleted"})   # П2
-        v = view(spec("    n: {type: int, inherit: 1}\n    m: {type: int, default: 2}"))
+        v = view(manifest("    n: {type: int, inherit: 1}\n    m: {type: int, default: 2}"))
         self.assertEqual([x["default"] for x in v["unit"]["fields"]], [None, 2])
-        v = view(spec("    cam: {type: url, secret_in: [{regex: 'x', decoded: false}]}"))
+        v = view(manifest("    cam: {type: url, secret_in: [{regex: 'x', decoded: false}]}"))
         self.assertEqual(v["unit"]["fields"][0]["secret_in"], [{"decoded": False, "regex": "x"}])   # П5 — не сказано
 
     def test_defaults_only_inside_present_parent(self):
-        v = view(spec())
+        v = view(manifest())
         self.assertNotIn("requests", v)
         self.assertEqual(v["placement"]["weight"], {"default": 1})
         self.assertEqual(v["lease"], {"unconfirmed_max": "off"})
@@ -77,12 +77,12 @@ class StepsTests(unittest.TestCase):
         self.assertNotIn("suppress", v["events"])
 
     def test_ordered_keeps_the_author_order(self):
-        v = view(spec("    zz: {}\n    aa: {}"))
+        v = view(manifest("    zz: {}\n    aa: {}"))
         self.assertEqual([x["name"] for x in v["unit"]["fields"]], ["zz", "aa"])
         self.assertEqual(v["snapshot"], ["zz", "aa"])
 
     def test_skipping_a_step_changes_the_view(self):
-        text = spec(tail="tables: [a]\n")
+        text = manifest(tail="tables: [a]\n")
         for s in STEPS:
             if s.name in ("in", "П5"):
                 continue
@@ -98,7 +98,7 @@ class StepsTests(unittest.TestCase):
 
 
 class CorpusTests(unittest.TestCase):
-    """Все принятые случаи корпуса 2.1 и спеки курса: проекция без исключений, повтор — те же байты, схема вида."""
+    """Все принятые случаи корпуса 2.1 и манифесты курса: проекция без исключений, повтор — те же байты, схема вида."""
 
     def test_accepted_inputs_project_and_pass_the_schema(self):
         schema = view_schema(LOADER.form)
@@ -127,7 +127,7 @@ class SchemaTests(unittest.TestCase):
     def setUp(self):
         self.schema = view_schema(LOADER.form)
         self.validator = jsonschema.Draft202012Validator(self.schema)
-        self.v = view(spec("    cam: {type: url, secret_in: [{regex: 'x'}]}", "tables: [a]\n"))
+        self.v = view(manifest("    cam: {type: url, secret_in: [{regex: 'x'}]}", "tables: [a]\n"))
 
     def bad(self, change):
         v = json.loads(json.dumps(self.v))
@@ -172,8 +172,8 @@ class SectionTests(unittest.TestCase):
 
 class MutantTests(unittest.TestCase):
     def test_probe_names_the_rule_no_vector_holds(self):
-        typed = tree_of(spec("    a: {type: string}").encode())
-        untyped = tree_of(spec("    a: {}").encode())
+        typed = tree_of(manifest("    a: {type: string}").encode())
+        untyped = tree_of(manifest("    a: {}").encode())
         form = LOADER.form
         built = [jcs(canonical(form, typed)).encode()]
         alive = probe(form, [typed], built)
@@ -188,7 +188,7 @@ class MutantTests(unittest.TestCase):
 
 
 class LayoutBase(unittest.TestCase):
-    """Временная раскладка: источник 2.1 курса, маленький корпус, одна спека курса."""
+    """Временная раскладка: источник 2.1 курса, маленький корпус, один манифест курса."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -200,12 +200,12 @@ class LayoutBase(unittest.TestCase):
         cases = self.root / CORPUS / "cases"
         cases.mkdir(parents=True)
         (self.root / CORPUS / "verdicts.tsv").write_text("# c\none\tok\ntwo\tok\nbad\trefused\n")
-        (cases / "one.subsystem.yaml").write_text(spec("    a: {}"))
-        (cases / "two.subsystem.yaml").write_text(spec("    a: {type: int}", "tables: [t]\n"))
+        (cases / "one.subsystem.yaml").write_text(manifest("    a: {}"))
+        (cases / "two.subsystem.yaml").write_text(manifest("    a: {type: int}", "tables: [t]\n"))
         (cases / "bad.subsystem.yaml").write_text("name: X\n")
         course = self.root / "Source/tests/testdata"
         course.mkdir(parents=True)
-        (course / "sub.subsystem.yaml").write_text(spec())
+        (course / "sub.subsystem.yaml").write_text(manifest())
 
     def vectors(self):
         generate(self.root)
@@ -234,7 +234,7 @@ class GeneratorTests(LayoutBase):
         self.vectors()
         vec = self.root / VECTORS
         (vec / "inputs").mkdir()
-        (vec / "inputs/x.subsystem.yaml").write_text(spec("    b: {}"))
+        (vec / "inputs/x.subsystem.yaml").write_text(manifest("    b: {}"))
         with open(vec / "cases.tsv", "a") as f:
             f.write("example-x\t%s\t-\tпример\n" % (VECTORS / "inputs/x.subsystem.yaml").as_posix())
         (vec / "expect/old.json").write_text("{}")
@@ -286,7 +286,7 @@ class ChapterTests(LayoutBase):
             f.write("e1\t../x.subsystem.yaml\texpect/e1.json\tx\n")
             f.write("e2\t%s\texpect/zz.json\tx\n" % (CORPUS / "cases/bad.subsystem.yaml").as_posix())
         got = self.messages()
-        self.assertTrue(any("is not a spec file under the root" in m for m in got))
+        self.assertTrue(any("is not a manifest file under the root" in m for m in got))
         self.assertTrue(any("expect must be expect/e2.json" in m for m in got))
         self.assertTrue(any("refuses the input" in m for m in got))
 
@@ -310,8 +310,8 @@ class PutsTests(LayoutBase):
         self.vectors()
         self.acc = self.root / ACCEPTANCE
         (self.acc / "puts").mkdir(parents=True)
-        (self.acc / "puts/first.subsystem.yaml").write_text(spec("    a: {}"))
-        (self.acc / "puts/second.subsystem.yaml").write_text(spec("    a: {type: int}", "tables: [t]\n"))
+        (self.acc / "puts/first.subsystem.yaml").write_text(manifest("    a: {}"))
+        (self.acc / "puts/second.subsystem.yaml").write_text(manifest("    a: {type: int}", "tables: [t]\n"))
 
     def puts(self, rows, header="case\tputs\texpect\tcanonical"):
         (self.acc / "puts.tsv").write_text("# p\n%s\n%s" % (header, "".join(r + "\n" for r in rows)))

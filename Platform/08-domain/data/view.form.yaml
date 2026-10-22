@@ -31,7 +31,7 @@ defs:
       view:
         type: object
         opaque: true
-        description: поля, названные domain.view спеки (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)
+        description: поля, названные domain.view манифеста (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)
     required: [sub, id, ref, cluster, phase, age, state]
   knock:
     type: object
@@ -67,13 +67,13 @@ root:
         required: [name, state, age]
     units:
       type: object
-      description: каждая спека каталога с domain.ref (Н1.2), ключ есть и у пустой; порядок — по (cluster, id, worker)
+      description: каждый манифест каталога с domain.ref (Н1.2), ключ есть и у пустого; порядок — по (cluster, id, worker)
       names:
         key: {ref: common.sub_name}
         value: {type: array, items: {ref: unit}}
     contested:
       type: object
-      description: ref, который заявляют два члена и больше; ключ есть у каждой спеки с domain.ref, без спорных — {}
+      description: ref, который заявляют два члена и больше; ключ есть у каждого манифеста с domain.ref, без спорных — {}
       names:
         key: {ref: common.sub_name}
         value:

@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 
 SCRIPTS = Path(__file__).resolve().parent
 EXCEPTIONS = SCRIPTS.parent / "exceptions.tsv"
-# Form schema next to the norm (ADR-0085): spec/<lesson>.schema.yaml and .references.tsv, run by spec_schema/run.py.
+# Form schema next to the norm (ADR-0085): spec/<lesson>.schema.yaml and .references.tsv, run by manifest_schema/run.py.
 SCHEMA_INSTALL = ("uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py "
                   "--with jsonschema --with ruamel.yaml --with regress python skills/lesson-spec/scripts/check_spec.py …")
 
@@ -382,9 +382,10 @@ PROCESS_ROLES = {
     "configstore": {"configstore-door"},
     "w2cctl": {"admin"},
 }
-# `schema` = `spec`: the form of the row is given by the subsystem manifest (its spec key in the catalog key); no family
-# in data/ (ADR-0083 доп. (11), решение «Архитектора» по ревью стадии B 3–5). Only for keys with one of these spec keys.
-SPEC_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domain.kept"}
+# `schema` = `manifest`: the form of the row is given by the subsystem manifest (its manifest key in the catalog key); no
+# family in data/ (ADR-0083 доп. (11), решение «Архитектора» по ревью стадии B 3–5; ADR-0086). Only for keys with one of
+# these manifest keys.
+MANIFEST_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domain.kept"}
 # id-map of the old norms (ADR-0083, module-design «Прослеживаемость»): the column `new` holds checklist ids P/NN[.K]-MM
 # (and scenario and vector addresses, which these checks do not read).
 IDMAP = Path("Platform/common/id-map.tsv")
@@ -434,18 +435,19 @@ def parse_ops(text):
 
 
 def key_pattern(key):
-    """Catalog key → (regex, literal length, sample key, spec keys): `<слово>` is one segment, a trailing `/*` the
-    family; `<spec:ключ>` is a segment named by that spec key — patterns with different spec keys never overlap."""
+    """Catalog key → (regex, literal length, sample key, manifest keys): `<слово>` is one segment, a trailing `/*` the
+    family; `<manifest:ключ>` is a segment named by that manifest key — patterns with different manifest keys never
+    overlap."""
     family = key.endswith("/*")
     body = key[:-2] if family else key
     parts = re.split(r"(<[^<>]+>)", body)
     regex = "".join("[^/]+" if part.startswith("<") else re.escape(part) for part in parts)
     sample = "".join("x" if part.startswith("<") else part for part in parts)
     literal = sum(len(part) for part in parts if not part.startswith("<"))
-    spec_keys = tuple(part[6:-1] for part in parts if part.startswith("<spec:"))
+    manifest_keys = tuple(part[10:-1] for part in parts if part.startswith("<manifest:"))
     if family:
         regex, sample = regex + "/.+", sample + "/x"
-    return re.compile(regex), literal, sample, spec_keys
+    return re.compile(regex), literal, sample, manifest_keys
 
 
 def path_segment(segment):
@@ -749,8 +751,11 @@ class Check:
             try:
                 if not row["key"] or (row["key"], row["kind"]) in self.catalog:
                     raise ValueError("key and kind empty or repeated")
-                if any(not re.fullmatch(r"spec:[a-z_]+(?:\.[a-z_]+)*", v) for v in re.findall(r"<(spec:[^<>]*)>", row["key"])):
-                    raise ValueError("a spec variable is <spec:ключ.спеки>")
+                if any(not re.fullmatch(r"manifest:[a-z_]+(?:\.[a-z_]+)*", v)
+                       for v in re.findall(r"<(manifest:[^<>]*)>", row["key"])):
+                    raise ValueError("a manifest variable is <manifest:ключ.манифеста>")
+                if "<spec:" in row["key"]:
+                    raise ValueError("<spec:…> is renamed <manifest:…> (ADR-0086)")
                 if row["kind"] not in CATALOG_KINDS:
                     raise ValueError(f"kind is one of {sorted(CATALOG_KINDS)}")
                 if not re.fullmatch(LESSON, row["owner"]):
@@ -758,17 +763,17 @@ class Check:
                 row["ops"] = parse_ops(row["ops"])
                 row["reader_roles"] = None if row["readers"] == "*" else parse_roles(row["readers"], "readers")
                 if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]):
-                    raise ValueError("when is - or a spec key")
+                    raise ValueError("when is - or a manifest key")
                 if row["when"] != "-" and row["when"] not in words and not when_key(row["when"]):
                     raise ValueError(f"when {row['when']} is neither a key path of {MANIFEST_FORM} nor a derived "
                                      f"word of the catalog header ({', '.join(sorted(words)) or 'none'})")
                 if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
                     raise ValueError("version is an integer ≥ 1")
-                if row["schema"] == "spec":
-                    named = {v[5:] for v in re.findall(r"<(spec:[^<>]*)>", row["key"])}
-                    if not named & SPEC_FORMS or row["kind"] not in {"row", "object"}:
-                        raise ValueError(f"schema spec is for a row or object whose key names one of "
-                                         f"{', '.join(sorted(SPEC_FORMS))} (<spec:…>)")
+                if row["schema"] == "manifest":
+                    named = {v[9:] for v in re.findall(r"<(manifest:[^<>]*)>", row["key"])}
+                    if not named & MANIFEST_FORMS or row["kind"] not in {"row", "object"}:
+                        raise ValueError(f"schema manifest is for a row or object whose key names one of "
+                                         f"{', '.join(sorted(MANIFEST_FORMS))} (<manifest:…>)")
                 elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
                 elif row["schema"] != "-":
@@ -1469,7 +1474,7 @@ class Check:
     # The form schema is a check next to the norm, not the norm (ADR-0085): every case of the lesson corpus goes through
     # the text layer, the schema and the reference pass; its verdict must be verdicts.tsv's and its class classes.tsv's.
     # A difference is a defect of the schema, the norm or the corpus. Missing dependencies fail, never skip.
-    def spec_schema(self, schema, references, cases, verdicts, classes):
+    def manifest_schema(self, schema, references, cases, verdicts, classes):
         for path in (schema, references):
             if not path.is_file():
                 self.error(path, "form schema check needs both .schema.yaml and .references.tsv (ADR-0085)")
@@ -1480,7 +1485,7 @@ class Check:
         if str(SCRIPTS) not in sys.path:
             sys.path.insert(0, str(SCRIPTS))
         try:
-            from spec_schema.run import Runner
+            from manifest_schema.run import Runner
         except ImportError as exc:
             self.error(schema, f"form schema check needs jsonschema, ruamel.yaml and regress (ADR-0085), missing: {exc}; "
                                f"run: {SCHEMA_INSTALL}")
@@ -1505,11 +1510,12 @@ class Check:
             elif case in classes and got["class"] != classes[case]:
                 self.error(path, f"form schema: class expected {classes[case]}, got {got['class']} ({why})")
             self.stats["schema_cases"] += 1
-        # Every subsystem spec of the course must load too, not only the corpus (ADR-0085 доп. (1), Р3).
-        # Corpora (cases/, spec_verdicts/) hold refused specs on purpose; only the specs subsystems ship are checked here.
-        specs = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
-                 *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
-        for path in sorted(specs):
+        # Every subsystem manifest of the course must load too, not only the corpus (ADR-0085 доп. (1), Р3).
+        # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are
+        # checked here.
+        manifests = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        for path in sorted(manifests):
             try:
                 got = runner.judge(path.read_bytes())
             except Exception as exc:
@@ -1517,12 +1523,12 @@ class Check:
                 continue
             if got["verdict"] != "ok":
                 why = f"layer {got['layer']}" + (f": {got['errors'][0]}" if got["errors"] else "")
-                self.error(path, f"form schema: course spec refused {got['verdict']} ({why})")
-            self.stats["schema_specs"] += 1
+                self.error(path, f"form schema: course manifest refused {got['verdict']} ({why})")
+            self.stats["schema_manifests"] += 1
 
     # The form source of ADR-0087 next to the chapter norms: the section built from it stands in the norms byte for byte
     # between the markers, the corpus goes through the loader built from it (verdict, class, paths, lines), every
-    # course spec loads, and the coverage of references.tsv is counted (strict with --strict-coverage).
+    # course manifest loads, and the coverage of references.tsv is counted (strict with --strict-coverage).
     def form_source(self, norms, text, form, references, scalars, acceptance, verdicts, classes):
         if str(SCRIPTS) not in sys.path:
             sys.path.insert(0, str(SCRIPTS))
@@ -1589,14 +1595,14 @@ class Check:
                 elif not set(lines_) <= set(got["lines"]):
                     self.error(path, f"form source: lines expected {lines_}, got {got['lines']}")
             self.stats["form_cases"] += 1
-        specs = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
-                 *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
-        for path in sorted(specs):
+        manifests = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        for path in sorted(manifests):
             got = loader.judge(path.read_bytes())
             if got["verdict"] != "ok":
                 why = f"layer {got['layer']}" + (f": {got['why'][0]}" if got["why"] else "")
-                self.error(path, f"form source: course spec refused {got['class']} ({why})")
-            self.stats["form_specs"] += 1
+                self.error(path, f"form source: course manifest refused {got['class']} ({why})")
+            self.stats["form_manifests"] += 1
         held = held_rows(results)
         self.stats["form_rows"] += len(loader.rows)
         self.stats["form_rows_held"] += len(held)
@@ -1614,7 +1620,7 @@ class Check:
         self.stats["families_without_section"] += 0
         if self.catalog is None:
             return
-        rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] not in ("-", "spec")]
+        rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] not in ("-", "manifest")]
         lines = text.split("\n") if text is not None else []
         if not rows and not any(line in (FAMILIES_BEGIN, FAMILIES_END) for line in lines):
             return
@@ -1666,7 +1672,7 @@ class Check:
             return
         self.stats["families_with_section"] += len(rows)
 
-    # Chapter 2.2 «Канонический вид» (ADR-0089): the view of every accepted corpus case and course spec passes the built
+    # Chapter 2.2 «Канонический вид» (ADR-0089): the view of every accepted corpus case and course manifest passes the built
     # schema, the built section stands in the norms between its markers, the vectors canonical are the built bytes and
     # hold every default, ordered and step of the projection (mutants, strict with --strict-coverage), puts.tsv of
     # acceptance/2/ names vectors. Without any file of the chapter it is skipped: COUNTS says canonical=absent. The
@@ -1825,7 +1831,7 @@ class Check:
         texts.update(more)
         schema, schema_refs = spec / f"{lesson.stem}.schema.yaml", spec / f"{lesson.stem}.references.tsv"
         if schema.exists() or schema_refs.exists():
-            self.spec_schema(schema, schema_refs, acceptance / "cases", verdicts, classes)
+            self.manifest_schema(schema, schema_refs, acceptance / "cases", verdicts, classes)
         choices = self.choices(texts[norms]) if norms in texts else None
         for path, text in texts.items():
             self.counts(path, text, prefix, ids, scenarios, path == instructions, verdict_counts, choices or None,
@@ -1915,7 +1921,7 @@ class Check:
                 self.form_source(norms, text, source, schema_refs, spec / f"{base}.scalars.tsv", where, verdicts,
                                  classes)
             elif schema.exists() or schema_refs.exists():
-                self.spec_schema(schema, schema_refs, where / "cases", verdicts, classes)
+                self.manifest_schema(schema, schema_refs, where / "cases", verdicts, classes)
             self.families(norms, text, prefix)
             choices = self.choices(text) if text is not None else None
             # A chapter's own texts count the chapter.

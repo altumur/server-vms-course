@@ -8,8 +8,8 @@ root:
     holder:
       type: string
       description: уникальная метка попытки захвата или "" — очередь свободна; новая попытка не повторяет метку прежней
-    spec_rev:
+    manifest_rev:
       type: string
       pattern: '[1-9][0-9]*'
-      description: ревизия спеки (P/02.3 Н1.5 rev); не убывает — старый контроллер не захватывает новую ревизию
-  required: [holder, spec_rev]
+      description: ревизия манифеста (P/02.3 Н1.5 rev); не убывает — старый контроллер не захватывает новую ревизию
+  required: [holder, manifest_rev]

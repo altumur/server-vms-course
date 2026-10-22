@@ -1,7 +1,7 @@
 # Семья <sub>/controller/pass — отчёт прохода контроллера (P/04; P/04 Н1.2). Источник формы объекта (ADR-0088; разбор
 # ревью стадии A 3–5, № 16: names_given, hung_move_after). Экземпляр — {key, object}; ключ — грамматика колонки key
 # каталога. Слова — Platform/common/DIALECT.md. Поля ниже ДОЛЖНЫ быть (short, wants — только при placement.grows: true);
-# реализация МОЖЕТ добавлять свои счётчики (имена вне properties). Запись spec_rev и rev судьбы нормой не названа —
+# реализация МОЖЕТ добавлять свои счётчики (имена вне properties). Запись manifest_rev и rev судьбы нормой не названа —
 # число или десятичная строка.
 dialect: data-form/1
 defs:
@@ -29,8 +29,8 @@ root:
     failures: {ref: count}
     last_success: {ref: common.time, description: "момент конца последнего успешного прохода"}
     seconds: {type: number, minimum: 0, description: "длительность прохода"}
-    spec_rev: {type: [integer, string], description: "ревизия спеки контроллера"}
-    spec_behind: {ref: count, description: "строк, решённых более новой спекой"}
+    manifest_rev: {type: [integer, string], description: "ревизия манифеста контроллера"}
+    manifest_behind: {ref: count, description: "строк, решённых более новым манифестом"}
     names_given:
       type: object
       names:
@@ -117,8 +117,8 @@ root:
     - failures
     - last_success
     - seconds
-    - spec_rev
-    - spec_behind
+    - manifest_rev
+    - manifest_behind
     - names_given
     - hung_move_after
     - fates

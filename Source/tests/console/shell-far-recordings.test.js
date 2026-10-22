@@ -14,7 +14,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000,ms=x=>Math.round(x*1000);
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"demo",ref:"SN-DEMO"},{id:2,name:"x",ref:"SN-X"},{id:3,name:"y",ref:"SN-Y"},{id:4,name:"own",ref:"SN-OWN"},{id:5,name:"z",ref:"SN-Z"},{id:6,name:"bk",ref:"SN-BK"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1-card",cam:"1",home:"card",backup:true},{id:"SN-OWN",cam:"4",home:"card"},{id:"6-card",cam:"6",home:"card",backup:true}],rows:[]};

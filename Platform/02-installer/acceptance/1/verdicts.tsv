@@ -1,5 +1,5 @@
-# Приёмка главы P/02.1 «Спека подсистемы и строгий загрузчик» (ADR-0080; перенесена из М10/2): вердикты загрузчика.
-# Строка: case<TAB>verdict. case — файл cases/<case>.subsystem.yaml, загруженный один, как спека подсистемы;
+# Приёмка главы P/02.1 «Манифест подсистемы и строгий загрузчик» (ADR-0080; перенесена из М10/2): вердикты загрузчика.
+# Строка: case<TAB>verdict. case — файл cases/<case>.subsystem.yaml, загруженный один, как манифест подсистемы;
 # verdict — ok (грузится) или refused (отказ, называющий файл); диагностика — diagnostics.tsv и чтением по Н5. Правила — Н1, Н4;
 # здесь только таблица. Происхождение: таблица spec_verdicts.tsv (ревью 14 и 15, вердикты «Архитектора», 2026-10-06),
 # перенесена сюда 2026-10-14 с восемью новыми случаями (имя, обязательный ключ, пустой документ, snapshot, default+inherit).
@@ -245,6 +245,8 @@ k38_sub_domain	refused
 k38_sub_console	refused
 k38_sub_audit	refused
 k38_sub_spec	refused
+k38_sub_manifest	refused
+a86_sub_manifest2	ok
 k38_sub_session	refused
 k38_sub_mounts	refused
 k38_sub_servers	refused
@@ -338,6 +340,7 @@ m49_table_healthz	refused
 m49_table_heartbeats	refused
 m49_table_holds	refused
 m49_table_idem	refused
+m49_table_manifest	refused
 m49_table_marks	refused
 m49_table_metrics	refused
 m49_table_mounts	refused

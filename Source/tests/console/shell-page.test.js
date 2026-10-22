@@ -15,10 +15,10 @@ out.mountedOnce=(inline[0].match(/PlatformConsole\.mount\(/g)||[]).length===1&&/
 // no handler in an attribute: none in the markup, none in what the script writes
 out.noInlineHandlerInSource=!/\son[a-z]+\s*=\s*["'`$]/i.test(PAGE.replace(/<!--[\s\S]*?-->/g,""));
 // the platform's parts are the module's: the page reads none of their routes and draws none of them — but the VMS's
-// share of the domain: the book of primaries the spec shows (/domain/cam/books/…, ADR-0010) and another cluster's
+// share of the domain: the book of primaries the manifest shows (/domain/cam/books/…, ADR-0010) and another cluster's
 // recording's where through this console (/domain/at/…, ADR-0061)
 const code=inline[0].replace(/^\s*\/\/.*$/gm,"");
-out.noPlatformRoutes=!/["'`]\/(session|servers|domain(?!\/(?:cam|rec)\/books\/|\/rec\/recordings(?:["\'`?\/])|\/at\/|\/placement(?:["'`?\/]))|policy|drain|mounts|spec|unplaceable|metrics)["'`?\/]/.test(code)&&!/["'`]\/where\//.test(code);
+out.noPlatformRoutes=!/["'`]\/(session|servers|domain(?!\/(?:cam|rec)\/books\/|\/rec\/recordings(?:["\'`?\/])|\/at\/|\/placement(?:["'`?\/]))|policy|drain|mounts|spec|manifest|unplaceable|metrics)["'`?\/]/.test(code)&&!/["'`]\/where\//.test(code);
 out.noOwnLogin=!/type="password" name="password"|signin|break-glass/.test(PAGE);
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

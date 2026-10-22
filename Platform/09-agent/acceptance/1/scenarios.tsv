@@ -46,7 +46,7 @@ scenario	step	request	expect
 05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200
 05-unsigned-document	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~not_a_record"}}
 05-unsigned-document	5	member m1 store GET /v1/get?key=domain/shared	200 {"items": null}
-05-unsigned-document	6	member hold console GET /domain/shared/testsub	200 {"fields": {"step": {"value": 1, "from": "spec"}}}
+05-unsigned-document	6	member hold console GET /domain/shared/testsub	200 {"fields": {"step": {"value": 1, "from": "manifest"}}}
 06-fresh-and-unchanged	1	@domain m1	ok
 06-fresh-and-unchanged	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
 06-fresh-and-unchanged	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "root", "cap": "view", "scope": "unit:testsub/1"}]}	200

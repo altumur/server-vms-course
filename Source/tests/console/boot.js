@@ -12,7 +12,7 @@ const FILE=process.env.CONSOLE_FILE||(()=>{
   return tmp;
 })();
 const FIX={
- "/spec":{subsystems:{cam:{},rec:{}}},
+ "/manifest":{subsystems:{cam:{},rec:{}}},
  "/cameras":{configured:[
    {id:"1",name:"Главный вход",source:"ipint://10.0.0.11/Hikvision/DS-2CD2143G2",enabled:true,labels:[],folders:["Офис/Вход"],priority:100,live:"always"},
    {id:"2",name:"Парковка",source:"ipint://10.0.0.12/Axis/P3245",enabled:true,labels:["vlan:cctv"],folders:["Офис/Улица","Периметр"],priority:100,live:"always"}],

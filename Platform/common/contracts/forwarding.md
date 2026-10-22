@@ -122,7 +122,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 |---|---|---|---|---|
 | GET | `/domain` | 1 Н2 | 5 | да |
 | GET | `/domain/shadow` | 1 Н2 | 5 | да |
-| GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` спеки каталога; спека без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
+| GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` манифеста каталога; манифест без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
 | GET, POST | `/domain/members` | 3 Н2 | 5 | да |
 | DELETE | `/domain/members/<член>` | 3 Н2 | 5 | да |
 | POST | `/domain/members/<член>/ca` | 8 Н1.6 | 5 | да |
@@ -131,7 +131,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET, PUT, DELETE | `/domain/placement/<sub>/<ref>` | 6 Н2 | 5 | да |
 | POST | `/domain/<sub>/<rows>` | 6 Н2 | 5 | да |
 | PUT, DELETE | `/domain/<sub>/<rows>/<ref>` | 6 Н2 | 5 | да |
-| любой | `/domain/<sub>/<сегмент door.pass спеки>[/…]` | 8 Н1.7 | 5 | да |
+| любой | `/domain/<sub>/<сегмент door.pass манифеста>[/…]` | 8 Н1.7 | 5 | да |
 | GET, POST | `/domain/users` | 9 Н2 (добавлено М11/9) | 5 | да |
 | PUT, DELETE | `/domain/users/<имя>` | 9 Н2 (добавлено М11/9) | 5 | да |
 | GET | `/domain/grants` | 9 Н2 (добавлено М11/9) | 5 | да |

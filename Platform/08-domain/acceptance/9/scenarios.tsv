@@ -15,4 +15,4 @@ scenario	step	request	expect
 01-shared-edit-and-read	13	member m1 console GET /domain/shared/testsub?unit=nope	404 {"error": "no such unit"}
 01-shared-edit-and-read	14	@until 60 holder GET /domain/shared	200 {"doc": {"rev": 1}, "delivery": {"term": 1, "rev": 1, "holding": ["hold", "m1", "m2"], "silent": []}}
 01-shared-edit-and-read	15	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": null}}}	200 {"rev": 2}
-01-shared-edit-and-read	16	@until 60 member m1 console GET /domain/shared/testsub?unit=c6	200 {"rev": 2, "fields": {"step": {"value": 1, "from": "spec"}}}
+01-shared-edit-and-read	16	@until 60 member m1 console GET /domain/shared/testsub?unit=c6	200 {"rev": 2, "fields": {"step": {"value": 1, "from": "manifest"}}}

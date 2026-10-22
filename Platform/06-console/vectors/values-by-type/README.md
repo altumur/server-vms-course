@@ -1,7 +1,7 @@
 # Векторы: текстовые формы значений по типам (`values_by_type`)
 
 Владелец — глава P/06.1 ([нормы](../../spec/06.1-console.norms.md) Н1.2 `values_by_type`, `absent`; Н2 — значения JSON-ответа;
-Н4 — отказы типа). Участники — все, кто читает или пишет строки единиц и таблиц по спеке: `<s>controller`, `<s>worker`,
+Н4 — отказы типа). Участники — все, кто читает или пишет строки единиц и таблиц по манифесту: `<s>controller`, `<s>worker`,
 `<s>domain`, `domain`, `domainagent` (читатели строки единицы по [каталогу](../../../common/data/catalog.tsv)), кодек схем
 семей [`codec.tsv`](../../../common/data/codec.tsv) (типы `string`, `integer`, `number`, `boolean`, `array`, `null` — то
 же правило), строки таблиц (P/06.1 Н1.6: значения и штампы — по `values_by_type`), строка `sweep` (P/06.1 Н1.5: `at`).
@@ -15,7 +15,7 @@ UTF-8, LF, поля через TAB. Строки с `#` и пустые проп
 | Поле | Значение |
 |---|---|
 | `case` | имя строки |
-| `type` | тип поля спеки: `string`, `url`, `int`, `float`, `bool`, `list`, `json`, `blob`; `secret` — строковое поле с суффиксом `_secret`; `list:labels` — поле меток размещения (`placement.constraint: labels-subset`, азбука меток — [договор](../../../common/contracts/labels.md)); `int:inherit` — поле `int` с `inherit` |
+| `type` | тип поля манифеста: `string`, `url`, `int`, `float`, `bool`, `list`, `json`, `blob`; `secret` — строковое поле с суффиксом `_secret`; `list:labels` — поле меток размещения (`placement.constraint: labels-subset`, азбука меток — [договор](../../../common/contracts/labels.md)); `int:inherit` — поле `int` с `inherit` |
 | `dir` | `write` — значение JSON на входе двери → элемент строки; `read` — элемент строки → значение JSON ответа; `both` — оба направления |
 | `json` | значение JSON (текст JSON) — как в теле запроса (`write`) или ответа (`read`); `@unset` — поле не передано (`write`) / в ответе поля нет (`read`); `@unreadable` — элемент не читается своим типом (`read`) |
 | `row` | элемент строки хранилища — **строка JSON** с текстом элемента (`"5"` — текст `5`, `""` — пустой текст); `@absent` — элемента нет; `@refuse` — запись отказана, 400 у двери (Н4), `@refuse <слово>` — с этим `fault` ([словарь](../fault/README.md)); `@json <текст JSON>` — элемент — текст массива JSON, равный по значению; `@sealed` — конверт `enc:v2:…` ([договор запечатывания](../../../common/contracts/sealing.md)) |
@@ -23,7 +23,7 @@ UTF-8, LF, поля через TAB. Строки с `#` и пустые проп
 
 ## Прогон
 
-Сторона берёт загруженную спеку с полем нужного типа (у `testsub2` есть поля всех типов, `int:inherit` — `keep_days`;
+Сторона берёт загруженный манифест с полем нужного типа (у `testsub2` есть поля всех типов, `int:inherit` — `keep_days`;
 `list:labels` — `testsub.labels`) и проверяет строки своим кодом преобразования, без HTTP:
 
 1. **`write`, `both`** — из `json` получает элемент строки: текст байт в байт равен `row`; `@absent` — элемента нет;

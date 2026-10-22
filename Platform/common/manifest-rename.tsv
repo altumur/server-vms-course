@@ -32,3 +32,25 @@ from: "spec"	from: "manifest"	слово источника значения в 
 «спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	проза	P/02.1	все уроки, лекции, README и инструкции М10, М11, Platform/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, глоссарий (статья «Манифест подсистемы»)
 «Спека подсистемы и строгий загрузчик»	«Манифест подсистемы и строгий загрузчик»	заголовок урока P/02	P/02.1	Platform/module-design.md (уже с целевым именем), README
 spec (в текстах и исключениях check_spec и навыка lesson-spec)	manifest	строки проверок и навыка	skills/ («Архитектор»)	—
+# Дополнено при переходе (ADR-0086 доп. (2)): имена со spec в значении манифеста, найденные при переходе вне строк выше.
+spec put, spec show (короткие формы)	manifest put, manifest show	команда установщика в тексте и ops каталога	P/02.3 Н3, P/02.4	Platform/02-installer; catalog.tsv (ops admin(manifest put …)); id-map.tsv
+spec (поле строки вида {form, rev, sha256, spec})	manifest	поле строки platform/manifest/<sub>/canonical/<форма>; указатель /spec → /manifest	P/02.2 Н1.2	P/02.3 Н3; data/canonical-row.form.yaml; приёмка P/02 гл. 2 (puts.tsv; вес строки 83 → 87 + длина вида); векторы canonical; form_source (canonical.py, vectors.py); id-map.tsv
+data/spec-row.*, data/spec-rev.*	data/manifest-row.*, data/manifest-rev.*	файлы семей данных	Platform/02-installer/data	catalog.tsv (колонка schema)
+spec (значение колонки schema)	manifest	значение колонки schema каталога данных	Platform/common/data/catalog.tsv	check_spec; exceptions.tsv
+SpecNoRoot	ManifestNoRoot	схема OpenAPI ответа двери /manifest консоли домена	P/10 Н1.7 (10-domain-console.api.openapi.yaml)	—
+specs (поле ViewInput)	manifests	поле входа векторов view	P/08 (08-domain.api.openapi.yaml)	08-domain/vectors/view (cases.tsv, README)
+spec: (метка нотации)	manifest:	метка нотации и раздела	P/08.5 Н1.7, P/10 Н1.7	—
+spec: (метка блока YAML-описания)	manifest:	метка блока в описаниях форм	P/06.4 Н1.5, P/06.5 Н1.8, P/06.7	common/contracts/request-mark.md, gate-and-pass.md; id-map.tsv
+spec.lease, spec.placement.capacity.from	manifest.lease, manifest.placement.capacity.from	путь поля манифеста в прозе	P/03.2, P/03.4	—
+NoSpec	NoManifest	имя отказа	P/03.4 Н3–Н5	—
+per_spec:	per_manifest:	метка формы вывода прав	P/01.2 Н1.2	—
+08-two-specs	08-two-manifests	id сценария приёмки	03-worker/acceptance/2	id-map.tsv
+02-spec-and-mounts	02-manifest-and-mounts	id сценария приёмки	06-console/acceptance/5	id-map.tsv
+resolve-03-spec	resolve-03-manifest	id случая вектора	06-console/vectors/resolve	id-map.tsv
+sub.spec, loadSpecs, rootSpec, fromSpecs	sub.manifest, loadManifests, rootManifest, fromManifests	внутренние имена модуля консоли	Source/w2cplatform/console.js	Source/tests/console (имена проверок); Source/vms/cam.shell.html (pc.manifest, /det/manifest)
+spec_schema/, SPEC_FORMS, spec_schema(), --spec, schema_specs, form_specs	manifest_schema/, MANIFEST_FORMS, manifest_schema(), --manifest, schema_manifests, form_manifests	пакет, имена и счётчики навыка	skills/lesson-spec/scripts	validation.md (якоря «…-манифеста-…»)
+«Спека и установщик»	«Манифест и установщик»	имя урока P/02 (глава 2.1 — «Манифест подсистемы и строгий загрузчик»)	Platform/lessons.tsv	Platform/README.md; лекция P/02
+# Не переименованы при переходе: комментарии Source/tests/testdata/testsub*.subsystem.yaml и их копия в приёмке P/02 гл. 2 (sha256
+# закреплён во входах векторов; файл общий с продуктом); буквальные имена старого кода и команд продукта в прозе М10B, М12B
+# (SPEC_DIR, /spec, SpecController, spec.py — до правки продукта, Р7); журналы corrections.tsv. Байты общей с продуктом таблицы
+# 02-installer/vectors/platform-lists/cases.tsv изменились (комментарии) — долг продукта Р7.

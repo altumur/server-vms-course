@@ -7,7 +7,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const key of Object.keys(b.FIX))delete b.FIX[key];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],
   servers:{show:[{table:"entries",by:"server",title:"Discovered",columns:["name","size","identity"]}]}};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{workers:[],resource:"live"}},policy:{}};

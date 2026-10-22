@@ -822,9 +822,9 @@ paths:
         '503':
           description: как у GET, без тела
       parameters: *id006
-  /spec:
+  /manifest:
     get:
-      summary: Спека консоли домена — корня нет (Н1.7 spec)
+      summary: Манифест консоли домена — корня нет (Н1.7 manifest)
       description: Страница держателя (P/10-04).
       responses:
         '200':
@@ -832,7 +832,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SpecNoRoot'
+                $ref: '#/components/schemas/ManifestNoRoot'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2089,11 +2089,11 @@ paths:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
   '/domain/{sub}/{pass}':
-    description: 'door.pass на домене (Н1.6, P/10-03): маршрут /domain/<sub>/<сегмент>[/…], чей сегмент в door.pass спеки
+    description: 'door.pass на домене (Н1.6, P/10-03): маршрут /domain/<sub>/<сегмент>[/…], чей сегмент в door.pass манифеста
       <sub>, консоль домена передаёт воркеру на домене этой подсистемы (адрес — пульс domain/<sub>/heartbeat) путём /<сегмент>[/…]
       с query, клиентом роли domainconsole; заголовки, тело, ответ и коды — договор сторожевой и передачи «Передача door.pass».
       Ответ воркера — как получен (default: это ответ воркера, не процесса domain; решение п. 9 о передаче процессу его не
-      касается). Один сегмент пути различает загруженная спека: unit.rows — /domain/{sub}/{rows}, door.pass — этот путь (как
+      касается). Один сегмент пути различает загруженный манифест: unit.rows — /domain/{sub}/{rows}, door.pass — этот путь (как
       /{rows} и /{pass} OpenAPI P/06); путь длиннее одного сегмента передаётся так же.'
     parameters:
     - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
@@ -2103,7 +2103,7 @@ paths:
       schema:
         type: string
         minLength: 1
-      description: Сегмент из door.pass спеки подсистемы (P/02.1); совпавший с books, placement, members, topology, shadow,
+      description: Сегмент из door.pass манифеста подсистемы (P/02.1); совпавший с books, placement, members, topology, shadow,
         at — не передаётся.
     get:
       summary: 'door.pass на домене: GET к воркеру на домене'
@@ -2275,14 +2275,14 @@ components:
           schema:
             $ref: '#/components/schemas/NoDomainBody'
     ViewNotFound:
-      description: 'По порядку Н1.2а: нет такой спеки; not in the directory — у спеки нет domain.ref; rows не её; no domain
+      description: 'По порядку Н1.2а: нет такого манифеста; not in the directory — у манифеста нет domain.ref; rows не его; no domain
         here; no such member — член не в списке; путь с . или .. — not a domain route'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Refusal'
     NoPlacement:
-      description: Нет записи; нет спеки или без domain.ref (Н1.2г); путь с . или .. — not a domain route
+      description: Нет записи; нет манифеста или без domain.ref (Н1.2г); путь с . или .. — not a domain route
       content:
         application/json:
           schema:
@@ -2426,7 +2426,7 @@ components:
                 schema:
                   type: object
                   additionalProperties: true
-                  description: JSON Schema документа из спеки (P/02.1 Н1.2б) как объявлена.
+                  description: JSON Schema документа из манифеста (P/02.1 Н1.2б) как объявлена.
     AlarmsView:
       type: object
       required:
@@ -2487,7 +2487,7 @@ components:
           type: string
         history_cut_before:
           type: number
-    SpecNoRoot:
+    ManifestNoRoot:
       type: object
       required:
       - name
@@ -2510,5 +2510,5 @@ components:
         mounts:
           type: object
           additionalProperties:
-            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/SpecView'
-          description: Описание подсистемы P/06.5 Н2 /mounts; форма — SpecView контракта P/06.
+            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ManifestView'
+          description: Описание подсистемы P/06.5 Н2 /mounts; форма — ManifestView контракта P/06.

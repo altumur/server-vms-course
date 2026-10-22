@@ -11,7 +11,7 @@ const b=require("./boot");
 async function run(session){
   for(const k of Object.keys(b.FIX))delete b.FIX[k];
   b.FIX["/session"]=session;
-  b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+  b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
   b.FIX["/things"]={configured:[{id:1,name:"a"}],rows:[]};
   b.FIX["/events"]={events:[{t:100,kind:"session.debug_open",person:"stand-admin"}]};
   const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

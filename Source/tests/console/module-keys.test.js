@@ -11,7 +11,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/domain"]={holder:"h",age:1,complete:true,members:[{name:"h",holder:true,state:"ok"}],topology:{rev:1}};
 b.FIX["/domain/keys"]={vars:[

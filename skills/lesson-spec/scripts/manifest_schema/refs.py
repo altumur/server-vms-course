@@ -17,7 +17,7 @@ def _platform_list(name):
             if not words:
                 raise RuntimeError(f"platform-lists/cases.tsv names no {name}")
             return words
-    raise RuntimeError("platform-lists/cases.tsv not found above spec_schema/")
+    raise RuntimeError("platform-lists/cases.tsv not found above manifest_schema/")
 
 
 PLATFORM_SHOWN = _platform_list("platform_shown")

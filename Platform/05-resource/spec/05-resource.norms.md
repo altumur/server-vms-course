@@ -26,9 +26,9 @@
 **Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../common/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<ключ>` — `written` (пишет консоль, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5).
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
-- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 доп. (16)), `.gone/<ключ>`, `objects/<sub>/<spec:objects.rows>`, `objects/<sub>/<spec:objects.rows>/*`;
+- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 доп. (16)), `.gone/<ключ>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
 - пишет: `<sub>/blobs/sha256-<hex>` (put);
-- читает: `platform/spec/<sub>`, `platform/spec/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<spec:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
+- читает: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
 
 Ключ своего комплекта ресурс читает при `RESOURCE_TLS=1` (Н1.4 `door.mode` `mtls`, `cert_until`; «Допуск к дверям
 ресурса»; [договор сертификата роли](../../common/contracts/role-certificate.md) `kit`) (разбор ревью стадии B 3–5, № 10).
@@ -44,19 +44,19 @@ object:
   api:       put(key, bytes) | get(key) → bytes | null | list(prefix) → [key] (отсортировано, без служебных имён с `~` — ADR-0083 доп. (16)) | delete(key)
              | put_new(key, bytes) → conflict, если есть  (создание-однажды) | get_at/put_at (запись по прочитанному индексу)
   key:       <семья>/… ; семьи платформы: heartbeats, contenders (P/03.4, P/03.2), controller (P/04), snapshot, blobs (добавлено М10/10),
-             commands (договор просьбы и её метки, «Метка» mark; разбор ревью стадии B 6–7, № 24) — спека их не называет
+             commands (договор просьбы и её метки, «Метка» mark; разбор ревью стадии B 6–7, № 24) — манифест их не называет
   writer:    один каталог — один писатель: worker → <s>/heartbeats/*, <s>/contenders/*;
              controller → <s>/snapshot/* (добавлено М10/10), <s>/controller/*; console → <s>/blobs/* (добавлено М10/10); resource → platform/resources/*
   cluster:   файл на сервере писателя; при чтении свежая копия (written) побеждает; сервер, который не ответил, — missing
   row_object: ключи, чей следующий писатель может быть на другом сервере, — строки хранилища objects/<ключ>
-             (objects.rows спеки; commands/* — всегда, у спеки с requests); put_new = запись с cas ""
+             (objects.rows манифеста; commands/* — всегда, у манифеста с requests); put_new = запись с cas ""
   ops:       операции объектов сводятся к словарю P/01.1 и его отказам: put_new — «записать, если нет» (conflict, когда есть);
              get_at — чтение с индексом объекта; put_at — запись по прочитанному индексу (иной индекс → conflict, как cas строки);
              put_durable — запись тела целиком с барьером долговечности до публикации (строка ссылается на тело только после
              ответа — P/06.1 Н1.5 `write`); delete_at — удаление по прочитанному индексу (иной индекс → conflict, объект не тронут — P/06.1 Н1.5 `sweep`); append — дописать строку события в открытый бакет (только его писатель, Н1.2); иных атомарностей нет
   door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/* (М11), */heartbeats/*, */contenders/*, */snapshot/*,
-             */controller/*, */blobs/*; snapshot и blobs — добавлено М10/10) и objects.door спеки; иное — 403;
-             `*` первой части — подсистема каталога спек: `other/heartbeats/x` без спеки other — 403 (сверка python и go М10/6–11, E5)
+             */controller/*, */blobs/*; snapshot и blobs — добавлено М10/10) и objects.door манифеста; иное — 403;
+             `*` первой части — подсистема каталога манифестов: `other/heartbeats/x` без манифеста other — 403 (сверка python и go М10/6–11, E5)
   disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога `<каталог>/~lock`, flock(LOCK_EX), файл
              не удаляется; служебные имена (замок, временное имя) — договор журнала событий «Имена файлов» (ADR-0083 доп. (16))
 ```
@@ -130,7 +130,7 @@ delete:   надгробие .gone/<ключ> у удалившего — объ
 [глава 3.6 Н1.2](../../03-worker/spec/03.6-worker.norms.md); `older_epochs` и отметки оператора (`marks`) —
 [глава 6.4](../../06-console/spec/06.4-console.norms.md) Н1.2 (консоль).
 
-`subsystem` строки индекса — имя спеки, и у строк дерева тревог (`testsub`, не `testsub.alarms`; сверка python и go М10/6–11, E32).
+`subsystem` строки индекса — имя манифеста, и у строк дерева тревог (`testsub`, не `testsub.alarms`; сверка python и go М10/6–11, E32).
 `unit` в ответе индекса — полная ссылка `<дерево>/<единица>`;
 у журнала это `audit/<роль>`, у отметки — `console/<экземпляр>`, а её `of` — адресат.
 
@@ -144,7 +144,7 @@ index:
             предел 10000), keep (newest | oldest), class, by (t | occurred; occurred читает на 3600 с дальше)
   row:      {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …поля}
             # epoch_is и fenced ставит консоль при слиянии; у ресурса строки без них (решение «Архитектора», ревью стадии A)
-  epoch_is: current | fenced | earlier-run   # консоль — по current_epochs из <sub>/epoch/* и политике спеки
+  epoch_is: current | fenced | earlier-run   # консоль — по current_epochs из <sub>/epoch/* и политике манифеста
   cut:      до обрезки дубли по id убрать; сначала alarm, затем observation; внутри класса по by (newest — убывание, oldest — возрастание),
             при равном времени id лексикографически по байтам UTF-8; первые limit строк. truncated ресурса — число оставшихся после этой обрезки
   answer:   {events, state, truncated, partial?}; truncated — неотрицательное целое по cut/merge (всегда); partial: true — хотя бы один
@@ -228,7 +228,7 @@ resource:                                    # один процесс на се
              # строки нет — включено с порогами 0.85/0.75; enabled: false — ресурс снимает свою строку free-* (сверка python и go М10/6–11, E45)
              # форма строки — P/02.4 Н1.9 (пишет admin, w2cctl space)
   free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # своя форма (ADR-0059): пишет и перезаписывает с cas только
-             ресурс, не создание-однажды, без unit/digest/схемы семьи; для спек с requests.free, пока том > high;
+             ресурс, не создание-однажды, без unit/digest/схемы семьи; для манифестов с requests.free, пока том > high;
              для requests.free volume — непустое имя из ASCII A-Z/a-z/0-9/_, 1–64 байта, без дефиса (на коробке один том —
              файловая система дерева событий, имя events); server — непустой сегмент ключа P/01.1, дефисы допустимы.
              Разделение по последнему дефису однозначно. Иной volume — вне профиля: диагностировать конфигурацию, не создавать/менять просьбу этого тома;
@@ -565,7 +565,7 @@ role при отказе роли) — 403 шлюза ресурса, до об�
 
 | Маршрут ресурса | Допущенные роли |
 |---|---|
-| `/events*`, `/buckets/`, `/mirrored/` | `console`, `resource`, `<sub>worker` спек каталога |
+| `/events*`, `/buckets/`, `/mirrored/` | `console`, `resource`, `<sub>worker` манифестов каталога |
 | `PUT /mirror/` | `resource` |
 | чтение `/v1/objects` (семьи Н1.1 `door`); `PUT /v1/objects/<sub>/blobs/<digest>` (Н2) | любая роль с комплектом (P/02.4 Н1.6) |
 
@@ -589,7 +589,7 @@ HTTP-статус: вызывающий не принимает неполные
 P/04). Порядок старта ресурса — [жизненный цикл](../lifecycle.md).
 
 ```
-первым шагом старта ресурса, до чтения спеки (P/02.3) (общий блок у прочих процессов — P/06.6, P/03.2, P/04;
+первым шагом старта ресурса, до чтения манифеста (P/02.3) (общий блок у прочих процессов — P/06.6, P/03.2, P/04;
 разбор ревью стадии B 3–5, № 26):
 прочитать platform/schema: нет → своя SCHEMA; не число → не стартовать; version > SCHEMA → не стартовать
                                                                  («store is at schema N; this build understands M»)
@@ -627,7 +627,7 @@ retain:  для каждого дерева: days = <sub>/retention | 365 (tree.
          убрать закрытые бакеты старше days (отметки консоли — не раньше самого долгого; holds сохраняют;
          копии зеркала — days + 1 ч); журнал events.removed; index.forget
 usage:   измерить тома (зонд ≤ 5 с); пульс space/volumes
-relieve: platform/space.enabled ∧ used/total > high → для спек с requests.free: need = used − total·low − Σ freeing
+relieve: platform/space.enabled ∧ used/total > high → для манифестов с requests.free: need = used − total·low − Σ freeing
          need > 0 → записать free-<server>-<volume> {free: need, volume, server, at}: cas "" или cas по версии строки СВОЕЙ формы
          (без unit И с точными server/volume текущего тома); перед записью проверить грамматику Н1.4 `free_ask`;
          под этим ключом строка с unit, чужими server/volume или испорченной формой → не трогать, журнал free_ask.key_taken, пропустить;
@@ -688,7 +688,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 ресурса (из приёмки М10/10). Каждый получает
 пустое хранилище, объекты и события, все, кроме `10-body-copy`, — и новую консоль (сценарию `10-body-copy` консоль и контроллер не
 нужны; разбор ревью стадии B 3–5, № 26); ресурс srv-a ([общий README приёмки](../../common/acceptance/README.md),
-«Ресурс») готов до первого шага, у `09-resource-door`, `10-body-copy` и `16-presence-lock` его запускает шаг 1 (`@start resource`); воркер `w-1` — только у `16-presence-lock`. Установленная спека
+«Ресурс») готов до первого шага, у `09-resource-door`, `10-body-copy` и `16-presence-lock` его запускает шаг 1 (`@start resource`); воркер `w-1` — только у `16-presence-lock`. Установленный манифест
 `testsub` (у `10-body-copy` — каталог `testsub` и `testsub2`) — часть подготовки, не пользовательские данные. Номера и имена сценариев —
 прежние, кроме `09-resource-door` из М10/11 (там — 01; номер 01 занят `01-objects-door` из М10/08).
 

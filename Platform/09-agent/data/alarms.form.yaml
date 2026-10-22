@@ -15,7 +15,7 @@ root:
     events:
       type: array
       writer: {max_items: 100}
-      description: "строки индекса класса alarm всех спек каталога, не больше ALARM_PAGE = 100, самые новые (Н1.10 events)"
+      description: "строки индекса класса alarm всех манифестов каталога, не больше ALARM_PAGE = 100, самые новые (Н1.10 events)"
       items:
         type: object
         description: "строка страницы — форма строки индекса P/05 Н1.3 (Н1.10 event); прочие поля — имена автора"

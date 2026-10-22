@@ -619,7 +619,7 @@ properties:
 
     def test_form_schema_without_dependencies_fails_with_the_install_command(self):
         self.add_schema()
-        with patch.dict(sys.modules, {"spec_schema": None, "spec_schema.run": None}):
+        with patch.dict(sys.modules, {"manifest_schema": None, "manifest_schema.run": None}):
             errors = self.check().errors
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("form schema check needs jsonschema, ruamel.yaml and regress", errors[0])
@@ -640,8 +640,8 @@ properties:
             "<s>controller, console", "-", "1", "-", "М12A/1 Н1"]
 
     def test_catalog_and_data_paragraph_agree(self):
-        self.write_catalog(self.SLOT, ["platform/spec/<sub>", "row", "М12A/1", "put=admin", "*", "-", "1", "-", "М12A/1 Н1"])
-        self.data("- владеет: `<sub>/slots/<имя>`, `platform/spec/<sub>`;", "- пишет: `<sub>/slots/<имя>` (cas);")
+        self.write_catalog(self.SLOT, ["platform/manifest/<sub>", "row", "М12A/1", "put=admin", "*", "-", "1", "-", "М12A/1 Н1"])
+        self.data("- владеет: `<sub>/slots/<имя>`, `platform/manifest/<sub>`;", "- пишет: `<sub>/slots/<имя>` (cas);")
         result = self.check()
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["catalog_rows"], 2)
@@ -660,17 +660,19 @@ properties:
         self.assertIn("readers: expected role", errors)
         self.assertIn("overlap with equal narrowness", errors)
 
-    def test_catalog_spec_variables_conditional_readers_and_kinds(self):
-        units = ["<sub>/<spec:unit.rows>/<id>", "row", "М12A/1", "guard=console(cas по версии строки)", "<s>worker(при door.routes), console", "-", "1", "-", "М12A/1 Н1"]
-        tables = ["<sub>/<spec:tables>/<имя>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
+    def test_catalog_manifest_variables_conditional_readers_and_kinds(self):
+        units = ["<sub>/<manifest:unit.rows>/<id>", "row", "М12A/1", "guard=console(cas по версии строки)", "<s>worker(при door.routes), console", "-", "1", "-", "М12A/1 Н1"]
+        tables = ["<sub>/<manifest:tables>/<имя>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
         pointer = ["domain/shared", "row", "М12A/1", "cas=domain", "configstore-door, proc:02-installer", "-", "1", "-", "М12A/1 Н1"]
         copy = ["domain/shared", "object", "М12A/1", "put=domainagent", "*", "-", "1", "-", "М12A/1 Н1"]
-        bad = ["<sub>/<spec:Bad>/<x>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
-        self.write_catalog(units, tables, pointer, copy, bad)
-        self.data("- владеет: `<sub>/<spec:unit.rows>/<id>`, `<sub>/<spec:tables>/<имя>`, `domain/shared`;")
+        bad = ["<sub>/<manifest:Bad>/<x>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
+        old = ["<sub>/<spec:unit.rows>/<x>", "row", "М12A/1", "put=console", "*", "-", "1", "-", "М12A/1 Н1"]
+        self.write_catalog(units, tables, pointer, copy, bad, old)
+        self.data("- владеет: `<sub>/<manifest:unit.rows>/<id>`, `<sub>/<manifest:tables>/<имя>`, `domain/shared`;")
         errors = self.check().errors
-        self.assertEqual(len(errors), 1, errors)
-        self.assertIn("spec variable", errors[0])
+        self.assertEqual(len(errors), 2, errors)
+        self.assertIn("manifest variable", errors[0])
+        self.assertIn("<spec:…> is renamed <manifest:…> (ADR-0086)", errors[1])
 
     def test_catalog_when_is_a_manifest_key_path_or_a_header_word(self):
         form = self.root / "Platform/02-installer/spec/02.1-installer.form.yaml"
@@ -690,7 +692,7 @@ properties:
         self.write_catalog(*rows)
         path = self.root / "Platform/common/data/catalog.tsv"
         path.write_text(path.read_text().replace(
-            "# catalog\n", "# catalog\n# when — путь ключа спеки или производное слово из закрытого перечня: "
+            "# catalog\n", "# catalog\n# when — путь ключа манифеста или производное слово из закрытого перечня: "
                            "domain.worker — воркер на домене (решение; пояснение); unused.word — нигде не стоит.\n"))
         self.data("- владеет: " + ", ".join(f"`{r[0]}`" for r in rows) + ";")
         errors = self.check().errors
@@ -1534,15 +1536,15 @@ class PlatformCatalogTests(unittest.TestCase):
 
     def test_late_layer_rows_and_the_data_paragraph_exception(self):
         rows = self.ROWS + [
-            ["d/late/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "spec", "М11/3 Н1"],
-            ["d/named/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "spec", "М11/3 Н1"],
+            ["d/late/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "manifest", "М11/3 Н1"],
+            ["d/named/<x>", "row", "М11/3", "put=domain", "<s>worker", "-", "1", "manifest", "М11/3 Н1"],
         ]
         old = self.root / "М11_Domain/spec"
         old.mkdir(parents=True)
         (old / "03-x.norms.md").write_text("# М11/3\n")
-        rows = [[c.replace("<x>", "<spec:unit.rows>") if c.startswith("d/") else c for c in r] for r in rows]
+        rows = [[c.replace("<x>", "<manifest:unit.rows>") if c.startswith("d/") else c for c in r] for r in rows]
         self.write_catalog(rows)
-        late, named = "d/late/<spec:unit.rows>", "d/named/<spec:unit.rows>"
+        late, named = "d/late/<manifest:unit.rows>", "d/named/<manifest:unit.rows>"
         text = self.norms.read_text()
         self.norms.write_text(text.replace("## Н2 Section", f"Читает `{named}` позже.\n## Н2 Section"))
         result = self.check()
@@ -1557,18 +1559,18 @@ class PlatformCatalogTests(unittest.TestCase):
         self.assertEqual(result.errors, ["Platform/03-worker/acceptance: stale exception data-paragraph c/read/<x>: "
                                          "this lesson does not need it"])
 
-    def test_schema_spec_is_a_form_given_by_the_manifest(self):
+    def test_schema_manifest_is_a_form_given_by_the_manifest(self):
         rows = self.ROWS + [
-            ["<sub>/<spec:unit.rows>/<id>", "row", "М10/8", "put=console", "<s>worker", "-", "1", "spec", "М10/8 Н1.2"],
-            ["s/<spec:domain.books>/<x>", "row", "М10/8", "put=console", "console", "-", "1", "spec", "М10/8 Н1.2"],
-            ["s/<spec:tables>/<x>", "file", "М10/8", "put=console", "console", "-", "1", "spec", "М10/8 Н1.2"],
+            ["<sub>/<manifest:unit.rows>/<id>", "row", "М10/8", "put=console", "<s>worker", "-", "1", "manifest", "М10/8 Н1.2"],
+            ["s/<manifest:domain.books>/<x>", "row", "М10/8", "put=console", "console", "-", "1", "manifest", "М10/8 Н1.2"],
+            ["s/<manifest:tables>/<x>", "file", "М10/8", "put=console", "console", "-", "1", "manifest", "М10/8 Н1.2"],
         ]
         self.write_catalog(rows)
-        self.write_norms(self.DATA[:2] + ["- читает: `c/read/<x>`, `<sub>/<spec:unit.rows>/<id>`."], ["P/03-01", "P/03-02"])
+        self.write_norms(self.DATA[:2] + ["- читает: `c/read/<x>`, `<sub>/<manifest:unit.rows>/<id>`."], ["P/03-01", "P/03-02"])
         errors = self.check().errors
         self.assertEqual(len(errors), 2, errors)
-        self.assertTrue(all("schema spec is for a row or object whose key names one of" in e for e in errors), errors)
-        self.assertFalse(any("<spec:unit.rows>" in e for e in errors), errors)
+        self.assertTrue(all("schema manifest is for a row or object whose key names one of" in e for e in errors), errors)
+        self.assertFalse(any("<manifest:unit.rows>" in e for e in errors), errors)
 
 
 if __name__ == "__main__":

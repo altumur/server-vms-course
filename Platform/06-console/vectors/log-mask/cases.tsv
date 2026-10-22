@@ -3,7 +3,7 @@
 # credential (Authorization and Proxy-Authorization, М10/7 Н1.4), every name=value whose name is a secret's, and every address in it masked. The norm — М10/7 Н1.4 `log`
 # with Н1.1а (pairs, addresses); it is not secret_in.tsv's: those are a url field's values. Owner: «Спецификация»; the
 # product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083). Read by a test of the product, as a process that
-# knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
+# knows the product's manifests masks a log line (the names a manifest adds — sig, psd — included).
 #
 # A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a value cannot be
 # written, and no row needs one; `\t`, `\n` in a cell are two characters.

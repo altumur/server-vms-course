@@ -26,16 +26,16 @@ scenario	step	request	expect
 05-sigkill	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
 05-sigkill	6	@sleep 20	ok
 05-sigkill	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
-08-two-specs	1	@start controller	ok
-08-two-specs	2	@start worker w-1	ok
-08-two-specs	3	@start worker testsub2 t-1	ok
-08-two-specs	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
-08-two-specs	5	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
-08-two-specs	6	console POST /counters {"name": "c8", "start": 1}	201
-08-two-specs	7	@until 30 console GET /counters	200 {"rows": [{"id": "c8", "phase": "running", "worker": "w-1", "worker_state": "live"}]}
-08-two-specs	8	@sleep 12	ok
-08-two-specs	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
-08-two-specs	10	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
+08-two-manifests	1	@start controller	ok
+08-two-manifests	2	@start worker w-1	ok
+08-two-manifests	3	@start worker testsub2 t-1	ok
+08-two-manifests	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
+08-two-manifests	5	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
+08-two-manifests	6	console POST /counters {"name": "c8", "start": 1}	201
+08-two-manifests	7	@until 30 console GET /counters	200 {"rows": [{"id": "c8", "phase": "running", "worker": "w-1", "worker_state": "live"}]}
+08-two-manifests	8	@sleep 12	ok
+08-two-manifests	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
+08-two-manifests	10	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
 09-bad-given-name	1	@start worker W-1	ok
 09-bad-given-name	2	@start worker x-1	ok
 09-bad-given-name	3	@sleep 12	ok

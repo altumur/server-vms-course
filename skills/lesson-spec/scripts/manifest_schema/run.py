@@ -1,4 +1,4 @@
-"""Прогонщик проверки формы спеки (ADR-0085): текст YAML → форма схемой → ссылки → вердикт и класс.
+"""Прогонщик проверки формы манифеста (ADR-0085): текст YAML → форма схемой → ссылки → вердикт и класс.
 
 Проверка рядом с нормой, не норма: норма урока М10/2 — проза. Схема, ссылки и профиль —
 Platform/02-installer/spec/02.1-installer.schema.yaml (профиль — её шапка) и .references.tsv (переехали с главой 2.1).
@@ -21,7 +21,7 @@ from ruamel.yaml import YAML
 
 if __package__:
     from . import refs, textlayer
-else:                                               # запуск файлом: python spec_schema/run.py
+else:                                               # запуск файлом: python manifest_schema/run.py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import refs  # noqa: E402
     import textlayer  # noqa: E402
@@ -156,7 +156,7 @@ class Runner:
         self.rows = refs.load_rows(references)
 
     def judge(self, data):
-        """bytes спеки → {verdict, class, layer, errors, …}; layer — text:<правило>, schema, global или refs."""
+        """bytes манифеста → {verdict, class, layer, errors, …}; layer — text:<правило>, schema, global или refs."""
         try:
             tree, numbers, empties = textlayer.load_text(data)
         except textlayer.TextRefused as e:
@@ -184,7 +184,7 @@ class Runner:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("files", nargs="+", help="spec files, or @LIST with one path per line")
+    parser.add_argument("files", nargs="+", help="manifest files, or @LIST with one path per line")
     parser.add_argument("--schema", type=Path, default=SCHEMA)
     parser.add_argument("--references", type=Path, default=REFERENCES)
     args = parser.parse_args()

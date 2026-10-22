@@ -1,4 +1,4 @@
-# Семья platform/spec/<sub>/rev — метка ревизии спеки (P/02.3; P/02.3 Н1.5). Источник формы строки (ADR-0088).
+# Семья platform/manifest/<sub>/rev — метка ревизии манифеста (P/02.3; P/02.3 Н1.5). Источник формы строки (ADR-0088).
 # Экземпляр — {key, row}; ключ — грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
 dialect: data-form/1
 root:

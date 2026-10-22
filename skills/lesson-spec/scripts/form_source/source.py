@@ -1,4 +1,4 @@
-"""Источник формы спеки (ADR-0087): `*.form.yaml`, `*.references.tsv`, `*.scalars.tsv` → разобранная форма.
+"""Источник формы манифеста (ADR-0087): `*.form.yaml`, `*.references.tsv`, `*.scalars.tsv` → разобранная форма.
 
 Форма читается слоем текста Н1.1 (доп. (4) В1); таблицы — как TSV, не YAML (доп. (6)). Построение отказывает
 (SourceError) на слове вне диалекта, на выражении вне подмножества § 4, на пути правила, которого нет в форме
@@ -8,7 +8,7 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "spec_schema"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "manifest_schema"))
 import textlayer  # noqa: E402
 
 TYPES = {"object", "array", "string", "integer", "number", "boolean", "null", "any"}

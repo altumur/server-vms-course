@@ -11,7 +11,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/things"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{resource:"live",workers:[{worker:"w-1",load:1,capacity:5,state:"live"}]}},policy:{}};
 b.FIX["/drain"]={draining:"s-1",safe:false,subsystems:{testsub:{subsystem:"testsub",draining:true,units:2,pending_writes:3,pending_unsaid:["w-1",P]}}};

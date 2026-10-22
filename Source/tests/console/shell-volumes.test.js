@@ -1,4 +1,4 @@
-// Тома на странице VMS курса — строки таблицы мест, которую называет спека rec (places.table): под сервером его тома,
+// Тома на странице VMS курса — строки таблицы мест, которую называет манифест rec (places.table): под сервером его тома,
 // сетевые — отдельным узлом «Сетевые архивы» на верхнем уровне; карточка тома — вид, путь, квота, кто обслуживает
 // (held_by: объявлен и обслуживается — разные вещи), записи в нём; объявить (POST /rec/<таблица>, строка целиком),
 // меньшая квота — только после подтверждения и с shrink_confirmed, равным ей; отозвать (DELETE) после подтверждения.
@@ -14,7 +14,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const G=1073741824;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30}],rows:[]};

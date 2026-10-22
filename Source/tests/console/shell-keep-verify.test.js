@@ -1,7 +1,7 @@
 // «Проверить» удержание (ADR-0057 п. 3, ADR-0015): печать проверяет держатель тома инцидентов — у его двери, где лежит
 // копия: по записи удержания — дверь из /rec/where/<таблица мест>/<том>?unit=rec/<запись> (жетон места этой записи),
 // POST <дверь>/keeps/<имя>/verify?recording=<запись> с Bearer. Кнопка есть, только если
-// спека rec открывает маршрут keeps на двери (door.routes); у тома инцидентов без держателя — проверять негде.
+// манифест rec открывает маршрут keeps на двери (door.routes); у тома инцидентов без держателя — проверять негде.
 // Запись без кадров в отрезке (result: empty) — «нет кадров — запечатывать нечего», не провал. Копия продуктового
 // vmsworker/vms/consoletest/shell-keep-verify.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
@@ -13,7 +13,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}],
   places:{table:"volumes"},door:{routes:["timeline","segment","keeps"]}}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};

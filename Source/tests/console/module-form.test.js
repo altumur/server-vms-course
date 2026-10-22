@@ -1,4 +1,4 @@
-// Общая форма единицы по типам спеки: список — через запятую (поле group_by — блоком групп), метки — с подсказкой из
+// Общая форма единицы по типам манифеста: список — через запятую (поле group_by — блоком групп), метки — с подсказкой из
 // меток серверов, секрет — пустой со словом «задан»; свой редактор одного поля (addFieldEditor) внутри формы, а
 // отправка остаётся за формой; своя общая карточка (addTab "general") с console.unitForm внутри.
 const fs=require("fs"),path=require("path");
@@ -9,7 +9,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"addr",type:"url"},{name:"folders",type:"list"},{name:"labels",type:"list"},{name:"key_secret",type:"string",bound_to:["addr"]},{name:"origin",type:"string",fixed:true},{name:"mode",type:"string",enum:["a","b"],default:"a"},{name:"tone",type:"string"}],display:{options:{mode:{a:"Alpha"},tone:{x:"Ex"}}}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"addr",type:"url"},{name:"folders",type:"list"},{name:"labels",type:"list"},{name:"key_secret",type:"string",bound_to:["addr"]},{name:"origin",type:"string",fixed:true},{name:"mode",type:"string",enum:["a","b"],default:"a"},{name:"tone",type:"string"}],display:{options:{mode:{a:"Alpha"},tone:{x:"Ex"}}}};
 b.FIX["/things"]={configured:[{id:1,name:"one",addr:"x://1/Brand/Model",folders:["A","B"],labels:["v:a"],key_secret:"***",origin:"o-1"}],rows:[]};
 b.FIX["/servers"]={servers:{"s-1":{workers:[],resource:"live",labels:["v:a","v:b"]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
@@ -22,7 +22,7 @@ let f=main().querySelector(".pc-edit");
 out.fixedReadOnly=f.elements.origin.disabled===true&&f.elements.origin.value==="o-1";
 out.listAsItems=f.elements.folders.value==="A, B";
 out.labelsSuggestServers=[...f.querySelectorAll("#pc-dl-labels option")].map(o=>o.value).join(",")==="v:a,v:b";
-// набор значений — из enum спеки, слова — из display.options; без enum слова select не делают
+// набор значений — из enum манифеста, слова — из display.options; без enum слова select не делают
 const ms=f.elements.mode;out.enumSelect=!!ms&&ms.tagName==="SELECT"&&[...ms.options].map(o=>o.value+"="+o.textContent).join(",")==="a=Alpha,b=b"&&f.elements.tone.tagName==="INPUT";
 out.secretSaysSet=/set — empty keeps it/.test(f.elements.key_secret.placeholder)&&f.elements.key_secret.value==="";
 // убрать A, добавить C; уходит только folders

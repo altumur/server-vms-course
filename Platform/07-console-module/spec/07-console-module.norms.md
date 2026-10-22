@@ -38,13 +38,13 @@ P/08](../../08-domain/spec/08-domain.api.openapi.yaml)), которые конс
 ### Н1.4 Что зовёт модуль — закрытый список
 
 ```yaml
-reads:   /session, /spec, /<sub>/spec, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
+reads:   /session, /manifest, /<sub>/manifest, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
          /events, /metrics (только running_gauge и workers_gauge), /domain/* (договор пересылки «Двери домена»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (договор пересылки «Двери домена»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
-order:   /session → /spec → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
+order:   /session → /manifest → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
 
@@ -73,7 +73,7 @@ may:       console.may(cap, ref) → bool по grants сессии и прави
 events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout")
 where:     where(ref) → {worker, server, door: {url, token, expires, routes} | null, reason}
            библиотека превращает отсутствующее поле door HTTP-ответа в null для оболочки; HTTP Where остаётся формой P/06.5 (контракт урока 6)
-words:     display(name), spec(name), kindWord(e), eventNote(e), addEventNote; W — словарь модуля ru | en
+words:     display(name), manifest(name), kindWord(e), eventNote(e), addEventNote; W — словарь модуля ru | en
 adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, label, render, busy}) kind ∈ unit | server |
            worker | member | domain, addTreeNodes(kind | servers | server, fn) → узлы {ref, label, icon, count, kids, badge,
            tags, dot, title, off, open, after, replaces}, addCard(prefix, render), addMenu, addDecor{icon, badge, title},
@@ -124,7 +124,7 @@ holder:    при sections: [domain] режим держателя модуль 
            /unplaceable, единицы по подсистемам берёт из вида /domain; /servers, /drain, /schema, /unplaceable, /metrics,
            /events у держателя не нужны — модуль переживает их отсутствие
 schema:    GET /domain/shared → {doc, delivery, declared: {<sub>: [{name, type, schema?}]}} (P/10-14): объявленные поля из
-           domain.shared спек и их типы; у документа {name, type: json} — и его schema, по ней страница строит форму;
+           domain.shared манифестов и их типы; у документа {name, type: json} — и его schema, по ней страница строит форму;
            правка — PUT /domain/shared {base_rev, shared: {<sub>: {<поле>: значение | null}}}
 ```
 
@@ -135,7 +135,7 @@ schema:    GET /domain/shared → {doc, delivery, declared: {<sub>: [{name, type
 элементы по `items` с добавлением и удалением, строка, число, целое, да/нет, `enum` — свои поля; чего форма сказать не может
 (объект без `properties`, объединение типов, значение с ключами вне схемы), — текст JSON на своём месте; пустые поля не
 уходят, пустой документ — `null`; схему проверяет домен при `PUT` («Решает реализация» п. 2, закрыт; решение «Архитектора» 2026-10-21).
-Страницу держателя (`/`, CSP, `/spec`, `/mounts`, `/session`) отдаёт урок P/10 (P/10-04): реализации отдают байты модуля
+Страницу держателя (`/`, CSP, `/manifest`, `/mounts`, `/session`) отдаёт урок P/10 (P/10-04): реализации отдают байты модуля
 как есть; что модуль зовёт в режиме `domain` — свойство опубликованного модуля, не реализаций (М11/8 Н1.8 `module`).
 
 ---

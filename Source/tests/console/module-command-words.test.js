@@ -1,5 +1,5 @@
 // Виды command и command.failed — платформенные (семейство просьб базы воркера, ADR-0013): слово и заметку даёт модуль,
-// спека их не называет. Заметка по outcome: performed, refused (почему — в error), expired, unknown (с error); без
+// манифест их не называет. Заметка по outcome: performed, refused (почему — в error), expired, unknown (с error); без
 // outcome — ошибка; ответ цели (reply) — «ключ: значение» после исхода;
 // late — ответ устройства пришёл после срока.
 const fs=require("fs"),path=require("path");
@@ -12,7 +12,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/things"]={configured:[{id:1,name:"a"}],rows:[]};
 b.FIX["/events"]={events:[
   {t:5,kind:"command",unit:"testsub/1",action:"preset",outcome:"performed",by:"ann",reply:{preset:3,moved:true}},

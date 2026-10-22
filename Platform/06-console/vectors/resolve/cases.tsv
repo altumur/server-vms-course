@@ -6,7 +6,7 @@
 case	input	expect	note
 resolve-01-unit-own	{"field":{"name":"step","type":"int","inherit":1},"unit":3,"domain":{"term":1,"rev":3,"value":5}}	{"value":3,"from":"unit"}	М11/11 сц. 03-resolve шаг 1
 resolve-02-domain	{"field":{"name":"step","type":"int","inherit":1},"domain":{"term":1,"rev":3,"value":5}}	{"value":5,"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 2
-resolve-03-spec	{"field":{"name":"step","type":"int","inherit":1},"domain":null}	{"value":1,"from":"spec"}	М11/11 сц. 03-resolve шаг 3
+resolve-03-manifest	{"field":{"name":"step","type":"int","inherit":1},"domain":null}	{"value":1,"from":"manifest"}	М11/11 сц. 03-resolve шаг 3
 resolve-04-union	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":1,"rev":3,"value":["site","east"]}}	{"value":["east","mine","site"],"from":"unit + domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 4
 resolve-05-union-no-unit	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"domain":{"term":1,"rev":3,"value":["east"]}}	{"value":["east"],"from":"domain term 1 rev 3"}	М11/11 сц. 03-resolve шаг 5
 resolve-06-union-no-domain	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":null}	{"value":["mine"],"from":"unit"}	М11/11 сц. 03-resolve шаг 6

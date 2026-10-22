@@ -8,5 +8,5 @@ root:
     servers:
       type: string
       enum: [shared, distinct]
-      description: политика мест подсистемы; строка побеждает `placement.servers` спеки (P/04 Н1.3 `servers`)
+      description: политика мест подсистемы; строка побеждает `placement.servers` манифеста (P/04 Н1.3 `servers`)
   required: [servers]

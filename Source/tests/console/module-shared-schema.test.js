@@ -13,7 +13,7 @@ const P=`x"'><img src=x onerror=window.__pwned=1>`;
 const RULES={type:"array",maxItems:1000,items:{type:"object",required:["name","when","then"],additionalProperties:false,
   properties:{name:{type:"string",minLength:1},enabled:{type:"boolean"},when:{type:"object"},then:{type:"object"}}}};
 const TUNE={type:"object",additionalProperties:false,properties:{depth:{type:"integer"},mode:{enum:["a","b"]},arg:{type:["integer","string"]}}};
-b.FIX["/session"]={open:true};b.FIX["/spec"]={name:"",rows:null};
+b.FIX["/session"]={open:true};b.FIX["/manifest"]={name:"",rows:null};
 b.FIX["/mounts"]={root:"",mounts:{testsub2:{name:"testsub2",rows:"tallies",id:"name",fields:[{name:"name",type:"string"}],domain:{shared:["rules","tune"]}}}};
 b.FIX["/domain"]={holder:"hold",members:[{name:"hold",holder:true,state:"ok"}],units:{}};b.FIX["/domain/alarms"]={events:[]};
 b.FIX["/domain/shared"]={doc:{rev:4,term:1,at:1,shared:{testsub2:{rules:[{name:P,enabled:true,when:{x:1},then:{y:2}}],tune:{depth:3,mode:"b"}}}},delivery:{},

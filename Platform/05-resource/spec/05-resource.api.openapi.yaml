@@ -656,6 +656,7 @@ components:
           - console
           - audit
           - spec
+          - manifest
           - session
           - mounts
           - healthz

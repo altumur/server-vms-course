@@ -29,9 +29,9 @@
 член-заявитель, `body` — тело `{request_id, ref, by?}`, `members`, `holder`, `placements` (`"garbled"` — запись нечитаема,
 запись без `copies` — тоже нечитаема), `topology` (`centre?`, `star`, `via`), `units` — владельцы единиц по ref, `shared` —
 общий документ, `now` — 1760000000. Домен — `acme`; члены — `hold`, `m1`, `m2`, `relay`. Объявления видов во входах — виды
-`tally`, `probe` спеки `testsub` и `feed`, `tally2` спеки `testsub2` из данных спецификации
+`tally`, `probe` манифеста `testsub` и `feed`, `tally2` манифеста `testsub2` из данных спецификации
 ([`testsub`](../../../../Source/tests/testdata/testsub.subsystem.yaml),
-[`testsub2`](../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов спек не
+[`testsub2`](../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
 зависят.
 
 ## Файлы

@@ -1,6 +1,6 @@
-# Приёмка P/02.3: установка spec put (Н3 «Смена спеки») по порядку. Строка: case<TAB>puts<TAB>expect.
+# Приёмка P/02.3: установка manifest put (Н3 «Смена манифеста») по порядку. Строка: case<TAB>puts<TAB>expect.
 # puts — файлы puts/<имя>.subsystem.yaml через пробел, ставятся по порядку в одно свежее хранилище; expect — код возврата
-# последней установки и rev строки platform/spec/<name> последнего файла после неё («-» — строки нет). Правила — README.
+# последней установки и rev строки platform/manifest/<name> последнего файла после неё («-» — строки нет). Правила — README.
 case	puts	expect
 same_twice	probe probe	0 1
 changed	probe probe-changed	0 2

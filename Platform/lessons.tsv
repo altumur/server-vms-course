@@ -2,7 +2,7 @@
 # аргумент раннера w2c-run.sh), unit — его юнит в P/02.4 Н1.1 («-» — нет). Читает check_spec.
 # lesson	dir	title	process	unit
 01	01-store	Хранилище	configstore	configstore.service
-02	02-installer	Спека и установщик	w2cctl	-
+02	02-installer	Манифест и установщик	w2cctl	-
 03	03-worker	Воркер (SDK)	<sub>worker	<dep>-<sub>worker@.service
 04	04-controller	Контроллер	<sub>controller	w2c-controller@.service
 05	05-resource	Ресурс	resource	w2c-resource.service

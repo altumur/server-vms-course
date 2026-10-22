@@ -20,7 +20,7 @@
 <JSON>`: названные поля есть и равны, `"@absent"` — поля нет, массив — по длине, порядку и элементам) или `@exit 2` (вход
 не по форме Н5: ключи `copies` — не в точности `members`; `grants` без `now`). Каждая строка — отдельный запуск.
 
-## Входы, ключи и спеки
+## Входы, ключи и манифесты
 
 Вход — Н5 главы: `book` — `testsub2/notes` (`pick: unique`, индекс имён `notes/` с `grant: view`) или `testsub2/rolls`
 (`pick: all`), `members` — список членов, `book_seal_seed` — `seed_secret` ключа приёма книг (`book seal 1`,
@@ -31,10 +31,10 @@
 item]` и JSON Pointer секрета). Случай 12 — секрет конвертом кольца члена `enc:v2:`: член его не открыл, и агент нёс как
 есть ([глава 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2) — сборка даёт `secret_unopened`.
 
-Ожидания зависят от байтов спек каталога (разбор ревью стадии A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) и
-`domain.names` спеки `testsub2` из данных спецификации:
+Ожидания зависят от байтов манифестов каталога (разбор ревью стадии A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) и
+`domain.names` манифеста `testsub2` из данных спецификации:
 
-| Спека | Файл | sha256 |
+| Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `769c5a472b74307c5dc5b697a76dc6eaede09e3c69c47e8808d862d0d0cb9165` |
 | `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `bcb735667abd02f634c19a451fad686688a2c24fed9725ec58248e162e368e32` |

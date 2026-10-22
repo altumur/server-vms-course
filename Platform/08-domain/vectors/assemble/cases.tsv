@@ -1,6 +1,6 @@
 # Функция assemble (P/08.5 Н3 «сборка книги»): сборка одной книги у держателя из копий членов → строки книги каждого члена
 # списка до кольца (секреты открыты) и отчёт вида {conflicts, dropped, undelivered}. input — вход команды assemble текстом
-# JSON (P/08.5 Н5): catalog, book, members, book_seal_seed, copies, grants?, now?; объявления книг и имён — спеки каталога
+# JSON (P/08.5 Н5): catalog, book, members, book_seal_seed, copies, grants?, now?; объявления книг и имён — манифесты каталога
 # Source/tests/testdata/testsub*.subsystem.yaml (README). expect — подмножество вывода («@absent» — поля нет) или «@exit 2»
 # (вход не по форме). Строки — входы приёмки М11/05 inputs/assemble-*.json, сц. 06.
 # Строка: case<TAB>input<TAB>expect<TAB>note.

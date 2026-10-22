@@ -14,6 +14,6 @@ scenario	step	request	expect
 05-the-holders-page	1	@domain	ok
 05-the-holders-page	2	holder GET /	200 @header Content-Type: ~text/html
 05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
-05-the-holders-page	4	holder GET /spec	200 {"name": "", "rows": null}
+05-the-holders-page	4	holder GET /manifest	200 {"name": "", "rows": null}
 05-the-holders-page	5	holder GET /mounts	200 {"root": "", "mounts": {"testsub": "@any"}}
 05-the-holders-page	6	holder GET /session	200 {"open": false, "user": "root", "login_url": "/api/login"}

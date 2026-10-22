@@ -9,10 +9,10 @@ root:
       type: string
       enum: [active, idle]
       description: active — решение ещё доводится; idle — все строки завершённого решения доведены
-    spec_rev:
+    manifest_rev:
       type: string
       pattern: '[1-9][0-9]*'
-      description: ревизия спеки принятого решения
+      description: ревизия манифеста принятого решения
     members:
       encoding: json
       type: array
@@ -32,7 +32,7 @@ root:
     at:
       ref: common.time
       description: стенные секунды принятия решения; только при active
-  required: [state, spec_rev]
+  required: [state, manifest_rev]
   rules:
     - when: {is: {state: [active]}}
       require: [members, target, reason, at]

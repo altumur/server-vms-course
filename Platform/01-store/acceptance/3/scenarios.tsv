@@ -26,8 +26,8 @@ scenario	step	request	expect
 11-copy	6	restored GET /v1/get?key=testsub/counters/1	200 {"items": {"n": "1"}}
 11-copy	7	@backup store c1	ok
 11-copy	8	@import store backup c1	ok
-11-copy	9	restored GET /v1/get?key=platform/spec/testsub	200 {"items": {"rev": "@any"}}
-11-copy	10	restored GET /v1/get?key=platform/spec/testsub2	200 {"items": {"rev": "@any"}}
+11-copy	9	restored GET /v1/get?key=platform/manifest/testsub	200 {"items": {"rev": "@any"}}
+11-copy	10	restored GET /v1/get?key=platform/manifest/testsub2	200 {"items": {"rev": "@any"}}
 11-copy	11	@backup store b2 in-data	refused
 12-copy-refused	1	@import store inputs/bad-format.jsonl	refused
 12-copy-refused	2	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}

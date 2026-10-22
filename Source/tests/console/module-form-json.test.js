@@ -12,7 +12,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const P=`x"'><img src=x onerror=window.__pwned=1>`;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"rules",type:"json"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"rules",type:"json"}]};
 b.FIX["/things"]={configured:[{id:1,name:"a",rules:{when:[{kind:P}],n:1}}],rows:[]};
 b.FIX["/things/1"]={ok:true};
 (async()=>{

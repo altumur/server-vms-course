@@ -83,7 +83,7 @@ paths:
         '403':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/TokenRefused'
         '404':
-          description: 'У агента: нет маршрута — <sub> пути не спека каталога, к держателю запрос не идёт (договор «Дверь»
+          description: 'У агента: нет маршрута — <sub> пути не манифест каталога, к держателю запрос не идёт (договор «Дверь»
             request, «Отказы»); или код и тело держателя как пришли (P/08.7 Н4)'
           content:
             application/json:

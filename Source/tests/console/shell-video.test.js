@@ -1,5 +1,5 @@
 // Вкладка «Видео» страницы VMS курса — байты только через двери (решение владельца, без исключений). Шкала: дверь каждой
-// записи камеры (/rec/where/<запись>) и двери мест из таблицы, которую называет спека rec (places.table: /rec/where/
+// записи камеры (/rec/where/<запись>) и двери мест из таблицы, которую называет манифест rec (places.table: /rec/where/
 // volumes/<том>?unit=rec/<запись>); близнецы сливаются, своя дверь записи впереди; том без держателя назван
 // (X-Unreachable), «нет такого места» пропущен. Кусок — …/e<эпоха>/<from>-<to>.<source>.mp4 с ?t=. Участок с yields и
 // участок резервной записи уступают основным; остаток резервной — «только в резервном», «Закрепить» — заявка основной
@@ -16,8 +16,8 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000,ms=x=>Math.round(x*1000);
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"camera.footage.lost":"камера потеряла запись"}}};
-// таблица мест — не «volumes»: страница берёт её имя из спеки rec, а не пишет сама
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"camera.footage.lost":"камера потеряла запись"}}};
+// таблица мест — не «volumes»: страница берёт её имя из манифеста rec, а не пишет сама
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"disks"},fields:[{name:"cam",type:"string"}]},live:{name:"live",rows:"streams",id:"cam",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main"},{id:"1-b",cam:"1",home:"card"}],rows:[]};
 b.FIX["/rec/disks"]={disks:[{name:"main",kind:"local",server:"box-a"},{name:"old",kind:"local",server:"box-b"},{name:"gone",kind:"local",server:"box-c"},{name:"card",kind:"backup",server:"cam-a"}]};
@@ -61,7 +61,7 @@ out.tabShown=!!main().querySelector("#timeline")&&!!main().querySelector("video"
 // шкала — только двери: запись, её прежний том, резервная запись; консольного /timeline нет
 out.noConsoleTimeline=!calls.some(([,u])=>/^\/timeline\//.test(u))&&!calls.some(([,u])=>/^\/segment\//.test(u));
 out.doorsAsked=calls.some(([,u,a])=>u.startsWith("http://box-a:9001/timeline/1?")&&a==="Bearer A1")&&calls.some(([,u,a])=>u.startsWith("http://box-b:9001/timeline/1?")&&a==="Bearer B1")&&calls.some(([,u])=>u.startsWith("/rec/where/disks/old?unit=rec%2F1"));
-out.placesFromSpec=!calls.some(([,u])=>/\/volumes/.test(u));
+out.placesFromManifest=!calls.some(([,u])=>/\/volumes/.test(u));
 const spans=JSON.parse(w.eval("JSON.stringify(V.spans.map(s=>({a:Math.round(s.start-"+now+"),z:Math.round(s.end-"+now+"),r:s.recording,src:s.source,y:!!s.yields,bk:!!s.backupOnly})))"));
 out.twinMerged=spans.filter(s=>s.r==="1"&&s.a===-600&&s.z===-300).length===1&&spans.some(s=>s.r==="1"&&s.a===-900&&s.z===-700);
 // участок устройства на резервной записи уступает основной: видны только непокрытые края

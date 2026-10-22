@@ -9,7 +9,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"folders",type:"list"}],
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"folders",type:"list"}],
   display:{unit:"thing",tree:{group_by:"folders",nested_by:"/",new_root:"folder",new_sub:"subfolder",add_here:"Add a thing here",new_group_note:"Folder made — put a thing in it"}}};
 b.FIX["/things"]={configured:[{id:1,name:"gate",folders:["Yard"]},{id:2,name:"roof"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};

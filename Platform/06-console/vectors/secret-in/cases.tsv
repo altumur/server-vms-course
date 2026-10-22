@@ -1,7 +1,7 @@
 # How an address carries a login or a password: one table for the course and the product
 # (each keeps its copy; a test of the course and a test of the product read it the same way) — the platform's reading of an address and the vms
-# spec's source field (`credentials`, `secret_in`; the boundary's step 4, item 6). The course's rows first (seeded from
-# the course's tests of credentials: query, login, nested, host-in-path, false-friend and plain forms, the spec's
+# manifest's source field (`credentials`, `secret_in`; the boundary's step 4, item 6). The course's rows first (seeded from
+# the course's tests of credentials: query, login, nested, host-in-path, false-friend and plain forms, the manifest's
 # spellings, the final form), then the product's (its tables before it — secret-keys.tsv, a
 # name in http://10.0.0.5/videostream.cgi?channel=1&<name>=hunter2xyz, and secret-sources.tsv, which ipintd still
 # reads — and its tests of the rule). Addresses only: a text that is no field's value is testdata/log_mask.tsv.
@@ -11,8 +11,8 @@
 # A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a value cannot be
 # written, and no row needs one; `\t`, `\n` in a cell are two characters.
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
-#   field   whose rule the row is read by: cam.source (the cam spec's unit field `source`) or rec.volumes.url (the rec
-#           spec's table `volumes`, its field `url`); a field the reader does not know is a wrong row, not a skipped one
+#   field   whose rule the row is read by: cam.source (the cam manifest's unit field `source`) or rec.volumes.url (the rec
+#           manifest's table `volumes`, its field `url`); a field the reader does not know is a wrong row, not a skipped one
 #   raw     the address as written
 #   masked  what is shown of it: every password masked as *** where it stands; a login — a userinfo's, a pair's, a
 #           spelling's — shown as written (admin:***@h, ?usr=admin&pwd=***)
@@ -135,7 +135,7 @@ cam.source	rtsp://10.0.0.5/axis-media/media.amp?videocodec=h264&resolution=640x4
 cam.source	rtsp://10.0.0.9:554/channel=1_stream=0.sdp?real_stream	rtsp://10.0.0.9:554/channel=1_stream=0.sdp?real_stream		an ordinary address (PLAIN_FORMS)
 cam.source	http://10.0.0.5/cgi-bin/auth/snapshot.jpg	http://10.0.0.5/cgi-bin/auth/snapshot.jpg		an ordinary address (PLAIN_FORMS)
 cam.source	rtsp://[fe80::1]:554/live	rtsp://[fe80::1]:554/live		an ordinary address (PLAIN_FORMS)
-cam.source	rtsp://10.0.0.9:554/channel=1_user=admin_password=Hunter2_stream=0.sdp	rtsp://10.0.0.9:554/channel=1_user=admin_password=***_stream=0.sdp	cred_secret	a vendor's spelling the vms spec's secret_in names (the boundary's step 4) (spelt)
+cam.source	rtsp://10.0.0.9:554/channel=1_user=admin_password=Hunter2_stream=0.sdp	rtsp://10.0.0.9:554/channel=1_user=admin_password=***_stream=0.sdp	cred_secret	a vendor's spelling the vms manifest's secret_in names (the boundary's step 4) (spelt)
 cam.source	http://10.0.0.5/x.cgi?usr=admin	http://10.0.0.5/x.cgi?usr=admin	cred_username	the final form of secret_in: a login named and shown, decoded regexes, schemes, nested [src, url] (final form)
 cam.source	http://10.0.0.5/x.cgi?user_id=admin&channel=1	http://10.0.0.5/x.cgi?user_id=admin&channel=1	cred_username	the final form of secret_in: a login named and shown, decoded regexes, schemes, nested [src, url] (final form)
 cam.source	driverpack://acme/admin@10.0.0.5/ch/1	driverpack://acme/admin@10.0.0.5/ch/1	cred_username	the final form of secret_in: a login named and shown, decoded regexes, schemes, nested [src, url] (final form)
@@ -418,7 +418,7 @@ cam.source	rtsp://10.0.0.9:554/channel=1_user=admin	rtsp://10.0.0.9:554/channel=
 cam.source	http://10.0.0.9/x?channel=1_auth=hunter2xyz	http://10.0.0.9/x?channel=1_auth=hunter2xyz		…in the query
 cam.source	http://10.0.0.9/x?enable_auth=1&gpio_pin=4&rtsp_auth=digest	http://10.0.0.9/x?enable_auth=1&gpio_pin=4&rtsp_auth=digest		a name of its own: its last word is not a whole name
 cam.source	rtsp://10.0.0.9/live?a=1&b=2&c=hunter2_token=x	rtsp://10.0.0.9/live?a=1&b=2&c=hunter2_token=x		a name joined to a value, named by none
-# The rec spec's volumes: the field's own words (sig, signature, xamzsignature, accountkey, sharedaccesssignature,
+# The rec manifest's volumes: the field's own words (sig, signature, xamzsignature, accountkey, sharedaccesssignature,
 # passwords and tokens), an address inside one by the catalog's rule (ADR-0053, the addendum of 2026-10-06).
 rec.volumes.url	https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=hunter2xyz%2B%3D	https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=***	access_secret	an Azure SAS (ADR-0053, the addendum of 2026-10-06)
 rec.volumes.url	azure://https://acc.blob.core.windows.net/container?sv=2021-06-08&sig=hunter2xyz	azure://https://acc.blob.core.windows.net/container?sv=2021-06-08&sig=***	access_secret	ObjectStorage's Azure with a SAS

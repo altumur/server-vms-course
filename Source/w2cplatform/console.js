@@ -2,20 +2,20 @@
 // (console.html: this module and nothing else) and a subsystem's page, which mounts it and adds its own.
 // The contract is the course's КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; this file is version 1 of it.
 //
-// What the module knows is the spec and the platform's doors: /spec and the specs /mounts carries, the units
+// What the module knows is the manifest and the platform's doors: /manifest and the manifests /mounts carries, the units
 // of each (/<rows>), where a unit is (/where), the servers (/servers), the session (/session), the units'
 // events (/events, /marks). It names no subsystem: what a unit is called, how its fields are explained, how
-// the kinds of its events read — all of that comes from the spec's `display`, as data. A page that has more
+// the kinds of its events read — all of that comes from the manifest's `display`, as data. A page that has more
 // to show (bytes, players, its own tables) adds it through the calls below; those are the page calling this
 // library inside itself, not the platform calling a subsystem.
 //
-// `display` and `about` are the spec's alone; the session's grants are /session's. `may` is a hint by them — yes
+// `display` and `about` are the manifest's alone; the session's grants are /session's. `may` is a hint by them — yes
 // without grants only at an open console; the server decides every request anyway.
 (function () {
   "use strict";
   const VERSION = 1;
 
-  // The platform's own words, per language. A subject's words come from the spec.
+  // The platform's own words, per language. A subject's words come from the manifest.
   const WORDS = {
     en: {
       // the frame: header, rail, panel, footer, sign-in
@@ -132,7 +132,7 @@
       alarms: "alarms from every member", noAlarms: "no alarms", keys: "keys", lastPub: "last published", skew: "clock vs the domain",
       byList: "by the member list, revision", byConfig: "by the domain's configuration: no member list written yet",
       confirmQ: "Are you sure?", heard: "last heard", policyShared: "every worker carries units, two on one server included", policyDistinct: "one worker per server carries units",
-      // the platform's own events: its servers and workers (a subsystem's kinds are its spec's display.kinds)
+      // the platform's own events: its servers and workers (a subsystem's kinds are its manifest's display.kinds)
       kinds: {
         "server.decommission_requested": "server decommission requested", "server.decommission_withdrawn": "server decommission withdrawn",
         "server.decommissioned": "server decommissioned", "server.decommission_refused": "server decommission refused",
@@ -157,7 +157,7 @@
       rootFp: "Root", currentKey: "Current key", issuingW: "Issuing keys", revokedW: "revoked", holderKeys: "The holder has the keys", yesW: "yes", noW: "no",
       admittedKey: "admitted", presentedKey: "presents", holdsRev: "holds rev", rotating: "rotation not finished",
       rotationNote: "A member whose revision is below the set's, or whose key is not the admitted one, has not finished the rotation.",
-      domUnits: "Units", domUnitsNote: "What the subsystems hold in the domain's clusters, by their specs: the ref, the cluster, where it runs, its state.",
+      domUnits: "Units", domUnitsNote: "What the subsystems hold in the domain's clusters, by their manifests: the ref, the cluster, where it runs, its state.",
       noUnitsDecl: "no subsystem on the domain declared units", uLive: "running", uStale: "worker silent — last known", uConfigured: "configured, nobody holds it",
       uSilent: "cluster silent — last known", turnOn: "Turn on", turnOff: "Turn off",
       sharedW: "Shared settings", sharedNote: "Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.",
@@ -310,7 +310,7 @@
       rootFp: "Корень", currentKey: "Текущий ключ", issuingW: "Ключи выдачи", revokedW: "отозваны", holderKeys: "Ключи у держателя", yesW: "да", noW: "нет",
       admittedKey: "принят", presentedKey: "предъявляет", holdsRev: "держит rev", rotating: "ротация не закончена",
       rotationNote: "Член, у которого ревизия ниже ревизии набора или предъявленный ключ не тот, что принят, ротацию не закончил.",
-      domUnits: "Единицы", domUnitsNote: "Что подсистемы держат в кластерах домена — по их спекам: ссылка, кластер, где работает, в каком состоянии.",
+      domUnits: "Единицы", domUnitsNote: "Что подсистемы держат в кластерах домена — по их манифестам: ссылка, кластер, где работает, в каком состоянии.",
       noUnitsDecl: "ни одна подсистема на домене не объявила единиц", uLive: "идёт", uStale: "воркер молчит — последнее известное", uConfigured: "настроена, никто не держит",
       uSilent: "кластер молчит — последнее известное", turnOn: "Включить", turnOff: "Выключить",
       sharedW: "Общие настройки", sharedNote: "Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.",
@@ -396,7 +396,7 @@
     const newKey = () => (crypto.randomUUID ? crypto.randomUUID() : "k-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
     C.retryWaits = [2000, 3000, 5000];
     C.timeoutMs = 20000;
-    const remembers = (method, path) => method === "POST" && st.subs.some(s => path === s.base + "/" + s.spec.rows);
+    const remembers = (method, path) => method === "POST" && st.subs.some(s => path === s.base + "/" + s.manifest.rows);
     const failure = (msg, r, d) => { const e = new Error(msg); e.status = r ? r.status : undefined; e.body = d; return e; };
     async function send(method, path, body, key) {
       const text = body === undefined ? undefined : JSON.stringify(body);
@@ -439,15 +439,15 @@
     // the sign-in, not only «sign in»
     const getJSON = async path => { const r = await fetch(path); if (r.status === 401) { let why = ""; try { const d = await r.clone().json(); why = d.detail || d.error || ""; } catch (e) { /* no body */ } showLogin(why); } if (!r.ok) throw new Error(path + ": " + r.status); return r.json(); };
 
-    // -- the spec's words, and the interim ones the page passes ----------------------------------------------
-    const display = sub => sub.spec.display || {};   // what the spec calls things
-    const aboutOf = sub => sub.spec.about || null;   // the spec says what a subsystem's units are about
-    const unitWord = (sub, many) => { const d = display(sub); return (many ? d.units : d.unit) || (many ? sub.spec.rows : W.unit); };
+    // -- the manifest's words, and the interim ones the page passes ----------------------------------------------
+    const display = sub => sub.manifest.display || {};   // what the manifest calls things
+    const aboutOf = sub => sub.manifest.about || null;   // the manifest says what a subsystem's units are about
+    const unitWord = (sub, many) => { const d = display(sub); return (many ? d.units : d.unit) || (many ? sub.manifest.rows : W.unit); };
     C.display = name => { const s = st.subs.find(x => x.name === name); return s ? display(s) : {}; };
-    // [course leads] the spec as /spec gave it, a copy — for the page's own reading of it (its places' table, spec.places)
-    C.spec = name => { const s = st.subs.find(x => x.name === name); return s ? JSON.parse(JSON.stringify(s.spec)) : null; };
+    // [course leads] the manifest as /manifest gave it, a copy — for the page's own reading of it (its places' table, manifest.places)
+    C.manifest = name => { const s = st.subs.find(x => x.name === name); return s ? JSON.parse(JSON.stringify(s.manifest)) : null; };
     // A kind's words: its subsystem's display.kinds; a line relayed under another name (an audit line, an alarm from a
-    // member) by any spec that names the kind; then the platform's own.
+    // member) by any manifest that names the kind; then the platform's own.
     const kindWord = e => { const s = st.subs.find(x => x.name === e.subsystem); const k = s && display(s).kinds; return (k && k[e.kind]) || st.subs.map(x => (display(x).kinds || {})[e.kind]).find(Boolean) || W.kinds[e.kind] || e.kind; };
     // What a platform event says beyond its kind, from its fields; a subsystem's events say it in their note.
     const dur = sec => { sec = Math.round(+sec || 0); const m = Math.floor(sec / 60), r = sec % 60; return m ? `${m} ${W.n.min}${r ? " " + r + " " + W.n.s : ""}` : `${r} ${W.n.s}`; };
@@ -483,7 +483,7 @@
       return e.note || e.detail || "";
     };
     C.kindWord = kindWord;
-    // A page's words for its subsystems' events (what the spec's kinds cannot say: amounts, causes): fn(e) → text.
+    // A page's words for its subsystems' events (what the manifest's kinds cannot say: amounts, causes): fn(e) → text.
     C.addEventNote = fn => { (shell.eventNotes = shell.eventNotes || []).push(fn); return C; };
     C.eventNote = eventNote;
 
@@ -530,7 +530,7 @@
     C.addTab = (kind, t) => { (shell.tabs[kind] = shell.tabs[kind] || []).push(t); return C; };
     C.addTreeNodes = (kind, fn) => { (shell.nodes[kind] = shell.nodes[kind] || []).push(fn); return C; };
     // The page's own editor of ONE field inside the module's form: render(host, ref, obj, value, set). The form still
-    // sends it — set(v) writes the value the form will read; the field is still the spec's.
+    // sends it — set(v) writes the value the form will read; the field is still the manifest's.
     C.addFieldEditor = (kind, field, render) => { ((shell.editors = shell.editors || {})[kind] = (shell.editors[kind] || {}))[field] = render; return C; };
     // The card of the page's own objects (refs with its prefix: addTreeNodes made them): render(host, ref), in the
     // inspector where the module's cards are, with the same star and full screen.
@@ -677,15 +677,15 @@
       t._t = setTimeout(() => { t.hidden = true; }, rt ? 20000 : 3000);
     };
 
-    // -- the header: the counters, from the gauges the spec names; whose session ---------------------------------
+    // -- the header: the counters, from the gauges the manifest names; whose session ---------------------------------
     const cap = s => String(s || "").charAt(0).toUpperCase() + String(s || "").slice(1);
     st.gauges = {};
     async function loadGauges() {
-      const r0 = st.subs[0]; if (!r0 || !(r0.spec.running_gauge || r0.spec.workers_gauge)) { st.gauges = {}; return; }
+      const r0 = st.subs[0]; if (!r0 || !(r0.manifest.running_gauge || r0.manifest.workers_gauge)) { st.gauges = {}; return; }
       try {
         const r = await fetch("/metrics"); if (!r.ok) throw new Error(String(r.status));
         const text = await r.text(), sum = name => { if (!name) return null; let n = null; for (const l of text.split("\n")) { const m = /^([a-zA-Z_:][\w:]*)(\{[^}]*\})?\s+(\S+)/.exec(l); if (m && m[1] === name) n = (n || 0) + Number(m[3]); } return n; };
-        st.gauges = { units: sum(r0.spec.running_gauge), workers: sum(r0.spec.workers_gauge) };
+        st.gauges = { units: sum(r0.manifest.running_gauge), workers: sum(r0.manifest.workers_gauge) };
       } catch (e) { st.gauges = {}; }
     }
     function paintHeader() {
@@ -723,7 +723,7 @@
     }
 
     // -- the rail -------------------------------------------------------------------------------------------------
-    // The units, the servers and the domain are one section — two layouts of one panel (by the spec's groups, by
+    // The units, the servers and the domain are one section — two layouts of one panel (by the manifest's groups, by
     // servers); the rights; the journal at the bottom. A page's own sections stand where they say (after).
     const SECTIONS = { units: W.hwSection, domain: W.domainWord, access: W.access, journal: W.journal };
     const LAYOUT_OF = { units: "units", servers: "units", domain: "units" };   // what the rail shows as on
@@ -782,7 +782,7 @@
     document.addEventListener("mousedown", e => { if (layoutPop && !(e.target.closest && e.target.closest(".ph"))) { layoutPop = false; paintAside(); } });
 
     // -- the tree ----------------------------------------------------------------------------------------------
-    // Units of every subsystem the page shows; a subsystem whose spec says `about: {sub, field}` is nested under
+    // Units of every subsystem the page shows; a subsystem whose manifest says `about: {sub, field}` is nested under
     // the units of its parent, by that field. `display.tree.group_by` groups a subsystem's units by a list field.
     function childrenOf(sub, row) {
       const out = [];
@@ -801,17 +801,17 @@
       if (st.stateF === "problems") return u.phase !== "running" || u.worker_state === "stale";
       return true;
     }
-    // A column's value, formatted by the field's type in the spec (a secret as the mask, a list joined); a status
+    // A column's value, formatted by the field's type in the manifest (a secret as the mask, a list joined); a status
     // key (phase, worker, server, revision, observed_revision) as it is. No logic: display is a dictionary.
     function colValue(sub, u, field) {
-      const f = sub.spec.fields.find(x => x.name === field), v = u[field];
+      const f = sub.manifest.fields.find(x => x.name === field), v = u[field];
       if (f && isSecret(f.name)) return v ? MASK : "";
       if (Array.isArray(v)) return v.join(", ");
       if (field === "worker" && !v) return W.unplaced;
       return v ?? "";
     }
     const filtering = () => !!(st.q.trim() || st.stateF);
-    const label = (sub, u) => u.name || (sub.spec.id === "numeric" ? unitWord(sub, false) + " " + u.id : String(u.id));
+    const label = (sub, u) => u.name || (sub.manifest.id === "numeric" ? unitWord(sub, false) + " " + u.id : String(u.id));
     function favLabel(ref) {
       const u = parseUnit(ref); if (u) return u.row ? label(u.sub, u.row) : ref;
       return ref.replace(/^[a-z]+:/, "");
@@ -866,7 +866,7 @@
     // Groups by a list field (display.tree.group_by), nested by a separator in the value (display.tree.nested_by):
     // "Office/Entrance" is the group Entrance under Office. A unit stands under each group it names; a group shows
     // the groups below it, then its own units; its count is every unit under it. Its ref is the whole path.
-    // [course leads] …and groups with no unit in them yet: those the domain offers for a group_by field the spec shares with it
+    // [course leads] …and groups with no unit in them yet: those the domain offers for a group_by field the manifest shares with it
     // (domain.shared), read by the module at /domain/shared/<sub> — no page passes them any more (addGroupValues is gone)
     // a group made here and carried by no unit yet: kept in this browser, gone when a unit carries it (as the product
     // console's new folder was)
@@ -1029,7 +1029,7 @@
       const u = parseUnit(ref); if (!u || !u.row || !C.may("admin", ref)) return [];
       return [{ label: W.del, run: async () => {
         if (!confirm(W.deleteQ + " " + label(u.sub, u.row) + "?")) return;
-        try { await C.api("DELETE", u.sub.base + "/" + u.sub.spec.rows + "/" + encodeURIComponent(u.id)); if (st.sel === ref) st.sel = null; await load(); paintMain(); C.toast(W.deleted); }
+        try { await C.api("DELETE", u.sub.base + "/" + u.sub.manifest.rows + "/" + encodeURIComponent(u.id)); if (st.sel === ref) st.sel = null; await load(); paintMain(); C.toast(W.deleted); }
         catch (err) { C.toast(W.refused + ": " + err.message); }
       } }];
     }
@@ -1269,7 +1269,7 @@
         const opts = f.name === "labels" ? [...new Set(Object.values(st.servers).flatMap(s2 => s2.labels || s2.labels_node || []))].sort() : [];
         return `<div><label>${h(title)}</label><input type="text" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${opts.length ? ` list="pc-dl-${h(f.name)}"` : ""}${tip}${dis}>${opts.length ? `<datalist id="pc-dl-${h(f.name)}">${opts.map(o => `<option value="${h(o)}">`).join("")}</datalist>` : ""}</div>`;
       }
-      // the values a field takes are the spec's (enum); display.options are only their words
+      // the values a field takes are the manifest's (enum); display.options are only their words
       const vals0 = Array.isArray(f.enum) ? f.enum : f.schema && Array.isArray(f.schema.enum) ? f.schema.enum : null;
       if (vals0) {
         const words = (d.options || {})[f.name] || {}, cur = row ? String(row[f.name] ?? "") : String(f.default ?? "");
@@ -1299,7 +1299,7 @@
         const items = () => hid.value.split(",").map(x => x.trim()).filter(Boolean);
         const redraw = () => {
           const sub = st.subs.find(s => form.dataset.sub === s.name); if (!sub) return;
-          const f = sub.spec.fields.find(x => x.name === box.dataset.groups);
+          const f = sub.manifest.fields.find(x => x.name === box.dataset.groups);
           const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, f, null, hid.value, "");
           const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(hid); box.replaceWith(nb); box = nb; wire();
         };
@@ -1318,7 +1318,7 @@
         sw.onclick = async () => {
           cb.checked = !cb.checked; sw.classList.toggle("on", cb.checked);
           if (!row) return;
-          try { await C.api("PUT", sub.base + "/" + sub.spec.rows + "/" + encodeURIComponent(row.id), { [cb.name]: cb.checked }); C.toast(W.saved); await load(); }
+          try { await C.api("PUT", sub.base + "/" + sub.manifest.rows + "/" + encodeURIComponent(row.id), { [cb.name]: cb.checked }); C.toast(W.saved); await load(); }
           catch (err) { cb.checked = !cb.checked; sw.classList.toggle("on", cb.checked); C.toast(W.refused + ": " + err.message); }
         };
       });
@@ -1337,7 +1337,7 @@
     function formBody(sub, form, editing) {
       const out = {}, bad = [];
       form.querySelectorAll("[data-ferr]").forEach(x => { x.hidden = true; x.textContent = ""; });
-      for (const f of sub.spec.fields) {
+      for (const f of sub.manifest.fields) {
         const el = form.elements[f.name]; if (!el) continue;
         if (f.type === "bool") { out[f.name] = el.checked; continue; }
         const v = el.value;
@@ -1368,7 +1368,7 @@
       const labels = x.labels || [], live = x.workers_live ?? 0;
       return labels.length ? W.whyLabels.replace("{n}", live).replace("{l}", labels.join(", ")) : W.whyLive.replace("{n}", live);
     }
-    // the page's words about a unit that the spec cannot say (addNote): warnings under its placement
+    // the page's words about a unit that the manifest cannot say (addNote): warnings under its placement
     C.addNote = (kind, fn) => { (shell.notes = shell.notes || {})[kind] = ((shell.notes || {})[kind] || []).concat([fn]); return C; };
     const unitNotes = (ref, row) => ((shell.notes || {}).unit || []).flatMap(fn => { try { const t = fn(ref, row); return Array.isArray(t) ? t : t ? [t] : []; } catch (e) { return []; } }).filter(Boolean);
     const stateBadge = u => { const [w, c] = stateOf(u); return `<span class="bd${c ? " " + c : ""} pc-state">${h(w)}</span>`; };
@@ -1377,8 +1377,8 @@
     // block with every field. A block's fields: the switches first, the rest in the grid; «placement» puts the
     // worker and server, the state and the controller's why in it; Delete is on the last block's head.
     function formCards(sub, row, ref) {
-      const d = display(sub), byName = n => sub.spec.fields.find(f => f.name === n);
-      const all = sub.spec.fields.filter(f => f.name !== sub.spec.id && !(!row && sub.spec.id === "numeric" && f.name === "id")).map(f => f.name);
+      const d = display(sub), byName = n => sub.manifest.fields.find(f => f.name === n);
+      const all = sub.manifest.fields.filter(f => f.name !== sub.manifest.id && !(!row && sub.manifest.id === "numeric" && f.name === "id")).map(f => f.name);
       const groups = Array.isArray(d.form) && d.form.length ? d.form : [{ title: d.general || W.general, state: true, placement: true, fields: all }];
       const del = row && C.may("admin", ref) ? `<button type="button" class="btn s pc-del">${h(W.del)}</button>` : "";
       return groups.map((g, gi) => {
@@ -1408,7 +1408,7 @@
       const general = el.querySelector(".pc-general"), own = (shell.tabs.unit || []).find(t => t.id === "general");
       if (own) { try { own.render(general, ref, row); } catch (e) { general.textContent = String(e); } }
       else C.unitForm(general, ref);
-      // the unit's events and the person's marks: a tab of their own, unless the spec says the page shows them
+      // the unit's events and the person's marks: a tab of their own, unless the manifest says the page shows them
       const evTab = display(sub).events === false ? [] : [{ id: "events", label: W.events, render: box => {
         box.innerHTML = card(h(W.events), `<div class="pc-row"><span class="pc-evstate"></span><select class="pc-evf"></select>
           ${C.may("edit", ref) ? `<form class="pc-mark pc-row"><input name="note" placeholder="${h(W.markPh)}"><button type="submit" class="btn s">${h(W.mark)}</button></form>` : ""}</div><ul class="pc-evlist"></ul>`);
@@ -1426,17 +1426,17 @@
       const why = el.querySelector(".pc-why");
       if (why && st.sel === ref && r.worker) why.textContent = w && w.reason ? W.placement + ": " + w.reason : W.noReason;
     }
-    // A new unit: the spec's fields by their types (defaults as hints), POST /<rows>; a numbered subsystem's
+    // A new unit: the manifest's fields by their types (defaults as hints), POST /<rows>; a numbered subsystem's
     // number is the server's. The new unit is selected when the console answers.
     function paintNew(el, name) {
       const sub = st.subs.find(x => x.name === name); if (!sub) { el.innerHTML = ""; return; }
-      const rowsPath = sub.base + "/" + sub.spec.rows;
+      const rowsPath = sub.base + "/" + sub.manifest.rows;
       el.innerHTML = `<h1>${h(W.newUnit)} ${h(unitWord(sub, false))}</h1>
         <form class="pc-edit pc-new-f" data-sub="${h(sub.name)}">${formCards(sub, null, null)}
           <div class="pc-row"><button type="submit" class="btn pri">${h(W.create)}</button></div><div class="nt err pc-err"></div></form>`;
       const form = el.querySelector("form");
       const gf = (display(sub).tree || {}).group_by;
-      if (st.newInto && gf && form.elements[gf]) { form.elements[gf].value = st.newInto; const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, sub.spec.fields.find(f => f.name === gf), { [gf]: [st.newInto], id: "" }, st.newInto, ""); const box = form.querySelector(`[data-groups="${gf}"]`); if (box) { const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(form.elements[gf]); box.replaceWith(nb); } }
+      if (st.newInto && gf && form.elements[gf]) { form.elements[gf].value = st.newInto; const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, sub.manifest.fields.find(f => f.name === gf), { [gf]: [st.newInto], id: "" }, st.newInto, ""); const box = form.querySelector(`[data-groups="${gf}"]`); if (box) { const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(form.elements[gf]); box.replaceWith(nb); } }
       wireGroups(form); wireSwitches(form, sub, null);
       form.onsubmit = async e => {
         e.preventDefault(); form.querySelector(".pc-err").textContent = "";
@@ -1453,14 +1453,14 @@
     // slots; the footer saves it. The page's own general card calls it for its fields.
     C.unitForm = (host, ref) => {
       const u = parseUnit(ref); if (!u) return null;
-      const { sub, id, row } = u, r = row || {}, rowsPath = sub.base + "/" + sub.spec.rows;
+      const { sub, id, row } = u, r = row || {}, rowsPath = sub.base + "/" + sub.manifest.rows;
       host.innerHTML = `<form class="pc-edit" data-sub="${h(sub.name)}">${formCards(sub, r, ref)}
         ${C.may("edit", ref) ? `<button type="submit" class="pc-save-in">${h(W.save)}</button>` : ""}<div class="nt err pc-err"></div></form>`;
       const form = host.querySelector(".pc-edit");
       wireGroups(form); wireSwitches(form, sub, r); wireEditors(form, sub, ref, row);
       form.onsubmit = async e => {
         e.preventDefault(); form.querySelector(".pc-err").textContent = "";
-        // A secret bound to other fields (the spec's bound_to) is asked anew when one of them changes: the server
+        // A secret bound to other fields (the manifest's bound_to) is asked anew when one of them changes: the server
         // would refuse to send the one it keeps to the new value.
         const stale = staleSecrets(sub, form, r);
         if (stale.length) { form.querySelector(".pc-err").textContent = stale.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.boundAnew; form.elements[stale[0]].focus(); return; }
@@ -1476,7 +1476,7 @@
       return form;
     };
     function staleSecrets(sub, form, row) {
-      return sub.spec.fields.filter(f => isSecret(f.name) && Array.isArray(f.bound_to) && row[f.name]).filter(f => {
+      return sub.manifest.fields.filter(f => isSecret(f.name) && Array.isArray(f.bound_to) && row[f.name]).filter(f => {
         const el = form.elements[f.name], v = el ? el.value : "";
         if (v && v !== MASK) return false;
         return f.bound_to.some(b => { const x = form.elements[b]; return x && x.dataset.orig !== undefined && x.value !== x.dataset.orig; });
@@ -1564,12 +1564,12 @@
         <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev).replace("{t}", b.term) : W.noBackupKept)}</p>
         ${here || !C.may("admin", "domain") ? "" : `<p class="sub">${h(W.moveHelp)}</p><div style="display:flex;justify-content:flex-end"><button type="button" class="btn s" data-a="move">${h(W.move)}</button></div>`}`);
     }
-    // A subsystem's tables under a server (the spec's servers.show: [{table, by, title, columns}]): the rows whose `by` is
+    // A subsystem's tables under a server (the manifest's servers.show: [{table, by, title, columns}]): the rows whose `by` is
     // this server, the columns in the subsystem's words — unless the page covers that table with a block of its own
     // (addBlock({covers: "<sub>/<table>"})). The module does not know what the rows are.
     function serverTables(el, server) {
       const covered = new Set(((shell.blocks || {}).server || []).map(b => b.covers).filter(Boolean));
-      for (const sub of st.subs) for (const t of ((sub.spec.servers || {}).show || [])) {
+      for (const sub of st.subs) for (const t of ((sub.manifest.servers || {}).show || [])) {
         if (!t || !t.table || covered.has(sub.name + "/" + t.table)) continue;
         const host = document.createElement("div"); host.className = "pc-show"; host.dataset.table = sub.name + "/" + t.table; el.appendChild(host);
         const cols = Array.isArray(t.columns) && t.columns.length ? t.columns : ["name"];
@@ -1741,7 +1741,7 @@
       return { sub, field, value, inIt, all, sep, under };
     }
     async function setList(sub, u, field, list) {
-      return C.api("PUT", sub.base + "/" + sub.spec.rows + "/" + encodeURIComponent(u.id), { [field]: list });
+      return C.api("PUT", sub.base + "/" + sub.manifest.rows + "/" + encodeURIComponent(u.id), { [field]: list });
     }
     function paintGroup(el, ref) {
       const g = parseGroup(ref); if (!g) { el.innerHTML = ""; return; }
@@ -1909,15 +1909,15 @@
         <div style="margin-top:10px">${ms.map(([n, m]) => `<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(n)}<small>${h(W.admittedKey)} ${h(m.admitted_key || "—")} · ${h(W.presentedKey)} ${h(m.presented_key || "—")} · ${h(W.holdsRev)} ${h(m.keys_rev ?? "—")}</small></span>${behind(m) ? `<span class="bd off">${h(W.rotating)}</span>` : ""}</div>`).join("")}</div>
         ${ms.some(([, m]) => behind(m)) ? `<p class="sub">${h(W.rotationNote)}</p>` : ""}`);
     }
-    // The units each subsystem has on the domain (the view's units, by the specs' domain.ref and domain.view): the
-    // ref, the cluster, where it runs, its state; a yes/no field the spec's domain.edit names is switched here.
+    // The units each subsystem has on the domain (the view's units, by the manifests' domain.ref and domain.view): the
+    // ref, the cluster, where it runs, its state; a yes/no field the manifest's domain.edit names is switched here.
     const U_STATE = () => ({ live: [W.uLive, ""], stale: [W.uStale, "wait"], configured: [W.uConfigured, "wait"], silent: [W.uSilent, "off"] });
     function unitsCard(v) {
       const all = Object.entries(v.units || {}); if (!all.length && !v.units) return "";
       const S = U_STATE();
       return card(h(W.domUnits), `<p class="sub">${h(W.domUnitsNote)}</p>` + (all.map(([name, list]) => {
         const sub = st.subs.find(x => x.name === name), title = sub ? cap(unitWord(sub, true)) : name;
-        const edit = sub ? (((sub.spec.domain || {}).edit) || []).filter(f => ((sub.spec.fields || []).find(x => x.name === f) || {}).type === "bool") : [];
+        const edit = sub ? (((sub.manifest.domain || {}).edit) || []).filter(f => ((sub.manifest.fields || []).find(x => x.name === f) || {}).type === "bool") : [];
         return `<div class="pc-g" style="margin-top:10px">${h(title)} <span class="sub">${(list || []).length}</span></div>` + ((list || []).map(u => {
           const [w, c] = S[u.state] || [u.state || "—", ""], vw = u.view || {};
           const vals = Object.entries(vw).map(([k, x]) => (sub ? fieldTitle(sub, k) : k) + ": " + (typeof x === "boolean" ? (x ? W.yesW : W.noW) : typeof x === "object" ? JSON.stringify(x) : x)).join(" · ");
@@ -1930,7 +1930,7 @@
     function wireUnits(el) {
       el.querySelectorAll("[data-uedit]").forEach(b => { b.onclick = async () => {
         const [name, ref, f, to] = JSON.parse(b.dataset.uedit), sub = st.subs.find(x => x.name === name); if (!sub) return;
-        try { await C.api("PUT", "/domain/" + encodeURIComponent(name) + "/" + encodeURIComponent(sub.spec.rows) + "/" + encodeURIComponent(ref), { [f]: to }); C.toast(W.saved); await load(); } catch (e) { C.toast(W.refused + ": " + e.message); }
+        try { await C.api("PUT", "/domain/" + encodeURIComponent(name) + "/" + encodeURIComponent(sub.manifest.rows) + "/" + encodeURIComponent(ref), { [f]: to }); C.toast(W.saved); await load(); } catch (e) { C.toast(W.refused + ": " + e.message); }
       }; });
     }
     // A form by a shared document's schema (P/07 Н1.6 schema): an object — its properties, an array — its items with
@@ -1974,7 +1974,7 @@
       if (k === "number" || k === "integer") { const n = Number(raw); if (!Number.isFinite(n) || (k === "integer" && !Number.isInteger(n))) throw new Error(where + ": " + W.sfNotNumber); return n; }
       try { return JSON.parse(raw); } catch (e) { throw new Error(where + ": " + W.notJsonField + " — " + e.message); }
     }
-    // The domain's shared settings: the fields each spec shares with the domain (declared: domain.shared with their
+    // The domain's shared settings: the fields each manifest shares with the domain (declared: domain.shared with their
     // types) — a list one value a line, a number, a yes/no, a document by its schema; empty takes the domain's value away (null).
     function sharedCard() {
       const sh = st.domShared; if (!sh) return "";
@@ -2054,7 +2054,7 @@
       box.querySelectorAll("[data-ref]").forEach(n => { n.onclick = () => { if (sectionList().some(s => s.id === "access")) { st.section = "access"; paintRail(); paintAside(); } C.select(n.dataset.ref); }; });
     }
     // The domain's keys: what the holder keeps under domain/, by family — the module names the platform's; a
-    // subsystem's are its spec's part of the domain (domain.keys, their words display.keys); a key no family claims
+    // subsystem's are its manifest's part of the domain (domain.keys, their words display.keys); a key no family claims
     // is under «other keys». Read only.
     const KEY_FAMILIES = [
       { id: "members", keys: ["domain/members"], title: W.kfMembers, about: W.kfMembersAbout, absent: W.kfMembersAbsent },
@@ -2066,9 +2066,9 @@
       { id: "view", keys: ["domain/view"], title: W.kfView, about: W.kfViewAbout },
     ];
     const keyFamilies = () => {
-      const fromSpecs = st.subs.flatMap(s => ((s.spec.domain || {}).keys || []).map(f => ({ ...f, ...(((display(s).keys || {})[f.id]) || {}) })));
+      const fromManifests = st.subs.flatMap(s => ((s.manifest.domain || {}).keys || []).map(f => ({ ...f, ...(((display(s).keys || {})[f.id]) || {}) })));
       const own = KEY_FAMILIES.filter(f => f.id !== "view"), view = KEY_FAMILIES.filter(f => f.id === "view");
-      return [...own, ...fromSpecs, ...view];
+      return [...own, ...fromManifests, ...view];
     };
     const pretty = v => { if (typeof v !== "string") return JSON.stringify(v, null, 2); const t = v.trim(); if (t.startsWith("{") || t.startsWith("[")) { try { return JSON.stringify(JSON.parse(t), null, 2); } catch (e) { /* as it is */ } } return v; };
     async function domKeys(box) {
@@ -2258,15 +2258,15 @@
     }
 
     // -- data --------------------------------------------------------------------------------------------------
-    async function loadSpecs() {
+    async function loadManifests() {
       const subs = [];
-      const rootSpec = await getJSON("/spec");
-      if (rootSpec && rootSpec.rows) subs.push({ name: rootSpec.name, base: "", spec: rootSpec });   // the holder has no root (§10a)
-      st.root = rootSpec && rootSpec.rows ? rootSpec.name : null;
+      const rootManifest = await getJSON("/manifest");
+      if (rootManifest && rootManifest.rows) subs.push({ name: rootManifest.name, base: "", manifest: rootManifest });   // the holder has no root (§10a)
+      st.root = rootManifest && rootManifest.rows ? rootManifest.name : null;
       try {
         const m = await getJSON("/mounts");
-        for (const [n, spec] of Object.entries(m.mounts || {})) if (spec && spec.rows) subs.push({ name: spec.name || n, base: "/" + n, spec });
-      } catch (e) { /* one console, one spec */ }
+        for (const [n, manifest] of Object.entries(m.mounts || {})) if (manifest && manifest.rows) subs.push({ name: manifest.name || n, base: "/" + n, manifest });
+      } catch (e) { /* one console, one manifest */ }
       const want = opts.subsystems;
       st.subs = Array.isArray(want) ? subs.filter(s => want.includes(s.name)) : subs;
     }
@@ -2274,7 +2274,7 @@
       if (domainOnly) return loadHolder();
       for (const sub of st.subs) {
         try {
-          const d = await getJSON(sub.base + "/" + sub.spec.rows);
+          const d = await getJSON(sub.base + "/" + sub.manifest.rows);
           if (sub === st.subs[0]) st.loadErr = null;
           const by = {};
           for (const c of d.configured || []) by[c.id] = { ...c, phase: "silent", worker_state: "stale" };
@@ -2286,10 +2286,10 @@
       pruneLocalGroups();
       st.unplaceable = {};
       for (const sub of st.subs) { try { const d = await getJSON(sub.base + "/unplaceable"); st.unplaceable[sub.name] = Array.isArray(d) ? d : (d && d.units) || []; } catch (e) { st.unplaceable[sub.name] = []; } }
-      // [course leads] the groups a spec shares with the domain: its group_by field among domain.shared
+      // [course leads] the groups a manifest shares with the domain: its group_by field among domain.shared
       const shared = {};
       for (const sub of st.subs) {
-        const g = (display(sub).tree || {}).group_by; if (!g || !((sub.spec.domain || {}).shared || []).includes(g)) continue;
+        const g = (display(sub).tree || {}).group_by; if (!g || !((sub.manifest.domain || {}).shared || []).includes(g)) continue;
         try { const d = await getJSON("/domain/shared/" + encodeURIComponent(sub.name)), f = (d.fields || {})[g] || {}; shared[sub.name] = { groups: Array.isArray(f.groups) ? f.groups : [], rev: d.rev }; }
         catch (e) { /* no domain here: no shared groups */ }
       }
@@ -2345,7 +2345,7 @@
       if (keep("pc.layout") === "servers" && !domainOnly) st.section = "servers";
       paintRail();
       await loadSession();
-      try { await loadSpecs(); } catch (e) { st.loadErr = e.message; }
+      try { await loadManifests(); } catch (e) { st.loadErr = e.message; }
       paintRail(); paintAside();
       await load();
       paintMain();

@@ -3,7 +3,7 @@
      when the console's root is the VMS (`page_of`: the `cam.shell.html` beside `cam.subsystem.yaml`).
      Everything the platform knows — the frame, the tree, the cards of units, servers, workers, the domain, people,
      the journal, the session — and the console's look (/platform/console.css) are the module's; the VMS's words come
-     from its specs (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
+     from its manifests (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
      for a person, its tabs (video, archive), its notes and its events in words, the volumes under the servers, the
      scenarios, the domain's cameras and archives. Its writes go through the module's `api()` (one Idempotency-Key a
      submission); the bytes — the timeline, the pieces, the live picture — through the holders' doors, never the
@@ -15,16 +15,16 @@ NOTES — what this page is, its parts and its state (each function is described
 # vms/cam.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
 **Role.** The page at `/` of a console whose root is `cam` (`w2cplatform/console.py`: `page_of` — a subsystem's own
-page is `<sub>.shell.html` beside its spec, `SHELL`, served by the console's root alone). It mounts the module
+page is `<sub>.shell.html` beside its manifest, `SHELL`, served by the console's root alone). It mounts the module
 (`PlatformConsole.mount(#app, {lang, subsystems: [cam, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
-their specs with `pc.spec(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
+their manifests with `pc.manifest(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
 journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: `tests/console/shell-*.test.js`.
 
 ## The core: copied with a check
 `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
 `stopLive` are the product's (`vmsworker/vms/cam.shell.html` on its `main`), between the two «core» lines below;
 `tests/test_shell_core.py` compares each with the product's, and what differs is `tests/testdata/shell_core_debt.txt`
-— only shrinking, and empty now. The places a recording may lie on are the rows of the table the rec spec names
+— only shrinking, and empty now. The places a recording may lie on are the rows of the table the rec manifest names
 (`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
 
 ## What the page adds (all through the module's calls)
@@ -51,7 +51,7 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
 - «Камеру в архив» — `addAction("server")`, `addMenu("server"|"vol")`: a recording of a camera on a volume of the
   server (`POST /rec/recordings {name, cam, home}`).
 - `addSection` «Сценарии» (after units) — the auto subsystem's scenarios: the list and the editor, the actions the
-  auto spec's `then` accepts (`RACTIONS`, held to the spec by `tests/test_auto_spec.py`), the last firings.
+  auto manifest's `then` accepts (`RACTIONS`, held to the manifest by `tests/test_auto_spec.py`), the last firings.
 - The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
   — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
   `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Назначения записи» (`domain/placement/rec/`).
@@ -110,7 +110,7 @@ cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents
 <script src="/platform/console.js?v=1"></script>
 <script>
 "use strict";
-// The VMS's words (display) and what its subsystems are about (about) the module reads from each one's spec.
+// The VMS's words (display) and what its subsystems are about (about) the module reads from each one's manifest.
 const SUBS=["cam","rec","live"];
 const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
 window.platformConsole=pc;
@@ -174,7 +174,7 @@ pc.addIcons({
   storage:`<path fill="currentColor" d="M2 2.4h12c.6 0 1 .4 1 1v2.2H1V3.4c0-.6.4-1 1-1zm-1 4.4h14v2.4H1zm0 3.6h14V12.6c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1zm3 1.1c0 .4.3.7.7.7s.7-.3.7-.7-.3-.7-.7-.7-.7.3-.7.7z"/>`
 });
 // The camera's source, read for a person: driverpack://<vendor>/<address>/ch/<channel>, or any other URL's host — the
-// one thing about a camera that does not follow from the spec's types (a field editor; the module's form sends it).
+// one thing about a camera that does not follow from the manifest's types (a field editor; the module's form sends it).
 function parseSource(src){
   const out={host:"",vendor:"",channel:""};
   if(!src)return out;
@@ -300,8 +300,8 @@ async function loadTimeline(id){
   // The raw ranges {start_ms, end_ms, epoch, source, yields} are merged without twins by (recording, start, end,
   // epoch, source), the recording's own door first; a volume nobody holds is named, not dropped silently.
   const recs=recsOfCam(id).concat(farRecsOfCam(id));
-  // the places a recording may lie on: the rows of the table rec's spec names (spec.places), not a name written here
-  const T=((pc.spec("rec")||{}).places||{}).table||"";
+  // the places a recording may lie on: the rows of the table rec's manifest names (manifest.places), not a name written here
+  const T=((pc.manifest("rec")||{}).places||{}).table||"";
   let places=[];
   if(T){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places=d[T]||[]}catch(e){places=[]}}
   const asks=[],missing=new Set(),refused=new Map(),seen=new Set(),spans=[];
@@ -480,7 +480,7 @@ function drawTimeline(){
 }
 // What is only in a backup, and «Закрепить»: the operator sees not a setting but the minutes the primary lacks. The
 // pieces glue into ranges, a range is one request of the camera's primary recording (`POST /rec/requests {unit:
-// rec/<recording>, from, to}`, the rec spec's `requests`): its recorder fetches the range from the backup into it.
+// rec/<recording>, from, to}`, the rec manifest's `requests`): its recorder fetches the range from the backup into it.
 function deviceRanges(){
   const out=[];
   V.spans.filter(s=>s.backupOnly).sort((a,b)=>a.start-b.start).forEach(s=>{
@@ -635,7 +635,7 @@ window.addEventListener("beforeunload",()=>stopLive(true));
 
 // ── «Архив»: the camera's recordings and its keeps ───────────────────────────────────────────────────────────────
 // A recording is a unit of rec (`rec/recordings/<name>`): a camera may have several, one per volume; `cam` says whose
-// footage it holds and `home` the volume it lies on. The volumes are the rows of the table rec's spec names as its
+// footage it holds and `home` the volume it lies on. The volumes are the rows of the table rec's manifest names as its
 // places (`places.table`); a keep is a row of `rec/keeps` — a range that must not go by the retention.
 let recOn=null,vols=[],recs=[],keeps=[],T_PLACES="";
 const VOL_NET="network";
@@ -643,9 +643,9 @@ const VOL_KIND={local:"локальный",network:"сетевой",backup:"ре
 function volKind(v,short){const k=VOL_KIND[v.kind]||v.kind||"—";return short||v.kind===VOL_NET?k:k+", "+(v.server||"—")}
 async function loadRec(){
   await pc.ready;
-  const spec=pc.spec("rec");
-  if(!spec){recOn=false;return}
-  T_PLACES=(spec.places||{}).table||"";
+  const manifest=pc.manifest("rec");
+  if(!manifest){recOn=false;return}
+  T_PLACES=(manifest.places||{}).table||"";
   try{
     const [r,v,k]=await Promise.all([getJSON("/rec/recordings"),T_PLACES?getJSON("/rec/"+encodeURIComponent(T_PLACES)):{},getJSON("/rec/keeps").catch(()=>({}))]);
     const byId={};(r.rows||[]).forEach(x=>{byId[String(x.id)]=x});
@@ -716,11 +716,11 @@ const camKeeps=cam=>keeps.filter(k=>String(k.cam)===String(cam)).sort((a,b)=>b.f
 let REC_SERVERS={};
 const recWorkers=()=>Object.entries(REC_SERVERS||{}).flatMap(([server,s])=>(s.workers||[]).map(w=>({server,worker:w.worker,status:w.status||{}})));
 const incidentsVol=()=>vols.find(v=>v.enabled&&v.kind==="incidents")||null;
-// the holder's door answers the checks of a keep only when rec's spec opens that route on it
-const keepVerifyOn=()=>(((pc.spec("rec")||{}).door||{}).routes||[]).includes("keeps");
+// the holder's door answers the checks of a keep only when rec's manifest opens that route on it
+const keepVerifyOn=()=>(((pc.manifest("rec")||{}).door||{}).routes||[]).includes("keeps");
 // What the recorders say of the keeps, in their beat (servers.status of rec with `of: keeps`, ADR-0064):
 // keeps {<keep>: {state, …}}, incidents_lost {<keep>: seconds}, incidents_at_risk [<keep>] — matched to the keep's row
-// by its key. Only the fields rec's spec names with of: keeps are read; nothing named — nothing said. Each recorder
+// by its key. Only the fields rec's manifest names with of: keeps are read; nothing named — nothing said. Each recorder
 // says its own part: the one writing a recording — here, pushing, pushed, at risk, lost (with recording); the holder
 // of the incident archive — kept, released, garbled.
 const KEEP_STATE={
@@ -729,7 +729,7 @@ const KEEP_STATE={
   lost:{said:"потеряно",cls:"off"},kept:{said:"в архиве инцидентов",cls:""},
   released:{said:"отпущено",cls:"wait"},garbled:{said:"не читается",cls:"off"}};
 function keepSaid(name){
-  const fields=new Set((((pc.spec("rec")||{}).servers||{}).status||[]).filter(x=>x.of==="keeps").map(x=>x.field));
+  const fields=new Set((((pc.manifest("rec")||{}).servers||{}).status||[]).filter(x=>x.of==="keeps").map(x=>x.field));
   const out={said:[]};
   for(const w of recWorkers()){const st=w.status||{};
     if(fields.has("keeps")&&st.keeps&&typeof st.keeps==="object"&&st.keeps[name]&&typeof st.keeps[name]==="object")out.said.push({...st.keeps[name],worker:w.worker});
@@ -974,7 +974,7 @@ pc.addMenu("vol",ref=>{const v=volByName(ref.slice(4));return v&&v.enabled?[{lab
 // ── «Сценарии»: the auto subsystem's scenarios, a section of the page ───────────────────────────────────────────
 // A scenario is a unit of auto: «when this happened (and that, within N seconds) — ask for this». Its evaluator reads
 // the same events this page shows and files a REQUEST, performed by whoever holds the unit. The catalogue of actions
-// is the auto spec's `then` (each of its `anyOf`, with its required fields): the operator cannot ask for what no
+// is the auto manifest's `then` (each of its `anyOf`, with its required fields): the operator cannot ask for what no
 // executor is written for — `tests/test_auto_spec.py` holds the two together. A detector's actions are offered when
 // the console mounts det.
 const RACTIONS=[
@@ -986,7 +986,7 @@ const RACTIONS=[
 let RSEL=null,ruleDraft=null,ruleFires={},autos=[],autoOff=false,detOn=false,RULES_HOST=null;
 const actionsOn=()=>RACTIONS.filter(a=>a.sub!=="det"||detOn);
 const actionKind=a=>RACTIONS.find(k=>k.sub===a.sub&&k.action===a.action)||{sub:a.sub,action:a.action,label:(a.sub||"?")+"."+(a.action||"?"),fields:[]};
-// The events a trigger may name: the words the VMS's spec has for its kinds (display.kinds), and any other typed in.
+// The events a trigger may name: the words the VMS's manifest has for its kinds (display.kinds), and any other typed in.
 const triggerKinds=()=>Object.entries(pc.display("cam").kinds||{});
 async function loadAuto(){
   try{
@@ -998,7 +998,7 @@ async function loadAuto(){
       .sort((a,b)=>a.id.localeCompare(b.id));
     autoOff=false;
   }catch(e){autos=[];autoOff=true}
-  try{detOn=(await fetch("/det/spec")).ok}catch(e){detOn=false}
+  try{detOn=(await fetch("/det/manifest")).ok}catch(e){detOn=false}
 }
 // The last firings: the evaluator writes `fired` into the scenario's bucket — «why did the door open at 14:02».
 async function loadFires(id){
@@ -1105,7 +1105,7 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 
 // ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
 // The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
-// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`domain/placement/rec/`:
+// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the manifests serve (`domain/placement/rec/`:
 // for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
 // keys); this is the rest: a member's cameras and archives in the tree, their cards, recording assignments. Edits use the domain console's placement and queued CRUD routes.
 const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};

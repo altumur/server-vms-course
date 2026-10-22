@@ -11,7 +11,7 @@ const b=require("./boot");
 function cluster(){
   for(const k of Object.keys(b.FIX))delete b.FIX[k];
   b.FIX["/session"]={open:true,login_url:"/api/login"};
-  b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",running_gauge:"testsub_things_running",workers_gauge:"testsub_workers_live",
+  b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",running_gauge:"testsub_things_running",workers_gauge:"testsub_workers_live",
     fields:[{name:"name",type:"string"},{name:"labels",type:"list"}],servers:{show:[{table:"places",by:"server"}]},
     display:{tree:{group_by:"labels"}},domain:{shared:["labels"]}};
   b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"sub",rows:"parts",id:"name",fields:[{name:"size",type:"int"}]}}};
@@ -27,7 +27,7 @@ function cluster(){
   b.FIX["/where/1"]={worker:"w-1",server:"s-1",reason:"most free",door:{url:"http://holder-door:9/",token:"t",expires:9,routes:["read"]}};
   b.FIX["/testsub/places"]={places:[{name:"pl-1",server:"s-1"}]};
 }
-// Н1.4 для этой спеки: корень testsub (/<rows> = /things, таблица servers.show — places), смонтированная sub (/sub/parts)
+// Н1.4 для этого манифеста: корень testsub (/<rows> = /things, таблица servers.show — places), смонтированная sub (/sub/parts)
 const SUBS=[{name:"testsub",base:"",rows:"things",show:["places"]},{name:"sub",base:"/sub",rows:"parts",show:[]}];
 function allowed(method,url,loginUrl){
   const u=new URL(url,"http://localhost/");
@@ -35,8 +35,8 @@ function allowed(method,url,loginUrl){
   const p=u.pathname,seg=p.split("/").slice(1);
   const rows=SUBS.some(s=>p===s.base+"/"+s.rows),row=SUBS.some(s=>p.startsWith(s.base+"/"+s.rows+"/")&&p.slice((s.base+"/"+s.rows+"/").length).indexOf("/")<0);
   if(method==="GET"){
-    if(["/session","/spec","/mounts","/servers","/unplaceable","/policy","/drain","/schema","/events","/metrics","/api/held"].includes(p))return true;
-    if(SUBS.some(s=>s.base&&(p===s.base+"/spec"||p===s.base+"/unplaceable"||p.startsWith(s.base+"/where/"))))return true;
+    if(["/session","/manifest","/mounts","/servers","/unplaceable","/policy","/drain","/schema","/events","/metrics","/api/held"].includes(p))return true;
+    if(SUBS.some(s=>s.base&&(p===s.base+"/manifest"||p===s.base+"/unplaceable"||p.startsWith(s.base+"/where/"))))return true;
     if(rows||p.startsWith("/where/"))return true;
     if(SUBS.some(s=>s.show.some(t=>p==="/"+s.name+"/"+t)))return true;   // /<sub>/<table> только из servers.show
     if(p==="/domain"||p.startsWith("/domain/"))return true;
@@ -64,13 +64,13 @@ cluster();page(`{lang:"en",poll_s:0.3}`);
 let w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 w.confirm=()=>true;
 await w.pc.ready;const mountEnd=w.__log.length,mountAt=Date.now();
-out.orderAtMount=JSON.stringify(gets(w.__log).slice(0,mountEnd))===JSON.stringify(["/session","/spec","/mounts",...ORDER]);
+out.orderAtMount=JSON.stringify(gets(w.__log).slice(0,mountEnd))===JSON.stringify(["/session","/manifest","/mounts",...ORDER]);
 out.orderAtMountGot=gets(w.__log).join(" ");
 await b.ready(1000);
 const polls=[];{const g=gets(w.__log,mountEnd);let cur=null;for(const p of g){if(p==="/things"){cur=[];polls.push(cur)}if(cur)cur.push(p)}}
 out.pollsEveryPollS=polls.length>=2&&polls.length<=5;
 out.pollOrder=polls.length>=2&&polls.slice(0,-1).every(x=>JSON.stringify(x)===JSON.stringify(ORDER));
-out.pollNoSessionOrSpec=!gets(w.__log,mountEnd).some(p=>p==="/session"||p==="/spec"||p==="/mounts");
+out.pollNoSessionOrManifest=!gets(w.__log,mountEnd).some(p=>p==="/session"||p==="/manifest"||p==="/mounts");
 // --- выбор единицы: /events?unit= выбранной каждые 5 с, where() даёт дверь, модуль туда не ходит
 const pc=w.pc,d=w.document;
 pc.select("unit:testsub/1");await b.ready(200);
@@ -100,14 +100,14 @@ out.holderDoorNotCalled=!w.__log.some(x=>x.url.includes("holder-door"));
 w.close();
 // --- страница держателя (sections: [domain], Н1.6 holder): без единиц, /servers, /unplaceable; всё — из списка
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-b.FIX["/session"]={open:true,login_url:"/api/login"};b.FIX["/spec"]={name:"",rows:null};
+b.FIX["/session"]={open:true,login_url:"/api/login"};b.FIX["/manifest"]={name:"",rows:null};
 b.FIX["/mounts"]={root:"",mounts:{testsub:{name:"testsub",rows:"things",id:"name",fields:[{name:"name",type:"string"}],domain:{edit:[],view:[],shared:[]}}}};
 b.FIX["/domain"]={holder:"hold",members:[{name:"hold",holder:true,state:"ok"}],units:{testsub:[]}};b.FIX["/domain/alarms"]={events:[]};
 b.FIX["/domain/shared"]={doc:{rev:1,shared:{}},delivery:{},declared:{}};
 page(`{lang:"en",sections:["domain"],poll_s:0.3}`);
 w=b.boot();await w.pc.ready;await b.ready(700);
 const hg=gets(w.__log);
-out.holderOrder=JSON.stringify(hg.slice(0,6))===JSON.stringify(["/session","/spec","/mounts","/domain","/domain/alarms","/domain/shared"]);
+out.holderOrder=JSON.stringify(hg.slice(0,6))===JSON.stringify(["/session","/manifest","/mounts","/domain","/domain/alarms","/domain/shared"]);
 out.holderNoClusterReads=!hg.some(p=>["/servers","/unplaceable","/drain","/schema","/metrics","/events"].includes(p)||p.startsWith("/sub/")||p.endsWith("/things"));
 out.holderEveryCallListed=w.__log.every(x=>allowed(x.method,x.url,"/api/login"));
 w.close();

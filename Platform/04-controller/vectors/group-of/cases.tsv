@@ -10,7 +10,7 @@
 # THE RULES
 #   a field's schemes name only what an operator writes into the row and an actuator opens: a scheme with no actuator
 #   is not declared (onvif), one with an actuator comes back with its rows here; an address a platform or a subsystem
-#   builds in memory (ingest://) is no spec key. A scheme not in the field's map is refused, its host unread:
+#   builds in memory (ingest://) is no manifest key. A scheme not in the field's map is refused, its host unread:
 #   nosuch://10.0.0.5/ below is that case (a made-up scheme: the row is about the map, not about any one scheme).
 #   the group is the source's HOST in one spelling: lowercased, without the root's trailing dot; an IP literal as netip
 #   writes it — IPv6 unbracketed, zero runs folded, zone dropped; IPv4-mapped as the IPv4 address

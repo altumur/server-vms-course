@@ -1,4 +1,4 @@
-# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты спек»): роль, действие, ключ, allow | deny.
+# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты манифестов»): роль, действие, ключ, allow | deny.
 role	action	key	expect
 console	write	va/items/u1	allow
 console	write	va/requests/r1	deny
@@ -40,5 +40,5 @@ resource	write	va/items/u1	deny
 vadomain	write	domain/va/worker	deny
 domainconsole	read	platform/schema	allow
 domainconsole	read	platform/doors/srv-a	deny
-domainconsole	read	platform/spec/va	allow
-domainconsole	read	platform/spec/va/rev	allow
+domainconsole	read	platform/manifest/va	allow
+domainconsole	read	platform/manifest/va/rev	allow

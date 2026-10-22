@@ -15,7 +15,7 @@ async function sweep(P,tag){
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const p=s=>P+s;
 b.FIX["/session"]={open:true,user:p("u"),until:1790800000,login_url:"http://srv:8070/api/login"};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"cred_secret",type:"string"}],
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"},{name:"source",type:"url"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"cred_secret",type:"string"}],
   display:{unit:"камера",units:"камеры",kinds:{[P]:P,"io.input":P},tree:{group_by:"folders",nested_by:"/"},form:[{title:"Размещение",placement:true,state:true,fields:["name","source","labels","folders","cred_secret"]}]}};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],display:{kinds:{[P]:P}}},live:{name:"live",rows:"streams",id:"cam",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:P,source:"driverpack://"+encodeURIComponent(P)+"/10.0.0.11/ch/1",enabled:true,labels:[P],folders:[p("f")+"/"+p("g")],ref:p("ref"),cred_secret:"***"},{id:2,name:P,source:P,enabled:false,labels:[],folders:[]}],
@@ -49,7 +49,7 @@ b.FIX["/domain/grants"]={grants:{domain:[{subject:p("u"),cap:"admin",scope:"*",b
 b.FIX["/domain/break-glass"]={clusters:{[p("m")]:{set_at:1}}};
 b.FIX["/domain/shared/cam"]={sub:"cam",rev:P,fields:{folders:{groups:[p("site")],from:P}}};
 b.FIX["/auto/scenarios"]={configured:[{id:p("sc"),name:P,when:[{sub:P,kind:P,unit:P,match:{[P]:P}}],then:[{sub:"cam",action:"output",unit:P,port:P},{sub:P,action:P,x:P}],enabled:true,within:P}],rows:[{id:p("sc"),phase:"refused",why:P,unfit:[P],worker:P}]};
-b.FIX["/det/spec"]={name:"det"};
+b.FIX["/det/manifest"]={name:"det"};
 
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 w.prompt=()=>null;w.confirm=()=>false;w.alert=()=>{};w.HTMLMediaElement.prototype.play=function(){return Promise.resolve()};

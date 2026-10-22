@@ -10,7 +10,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const W=o=>({worker:"w-1",load:1,capacity:5,state:"live",labels:"a",released:false,slot_until:1757500000,holds:[],hung:false,...o});
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"addr",type:"string"},{name:"labels",type:"list"},{name:"key_secret",type:"string",bound_to:["addr"]}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"addr",type:"string"},{name:"labels",type:"list"},{name:"key_secret",type:"string",bound_to:["addr"]}]};
 b.FIX["/things"]={configured:[{id:1,name:"one",addr:"x://1",labels:["a"],key_secret:"***"},{id:2,name:"two",addr:"x://2",labels:[],key_secret:""}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/drain"]={draining:"",safe:true,subsystems:{}};
 b.FIX["/schema"]={can_raise_to:3,builds:["b-1"],processes:{cam:{live:true},rec:{live:false}}};

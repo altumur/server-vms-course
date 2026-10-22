@@ -11,13 +11,13 @@ scenario	step	request	expect
 01-page-and-module	9	GET /platform/console.css?v=1	200 @file Source/w2cplatform/console.css
 01-page-and-module	10	GET /platform/console.js?v=%31	200 ~PlatformConsole
 01-page-and-module	11	GET /platform/console.js?%76=1	200 ~PlatformConsole
-02-spec-and-mounts	1	GET /spec	200 {"name": "testsub", "rows": "counters", "id": "name", "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live", "metrics": {"prefix": "testsub", "running": "counters_running"}, "display": {"keys": {"tallies": {"title": "tallies"}}}}
-02-spec-and-mounts	2	GET /mounts	200 {"root": "testsub", "mounts": {"testsub2": {"name": "testsub2", "rows": "tallies"}}}
-02-spec-and-mounts	3	GET /testsub2/spec	200 {"name": "testsub2", "rows": "tallies", "id": "name"}
-02-spec-and-mounts	4	GET /testsub2/spec	200 {"domain": {"view": [], "edit": [], "shared": ["rules"], "keys": [], "tokens": "@absent", "books": "@absent"}}
-02-spec-and-mounts	5	GET /probe-x/spec	200 {"name": "probe-x", "metrics": {"prefix": "probe_x"}, "workers_gauge": "probe_x_workers_live"}
-02-spec-and-mounts	6	GET /metrics	200 ~w2c_requests_expired_total{sub="testsub"}
-02-spec-and-mounts	7	GET /metrics	200 !contains w2c_requests_expired_total{sub="probe-x"}
+02-manifest-and-mounts	1	GET /manifest	200 {"name": "testsub", "rows": "counters", "id": "name", "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live", "metrics": {"prefix": "testsub", "running": "counters_running"}, "display": {"keys": {"tallies": {"title": "tallies"}}}}
+02-manifest-and-mounts	2	GET /mounts	200 {"root": "testsub", "mounts": {"testsub2": {"name": "testsub2", "rows": "tallies"}}}
+02-manifest-and-mounts	3	GET /testsub2/manifest	200 {"name": "testsub2", "rows": "tallies", "id": "name"}
+02-manifest-and-mounts	4	GET /testsub2/manifest	200 {"domain": {"view": [], "edit": [], "shared": ["rules"], "keys": [], "tokens": "@absent", "books": "@absent"}}
+02-manifest-and-mounts	5	GET /probe-x/manifest	200 {"name": "probe-x", "metrics": {"prefix": "probe_x"}, "workers_gauge": "probe_x_workers_live"}
+02-manifest-and-mounts	6	GET /metrics	200 ~w2c_requests_expired_total{sub="testsub"}
+02-manifest-and-mounts	7	GET /metrics	200 !contains w2c_requests_expired_total{sub="probe-x"}
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
@@ -47,7 +47,7 @@ scenario	step	request	expect
 06-refusals	10	POST /testsub2/	405 {"error": "method"}
 06-refusals	11	GET /testsub2/where/shelves/sh1?unit=a/b	400 {"detail": "@any", "error": "@any"}
 07-unreadable-intent	1	POST /counters {"name": "c7"}	201
-07-unreadable-intent	2	@as testsubcontroller store POST /v1/write {"id":"b1","op":"put","key":"testsub/controller/placement_intent","items":{"state":"bogus","spec_rev":"1"}}	200
+07-unreadable-intent	2	@as testsubcontroller store POST /v1/write {"id":"b1","op":"put","key":"testsub/controller/placement_intent","items":{"state":"bogus","manifest_rev":"1"}}	200
 07-unreadable-intent	3	GET /where/c7	503
 08-unreadable-worker-heartbeat	1	@start worker w-1	ok
 08-unreadable-worker-heartbeat	2	@until 30 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1"}]}}}

@@ -1,6 +1,6 @@
-# Приёмка P/02.2: установки spec put с каноническим видом (Н3; окно 2.2, п. 8). Строка: case<TAB>puts<TAB>expect<TAB>canonical.
+# Приёмка P/02.2: установки manifest put с каноническим видом (Н3; окно 2.2, п. 8). Строка: case<TAB>puts<TAB>expect<TAB>canonical.
 # puts — файлы puts/<имя>.subsystem.yaml через пробел и директивы @view-delete, @view-spoil между ними; expect — код
-# последней установки и rev строки platform/spec/<name> после неё; canonical — вектор vectors/canonical (байты spec вида)
+# последней установки и rev строки platform/manifest/<name> после неё; canonical — вектор vectors/canonical (байты manifest вида)
 # или «-» (вида нет). Правила — README.
 case	puts	expect	canonical
 first	testsub	0 1	course-testsub

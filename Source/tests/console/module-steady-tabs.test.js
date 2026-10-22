@@ -11,7 +11,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/things"]={configured:[{id:1,name:"one"}],rows:[]};
 (async()=>{
   const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

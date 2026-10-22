@@ -21,11 +21,11 @@
 `sha256` — от JCS `stored`, кроме `accept-05-rebase-stored-not-mark` и `accept-20-whole-over-broken-stored` урока 3: там
 `stored` нарочно не с `mark.sha256` (разбор ревью стадии B 8–10, № 22, Claude М-18).
 
-Входы зависят от байтов спеки каталога (P/08.3 Н5; разбор ревью стадии A 8–10, № 37; разбор ревью стадии B 8–10, № 22,
-Kimi SB810-06): у всех строк `catalog` — `["testsub"]`, ключи объектов — `testsub/*`; `domain.ref` спеки решает шаги 4
+Входы зависят от байтов манифеста каталога (P/08.3 Н5; разбор ревью стадии A 8–10, № 37; разбор ревью стадии B 8–10, № 22,
+Kimi SB810-06): у всех строк `catalog` — `["testsub"]`, ключи объектов — `testsub/*`; `domain.ref` манифеста решает шаги 4
 (`member_objects`) и 5 (`not_ready`):
 
-| Спека | Файл | sha256 |
+| Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `769c5a472b74307c5dc5b697a76dc6eaede09e3c69c47e8808d862d0d0cb9165` |
 

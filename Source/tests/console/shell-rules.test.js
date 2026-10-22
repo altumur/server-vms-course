@@ -1,6 +1,6 @@
 // «Сценарии» страницы VMS курса — раздел страницы (addSection после «Объектов»): список сценариев подсистемы auto с их
 // состоянием (следит, отказан — со словами вычислителя), редактор «если — то»: события со словами из display.kinds
-// спеки VMS, действия — только те, под что написан исполнитель (каталог спеки auto; действия детекторов — когда консоль
+// манифеста VMS, действия — только те, под что написан исполнитель (каталог манифеста auto; действия детекторов — когда консоль
 // монтирует det), отказы — до отправки, теми же словами; новый — POST /auto/scenarios, существующий — PUT без имени,
 // удаление — после подтверждения; последние срабатывания — события fired вычислителя.
 const fs=require("fs"),path=require("path");
@@ -13,7 +13,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Date.now()/1000;
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"io.input":"вход устройства",silent:"камера молчит"}}};
+b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"io.input":"вход устройства",silent:"камера молчит"}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/auto/scenarios"]={configured:[{id:"door",name:"door",enabled:true,when:JSON.stringify([{sub:"cam",kind:"io.input",unit:"12",match:{port:"1"}}]),then:JSON.stringify([{sub:"cam",action:"output",unit:"12",port:"2"}]),within:0},
@@ -36,7 +36,7 @@ pick("bad");await b.ready(60);
 out.refusalShown=/Вычислитель отказал: no camera 9/.test(host().textContent);
 pick("door");await b.ready(150);
 out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==="cam|io.input|12|port=1";
-out.kindsFromSpec=[...host().querySelectorAll("#vms-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
+out.kindsFromManifest=[...host().querySelectorAll("#vms-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
 out.lastFired=/Последние срабатывания/.test(host().textContent)&&[...host().querySelectorAll("table td")].pop().textContent==="1";
 // без det в консоли — действий детекторов нет
 const acts=()=>[...host().querySelectorAll('[data-act="akind"] option')].map(o=>o.textContent);
@@ -64,7 +64,7 @@ out.noInlineHandlers=!host().querySelector("[onclick],[onchange],[oninput]");
 out.errors=errs;
 b.report(out,["errors"]);
 // с det в консоли — и действия детекторов
-b.FIX["/det/spec"]={name:"det"};
+b.FIX["/det/manifest"]={name:"det"};
 const w2=b.boot();await b.ready(700);await w2.platformConsole.ready;
 w2.document.querySelector('.pc-rail [data-s="rules"]').click();await b.ready(200);
 w2.document.querySelector('.vms-rules [data-act="pick"][data-id="door"]').click();await b.ready(60);

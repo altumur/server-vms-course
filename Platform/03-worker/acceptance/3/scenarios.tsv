@@ -4,7 +4,7 @@ scenario	step	request	expect
 02-unit	2	@start worker w-1	ok
 02-unit	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
 02-unit	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
-02-unit	5	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "reason": "@any", "spec_rev": "@any"}}
+02-unit	5	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "reason": "@any", "manifest_rev": "@any"}}
 02-unit	6	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
 02-unit	7	@until 30 console GET /counters	200 {"rows": [{"id": "c1", "phase": "running", "worker": "w-1", "server": "srv-a", "worker_state": "live"}]}
 02-unit	8	console PUT /counters/c1 {"start": 2}	200 {"revision": 2}

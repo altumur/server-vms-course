@@ -1,4 +1,4 @@
-# Форма спеки подсистемы <name>.subsystem.yaml (P/02.1 Н1.2, Н1.2а, Н1.2б, Н1.3) на диалекте Platform/common/DIALECT.md.
+# Форма манифеста подсистемы <name>.subsystem.yaml (P/02.1 Н1.2, Н1.2а, Н1.2б, Н1.3) на диалекте Platform/common/DIALECT.md.
 # Источник главы P/02.1 (ADR-0087): из него строятся загрузчики реализаций и раздел формы в нормах главы.
 # Ссылки Н1.4 и отношения между значениями — references.tsv; таблица скаляров Н1.1 — scalars.tsv.
 # owner — урок, где ключ получает смысл; description — пояснение для урока.
@@ -80,7 +80,7 @@ root:
         writes: {ref: strList, owner: P/02.5 Н1.4, description: "собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (P/06.2 Н3 «перезапечатать при старте»)", default: [], default_text: таблиц воркера нет}
         reads: {ref: grantList, owner: P/02.5 Н1.4, description: "`<семья>/<имя>` или префиксы с `/`"}
         requests: {ref: strList, owner: P/06.4 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
-        deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этой спеки — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
+        deletes: {ref: strList, owner: P/02.5 Н1.4, description: "семьи единиц этого манифеста — только `unit.rows` (ADR-0067 доп. 2026-10-17)", default: [], default_text: строки единиц воркер не удаляет}
     slot:
       owner: P/03.2 Н1.4
       type: object
@@ -136,20 +136,20 @@ defs:
   strList: {type: array, items: {type: string}}
   name: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
   subName:
-    description: "не из 21 зарезервированного слова; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"
+    description: "не из 22 зарезервированных слов; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
-    not_enum: [platform, spec, policy, drain, servers, where, unplaceable, console, audit, events, marks, requests, asked, session, mounts, healthz, metrics, resources, schema, domain, api]
+    not_enum: [platform, spec, manifest, policy, drain, servers, where, unplaceable, console, audit, events, marks, requests, asked, session, mounts, healthz, metrics, resources, schema, domain, api]
   tableName:
     description: имя по Н1.2, не из перечня запрещённых имён таблиц
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
-    not_enum: [platform, spec, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands]
+    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands]
   rowsName:
     description: имя по Н1.2, не из перечня запрещённых имён таблиц и не `cluster`, `worker`, `ts`
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
-    not_enum: [platform, spec, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, cluster, worker, ts]
+    not_enum: [platform, spec, manifest, next_id, slots, epoch, idem, policy, placement, workers, controller, decommissioned, holds, requests, asked, sweep, servers, where, unplaceable, drain, events, marks, console, audit, session, mounts, healthz, metrics, resources, schema, domain, api, heartbeats, contenders, snapshot, blobs, commands, cluster, worker, ts]
   grantName:
     description: "без буквального `*`, начального `!` и `delete:`"
     type: string
@@ -477,7 +477,7 @@ defs:
       outcome: {enum: [mark, fetched], default: mark, description: "смысл — P/06.4 Н1.5 (`mark`), глава 3.6 (дозапись `fetched`), ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)"}
       stamp: {type: array, items: {enum: [by, at, group, about]}}
       journal: {type: string, description: вид журнала}
-      elsewhere: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора спеки: чеклист и `check_spec` для спек курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
+      elsewhere: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора манифеста: чеклист и `check_spec` для манифестов курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
       free: {type: boolean, default: false}
     rules:
       - {when: {present: [per_person]}, require: [ttl]}
@@ -500,7 +500,7 @@ defs:
         properties:
           group: {ref: strList}
           cluster: {ref: strList}
-          requests: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора спеки: чеклист и `check_spec` для спек курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
+          requests: {ref: strList, description: "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора манифеста: чеклист и `check_spec` для манифестов курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"}
       names:
         type: array
         items:
@@ -648,7 +648,7 @@ defs:
         live: {type: boolean}
         unheld: {type: boolean}
         labels: {type: object, opaque: true}
-        count: {type: string, pattern: 'table [a-z][a-z0-9_-]{0,31}', description: "`table <таблица этой спеки>`"}
+        count: {type: string, pattern: 'table [a-z][a-z0-9_-]{0,31}', description: "`table <таблица этого манифеста>`"}
         where: {type: object, opaque: true, description: "ключи — поля, при `count` — поля таблицы"}
         unless:
           type: object

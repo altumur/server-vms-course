@@ -1,5 +1,5 @@
 // Страница держателя домена (w2cplatform/domain/page.html, контракт модуля §10a): модуль с одним разделом «domain» и
-// ничего своего. Корня нет (/spec без rows), единиц кластера, серверов, /drain и /metrics у держателя нет — модуль их
+// ничего своего. Корня нет (/manifest без rows), единиц кластера, серверов, /drain и /metrics у держателя нет — модуль их
 // не спрашивает. Карточка домена: размещение и передача, доверие, тревоги, члены (держатель среди них), единицы по
 // подсистемам со «вкл/выкл» по domain.edit, общие настройки по declared, правки для кластеров. Заменённый держатель
 // говорит, кто держит теперь, и предлагает применить заново то, что держал один. Данные — текстом: вредные строки во
@@ -17,7 +17,7 @@ function fixtures(P,deposed){
   for(const k of Object.keys(b.FIX))delete b.FIX[k];
   const p=s=>P+s;
   b.FIX["/session"]={open:false,user:p("u"),login_url:"/api/login",until:9,via:"token",grants:[{cap:"admin",scope:"*"}]};
-  b.FIX["/spec"]={name:"",rows:null};
+  b.FIX["/manifest"]={name:"",rows:null};
   b.FIX["/mounts"]={root:"",mounts:{testsub:{name:"testsub",rows:"things",id:"name",fields:[{name:"name",type:"string"},{name:"start",type:"bool"}],
     display:{unit:"штука",units:"штуки",fields:{start:"Пуск"},kinds:{"thing.lost":"штука потеряна"}},domain:{edit:["start"],view:["start"],shared:["tags","depth","on"]}}}};
   b.FIX["/domain"]={holder:"hold",as_of:1,age:0,complete:false,url:"http://hold/"+P,
@@ -65,7 +65,7 @@ async function run(tag,P,deposed){
     out[T("unitsBySubsystemInItsWords")]=!!un&&/Штуки/.test(un.textContent)&&/Пуск: да/.test(un.textContent)&&/Пуск: нет/.test(un.textContent)&&/кластер молчит/.test(un.textContent);
     const al=cardOf(/Тревоги/),rows=al?[...al.querySelectorAll(".it")]:[];
     out[T("alarmsOneLinePerKindAndAbout")]=rows.length===4&&/×2/.test(rows[0].textContent)&&/· console/.test(rows[0].textContent)&&/hold, quiet/.test(rows[0].textContent)&&/как stand-admin/.test(rows[0].textContent)&&!/id=/.test(rows[0].textContent)&&/· domain/.test(rows[1].textContent)&&!/×/.test(rows[1].textContent);
-    out[T("relayedKindInAnySpecsWords")]=/штука потеряна/.test(rows[3]?rows[3].textContent:"");
+    out[T("relayedKindInAnyManifestsWords")]=/штука потеряна/.test(rows[3]?rows[3].textContent:"");
     out[T("holderHeaderNoWorkersNoFooter")]=d.querySelector(".pc-hworkers").parentElement.style.display==="none"&&d.querySelector("footer").style.display==="none"&&d.querySelector(".pc-hunits-l").textContent==="Кластеры";
     const ed=cardOf(/Правки для кластеров/);
     out[T("editsPendingAndOutcomes")]=!!ed&&/ждёт публикации/.test(ed.textContent)&&/отказ 409/.test(ed.textContent)&&/применена/.test(ed.textContent);

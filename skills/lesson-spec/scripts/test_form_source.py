@@ -226,11 +226,11 @@ class TextLayerTests(unittest.TestCase):
     """Слой текста P/02.1 Н1.1 под построенным загрузчиком."""
 
     def load(self, text):
-        from spec_schema import textlayer
+        from manifest_schema import textlayer
         return textlayer.load_text(text.encode("utf-8"))[0]
 
     def refused(self, text):
-        from spec_schema import textlayer
+        from manifest_schema import textlayer
         with self.assertRaises(textlayer.TextRefused):
             textlayer.load_text(text.encode("utf-8"))
 

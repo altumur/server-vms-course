@@ -1,8 +1,8 @@
 """Catalog ⊆ rights (ADR-0083 доп. (6)): every operation of every catalog participant is allowed by a rights file
-derived from the specs (М10/6 Н1.4), evaluated by М10/6 Н1.3. Store rows only: objects and files are not under the
+derived from the subsystem manifests (P/02.5 Н1.4), evaluated by P/01.2 Н1.2. Store rows only: objects and files are not under the
 store's rights. The rights file comes from any implementation's rights command; this script does not derive rights.
 
-    catalog_rights.py --catalog Platform/common/data/catalog.tsv --rights rights.json --spec testsub.subsystem.yaml ...
+    catalog_rights.py --catalog Platform/common/data/catalog.tsv --rights rights.json --manifest testsub.subsystem.yaml ...
 """
 
 import argparse
@@ -35,8 +35,8 @@ def allowed(rights, role, action, key):
     return any(not p.startswith("!") and matches(p, key) for p in patterns)
 
 
-def declared(spec, dotted):
-    node = spec
+def declared(manifest, dotted):
+    node = manifest
     for part in dotted.split("."):
         if not isinstance(node, dict) or part not in node:
             return False
@@ -45,8 +45,8 @@ def declared(spec, dotted):
 
 
 def instance(key, sub):
-    """A concrete key for one spec, or None when a <spec:…> variable needs the spec's own names."""
-    if "<spec:" in key:
+    """A concrete key for one manifest, or None when a <manifest:…> variable needs the manifest's own names."""
+    if "<manifest:" in key:
         return None
     key = re.sub(r"<(?:sub|s)>", sub, key)
     key = re.sub(r"<[^<>]+>", "x1", key)
@@ -72,13 +72,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--catalog", type=Path, required=True)
     parser.add_argument("--rights", type=Path, required=True)
-    parser.add_argument("--spec", type=Path, action="append", required=True, help="spec file; repeat for each")
+    parser.add_argument("--manifest", type=Path, action="append", required=True,
+                        help="subsystem manifest file; repeat for each")
     args = parser.parse_args()
     rights = json.loads(args.rights.read_text(encoding="utf-8"))
-    specs = {}
-    for path in args.spec:
-        spec = yaml.safe_load(path.read_text(encoding="utf-8"))
-        specs[spec["name"]] = spec
+    manifests = {}
+    for path in args.manifest:
+        manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
+        manifests[manifest["name"]] = manifest
     rows = [line.split("\t") for line in args.catalog.read_text(encoding="utf-8").splitlines()
             if line and not line.startswith("#")]
     header, rows = rows[0], rows[1:]
@@ -92,8 +93,8 @@ def main():
         wanted = ops_roles(row["ops"])
         if row["readers"] != "*":
             wanted += [(role, "read", conditional) for role, conditional in roles_of(row["readers"])]
-        for sub, spec in specs.items():
-            if row["when"] != "-" and not declared(spec, row["when"]):
+        for sub, manifest in manifests.items():
+            if row["when"] != "-" and not declared(manifest, row["when"]):
                 continue
             key = instance(row["key"], sub)
             if key is None:
@@ -113,11 +114,11 @@ def main():
     for line in denied:
         print("DENIED", line)
     for line in conditional_denied:
-        print("CONDITIONAL", line, "— the participant's condition may name another spec; check by reading")
+        print("CONDITIONAL", line, "— the participant's condition may name another manifest; check by reading")
     if absent:
-        print("ABSENT roles not derived for these specs:", ", ".join(sorted(absent)))
+        print("ABSENT roles not derived for these manifests:", ", ".join(sorted(absent)))
     print(f"checked={checked} denied={len(denied)} conditional={len(conditional_denied)} "
-          f"skipped_spec_variables={skipped}")
+          f"skipped_manifest_variables={skipped}")
     return int(bool(denied))
 
 

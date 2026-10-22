@@ -9,7 +9,7 @@ process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
-b.FIX["/spec"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"key_secret",type:"string"}],display:{units:"things",tree:{group_by:"folders",columns:[{field:"phase",title:"state"},{field:"labels",title:"nets",width:10},{field:"key_secret",title:"key"}]}}};
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"},{name:"labels",type:"list"},{name:"folders",type:"list"},{name:"key_secret",type:"string"}],display:{units:"things",tree:{group_by:"folders",columns:[{field:"phase",title:"state"},{field:"labels",title:"nets",width:10},{field:"key_secret",title:"key"}]}}};
 b.FIX["/mounts"]={root:"testsub",mounts:{sub:{name:"subthings",rows:"parts",id:"name",about:{sub:"testsub",field:"thing"},fields:[{name:"thing",type:"string"}]}}};
 b.FIX["/things"]={configured:[{id:1,name:"gate",labels:["a","b"],folders:["Yard"],key_secret:"***"},{id:2,name:"door",labels:[],folders:["Hall"],key_secret:""},{id:3,name:"roof",labels:[],folders:[]}],
   rows:[{id:1,worker:"w-1",phase:"running"},{id:2,worker:"w-1",phase:"failed"}]};

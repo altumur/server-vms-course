@@ -11,7 +11,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 **Вход** — один набор меток; все серверы и воркеры входа ему подходят (метки, `requires` и ресурс — не предмет вектора;
 `servers: distinct` — только полями `place_by` набора и `placeless` сервера ниже):
-- `default` — `placement.capacity.default` спеки (целое ≥ 0);
+- `default` — `placement.capacity.default` манифеста (целое ≥ 0);
 - `workers` — подходящие живые воркеры: `capacity` (целое или `null` — ёмкость не названа) и `free` (свободно);
 - `waiting` — Σ весов ждущих, `groups` — групп, которым нигде нет места;
 - `servers` — `{<сервер>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — строка заказа, `live` — живые(s)
