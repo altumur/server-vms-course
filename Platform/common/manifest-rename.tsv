@@ -52,5 +52,5 @@ spec_schema/, SPEC_FORMS, spec_schema(), --spec, schema_specs, form_specs	manife
 «Спека и установщик»	«Манифест и установщик»	имя урока P/02 (глава 2.1 — «Манифест подсистемы и строгий загрузчик»)	Platform/lessons.tsv	Platform/README.md; лекция P/02
 # Не переименованы при переходе: комментарии Source/tests/testdata/testsub*.subsystem.yaml и их копия в приёмке P/02 гл. 2 (sha256
 # закреплён во входах векторов; файл общий с продуктом); буквальные имена старого кода и команд продукта в прозе М10B, М12B
-# (SPEC_DIR, /spec, SpecController, spec.py — до правки продукта, Р7); журналы corrections.tsv. Байты общей с продуктом таблицы
+# (до правки продукта, Р7); журналы corrections.tsv. Байты общей с продуктом таблицы
 # 02-installer/vectors/platform-lists/cases.tsv изменились (комментарии) — долг продукта Р7.
