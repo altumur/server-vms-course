@@ -1867,6 +1867,7 @@ class Check:
         elif contract.exists():
             self.used.add((key, "no-openapi", "-"))
             self.error(contract, "stale exception no-openapi: the contract exists")
+            self.openapi(contract)                   # a stale row must not hide the contract's own errors
         else:
             self.except_(contract, key, "no-openapi", "-")
 
