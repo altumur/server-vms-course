@@ -390,6 +390,20 @@ MANIFEST_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "d
 # (and scenario and vector addresses, which these checks do not read).
 IDMAP = Path("Platform/common/id-map.tsv")
 IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
+# The VMS module (ADR-0090 доп. (1) «Условия старта», доп. (2)): its lessons, data catalog and id-map are read from
+# VMS/common/; a lesson's manifest is VMS/NN-<имя>/<subsystem>.subsystem.yaml. The bytes of Source/vms/ are the frozen
+# witness's (доп. (6) п. 8, (7) п. 4): after the start nobody edits them, the list of their sha256 is recorded at the
+# start next to the boundary hooks and every file of Source/vms/ must match it.
+VMS_DIR = Path("VMS")
+VMS_LESSONS = Path("VMS/common/lessons.tsv")
+VMS_LESSONS_FIELDS = ["lesson", "dir", "title", "subsystem", "status"]
+VMS_STATUS = {"переведён", "не переведён"}
+VMS_CATALOG = Path("VMS/common/data/catalog.tsv")
+VMS_IDMAP = Path("VMS/common/id-map.tsv")
+VMS_FROZEN = Path("tools/vms-boundary/source-vms.sha256")
+VMS_FROZEN_DIR = Path("Source/vms")
+
+
 def chapter_key(path):
     """Порядок глав по номеру, а не по строке: 8.0, 8.1, …, 8.9, 8.10."""
     m = re.match(r"[0-9]{2}\.([0-9]+)-", path.name)
@@ -1512,8 +1526,9 @@ class Check:
             self.stats["schema_cases"] += 1
         # Every subsystem manifest of the course must load too, not only the corpus (ADR-0085 доп. (1), Р3).
         # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are
-        # checked here.
-        manifests = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+        # checked here. The VMS manifests are checked in VMS/ (their canon since the start, ADR-0090 доп. (6) п. 8);
+        # Source/vms/ holds the frozen witness's bytes and is never form-checked.
+        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
                      *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
         for path in sorted(manifests):
             try:
@@ -1595,7 +1610,7 @@ class Check:
                 elif not set(lines_) <= set(got["lines"]):
                     self.error(path, f"form source: lines expected {lines_}, got {got['lines']}")
             self.stats["form_cases"] += 1
-        manifests = [*(self.root / "Source" / "vms").glob("*.subsystem.yaml"),
+        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
                      *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
         for path in sorted(manifests):
             got = loader.judge(path.read_bytes())
@@ -1951,11 +1966,87 @@ class Check:
         self.stale(key, acceptance)
         self.stats["lessons"] += 1
 
+    # The VMS module (constants VMS_*): the three common tables in form, every lesson of lessons.tsv has its directory
+    # and, if it names a subsystem, its manifest there; every manifest under VMS/ belongs to the lesson of its
+    # directory. Without VMS/ (an export before the start) nothing is checked.
+    def vms_module(self):
+        if not (self.root / VMS_DIR).is_dir():
+            return
+        path = self.root / VMS_LESSONS
+        if not path.is_file():
+            self.error(path, "the VMS module reads its lessons from VMS/common/lessons.tsv (ADR-0090 доп. (1))")
+            return
+        text = self.read(path) or ""
+        header = next((line[1:].strip().split("\t") for line in text.splitlines() if line.startswith("# lesson\t")), None)
+        if header != VMS_LESSONS_FIELDS:
+            self.error(path, f"header expected # {chr(9).join(VMS_LESSONS_FIELDS)}")
+        lessons = {}
+        for line, cols in self.tsv(path, len(VMS_LESSONS_FIELDS)):
+            row = dict(zip(VMS_LESSONS_FIELDS, cols))
+            if not re.fullmatch(r"[0-9]{2}", row["lesson"]) or not re.fullmatch(rf"{row['lesson']}-[a-z][a-z0-9-]*", row["dir"]):
+                self.error(path, f"line {line}: lesson NN and dir NN-<имя>")
+                continue
+            if row["dir"] in lessons:
+                self.error(path, f"line {line}: dir {row['dir']} repeated")
+            if row["status"] not in VMS_STATUS:
+                self.error(path, f"line {line}: status is one of {sorted(VMS_STATUS)}")
+            where = self.root / VMS_DIR / row["dir"]
+            if not where.is_dir():
+                self.error(path, f"line {line}: no directory VMS/{row['dir']}")
+            elif row["subsystem"] != "-" and not (where / f"{row['subsystem']}.subsystem.yaml").is_file():
+                self.error(path, f"line {line}: no manifest VMS/{row['dir']}/{row['subsystem']}.subsystem.yaml")
+            lessons[row["dir"]] = row
+            self.stats["vms_lessons"] += 1
+        for manifest in sorted((self.root / VMS_DIR).glob("*/*.subsystem.yaml")):
+            row = lessons.get(manifest.parent.name)
+            if row is None or manifest.name != f"{row['subsystem']}.subsystem.yaml":
+                self.error(manifest, "a VMS manifest lies in the directory of the lesson that lessons.tsv gives it")
+            self.stats["vms_manifests"] += 1
+        for table, fields in ((VMS_CATALOG, CATALOG_FIELDS), (VMS_IDMAP, IDMAP_FIELDS)):
+            rows = self.tsv(self.root / table, len(fields)) if (self.root / table).is_file() else None
+            if rows is None:
+                self.error(self.root / table, "missing (ADR-0090 доп. (1), «Условия старта»)")
+            elif not rows or rows[0][1] != fields:
+                self.error(self.root / table, f"expected header {' '.join(fields)}")
+            else:
+                self.stats["vms_table_rows"] += len(rows) - 1
+
+    # The witness's bytes in Source/vms/ are frozen at the start of the VMS kit (ADR-0090 доп. (7) п. 4): every file
+    # there (bytecode caches aside) is in the list with its sha256, and nothing else is there. Without the list (an
+    # export, a slice before the start) nothing is checked.
+    def vms_frozen(self):
+        frozen = self.root / VMS_FROZEN
+        if not frozen.is_file():
+            return
+        import hashlib
+        listed = {}
+        for line_no, line in enumerate((self.read(frozen) or "").splitlines(), 1):
+            if not line or line.startswith("#"):
+                continue
+            match = re.fullmatch(r"([0-9a-f]{64})  (Source/vms/\S.*)", line)
+            if not match:
+                self.error(frozen, f"line {line_no}: expected <sha256><two spaces>Source/vms/<path>")
+                continue
+            listed[match.group(2)] = match.group(1)
+        present = {str(p.relative_to(self.root)) for p in (self.root / VMS_FROZEN_DIR).rglob("*")
+                   if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"}
+        for name in sorted(present - set(listed)):
+            self.error(self.root / name, "Source/vms/ is frozen since the VMS start: a new file (ADR-0090 доп. (7) п. 4)")
+        for name, digest in sorted(listed.items()):
+            path = self.root / name
+            if name not in present:
+                self.error(path, "Source/vms/ is frozen since the VMS start: the file is gone (ADR-0090 доп. (7) п. 4)")
+            elif hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                self.error(path, "Source/vms/ is frozen since the VMS start: the bytes changed (ADR-0090 доп. (7) п. 4)")
+            self.stats["vms_frozen"] += 1
+
 def main():
     args = arguments().parse_args()
     check = Check(args.root, args.exceptions, args.strict_coverage)
     for name in args.lessons:
         check.lesson((check.root / name).resolve())
+    check.vms_module()
+    check.vms_frozen()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:

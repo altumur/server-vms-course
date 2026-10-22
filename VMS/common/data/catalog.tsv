@@ -1,0 +1,3 @@
+# Каталог данных модуля VMS (ADR-0090 доп. (2)); форма — как Platform/common/data/catalog.tsv (ADR-0083). owner — адрес урока
+# VMS (V/NN). Наполняется описью и переводом уроков.
+key	kind	owner	ops	readers	when	version	schema	norm

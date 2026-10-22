@@ -1573,5 +1573,64 @@ class PlatformCatalogTests(unittest.TestCase):
         self.assertFalse(any("<manifest:unit.rows>" in e for e in errors), errors)
 
 
+class VmsModuleTests(unittest.TestCase):
+    """ADR-0090 доп. (1) «Условия старта», доп. (7) п. 4: the VMS module's common tables and the frozen Source/vms/."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        (self.root / "VMS/common/data").mkdir(parents=True)
+        (self.root / "VMS/01-cam").mkdir()
+        (self.root / "VMS/09-deploy").mkdir()
+        (self.root / "VMS/01-cam/cam.subsystem.yaml").write_text("name: cam\n", encoding="utf-8")
+        (self.root / "VMS/common/lessons.tsv").write_text(
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\tcam\tне переведён\n"
+            "09\t09-deploy\tРазвёртывание\t-\tне переведён\n", encoding="utf-8")
+        (self.root / "VMS/common/data/catalog.tsv").write_text(
+            "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n", encoding="utf-8")
+        (self.root / "VMS/common/id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n", encoding="utf-8")
+        (self.root / "Source/vms").mkdir(parents=True)
+        (self.root / "Source/vms/a.py").write_bytes(b"x = 1\n")
+        (self.root / "tools/vms-boundary").mkdir(parents=True)
+        import hashlib
+        digest = hashlib.sha256(b"x = 1\n").hexdigest()
+        (self.root / "tools/vms-boundary/source-vms.sha256").write_text(f"# frozen\n{digest}  Source/vms/a.py\n",
+                                                                         encoding="utf-8")
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def errors(self):
+        check = Check(self.root)
+        check.vms_module()
+        check.vms_frozen()
+        return check.errors
+
+    def test_start_layout_passes(self):
+        self.assertEqual(self.errors(), [])
+
+    def test_manifest_outside_its_lesson(self):
+        (self.root / "VMS/09-deploy/rec.subsystem.yaml").write_text("name: rec\n", encoding="utf-8")
+        self.assertTrue(any("directory of the lesson" in e for e in self.errors()))
+
+    def test_lesson_without_its_manifest(self):
+        (self.root / "VMS/01-cam/cam.subsystem.yaml").unlink()
+        self.assertTrue(any("no manifest VMS/01-cam/cam.subsystem.yaml" in e for e in self.errors()))
+
+    def test_tables_need_their_headers(self):
+        (self.root / "VMS/common/id-map.tsv").write_text("a\tb\tc\td\te\n", encoding="utf-8")
+        self.assertTrue(any("id-map.tsv" in e and "header" in e for e in self.errors()))
+
+    def test_frozen_witness_bytes(self):
+        (self.root / "Source/vms/a.py").write_bytes(b"x = 2\n")
+        (self.root / "Source/vms/b.py").write_bytes(b"")
+        (self.root / "Source/vms/__pycache__").mkdir()
+        (self.root / "Source/vms/__pycache__/a.cpython-312.pyc").write_bytes(b"")
+        errors = self.errors()
+        self.assertTrue(any("a.py" in e and "bytes changed" in e for e in errors), errors)
+        self.assertTrue(any("b.py" in e and "new file" in e for e in errors), errors)
+        self.assertFalse(any("__pycache__" in e for e in errors), errors)
+
+
 if __name__ == "__main__":
     unittest.main()

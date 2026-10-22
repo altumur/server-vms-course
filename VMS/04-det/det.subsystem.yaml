@@ -1,0 +1,111 @@
+# Detectors, as the platform sees them: the THIRD subsystem. Its unit is one
+# model on one camera — "line-crossing on camera 7" — named by the operator
+# from the camera's page (`7-linecross`); its workers are detector workers
+# (vms/detworker.py) on GPU-labelled servers, capacity in STREAMS a GPU can
+# decode and infer on; its events are buckets under det/<unit>/e<epoch>/ on
+# the resource, on the camera's timeline like any other subsystem's. Same
+# controller class, same console class, same ACL shape as the VMS.
+name: det
+# The slot a worker of this subsystem makes, `d-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: d, name_env: DET_NAME}
+about: {sub: cam, field: cam}   # a model runs on a camera's stream: its events, grants and labels are the camera's
+unit:
+  rows: units                        # det/units/<name>
+  id: name                           # "<cam>-<kind>", the operator's name for the pair
+  fields:
+    name:      {type: string, required: true}
+    cam:       {type: string, required: true, fixed: true}   # the VMS camera id whose stream the model runs on
+    kind:      {type: string, required: true}      # which model: motion | linecross | lpr | …
+    params:    {type: string}                      # the model's settings, opaque to the platform — and SMALL
+    # The one thing about a detector that does not fit in a row. A polygon mask is a few hundred bytes and
+    # belongs in `params`; a per-pixel one is 345 KB and belongs here — the row keeps the digest, the bytes
+    # go to `det/blobs/<digest>` in the object store, and the platform never looks inside either. Changing
+    # it changes the digest, which changes the row, which moves `revision`, which is what makes the worker
+    # pick it up. See М10A Lesson 26.
+    mask:      {type: blob}                        # sha256-<hex>; the bytes are in the object store
+    enabled:   {type: bool,   default: true}
+    labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
+    # Which of this detector's event kinds are ALARMS: written down with fsync, kept in a tree of their own for
+    # the alarms' days, kept ahead of observations when a window overflows (`w2cplatform/events.py`). The VMS's
+    # field, on the row for the VMS's reason: the class is a fact about what the operator set the model up FOR,
+    # and the platform fixes only the two words. The default answers for the three models here (M12 of the
+    # review — every detector line used to be an observation): a line is drawn where crossing it matters and a
+    # plate list is kept for the plates on it, so `linecross` and an `lpr` hit are what somebody is called for;
+    # `motion` is the scene moving, which is all day — an observation, and a suppressed one (`events` below).
+    alarms:    {type: list,   default: ["linecross", "lpr"]}
+    # WHEN THIS DETECTOR STOPS BEING ONE, in unix seconds; 0 — never, which is every detector an operator
+    # creates by hand. The recording's field, for the recording's reason (rec.subsystem.yaml): a scenario
+    # that asks "watch camera 7 for plates for ten minutes" asks for an END, and an end that lives in a
+    # process's timer dies with the process. The console's loop deletes the row when the time comes
+    # (`jobs.expire`); the controller unplaces it, the worker stops the model.
+    until:     {type: float,  default: 0}          # unix seconds; 0 — never
+placement:
+  capacity:   {from: capacity, default: 8}        # streams per worker — its own number, from its heartbeat
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  requires:   resource                          # a detector writes its events into the resource on its own server
+  near:       {sub: rec, by: cam, of: cam}      # An affinity, never a filter: be beside the recorder holding this
+                                                # camera's recording. Those are the servers with the disks, and here
+                                                # they are the servers with the GPUs too — so the model reads the
+                                                # fan-out from shared memory on its own box instead of pulling the
+                                                # stream across the network, next to the footage already crossing it.
+                                                # `by: cam` and not the bare `near: rec`, because a detector's unit is
+                                                # `7-linecross` and no recorder ever reports that id: the short form
+                                                # would match nothing and read as if it did.
+                                                # Where the affinity cannot be had, the filters and `most-free-capacity`
+                                                # below spread detectors over the GPU servers. That is the fallback and
+                                                # not a failure — a fan-out is readable over RTSP from anywhere.
+  # No `home`. A recording has one because an operator can answer "which disk does this footage live on";
+  # a detector has nobody to answer "which server does this model live on", and a preference nobody sets is
+  # a field nobody maintains. The affinity above is the whole of its topology.
+  tie_break:  most-free-capacity
+  rebalance:  {dead_band: 0.10}
+# What another subsystem asks of a detector (the automation's `then`: detect on a camera now, or scan its recording around
+# a moment): a request row, performed by the detectors' job runner (`vms jobs`). No `valid_until` in the schema: the one
+# who files it sets it; no `free` — nothing to free here (ADR-0059). A minute by default, an hour at most.
+requests:
+  schema:
+    type: object
+    required: [action, cam, kind]
+    additionalProperties: false
+    properties:
+      action: {enum: [detect, scan]}
+      cam: {type: string}
+      kind: {type: string}
+      minutes: {type: number}
+      before: {type: number}
+      after: {type: number}
+      rec: {type: string}
+      params: {}
+  valid_for: 60
+  most_valid: 3600
+  elsewhere: [detect, scan]
+snapshot: [name, cam, kind, enabled, until]
+metrics:
+  - {name: units_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+console:
+  running: units_running               # det_units_running
+events:
+  # Which of this subsystem's events collapse when they repeat — the VMS's rule (cam.subsystem.yaml), applied
+  # by the detector worker before the write (`Suppressor`). Until this every line a model produced went into the
+  # log (M12 of the review): a motion model re-reports for as long as the scene moves, which on a windy camera is
+  # all night, once a pass. The first line of a window is the news and goes in unchanged; what the window
+  # swallowed is said when it closes — one line with `repeats`, `since`, `until`.
+  #
+  # `by: [cam]`, and not every field: a model's fields drift between two looks at the same scene (a score, a box,
+  # a pass counter), and two lines that differ only there are not two observations. The unit is already one
+  # model on one camera, so this reads "any motion this detector saw inside the window".
+  #
+  # Not `linecross` and not `lpr`: those are alarms, and every one of them is a separate thing that happened —
+  # the second car over the line is the second car. An alarm swallowed is an alarm nobody was called for.
+  suppress:
+    motion:
+      window: 30                       # the VMS's number for a bouncing contact: long enough that a tree in the
+                                       # wind is one line a window, short enough that two people crossing a
+                                       # minute apart are two
+      by: [cam]
+# `det/requests/<id>` — what automation asks the detectors for (`vms/jobs.py`, `detect_on_request`). One
+# family, two kinds of asking, as the recorder's: `detect` (the stream, from now, for minutes) becomes a row
+# HERE; `scan` (an interval of the archive) becomes a job of `detjob`. One door, two budgets: a scan is
+# still placed by its own subsystem and never spends a stream live detection runs on (Lesson 21).

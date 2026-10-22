@@ -1,0 +1,392 @@
+# rec.subsystem.yaml — the recorder: the FOURTH subsystem, and the only one placed on top of the archive.
+#
+# A unit is ONE RECORDING of one camera, named by the operator: `rec/recordings/<name>`. The recorder worker
+# (`vms/recworker.py`, `recworker@`) subscribes to the camera's fan-out from whichever VMS worker holds it
+# (the `live_url` in the VMS heartbeat — never a second connection to the camera), takes `rec/epoch/<name>`,
+# and writes footage into the volume it holds, as the stream `<name>/e<epoch>`, through the host's `obsd`.
+# The worker that holds the camera may be anywhere; the recorder must be where disks are — `requires:
+# resource` — and one per VOLUME (`servers: distinct` over `place_by: volume`): a second recorder on the
+# same disk is no second place to record, while a second one on another disk of the same box is exactly
+# that. How far back the footage is SHOWN is this row's `retention_days` — a ceiling the recorder's archive
+# door applies; what is still there, the volume's ring decides. The camera's events are the worker's and
+# retained by the subsystem-wide `cam/retention` policy.
+#
+# WHY A NAME AND NOT THE CAMERA. `id: cam` stood here while every camera had at most one recording, and it
+# stopped being true the day an archive stopped meaning "this box's disks": with a network archive as a
+# second volume, "camera 7 on the local disk" and "camera 7 in the network archive" are two recordings, of
+# one camera, with their own retention, their own tree and their own epoch — and two rows cannot share the
+# key `rec/recordings/7`. The name says which one it is; `cam` below says whose footage it holds. The two
+# were always separate in the recorder (`enrich` reads both in three lines) — only the spec tied them.
+#
+# The page keeps the simple case simple: with no archive chosen the name IS the camera, so a box with one
+# volume still writes `rec/recordings/7` and `rec/7/e1/…`, and the rule is visible in one place
+# (`addToArchive` in `vms/cam.shell.html`) instead of hidden in a default here.
+#
+# Created by the operator: a camera exists without a recording (watched: live, detected, its events kept),
+# and records when a row is here — from the page's Record form, which POSTs `/rec/recordings`.
+name: rec
+# The slot a worker of this subsystem makes, `r-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: r, name_env: RECORDER_NAME}
+# Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
+# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone; a
+# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`). What
+# a member reports to the domain (`domain.reports`) the resource's door gives out unasked (`resource.door_readable`). What
+# a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
+# addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
+# recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
+# tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`,
+# `chain.Forwarder`, `UP_KEPT`): the next process of the relay goes on from it while the centre is unreachable; and the
+# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`) (ADR-0019).
+# What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
+# recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
+objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]}
+# The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
+# (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`), and where
+# the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
+# find it there — `ingest.ingest_urls`, `ingest.heartbeat_peers`; ADR-0065, its addition of 2026-10-08).
+heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}
+# A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
+# a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
+lease: {unconfirmed_max: forever}
+# What a recorder reads outside its subsystem's rows: the domain's books its agent carried home — where each camera's
+# primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
+# source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
+# denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
+worker: {reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam]}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+# A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
+# on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
+# it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
+about: {sub: cam, field: cam}
+unit:
+  rows: recordings                   # rec/recordings/<name>
+  id: name                           # "7", "7-cloud" — the operator's name for THIS recording
+  fields:
+    name:           {type: string, required: true}   # which recording this is: its key, its epoch, its streams
+    cam:            {type: string, required: true, fixed: true}   # WHOSE footage it holds — the VMS camera id
+    retention_days: {type: int,    default: 30, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
+    enabled:        {type: bool,   default: true}
+    labels:         {type: list}                     # where it may run: a recorder whose server has these labels
+    # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say).
+    # A card in a camera holds that camera's recordings and no other's: the volume row says whose card it is (`cam`),
+    # and the platform refuses a recording of another camera homed on it (`must_match`; the review's sixth pass, major —
+    # it was `volumes.refuse_recording`, a hook, until the boundary's step 6).
+    home:           {type: string, ref: rec/volumes, must_match: {cam: cam}}
+    # WHEN THIS RECORDING STOPS BEING ONE, in unix seconds; 0 — never, which is every recording an
+    # operator creates by hand. A scenario asks for ten minutes of a camera, and ten minutes is not a
+    # setting on the row: it is an END. The console's loop deletes the row when the time comes, the
+    # controller unplaces it and the recorder stops its pipeline — the ordinary path for a recording that
+    # was removed, reached by a clock instead of by a click.
+    #
+    # It is a field and not a timer because a timer lives in a process: the one that set it would have to
+    # survive ten minutes for the recording to stop, and a restart would leave a camera recording for
+    # ever with nobody remembering why.
+    until:          {type: float,  default: 0}       # unix seconds; 0 — never
+    # THE FLOOR OF THIS RECORDING, in days; 0 — none. `retention_days` is a ceiling: nothing older is shown.
+    # Nothing said how much must BE there, and a recording promised thirty days on a volume that holds four
+    # looked healthy. When the volume's ring has closed and the recording holds less than this, the recorder
+    # raises the alarm `archive.shallow` (М10B Lesson 18). It does not stop the ring: a larger quota, or fewer
+    # recordings on the volume, is the answer.
+    min_depth_days: {type: float,  default: 0}
+    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
+placement:
+  # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
+  # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
+  # — by the worst case: a backup recording (`when: offline`) holds REC_PREBUFFER_MS of its stream, ~28 MB at
+  # 3.8 Mbit/s, inside unit_mb (1.73 + 28, +25 %): which rows a recorder will hold is not known at its start
+  capacity:   {from: capacity, default: 50, unit_mb: 38, base_mb: 51}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer
+  # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `archive.keep.copied`/
+  # `archive.keep.lost`, what it fetched — go into the resource's tree (`RESOURCE_ROOT`), and the resource's door is how
+  # anybody reads them.
+  # And the resource's heartbeat is the second witness that a SERVER is gone: `gone_servers` moves the recordings
+  # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
+  # server — М11 Lesson 4); without `requires` that move never happens, and the recordings of a box that lost its
+  # power wait for it for ever. What the review saw — a five-minute pass whose pulse died on a blinking store, a
+  # silent resource, recordings moved off a sound server — was the pulse, and the pulse is mended
+  # (`Resource.pass_`: a `try` per beat, a monotonic clock, a limit on no progress).
+  requires:   resource                               # the only subsystem that must be where the archive is
+  # what a recorder holds, one each; a volume any box may serve is let go when its hold goes unconfirmed (`lease`)
+  places:     {table: volumes, where: {enabled: true}, server_field: server, lease: strict}
+  place_by:   volume                                 # WHAT `distinct` and `home` count in: the disk, not the box —
+                                                     # a server with three volumes runs three recorders, and one
+                                                     # recording's worth of work goes to each. Reachability,
+                                                     # draining and `spread_by` stay on the server: a volume has no
+                                                     # address and cannot be drained on its own.
+  servers:    distinct                               # one recorder per VOLUME carries recordings (the others idle)
+  tie_break:  most-free-capacity
+  # No `near`. A recorder does not follow a camera around: it is the one thing here that CANNOT move, being
+  # pinned to disks (`requires: resource` above), and a fan-out can be read from any server over RTSP. So
+  # the recording names the disk and the camera comes to it — `near: rec` in `cam.subsystem.yaml`. The pair
+  # ends up on one server either way and the recorder reads shared memory; what changes is which of the two
+  # decides, and it has to be the one with the disks.
+  #
+  # `home` is a preference, never a filter: a recording whose home is down is written elsewhere, which is
+  # the whole reason the home may be down. It is MAINTAINED, unlike a bare affinity — `_pick` prefers a
+  # recorder there when placing, `ensure_home(budget)` brings back, one recording a pass, what is written
+  # somewhere else, so a server returning from an outage takes its recordings back without anybody running
+  # a procedure. The filters (`labels-subset`, `spread_by`, `requires: resource`) still win: this only
+  # orders what is already eligible. With no home, the pick is the disk with the most room.
+  home:       home                                   # the row's field naming the volume whose archive holds it
+  # …and a FILTER where the volume is a standby (`affinity`; М10B Lesson 26 — it was `volumes.admit_recording`, a hook,
+  # until the boundary's step 6). A recording homed on an enabled backup or edge volume goes there or nowhere, and
+  # nothing else goes there: a primary moved onto the backup while its server rebooted is ONE copy where the operator
+  # paid for two, and a backup moved off it is no copy at all. A volume row that says `admits: false` — an incidents
+  # volume, a place for what somebody kept (`RecWorker.keep_pass`) — takes no recording. `/unplaceable` says so.
+  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}}
+  rebalance:  {dead_band: 0.10}
+  # No `spread_by: cam`, deliberately, though `id: name` is what makes it possible. `spread_by` is a filter
+  # over SERVERS — two recordings of one camera may not share a machine — and that is right for the reason
+  # it exists (redundancy: a second copy on the failed server is not a second copy) and wrong for the
+  # reason the name arrived here (a local volume and a network archive on the SAME box are two archives,
+  # and the filter would refuse the pair outright). Which one the operator is buying is not visible from
+  # the rows, so the spec does not guess: `home` names the volume for each recording, and an installation
+  # that wants copies to survive a server adds the line — `/unplaceable` then says so out loud instead of
+  # quietly putting both in one place.
+# The archives themselves, as rows the administrator writes: `rec/volumes/<name>`. Not units — nothing is placed on a
+# volume, it has no epoch and no worker; it is a LIST, like `policy`. A volume becomes a PLACE when a recorder takes it
+# (`rec/holds/<name>`), which is what lets an operator create a network archive in the console and have it served
+# without anybody editing a unit file. And what somebody said to KEEP: `rec/keeps/<id>` — a camera, an interval, a
+# note, who set it. The footage it names is COPIED into an `incidents` volume (`RecWorker.keep_pass`); the events it
+# names are left in place by the resource's retention (`holds:` below).
+#
+# DECLARED, AND SERVED BY THE PLATFORM'S CONSOLE (the boundary's step 6: `/rec/volumes` and `/rec/keeps` were the VMS's
+# routes on it, `rec_routes`, with the rules in `vms/volumes.py` and `vms/keeps.py`): what a row is — its fields, the
+# rules between them as JSON Schema — the console writes, lists and deletes, and says in the journal who did.
+tables:
+  volumes:
+    key: name
+    fields:
+      name:             {type: string, required: true}
+      kind:             {type: string, default: local, schema: {enum: [local, network, backup, edge, incidents]}}
+      # the directory it is, or the address it is at — never the key to it: a login or a credential anywhere in it is
+      # refused (the platform's address rule; the twelfth review, blocker 10)
+      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [{param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]}, {param: ['password*', 'passwd*', 'pwd*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']}, {nested: [src, url]}]}
+      server:           {type: string}               # local, edge, a backup or incidents disk: whose; network: empty
+      # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
+      quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
+      access_key:       {type: string}               # a bucket's key ID — which key, not the key: shown
+      access_secret:    {type: string, bound_to: [url]}   # sealed, never shown, kept only for the address it was given for
+      enabled:          {type: bool, default: true}
+      # a quota SMALLER than the ring's erases its oldest footage: applied only when this says the same number — the
+      # operator's second word (`RecWorker._apply_quota`; the review's third pass)
+      shrink_confirmed: {type: int, default: 0, schema: {minimum: 0}}
+      cam:              {type: string}               # an edge volume is the card IN a camera: which (the sixth pass)
+      # the word the platform's placement reads (`affinity`): `false` — a place that takes no recording (an incidents
+      # volume: a place for what somebody kept, never one to record into)
+      admits:           {type: bool, default: true}
+    schema:
+      allOf:
+        - if: {properties: {kind: {const: local}}}
+          then: {required: [server]}                 # a disk on one server: name it
+        - if: {properties: {kind: {const: network}}}
+          then: {not: {required: [server]}}          # served by whichever box takes it
+        - if: {properties: {kind: {const: incidents}}}
+          then: {properties: {admits: {const: false}}, required: [admits]}
+        - if: {properties: {kind: {const: edge}}}
+          # the card in one camera — a directory on it, with no key: an address is a local or network volume
+          then:
+            required: [server, cam]
+            properties: {url: {anyOf: [{pattern: "^file://"}, {not: {pattern: "^[A-Za-z][A-Za-z0-9+.-]*://"}}]}}
+            allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
+          else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
+    journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
+  keeps:
+    key: "{cam}-{from:int}-{to:int}"
+    fields:
+      cam:  {type: string, required: true}           # whose: the camera `about` names (`rights.unit_of`)
+      from: {type: float, required: true, schema: {exclusiveMinimum: 0}}   # unix seconds; a keep ends after it starts —
+      to:   {type: float, required: true, schema: {exclusiveMinimum: 0}}   # the holds read one that does not as nothing
+      note: {type: string, schema: {maxLength: 500}}
+      # the camera's recordings when it was set, if whoever set it says them: a recording deleted since still has its
+      # minutes copied (`keeps.spans_of`); left out, its camera's recordings as they are when it is copied
+      recordings: {type: list}
+      # when a garbled keep was let go after it had held long enough (unix seconds, the product's `released_at`,
+      # ADR-0064): empty while it holds, and from then on it holds nothing (`holds.released`, ADR-0057). A string: a
+      # number field left out is written 0, which is not empty
+      released_at: {type: string}
+    stamp: [by, at, made_at]                         # made_at: when the row was made — what a keep's seal is bound to (ADR-0057)
+    journal: {written: archive.keep.made, deleted: archive.keep.lifted}
+# Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
+# needs on that camera what the route needs — on both, if a write ever moved it. And a keep is set by an operator
+# (`edit`), a volume declared by an administrator (`admin`, the default).
+rights:
+  unit_of: {keeps: cam}
+  routes: {edit: [keeps]}
+  reach: {cluster: [home]}         # a recording moved to another volume is the cluster's to move (ADR-0057)
+# What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
+# `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
+# most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
+holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800, released: released_at}
+# What a recording's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
+# console), in the product's paths: `/timeline/<recording>?from&to` — its spans, raw, from every recorder's door, and what
+# its camera holds itself as a span that yields — and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`.backfill.mp4`,
+# `.device.mp4`), a piece of it (`vms/footage.py`). The console hands out the door with the recording's place —
+# `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`. What a recording left on a volume another recorder
+# holds now is read at THAT recorder's door: `GET /rec/where/volumes/<volume>?unit=rec/<recording>` (by `places` above;
+# nobody holding it: 404 and `X-Unreachable: <volume>@<server>`). The console carries no bytes of its own.
+door: {routes: [timeline, segment, keeps]}
+# A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
+# asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
+# {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
+# one person's unanswered at once (counted by CAS; one counts for a minute after it was filed, row or no row, and never
+# past a day — `requests.ttl`, the platform's `clear_requests`). What only the recorder can judge — a range longer than a day, shorter than a
+# second, in the future, older than the recording shows — it refuses, in its heartbeat (`RecWorker.requests`).
+# And the resource asks it to free bytes on a volume of its server (`free-<server>-<volume>`); the recorder decides:
+# the footage is in rings of a fixed size, and it answers that it frees nothing (`freeing: 0` in its heartbeat — no deletion it waits to see).
+requests:
+  free: true
+  schema:
+    type: object
+    required: [unit, from, to]
+    additionalProperties: false
+    # lost: a span a recorder said it lost on the way in, filed by the console's pass (FileLostSpans) — worked as a
+    # known loss whatever its length, by whoever holds the recording then
+    properties: {unit: {type: string}, from: {type: number}, to: {type: number}, lost: {type: boolean}}
+  key: "{unit}-{from:int}-{to:int}"
+  per_person: 7
+  settle: 60
+  ttl: 86400
+  stamp: [by, at, about]
+  journal: archive.backfill.asked
+  # A scenario's `record` (`vms/autoworker.py`) is turned into a recording by the VMS's jobs (`jobs.record_on_request`),
+  # not performed by a recorder: the platform's reaper leaves it to them.
+  elsewhere: [record]
+snapshot: [name, cam, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
+# WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
+# function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
+# (`w2cplatform/metrics.py`): a count of a table's rows, or a field of the recorders' heartbeats and status entries.
+metrics:
+  # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
+  # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
+  # What the chain lost, per camera, from the recorders that host an ingest and a relay's forwarder (ADR-0065, its
+  # addition of 2026-10-10; the fifteenth review, major 3): frames the stream up had no room for, pulls from a centre
+  # that restarted, the centre's word outliving its keep; frames the ingest refused as absurd, lost ahead of the stream,
+  # repeats handed to nobody.
+  - {name: upstream_dropped_total, from: "heartbeat.upstream.<camera>.up_dropped", agg: sum, type: counter}
+  - {name: upstream_breaks_total, from: "heartbeat.upstream.<camera>.down_breaks", agg: sum, type: counter}
+  - {name: upstream_expired_total, from: "heartbeat.upstream.<camera>.up_expired", agg: sum, type: counter}
+  # The rounds of a relay's forwarder its store failed, per camera (the fifteenth review's blocker: one failure killed
+  # the camera's loop in silence; now it is counted, said once in the log and the loop goes on — `upstream.<ref>.errors`).
+  - {name: forwarder_errors_total, from: "heartbeat.upstream.<camera>.errors", agg: sum, type: counter}
+  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.absurd_frames", agg: sum, type: counter}
+  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.ahead_losses", agg: sum, type: counter}
+  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.repeats_dropped", agg: sum, type: counter}
+  - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
+  - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
+  # (How many recorders are short is the platform's, from `placement.places`: the enabled volumes nobody holds, less the
+  # live recorders that hold none.)
+  # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
+  - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
+  # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).
+  - {name: keep_missing_seconds, from: "heartbeat.keep_missing.<keep>", agg: max, live: true}
+  # What each recorder says of itself (feedback BG): its recordings by phase; a volume that would not open; a pin to a
+  # volume another holds (the eighth pass); how long the archive has been away; why it stopped taking samples; its writer.
+  - {name: recordings, from: status.phase, agg: count}
+  - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0}
+  - {name: volume_wait, from: heartbeat.volume_wait, agg: flag, default: 0}
+  # A smaller quota declared without `shrink_confirmed`: the ring keeps its size until the operator's second word, and
+  # the recorder says why (`quota_note`; the review's fourth pass — the console's volumes view said it until step 6).
+  - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
+  - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
+  - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], default: ok}
+  # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
+  # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
+  # and how long it has gone on under an epoch the store has not confirmed.
+  - {name: last_frame_age_seconds, from: status.last_frame_at, agg: age}
+  - {name: samples_refused_total, from: "status.samples_refused.<status>", type: counter}
+  - {name: archive_depth_days, from: status.depth_days}
+  - {name: archive_shallow, from: status.shallow, agg: flag, when: depth_days}
+  - {name: unconfirmed_seconds, from: status.unconfirmed_s}
+  # A camera's stream as its pusher says it in the camera recorder's heartbeat (`stream`; the eighth to eleventh reviews).
+  - {name: stream_behind_seconds, from: heartbeat.stream.behind_s}
+  - {name: stream_lagging, from: heartbeat.stream.lagging, agg: flag, equals: true}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.cut_s, labels: {why: cut}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.left_s, labels: {why: left}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.failed_s, labels: {why: failed}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.evicted_s, labels: {why: evicted}, type: counter}
+  - {name: stream_owed_unknown, from: heartbeat.stream.owed, agg: flag, equals: unknown}
+  - {name: stream_evicted_unknown_seconds_total, from: heartbeat.stream.evicted_unknown_s, type: counter}
+  - {name: camera_clock_stepped_seconds_total, from: heartbeat.stream.clock_back_s, labels: {way: back}, type: counter}
+  - {name: camera_clock_stepped_seconds_total, from: heartbeat.stream.clock_forward_s, labels: {way: forward}, type: counter}
+  - {name: camera_clock_set_total, from: heartbeat.stream.clock_set, type: counter}
+  - {name: camera_frames_ahead_total, from: heartbeat.stream.ahead, type: counter}
+  # What the operator reads off a camera's stream beyond its gaps («Прошивка», «Архитектор» 2026-10-06): whether it is
+  # pushing now; the video only the card holds — said to the server, not yet filled back; live frames dropped for want
+  # of room, and frames that came before ones already sent (time went back); card uploads held while the live push
+  # lags; how far the camera's clock line is from the wall now, and video on clock lines no receiver heard; live frames
+  # the card skipped while catching up its writing; and the card's state.
+  - {name: stream_up, from: heartbeat.stream.up, agg: flag, equals: true}
+  - {name: stream_owed_seconds, from: heartbeat.stream.owed_s, default: 0}
+  - {name: stream_owed_gaps, from: heartbeat.stream.owed_gaps, default: 0}
+  - {name: stream_owed_up_seconds, from: heartbeat.stream.owed_up_s, default: 0}         # held by the card alone for the centre: a relay has not sent it up yet
+  - {name: stream_live_drops_total, from: heartbeat.stream.live_drops, default: 0, type: counter}
+  - {name: stream_frames_back_total, from: heartbeat.stream.back_frames, default: 0, type: counter}
+  - {name: stream_uploads_held, from: heartbeat.stream.uploads_held, default: 0}
+  - {name: stream_upload_wait_seconds_total, from: heartbeat.stream.upload_wait_s, default: 0, type: counter}
+  - {name: camera_clock_shift_seconds, from: heartbeat.stream.clock_shift_s, default: 0}
+  - {name: camera_clock_unplaceable_seconds_total, from: heartbeat.stream.unplaceable_s, default: 0, type: counter}
+  - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
+  # card.state is a closed set, the same words on both sides: opening, recording, failing, stalled, failed, unavailable (an
+  # accident: a card that would not open or refused), none (no card by the camera's own setting — no accident)
+  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, values: [opening, recording, failing, stalled, failed, unavailable, none], default: recording}
+# What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
+# heartbeat field `archive`, read by the platform's `/servers`).
+servers:
+  show:
+    - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
+  status:
+    - {field: volume_missing, title: том не найден}
+    - {field: shrink_pending, title: уменьшение квоты не подтверждено}
+    - {field: writer.state, title: запись в архив}
+    - {field: objectstorage.block_small, title: "блок тома меньше кадров видео, байт"}
+    - {field: keeps, title: сохранения, of: keeps}
+    - {field: incidents_lost, title: потеряно из сохранений, of: keeps}
+    - {field: incidents_at_risk, title: сохранения под угрозой, of: keeps}
+# What a page calls things (the console module reads it from /spec; the platform reads none of it).
+display:
+  unit: запись
+  units: записи
+  units_count: записей
+  field_help:
+    cam: камера, которую пишет запись
+    home: том, в котором лежит запись
+    retention_days: сколько дней показывать
+    min_depth_days: сколько дней должно быть не меньше
+    when: "резервная запись: всегда или только когда основная не пишется"
+  kinds:
+    archive.shallow: архив мельче обещанного
+    archive.keep.sealed: сохранённое запечатано
+    archive.keep.verified: сохранённое проверено
+    archive.keep.copied: сохранённое скопировано
+    archive.keep.lost: сохранённое не удалось скопировать
+# The recorders on the domain: a member reports, beside its heartbeats and snapshot, when each camera last polled its
+# ingest (`rec/polled/<ingest>`) — the domain's witness that a camera is alive while its agent is silent. Where the ingest
+# takes streams is in the recorder's heartbeat (`ingest`), which the domain has already: no report of its own (ADR-0065,
+# its addition of 2026-10-08). The witness names each camera it heard of by whose it is, `cam` — fixed, as the
+# platform requires of the field a witness names by: a camera that is a member is its own cluster, and the ingest names
+# it by the member it is (its stream token's subject), so the domain matches a silent member by its own name.
+domain:
+  books:
+    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
+    upstream: {from: rec/upstream/, key: ref, pick: unique, to: to}
+    polls: {from: rec/polls/, key: ref, pick: unique, to: to}
+  tokens:
+    upstream:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [recworker]
+      placement: {sub: rec, caller: cluster, ref_claim: ref, target_fields: [centre], audience_claim: aud}
+      unit: {sub: cam, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
+  reports: [polled/]
+  witness: {report: polled, member_field: cam}
+  # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of
+  # its directory alone (`PUT /domain/<sub>/<rows>/<ref>`) and a recording has no `ref`: declared, as the product's.
+  edit: [enabled, retention_days]
+console:
+  running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

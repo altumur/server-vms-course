@@ -1,0 +1,579 @@
+# The VMS, as the platform sees it. Everything the controller does for this
+# subsystem is here; the worker (camworker) is the part that knows what a camera is.
+# the prefix. `SubsystemSpec.sub` becomes `Subsystem("cam")`, so every key is `cam/…`: rows under
+# `cam/cameras/`, `cam/next_id`, `cam/workers/<w>`, `cam/placement/<id>`, `cam/slots/<w>`, `cam/epoch/<id>`,
+# `cam/idem/<key>`, `cam/devices/<host>` (what a held device raises and can do — its
+# holder's, Lesson 25), and the object-store keys `cam/<w>/heartbeat` and `cam/snapshot`.
+# It also prefixes every `/metrics` line (`vms_…`) and is the `<subsystem>` directory on the resource
+# (`<archive>/cam/<cam>/…`). The grants are cut from it (`SubsystemSpec.acl_console`, `acl_controller`,
+# `acl_worker_role`): the console's token gets `cam/cameras/*`, `cam/next_id`, `cam/idem/*`, `cam/requests/*`, …;
+# the controller's `cam/workers/*`, `cam/placement/*`, `cam/slots/*`, `cam/decommissioned/*`; a worker's its epochs,
+# slot and place, and the rows of its own tables (`worker.writes`: `cam/devices/*`).
+name: cam
+# The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: w, name_env: WORKER_NAME}
+# The fields of its holder's heartbeat that are strings and that something decides by (beside the platform's own):
+# the key its door's tokens for footage are checked with (`playback.py`). One not a string garbles the heartbeat.
+heartbeat: {strings: [playback_key]}
+# A holder records on past a lease the silent store did not confirm, for as long as the silence lasts: footage carries
+# its epoch in its name, and a second writer is a duplicate, not damage (`Lease.may_write`; the platform's default:
+# off).
+lease: {unconfirmed_max: forever}
+# Its secret rows and the roles that read them: the seed its holders' door tokens are signed with, by the console that
+# signs them (`door.py`) — never a worker, or a door could make the tokens it checks. Held to the rights file's grants
+# (`w2cplatform/cluster/rights.py`, `check_secrets`).
+secrets:
+  readers:
+    door/signer: [console]
+# What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
+# 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
+worker: {writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls]}
+unit:
+  # the row directory `cam/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
+  # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
+  # `SpecController._row_key` and `units()` list this prefix.
+  rows: cameras                      # cam/cameras/<id>
+  # ids are integers issued by `SpecController._next_id`, a CAS bump on `cam/next_id {n}`. A `POST` body
+  # carrying `id` is refused (it is a platform field). `parse_id` turns the URL's last segment into an
+  # `int`; sort order is numeric.
+  id: numeric                        # cam/next_id
+  # the operator's fields. `SubsystemSpec.refuse` rejects any key not in this list and any of
+  # `PLATFORM_FIELDS`; `new_row` applies the defaults; `row()`/`items()` convert by type; `/spec` sends
+  # `{name, type, default, required}` for each so the page builds its forms without knowing the VMS.
+  fields:
+    # `{id}` is substituted with the issued id in `new_row` (the default is kept as a string in `from_dict`
+    # for exactly this). The worker's heartbeat status echoes it.
+    name:                  {type: string, default: "cam{id}"}
+    # the only required field: a create without it is `Refused("a vms unit needs a source")`. The worker
+    # passes it verbatim as `driverpacksrc uri=…`; `gstvms/uri.py` accepts `driverpack://file/<name>` and
+    # refuses `driverpack://<vendor>/…` as the real DriverPack's.
+    # `type: url` is not decoration: it is what refuses `driverpack://root:hunter2@10.0.0.7/…` at the
+    # door. This field IS in the snapshot below, and the snapshot leaves the cluster — a password pasted
+    # in here would reach М12's directory and every console screen, past a mask that only looks at
+    # `*_secret`. The credential goes in the two fields below instead.
+    #
+    # ONE CHANNEL, ONE CAMERA — and moving a camera about a device is an act on the device (the review's sixth
+    # pass). `source` points at something other rows point at too: a channel of a recorder whose credentials
+    # are the device's. A source another live camera already is, is refused for anybody (`volumes.refuse_camera`);
+    # a change of device or channel asks for `admin` on every camera of the device it leaves and of the one it
+    # moves to, not on this camera alone (`vms/console.py`, `source_cams`).
+    # WHAT A LOGIN LOOKS LIKE IN A CAMERA'S ADDRESS — the VMS's knowledge, not the platform's (the boundary's step 4).
+    # The platform reads an address as RFC 3986 writes one: a login before an `@`, a port that is no number, `name=value`
+    # pairs, an address escaped into a path segment. Everything below is how cameras and recorders spell a login on top
+    # of that, found one review at a time; the platform refuses a `source` that carries one (`SubsystemSpec.refuse`, in
+    # words naming `credentials`) and hides it wherever a stored one is said, by these rules.
+    #
+    # `schemes` — what a camera is reached by, and how each scheme writes its address in the platform's closed words
+    # (ADR 0053; `{}` — by RFC 3986): `driverpack://<vendor>/<host>/…` has its host in the path's first segment and
+    # `driverpack://file/…` names none (a file, no device); `ipint://` (the product's) has no fragment — a `#` is a
+    # character, the host after the last `@`. The refusal of a source and its group (`placement.group_by`) read an
+    # address by these same words. `credentials` — where the login and the password go instead.
+    # `secret_in` (the form the architect approved for the course and the product alike; the product's lines, word for
+    # word — one table of addresses for both, tests/testdata/secret_in.tsv):
+    # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`)
+    #   beside the platform's own, which every address is read by (`secrets.COMMON_RULES`: password, passwd, pass, pwd,
+    #   secret, token, `key` as the last word, credential(s), psk, privkey, apikey, `=auth`, `=pin`) — the vendors'
+    #   spellings (Foscam's `loginpas`, `adminpass`, an RTMP `streamkey`, `oauth`), read as words: `psd` the whole name
+    #   or its last word (`X-Amz-Signature`), `pwd*` a word beginning with it (`pwd_md5`, `passwordHash`), `*pwd` a last
+    #   word ending with it (`userpwd`, `clientsecret`); a word's trailing digits are not part of it (`apiKey2`). `p`,
+    #   `code` and `pin` as a part are not here: too many cameras mean something else by them (a profile, a codec, which
+    #   pin). A word that only begins a name (`token_bucket`, `authmode`, `passage`) is no credential.
+    #   `login`: which of an entry's names are a login's (`?usr=admin`, `user_id`, Foscam's `loginuse`, `uname`, an S3
+    #   access key's id `AWSAccessKeyId` — the id of a key is no key) — refused as well, the refusal naming
+    #   `cred_username`, and shown as written: a login identifies, it does not authenticate;
+    # - a value joined by `_` to a password's or a login's name (`?channel=1_pwd=…`, `/channel=1_user=admin`);
+    # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
+    #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2` — and the
+    #   same chain in the query, where it is one pair named by its login (`?user=admin_password=…`), and a login's value
+    #   is shown;
+    # - a password's name segment gives the next segment (`/user/admin/password/…/snap.jpg`); not `pass` or `pw`:
+    #   `/live/pass/stream`, `/pw/1` are paths (the thirteenth review);
+    # - DriverPack names its host in the path, `driverpack://<vendor>/<host>/ch/<n>` (the thirteenth review, major 8):
+    #   a port there that is no number (`acme/admin:…/ch/1`; digits of any script are digits — `8²` is a key of its own,
+    #   the review's tenth pass), digits a `/` cut from an `@` further on, and what stands before an `@` escaped or not
+    #   (`acme/admin:…%4010.0.0.5`) are a login and a password — of a `driverpack://` address only (`schemes`);
+    # - every regex reads the path with its escapes undone (`decoded`, the default): `p%2561ssword/…` is `password/…`,
+    #   and what it finds is hidden where it was written;
+    # - go2rtc's `?src=` holds another address (the thirteenth review, blocker 6), `ffmpeg:` before it or not, and a
+    #   relay's `?url=` too: read as one, three levels deep.
+    source:
+      type: url
+      required: true
+      # cfw://local — the camera's own firmware (vmscam's row, opened by the camera's worker): no device with a host, no
+      # group, as `file` under driverpack; a login in it is refused by the url rule, the rest (local, no path) the
+      # camera's worker checks (ADR-0053, «Архитектор» 2026-10-06; the course writes no such row, the line keeps one spec).
+      schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, cfw: {none: [local]}}
+      # One channel, one camera: no two cameras hold the same address in its one spelling (RFC 3986 — the platform's;
+      # the review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` opened channel 2 as camera 1). Two
+      # spellings the platform cannot tell apart — `…/ch/02` and `…/ch/2` — are the worker's to find: it opens the
+      # first and says «device busy» of the other in its heartbeat (the owner's decision on the boundary's step 6).
+      unique: canonical
+      credentials: {login: cred_username, secret: cred_secret}
+      secret_in:
+        - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+          login: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+        - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
+        - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
+        - param: ['password*', 'passwd*', 'pwd*', 'psw*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']
+        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+          in: path
+        - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+          in: query
+        - regex: '(?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+          in: [path, query]
+        - regex: '(?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)'
+          in: [path, query]
+        - regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)'
+          in: path
+        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)'
+          in: path
+          schemes: [driverpack]
+        - regex: '^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@'
+          in: path
+          schemes: [driverpack]
+        - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@'
+          in: path
+          schemes: [driverpack]
+        - nested: [src, url]
+    # the reconciler only starts enabled rows and stops what is disabled; the worker reports `phase:
+    # pending` for a disabled camera. `PUT {"enabled": false}` bumps `revision` and the worker stops the
+    # pipeline.
+    enabled:               {type: bool,   default: true}
+    # media retention is the RECORDING's (`retention_days` in rec.subsystem.yaml), not the camera's: a camera
+    # may be written to several volumes with several ceilings.
+    # stored and carried in the snapshot; nothing in М10 reads it (no placement rule uses it).
+    priority:              {type: int,    default: 100}
+    # where the camera is reachable from (`"vlan:cctv-a"`); the placement constraint below compares it
+    # against the worker's server labels. Accepts a JSON list or a comma-separated string; stored
+    # comma-joined.
+    labels:                {type: list}                       # where the camera is reachable from: "vlan:cctv-a"
+    # The operator's grouping — «Подъезд», «Улица», «Объект А». A separate key from `labels`, and not
+    # because it is tidier: `labels` are MATCHED by placement (`labels-subset` below) against what a server
+    # declares about itself, and a server declares two kinds of fact there — which segments it reaches
+    # (`vlan:cctv-a`) and what it has (`gpu`). Put a folder in that set and the camera becomes unplaceable
+    # until some server claims to reach «Подъезд»: an absurdity that arrives looking like a placement
+    # failure, which is the most expensive kind of wrong.
+    #
+    # And no `loc:` prefix. A prefix would exist only to smuggle folders past a field that is matched;
+    # with a key of their own it carries no information, and a prefix carrying no information is a thing
+    # to get wrong (`Loc:`, `loc :`) with no one to refuse it.
+    #
+    # PATHS, `/` between the levels — `Объект А/Подъезд` — and a camera may be in several, visible in each
+    # (`Объект А/Подъезд,Периметр`). The same model as the product (`vmssubsystem/vmsworker/vms`).
+    #
+    # A folder exists NOWHERE in the store: it is the path on the cameras that carry it. So there are no
+    # empty folders — a folder lasts exactly as long as one camera is filed in it — and renaming one means
+    # rewriting the path on every camera under it. The tree is whatever draws it, splitting on `/`.
+    #
+    # A plain list, not a type of its own: nothing in the platform needs to know an entry is a path. And it
+    # has the list's one limit (Lesson 9 М10A): the store keeps a list comma-joined, so a level may not
+    # contain a comma — `Корпус 1, этаж 2` would come back as two paths. The product has the same limit.
+    #
+    # Nothing is inherited down the tree. A folder groups; it carries no policy — no retention, no
+    # placement, no rights. The day a folder is meant to CARRY something, that is a separate decision with
+    # its own rules about what a child overrides.
+    #
+    # Nothing in М10 reads it — like `priority`. Stored, and shown by the console because the page builds
+    # its form from `/spec`.
+    #
+    # NOT in the snapshot below, and that was measured rather than chosen: the snapshot is one object per
+    # worker under a 64 KiB ceiling, `test_the_shard_fits_where_the_one_object_did_not` holds it to a third
+    # of that, and this field pushed the biggest shard from 20.9 to 21.7 KiB — past the line. The margin is
+    # there so the shape survives the next field; spending it on a field nothing reads, to loosen a test
+    # written to measure exactly this, would be the wrong trade. When М12's directory wants folders, put it
+    # in and re-measure — that is a decision with a number attached, which is what the test is for.
+    #
+    # The product DOES carry `folders` in its snapshot. It has no test holding a shard to a third of the
+    # ceiling, so nothing there measured what this field costs; here something does.
+    folders:               {type: list}                       # paths it is filed under: "Объект А/Подъезд,Периметр"
+    # Which of this device's event kinds are ALARMS (`w2cplatform/events.py`: the platform fixes the
+    # vocabulary, the unit says which of its lines belong to which class). A list of kinds, empty by
+    # default — a camera observes, and observing is not alarming.
+    #
+    # It lives on the UNIT and not in this spec's `events:` section, because the class is a property of
+    # how the device was WIRED, not of the event type: `io.input` is an alarm on a door contact and noise
+    # on a technological sensor that reports the same way. Written here as a constant, a perimeter camera
+    # and a corridor camera would have to be two subsystems to be told apart.
+    #
+    # And it inherits by UNION (feedback AT): a kind the site declares an alarm is an alarm on every camera,
+    # plus the camera's own. Override would let one camera's list silently drop the site's door contact.
+    alarms:                {type: list,   inherit: [], merge: union}   # kinds that are alarms on THIS device: "io.input,silent"
+    # the name a layer above (М12) knows the camera by; the worker copies it into each status entry, and it
+    # leaves the cluster in the snapshot.
+    #
+    # One name, one camera here; and changing it is the cluster's to decide, not the camera's administrator's — the
+    # domain finds a camera by it (`volumes.refuse_camera`, `source_cams`; the same pass).
+    ref:                   {type: string, unique: true}       # the name a layer above knows it by (М12): one camera, one name
+    # The device's own credential. Two fields and not one, because they are not the same KIND of thing: a
+    # login identifies and a password authenticates, and only the second has to be kept. `mask_secrets`
+    # keeps the secret off every reply the console sends. The worker hands both to the actuator as element
+    # PROPERTIES — never inside a launch string, which is what ends up in logs, in a crash dump and in `ps`.
+    # Not in the snapshot below: nothing above the cluster reads it, and the snapshot is one object with a
+    # 64 KiB ceiling — a field nobody consumes is paid for by every camera. "Not a secret" is a reason not
+    # to hide it, never a reason to publish it.
+    cred_username:         {type: string}                     # the device login
+    # `bound_to`: the address the password is FOR. An edit that changes `source` and sends no new password is refused —
+    # the old one would go to whatever host the new address names; one that sends it empty keeps the stored one.
+    cred_secret:           {type: string, bound_to: [source]} # the device password: never in the snapshot, masked on the way out
+    # `always` (the default) or `on-demand`. A channel of an NVR kept only for its archive needs no live
+    # pipeline: the worker still HOLDS the device — its session, its playback, its coverage — and reports the
+    # camera as `held`. Thirty-two channels imported for their footage would otherwise be thirty-two streams
+    # nobody watches.
+    live:                  {type: string, default: "always", enum: [always, on-demand]}
+    # WHAT THIS DEVICE IS, and the reason the field exists at all: not every device has a picture. A door
+    # controller, a fire panel, a relay board are IP devices integrated the same way, through the same
+    # DriverPack, and they need everything a camera needs except the one thing the subsystem is named
+    # after — they are held (one connection), they take an epoch, they are placed, and they write events.
+    #
+    # So the unit of this subsystem is a DEVICE, and a camera is the common case. `video` keeps every row
+    # ever written meaning exactly what it meant; `io` says "no stream here", and the one thing that
+    # changes is that the worker publishes no fan-out for it — see `enrich`. Nothing else in the system
+    # needs a new branch, because everything else already asks the heartbeat rather than the row: the
+    # recorder looks for `live_url` and does not find one, the gateway the same, the page the same.
+    #
+    # Deliberately NOT a list of capabilities. What a device can do — two inputs, one relay, PTZ — is a
+    # DISCOVERY and belongs to the holder, not to the operator's row: the holder writes it in
+    # `cam/devices/<host>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
+    # 25, where automation checks a scenario against it. The row is what the operator declared; the device
+    # row is what the process found.
+    kind:                  {type: string, default: "video"}   # video | io — a device without a picture is still a device
+# What a holder says of each DEVICE it has open, as the device said it (`config.device_row`): the kinds of event its units
+# raise, its contacts and relays, whether it turns, its presets — what automation may point at (`Catalog`) — and the
+# device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
+# worker writes (`worker.writes`) and the console shows (`GET /devices`): two writers, the holder's next word wins
+# (ADR-0012, «Архитектор» 2026-10-06: `writes` names only a unit's rows or a declared table).
+tables:
+  devices:
+    key: device
+    fields:
+      device:   {type: string, required: true}       # the device's key: the host its sources name (`group_by`)
+      events:   {type: list}                         # the event kinds its units raise
+      rays:     {type: int, default: 0}              # inputs (contacts) — `io.input` with a port
+      relays:   {type: int, default: 0}              # outputs it can be asked to switch
+      ptz:      {type: bool, default: false}         # it turns
+      presets:  {type: int, default: 0}              # positions it can be asked to go to
+      identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
+placement:
+  # `SpecController.capacity_of(worker)` reads `extra["capacity"]` from the worker's latest heartbeat (any
+  # age); a worker that never said anything counts as 50 (the constructor's `capacity` argument overrides
+  # the default; a spec without `default` does not load). `test_capacity_is_the_workers_word_not_the_controllers`: workers saying 2 and 6 are
+  # filled to 2 and 6; unknown `w-9` is 50.
+  # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
+  # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
+  # (a camera's frames are its driver host's — ipintd, roles/ipintd.env — not this worker's: 0.09 MB a camera)
+  capacity:   {from: capacity, default: 50, unit_mb: 1, base_mb: 18}    # the worker's word, from its heartbeat; the default for one that said nothing
+  # `SpecController.headroom()` sums `extra["headroom"]` over workers seen in the last 45 s; the console
+  # exports it as `cam_headroom` and `cam_worker_headroom{worker,server}` — what the autoscaler sums. The
+  # worker computes it as `capacity − len(rows)`.
+  headroom:   {from: headroom}                  # what the autoscaler sums
+  # chosen by name from `CONSTRAINTS`: a worker is eligible for a camera only if the camera's `labels` ⊆ the
+  # labels in the worker's heartbeat (from `LABELS`, the server's line in `/etc/w2c/w2c.env`). The placement reason names the labels
+  # reached; `unplaceable()` lists cameras no live worker's labels can serve.
+  constraint: labels-subset                     # the camera's labels ⊆ the worker's server's labels
+  # ONE CONNECTION PER DEVICE, and this is the line that makes it true. A recorder with sixteen channels
+  # is sixteen rows; without this they are placed by capacity alone, land on four workers, and open four
+  # sessions to a box that licenses two. The failure then arrives in the device's words — "too many
+  # sessions", a channel that will not start, a stream that drops when the fifth is added — and nothing
+  # in it points at a placement decision made on another server an hour earlier.
+  #
+  # `device` is not a field: the device is the HOST the source names (`cut_at: host`, the platform's rule; «Архитектор»,
+  # 2026-10-06, one wire with the product): `rtsp://Nvr50:554/ch/1` and `rtsps://nvr50./x` are one box, whatever the
+  # scheme, the port or the path; an IP in its one spelling (`[0:0::1]` is `::1`); a host that is neither a name nor an
+  # IP (`nvr%2Ecorp`, `nvr_50`), like a row with no source, groups with nothing — what a half-created camera should do.
+  # How a scheme of ours writes its host is the source field's `schemes`: `driverpack://acme/10.0.0.50/ch/17` and
+  # `driverpack://other/10.0.0.50/ch/1` are one NVR, `driverpack://acme` with no address is the vendor's, and
+  # `driverpack://file/…` is a file — the only source with no group; a host nobody can tell is refused (ADR 0053). It was
+  # `VmsController.group_value`, the VMS's parser of its addresses, until the boundary's step 6, and `cut_at: ch` after.
+  group_by:   {field: source, cut_at: host}
+  # a worker records into the resource on its own server: every server runs its resource (`w2c-resource`) beside its
+  # worker, and this is the live fact — a worker whose server's resource has gone silent is
+  # not placed on, and its cameras are moved off on the controller's next pass (`redistribute`).
+  requires:   resource                          # the worker's server must have a resource that answers
+  # `_best`: among eligible workers the one with the largest `capacity − load`, strictly positive; ties to
+  # the first in sorted order. The only tie-break the catalogue has.
+  tie_break:  most-free-capacity
+  # What nothing live has room for, the controller ORDERS: the row `cam/want/<server>` — how many camera workers that
+  # server runs (М10/4 «заказать», ADR-0084); the server's `w2c-workers.sh` reads `cam_workers_wanted{server}` on
+  # `/metrics` and starts or stops `<dep>-camworker@w-<server>-<n>`. The controller starts nothing itself.
+  grows:      true
+  # the camera has no home of its own: it goes where its RECORDING is. The anchor of the pair is the
+  # recording, because it writes to a disk and a disk does not move; the fan-out can be read from anywhere
+  # over RTSP, so the camera is the one that can follow. Both together mean the recorder reads shared
+  # memory instead of the network, and after an outage the pair comes back in that order — the recording
+  # to the server its row names, the camera behind it, one a pass.
+  # `of: cam`, not a bare `near: rec`: a recording is named by the operator now (`id: name`), so "the rec
+  # unit with my id" is a coincidence — true while a camera has one recording called `7`, false the moment
+  # it also has `7-cloud`, and silently false, which is worse. `of` reads the recorder's status entry and
+  # takes the recording whose `cam` is this camera, whatever it is called. Two of them: the smallest id,
+  # and the other one reads the same fan-out over the network.
+  # An affinity: the recorder running a recording OF this camera — and of two, the one homed on a STANDBY volume (an
+  # enabled backup or a card): beside the primary, the worker falls with the primary's server and the backup loses its
+  # stream at exactly the moment it exists for (М10B Lesson 26; it was `volumes.rank_near_recording`, a hook, until the
+  # boundary's step 6).
+  near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
+  home:       near                              # …and, unlike a bare affinity, maintained: `ensure_home` follows it back
+  # `rebalance(budget)` stops when the spread in `load/capacity` between the most and least loaded workers
+  # is under 10 %. Rebalance runs only when asked, never in the controller's pass.
+  rebalance:  {dead_band: 0.10}
+# The fields `SpecController.snapshot()` copies out of each row into `cam/snapshot` (object store), with
+# `id`, `revision`, `worker` and `server` added by the controller. All eight operator fields here; it is the
+# copy that leaves the cluster (М12), never the rows themselves. `publish_snapshot` runs in every controller
+# pass.
+# A COMMAND to a device, filed as a row for whoever holds it — `POST /requests {unit: cam/<id>, action, …}` (the
+# boundary's step 6: it was the VMS's route on the platform's console, `vms_routes`). Not a call: the console does not
+# open devices, and the one process that has this device open is the worker that holds it (М10B, lesson 4). It writes
+# the row; the holder performs it on its next look, says so in its heartbeat, and the row is cleared. Named by its
+# `Idempotency-Key` (or the body's `id`): a retried click is the same command, not a second pulse (the platform review,
+# M17). Thirty seconds by default (`valid_for`): a door opened a minute after the button is an incident; at most ten
+# minutes — what the holder accepts (`most_valid`, read by `Worker.most_valid`). The console stamps the group the rights were asked on
+# (`group`, the source up to `/ch/`): the holder performs it only there — a camera moved onto a recorder in the ten
+# minutes a command may wait is not the camera the person had the right to command (the review's eighth pass).
+requests:
+  schema:
+    type: object
+    required: [unit, action]
+    additionalProperties: false
+    properties:
+      unit:        {type: string}
+      id:          {type: string}
+      action:      {enum: [output, preset]}
+      # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (`config.COMMAND_ARG_MAX`; the
+      # product's cross-check of the eleventh review; integers past 2^53 are no number a spec holds), at the door as
+      # at the holder
+      port:        {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      state:       {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      valid_until: {type: number}
+  valid_for: 30
+  most_valid: 600
+  stamp: [by, at, group]
+# Who may do what to a camera beyond the camera itself (the boundary's step 6: it was the VMS's code on the console —
+# `source_cams`, `command_cams`, `scenario_cams`): its `source` or `labels` changed reach every camera of the device it
+# leaves and joins — the credentials are the device's, so `…/ch/2` under camera 1's name showed camera 2's picture (the
+# review's sixth pass), and a device nobody holds a camera of is the cluster's to point one at (the ninth pass); its
+# `ref` — the name the domain knows it by — is the cluster's to change; a relay or a preset is every camera's of the
+# device (the seventh pass: the device performs it, no channel in it).
+rights:
+  reach:
+    group: [source, labels]
+    cluster: [ref]
+    requests: [output, preset]
+# No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
+# own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
+snapshot: [name, source, enabled, priority, labels, ref, live]
+# Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
+# Ordinary autoworkers publish asks; role credentials are requested by each caller (C6).
+# Recording assignments are platform rows, read through /domain/placement. Domain names and grants
+# remain declared here; the platform carries and checks them without VMS-specific code.
+domain:
+  ref: ref
+  view: [name, enabled]   # what the holder knows of a camera: its name, and whether it is on (domain.edit)
+  # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
+  # folders, labels and retention are its cluster's console's (ADR-0031).
+  edit: [enabled]
+  books:
+    sources: {from: cam/sources/, key: ref, pick: unique, to: to}
+  tokens:
+    stream:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [camworker, recworker]
+      placement: {sub: rec, caller: origin, ref_claim: ref, target_fields: [cluster, copies, star_centre], audience_claim: aud}
+    poll:
+      lifetime: 86400
+      claims: [aud, ref]
+      grant: [camworker, recworker]
+      unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}
+    ask:
+      lifetime: 86400
+      claims: [aud, ref, by, acts, up]
+      grant: [autoworker, recworker]
+      scenario: {doc: auto, items: scenarios, name: name, enabled: enabled, trigger: when.camera, target: then.camera, act: then, placement: rec, ref_claim: ref, trigger_claim: by, acts_claim: acts, up_claim: up, audience_claim: aud}
+  # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
+  # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
+  # book's entry carries its token sealed, `token_secret`, the domain's signer's (`tokens:` above; ADR-0010, its addition
+  # of 2026-10-08); asks carried up wait in the relay's memory; the scenarios between cameras are `auto`'s document in
+  # the shared settings (`auto.subsystem.yaml`).
+  # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
+  # them at GET /domain/shared/cam): the folders the page offers, and two that inherit — the site's alarm kinds
+  # (added to the camera's own).
+  shared: [folders, alarms]
+  keys:
+    - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
+# The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
+# functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
+metrics:
+  - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  # The commands the holders performed, refused, let expire or could not say about, summed over their heartbeats.
+  - {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
+  # The road to the device, where it ends (`Worker._measure`), per holder and by who asked (`by`: `auto` or
+  # `operator`): from the event's moment and from the row's filing to the call, with the times the two clocks visibly
+  # disagreed; and from the holder's first sight of the row, by its clock alone (the review's seventh pass, minor).
+  - {name: event_to_device_seconds, from: "heartbeat.command_road.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.ahead", labels: {direction: ahead}, type: counter}
+  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.behind", labels: {direction: behind}, type: counter}
+  - {name: request_to_device_seconds, from: "heartbeat.command_request.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.ahead", labels: {direction: ahead}, type: counter}
+  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.behind", labels: {direction: behind}, type: counter}
+  - {name: request_seen_to_device_seconds, from: heartbeat.command_wait, agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  # What a holder's beat waits on (the review's eighth pass, minor) and what it found of its devices: a line for every
+  # holder, 0 when unsaid.
+  - {name: devices_slow, from: heartbeat.devices_slow, default: 0}
+  - {name: commands_in_flight, from: heartbeat.commands_in_flight, default: 0}
+  - {name: device_identity_coincidences, from: heartbeat.identity_coincidences, default: 0}   # the ninth pass
+  - {name: devices_opening, from: heartbeat.devices_opening, default: 0}                      # the tenth pass
+  - {name: device_identity_changes_total, from: heartbeat.identity_changes, default: 0, type: counter}
+  - {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
+  - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
+  - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
+  # The driver host's counts (heartbeat.driver, summed over a worker's hosts: the product's; a worker that runs its cameras
+  # in-process says no `driver`, and has no line — `default` is a leaf's, in a map that is there): a device call not back,
+  # a zombie, an opening left behind in a driver, an NVR replaced under its name, a card lane stuck — each was in the
+  # heartbeat alone, visible to no alert (the eleventh review; «Архитектор», 2026-10-06: one spec, the driver's name
+  # nowhere in it).
+  - {name: driver_zombies, from: heartbeat.driver.zombies, default: 0}
+  - {name: driver_openings_left_behind, from: heartbeat.driver.openings_left_behind, default: 0}
+  - {name: driver_device_calls_stuck, from: heartbeat.driver.device_calls.stuck, default: 0}
+  - {name: driver_device_calls_left, from: heartbeat.driver.device_calls.left, default: 0}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.timed_out, labels: {outcome: timed_out}, default: 0, type: counter}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.behind_stuck, labels: {outcome: behind_stuck}, default: 0, type: counter}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.busy, labels: {outcome: busy}, default: 0, type: counter}
+  - {name: driver_device_id_stuck_total, from: heartbeat.driver.device_id_stuck, default: 0, type: counter}
+  - {name: driver_device_id_changes_total, from: heartbeat.driver.device_id_changes, default: 0, type: counter}
+  - {name: driver_device_ids_shared_total, from: heartbeat.driver.device_ids_shared, default: 0, type: counter}
+  - {name: driver_card_stuck, from: heartbeat.driver.card_stuck, default: 0}
+  - {name: driver_card_slow, from: heartbeat.driver.card_slow, default: 0}
+  - {name: driver_card_reads_refused_total, from: heartbeat.driver.card_reads_refused, default: 0, type: counter}
+# What a page calls things (the console module reads it from /spec; the platform reads none of it).
+display:
+  section: Оборудование
+  unit: камера
+  units: камеры
+  units_count: камер
+  # The camera's card (the product's words, one card on both sides): its first tab, the fields' labels, the words for
+  # `live`'s values, and the blocks of the form in order — the page module draws it; the platform checks each names a
+  # field of the row (`SubsystemSpec._card_words`) and reads none of it.
+  general: Подключение
+  fields:
+    enabled: Включена
+    name: Имя
+    ref: Короткое имя
+    id: ID
+    folders: Папки
+    source: Источник
+    cred_username: Логин устройства
+    cred_secret: Пароль устройства
+    live: Живой поток
+    priority: Приоритет
+    labels: Метки достижимости
+  options:
+    live:
+      always: Держать всегда
+      on-demand: По требованию
+  form:
+    - title: Идентификация
+      state: true
+      fields: [enabled, name, ref, id, folders]
+    - title: Подключение
+      fields: [source, cred_username, cred_secret]
+      note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
+    - title: Размещение
+      placement: true
+      fields: [live, priority, labels]
+      note: "Метки решают, где может работать камера: её возьмёт воркер, чей сервер несёт все её метки. Пусто — любой сервер. Папки лежат только в дереве и на размещение не влияют."
+  field_help:
+    source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
+    labels: "сети, в которых виден адрес камеры (vlan:cctv-a)"
+    folders: папки, в которых камера показана
+    cred_username: логин устройства
+    cred_secret: пароль устройства
+    live: "живой поток: держать всегда или по требованию"
+  kinds:
+    io.input: вход устройства
+    silent: камера молчит
+  tree:
+    group_by: folders
+    nested_by: "/"
+    group_title: По папкам
+    group_hint: Папки из поля folders → камеры
+    filter: Фильтр по имени, адресу…
+    no_group: Без папки
+    contents_title: Состав папки
+    group_word: папка
+    no_group_suffix: без папки
+    pick_note: "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels."
+    new_root: Папка
+    new_sub: Подпапка
+    add_here: Добавить камеру сюда
+    new_group_note: "Папка создана — добавьте в неё камеру, иначе она не сохранится"
+  # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
+  keys:
+    sources:
+      title: Книги источников
+      about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
+
+console:
+  # the name of the running gauge, one of `metrics:` above (`cam_cameras_running <n>`: status entries in phase
+  # `running` on live workers); `/spec` sends it as `metrics.running` so the page's status line knows which metric
+  # to read. Not said: no running gauge.
+  running: cameras_running             # cam_cameras_running: cameras held — streaming to whoever subscribes; recording is rec's gauge
+
+events:
+  # Which of this subsystem's events collapse when they repeat. A storm is normal, not a fault, and the
+  # only place a repeat costs nothing to recognise is the worker holding the device — one line before the
+  # write (`w2cplatform/events.py`, `Suppressor`; М10A, урок 12).
+  #
+  # The first line of every window goes into the log immediately and unchanged: whatever the repeats are
+  # worth, the first occurrence is the observation. What was swallowed is said when the window closes —
+  # one line carrying `repeats`, `since` and `until`, so a quiet log and a suppressed storm are different
+  # things on the timeline.
+  #
+  # `by` is left out everywhere here, which means "every field of the line": two lines collapse only when
+  # they are identical. A contact that opens and then closes differs in `value` and is never one event;
+  # only the same reading, repeated, is.
+  suppress:
+    io.input:
+      window: 30                       # a contact bounces for milliseconds and a bad one for hours; thirty
+                                       # seconds is long enough that a swinging gate is one line per window,
+                                       # short enough that a door genuinely used twice a minute is two.
+    silent:
+      window: 60                       # a camera that cannot be reached posts this every pass — once every
+                                       # two seconds, for as long as the network is down. The first one is
+                                       # the news; the next thirty are the same news.
+    source-stats:
+      window: 60
+      # …and this is the case `by` exists for. The counters in this line GROW — `delivered` and
+      # `received` are different on every pass — so with the default identity two of them are never the
+      # same thing and nothing would ever be suppressed. What actually says "the same news" here is that
+      # nothing was dropped and nothing is queued: a healthy pipeline then writes one line a minute
+      # instead of one every four seconds, and the moment a frame is dropped the line goes out at once,
+      # unchanged and immediately, because that is a different reading.
+      by: [dropped, depth]
+
+# ================================================================================================
+# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
+# ================================================================================================
+# # cam.subsystem.yaml — the VMS's controller, as a spec: what `SpecController` and `SpecConsole` run from
+#
+# **Role.** Lesson 6. The one file a subsystem gives the platform. `vms/config.py` loads it into
+# `SubsystemSpec` at import (`SPEC`); `VmsController` is `SpecController(SPEC, …)` and the console is
+# `SpecConsole` over the same controller (see `w2cplatform/spec.py` and `console.py` for what each class
+# does with each section). Its header comment draws the line: "Everything the controller does for this
+# subsystem is here; the worker (camworker) is the part that knows what a camera is." Nothing in the file
+# says how a camera records. `live.subsystem.yaml` and `det.subsystem.yaml` prove the same classes run two more subsystems from a
+# different dict.
+#
+# Event and alarm retention are subsystem-wide resource settings (ADR-0076), independent of camera rows.
+#
+# ## Notes
+# - Key layout summary from `config.py`'s docstring: `cam/cameras/<id>` (row), `cam/workers/<w>`
+#   (assignment), `cam/placement/<id>`, `cam/retention`, `cam/alarms_retention`, `cam/epoch/<id>` (a worker takes by CAS),
+#   `cam/next_id`.
+# - Fields the operator may never send, whatever the YAML says: `worker, placement, epoch, revision,
+#   observed_revision, phase, id` (`PLATFORM_FIELDS`). Those are the controller's (placement, with a reason)
+#   or the worker's (phase, epoch, observed_revision in its heartbeat).
+# - Editing this file changes the controller and the console together and requires no Python change;
+#   `config.OPERATOR_FIELDS` follows it.
+# ================================================================================================

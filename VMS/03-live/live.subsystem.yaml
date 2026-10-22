@@ -1,0 +1,72 @@
+# Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's
+# live fan-out — "camera 7 is being watched, from gateway g-2" — one per camera,
+# created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
+# gateway a grace period after the last one leaves. Its workers are gateways (vms/liveworker.py):
+# stateless, count = N by demand, capacity in VIEWERS, not cameras. Same
+# controller class, same console class, same ACL shape as the VMS; nothing
+# about video in the platform.
+name: live
+# The slot a worker of this subsystem makes, `g-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: g, name_env: LIVE_NAME}
+# The gateway deletes a fan-out a grace period after its last viewer (`worker.deletes`, М10/2 Н1.2а, ADR-0067 доп.
+# 2026-10-17): it never writes a unit row — `unit.rows` in `worker.writes` is refused by the loader.
+worker: {writes: [accounts], deletes: [streams], reads: [domain/live/stream-accounts, domain/member-list]}
+# Cluster-owned accounts are served only by the gateway, never by generic table CRUD.
+tables: [accounts]
+about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
+unit:
+  rows: streams                      # live/streams/<cam>
+  id: cam                            # named by the camera it fans out, never numbered
+  fields:
+    cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name
+    labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
+    grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
+placement:
+  # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
+  # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
+  # (a viewer on its own stream: webrtcbin, DTLS, a queue — the worst case; ten viewers of one stream cost less)
+  capacity:   {from: capacity, default: 100, unit_mb: 2, base_mb: 48}   # viewers a gateway can carry — its own number, from its heartbeat
+  headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
+  constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
+  tie_break:  most-free-capacity
+  grows:      true                              # short on a label set, the controller orders one more gateway on a server (`live_workers_wanted{server}`)
+  rebalance:  {dead_band: 0.10}
+  unplaced:   {delete_after: 30}                 # a stream nobody holds for 30 s goes — no gateway carries its labels, or none is left; its controller deletes it (ADR-0067)
+# Not a moment past its lease's end: a gateway writes nothing that carries an epoch — it holds a camera's stream and
+# hands it to viewers, and a fan-out that goes on under a lease nobody confirms is a second subscription to the camera
+# beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is
+# read, as the product says it.)
+lease: {unconfirmed_max: off}
+# C5: local credentials, published contribution, and delivered book have distinct readers.
+secrets:
+  readers:
+    live/accounts/: [worker]
+    live/stream-accounts/: [worker, domainagent]
+    domain/live/stream-accounts: [worker, domainagent, domain]     # member's carried book (exact name)
+    domain/live/stream-accounts/: [domainagent, domain]          # holder's per-member books (prefix)
+domain:
+  books:
+    stream-accounts: {from: live/stream-accounts/, key: name, pick: unique, to: to}
+  names:
+    stream-accounts/: {exclusive_with: domain/users, grant: view}
+snapshot: [cam, labels]
+# Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
+# console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).
+rights:
+  routes: {view: [streams]}
+# The gateway's door, opened to a page itself (the owner's decision 1: the bytes — here the offer and the stream — go
+# gateway ↔ browser): `POST /whep/<cam>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
+# `GET /live/where/<cam>` hands it out.
+door:
+  routes: [whep]
+  pass: [accounts]
+metrics:
+  - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+console:
+  running: streams_live                # live_streams_live: fan-outs with a subscription up
+# What a page calls a unit of it (the product's words, one spec on both sides).
+display:
+  unit: живой поток
+  units: живые потоки
+  units_count: живых потоков
