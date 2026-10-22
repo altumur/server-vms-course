@@ -20,7 +20,7 @@
 | обновление сервера за сервером | `POST /drain` → `safe: true` → остановить, обновить, запустить → `DELETE /drain`; последним — подъём схемы | P/02.4 Н1.7 `upgrade`, P/06.6 Н2.3, Н3 «поднять_схему» |
 | `w2cctl manifest put <файл>` | установка одного манифеста: загрузка, полный каталог, строка, затем метка `/rev` | P/02.3 Н3 «Смена манифеста» |
 | `w2cctl manifest status [-rights]` | состояние строк манифестов; с `-rights` — и файла прав | P/02.4 Н1.9, P/02.5 |
-| `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `domain`, `domainconsole`, `domainagent`, `workers`, `rights`, `part <sub> <часть>` (часть подсистемы: значения юнита и файл подсистемы, без `W2C_ROLE`); окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
+| `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `domain`, `domainconsole`, `domainagent`, `domainworker <sub>`, `workers`, `rights`, `part <sub> <часть>` (часть подсистемы: значения юнита и файл подсистемы, без `W2C_ROLE`); окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
 | `w2cctl rights -deployment <имя> [--check <файл>]` | вывод прав из `MANIFEST_DIR`; `--check` — по смыслу | P/02.5 Н2, Н3 |
 | `w2c-ca.sh init \| issue \| revoke \| crl \| own` | центр и комплекты ролей | P/02.4 Н1.6 |
 | `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | [договор запечатывания](../common/contracts/sealing.md), P/02.4 Н1.9 |
