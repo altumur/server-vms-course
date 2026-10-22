@@ -20,6 +20,10 @@
 - Проверка хука (ADR-0090, Confirmation): пробный коммит с `Platform/zz-probe.txt` отклонён `pre-commit` — «закрытый путь
   для «Спецификация VMS»»; HEAD не сдвинулся, файл убран.
 
+## Перевод 02-rec
+- План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
+  переведена (нормы, приёмка 1, лекция и инструкция — начало, id-map V/02.1-01…07; манифест: `grows: true`, `ends`).
+
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
 - V/01.7 — переведена по решению № 18 (2026-10-23): документ `licence` в `cam.domain.shared`, переносимая книга `licence`,
@@ -60,6 +64,7 @@
 | `decisions/inbox/2026-10-23-запрос-vms-реестр-V01-5.md` | навык: снять `V/01 no-openapi`; `stands()` читает `VMS/common/acceptance/README.md` (или `5/own`) | нет | решён: `check_spec` читает `VMS/common/acceptance/README.md`; строки `V/01 no-openapi`, `2/own`, `4/own` сняты; V/01 — PASS без исключений |
 | `decisions/inbox/2026-10-23-запрос-vms-кластер-из-одного.md` | дверь кластера из одного после первой публикации; запись копии `domain/grants` на флеш — опись № 19 (V/01.6) | нет | решён (2026-10-23): двери до первой публикации — 503 `not_ready`; `as_of` копии `domain/grants` — в памяти, на носитель при изменении и не чаще раза в час; V/01.6 Н1.5 — по решению, ссылку на норму — после выгрузки |
 | `decisions/inbox/2026-10-23-запрос-vms-юнит-воркера-на-домене.md` | юнит, пользователь, группа, раннер воркера на домене `<sub>domain` (первая переносимая книга VMS — `cam.licence`, V/01.7) | нет | решён (2026-10-23): `<dep>-<sub>domain.service` на каждом сервере с `w2c-domain`, активен один по слоту, раннер `w2c-run.sh domainworker <sub>`; долг V/09 снять после выгрузки |
+| `decisions/inbox/2026-10-23-запрос-vms-реестр-V02.md` | навык: `V/02 no-openapi` до главы V/02.5 | нет | открыт |
 
 ## Решение по пакету запросов (2026-10-23, ADR-0091 доп. (2), (3); запросы № 5, 6, 16 — решены, main `a4c4121ba`)
 `worker.stop_timeout`, `parts.stop_timeout`; юнит воркера — `After=` своей части без `Wants`; `W2C_SUB_ENV=/etc/<sub>/<sub>.env`,
@@ -74,6 +79,7 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
+- «Сборке»: `rec.subsystem.yaml` — `placement.grows: true`, `placement.ends: {field: until, never: 0}`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.
