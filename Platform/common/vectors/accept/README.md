@@ -37,7 +37,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 35 строк (26 урока 3, 9 урока 4) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
+| [`cases.tsv`](cases.tsv), 37 строк (26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
 
 ## Кандидаты
 

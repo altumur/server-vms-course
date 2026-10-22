@@ -143,30 +143,38 @@ paths:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
         '400':
-          description: 'Тело — не публикация (P/09.2 Н4; как у двери держателя, P/08.3 Н4)'
+          description: 'Тело — не публикация, reason not_a_publication; тело chunked (P/09.2 Н2, Н4; как у двери держателя, P/08.3 Н4)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
         '401':
-          description: 'Подпись (договор подписи агента; ключ — из keys ответа пакета); незнакомец с неверной подписью своим
-            ключом (P/09.2 Н2, Н3)'
+          description: 'Подпись, reason — слово договора подписи агента (ключ — из keys ответа пакета); незнакомец с неверной
+            подписью своим ключом (P/09.2 Н2, Н3)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
         '403':
           $ref: '#/components/responses/RelayForbidden'
+        '405':
+          $ref: '#/components/responses/RelayMethod'
         '409':
-          description: 'rebase — база не та (договор приёма отчёта над памятью ретранслятора; P/09.2 Н2, Н4)'
+          description: 'Исход «принять» над памятью ретранслятора: reason same_sent_at (по последней записи метки), rebase,
+            not_ready (договор приёма отчёта; P/09.2 Н2, Н4)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
         '413':
-          description: 'Тело больше BODY_LIMIT (16 MiB — договор приёма отчёта «Поколение, метка, пределы»; P/08.3 Н1.3; P/09.2 Н4)'
+          description: 'Content-Length больше BODY_LIMIT (16 MiB) — до чтения тела, без reason, соединение закрывается; либо исход
+            «принять» — reason whole_too_large (P/09.2 Н2, Н4)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
         '503':
-          $ref: '#/components/responses/RelayNothingYet'
+          description: '«the relay has nothing from the domain for <член> yet» — до проверки подписи, без стука, и незнакомцу; либо
+            исход «принять» — reason rev_exhausted (P/09.2 Н2, Н4). Retry-After не ставится.'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
   /api/carry/{member}:
     servers:
       - url: '{origin}'
@@ -190,12 +198,14 @@ paths:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
         '401':
-          description: 'Подпись (договор подписи агента; ключ — из keys ответа пакета; P/09.2 Н2 «как выше»)'
+          description: 'Подпись, reason — слово договора подписи агента (ключ — из keys ответа пакета; P/09.2 Н2 «как выше»)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusal'}
         '403':
           $ref: '#/components/responses/RelayForbidden'
+        '405':
+          $ref: '#/components/responses/RelayMethod'
         '503':
           $ref: '#/components/responses/RelayNothingYet'
   /api/tokens/{member}/{sub}/{kind}:
@@ -254,14 +264,30 @@ components:
         незнакомец с верной подписью своим ключом запомнен стуком (P/09.2 Н3); ключа нет — принят до ключей (P/09.2 Н2, Н4)'
       content:
         application/json:
-          schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+          schema: {$ref: '#/components/schemas/RelayRefusal'}
     RelayNothingYet:
-      description: '«the relay has nothing from the domain for <член> yet» — до первого ответа держателя; незнакомцу — тоже, без
-        стука (P/09.2 Н2, Н3, Н4)'
+      description: '«the relay has nothing from the domain for <член> yet» — до первого ответа держателя; до проверки подписи,
+        незнакомцу — тоже, без стука (P/09.2 Н2, Н3, Н4); Retry-After не ставится'
       content:
         application/json:
-          schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+          schema: {$ref: '#/components/schemas/RelayRefusal'}
+    RelayMethod:
+      description: 'Неверный метод на пути двери ретранслятора — 405 (P/09.2 Н2)'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RelayRefusal'}
   schemas:
+    RelayRefusal:
+      type: object
+      required: [error]
+      additionalProperties: false
+      description: 'Отказ двери ретранслятора (P/09.2 Н2): нормативны статус и reason; detail — слова реализации, кроме текстов
+        403 и 503, которые называет норма. reason — слово договора приёма отчёта (not_a_publication, same_sent_at, rebase,
+        not_ready, whole_too_large, rev_exhausted) или договора подписи агента у 401; у 413 тела, 405 и обоих 403 его нет.'
+      properties:
+        error: {const: refused}
+        detail: {type: string}
+        reason: {type: string}
     LocalAsk:
       type: object
       required: [request_id, ref]
