@@ -29,11 +29,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | Файл | Вход → ожидание |
 |---|---|
 | [`cases.tsv`](cases.tsv), 21 строка: 4 `took`/`holding`, 17 отказов | `input` — вход команды `keys` текстом JSON (`pinned` — `{pub, domain}` или `null`, `held` — документ набора или `null`, `offered` — строка `domain/keys` как пришла) → `expect` — `{"result":"took"\|"holding","rev":…}` или `{"result":"refused","reason":<слово>[,"rev":…]}`: `older` (rev `held`), `no_pin`, `another_root` (корень, домен), `bad_signature` (подмена, `kid` не `root`, подпись 63 байта, не тот ключ), `not_a_set` (не JSON, лишнее поле, `current` не в `keys`, лишний элемент строки, повтор ключа JSON), `no_book_seal` (нет, точка малого порядка) |
-
-## Кандидаты
-
-- `merge` и `prune` строки `domain/revoked` у члена (объединение по `jti`, при равном `jti` больший `exp`; снятие при
-  `exp + TOKEN_SKEW < now`, строго) — векторов нет; кандидат пакета при переносе урока 9 (глава 9.1).
+| [`revoked.tsv`](revoked.tsv), 7 строк | `input` — `{own, answer, now}`: своя строка `jtis` члена, `jtis` ответа держателя или `null`, стенные секунды; `expect` — `jtis` строки, которую агент пишет (`merge`, `repeat`, `prune` договора; `TOKEN_SKEW` 60; KEYS-G01) |
 
 Векторы проверены эталонными Ed25519 (RFC 8032), X25519 (RFC 7748) и JCS (RFC 8785) по тексту договора, не по коду
 реализаций; при расхождении прав договор, вектор правит «Спецификация».

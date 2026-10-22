@@ -1,0 +1,9 @@
+# Объединение и снятие domain/revoked у члена (договор набора ключей домена «Отзывы», merge, prune; KEYS-G01): {own, answer, now} → jtis записанной строки. Форма — README.
+case	input	expect	note
+dup-own	{"own":"x:100,x:200","answer":null,"now":161}	"x:200"	повтор jti в своей строке — наибольший exp: повтор не сокращает отзыв (x:100 при now 161 снялся бы)
+dup-answer	{"own":"","answer":"x:200,x:100","now":161}	"x:200"	повтор jti в ответе — наибольший exp
+merge-greater	{"own":"a:300","answer":"a:250,b:400","now":0}	"a:300,b:400"	при равном jti — больший exp; объединение с ответом
+answer-does-not-remove	{"own":"a:300,c:500","answer":"b:400","now":0}	"a:300,b:400,c:500"	отзыв ответом не отменяется: своих записей нет в ответе — остаются
+prune-boundary-kept	{"own":"a:100","answer":null,"now":160}	"a:100"	exp + TOKEN_SKEW = now — не меньше: стоит
+prune-boundary-gone	{"own":"a:100","answer":null,"now":161}	""	exp + TOKEN_SKEW < now — снимается
+order	{"own":"b:500,a:500","answer":null,"now":0}	"a:500,b:500"	порядок — по jti в байтах
