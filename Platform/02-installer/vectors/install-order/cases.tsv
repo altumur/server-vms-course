@@ -1,0 +1,10 @@
+# Порядок первичной установки манифестов (P/02.4 Н1.7 install steps; догадка стадии C I02-INSTALL-ORDER). Форма — README.
+case	input	expect	note
+testsub-pair	{"manifests":[{"name":"testsub2","requests":["testsub"],"near":"testsub"},{"name":"testsub","creates":["testsub2"],"uses":["testsub2.belt"]}],"installed":[]}	["testsub","testsub2"]	testsub2 просит testsub и стоит рядом с ним; creates и uses testsub порядка не задают — их проверки ждут адресата
+by-name	{"manifests":[{"name":"beta"},{"name":"alpha"}],"installed":[]}	["alpha","beta"]	без связей — по имени, байтами
+chain	{"manifests":[{"name":"c","requests":["b"]},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c"]	адресат раньше клиента по цепочке
+diamond	{"manifests":[{"name":"d","requests":["b","c"]},{"name":"c","near":"a"},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c","d"]	среди готовых — по имени
+creates-cycle	{"manifests":[{"name":"y","creates":["x"]},{"name":"x","creates":["y"],"uses":["y.s"]}],"installed":[]}	["x","y"]	взаимные creates и uses — не цикл: порядка не задают
+cycle	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","near":"p"}],"installed":[]}	@exit 2	цикл requests/near в пустом хранилище — отказ установки кодом 2 до изменений
+cycle-installed	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","near":"p"}],"installed":["q"]}	["p","q"]	q уже в хранилище: связь к установленному порядка не задаёт — не цикл
+outside	{"manifests":[{"name":"m","requests":["z"]}],"installed":[]}	["m"]	адресат вне установки — порядка не задаёт; есть ли он — проверка каталога P/02.1 Н3
