@@ -16,6 +16,9 @@
     "m2-no-role": {"issuer": "m2", "role": "console", "uri": null},
     "m2-expired": {"issuer": "m2", "role": "console", "not_before": -172800, "days": 1},
     "m2-sig-sha512": {"issuer": "m2", "role": "console", "sig": "sha512"},
-    "m2-server-only": {"issuer": "m2", "role": "console", "eku": ["serverAuth"]}
+    "m2-server-only": {"issuer": "m2", "role": "console", "eku": ["serverAuth"]},
+    "hold-domainconsole-expired": {"issuer": "hold", "role": "domainconsole", "not_before": -172800, "days": 1},
+    "hold-domainconsole-server-only": {"issuer": "hold", "role": "domainconsole", "eku": ["serverAuth"]},
+    "hold-domainconsole-sig-sha512": {"issuer": "hold", "role": "domainconsole", "sig": "sha512"}
   }
 }
