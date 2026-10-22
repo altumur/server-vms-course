@@ -409,8 +409,8 @@ defs:
     description: "общий документ домена (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/shared-docs/rev-<rev>`) и у члена (объект domain/shared — копия, взятая агентом, P/09.1 Н1.10); подпись — выпускающим, проверка — функция record договора записи срока (вид «общий документ»)"
     properties:
       domain:
-        type: string
-        description: имя домена (глава 8.2, из М11/2 Н1.1)
+        writer: {pattern: '[a-z0-9-]{1,64}'}
+        description: "имя домена (глава 8.2, из М11/2 Н1.1); иной JSON-тип или ≠ домену набора — функция record шаг 2 (another_domain), не форма (REC-G01)"
       term:
         ref: pos53
         description: "срок держателя (глава 8.8, из М11/10 Н1.1); порядок — (term, rev), term старше"
@@ -440,9 +440,10 @@ defs:
         description: "hex открытого ключа выпускающего (договор записи срока, issuing_key_secret)"
       kid:
         type: string
-        pattern: '[0-9a-f]{16}'
-        description: serial выпускающего — первые 16 знаков hex issuer
+        writer: {pattern: '[0-9a-f]{16}'}
+        description: "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма (REC-G01)"
       sig:
         type: string
-        description: "base64url без «=» подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)) (договор записи срока)"
+        writer: {pattern: '[A-Za-z0-9_-]{85}[AQgw]'}
+        description: "base64url без «=» подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; иное — функция record шаг 5 (bad_signature), не форма (REC-G01)"
     required: [domain, term, rev, at, by, shared, issuer, kid, sig]
