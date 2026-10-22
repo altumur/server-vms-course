@@ -25,6 +25,7 @@
 | вывод прав из манифеста (по смыслу) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 Н1.4, Н3 |
 | текстовые формы значений (`values_by_type`) | [`06-console/vectors/values-by-type/`](../../06-console/vectors/values-by-type/) | P/06.1 | P/06.1 Н1.2 |
 | id события | векторов нет — норма формы; кандидат пакета — после урока 5 | P/05 | [договор журнала событий](../contracts/event-journal.md) `id` |
+| ключ резервной копии домена: HMAC-SHA256 от root_key и backup_key_rev | [`domain-backup-key/`](domain-backup-key/README.md) | P/08 (глава 8.8) | [договор ключа резервной копии домена](../contracts/domain-backup-key.md); догадка стадии C I02-BACKUP-HMAC |
 | бакет журнала: порванный хвост и неверная строка, времена кодеком, годы бакета; имена `%h<sha256>` и `.name` | [`journal/`](journal/README.md) | common (договор журнала событий) | [договор журнала событий](../contracts/event-journal.md) `bucket` (`torn`, `years`), `line`, «Имена файлов в общих деревьях»; догадки стадии C EJ-G03, EJ-G04, EJ-G06, EJ-G07 |
 | разбор адреса | частью — пакеты `secret-in`, `group-of`; отдельного пакета нет | P/06.2 | P/06.2 Н1.1а, P/02.1 Н1.2а `schemes` |
 | конверт `enc:v2`, путь AAD, открытие, файл кольца | [`sealing/`](sealing/README.md) | common | [договор запечатывания](../contracts/sealing.md) |

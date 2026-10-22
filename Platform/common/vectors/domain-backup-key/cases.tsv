@@ -1,0 +1,9 @@
+# Ключ резервной копии домена (договор ключа резервной копии домена): root_key (hex 32 байт), backup_key_rev → ключ hex.
+# HMAC-SHA256(root_key, "w2c domain backup secrets" 0x00 ‖ ASCII backup_key_rev). Форма — README.
+case	root_key	backup_key_rev	expect	note
+rev1	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f	1	76edc97e47d8b4b164a1a3cdae93fc42930bb1bfac581ee123804296b50dc699	при установке rev 1
+rev2	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f	2	7ea9ba27e647f328706d932cf12b5546dbab559f6ac3f74f9b8b8e8400014cff	следующая смена
+rev10	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f	10	b2e8b60f9a7eb585ca66288146e412d06452d9e96946c524789568439dc904ba	ASCII десятичной записи без ведущих нулей: «10», два байта
+other-root	44b9a4b07b206e3c60c33007a2ed1eff1f7333844b75b6f796f6b4695855ae06	1	437c10a4bb15469cd247021a3d78af2a4f8f17c949fcb0f1874aa01374943614	другой корень — другой ключ
+rev0	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f	0	@refuse	backup_key_rev 0 — не ключ: целое ≥ 1
+rev-leading-zero	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f	01	@refuse	запись с ведущим нулём — не backup_key_rev
