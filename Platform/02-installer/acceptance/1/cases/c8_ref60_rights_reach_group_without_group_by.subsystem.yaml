@@ -36,3 +36,4 @@ display:
 lease: {unconfirmed_max: off}
 rights:
   reach: {group: [kind]}
+worker: {exec: /usr/lib/probe/worker}

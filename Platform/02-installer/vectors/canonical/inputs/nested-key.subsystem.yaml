@@ -19,3 +19,4 @@ display:
     - fields: [name]
 lease: {unconfirmed_max: 600}
 snapshot: [name]
+worker: {exec: /usr/lib/probe/worker}

@@ -35,3 +35,4 @@ display:
 lease: {unconfirmed_max: off}
 tables:
   snapshot: {fields: {note: {type: string}}}
+worker: {exec: /usr/lib/probe/worker}

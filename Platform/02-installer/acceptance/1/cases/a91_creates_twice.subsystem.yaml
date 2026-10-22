@@ -8,6 +8,7 @@ unit:
 placement:
   capacity: {default: 4}
 worker:
+  exec: /usr/lib/probe/worker
   creates:
   - {sub: other, rows: things, key: '{cam}'}
   - {sub: other, rows: things, key: '{kind}'}

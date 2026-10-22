@@ -1,2 +1,3 @@
 name: probe
 placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

@@ -10,4 +10,4 @@ placement:
   constraint: labels-subset
   tie_break:  most-free-capacity
   unplaced:   {delete_after: 3600}
-worker: {requests: [va]}
+worker: {exec: /usr/lib/vb/worker, requests: [va]}

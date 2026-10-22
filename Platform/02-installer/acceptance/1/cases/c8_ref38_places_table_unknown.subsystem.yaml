@@ -2,3 +2,4 @@
 name: probe
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}, places: {table: disks}}
+worker: {exec: /usr/lib/probe/worker}

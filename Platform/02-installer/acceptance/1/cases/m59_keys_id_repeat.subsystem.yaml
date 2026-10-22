@@ -41,3 +41,4 @@ domain:
   keys:
     - {id: notes, keys: [domain/probe/notes]}
     - {id: notes, prefix: domain/probe/notes/}
+worker: {exec: /usr/lib/probe/worker}

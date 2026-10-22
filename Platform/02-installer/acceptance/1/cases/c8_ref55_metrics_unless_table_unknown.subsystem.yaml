@@ -40,3 +40,4 @@ tables:
       zone: {type: string}
 metrics:
   - {name: shelves_open, count: table shelves, unless: {table: ghost}}
+worker: {exec: /usr/lib/probe/worker}

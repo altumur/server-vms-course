@@ -80,3 +80,4 @@ tables:
         type: string
       '1.5':
         type: string
+worker: {exec: /usr/lib/probe/worker}

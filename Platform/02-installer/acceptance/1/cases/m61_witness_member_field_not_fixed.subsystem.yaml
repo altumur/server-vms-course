@@ -37,3 +37,4 @@ lease: {unconfirmed_max: off}
 domain:
   ref: name
   witness: {report: seen, member_field: start}
+worker: {exec: /usr/lib/probe/worker}

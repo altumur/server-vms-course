@@ -11,7 +11,7 @@ name: live
 slot: {prefix: g, name_env: LIVE_NAME}
 # The gateway deletes a fan-out a grace period after its last viewer (`worker.deletes`, М10/2 Н1.2а, ADR-0067 доп.
 # 2026-10-17): it never writes a unit row — `unit.rows` in `worker.writes` is refused by the loader.
-worker: {writes: [accounts], deletes: [streams], reads: [domain/live/stream-accounts, domain/member-list]}
+worker: {exec: /usr/lib/live/worker, writes: [accounts], deletes: [streams], reads: [domain/live/stream-accounts, domain/member-list]}
 # Cluster-owned accounts are served only by the gateway, never by generic table CRUD.
 tables: [accounts]
 about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's

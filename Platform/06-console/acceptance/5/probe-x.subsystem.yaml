@@ -3,3 +3,4 @@ name: probe-x
 # label — умолчание с {id}: дверь подставляет выданный номер при создании (P/06.1 Н1.2 шаг 3; запрос VMS № 1, сц. 18)
 unit: {rows: probes, id: numeric, fields: {label: {type: string, default: 'probe{id}'}, n: {type: int}}}
 placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe-x/worker}

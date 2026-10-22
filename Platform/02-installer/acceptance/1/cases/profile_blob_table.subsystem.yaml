@@ -74,3 +74,4 @@ tables:
         required: true
       payload:
         type: blob
+worker: {exec: /usr/lib/probe/worker}

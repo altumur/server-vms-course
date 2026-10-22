@@ -9,3 +9,4 @@ placement:
   capacity: {default: 4}
 parts:
   pump: {volumes: true}
+worker: {exec: /usr/lib/probe/worker}

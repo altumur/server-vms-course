@@ -11,3 +11,4 @@ placement:
   tie_break:  most-free-capacity
   unplaced:   {delete_after: 3600}
 objects: {rows: [marks/]}
+worker: {exec: /usr/lib/va/worker}

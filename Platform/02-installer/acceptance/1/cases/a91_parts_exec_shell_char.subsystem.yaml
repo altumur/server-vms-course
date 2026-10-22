@@ -1,0 +1,12 @@
+# parts.<часть>.exec — та же грамматика: ; в слове; ADR-0091 доп. (5) п. 2
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
+parts:
+  pump: {exec: '/usr/lib/probe/pump;rm'}

@@ -42,3 +42,4 @@ tables:
       kind:   {type: string}
 metrics:
   - {name: local_disks, count: table disks, unless: {table: disks, where: {knd: local}}}
+worker: {exec: /usr/lib/probe/worker}

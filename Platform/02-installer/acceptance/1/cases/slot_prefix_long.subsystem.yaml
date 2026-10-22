@@ -3,6 +3,7 @@ slot:
   prefix: abcdefghij
   name_env: TALLY_NAME
 worker:
+  exec: /usr/lib/testsub2/worker
   reads:
   - testsub/counters
   requests:

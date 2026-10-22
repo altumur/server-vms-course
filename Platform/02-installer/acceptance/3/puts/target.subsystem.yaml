@@ -12,3 +12,4 @@ unit:
     note_secret: {type: string}
 placement: {capacity: {default: 1}}
 about: {sub: cam, field: cam}
+worker: {exec: /usr/lib/target/worker}

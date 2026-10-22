@@ -6,3 +6,4 @@ unit:
   fields:
     rule: {type: json, schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
 placement: {capacity: {default: 4}}
+worker: {exec: /usr/lib/probe/worker}

@@ -40,3 +40,4 @@ domain:
   ref: name
   shared:
     - step
+worker: {exec: /usr/lib/probe/worker}

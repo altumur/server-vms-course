@@ -13,3 +13,4 @@ placement:
 domain:
   ref: name
   kept: [ledger, badges/]
+worker: {exec: /usr/lib/va/worker}

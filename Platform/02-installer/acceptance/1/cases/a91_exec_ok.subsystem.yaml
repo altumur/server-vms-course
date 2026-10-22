@@ -1,0 +1,10 @@
+# worker.exec — абсолютный путь и слова через один пробел, разрешённые знаки; ADR-0091 доп. (5) п. 2
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: '/usr/lib/probe/worker --mode=a,b +x @y:z ^w_1.2'}

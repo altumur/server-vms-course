@@ -9,3 +9,4 @@ placement:
   capacity: {default: 4}
 parts:
   pump: {exec: /usr/lib/probe/pump, stop_timeout: 0}
+worker: {exec: /usr/lib/probe/worker}

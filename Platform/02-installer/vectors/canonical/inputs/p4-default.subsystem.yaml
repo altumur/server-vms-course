@@ -15,3 +15,4 @@ tables:
     fields:
       zone: {type: string}
       size: {type: int, default: 1}
+worker: {exec: /usr/lib/probe/worker}

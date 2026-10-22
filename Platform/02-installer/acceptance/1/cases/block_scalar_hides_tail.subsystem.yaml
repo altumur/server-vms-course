@@ -36,3 +36,4 @@ display:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
 bogus_after: 1
+worker: {exec: /usr/lib/probe/worker}

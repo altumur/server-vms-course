@@ -7,3 +7,4 @@ unit:
     name: {type: string, required: true}
 placement:
   capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}

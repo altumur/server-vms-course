@@ -38,3 +38,4 @@ domain:
   ref: name
   books:
     tally: {}
+worker: {exec: /usr/lib/probe/worker}

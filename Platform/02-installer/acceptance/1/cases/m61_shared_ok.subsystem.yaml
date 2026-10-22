@@ -42,3 +42,4 @@ domain:
     - step
     - marks
     - {name: rounds, type: json, schema: {type: array, maxItems: 16}}
+worker: {exec: /usr/lib/probe/worker}

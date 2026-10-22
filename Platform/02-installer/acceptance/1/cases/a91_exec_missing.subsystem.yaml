@@ -1,0 +1,10 @@
+# нет worker.exec — обязателен у каждого манифеста; ADR-0091 доп. (5) п. 4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {reads: [probe/counters/]}

@@ -11,3 +11,4 @@ tables:
     fields:
       zone: {type: string}
     journal: {written: shelf.declared}
+worker: {exec: /usr/lib/probe/worker}

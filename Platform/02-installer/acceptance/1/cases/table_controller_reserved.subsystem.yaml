@@ -38,3 +38,4 @@ tables:
     key: name
     fields:
       name: {type: string, required: true}
+worker: {exec: /usr/lib/probe/worker}

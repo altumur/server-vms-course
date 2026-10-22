@@ -9,3 +9,4 @@ tables:
       name: {type: string, required: true}
       shelf: {type: string, ref: probe/shelves, must_match: {zone: nozone}}
       zone: {type: string}
+worker: {exec: /usr/lib/probe/worker}

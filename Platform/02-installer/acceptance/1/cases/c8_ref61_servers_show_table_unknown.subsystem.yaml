@@ -41,3 +41,4 @@ tables:
 servers:
   show:
     - {table: ghost, by: zone}
+worker: {exec: /usr/lib/probe/worker}

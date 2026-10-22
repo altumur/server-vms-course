@@ -9,3 +9,4 @@ placement:
   capacity: {default: 4}
 shares:
   belt: {kind: pipe}
+worker: {exec: /usr/lib/probe/worker}

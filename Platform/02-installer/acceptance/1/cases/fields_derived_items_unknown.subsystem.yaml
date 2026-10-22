@@ -42,3 +42,4 @@ tables:
       name:   {type: string, required: true}
       server: {type: string}
       kind:   {type: string}
+worker: {exec: /usr/lib/probe/worker}

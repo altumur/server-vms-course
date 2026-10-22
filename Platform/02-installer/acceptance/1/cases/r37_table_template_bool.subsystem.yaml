@@ -71,3 +71,4 @@ tables:
     fields:
       flag:
         type: bool
+worker: {exec: /usr/lib/probe/worker}

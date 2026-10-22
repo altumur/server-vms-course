@@ -1,3 +1,4 @@
 name: probe
 unit: {rows: things, fields: {}}
 placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

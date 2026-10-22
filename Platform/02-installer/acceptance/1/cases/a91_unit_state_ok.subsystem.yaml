@@ -11,3 +11,4 @@ placement:
   capacity: {default: 4}
   retire_when: {state: result, field: state, in: [done, failed], delete_after: 600}
 snapshot: [name, state.result]
+worker: {exec: /usr/lib/probe/worker}

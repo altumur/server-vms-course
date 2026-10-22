@@ -11,3 +11,4 @@ placement:
 display:
   unit: counter
   units: counters
+worker: {exec: /usr/lib/probe/worker}

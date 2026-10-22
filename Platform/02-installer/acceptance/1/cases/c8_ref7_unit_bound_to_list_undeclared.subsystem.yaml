@@ -7,3 +7,4 @@ unit:
     feed: {type: url}
     feed_secret: {type: string, bound_to: [feed, nofeed]}
 placement: {capacity: {default: 4}}
+worker: {exec: /usr/lib/probe/worker}

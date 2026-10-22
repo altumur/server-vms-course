@@ -88,3 +88,4 @@ metrics:
   - {name: jobs_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: jobs_running              # detjob_jobs_running: scans whose worker is decoding right now
+worker: {exec: /usr/lib/detjob/worker}

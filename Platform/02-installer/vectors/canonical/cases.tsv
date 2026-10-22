@@ -19,6 +19,7 @@ example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
 corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1
 corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	принятый случай корпуса 2.1
+corpus-a91_exec_ok	Platform/02-installer/acceptance/1/cases/a91_exec_ok.subsystem.yaml	expect/corpus-a91_exec_ok.json	принятый случай корпуса 2.1
 corpus-a91_shares_part_ok	Platform/02-installer/acceptance/1/cases/a91_shares_part_ok.subsystem.yaml	expect/corpus-a91_shares_part_ok.json	принятый случай корпуса 2.1
 corpus-a91_shares_parts_ok	Platform/02-installer/acceptance/1/cases/a91_shares_parts_ok.subsystem.yaml	expect/corpus-a91_shares_parts_ok.json	принятый случай корпуса 2.1
 corpus-a91_stop_timeout_bounds_ok	Platform/02-installer/acceptance/1/cases/a91_stop_timeout_bounds_ok.subsystem.yaml	expect/corpus-a91_stop_timeout_bounds_ok.json	принятый случай корпуса 2.1

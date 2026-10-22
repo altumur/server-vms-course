@@ -37,3 +37,4 @@ lease: {unconfirmed_max: off}
 metrics:
   - {name: started, from: status.phase, agg: count, equals: running}
 console: {running: ghost}
+worker: {exec: /usr/lib/probe/worker}

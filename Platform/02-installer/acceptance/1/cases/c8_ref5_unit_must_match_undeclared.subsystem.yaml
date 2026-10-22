@@ -7,3 +7,4 @@ unit:
     shelf: {type: string, ref: probe/shelves, must_match: {zone: nozone}}
     zone: {type: string}
 placement: {capacity: {default: 4}}
+worker: {exec: /usr/lib/probe/worker}

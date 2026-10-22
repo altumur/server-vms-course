@@ -73,5 +73,6 @@ tables:
         type: string
         required: true
 worker:
+  exec: /usr/lib/probe/worker
   writes:
   - notes

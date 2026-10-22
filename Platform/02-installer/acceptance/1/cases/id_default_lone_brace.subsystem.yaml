@@ -8,3 +8,4 @@ unit:
     label: {type: string, default: 'cam{id}}'}
 placement:
   capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}

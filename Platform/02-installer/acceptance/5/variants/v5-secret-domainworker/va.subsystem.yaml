@@ -14,3 +14,4 @@ secrets: {readers: {va/vault: [domainworker]}}
 domain:
   ref: name
   kept: [ledger]
+worker: {exec: /usr/lib/va/worker}

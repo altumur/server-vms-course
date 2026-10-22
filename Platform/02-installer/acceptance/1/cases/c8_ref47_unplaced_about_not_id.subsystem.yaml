@@ -4,3 +4,4 @@ name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, fixed: true}, parent: {type: string, fixed: true}}}
 placement: {capacity: {default: 1}, unplaced: {delete_after: 30}}
 about: {sub: cam, field: parent}
+worker: {exec: /usr/lib/probe/worker}

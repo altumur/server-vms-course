@@ -37,3 +37,4 @@ display:
 lease: {unconfirmed_max: off}
 about: {sub: testsub, field: nosuch}
 servers: {show: [{table: nosuch, by: x}]}
+worker: {exec: /usr/lib/probe/worker}

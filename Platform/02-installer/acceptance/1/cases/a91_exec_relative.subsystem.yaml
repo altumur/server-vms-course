@@ -1,0 +1,10 @@
+# первое слово не абсолютный путь; ADR-0091 доп. (5) п. 2
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: usr/lib/probe/worker}

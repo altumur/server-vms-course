@@ -41,3 +41,4 @@ tables:
 servers:
   status:
     - {field: seen, of: ghost}
+worker: {exec: /usr/lib/probe/worker}

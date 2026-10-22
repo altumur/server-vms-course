@@ -3,4 +3,5 @@ name: user
 unit: {rows: stuff, id: numeric}
 placement: {capacity: {default: 1}}
 worker:
+  exec: /usr/lib/user/worker
   uses: [owner.belt]

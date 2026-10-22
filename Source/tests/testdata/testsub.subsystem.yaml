@@ -34,6 +34,7 @@ snapshot: [name, start]
 # a counter's holder keeps a tally of testsub2 about its counter, one row each — `testsub2/tallies/testsub-<counter>`
 # (ADR-0091 п. 1) — and feeds testsub2's belt
 worker:
+  exec: /usr/lib/testsub/worker
   creates:
     - {sub: testsub2, rows: tallies, key: "{of}"}
   uses: [testsub2.belt]

@@ -40,3 +40,4 @@ tables:
       zone: {type: string}
 rights:
   unit_of: {ghost: zone}
+worker: {exec: /usr/lib/probe/worker}

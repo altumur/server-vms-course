@@ -40,3 +40,4 @@ domain:
   ref: name
   shared:
     - start
+worker: {exec: /usr/lib/probe/worker}

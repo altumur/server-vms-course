@@ -74,3 +74,4 @@ tables:
         required: true
       garbled:
         type: string
+worker: {exec: /usr/lib/probe/worker}

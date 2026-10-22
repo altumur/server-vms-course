@@ -31,3 +31,4 @@ display:
     -   title: Main
         fields: [name, start, kind]
 lease: {unconfirmed_max: off}
+worker: {exec: /usr/lib/probe/worker}

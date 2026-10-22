@@ -7,3 +7,4 @@ unit:
 placement:
   capacity: {from: capacity, default: 4}
 tables: [shelves]
+worker: {exec: /usr/lib/probe/worker}

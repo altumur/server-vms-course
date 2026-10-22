@@ -9,3 +9,4 @@ unit:
 placement:
   capacity: {default: 4}
   ends: {field: until}
+worker: {exec: /usr/lib/probe/worker}

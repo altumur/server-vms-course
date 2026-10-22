@@ -39,3 +39,4 @@ domain:
   ref: name
   tokens:
     t1: {lifetime: 60, claims: [ref, aud], grant: [probeworker], unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: au}}
+worker: {exec: /usr/lib/probe/worker}

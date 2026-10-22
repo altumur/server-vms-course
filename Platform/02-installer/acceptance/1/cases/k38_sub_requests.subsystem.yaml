@@ -65,3 +65,4 @@ display:
       title: Seen
 lease:
   unconfirmed_max: 'off'
+worker: {exec: /usr/lib/requests/worker}

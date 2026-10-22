@@ -38,4 +38,4 @@ tables:
   shelves:
     fields:
       zone: {type: string}
-worker: {writes: [ghost]}
+worker: {exec: /usr/lib/probe/worker, writes: [ghost]}

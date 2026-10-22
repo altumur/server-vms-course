@@ -36,3 +36,4 @@ display:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
 about: {sub: cam, field: cam}
+worker: {exec: /usr/lib/probe/worker}

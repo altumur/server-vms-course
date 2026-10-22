@@ -43,3 +43,4 @@ tables:
 servers:
   show:
     - {table: disks, by: server, title: Disks, columns: [name, knd]}
+worker: {exec: /usr/lib/probe/worker}

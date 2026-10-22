@@ -74,3 +74,4 @@ tables:
         required: true
       made_at:
         type: string
+worker: {exec: /usr/lib/probe/worker}

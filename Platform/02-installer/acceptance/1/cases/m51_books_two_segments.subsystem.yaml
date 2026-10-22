@@ -38,3 +38,4 @@ domain:
   ref: name
   books:
     notes: {from: probe/a/b/, key: ref, pick: all, to: to}
+worker: {exec: /usr/lib/probe/worker}

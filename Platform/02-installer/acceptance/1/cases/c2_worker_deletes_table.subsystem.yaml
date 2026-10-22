@@ -36,5 +36,6 @@ lease: {unconfirmed_max: off}
 tables:
   notes: {fields: {note: {type: string}}}
 worker:
+  exec: /usr/lib/probe/worker
   writes: [notes]
   deletes: [notes]

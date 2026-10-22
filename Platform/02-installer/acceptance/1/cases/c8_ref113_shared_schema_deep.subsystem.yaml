@@ -43,3 +43,4 @@ domain:
     - step
     - marks
     - {name: rounds, type: json, schema: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {items: {type: array}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+worker: {exec: /usr/lib/probe/worker}

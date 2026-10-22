@@ -39,3 +39,4 @@ domain:
   books:
     tally: {}
   kept: [tally]
+worker: {exec: /usr/lib/probe/worker}

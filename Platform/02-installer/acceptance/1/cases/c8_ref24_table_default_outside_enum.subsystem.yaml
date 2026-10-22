@@ -8,3 +8,4 @@ tables:
     fields:
       name: {type: string, required: true}
       kind: {type: string, enum: [a, b], default: c}
+worker: {exec: /usr/lib/probe/worker}

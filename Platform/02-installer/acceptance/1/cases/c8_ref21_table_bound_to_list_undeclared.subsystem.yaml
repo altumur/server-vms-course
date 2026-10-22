@@ -9,3 +9,4 @@ tables:
       name: {type: string, required: true}
       feed: {type: url}
       feed_secret: {type: string, bound_to: [feed, nofeed]}
+worker: {exec: /usr/lib/probe/worker}

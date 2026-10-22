@@ -184,3 +184,13 @@ id_default_name_id	reference
 id_default_json_field	reference
 id_default_other_brace	reference
 id_default_lone_brace	reference
+a91_exec_missing	value
+a91_worker_missing	value
+a91_exec_relative	value
+a91_exec_double_space	value
+a91_exec_trailing_space	value
+a91_exec_tab	value
+a91_exec_shell_char	value
+a91_exec_quote	value
+a91_exec_non_ascii	value
+a91_parts_exec_shell_char	value

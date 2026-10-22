@@ -8,6 +8,7 @@ unit:
 placement:
   capacity: {default: 4}
 worker:
+  exec: /usr/lib/probe/worker
   uses: [probe.pump]
 shares:
   pump: {kind: socket, part: pump}

@@ -9,3 +9,4 @@ unit:
     feed_secret: {type: string, bound_to: feed}
 placement:
   capacity: {from: capacity, default: 4}
+worker: {exec: /usr/lib/probe/worker}

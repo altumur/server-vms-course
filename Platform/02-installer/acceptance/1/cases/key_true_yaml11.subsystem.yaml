@@ -34,3 +34,4 @@ display:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
 on: 1
+worker: {exec: /usr/lib/probe/worker}

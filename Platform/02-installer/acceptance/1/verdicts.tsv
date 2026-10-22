@@ -614,3 +614,14 @@ id_default_name_id	refused
 id_default_json_field	refused
 id_default_other_brace	refused
 id_default_lone_brace	refused
+a91_exec_ok	ok
+a91_exec_missing	refused
+a91_worker_missing	refused
+a91_exec_relative	refused
+a91_exec_double_space	refused
+a91_exec_trailing_space	refused
+a91_exec_tab	refused
+a91_exec_shell_char	refused
+a91_exec_quote	refused
+a91_exec_non_ascii	refused
+a91_parts_exec_shell_char	refused

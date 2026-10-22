@@ -12,3 +12,4 @@ shares:
   pump: {kind: dir}
 parts:
   pump: {exec: /usr/lib/probe/pump}
+worker: {exec: /usr/lib/probe/worker}

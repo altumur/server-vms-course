@@ -38,3 +38,4 @@ domain:
   ref: name
   books:
     notes: {from: probe/notes/, key: "Bad Key", pick: unique, to: "to.list-1", show: ["Bad Key"]}
+worker: {exec: /usr/lib/probe/worker}

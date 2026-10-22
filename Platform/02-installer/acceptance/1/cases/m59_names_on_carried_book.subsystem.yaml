@@ -40,3 +40,4 @@ domain:
     tally: {}
   names:
     tally/: {exclusive_with: domain/users, grant: view}
+worker: {exec: /usr/lib/probe/worker}

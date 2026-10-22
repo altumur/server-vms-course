@@ -72,3 +72,4 @@ tables:
       name:
         type: int
         required: true
+worker: {exec: /usr/lib/probe/worker}

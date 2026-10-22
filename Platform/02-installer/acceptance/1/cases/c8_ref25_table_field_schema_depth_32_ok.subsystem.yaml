@@ -8,3 +8,4 @@ tables:
     fields:
       name: {type: string, required: true}
       rule: {type: json, schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+worker: {exec: /usr/lib/probe/worker}

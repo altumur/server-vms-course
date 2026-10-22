@@ -8,3 +8,4 @@ tables:
     schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
     fields:
       name: {type: string, required: true}
+worker: {exec: /usr/lib/probe/worker}

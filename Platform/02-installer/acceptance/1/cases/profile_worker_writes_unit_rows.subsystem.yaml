@@ -66,5 +66,6 @@ display:
 lease:
   unconfirmed_max: 'off'
 worker:
+  exec: /usr/lib/probe/worker
   writes:
   - counters

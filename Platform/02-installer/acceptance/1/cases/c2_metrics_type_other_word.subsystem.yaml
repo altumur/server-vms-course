@@ -35,3 +35,4 @@ display:
 lease: {unconfirmed_max: off}
 metrics:
   - {name: things_total, type: summary, agg: count}
+worker: {exec: /usr/lib/probe/worker}

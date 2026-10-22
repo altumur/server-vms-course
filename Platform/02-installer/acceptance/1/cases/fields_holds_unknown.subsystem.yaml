@@ -41,3 +41,4 @@ tables:
       server: {type: string}
       kind:   {type: string}
 holds: {table: disks, unit: nam, since: kind, until: kind}
+worker: {exec: /usr/lib/probe/worker}

@@ -34,4 +34,4 @@ display:
       status:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
-worker: {reads: [testsub/counters/, testsub/counters/hot/]}
+worker: {exec: /usr/lib/probe/worker, reads: [testsub/counters/, testsub/counters/hot/]}

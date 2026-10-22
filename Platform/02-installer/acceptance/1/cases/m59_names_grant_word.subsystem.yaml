@@ -40,3 +40,4 @@ domain:
     notes: {from: probe/notes/, key: ref, pick: unique, to: to, show: [ref]}
   names:
     notes/: {exclusive_with: domain/users, grant: owner}
+worker: {exec: /usr/lib/probe/worker}

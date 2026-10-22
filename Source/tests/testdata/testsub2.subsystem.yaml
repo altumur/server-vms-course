@@ -9,7 +9,7 @@ name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
 # its worker stops in 30 s at most (`stop_timeout`), and reads the pump's share — its own share, made by its part (ADR-0091
 # доп. (2) пп. 1, 4)
-worker: {reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30, writes: [gauges]}
+worker: {exec: /usr/lib/testsub2/worker, reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30, writes: [gauges]}
 # its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
 # files its resource's door gives out (`resource.door_readable`)
 objects: {rows: [marks/*], door: [tickets/*]}

@@ -61,3 +61,4 @@ metrics:
   - {name: watches_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: watches_running
+worker: {exec: /usr/lib/survey/worker}

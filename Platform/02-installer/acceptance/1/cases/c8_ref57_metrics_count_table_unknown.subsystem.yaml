@@ -36,3 +36,4 @@ display:
 lease: {unconfirmed_max: off}
 metrics:
   - {name: ghosts, count: table ghost}
+worker: {exec: /usr/lib/probe/worker}

@@ -10,3 +10,4 @@ unit:
 placement:
   capacity: {default: 4}
 snapshot: [name, state.nope]
+worker: {exec: /usr/lib/probe/worker}

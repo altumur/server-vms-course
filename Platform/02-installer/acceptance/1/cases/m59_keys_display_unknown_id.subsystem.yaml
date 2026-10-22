@@ -42,3 +42,4 @@ domain:
     notes: {from: probe/notes/, key: ref, pick: unique, to: to, show: [ref]}
   keys:
     - {id: notes, keys: [domain/probe/notes]}
+worker: {exec: /usr/lib/probe/worker}

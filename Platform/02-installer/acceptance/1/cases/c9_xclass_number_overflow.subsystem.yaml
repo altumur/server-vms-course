@@ -39,3 +39,4 @@ domain:
     probe/:
       exclusive_with: domain/users
       grant: 1e999
+worker: {exec: /usr/lib/probe/worker}

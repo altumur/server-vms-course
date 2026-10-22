@@ -2,3 +2,4 @@ name: probe2
 unit: {rows: stuff, id: numeric}
 placement: {capacity: {default: 1}}
 tables: {ledger: {}}
+worker: {exec: /usr/lib/probe2/worker}

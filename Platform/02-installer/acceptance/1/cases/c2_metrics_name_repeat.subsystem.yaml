@@ -36,3 +36,4 @@ lease: {unconfirmed_max: off}
 metrics:
   - {name: things_total, type: counter, agg: count, labels: {kind: a}, where: {kind: a}}
   - {name: things_total, type: counter, agg: count, labels: {kind: b}, where: {kind: b}}
+worker: {exec: /usr/lib/probe/worker}

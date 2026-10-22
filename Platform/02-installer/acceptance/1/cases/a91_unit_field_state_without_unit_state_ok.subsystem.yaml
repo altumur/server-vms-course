@@ -8,3 +8,4 @@ unit:
     state: {type: string}
 placement:
   capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}

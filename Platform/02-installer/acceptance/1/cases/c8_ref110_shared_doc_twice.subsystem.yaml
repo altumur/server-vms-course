@@ -44,3 +44,4 @@ domain:
     - marks
     - {name: rounds, type: json, schema: {type: array, maxItems: 16}}
     - {name: rounds, type: json, schema: {type: array}}
+worker: {exec: /usr/lib/probe/worker}

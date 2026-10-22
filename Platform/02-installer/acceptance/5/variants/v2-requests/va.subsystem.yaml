@@ -18,3 +18,4 @@ requests:
     required: [unit]
     additionalProperties: false
     properties: {unit: {type: string}}
+worker: {exec: /usr/lib/va/worker}

@@ -1,3 +1,4 @@
 name: a_b
 unit: {rows: items, id: numeric}
 placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/a_b/worker}

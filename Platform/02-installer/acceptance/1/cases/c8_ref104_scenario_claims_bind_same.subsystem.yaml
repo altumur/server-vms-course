@@ -39,3 +39,4 @@ domain:
   ref: name
   tokens:
     t1: {lifetime: 60, claims: [ref, by, acts, up, aud], grant: [probeworker], scenario: {doc: probe, items: rules, name: name, enabled: enabled, trigger: when.item, target: then.item, act: then, ref_claim: ref, trigger_claim: by, acts_claim: acts, up_claim: by, audience_claim: aud}}
+worker: {exec: /usr/lib/probe/worker}

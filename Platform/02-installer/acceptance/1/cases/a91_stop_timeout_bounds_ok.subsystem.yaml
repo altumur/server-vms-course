@@ -8,6 +8,7 @@ unit:
 placement:
   capacity: {default: 4}
 worker:
+  exec: /usr/lib/probe/worker
   stop_timeout: 50
 parts:
   pump: {exec: /usr/lib/probe/pump, stop_timeout: 1}

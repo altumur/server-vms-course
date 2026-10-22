@@ -8,7 +8,7 @@ root:
   description: корень — отображение с закрытым набором разделов
   owner: P/02.1 Н1.2
   type: object
-  required: [name, unit, placement]
+  required: [name, unit, placement, worker]
   properties:
     name:
       ref: subName
@@ -83,8 +83,9 @@ root:
     worker:
       owner: P/02.5 Н1.4; P/06.4 Н1.5
       type: object
-      default: {}
+      required: [exec]
       properties:
+        exec: {ref: execLine, owner: P/02.4 Н1.1, description: "программа воркера подсистемы — юнит воркера кластера и воркера на домене исполняет её раннером (`w2c-run.sh worker`, `domainworker`; P/02.4 Н1.1, Н1.12), слот — последним аргументом у кластера (ADR-0091 доп. (4), (5))"}
         writes: {ref: strList, owner: P/02.5 Н1.4, description: "собственные таблицы, не `unit.rows`; таблица с полем `*_secret` — отказ: её строки пишет только воркер, а перезапечатывает консоль (P/06.2 Н3 «перезапечатать при старте»)", default: [], default_text: таблиц воркера нет}
         reads: {ref: grantList, owner: P/02.5 Н1.4, description: "`<семья>/<имя>` или префиксы с `/`"}
         requests: {ref: strList, owner: P/06.4 Н1.5, description: "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)"}
@@ -167,7 +168,7 @@ root:
           type: object
           required: [exec]
           properties:
-            exec: {type: string, description: "команда службы части"}
+            exec: {ref: execLine, description: "команда службы части — та же грамматика, что `worker.exec` (ADR-0091 доп. (5) п. 2)"}
             volumes: {type: boolean, default: false, description: "тома: точки монтирования `…/<часть>/volumes/<n>` (ADR-0091 п. 4)"}
             stop_timeout: {type: integer, minimum: 1, default: 20, description: "секунды остановки юнита части — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 доп. (2) п. 1, доп. (3) п. 4)"}
     door:
@@ -189,6 +190,10 @@ root:
 
 defs:
   strList: {type: array, items: {type: string}}
+  execLine:
+    type: string
+    pattern: '/[A-Za-z0-9+,./:=@^_\-]*( [A-Za-z0-9+,./:=@^_\-]+)*'
+    description: "командная строка без оболочки: слова через один пробел U+0020, пустых слов нет; первое — абсолютный путь; в словах — печатные ASCII без \" ' \\ % $ ` ; | & < > * ? ( ) { } [ ] ~ # !; argv — разбиение по пробелу (ADR-0091 доп. (5) п. 2)"
   name: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
   subName:
     description: "не из 22 зарезервированных слов; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"

@@ -14,3 +14,4 @@ tables:
       zone: {type: string}
       area: {type: string}
       kind: {type: string}
+worker: {exec: /usr/lib/probe/worker}

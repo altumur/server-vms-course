@@ -4,3 +4,4 @@ unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}
 tables: {disks: {fields: {server: {type: string}}}}
 holds: {table: disks, until: t0}
+worker: {exec: /usr/lib/probe/worker}

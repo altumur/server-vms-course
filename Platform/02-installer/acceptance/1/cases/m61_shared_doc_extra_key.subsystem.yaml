@@ -40,3 +40,4 @@ domain:
   ref: name
   shared:
     - {name: rounds, type: json, schema: {type: array}, title: Rounds}
+worker: {exec: /usr/lib/probe/worker}

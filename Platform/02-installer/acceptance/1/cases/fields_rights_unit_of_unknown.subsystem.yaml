@@ -41,3 +41,4 @@ tables:
       server: {type: string}
       kind:   {type: string}
 rights: {unit_of: {disks: nam}}
+worker: {exec: /usr/lib/probe/worker}

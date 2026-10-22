@@ -9,3 +9,4 @@ unit:
 placement:
   capacity: {default: 4}
   retire_when: {field: stage, in: [done], delete_after: 0}
+worker: {exec: /usr/lib/probe/worker}

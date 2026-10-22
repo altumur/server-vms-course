@@ -8,3 +8,4 @@ unit:
     made: {type: json}
 placement:
   capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
