@@ -17,6 +17,7 @@ example-ordered	Platform/02-installer/vectors/canonical/inputs/ordered.subsystem
 example-sugared	Platform/02-installer/acceptance/2/puts/sugared.subsystem.yaml	expect/example-sugared.json	приёмка 2.2 сц. 07: сахар `tables: [shelves]` и `bound_to: feed`, без `snapshot` и `display` — П1, П3, П4 вместе (Н1.1)
 example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.subsystem.yaml	expect/example-view-at-ceiling.json	приёмка 2.2 сц. 06: вид 524201 байт — вес строки вида с rev из одной цифры ровно потолок 524288 (Н1.2 ceiling)
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
+corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	принятый случай корпуса 2.1
 corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1
 corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	принятый случай корпуса 2.1
 corpus-a91_exec_ok	Platform/02-installer/acceptance/1/cases/a91_exec_ok.subsystem.yaml	expect/corpus-a91_exec_ok.json	принятый случай корпуса 2.1

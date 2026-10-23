@@ -490,6 +490,9 @@ defs:
           table: {type: string, description: таблица}
           server_field: {type: string, description: поле таблицы}
           strict: {type: object, opaque: true, description: "ключи — поля таблицы"}
+          exclusive: {type: boolean, default: false, description: "исключительное место: держатель связывающего места (по `strict`) принимает только единицы, связанные с ним, и других мест не берёт (P/04 Н1.3, P/03.2 Н3; ADR-0091 доп. (9) п. 6, доп. (10) пп. 1–2)"}
+        rules:
+          - {when: {is: {exclusive: [true]}}, require: [strict]}
       requires: {enum: [none, resource], default: none}
       grows: {type: boolean, default: false, description: роль растёт по требованию (ADR-0084)}
       retire_when:

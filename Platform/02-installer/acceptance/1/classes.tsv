@@ -199,3 +199,5 @@ door_routes_role_no_name	value
 door_routes_role_extra_key	key
 door_routes_role_dup_name	reference
 door_routes_role_repeat	value
+a91_affinity_exclusive_without_strict	value
+a91_affinity_exclusive_not_bool	value

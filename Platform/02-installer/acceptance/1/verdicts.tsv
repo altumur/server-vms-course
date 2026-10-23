@@ -631,3 +631,6 @@ door_routes_role_no_name	refused
 door_routes_role_extra_key	refused
 door_routes_role_dup_name	refused
 door_routes_role_repeat	refused
+a91_affinity_exclusive_ok	ok
+a91_affinity_exclusive_without_strict	refused
+a91_affinity_exclusive_not_bool	refused

@@ -1,0 +1,19 @@
+# exclusive без strict — отказ; ADR-0091 доп. (10) п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    shelf: {type: string}
+placement:
+  capacity: {default: 4}
+  affinity: {field: shelf, table: shelves, server_field: server, exclusive: true}
+worker: {exec: /usr/lib/probe/worker}
+tables:
+  shelves:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      server: {type: string}
+      kind: {type: string}
