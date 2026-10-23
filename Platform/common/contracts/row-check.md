@@ -223,3 +223,6 @@ ref_and_must_match:                      # поле единицы или таб
 ## Векторы
 
 Пакеты [`row-check`](../vectors/row-check/README.md) (общая проверка строки), [`values-by-type`](../vectors/values-by-type/README.md) (формы значений), [`fault`](../vectors/fault/README.md) (слова отказов); адрес — пакет [`secret-in`](../vectors/secret-in/README.md) договора адреса. (ADR-0083 доп. (32) п. 2)
+
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/vectors/jcs/README.md)
+урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
