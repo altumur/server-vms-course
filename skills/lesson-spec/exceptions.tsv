@@ -24,7 +24,6 @@ P/06	scenarios-format	3/own	общие двери консоли без преф
 P/06	scenarios-format	4/own	двери console/resource/store, @until/@key/@header, JSON Lines и байты (сценарии главы 6.4 из М10/08); проверяется по README приёмки
 P/06	scenarios-format	5/own	двери без префикса, console/console2/resource/store, @start/@sigkill/@sigterm/@spoil/@put/@as/@sleep/@until, подстроки ответа, @header/@file/@any/@absent/@time (сценарии главы 6.5 из М10/09, М10/10, М10/11); проверяется по README приёмки
 P/06	scenarios-format	6/own	двери console/console2/resource/store, без префикса — консоль; @start/@as/@put/@spoil/@until, ожидания 2xx/4xx (сценарии главы 6.6 из М10/04, М10/10, М10/11); проверяется по README приёмки
-P/06	acceptance-entry	2/fields.yaml	объявления полей cam.source и rec.volumes.url для векторов secret-in и log-mask как данные приёмки (ADR-0001; глава 6.2 из М10/07); проверяется по README приёмки
 P/06	acceptance-entry	5/probe-x.subsystem.yaml	третий манифест стенда главы 6.5 (имя с «-», metrics.prefix; из М10/09); проверяется по README приёмки
 P/06	acceptance-entry	5/inputs	пульсы для @put object (наблюдения консоли, глава 6.5 из М10/09); проверяется по README приёмки
 P/06	acceptance-entry	6/inputs	пульсы воркера w-1 для @put object (дренаж, pending_writes, schema, build; глава 6.6 из М10/04 и М10/10); проверяется по README приёмки

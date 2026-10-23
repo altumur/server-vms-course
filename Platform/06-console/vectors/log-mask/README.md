@@ -20,7 +20,7 @@ UTF-8, LF, поля через TAB; строки с `#` — пояснения, 
 ## Прогон
 
 Сторона маскирует `raw` лог-маской процесса, который знает манифесты стенда, и сравнивает с `masked` байт в байт. Правило
-каталога — объединение правил полей `cam.source` и `rec.volumes.url` из [`../../acceptance/2/fields.yaml`](../../acceptance/2/fields.yaml)
+каталога — объединение правил полей `cam.source` и `rec.volumes.url` из [`fields.yaml`](../../../common/vectors/secret-in/fields.yaml) векторов `secret-in`
 с общим словарём Н1.1 `common_words` (имена, которые добавляет манифест, — `sig`, `psd` — включены).
 
 Значение поля `type: url` — векторы [`../../../common/vectors/secret-in/`](../../../common/vectors/secret-in/README.md): в свободном тексте адрес кончается на пробеле,
