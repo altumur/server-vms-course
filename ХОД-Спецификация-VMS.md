@@ -135,6 +135,7 @@
 
 ## Долги
 - V/02.9 Н1.1: основная и резервная запись одного `ref` в двух членах — `contested` вида домена; Н1.6: свежесть копии книги `primaries` (`domain/reached`) воркеру не читается — регистратор верит копии; до решения запроса «запись в домене».
+- «Сборке»: `rec.subsystem.yaml` — `worker.reads` + `cam/heartbeats/` (пульсы держателей, V/02.4 Н1.1; основа роли чужие пульсы не даёт, P/02.5 Н1.4).
 - «Сборке»: `rec.subsystem.yaml` — поле записи `ref`, `domain.ref: ref`, `ref` в снимке; книга `upstream` и `reports: [polled/]` сняты; `worker.reads` `domain/rec/primaries` вместо `domain/rec/upstream`; ряды `ingest_dropped_total`, `ingest_clock_steps_total`.
 - «Сборке»: `rec.subsystem.yaml` — `requests.outcome: fetched`, `elsewhere` снят, `worker.creates` к `detjob` (имена `rec-…`);
   `worker.stop_timeout: 40`; `placement.grows: true`, `placement.ends: {field: until, never: 0}`; часть `obsd`
