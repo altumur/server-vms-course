@@ -1,0 +1,31 @@
+# Азбука меток (договор common/contracts/labels.md; догадки стадии C L01–L03): метка, вывод набора, чтение текста списка. Форма — README.
+case	op	input	expect	note
+word	label	"gpu"	ok	буква и буквы
+all_signs	label	"vlan:cctv-a.b_1"	ok	`_`, `.`, `:`, `-` после первого знака
+first_digit	label	"1a"	ok	первая — цифра
+upper	label	"GPU"	ok	регистр различается, оба допустимы
+len_64	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	ok	64 знака
+len_65	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	@refuse	65 знаков
+empty	label	""	@refuse	пустая — не метка
+first_underscore	label	"_a"	@refuse	первая — не буква и не цифра
+first_colon	label	":a"	@refuse	первая — не буква и не цифра
+space	label	"vlan a"	@refuse	пробел (P/06.6 сц. 05 шаг 2)
+comma	label	"a,b"	@refuse	запятая
+bracket	label	"[a"	@refuse	`[` — не знак азбуки
+newline	label	"a\n"	@refuse	перевод строки
+non_ascii	label	"é"	@refuse	знак вне ASCII
+bang	label	"gpu!"	@refuse	знак вне азбуки
+out_bytes	set_write	["vlan:b","Vlan:a","gpu"]	"Vlan:a,gpu,vlan:b"	по возрастанию байтов: заглавные раньше строчных (L01)
+out_not_numeric	set_write	["a9","a10"]	"a10,a9"	байты, не числа (L01)
+out_one	set_write	["gpu"]	"gpu"	один элемент без запятой
+out_empty	set_write	[]	""	ни одной метки
+out_repeat	set_write	["vlan:a","vlan:a"]	@refuse	повтор — отказ, не сжатие (P/06.6 сц. 05 шаг 5)
+out_case_distinct	set_write	["a","A"]	"A,a"	регистр различается: две метки
+read_commas	text_read	"b,a"	["a","b"]	через запятую; набор — по байтам
+read_empty	text_read	""	[]	"" — ни одной метки
+read_json	text_read	"[\"b\",\"a\"]"	["a","b"]	ведущий `[` — массив JSON (L03)
+read_json_spaced	text_read	"[ \"a\", \"b\" ]"	["a","b"]	пробелы между лексемами допустимы (L02, L03)
+read_bracket_inside	text_read	"a,[b"	@refuse	`[` не первым знаком — знак метки, отказ азбуки (L03)
+read_empty_item	text_read	"a,,b"	@refuse	пустой элемент у меток недопустим
+read_json_bad_label	text_read	"[\"a b\"]"	@refuse	элемент массива — тоже по азбуке
+read_repeat	text_read	"a,a"	@refuse	повтор — отказ (P/06.6 сц. 05 шаг 6, query пробы)

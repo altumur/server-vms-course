@@ -20,7 +20,7 @@ float_shortest	testsub2/tallies	create	{"name": "t1", "of": "c1", "weight": 0.1}
 float_no_exponent	testsub2/tallies	create	{"name": "t1", "of": "c1", "until": 1e+21}		{}	ok				{"until": "1000000000000000000000"}	float: без экспоненты
 bool_as_string	testsub2/tallies	create	{"name": "t1", "of": "c1", "active": "yes"}		{}	refused	type	active	П2		не булево
 list_non_string	testsub2/tallies	create	{"name": "t1", "of": "c1", "tags": [1]}		{}	refused	type	tags	П2		список не строк
-list_empty_item	testsub2/tallies	create	{"name": "t1", "of": "c1", "tags": ["a", ""]}		{}	ok				{"tags": "[\"a\", \"\"]"}	пустой элемент — массив JSON
+list_empty_item	testsub2/tallies	create	{"name": "t1", "of": "c1", "tags": ["a", ""]}		{}	ok				{"tags": "[\"a\",\"\"]"}	пустой элемент — массив JSON
 list_plain	testsub2/tallies	create	{"name": "t1", "of": "c1", "tags": ["a", "b"]}		{}	ok				{"tags": "a,b"}	элементы через запятую
 list_one_empty	testsub2/tallies	create	{"name": "t1", "of": "c1", "tags": [""]}		{}	ok				{"tags": "[\"\"]"}	[""] — JSON-текст
 url_password	testsub2/tallies	create	{"name": "t1", "of": "c1", "feed": "https://u:p@h.example/x"}		{}	refused	bad_url	feed	П2		пароль в userinfo — договор адреса А10, А15
