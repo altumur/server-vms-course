@@ -141,7 +141,7 @@ placement:
   # nothing else goes there: a primary moved onto the backup while its server rebooted is ONE copy where the operator
   # paid for two, and a backup moved off it is no copy at all. A volume row that says `admits: false` — an incidents
   # volume, a place for what somebody kept (`RecWorker.keep_pass`) — takes no recording. `/unplaceable` says so.
-  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}}
+  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}, exclusive: true}
   rebalance:  {dead_band: 0.10}
   # No `spread_by: cam`, deliberately, though `id: name` is what makes it possible. `spread_by` is a filter
   # over SERVERS — two recordings of one camera may not share a machine — and that is right for the reason
