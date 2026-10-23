@@ -69,7 +69,9 @@
   `filings_total`; V/02.8 Н1.5 — заказ копирует и `alarms`. Запрос «реестр V05». Влита (`60079d515`), строка реестра — `8807ee9a5`; прочтение
   P/04 Н1.3 (`delete_after` у таблицы с `fixed` удаляет только заказы) — слова нормы.
   V/05.2 — переведена (нормы, id-map V/05.2-01…04). Влита.
-  V/05.3 — переведена (нормы, id-map V/05.3-01…05).
+  V/05.3 — переведена (нормы, id-map V/05.3-01…05). Влита.
+  V/05.4 — переведена (нормы, id-map V/05.4-01…05; курсор + `waiting_since`, `fetch_since`); урок 05 — «переведён».
+  Приёмки скана на стенде нет: TLS-стенд VMS и видимость блоков — долг (сценарий `tick` по записи до итога).
 
 ## Перевод 04-det
 - План — `VMS/04-det/README.md` (годен, «Архитектор» 2026-10-23; решения 1–7, 5 — с поправкой: элемента без эпохи у
@@ -182,6 +184,7 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
+- V/05: сценарий скана на стенде (учебная модель по записи до итога `done` и снятия) — со стендом TLS VMS (листы `recworker`, `detjobworker`) и малым лагом видимости; до него главы V/05.2–V/05.4 — чтением.
 - «Сборке»: `detjob.subsystem.yaml` — поля `state`, `ended` сняты; `unit.state` (`result`, `cursor`), `retire_when` по состоянию с `delete_after`, `mask_from`, `alarms`, `snapshot` `state.result`, `worker.reads`, `worker.requests: [rec]`, ряд `filings_total`; `rec` — заказ копирует `alarms`.
 - V/04.1: действие `det.scan` сценария без пути до V/05, V/07 (раздел `requests:` у `det` снят, задача `detjob` — V/05); `auto` объявляет `worker.creates` к `det/units` без норм до V/07.
 - «Сборке»: `det.subsystem.yaml` — `near: {sub: cam, by: cam}`, `placement.ends`, `worker.reads`/`uses`, `requests:` снят; `auto.subsystem.yaml` — `worker.requests: [cam]`, `worker.creates` к `det/units`.
