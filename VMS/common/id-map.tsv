@@ -187,3 +187,8 @@ old	new	chapter	subject	note
 М10B/23 ш.7	V/06.4-02	6.4	просьба дозаписи подачей воркером в запись rec: «видно с», куски ≤ суток и ≥ 1 с; per_person не относится	поле пульса hits и исполнитель заданий сняты
 М10B/23 ш.1–7	V/06.4-03	6.4	фазы обхода: running, caught_up, waiting, pending, unsupported, failed	
 М10B/23 ш.6, 8	V/06.4-04	6.4	пульс: through, lag, events обхода, overrun, index_garbled, keep_off; ряды	
+М10B/25 ш.1	V/07.1-01	7.1	поля сценария: умолчания и границы within, rate_per_minute, valid_for	
+М10B/25 ш.2	V/07.1-02	7.1	триггер: 1–4, четыре ключа, строгое сравнение match	
+М10B/25 ш.3, 4	V/07.1-03	7.1	действие: пять форм (output, preset, record, detect, scan), каталог = схема then	record/detect/scan — заказы, не просьбы
+М10B/25 ш.8	V/07.1-04	7.1	права: cluster_rows, names по when и then	P/06.3 Н1.5 → договор gate-and-pass
+М10B/25 ш.1	V/07.1-05	7.1	размещение (capacity 50, requires resource, servers shared, grows), аренда off, снимок	

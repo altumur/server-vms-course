@@ -1,0 +1,8 @@
+scenario	step	request	expect
+# Приёмка V/07.1: сценарий — единица и язык (дверь единиц консоли auto). Формат — README.
+01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": "2", "pulse_ms": 500}]}	201 {"id": "door-on-badge", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true}
+01-create	2	POST /scenarios {"name": "s2", "when": [], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	3	POST /scenarios {"name": "s3", "when": [{"sub": "det", "kind": "motion", "extra": 1}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	4	POST /scenarios {"name": "s4", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "reboot", "unit": "7"}]}	400 {"error": "@any"}
+01-create	5	POST /scenarios {"name": "s5", "when": [{"sub": "det", "kind": "motion"}], "within": 4000, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	6	POST /scenarios {"name": "s6", "when": [{"sub": "det", "kind": "motion"}], "valid_for": 3, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
