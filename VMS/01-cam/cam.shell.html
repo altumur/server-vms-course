@@ -62,7 +62,7 @@ recording may lie on are the rows of the table the rec manifest names
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
 `/events`, `/marks`, `/live/accounts` (writes through `pc.api`), `/domain/rec/books/primaries`; the holders' doors from
-`/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
+`/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
 -->
@@ -165,7 +165,7 @@ function farRecsOfCam(id){
 }
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
 const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
-const placeWhere=(rec,T,place)=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(place)}?unit=${encodeURIComponent("rec/"+rec.id)}`;
+const placeWhere=(rec,T,place)=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(place)}?unit=${encodeURIComponent(rec.id)}`;
 const camOf=ref=>String(ref).replace(/^unit:cam\//,"");
 const isCam=ref=>String(ref).startsWith("unit:cam/");
 const goTab=t=>setTimeout(()=>{const x=document.querySelector(`.pc-tabs [data-tab="${t}"]`);if(x)x.click()},60);
@@ -222,12 +222,12 @@ const evKindRu=e=>(pc.display(e.subsystem).kinds||{})[e.kind]||SUBS.map(n=>(pc.d
 // ── «Видео»: the live picture, the recorded spans and the events on one timeline ─────────────────────────────────
 // Where the bytes come from — the holders' doors and nothing else (the owner's decision: bytes go past the console).
 // A camera's recordings each have the door of the recorder holding them (/rec/where/<recording>), and every place they
-// may have lain on the door of its holder (/rec/where/<table>/<place>?unit=rec/<recording>); its live stream, the door
+// may have lain on the door of its holder (/rec/where/<table>/<place>?unit=<recording>); its live stream, the door
 // of its gateway (/live/where/<camera>). A door is {url, token, expires}: Bearer for fetch and WHEP, ?t= for the
 // player; asked again before its token runs out, and once at once on a 401.
 const DOORS={};
-const V={spans:[],events:[],groups:[],queue:[],evfilter:"",live:null,connecting:false,lo:0,hi:0,note:"",evstate:"",
-         aggregated:false,rate:0,norm:0,truncated:false,cam:null};
+const V={spans:[],events:[],queue:[],evfilter:"",live:null,connecting:false,lo:0,hi:0,note:"",evstate:"",
+         truncated:false,cam:null};
 const VOL_BACKUP="backup";
 const PALETTE=["#c58a1a","#8e44ad","#2a9d5c","#d35400","#16a085","#7f8c8d"];
 const palette={};
@@ -282,7 +282,7 @@ async function doorFetch(where,path,init={}){
   let d=await doorOf(where);if(!d)return null;
   const go=()=>fetch(d.url+path,{...init,headers:{...(init.headers||{}),Authorization:"Bearer "+d.token}});
   let r=await go();
-  if(r.status===401||r.status===403){d=await doorOf(where,true);if(!d)return null;r=await go()}   // its token would not do (door token contract: 403): where again, once
+  if(r.status===403){d=await doorOf(where,true);if(!d)return null;r=await go()}   // its token would not do (door token contract: 403): where again, once
   return r;
 }
 function yieldCut(spans){
@@ -319,6 +319,7 @@ async function loadTimeline(id){
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
       const m=r.headers.get("X-Unreachable");if(m)missing.add(m);
+      const u=r.headers.get("X-Unavailable");if(u)u.split(",").map(x=>x.trim()).filter(Boolean).forEach(x=>missing.add(x));   // volumes of it nobody holds
       return await r.json()}
     catch(e){missing.add(place||rec.id);return null}
   };
@@ -502,18 +503,15 @@ function drawDeviceLine(){
 async function pinBackup(){
   const rs=deviceRanges(),to=primariesOf(V.cam);let ok=0,why="";
   for(const rec of to)for(const r of rs){
-    try{await pc.api("POST","/rec/requests",{unit:"rec/"+rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=e.message||String(e)}
+    try{await pc.api("POST","/rec/requests",{unit:rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=e.message||String(e)}
   }
   pc.toast(ok?`Заявок на дозапись: ${ok}. Регистратор заберёт их из резервного архива.`:`Не получилось: ${why}`);
 }
 async function fetchEvents(id,from,to){
-  V.events=[];V.groups=[];V.evstate="";V.aggregated=false;V.truncated=false;V.rate=0;V.norm=0;
+  V.events=[];V.evstate="";V.truncated=false;
   try{
     const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("cam/"+id)}`);
-    // Past the console's norm the answer is `groups`, not `events` — read both, and say why the list changed shape.
-    if(r.ok){const d=await r.json();
-      V.events=d.events||[];V.groups=d.groups||[];V.evstate=d.state||"";
-      V.aggregated=!!d.aggregated;V.truncated=!!d.truncated;V.rate=+d.rate_per_minute||0;V.norm=+d.per_minute||0}
+    if(r.ok){const d=await r.json();V.events=d.events||[];V.evstate=d.state||"";V.truncated=!!d.truncated}
     else V.evstate="события недоступны: "+r.status;
   }catch(e){V.evstate="события недоступны"}
   const subs=[...new Set(V.events.map(e=>e.subsystem))].sort();
@@ -540,14 +538,7 @@ function drawEvents(){
     tl.appendChild(el);
   });
   const ul=$("#events");
-  if(ul&&V.aggregated){
-    const g=V.groups.filter(x=>!V.evfilter||x.subsystem===V.evfilter);
-    ul.innerHTML=`<li class="sub">${esc(V.rate)}/мин при нормативе ${esc(V.norm)} — счёт, а не строки</li>`+
-      g.map(x=>`<li class="${x.class==="alarm"?"fenced":""}" data-t="${Number(x.since)||0}">
-        <span><span class="swatch" style="background:${subColor(x.subsystem)}"></span><strong title="${esc(x.kind)}">${esc(evKindRu(x))}</strong> <small>${esc(x.subsystem)}/${esc(x.unit??"")}</small>${x.class==="alarm"?"<small> · тревога</small>":""}</span>
-        <small>${esc(x.count)} × · ${fmtHMS(x.since)}–${fmtHMS(x.until)}</small></li>`).join("");
-    const cnt=$("#evcount");if(cnt)cnt.textContent=g.reduce((n,x)=>n+(+x.count||0),0);
-  }else if(ul){
+  if(ul){
     ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+([...shown].reverse().slice(0,200).map(e=>{
       const extra=Object.entries(e).filter(([k])=>!["subsystem","unit","of","epoch","t","kind","server","bucket","fenced","epoch_is","class","occurred"].includes(k))
         .map(([k,v])=>`${k}=${typeof v==="object"?JSON.stringify(v):v}`).join(" ");
@@ -829,7 +820,7 @@ function liftKeep(name){
 }
 // The check of a keep's seal is the incidents volume holder's (its door, ADR-0015, ADR-0057 p. 3): the copy lies there.
 // One request per recording of the keep: the door is a place token for rec/<recording> (/rec/where/<table>/<volume>
-// ?unit=rec/<r>), and the check names it (?recording=<r>). The answers in one word each: ok, broken, unknown.
+// ?unit=<r>), and the check names it (?recording=<r>). The answers in one word each: ok, broken, unknown.
 async function verifyKeep(id){
   const inc=incidentsVol(),k=keeps.find(x=>x.name===id);
   if(!inc||!inc.held_by){pc.toast("Архив инцидентов никто не держит — проверять негде");return}
@@ -837,7 +828,7 @@ async function verifyKeep(id){
   if(!list.length){pc.toast("У удержания нет записей — проверять нечего");return}
   const said=[];let bad=false;
   for(const r of list){
-    try{const where=`/rec/where/${encodeURIComponent(T_PLACES)}/${encodeURIComponent(inc.name)}?unit=${encodeURIComponent("rec/"+r)}`;
+    try{const where=`/rec/where/${encodeURIComponent(T_PLACES)}/${encodeURIComponent(inc.name)}?unit=${encodeURIComponent(r)}`;
       const res=await doorFetch(where,"/keeps/"+encodeURIComponent(id)+"/verify?recording="+encodeURIComponent(r),{method:"POST"});
       if(!res){said.push(`${r}: дверь держателя архива инцидентов не ответила`);bad=true;continue}
       const d=await res.json().catch(()=>({}));

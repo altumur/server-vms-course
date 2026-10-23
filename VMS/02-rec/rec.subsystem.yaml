@@ -235,7 +235,7 @@ holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800, releas
 # its camera holds itself as a span that yields — and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`.backfill.mp4`,
 # `.device.mp4`), a piece of it. The console hands out the door with the recording's place —
 # `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`. What a recording left on a volume another recorder
-# holds now is read at THAT recorder's door: `GET /rec/where/volumes/<volume>?unit=rec/<recording>` (by `places` above;
+# holds now is read at THAT recorder's door: `GET /rec/where/volumes/<volume>?unit=<recording>` (by `places` above;
 # nobody holding it: 404 and `X-Unreachable: <volume>@<server>`). The console carries no bytes of its own.
 # To processes, by their role's certificate (V/02.5): `/spans`, `/samples` — another recorder, a scan. The ingest (V/02.9):
 # this cluster's processes by role, a camera, a pusher or a relay of another cluster by a domain token of its kind.
