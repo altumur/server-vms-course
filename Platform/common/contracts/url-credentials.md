@@ -41,11 +41,12 @@ none?}` (объявление в манифесте — [P/02.1](../../02-instal
 ```yaml
 node:      узел authority — как записан, вместе с `userinfo@` и портом; хост в нём — в одном написании (нижним регистром, без
            конечной точки корня); none сравнивает его байт в байт: узел с портом или userinfo — не none (`cfw://user:pw@local` —
-           хост local, группа local, векторы group-of; уточнение «Архитектора» 2026-10-23); узел с портом — не none (`driverpack://FILE/x` — none, `driverpack://file:1/x`
+           хост local, группа local, векторы group-of; уточнение «Архитектора» 2026-10-23; `driverpack://FILE/x` — none, `driverpack://file:1/x`
            — нет, как векторы group-of; догадка стадии C URLC-SCHEMES-01, пересмотр, решение «Архитектора» 2026-10-23); IP-literal — со скобками:
            none ["[::1]"] совпадает с `cfw://[::1]/…`, ["::1"] — нет, `cfw://[::1]:99999` — узел с портом, не none
            (URLC-SCHEMES-03; вектора нет — в манифестах векторов none с IP-literal нет, чтением)
-host:      authority (умолчание) — хост — узел authority; path — хост — первый сегмент пути, узел authority — хаб
+host:      authority (умолчание) — хост — хост authority (после последнего «@», без порта); path — хост — первый сегмент
+           пути, узел authority — хаб
            (`mirror://<hub>/<host>/…`); первый сегмент при host: path — `хост[:порт]` по правилу authority (порт — port
            ниже): `mirror://hub/h:99999/x` — принят, `mirror://hub/h:abc/x` — bad_url; пустой первый сегмент — хоста нет:
            `mirror://hub/` — bad_url
