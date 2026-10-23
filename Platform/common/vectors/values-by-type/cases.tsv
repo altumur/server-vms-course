@@ -51,6 +51,7 @@ l-comma	list	both	["a,b","c"]	@json ["a,b","c"]	запятая в элемент
 l-bracket	list	both	["[x","y"]	@json ["[x","y"]	текст начинается с [ — массив JSON; сц. 09 шаг 2
 l-empty-item	list	both	["a","","b"]	@json ["a","","b"]	пустой элемент — массив JSON
 l-read-spaced	list	read	["a","b"]	"[\"a\", \"b\"]"	ведущий [ — разбор массива JSON (Н1.2 «При чтении»)
+l-read-empty-item-spaced	list	read	["a",""]	"[\"a\", \"\"]"	чтение по значению: тот же список, что '["a",""]' — fixed и сравнения по значению JSON (договор проверки строки; RC-14)
 l-string	list	write	"a"	@refuse	список строкой; сц. 08 шаг 3
 l-non-string	list	write	[1]	@refuse	иной JSON-элемент — отказ типа поля (Н1.2, Н4)
 lb-words	list:labels	both	["gpu","vlan:cctv-a","a.b_c-1"]	"gpu,vlan:cctv-a,a.b_c-1"	метки по азбуке (common/contracts/labels.md); сц. 12 шаг 7
