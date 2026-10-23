@@ -12,7 +12,7 @@
 Формы строк, которые этот договор называет, — в семьях урока P/08 (`Platform/08-domain/data/*.form.yaml`) и в общих
 договорах, не здесь: `domain/root` — семья `root`; `domain/signer` — `signer`; `domain/book-seal` — `book-seal`;
 `domain/keys` — семья `keys` и [договор набора ключей домена](keys.md); `domain/holder` — семья `holder` и [договор записи
-срока](record.md). Векторы — [`../vectors/domain-founding/`](../vectors/domain-founding/README.md).
+срока](record.md).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
@@ -106,3 +106,7 @@ claim_1:     процесс domain держателя при первом ста
              restored_from нет; issuer, kid, sig — выпускающий из domain/signer (issuing_key_secret); равная лежащей не
              пишется; затем держатель вносит себя в список членов (P/08.3 Н3 «держатель в списке»)
 ```
+
+## Векторы
+
+Пакет [`domain-founding`](../vectors/domain-founding/README.md): основание домена — корень, файл восстановления, закрепление. (ADR-0083 доп. (32) п. 2)

@@ -220,6 +220,6 @@ ref_and_must_match:                      # поле единицы или таб
 | `required`-поле не задано или `""` | П4 | `error` — `a <sub> unit needs a <поле>` | 400 |
 | `unique`/`ref`/`must_match` нарушены; ссылочная строка не читается | П5, Р3 | `error: conflict`, `fault: unique \| must_match \| garbled` | 409 |
 
-Векторы — [`../vectors/values-by-type/`](../vectors/values-by-type/README.md) (формы значений), [`../vectors/fault/`](../vectors/fault/README.md)
-(слова), [`../vectors/secret-in/`](../vectors/secret-in/README.md) (адрес), [`../vectors/row-check/`](../vectors/row-check/README.md)
-(проверка строки).
+## Векторы
+
+Пакеты [`row-check`](../vectors/row-check/README.md) (общая проверка строки), [`values-by-type`](../vectors/values-by-type/README.md) (формы значений), [`fault`](../vectors/fault/README.md) (слова отказов); адрес — пакет [`secret-in`](../vectors/secret-in/README.md) договора адреса. (ADR-0083 доп. (32) п. 2)

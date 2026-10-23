@@ -285,4 +285,6 @@ port:      *DIGIT по RFC 3986, без предела номера порта T
 Отказ — слово `bad_url` и имена полей `credentials` (А15): у двери — 400 `fault: bad_url` (P/06.2 Н4, P/06.1 Н4), у
 библиотеки заказчика — исход `refused` ([договор проверки строки](row-check.md) «Отказы»).
 
-Векторы — [`../vectors/secret-in/`](../vectors/secret-in/README.md).
+## Векторы
+
+Пакет [`secret-in`](../vectors/secret-in/README.md) (`cases.tsv`, объявления полей `fields.yaml`); правила «Схем» — частью пакетов [`group-of`](../vectors/group-of/README.md) и [`row-check`](../vectors/row-check/README.md). (ADR-0083 доп. (32) п. 2)

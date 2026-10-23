@@ -19,4 +19,6 @@ verify:   строка по form — вычислить ключ от парол
 secret:   в строке хранилища поле *_secret запечатано кольцом держателя (договор запечатывания); хэш — у открытого значения
 ```
 
-Векторы — [`../vectors/password-hash/`](../vectors/password-hash/README.md).
+## Векторы
+
+Пакет [`password-hash`](../vectors/password-hash/README.md): хэш и проверка пароля. (ADR-0083 доп. (32) п. 2)
