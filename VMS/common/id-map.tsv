@@ -157,3 +157,7 @@ old	new	chapter	subject	note
 М10B/21 ш.1; М10B/22	V/05.1-02	5.1	кто заводит: оператор (повторный прогон — новая строка), заказы rec-…, auto-…	расширение по пересечению снято
 М10B/21 ш.3–6	V/05.1-03	5.1	итог unit.state.result, действует по born/revision; retire_when с delete_after (заказ удаляется, ручная — нет)	уборщик консоли снят
 М10B/21 ш.1	V/05.1-04	5.1	размещение: capacity 2, near {sub: rec, by: rec}, без home и grows; снимок state.result	
+М10B/20 ш.1	V/05.2-01	5.2	у кого спросить: каждая живая дверь, лист detjobworker, 5 с, silent/garbled/unread, None ≠ []	
+М10B/20 ш.2–4	V/05.2-02	5.2	план по правилу эпохи, отрезок с дверью и ключом, потолок видимости — дыра	V/02.5 Н1.3
+М10B/20 ш.4; М10B/21 ш.2	V/05.2-03	5.2	чтение отрезка: /samples со stream у двери спана, accepts, подводка	/timeline → /samples
+М10B/20 ш.5, 8	V/05.2-04	5.2	covered, written_through, asked	
