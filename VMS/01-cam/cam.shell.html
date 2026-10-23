@@ -283,7 +283,7 @@ async function doorFetch(where,path,init={}){
   let d=await doorOf(where);if(!d)return null;
   const go=()=>fetch(d.url+path,{...init,headers:{...(init.headers||{}),Authorization:"Bearer "+d.token}});
   let r=await go();
-  if(r.status===401){d=await doorOf(where,true);if(!d)return null;r=await go()}   // its token would not do: where again, once
+  if(r.status===401||r.status===403){d=await doorOf(where,true);if(!d)return null;r=await go()}   // its token would not do (door token contract: 403): where again, once
   return r;
 }
 function yieldCut(spans){
@@ -387,7 +387,7 @@ async function negotiateLive(id){
   const offer=await pc.createOffer();
   await pc.setLocalDescription({type:"offer",sdp:h265Dynamic(offer.sdp)});
   // The first viewer makes the stream (POST /live/streams {cam}; «exists» — somebody watches already), then the
-  // offer goes to its gateway's door: 404/503 — not placed yet, again in 1.5 s, up to 8 times; 401 — where again, once.
+  // offer goes to its gateway's door: 404/503 — not placed yet, again in 1.5 s, up to 8 times; 403 — where again, once.
   try{await window.platformConsole.api("POST","/live/streams",{cam:String(id)})}
   catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
   const where="/live/where/"+encodeURIComponent(id);
