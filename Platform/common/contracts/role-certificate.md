@@ -146,7 +146,7 @@ mixed:        как signed целиком: TLS сервера роли проц
               центры кластера (ca.pem, ca.next.pem), чтобы браузер без таких листов не спрашивал человека; предъявленный
               лист проверяется в рукопожатии, как у signer (сходится к центру, срок, нет EKU без clientAuth — иначе alert);
               sig, revoked и роль из SAN — после рукопожатия
-  routes:     маршрут-имя — допуск token: токен двери (договор door-token), нет или неверен — 403 forbidden; маршрут
+  routes:     маршрут-имя или {name} без role и domain (W03-G08) — допуск token: токен двери (договор door-token), нет или неверен — 403 forbidden; маршрут
               {name, role} — допуск по сертификату роли: листа нет — 401 no_role, роль не из role — 403 wrong_role, подпись
               вне sig или серийник в revoked — 403 bad_chain (слова P/10 Н1.4 server.role); маршруты {name, domain} и
               {name, role, domain} — допуск по токену домена и по предъявленному, P/03.4 Н1.7 door_admission (ADR-0091 доп. (14))
