@@ -153,3 +153,7 @@ old	new	chapter	subject	note
 М10B/14 ш.6; М10B/14 «Результат»	V/04.4-01	4.4	пульс: events, events_refused, элемент phase/reason/events/via	запас — платформа
 М10B/14 ш.6	V/04.4-02	4.4	ряд units_running и console.running	
 М10B/14 ш.3	V/04.4-03	4.4	остановка: модели, источник, сброс подавления, слот	P/03.3, P/03.4 Н3
+М10B/21 ш.1, 9	V/05.1-01	5.1	поля задачи: cam, rec этой камеры (must_match), mask_from, alarms, медийный интервал; без state/ended	state/ended сняты (ADR-0091 п. 3)
+М10B/21 ш.1; М10B/22	V/05.1-02	5.1	кто заводит: оператор (повторный прогон — новая строка), заказы rec-…, auto-…	расширение по пересечению снято
+М10B/21 ш.3–6	V/05.1-03	5.1	итог unit.state.result, действует по born/revision; retire_when с delete_after (заказ удаляется, ручная — нет)	уборщик консоли снят
+М10B/21 ш.1	V/05.1-04	5.1	размещение: capacity 2, near {sub: rec, by: rec}, без home и grows; снимок state.result	

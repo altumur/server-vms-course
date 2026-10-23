@@ -1,0 +1,8 @@
+scenario	step	request	expect
+# Приёмка V/05.1: задача — единица (дверь единиц консоли detjob; манифесты cam, rec, det, detjob, auto). Формат — README.
+01-create	1	console2 POST /recordings {"name": "r7", "cam": "7"}	201 {"id": "r7"}
+01-create	2	console2 POST /recordings {"name": "r8", "cam": "8"}	201 {"id": "r8"}
+01-create	3	POST /jobs {"name": "j1", "cam": "7", "rec": "r7", "kind": "tick", "from": 1000, "to": 1060}	201 {"id": "j1", "labels": ["gpu"], "alarms": ["linecross", "lpr"], "state": "@absent"}
+01-create	4	POST /jobs {"name": "j2", "cam": "7", "rec": "r8", "kind": "tick", "from": 1000, "to": 1060}	409 {"error": "conflict", "fault": "must_match"}
+01-create	5	PUT /jobs/j1 {"rec": "r8"}	400 {"error": "~rec is fixed"}
+01-create	6	POST /jobs {"name": "rec-x", "cam": "7", "rec": "r7", "kind": "tick", "from": 1, "to": 2}	400 {"error": "~made by rec"}
