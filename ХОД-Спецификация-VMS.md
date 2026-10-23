@@ -71,6 +71,7 @@
   `rec` (`must_match`), `start`/`keep` перечнями, `unit.state.cursor` `{through, events, overrun}`, `events.older_epochs:
   earlier-run`, `worker: {reads, requests: [rec]}`, ряд `filings_total`, комментарии без «пишет консоль» и `frontier.json`.
   Запрос «реестр V06».
+  V/06.2 — переведена (нормы, id-map V/06.2-01…04).
 
 ## Перевод 05-detjob
 - План — `VMS/05-detjob/README.md` (годен, «Архитектор» 2026-10-23; решения 1–9). V/05.1 — переведена (нормы, приёмка 1,
@@ -166,7 +167,7 @@
 | `decisions/inbox/2026-10-23-запрос-vms-снять-V03-no-openapi.md` | навык: снять строку `V/03 no-openapi` — контракт двери шлюза есть (V/03.3) | нет | решён: строка снята (`2c17c28dd`) |
 | `decisions/inbox/2026-10-23-запрос-vms-реестр-V04.md` | навык: строка `V/04 no-openapi` (своей двери у `det` нет) | нет | решён: постоянная строка (`131b1fbb3`) |
 | `decisions/inbox/2026-10-23-запрос-vms-реестр-V05.md` | навык: строка `V/05 no-openapi` (своей двери у `detjob` нет) | нет | решён: постоянная строка (`8807ee9a5`) |
-| `decisions/inbox/2026-10-23-запрос-vms-реестр-V06.md` | навык: строка `V/06 no-openapi` (своей двери у `detedge` нет) | нет | открыт |
+| `decisions/inbox/2026-10-23-запрос-vms-реестр-V06.md` | навык: строка `V/06 no-openapi` (своей двери у `detedge` нет) | нет | решён: постоянная строка (`4a67d8c33`) |
 
 ## Решение по пакету запросов (2026-10-23, ADR-0091 доп. (2), (3); запросы № 5, 6, 16 — решены, main `a4c4121ba`)
 `worker.stop_timeout`, `parts.stop_timeout`; юнит воркера — `After=` своей части без `Wants`; `W2C_SUB_ENV=/etc/<sub>/<sub>.env`,
