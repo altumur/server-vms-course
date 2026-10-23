@@ -53,7 +53,7 @@ lease: {unconfirmed_max: forever}
 # primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
 # source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
 # denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
-worker: {exec: /usr/lib/rec/worker, reads: [domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+worker: {exec: /usr/lib/rec/worker, reads: [det/units/, domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -257,9 +257,9 @@ requests:
   ttl: 86400
   stamp: [by, at, about]
   journal: archive.backfill.asked
-  # A scenario's `record` (`vms/autoworker.py`) is turned into a recording by the VMS's jobs (`jobs.record_on_request`),
-  # not performed by a recorder: the platform's reaper leaves it to them.
-  elsewhere: [record]
+  # Backfill's profile (V/02.8 Н1.4; P/06.4 Н3 «жнец»): the outcome is the word `fetched` in the recorder's heartbeat, no
+  # mark; an old request is closed by the recorder, not by age. A scenario's recording is made by `auto` (worker.creates).
+  outcome: fetched
 snapshot: [name, cam, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
@@ -371,6 +371,8 @@ display:
     archive.keep.verified: сохранённое проверено
     archive.keep.copied: сохранённое скопировано
     archive.keep.lost: сохранённое потеряно или не скопировано
+    archive.backfill.asked: попросили дописать
+    archive.backfill.refused: дозапись отклонена
     archive.keep.made: поставлена метка «сохранить»
     archive.keep.lifted: метка «сохранить» снята
     archive.keep.uncopied: сохранённое ещё не скопировано
