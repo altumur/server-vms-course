@@ -109,6 +109,12 @@ root:
     unconfirmed:
       ref: common.uint53
       description: "единиц, чья аренда сейчас не подтверждена (элементы status[] с lease: unconfirmed); ряд worker_unconfirmed{worker}"
+    place_error:
+      type: object
+      description: "место не взято или потеряно: место → слово — sealed (секрет строки места не открылся, глава 3.5), refused (отказ подсистемы), wrong (строка места не по форме) — закрытый перечень; запись снимается, когда место взято или отпущено; записей не больше числа мест-кандидатов; поле платформы, не строка platform_strings; place_by — прежнее (ADR-0091 доп. (10) п. 4, повторное ревью)"
+      names:
+        key: {type: string}
+        value: {enum: [sealed, refused, wrong]}
     freeing:
       type: object
       description: "ответ на просьбу ресурса освободить место (P/05 Н1.4 free_ask): том ресурса → байты, которые воркер освобождает и которых ещё нет в used; 0 — ничего; поле платформы; что освобождать — подсистема (запрос VMS freeing)"
