@@ -356,10 +356,14 @@ async function playNext(){
   const p=V.queue.shift(),s=V.spans[p.i];
   [...$("#timeline").children].forEach((el,j)=>el.classList.toggle("playing",j===p.i));
   const cap=$("#playing");
-  if(cap)cap.textContent=`${fmtT(p.start)} – ${fmtT(p.end)} · эпоха ${s.epoch}`+(s.server?" · с "+s.server:"")+
+  if(cap)cap.textContent=`${fmtT(p.start)} – ${fmtT(p.end)} · эпоха ${s.epoch}`+
     (s.backupOnly?" · из резервного архива":"")+(s.source==="backfill"?" · дозаписано из резервного":"");
   const v=$("#player");v.srcObject=null;v.crossOrigin="anonymous";
   v.src=await segmentURL(s,p);
+  // A piece the door would not give (busy — `Retry-After: 5`, V/02.5 Н1.6 — or refused): said, and the same piece asked
+  // again once after five seconds; then the queue goes on.
+  v.onerror=()=>{if(p.again){setCap("кусок не отдан дверью — дальше");playNext();return}
+    p.again=true;setCap("дверь архива занята или отказала — повтор через 5 с");setTimeout(()=>{V.queue.unshift(p);playNext()},5000)};
   if(p.off)v.addEventListener("loadedmetadata",()=>{v.currentTime=p.off},{once:true});
   v.play().catch(()=>{});
 }
@@ -387,7 +391,8 @@ async function negotiateLive(id){
   const offer=await pc.createOffer();
   await pc.setLocalDescription({type:"offer",sdp:h265Dynamic(offer.sdp)});
   // The first viewer makes the stream (POST /live/streams {cam}; «exists» — somebody watches already), then the
-  // offer goes to its gateway's door: 404/503 — not placed yet, again in 1.5 s, up to 8 times; 403 — where again, once.
+  // offer goes to its gateway's door: 404 (not yet), 503 (full, busy), 500 (answer failed) — again after `Retry-After` or
+  // 1.5 s, up to 8 times (V/03.3 Н4); 403 — where again, once.
   try{await window.platformConsole.api("POST","/live/streams",{cam:String(id)})}
   catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
   const where="/live/where/"+encodeURIComponent(id);
@@ -395,10 +400,11 @@ async function negotiateLive(id){
   for(;;){
     try{r=await doorFetch(where,`/whep/${encodeURIComponent(id)}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
     catch(e){r=null}
-    if(r&&![404,503].includes(r.status))break;
+    if(r&&![404,500,503].includes(r.status))break;
     if(++tries>8)break;
     setCap(`живое: ждём шлюз… (${tries})`);
-    await new Promise(res=>setTimeout(res,1500));
+    const ra=r?Number(r.headers.get("Retry-After")):NaN;
+    await new Promise(res=>setTimeout(res,ra>0?ra*1000:1500));
   }
   if(!r){setCap("живое: шлюз не взял поток");pc.close();return}
   if(r.status!==201){
