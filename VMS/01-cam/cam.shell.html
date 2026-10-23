@@ -43,11 +43,12 @@ recording may lie on are the rows of the table the rec manifest names
   «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
   its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state in the recorders' own words, from
   their beat — `servers.status` of their rows at `/rec/servers` with `of: keeps`, ADR-0064: here, pushing, pushed,
-  at risk, lost of the recording's writer; kept, released, garbled of the incidents holder —, «нет кадров,
+  at risk, lost, garbled of the recording's writer; kept of the incidents holder; let go — the row's `released_at` —, «нет кадров,
   запечатывать нечего» for a recording with no footage in the stretch).
 - Volumes (`/rec/<places table>`): `addTreeNodes("server")` (a server's own), `addTreeNodes("servers")` («Сетевые
   архивы»), `addCard("vol"|"netvols")`, `addBlock("server", {covers: "rec/volumes"})` «Архивы сервера»; declaring
-  (`POST`, a smaller quota only with `shrink_confirmed`) and withdrawing (`DELETE`).
+  (`POST`, the row whole: what the dialog does not show is carried from the row; a smaller quota, or one a holder says
+  waits — `shrink_pending` —, only with `shrink_confirmed`; `incidents` with `admits: false`) and withdrawing (`DELETE`).
 - «Камеру в архив» — `addAction("server")`, `addMenu("server"|"vol")`: a recording of a camera on a volume of the
   server (`POST /rec/recordings {name, cam, home}`).
 - `addSection` «Сценарии» (after units) — the auto subsystem's scenarios: the list and the editor, the actions the
@@ -229,6 +230,8 @@ const DOORS={};
 const V={spans:[],events:[],queue:[],evfilter:"",live:null,connecting:false,lo:0,hi:0,note:"",evstate:"",
          truncated:false,cam:null};
 const VOL_BACKUP="backup";
+// a backup recording is one homed on a backup volume or on a camera's card (V/02.1 `when`, V/02.6)
+const BACKUP_KINDS=[VOL_BACKUP,"edge"];
 const PALETTE=["#c58a1a","#8e44ad","#2a9d5c","#d35400","#16a085","#7f8c8d"];
 const palette={};
 const subColor=s=>palette[s]||(palette[s]=PALETTE[Object.keys(palette).length%PALETTE.length]);
@@ -306,7 +309,7 @@ async function loadTimeline(id){
   const asks=[],missing=new Set(),refused=new Map(),seen=new Set(),spans=[];
   // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»;
   // another cluster's recording says it itself (its volumes are that cluster's)
-  const backupRec=rec=>{if(rec.cluster)return!!rec.backup;const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
+  const backupRec=rec=>{if(rec.cluster)return!!rec.backup;const v=places.find(x=>x.name===rec.home);return!!v&&BACKUP_KINDS.includes(v.kind)};
   const take=(rec,where,list)=>{const bk=backupRec(rec);for(const x of list||[]){
     const k=[rec.cluster||"",rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
     spans.push({start:x.start_ms/1000,end:x.end_ms/1000,epoch:x.epoch,fenced:!!x.fenced,events:0,source:x.source||"",recording:rec.id,where,media:true,yields:!!x.yields||bk,backupOnly:bk})}};
@@ -495,7 +498,7 @@ function deviceRanges(){
   });
   return out;
 }
-const primariesOf=cam=>recsOfCam(cam).filter(r=>{const v=vols.find(x=>x.name===r.home);return!v||(v.kind!==VOL_BACKUP&&v.kind!=="edge")});
+const primariesOf=cam=>recsOfCam(cam).filter(r=>{const v=vols.find(x=>x.name===r.home);return!v||!BACKUP_KINDS.includes(v.kind)});
 function drawDeviceLine(){
   const el=$("#devline");if(!el)return;
   const rs=deviceRanges();
@@ -646,7 +649,7 @@ async function loadRec(){
     const [r,v,k]=await Promise.all([getJSON("/rec/recordings"),T_PLACES?getJSON("/rec/"+encodeURIComponent(T_PLACES)):{},getJSON("/rec/keeps").catch(()=>({}))]);
     const byId={};(r.rows||[]).forEach(x=>{byId[String(x.id)]=x});
     recs=(r.configured||[]).map(c=>({...c,id:String(c.id),row:byId[String(c.id)]||null}));
-    vols=((v||{})[T_PLACES]||[]).filter(x=>!x.garbled).map(x=>({...x,quota_bytes:+x.quota_bytes||0,enabled:String(x.enabled)!=="false"}));
+    vols=((v||{})[T_PLACES]||[]).map(x=>({...x,quota_bytes:+x.quota_bytes||0,enabled:String(x.enabled)!=="false"}));
     keeps=(k||{}).keeps||[];
     // what the recorders say in their beat: rec's own servers (`/rec/servers`) — the root /servers lists only the
     // workers of the root subsystem
@@ -666,6 +669,7 @@ function recState(r){
   if(!w)return{label:"Не размещена",bad:true};
   if(w.worker_state==="stale")return{label:"Регистратор молчит",bad:true};
   if(w.phase==="running")return{label:"Пишет",bad:false};
+  if(w.phase==="pending")return{label:"Запускается",bad:false};
   if(w.phase==="standby")return{label:"Ждёт: основная запись идёт",bad:false};
   if(w.phase==="waiting")return{label:"Ждёт том",bad:true};
   if(w.phase==="failed")return{label:"Ошибка",bad:true};
@@ -678,10 +682,13 @@ function volState(v){
   return{label:"Никто не обслуживает",bad:true};
 }
 const offCard=(title,why,body)=>`<div class="card is-off"><div class="ch">${title}<span class="sub" style="font-weight:400">${esc(why)}</span></div><div class="cb"><p class="sub">${body||""}</p></div></div>`;
-const homeOptions=cur=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+vols.filter(x=>x.enabled).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
+// The volumes a recording of this camera may be homed on: enabled, admitting recordings (not `incidents`, `admits:
+// false`), a camera's card only for its own camera (`home` — `must_match: {cam: cam}`, V/02.1).
+const homesFor=cam=>vols.filter(x=>x.enabled&&x.admits!==false&&(x.kind!=="edge"||cam==null||String(x.cam)===String(cam)));
+const homeOptions=(cur,cam)=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+homesFor(cam).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
 function whenSelectHtml(r){
   const v=volByName(r.home);
-  if(!v||v.kind!==VOL_BACKUP)return"";
+  if(!v||!BACKUP_KINDS.includes(v.kind))return"";
   const cur=r.when||"always";
   return`<div><label>Когда писать</label><select data-act="when" data-rec="${esc(r.id)}">
       <option value="always" ${cur==="always"?"selected":""}>всегда — основная закрывает из неё любую дыру</option>
@@ -694,12 +701,12 @@ function camRecCardHtml(cam){
     const st=recState(r),w=r.row||{},v=volByName(r.home);
     return`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
       <span><b>${esc(r.id)}</b><small>${r.home?`том «${esc(r.home)}»${v?" · "+esc(volKind(v)):""}`:"том не выбран — пишется туда, где есть место"}</small>
-        ${w.why?`<small style="color:var(--rd)">${esc(w.why)}</small>`:""}</span>
+        ${w.reason||w.why?`<small style="color:var(--rd)">${esc(w.reason||w.why)}</small>`:""}</span>
       <span class="bd ${st.bad?"off":""}">${esc(st.label)}</span>
       <button type="button" class="btn s" data-act="toggle" data-rec="${esc(r.id)}" data-on="${r.enabled===false?"1":""}">${r.enabled===false?"Включить":"Выключить"}</button>
       <button type="button" class="btn s" data-act="del" data-rec="${esc(r.id)}">Удалить</button></div>
     <div class="g" style="margin:0 0 10px">
-      <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home)}</select></div>
+      <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home,cam)}</select></div>
       ${whenSelectHtml(r)}
       <div><label>Срок хранения, дн</label><input type="number" min="1" value="${esc(r.retention_days)}" data-act="days" data-rec="${esc(r.id)}"></div>
       ${fldRo("Регистратор · сервер",w.worker?`${w.worker} · ${w.server||"—"}`:"—")}</div>`;
@@ -717,13 +724,12 @@ const keepVerifyOn=()=>(((pc.manifest("rec")||{}).door||{}).routes||[]).includes
 // What the recorders say of the keeps, in their beat (servers.status of rec with `of: keeps`, ADR-0064):
 // keeps {<keep>: {state, …}}, incidents_lost {<keep>: seconds}, incidents_at_risk [<keep>] — matched to the keep's row
 // by its key. Only the fields rec's manifest names with of: keeps are read; nothing named — nothing said. Each recorder
-// says its own part: the one writing a recording — here, pushing, pushed, at risk, lost (with recording); the holder
-// of the incident archive — kept, released, garbled.
+// says its own part: the one writing a recording — here, pushing, pushed, at risk, lost, garbled (with recording); the
+// holder of the incident archive — kept (V/02.7 Н1.5). A keep let go is its row's `released_at`, not a state.
 const KEEP_STATE={
   here:{said:"в архиве записи",cls:"wait"},pushing:{said:"копируется в архив инцидентов",cls:"wait"},
   pushed:{said:"скопировано в архив инцидентов",cls:""},"at risk":{said:"под угрозой",cls:"off"},
-  lost:{said:"потеряно",cls:"off"},kept:{said:"в архиве инцидентов",cls:""},
-  released:{said:"отпущено",cls:"wait"},garbled:{said:"не читается",cls:"off"}};
+  lost:{said:"потеряно",cls:"off"},kept:{said:"в архиве инцидентов",cls:""},garbled:{said:"не читается",cls:"off"}};
 function keepSaid(name){
   const fields=new Set((((pc.manifest("rec")||{}).servers||{}).status||[]).filter(x=>x.of==="keeps").map(x=>x.field));
   const out={said:[]};
@@ -746,9 +752,7 @@ function keepStateHtml(name){
     if(k.state==="here"&&k.leaves_in_s!=null)more.push(`кольцо заберёт через ${daysHours(k.leaves_in_s)}`);
     if(k.state==="lost"&&k.lost_seconds!=null)more.push(`${Math.round(+k.lost_seconds)} с`);
     parts.push(`<span class="bd${st.cls?" "+st.cls:""}">${who}${esc(st.said)}${more.length?" · "+esc(more.join(" · ")):""}</span>`);
-    if(k.why&&(k.state==="at risk"||k.state==="lost"||k.state==="released"||k.state==="garbled"))parts.push(`<small${k.state==="released"?"":' style="color:var(--rd)"'}>${esc(k.why)}</small>`);
-    if(k.garbled)parts.push(`<small class="sub">границы прочитаны не полностью: ${esc(k.garbled)}</small>`);
-    if(k.error)parts.push(`<small style="color:var(--rd)">${esc(k.error)}</small>`);
+    if(k.why&&(k.state==="at risk"||k.state==="garbled"))parts.push(`<small style="color:var(--rd)">${esc(k.why)}</small>`);
     // the recordings that hold no footage in the keep's stretch (the holder's keeps.<id>.empty): nothing to seal there
     if(Array.isArray(k.empty)&&k.empty.length)parts.push(`<small class="sub">в отрезке нет кадров у ${esc(k.empty.join(", "))} — запечатывать нечего</small>`);
   }
@@ -761,6 +765,7 @@ function keepRowHtml(k){
   return`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
     <span><b>${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}</b> <small>${Math.round((k.to-k.from)/60)} мин</small>${k.note?`<small>${esc(k.note)}</small>`:""}
       <small>${k.by?`поставил ${esc(k.by)} · `:""}${k.at?fmtDayTime(k.at)+" · ":""}записи ${esc((k.recordings||[]).join(", ")||"—")}</small></span>
+    ${k.released_at?`<span class="bd wait">отпущено ${esc(fmtDayTime(+k.released_at))} — больше не держит</span>`:""}
     ${keepStateHtml(k.name)}
     ${keepVerifyOn()?`<button type="button" class="btn s" data-act="verify" data-keep="${esc(k.name)}">Проверить</button>`:""}
     <button type="button" class="btn s" data-act="lift" data-keep="${esc(k.name)}">Снять</button></div>`;
@@ -815,7 +820,9 @@ async function openKeep(cam,from,to){
   if(!v)return;
   const f=fromLocalInput(v.from),t=fromLocalInput(v.to);
   if(!(t>f)){pc.toast("Конец отрезка должен быть позже начала");return}
-  try{await pc.api("POST","/rec/keeps",{cam:String(cam),from:Math.floor(f),to:Math.ceil(t),...(v.note.trim()?{note:v.note.trim()}:{})});await reloadRec();pc.toast("Отрезок удержан")}
+  // the camera's recordings as they are now: one deleted later still has its minutes copied (V/02.7 Н1.1)
+  const rl=camRecs(cam).map(r=>r.id);
+  try{await pc.api("POST","/rec/keeps",{cam:String(cam),from:Math.floor(f),to:Math.ceil(t),...(v.note.trim()?{note:v.note.trim()}:{}),...(rl.length?{recordings:rl}:{})});await reloadRec();pc.toast("Отрезок удержан")}
   catch(e){pc.toast("Отказано: "+e.message)}
 }
 function keepShown(cam){const now=Date.now()/1000,w=WINDOWS.find(x=>x[0]===winKey);openKeep(cam,w&&w[2]?now-w[2]:V.lo||now-3600,now)}
@@ -865,7 +872,7 @@ loadRec().then(()=>{KEEP_ON=!!recOn});
 async function addToArchive(opt){
   opt=opt||{};
   if(recOn===false){pc.toast("Консоль не монтирует rec");return}
-  const homes=vols.filter(v=>v.enabled&&(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
+  const homes=homesFor(opt.cam).filter(v=>(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
   // a camera the server (the volume) writes already is not offered again: one camera, one recording a place
   const here=opt.home?[opt.home]:opt.server?serverVolumes(opt.server).map(v=>v.name):[];
   const cams=(UNITS.cam||[]).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
@@ -877,6 +884,8 @@ async function addToArchive(opt){
   if(!v)return;
   const days=parseInt(v.days,10);
   if(!(days>=1)){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
+  const hv=volByName(v.home);
+  if(hv&&hv.kind==="edge"&&String(hv.cam)!==String(v.cam)){pc.toast(`Том «${hv.name}» — карта камеры ${hv.cam}: только для её записей`);return}
   const taken=new Set(recs.map(r=>r.id));
   const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:v.cam;
   if(taken.has(name)){pc.toast(`Запись «${name}» уже есть`);return}
@@ -885,10 +894,13 @@ async function addToArchive(opt){
 }
 
 // ── Volumes: under each server its own, the network ones apart; their cards; declaring and withdrawing ──────────
+// A smaller quota the holder has not applied: its `shrink_pending` (bytes) in its beat (servers.status, V/02.6).
+const shrinkPending=v=>{const w=recWorkers().find(x=>v.held_by&&x.worker===v.held_by);return w&&+w.status.shrink_pending>0?+w.status.shrink_pending:0};
 function volCardHtml(v){
-  const st=volState(v),list=volRecs(v.name),net=v.kind===VOL_NET;
+  const st=volState(v),list=volRecs(v.name),net=v.kind===VOL_NET,sp=shrinkPending(v);
   return`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify(net?[["Сетевые архивы","netvols"]]:v.server?[[v.server,"server:"+v.server]]:[]))}"></span>${esc(v.name)}</h1>
     <p class="sub pc-hdsub">том · ${esc(volKind(v))}</p>
+    ${sp?`<div class="nt err">Уменьшение квоты ждёт подтверждения: стереть ${gbytes(sp)} самого старого. Подтвердить — «Изменить объявление».</div>`:""}
     ${card("Архив",`<span class="bd ${st.bad?"off":""}">${esc(st.label)}</span>
       <div class="g" style="margin-top:10px">${fldRo("Вид",volKind(v))}${fldRo(net?"Адрес":"Путь",v.url||"—")}${fldRo("Сервер",net?"любой в кластере":(v.server||"—"))}${fldRo("Квота",gbytes(v.quota_bytes))}${v.access_key?fldRo("Ключ доступа (ID)",v.access_key):""}</div>
       <p class="sub">Квота задана, а не измерена: два тома на одном разделе без квот оба считают чужое место своим. Меньшая квота у тома, который уже есть, стирает самое старое — регистратор делает это, только когда её подтвердили.</p>
@@ -930,10 +942,14 @@ async function openVolume(kind,server,was){
   if(v.access_key&&v.access_key.trim())body.access_key=v.access_key.trim();
   if(v.access_secret)body.access_secret=v.access_secret;
   const old=volByName(body.name);
-  if(old&&old.quota_bytes&&body.quota_bytes<old.quota_bytes){
-    if(!pc.confirm(`Уменьшить том «${body.name}» с ${gbytes(old.quota_bytes)} до ${gbytes(body.quota_bytes)}?`,"Самое старое будет стёрто, чтобы уместиться: стёртое не вернуть."))return;
+  // POST of a table row replaces it whole (P/06.1): what the dialog does not show is carried from the row as it is
+  if(old){if(old.enabled===false)body.enabled=false;if(old.kind==="edge"&&body.kind==="edge"&&old.cam!=null)body.cam=old.cam}
+  if(body.kind==="incidents")body.admits=false;   // evidence takes no recordings (the table's schema, V/02.1 Н1.2)
+  const pend=old?shrinkPending(old):0;
+  if(old&&old.quota_bytes&&(body.quota_bytes<old.quota_bytes||pend&&body.quota_bytes===old.quota_bytes)){
+    if(!pc.confirm(`Уменьшить том «${body.name}»${body.quota_bytes<old.quota_bytes?` с ${gbytes(old.quota_bytes)}`:""} до ${gbytes(body.quota_bytes)}?`,"Самое старое будет стёрто, чтобы уместиться: стёртое не вернуть."))return;
     body.shrink_confirmed=body.quota_bytes;
-  }
+  }else if(old&&body.quota_bytes===old.quota_bytes&&+old.shrink_confirmed)body.shrink_confirmed=+old.shrink_confirmed;
   try{await pc.api("POST","/rec/"+encodeURIComponent(T_PLACES),body);await reloadRec();pc.select("vol:"+body.name);pc.toast(body.shrink_confirmed?"Квота тома уменьшена":"Архив объявлен")}
   catch(e){pc.toast("Отказано: "+e.message)}
 }
