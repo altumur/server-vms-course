@@ -1,0 +1,10 @@
+# Режимы корня событий, замков присутствия и бакетов (договор журнала событий bucket modes, договор замка присутствия modes; EJ-L02, PL-G02, PL-G03): путь → вид, режим, владелец (если назван), группа. Форма — README.
+case	path	kind	mode	owner	group	note
+events-root	<PLATFORM_DIR>/events	dir	2771	w2c	w2c-events	корень событий — проход прочим без чтения (путь скрипта воркеров к замкам; PL-G03)
+workers-dir	<PLATFORM_DIR>/events/.workers	dir	2771	-	w2c-events	путь к замкам — проход прочим без чтения (PL-G03)
+workers-sub	<PLATFORM_DIR>/events/.workers/testsub	dir	2775	-	w2c-events	каталог замков подсистемы — перечень и чтение прочим (скрипт воркеров), группа пишет (PL-G02)
+lock-file	<PLATFORM_DIR>/events/.workers/testsub/<экземпляр>.lock	file	0644	<пользователь воркера>	w2c-events	файл замка — чтение прочим (PL-G02)
+tree-dir	<PLATFORM_DIR>/events/testsub	dir	2770	-	w2c-events	каталог дерева — пишет и удаляет больше одного пользователя группы (EJ-L02)
+unit-dir	<PLATFORM_DIR>/events/testsub/c1	dir	2770	-	w2c-events	каталог единицы — создаёт писатель, удаляет ресурс
+bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<пользователь воркера>	w2c-events	бакет единицы — один писатель
+audit-bucket	<PLATFORM_DIR>/events/audit/console/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	журнал роли — процессы одного пользователя
