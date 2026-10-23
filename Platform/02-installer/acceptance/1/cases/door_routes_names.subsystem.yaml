@@ -330,6 +330,9 @@ events:
       window: 5
       by:
       - unit
+# the belt testsub uses (its worker.uses testsub2.belt, ADR-0091 п. 5): a put beside testsub needs the share
+shares:
+  belt: {kind: socket}
 snapshot:
 - name
 - of

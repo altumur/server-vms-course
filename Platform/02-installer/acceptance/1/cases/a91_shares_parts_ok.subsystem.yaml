@@ -9,7 +9,7 @@ placement:
   capacity: {default: 4}
 shares:
   belt: {kind: socket}
-  pump: {kind: dir}
+  pump: {kind: dir, part: pump}
 parts:
   pump: {exec: /usr/lib/probe/pump}
 worker: {exec: /usr/lib/probe/worker}
