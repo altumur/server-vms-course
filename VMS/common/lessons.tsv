@@ -2,7 +2,7 @@
 # урока (<sub>.subsystem.yaml в его каталоге) или «-»; status — переведён | не переведён. Читает check_spec.
 # lesson	dir	title	subsystem	status
 01	01-cam	Камера	cam	переведён
-02	02-rec	Запись	rec	не переведён
+02	02-rec	Запись	rec	переведён
 03	03-live	Живое видео	live	не переведён
 04	04-det	Живая детекция	det	не переведён
 05	05-detjob	Задача по интервалу архива	detjob	не переведён
