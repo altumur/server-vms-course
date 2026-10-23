@@ -62,6 +62,12 @@
   недержимые записи и книгу `polls` пишет первый регистратор кластера; `CLOCK_STEP` 5 с, `PEER_BUFFER` 300, `period` 2 с,
   `CLOCK_FLOOR` 2000-01-01, `POLL_HOLD` 30 с — числа курса.
 
+## Перевод 06-detedge
+- План — `VMS/06-detedge/README.md` (годен, «Архитектор» 2026-10-23; решения 1–10; переход — ADR-0090 доп. (11)).
+  Переход `survey` → `detedge` первым коммитом: `detedge.subsystem.yaml`, `name: detedge`, ключи `detedge/…`, слот
+  `{prefix: e, name_env: DETEDGE_NAME}`, `exec: /usr/lib/detedge/worker`; V/01.5 Н2 — оговорка снята; `lessons.tsv`, `VMS/README.md`.
+  Словарь и тест границы — не мои (сессия тестов, «Сборка»).
+
 ## Перевод 05-detjob
 - План — `VMS/05-detjob/README.md` (годен, «Архитектор» 2026-10-23; решения 1–9). V/05.1 — переведена (нормы, приёмка 1,
   id-map V/05.1-01…04, лекция и инструкция — начало). Манифест `detjob` переписан: поля `state`, `ended` сняты (отказ
@@ -185,6 +191,7 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
+- «Сборке»: переход `survey` → `detedge` (ADR-0090 доп. (11)): манифест `detedge.subsystem.yaml`, ключи `detedge/…`, слот `e`, `DETEDGE_NAME`, роль `detedgeworker`, юнит `vms-detedgeworker@`, ряды `detedge_*`.
 - V/05: сценарий скана на стенде (учебная модель по записи до итога `done` и снятия) — со стендом TLS VMS (листы `recworker`, `detjobworker`) и малым лагом видимости; до него главы V/05.2–V/05.4 — чтением.
 - «Сборке»: `detjob.subsystem.yaml` — поля `state`, `ended` сняты; `unit.state` (`result`, `cursor`), `retire_when` по состоянию с `delete_after`, `mask_from`, `alarms`, `snapshot` `state.result`, `worker.reads`, `worker.requests: [rec]`, ряд `filings_total`; `rec` — заказ копирует `alarms`.
 - V/04.1: действие `det.scan` сценария без пути до V/05, V/07 (раздел `requests:` у `det` снят, задача `detjob` — V/05); `auto` объявляет `worker.creates` к `det/units` без норм до V/07.

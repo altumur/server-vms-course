@@ -1,27 +1,27 @@
-# The survey: the SIXTH subsystem, and the only one whose input is an archive we do not own.
+# Detection over a device's archive (`detedge`, V/06): the only subsystem whose input is an archive we do not own.
 #
 # A unit is one model watching one camera's DEVICE archive — the card, the NVR — forever. It exists for
 # the case where the footage is never going to be ours: thirty days on an NVR that has no analytics of its
 # own, no room on the server for a copy, and a need for our detections anyway. So nothing is copied: the
 # video stays where it is, and what comes out is events.
 #
-#   survey/watches/<name>          the unit: cam, kind, params — written by the console
-#   survey/<name>/e<epoch>/…       what the model saw, on this server's resource
-#   survey/<name>/frontier.json    how far it has watched — durable, beside the events
+#   detedge/watches/<name>          the unit: cam, kind, params — written by the console
+#   detedge/<name>/e<epoch>/…       what the model saw, on this server's resource
+#   detedge/<name>/frontier.json    how far it has watched — durable, beside the events
 #
 # It is NOT `det` with another source, for the reason Lesson 21 gives: the budgets differ. A live detector
-# decodes one stream at one times real time; a survey decodes as fast as the device's door will give it,
+# decodes one stream at one times real time; a watch decodes as fast as the device's door will give it,
 # and its limit is not the GPU but the two playback sessions the device allows. Two numbers, two
-# subsystems — and a survey must never be able to spend what live detection is running on.
+# subsystems — and a watch must never be able to spend what live detection is running on.
 #
 # It is not `detjob` either: its work does not end. There is no `retire_when` here.
-name: survey
-# The slot a worker of this subsystem makes, `s-<n>`, and the variable naming the one it is started under
-# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
-slot: {prefix: s, name_env: SURVEY_NAME}
+name: detedge
+# The slot a worker of this subsystem makes, `e-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (ADR-0090 доп. (11): `d` is the detectors', `s` meant `survey`).
+slot: {prefix: e, name_env: DETEDGE_NAME}
 about: {sub: cam, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
 unit:
-  rows: watches                      # survey/watches/<name>
+  rows: watches                      # detedge/watches/<name>
   id: name                           # "<cam>-<kind>", the operator's name for the pair
   fields:
     name:    {type: string, required: true}
@@ -61,4 +61,4 @@ metrics:
   - {name: watches_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: watches_running
-worker: {exec: /usr/lib/survey/worker}
+worker: {exec: /usr/lib/detedge/worker}
