@@ -463,4 +463,4 @@ cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid 
 cam.source	cfw://local	cfw://local		host: authority with none: [local] needs no path (url-credentials «Схемы»; URLC-HOST-01)
 cam.source	driverpack://file	driverpack://file		no credentials in it: fault empty; its bad_url (host: path needs a path) is by url-credentials «Схемы», outside this table (URLC-HOST-01, URLC-VECTORS-02)
 cam.source	rtsp://10.0.0.5:99999/live	rtsp://10.0.0.5:99999/live		a port is *DIGIT, no TCP bound (URLC-HOST-01)
-cam.source	cfw://local:80	cfw://local:80		the authority node is the host without userinfo and port: local:80 is the none node local, no path needed (URLC-SCHEMES-01)
+cam.source	cfw://local:80	cfw://local:80		a node with a port is no none node: the host is local, accepted; no credentials (URLC-SCHEMES-01, revised)
