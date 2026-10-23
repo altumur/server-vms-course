@@ -62,7 +62,8 @@ recording may lie on are the rows of the table the rec manifest names
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks`, `/live/accounts` (writes through `pc.api`), `/domain/rec/books/primaries`; the holders' doors from
+`/events`, `/marks`, `/live/accounts` (writes through `pc.api`), `/domain/rec/books/primaries`, `/domain/placement`
+(`PUT /domain/placement/rec/<ref>`); the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
@@ -103,9 +104,9 @@ cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents
 .livefeed .ev:first-child{font-weight:600;color:var(--mu)}
 .sub.bad{color:var(--rd)}
 .btn.on{border-color:#3f6fac;background:#1a2d4d;color:#fff}
-.vms-rules{display:grid;grid-template-columns:260px 1fr;gap:12px}
-.vms-rules-list .n{display:flex;gap:6px;padding:6px 8px;border-radius:7px;cursor:pointer}
-.vms-rules-list .n:hover{background:var(--p2)}.vms-rules-list .n.on{background:#1a2d4d}
+.auto-rules{display:grid;grid-template-columns:260px 1fr;gap:12px}
+.auto-rules-list .n{display:flex;gap:6px;padding:6px 8px;border-radius:7px;cursor:pointer}
+.auto-rules-list .n:hover{background:var(--p2)}.auto-rules-list .n.on{background:#1a2d4d}
 </style>
 <div id="app"></div>
 <script src="/platform/console.js?v=1"></script>
@@ -992,8 +993,8 @@ const RACTIONS=[
   {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
   {sub:"cam",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
   {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут"},{id:"archive",label:"Архив",opt:true}]},
-  {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут"}]},
-  {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true},{id:"after",label:"Секунд после",opt:true},{id:"rec",label:"Запись",opt:true}]}];
+  {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут"},{id:"params",label:"Параметры (JSON)",opt:true,json:true}]},
+  {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true},{id:"after",label:"Секунд после",opt:true},{id:"rec",label:"Запись",opt:true},{id:"params",label:"Параметры (JSON)",opt:true,json:true}]}];
 let RSEL=null,ruleDraft=null,ruleFires={},autos=[],autoOff=false,detOn=false,RULES_HOST=null;
 const actionsOn=()=>RACTIONS.filter(a=>a.sub!=="det"||detOn);
 const actionKind=a=>RACTIONS.find(k=>k.sub===a.sub&&k.action===a.action)||{sub:a.sub,action:a.action,label:(a.sub||"?")+"."+(a.action||"?"),fields:[]};
@@ -1005,7 +1006,8 @@ async function loadAuto(){
     // A scenario exists while its row does; a holder that has not noticed a deletion yet speaks of it last.
     const seen={};(d.rows||[]).forEach(r=>{seen[String(r.id)]=r});
     autos=(d.configured||[]).map(c=>{const r=seen[String(c.id)]||null;
-      return{...c,id:String(c.id),worker:r?r.worker:null,phase:r?r.phase:"silent",why:r?r.why:"",unfit:r&&r.unfit||null}})
+      return{...c,id:String(c.id),worker:r?r.worker:null,phase:r?r.phase:"silent",reason:r&&(r.reason||r.why)||"",
+        unfit:r&&Array.isArray(r.unfit)&&r.unfit.length?r.unfit:null,unchecked:r&&Array.isArray(r.unchecked)&&r.unchecked.length?r.unchecked:null}})
       .sort((a,b)=>a.id.localeCompare(b.id));
     autoOff=false;
   }catch(e){autos=[];autoOff=true}
@@ -1031,7 +1033,11 @@ function ruleProblem(r){
   if(r.when.some(t=>!t.sub||!t.kind))return"у события должны быть подсистема и вид";
   if(!r.then.length||r.then.length>4)return"«то» — от одного до четырёх действий";
   for(const a of r.then){const k=actionKind(a),miss=k.fields.filter(f=>!f.opt).find(f=>!String(a[f.id]??"").trim());if(miss)return`«${k.label}»: не заполнено поле «${miss.label}»`}
+  for(const a of r.then){const k=actionKind(a),j=k.fields.find(f=>f.json&&a[f.id]!=null&&(typeof a[f.id]!=="object"||Array.isArray(a[f.id])));if(j)return`«${k.label}»: «${j.label}» — объект JSON`}
   if(r.within<0||r.within>3600)return"«в пределах» — от 0 до 3600 секунд";
+  // what one field's form cannot say — the evaluator's refusal of two fields together (V/07.3 Н1.1), said before writing
+  if(r.when.length>1&&!r.within)return"два события и больше — нужно «в пределах»: окно, в которое они должны попасть";
+  if(r.when.length===1&&r.within)return"«в пределах» — окно между событиями; у одного события окна нет";
   if(r.rate_per_minute&&(r.rate_per_minute<1||r.rate_per_minute>600))return"не чаще — от 1 до 600 в минуту (0 — по умолчанию)";
   if(r.valid_for&&(r.valid_for<5||r.valid_for>600))return"заявка действительна — от 5 до 600 секунд (0 — по умолчанию)";
   return"";
@@ -1040,8 +1046,8 @@ const parseMatch=s=>Object.fromEntries(String(s||"").split(",").map(x=>x.split("
 const matchText=m=>Object.entries(m||{}).map(([k,v])=>`${k}=${v}`).join(", ");
 function rulesListHtml(){
   if(autoOff)return`<div class="n"><span class="nm sub">Подсистема автоматизации не смонтирована</span></div>`;
-  return autos.map(r=>{const on=r.enabled!==false,st=!on?"выключен":r.phase==="running"?"следит":r.phase==="refused"?"отказан":"размещается";
-    return`<div class="n ${RSEL===r.id?"on":""}" data-act="pick" data-id="${esc(r.id)}">${pc.icon("bolt")}<span class="nm">${esc(r.name||r.id)}</span><span class="n-meta"><span class="tag" title="${esc(r.why||r.worker||"")}">${esc(st)}</span></span></div>`}).join("")+
+  return autos.map(r=>{const on=r.enabled!==false,st=!on?"выключен":r.phase==="running"?"следит":r.phase==="refused"?"отказан":r.phase==="unreadable"?"не читается":"размещается";
+    return`<div class="n ${RSEL===r.id?"on":""}" data-act="pick" data-id="${esc(r.id)}">${pc.icon("bolt")}<span class="nm">${esc(r.name||r.id)}</span><span class="n-meta"><span class="tag" title="${esc(r.reason||r.worker||"")}">${esc(st)}</span></span></div>`}).join("")+
     `<div class="n" data-act="new"><span class="nm">＋ Сценарий</span></div>`;
 }
 function ruleCardHtml(r){
@@ -1049,11 +1055,11 @@ function ruleCardHtml(r){
   const when=r.when.map((t,i)=>`<div class="g" style="grid-template-columns:44px 90px 1.4fr 1fr 1fr auto;align-items:end;margin-bottom:8px">
       <div><label>&nbsp;</label><div class="sub" style="padding:8px 0">${i?"и":"Если"}</div></div>
       <div><label>Подсистема</label><input type="text" value="${esc(t.sub)}" data-act="tf" data-i="${i}" data-f="sub"></div>
-      <div><label>Событие</label><input type="text" list="vms-kinds" value="${esc(t.kind)}" data-act="tf" data-i="${i}" data-f="kind"></div>
+      <div><label>Событие</label><input type="text" list="auto-kinds" value="${esc(t.kind)}" data-act="tf" data-i="${i}" data-f="kind"></div>
       <div><label>Единица</label><input type="text" placeholder="любая" value="${esc(t.unit??"")}" data-act="tf" data-i="${i}" data-f="unit"></div>
       <div><label>Уточнения</label><input type="text" placeholder="port=1, value=closed" value="${esc(matchText(t.match))}" data-act="tf" data-i="${i}" data-f="match"></div>
       <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="tdel" data-i="${i}">✕</button></div></div>`).join("")+
-    `<datalist id="vms-kinds">${kinds.map(([k,w])=>`<option value="${esc(k)}">${esc(w)}</option>`).join("")}</datalist>
+    `<datalist id="auto-kinds">${kinds.map(([k,w])=>`<option value="${esc(k)}">${esc(w)}</option>`).join("")}</datalist>
     <div class="vrow"><button type="button" class="btn s" data-act="tadd">Добавить событие</button>
       <span class="sub">в пределах <input type="number" min="0" max="3600" style="width:80px" value="${esc(r.within)}" data-act="rf" data-f="within"> с</span></div>`;
   const acts=actionsOn();
@@ -1061,25 +1067,27 @@ function ruleCardHtml(r){
     return`<div class="g" style="grid-template-columns:44px 1.4fr repeat(4,1fr) auto;align-items:end;margin-bottom:8px">
       <div><label>&nbsp;</label><div class="sub" style="padding:8px 0">${i+1}</div></div>
       <div><label>Действие</label><select data-act="akind" data-i="${i}">${acts.map((x,j)=>`<option value="${j}" ${j===ki?"selected":""}>${esc(x.label)}</option>`).join("")}${ki<0?`<option value="" selected>${esc(k.label)}</option>`:""}</select></div>
-      ${k.fields.map(f=>`<div><label>${esc(f.label)}${f.opt?" <span class='sub'>необяз.</span>":""}</label><input type="text" value="${esc(a[f.id]??"")}" data-act="af" data-i="${i}" data-f="${esc(f.id)}"></div>`).join("")}
+      ${k.fields.map(f=>`<div><label>${esc(f.label)}${f.opt?" <span class='sub'>необяз.</span>":""}</label><input type="text" value="${esc(f.json&&a[f.id]!=null&&typeof a[f.id]==="object"?JSON.stringify(a[f.id]):a[f.id]??"")}" data-act="af" data-i="${i}" data-f="${esc(f.id)}"${f.json?' data-json="1"':""}></div>`).join("")}
       <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="adel" data-i="${i}">✕</button></div></div>`}).join("")+
     `<div class="vrow"><button type="button" class="btn s" data-act="aadd">Добавить действие</button>
       <span class="sub">заявка действительна <input type="number" min="0" max="600" style="width:80px" value="${esc(r.valid_for)}" data-act="rf" data-f="valid_for"> с · не чаще <input type="number" min="0" max="600" style="width:80px" value="${esc(r.rate_per_minute)}" data-act="rf" data-f="rate_per_minute"> в минуту (0 — по умолчанию)</span></div>
     <p class="sub">Действия — то, под что написан исполнитель: сценарий подаёт заявку, а выполняет её тот, кто держит единицу.</p>`;
   const bad=ruleProblem(r);
   return`<h1>${esc(r.name||"Новый сценарий")}</h1>
-    ${row&&row.unfit?`<div class="nt err">Вычислитель отказал: ${esc(row.unfit.join("; "))}</div>`:""}
+    ${row&&row.phase==="refused"&&row.reason?`<div class="nt err">Вычислитель отказал: ${esc(row.reason)}</div>`:""}
+    ${row&&row.unfit?`<div class="nt err">Не годится: ${esc(row.unfit.join("; "))}</div>`:""}
+    ${row&&row.unchecked?`<p class="sub">Не проверено (устройство не сказало): ${esc(row.unchecked.join("; "))}</p>`:""}
     ${card("Сценарий",`<div class="g"><div><label>Имя</label><input type="text" value="${esc(r.name)}" data-act="rf" data-f="name" ${r.id?"readonly disabled":""}></div>
       <div><label>Включён</label><select data-act="rf" data-f="enabled"><option value="1" ${r.enabled?"selected":""}>да</option><option value="0" ${r.enabled?"":"selected"}>нет</option></select></div></div>`)}
     ${card("Если",when)}${card("То",then)}
     ${bad?`<div class="nt err">${esc(bad)}</div>`:""}
     <div class="vrow"><button type="button" class="btn pri s" data-act="save" ${ruleDraft?"":"disabled"}>Сохранить</button>${ruleDraft?`<button type="button" class="btn s" data-act="undo">Отменить</button>`:""}${r.id?`<button type="button" class="btn s" data-act="del">Удалить</button>`:""}</div>
-    ${r.id?card("Последние срабатывания",fires.length?`<table><tr><th>Время</th><th>Действий</th></tr>${fires.map(e=>`<tr><td>${esc(fmtT(e.t))}</td><td>${esc(e.actions??"—")}</td></tr>`).join("")}</table>`:`<p class="sub">Ещё не срабатывал.</p>`):""}`;
+    ${r.id?card("Последние срабатывания",fires.length?`<table><tr><th>Время</th><th>Действий</th></tr>${fires.map(e=>`<tr><td>${esc(fmtT(e.t))}</td><td>${esc(Array.isArray(e.actions)?String(e.actions.length):e.actions??"—")}${e.late?" · срок прошёл, не подано":""}</td></tr>`).join("")}</table>`:`<p class="sub">Ещё не срабатывал.</p>`):""}`;
 }
 function renderRules(){
   if(!RULES_HOST||!RULES_HOST.isConnected)return;
   const r=curRule();
-  RULES_HOST.innerHTML=`<div class="vms-rules"><aside class="vms-rules-list">${rulesListHtml()}</aside><section class="vms-rules-card">${autoOff
+  RULES_HOST.innerHTML=`<div class="auto-rules"><aside class="auto-rules-list">${rulesListHtml()}</aside><section class="auto-rules-card">${autoOff
     ?offCard("Сценарии","подсистема не смонтирована","Консоль запущена без auto: сценарии писать некуда.")
     :r?ruleCardHtml(r):card("Выберите сценарий",`<p class="sub">Сценарий — «когда случилось это — попросить сделать то». Вычислитель читает тот же журнал, что раздел «Журнал», и подаёт заявку тому, кто держит устройство: консоль ничего не выполняет сама.</p>`)}</section></div>`;
   if(r&&r.id&&!(r.id in ruleFires))loadFires(r.id);
@@ -1092,7 +1100,9 @@ function renderRules(){
     tadd:()=>{editRule().when.push({sub:"cam",kind:""});renderRules()},
     tdel:el=>{editRule().when.splice(i(el),1);renderRules()},
     akind:el=>{const k=actionsOn()[+el.value];if(k)editRule().then[i(el)]={sub:k.sub,action:k.action};renderRules()},
-    af:el=>{const a=editRule().then[i(el)];if(el.value.trim())a[el.dataset.f]=el.value.trim();else delete a[el.dataset.f];renderRules()},
+    af:el=>{const a=editRule().then[i(el)],v=el.value.trim();
+      // a JSON field kept as typed when it does not parse: ruleProblem names it, nothing is written
+      if(!v)delete a[el.dataset.f];else if(el.dataset.json){try{a[el.dataset.f]=JSON.parse(v)}catch(e){a[el.dataset.f]=v}}else a[el.dataset.f]=v;renderRules()},
     aadd:()=>{const k=actionsOn()[0];editRule().then.push({sub:k.sub,action:k.action});renderRules()},
     adel:el=>{editRule().then.splice(i(el),1);renderRules()},
     save:()=>saveRule(),undo:()=>{ruleDraft=null;renderRules()},del:()=>delRule(RSEL)});
@@ -1118,7 +1128,8 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 // The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
 // member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the manifests serve (`domain/placement/rec/`:
 // for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
-// keys); this is the rest: a member's cameras and archives in the tree, their cards, recording assignments. Edits use the domain console's placement and queued CRUD routes.
+// keys); this is the rest: a member's cameras and archives in the tree, their cards, recording assignments. The page
+// writes only the assignment (`PUT /domain/placement/rec/<ref>`); the recordings are their clusters' rows.
 const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};
 const domUnits=(sub,cluster)=>((((domView&&domView.units)||{})[sub])||[]).filter(u=>cluster==null||u.cluster===cluster);
 const domKey=u=>u.cluster+"/"+u.unit;
@@ -1135,6 +1146,11 @@ pc.addTreeNodes("member",ref=>{
   if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
   return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
 });
+// Which cluster records a camera is the domain operator's assignment (`domain/placement/rec/<ref>`, P/08.6 Н1.1; V/02.9
+// Н1.1): `cluster` — the primary's, `origin` — the camera's, `copies` — the backups' (`when: offline`). The assignment
+// creates no row: the recording cluster's operator makes `rec/recordings` there (`cam: ref:<ref>`, `ref`) — the domain's
+// door edits only `domain.edit` (enabled, retention_days) and cannot make one. A move leaves the former primary standing
+// with its archive until its days run out; its row is its cluster operator's to remove.
 async function domainRecording(camera,backup=false){
   const ref=camera.ref;
   if(!ref){pc.toast("Для записи нужно имя камеры в домене");return}
@@ -1142,32 +1158,24 @@ async function domainRecording(camera,backup=false){
   let old=null;
   try{old=await pc.api("GET",route)}catch(e){if(e.status!==404){pc.toast("Назначение недоступно: "+e.message);return}}
   if(backup&&!old){pc.toast("Сначала назначьте основную запись");return}
-  const members=((domView&&domView.members)||[]).filter(m=>!m.left&&!m.refused&&(!backup||m.name!==old.cluster));
+  const was=old?jsonList(old.copies):[];
+  const members=((domView&&domView.members)||[]).filter(m=>!m.left&&!m.refused&&(!backup||m.name!==old.cluster&&!was.includes(m.name)));
   if(!members.length){pc.toast("Нет кластера для этой записи");return}
   const v=await pc.dialog(backup?"Резервная запись":"Основная запись",[
-    {name:"cluster",label:"Кластер",value:old&&!backup?old.cluster:"",options:members.map(m=>[m.name,m.name])},
-    {name:"days",label:"Хранить, дней",value:"30"},
-    {name:"home",label:"Том (необязательно)",value:""}],backup?"Добавить резерв":"Назначить и создать");
+    {name:"cluster",label:"Кластер",value:old&&!backup?old.cluster:"",options:members.map(m=>[m.name,m.name])}],backup?"Добавить резерв":"Назначить");
   if(!v)return;
-  const days=Number(v.days);
-  if(!Number.isInteger(days)||days<1){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
-  if(!members.some(m=>m.name===v.cluster)||backup&&v.cluster===old.cluster){pc.toast("Выберите другой кластер для резерва");return}
-  const copies=backup?[...new Set([...(old.copies||[]),v.cluster])]:(old&&old.copies||[]).filter(n=>n!==v.cluster);
-  let removal="";
+  if(!members.some(m=>m.name===v.cluster)){pc.toast("Выберите кластер из списка");return}
+  const primary=backup?old.cluster:v.cluster;
+  // copies: the other executors, ascending, no repeats, not the primary (P/08.6 Н2)
+  const copies=[...new Set(backup?[...was,v.cluster]:was)].filter(n=>n!==primary).sort();
   try{
-    await pc.api("PUT",route,{cluster:backup?old.cluster:v.cluster,origin:camera.cluster,copies});
-    if(!backup&&old&&old.cluster!==v.cluster){
-      try{await pc.api("DELETE","/domain/rec/recordings/"+encodeURIComponent(ref)+"?cluster="+encodeURIComponent(old.cluster))}
-      catch(e){removal=" Предыдущую запись удалить не удалось: "+e.message}
-    }
-    let queued=false;
-    try{const out=await pc.api("POST","/domain/rec/recordings",{cluster:v.cluster,name:ref,cam:"ref:"+ref,
-      retention_days:days,...(v.home?{home:v.home}:{})});queued=!!out.kept}
-    catch(e){if(e.status!==409)throw e}
+    await pc.api("PUT",route,{cluster:primary,origin:camera.cluster,copies});
     PLACEMENTS=await pc.api("GET","/domain/placement");
     if(assignmentHost)renderAssignments(assignmentHost);
-    pc.toast((queued?"Назначение сохранено; создание записи ожидает применения в ":"Запись назначена в ")+v.cluster+"."+removal);
-  }catch(e){pc.toast("Отказано: "+e.message+removal)}
+    const row=`строку rec/recordings с cam: ref:${ref}, ref: ${ref}`+(backup?", дом на резервном томе, when: offline":"");
+    const moved=!backup&&old&&old.cluster!==v.cluster?` Запись кластера ${old.cluster} встанет и хранит архив до срока; её строку убирает оператор ${old.cluster}.`:"";
+    pc.toast(`${backup?"Резерв назначен":"Запись назначена"} в ${v.cluster}. Оператор ${v.cluster} заводит ${row}.${moved}`);
+  }catch(e){pc.toast("Отказано: "+e.message)}
 }
 function domCamCard(host,key){
   const u=domFind("cam",key);
@@ -1203,7 +1211,7 @@ function renderAssignments(host){
   if(!domView){host.innerHTML="";return}
   if(!PLACEMENTS){host.innerHTML=card("Назначения записи",`<p class="sub">Назначения сейчас недоступны.</p>`);return}
   const rows=Object.entries(assignments()),nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
-  host.innerHTML=card("Назначения записи",rows.length?`<table><tr><th>Камера</th><th>Основной</th><th>Резервы</th></tr>${rows.map(([ref,row])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(row.cluster)}</td><td>${esc((row.copies||[]).join(", ")||"—")}</td></tr>`).join("")}</table>`
+  host.innerHTML=card("Назначения записи",rows.length?`<table><tr><th>Камера</th><th>Основной</th><th>Резервы</th></tr>${rows.map(([ref,row])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(row.cluster)}</td><td>${esc(jsonList(row.copies).join(", ")||"—")}</td></tr>`).join("")}</table>`
     :`<p class="sub">Назначений нет.</p>`);
 }
 pc.addBlock("domain",{id:"cam",render:host=>{assignmentHost=host;renderAssignments(host)}});
@@ -1213,7 +1221,7 @@ pc.addBlock("domain",{id:"cam",render:host=>{assignmentHost=host;renderAssignmen
 // the module's HTML snapshots, browser storage and subsequent list responses cannot restore it.
 let accountView=0,accountPassword=null;
 function forgetAccountPassword(){
-  if(accountPassword){accountPassword.value="";accountPassword.closest(".vms-account-secret").remove();accountPassword=null}
+  if(accountPassword){accountPassword.value="";accountPassword.closest(".live-account-secret").remove();accountPassword=null}
 }
 pc.on("select",()=>forgetAccountPassword());
 new MutationObserver(()=>{if(accountPassword&&!accountPassword.isConnected)forgetAccountPassword()})
@@ -1228,14 +1236,14 @@ pc.addCard("streamaccounts",host=>{
     if(!live())return;
     forgetAccountPassword();
     const admin=pc.may("admin","domain"),disabled=busy||loading?" disabled":"";
-    host.innerHTML=`<h1>Учётки потоков</h1><div class="vms-accounts">
+    host.innerHTML=`<h1>Учётки потоков</h1><div class="live-accounts">
       <p class="sub">Учётки этого кластера для внешних потребителей видео. Доступ к камерам задают гранты.</p>
       <button type="button" data-account="reload"${disabled}>Обновить</button>
       ${loading?`<p role="status">Загрузка учёток…</p>`:""}
       ${error?`<p class="bad" role="alert">${esc(error)}</p>`:""}
-      ${admin?`<form class="vms-account-create"><label>Имя <input name="name" value="${esc(draft)}" autocomplete="off" required${disabled}></label>
+      ${admin?`<form class="live-account-create"><label>Имя <input name="name" value="${esc(draft)}" autocomplete="off" required${disabled}></label>
         <button type="submit"${disabled}>Создать учётку</button></form>`:""}
-      <div class="vms-account-result"></div>
+      <div class="live-account-result"></div>
       ${!loading&&!error&&!rows.length?`<p>Учёток нет.</p>`:""}
       <table><thead><tr><th>Имя</th><th>Состояние</th><th>Изменена</th><th>Кем</th><th></th></tr></thead><tbody>
       ${rows.map((row,i)=>`<tr><td>${esc(row.name)}</td><td>${row.disabled?"Отключена":"Включена"}</td>
@@ -1245,7 +1253,7 @@ pc.addCard("streamaccounts",host=>{
            <button type="button" data-account="delete" data-row="${i}"${disabled}>Удалить</button>`:""}</td></tr>`).join("")}
       </tbody></table></div>`;
     host.querySelector('[data-account="reload"]').onclick=()=>load();
-    const form=host.querySelector(".vms-account-create");
+    const form=host.querySelector(".live-account-create");
     if(form){
       form.elements.name.oninput=e=>{draft=e.target.value};
       form.onsubmit=e=>{e.preventDefault();const name=form.elements.name.value.trim();if(name)change("POST","/live/accounts",{name},true)};
@@ -1277,16 +1285,17 @@ pc.addCard("streamaccounts",host=>{
     try{
       answer=await pc.api(method,path,body);
       if(!live())return;
-      if(password&&(!answer||typeof answer.account!=="string"||typeof answer.password!=="string"||!answer.password))
+      // the gateway answers {account: {name, disabled, at, by}, password} (V/03.6 Н1.2)
+      if(password&&(!answer||!answer.account||typeof answer.account.name!=="string"||typeof answer.password!=="string"||!answer.password))
         throw new Error("Шлюз не вернул пароль; запросите новый пароль");
       if(method==="POST"&&path==="/live/accounts")draft="";
       await load();
     }catch(e){if(live())error=failure(e);answer=null}
     finally{if(live()){busy=false;draw()}}
     if(password&&answer&&live()){
-      const result=host.querySelector(".vms-account-result");
-      result.innerHTML=`<div class="vms-account-secret"><p>Пароль учётки <strong>${esc(answer.account)}</strong> показан один раз. Сохраните его сейчас.</p>
-        <input class="vms-account-password" aria-label="Новый пароль учётки" readonly autocomplete="off">
+      const result=host.querySelector(".live-account-result");
+      result.innerHTML=`<div class="live-account-secret"><p>Пароль учётки <strong>${esc(answer.account.name)}</strong> показан один раз. Сохраните его сейчас.</p>
+        <input class="live-account-password" aria-label="Новый пароль учётки" readonly autocomplete="off">
         <button type="button">Скрыть пароль</button></div>`;
       accountPassword=result.querySelector("input");accountPassword.value=answer.password;
       result.querySelector("button").onclick=forgetAccountPassword;
