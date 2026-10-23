@@ -1,0 +1,12 @@
+# door.routes: {name} — допуск token, {name, domain}, {name, role, domain}; виды — проверка каталога (Н3), не загрузчика; ADR-0091 доп. (14) п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  routes: [read, {name: plain}, {name: feed, domain: [cam, tally]}, {name: archive, role: [recworker], domain: [cam]}]

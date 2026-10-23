@@ -1,0 +1,13 @@
+# тот же вид k1 у второй подсистемы — отказ каталога (P/02.1 Н3; ADR-0091 доп. (17) п. 5)
+name: kindb
+unit:
+  rows: kindbs
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement: {capacity: {default: 1}}
+domain:
+  ref: name
+  tokens:
+    k1: {lifetime: 60, claims: [ref, aud], grant: [kindbworker], unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}}
+worker: {exec: /usr/lib/kindb/worker}

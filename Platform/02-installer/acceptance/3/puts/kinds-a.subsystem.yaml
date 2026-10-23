@@ -1,0 +1,13 @@
+# вид k1 объявлен (ADR-0091 доп. (14) п. 1, доп. (17) п. 5)
+name: kinda
+unit:
+  rows: kindas
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement: {capacity: {default: 1}}
+domain:
+  ref: name
+  tokens:
+    k1: {lifetime: 60, claims: [ref, aud], grant: [kindaworker], unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}}
+worker: {exec: /usr/lib/kinda/worker}

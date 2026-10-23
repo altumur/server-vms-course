@@ -634,3 +634,9 @@ door_routes_role_repeat	refused
 a91_affinity_exclusive_ok	ok
 a91_affinity_exclusive_without_strict	refused
 a91_affinity_exclusive_not_bool	refused
+door_routes_domain_ok	ok
+door_routes_domain_empty	refused
+door_routes_domain_repeat	refused
+door_routes_domain_person	refused
+door_routes_domain_upper	refused
+door_routes_domain_string	refused

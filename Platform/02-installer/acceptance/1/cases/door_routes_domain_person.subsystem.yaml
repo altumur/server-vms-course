@@ -1,0 +1,12 @@
+# person — не вид domain.tokens (грамматика вида); ADR-0091 доп. (14) п. 1, доп. (19) п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  routes: [{name: feed, domain: [person]}]

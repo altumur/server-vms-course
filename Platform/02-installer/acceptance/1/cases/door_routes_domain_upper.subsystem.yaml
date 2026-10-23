@@ -1,0 +1,12 @@
+# вид не по грамматике [a-z][a-z0-9_-]{0,31}; ADR-0091 доп. (14) п. 1
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  routes: [{name: feed, domain: [Cam]}]

@@ -181,15 +181,16 @@ root:
           owner: P/06.5 Н3; P/03.4 Н1.7
           default: []
           default_text: двери нет
-          description: "маршруты двери процесса — первый сегмент пути запроса байт в байт (договор токена двери; решение «Архитектора» 2026-10-20); элемент — имя (допуск `token`: токен двери) или `{name, role}` (допуск по сертификату роли, класс `mixed` договора сертификата роли; ADR-0091 доп. (7), (8))"
+          description: "маршруты двери процесса — первый сегмент пути запроса байт в байт (договор токена двери; решение «Архитектора» 2026-10-20); элемент — имя (допуск `token`: токен двери) или `{name, role?, domain?}` (допуск по сертификату роли, класс `mixed` договора сертификата роли, и/или по токену домена; ADR-0091 доп. (7), (8), (14))"
           items:
             variants:
               - {ref: name, description: "маршрут с допуском `token` — по грамматике `name` (без «/»)"}
               - type: object
-                required: [name, role]
+                required: [name]
                 properties:
                   name: {ref: name, description: маршрут}
                   role: {type: array, min_items: 1, unique_items: true, items: {type: string, pattern: '[a-z][a-z0-9_-]*'}, description: "роли, чей предъявленный сертификат допускает к маршруту"}
+                  domain: {type: array, min_items: 1, unique_items: true, items: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}', not_enum: [person]}, description: "виды токена домена, допускающие к маршруту (P/03.4 Н1.7 door_admission domain); каждый вид объявлен в domain.tokens подсистемы каталога, иначе `refused:catalogue` (Н3; ADR-0091 доп. (14) п. 1)"}
         pass: {ref: strList, owner: P/06.5 Н1.8, default: [], default_text: передачи нет}
     servers: {ref: servers, owner: P/06.5 Н1.2}
     display: {ref: display, owner: P/06.5 Н1.2, default: {}}

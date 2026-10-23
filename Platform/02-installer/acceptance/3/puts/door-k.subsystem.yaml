@@ -1,0 +1,7 @@
+# маршрут с допуском по виду k1 чужой подсистемы (P/02.1 Н3; ADR-0091 доп. (14) п. 1)
+name: doork
+unit: {rows: doorks, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/doork/worker}
+door:
+  routes: [{name: feed, domain: [k1]}]

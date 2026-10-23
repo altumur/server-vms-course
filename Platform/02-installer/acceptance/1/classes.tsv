@@ -201,3 +201,8 @@ door_routes_role_dup_name	reference
 door_routes_role_repeat	value
 a91_affinity_exclusive_without_strict	value
 a91_affinity_exclusive_not_bool	value
+door_routes_domain_empty	value
+door_routes_domain_repeat	value
+door_routes_domain_person	value
+door_routes_domain_upper	value
+door_routes_domain_string	value

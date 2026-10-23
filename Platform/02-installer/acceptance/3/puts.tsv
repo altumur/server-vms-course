@@ -26,3 +26,8 @@ uses_ok	owner user	0 1
 uses_no_share	owner-noshare user	2 -
 uses_no_owner	user	0 1
 os_name_clash	owner owner-belt	2 -
+# ADR-0091 доп. (14), (17), (18) п. 6: виды токена домена в каталоге — повтор вида, вид маршрута двери (P/02.1 Н3 «загрузить_каталог»)
+kind_dup	kinds-a kinds-b	2 -
+door_domain_kind_other	kinds-a door-k	0 1
+door_domain_kind_missing	door-k	2 -
+door_domain_kind_own	door-own	0 1

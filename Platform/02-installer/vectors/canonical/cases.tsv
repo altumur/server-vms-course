@@ -85,6 +85,7 @@ corpus-display_options_bool_enum	Platform/02-installer/acceptance/1/cases/displa
 corpus-display_options_status_field	Platform/02-installer/acceptance/1/cases/display_options_status_field.subsystem.yaml	expect/corpus-display_options_status_field.json	принятый случай корпуса 2.1
 corpus-display_options_yes_key	Platform/02-installer/acceptance/1/cases/display_options_yes_key.subsystem.yaml	expect/corpus-display_options_yes_key.json	принятый случай корпуса 2.1
 corpus-display_word_On_Off_unquoted	Platform/02-installer/acceptance/1/cases/display_word_On_Off_unquoted.subsystem.yaml	expect/corpus-display_word_On_Off_unquoted.json	принятый случай корпуса 2.1
+corpus-door_routes_domain_ok	Platform/02-installer/acceptance/1/cases/door_routes_domain_ok.subsystem.yaml	expect/corpus-door_routes_domain_ok.json	принятый случай корпуса 2.1
 corpus-door_routes_names	Platform/02-installer/acceptance/1/cases/door_routes_names.subsystem.yaml	expect/corpus-door_routes_names.json	принятый случай корпуса 2.1
 corpus-door_routes_role_ok	Platform/02-installer/acceptance/1/cases/door_routes_role_ok.subsystem.yaml	expect/corpus-door_routes_role_ok.json	принятый случай корпуса 2.1
 corpus-fields_affinity_known	Platform/02-installer/acceptance/1/cases/fields_affinity_known.subsystem.yaml	expect/corpus-fields_affinity_known.json	принятый случай корпуса 2.1

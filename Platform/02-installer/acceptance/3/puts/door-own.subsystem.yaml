@@ -1,0 +1,15 @@
+# маршрут с допуском по своему виду k2 (ADR-0091 доп. (14) п. 1)
+name: doorown
+unit:
+  rows: doorowns
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement: {capacity: {default: 1}}
+domain:
+  ref: name
+  tokens:
+    k2: {lifetime: 60, claims: [ref, aud], grant: [doorownworker], unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}}
+worker: {exec: /usr/lib/doorown/worker}
+door:
+  routes: [{name: feed, role: [kindaworker], domain: [k2]}]
