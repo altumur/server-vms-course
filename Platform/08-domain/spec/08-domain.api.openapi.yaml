@@ -492,7 +492,7 @@ paths:
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
         '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/RefusedEdit409'}
         '422': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused503'}
     delete:
@@ -513,7 +513,7 @@ paths:
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
         '404': {$ref: '#/components/responses/Refused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/RefusedEdit409'}
         '422': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/users:
@@ -1105,6 +1105,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Refusal'
+    RefusedEdit409:
+      description: 'Отказ 409 двери правки по ref (P/08.6 Н4): Refusal — kept_full, «unit is being deleted», «the pending edits kept
+        changing; ask again»; Executors — ref у двух исполнителей и больше без ?cluster= (P/08.6 Н3 «принять правку» шаг 2а;
+        ADR-0091 доп. (13) п. 3, доп. (15) п. 4)'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/Refusal'
+              - $ref: '#/components/schemas/Executors'
     RefusedWord:
       description: 'Отказ двери агентов со словом (P/08.3 Н4): {error: refused, reason, detail} — у 400 not_a_publication, у 401 слово договора подписи агента (добавлено сверкой М11)'
       content:
@@ -1233,6 +1243,21 @@ components:
         holder:
           $ref: '#/components/schemas/HolderRecord'
           description: 'у 409 deposed — документ записи срока нового держателя как объект (P/08.8 Н1.6; добавлено М11/10)'
+    Executors:
+      type: object
+      required: [error, detail, clusters]
+      additionalProperties: false
+      description: 'Тело 409 executors (P/08.6 Н1.3, Н3 шаг 2а; P/08.1 Н4): правка по ref, который в виде у двух исполнителей
+        назначения и больше, без ?cluster= — нужен ?cluster=<исполнитель>'
+      properties:
+        error: {const: executors}
+        detail: {type: string}
+        clusters:
+          type: array
+          minItems: 2
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/MemberName'}
+          description: исполнители, у которых ref в units, по возрастанию байтов UTF-8
     Deposed:
       type: object
       required: [error, holder]
@@ -1469,8 +1494,10 @@ components:
                       items: {type: string}
                       description: Поле stale метки (глава 8.3 Н1.3) — пульсы, которые агент члена не видел меняющимися дольше LOST_AFTER; нет — пусто.
               placements:
-                type: object
-                description: '{<sub>: {<ref>: <член> | {cluster, copies}}} — назначения главы 8.6 Н1.1; имя — то же, что {cluster: имя, copies: []}.'
+                type: ['object', 'null']
+                description: '{<sub>: {<ref>: <член> | {cluster, copies?, origin?}}} — назначения главы 8.6 Н1.1; имя — то же, что {cluster: имя, copies: []};
+                  null — назначения этого прохода не прочитаны (P/08.1 Н3 шаг 3а: исключения executors нет, теневой отчёт прохода не
+                  строится; ADR-0091 доп. (13) п. 1, доп. (15) п. 3).'
                 additionalProperties:
                   type: object
                   additionalProperties:
@@ -1486,6 +1513,9 @@ components:
                           copies:
                             type: array
                             items: {$ref: '#/components/schemas/MemberName'}
+                          origin:
+                            $ref: '#/components/schemas/MemberName'
+                            description: 'член-владелец источника (глава 8.6 Н1.1); нет — нет; исполнителей не меняет (ADR-0091 доп. (15) п. 1)'
     ViewOutput:
       type: object
       description: 'Не HTTP: вывод команды view (P/08.1 Н5) — вид и теневой отчёт последнего прохода входа.'
@@ -1495,7 +1525,10 @@ components:
         view:
           $ref: '#/components/schemas/View'
         shadow:
-          $ref: '#/components/schemas/ShadowReport'
+          description: 'отчёт последнего прохода, который его строил (P/08.1 Н1.6 unread); ни один не строил — null'
+          anyOf:
+            - $ref: '#/components/schemas/ShadowReport'
+            - type: 'null'
     # --- глава 8.2: строки набора и отзывов в ответе держателя ---
     KeysRow:
       type: object

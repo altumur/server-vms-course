@@ -123,3 +123,17 @@ scenario	step	request	expect
 09-forms-of-edits	14	holder @header Idempotency-Key: a3-asked PUT /domain/testsub/counters/c11 {"start": 5}	202 {"kept": "e-a5231d61506d", "cluster": "m1"}
 09-forms-of-edits	15	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"e-a5231d61506d": "~/domain/testsub/counters/c11?cluster=m1"}}
 09-forms-of-edits	16	@mend m1	ok
+10-executors	1	@domain	ok
+10-executors	2	member m1 console POST /counters {"name": "c4", "start": 1}	201
+10-executors	3	member m2 console POST /counters {"name": "c4", "start": 1}	201
+10-executors	4	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c4": ["m1", "m2"]}}}
+10-executors	5	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "copies": ["m2"]}	200 {"rev": 1}
+10-executors	6	@until 60 holder GET /domain	200 {"complete": true, "contested": {"testsub": {}}}
+10-executors	7	holder GET /domain/testsub/counters	200 [{"ref": "c4", "cluster": "m1"}, {"ref": "c4", "cluster": "m2"}]
+10-executors	8	@cut m1	ok
+10-executors	9	holder PUT /domain/testsub/counters/c4 {"start": 5}	409 {"error": "executors", "clusters": ["m1", "m2"]}
+10-executors	10	holder PUT /domain/testsub/counters/c4?cluster=m1 {"start": 5}	202 {"kept": "$id", "cluster": "m1", "what": "start"}
+10-executors	11	@key(10) holder PUT /domain/testsub/counters/c4 {"start": 5}	202 {"kept": "$id", "cluster": "m1"}
+10-executors	12	@mend m1	ok
+10-executors	13	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "origin": "m2"}	200 {"rev": 2}
+10-executors	14	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c4": ["m1", "m2"]}}}

@@ -1186,7 +1186,7 @@ paths:
         '408':
           $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
         '409':
-          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RefusedEdit409'
         '413':
           $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
         '422':
@@ -1269,7 +1269,7 @@ paths:
         '408':
           $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody'
         '409':
-          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused'
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RefusedEdit409'
         '413':
           $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody'
         '422':

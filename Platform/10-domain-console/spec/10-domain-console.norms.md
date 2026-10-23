@@ -406,6 +406,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | `no domain here` | 404 | вид не построен или не читается (Н1.2а, Н1.2б, Н1.2в) |
 | `not in the directory` | 404 | манифест без `domain.ref` (Н1.2а) |
 | `no such member` | 404 | `?cluster=` не член (Н1.2а) |
+| `executors` | 409 | переход 3 — ответ процесса `domain` как пришёл: правка `PUT`, `DELETE` `/domain/<sub>/<rows>/<ref>` без `?cluster=`, ref у двух исполнителей и больше; тело `{error, detail, clusters}` ([P/08.6](../../08-domain/spec/08.6-domain.norms.md) Н3 «принять правку» шаг 2а; ADR-0091 доп. (15) п. 4) |
 | — | 400 / 404 | запрос: `cluster` дважды или пуст; нет манифеста; `rows` не его ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); назначения: нет записи, нет манифеста или без `domain.ref` (Н1.2г) |
 | `refused` | 400 | окно `/domain/alarms` (Н1.8 `door`) |
 
