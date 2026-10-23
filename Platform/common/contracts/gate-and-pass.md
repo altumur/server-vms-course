@@ -80,6 +80,13 @@ session:
                    доказанной личности: {open: false, login_url, user, until, via, grants: [{cap, scope}], debug?}
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; снимает обе куки (w2c_token, w2c_glass) и аварийную сессию в памяти (GP-L02); POST /session/break-glass {who, why, password} → {user, until} + кука w2c_glass; 429 по пределу
+  by_state:  исходы дверей сессии по состояниям сторожевой (gate выше; P/06.3 Н4 — ссылкой; сц. 03 приёмки главы 6.3;
+             догадка стадии C C06-GATE-OPEN-33-01, решение «Архитектора» 2026-10-23):
+             open — POST /session → 400 {detail, error: "this console is open"}, не 503; GET /session → 200 {open: true,
+             login_url}; DELETE /session → 200 {out: true}, снимает обе куки; POST /session/break-glass — 400 open (Аварийный
+             вход, door шаг 1);
+             shut — двери, которым нужна проверка личности, — 503 {detail: "…admits nobody", error: denied}; GET /session анонимному —
+             {open: false, login_url} (shut выше); 503 у POST /session — только в shut, никогда в open
   login_url: дверь домена /api/login (P/08.4 Н1.2) — консоль пересылает её домену (open_routes, договор пересылки «Двери домена»);
              консоль токенов людей не выдаёт; значение — LOGIN_URL окружения (P/02.4 Н1.2), не задано — "/api/login"
              (строка, не null, и у открытой консоли)
