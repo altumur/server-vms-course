@@ -18,14 +18,14 @@ root:
       description: ДОЛЖЕН; по элементу на единицу, которую воркер ведёт
       items:
         type: object
-        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase или revision; у phase не sealed нет epoch или observed_revision; у phase sealed нет why или есть epoch или observed_revision (W03-G02); id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
+        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id или phase; у phase не sealed и не unreadable нет epoch, observed_revision или revision; у phase sealed нет why или revision или есть epoch или observed_revision (W03-G02); у phase unreadable нет why или есть epoch или observed_revision (W03-G05); id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
         properties:
           id:
             ref: common.named_id
             description: id единицы — по грамматике договора проверки строки (форма держит named; у манифеста с unit.id numeric — ещё numeric, P/06.1 Н1.3)
           phase:
             type: string
-            description: "слова подсистемы; платформа знает два — running (счётчик running, соседство near) и sealed (глава 3.5 Н3 «открыть»: секрет строки не открылся, эпоха не взята; W03-G02)"
+            description: "слова подсистемы; платформа знает три — running (счётчик running, соседство near), sealed (глава 3.5 Н3 «открыть»: секрет строки не открылся, эпоха не взята; W03-G02) и unreadable (глава 3.3 Н3 шаг 2: строка ни разу не прочитана своим типом, эпоха не взята; W03-G05)"
           epoch:
             type: integer
             minimum: 1
@@ -56,13 +56,18 @@ root:
             type: number
             minimum: 0
             description: "секунды без подтверждения аренды единицы, с точностью 0,1 с; только вместе с lease: unconfirmed"
-        required: [id, phase, revision]
+        required: [id, phase]
         rules:
           # элемент запечатанной единицы — {id, phase: sealed, why, revision}: эпоха не взята, epoch и observed_revision
-          # отсутствуют, revision — прочитанной строки (догадка стадии C W03-G02, решение «Архитектора» 2026-10-23)
-          - when: {is_not: {phase: [sealed]}}
-            require: [epoch, observed_revision]
+          # отсутствуют, revision — прочитанной строки (догадка стадии C W03-G02, решение «Архитектора» 2026-10-23);
+          # элемент ни разу не прочитанной строки — {id, phase: unreadable, why, revision?}: эпоха не взята, revision —
+          # если ревизия строки читается (догадка стадии C W03-G05, решение «Архитектора» 2026-10-23)
+          - when: {is_not: {phase: [sealed, unreadable]}}
+            require: [epoch, observed_revision, revision]
           - when: {is: {phase: [sealed]}}
+            require: [why, revision]
+            forbid: [epoch, observed_revision]
+          - when: {is: {phase: [unreadable]}}
             require: [why]
             forbid: [epoch, observed_revision]
         names:
