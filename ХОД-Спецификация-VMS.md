@@ -66,7 +66,8 @@
   `det`: `near: {sub: cam, by: cam}`, `placement.ends`, `worker: {reads: [cam/heartbeats/, rec/heartbeats/], uses:
   [cam.shm]}`, раздел `requests:` снят; `auto`: `worker.requests: [cam]`, `worker.creates` к `det/units` (нормы — V/07);
   V/02.9 — приёмник допускает лист `detworker`; V/03.2, V/03.5 — `reason`, эпоха не взята — элемента нет. Запрос «реестр
-  V04» (`V/04 no-openapi`, постоянная).
+  V04» (`V/04 no-openapi`, постоянная). V/04.1 влита (`da6eb947d`), строка реестра — `131b1fbb3`.
+  V/04.2 — переведена (нормы, id-map V/04.2-01…04).
 
 ## Перевод 03-live
 - План — `VMS/03-live/README.md` (годен, «Архитектор» 2026-10-23; решения 1–4 приняты: источник другого сервера —
@@ -137,7 +138,7 @@
 | `decisions/inbox/2026-10-23-запрос-vms-приёмник-на-двери-процесса.md` | допуск по токену домена у маршрута двери процесса (приёмник: лист роли или токен домена; V/02.9 Н1.3, V/03.2) | нет (обход — второй слушатель) | решён ADR-0091 доп. (14) (`9ca4c384c`, на ревью): `door.routes {name, role?, domain: [виды]}`; обход снимется переходом после нормы |
 | `decisions/inbox/2026-10-23-запрос-vms-cors-whep.md` | CORS двери процесса: `POST`, `DELETE`, `Content-Type`, expose `Location` для маршрута `whep` (V/03.3 Н1.4) | нет (обход — правило подсистемы) | решён ADR-0091 доп. (16) (`be376a33d`): `cors.allow` всем маршрутам — `GET`, `HEAD`, `POST`, `PUT`, `DELETE`; `Authorization`, `Range`, `Content-Type`; expose + `Location`; обход снимется переходом |
 | `decisions/inbox/2026-10-23-запрос-vms-снять-V03-no-openapi.md` | навык: снять строку `V/03 no-openapi` — контракт двери шлюза есть (V/03.3) | нет | решён: строка снята (`2c17c28dd`) |
-| `decisions/inbox/2026-10-23-запрос-vms-реестр-V04.md` | навык: строка `V/04 no-openapi` (своей двери у `det` нет) | нет | открыт |
+| `decisions/inbox/2026-10-23-запрос-vms-реестр-V04.md` | навык: строка `V/04 no-openapi` (своей двери у `det` нет) | нет | решён: постоянная строка (`131b1fbb3`) |
 
 ## Решение по пакету запросов (2026-10-23, ADR-0091 доп. (2), (3); запросы № 5, 6, 16 — решены, main `a4c4121ba`)
 `worker.stop_timeout`, `parts.stop_timeout`; юнит воркера — `After=` своей части без `Wants`; `W2C_SUB_ENV=/etc/<sub>/<sub>.env`,
