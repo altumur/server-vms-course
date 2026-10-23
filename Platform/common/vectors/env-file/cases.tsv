@@ -1,0 +1,31 @@
+# Строка файла окружения (договор файла окружения common/contracts/env-file.md; P/02.4 Н1.2; края B19; C04-ENV-01). Форма — README.
+case	line	expect	note
+plain	"A=1"	["A","1"]	KEY=VALUE
+underscore-name	"_A1=v"	["_A1","v"]	KEY — [A-Za-z_][A-Za-z0-9_]*
+export	"export A=1"	["A","1"]	префикс export и один пробел
+export-two-spaces	"export  A=1"	"bad"	export — ровно одно слово и один пробел
+export-only	"export"	"bad"	export без KEY= — не по грамматике
+export-no-eq	"export A"	"bad"	export без KEY= — не по грамматике
+double-quoted	"A=\"x y\""	["A","x y"]	значение в парных "…" — без кавычек
+single-quoted	"A='x $B'"	["A","x $B"]	в '…' подстановок нет
+double-quoted-no-subst	"A=\"${B}\""	["A","${B}"]	подстановок нет и в "…"
+empty	"A="	["A",""]	KEY= — пустая строка
+empty-quoted	"A=\"\""	["A",""]	пустые кавычки — пустая строка
+hash-inside	"A=x#y"	["A","x#y"]	# внутри значения — часть значения
+hash-after-space	"A=x #y"	["A","x #y"]	без обрезки, # — не комментарий
+trailing-spaces	"A=x  "	["A","x  "]	всё после = до конца строки как есть
+second-eq	"A==1"	["A","=1"]	значение — после первого =
+comment	"# note"	"skip"	первый непробельный знак # — пропуск
+indented-comment	"   # note"	"skip"	первый непробельный знак # — пропуск
+blank	""	"skip"	пустая строка — пропуск
+cr	"A=1\r"	"bad"	CR в строке — не по грамматике (строки разделяет LF)
+bom	"\ufeffA=1"	"bad"	BOM в начале файла — не по грамматике
+space-before-eq	"A =1"	"bad"	пробел до = — не по грамматике
+space-after-eq	"A= 1"	"bad"	пробел после = — не по грамматике
+tab-after-eq	"A=\t1"	"bad"	табуляция после = — не по грамматике
+space-in-name	"A B=1"	"bad"	пробел в имени — не по грамматике
+digit-first	"1A=1"	"bad"	KEY начинается не с буквы и не с _
+no-eq	"A"	"bad"	нет =
+unpaired-double	"A=\"x"	"bad"	непарная кавычка — не по грамматике
+unpaired-single	"A='x"	"bad"	непарная кавычка — не по грамматике
+mixed-quotes	"A=\"x'"	"bad"	кавычки разные — непарная

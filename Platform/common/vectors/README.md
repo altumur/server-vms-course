@@ -26,6 +26,7 @@
 | текстовые формы значений (`values_by_type`) | [`common/vectors/values-by-type/`](values-by-type/) | P/06.1 | договор проверки строки «Строка единицы» (P/06.1 Н1.2) |
 | общая проверка строки | [`common/vectors/row-check/`](row-check/) | P/06.1 | договор проверки строки (W03-E07) |
 | азбука меток | [`common/vectors/labels/`](labels/) | P/06 | договор азбуки меток (L01–L03) |
+| строка файла окружения | [`common/vectors/env-file/`](env-file/) | P/02.4 | договор файла окружения (C04-ENV-01) |
 | id события | векторов нет — норма формы; кандидат пакета — после урока 5 | P/05 | [договор журнала событий](../contracts/event-journal.md) `id` |
 | основание домена: файл восстановления, ключ приёма книг, запись срока 1 | [`domain-founding/`](domain-founding/README.md) | P/08 (главы 8.2, 8.8) | [договор основания домена](../contracts/domain-founding.md); находка I02-FOUND |
 | ключ резервной копии домена: HMAC-SHA256 от root_key и backup_key_rev | [`domain-backup-key/`](domain-backup-key/README.md) | P/08 (глава 8.8) | [договор ключа резервной копии домена](../contracts/domain-backup-key.md); догадка стадии C I02-BACKUP-HMAC |
