@@ -70,7 +70,7 @@ root:
       description: "`{<sub>/<имя слота>: <экземпляр>}`"
     short:
       ref: common.uint53
-      description: сколько байтов отметка просила освободить и не смогла (P/06.5 Н3 /metrics w2c_resource_short_bytes)
+      description: "сколько байтов отметка просила освободить и не смогла (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ по томам наибольшей need (> 0) среди действующих своих `free-<server>-<volume>` этого прохода relieve — подсистемы на одном томе не суммируются; need — по Н3 relieve, вверх до целого байта, насыщение 2^53−1; platform/space выключен, просьб нет, need ≤ 0 — 0; вход прохода не прочитан — прежнее значение (догадка стадии C R05-G03, решение «Архитектора» 2026-10-23)"
     waits:
       type: object
       properties:
