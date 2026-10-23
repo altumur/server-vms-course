@@ -18,6 +18,17 @@ Ed25519) и проверка у держателя по строке `door/keys`
 - `verify.tsv` — проверка(`keys`, `authorization`, `now`, `unit`, `holder`, `path`) даёт `ok` и прочитанные claims, равные
   колонке `claims` по значению JSON (не по тексту), или `forbidden` (чтение коммитов «cammeta-acceptance» 2026-10-20).
 
+## Команда стенда `door-token-verify`
+
+Ключ `stand` профиля `03-worker` (раздел «Раскладка по процессам» [общего README приёмки](../../../common/acceptance/README.md);
+P/03.4 Н5): шаблон с `{input}` — путь файла, в который раннер пишет один JSON-объект входа строки: у `verify.tsv` —
+`{keys, authorization, now, unit, holder, path}` (`keys` — значение колонки как JSON, `authorization` и `path` — строки
+байт в байт, пустая строка `authorization` — заголовка нет, `now` — число), у `place.tsv` — ячейка `input` как есть
+(`place_units` вместо `unit`). stdout — ровно один JSON-объект в UTF-8 и LF: `{"result":"ok","claims":{…}}` — claims
+прочитанного токена, сравниваются с колонкой `claims` по значению JSON, — или `{"result":"forbidden"}`; код 0. Вход не по
+этой форме — код 2. Иной код, иной `result`, лишние поля или байты — FAIL строки (догадка стадии C W03-E04, решение
+«Архитектора» 2026-10-23).
+
 ## Ключи
 
 Зерно Ed25519 — 32 байта `sha256("w2c test <слово>")` (как ключи [векторов запечатывания](../sealing/README.md)); слова
