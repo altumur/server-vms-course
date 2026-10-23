@@ -1,18 +1,17 @@
-# auto.subsystem.yaml — the SEVENTH subsystem: scenarios. The first one whose work is reading what the
-# others wrote.
+# Scenarios (`auto`, V/07): the subsystem whose work is reading what the others wrote.
 #
 # A unit is one scenario — `auto/scenarios/<name>` — and the operator writes it on the console: when this
-# happens (and that, within thirty seconds), do this. The worker (`vms/autoworker.py`) evaluates it against
-# the event log and, when it fires, FILES REQUESTS: `cam/requests/<id>` to pulse a relay or go to a preset,
-# `rec/requests/<id>` to record for ten minutes. It touches no device and writes no configuration — the
-# subsystem that owns the device performs the command, under its own epoch, on its own connection.
+# happens (and that, within thirty seconds), do this. The evaluator reads the cluster's event log and, when it fires,
+# acts through the subsystem that owns what it acts on: a request to a camera's holder to pulse a relay or go to a
+# preset (`cam/requests/<id>`), or a row ordered for a while — a recording, a detector, a scan (V/07.4). It touches
+# no device: the owner performs the command, under its own epoch, on its own connection.
 #
 # Why a subsystem and not the platform: every word here is domain. "A sensor closed", "a detector fired",
 # "open the door" — the platform knows a unit, a row and an epoch, and learning what a door is would be the
 # end of the line it has held for twenty lessons.
 #
 # Why a UNIT and not a daemon reading a list: because then two evaluators would run the same scenario and
-# the door would open twice. A scenario placed like everything else gets `servers: distinct`-free placement,
+# the door would open twice. A scenario placed like everything else gets placement,
 # an epoch and a lease — "exactly one evaluator" comes out of machinery that already exists rather than out
 # of care.
 name: auto
@@ -33,9 +32,9 @@ unit:
     # WHEN: a list of triggers, each `{sub, kind}` plus optional `unit` and `match`. JSON because a scenario's triggers
     # are a list of shapes: flattening them into fields would cap the count at one or invent `when_1_sub`, `when_2_sub`.
     # What a trigger may BE is the schema below, checked by the platform at the door for every writer (the boundary's
-    # step 6, the owner's decision 3: it was `AutoController`, a controller of the VMS's own); what it may MEAN — that
-    # camera 7 raises `io.input` on port 2 — the evaluator checks against what the devices said, and a scenario that
-    # asks for what nobody can do is refused in its heartbeat (`AutoWorker`, `why`), never fired.
+    # step 6, the owner's decision 3: it was a controller of the VMS's own); what it may MEAN — that camera 7 raises
+    # `io.input` on port 2 — the evaluator checks against what the devices said, and a scenario that asks for what
+    # nobody can do is refused in its heartbeat (V/07.3), never fired.
     when:
       type: json
       required: true
@@ -55,8 +54,9 @@ unit:
     # The correlation window, in seconds. That two triggers need it and one refuses it is the evaluator's to say (a
     # scenario's two fields together); how large it may be is the schema's.
     within:          {type: int,    default: 0, schema: {minimum: 0, maximum: 3600}}
-    # THEN: a list of actions, each `{sub, action, …}` — one of the five shapes below. Every one becomes a REQUEST, never
-    # a configuration row: a request has an owner who performs it and a `valid_until` after which it is not performed.
+    # THEN: a list of actions, each `{sub, action, …}` — one of the five shapes below: a request to a camera's holder,
+    # which has an owner who performs it and a `valid_until` after which it is not performed, or a row ordered for a
+    # while — a recording, a detector, a scan (V/07.4).
     then:
       type: json
       required: true
@@ -113,7 +113,7 @@ unit:
     rate_per_minute: {type: int,    default: 6, schema: {anyOf: [{const: 0}, {minimum: 1, maximum: 600}]}}   # 0: the default
     # How long a request this scenario files stays worth doing, from the moment of the event: the holder does not perform
     # it later (`expired`). Five seconds at least — less is shorter than the road from an event to the device — and ten
-    # minutes at most: the holder refuses a command valid longer (`VmsWorker.MAX_VALID`).
+    # minutes at most: the holder refuses a command valid longer (`requests.most_valid` of `cam`, V/01.4).
     valid_for:       {type: int,    default: 30, schema: {anyOf: [{const: 0}, {minimum: 5, maximum: 600}]}}  # 0: the default
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
@@ -149,7 +149,7 @@ rights:
     - {field: then, unit: cam, of: cam}
 snapshot: [name, enabled]
 # Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
-# `vms/console.py`'s `auto_metrics`). `auto_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
+# a function of the VMS's console). `auto_<name>`; the shapes are the platform's (P/06.5).
 metrics:
   # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
   # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
@@ -162,7 +162,7 @@ metrics:
   - {name: event_to_request_seconds, from: heartbeat.latency, agg: histogram, buckets: [1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
   - {name: fired_late_total, from: heartbeat.late, type: counter}
   - {name: firings_suppressed_total, from: heartbeat.suppressed, type: counter}     # refused by a scenario's own ceiling
-  # the long poll of the resources (`AutoWorker.long_poll_stats`): a wait that fails breaks nothing, so here is where it
+  # the long poll of the resources (V/07.2): a wait that fails breaks nothing, so here is where it
   # is seen — `auto_wait_errors_total` growing is the road back at two seconds
   - {name: waits_total, from: heartbeat.waits, type: counter}
   - {name: woken_total, from: heartbeat.woken, type: counter}
