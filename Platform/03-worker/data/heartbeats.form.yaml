@@ -178,13 +178,13 @@ root:
         value: {ref: histogram}
     command_request:
       type: object
-      description: "по подателю: от подачи строки до вызова"
+      description: "по подателю: от at строки просьбы (время подачи) до вызова; из filed время не выводится (W03-E05)"
       names:
         key: {type: string}
         value: {ref: histogram}
     command_wait:
       ref: histogram
-      description: от первого взгляда держателя на строку до вызова, по монотонным часам
+      description: от первого местного наблюдения просьбы этим воркером до вызова, по монотонным часам (W03-E05)
     filings:
       type: object
       description: "подача просьб воркером (глава 3.6 Н1.5; ADR-0091 п. 7)"
