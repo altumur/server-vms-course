@@ -31,7 +31,7 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone; a
 # camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`). What
-# a member reports to the domain (`domain.reports`) the resource's door gives out unasked (`resource.door_readable`). What
+# a member's witness says to the domain (`domain.witness`) the resource's door gives out unasked (`resource.door_readable`). What
 # a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
 # addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
@@ -49,11 +49,11 @@ heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
-# What a recorder reads outside its subsystem's rows: the domain's books its agent carried home — where each camera's
-# primary is (М12), and those the ingest and the forwarder it hosts read (ADR-0065's addition of 2026-10-08): the
-# source book, a relay's upstream, the asks a relay carries up. The product's recorder reads them (`*` less its
-# denials); here a worker reads what its spec names (the scenario «камера — офис — центр», F3).
-worker: {exec: /usr/lib/rec/worker, reads: [det/units/, domain/cam/sources, domain/placed/rec/, domain/member-topology, domain/rec/upstream, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+# What a recorder reads outside its subsystem's rows: the domain's books its agent carried home (V/02.9) — the source
+# book (where a camera of another cluster comes from), the book of primaries (a backup decides by it; a relay's
+# forwarder finds the centre's ingest in the centre's entry), the assignments naming this cluster, the topology (relay,
+# star, centre) and the asks a relay carries up (V/07). Here a worker reads what its spec names.
+worker: {exec: /usr/lib/rec/worker, reads: [det/units/, domain/cam/sources, domain/rec/primaries, domain/placed/rec/, domain/member-topology, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -68,6 +68,7 @@ unit:
   fields:
     name:           {type: string, required: true}   # which recording this is: its key, its epoch, its streams
     cam:            {type: string, required: true, fixed: true}   # WHOSE footage it holds — the VMS camera id
+    ref:            {type: string, fixed: true}      # the camera's name in the domain (V/02.9 Н1.1): what the domain finds it by
     retention_days: {type: int,    default: 30, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
@@ -260,7 +261,7 @@ requests:
   # Backfill's profile (V/02.8 Н1.4; P/06.4 Н3 «жнец»): the outcome is the word `fetched` in the recorder's heartbeat, no
   # mark; an old request is closed by the recorder, not by age. A scenario's recording is made by `auto` (worker.creates).
   outcome: fetched
-snapshot: [name, cam, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
+snapshot: [name, cam, ref, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
 # (`w2cplatform/metrics.py`): a count of a table's rows, or a field of the recorders' heartbeats and status entries.
@@ -281,6 +282,8 @@ metrics:
   - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.absurd_frames", agg: sum, type: counter}
   - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.ahead_losses", agg: sum, type: counter}
   - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.repeats_dropped", agg: sum, type: counter}
+  - {name: ingest_dropped_total, from: "heartbeat.ingest_streams.<camera>.dropped", agg: sum, type: counter}
+  - {name: ingest_clock_steps_total, from: "heartbeat.ingest_streams.<camera>.clock_steps", agg: sum, type: counter}
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
@@ -377,16 +380,16 @@ display:
     archive.keep.lifted: метка «сохранить» снята
     archive.keep.uncopied: сохранённое ещё не скопировано
     archive.keep.garbled: метка «сохранить» не читается
-# The recorders on the domain: a member reports, beside its heartbeats and snapshot, when each camera last polled its
-# ingest (`rec/polled/<ingest>`) — the domain's witness that a camera is alive while its agent is silent. Where the ingest
-# takes streams is in the recorder's heartbeat (`ingest`), which the domain has already: no report of its own (ADR-0065,
-# its addition of 2026-10-08). The witness names each camera it heard of by whose it is, `cam` — fixed, as the
-# platform requires of the field a witness names by: a camera that is a member is its own cluster, and the ingest names
-# it by the member it is (its stream token's subject), so the domain matches a silent member by its own name.
+# The recorders on the domain (V/02.9): a recording is the domain's by its camera's `ref` (the assignment
+# `domain/placement/rec/<ref>`: the cluster of the primary, the camera's cluster as origin, the clusters of backups as
+# copies). Each recorder contributes its held recordings to the book of primaries — with the addresses of its cluster's
+# ingests — and, the first of its cluster, the recordings nobody holds and the cameras its cluster polls. A member's
+# witness that a camera is alive while its agent is silent: when each member last polled the recorder's ingest
+# (`rec/polled/<slot>`), the member named by its token; `cam` is the fixed field the platform's check asks for.
 domain:
+  ref: ref
   books:
     primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
-    upstream: {from: rec/upstream/, key: ref, pick: unique, to: to}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
   tokens:
     upstream:
@@ -395,7 +398,6 @@ domain:
       grant: [recworker]
       placement: {sub: rec, caller: cluster, ref_claim: ref, target_fields: [centre], audience_claim: aud}
       unit: {sub: cam, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
-  reports: [polled/]
   witness: {report: polled, member_field: cam}
   # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of
   # its directory alone (`PUT /domain/<sub>/<rows>/<ref>`) and a recording has no `ref`: declared, as the product's.

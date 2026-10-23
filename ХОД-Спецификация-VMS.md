@@ -49,6 +49,13 @@
   к `detjob`, `worker.reads` `det/units/`, слова `archive.backfill.*`). Открыто: просьба о записи, которую никто не держит
   (удалена) — решено ADR-0091 доп. (11) п. 4: жнец закрывает исходом `gone`, резерв `per_person` свободен (P/06.4 после
   выгрузки). V/02.8 влита (`7f91380b3`).
+  V/02.9 — переведена (нормы, id-map V/02.9-01…11, лекция — глава 9, инструкция); урок 02 — «переведён». Манифест: поле
+  записи `ref` (`fixed`), `domain.ref: ref`, `ref` в снимке; `worker.reads` + `domain/rec/primaries`, − `domain/rec/upstream`;
+  книга `upstream` снята (адреса центра — элемент центра в `primaries`, ключ — токен `upstream`); `reports: [polled/]` снят
+  (свидетель несёт семью сам, P/09.1 Н1.10); ряды `ingest_dropped_total`, `ingest_clock_steps_total`. Решения подсистемы:
+  между кластерами только толкание (RTSP — петля); толкатель серверной камеры — первый регистратор сервера держателя;
+  недержимые записи и книгу `polls` пишет первый регистратор кластера; `CLOCK_STEP` 5 с, `PEER_BUFFER` 300, `period` 2 с,
+  `CLOCK_FLOOR` 2000-01-01, `POLL_HOLD` 30 с — числа курса.
 
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
@@ -97,6 +104,7 @@
 | `decisions/inbox/2026-10-23-запрос-vms-секрет-строки-места.md` | воркер открывает `*_secret` строки таблицы мест — опись № 7 (V/02.6) | нет | решён: ADR-0091 доп. (9)–(10), выгрузка `e747d1f` |
 | `decisions/inbox/2026-10-23-запрос-vms-строгое-место.md` | строгое `affinity`: место только связанным, место без `server`, заказ под коробку камеры (V/02.6) | нет | решён: ADR-0091 доп. (9)–(10), выгрузка `e747d1f` |
 | `decisions/inbox/2026-10-23-запрос-vms-freeing.md` | поле `freeing` в пульсе и адресат просьбы освободить место — опись № 11 (V/02.7) | нет | решён (2026-10-23): `freeing: {<том ресурса>: байты}` — поле пульса; просьба — всем воркерам подсистемы на сервере, `volume` — том ресурса; Σ по пульсам. V/02.7 Н1.6 — ссылкой после выгрузки |
+| `decisions/inbox/2026-10-23-запрос-vms-запись-в-домене.md` | `rec` без `domain.ref` вне каталога домена; основная и резервная у исполнителей назначения — `contested` (P/08.1 Н3 шаг 4); строка без значения `domain.ref`; `domain/reached` воркеру (V/02.9) | нет | открыт (принят к разбору) |
 
 ## Решение по пакету запросов (2026-10-23, ADR-0091 доп. (2), (3); запросы № 5, 6, 16 — решены, main `a4c4121ba`)
 `worker.stop_timeout`, `parts.stop_timeout`; юнит воркера — `After=` своей части без `Wants`; `W2C_SUB_ENV=/etc/<sub>/<sub>.env`,
@@ -125,6 +133,8 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
+- V/02.9 Н1.1: основная и резервная запись одного `ref` в двух членах — `contested` вида домена; Н1.6: свежесть копии книги `primaries` (`domain/reached`) воркеру не читается — регистратор верит копии; до решения запроса «запись в домене».
+- «Сборке»: `rec.subsystem.yaml` — поле записи `ref`, `domain.ref: ref`, `ref` в снимке; книга `upstream` и `reports: [polled/]` сняты; `worker.reads` `domain/rec/primaries` вместо `domain/rec/upstream`; ряды `ingest_dropped_total`, `ingest_clock_steps_total`.
 - «Сборке»: `rec.subsystem.yaml` — `requests.outcome: fetched`, `elsewhere` снят, `worker.creates` к `detjob` (имена `rec-…`);
   `worker.stop_timeout: 40`; `placement.grows: true`, `placement.ends: {field: until, never: 0}`; часть `obsd`
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
