@@ -395,8 +395,8 @@ defs:
         - {when: {absent: [param]}, forbid: [login]}
         - {when: {absent: [regex]}, forbid: [in, schemes, decoded]}
   schemes:
-    owner: P/06.2 Н1.1; P/06.1 Н4
-    description: "имя схемы → `{host?, fragment?, none?}`"
+    owner: договор адреса url-credentials «Схемы»; P/06.2 Н1.1
+    description: "имя схемы → `{host?, fragment?, none?}`; смысл — договор адреса «Схемы» (URLC-HOST-01)"
     type: object
     names:
       key: {type: string, pattern: '[a-z][a-z0-9+.-]*'}
@@ -405,7 +405,7 @@ defs:
         properties:
           host: {enum: [authority, path], default: authority, description: "`authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`)"}
           fragment: {enum: [none], default_text: "`#` начинает фрагмент", description: "`none`: `#` — обычный знак, не начало фрагмента (P/06.2 Н1.1а А2)"}
-          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы ни был путь); при `host: path` путь обязателен и с узлом из `none` (`mirror://local`, `driverpack://file` без пути — `bad_url` P/06.1 Н4); проверка «нет хоста» P/06.1 Н4 к такой ссылке не применяется, `group_by` P/04 Н1.3 её в группу не берёт"}
+          none: {ref: strList, description: "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия); путь обязателен только при `host: path` — договор адреса «Схемы»"}
   jsonSchemaLite:
     owner: P/02.1 Н1.2
     description: "JSON Schema 2020-12; ключевые слова — перечень `names.key` этого определения (иное — value), глубина ≤ 32 (разбор ревью стадии A 6–7, № 11)"
