@@ -17,7 +17,7 @@
 #   masked  what is shown of it: every password masked as *** where it stands; a login — a userinfo's, a pair's, a
 #           spelling's — shown as written (admin:***@h, ?usr=admin&pwd=***)
 #   fault   what refusing raw as the field's value says about its credentials: empty — no credential refuses it (a refusal
-#           by the url rule itself — bad_url: no host, a character outside RFC 3986 — is group_of.tsv's, not this table's,
+#           by the url rule itself — bad_url: no host, url-credentials «Схемы» — is group_of.tsv's, not this table's,
 #           stage A review Gemini 4.2); otherwise refused, and the refusal names
 #           the field it sends the value to by the field's `credentials`: its secret (cred_secret, access_secret — a
 #           password) or its login (cred_username, access_key — a login and no password)
