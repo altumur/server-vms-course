@@ -23,7 +23,7 @@ journal — the module's; the page's own tests hold it to that.
 ## The core: copied with a check
 `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
 `stopLive` are the product's (its own page on its `main`), between the two «core» lines below; a check compares each
-with the product's page, and what differs is listed as a debt — only shrinking, and empty now. The places a
+with the product's page, and what differs is listed as a debt — only shrinking. The places a
 recording may lie on are the rows of the table the rec manifest names
 (`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
 
@@ -112,12 +112,14 @@ cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents
 "use strict";
 // The VMS's words (display) and what its subsystems are about (about) the module reads from each one's manifest.
 const SUBS=["cam","rec","live"];
+// The module's API this page is written for (P/07 Н1.5 `version`): another version is not used — the page says so.
+const SHELL_API=1;
+if(PlatformConsole.version!==SHELL_API){document.getElementById("app").textContent="Страница VMS написана для версии "+SHELL_API+" модуля консоли, а загружена "+PlatformConsole.version+".";throw new Error("console module version")}
 const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
 window.platformConsole=pc;
 // ── Helpers ───────────────────────────────────────────────────────────────────────────────────────────────────
 // Everything the page draws from data goes through esc: a camera's name, an event's note, a volume's url are TEXT.
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const escHtml=esc;
 const $=q=>document.querySelector(q);
 const card=(title,body,act="")=>`<div class="card"><div class="ch">${title}${act}</div><div class="cb">${body}</div></div>`;
 const fldRo=(label,value)=>`<div><label>${esc(label)}</label><input type="text" value="${esc(value??"")}" readonly disabled></div>`;
@@ -186,8 +188,8 @@ function parseSource(src){
 }
 pc.addDecor("unit",(ref,u)=>isCam(ref)?{icon:"camera",badge:u?parseSource(u.source).host:""}:{});
 pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
-  host.innerHTML=`<div class="g"><div><label>Источник</label><input class="vms-src" value="${esc(value)}" autocomplete="off"></div><span class="vms-src-parts" style="display:contents"></span></div>`;
-  const inp=host.querySelector(".vms-src"),parts=host.querySelector(".vms-src-parts");
+  host.innerHTML=`<div class="g"><div><label>Источник</label><input class="cam-src" value="${esc(value)}" autocomplete="off"></div><span class="cam-src-parts" style="display:contents"></span></div>`;
+  const inp=host.querySelector(".cam-src"),parts=host.querySelector(".cam-src-parts");
   const show=v=>{const s2=parseSource(v);parts.innerHTML=fldRo("Адрес",s2.host)+fldRo("Производитель",s2.vendor)+fldRo("Канал",s2.channel)};
   show(value);
   if(!pc.may("edit",ref))inp.disabled=true;
@@ -198,19 +200,16 @@ pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
 pc.addNote("unit",(ref,u)=>{
   if(!isCam(ref)||!u)return"";
   if(u.device_state==="opening")return"Устройство ещё открывается — если это не проходит, открытие не завершается: проверьте адрес, сеть и учётные данные камеры.";
-  if(u.phase==="failed")return`Хост драйверов: сбой устройства${u.why?" — "+u.why:""}.`;
+  if(u.phase==="failed"){const w=u.reason||u.why;return`Хост драйверов: сбой устройства${w?" — "+w:""}.`}
   return"";
 });
 // The VMS's events in words in the module's journal and everywhere it lists events (the platform's it says itself).
 let inNote=false;
-pc.addEventNote(e=>{if(inNote||!/^(camera\.|card\.|volume\.|archive\.)/.test(e.kind||""))return"";inNote=true;try{return evNoteRu(e)}finally{inNote=false}});
+pc.addEventNote(e=>{if(inNote||!/^(card\.|archive\.)/.test(e.kind||""))return"";inNote=true;try{return evNoteRu(e)}finally{inNote=false}});
 function evNoteRu(e){
   const k=e.kind||"";
-  if(k==="volume.missing")return[`том ${e.volume??"?"}`,e.server?"на "+e.server:"",e.recorder?"держал "+e.recorder:"",e.detail||"","записи ушли на другие тома"].filter(Boolean).join(" · ");
   if(k==="archive.volume.shrunk")return`том ${e.volume??"?"}${e.was!=null?": "+gbytes(+e.was)+" → "+gbytes(+e.quota_bytes):""} — самое старое отдано первым`;
   if(k==="archive.footage.dropped")return`том ${e.volume??"?"} · потеряно ${durRu(e.seconds)}: писатель взял кадры и не успел записать, когда том отдали`;
-  if(k==="camera.footage.lost")return`потеряно ${durRu(e.lost_s)} записи на карте камеры${e.why?" · "+e.why:""}`;
-  if(k==="camera.uplink.short")return`канал камеры не успевает: отстаёт на ${durRu(e.behind_s)}`;
   if(k==="card.prebuffer.short")return`кольцо карты держит ${durRu(e.reach_s)}, а обрыв замечают за ${durRu(e.need_s)}: начало обрыва не попадёт в запись`;
   if(k==="card.failing")return`карта камеры: ${e.state||"?"}${e.error?" · "+e.error:""}`;
   if(k==="archive.backfill.refused")return`дозапись не принята${e.error?": "+e.error:""}`;
@@ -889,7 +888,6 @@ async function addToArchive(opt){
 }
 
 // ── Volumes: under each server its own, the network ones apart; their cards; declaring and withdrawing ──────────
-let CARD_HOST=null;
 function volCardHtml(v){
   const st=volState(v),list=volRecs(v.name),net=v.kind===VOL_NET;
   return`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify(net?[["Сетевые архивы","netvols"]]:v.server?[[v.server,"server:"+v.server]]:[]))}"></span>${esc(v.name)}</h1>
@@ -951,8 +949,8 @@ function delVolume(name){
 pc.addTreeNodes("server",ref=>recOn?serverVolumes(ref.slice(7)).map(v=>({ref:"vol:"+v.name,label:v.name,icon:"storage",badge:volKind(v,true),off:!v.enabled})):[]);
 pc.addTreeNodes("servers",()=>recOn?[{ref:"netvols",label:"Сетевые архивы",icon:"storage",count:networkVolumes().length,
   kids:networkVolumes().map(v=>({ref:"vol:"+v.name,label:v.name,icon:"storage",badge:volKind(v,true),off:!v.enabled}))}]:[]);
-pc.addCard("vol",(host,ref)=>{CARD_HOST=host;volumeCard(host,ref.slice(4))});
-pc.addCard("netvols",host=>{CARD_HOST=host;netVolumesCard(host)});
+pc.addCard("vol",(host,ref)=>volumeCard(host,ref.slice(4)));
+pc.addCard("netvols",host=>netVolumesCard(host));
 // The server's archives: a block of its overview, with «＋ Камеру в архив» and «＋ Архив».
 pc.addBlock("server",{id:"vols",covers:"rec/volumes",render:(host,ref)=>{
   const name=ref.slice(7);
