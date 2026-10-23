@@ -27,7 +27,7 @@ Kimi SB810-06): у всех строк `catalog` — `["testsub"]`, ключи �
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `769c5a472b74307c5dc5b697a76dc6eaede09e3c69c47e8808d862d0d0cb9165` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f529f2d9d9d3cdc02aa7639071626ab7005554e51f0421b6eda85e16b254d87d` |
 
 Смена этих байтов — повод перепроверить таблицу.
 
