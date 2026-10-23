@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- The VMS's console page: a SHELL over the platform's console module (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md), served at `/`
-     when the console's root is the VMS (`page_of`: the `cam.shell.html` beside `cam.subsystem.yaml`).
+     when the console's root is the VMS (the `cam.shell.html` beside `cam.subsystem.yaml`).
      Everything the platform knows — the frame, the tree, the cards of units, servers, workers, the domain, people,
      the journal, the session — and the console's look (/platform/console.css) are the module's; the VMS's words come
      from its manifests (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
@@ -12,19 +12,19 @@
 <!--
 NOTES — what this page is, its parts and its state (each function is described where it is defined)
 
-# vms/cam.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
+# cam.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
-**Role.** The page at `/` of a console whose root is `cam` (`w2cplatform/console.py`: `page_of` — a subsystem's own
-page is `<sub>.shell.html` beside its manifest, `SHELL`, served by the console's root alone). It mounts the module
+**Role.** The page at `/` of a console whose root is `cam` (P/06: a subsystem's own page is `<sub>.shell.html`
+beside its manifest, served by the console's root alone). It mounts the module
 (`PlatformConsole.mount(#app, {lang, subsystems: [cam, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
 their manifests with `pc.manifest(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
-journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: `tests/console/shell-*.test.js`.
+journal — the module's; the page's own tests hold it to that.
 
 ## The core: copied with a check
 `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
-`stopLive` are the product's (`vmsworker/vms/cam.shell.html` on its `main`), between the two «core» lines below;
-`tests/test_shell_core.py` compares each with the product's, and what differs is `tests/testdata/shell_core_debt.txt`
-— only shrinking, and empty now. The places a recording may lie on are the rows of the table the rec manifest names
+`stopLive` are the product's (its own page on its `main`), between the two «core» lines below; a check compares each
+with the product's page, and what differs is listed as a debt — only shrinking, and empty now. The places a
+recording may lie on are the rows of the table the rec manifest names
 (`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
 
 ## What the page adds (all through the module's calls)
@@ -51,7 +51,7 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
 - «Камеру в архив» — `addAction("server")`, `addMenu("server"|"vol")`: a recording of a camera on a volume of the
   server (`POST /rec/recordings {name, cam, home}`).
 - `addSection` «Сценарии» (after units) — the auto subsystem's scenarios: the list and the editor, the actions the
-  auto manifest's `then` accepts (`RACTIONS`, held to the manifest by `tests/test_auto_spec.py`), the last firings.
+  auto manifest's `then` accepts (the page's catalogue of actions, held to the manifest by a check), the last firings.
 - The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
   — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
   `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Назначения записи» (`domain/placement/rec/`).
@@ -266,7 +266,7 @@ function setCap(text){const el=$("#playing");if(el)el.textContent=text}
 function evAt(e){return e.occurred||e.t}
 function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
 
-// ── core: COPY WITH A CHECK — the product's vms/cam.shell.html (main), function by function; test_shell_core.py ──
+// ── core: COPY WITH A CHECK — the product's page (main), function by function, each checked against it ──────────
 async function whereAt(url){
   try{const r=await fetch(url);let d={};try{d=await r.json()}catch(e){}
     return{status:r.status,door:d&&d.door&&d.door.url?d.door:null,missing:r.headers.get("X-Unreachable")||(d&&d.unreachable)||"",error:d&&d.error||""}}
@@ -975,7 +975,7 @@ pc.addMenu("vol",ref=>{const v=volByName(ref.slice(4));return v&&v.enabled?[{lab
 // A scenario is a unit of auto: «when this happened (and that, within N seconds) — ask for this». Its evaluator reads
 // the same events this page shows and files a REQUEST, performed by whoever holds the unit. The catalogue of actions
 // is the auto manifest's `then` (each of its `anyOf`, with its required fields): the operator cannot ask for what no
-// executor is written for — `tests/test_auto_spec.py` holds the two together. A detector's actions are offered when
+// executor is written for — a check of the specification holds the two together. A detector's actions are offered when
 // the console mounts det.
 const RACTIONS=[
   {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
