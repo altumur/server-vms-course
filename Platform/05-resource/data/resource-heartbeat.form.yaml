@@ -10,9 +10,8 @@ root:
   properties:
     server:
       type: string
-      pattern: '[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*'
-      max_bytes: 253
-      description: свой сервер (SERVER_NAME, P/02.4 Н1.2); не равен серверу ключа — пульс нечитаем (P/06.5 Н2)
+      pattern: '[a-z0-9]+(-[a-z0-9]+)*'
+      description: свой сервер — SERVER_NAME по грамматике P/02.4 Н1.2, как у замка присутствия (догадка стадии C R05-G07, решение «Архитектора» 2026-10-23); не по ней или не равен серверу ключа — пульс нечитаем (P/06.5 Н2)
     box:
       type: string
       description: коробка (BOX_ID, P/02.4 Н1.2)
