@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: V/03 — дверь шлюза живого видео
+  version: 1.0.0
+  description: |
+    HTTP-контракт двери шлюза `liveworker` — урок V/03 «Живое видео» модуля VMS. Канон — нормы глав `03.K-live.norms.md`;
+    файл их выражает и не добавляет требований. Маршрут `whep` (глава V/03.3): оффер и отбой; допуск — токен двери консоли
+    (`GET /live/where/<cam>`, договор токена двери; `Authorization: Bearer` или `?t=`). Иной метод — 405, иной путь — 404.
+    Учётки потоков через `door.pass` — глава V/03.6.
+servers:
+  - url: http://127.0.0.1:{port}
+    description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
+    variables:
+      port: {default: "0"}
+paths:
+  /whep/{cam}:
+    post:
+      summary: Оффер WebRTC — ответ без trickle (Н1.2)
+      security: [{doorToken: []}]
+      parameters:
+        - name: cam
+          in: path
+          required: true
+          description: id камеры — имя раздачи (V/03.1)
+          schema: {type: string, minLength: 1}
+      requestBody:
+        required: true
+        content:
+          application/sdp:
+            schema: {type: string, maxLength: 262144}
+      responses:
+        "201":
+          description: ответ SDP со всеми кандидатами ICE
+          headers:
+            Location:
+              required: true
+              description: "/whep/session/<sid>?gateway=<имя шлюза>"
+              schema: {type: string}
+          content:
+            application/sdp:
+              schema: {type: string}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "415": {$ref: "#/components/responses/Refusal"}
+        "500": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /whep/session/{session}:
+    delete:
+      summary: Отбой своей сессии (Н1.3)
+      security: [{doorToken: []}]
+      parameters:
+        - name: session
+          in: path
+          required: true
+          description: sid из Location ответа на оффер
+          schema: {type: string, pattern: "^[0-9a-f]{32}$"}
+      responses:
+        "204":
+          description: сессия закрыта
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+components:
+  securitySchemes:
+    doorToken:
+      type: http
+      scheme: bearer
+      description: токен двери консоли (договор токена двери); также ?t=
+  responses:
+    Refusal:
+      description: отказ (V/03.3 Н4); 503 пределов — с Retry-After
+      headers:
+        Retry-After:
+          required: false
+          schema: {type: integer}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {type: string}
+              detail: {type: string}
