@@ -1,6 +1,7 @@
 # Режимы корня событий, замков присутствия и бакетов (договор журнала событий bucket modes, договор замка присутствия modes; EJ-L02, PL-G02, PL-G03): путь → вид, режим, владелец (если назван), группа. Форма — README.
 case	path	kind	mode	owner	group	note
 events-root	<PLATFORM_DIR>/events	dir	2771	w2c	w2c-events	корень событий — проход прочим без чтения (путь скрипта воркеров к замкам; PL-G03)
+resource-root	<RESOURCE_ROOT>	dir	2771	w2c	w2c-events	RESOURCE_ROOT, заданный явно, — сам корень событий: те же 2771, деревья под ним — 2770/2750 (EJ-G12)
 workers-dir	<PLATFORM_DIR>/events/.workers	dir	2771	-	w2c-events	путь к замкам — проход прочим без чтения (PL-G03)
 workers-sub	<PLATFORM_DIR>/events/.workers/testsub	dir	2775	-	w2c-events	каталог замков подсистемы — перечень и чтение прочим (скрипт воркеров), группа пишет (PL-G02)
 lock-file	<PLATFORM_DIR>/events/.workers/testsub/<экземпляр>.lock	file	0644	<пользователь воркера>	w2c-events	файл замка — чтение прочим (PL-G02)
