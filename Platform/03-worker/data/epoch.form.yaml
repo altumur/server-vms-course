@@ -1,5 +1,5 @@
 # Семья <sub>/epoch/<id> — строка эпохи единицы (P/03.2; P/03.2 Н1.5). Источник формы строки (ADR-0088).
-# Экземпляр — {key, row}; ключ — грамматика колонки key каталога (id единицы P/06.1 Н1.3). Слова — Platform/common/DIALECT.md.
+# Экземпляр — {key, row}; ключ — грамматика колонки key каталога (id единицы — договор проверки строки). Слова — Platform/common/DIALECT.md.
 dialect: data-form/1
 root:
   type: object

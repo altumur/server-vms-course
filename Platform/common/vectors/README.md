@@ -16,19 +16,20 @@
 | `rid` | [`06-console/vectors/rid/`](../../06-console/vectors/rid/) | P/06.4 | P/06.4 Н1.5 |
 | сериализация тела просьбы | [`06-console/vectors/requests-body/`](../../06-console/vectors/requests-body/) | P/06.4 | P/06.4 Н1.5, ADR-0072 |
 | digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | P/06.4 | P/06.4 Н1.5 `digest` |
-| секреты в адресе | [`common/vectors/secret-in/`](secret-in/) | P/06.2 | P/06.2 Н1.1а |
+| секреты в адресе | [`common/vectors/secret-in/`](secret-in/) | P/06.2 | договор адреса `url-credentials` (P/06.2 Н1.1а) |
 | маска лога | [`06-console/vectors/log-mask/`](../../06-console/vectors/log-mask/) | P/06.2 | P/06.2 Н1.4 |
 | секретные строки платформы | [`02-installer/vectors/platform-lists/`](../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 Н1.3, P/02.5 Н1.4 |
 | корпус манифеста | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 Н1, Н4, Н5 |
 | оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 Н1.2 `pattern`, Н1.3 |
 | копия хранилища | [`01-store/acceptance/3/inputs/`](../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 Н1.3 `copy` |
 | вывод прав из манифеста (по смыслу) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 Н1.4, Н3 |
-| текстовые формы значений (`values_by_type`) | [`common/vectors/values-by-type/`](values-by-type/) | P/06.1 | P/06.1 Н1.2 |
+| текстовые формы значений (`values_by_type`) | [`common/vectors/values-by-type/`](values-by-type/) | P/06.1 | договор проверки строки «Строка единицы» (P/06.1 Н1.2) |
+| общая проверка строки | [`common/vectors/row-check/`](row-check/) | P/06.1 | договор проверки строки (W03-E07) |
 | id события | векторов нет — норма формы; кандидат пакета — после урока 5 | P/05 | [договор журнала событий](../contracts/event-journal.md) `id` |
 | основание домена: файл восстановления, ключ приёма книг, запись срока 1 | [`domain-founding/`](domain-founding/README.md) | P/08 (главы 8.2, 8.8) | [договор основания домена](../contracts/domain-founding.md); находка I02-FOUND |
 | ключ резервной копии домена: HMAC-SHA256 от root_key и backup_key_rev | [`domain-backup-key/`](domain-backup-key/README.md) | P/08 (глава 8.8) | [договор ключа резервной копии домена](../contracts/domain-backup-key.md); догадка стадии C I02-BACKUP-HMAC |
 | бакет журнала: порванный хвост и неверная строка, времена кодеком, годы бакета; имена `%h<sha256>` и `.name` | [`journal/`](journal/README.md) | common (договор журнала событий) | [договор журнала событий](../contracts/event-journal.md) `bucket` (`torn`, `years`), `line`, «Имена файлов в общих деревьях»; догадки стадии C EJ-G03, EJ-G04, EJ-G06, EJ-G07 |
-| разбор адреса | частью — пакеты `secret-in`, `group-of`; отдельного пакета нет | P/06.2 | P/06.2 Н1.1а, P/02.1 Н1.2а `schemes` |
+| разбор адреса | частью — пакеты `secret-in`, `group-of`, `row-check`; отдельного пакета нет | P/06.2 | договор адреса, P/02.1 Н1.2а `schemes` |
 | конверт `enc:v2`, путь AAD, открытие, файл кольца | [`sealing/`](sealing/README.md) | common | [договор запечатывания](../contracts/sealing.md) |
 | свежесть: возраст наблюдаемой версии → свеж (`≤ LOST_AFTER`) | [`fresh-age/`](fresh-age/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть»; P/04 Н3, главы 6.1, 6.4, 6.5, 6.6 (разбор ревью стадии B 6–7, № 20) |
 | SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` |

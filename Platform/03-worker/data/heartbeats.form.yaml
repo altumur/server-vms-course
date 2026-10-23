@@ -18,11 +18,11 @@ root:
       description: ДОЛЖЕН; по элементу на единицу, которую воркер ведёт
       items:
         type: object
-        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase, epoch, revision или observed_revision; id не по грамматике id единицы (P/06.1 Н1.3); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
+        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase, epoch, revision или observed_revision; id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
         properties:
           id:
             ref: common.named_id
-            description: id единицы — по грамматике P/06.1 Н1.3 (форма держит named; у манифеста с unit.id numeric — ещё numeric, проза Н1.3)
+            description: id единицы — по грамматике договора проверки строки (форма держит named; у манифеста с unit.id numeric — ещё numeric, P/06.1 Н1.3)
           phase:
             type: string
             description: слова подсистемы; платформа знает одно — running (счётчик running, соседство near)
