@@ -70,7 +70,9 @@
   V/07.1 — переведена (нормы, приёмка 1, id-map V/07.1-01…05, лекция и инструкция — начало; комментарии манифеста `auto` —
   без кода и «только просьбы»). Запрос «реестр V07».
   V/07.2 — переведена (нормы, id-map V/07.2-01…05); манифест `auto`: `unit.state.cursor` `{through, held_from}`, ряд
-  `wants_folded` снят.
+  `wants_folded` снят. Влита.
+  V/07.3 — переведена (нормы, id-map V/07.3-01…03); манифест `auto`: `worker.reads` + `cam/cameras/`, `cam/heartbeats/`,
+  `cam/devices/`, `det/units/`, `rec/recordings/`.
 
 ## Перевод 06-detedge
 - План — `VMS/06-detedge/README.md` (годен, «Архитектор» 2026-10-23; решения 1–10; переход — ADR-0090 доп. (11)).
