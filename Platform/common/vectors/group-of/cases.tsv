@@ -169,3 +169,5 @@ rtsp://nvr50/ch^1	nvr50	bad_url
 rtsp://nvr50/a{b}/c	nvr50	bad_url
 rtsp://nvr50/a\b	nvr50	bad_url
 rtsp://hub.ex'ample/x	<none>	bad_url
+rtsp://cam.0x50/x	<none>	bad_url
+cfw://[::ffff:10.0.0.5]/x	10.0.0.5	
