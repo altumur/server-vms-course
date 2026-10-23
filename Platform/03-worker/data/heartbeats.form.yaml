@@ -172,19 +172,19 @@ root:
       description: исходов, записанных снова (late); только когда > 0
     command_road:
       type: object
-      description: "по подателю (operator или подсистема): от времени просьбы до вызова"
+      description: "по подателю (operator или подсистема): дорога — от at строки просьбы до первого местного наблюдения её этим воркером (W03-E05)"
       names:
         key: {type: string}
         value: {ref: histogram}
     command_request:
       type: object
-      description: "по подателю: от at строки просьбы (время подачи) до вызова; из filed время не выводится (W03-E05)"
+      description: "по подателю: полное время — от at строки просьбы (время подачи) до исхода; из filed время не выводится (W03-E05)"
       names:
         key: {type: string}
         value: {ref: histogram}
     command_wait:
       ref: histogram
-      description: от первого местного наблюдения просьбы этим воркером до вызова, по монотонным часам (W03-E05)
+      description: ожидание у держателя — от первого местного наблюдения просьбы этим воркером до исхода, по монотонным часам (W03-E05)
     filings:
       type: object
       description: "подача просьб воркером (глава 3.6 Н1.5; ADR-0091 п. 7)"
