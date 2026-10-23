@@ -6,7 +6,8 @@ info:
     HTTP-контракт двери шлюза `liveworker` — урок V/03 «Живое видео» модуля VMS. Канон — нормы глав `03.K-live.norms.md`;
     файл их выражает и не добавляет требований. Маршрут `whep` (глава V/03.3): оффер и отбой; допуск — токен двери консоли
     (`GET /live/where/<cam>`, договор токена двери; `Authorization: Bearer` или `?t=`). Иной метод — 405, иной путь — 404.
-    Учётки потоков через `door.pass` — глава V/03.6.
+    Учётки потоков (глава V/03.6) — маршруты консоли `/live/accounts…`, которые консоль передаёт шлюзу (`door.pass`):
+    право человека проверяет консоль (view — чтение, admin — запись), шлюз — его учётные данные снова.
 servers:
   - url: http://127.0.0.1:{port}
     description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
@@ -63,13 +64,133 @@ paths:
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
+  /live/accounts:
+    get:
+      summary: Учётки потоков кластера, без паролей (V/03.6 Н1.2; через door.pass консоли, право view)
+      responses:
+        "200":
+          description: список
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accounts]
+                additionalProperties: false
+                properties:
+                  accounts:
+                    type: array
+                    items: {$ref: "#/components/schemas/Account"}
+        "502": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+    post:
+      summary: Новая учётка — пароль один раз (право admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {type: string, minLength: 1, maxLength: 64}
+      responses:
+        "201": {$ref: "#/components/responses/WithPassword"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "409": {$ref: "#/components/responses/Refusal"}
+        "502": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /live/accounts/{name}:
+    parameters:
+      - $ref: "#/components/parameters/AccountName"
+    put:
+      summary: Включить или отключить учётку (право admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [disabled]
+              additionalProperties: false
+              properties:
+                disabled: {type: boolean}
+      responses:
+        "200":
+          description: учётка после правки
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [account]
+                additionalProperties: false
+                properties:
+                  account: {$ref: "#/components/schemas/Account"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "502": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+    delete:
+      summary: Удалить учётку и снять её гранты (право admin)
+      responses:
+        "200":
+          description: удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                additionalProperties: false
+                properties:
+                  deleted: {type: string}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "502": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /live/accounts/{name}/password:
+    parameters:
+      - $ref: "#/components/parameters/AccountName"
+    post:
+      summary: Новый пароль — один раз (право admin)
+      responses:
+        "200": {$ref: "#/components/responses/WithPassword"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "502": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
 components:
+  parameters:
+    AccountName:
+      name: name
+      in: path
+      required: true
+      description: имя учётки (грамматика имени человека домена)
+      schema: {type: string, minLength: 1, maxLength: 64}
+  schemas:
+    Account:
+      type: object
+      required: [name, disabled, at, by]
+      additionalProperties: false
+      properties:
+        name: {type: string}
+        disabled: {type: boolean}
+        at: {type: number}
+        by: {type: string}
   securitySchemes:
     doorToken:
       type: http
       scheme: bearer
       description: токен двери консоли (договор токена двери); также ?t=
   responses:
+    WithPassword:
+      description: учётка и её пароль — пароль только в этом ответе
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [account, password]
+            additionalProperties: false
+            properties:
+              account: {$ref: "#/components/schemas/Account"}
+              password: {type: string, minLength: 32, maxLength: 32}
     Refusal:
       description: отказ (V/03.3 Н4); 503 пределов — с Retry-After
       headers:
