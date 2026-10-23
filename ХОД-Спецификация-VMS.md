@@ -43,6 +43,9 @@
   V/02.7 — переведена (нормы, id-map V/02.7-01…07; манифест — слова видов `archive.keep.*`); влита.
   Доп. (9) (на ревью): исключительное место — ключ `affinity.exclusive` рядом со `strict`, воркер с исключительным местом других
   мест не держит — учесть в V/02.6 Н1.1 после разбора (манифест `rec`: `exclusive` у `backup`/`edge`).
+  V/02.8 — переведена (нормы, id-map V/02.8-01…06; манифест: `requests.outcome: fetched`, `elsewhere` снят, `worker.creates`
+  к `detjob`, `worker.reads` `det/units/`, слова `archive.backfill.*`). Открыто: просьба о записи, которую никто не держит
+  (удалена), остаётся навсегда и держит резерв `per_person` — у профиля `fetched` закрыть её некому (вопрос платформе).
 
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
@@ -119,7 +122,8 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
-- «Сборке»: `rec.subsystem.yaml` — `worker.stop_timeout: 40`; `placement.grows: true`, `placement.ends: {field: until, never: 0}`; часть `obsd`
+- «Сборке»: `rec.subsystem.yaml` — `requests.outcome: fetched`, `elsewhere` снят, `worker.creates` к `detjob` (имена `rec-…`);
+  `worker.stop_timeout: 40`; `placement.grows: true`, `placement.ends: {field: until, never: 0}`; часть `obsd`
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
