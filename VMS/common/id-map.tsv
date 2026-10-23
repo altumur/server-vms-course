@@ -138,3 +138,7 @@ old	new	chapter	subject	note
 М12B/01 ш.6а	V/03.6-02	3.6	двери учёток через door.pass: права view/admin, пять запросов, пароль один раз, отказы	без шлюза — 503 (решение плана 5)
 М12B/01 ш.6а	V/03.6-03	3.6	имя через свою консоль, гранты view, снятие при удалении, книга stream-accounts — один издатель, to — все члены	P/08.5 Н1.7
 М12B/01 ш.6а	V/03.6-04	3.6	дверь RTSP: RTSP_PORT, адрес, точки, источник, учётки и гранты, журнал live.rtsp.*	LIVE_RTSP_LISTEN → RTSP_PORT
+М10B/14 ш.1	V/04.1-01	4.1	поля детектора: умолчания labels [gpu], alarms, until; cam неизменен; params мал; mask — blob	
+М10B/14 ш.1	V/04.1-02	4.1	кто заводит: оператор дверью, auto — worker.creates с ключом {cam}-{kind}; раздела requests нет	requests: и исполнитель заданий сняты
+М10B/14 ш.1	V/04.1-03	4.1	срок placement.ends: заказ удаляется, ручная снимается (expired_kept)	jobs.expire снят
+М10B/14 ш.1, 6	V/04.1-04	4.1	размещение: capacity 8, labels-subset, requires resource, near к держателю камеры, без home и grows; запас — платформа; снимок	near rec → cam

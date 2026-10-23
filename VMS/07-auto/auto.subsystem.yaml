@@ -19,8 +19,9 @@ name: auto
 # The slot a worker of this subsystem makes, `a-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: a, name_env: AUTO_NAME}
-# The one worker that files to other subsystems: their request rows, and nothing else of theirs.
-worker: {exec: /usr/lib/auto/worker, reads: [domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam, rec, det]}
+# What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and a detector for a
+# while — a row of `det` it creates and renews by its key (`worker.creates`, P/03.6 Н1.6; V/04.1). Its norms — V/07.
+worker: {exec: /usr/lib/auto/worker, reads: [domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: det, rows: units, key: "{cam}-{kind}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
 lease: {unconfirmed_max: off}
