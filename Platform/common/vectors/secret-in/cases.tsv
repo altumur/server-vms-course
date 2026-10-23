@@ -463,3 +463,4 @@ cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid 
 cam.source	cfw://local	cfw://local		host: authority with none: [local] needs no path (url-credentials «Схемы»; URLC-HOST-01)
 cam.source	driverpack://file	driverpack://file	cred_secret	host: path needs a path even with a none node: driverpack://file without one does not parse (URLC-HOST-01)
 cam.source	rtsp://10.0.0.5:99999/live	rtsp://10.0.0.5:99999/live		a port is *DIGIT, no TCP bound (URLC-HOST-01)
+cam.source	cfw://local:80	cfw://local:80		the authority node is the host without userinfo and port: local:80 is the none node local, no path needed (URLC-SCHEMES-01)

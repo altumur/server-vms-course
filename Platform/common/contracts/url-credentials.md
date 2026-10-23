@@ -39,14 +39,18 @@ none?}` (объявление в манифесте — [P/02.1](../../02-instal
 догадка стадии C URLC-HOST-01, решение «Архитектора» 2026-10-23). Схема значения не из `schemes` — отказ `bad_url`.
 
 ```yaml
+node:      узел authority — хост (RFC 3986 host) без `userinfo@` и `:port`; none сравнивает его байт в байт
+           (догадки стадии C URLC-SCHEMES-01/02, решение «Архитектора» 2026-10-23)
 host:      authority (умолчание) — хост — узел authority; path — хост — первый сегмент пути, узел authority — хаб
-           (`mirror://<hub>/<host>/…`)
+           (`mirror://<hub>/<host>/…`); первый сегмент при host: path — `хост[:порт]` по правилу authority (порт — port
+           ниже): `mirror://hub/h:99999/x` — принят, `mirror://hub/h:abc/x` — bad_url; пустой первый сегмент — хоста нет:
+           `mirror://hub/` — bad_url
 fragment:  none — `#` обычный знак, не начало фрагмента (А2); без ключа — `#` начинает фрагмент
 none:      [<значение>…] — точные значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия, каков бы
            ни был путь); проверка «нет хоста» к такой ссылке не применяется, group_by P/04 Н1.3 её в группу не берёт
 path:      путь обязателен только при host: path, в том числе с узлом из none: `mirror://local`, `driverpack://file` без
-           пути — bad_url; `mirror://local/x` при none: [local] — принят; при host: authority путь не требуется и с узлом из
-           none: `cfw://local` при none: [local] — принят
+           пути — bad_url; `mirror://local/x`, `mirror://local/` и `mirror://local:80/` при none: [local] — приняты; при
+           host: authority путь не требуется и с узлом из none: `cfw://local` и `cfw://local:80` при none: [local] — приняты
 port:      *DIGIT по RFC 3986, без предела номера порта TCP (`h:99999` — принят); нечисловой порт — bad_url (пароль на месте
            порта — А12), отказ значения не повторяет
 ```
