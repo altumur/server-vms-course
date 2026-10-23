@@ -19,7 +19,7 @@
 | 02 | [`02-rec/`](02-rec/README.md) | `rec` | переведён |
 | 03 | [`03-live/`](03-live/README.md) | `live` | переведён |
 | 04 | [`04-det/`](04-det/README.md) | `det` | переведён |
-| 05 | [`05-detjob/`](05-detjob/README.md) | `detjob` | не переведён |
+| 05 | [`05-detjob/`](05-detjob/README.md) | `detjob` | переведён |
 | 06 | [`06-detedge/`](06-detedge/README.md) | `detedge` (манифест пока `survey`) | не переведён |
 | 07 | [`07-auto/`](07-auto/README.md) | `auto` | не переведён |
 | 08 | [`08-page/`](08-page/README.md) | страница VMS над модулем консоли P/07 | не переведён |
