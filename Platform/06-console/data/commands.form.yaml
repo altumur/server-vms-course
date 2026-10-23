@@ -33,8 +33,8 @@ root:
       description: begun.valid_until — срок строки просьбы, если он был (необязателен)
     outcome:
       type: string
-      enum: [performed, refused, unknown, expired]
-      description: исход — закрытый перечень (ADR-0054); нет поля — begun без исхода (исполняется)
+      enum: [performed, refused, unknown, expired, gone]
+      description: "исход — закрытый перечень (ADR-0054); gone — единица-адресат отсутствует, закрыл жнец (ADR-0091 доп. (11) п. 4); нет поля — begun без исхода (исполняется)"
     action:
       type: string
       description: значение поля action тела просьбы (договор просьбы «Просьба» action), не имя обработчика; у тела с action обязателен при performed/refused после вызова, при unknown необязателен; у тела без action поля нет (разбор ревью стадии B 6–7, № 16)
@@ -63,7 +63,7 @@ root:
       forbid: [error]
     - when: {is: {outcome: [refused, unknown]}}
       require: [error]
-    - when: {is: {outcome: [expired]}}
+    - when: {is: {outcome: [expired, gone]}}
       require: [ended_by]
     # формы метки строго по договору просьбы «Метка» и «Три формы метки» (решение «Архитектора» 2026-10-20, разбор ревью
     # стадии B 6–7): набор ключей закрыт (properties без names — лишнее поле — отказ key)
@@ -74,6 +74,9 @@ root:
       require: [instance, slot, at]
     - when: {is: {outcome: [expired]}}
       forbid: [instance, slot, at, of, valid_until, action, late, error]
+    - when: {is: {outcome: [gone]}}
+      forbid: [instance, slot, at, of, valid_until, action, late, error]
+      check: {ended_by: {type: string, enum: [reaper]}}
     - when: {is: {outcome: [refused]}, absent: [instance]}
       require: [ended_by]
       forbid: [slot, at, of, valid_until, action, late]

@@ -80,9 +80,10 @@ mark:       objects/<sub>/commands/<rid>      # обычный профиль; �
              # просьбы (раздел «Просьба» `action`), не имя обработчика: у тела с action ДОЛЖЕН при performed/refused после вызова, при unknown
              # необязателен; у тела без action в метке поля нет (разбор ревью стадии B 6–7, № 16)
              # безусловная запись начавшего держателя (ADR-0054); закрытие чужой begun — по индексу, с ended_by
-  no_begun:  {unit, digest, outcome: expired | refused, ended_by: reaper | holder, ended_at, error (≤ 200 — ДОЛЖЕН у refused)}   # метка без begun (срок вышел, отказ до вызова):
+  no_begun:  {unit, digest, outcome: expired | refused | gone, ended_by: reaper | holder, ended_at, error (≤ 200 — ДОЛЖЕН у refused)}   # метка без begun (срок вышел, отказ до вызова,
+             # единица-адресат отсутствует — gone, только ended_by: reaper; ADR-0091 доп. (11) п. 4):
              # digest и unit переносятся из строки просьбы — повтор после удаления строки сравнивает digest и здесь
-  outcome:   performed | refused | unknown | expired                       # закрыто (ADR-0054)
+  outcome:   performed | refused | unknown | expired | gone                # закрыто (ADR-0054; gone — ADR-0091 доп. (11) п. 4)
   ended_by:  reaper | holder                                               # кто закрыл чужую или безначальную просьбу: reaper — expired/unknown от жнеца; holder — expired/refused до вызова
              # (no_begun) и unknown, которым другой держатель закрыл чужую begun за сроком; у answer от начавшего поля нет
   kept:      max(60, ttl) от момента, когда держатель увидел, что строки просьбы больше нет (его монотонные часы), и не
