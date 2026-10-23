@@ -1,7 +1,7 @@
 # Приёмка V/02.4 — регистратор
 
 Норма главы — [`02.4-rec.norms.md`](../../spec/02.4-rec.norms.md) Н5. Стенд и директивы — [общий README приёмки
-VMS](../../../common/acceptance/README.md) (выгрузка `6e51975`).
+VMS](../../../common/acceptance/README.md) (выгрузка `e747d1f`).
 
 ## Подготовка
 
