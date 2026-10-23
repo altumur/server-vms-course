@@ -158,7 +158,7 @@ journal:       access.break_glass.opened {who, why} | .refused {who, why, reason
                сильнее view — access.break_glass {who, method, path}
 ```
 
-Сверка хеша пароля — форма `pwhash_secret` строки держателя (P/08.4 Н1.1, Н1.6).
+Сверка хеша пароля — [договор хэша пароля](password-hash.md) (`verify`; GP-G06).
 
 ### Предел попыток
 

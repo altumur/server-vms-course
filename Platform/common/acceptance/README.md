@@ -107,6 +107,8 @@
   Команды `group-of` (профили `03-worker`, `04-controller`: адрес → `{group, fault}`) и `fresh-age` (профили `04-controller`,
   `06-console`: возраст → `true`/`false`) — без конверта, по README их пакетов `Platform/common/vectors/group-of/`,
   `…/fresh-age/` (догадка стадии C C04-VECTOR-01, решение «Архитектора» 2026-10-23).
+  Команда `password-hash` профилей `08-domain` и `06-console` — хэш пароля и проверка, без конверта; пакет
+  `Platform/common/vectors/password-hash/` (догадка стадии C GP-G06, решение «Архитектора» 2026-10-23).
   Команда `env-line` профиля `02-installer` — строка файла окружения → пара, `skip` или `bad`, без конверта; пакет
   `Platform/common/vectors/env-file/` (догадка стадии C C04-ENV-01, решение «Архитектора» 2026-10-23).
   Команды `said-id` и `said-read` профилей `03-worker` и `06-console` — без конверта: stdout — SaidID строкой JSON или

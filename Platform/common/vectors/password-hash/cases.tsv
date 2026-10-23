@@ -1,0 +1,15 @@
+# Хэш пароля (договор common/contracts/password-hash.md; P/08.4 Н1.1; GP-G06): {password, salt} → строка; {hash, password} → да/нет. Форма — README.
+case	input	expect	note
+hash-ascii	{"password":"correct horse battery","salt":"000102030405060708090a0b0c0d0e0f"}	"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad"	PBKDF2-HMAC-SHA256, 600000 итераций, ключ 32 байта, hex строчными
+hash-utf8	{"password":"пароль-Ж ✓","salt":"f0e1d2c3b4a5968778695a4b3c2d1e0f"}	"pbkdf2-sha256$600000$f0e1d2c3b4a5968778695a4b3c2d1e0f$a371ede5e6f0352a9db5296d98448e2301a15bc084fa4a9d251ba7880093e96e"	пароль — байты UTF-8
+hash-empty	{"password":"","salt":"000102030405060708090a0b0c0d0e0f"}	"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$ffa81c4acdf4b1394384005f0aaf083dd4c7bae97d8dc466581ecf75bb005eb9"	пустой пароль — функция считает; длину требуют двери (GLASS_MIN)
+verify-ok	{"hash":"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad","password":"correct horse battery"}	true	тот же пароль
+verify-utf8-ok	{"hash":"pbkdf2-sha256$600000$f0e1d2c3b4a5968778695a4b3c2d1e0f$a371ede5e6f0352a9db5296d98448e2301a15bc084fa4a9d251ba7880093e96e","password":"пароль-Ж ✓"}	true	тот же пароль UTF-8
+verify-wrong	{"hash":"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad","password":"correct horse batterY"}	false	иной пароль
+verify-empty-wrong	{"hash":"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$ffa81c4acdf4b1394384005f0aaf083dd4c7bae97d8dc466581ecf75bb005eb9","password":" "}	false	иной пароль
+verify-upper-hex	{"hash":"pbkdf2-sha256$600000$000102030405060708090A0B0C0D0E0F$BB06C8C0B1DD5BFD4E40F4E297A2D0E64DA7EF94B4B8EC20989021C8B41536AD","password":"correct horse battery"}	false	hex заглавными — не по форме, не подходит
+verify-other-iterations	{"hash":"pbkdf2-sha256$100000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad","password":"correct horse battery"}	false	иное число итераций — не по форме
+verify-short-salt	{"hash":"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad","password":"correct horse battery"}	false	соль не 32 hex — не по форме
+verify-other-prefix	{"hash":"pbkdf2-sha512$600000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad","password":"correct horse battery"}	false	иной алгоритм — не по форме
+verify-extra-part	{"hash":"pbkdf2-sha256$600000$000102030405060708090a0b0c0d0e0f$bb06c8c0b1dd5bfd4e40f4e297a2d0e64da7ef94b4b8ec20989021c8b41536ad$x","password":"correct horse battery"}	false	лишняя часть — не по форме
+verify-empty-hash	{"hash":"","password":""}	false	пустая строка — не по форме
