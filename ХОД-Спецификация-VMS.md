@@ -147,6 +147,7 @@
 ## Долги
 - V/02.9 Н1.3: приёмник — второй слушатель регистратора, допуск по токену домена делает подсистема (P/03.7 Н1.5); до решения запроса «приёмник на двери процесса».
 - V/02.9 Н1.1: основная и резервная запись одного `ref` у исполнителей назначения — `contested` вида домена до выгрузки нормы ADR-0091 доп. (12), (13); Н1.6 свежесть — по `missing` книги (доп. (13): `domain/reached` — не мера свежести), долга нет.
+- «Сборке»: комментарии `cam.subsystem.yaml`, `rec.subsystem.yaml`, `live.subsystem.yaml`, `cam.shell.html` — без имён и путей кода свидетелей (данные YAML те же; долг до генерации VMS, слово «Архитектора» 2026-10-23).
 - «Сборке»: `live.subsystem.yaml` — `worker.reads` + `cam/heartbeats/`, `rec/heartbeats/` (V/03.2).
 - «Сборке»: `rec.subsystem.yaml` — `worker.reads` + `cam/heartbeats/` (пульсы держателей, V/02.4 Н1.1; основа роли чужие пульсы не даёт, P/02.5 Н1.4).
 - «Сборке»: `rec.subsystem.yaml` — поле записи `ref`, `domain.ref: ref`, `ref` в снимке; книга `upstream` и `reports: [polled/]` сняты; `worker.reads` `domain/rec/primaries` вместо `domain/rec/upstream`; ряды `ingest_dropped_total`, `ingest_clock_steps_total`.

@@ -1,13 +1,13 @@
 # Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's
 # live fan-out — "camera 7 is being watched, from gateway g-2" — one per camera,
 # created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
-# gateway a grace period after the last one leaves. Its workers are gateways (vms/liveworker.py):
+# gateway a grace period after the last one leaves. Its workers are gateways (`liveworker`):
 # stateless, count = N by demand, capacity in VIEWERS, not cameras. Same
 # controller class, same console class, same ACL shape as the VMS; nothing
 # about video in the platform.
 name: live
 # The slot a worker of this subsystem makes, `g-<n>`, and the variable naming the one it is started under
-# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+# beside `WORKER_NAME` (the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: g, name_env: LIVE_NAME}
 # A gateway finds a camera's holder and its own cluster's ingests by their heartbeats (V/03.2: `cam/heartbeats/`,
 # `rec/heartbeats/` — another subsystem's heartbeats are read by declaration).
@@ -27,7 +27,7 @@ unit:
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
-  # (a viewer on its own stream: webrtcbin, DTLS, a queue — the worst case; ten viewers of one stream cost less)
+  # (a viewer on its own stream: its WebRTC element, DTLS, a queue — the worst case; ten viewers of one stream cost less)
   capacity:   {from: capacity, default: 100, unit_mb: 2, base_mb: 48}   # viewers a gateway can carry — its own number, from its heartbeat
   headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
