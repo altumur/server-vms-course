@@ -18,9 +18,10 @@ name: auto
 # The slot a worker of this subsystem makes, `a-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: a, name_env: AUTO_NAME}
-# What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and a detector for a
-# while — a row of `det` it creates and renews by its key (`worker.creates`, P/03.6 Н1.6; V/04.1). Its norms — V/07.
-worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: det, rows: units, key: "{cam}-{kind}"}]}
+# What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and rows for a while —
+# a recording, a detector, a scan — it creates and renews by their keys (`worker.creates`, P/03.6 Н1.6; V/07.4); what it
+# reads to check a scenario against the devices and units (V/07.3) and to publish the asks book (V/07.5).
+worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
 lease: {unconfirmed_max: off}
@@ -164,6 +165,10 @@ metrics:
   # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
   # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
   - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
+  # The rows it ordered for a while and how each order went (P/03.6 Н1.6: created, extended, unchanged, taken, gone,
+  # expired, refused), and how many of its rows stand now.
+  - {name: creates_total, from: "heartbeat.creates.<outcome>", agg: sum, type: counter}
+  - {name: made_rows, from: heartbeat.made_rows, agg: sum}
   - {name: scenarios_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: pass_seconds, from: heartbeat.pass_seconds}
   - {name: queries_per_pass, from: heartbeat.queries}
