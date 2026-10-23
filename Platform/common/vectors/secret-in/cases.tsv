@@ -458,3 +458,5 @@ rec.volumes.url	http://h/x?a=<b>	http://h/x?a=<b>	access_secret	a character outs
 cam.source	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	cred_secret	a secret pair with an empty value refuses too, the shown value stays empty (А6)
 cam.source	rtsp://10.0.0.5/live?pass%3Dhunter2xyz=1	rtsp://10.0.0.5/live?***	cred_secret	a name that decodes holding «=» is read as a pair: the name goes with the value (А7)
 cam.source	rtsp://10.0.0.5/x%3A//admin%3Ahunter2xyz%40h/s	rtsp://10.0.0.5/***	cred_secret	a segment that decodes ending in «:» before «//» starts a nested address to «?»: masked whole (А8 (4))
+cam.source	rtsp://10.0.0.5/live?pwd=ab%zz	rtsp://10.0.0.5/live?pwd=***	cred_secret	a «%» without two hex digits stays a character: the pair is still a password, shown *** (А4 step 1; URLC-UTF8-01)
+cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid UTF-8 after decoding reads as U+FFFD: «p\uFFFDwd» is no password name (А4 step 1; URLC-UTF8-01)
