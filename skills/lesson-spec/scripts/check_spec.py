@@ -1988,11 +1988,21 @@ class Check:
                 texts[path] = text
                 self.markdown(path, text)
         self.openapi_or_exception(spec / f"{stem}.api.openapi.yaml", key)
-        try:
-            entries = sorted(p for p in acceptance.iterdir() if p.name not in IGNORED) if chapters else []
-        except OSError as exc:
-            self.error(acceptance, str(exc))
+        # A lesson with chapters none of which has acceptance (a page checked by reading and jsdom tests, V/08) carries
+        # no-acceptance as a one-file lesson does: no acceptance/ directory (git keeps no empty one) is then no error.
+        lesson_no_acceptance = chapters and self.exception(key, "no-acceptance") is not None
+        if lesson_no_acceptance and not acceptance.exists():
             entries = []
+            self.except_(acceptance, key, "no-acceptance", "-")
+        else:
+            if lesson_no_acceptance:
+                self.used.add((key, "no-acceptance", "-"))
+                self.error(acceptance, "stale exception no-acceptance: the lesson has an acceptance directory")
+            try:
+                entries = sorted(p for p in acceptance.iterdir() if p.name not in IGNORED) if chapters else []
+            except OSError as exc:
+                self.error(acceptance, str(exc))
+                entries = []
         names = {chapter for chapter, _ in parts}
         for entry in entries:
             if not (entry.is_dir() and entry.name in names):
