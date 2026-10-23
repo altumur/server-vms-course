@@ -69,7 +69,8 @@
   Уборка имён кода влита (`5f2dcd197`). V/03.3 — переведена (нормы, OpenAPI двери шлюза, id-map V/03.3-01…04); оболочка
   `cam.shell.html` — повтор `/live/where` и на 403 (договор токена двери); запросы «CORS WHEP», «снять V03 no-openapi».
   V/03.3 влита (`c498dd4b8`). V/03.4 — переведена (нормы, id-map V/03.4-01…04); перенесена на `origin/main` (ветка
-  `vms/03-live-5`). V/03.5 — переведена (нормы, id-map V/03.5-01…05; V/03.2 — фазы в элементе `status[]`).
+  `vms/03-live-5`). V/03.5 — переведена (нормы, id-map V/03.5-01…05; V/03.2 — фазы в элементе `status[]`). Влита.
+  V/03.6 — переведена (нормы, OpenAPI `/live/accounts…`, id-map V/03.6-01…04); урок 03 — «переведён».
 
 ## Перевод 01-cam
 - Урок V/01 влит в main `ac03d7bef` (2026-10-23) — первый урок VMS.
@@ -155,6 +156,7 @@
 - V/02.9 Н1.3: приёмник — второй слушатель регистратора, допуск по токену домена делает подсистема (P/03.7 Н1.5); до решения запроса «приёмник на двери процесса».
 - V/02.9 Н1.1: основная и резервная запись одного `ref` у исполнителей назначения — `contested` вида домена до выгрузки нормы ADR-0091 доп. (12), (13); Н1.6 свежесть — по `missing` книги (доп. (13): `domain/reached` — не мера свежести), долга нет.
 - «Сборке»: комментарии `cam.subsystem.yaml`, `rec.subsystem.yaml`, `live.subsystem.yaml`, `cam.shell.html` — без имён и путей кода свидетелей (данные YAML те же; долг до генерации VMS, слово «Архитектора» 2026-10-23).
+- «Сборке»: `live` — переменная двери RTSP `RTSP_PORT` в `/etc/live/live.env` (у свидетеля `LIVE_RTSP_LISTEN`), поле пульса `rtsp`; двери шлюза `whep` — `WHEP_PORT` (V/03.3, V/03.6).
 - «Сборке»: `live.subsystem.yaml` — `worker.reads` + `cam/heartbeats/`, `rec/heartbeats/` (V/03.2).
 - «Сборке»: `rec.subsystem.yaml` — `worker.reads` + `cam/heartbeats/` (пульсы держателей, V/02.4 Н1.1; основа роли чужие пульсы не даёт, P/02.5 Н1.4).
 - «Сборке»: `rec.subsystem.yaml` — поле записи `ref`, `domain.ref: ref`, `ref` в снимке; книга `upstream` и `reports: [polled/]` сняты; `worker.reads` `domain/rec/primaries` вместо `domain/rec/upstream`; ряды `ingest_dropped_total`, `ingest_clock_steps_total`.

@@ -134,3 +134,7 @@ old	new	chapter	subject	note
 М10B/13 ш.2, 4	V/03.5-03	3.5	пульс: capacity, headroom, sessions, subscriptions, resets, swept, codec; элемент раздачи phase/why/viewers/source	waiting/refused — элемент status[]
 М10B/13 ш.1	V/03.5-04	3.5	ряд streams_live и console.running	
 М10B/13 ш.8; М12A/03	V/03.5-05	3.5	остановка, перезапуск без состояния, арифметика отказов	
+М12B/01 ш.6а	V/03.6-01	3.6	таблица accounts: списочная форма, пишет только шлюз, строка {doc, password_secret}, удаление без надгробия	C5 ADR-0074; stream-clients сняты
+М12B/01 ш.6а	V/03.6-02	3.6	двери учёток через door.pass: права view/admin, пять запросов, пароль один раз, отказы	без шлюза — 503 (решение плана 5)
+М12B/01 ш.6а	V/03.6-03	3.6	имя через свою консоль, гранты view, снятие при удалении, книга stream-accounts — один издатель, to — все члены	P/08.5 Н1.7
+М12B/01 ш.6а	V/03.6-04	3.6	дверь RTSP: RTSP_PORT, адрес, точки, источник, учётки и гранты, журнал live.rtsp.*	LIVE_RTSP_LISTEN → RTSP_PORT

@@ -17,7 +17,7 @@
 |---|---|---|---|
 | 01 | [`01-cam/`](01-cam/README.md) | `cam` | переведён |
 | 02 | [`02-rec/`](02-rec/README.md) | `rec` | переведён |
-| 03 | [`03-live/`](03-live/README.md) | `live` | не переведён |
+| 03 | [`03-live/`](03-live/README.md) | `live` | переведён |
 | 04 | [`04-det/`](04-det/README.md) | `det` | не переведён |
 | 05 | [`05-detjob/`](05-detjob/README.md) | `detjob` | не переведён |
 | 06 | [`06-detedge/`](06-detedge/README.md) | `detedge` (манифест пока `survey`) | не переведён |
