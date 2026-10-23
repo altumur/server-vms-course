@@ -5287,6 +5287,7 @@ components:
           minLength: 1
         until:
           type: number
+          description: стенные секунды конца сессии; 0 — без срока, у отладочной личности (via debug; договор сторожевой и передачи `session` `until`, GP-G02)
         via:
           type: string
           enum: [break-glass, token, debug]
