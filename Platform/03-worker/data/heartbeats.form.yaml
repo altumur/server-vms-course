@@ -109,6 +109,12 @@ root:
     unconfirmed:
       ref: common.uint53
       description: "единиц, чья аренда сейчас не подтверждена (элементы status[] с lease: unconfirmed); ряд worker_unconfirmed{worker}"
+    freeing:
+      type: object
+      description: "ответ на просьбу ресурса освободить место (P/05 Н1.4 free_ask): том ресурса → байты, которые воркер освобождает и которых ещё нет в used; 0 — ничего; поле платформы; что освобождать — подсистема (запрос VMS freeing)"
+      names:
+        key: {type: string, pattern: '[A-Za-z0-9_]{1,64}'}
+        value: {ref: common.uint53}
     garbled_rows:
       ref: common.uint53
       description: "чтений строк своих единиц, не прочитанных своим типом, с запуска экземпляра (глава 3.3 Н3 шаг 2)"
