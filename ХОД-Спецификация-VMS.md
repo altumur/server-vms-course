@@ -75,7 +75,10 @@
   `cam/devices/`, `det/units/`, `rec/recordings/`. Влита.
   V/07.4 — переведена (нормы, id-map V/07.4-01…06); `auto`: `worker.creates` к `rec` `{cam}`, `det`, `detjob` `{cam}-{rec}-{kind}-{from}-{to}`,
   ряды `creates_total`, `made_rows`; `rec.ref` — без `fixed` (V/02.9 Н1.1; сверка с `cam` у регистратора); `det` — поле `mask_from`
-  (V/04.1, V/04.2).
+  (V/04.1, V/04.2). Влита.
+  V/07.5 — переведена (нормы, id-map V/07.5-01…05); документ `scenarios`: `then.within` → `valid_for` (≤ 600), `action`
+  перечнем, `arg` → `n`/`port`, `rate_per_minute` ≤ 600; `auto` reads + `rec/heartbeats/`; V/02.9 — пределы просьбы ссылкой,
+  передатчик несёт просьбу (Н1.8); урок 07 — «переведён».
 
 ## Перевод 06-detedge
 - План — `VMS/06-detedge/README.md` (годен, «Архитектор» 2026-10-23; решения 1–10; переход — ADR-0090 доп. (11)).
