@@ -20,7 +20,7 @@ name: auto
 slot: {prefix: a, name_env: AUTO_NAME}
 # What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and a detector for a
 # while — a row of `det` it creates and renews by its key (`worker.creates`, P/03.6 Н1.6; V/04.1). Its norms — V/07.
-worker: {exec: /usr/lib/auto/worker, reads: [domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: det, rows: units, key: "{cam}-{kind}"}]}
+worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: det, rows: units, key: "{cam}-{kind}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
 lease: {unconfirmed_max: off}
