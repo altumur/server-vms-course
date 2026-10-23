@@ -2,7 +2,7 @@
 
 Владелец — глава P/03.6 ([нормы](../../spec/03.6-worker.norms.md) Н1.6 `id`, `key`; ADR-0091 п. 1). Участник —
 `<s>worker` заказчика (библиотека воркера). Запись значений по типам — [P/06.1](../../../06-console/spec/06.1-console.norms.md)
-Н1.2 `values_by_type` (векторы [`values-by-type`](../../../06-console/vectors/values-by-type/README.md)). Байты пишет «Спецификация».
+Н1.2 `values_by_type` (векторы [`values-by-type`](../../../common/vectors/values-by-type/README.md)). Байты пишет «Спецификация».
 
 ## `cases.tsv`
 

@@ -4,7 +4,7 @@
 `schemes` P/02.1 Н1.2а). Участник — `<s>controller` (группа единицы при размещении). Байты пишет «Спецификация»; перенесено
 из `Source/tests/testdata/group_of.tsv` (стадия B, перенос урока 6, решение «Архитектора» по В8 плана урока 6). Шапка
 `cases.tsv` перенесена байт в байт и называет прежние адреса: М10/3 Н4 — ныне P/06.1 Н4, М10/7 Н1.1а — P/06.2 Н1.1а,
-`fault.tsv` — пакет [`fault`](../../../06-console/vectors/fault/README.md).
+`fault.tsv` — пакет [`fault`](../../../common/vectors/fault/README.md).
 
 ## `cases.tsv`
 

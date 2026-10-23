@@ -11,19 +11,19 @@
 | Вектор | Где сейчас | Владелец (стадия A) | Норма |
 |---|---|---|---|
 | JCS | [`01-store/vectors/jcs/`](../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
-| словарь `fault` отказов дверей | [`06-console/vectors/fault/`](../../06-console/vectors/fault/) | P/06.1 | двери P/06 (главы 6.1, 6.5, 6.6) |
+| словарь `fault` отказов дверей | [`common/vectors/fault/`](fault/) | P/06.1 | двери P/06 (главы 6.1, 6.5, 6.6) |
 | `cut_at: host` | [`04-controller/vectors/group-of/`](../../04-controller/vectors/group-of/) | P/04 | P/04 Н1.3 `group_by` |
 | `rid` | [`06-console/vectors/rid/`](../../06-console/vectors/rid/) | P/06.4 | P/06.4 Н1.5 |
 | сериализация тела просьбы | [`06-console/vectors/requests-body/`](../../06-console/vectors/requests-body/) | P/06.4 | P/06.4 Н1.5, ADR-0072 |
 | digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | P/06.4 | P/06.4 Н1.5 `digest` |
-| секреты в адресе | [`06-console/vectors/secret-in/`](../../06-console/vectors/secret-in/) | P/06.2 | P/06.2 Н1.1а |
+| секреты в адресе | [`common/vectors/secret-in/`](secret-in/) | P/06.2 | P/06.2 Н1.1а |
 | маска лога | [`06-console/vectors/log-mask/`](../../06-console/vectors/log-mask/) | P/06.2 | P/06.2 Н1.4 |
 | секретные строки платформы | [`02-installer/vectors/platform-lists/`](../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 Н1.3, P/02.5 Н1.4 |
 | корпус манифеста | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 Н1, Н4, Н5 |
 | оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 Н1.2 `pattern`, Н1.3 |
 | копия хранилища | [`01-store/acceptance/3/inputs/`](../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 Н1.3 `copy` |
 | вывод прав из манифеста (по смыслу) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 Н1.4, Н3 |
-| текстовые формы значений (`values_by_type`) | [`06-console/vectors/values-by-type/`](../../06-console/vectors/values-by-type/) | P/06.1 | P/06.1 Н1.2 |
+| текстовые формы значений (`values_by_type`) | [`common/vectors/values-by-type/`](values-by-type/) | P/06.1 | P/06.1 Н1.2 |
 | id события | векторов нет — норма формы; кандидат пакета — после урока 5 | P/05 | [договор журнала событий](../contracts/event-journal.md) `id` |
 | основание домена: файл восстановления, ключ приёма книг, запись срока 1 | [`domain-founding/`](domain-founding/README.md) | P/08 (главы 8.2, 8.8) | [договор основания домена](../contracts/domain-founding.md); находка I02-FOUND |
 | ключ резервной копии домена: HMAC-SHA256 от root_key и backup_key_rev | [`domain-backup-key/`](domain-backup-key/README.md) | P/08 (глава 8.8) | [договор ключа резервной копии домена](../contracts/domain-backup-key.md); догадка стадии C I02-BACKUP-HMAC |

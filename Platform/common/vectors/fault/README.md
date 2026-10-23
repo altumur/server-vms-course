@@ -1,9 +1,9 @@
 # Векторы: словарь `fault` отказов дверей
 
-Владелец — глава P/06.1 ([нормы](../../spec/06.1-console.norms.md) Н2: ответ-отказ `{detail, error, fault?}`; Н4: причины
+Владелец — глава P/06.1 ([нормы](../../../06-console/spec/06.1-console.norms.md) Н2: ответ-отказ `{detail, error, fault?}`; Н4: причины
 с `fault` — `not_json`, `not_number`, `too_long`, `bad_url`, `unique`, `must_match`, `garbled`). Участники — двери, которые
-говорят этими словами: дверь таблиц (P/06.1 Н4 «Тела, таблицы…»), дверь просьб ([глава 6.4](../../spec/06.4-console.norms.md);
-вектор [`requests-body`](../requests-body/README.md)), запечатывание консолью ([глава 6.2](../../spec/06.2-console.norms.md): `bad_url` у адреса с
+говорят этими словами: дверь таблиц (P/06.1 Н4 «Тела, таблицы…»), дверь просьб ([глава 6.4](../../../06-console/spec/06.4-console.norms.md);
+вектор [`requests-body`](../../../06-console/vectors/requests-body/README.md)), запечатывание консолью ([глава 6.2](../../../06-console/spec/06.2-console.norms.md): `bad_url` у адреса с
 паролем), контроллер ([P/04](../../../04-controller/spec/04-controller.norms.md) `group_by`: вектор
 [`group-of`](../../../04-controller/vectors/group-of/) берёт `bad_url` отсюда), двери домена (уроки 8–10). Байты пишет
 «Спецификация» (ADR-0083, стадия B; решение «Архитектора» 2026-10-06 о закрытом словаре); соответствие продукта — его

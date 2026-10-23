@@ -4,12 +4,12 @@
 Норма главы — [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) Н5. Сценарии, файл полей и текст ниже перенесены из
 приёмки М10/07 целиком (стадия B, ADR-0083 доп. (1):
 без изменения поведения); номера сценариев и шаги — прежние; общие таблицы `secret_in.tsv` и `log_mask.tsv` — векторы
-главы [`secret-in`](../../vectors/secret-in/README.md) и [`log-mask`](../../vectors/log-mask/README.md). Две таблицы векторов,
+главы [`secret-in`](../../../common/vectors/secret-in/README.md) и [`log-mask`](../../vectors/log-mask/README.md). Две таблицы векторов,
 файл полей и сценарный файл; собственных путей глава не добавляет — дверь единиц главы 6.1 и дверь хранилища.
 
 ## Векторы `secret-in` и `log-mask`
 
-Общие таблицы [`../../vectors/secret-in/cases.tsv`](../../vectors/secret-in/cases.tsv) и
+Общие таблицы [`../../../common/vectors/secret-in/cases.tsv`](../../../common/vectors/secret-in/cases.tsv) и
 [`../../vectors/log-mask/cases.tsv`](../../vectors/log-mask/cases.tsv) — один источник курса и продукта (ADR-0003; продукт
 забирает их `sync-course.sh`), копии здесь нет. Формат — в шапке каждой и в README пакета. Раннер: `secret-in` —
 каждая строка читается правилом названного поля из раздела ниже: показ равен `masked`,
