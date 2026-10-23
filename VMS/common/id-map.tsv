@@ -113,3 +113,7 @@ old	new	chapter	subject	note
 М12B/03 ш.8	V/02.9-09	2.9	книга polls: дом опроса, элемент, токен poll	V/07 — просьбы
 М12B/04 ш.2–5, 7	V/02.9-10	2.9	передатчик: когда, толчок, звезда, слово центра rec/ingest/up, архив по заявке центра, сбои; книга upstream снята	P/08.3, P/09.2
 М12A/13; М12B/03 ш.6а; М12B/04 ш.5	V/02.9-11	2.9	свидетель rec/polled и поля пульса ingest, ingest_streams, upstream, forwarder_errors	P/10 Н1.8
+М10B/13 ш.1	V/03.1-01	3.1	поля раздачи: cam неизменен и имя строки, labels зрителей, grace 30, about	
+М10B/13 ш.1	V/03.1-02	3.1	создание первым зрителем (rights.routes view), 409 exists, PUT с view — 403, камера без строки; удаляют шлюз и контроллер	worker.writes: [streams] → deletes
+М10B/13 ш.1–2; М12A/03	V/03.1-03	3.1	размещение: ёмкость в зрителях (unit_mb, base_mb), headroom, labels-subset, grows, rebalance, unplaced	offers → grows (ADR-0084); P/04
+М10B/13 ш.1	V/03.1-04	3.1	аренда unconfirmed_max off, снимок, слова	
