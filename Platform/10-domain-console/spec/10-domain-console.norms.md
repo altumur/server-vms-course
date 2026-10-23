@@ -242,13 +242,7 @@ server:
 `domain`; текст — там): `may` ([договор права](../../common/contracts/may.md)) по `domain/grants/domain`, `need` view/admin по
 двери; вход `disabled` функции `may` — строка `domain/disabled` у держателя (P/06.3 Н1.3 «Данные», М11/9 Н1.5 `cluster`).
 
-```yaml
-body_unit: need, чья единица в теле (P/06.3 Н1.3: /marks, POST /<sub>/requests), решается до чтения тела — unit = "*";
-           у сторожевой домена действует эта предпроверка до тела, проверки P/06.3 после тела (rights.unit_of, reach,
-           names) сохраняются (добавлено сверкой М11)
-session:   GET /session доказанной личности (P/06.3 Н1.3) — grants: [{cap, scope}] — действующие строки этого человека
-           (шаг 5 may) у этой консоли, по (cap, scope); у аварийной сессии — [] (её may — allow по glass)
-```
+Строки `body_unit` и `session` — [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) «Права по телу» (перенесены; догадка стадии C GP-G05, решение «Архитектора» 2026-10-23).
 
 Строки `body_unit` и `session` — общие с консолью кластера ([P/06.7](../../06-console/spec/06.7-console.norms.md), глава позднего слоя);
 `/session` и `/healthz` консоли домена — как у консоли кластера (договор сторожевой и передачи `session`; Н1.7). Часть
