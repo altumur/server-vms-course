@@ -3,16 +3,16 @@
 # A unit is one model watching one camera's DEVICE archive — the card, the NVR — forever. It exists for
 # the case where the footage is never going to be ours: thirty days on an NVR that has no analytics of its
 # own, no room on the server for a copy, and a need for our detections anyway. So nothing is copied: the
-# video stays where it is, and what comes out is events.
+# video stays where it is, and what comes out is events — and, if asked, the minutes around what fired.
 #
-#   detedge/watches/<name>          the unit: cam, kind, params — written by the console
+#   detedge/watches/<name>          the unit: cam, kind, params — written by the operator at the console's door
 #   detedge/<name>/e<epoch>/…       what the model saw, on this server's resource
-#   detedge/<name>/frontier.json    how far it has watched — durable, beside the events
+#   detedge/state/cursor/<name>     how far it has watched — the unit's state, which outlives a move (P/03.6 Н1.7)
 #
-# It is NOT `det` with another source, for the reason Lesson 21 gives: the budgets differ. A live detector
-# decodes one stream at one times real time; a watch decodes as fast as the device's door will give it,
-# and its limit is not the GPU but the two playback sessions the device allows. Two numbers, two
-# subsystems — and a watch must never be able to spend what live detection is running on.
+# It is NOT `det` with another source: the budgets differ. A live detector decodes one stream at one times real
+# time; a watch decodes as fast as the device's door will give it, and its limit is not the GPU but the playback
+# sessions the device allows, shared with the operator and the recorder. Two numbers, two subsystems — and a
+# watch must never be able to spend what live detection is running on.
 #
 # It is not `detjob` either: its work does not end. There is no `retire_when` here.
 name: detedge
@@ -26,23 +26,36 @@ unit:
   fields:
     name:    {type: string, required: true}
     cam:     {type: string, required: true, fixed: true}   # whose device archive to watch
-    kind:    {type: string, required: true}      # which model: motion | linecross | lpr | …
+    kind:    {type: string, required: true}      # which model: motion | linecross | lpr | tick | … — the detectors' registry
     params:  {type: string}                      # the model's settings, opaque to the platform
-    mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store
-    start:   {type: string, default: now}        # `now` or `earliest`: where the frontier begins the first time.
+    mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (P/06.1 Н1.5)
+    alarms:  {type: list,   default: []}         # which event kinds are ALARMS; findings in an old archive are observations
+    start:   {type: string, default: now, schema: {enum: [now, earliest]}}   # where the watch begins the first time.
                                                  # `earliest` means thirty days of backlog on the day somebody
                                                  # enables it, which is a decision and not a default.
     # `keep: hits` is the whole of the fourth way to use a device archive: watch everything, copy only what
     # a model liked. The network is already spent — those minutes were decoded to look at them — and what
     # lands on the disk is a few per cent of the recording. There is no second retention and no second
-    # recorder here: what is kept IS the server's archive, and everything else stays on the device.
-    keep:    {type: string, default: none}       # none | hits
+    # recorder here: what is kept IS the recording's archive (`rec`), and everything else stays on the device.
+    keep:    {type: string, default: none, schema: {enum: [none, hits]}}
+    rec:     {type: string, ref: rec/recordings, must_match: {cam: cam}}   # the recording the kept minutes go to; with `keep: hits`
     pre:     {type: float,  default: 5}          # seconds before a hit: a one-second clip is not evidence
     post:    {type: float,  default: 5}          # …and after
     join:    {type: float,  default: 30}         # hits closer than this are one stretch, gap and all —
                                                  # otherwise a busy minute becomes three hundred clips
     enabled: {type: bool,   default: true}
     labels:  {type: list,   default: ["gpu"]}
+  # The edge the watch has reached on the device's archive, kept by the holder under its epoch: the next holder goes on
+  # from it (V/06.3).
+  state:
+    cursor:
+      type: object
+      required: [through, events]
+      additionalProperties: false
+      properties:
+        through:  {type: number}                 # media seconds watched through
+        events:   {type: integer, minimum: 0}
+        overrun:  {type: number, minimum: 0}     # seconds the device's ring erased before the watch got there
 placement:
   capacity:   {from: capacity, default: 2}      # watches per worker — its own number, in its own heartbeat
   headroom:   {from: headroom}
@@ -50,15 +63,20 @@ placement:
   requires:   resource                           # it writes its events into the resource on its own server
   near:       {sub: cam, by: cam}                # An affinity: be beside the worker HOLDING this camera, so the
                                                  # archive bytes cross a loopback and not the network. Never a
-                                                 # filter — the door answers over HTTP from anywhere, it is only
-                                                 # cheaper next door. `by: cam` because this unit is `7-lpr` and
-                                                 # no VMS worker ever reports that id.
+                                                 # filter — it is only cheaper next door. `by: cam` because this
+                                                 # unit is `7-lpr` and no holder ever reports that id.
   # No `home`, for the same reason `det` has none: nobody owns the answer to "which server does this watch
   # belong on". And no `retire_when`: it does not end.
   tie_break:  most-free-capacity
 snapshot: [name, cam, kind, enabled]             # enough for a domain to say camera 7 is being watched
+events:
+  older_epochs: earlier-run          # after a move the earlier epoch's lines are the only record of those minutes — a
+                                     # run that moved, not a writer that lost a race
 metrics:
-  - {name: watches_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  - {name: watches_running, from: status.phase, agg: count, equals: running, live: true}   # watches reading now (`console.running`)
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}   # requests to keep minutes it filed
 console:
   running: watches_running
-worker: {exec: /usr/lib/detedge/worker}
+# What a watch worker reads besides its rows: the holders' heartbeats (the device's archive doors), the recordings (what
+# is visible, where kept minutes go), the detectors' mask bodies; and the requests to keep minutes it files (V/06.4).
+worker: {exec: /usr/lib/detedge/worker, reads: [cam/heartbeats/, rec/recordings/, det/blobs/], requests: [rec]}
