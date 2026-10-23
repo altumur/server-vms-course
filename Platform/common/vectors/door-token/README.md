@@ -24,7 +24,7 @@ Ed25519) и проверка у держателя по строке `door/keys`
 P/03.4 Н5): шаблон с `{input}` — путь файла, в который раннер пишет один JSON-объект входа строки: у `verify.tsv` —
 `{keys, authorization, now, unit, holder, path}` (`keys` — значение колонки как JSON, `authorization` и `path` — строки
 байт в байт, пустая строка `authorization` — заголовка нет, `now` — число), у `place.tsv` — ячейка `input` как есть
-(`place_units` вместо `unit`). stdout — ровно один JSON-объект в UTF-8 и LF: `{"result":"ok","claims":{…}}` — claims
+(`place_units` вместо `unit`; колонка `claims` — как у `verify.tsv`). stdout — ровно один JSON-объект в UTF-8 и LF: `{"result":"ok","claims":{…}}` — claims
 прочитанного токена, сравниваются с колонкой `claims` по значению JSON, — или `{"result":"forbidden"}`; код 0. Вход не по
 этой форме — код 2. Иной код, иной `result`, лишние поля или байты — FAIL строки (догадка стадии C W03-E04, решение
 «Архитектора» 2026-10-23).
@@ -53,7 +53,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 |---|---|
 | [`issue.tsv`](issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
 | [`verify.tsv`](verify.tsv), 89 строк: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; разделитель HTAB и несколько заголовков `Authorization` строкой TSV не выразить — чтением) | `keys` — значение строки `door/keys` текстом JSON; `authorization` — заголовок `Authorization` целиком, пусто — заголовка нет (прежде колонка `token`; у большинства строк — `Bearer <token>`; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)); `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — цель запроса к двери держателя: путь URL, у части строк с query (`?t=<token>`); первый сегмент пути URL без query сравнивается с элементами `routes` (разбор ревью стадии B 6–7, № 9) → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
-| [`place.tsv`](place.tsv), 3 строки: 1 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — единицы, чьи данные лежат в месте держателя; токен места — договор «Токен места» (ADR-0091 доп. (7), (8)) |
+| [`place.tsv`](place.tsv), 3 строки: 1 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — единицы, чьи данные лежат в месте держателя; токен места — договор «Токен места» (ADR-0091 доп. (7), (8)) → `expect` и `claims` — прочитанные claims у `ok` текстом JSON, сравниваются по значению; у `forbidden` пусто (чтение «cammeta-acceptance» 2026-10-23) |
 
 ## Отказы
 
