@@ -54,7 +54,7 @@ lease: {unconfirmed_max: forever}
 # the centre's ingests per relay (`upstream`, written by the centre's first recorder), the assignments naming this
 # cluster, the topology (relay, star, centre) and the asks a relay carries up (V/07). Here a worker reads what its spec
 # names.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-topology, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
+worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -235,7 +235,16 @@ holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800, releas
 # `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`. What a recording left on a volume another recorder
 # holds now is read at THAT recorder's door: `GET /rec/where/volumes/<volume>?unit=rec/<recording>` (by `places` above;
 # nobody holding it: 404 and `X-Unreachable: <volume>@<server>`). The console carries no bytes of its own.
-door: {routes: [timeline, segment, keeps]}
+# To processes, by their role's certificate (V/02.5): `/spans`, `/samples` — another recorder, a scan. The ingest (V/02.9):
+# this cluster's processes by role, a camera, a pusher or a relay of another cluster by a domain token of its kind.
+door:
+  routes:
+    - timeline
+    - segment
+    - keeps
+    - {name: spans, role: [recworker, detjobworker]}
+    - {name: samples, role: [recworker, detjobworker]}
+    - {name: ingest, role: [recworker, liveworker, detworker], domain: [stream, poll, upstream, ask]}
 # A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
 # asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
 # {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
