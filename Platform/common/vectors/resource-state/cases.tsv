@@ -1,0 +1,26 @@
+# Состояние ресурса по истории наблюдения при LOST_AFTER = 45 с (договор наблюдения «Наблюдение версии», «Состояние ресурса»; OBS-001). Форма — README.
+case	history	at	state	note
+first_pulse	[[0,"pulse","v1"]]	0	live	первый взгляд — возраст 0
+pulse_same_version	[[0,"pulse","v1"],[40,"pulse","v1"]]	40	live	повторное чтение того же — возраст не обнуляется, 40 ≤ 45
+pulse_boundary	[[0,"pulse","v1"],[45,"pulse","v1"]]	45	live	ровно LOST_AFTER — свеж (≤)
+pulse_stale	[[0,"pulse","v1"],[46,"pulse","v1"]]	46	silent	возраст 46 — не свеж; пульс видели — не unknown
+pulse_new_version	[[0,"pulse","v1"],[40,"pulse","v2"],[80,"pulse","v2"]]	80	live	новая версия в 40 — возраст 40
+pulse_noanswer_after_read	[[0,"pulse","v1"],[10,"pulse","noanswer"]]	10	silent	неответ пульса после чтения — не live; прежнее наблюдение не стёрто (OBS-001)
+pulse_absent_after_read	[[0,"pulse","v1"],[10,"pulse","absent"]]	10	silent	подтверждённое отсутствие после чтения — не live, не unknown (OBS-001)
+pulse_back_same_version	[[0,"pulse","v1"],[10,"pulse","noanswer"],[20,"pulse","v1"]]	20	live	та же версия вернулась: возраст от первого прочтения — 20
+pulse_back_no_new_count	[[0,"pulse","v1"],[30,"pulse","noanswer"],[50,"pulse","v1"]]	50	silent	неответ возраст не обнуляет: 50 > 45 (OBS-001)
+pulse_garbled_only	[[0,"pulse","garbled"]]	0	unknown	нечитаемый пульс увиденным не считается (C13)
+pulse_garbled_after_read	[[0,"pulse","v1"],[10,"pulse","garbled"]]	10	silent	нечитаемый пульс жизни не подтверждает
+door_only	[[0,"door","v1"]]	0	unreachable	строка двери свежа, пульса нет
+door_stale	[[0,"door","v1"],[46,"door","v1"]]	46	silent	строка двери не менялась 46 с
+door_noanswer_within	[[0,"door","v1"],[30,"door","noanswer"]]	30	unreachable	неответ двери — основание до той же границы (OBS-001)
+door_noanswer_past	[[0,"door","v1"],[30,"door","noanswer"],[46,"door","noanswer"]]	46	silent	без нового отсчёта: 46 > 45 (OBS-001)
+door_absent_within	[[0,"door","v1"],[20,"door","absent"]]	20	unreachable	отсутствие двери после чтения — основание до границы (OBS-001)
+door_absent_boundary	[[0,"door","v1"],[45,"door","absent"]]	45	unreachable	ровно граница — свежа (≤)
+pulse_stale_door_fresh	[[0,"pulse","v1"],[0,"door","v1"],[30,"door","v2"],[60,"pulse","v1"],[60,"door","v2"]]	60	unreachable	пульс 60 — не live; дверь v2 возраст 30
+pulse_lapse_door_fresh	[[0,"pulse","v1"],[0,"door","v1"],[10,"pulse","absent"]]	10	unreachable	пульс пропал — не live; дверь свежа
+garbled_pulse_door	[[0,"pulse","garbled"],[0,"door","v1"]]	0	unreachable	пульс нечитаем — не live; дверь свежа
+nothing	[]	0	unknown	ничего не видели
+noanswer_only	[[0,"pulse","noanswer"],[0,"door","noanswer"]]	0	unknown	неответ — не наблюдение
+absent_only	[[0,"pulse","absent"],[0,"door","absent"]]	0	unknown	отсутствие без прежнего чтения — не увидено
+pulse_fraction	[[0,"pulse","v1"],[45.000001,"pulse","v1"]]	45.000001	silent	превышение на микросекунду
