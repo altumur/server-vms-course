@@ -20,6 +20,8 @@
 | 2026-10-23 | `cf36fa1`, `6fafc6e`, `84a28c6` | `140e3d206` | `140e3d206` (`origin/main` после влития `vms/03-live-7`; ветка `vms/04-det`) | векторы jcs и команды стенда консоли — для VMS ничего; V/04 пишется на `84a28c6` |
 | 2026-10-23 | `db53315` | `d99e2aff5` | `d99e2aff5` (`origin/main` после влития `vms/04-det-5`; ветка `vms/05-detjob`) | Platform не менялась — для VMS ничего; V/05 пишется на `db53315` |
 | 2026-10-23 | `84958d6` | `eeb6a41e0` | `eeb6a41e0` (`origin/main` после влития `vms/05-detjob-5`; ветка `vms/06-detedge`) | Platform не менялась — для VMS ничего; V/06 пишется на `84958d6` |
+| 2026-10-23 | `10834eb` … `5959be7` | `778acf774` | `778acf774` (`origin/main` после влития `vms/06-detedge-5`; ветка `vms/07-auto`) | общий договор удержаний `holds` (из P/06.4 Н1.5) — V/02.7 Н1.2 ссылкой на договор; зеркало ресурса, грамматика `server` ресурса, векторы — для VMS ничего; V/07 пишется на `5959be7` |
+| 2026-10-23 | `180c6c5` | `b7fef5de8` | `origin/main` (ветка `vms/export-180c6c5`) | нормы ADR-0091 доп. (12)–(19): исполнители назначения не спор, 409 `executors` — обход `contested` V/02.9 снят; `door.routes {name, role?, domain?}`, допуск `role_domain`, `cross_cluster`, `no_handler` — приёмник маршрутом `ingest` двери `rec` (`role: [recworker, liveworker, detworker]`, `domain: [stream, poll, upstream, ask]`), второй слушатель снят; `/spans`, `/samples` — маршруты `role` (`recworker`, `detjobworker`; долг перехода ADR-0091 доп. (7) закрыт); `domain/member-list` в `worker.reads` `cam` и `rec` (клиент другого кластера проверяет сервер по `Entry.ca`); CORS `cors.allow` всем маршрутам — обход V/03.3 снят; заголовки V/01.6, V/02.7, V/02.9, V/03.3 — `180c6c5` |
 
 ## Заведение сессии (2026-10-23)
 - Дерево `/Users/murat/w2c/wt-vms-spec`, ветка `vms/inventory` от `5d752c661`; хуки — `tools/vms-boundary/install.sh
@@ -179,7 +181,7 @@
 (умолчание 20), каталог части `0700`. Нормы — после Т-правки и выгрузки; до неё уроки пишутся по решению со ссылкой на ADR-0091 доп. (2).
 
 ## Входы для следующих уроков
-- Переход на выгрузку с нормами ADR-0091 доп. (12)–(19) (ревью `69aedcbae`): снять обходы V/02.9 (`contested`, второй слушатель приёмника — `door.routes {name: ingest, role: [recworker, liveworker], domain: [stream, poll, upstream]}` в манифесте `rec`), V/03.2, V/03.3 (CORS); клиент другого кластера к `mixed` — без листа, сервер проверяет как пир члена по `Entry.ca` копии `domain/member-list` — `rec.worker.reads` + `domain/member-list`; 503 — `no_handler`.
+- Переход на нормы ADR-0091 доп. (12)–(19) сделан на `180c6c5`.
 - **V/09** (из V/02.4): места — только строки `volumes`; «своего тома сервера» без строки нет — коробка без объявленного тома
   не пишет. Объявлять ли том сервера по умолчанию при установке (строка `kind: local, server: <сервер>`) — решить в V/09.
 - **V/01 (закрыт в V/02.5 Н1.7)**: хост в `live_url` — имя сервера (V/01.2 Н1.3), а у свидетеля «DNS между серверами нет» (М10B/28 шаг 3,
@@ -205,11 +207,9 @@
 - «Сборке»: `detjob.subsystem.yaml` — поля `state`, `ended` сняты; `unit.state` (`result`, `cursor`), `retire_when` по состоянию с `delete_after`, `mask_from`, `alarms`, `snapshot` `state.result`, `worker.reads`, `worker.requests: [rec]`, ряд `filings_total`; `rec` — заказ копирует `alarms`.
 - V/04.1: действие `det.scan` сценария без пути до V/05, V/07 (раздел `requests:` у `det` снят, задача `detjob` — V/05); `auto` объявляет `worker.creates` к `det/units` без норм до V/07.
 - «Сборке»: `det.subsystem.yaml` — `near: {sub: cam, by: cam}`, `placement.ends`, `worker.reads`/`uses`, `requests:` снят; `auto.subsystem.yaml` — `worker.requests: [cam]`, `worker.creates` к `det/units`.
-- V/03.3 Н1.4: CORS маршрута `whep` — правило подсистемы до выгрузки нормы ADR-0091 доп. (16).
-- V/02.9 Н1.3: приёмник — второй слушатель регистратора, допуск по токену домена делает подсистема (P/03.7 Н1.5); до решения запроса «приёмник на двери процесса».
-- V/02.9 Н1.1: основная и резервная запись одного `ref` у исполнителей назначения — `contested` вида домена до выгрузки нормы ADR-0091 доп. (12), (13); Н1.6 свежесть — по `missing` книги (доп. (13): `domain/reached` — не мера свежести), долга нет.
 - «Сборке»: комментарии `cam.subsystem.yaml`, `rec.subsystem.yaml`, `live.subsystem.yaml`, `cam.shell.html` — без имён и путей кода свидетелей (данные YAML те же; долг до генерации VMS, слово «Архитектора» 2026-10-23).
 - «Сборке»: `rec.subsystem.yaml` — книга `upstream: {from: rec/upstream/, key: relay, pick: unique, to: to}`, `worker.reads` + `domain/rec/upstream` (V/02.9 Н1.8).
+- «Сборке»: `rec.subsystem.yaml` — `door.routes` с `spans`, `samples` (`role`) и `ingest` (`role`, `domain`), `worker.reads` + `domain/member-list`; `cam.subsystem.yaml` — `worker.reads` + `domain/member-list` (переход `180c6c5`).
 - «Сборке»: `live` — переменная двери RTSP `RTSP_PORT` в `/etc/live/live.env` (у свидетеля `LIVE_RTSP_LISTEN`), поле пульса `rtsp`; двери шлюза `whep` — `WHEP_PORT` (V/03.3, V/03.6).
 - «Сборке»: `live.subsystem.yaml` — `worker.reads` + `cam/heartbeats/`, `rec/heartbeats/` (V/03.2).
 - «Сборке»: `rec.subsystem.yaml` — `worker.reads` + `cam/heartbeats/` (пульсы держателей, V/02.4 Н1.1; основа роли чужие пульсы не даёт, P/02.5 Н1.4).
