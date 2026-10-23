@@ -117,6 +117,16 @@ unit:
     valid_for:       {type: int,    default: 30, schema: {anyOf: [{const: 0}, {minimum: 5, maximum: 600}]}}  # 0: the default
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
+  # How far the evaluator has read the cluster's log for this scenario, and since when the window has been incomplete —
+  # the unit's state, which outlives a move (V/07.2).
+  state:
+    cursor:
+      type: object
+      required: [through]
+      additionalProperties: false
+      properties:
+        through:   {type: number}
+        held_from: {type: number}
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
@@ -168,7 +178,6 @@ metrics:
   - {name: woken_total, from: heartbeat.woken, type: counter}
   - {name: early_passes_total, from: heartbeat.early_passes, type: counter}
   - {name: wait_errors_total, from: heartbeat.wait_errors, type: counter}
-  - {name: wants_folded, from: heartbeat.wants_folded}                              # triggers folded to their kinds (the eighth pass)
 
 console:
   running: scenarios_running         # auto_scenarios_running: scenarios an evaluator is actually watching
