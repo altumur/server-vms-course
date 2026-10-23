@@ -69,7 +69,9 @@ unit:
   fields:
     name:           {type: string, required: true}   # which recording this is: its key, its epoch, its streams
     cam:            {type: string, required: true, fixed: true}   # WHOSE footage it holds — the VMS camera id
-    ref:            {type: string, fixed: true}      # the camera's name in the domain (V/02.9 Н1.1): what the domain finds it by
+    ref:            {type: string}                   # the camera's name in the domain (V/02.9 Н1.1): what the domain finds it by;
+                                                     # the recorder checks it against `cam` (not `fixed`: a scenario orders a
+                                                     # recording by its camera alone, V/07.4)
     retention_days: {type: int,    default: 30, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels

@@ -24,6 +24,7 @@ unit:
     # it changes the digest, which changes the row, which moves `revision`, which is what makes the worker
     # pick it up (P/06.1 Н1.5).
     mask:      {type: blob}                        # sha256-<hex>; the bytes are in the object store
+    mask_from: {type: string}                      # an order's mask: the operator's detector's body by reference, det/<id>@sha256-<hex> (V/07.4)
     enabled:   {type: bool,   default: true}
     labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
     # Which of this detector's event kinds are ALARMS: written down with fsync, kept in a tree of their own for

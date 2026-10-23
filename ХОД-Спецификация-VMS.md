@@ -72,7 +72,10 @@
   V/07.2 — переведена (нормы, id-map V/07.2-01…05); манифест `auto`: `unit.state.cursor` `{through, held_from}`, ряд
   `wants_folded` снят. Влита.
   V/07.3 — переведена (нормы, id-map V/07.3-01…03); манифест `auto`: `worker.reads` + `cam/cameras/`, `cam/heartbeats/`,
-  `cam/devices/`, `det/units/`, `rec/recordings/`.
+  `cam/devices/`, `det/units/`, `rec/recordings/`. Влита.
+  V/07.4 — переведена (нормы, id-map V/07.4-01…06); `auto`: `worker.creates` к `rec` `{cam}`, `det`, `detjob` `{cam}-{rec}-{kind}-{from}-{to}`,
+  ряды `creates_total`, `made_rows`; `rec.ref` — без `fixed` (V/02.9 Н1.1; сверка с `cam` у регистратора); `det` — поле `mask_from`
+  (V/04.1, V/04.2).
 
 ## Перевод 06-detedge
 - План — `VMS/06-detedge/README.md` (годен, «Архитектор» 2026-10-23; решения 1–10; переход — ADR-0090 доп. (11)).
@@ -214,6 +217,8 @@
   `finish` писателя тома под сроком вызова 10 с) укладывается — нормировать так (опись § 2 М10B/07 шаг 12, М10B/10 шаг 11).
 
 ## Долги
+- V/07.4: имя просьбы `cam` — случайное до выгрузки ADR-0091 доп. (20) п. 2 (повтор после переезда в окне курсора).
+- «Сборке»: `auto.subsystem.yaml` — `worker.creates` к `rec`, `det`, `detjob`, `worker.reads`, `unit.state.cursor`, ряды; `rec.subsystem.yaml` — `ref` без `fixed`; `det.subsystem.yaml` — `mask_from` (V/07.1–V/07.4).
 - V/07.2: журнал — слияние по ресурсам без `fenced` до выгрузки ADR-0091 доп. (20) п. 1 (`worker.events: true`, дверь консоли).
 - «Сборке»: `detedge.subsystem.yaml` — `alarms`, `rec`, перечни `start`/`keep`, `unit.state.cursor`, `older_epochs: earlier-run`, `worker.reads`/`requests: [rec]`, ряд `filings_total` (V/06.1).
 - «Сборке»: переход `survey` → `detedge` (ADR-0090 доп. (11)): манифест `detedge.subsystem.yaml`, ключи `detedge/…`, слот `e`, `DETEDGE_NAME`, роль `detedgeworker`, юнит `vms-detedgeworker@`, ряды `detedge_*`.
