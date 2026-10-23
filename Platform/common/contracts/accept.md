@@ -187,11 +187,15 @@ input:          {catalog: [<sub>…], mark: <метка> | null, stored: <whole>
   refreshed_ago: монотонные с с тех пор, как этот процесс писал метку; null — не писал
   via:          дорога запроса: null — прямо, иначе имя ретранслятора
   heard_ago:    монотонные с с последнего приёма этого члена по любой дороге; null — не слышал
-output:         {result: generation, rev, base, whole} | {result: heard, refresh} | {result: same} | {result: ignored}
+output:         {result: generation, rev, base, whole, sign_failures?} | {result: heard, refresh, sign_failures?} | {result: same}
+                | {result: ignored}
                 | {result: refused, status, reason: not_a_publication | same_sent_at | rebase | not_ready | whole_too_large
                    | rev_exhausted}
   whole:        целое whole' нового поколения (шаг 7) — объект, JCS которого записан в reports/<rev>
   refresh:      true — метка переписана (шаг 6 или повтор другой дорогой шага 2), false — ничего не записано
+  sign_failures: у generation и heard с refresh: true — поле sign_failures, как оно записано в метку; нет поля — в метку
+                не взято (нет в публикации или не по форме, out_of_delta); у heard с refresh: false поля нет (догадки
+                стадии C ACC-FORM-31-01, ACC-G01-COUNTER-31-01, решение «Архитектора» 2026-10-23: форма вывода расширена)
   status:       код ответа двери: 400 not_a_publication (шаг 1); 409 same_sent_at (шаг 2), rebase (шаг 3), not_ready
                 (шаг 5); 413 whole_too_large (шаг 4а; у двери — {error: "whole too large", detail}); 503 rev_exhausted (шаг 7)
 exit:           0 — вычислено (в том числе отказ словом); 2 — вход не по форме (метка — строго «Поколение, метка, пределы»:
@@ -201,9 +205,9 @@ exit:           0 — вычислено (в том числе отказ сло
 
 ## Векторы
 
-Пакет [`accept`](../vectors/accept/README.md) (разбор ревью стадии A 8–10, № 13): 57 строк — входы команды `accept`
+Пакет [`accept`](../vectors/accept/README.md) (разбор ревью стадии A 8–10, № 13): 58 строк — входы команды `accept`
 приёмки М11/3 (сц. 13, 26 строк) и М11/4 (сц. 06, 9 строк — дороги) без изменения байтов (сценарии и входы сняты переносом
-урока 8 — таблица единственный источник этих случаев), 2 строки двери ретранслятора и 20 строк стадии C: прочие семьи
+урока 8 — таблица единственный источник этих случаев), 2 строки двери ретранслятора и 21 строка стадии C: прочие семьи
 `member_objects`, лишние поля и `@exit 2`, форма `sign_failures` (README пакета). Реализация держателя и
 ретранслятора проходит их своей функцией, без стенда. Строки на шаг 4а (`whole_too_large`) нет — кандидат пакета
 (README пакета, «Кандидаты»; разбор ревью стадии B 8–10, № 6).

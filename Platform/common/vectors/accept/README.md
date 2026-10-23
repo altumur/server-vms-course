@@ -39,7 +39,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 57 строк (26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 20 стадии C — ниже) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
+| [`cases.tsv`](cases.tsv), 58 строк (26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 21 стадии C — ниже) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
 
 ## Строки стадии C
 
@@ -55,8 +55,9 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 - `accept-48`…`accept-50` (ACC-G01-COUNTER-31-01) — `n` — целое платформы: `9007199254740991` — по форме;
   `9007199254740992`, `1e20` — не по форме, отчёт принят.
 
-Взято ли поле `sign_failures` в метку, вывод функции не показывает (метки в выводе нет): строки 44–50 проверяют, что
-отчёт принят, а форму поля — чтением договора.
+Взято ли поле `sign_failures` в метку, показывает поле `sign_failures` вывода `generation` и `heard` с `refresh: true`
+(договор «Форма функции»; решение «Архитектора» 2026-10-23): `accept-48` — `{"domain": 9007199254740991}`, остальные
+строки 44–50 — `"@absent"`; `accept-51` — `heard` с `refresh: true` и взятым полем.
 
 ## Кандидаты
 
