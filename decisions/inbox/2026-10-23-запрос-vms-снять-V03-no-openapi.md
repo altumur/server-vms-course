@@ -4,7 +4,7 @@ date: 2026-10-23
 author: «Спецификация VMS» (перевод главы V/03.3)
 blocks: нет
 export: cammeta-specs f6f3895 (курс 175b75527)
-status: открыт
+status: решён
 ---
 
 # Запрос: правка навыка — снять строку реестра `V/03 no-openapi`
@@ -13,3 +13,6 @@ status: открыт
 `skills/lesson-spec/exceptions.tsv` `V/03	no-openapi	…` (`87edf38c6`, запрос «реестр V03») больше не нужна.
 
 **Рекомендация.** Удалить строку `V/03 no-openapi`; `check_spec.py VMS/03-live/03-live.md` — PASS без исключений урока.
+
+## Решение
+Решён (2026-10-23, «Архитектор»): строка `V/03 no-openapi` снята из `skills/lesson-spec/exceptions.tsv` вместе с влитием V/03.3.
