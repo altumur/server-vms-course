@@ -18,14 +18,14 @@ root:
       description: ДОЛЖЕН; по элементу на единицу, которую воркер ведёт
       items:
         type: object
-        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase, epoch, revision или observed_revision; id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
+        description: "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id, phase или revision; у phase не sealed нет epoch или observed_revision; у phase sealed нет why или есть epoch или observed_revision (W03-G02); id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)"
         properties:
           id:
             ref: common.named_id
             description: id единицы — по грамматике договора проверки строки (форма держит named; у манифеста с unit.id numeric — ещё numeric, P/06.1 Н1.3)
           phase:
             type: string
-            description: слова подсистемы; платформа знает одно — running (счётчик running, соседство near)
+            description: "слова подсистемы; платформа знает два — running (счётчик running, соседство near) и sealed (глава 3.5 Н3 «открыть»: секрет строки не открылся, эпоха не взята; W03-G02)"
           epoch:
             type: integer
             minimum: 1
@@ -56,7 +56,15 @@ root:
             type: number
             minimum: 0
             description: "секунды без подтверждения аренды единицы, с точностью 0,1 с; только вместе с lease: unconfirmed"
-        required: [id, phase, epoch, revision, observed_revision]
+        required: [id, phase, revision]
+        rules:
+          # элемент запечатанной единицы — {id, phase: sealed, why, revision}: эпоха не взята, epoch и observed_revision
+          # отсутствуют, revision — прочитанной строки (догадка стадии C W03-G02, решение «Архитектора» 2026-10-23)
+          - when: {is_not: {phase: [sealed]}}
+            require: [epoch, observed_revision]
+          - when: {is: {phase: [sealed]}}
+            require: [why]
+            forbid: [epoch, observed_revision]
         names:
           key: {type: string}
           value: {type: any, description: "слова подсистемы; учебный обработчик testsub — одно слово n, текущее значение счётчика (второй пилот, Н-7)"}

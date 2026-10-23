@@ -6134,9 +6134,7 @@ components:
       required:
       - id
       - phase
-      - epoch
       - revision
-      - observed_revision
       - worker
       - server
       - age
@@ -6166,8 +6164,29 @@ components:
           enum:
           - live
           - stale
+        why:
+          type: string
       additionalProperties: true
-      description: Элемент status пульса (P/03.4 Н1.1) плюс worker, server, age, worker_state (глава 6.1 Н2; фильтрация
+      if:
+        properties:
+          phase:
+            const: sealed
+        required:
+        - phase
+      then:
+        required:
+        - why
+        not:
+          anyOf:
+          - required:
+            - epoch
+          - required:
+            - observed_revision
+      else:
+        required:
+        - epoch
+        - observed_revision
+      description: Элемент status пульса (P/03.4 Н1.1; у phase sealed — {id, phase, why, revision} без epoch и observed_revision, W03-G02) плюс worker, server, age, worker_state (глава 6.1 Н2; фильтрация
         по view — сторожевая главы 6.3, need). Слова подсистемы остаются непрозрачными. Смысл свежести и формирования списка
         — глава 6.1 Н2 («`rows` в `GET /{rows}`»).
     Refusal:
