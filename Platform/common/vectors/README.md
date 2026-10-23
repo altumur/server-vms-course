@@ -12,7 +12,7 @@
 |---|---|---|---|
 | JCS | [`01-store/vectors/jcs/`](../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
 | словарь `fault` отказов дверей | [`common/vectors/fault/`](fault/) | P/06.1 | двери P/06 (главы 6.1, 6.5, 6.6) |
-| `cut_at: host` | [`04-controller/vectors/group-of/`](../../04-controller/vectors/group-of/) | P/04 | P/04 Н1.3 `group_by` |
+| `cut_at: host` | [`common/vectors/group-of/`](group-of/) | P/04 | P/04 Н1.3 `group_by` |
 | `rid` | [`06-console/vectors/rid/`](../../06-console/vectors/rid/) | P/06.4 | P/06.4 Н1.5 |
 | сериализация тела просьбы | [`06-console/vectors/requests-body/`](../../06-console/vectors/requests-body/) | P/06.4 | P/06.4 Н1.5, ADR-0072 |
 | digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | P/06.4 | P/06.4 Н1.5 `digest` |

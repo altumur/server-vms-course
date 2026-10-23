@@ -46,4 +46,4 @@ UTF-8, LF, поля через TAB; строки с `#` — пояснения, 
 
 Отказ на двери единиц (400 `fault: bad_url`, порядок отказов Н3 шаг 2) — сценарий 04 [приёмки главы 6.2](../../../06-console/acceptance/2/README.md);
 грамматику самого url (схемы, хост) — [P/02.1 Н1.2а](../../../02-installer/spec/02.1-installer.norms.md) `schemes` и векторы
-[`group-of`](../../../04-controller/vectors/group-of/README.md).
+[`group-of`](../group-of/README.md).

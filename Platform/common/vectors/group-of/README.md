@@ -1,10 +1,10 @@
 # Векторы: группа единицы по хосту адреса (`cut_at: host`)
 
-Владелец — урок P/04 ([нормы](../../spec/04-controller.norms.md) Н1.3 `group_by`, `cut_at: host`; ADR-0053; разбор адреса —
-`schemes` P/02.1 Н1.2а). Участник — `<s>controller` (группа единицы при размещении). Байты пишет «Спецификация»; перенесено
+Владелец — урок P/04 через [договор группы по хосту](../../contracts/group-of.md) ([нормы](../../../04-controller/spec/04-controller.norms.md) Н1.3 `group_by`, `cut_at: host`; ADR-0053; разбор адреса —
+`schemes` P/02.1 Н1.2а). Участники — `<s>controller` (группа единицы при размещении) и `<s>worker` (штамп `group` просьбы и вызов на группу, P/03.6); перенесено из `04-controller/vectors/group-of` байт в байт (W03-GROUP-01). Байты пишет «Спецификация»; перенесено
 из `Source/tests/testdata/group_of.tsv` (стадия B, перенос урока 6, решение «Архитектора» по В8 плана урока 6). Шапка
 `cases.tsv` перенесена байт в байт и называет прежние адреса: М10/3 Н4 — ныне P/06.1 Н4, М10/7 Н1.1а — P/06.2 Н1.1а,
-`fault.tsv` — пакет [`fault`](../../../common/vectors/fault/README.md).
+`fault.tsv` — пакет [`fault`](../fault/README.md).
 
 ## `cases.tsv`
 
