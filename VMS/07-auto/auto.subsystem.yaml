@@ -21,7 +21,7 @@ slot: {prefix: a, name_env: AUTO_NAME}
 # What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and rows for a while —
 # a recording, a detector, a scan — it creates and renews by their keys (`worker.creates`, P/03.6 Н1.6; V/07.4); what it
 # reads to check a scenario against the devices and units (V/07.3) and to publish the asks book (V/07.5).
-worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
+worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, rec/heartbeats/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
 lease: {unconfirmed_max: off}
@@ -189,8 +189,9 @@ console:
 # Automation on the domain: the scenarios BETWEEN cameras of different members (М12B) — "a vehicle at the gate camera:
 # the yard camera to preset 3" — are no unit of a cluster: the domain holds them whole, in its shared settings, as a
 # document of this spec (`settings.shared.auto.scenarios`), and signs them like any shared field (ADR-0032). What one may
-# BE is the schema below, checked where it is signed. The ordinary autoworker reads local trigger events;
-# the target camera checks its own capabilities when the ask arrives (ADR-0074 C7).
+# BE is the schema below, checked where it is signed. The evaluator of the trigger camera's cluster runs it on its own
+# events and asks the target over the ingest it polls; the evaluators on the path publish the roads (`asks`, V/07.5);
+# the target camera checks its own capabilities when the ask arrives (ADR-0074 C6, C7).
 domain:
   books:
     asks: {from: auto/asks/, key: target, pick: all, to: to}
@@ -218,9 +219,10 @@ domain:
               required: [camera, action]
               additionalProperties: false
               properties:
-                camera: {type: string, minLength: 1}
-                action: {type: string, minLength: 1}
-                arg:    {type: [integer, string]}
-                within: {type: number, exclusiveMinimum: 0}
-            rate_per_minute: {type: integer, minimum: 0}
+                camera:    {type: string, minLength: 1}
+                action:    {enum: [preset, output]}     # between cameras only these: a recording, a detector, a scan are a cluster's rows
+                n:         {type: [integer, string]}    # the preset
+                port:      {type: [integer, string]}    # the relay
+                valid_for: {type: number, exclusiveMinimum: 0, maximum: 600}   # how long the ask stays worth doing; the same name as a scenario's
+            rate_per_minute: {type: integer, minimum: 0, maximum: 600}
             enabled:         {type: boolean}

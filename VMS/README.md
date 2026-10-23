@@ -20,7 +20,7 @@
 | 04 | [`04-det/`](04-det/README.md) | `det` | переведён |
 | 05 | [`05-detjob/`](05-detjob/README.md) | `detjob` | переведён |
 | 06 | [`06-detedge/`](06-detedge/README.md) | `detedge` | переведён |
-| 07 | [`07-auto/`](07-auto/README.md) | `auto` | не переведён |
+| 07 | [`07-auto/`](07-auto/README.md) | `auto` | переведён |
 | 08 | [`08-page/`](08-page/README.md) | страница VMS над модулем консоли P/07 | не переведён |
 | 09 | [`09-deploy/`](09-deploy/README.md) | развёртывание VMS | не переведён |
 
