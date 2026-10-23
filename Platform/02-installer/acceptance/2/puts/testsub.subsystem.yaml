@@ -1,5 +1,5 @@
-# testsub.subsystem.yaml — a subsystem that exists only for the platform's own tests (tests/test_boundary.py; the
-# product's `w2cplatform/testdata/testsub.subsystem.yaml` is the same subsystem).
+# testsub.subsystem.yaml — a subsystem that exists only for the platform's own tests (the product keeps the same
+# subsystem in its own test data).
 #
 # The platform knows the subsystems by their specs and by nothing else. This one has nothing to do with the
 # product: a unit is a named counter a worker keeps. If the platform's pieces come up on this file alone —
@@ -21,7 +21,7 @@ placement:
   constraint: labels-subset
   tie_break:  most-free-capacity
   unplaced:   {delete_after: 3600}   # a counter nobody holds for an hour is deleted by the controller (ADR-0067)
-# A request to a counter's holder: add to it (the platform's request family, `w2cplatform/worker.py`, `requests.py`).
+# A request to a counter's holder: add to it (the platform's request family).
 requests:
   schema:
     type: object

@@ -1,9 +1,9 @@
 # Таблица перехода ADR-0086 (доп. (1) Р2): имена со словом spec, которые означают файл <имя>.subsystem.yaml, — к manifest.
 # Закрытая: переход — последний коммит стадии B, по этой таблице целиком; Confirmation ADR-0086 проверяет каждую строку.
 # Опись по М10_Platform/, М11_Domain/, Platform/, Source/tests/testdata/acceptance/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md,
-# Source/w2cplatform/console.js на срезе 617b82422. Полей пульса и метрик со spec нет (поиск w2c_*spec, полей пульса М10/5, М10/8).
+# модуль консоли (console.js) на срезе 617b82422. Полей пульса и метрик со spec нет (поиск w2c_*spec, полей пульса М10/5, М10/8).
 # Не переименовываются: каталоги норм spec/, cammeta-specs и $CAMMETA_SPECS, lesson-spec, check_spec, «Спецификация» — это
-# нормы и инструменты; старый код курса Source/w2cplatform/*.py, Source/vms/*.py, Source/tests/ и его данные
+# нормы и инструменты; старый код курса, его тесты и данные
 # (spec_verdicts.tsv, spec_verdicts/, spec_parity_debt.txt, spec_load_debt.txt) — замороженный свидетель (Р6); ссылка
 # WHATWG url.spec.whatwg.org; имена случаев корпуса с запрещённым словом spec (k38_sub_spec, m49_table_spec) — слово
 # spec остаётся зарезервированным. Тексты принятых ADR не переписываются. Продукт — долг «Сборке» с меткой ADR-0086 (Р7).
@@ -14,8 +14,8 @@ platform/spec/<sub>/rev	platform/manifest/<sub>/rev	ключ метки	P/02.3 �
 platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	ключ (будущий, ADR-0089 доп. (1) Р11)	P/02.2	читатели уроков P/03–P/06 после своей правки поведения
 spec_rev	manifest_rev	поле строк <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent и объекта <sub>/controller/pass	P/04 Н1.1, Н1.2, Н1.5	Platform/03-worker, 06-console; приёмка P/04, P/06.5; catalog.tsv; id-map.tsv
 spec_behind	manifest_behind	счётчик отчёта прохода (объект <sub>/controller/pass)	P/04 Н1.2	лекция P/04; id-map.tsv
-GET /spec	GET /manifest	дверь консоли кластера и консоли домена	P/06.5 Н2 «GET /spec»	P/02.1, P/06.5; P/10 Н1.7; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js; приёмка P/02, P/06.5, P/10; id-map.tsv
-GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	P/06.5 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; Source/w2cplatform/console.js
+GET /spec	GET /manifest	дверь консоли кластера и консоли домена	P/06.5 Н2 «GET /spec»	P/02.1, P/06.5; P/10 Н1.7; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; модуль консоли (console.js); приёмка P/02, P/06.5, P/10; id-map.tsv
+GET /<sub>/spec	GET /<sub>/manifest	дверь консоли (подсистемы из /mounts)	P/06.5 Н2	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; модуль консоли (console.js)
 SpecView	ManifestView	схема OpenAPI ответа двери	P/06.5 Н2 «GET /spec» (06-console.api.openapi.yaml)	P/02.1, P/06; приёмка P/02, P/06.5; id-map.tsv
 w2cctl spec put	w2cctl manifest put	команда установщика	P/02.3 Н3, P/02.4	Platform/02-installer/lifecycle.md; приёмка P/02; catalog.tsv (ops); id-map.tsv
 w2cctl spec status	w2cctl manifest status	команда установщика	P/02.3 Н3	Platform/02-installer/lifecycle.md
@@ -25,8 +25,8 @@ spec-put {socket} {file}	manifest-put {socket} {file}	команда «Стен�
 SPEC_DIR	MANIFEST_DIR	переменная окружения установщика	P/02.4 Н1.2	P/02.5; общий README приёмки (разбор ревью стадии B 3–5, № 33); Platform/02-installer/lifecycle.md; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md
 /opt/w2c/specs	/opt/w2c/manifests	каталог на диске (умолчание SPEC_DIR)	P/02.4 Н1.2	Platform/02-installer/lifecycle.md
 <spec:…>	<manifest:…>	обозначение части ключа каталога данных из манифеста	Platform/common/data/catalog.tsv (форма — inbox 2026-10-18-каталог-данных-форма.md)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; абзацы «Данные»
-console.spec(name)	console.manifest(name)	вызов модуля консоли	P/07 Н1.5 `words` (`spec(name)`); описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	Source/w2cplatform/console.js (C.spec); страницы подсистем
-getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	код модуля консоли (входит в выгрузку)	Source/w2cplatform/console.js	—
+console.spec(name)	console.manifest(name)	вызов модуля консоли	P/07 Н1.5 `words` (`spec(name)`); описание — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md («Архитектор»)	модуль консоли (console.js, C.spec); страницы подсистем
+getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	код модуля консоли (входит в выгрузку)	модуль консоли (console.js)	—
 from: "spec"	from: "manifest"	слово источника значения в выводе resolve	P/06.7 Н3 resolve	векторы 06-console/vectors/resolve
 —	manifest	зарезервированное имя (рядом со spec: имя подсистемы, unit.rows, имя таблицы)	P/02.1 Н1.2, Н1.2а	корпус P/02.1: отрицательные случаи k38_sub_manifest, m49_table_manifest и допустимый сосед (ADR-0086 доп. (1) Р3)
 «спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	проза	P/02.1	все уроки, лекции, README и инструкции М10, М11, Platform/, КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, глоссарий (статья «Манифест подсистемы»)
@@ -47,7 +47,7 @@ per_spec:	per_manifest:	метка формы вывода прав	P/01.2 Н1.2
 08-two-specs	08-two-manifests	id сценария приёмки	03-worker/acceptance/2	id-map.tsv
 02-spec-and-mounts	02-manifest-and-mounts	id сценария приёмки	06-console/acceptance/5	id-map.tsv
 resolve-03-spec	resolve-03-manifest	id случая вектора	06-console/vectors/resolve	id-map.tsv
-sub.spec, loadSpecs, rootSpec, fromSpecs	sub.manifest, loadManifests, rootManifest, fromManifests	внутренние имена модуля консоли	Source/w2cplatform/console.js	Source/tests/console (имена проверок); Source/vms/cam.shell.html (pc.manifest, /det/manifest)
+sub.spec, loadSpecs, rootSpec, fromSpecs	sub.manifest, loadManifests, rootManifest, fromManifests	внутренние имена модуля консоли	модуль консоли (console.js)	jsdom-тесты модуля (имена проверок); оболочка cam (pc.manifest, /det/manifest)
 spec_schema/, SPEC_FORMS, spec_schema(), --spec, schema_specs, form_specs	manifest_schema/, MANIFEST_FORMS, manifest_schema(), --manifest, schema_manifests, form_manifests	пакет, имена и счётчики навыка	skills/lesson-spec/scripts	validation.md (якоря «…-манифеста-…»)
 «Спека и установщик»	«Манифест и установщик»	имя урока P/02 (глава 2.1 — «Манифест подсистемы и строгий загрузчик»)	Platform/lessons.tsv	Platform/README.md; лекция P/02
 # Не переименованы при переходе: комментарии Source/tests/testdata/testsub*.subsystem.yaml и их копия в приёмке P/02 гл. 2 (sha256
