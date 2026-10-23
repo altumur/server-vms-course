@@ -12,6 +12,7 @@ defs:
   failures:
     type: integer
     minimum: 1
+    maximum: 9007199254740991
     description: n ≥ 1 — запросы, которые агент с запуска не отправил, потому что не смог подписать
 root:
   type: object
