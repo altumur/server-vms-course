@@ -171,7 +171,7 @@ old	new	chapter	subject	note
 М10B/21 ш.9	V/05.4-03	5.4	following: written_through, 2 лага VISIBLE_LAG_SECONDS, интервал в будущем	
 М10B/21 ш.8; М10B/23 ш.2	V/05.4-04	5.4	просьба дозаписи: дыра после «видно с», перечень устройства, кусками ≤ суток, fetching до WAIT_MAX	подача воркером (P/03.6 Н1.5)
 М10B/21 ш.2	V/05.4-05	5.4	пульс задачи и ряды jobs_running, filings_total	
-М10B/23 «Зачем»	V/06.1-01	6.1	имя detedge (до перехода survey): манифест, ключи, слот e, роль detedgeworker	ADR-0090 доп. (2), (11)
+М10B/23 «Зачем»	V/06.1-01	6.1	имя detedge: манифест, ключи, слот e, роль detedgeworker	ADR-0090 доп. (2), (11)
 М10B/23 ш.1, 5, 7	V/06.1-02	6.1	поля обхода: alarms [], start/keep перечнями, rec этой камеры (must_match), pre/post/join	rec — вместо «первой записи камеры»
 М10B/23 ш.1	V/06.1-03	6.1	кто заводит: только оператор; без итога и снятия	
 М10B/23 ш.1	V/06.1-04	6.1	размещение: capacity 2, near {sub: cam, by: cam}, без home, grows, retire_when, ends; снимок	

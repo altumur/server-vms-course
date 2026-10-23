@@ -17,7 +17,7 @@
 # It is not `detjob` either: its work does not end. There is no `retire_when` here.
 name: detedge
 # The slot a worker of this subsystem makes, `e-<n>`, and the variable naming the one it is started under
-# beside `WORKER_NAME` (ADR-0090 доп. (11): `d` is the detectors', `s` meant `survey`).
+# beside `WORKER_NAME` (ADR-0090 доп. (11); `d` is the detectors').
 slot: {prefix: e, name_env: DETEDGE_NAME}
 about: {sub: cam, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
 unit:
