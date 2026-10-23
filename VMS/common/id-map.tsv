@@ -175,3 +175,7 @@ old	new	chapter	subject	note
 М10B/23 ш.1, 5, 7	V/06.1-02	6.1	поля обхода: alarms [], start/keep перечнями, rec этой камеры (must_match), pre/post/join	rec — вместо «первой записи камеры»
 М10B/23 ш.1	V/06.1-03	6.1	кто заводит: только оператор; без итога и снятия	
 М10B/23 ш.1	V/06.1-04	6.1	размещение: capacity 2, near {sub: cam, by: cam}, без home, grows, retire_when, ends; снимок	
+М10B/23 ш.2	V/06.2-01	6.2	держатель по пульсу: coverage, index_url, playback_url, oldest/newest	holder_of → пульсы
+М10B/23 ш.5	V/06.2-02	6.2	окно прохода: SETTLE 30, SECONDS_PER_PASS 600, caught_up	
+М10B/23 ш.2	V/06.2-03	6.2	перечень без сессии: spans / [] / None оптимистично, index_garbled, ошибка — рубеж стоит	
+М10B/23 ш.4	V/06.2-04	6.2	чтение, уступая: запас последней сессии, одна сессия на устройство, 4 чтения за проход, 503 — waiting	две сессии константой сняты
