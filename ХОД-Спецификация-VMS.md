@@ -71,7 +71,8 @@
   `rec` (`must_match`), `start`/`keep` перечнями, `unit.state.cursor` `{through, events, overrun}`, `events.older_epochs:
   earlier-run`, `worker: {reads, requests: [rec]}`, ряд `filings_total`, комментарии без «пишет консоль» и `frontier.json`.
   Запрос «реестр V06».
-  V/06.2 — переведена (нормы, id-map V/06.2-01…04).
+  V/06.2 — переведена (нормы, id-map V/06.2-01…04). Влита; следы прежнего имени сняты отдельным коммитом (СЕССИИ.md §1 п. 6).
+  V/06.3 — переведена (нормы, id-map V/06.3-01…04).
 
 ## Перевод 05-detjob
 - План — `VMS/05-detjob/README.md` (годен, «Архитектор» 2026-10-23; решения 1–9). V/05.1 — переведена (нормы, приёмка 1,
