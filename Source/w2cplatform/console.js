@@ -384,6 +384,15 @@
     // -- events to the page ---------------------------------------------------------------------------------
     C.on = (evt, fn) => { (listeners[evt] = listeners[evt] || []).push(fn); return C; };
     const emit = (evt, ...a) => (listeners[evt] || []).forEach(fn => { try { fn(...a); } catch (e) { console.error(e); } });
+    // card.closed {ref}: the card a person looked at is gone — another selection, no selection, the page leaving (P/07 Н1.5
+    // events; ADR-0091 доп. (22), (24)). A shell card says it too, its ref as the page made it.
+    let shownRef = null;
+    function noteShown() { const was = shownRef; shownRef = st.sel == null ? null : st.sel; if (was !== null && was !== shownRef) emit("card.closed", { ref: was }); }
+    window.addEventListener("pagehide", () => { const was = shownRef; shownRef = null; if (was !== null) emit("card.closed", { ref: was }); });
+    // pc.ready: settled once the module is mounted and /manifest was read; a 401 waits for the login (P/07 Н1.5 ready;
+    // ADR-0091 доп. (24) п. 1, доп. (27) п. 1)
+    let manifestRead = false, readyNow = null;
+    C.ready = new Promise(r => { readyNow = r; });
 
     // -- requests: one Idempotency-Key per action (P/07 Н1.5 api) ------------------------------------------------
     // A call of api is one action of a person: its POST or PUT carries a new key, and only its own repeats keep it, with
@@ -558,7 +567,9 @@
       try { const w = await getJSON(u.sub.base + "/where/" + encodeURIComponent(u.id)); return { worker: w.worker, server: w.server, door: w.door || null, reason: w.reason }; }
       catch (e) { return null; }
     };
-    C.select = ref => { st.sel = ref; st.draft = null; paintTree(); paintMain(); const m = $(".pc-main"); if (m) m.scrollTop = 0; emit("select", ref, objectOf(ref)); return C; };   // another object starts at the top
+    // select(ref, {tab}): the tab by the id addTab gave it ("general" — the module's card); no such tab — the card opens
+    // on the tab it had (P/07 Н1.5 adds; ADR-0091 доп. (22), (24), (25))
+    C.select = (ref, o) => { const tab = o && o.tab, kind = String(ref).split(":")[0]; if (tab != null && (tab === "general" || (shell.tabs[kind] || []).some(t => t.id === tab))) st.tab[kind] = String(tab); st.sel = ref; st.draft = null; paintTree(); paintMain(); const m = $(".pc-main"); if (m) m.scrollTop = 0; emit("select", ref, objectOf(ref)); return C; };   // another object starts at the top
     C.refresh = () => load();
 
     // -- refs ------------------------------------------------------------------------------------------------
@@ -615,7 +626,9 @@
     setTheme(keep("pc.theme") || "dark");
     $(".pc-theme").onchange = e => setTheme(e.target.value);
     let pollTimer = null;
-    const setPoll = s => { clearInterval(pollTimer); pollTimer = setInterval(load, s * 1000); };
+    // /manifest not read yet (a 5xx, the network): each poll asks again, not while the login is up (a 401 waits for it)
+    const tick = async () => { if (!manifestRead) { if (!$(".pc-login").hidden || !await readManifests()) return; paintRail(); paintAside(); } await load(); if (manifestRead) readyNow(C); };
+    const setPoll = s => { clearInterval(pollTimer); pollTimer = setInterval(tick, s * 1000); };
     $(".pc-reload").onclick = () => load();
     const userMenu = on => { show($(".pc-upop"), on); $(".pc-upop").hidden = false; $(".pc-ubtn").classList.toggle("on", on); $(".pc-ubtn").setAttribute("aria-expanded", on ? "true" : "false"); };
     $(".pc-ubtn").onclick = e => { e.stopPropagation(); userMenu(!$(".pc-upop").classList.contains("open")); };
@@ -641,7 +654,7 @@
         const r = await fetch("/session/break-glass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ who: f.elements.who.value.trim(), why: f.elements.why.value.trim(), password: f.elements.password.value }) });
         const d = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(d.detail || d.error || String(r.status));
-        f.elements.password.value = ""; show($(".pc-login"), false); await loadSession(); await load(); C.toast(W.glassOn);
+        f.elements.password.value = ""; show($(".pc-login"), false); await afterLogin(); C.toast(W.glassOn);
       } catch (err) { $(".pc-login-e").textContent = err.message; }
     };
     C.logout = async () => { try { await fetch("/session", { method: "DELETE" }); } catch (e) { /* gone anyway */ } st.session = null; await loadSession(); if (!st.session || !st.session.open) showLogin(""); paintHeader(); emit("logout"); };
@@ -1155,7 +1168,7 @@
     $(".pc-discard").onclick = () => { setDirty(false); paintMain(); C.toast(W.discarded); };
     // what is drawn later (a page's card after its request) is dressed too: its head moved up, its sections made cards
     if (typeof MutationObserver === "function") new MutationObserver(() => { const sc = $(".pc-main"); if (sc.querySelector(":scope > h1, :scope > .pc-card > h1")) { $(".pc-hd").innerHTML = ""; dress(); } else cardify(sc); }).observe($(".pc-main"), { childList: true, subtree: true });
-    function paintMain() { $(".pc-hd").innerHTML = ""; setDirty(false); paintMainInner(); dress(); }
+    function paintMain() { noteShown(); $(".pc-hd").innerHTML = ""; setDirty(false); paintMainInner(); dress(); }
     // A poll repaints the card with the new data — but never under a person's hands: not while a field in it has
     // the focus or differs from what the row showed, not while a dialog is open. The scroll stays where it was.
     function pageOwnsCard() {
@@ -2247,9 +2260,16 @@
         if (!r.ok) throw new Error(d.detail || d.error || String(r.status));
         const s = await fetch("/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: d.token }) });
         if (!s.ok) throw new Error(String(s.status));
-        f.elements.password.value = ""; show($(".pc-login"), false); await loadSession(); await load();
+        f.elements.password.value = ""; show($(".pc-login"), false); await afterLogin();
       } catch (err) { $(".pc-login-e").textContent = err.message; }
     };
+    // after a login: the manifests a 401 kept back are read now, and pc.ready settles
+    async function afterLogin() {
+      await loadSession();
+      if (!manifestRead && await readManifests()) { paintRail(); paintAside(); }
+      await load();
+      if (manifestRead) readyNow(C);
+    }
     async function loadSession() {
       // /session that did not answer leaves the session unknown — closed for may (P/07 Н1.5), not open
       try { const r = await fetch("/session"); st.session = r.ok ? await r.json() : null; } catch (e) { st.session = null; }
@@ -2258,6 +2278,7 @@
     }
 
     // -- data --------------------------------------------------------------------------------------------------
+    async function readManifests() { try { await loadManifests(); manifestRead = true; return true; } catch (e) { st.loadErr = e.message; return false; } }
     async function loadManifests() {
       const subs = [];
       const rootManifest = await getJSON("/manifest");
@@ -2341,20 +2362,22 @@
       try { st.domShared = await getJSON("/domain/shared"); } catch (e) { st.domShared = { error: e.message }; }
     }
 
-    C.ready = (async () => {
+    (async () => {
       if (keep("pc.layout") === "servers" && !domainOnly) st.section = "servers";
       paintRail();
       await loadSession();
-      try { await loadManifests(); } catch (e) { st.loadErr = e.message; }
+      await readManifests();
       paintRail(); paintAside();
       await load();
       paintMain();
       setPoll(Number(opts.poll_s) > 0 ? Number(opts.poll_s) : 5);   // the page's poll_s (P/06.5 opts), 5 s when it names none
       setInterval(() => { if (st.sel && parseUnit(st.sel)) loadEvents(st.sel); }, 5000);
-      return C;
+      if (manifestRead) readyNow(C);
     })();
     return C;
   }
 
-  window.PlatformConsole = { version: VERSION, mount };
+  // features: what this version 1 gives beyond its first calls — a page asks before it uses them (P/07 Н1.5 features;
+  // ADR-0091 доп. (25) п. 1). No string — no such capability.
+  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed"]), mount };
 })();

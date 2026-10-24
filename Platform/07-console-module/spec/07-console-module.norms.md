@@ -55,7 +55,16 @@ order:   /session → /manifest → /mounts → по подсистеме /<rows
 ### Н1.5 Контракт модуля с оболочкой
 
 ```yaml
-version:   console.version — целое версии API оболочки (P/06.5 Н1.1 version); проверяется до использования модуля
+module:    один объект модуля — PlatformConsole {version, features, mount}; mount(root, opts) возвращает объект страницы
+           (pc — имя переменной страницы в примерах, не второй объект) (ADR-0091 доп. (27) п. 3)
+version:   console.version — целое версии API оболочки (P/06.5 Н1.1 version); проверяется до использования модуля;
+           остаётся 1: новое ниже (features, ready, select с tab, card.closed) только добавляется, загрузка ?v=1 та же
+           (ADR-0091 доп. (25) п. 1)
+features:  PlatformConsole.features — список строк возможностей сверх первых вызовов версии 1: "select.tab", "card.closed";
+           строки нет — нет возможности; страница узнаёт новое по нему, не по версии (ADR-0091 доп. (25) п. 1)
+ready:     pc.ready — обещание (Promise), нового вызова нет: разрешается объектом страницы после mount и первого прочитанного
+           /manifest (двери /spec нет — Н1.4); ответ 401 — обещание ждёт входа и разрешается после него; /manifest не
+           прочитан (сеть, 5xx) — модуль читает его снова опросом, обещание ждёт (ADR-0091 доп. (24) п. 1, доп. (27) п. 1)
 objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | domain | person:<name> | group:<sub>/<поле>/<путь>
            | <prefix>:<…> оболочки (модуль только хранит)
 api:       console.api(method, path, body) → ответ | throw {status, body, retry}
@@ -70,16 +79,24 @@ may:       console.may(cap, ref) → bool по grants сессии и прави
            единицу или на её about-единицу; ранг cap — view < edit < admin, договор права common/contracts/may.md шаг 7);
            via: break-glass (grants []) — true, как сервер у аварийной сессии (договор права common/contracts/may.md шаг 1,
            glass → allow); true без grants только при open: true; в закрытой или неизвестной (/session не ответила) сессии отсутствие grants — false; сервер проверяет всегда (разбор ревью стадии B 6–7, № 28)
-events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout")
+events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout") | on("card.closed", {ref})
+           card.closed — карточку убрали: выбор другого объекта, снятие выбора (смена раздела, удаление), уход со страницы;
+           и у карточки оболочки — ref её имя как есть (streamaccounts:local, netvols); перерисовка опроса того же выбора
+           его не даёт (ADR-0091 доп. (22) п. 2, доп. (24) п. 2, доп. (25) п. 2)
 where:     where(ref) → {worker, server, door: {url, token, expires, routes} | null, reason}
            библиотека превращает отсутствующее поле door HTTP-ответа в null для оболочки; HTTP Where остаётся формой P/06.5 (контракт урока 6)
 words:     display(name), manifest(name), kindWord(e), eventNote(e), addEventNote; W — словарь модуля ru | en
 adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, label, render, busy}) kind ∈ unit | server |
            worker | member | domain, addTreeNodes(kind | servers | server, fn) → узлы {ref, label, icon, count, kids, badge,
            tags, dot, title, off, open, after, replaces}, addCard(prefix, render), addMenu, addDecor{icon, badge, title},
-           addFieldEditor(kind, field, render(host, ref, obj, value, set)), addBlock("server", {id, covers, render}),
-           addAction, addNote, addIcons, icon, unitForm(host, ref), dialog(title, fields, ok), confirm, toast, select,
-           selected, refresh, logout, fullScreen, isFav, toggleFav
+           addFieldEditor(kind, field, render(host, ref, obj, value, set)), addBlock(kind, {id, covers, render}),
+           addAction, addNote, addIcons, icon, unitForm(host, ref), dialog(title, fields, ok), confirm, toast,
+           select(ref, {tab?}), selected, refresh, logout, fullScreen, isFav, toggleFav
+           addBlock(kind) — kind ∈ server, member, domain; addTreeNodes(kind) — kind ∈ unit (узлы под единицей), servers,
+           server, member, access (то, что модуль уже даёт; ADR-0091 доп. (22) п. 1)
+           select(ref, {tab}) — выбрать объект (единицу или карточку оболочки) и открыть вкладку по id, данному addTab
+           ("general" — карточка модуля); такой вкладки нет — карточка открывается без смены вкладки (ADR-0091 доп. (22)
+           п. 2, доп. (24) п. 2, доп. (25) п. 2)
 cards:     разметка карточки: <h1>, nav.pc-tabs, <h2> → .card, button.pc-hdbtn, span.pc-crumbs[data-crumbs], p.pc-hdsub
 commands:  вид command / command.failed — слово и заметка модуля (action · исход · ответ · «кто: by»; late → «поздно»); поля события
            outcome, action, by, late, error, reply пишет база воркера (P/03.6 Н3 «взгляд держателя»)
@@ -108,7 +125,8 @@ order:     /domain/shared/<sub>, /domain (+ /domain/alarms — P/10-06), /api/he
 never:     /api/backup (P/06.7-16)
 objects:   member:<m>, domain, person:<name>
 events:    поле domain у refresh; раздел access, прочитав свои двери, испускает refresh {access}
-adds:      виды member, domain у addTab
+adds:      виды member, domain у addTab; addBlock — member, domain; addTreeNodes — member, access (как в Н1.5; ADR-0091
+           доп. (24) п. 6, доп. (27) п. 3)
 sections:  умолчание opts.sections — [units, access, journal] (P/06.5 Н1.1 opts): раздел access умолчания — поздний слой
            (ниже); [domain] — страница держателя (P/10-04)
 domain:    не раздел ленты, а корень раскладки «По серверам» панели единиц: где держатель (GET /api/held), члены, ключи,
@@ -192,6 +210,7 @@ jsdom-тестами владельца спецификации [`Source/tests/
 | Н1.5 `may` — по grants сессии; без grants `true` только при `open: true` | гранты выдаёт домен, сценарии урока 6 идут без домена | jsdom-тест `module-may`: ранг и область (`*`, `unit:` с about-единицей, `labels:` у about или у самой единицы), вне единицы, `via: break-glass`, открытая, закрытая и неизвестная сессия (решение «Архитектора» 2026-10-21); сервер проверяет всегда — P/06.3 |
 | Н1.5 `where` — `door` или `null`, когда поля `door` в HTTP-ответе нет | преобразование делает библиотека, не дверь | jsdom-тест `module-contract`: `door` — объект `Door` ответа, без поля `door` — `null`; HTTP `Where` без `door` — сц. 04 приёмки 6.5 (разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21) |
 | Н1.5 `objects`, `events`, `words`, `adds`, `cards`, `commands`; без хуков и чужого DOM | предмет — поведение страницы, не двери | jsdom-тест модуля и оболочки и чтение; `objects` (`worker:<sub>/<w>`) — `module-contract`, `module-servers`, `module-calls`; `events` (`logout`) — `module-session` (разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21) |
+| Н1.5 `module`, `features`, `ready`, `select(ref, {tab})`, `card.closed` (ADR-0091 доп. (22)–(27)) | предмет — поведение страницы | jsdom-тест `module-page-calls`: `features`, версия 1, `pc.ready` после `mount` и первого `/manifest` и после 401 → вход, `select` с вкладкой, без неё, с неизвестной и `general`, `card.closed` при смене выбора, снятии выбора, уходе со страницы, у карточки оболочки, не при опросе; страница VMS без обращений к DOM рамки (`shell.may_not`) — тесты страницы владельца VMS и чтением |
 | Н1.6 поздний слой (режим `domain`, разделы `domain`, `access`, `login_url`, `refresh {access}`) | домена у стенда урока 6 нет; вызовов страницы TSV не видит | jsdom-тест режима `domain` у владельца модуля (Н1.6 `holder`; `Source/tests/console`); двери страницы держателя — приёмка [урока P/10](../../10-domain-console/spec/10-domain-console.norms.md) (P/10-04), двери людей — [приёмка главы P/08.4](../../08-domain/acceptance/4/README.md); форма по `schema` — jsdom-тест `module-shared-schema` (решение «Архитектора» 2026-10-21) |
 
 ---
@@ -221,7 +240,7 @@ jsdom-тестами владельца спецификации [`Source/tests/
 находки и записи окон (ADR-0080 доп. 6). Реализация здесь — опубликованный модуль, один у всех (Н2).
 
 - [ ] **P/07-01** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется jsdom-тестом: вызовы модуля и их порядок — по Н1.4 `reads`/`writes`/`never`/`order`; причина — модуль один у всех реализаций, двери порядок загрузки не показывают; место доказательства — jsdom-тест владельца спецификации `Source/tests/console/module-calls.test.js` (Н5; разбор ревью стадии A 6–7, № 31; разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21); части позднего слоя — Н1.6 `reads`, `writes` (`login_url`), `order`, `never`, режим `holder` (`sections: [domain]`)
-- [ ] **P/07-02** контракт оболочки Н1.5: `api` с ключом логического действия и повторами только по контракту владельца, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери); причина — TSV говорит с дверями, страницу не исполняет; место доказательства — `Source/tests/console` (Н5; разбор, № 31); `api`, `may`, `version`, `where`, `objects`, `events` — jsdom-тесты `module-retry`, `module-may`, `platform-page`, `module-contract`, `module-session` (Н5; разбор, № 6; разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21); части позднего слоя — Н1.6 `objects`, `events` (`refresh {access}`), `adds`, разделы `domain`, `access`, `held`, `schema` (форма по `schema` — jsdom-тест `module-shared-schema`)
+- [ ] **P/07-02** контракт оболочки Н1.5: `api` с ключом логического действия и повторами только по контракту владельца, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери); причина — TSV говорит с дверями, страницу не исполняет; место доказательства — `Source/tests/console` (Н5; разбор, № 31); `api`, `may`, `version`, `where`, `objects`, `events` — jsdom-тесты `module-retry`, `module-may`, `platform-page`, `module-contract`, `module-session`; `features`, `ready`, `select(ref, {tab})`, `card.closed` — `module-page-calls` (ADR-0091 доп. (22)–(27)) (Н5; разбор, № 6; разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21); части позднего слоя — Н1.6 `objects`, `events` (`refresh {access}`), `adds`, разделы `domain`, `access`, `held`, `schema` (форма по `schema` — jsdom-тест `module-shared-schema`)
 
 ## Соответствие прежним урокам
 
