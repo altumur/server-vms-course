@@ -12,22 +12,24 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Поле | Значение |
 |---|---|
-| `manifest` | `{servers: shared \| distinct, place_by?: server \| <поле пульса>, requires: none \| resource}` |
+| `manifest` | `{servers: shared \| distinct, place_by?: server \| <поле пульса>, requires: none \| resource, grows?: bool, weight?: {field, default}}` |
 | `heartbeats` | `{<воркер>: {server, <поле place_by>?}}` — прочитанные пульсы |
 | `live` | воркеры, чей пульс менялся в последние `LOST_AFTER` |
 | `slots` | `{<воркер>: {released: "false" \| "true" \| "taking", holder}}`; нет записи — строки слота нет |
 | `assignments` | `{<воркер>: [<id>…] \| "@garbled"}` — строки назначения; нет записи — строки нет |
-| `weights` | `{<id>: <вес>}`; нет — 1 |
+| `units` | `{<id>: <строка единицы — элементы текстом> \| "@garbled"}`; нет записи — строки нет (вес 0) |
 | `intent` | `{target, members}` — active intent (резерв нагрузки) или нет поля |
 | `drain`, `decommissioned` | дренируемый сервер (`""` — нет) и выведенные серверы |
 | `resources` | `{<сервер>: live \| silent \| unknown}` — `resource_state` |
-| `wants` | `{<сервер>: {want, retiring?}}` — строки заказа |
+| `wants` | `{<сервер>: {want, retiring?} \| "@garbled"}` — строки заказа; нет записи — строки нет |
 
 **Выход** — `{pool: [<воркер>…], keepers: {<место>: <воркер>}, idle_by_policy: {<воркер>: bool}, placeable: {<сервер>:
-{placeable, why?}}}`: пул в слотовом порядке; хранители при `distinct`; `idle_by_policy` у каждого прочитанного пульса;
+{placeable, why?}}, load: {<воркер>: n}, count: {<воркер>: n}}`: пул в слотовом порядке; `load` и `count` — у воркеров с
+читаемым назначением (нечитаемое — записи нет); хранители при `distinct`; `idle_by_policy` у каждого прочитанного пульса;
 `placeable` у серверов пульсов и ресурсов. Сравнение — JSON по значению.
 
-14 строк: живость по слоту, дренаж и вывод, `requires: resource` (silent, unknown) и `requires: none`, `retiring` и номер выше
+19 строк: `grows: false`, без строки заказа, с нечитаемой, retiring из читаемой; нагрузка при отсутствующей, нечитаемой
+строке единицы, поле веса не число, без `placement.weight`; прежние — живость по слоту, дренаж и вывод, `requires: resource` (silent, unknown) и `requires: none`, `retiring` и номер выше
 `want`, `distinct` — хранитель по весам и слотовому порядку, нечитаемое назначение, новый воркер без назначения, резерв intent,
 место `""`, не живой воркер.
 
