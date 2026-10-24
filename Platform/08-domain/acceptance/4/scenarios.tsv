@@ -26,6 +26,13 @@ scenario	step	request	expect
 01-login-people-grants	24	holder POST /domain/users {"name": "a\ufeffb", "password": "ann password 1"}	201 {"user": "a\ufeffb"}
 01-login-people-grants	25	@person ann ann password 1	ok
 01-login-people-grants	26	member m1 console GET /drain	403 {"error": "denied"}
+01-login-people-grants	27	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "view only"}	403 {"error": "denied"}
+01-login-people-grants	28	@person root w2c test root password	ok
+01-login-people-grants	29	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "edit", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+01-login-people-grants	30	@person ann ann password 1	ok
+01-login-people-grants	31	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "edit", "scope": "unit:testsub/c1-m1"}]}
+01-login-people-grants	32	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "own"}	2xx
+01-login-people-grants	33	member m1 console POST /marks {"unit": "testsub/c2-m1", "note": "other"}	403 {"error": "denied"}
 02-disable-revoke-last-admin	1	@domain	ok
 02-disable-revoke-last-admin	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 02-disable-revoke-last-admin	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
