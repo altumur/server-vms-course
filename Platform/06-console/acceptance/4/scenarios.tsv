@@ -25,6 +25,12 @@ scenario	step	request	expect
 04-request-reaped	13	console @header Idempotency-Key: a,b POST /testsub/requests {"unit": "c4", "add": 4}	202
 04-request-reaped	14	console POST /testsub/requests {"unit": "c4", "add": 2, "valid_until": 0}	202 {"queued": "$r0"}
 04-request-reaped	15	store GET /v1/get?key=testsub/requests/$r0	200 {"items": {"unit": "c4", "valid_until": "0"}}
+04-request-reaped	16	console POST /testsub/requests {"unit": "c4", "add": 6, "valid_until": -1}	202 {"queued": "$r1"}
+04-request-reaped	17	store GET /v1/get?key=testsub/requests/$r1	200 {"items": {"unit": "c4", "valid_until": "0"}}
+04-request-reaped	18	console POST /testsub/requests {"unit": "c4", "add": 7, "valid_until": 1e-12}	202 {"queued": "$r2"}
+04-request-reaped	19	store GET /v1/get?key=testsub/requests/$r2	200 {"items": {"unit": "c4", "valid_until": "0"}}
+04-request-reaped	20	console POST /testsub/requests {"unit": "c4", "add": 8, "valid_until": 1000.1234}	202 {"queued": "$r3"}
+04-request-reaped	21	store GET /v1/get?key=testsub/requests/$r3	200 {"items": {"unit": "c4", "valid_until": "1000.123"}}
 06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
 06-request-refused	2	console POST /testsub/requests {"add": 5}	400
 06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404
