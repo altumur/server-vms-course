@@ -6340,13 +6340,13 @@ components:
         fault:
           const: too_long
     ConsoleEventRow:
-      description: Строка ответа консоли — с epoch_is и fenced (P/05 Н1.3, Н3 «слияние»).
+      description: Строка ответа консоли — с fenced и epoch_is (P/05 Н1.3, договор слияния журнала событий); epoch_is нет
+        только у строки подсистемы, чья эпоха не прочитана (incomplete[<sub>/epoch]); unknown у консоли не бывает.
       type: object
       additionalProperties: true
       allOf:
       - $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/EventRow
       required:
-      - epoch_is
       - fenced
     ConsoleEvents:
       type: object

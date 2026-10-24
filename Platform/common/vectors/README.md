@@ -36,6 +36,7 @@
 | конверт `enc:v2`, путь AAD, открытие, файл кольца | [`sealing/`](sealing/README.md) | common | [договор запечатывания](../contracts/sealing.md) |
 | свежесть: возраст наблюдаемой версии → свеж (`≤ LOST_AFTER`) | [`fresh-age/`](fresh-age/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть»; P/04 Н3, главы 6.1, 6.4, 6.5, 6.6 (разбор ревью стадии B 6–7, № 20) |
 | состояние ресурса по истории наблюдения (`resource_state`, неответ и отсутствие) | [`resource-state/`](resource-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Наблюдение версии», «Состояние ресурса» (OBS-001) |
+| слияние журнала событий (консоль и воркер: дубли, `cut`, эпохи, `unknown`, полнота) | [`events-merge/`](events-merge/README.md) | P/06.4 (участник — воркер) | [договор слияния журнала событий](../contracts/events-merge.md) (ADR-0091 доп. (21)) |
 | SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` |
 | токен двери `door1`: выпуск (JCS, Ed25519) и проверка у держателя по `door/keys` | [`door-token/`](door-token/README.md) | P/06.5 (участник 3.4) | [договор токена двери](../contracts/door-token.md); P/06.5-05, P/03.4-08 |
 | «принять консолью» | векторов нет — шаги приёмки [главы 6.7](../../06-console/acceptance/7/README.md) (сц. 01, 02) | P/06 | [договор пересылки](../contracts/forwarding.md) «Принять консолью» |
