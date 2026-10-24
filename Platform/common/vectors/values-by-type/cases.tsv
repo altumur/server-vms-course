@@ -59,6 +59,7 @@ lb-empty	list:labels	both	[]	""	нет меток — пустой набор
 lb-bang	list:labels	write	["gpu!"]	@refuse	знак вне азбуки меток; сц. 12 шаг 6
 lb-comma	list:labels	write	["a,b"]	@refuse	у меток запятая — 400; сц. 09 шаг 3
 lb-empty-item	list:labels	write	[""]	@refuse	пустой элемент у меток не допустим (Н1.2)
+lb-repeat	list:labels	both	["a","a"]	"a,a"	повтор метки в поле меток единицы — значение поля списка как есть, не набор (договор азбуки меток output; C51-LABEL-LIST-01)
 j-canonical	json	both	{"a":2,"b":1}	"{\"a\":2,\"b\":1}"	канонический JSON (ADR-0072)
 j-reorder	json	write	{"b":1,"a":2}	"{\"a\":2,\"b\":1}"	порядок ключей — по JCS
 j-nested	json	write	{"z":{"b":true,"a":[]}}	"{\"z\":{\"a\":[],\"b\":true}}"	JCS на любой глубине
