@@ -199,7 +199,7 @@ root:
       type: object
       properties:
         running: {type: string, description: "`name` метрики из `metrics[]`", default_text: "`running_gauge: null`"}
-    metrics: {ref: metrics, owner: P/06.5 Н1.2; М13}
+    metrics: {ref: metrics, owner: "P/06.5 Н1.2; Н3 «Ряды манифеста metrics[]»"}
     domain: {ref: domain, owner: P/08}
 
 defs:
