@@ -1,0 +1,20 @@
+# Имя слота: порядок, следующий номер, номер процесса роли (договор common/contracts/slot-name.md; POOL-ORDER-51-01).
+# Строка: case<TAB>op<TAB>input<TAB>expect<TAB>note. Форма — README пакета.
+case	op	input	expect	note
+order-example	order	{"prefix":"w","names":["w-srv-a-1","w-b","w-10","w-2","w-a","w-1","w-01","w-0"]}	["w-0","w-01","w-1","w-2","w-10","w-a","w-b","w-srv-a-1"]	пример P/03.2 Н1.4: цифровые по числу (равенство — по имени: w-01 раньше w-1), затем прочие по имени; w-srv-a-1 — вторая группа
+order-big	order	{"prefix":"w","names":["w-18446744073709551616","w-18446744073709551615","w-9","w-a"]}	["w-9","w-18446744073709551615","w-18446744073709551616","w-a"]	суффикс длиннее 64 бит — число без переполнения
+order-prefix	order	{"prefix":"w","names":["w-ab","w-a","w-a-b"]}	["w-a","w-a-b","w-ab"]	«по имени» — байты ASCII; собственный префикс раньше продолжения (w-a < w-a-b < w-ab)
+next-basic	next	{"prefix":"w","names":["w-1","w-3","w-a","w-srv-a-9"]}	"w-4"	следующий — <prefix>-<max+1> по цифровым суффиксам; прочие имена не участвуют
+next-none	next	{"prefix":"w","names":["w-a","w-srv-a-1"]}	"w-1"	цифровых нет — max = 0, следующий w-1
+next-leading-zero	next	{"prefix":"w","names":["w-007"]}	"w-8"	ведущие нули — число 7; новый без ведущих нулей
+next-big	next	{"prefix":"w","names":["w-18446744073709551615"]}	"w-18446744073709551616"	без переполнения: max+1 = 2^64
+role-basic	role	{"prefix":"t","name":"t-srv-a-2","server":"srv-a"}	{"server":"srv-a","n":"2"}	процесс роли: s — всё между «t-» и «-N», N — последний сегмент
+role-dash-server	role	{"prefix":"t","name":"t-rack-1-node-7-3","server":"rack-1-node-7"}	{"server":"rack-1-node-7","n":"3"}	имя сервера с «-»: s = rack-1-node-7, N = 3
+role-big-n	role	{"prefix":"t","name":"t-srv-a-18446744073709551617","server":"srv-a"}	{"server":"srv-a","n":"18446744073709551617"}	N без переполнения
+role-server-mismatch	role	{"prefix":"t","name":"t-srv-a-2","server":"srv-b"}	"not_role"	s ≠ server пульса — не процесс роли (ни этого, ни какого сервера)
+role-no-heartbeat	role	{"prefix":"t","name":"t-srv-a-2","server":null}	"not_role"	пульса нет или server не читается — не процесс роли
+role-numeric-only	role	{"prefix":"w","name":"w-5","server":"srv-a"}	"not_role"	w-5 — нет сервера в имени, не процесс роли
+role-leading-zero	role	{"prefix":"w","name":"w-srv-a-02","server":"srv-a"}	"not_role"	N с ведущим нулём — не по форме
+role-zero	role	{"prefix":"w","name":"w-srv-a-0","server":"srv-a"}	"not_role"	N = 0 — не по форме (N ≥ 1)
+role-other-prefix	role	{"prefix":"w","name":"t-srv-a-2","server":"srv-a"}	"not_role"	чужой prefix — не процесс роли
+role-no-number	role	{"prefix":"w","name":"w-srv-a","server":"srv-a"}	"not_role"	последний сегмент не число — не процесс роли
