@@ -124,7 +124,7 @@ root:
       names:
         key: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
         value: {type: string, enum: [days_garbled, unknown, holds_unread]}
-      description: "почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)"
+      description: "почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); у подсистемы одна причина: days_garbled и unknown вместе не бывают, причина срока прежде holds_unread (R05-G08); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)"
     restore:
       type: object
       names:
