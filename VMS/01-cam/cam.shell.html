@@ -117,6 +117,8 @@ const SUBS=["cam","rec","live"];
 // The module's API this page is written for (P/07 Н1.5 `version`): another version is not used — the page says so.
 const SHELL_API=1;
 if(PlatformConsole.version!==SHELL_API){document.getElementById("app").textContent="Страница VMS написана для версии "+SHELL_API+" модуля консоли, а загружена "+PlatformConsole.version+".";throw new Error("console module version")}
+// What the module offers beyond the first calls of version 1 (P/07 Н1.5 `features`): a missing word — no such call.
+const FEATURES=new Set(Array.isArray(PlatformConsole.features)?PlatformConsole.features:[]);
 const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
 window.platformConsole=pc;
 // ── Helpers ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -170,7 +172,9 @@ const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`
 const placeWhere=(rec,T,place)=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(place)}?unit=${encodeURIComponent(rec.id)}`;
 const camOf=ref=>String(ref).replace(/^unit:cam\//,"");
 const isCam=ref=>String(ref).startsWith("unit:cam/");
-const goTab=t=>setTimeout(()=>{const x=document.querySelector(`.pc-tabs [data-tab="${t}"]`);if(x)x.click()},60);
+// Open an object at a tab by the id given to addTab (`select(ref, {tab})`, feature "select.tab"); without it — the object
+// alone, the operator opens the tab: the module's markup is not the page's to touch.
+const openAt=(ref,tab)=>FEATURES.has("select.tab")?pc.select(ref,{tab}):pc.select(ref);
 
 // ── A camera: its icons, its address, its notes, its events ───────────────────────────────────────────────────
 pc.addIcons({
@@ -915,7 +919,7 @@ function volumeCard(host,name){
   if(!v){host.innerHTML=`<h1>Тома «${esc(name)}» нет</h1>`;return}
   host.innerHTML=volCardHtml(v);
   wire(host,{withdraw:()=>delVolume(v.name),redeclare:()=>openVolume(v.kind,v.server,v),addCam:()=>addToArchive({home:v.name,server:v.server}),
-    openRec:el=>{pc.select("unit:cam/"+el.dataset.cam);goTab("rec")}});
+    openRec:el=>openAt("unit:cam/"+el.dataset.cam,"rec")});
 }
 function netVolumesCard(host){
   const list=networkVolumes();
@@ -1223,9 +1227,10 @@ let accountView=0,accountPassword=null;
 function forgetAccountPassword(){
   if(accountPassword){accountPassword.value="";accountPassword.closest(".live-account-secret").remove();accountPassword=null}
 }
+// Forgotten when the card goes (`card.closed`, feature "card.closed": another object chosen, the section left, the page
+// left) — and, without that word, when another object is chosen.
+if(FEATURES.has("card.closed"))pc.on("card.closed",e=>{if(e&&e.ref==="streamaccounts:local")forgetAccountPassword()});
 pc.on("select",()=>forgetAccountPassword());
-new MutationObserver(()=>{if(accountPassword&&!accountPassword.isConnected)forgetAccountPassword()})
-  .observe(document.querySelector(".pc-main"),{childList:true,subtree:true});
 pc.addTreeNodes("access",()=>[{ref:"streamaccounts:local",label:"Учётки потоков",icon:"sec_access"}]);
 pc.addCard("streamaccounts",host=>{
   forgetAccountPassword();
@@ -1305,5 +1310,5 @@ pc.addCard("streamaccounts",host=>{
 });
 
 // The camera's menu: watch it, its archive (the tabs above).
-pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>{pc.select(ref);goTab("vid")}},...(recOn?[{label:"Архив",run:()=>{pc.select(ref);goTab("rec")}}]:[])]:[]);
+pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>openAt(ref,"vid")},...(recOn?[{label:"Архив",run:()=>openAt(ref,"rec")}]:[])]:[]);
 </script>
