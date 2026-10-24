@@ -113,7 +113,7 @@ answer | silent | said <state>}`; `complete` — `incomplete` пуст: это �
 
 Пакет [`events-merge`](../vectors/events-merge/README.md): функция слияния без стенда — дубли, порядок `cut`, `truncated`,
 `fenced`/`earlier-run`/`current`, неответ, `silent`, `said`, эпоха не прочитана, воркер с объявленной, необъявленной и не
-прочитанной эпохой, `partial`, `lines_garbled` (ADR-0091 доп. (21) п. 3). Живость строки двери — пакет `fresh-age`;
+прочитанной эпохой, `partial`, `lines_garbled` (ADR-0091 доп. (21) п. 3). Живость строки двери — пакет [`fresh-age`](../vectors/fresh-age/README.md) (граница `LOST_AFTER`, раздел «Живые ресурсы»);
 `from mirror`, гонки и поздние ответы — чтением.
 
 ## Соответствие прежним урокам
