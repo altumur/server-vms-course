@@ -1,0 +1,13 @@
+# Действующее удержание места (договор наблюдения «Удержание места»; C06-WHERE-PLACE-HOLD-33-01).
+# Строка: case<TAB>input<TAB>expect<TAB>note. Форма — README пакета.
+case	input	expect	note
+age-0	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":0,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": true}	первое наблюдение — возраст 0: действует
+age-49.999	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":49.999,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": true}	возраст версии 49.999 < LOST_AFTER + HOLD_SKEW — действует
+age-50	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":50,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": false}	возраст 50 — не действует: место свободно (то же отношение, что «простояло 45 + HOLD_SKEW» у берущего)
+hb-45	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":45}	{"active": true}	пульс by 45 с — свеж (≤ LOST_AFTER)
+hb-45.001	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":45.001}	{"active": false}	пульс by 45.001 с — не свеж: удержание не действует
+holder-other	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:43:ffffff"},"heartbeat_age":5}	{"active": false}	пульс называет иной экземпляр, чем holder, — не действует
+released	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"true","gen":"3"},"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": false}	released = true — не действует
+holder-empty	{"hold":{"by":"t-1","holder":"","released":"false","gen":"3"},"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": false}	holder пуст — не действует
+no-heartbeat	{"hold":{"by":"t-1","holder":"box:42:a1b2c3","released":"false","gen":"3"},"hold_age":10,"heartbeat":null,"heartbeat_age":5}	{"active": false}	пульса by нет — не действует
+no-hold	{"hold":null,"hold_age":10,"heartbeat":{"worker":"t-1","instance":"box:42:a1b2c3"},"heartbeat_age":5}	{"active": false}	строки удержания нет — не действует
