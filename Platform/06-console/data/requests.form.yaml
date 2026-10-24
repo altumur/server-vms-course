@@ -15,7 +15,7 @@ root:
       description: срок; когда у манифеста valid_for или клиент прислал свой срок; 0 и прошедшее — срок, уже вышедший (expired), а не «без срока»
     digest:
       ref: common.sha256_hex
-      description: ДОЛЖЕН у всякой исполняемой просьбы — у поданной дверью JCS тела клиента без valid_until, у поданной воркером JCS полей тела строки без unit, valid_until и штампов (векторы vectors/request-digest/)
+      description: ДОЛЖЕН у всякой исполняемой просьбы — у поданной дверью JCS тела клиента без valid_until (вид client), у поданной воркером JCS полей тела строки без unit, valid_until и штампов (вид worker); у цели с requests.key — вид worker у обоих писателей (векторы vectors/request-digest/, третье правило; ADR-0091 доп. (24) п. 3)
     by:
       type: string
       description: штамп requests.stamp — кто подал (человек, доказанный сторожевой; без домена — operator)
