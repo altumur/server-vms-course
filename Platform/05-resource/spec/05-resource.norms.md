@@ -208,7 +208,9 @@ retention:
 resource:                                    # один процесс на сервер; без контроллера
   heartbeat: объект platform/resources/<server>/heartbeat каждые 10 с
     {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]},
-     workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door, …}
+     workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door,
+     retention_garbled?: [<sub>…], retention_withheld?: {<sub>: days_garbled | unknown | holds_unread}, …}
+    # retention_garbled, retention_withheld — причины прохода срока (Н3 retain, Н4; нет причины — полей нет; C05-RETENTION-PULSE-33)
     # door: {addr, mode: loopback | mtls, cert_until} — в каждом пульсе, пишет ресурс (ADR-0075 доп. (3)): addr —
     # RESOURCE_HOST:RESOURCE_PORT; mode — loopback без RESOURCE_TLS (только петля), mtls с RESOURCE_TLS=1; cert_until —
     # стенные секунды конца срока сертификата сервера своего комплекта, при mtls; читает w2cctl tls status (P/02.4 Н1.9; разбор ревью стадии B 3–5, № 28)
@@ -412,6 +414,10 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `door.cert_until` | число | необязателен |  | стенные секунды конца срока сертификата сервера своего комплекта (W2C_TLS_DIR); при mtls |
 | `garbled_rows` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | нечитаемых строк таблиц, прочитанных ресурсом (holds), по таблице |
 | `garbled_rows.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
+| `retention_garbled` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | подсистемы, чья строка `<sub>/retention` с неверным days (P/05 Н1.3 retention rule), по возрастанию байтов; нет таких — поля нет (P/05 Н3 retain, Н4; догадка стадии C C05-RETENTION-PULSE-33, решение «Архитектора» 2026-10-25) |
+| `retention_garbled[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
+| `retention_withheld` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  | почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33) |
+| `retention_withheld.<имя>` | строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  |  |
 | `restore` | отображение имена автора: имя — строка, значение — отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  | `{<сосед>: …}` — восстановление бакетов с копий соседей (Н1.4 «Восстановление бакетов»); в каждом пульсе (E39) |
 | `restore.<имя>` | отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  |  |
 | `restore.<имя>.done` | bool | обязателен |  |  |
@@ -457,6 +463,8 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 |---|---|---|---|---|
 | `/schema` | схема процесса неизвестна: в processes двери /schema — schema: null; в ResourceRow двери /resources — schema: null (разбор ревью стадии B 6–7, № 6); пульс остаётся читаемым | 0 | поле | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
 | `/build` | build читается как ""; пульс остаётся читаемым | 0 | поле | P/06.6 Н1.1а heartbeat; P/06.5 Н2 «Выдачи» |
+| `/retention_garbled` | поле читается как отсутствующее (причины срока не названы); пульс остаётся читаемым | 0 | поле | P/05 Н3 retain, Н4 (C05-RETENTION-PULSE-33) |
+| `/retention_withheld` | поле читается как отсутствующее (причины срока не названы); пульс остаётся читаемым | 0 | поле | P/05 Н3 retain, Н4 (C05-RETENTION-PULSE-33) |
 | объект целиком | пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state договора наблюдения: unreachable при свежей строке двери, иначе по порядку правил); присутствия процессов не даёт; консоль — в /resources не входит, считается в w2c_resource_heartbeats_garbled, ответ 200; restore соседа — пульс соседа не читается (Н1.4 «Восстановление бакетов»: необходимы все известные двери) | 1 | строка | договор наблюдения resource_state; P/06.5 Н2 «Выдачи»; P/05 Н1.4 |
 
 #### `<sub>/requests/free-<server>-<volume>` — строка
@@ -785,7 +793,9 @@ P/04). Порядок старта ресурса — [жизненный цик
 ```
 retain:  для каждого дерева: days = <sub>/retention | 365 (tree.alarms — alarms_retention | 1095; audit 1095;
          console — 1095, не раньше самого долгого дерева);
-         days не число или ≤ 0 или строка не ответила → не известно: ничего не убирать, назвать в пульсе;
+         days не число или ≤ 0 или строка не ответила → не известно: ничего не убирать, назвать в пульсе — неверный days:
+         <sub> в retention_garbled и retention_withheld[<sub>] = days_garbled; строка не ответила — retention_withheld[<sub>] =
+         unknown; удержания не прочитаны (договор удержаний) — retention_withheld[<sub>] = holds_unread (C05-RETENTION-PULSE-33);
          убрать закрытые бакеты старше days (отметки консоли — не раньше самого долгого; holds сохраняют — и бакеты
          единиц других подсистем, чьё about называет удержанную, и бакеты неизвестных единиц; что держит строка, окно,
          неполное объявление и нечитаемые строки — договор удержаний common/contracts/holds.md, P/06.4 Н1.5;
@@ -839,7 +849,7 @@ mirror:  platform/mirror.enabled → соседи = следующие copies ж
 | mirrored, events/{path}: путь не по Н1.6 | 404 | без тела | файл вне своего дерева не читается |
 | строка бакета нечитаема, файл не на месте | 200, строка пропущена | `lines_garbled` ответа (Н1.3) | исправить писателя; 503 из-за строки запрещён (P/01.1 Н0) |
 | mirrored: нет каталога копий / нет такой копии | 404 | без тела | сосед пропущен при restore (Н1.4 «Восстановление бакетов») |
-| retention: неверный days / чтение неизвестно / holds не удалось прочитать | ничего не убирать в зависимом дереве | причина в пульсе, retention_garbled для неверного days | восстановить достоверное чтение |
+| retention: неверный days / чтение неизвестно / holds не удалось прочитать | ничего не убирать в зависимом дереве | причина в пульсе: `retention_withheld[<sub>]` — `days_garbled` / `unknown` / `holds_unread`; неверный days — ещё `<sub>` в `retention_garbled` (C05-RETENTION-PULSE-33) | восстановить достоверное чтение |
 | нет пути / метод не поддержан | 404/405 | ресурс — без тела | исправить маршрут; частный PUT не-блоба выше |
 
 ---
