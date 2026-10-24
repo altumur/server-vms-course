@@ -87,3 +87,13 @@ scenario	step	request	expect
 10-deleting-any-mark	8	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	409 {"error": "exists"}
 10-deleting-any-mark	9	@until 20 member hold store GET /v1/get?key=domain/deleting/zz	200 {"items": null}
 10-deleting-any-mark	10	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	201
+11-events-view	1	@domain	ok
+11-events-view	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+11-events-view	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
+11-events-view	4	@on m1 @append event testsub/c2/e1 {"id": "ev-alarm-c2", "t": {now}, "kind": "jam", "class": "alarm", "of": "testsub/c2"}	ok
+11-events-view	5	@on m1 @append event testsub/c1/e1 {"id": "ev-tick-c1", "t": {now}, "kind": "tick", "of": "testsub/c1"}	ok
+11-events-view	6	member m1 console POST /marks {"unit": "testsub/c1", "note": "seen"}	2xx
+11-events-view	7	@person ann ann password 1	ok
+11-events-view	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1"}]}
+11-events-view	9	@until 30 member m1 console GET /events	200 {"events": [{"kind": "mark", "of": "testsub/c1"}, {"kind": "tick", "of": "testsub/c1"}], "truncated": 0, "complete": true}
+11-events-view	10	member m1 console GET /events?limit=1	200 {"events": [{"kind": "mark", "of": "testsub/c1"}], "truncated": 1, "complete": true}
