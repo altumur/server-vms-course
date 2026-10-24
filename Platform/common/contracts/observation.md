@@ -15,6 +15,17 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Пульс ресурса `platform/resources/<s>/heartbeat` наблюдатель читает по форме и исходам семьи его писателя — файлам
+`Platform/05-resource/data/resource-heartbeat.form.yaml` и `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`
+([форма](../../05-resource/data/resource-heartbeat.form.yaml), [исходы](../../05-resource/data/resource-heartbeat.outcomes.tsv));
+строку двери `platform/doors/<s>` — по смене версии, её форма — `Platform/05-resource/data/doors.form.yaml`, исходы —
+`doors.outcomes.tsv` ([форма](../../05-resource/data/doors.form.yaml)). Названные файлы данных входят в чтение `common`
+(ADR-0083 доп. (32) п. 1; C04-DEP-OBS-HEARTBEAT-01). Исходы — по `outcomes.tsv`: поле не по своей форме, у которого есть
+строка исхода поля (`build`, `schema`, `retention_garbled`, `retention_withheld`), действует его исход, пульс остаётся
+читаемым; нечитаемым пульс делает только исход «объект целиком» (в том числе поле вне закрытой формы).
+
 ## Наблюдение версии
 
 ```yaml
@@ -75,7 +86,7 @@ resource_state:
   silent:       иначе; исключает и двигает только silent
 ```
 
-Нечитаемый пульс — по форме его писателя ([P/05 Н1.4](../../05-resource/spec/05-resource.norms.md)); строку двери
+Нечитаемый пульс — по форме его писателя (раздел «Форма» выше; [P/05 Н1.4](../../05-resource/spec/05-resource.norms.md)); строку двери
 наблюдатель судит по смене её версии, не по полям (семья `doors` P/05). Что значит каждое состояние для судьбы слота и
 пула — [P/04 Н3](../../04-controller/spec/04-controller.norms.md) «судьба», «выбрать»; для выдачи `ServerRow.resource` —
 глава 6.5; для отказа вывода сервера — глава 6.6. Состояние по истории наблюдения — векторы
@@ -107,7 +118,7 @@ active intent и id в members → решают target/reason/at/manifest_rev in
 
 ## Векторы
 
-Пакеты [`fresh-age`](../vectors/fresh-age/README.md) (граница свежести: возраст → свеж) и [`resource-state`](../vectors/resource-state/README.md) (состояние ресурса по истории наблюдения). (ADR-0083 доп. (32) п. 2)
+Пакеты [`fresh-age`](../vectors/fresh-age/README.md) (граница свежести: возраст → свеж), [`resource-state`](../vectors/resource-state/README.md) (состояние ресурса по истории наблюдения) и [`heartbeat-read`](../vectors/heartbeat-read/README.md) (чтение пульса по форме и исходам: верные и неверные `retention_*`, исход поля и объекта целиком; C04-DEP-OBS-HEARTBEAT-01). (ADR-0083 доп. (32) п. 2)
 
 ## Соответствие прежним урокам
 

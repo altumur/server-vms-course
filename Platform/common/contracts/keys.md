@@ -29,6 +29,9 @@
 
 ## Набор `domain/keys`
 
+Форма строк семей — `Platform/08-domain/data/keys.form.yaml`, `keys.outcomes.tsv` и
+`Platform/08-domain/data/revoked.form.yaml`, `revoked.outcomes.tsv` (C04-DEP-OBS-HEARTBEAT-01: файлы данных, названные договором, — в чтении `common`, ADR-0083 доп. (32) п. 1).
+
 Из М11/2 Н1.2:
 
 ```yaml
