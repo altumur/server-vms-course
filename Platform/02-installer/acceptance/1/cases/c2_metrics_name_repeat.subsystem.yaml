@@ -34,6 +34,6 @@ display:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
 metrics:
-  - {name: things_total, type: counter, agg: count, labels: {kind: a}, where: {kind: a}}
-  - {name: things_total, type: counter, agg: count, labels: {kind: b}, where: {kind: b}}
+  - {name: things_total, type: counter, from: status.phase, agg: count, labels: {kind: a}}
+  - {name: things_total, type: counter, from: status.phase, agg: count, labels: {kind: b}}
 worker: {exec: /usr/lib/probe/worker}

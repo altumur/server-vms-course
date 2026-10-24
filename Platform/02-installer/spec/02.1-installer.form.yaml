@@ -722,10 +722,10 @@ defs:
       type: object
       required: [name]
       properties:
-        name: {type: string, pattern: '[a-z_][a-z0-9_]*', description: повтор допустим}
+        name: {type: string, pattern: '[a-z][a-z0-9_]*', description: повтор допустим}
         type: {enum: [gauge, counter, histogram]}
-        from: {type: string}
-        agg: {type: string}
+        from: {type: string, pattern: '(heartbeat|status)\..+', description: "`heartbeat.<путь>` | `status.<путь>` (P/06.5 Н3 «Ряды манифеста metrics[]»)"}
+        agg: {enum: [value, flag, age, label, count, sum, max, histogram]}
         equals:
           variants:
             - {type: string}
@@ -745,6 +745,12 @@ defs:
         buckets: {type: array, items: {type: number}}
         label: {type: string}
         values: {ref: strList}
+      rules:   # отказы загрузки — как у свидетеля (P/06.5 Н3 «Ряды манифеста metrics[]»; C06-METRICS-DSL-33-01, решение «Архитектора» 2026-10-25)
+        - {one_of: [count, from]}
+        - {when: {present: [count]}, forbid: [values]}
+        - {when: {is_not: {agg: [label]}}, forbid: [values]}
+        - {when: {is: {agg: [count]}}, check: {from: {type: string, pattern: 'status\..+'}}}
+        - {when: {is: {agg: [histogram]}}, require: [buckets]}
 
   # ---- domain: форма — здесь; смысл и класс отказа — главы урока P/08 (и главы P/06.7, P/09.1, урок P/10)
   domain:

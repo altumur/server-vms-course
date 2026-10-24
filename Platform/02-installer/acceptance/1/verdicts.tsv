@@ -642,3 +642,12 @@ door_routes_domain_upper	refused
 door_routes_domain_string	refused
 name_free_prefix	refused
 name_free_bare	ok
+c2_metrics_count_and_from	refused
+c2_metrics_neither	refused
+c2_metrics_from_bad	refused
+c2_metrics_agg_bad	refused
+c2_metrics_count_heartbeat	refused
+c2_metrics_histogram_no_buckets	refused
+c2_metrics_values_not_label	refused
+c2_metrics_values_with_count	refused
+c2_metrics_name_underscore	refused
