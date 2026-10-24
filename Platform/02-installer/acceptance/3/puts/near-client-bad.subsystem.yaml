@@ -1,0 +1,12 @@
+# near.prefer называет поле, которого у neart нет (ADR-0091 доп. (26) п. 2)
+name: nearb
+unit:
+  rows: nearbs
+  id: name
+  fields:
+    name: {type: string, required: true}
+    of:   {type: string, required: true}
+placement:
+  capacity: {default: 1}
+  near: {sub: neart, by: of, of: name, prefer: {nosuch: [0]}}
+worker: {exec: /usr/lib/nearb/worker}

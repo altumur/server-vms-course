@@ -110,6 +110,12 @@ root:
             since: {ref: common.time, description: "момент снятия заказа"}
             times: {ref: count, description: "отказов подряд"}
           required: [since, times]
+    near_waiting:
+      type: array
+      min_items: 1
+      unique_items: true
+      items: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
+      description: "подсистемы placement.near.sub, которых нет в каталоге манифестов этого прохода: сродство ждёт их установки (Н1.3 near; ADR-0091 доп. (27) п. 6); иначе поля нет"
   required:
     - at
     - ok

@@ -1,0 +1,10 @@
+# адресат сродства near (ADR-0091 доп. (26) п. 2)
+name: neart
+unit:
+  rows: nearts
+  id: name
+  fields:
+    name:  {type: string, required: true}
+    start: {type: int, default: 0}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/neart/worker}

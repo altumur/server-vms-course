@@ -1,0 +1,12 @@
+# near.sub — neart, near.of и near.prefer — её поля (ADR-0091 доп. (26) п. 2)
+name: nearc
+unit:
+  rows: nearcs
+  id: name
+  fields:
+    name: {type: string, required: true}
+    of:   {type: string, required: true}
+placement:
+  capacity: {default: 1}
+  near: {sub: neart, by: of, of: name, prefer: {start: [0]}}
+worker: {exec: /usr/lib/nearc/worker}

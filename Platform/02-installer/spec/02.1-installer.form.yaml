@@ -210,9 +210,10 @@ defs:
     description: "командная строка без оболочки: слова через один пробел U+0020, пустых слов нет; первое — абсолютный путь; в словах — печатные ASCII без \" ' \\ % $ ` ; | & < > * ? ( ) { } [ ] ~ # !; argv — разбиение по пробелу (ADR-0091 доп. (5) п. 2)"
   name: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
   subName:
-    description: "не из 22 зарезервированных слов; имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"
+    description: "не из 22 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене"
     type: string
     pattern: '[a-z][a-z0-9_-]{0,31}'
+    not_pattern: 'free-.*'
     not_enum: [platform, spec, manifest, policy, drain, servers, where, unplaceable, console, audit, events, marks, requests, asked, session, mounts, healthz, metrics, resources, schema, domain, api]
   tableName:
     description: имя по Н1.2, не из перечня запрещённых имён таблиц

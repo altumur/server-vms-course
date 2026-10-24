@@ -31,3 +31,9 @@ kind_dup	kinds-a kinds-b	2 -
 door_domain_kind_other	kinds-a door-k	0 1
 door_domain_kind_missing	door-k	2 -
 door_domain_kind_own	door-own	0 1
+# ADR-0091 доп. (26) п. 2, доп. (27) п. 5: near.sub ещё нет в каталоге — сродство ждёт, проверка near.of/near.prefer откладывается
+near_ok	near-target near-client	0 1
+near_no_target	near-client	0 1
+near_target_after	near-client near-target	0 1
+near_bad_field	near-target near-client-bad	2 -
+near_target_after_mismatch	near-client-bad near-target	2 -

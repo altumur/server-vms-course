@@ -111,6 +111,7 @@ corpus-m59_keys_ok	Platform/02-installer/acceptance/1/cases/m59_keys_ok.subsyste
 corpus-m59_names_no_grant_ok	Platform/02-installer/acceptance/1/cases/m59_names_no_grant_ok.subsystem.yaml	expect/corpus-m59_names_no_grant_ok.json	принятый случай корпуса 2.1
 corpus-m59_names_ok	Platform/02-installer/acceptance/1/cases/m59_names_ok.subsystem.yaml	expect/corpus-m59_names_ok.json	принятый случай корпуса 2.1
 corpus-m61_shared_ok	Platform/02-installer/acceptance/1/cases/m61_shared_ok.subsystem.yaml	expect/corpus-m61_shared_ok.json	принятый случай корпуса 2.1
+corpus-name_free_bare	Platform/02-installer/acceptance/1/cases/name_free_bare.subsystem.yaml	expect/corpus-name_free_bare.json	принятый случай корпуса 2.1
 corpus-profile_blob_64_ok	Platform/02-installer/acceptance/1/cases/profile_blob_64_ok.subsystem.yaml	expect/corpus-profile_blob_64_ok.json	принятый случай корпуса 2.1
 corpus-profile_blob_bytes_without_blob_ok	Platform/02-installer/acceptance/1/cases/profile_blob_bytes_without_blob_ok.subsystem.yaml	expect/corpus-profile_blob_bytes_without_blob_ok.json	принятый случай корпуса 2.1
 corpus-profile_rows_records_ok	Platform/02-installer/acceptance/1/cases/profile_rows_records_ok.subsystem.yaml	expect/corpus-profile_rows_records_ok.json	принятый случай корпуса 2.1
