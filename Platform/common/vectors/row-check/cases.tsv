@@ -72,3 +72,6 @@ counter_inherit_null	testsub/counters	create	{"name": "c1", "step": null}		{}	ok
 labels_ok	testsub/counters	create	{"name": "c1", "labels": ["zone:a", "x.y"]}		{}	ok				{"labels": "zone:a,x.y"}	азбука меток
 labels_space	testsub/counters	create	{"name": "c1", "labels": ["bad label"]}		{}	refused	labels	labels	П2		метка не по азбуке
 labels_empty_item	testsub/counters	create	{"name": "c1", "labels": ["a", ""]}		{}	refused	labels	labels	П2		пустой элемент недопустим у меток размещения
+table_ok_minimal	testsub2/shelves	create	{"name": "s1"}		{}	ok				{"name": "s1", "zone": "@absent", "server": "@absent", "kind": "plain", "size": "1"}	строка таблицы: непереданное без default отсутствует, default подставляется; поле с именем вне списка таблицы — обычное (C06-ROWCHECK-TABLE-33-01, C06-ROWCHECK-TABLE-FIELDS-707-01)
+table_platform_by	testsub2/shelves	create	{"name": "s1", "by": "x"}		{}	refused	platform_field	by	П1		платформенные поля строки таблицы — свой список: by клиент не задаёт (C06-ROWCHECK-TABLE-FIELDS-707-01)
+table_platform_held_by	testsub2/shelves	create	{"name": "s1", "held_by": "w-1"}		{}	refused	platform_field	held_by	П1		held_by — вычисляемое поле таблицы мест (C06-ROWCHECK-TABLE-FIELDS-707-01)
