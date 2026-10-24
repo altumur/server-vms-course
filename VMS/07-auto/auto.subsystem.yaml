@@ -20,8 +20,10 @@ name: auto
 slot: {prefix: a, name_env: AUTO_NAME}
 # What the evaluator asks of other subsystems: a camera's request rows (`cam/requests/<id>`), and rows for a while —
 # a recording, a detector, a scan — it creates and renews by their keys (`worker.creates`, P/03.6 Н1.6; V/07.4); what it
-# reads to check a scenario against the devices and units (V/07.3) and to publish the asks book (V/07.5).
-worker: {exec: /usr/lib/auto/worker, reads: [cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, rec/heartbeats/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
+# reads to check a scenario against the devices and units (V/07.3) and to publish the asks book (V/07.5); and the epoch rows of
+# the subsystems whose events it merges (`<sub>/epoch/`, the contract events-merge: a line of an older epoch is marked by its
+# manifest's policy; a subsystem not declared here is `unknown`, never proof).
+worker: {exec: /usr/lib/auto/worker, reads: [cam/epoch/, rec/epoch/, live/epoch/, det/epoch/, detjob/epoch/, detedge/epoch/, cam/cameras/, cam/heartbeats/, cam/devices/, det/units/, rec/recordings/, rec/heartbeats/, domain/shared, domain/auto/asks, domain/cam/sources, domain/member-list, domain/member-topology, domain/placed/rec/], requests: [cam], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
 lease: {unconfirmed_max: off}
