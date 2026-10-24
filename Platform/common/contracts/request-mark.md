@@ -194,7 +194,8 @@ rid (разбор ревью стадии B 6–7, № 37).
 [`requests-body`](../../06-console/vectors/requests-body/README.md); `digest` — векторы [`request-digest`](../../06-console/vectors/request-digest/README.md);
 имя `SaidID(rid)` в `fetched` пульса — [глава P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` (векторы
 [`said-id`](../vectors/said-id/README.md)); жнец над просьбой дозаписи — метка `gone`, `settle`, без снятия по `ttl` (строки
-«жнец, дозапись, …» раздела «Состояния…») — векторы [`reap`](../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01).
+«жнец, дозапись, …» раздела «Состояния…») — векторы [`reap`](../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01);
+запись присланного срока `valid_until` — векторы [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 Пакеты — у владельца (P/06.4); прочие состояния и `kept` векторов не имеют — шаги приёмки глав 6.4 и 3.6 и чтение.
 
 Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/vectors/jcs/README.md)
