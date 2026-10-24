@@ -60,6 +60,8 @@ gate:
     /marks, POST /{sub}/requests     → edit на единицу тела
     DELETE /{sub}/asked/*            → admin на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
+    GET /drain                       → view на * (не «любой грант»): дренаж — состояние всего кластера, частичной видимости нет;
+                                       грант уже (unit:…, labels:…) — 403 по refusal, без выдачи (C06-DRAIN-VISIBILITY-33-01)
     POST /domain/move                → admin на * (аварийный перенос домена сюда, P/08.8 Н1.8)
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | по rights.routes
