@@ -112,3 +112,6 @@ scenario	step	request	expect
 17-members-only-to-the-lagging	8	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "~\"m2\""}}
 17-members-only-to-the-lagging	9	@sleep 10	ok
 17-members-only-to-the-lagging	10	@carry m1	ok {"cluster": "m1", "members": "@absent"}
+18-relay-not-member	1	@install domain	ok
+18-relay-not-member	2	@start domain	ok
+18-relay-not-member	3	signer POST /api/relay/m9 {"relayed": {}}	404
