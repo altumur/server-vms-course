@@ -11,11 +11,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | `op` | Вход → выход |
 |---|---|
 | `peers` | `{self, doors, decommission, silent?}`: `self` — свой сервер; `doors` — серверы ключей листинга `platform/doors/`, `decommission` — листинга `platform/decommission/`, каждый — массив или `"@unconfirmed"` (листинг не подтверждён); `silent` — серверы с молчащим ресурсом (для показа, что молчание peers не меняет) → `{"peers": [...]}` или `"no_delete"` |
-| `ack` | `{peers, acked, answers}`: `answers` — ответ GET копии каждого из peers, кого нет в acked: код (`404`, `200`, `500`) или `"silent"` (неответ) → `{"acked": [...]}` |
+| `ack` | `{peers, acked, answers, decommission?}`: `answers` — ответ GET копии каждого из peers, кого нет в acked и кто не выведен: код (`404`, `200`, `500`) или `"silent"` (неответ); `decommission` — серверы листинга `platform/decommission/` или `"@unconfirmed"`, нет поля — `[]` → `{"acked": [...]}` |
 | `remove` | `{tombstone, now, rewritten}`: `tombstone` — `{written, peers, acked}` или `"@garbled"` (нечитаемо); `now` — стенные секунды снимающего; `rewritten` — ключ записан у удалившего снова после `written` → `"remove"` или `"keep"` |
 
 Сравнение — JSON по значению; массивы `peers` и `acked` — как множества (порядок договором не нормирован; в таблице — по
-возрастанию байтов). 17 строк: 8 `peers`, 3 `ack`, 6 `remove`.
+возрастанию байтов). 20 строк: 8 `peers`, 5 `ack`, 7 `remove`.
 
 ## Прогон
 

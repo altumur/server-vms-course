@@ -11,10 +11,13 @@ peers-doors-unconfirmed	peers	{"self":"srv-a","doors":"@unconfirmed","decommissi
 peers-decommission-unconfirmed	peers	{"self":"srv-a","doors":["srv-a","srv-b"],"decommission":"@unconfirmed"}	"no_delete"	листинг вывода не подтверждён — удаления нет
 ack-404	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":404,"srv-c":200}}	{"acked":["srv-b"]}	404 на GET копии — подтверждение; копия есть (200) — нет
 ack-unknown	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":500,"srv-c":"silent"}}	{"acked":[]}	иной ответ или неответ — неизвестный исход, не подтверждение
+ack-retired	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":"silent"},"decommission":["srv-c"]}	{"acked":["srv-c"]}	сосед, выведенный после записи надгробия, — подтвердивший без GET копии (ответ «Архитектора» 2026-10-25 (2)); молчащий невыведенный — нет
+ack-retired-unconfirmed	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":404,"srv-c":"silent"},"decommission":"@unconfirmed"}	{"acked":["srv-b"]}	листинг вывода не подтверждён — вывод не подтверждение; 404 соседа — подтверждение как обычно
 ack-keeps-acked	ack	{"peers":["srv-b","srv-c"],"acked":["srv-b"],"answers":{"srv-c":404}}	{"acked":["srv-b","srv-c"]}	подтвердивший остаётся в acked и не переспрашивается; новый 404 дописывается
 remove-all-acked-7d	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b","srv-c"]},"now":605800,"rewritten":false}	"remove"	все peers подтвердили и прошло ровно 7 дней (604800 с) — снять
 remove-all-acked-early	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b","srv-c"]},"now":605799.999,"rewritten":false}	"keep"	все подтвердили, но 7 дней не прошло — держать
 remove-not-all-acked	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b"]},"now":3000000,"rewritten":false}	"keep"	не все peers подтвердили — держать, сколько бы ни прошло
 remove-empty-peers	remove	{"tombstone":{"written":1000,"peers":[],"acked":[]},"now":605800,"rewritten":false}	"remove"	peers пуст — подтверждать некому, снять через 7 дней
 remove-rewritten	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":[]},"now":605801,"rewritten":true}	"remove"	ключ записан у удалившего снова после written — снять без подтверждений
+remove-rewritten-early	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":[]},"now":1001,"rewritten":true}	"remove"	запись снова до 7 дней — снять сразу: без подтверждений и без срока (ответ «Архитектора» 2026-10-25 (1))
 remove-garbled	remove	{"tombstone":"@garbled","now":3000000,"rewritten":false}	"keep"	нечитаемое надгробие — неизвестный исход: не снимать
