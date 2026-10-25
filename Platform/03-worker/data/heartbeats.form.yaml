@@ -87,7 +87,7 @@ root:
       description: "url двери — строка платформы (platform_strings Н1.1; добавлено М10/9, P/06.5 Н3 «`/where/<id>`»); хост, схема и привязка — Н1.7 door_address (ADR-0091 доп. (7), (8))"
     fetched:
       type: string
-      description: "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (глава 3.6)"
+      description: "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (договор отметки просьбы «fetched»)"
     events:
       type: string
       description: строка платформы (platform_strings Н1.1)
