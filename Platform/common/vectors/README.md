@@ -45,6 +45,7 @@
 | имя слота: слотовый порядок, следующий номер, номер процесса роли | [`slot-name/`](slot-name/README.md) | P/03.2 | [договор имени слота](../contracts/slot-name.md) (POOL-ORDER-51-01) |
 | действующее удержание места | [`hold-state/`](hold-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Удержание места» (C06-WHERE-PLACE-HOLD-33-01) |
 | суждение о строке слота | [`slot/`](slot/README.md) | P/03.2 | [договор слота](../contracts/slot.md) (C140-SLOT-TIME-01) |
+| очередь писателя: последовательности над строкой очереди | [`turn/`](turn/README.md) | P/04 | [договор очереди писателя](../contracts/turn.md) (C08-TURN-SELF-99) |
 | клиент хранилища объектов: адрес, исход чтения | [`object-client/`](object-client/README.md) | P/05 | [договор клиента хранилища объектов](../contracts/object-client.md) (C10-OBJECT-ADDRESS-32) |
 | проверка схемы при старте | [`schema/`](schema/README.md) | P/06.6 | [договор схемы](../contracts/schema.md) (C06-SCHEMA-WIDE-32-01) |
 | экземпляр процесса: заданный `INSTANCE_ID` | [`instance/`](instance/README.md) | P/03.2 | [договор экземпляра процесса](../contracts/instance.md) (INSTANCE54-02) |
