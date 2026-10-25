@@ -5532,18 +5532,23 @@ components:
           - $ref: '#/components/schemas/DiskSpace'
           - type: 'null'
         labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/Label'
+          description: null — строка источника platform/servers/<s> не читается (глава 6.5 Н2; ответ «Архитектора» 2026-10-25, Г-18).
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/Label'
+          - type: 'null'
         labels_node:
           type: array
           items:
             $ref: '#/components/schemas/Label'
         labels_source:
+          description: null — строка источника platform/servers/<s> не читается (глава 6.5 Н2; ответ «Архитектора» 2026-10-25, Г-18).
           enum:
           - console
           - node
           - unknown
+          - null
         draining:
           type: boolean
         decommission:
@@ -5551,7 +5556,10 @@ components:
           - $ref: '#/components/schemas/DecommissionRequest'
           - type: 'null'
         decommissioned:
-          type: boolean
+          description: null — строка источника вывода не читается (глава 6.5 Н2; ответ «Архитектора» 2026-10-25, Г-03).
+          anyOf:
+          - type: boolean
+          - type: 'null'
         decommission_refusal:
           type: string
         decommission_warning:

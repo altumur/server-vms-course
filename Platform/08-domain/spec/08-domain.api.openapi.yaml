@@ -1399,8 +1399,12 @@ components:
             books: {description: P/08.5}
             pending:
               type: object
-              additionalProperties: {type: integer, minimum: 0}
-              description: 'P/08.6 Н1.6: {<член>: <число ждущих правок>} — каждый член списка, 0 — ждущих нет'
+              additionalProperties:
+                anyOf:
+                  - {type: integer, minimum: 0}
+                  - {type: 'null'}
+              description: 'P/08.6 Н1.6: {<член>: <число ждущих правок>} — каждый член списка, 0 — ждущих нет; null — строка
+                ждущих правок члена не читается (общее правило выдачи, ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-33)'
             outcomes:
               type: object
               additionalProperties:
