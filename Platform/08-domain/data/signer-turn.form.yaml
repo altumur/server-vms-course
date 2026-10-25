@@ -7,5 +7,5 @@ root:
   properties:
     holder:
       type: string
-      description: "экземпляр активного процесса domain `<коробка>:<pid>:<6 hex>` (форма экземпляра — P/03.2 Н3 «старт()») или \"\" — очередь отдана по SIGTERM (Н1.7 release)"
+      description: "экземпляр активного процесса domain `<коробка>:<pid>:<6 hex>` (форма экземпляра — договор экземпляра common/contracts/instance.md) или \"\" — очередь отдана по SIGTERM (Н1.7 release)"
   required: [holder]

@@ -13,7 +13,7 @@ root:
     instance:
       type: string
       not_enum: ['']
-      description: "экземпляр воркера (P/03.2 Н3 «старт()» шаг 2: INSTANCE_ID или `<коробка>:<pid>:<6 hex>`); имя файла замка — он же в кодировании имён договора журнала событий"
+      description: "экземпляр воркера (договор экземпляра common/contracts/instance.md: INSTANCE_ID или `<коробка>:<pid>:<6 hex>`); имя файла замка — он же в кодировании имён договора журнала событий"
     sub:
       ref: common.sub_name
       description: "подсистема воркера — каталог `.workers/<sub>/` замка"
