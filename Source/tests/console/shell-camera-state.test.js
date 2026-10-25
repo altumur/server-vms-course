@@ -4,7 +4,7 @@
 // производитель, канал — addFieldEditor), отправляет форма модуля. События VMS — словами в «Журнале» модуля
 // (addEventNote): тома, карты, запись; неописанное — видом, без петли. (По образцу продуктового shell-camera-state.)
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-cst-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -41,7 +41,7 @@ out.cameraSignAndAddress=!!r1&&!!r1.querySelector(".ici-camera")&&/10\.0\.0\.90/
 pc.select("unit:cam/1");await b.ready(80);
 out.runningSaysNothing=!/открытие не завершается|сбой устройства/.test(main());
 // источник: адрес, производитель, канал — только для чтения; правка идёт в форму модуля
-const src=d.querySelector("main .vms-src");
+const src=d.querySelector("main .cam-src");
 out.sourceRead=!!src&&/10\.0\.0\.90/.test(main())&&/acme/.test(main())&&[...d.querySelectorAll("main input[readonly]")].some(x=>x.value==="1");
 src.value="driverpack://acme/10.0.0.91/ch/3";src.dispatchEvent(new w.Event("input",{bubbles:true}));
 out.sourceReparsed=[...d.querySelectorAll("main input[readonly]")].some(x=>x.value==="10.0.0.91")&&[...d.querySelectorAll("main input[readonly]")].some(x=>x.value==="3");
@@ -52,10 +52,9 @@ pc.select("unit:cam/3");await b.ready(80);
 out.failedSaid=/сбой устройства — its password cannot be opened/.test(main());
 d.querySelector('.pc-rail [data-s="journal"]').click();await b.ready(200);
 const t=main();
-out.volumeMissingInWords=/каталог тома пропал/.test(t)&&/том main · на box-a · держал r-1 · no such directory/.test(t);
+// volume.missing и camera.uplink.short — виды без производителя, у канона сняты (V/08.1 «Соответствие прежним урокам»): слов страницы у них нет
 out.shrunkInWords=/том уменьшен/.test(t)&&/2\.0 ГБ → 1\.0 ГБ/.test(t);
 out.cardInWords=/карта камеры сбоит/.test(t)&&/карта камеры: worn · write error/.test(t);
-out.uplinkInWords=/канал камеры не успевает/.test(t)&&/отстаёт на 1 мин 35 с/.test(t);
 out.noLoopOnUndescribed=/camera\.frames\.absurd_time/.test(d.querySelector("main").innerHTML);
 out.errors=errs;
 b.report(out,["errors"]);

@@ -4,7 +4,7 @@
 // монтирует det), отказы — до отправки, теми же словами; новый — POST /auto/scenarios, существующий — PUT без имени,
 // удаление — после подтверждения; последние срабатывания — события fired вычислителя.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-rules-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -25,7 +25,7 @@ const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.
 let asked=[];w.confirm=q=>{asked.push(q);return true};
 await b.ready(700);await w.platformConsole.ready;
 const d=w.document,pc=w.platformConsole,out={};
-const main=()=>d.querySelector("main"),host=()=>main().querySelector(".vms-rules");
+const main=()=>d.querySelector("main"),host=()=>main().querySelector(".auto-rules");
 const call=(n,m,p)=>w.__calls.slice(n).find(x=>x.method===m&&x.path===p);
 const rail=d.querySelector('.pc-rail [data-s="rules"]');
 out.sectionAfterUnits=!!rail&&rail.previousElementSibling&&rail.previousElementSibling.dataset.s==="units";
@@ -36,7 +36,7 @@ pick("bad");await b.ready(60);
 out.refusalShown=/Вычислитель отказал: no camera 9/.test(host().textContent);
 pick("door");await b.ready(150);
 out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==="cam|io.input|12|port=1";
-out.kindsFromManifest=[...host().querySelectorAll("#vms-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
+out.kindsFromManifest=[...host().querySelectorAll("#auto-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
 out.lastFired=/Последние срабатывания/.test(host().textContent)&&[...host().querySelectorAll("table td")].pop().textContent==="1";
 // без det в консоли — действий детекторов нет
 const acts=()=>[...host().querySelectorAll('[data-act="akind"] option')].map(o=>o.textContent);
@@ -67,8 +67,8 @@ b.report(out,["errors"]);
 b.FIX["/det/manifest"]={name:"det"};
 const w2=b.boot();await b.ready(700);await w2.platformConsole.ready;
 w2.document.querySelector('.pc-rail [data-s="rules"]').click();await b.ready(200);
-w2.document.querySelector('.vms-rules [data-act="pick"][data-id="door"]').click();await b.ready(60);
-b.report({detActionsWithDet:[...w2.document.querySelectorAll('.vms-rules [data-act="akind"] option')].map(o=>o.textContent).includes("Искать в архиве")});
+w2.document.querySelector('.auto-rules [data-act="pick"][data-id="door"]').click();await b.ready(60);
+b.report({detActionsWithDet:[...w2.document.querySelectorAll('.auto-rules [data-act="akind"] option')].map(o=>o.textContent).includes("Искать в архиве")});
 try{fs.unlinkSync(TMP)}catch(e){}
 process.exit(0);
 })();

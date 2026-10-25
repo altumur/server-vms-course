@@ -1,11 +1,11 @@
 // Домен глазами VMS на странице курса: камеры и архивы членов из /domain, назначения записи из /domain/placement.
 // Карточки камеры и архива показывают имя в домене, номер, воркер, сервер и назначенный кластер записи;
 // блоки членов показывают «Камеры» и «Архивы», обзор домена — «Назначения записи».
-// Просмотр не отправляет правки. Действия записи и резерва меняют назначение и ставят CRUD записи в очередь
-// через двери домена; отказ удаления прежней записи не останавливает создание новой.
+// Просмотр не отправляет правки. Действия записи и резерва меняют только назначение (PUT /domain/placement/rec/<ref>):
+// строку rec/recordings заводит оператор кластера записи, страница это говорит (V/08.5 Н1.2; V/02.9 Н1.1).
 // Фикстуры — вид домена с units и members, записи назначения и ответы очереди правок.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-dom-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -53,11 +53,11 @@ pc.select("domain");await b.ready(60);
 const dom=main().querySelector('.pc-block[data-block="cam"]');
 out.assignments=!!dom&&/Назначения записи/.test(dom.textContent)&&/gate · north/.test(dom.textContent)&&/office/.test(dom.textContent);
 out.readOnly=!w.__calls.some(x=>/^\/domain/.test(x.path));
-// A move is ordered: read -> assign -> attempt old deletion -> queue new creation.
-// A failed old deletion must not stop creation; a reserve preserves the primary.
+// A move is ordered: read -> assign -> reread the placements; no row is written: the recording cluster's operator makes it
+// (V/08.5 Н1.2). A reserve preserves the primary.
 pc.select("dc:north/1");await b.ready(40);
 let assignment={cluster:"office",origin:"north",copies:["north","srv"],rev:1},requests=[];
-pc.dialog=async()=>({cluster:"north",days:"7",home:"network"});
+pc.dialog=async()=>({cluster:"north"});let toasts=[];pc.toast=s=>toasts.push(String(s));
 pc.api=async(method,path,body)=>{
   requests.push({method,path,body});
   if(method==="GET"&&path==="/domain/placement/rec/SN-C")return assignment;
@@ -67,16 +67,15 @@ pc.api=async(method,path,body)=>{
   return{kept:"e-queue",cluster:body.cluster,what:Object.keys(body).filter(k=>k!=="cluster")};
 };
 main().querySelector('[data-act="domainRecord"]').click();await b.ready(60);
-out.moveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,DELETE,POST,GET";
+out.moveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,GET";
 out.moveBody=JSON.stringify(requests[1].body)===JSON.stringify({cluster:"north",origin:"north",copies:["srv"]});
-const create=requests.find(x=>x.method==="POST");
-out.queuedRecording=create.path==="/domain/rec/recordings"&&JSON.stringify(create.body)===JSON.stringify({cluster:"north",name:"SN-C",cam:"ref:SN-C",retention_days:7,home:"network"});
-out.deleteTargetsOld=requests[2].path==="/domain/rec/recordings/SN-C?cluster=office";
-requests=[];pc.dialog=async()=>({cluster:"srv",days:"2",home:""});
+out.noRowWritten=!requests.some(x=>x.method==="POST"||x.method==="DELETE");
+out.operatorTold=/Оператор north заводит строку rec\/recordings с cam: ref:SN-C/.test(toasts.join(" "))&&/Запись кластера office встанет и хранит архив до срока/.test(toasts.join(" "));
+requests=[];pc.dialog=async()=>({cluster:"office"});
 main().querySelector('[data-act="domainBackup"]').click();await b.ready(60);
-out.reserveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,POST,GET";
-out.reservePreservesPrimary=requests[1].body.cluster==="north"&&JSON.stringify(requests[1].body.copies)==='["srv"]';
-requests=[];pc.dialog=async()=>({cluster:"north",days:"2",home:""});
+out.reserveOrder=requests.map(x=>x.method).join(",")==="GET,PUT,GET";
+out.reservePreservesPrimary=requests[1].body.cluster==="north"&&JSON.stringify(requests[1].body.copies)==='["office","srv"]';
+requests=[];pc.dialog=async()=>({cluster:"north"});
 main().querySelector('[data-act="domainBackup"]').click();await b.ready(60);
 out.samePrimaryRefused=requests.length===1&&requests[0].method==="GET";
 requests=[];pc.api=async()=>{const e=new Error("assignment unavailable");e.status=503;throw e};

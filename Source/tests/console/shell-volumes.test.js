@@ -5,7 +5,7 @@
 // Пропавший каталог тома — слово регистратора (volume_missing в его строке /rec/servers; корневой /servers знает только
 // своих воркеров): в блоке «Архивы сервера» его сервера, имя — путь к карточке тома.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-vol-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));

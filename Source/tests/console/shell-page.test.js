@@ -5,7 +5,7 @@
 // встроенный скрипт и ни одного обработчика в атрибуте — ни в разметке, ни в том, что она рисует: CSP консоли (page_csp) пускает
 // только скрипт страницы по хешу и файлы своего источника. Разделы ленты — модуля и «Сценарии» страницы.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const b=require("./boot");
 const out={};
 const inline=[...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);

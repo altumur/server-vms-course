@@ -105,6 +105,9 @@ PRODUCT_WORDS = [
     ("rec", dict(forms=("rec", "recs"), mean=True)),         # the subsystem; `record` (a row, a write) is allowed
     # the detectors; `detect`/`detection` ("detects a conflict") are the language's
     ("det", dict(forms=("det", "dets", "detector", "detectors"))),
+    # the detection subsystems of the VMS module (VMS/05-detjob, VMS/06-detedge; ADR-0090, ADR-0080 доп. (22))
+    ("detjob", dict(forms=("detjob", "detjobs"))),
+    ("detedge", dict(forms=("detedge", "detedges"))),
     ("auto", dict(forms=("auto", "automation"))),            # the scenarios; `automatic(ally)` and CSS `auto` are allowed
     ("live", dict(forms=("live",), mean=True)),
     ("archive", dict(forms=("archive", "archives", "archived"))),

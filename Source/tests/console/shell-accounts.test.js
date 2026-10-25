@@ -1,4 +1,5 @@
-// C5: the VMS owns this access card; requests pass through the real module's api().
+// C5: the VMS owns this access card; requests pass through the real module's api(). Ответы шлюза — V/03.6 Н1.2: account —
+// {name, disabled, at, by} (V/08.5 Н1.3), POST создания — 201.
 // Exercise the DOM and HTTP boundary, including late answers, rather than its private helpers.
 const assert=require("node:assert/strict"),b=require("./boot");
 for(const key of Object.keys(b.FIX))delete b.FIX[key];
@@ -35,20 +36,20 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
       const name=path==="/live/accounts"?call.body.name:decodeURIComponent(path.slice("/live/accounts/".length).split("/")[0]);
       if(call.method==="POST"){
         if(path==="/live/accounts")metadata.push({name});
-        return response(200,{account:name,password:`one-time-${++passwordNumber}-<&\"`});
+        return response(path==="/live/accounts"?201:200,{account:{name,disabled:false,at:1700000000,by:"op"},password:`one-time-${++passwordNumber}-<&\"`});
       }
       if(call.method==="PUT"){
         metadata=metadata.map(row=>row.name===name?{...row,disabled:call.body.disabled}:row);
-        return response(200,{account:name,disabled:call.body.disabled});
+        return response(200,{account:{name,disabled:call.body.disabled,at:1700000000,by:"op"}});
       }
       metadata=metadata.filter(row=>row.name!==name);
-      return response(200,{account:name,deleted:true,grants_changed:["room-a"]});
+      return response(200,{deleted:true});
     };
-    const main=()=>d.querySelector("main"),host=()=>main().querySelector(".vms-accounts");
+    const main=()=>d.querySelector("main"),host=()=>main().querySelector(".live-accounts");
     const button=action=>host().querySelector(`[data-account="${action}"]`);
     const row=name=>[...host().querySelectorAll("tbody tr")].find(tr=>tr.cells[0].textContent===name);
     const action=(name,kind)=>row(name).querySelector(`[data-account="${kind}"]`);
-    const input=()=>host().querySelector(".vms-account-password");
+    const input=()=>host().querySelector(".live-account-password");
     const settled=()=>host()&&!host().querySelector('[role="status"]')&&!button("reload").disabled;
     const open=async()=>{
       const access=d.querySelector('[data-s="access"]');
@@ -80,7 +81,7 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
     const made=calls.find(call=>call.method==="POST"&&call.path==="/live/accounts");
     assert.deepEqual(made.body,{name:"new-wall"});assert.ok(made.headers["Idempotency-Key"]);
     assert.equal(made.headers["Content-Type"],"application/json");
-    host().querySelector(".vms-account-secret button").click();
+    host().querySelector(".live-account-secret button").click();
     assert.equal(first.value,"");assert.equal(input(),null);
     button("reload").click();await until(settled,"reload after create");assert.equal(input(),null,"GET cannot recover the password");
 
@@ -102,9 +103,10 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
     // Names stay data in both HTML and URLs. Even hostile metadata cannot become a route suffix.
     action(attack,"password").click();await until(()=>settled()&&input(),"encoded reset");
     assert.ok(calls.some(call=>call.path==="/live/accounts/"+encodeURIComponent(attack)+"/password"));
-    assert.equal(host().querySelector(".vms-account-secret strong").textContent,attack);
+    assert.equal(host().querySelector(".live-account-secret strong").textContent,attack);
     assert.ok(!d.querySelector("img")&&!w.__accountXSS);
     const leaving=input();d.querySelector('[data-s="journal"]').click();await until(()=>leaving.value==="","leaving removes the secret");
+    await until(()=>main().querySelector(".pc-evlist li"),"journal painted");   // журнал модуля дорисован до ухода: его поздний ответ не пишет в чужую карточку
     await open();assert.equal(input(),null);
 
     // Both reads and writes report refusals in the current card, without rendering server text as markup.
@@ -137,7 +139,7 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
     await until(()=>writes===1,"one write only");
     assert.ok(button("reload").disabled,"a mutation owns the current card until its answer");
     pc.select("grants:domain");await open();
-    lateWrite.resolve(response(200,{account:"late-wall",password:"LATE-SECRET"}));await b.ready(30);
+    lateWrite.resolve(response(201,{account:{name:"late-wall",disabled:false,at:1700000000,by:"op"},password:"LATE-SECRET"}));await b.ready(30);
     assert.equal(writes,1);assert.equal(input(),null);assert.ok(!d.body.textContent.includes("LATE-SECRET"));
     assert.ok(row("fresh"));
     assert.ok(calls.every(call=>call.path==="/live/accounts"||call.path.startsWith("/live/accounts/")));

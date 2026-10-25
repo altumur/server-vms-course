@@ -1,11 +1,11 @@
 // «Проверить» удержание (ADR-0057 п. 3, ADR-0015): печать проверяет держатель тома инцидентов — у его двери, где лежит
-// копия: по записи удержания — дверь из /rec/where/<таблица мест>/<том>?unit=rec/<запись> (жетон места этой записи),
+// копия: по записи удержания — дверь из /rec/where/<таблица мест>/<том>?unit=<запись> (V/08.2) (жетон места этой записи),
 // POST <дверь>/keeps/<имя>/verify?recording=<запись> с Bearer. Кнопка есть, только если
 // манифест rec открывает маршрут keeps на двери (door.routes); у тома инцидентов без держателя — проверять негде.
 // Запись без кадров в отрезке (result: empty) — «нет кадров — запечатывать нечего», не провал. Копия продуктового
 // vmsworker/vms/consoletest/shell-keep-verify.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","cam.shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-kv-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));
@@ -28,8 +28,8 @@ const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.
 const seen=[];let emptyRun=false;
 const J=(status,body)=>Promise.resolve({status,ok:status<300,headers:{get:()=>null},json:()=>Promise.resolve(body),text:()=>Promise.resolve(JSON.stringify(body))});
 {const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u);seen.push([s,(i&&i.method)||"GET",((i&&i.headers)||{}).Authorization||""]);
-  if(s==="/rec/where/volumes/inc?unit=rec%2F1")return J(200,{door:{url:"http://box-a:9009",token:"T1",expires:Date.now()/1000+300}});
-  if(s==="/rec/where/volumes/inc?unit=rec%2F1-b")return J(200,{door:{url:"http://box-a:9009",token:"T2",expires:Date.now()/1000+300}});
+  if(s==="/rec/where/volumes/inc?unit=1")return J(200,{door:{url:"http://box-a:9009",token:"T1",expires:Date.now()/1000+300}});
+  if(s==="/rec/where/volumes/inc?unit=1-b")return J(200,{door:{url:"http://box-a:9009",token:"T2",expires:Date.now()/1000+300}});
   if(s==="http://box-a:9009/keeps/1-100-200/verify?recording=1")return J(200,{keep:"1-100-200",integrity:"ok",ok:true,recordings:{"1":{result:"ok"}}});
   if(s==="http://box-a:9009/keeps/1-100-200/verify?recording=1-b")return J(200,emptyRun?{keep:"1-100-200",integrity:"unknown: 1-b holds no footage in the interval",ok:false,recordings:{"1-b":{result:"empty",detail:"1-b holds no footage in the interval"}}}
     :{keep:"1-100-200",integrity:"broken: block 12 does not match the seal",ok:false,recordings:{"1-b":{result:"damaged"}}});
