@@ -43,3 +43,15 @@ Authorization: Digest username="admin", response="5ccc"	Authorization: Digest us
 ?%26p%2577d=hunter2	?***	a name that decodes to «&pwd» is read as pairs: the name goes with the value (A7; S17)
 ?pwd=Hun<ter2&x=1	?pwd=***&x=1	< does not end a pair's value: the mask runs to the end of the value (A6; S4)
 Authorization: Bearer abc.def	Authorization: Bearer ***	the Authorization header with Bearer (М10/7 Н1.4 log; stage A review SA1-23)
+# rows of C06-LOG-MASK-33-01 (the Architect, 2026-10-25): a Basic/Bearer credential runs to the first White_Space character
+# or the end of the line, what sticks to it masked with it; a "space" that ends an address or a pair's value is any
+# White_Space character of Unicode 15.0.0 (U+00A0, U+000B, U+3000 below; a TAB cannot be written in a cell). Only here:
+# the shared Source/tests/testdata/log_mask.tsv stays as it was.
+Authorization: Bearer abc.def, retry	Authorization: Bearer *** retry	a comma stuck to the credential is masked with it: more masked, never less
+header="Authorization: Basic YWJj" sent	header="Authorization: Basic *** sent	a quote stuck to the credential is masked with it
+got 401 for Proxy-Authorization: Bearer t0k3n	got 401 for Proxy-Authorization: Bearer ***	the credential at the end of the line
+Authorization: Bearer abc x	Authorization: Bearer *** x	a no-break space (U+00A0) ends the credential
+?pwd=hunter2 channel=1	?pwd=*** channel=1	a no-break space (U+00A0) ends a pair's value
+k=v;apikey=zznext	k=v;apikey=***next	a line tabulation (U+000B) ends a pair's value
+rtsp://h/x?pwd=a b	rtsp://h/x?pwd=*** b	a no-break space (U+00A0) ends an address and its pair
+rtsp://h/x?pwd=a　b	rtsp://h/x?pwd=***　b	an ideographic space (U+3000) ends an address and its pair
