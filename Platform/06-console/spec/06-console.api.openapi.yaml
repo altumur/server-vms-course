@@ -5381,9 +5381,13 @@ components:
           description: Поле пульса placement.capacity.from — число как в пульсе, дробное без округления; нет поля — capacity.default;
             не число — null (P/04 Н1.3; журнал cammeta-go, урок 9 № 5).
         labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/Label'
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/Label'
+          - type: 'null'
+          description: Метки сервера воркера, как ServerRow.labels; null — строка источника platform/servers/<s> не читается (глава 6.5 Н2;
+            C06-WORKER-LABELS-129-04, общее правило выдачи этапа 3).
         place:
           type: string
           minLength: 1
