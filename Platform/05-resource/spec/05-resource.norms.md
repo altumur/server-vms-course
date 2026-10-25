@@ -211,11 +211,11 @@ resource:                                    # один процесс на се
   usage:     целое — байты файлов бакетов деревьев этого сервера и копий в .mirror/; usage_at — стенные секунды
              замера; space — том дерева событий: total, free, used — байты (statfs), full — доля used/total от 0 до 1
              (не признак); volumes — то же по каждому тому (журнал cammeta-go, урок 9 № 1)
-  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые 15 с (P/04)
+  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY (договор наблюдения «Состояние ресурса»; аудит раскладки, решение «Архитектора» 2026-10-25, А-10)
   room:      элементы room.<sub> и live.<sub> — по договору замка присутствия «Счёт room» (presence-lock.md; перенесено
              туда, разбор ревью стадии A 3–5, № 9; live.<sub> — ADR-0084 доп. (3) Р14′, № 3, 19)
-            не писать дверь, пока стоит platform/decommission/<мой сервер> (P/04 «вывести_сервер»; консоль её удалила)
-  lost_after: 45                              # по смене на часах читателя
+            не писать дверь, пока стоит platform/decommission/<мой сервер> (договор наблюдения «Сервер выведен» narrower; консоль её удалила)
+  lost_after: LOST_AFTER                      # договор наблюдения «Свежесть» (аудит раскладки, решение «Архитектора» 2026-10-25, А-01); по смене на часах читателя
   pass:      каждые 600 с: retain → usage → relieve → mirror; каждый шаг в своей попытке; pass_stalled при зависании
   space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # доли; включено, пока не выключили:
              # строки нет — включено с порогами 0.85/0.75; enabled: false — ресурс снимает свою строку free-* (сверка python и go М10/6–11, E45)

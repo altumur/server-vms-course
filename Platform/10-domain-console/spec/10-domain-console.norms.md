@@ -294,7 +294,7 @@ door:          GET /domain/alarms?since=&until= у консоли домена (
 answer:        200 {since, until, events, members, complete, sentence} — функция alarms (Н3) на странице последнего отчёта
                каждого члена списка (держатель включён), истории (P/08.9 Н1.9) и свидетелях
 member_state:  ok | silent | not_reporting | never | unreadable
-  silent:      последний отчёт старше LOST_AFTER (вид P/08.1 Н1.3, 45 с); silent_since = последний отчёт + LOST_AFTER
+  silent:      последний отчёт старше LOST_AFTER (договор наблюдения «Свежесть», 45 с); silent_since = последний отчёт + LOST_AFTER
   not_reporting: silent, а свидетель слышал единицу члена позже последнего отчёта
   never:       отчёта не было ни разу
   unreadable:  страница не по форме P/09.1 Н1.10 (у функции alarms — и вход "garbled")
