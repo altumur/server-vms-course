@@ -20,7 +20,7 @@ lifecycle.md                         флаги, окружение, коды в
 data/<семья>.form.yaml, .outcomes.tsv  схемы семей (диалект ADR-0087; ADR-0088): next-id, sweep (6.1); requests, asked,
                                      commands (6.4); door-signer, door-keys (6.5); policy, server-labels, drain,
                                      decommission, schema (6.6)
-vectors/<алгоритм>/                  векторы: fault, values-by-type (6.1); secret-in, log-mask (6.2); rid, requests-body,
+vectors/<алгоритм>/                  векторы: fault, values-by-type (6.1); secret-in, log-mask (6.2, в common/vectors); rid, requests-body,
                                      request-digest (6.4); resolve (6.7)
 acceptance/1/ … acceptance/7/        приёмка глав 6.1–6.7 (README, scenarios.tsv, corrections.tsv; 2/fields.yaml,
                                      5/inputs/, 5/probe-x.subsystem.yaml, 6/inputs/)

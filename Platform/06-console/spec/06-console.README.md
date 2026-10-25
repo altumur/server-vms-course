@@ -70,7 +70,7 @@ P/06.4-01…09, P/06.5-01…13, P/06.6-01…06, P/06.7-01…18.
   [6.6](../acceptance/6/README.md), [6.7](../acceptance/7/README.md) (стенд домена); стенд — [общий README
   приёмки](../../common/acceptance/README.md). Векторы урока —
   [`values-by-type`](../../common/vectors/values-by-type/README.md), [`fault`](../../common/vectors/fault/README.md) (6.1),
-  [`secret-in`](../../common/vectors/secret-in/README.md), [`log-mask`](../vectors/log-mask/README.md) (6.2),
+  [`secret-in`](../../common/vectors/secret-in/README.md), [`log-mask`](../../common/vectors/log-mask/README.md) (6.2),
   [`rid`](../vectors/rid/README.md), [`requests-body`](../vectors/requests-body/README.md),
   [`request-digest`](../vectors/request-digest/README.md) (6.4), [`resolve`](../vectors/resolve/README.md) (6.7); общие
   векторы договоров `peer`, `may`, `ask-sig`, `record` (`Platform/common/vectors/`) — участник 6.7. Флаги, окружение, коды

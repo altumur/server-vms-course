@@ -17,7 +17,7 @@
 | сериализация тела просьбы | [`06-console/vectors/requests-body/`](../../06-console/vectors/requests-body/) | P/06.4 | P/06.4 Н1.5, ADR-0072 |
 | digest просьбы | [`06-console/vectors/request-digest/`](../../06-console/vectors/request-digest/) | P/06.4 | P/06.4 Н1.5 `digest` |
 | секреты в адресе | [`common/vectors/secret-in/`](secret-in/) | P/06.2 | договор адреса `url-credentials` (P/06.2 Н1.1а) |
-| маска лога | [`06-console/vectors/log-mask/`](../../06-console/vectors/log-mask/) | P/06.2 | P/06.2 Н1.4 |
+| маска лога | [`common/vectors/log-mask/`](log-mask/) | P/06.2 | договор маски журнала `log-mask` (P/06.2 Н1.4; C06-LOG-MASK-33-01) |
 | секретные строки платформы | [`02-installer/vectors/platform-lists/`](../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 Н1.3, P/02.5 Н1.4 |
 | корпус манифеста | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 Н1, Н4, Н5 |
 | оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 Н1.2 `pattern`, Н1.3 |
