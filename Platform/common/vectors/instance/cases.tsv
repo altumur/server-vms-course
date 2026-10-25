@@ -1,0 +1,8 @@
+# Экземпляр процесса: заданный INSTANCE_ID — принят как задан или отказ старта (договор common/contracts/instance.md; INSTANCE54-02).
+# Строка: case<TAB>input<TAB>expect<TAB>note. Форма — README пакета.
+case	input	expect	note
+given-ok	{"INSTANCE_ID":"w:7:abcdef"}	{"instance":"w:7:abcdef"}	заданный по грамматике — принят как задан
+given-leading-zeros-upper	{"INSTANCE_ID":"w:007:ABCDEF"}	{"instance":"w:007:ABCDEF"}	заданный: ведущие нули pid и заглавные hex допустимы, используется байт в байт — не нормализуется
+given-pid-zero	{"INSTANCE_ID":"w:0:abcdef"}	@refuse	pid из одних нулей — отказ старта, код 2
+given-hex-short	{"INSTANCE_ID":"w:7:abcde"}	@refuse	5 hex вместо 6 — отказ старта, код 2
+given-pid-negative	{"INSTANCE_ID":"w:-7:abcdef"}	@refuse	pid со знаком — не цифры ASCII, отказ старта, код 2
