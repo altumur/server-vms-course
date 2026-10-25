@@ -34,12 +34,17 @@ def _digest(script: str) -> str:
 
 
 def test_the_platforms_page_is_the_console_module_and_its_mount_and_nothing_else():
-    """§10: the platform's page is the three lines of §1 — the module, its look, a mount — and no script, word or route
-    of its own; no handler in the markup."""
+    """§10: the platform's page is the three lines of §1 — the module, its look, a mount after the version check — and
+    no script, word or route of its own; no handler in the markup."""
     page = open(PAGE, encoding="utf-8").read()
     scripts = re.findall(r"<script\b([^>]*)>(.*?)</script>", page, re.S)
     assert [s[0].strip() for s in scripts] == [f'src="/platform/console.js?v={MODULE_VERSION}"', ""]
-    assert scripts[1][1].strip() == 'window.platformConsole = PlatformConsole.mount(document.getElementById("app"));'
+    # the inline script: the module's version checked before anything of it is used (P/07 Н1.5 version, P/06.5 Н1.1),
+    # then the mount — and nothing else (ADR-0080 доп. (23): the course's page against its canon)
+    assert [x.strip() for x in scripts[1][1].strip().split("\n") if x.strip() and not x.strip().startswith("//")] == [
+        'const app = document.getElementById("app");',
+        f'if (PlatformConsole.version === {MODULE_VERSION}) window.platformConsole = PlatformConsole.mount(app);',
+        f'else app.textContent = "The console module is version " + PlatformConsole.version + ", this page needs {MODULE_VERSION}: reload the page.";']
     assert f'<link rel="stylesheet" href="/platform/console.css?v={MODULE_VERSION}">' in page
     assert not re.search(r"\son\w+=", page) and "fetch(" not in page
 
