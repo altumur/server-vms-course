@@ -1,0 +1,14 @@
+# Резолвер коробки экземпляра: INSTANCE_ID, BOX_ID, machine-id, hostname → коробка и источник или отказ (договор instance.md sources, box; INSTANCE130-SOURCES-01). Форма — README.
+case	input	expect	note
+box-id	{"BOX_ID":"box-a","machine_id":"0123abcd\n","hostname":"host-1"}	{"box":"box-a","source":"BOX_ID"}	BOX_ID непуст — он
+instance-id-empty	{"INSTANCE_ID":"","BOX_ID":"box-b","machine_id":"@missing","hostname":"host-1"}	{"box":"box-b","source":"BOX_ID"}	пустой INSTANCE_ID — как не задан: коробка вычисляется
+box-id-empty	{"BOX_ID":"","machine_id":"0123abcd\n","hostname":"host-1"}	{"box":"0123abcd","source":"machine-id"}	пустой BOX_ID — как не задан → machine-id
+box-id-bad	{"BOX_ID":"a:b","machine_id":"0123abcd\n","hostname":"host-1"}	@refuse	BOX_ID задан не по грамматике коробки — отказ старта, код 2: заданное не подменяется
+machine-id-trim	{"machine_id":" \tabcd \r\n","hostname":"host-1"}	{"box":"abcd","source":"machine-id"}	обрезка SP, TAB, CR, LF с обоих концов
+machine-id-first-line	{"machine_id":"m1\nm2\n","hostname":"host-1"}	{"box":"m1","source":"machine-id"}	первая строка
+machine-id-missing	{"machine_id":"@missing","hostname":"host-1"}	{"box":"host-1","source":"hostname"}	файла нет → hostname
+machine-id-error	{"machine_id":"@error","hostname":"host-1\n"}	{"box":"host-1","source":"hostname"}	ошибка чтения → hostname, та же обрезка
+machine-id-blank	{"machine_id":"  \n","hostname":"host-1"}	{"box":"host-1","source":"hostname"}	пусто после обрезки → hostname
+machine-id-bad	{"machine_id":"a/b\n","hostname":"host-1"}	{"box":"host-1","source":"hostname"}	не по грамматике коробки → hostname
+hostname-bad	{"machine_id":"@missing","hostname":"h:1"}	@refuse	hostname не по грамматике — отказ старта, код 2 «no box name»
+hostname-empty	{"machine_id":"@error","hostname":" "}	@refuse	hostname пуст после обрезки — отказ старта, код 2 «no box name»
