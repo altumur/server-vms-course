@@ -13,3 +13,4 @@ null	null	{"status":400,"error":"bad deadline"}	не число — 400 (C47-DEA
 string	"5"	{"status":400,"error":"bad deadline"}	строка — 400, хотя и цифры (C47-DEADLINE-VECTORS-01)
 bool	true	{"status":400,"error":"bad deadline"}	bool — 400 (C47-DEADLINE-VECTORS-01)
 array	[]	{"status":400,"error":"bad deadline"}	список — 400 (C47-DEADLINE-VECTORS-01)
+overflow	1e400	{"status":400,"error":"bad deadline"}	число вне binary64 (переполнение) — записать временем нельзя: 400 (канон P/01.1 Н0, MAY-UNTIL-D8-01; C137-SCHEMA-TIME-01)
