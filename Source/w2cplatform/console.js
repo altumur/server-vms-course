@@ -64,7 +64,7 @@
       domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of the domain: rev {r} of term {t}.", noBackupKept: "This cluster keeps no backup copy of the domain.",
       overview: "Overview", serverCap: "Server", resourceIs: "Resource", drainingBd: "being drained", workersN: "Workers", diskFree: "Disk free",
       diskTotal: "Disk total", buildW: "Build", eventsOnDisk: "Events on disk", gbW: "GB", idle: "idle by policy", workerSilent: "The worker does not answer",
-      loadW: "Load", capW: "Capacity", freeW: "Free", labelsW: "Labels", idleNote: "Idle by the policy servers: {p}: units are carried by one worker per server.",
+      loadW: "Load", capW: "Capacity", freeW: "Free", labelsW: "Labels", labelsUnread: "labels not read", idleNote: "Idle by the policy servers: {p}: units are carried by one worker per server.",
       holdsW: "Holds", carriesNone: "Carries nothing", drainTitle: "Drain", decomTitle: "Decommission", labelsTitle: "Server's networks (labels)",
       stOff: "Switched off", stUnplaced: "Not placed", stStale: "Worker silent", stFailed: "Failed", stRunning: "Running", stStarting: "Starting",
       workerServer: "Worker · server", state: "State", whyAsking: "Why here — asking the controller…", notPlacedYet: "Not placed anywhere yet.",
@@ -218,7 +218,7 @@
       domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена: rev {r} срока {t}.", noBackupKept: "Резервной копии домена этот кластер не хранит.",
       overview: "Обзор", serverCap: "Сервер", resourceIs: "Ресурс", drainingBd: "выводится из эксплуатации", workersN: "Воркеров", diskFree: "Диск свободно",
       diskTotal: "Диск всего", buildW: "Сборка", eventsOnDisk: "События на диске", gbW: "ГБ", idle: "простаивает по политике", workerSilent: "Воркер не отвечает",
-      loadW: "Нагрузка", capW: "Ёмкость", freeW: "Свободно", labelsW: "Метки", idleNote: "Простаивает по политике servers: {p}: единицы несёт один воркер на сервер.",
+      loadW: "Нагрузка", capW: "Ёмкость", freeW: "Свободно", labelsW: "Метки", labelsUnread: "метки не прочитаны", idleNote: "Простаивает по политике servers: {p}: единицы несёт один воркер на сервер.",
       holdsW: "Держит", carriesNone: "Ничего не держит", drainTitle: "Вывод из эксплуатации", decomTitle: "Списание сервера", labelsTitle: "Сети сервера (метки)",
       stOff: "Выключена", stUnplaced: "Не размещена", stStale: "Воркер молчит", stFailed: "Ошибка", stRunning: "Работает", stStarting: "Запускается",
       workerServer: "Воркер · сервер", state: "Состояние", whyAsking: "Почему здесь — спрашиваем у контроллера…", notPlacedYet: "Пока никуда не размещена.",
@@ -1608,7 +1608,7 @@
           ${s.resource_heard_at ? `<p class="sub" style="margin-top:8px">${h(W.heard)} ${h(fmt(s.resource_heard_at))}</p>` : ""}`)}
         ${heldCard()}
         <section class="pc-drain"></section><section class="pc-decom"></section><section class="pc-labels"></section>
-        ${card(h(W.workersCap), workers.map(w => `<div class="it" data-ref="${h(workerRef(w.worker))}"><span>${ic("svcs")}</span><span>${h(w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`).join("") || `<p class="sub">${h(W.noWorkers)}</p>`, `<span class="sub" style="font-weight:400">${workers.length}</span>`)}`;
+        ${card(h(W.workersCap), workers.map(w => `<div class="it" data-ref="${h(workerRef(w.worker))}"><span>${ic("svcs")}</span><span>${h(w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels === null ? " · " + h(W.labelsUnread) : w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`).join("") || `<p class="sub">${h(W.noWorkers)}</p>`, `<span class="sub" style="font-weight:400">${workers.length}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
       const mv = el.querySelector('[data-a="move"]');
       if (mv) mv.onclick = async () => {
@@ -1628,8 +1628,10 @@
       tabsOf("server", el, ref, s, { general: W.overview });
     }
     // Labels: the administrator's word for the server (written here) over the node's; both shown when they differ.
+    // null from the console (the server's labels row cannot be read) is "not read", never the node's labels in its place
     function labelsOf(s) {
-      const node = s.labels_node || [...new Set((s.workers || []).flatMap(w => String(w.labels || "").split(",").filter(Boolean)))].sort();
+      const node = s.labels_node || [...new Set((s.workers || []).flatMap(w => w.labels == null ? [] : String(w.labels).split(",").filter(Boolean)))].sort();
+      if (s.labels === null || s.labels_source === null) return { labels: [], node, source: "unknown" };
       return { labels: s.labels || node, node, source: s.labels_source || "node" };
     }
     // a unit's ref as the platform names it (<sub>/<id>) in words, when this page knows the unit
@@ -1733,7 +1735,7 @@
       el.innerHTML = `<h1>${h(name)} <small>${h(W.worker)}</small></h1>
         ${card(h(cap(W.worker)), `<span class="bd${info.state === "live" ? "" : " off"}">${h(info.state)}</span>
           <div class="mx" style="margin-top:10px">${mc(W.loadW, info.load)}${mc(W.capW, info.capacity)}${mc(W.freeW, Math.max(0, info.capacity - info.load))}</div>
-          <div class="g" style="margin-top:10px">${fldRo(cap(W.server), server || "—")}${fldRo(W.labelsW, info.labels || "—")}</div>
+          <div class="g" style="margin-top:10px">${fldRo(cap(W.server), server || "—")}${fldRo(W.labelsW, info.labels === null ? W.labelsUnread : (info.labels || "—"))}</div>
           ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}`)}
         ${slotHtml(info)}
         ${card(h(W.holdsW + " " + (r0 ? unitWord(r0, true) : W.units)), units.map(x => `<div class="it" data-ref="${h(unitRef(x.s, x.u.id))}"><span>${decorOf(unitRef(x.s, x.u.id)).iconHtml || ic("x")}</span><span>${h(label(x.s, x.u))}<small>${h(stateOf(x.u)[0])}</small></span>${stateBadge(x.u)}</div>`).join("") || `<p class="sub">${h(W.carriesNone)}</p>`, `<span class="sub" style="font-weight:400">${units.length}</span>`)}`;
