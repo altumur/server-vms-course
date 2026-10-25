@@ -68,7 +68,7 @@ rotation:     ca.next.pem рядом — следующий центр, кото
 `ca-certs`, дверь `admin`) — [P/08.3 Н1.6](../../08-domain/spec/08.3-domain.norms.md).
 
 ```yaml
-W2C_TLS_DIR:  корень комплектов kit (выше): Linux /etc/w2c/tls, macOS <W2C_BOX>/tls (ADR-0075; P/02.4 Н1.2); пути kit —
+W2C_TLS_DIR:  корень комплектов kit (выше): Linux /etc/w2c/tls, macOS <W2C_BOX>/tls (ADR-0075; договор файла окружения «Переменные окружения»); пути kit —
               от него: <W2C_TLS_DIR>/ca.pem, ca.next.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key
 domain_roles: роли комплектов процессов домена: процесс domain — domain; консоль домена — domainconsole; агент и дверь
               ретранслятора (P/09.2: это агент) — domainagent; консоль кластера — console (P/02.4 Н1.6 roles; P/10 Н1.4 roles)
