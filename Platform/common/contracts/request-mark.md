@@ -131,6 +131,12 @@ unknown/ended_by/ended_at/error. Ответ начавшего не содерж
 семьи `requests/<rid>` без `unit` — нечитаема по семье `requests`, жнец её не метит и не снимает); класс прочих строк —
 объявленной формой/действием манифеста (`outcome`, `free`, `elsewhere`; действие — раздел «Просьба» `action`), не одним текстом
 rid (разбор ревью стадии B 6–7, № 37).
+Строка ресурса без живого хозяина: хозяин — ресурс `<server>` из ключа `requests/free-<server>-<volume>`; «без живого хозяина» —
+только `resource_state` этого сервера = `silent` ([договор наблюдения](observation.md) «Состояние ресурса»); `live`,
+`unreachable`, `unknown` — не снимать; неответ хранилища — оставить; при `silent` и возрасте строки ≥ `ttl` (по правилу
+`ttl` обычной строки без срока, раздел манифеста выше) — `delete` по `cas` прочитанной версии, метки нет (P/05 Н1.4 `free_ask`;
+догадка стадии C C06-FREE-OWNER-33-01, решение «Архитектора» 2026-10-25; векторы [`reap`](../../06-console/vectors/reap/README.md)
+профиль `resource`).
 Дозапись: консоль снимает строку по CAS после fetched и settle и освобождает её rid в asked
 по CAS. Единица-адресат дозаписи подтверждённо отсутствует (строки `<sub>/<rows>/<unit>` нет или она надгробие) —
 жнец пишет метку `gone` создание-однажды (`no_begun`: `{unit, digest, outcome: gone, ended_by: reaper, ended_at}`) — её
@@ -194,7 +200,7 @@ rid (разбор ревью стадии B 6–7, № 37).
 [`requests-body`](../../06-console/vectors/requests-body/README.md); `digest` — векторы [`request-digest`](../../06-console/vectors/request-digest/README.md);
 имя `SaidID(rid)` в `fetched` пульса — [глава P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` (векторы
 [`said-id`](../vectors/said-id/README.md)); жнец над просьбой дозаписи — метка `gone`, `settle`, без снятия по `ttl` (строки
-«жнец, дозапись, …» раздела «Состояния…») — векторы [`reap`](../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01);
+«жнец, дозапись, …» раздела «Состояния…») и строка ресурса без живого хозяина (C06-FREE-OWNER-33-01) — векторы [`reap`](../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01);
 запись присланного срока `valid_until` — векторы [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 Пакеты — у владельца (P/06.4); прочие состояния и `kept` векторов не имеют — шаги приёмки глав 6.4 и 3.6 и чтение.
 
