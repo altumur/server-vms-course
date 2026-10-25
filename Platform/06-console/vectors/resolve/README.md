@@ -17,9 +17,10 @@
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода или
 `@exit 2` (вход не по форме P/06.7 Н5 `exit`: у `resolve` `term`, `rev` не целые ≥ 1, пустое `field.name`, неизвестный
 `field.type` или `merge`, при `merge: union` любое из трёх значений не список, значение `group_by` не список, нет `domain`
-или `domain` без `value`, `unit` или `domain.value` `null` при `union`, лишнее поле — полный перечень там; разбор ревью
-стадии B 8–10, № 22: М-18). Строка `@exit 2` в таблице одна
-(`resolve-11-term-zero`); прочие случаи кода 2 — чтением (Н5). Коды выхода — по принципу «Стенда домена» общего README
+или `domain` без `value`, `unit` или `domain.value` `null` при `union`, лишнее поле, поле без `inherit`, не `document` и
+не `group_by` (C06-RESOLVE-ABSENT-INHERIT-91-01) — полный перечень там; разбор ревью
+стадии B 8–10, № 22: М-18). Строк `@exit 2` в таблице две
+(`resolve-11-term-zero`, `resolve-12-no-inherit`); прочие случаи кода 2 — чтением (Н5). Коды выхода — по принципу «Стенда домена» общего README
 приёмки («Коды выхода команд-векторов М11»: `field` и `domain` — доверенный вход вызывающего, код 2).
 
 ## Файлы
@@ -29,7 +30,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 11 строк: 10 вычислено, 1 `@exit 2` | `input` — вход команды `resolve` текстом JSON (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — значение строки единицы, нет ключа — значения нет, `domain` — `{term, rev, value}` или `null`) → `expect`: `{"value":…,"from":…}` — своё (`unit`), домена (`domain term T rev R`), манифеста (`manifest`), объединение `union` (`unit + domain term T rev R`), документ и его отсутствие (`none`), `override` у списка; `{"groups":…,"from":…}` — поле группировки |
+| [`cases.tsv`](cases.tsv), 12 строк: 10 вычислено, 2 `@exit 2` | `input` — вход команды `resolve` текстом JSON (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — значение строки единицы, нет ключа — значения нет, `domain` — `{term, rev, value}` или `null`) → `expect`: `{"value":…,"from":…}` — своё (`unit`), домена (`domain term T rev R`), манифеста (`manifest`), объединение `union` (`unit + domain term T rev R`), документ и его отсутствие (`none`), `override` у списка; `{"groups":…,"from":…}` — поле группировки |
 
 Векторы проверены прогонами реализаций приёмки М11/11 (прогон 41, сверка М11 09–12) и по тексту норм; при расхождении
 прав норма, вектор правит «Спецификация».
