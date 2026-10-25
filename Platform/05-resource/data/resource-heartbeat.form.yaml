@@ -118,13 +118,13 @@ root:
       min_items: 1
       unique_items: true
       items: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
-      description: "подсистемы, чья строка `<sub>/retention` с неверным days (P/05 Н1.3 retention rule), по возрастанию байтов; нет таких — поля нет (P/05 Н3 retain, Н4; догадка стадии C C05-RETENTION-PULSE-33, решение «Архитектора» 2026-10-25)"
+      description: "подсистемы, у которых любой срок (`<sub>/retention` или `<sub>/alarms_retention`) с неверным days (P/05 Н1.3 retention rule), независимо от retention_withheld (R05-RETENTION-MIXED-51-01), по возрастанию байтов; нет таких — поля нет (P/05 Н3 retain, Н4; догадка стадии C C05-RETENTION-PULSE-33, решение «Архитектора» 2026-10-25)"
     retention_withheld:
       type: object
       names:
         key: {type: string, pattern: '[a-z][a-z0-9_-]{0,31}'}
         value: {type: string, enum: [days_garbled, unknown, holds_unread]}
-      description: "почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); у подсистемы одна причина: days_garbled и unknown вместе не бывают, причина срока прежде holds_unread (R05-G08); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)"
+      description: "почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); у подсистемы одна причина по порядку unknown → days_garbled → holds_unread; каждое дерево удерживается по своему сроку (R05-G08, R05-RETENTION-MIXED-51-01); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)"
     restore:
       type: object
       names:

@@ -5812,14 +5812,16 @@ components:
             type: integer
             minimum: 0
         retention_garbled:
-          description: Подсистемы с неверным days строки <sub>/retention, по возрастанию байтов (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33).
+          description: Подсистемы, у которых любой срок (<sub>/retention или <sub>/alarms_retention) с неверным days, независимо от
+            retention_withheld, по возрастанию байтов (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01).
           type: array
           minItems: 1
           uniqueItems: true
           items:
             type: string
         retention_withheld:
-          description: Почему зависимое дерево подсистемы не убиралось в проходе срока (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33).
+          description: Почему зависимое дерево подсистемы не убиралось в проходе срока — одна причина по порядку unknown → days_garbled
+            → holds_unread (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01).
           type: object
           additionalProperties:
             enum:
