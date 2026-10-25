@@ -6755,6 +6755,8 @@ components:
         name:
           $ref: '#/components/schemas/TableRowName'
         held_by:
+          description: by действующего удержания места (договор наблюдения «Удержание места»), иначе null;
+            неподтверждённое чтение удержания или пульса — null, не 503 (Н1.6; C06-TABLE-HELD-BY-33-01).
           anyOf:
           - $ref: '#/components/schemas/WorkerName'
           - type: 'null'
