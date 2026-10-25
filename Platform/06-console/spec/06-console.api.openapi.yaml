@@ -5421,6 +5421,8 @@ components:
           - type: 'null'
         name_conflict:
           type: boolean
+          description: По меткам соперников (Н3 «/servers»); учитываются только свежие — договор наблюдения «Свежесть
+            метки соперника» (C06-CONTENDER-FRESH-33-01).
         status:
           type: object
           additionalProperties:
