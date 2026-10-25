@@ -196,7 +196,7 @@ contender: метка соперника <sub>/contenders/<имя>/<коробк
 
 ## Векторы
 
-Пакеты [`fresh-age`](../vectors/fresh-age/README.md) (граница свежести: возраст → свеж), [`hold-state`](../vectors/hold-state/README.md) (действующее удержание места; C06-WHERE-PLACE-HOLD-33-01), [`resource-state`](../vectors/resource-state/README.md) (состояние ресурса по истории наблюдения) и [`heartbeat-read`](../vectors/heartbeat-read/README.md) (чтение пульса по форме и исходам: верные и неверные `retention_*`, исход поля и объекта целиком; C04-DEP-OBS-HEARTBEAT-01), [`contender-fresh`](../vectors/contender-fresh/README.md) (граница свежести метки соперника: возраст → свежа; C06-CONTENDER-FRESH-33-01). (ADR-0083 доп. (32) п. 2)
+Пакеты [`fresh-age`](../vectors/fresh-age/README.md) (граница свежести: возраст → свеж), [`hold-state`](../vectors/hold-state/README.md) (действующее удержание места; C06-WHERE-PLACE-HOLD-33-01), [`resource-state`](../vectors/resource-state/README.md) (состояние ресурса по истории наблюдения) и [`heartbeat-read`](../vectors/heartbeat-read/README.md) (чтение пульса по форме и исходам: у ресурса — верные и неверные `retention_*`, исход поля и объекта целиком, C04-DEP-OBS-HEARTBEAT-01; у воркера — `worker.tsv`: объект целиком, элемент `status[]` по читателям, `worker` ≠ имени ключа, исходы полей, C08-HEARTBEAT-READER-99-VECTORS), [`contender-fresh`](../vectors/contender-fresh/README.md) (граница свежести метки соперника: возраст → свежа; C06-CONTENDER-FRESH-33-01). (ADR-0083 доп. (32) п. 2)
 
 ## Соответствие прежним урокам
 
