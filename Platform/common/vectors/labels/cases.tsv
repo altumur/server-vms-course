@@ -29,3 +29,6 @@ read_bracket_inside	text_read	"a,[b"	@refuse	`[` не первым знаком 
 read_empty_item	text_read	"a,,b"	@refuse	пустой элемент у меток недопустим
 read_json_bad_label	text_read	"[\"a b\"]"	@refuse	элемент массива — тоже по азбуке
 read_repeat	text_read	"a,a"	@refuse	повтор — отказ (P/06.6 сц. 05 шаг 6, query пробы)
+env_repeat	env_labels	"a,a"	["a"]	LABELS окружения: повтор — не отказ, метки узла набором (ENV54-02)
+env_order	env_labels	"b,a"	["a","b"]	набор по output — по возрастанию байтов
+env_bad	env_labels	"a,b@c"	@refuse	слово вне азбуки — отказ старта, код 2 (P/03.2 Н3 «старт()» шаг 2)
