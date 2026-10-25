@@ -1,0 +1,9 @@
+# Проверка схемы при старте: строка platform/schema и SCHEMA сборки (договор common/contracts/schema.md check; C06-SCHEMA-WIDE-32-01). Форма — README.
+case	input	expect	note
+version-1	{"SCHEMA":3,"row":{"version":"1","at":"1700000000"}}	{"start":true,"version":"1"}	1 ≤ SCHEMA — старт
+version-schema	{"SCHEMA":3,"row":{"version":"3","at":"1700000000"}}	{"start":true,"version":"3"}	ровно SCHEMA — старт
+version-schema-plus-1	{"SCHEMA":3,"row":{"version":"4","at":"1700000000"}}	{"refuse":"too_new","n":"4"}	SCHEMA + 1 — схема новее, отказ старта, код 2, в журнале N
+version-2-63	{"SCHEMA":3,"row":{"version":"9223372036854775808","at":"1700000000"}}	{"refuse":"too_new","n":"9223372036854775808"}	2^63 — читается точным целым без переполнения: схема новее с точным N
+version-0	{"SCHEMA":3,"row":{"version":"0","at":"1700000000"}}	{"refuse":"not_a_form"}	0 < 1 — не по форме, отказ старта, код 2
+version-fraction	{"SCHEMA":3,"row":{"version":"1.5","at":"1700000000"}}	{"refuse":"not_a_form"}	1.5 — не целое, не по форме
+row-absent	{"SCHEMA":3,"row":null}	{"start":true,"version":"3"}	строки нет — своя SCHEMA (свежая установка)
