@@ -90,7 +90,7 @@ tls_ca_certs: поле публикации рядом с tls_ca: [<PEM>…] —
               публикации закрыта: держатель прежней сборки отчёт с полем отвергает — реализации переходят одновременно
 Entry.ca:     поле записи члена в domain/members и в копии domain/member-list члена: [<отпечаток>…], 1–2, по возрастанию, без
               повторов; нет — отпечатков нет; пишет держатель (P/08.3 Н1.6 on_accept, admin); форма копии у члена —
-              Platform/09-agent/data/member-list.form.yaml, member-list.outcomes.tsv (C04-DEP-OBS-HEARTBEAT-01)
+              Platform/09-agent/data/member-list.form.yaml (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), member-list.outcomes.tsv (C04-DEP-OBS-HEARTBEAT-01)
 ```
 
 ## Серверная сторона: класс `signed`

@@ -146,7 +146,7 @@ console/экземпляр). Эпоха — каноническое десят�
 
 Умолчания срока хранения деревьев — из P/02.4 Н1.9 (формы строк `retention`, `alarms_retention`) и P/05 Н3 «проход ресурса»
 `retain` без изменения поведения: строки срока пишет установщик и оператор, убирает по сроку ресурс (аудит раскладки А-23, решение «Архитектора» 2026-10-25).
-Формы строк — `Platform/02-installer/data/retention.form.yaml`, `Platform/02-installer/data/alarms-retention.form.yaml` и
+Формы строк — `Platform/02-installer/data/retention.form.yaml` (исходы — `Platform/02-installer/data/retention.outcomes.tsv`), `Platform/02-installer/data/alarms-retention.form.yaml` (исходы — `Platform/02-installer/data/alarms-retention.outcomes.tsv`) и
 их `.outcomes.tsv`; что ресурс делает при неверном или неизвестном сроке — P/05 Н3 `retain`.
 
 ```yaml

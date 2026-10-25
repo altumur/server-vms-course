@@ -22,7 +22,7 @@
 Строка `platform/schema` — семья `schema`: форма `Platform/06-console/data/schema.form.yaml`, исходы
 `Platform/06-console/data/schema.outcomes.tsv` ([форма](../../06-console/data/schema.form.yaml),
 [исходы](../../06-console/data/schema.outcomes.tsv)). Поле `schema` пульса — формы пульсов
-`Platform/03-worker/data/heartbeats.form.yaml` и `Platform/05-resource/data/resource-heartbeat.form.yaml` (и их
+`Platform/03-worker/data/heartbeats.form.yaml` (исходы — `Platform/03-worker/data/heartbeats.outcomes.tsv`) и `Platform/05-resource/data/resource-heartbeat.form.yaml` (исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`) (и их
 `.outcomes.tsv`).
 
 ## Схема

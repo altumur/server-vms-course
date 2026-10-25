@@ -29,7 +29,7 @@ SB810-07); `keys` — принятый набор ([договор набора 
 
 ## Запись срока `domain/holder`
 
-Из М11/10 Н1.1 (форма семьи — `Platform/08-domain/data/holder.form.yaml`, `holder.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01 — файлы данных, названные договором, в чтении `common`, ADR-0083 доп. (32) п. 1):
+Из М11/10 Н1.1 (форма семьи — `Platform/08-domain/data/holder.form.yaml` (исходы — `Platform/08-domain/data/holder.outcomes.tsv`), `holder.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01 — файлы данных, названные договором, в чтении `common`, ADR-0083 доп. (32) п. 1):
 
 ```yaml
 domain/holder:   {doc: <текст JCS документа>}       # у держателя — пишет процесс domain (claim); у члена — агент (Н3 «следовать»)

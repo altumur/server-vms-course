@@ -17,10 +17,10 @@ P/03.2 и читатели — ссылкой сюда. Профиль экзе�
 
 ## Форма
 
-Экземпляр — строка в полях `holder` строки слота (`Platform/03-worker/data/slots.form.yaml`), `holder` строки очереди
-процесса `domain` (`Platform/08-domain/data/signer-turn.form.yaml`), `instance` пульса воркера
-(`Platform/03-worker/data/heartbeats.form.yaml`), метки соперника (`Platform/03-worker/data/contenders.form.yaml`) и замка
-присутствия (`Platform/05-resource/data/presence-lock.form.yaml`); исходы — `.outcomes.tsv` тех же семей.
+Экземпляр — строка в полях `holder` строки слота (`Platform/03-worker/data/slots.form.yaml` (исходы — `Platform/03-worker/data/slots.outcomes.tsv`)), `holder` строки очереди
+процесса `domain` (`Platform/08-domain/data/signer-turn.form.yaml` (исходы — `Platform/08-domain/data/signer-turn.outcomes.tsv`)), `instance` пульса воркера
+(`Platform/03-worker/data/heartbeats.form.yaml` (исходы — `Platform/03-worker/data/heartbeats.outcomes.tsv`)), метки соперника (`Platform/03-worker/data/contenders.form.yaml` (исходы — `Platform/03-worker/data/contenders.outcomes.tsv`)) и замка
+присутствия (`Platform/05-resource/data/presence-lock.form.yaml` (исходы — `Platform/05-resource/data/presence-lock.outcomes.tsv`)); исходы — `.outcomes.tsv` тех же семей.
 
 ## Экземпляр
 

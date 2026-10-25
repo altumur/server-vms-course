@@ -126,8 +126,8 @@ ALIVE_EVERY:    15           # с; ресурс переписывает at св
 
 ```yaml
 decommissioned: сервер <s> выведен — есть строка запроса platform/decommission/<s> (пишет консоль; форма —
-                Platform/06-console/data/decommission.form.yaml) или отметка контроллера <sub>/decommissioned/<s> (форма —
-                Platform/04-controller/data/decommissioned.form.yaml) — любая из них читаема и есть; так судит воркер при старте
+                Platform/06-console/data/decommission.form.yaml) (исходы — `Platform/06-console/data/decommission.outcomes.tsv`) или отметка контроллера <sub>/decommissioned/<s> (форма —
+                Platform/04-controller/data/decommissioned.form.yaml) (исходы — `Platform/04-controller/data/decommissioned.outcomes.tsv`) — любая из них читаема и есть; так судит воркер при старте
                 (P/03.2 Н3 «старт()» шаг 3) и пул (договор пула); нечитаемая строка — по читателю: пул — не факт, не вычитать;
                 надгробие — листинг не подтверждён, удаления нет (ответ «Архитектора» 2026-10-25)
 narrower:      читатели, чья норма берёт только строку запроса, судят по ней: ресурс не пишет свою строку двери, пока стоит

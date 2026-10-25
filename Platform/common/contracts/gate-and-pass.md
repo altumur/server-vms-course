@@ -75,7 +75,7 @@ gate:
     4. отладочная личность (ADR-0050): задан W2C_DEBUG_PERSON=<имя>, запрос без предъявленного токена в любом виде
        (ни Authorization, ни куки w2c_token; GP-G03), адрес TCP-соединения
        127.0.0.1 или ::1 (заголовки адреса не читаются) → этот человек со своими grants из domain/grants; критерий
-       выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.form.yaml, исходы disabled.outcomes.tsv;
+       выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.form.yaml (исходы — `Platform/08-domain/data/disabled.outcomes.tsv`), исходы disabled.outcomes.tsv;
        тот же вход disabled, что у функции may шаг 2): имя в ней — как без входа; строка есть, но не читается — как без
        входа (проверить нечем); строки нет — выключенных нет; domain/users консоль не читает: личность без строк в
        domain/grants — сессия grants: [], каждая проверка no_grant (C06-DEBUG-FACTS-33-01, решение «Архитектора»
