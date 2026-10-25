@@ -1,0 +1,11 @@
+# Функция covers (договор сторожевой scope; C06-EVENTS-QUERY-UNKNOWN-138-10): covers(scope, ref, row) → true | false. Форма — README пакета «covers».
+case	input	expect	note
+covers-unit-by-name-unreadable	{"scope":"unit:testsub/c1","ref":{"sub":"testsub","id":"c1"},"row":"@unreadable"}	true	грант на саму единицу — по имени из пути или ?unit=, строку не читая
+covers-labels-unreadable	{"scope":"labels:east","ref":{"sub":"testsub","id":"c1"},"row":"@unreadable"}	false	грант по меткам при нечитаемой строке не покрывает, не 503
+covers-about-unreadable	{"scope":"unit:testsub/a1","ref":{"sub":"testsub","id":"c1"},"row":"@unreadable"}	false	грант на about-единицу при нечитаемой строке не покрывает
+covers-star-unreadable	{"scope":"*","ref":{"sub":"testsub","id":"c1"},"row":"@unreadable"}	true	* — любую
+covers-labels-own	{"scope":"labels:east","ref":{"sub":"testsub","id":"c1"},"row":{"labels":["east","ground"]}}	true	все метки области у строки без about
+covers-labels-about	{"scope":"labels:east","ref":{"sub":"testsub","id":"c1"},"row":{"labels":[],"about":{"sub":"testsub","id":"a1","labels":["east"]}}}	true	метки — у about, если about есть
+covers-about-readable	{"scope":"unit:testsub/a1","ref":{"sub":"testsub","id":"c1"},"row":{"labels":[],"about":{"sub":"testsub","id":"a1","labels":["east"]}}}	true	грант на about-единицу, строка читается и называет её
+covers-unit-other	{"scope":"unit:testsub/c2","ref":{"sub":"testsub","id":"c1"},"row":{"labels":["east"]}}	false	unit: другой единицы, about нет
+covers-scope-not-grammar	{"scope":"unit:testsub","ref":{"sub":"testsub","id":"c1"},"row":{"labels":[]}}	@exit 2	область не по грамматике строки гранта — вход не по форме
