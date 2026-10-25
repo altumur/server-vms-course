@@ -5856,7 +5856,11 @@ components:
           type: string
           minLength: 1
         server:
-          $ref: '#/components/schemas/Server'
+          description: Поле server свежего пульса держателя; "" в пульсе — "?". Строка места не нужна —
+            её отсутствие, нечитаемость или пустой server_field ответ не меняют (Н3; C06-WHERE-PLACE-SERVER-33-01).
+          anyOf:
+          - $ref: '#/components/schemas/Server'
+          - const: '?'
         door:
           $ref: '#/components/schemas/Door'
       description: Держатель места; door присутствует только при подтверждённой двери и view на unit (Н3), не null.
