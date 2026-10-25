@@ -18,14 +18,18 @@
 `from_carry` P/09.1 Н1.4 о `revoked` без изменения поведения. У владельца остаются: корень и его закрепление (P/08.2 Н1.1),
 `rev` писателя, аварийный `rev` и предпосылка часов (P/08.2 Н1.2 `rev`, `emergency`, `clocks`), ключи держателя и `OLD_KEYS`
 (P/08.2 Н1.3, Н1.6), смены набора (P/08.2 Н3; установка — [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3),
-окно отзыва без связи (P/08.2 Н1.7). Общее для форм — [P/08.2 Н1](../../08-domain/spec/08.2-domain.norms.md#н1-форма)
-«Общее для всех форм главы» (hex, канонический base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, полнота
+окно отзыва без связи (P/08.2 Н1.7). Общее для форм — [договор основания домена](domain-founding.md)
+«Общие правила форм» (аудит раскладки, Б-03: hex, канонический base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, полнота
 форм JSON, повтор ключа, «целое»). Ссылки в перенесённом тексте: «Н1.x», «Н3» — главы P/08.2 (прежде урока М11/2; номера
 подразделов прежние); «урок N» — урок М11/N, их адреса теперь: «урок 3» (агент, приём и подпись члена) — P/09.1 и P/08.3,
 «урок 3 Н1.6 from_carry» — P/09.1 Н1.4 `from_carry`, «урок 7» (токен вида) — P/08.7, «урок 9» (отзыв человека) — P/08.4,
 «урок 10» (выпускающий держатель) — P/08.8 (разбор ревью стадии B 8–10, № 22; Kimi SB810-07).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+
+## Форма
+
+Строки договора: набор `domain/keys` и отзывы `domain/revoked` — `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.form.yaml`, `Platform/08-domain/data/revoked.outcomes.tsv`; закреплённый корень `domain/root` (`pinned`) — `Platform/08-domain/data/root.form.yaml`, `Platform/08-domain/data/root.outcomes.tsv`. Набор приходит ответами держателя — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/carry`) и `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/held`) (аудит раскладки, В-31, В-32, Б-15; решение «Архитектора» 2026-10-25).
 
 ## Набор `domain/keys`
 
@@ -98,7 +102,7 @@ not_serial:    отпечаток — не serial (writer_forms выше: пер
 
 Отказ не меняет строку `domain/keys`; член продолжает верить прежнему набору и пишет причину в журнал (М13).
 
-«Н1.2» в шагах 2 и 6 — раздел «Набор `domain/keys`» выше; `pinned` — `{pub, domain}` строки `domain/root` (P/08.2 Н1.1).
+«Н1.2» в шагах 2 и 6 — раздел «Набор `domain/keys`» выше; `pinned` — `{pub, domain}` строки `domain/root` ([договор основания домена](domain-founding.md) «Закрепление корня»; форма — «Форма» выше).
 Форма функции — вход команды `keys` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н5).
 
 ## Отзывы `domain/revoked`

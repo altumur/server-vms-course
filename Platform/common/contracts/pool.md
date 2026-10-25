@@ -13,12 +13,26 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Строки и объекты, которые читает расчёт пула, — по формам и исходам их семей (аудит раскладки, В-42–В-44, Б-07; решение «Архитектора» 2026-10-25): пульс `<sub>/heartbeats/<имя>`
+— `Platform/03-worker/data/heartbeats.form.yaml`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; слот `<sub>/slots/<имя>` —
+`Platform/03-worker/data/slots.form.yaml`, `Platform/03-worker/data/slots.outcomes.tsv`; назначение `<sub>/workers/<имя>` —
+`Platform/04-controller/data/workers.form.yaml`, `Platform/04-controller/data/workers.outcomes.tsv`; строка заказа
+`<sub>/want/<сервер>` — `Platform/04-controller/data/want.form.yaml`, `Platform/04-controller/data/want.outcomes.tsv`; решение
+`<sub>/controller/placement_intent` — `Platform/04-controller/data/placement-intent.form.yaml`,
+`Platform/04-controller/data/placement-intent.outcomes.tsv`; вывод `<sub>/decommissioned/<сервер>` —
+`Platform/04-controller/data/decommissioned.form.yaml`, `Platform/04-controller/data/decommissioned.outcomes.tsv`; дренаж
+`platform/drain` — `Platform/06-console/data/drain.form.yaml`, `Platform/06-console/data/drain.outcomes.tsv`; запрос вывода
+`platform/decommission/<сервер>` — `Platform/06-console/data/decommission.form.yaml`,
+`Platform/06-console/data/decommission.outcomes.tsv`.
+
 ## Живой воркер
 
 ```yaml
 live:      пульс <sub>/heartbeats/<имя> читается и менялся в последние LOST_AFTER по часам читающего (договор наблюдения
            «Свежесть»; граница — вектор fresh-age) ∧ строка слота <sub>/slots/<имя> читается, released = false (не отдан и не в
-           захвате taking — P/03.2 Н1.4), holder непуст; пульс, чьё worker ≠ имени в ключе (P/03.4 Н1.1), не читается —
+           захвате taking — slots.form.yaml), holder непуст; пульс, чьё worker ≠ имени в ключе (heartbeats.form.yaml), не читается —
            воркера нет
 ```
 
@@ -27,12 +41,12 @@ live:      пульс <sub>/heartbeats/<имя> читается и менялс
 ```yaml
 pool:      живые воркеры
            − отданные слоты
-           − воркеры дренируемого сервера (platform/drain, P/06.6 Н1.2) и выведенных серверов (P/04 Н3 «вывести_сервер»)
+           − воркеры дренируемого сервера (platform/drain, drain.form.yaml) и выведенных серверов (P/04 Н3 «вывести_сервер»)
            − при requires: resource — воркеры сервера, чей ресурс silent (resource_state договора наблюдения; unknown — не
              факт, воркер проходит)
-           − retiring строк заказа <sub>/want/<сервер> (P/04 Н3 «сократить»; ADR-0084)
-           − процессы роли с номером больше want своего сервера (P/04 Н3 «номер выше want»; ADR-0084 доп. (4) Р28; имя и номер —
-             договор имени слота)
+           − retiring строк заказа <sub>/want/<сервер> (поле retiring, want.form.yaml; ADR-0084)
+           − процессы роли с номером больше want своего сервера (имя и номер — договор имени слота «Имя процесса роли и его
+             номер»; ADR-0084 доп. (4) Р28)
            − воркеры с нечитаемой строкой назначения <sub>/workers/<имя> (P/04 Н4 «пульс/слот/назначение не читается»;
              у консоли — так же, ответ (3))
            − при servers: distinct — все, кроме хранителя своего места (раздел ниже)
@@ -79,7 +93,8 @@ why:       при placeable: false — «no eligible live worker»; при true 
 Пакет [`pool`](../vectors/pool/README.md): вход — пульсы (кто живой), слоты, назначения, строки единиц, серверы (дренаж,
 вывод, заказ), ресурсы, манифест; выход — пул, хранители, `idle_by_policy`, `placeable`/`why`, нагрузка и счёт. Живость пульса по истории — пакет
 [`fresh-age`](../vectors/fresh-age/README.md) и [`resource-state`](../vectors/resource-state/README.md); `constraint`,
-`spread_by`, `affinity`, порядок выбора — P/04, сценарии и чтение.
+`spread_by`, `affinity`, порядок выбора — P/04, сценарии и чтение. Участник: пакет [`slot-name`](../vectors/slot-name/README.md)
+(слотовый порядок — хранитель при равенстве нагрузки; В-44).
 
 ## Соответствие прежним урокам
 

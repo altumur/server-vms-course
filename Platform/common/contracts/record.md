@@ -18,10 +18,14 @@
 документ» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`, `signature`). Ссылки в перенесённом тексте: «Н1.x», «Н3» — урока М11/10 (Н1.1, Н1.5, Н1.7 — те же номера главы P/08.8; Н3 «следовать» —
 P/09.1 Н3 «следовать», «проверить резервную копию»); «урок N» — урок М11/N, их адреса теперь: «урок 3» (агент носит
 отчёты) — P/09.1 Н3 и P/08.3 Н2, «урок 11» (общий документ) — P/08.9 Н1.2 (разбор ревью стадии B 8–10, № 22; Kimi
-SB810-07); `keys` — принятый набор ([договор набора ключей домена](keys.md)). Общее для форм — [P/08.2 Н1](../../08-domain/spec/08.2-domain.norms.md#н1-форма)
-«Общее для всех форм главы».
+SB810-07); `keys` — принятый набор ([договор набора ключей домена](keys.md)). Общее для форм — [договор основания домена](domain-founding.md)
+«Общие правила форм» (аудит раскладки, Б-03).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+
+## Форма
+
+Виды документа: закрытый набор резервной копии — `Platform/08-domain/data/backups.form.yaml`, `Platform/08-domain/data/backups.outcomes.tsv`; `Platform/09-agent/data/backup.form.yaml`, `Platform/09-agent/data/backup.outcomes.tsv`; общий документ — `Platform/08-domain/data/shared-docs.form.yaml`, `Platform/08-domain/data/shared-docs.outcomes.tsv`; `Platform/09-agent/data/shared-copy.form.yaml`, `Platform/09-agent/data/shared-copy.outcomes.tsv`; доверенный набор `keys` — `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`. Времена — `Platform/common/data/codec.tsv`, строка `time` (аудит раскладки, В-46…В-48, Б-27; решение «Архитектора» 2026-10-25).
 
 ## Запись срока `domain/holder`
 
@@ -112,7 +116,8 @@ member_name:  имя члена — CLUSTER его установки: 1–64 з
 `kid` ≠ `issuer`, подмена, формы и типы; одна строка — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); сценарий и входы сняты переносом
 урока 8 — таблица единственный источник этих случаев. Форма функции и коды выхода команды —
 [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5 `record`, `exit`. Чтение общего документа консолью кластера
-(участник, P/06.7 Н1.14) — пакет [`resolve`](../../06-console/vectors/resolve/README.md) урока P/06.
+(участник, P/06.7 Н1.14) — пакет [`resolve`](../../06-console/vectors/resolve/README.md) урока P/06. Участник: пакет
+[`follow`](../../09-agent/vectors/follow/README.md) урока P/09 — следование зовёт `record` (аудит раскладки, В-49).
 
 Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).

@@ -18,6 +18,19 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Файлы, по которым работает договор (аудит раскладки, В-15–В-17; решение «Архитектора» 2026-10-25):
+
+- подписант `door/signer` — семья `door-signer`: `Platform/06-console/data/door-signer.form.yaml`,
+  `Platform/06-console/data/door-signer.outcomes.tsv`;
+- строка ключей `door/keys` — семья `door-keys`: `Platform/06-console/data/door-keys.form.yaml`,
+  `Platform/06-console/data/door-keys.outcomes.tsv`;
+- пульс держателя (`instance` для `claims.holder`) — семья `heartbeats`: `Platform/03-worker/data/heartbeats.form.yaml`,
+  `Platform/03-worker/data/heartbeats.outcomes.tsv`;
+- выдача токена в ответах `/where/{id}` и `/where/{table}/{place}` (поле `door`) —
+  `Platform/06-console/spec/06-console.api.openapi.yaml`.
+
 ## Токен
 
 Из P/06.5 Н3 «`/where/<id>`», «Токен двери — байты» (журнал cammeta-go, урок 9 № 3):
@@ -26,7 +39,7 @@
 token:      door1.<kid>.<claims>.<sig> — ровно четыре части через «.», ASCII
   kid:      имя ключа подписи, 1–32 знака [a-z0-9-]; по нему проверяющий берёт открытый ключ из door/keys
   claims:   base64url без «=» байтов JCS (RFC 8785) объекта {user, unit, holder, routes, expires}: user — доказанное имя
-            (P/06.3 Н1.3), unit — "<sub>/<id>", holder — экземпляр держателя из его пульса (instance, P/03.4 Н1.1), routes — массив
+            ([договор сторожевой и передачи](gate-and-pass.md) «Сторожевая» identity), unit — "<sub>/<id>", holder — экземпляр держателя из его пульса (instance, P/03.4 Н1.1), routes — массив
             маршрутов door.routes манифеста с допуском token (элементы-имена и {name} без role и domain; маршруты с role или
             domain в токен не входят — их допуск — сертификат роли, класс mixed договора сертификата роли, или токен домена,
             P/03.4 Н1.7; ADR-0091 доп. (8) п. 3, доп. (14) п. 1), expires — целые стенные секунды выдачи + 120 (разбор ревью стадии B 6–7, № 10): floor(now) + 120, now — стенные часы

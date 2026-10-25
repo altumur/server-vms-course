@@ -17,7 +17,10 @@ P/05 Н1.3; форма строки и ответа — раздел «Форм�
 `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../05-resource/spec/05-resource.api.openapi.yaml));
 ответ консоли — `ConsoleEvents` и `ConsoleEventRow` контракта `Platform/06-console/spec/06-console.api.openapi.yaml`
 ([OpenAPI урока P/06](../../06-console/spec/06-console.api.openapi.yaml)). Оба файла входят в чтение `common` (ADR-0083
-доп. (33) п. 1; EM-READ-33-01).
+доп. (33) п. 1; EM-READ-33-01). Строки эпох `<sub>/epoch/<id>` — семья `epoch`: `Platform/03-worker/data/epoch.form.yaml`,
+`Platform/03-worker/data/epoch.outcomes.tsv`; строки дверей `platform/doors/<s>` (раздел «Живые ресурсы») — семья `doors`:
+`Platform/05-resource/data/doors.form.yaml`, `Platform/05-resource/data/doors.outcomes.tsv` (аудит раскладки, В-18, В-19, Б-18;
+решение «Архитектора» 2026-10-25).
 
 ## Запрос и ответ ресурса
 

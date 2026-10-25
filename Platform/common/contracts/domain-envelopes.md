@@ -23,6 +23,10 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Открытие — по `seed_secret` строки `domain/book-seal`, запечатывание — к `book_seal` набора `domain/keys`, получатель `m1` — ключ члена `domain/member-key`: `Platform/08-domain/data/book-seal.form.yaml`, `Platform/08-domain/data/book-seal.outcomes.tsv`; `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/09-agent/data/member-key.form.yaml`, `Platform/09-agent/data/member-key.outcomes.tsv`; содержимое `sealed` — строки `Platform/08-domain/data/grants.form.yaml`, `Platform/08-domain/data/grants.outcomes.tsv`; `Platform/08-domain/data/break-glass.form.yaml`, `Platform/08-domain/data/break-glass.outcomes.tsv`; `Platform/08-domain/data/book.form.yaml`, `Platform/08-domain/data/book.outcomes.tsv`. Поле `sealed` ответа `carry` и `m1` двери токенов — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (аудит раскладки, В-10…В-13; решение «Архитектора» 2026-10-25).
+
 ## Конверт `x25519:v1`
 
 Из М11/2 Н1.5:

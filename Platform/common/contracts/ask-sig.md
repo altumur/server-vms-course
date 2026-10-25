@@ -16,6 +16,10 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+`pub` — ключ члена `domain/member-key` (backup) или ключ `current` набора `domain/keys` (prepare): `Platform/09-agent/data/member-key.form.yaml`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
+
 ## Подпись и проверка
 
 Из М11/10 Н3 «ask-sig — подпись просьбы»:

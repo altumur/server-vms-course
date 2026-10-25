@@ -22,6 +22,10 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Строки и объекты, которые функция пишет и читает, — семьи по [каталогу](../data/catalog.tsv): отчёт, дельта и метка члена — `Platform/08-domain/data/member-report.form.yaml`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.form.yaml`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.form.yaml`, `Platform/08-domain/data/member-reported.outcomes.tsv`; ключ члена `domain/member-key` — `Platform/09-agent/data/member-key.form.yaml`, `Platform/09-agent/data/member-key.outcomes.tsv`; семьи `member_objects` — `Platform/03-worker/data/heartbeats.form.yaml`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.form.yaml`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.form.yaml`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.form.yaml`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.form.yaml`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.form.yaml`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.form.yaml`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.form.yaml`, `Platform/08-domain/data/shared.outcomes.tsv`. Двери — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, ответ `carry`) и `Platform/09-agent/spec/09-agent.api.openapi.yaml` (дверь ретранслятора); ключи манифеста `domain.*` — `Platform/02-installer/spec/02.1-installer.form.yaml` (аудит раскладки, В-01…В-04, Б-13; решение «Архитектора» 2026-10-25).
+
 ## Поколение, метка, пределы
 
 Из P/08.3 Н1.3 (`generation`, `whole`, `delta`, `reported`, `MARK_REFRESH`, `BODY_LIMIT`) и Н1.3а (`ROAD_QUIET`) без
@@ -130,7 +134,7 @@ ready:          агент не шлёт публикацию, пока у не�
 REPORT_EVERY:   5           # с — проход агента; ответ держателя может назначить every, 1 … 3600
 every:          поле ответа carry (P/08.3 Н1.5): с — проход агента, 1 … 3600; держатель даёт REPORT_EVERY (5); значение вне
                 1 … 3600 агент не отвергает — ответ принимается, агент берёт ближайшую границу (1 или 3600; P/09.1 Н3
-                «проход агента» шаг 5). Граница 1 … 3600 схемы Carry.every OpenAPI урока 8 — то, что шлёт держатель, а не
+                «проход агента» шаг 5). Граница 1 … 3600 схемы Carry.every `Platform/08-domain/spec/08-domain.api.openapi.yaml` — то, что шлёт держатель, а не
                 повод агенту отвергать ответ (поведение М11/3 Н1.6)
 ```
 

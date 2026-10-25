@@ -24,6 +24,12 @@ garbled:   нечитаемое надгробие (gone.outcomes.tsv, объе�
            удаливший подтверждений не дописывает и надгробие не снимает
 ```
 
+Файлы: надгробие — `Platform/05-resource/data/gone.form.yaml`, `Platform/05-resource/data/gone.outcomes.tsv`; строки дверей
+и запросов вывода (раздел «Соседи») — `Platform/05-resource/data/doors.form.yaml`, `Platform/05-resource/data/doors.outcomes.tsv`,
+`Platform/06-console/data/decommission.form.yaml`, `Platform/06-console/data/decommission.outcomes.tsv`; дверь объектов —
+GET копии (404 — подтверждение), листинг `prefix=.gone/`, 409 «удалено позже» — контракт
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` (аудит раскладки, В-60; решение «Архитектора» 2026-10-25).
+
 ## Соседи (`peers`)
 
 Соседи меняются со временем (копии кладутся следующим `copies` живым по имени — P/05 Н1.1 «Тела у ресурса»), поэтому

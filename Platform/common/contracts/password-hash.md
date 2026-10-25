@@ -19,6 +19,10 @@ verify:   строка по form — вычислить ключ от парол
 secret:   в строке хранилища поле *_secret запечатано кольцом держателя (договор запечатывания); хэш — у открытого значения
 ```
 
+## Форма
+
+`pwhash_secret` — поле строк человека и аварийной учётки: `Platform/08-domain/data/users.form.yaml`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.form.yaml`, `Platform/08-domain/data/break-glass.outcomes.tsv` (аудит раскладки, В-41; решение «Архитектора» 2026-10-25).
+
 ## Векторы
 
 Пакет [`password-hash`](../vectors/password-hash/README.md): хэш и проверка пароля. (ADR-0083 доп. (32) п. 2)

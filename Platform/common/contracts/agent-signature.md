@@ -21,6 +21,10 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Ключ подписи члена — `domain/member-key`: `Platform/09-agent/data/member-key.form.yaml`, `Platform/09-agent/data/member-key.outcomes.tsv`. Двери, где заголовок проверяют, — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member`, `GET /api/carry`, `POST /api/tokens`), `Platform/09-agent/spec/09-agent.api.openapi.yaml` (двери ретранслятора), `Platform/06-console/spec/06-console.api.openapi.yaml` (двери единиц, `GET /events?class=alarm`) (аудит раскладки, В-05, В-06; решение «Архитектора» 2026-10-25).
+
 ## Подпись
 
 Из М11/3 Н1.4:

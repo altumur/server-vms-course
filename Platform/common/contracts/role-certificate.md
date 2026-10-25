@@ -55,6 +55,10 @@ revoke:       серийники в revoked — копируются на каж
 rotation:     ca.next.pem рядом — следующий центр, которому уже верят
 ```
 
+## Форма
+
+`Entry.ca` — поле записи члена `domain/members`: `Platform/08-domain/data/members.form.yaml`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25).
+
 ## Комплект кластера, роли домена, центр между кластерами
 
 Из P/02.4 Н1.2 (`W2C_TLS_DIR`), P/02.4 Н1.6 `roles`, P/10 Н1.4 `roles` и P/08.3 Н1.6 (`fingerprint`, `tls_ca`,
@@ -162,6 +166,7 @@ mixed:        как signed целиком: TLS сервера роли проц
 ## Векторы
 
 Пакеты [`crl`](../vectors/crl/README.md) (CRL: подпись, сроки, отзыв) и [`revoked`](../vectors/revoked/README.md) (файл `revoked`). (ADR-0083 доп. (32) п. 2)
+Участник: пакет [`peer`](../vectors/peer/README.md) — закрытый список `sig` проверяет его шаг 4 (аудит раскладки, В-57).
 
 ## Соответствие прежним урокам
 

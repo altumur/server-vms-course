@@ -10,6 +10,13 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Файлы, по которым работает договор (аудит раскладки, В-33, В-34; решение «Архитектора» 2026-10-25): строка меток
+сервера `platform/servers/<s>` — семья `server-labels`: `Platform/06-console/data/server-labels.form.yaml`,
+`Platform/06-console/data/server-labels.outcomes.tsv`; двери меток сервера (`PUT /servers/{server}/labels`, проба `labels`,
+отказ 400) — `Platform/06-console/spec/06-console.api.openapi.yaml`.
+
 ## Метка
 
 ```yaml

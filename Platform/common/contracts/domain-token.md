@@ -13,7 +13,7 @@
 `payload`, `sig`, константа `TOKEN_SKEW`, абзац о том, кто проверяет), Н3 «`token(keys, revoked, now, token)`» (шаги с
 `expect` и абзац о границе) и строк Н4 о токене без изменения поведения. Общее для форм главы 8.2 (hex, канонический
 base64url, JCS — RFC 8785, ADR-0072, «стенные секунды», Ed25519 — RFC 8032, полнота форм JSON, повтор ключа) —
-[P/08.2 Н1](../../08-domain/spec/08.2-domain.norms.md#н1-форма) «Общее для всех форм главы»; набор `domain/keys`
+[договор основания домена](domain-founding.md) «Общие правила форм» (аудит раскладки, Б-03); набор `domain/keys`
 (`keys`, `until`), форма строки `domain/revoked`, её писатели и `prune` — [договор набора ключей домена](keys.md) (разбор
 ревью стадии A 8–10, № 13); окно отзыва без связи — P/08.2 Н1.7. Вид токена воркера
 и `audience_claim` — объявление вида [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.2б (поздний слой),
@@ -22,6 +22,10 @@ base64url, JCS — RFC 8785, ADR-0072, «стенные секунды», Ed2551
 P/08.4 (разбор ревью стадии B 8–10, № 22); «Н1.x» в шагах — главы P/08.2 (прежде урока М11/2; номера подразделов прежние).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+
+## Форма
+
+Функция `token` читает `domain/keys` и `domain/revoked`: `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.form.yaml`, `Platform/08-domain/data/revoked.outcomes.tsv`; объявление вида и `audience_claim` — `Platform/02-installer/spec/02.1-installer.form.yaml` (аудит раскладки, В-14, Б-32; решение «Архитектора» 2026-10-25).
 
 ## Токен
 

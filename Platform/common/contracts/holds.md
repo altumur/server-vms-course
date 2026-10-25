@@ -15,6 +15,12 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Причины прохода срока и счёт нечитаемых строк удержаний (`garbled_rows.<table>`, `retention_withheld`) ресурс пишет в свой
+пульс — семья `resource-heartbeat`: `Platform/05-resource/data/resource-heartbeat.form.yaml`,
+`Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (аудит раскладки, В-30; решение «Архитектора» 2026-10-25).
+
 ## Объявление
 
 ```yaml
@@ -31,8 +37,8 @@ addressee:  A — подсистема адресата: about.sub манифе�
 
 ## Строка удержания
 
-Строка — `<M>/<table>/<id>`; элементы — тексты по `values_by_type` ([P/06.1](../../06-console/spec/06.1-console.norms.md)
-Н1.2; векторы [`values-by-type`](../vectors/values-by-type/README.md)).
+Строка — `<M>/<table>/<id>`; элементы — тексты по `values_by_type` ([договор проверки строки](row-check.md) «Строка
+единицы»; векторы [`values-by-type`](../vectors/values-by-type/README.md); Б-23).
 
 ```yaml
 released:   объявлен released и элемент этого поля в строке есть и непуст (текст длиннее нуля) — строка ничего не держит,
@@ -40,7 +46,7 @@ released:   объявлен released и элемент этого поля в �
             непустой текст
 unit:       элемент поля unit — id единицы подсистемы A как есть, байт в байт; элемента нет или он пуст — адресат не
             прочитан
-since, until: элементы полей since и until, прочитанные своим типом, — конечные числа, стенные секунды (Н0 P/01.1);
+since, until: элементы полей since и until, прочитанные своим типом, — конечные числа, стенные секунды (кодек `Platform/common/data/codec.tsv`, строка `time`; Б-27);
             элемента нет, он не читается своим типом, поле не числового типа или число не конечно — окно не прочитано
 window:     окно [since, end], end = until, при longest — min(until, since + longest); until ≤ since — строка ничего не
             держит (пустое окно)

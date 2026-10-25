@@ -24,6 +24,28 @@
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Файлы, по которым работает договор (аудит раскладки, В-23–В-29; решение «Архитектора» 2026-10-25):
+
+- формы ответов договора (`Denied` — `{detail, error: denied}`, ответы `/session`) — `Platform/common/contracts/gate-and-pass.api.openapi.yaml`;
+- двери: консоль кластера — `Platform/06-console/spec/06-console.api.openapi.yaml`; консоль домена (`/session`, `/domain/*`) —
+  `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml`; процесс `domain` (`POST /api/login`, предел попыток) —
+  `Platform/08-domain/spec/08-domain.api.openapi.yaml`;
+- набор ключей `domain/keys` (`on`, «ключи есть», `unreadable`) — семья `keys`: `Platform/08-domain/data/keys.form.yaml`,
+  `Platform/08-domain/data/keys.outcomes.tsv`;
+- гранты: копия `domain/grants` у консоли кластера — `Platform/09-agent/data/grants.form.yaml`,
+  `Platform/09-agent/data/grants.outcomes.tsv`; `domain/grants/domain` у консоли домена — `Platform/08-domain/data/grants.form.yaml`,
+  `Platform/08-domain/data/grants.outcomes.tsv`;
+- аварийная учётка `domain/break-glass/<кластер>` — `Platform/08-domain/data/break-glass.form.yaml`,
+  `Platform/08-domain/data/break-glass.outcomes.tsv`;
+- пульс воркера (`door.pass` — живому воркеру с дверью, воркеру на домене — по пульсу) — `Platform/03-worker/data/heartbeats.form.yaml`,
+  `Platform/03-worker/data/heartbeats.outcomes.tsv`;
+- следы домена (нужен только факт наличия строки): `domain/member` — `Platform/09-agent/data/member.form.yaml`,
+  `Platform/09-agent/data/member.outcomes.tsv`; `domain/root` — `Platform/08-domain/data/root.form.yaml`,
+  `Platform/08-domain/data/root.outcomes.tsv`; `domain/revoked` — `Platform/08-domain/data/revoked.form.yaml`,
+  `Platform/08-domain/data/revoked.outcomes.tsv`.
+
 ## Сторожевая
 
 Из P/06.3 Н1.3:
@@ -158,7 +180,7 @@ names:     # раскладка rights.names: [{field, unit, sub | of}] (дог�
   name:    единица — <подсистема>/<id>; записи names с одним field читаются над каждым объектом списка вместе
   outcomes: значение поля null — никого; значение не JSON или не список — "*" (все: правка досягает всех единиц);
            элемент списка не объект — пропуск; объект, в котором ни одна запись не назвала единицу, — "*"
-body_unit: need, чья единица в теле (P/06.3 Н1.3: /marks, POST /<sub>/requests): у консоли кластера — как create_about:
+body_unit: need, чья единица в теле (раздел «Сторожевая» need: /marks, POST /<sub>/requests): у консоли кластера — как create_about:
            до тела — предпроверка «есть грант edit на что-либо» (нет — 403, тело не читается), после тела — точная
            проверка edit на единицу тела (unit) и на единицы rights.unit_of, reach, names; единица не разрешается — по
            unresolved ("*"); грант на about-единицу строки — по scope; у сторожевой домена до тела — unit = "*", проверки
@@ -169,11 +191,11 @@ create_about: создание строки единицы, чья единиц�
            точная проверка по about из тела (догадка стадии C GP-L06, решение «Архитектора» 2026-10-23)
 unresolved: единица, которую нельзя разрешить (строки нет, строка нечитаема) — по about, unit_of, names — нужен грант на
            "*"; cluster_rows — всегда "*" (GP-L06)
-session:   GET /session доказанной личности (P/06.3 Н1.3) — grants: [{cap, scope}] — действующие строки этого человека
+session:   GET /session доказанной личности (раздел «Сторожевая» session) — grants: [{cap, scope}] — действующие строки этого человека
            (шаг 5 may) у этой консоли, по (cap, scope); у аварийной сессии — [] (её may — allow по glass)
 domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /manifest,
-           /mounts и двери урока с GET; admin — остальные двери /domain/* (главы 8.3, 8.4, 8.6 — уроки М11/3, 4, 6, 8,
-           9); unit = "*" у admin; кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле
+           /mounts и двери урока с GET; admin — остальные двери /domain/* (таблица [договора пересылки](forwarding.md)
+           «Двери домена»; аудит раскладки, Б-10); unit = "*" у admin; кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле
            (P/08.4 Н1.2 revoke)
 ```
 
@@ -185,16 +207,16 @@ P/08.4 Н1.10 (предел попыток — общий для `POST /session/
 `domain/break-glass/<кластер>`, `GLASS_MIN`, `carry`) — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.6.
 
 ```yaml
-door:          POST /session/break-glass {who, why, password} у консоли кластера (P/06.3 Н1.3) — по порядку:
+door:          POST /session/break-glass {who, why, password} у консоли кластера (раздел «Сторожевая» open_routes) — по порядку:
                1. консоль open — 400 {error: "open", detail: "this console is open: there is nothing to break into"}
                2. тело не {who, why, password} строками, who или why пусты — 400 bad body
-               3. предел P/08.4 Н1.10                                  → 429
+               3. предел («Предел попыток» ниже)                       → 429
                4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
                   нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
                   не открывается — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)
-               5а. открытых сессий уже GLASS_SESSIONS_MAX — 429 форма RateLimited контракта P/06 (06-console.api.openapi.yaml), detail «too many
-                  emergency sessions», Retry-After — секунды до конца самой ранней сессии; отказ в счёт предела P/08.4 Н1.10
+               5а. открытых сессий уже GLASS_SESSIONS_MAX — 429 форма RateLimited контракта P/06 (`Platform/06-console/spec/06-console.api.openapi.yaml`), detail «too many
+                  emergency sessions», Retry-After — секунды до конца самой ранней сессии; отказ в счёт «Предела попыток»
                   не идёт (добавлено сверкой М11, P20)
                6. 200 {user: "break-glass(<who>)", until} + кука w2c_glass; сессия — в памяти процесса консоли,
                   GLASS_SESSION, токена нет
@@ -208,11 +230,11 @@ journal:       access.break_glass.opened {who, why} | .refused {who, why, reason
 
 ### Предел попыток
 
-«Н1.2», «Н1.6 шаг 5» — [P/08.4](../../08-domain/spec/08.4-domain.norms.md); «глава 8.0 Н1.8» — P/08.0.
+«Н1.2» — [P/08.4](../../08-domain/spec/08.4-domain.norms.md); «глава 8.0 Н1.8» — P/08.0 (аудит раскладки, Б-08: круг через P/08.4 Н1.10 снят — правило здесь).
 
 ```yaml
 scope:     у процесса domain — POST /api/login; у консоли кластера — POST /session/break-glass; свой счёт у каждой двери
-count:     отказ — неверная пара (Н1.2, Н1.6 шаг 5); успех и отказ формы не считаются; попытка — каждый вызов, прошедший
+count:     отказ — неверная пара на POST /api/login (Н1.2) и шаг 5 раздела «Аварийный вход» door выше; успех и отказ формы не считаются; попытка — каждый вызов, прошедший
            форму (момент для ceiling)
 address:   у консоли кластера — адрес TCP-пира (заголовки адреса не читаются); у процесса domain — адрес клиента, который
            передаёт консоль домена (её TCP-пир; глава 8.0 Н1.8 pass): процесс верит переданному адресу только от консоли
@@ -230,7 +252,7 @@ key:       ключ счёта — у процесса domain пара (адре
 per_address: 5 отказов этого ключа за последние 900 с → 429; Retry-After — секунды до выхода старейшего из окна
 ceiling:   20 отказов всех ключей за последние 900 с → каждому ключу не чаще одной попытки в 60 с; раньше — 429,
            Retry-After — секунды до следующей
-body:      429 {error: "too many attempts", detail} и заголовок Retry-After (у консоли — форма RateLimited контракта P/06, 06-console.api.openapi.yaml);
+body:      429 {error: "too many attempts", detail} и заголовок Retry-After (у консоли — форма RateLimited контракта P/06, `Platform/06-console/spec/06-console.api.openapi.yaml`);
            блокировки по одному имени без адреса нет — она дала бы любому выключить администратора с любого адреса; через
            пересылку адрес у входящих один, и пара (адрес, имя) запирает имя у всех, кто входит через ту же консоль, — это
            сужение с «всех» до одного имени, не защита от запирания администратора (№ 26)

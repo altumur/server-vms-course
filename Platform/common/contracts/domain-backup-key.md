@@ -23,6 +23,10 @@ root_key:        вход функции — ровно 64 ASCII-знака hex,
 Где ключ хранится у держателя (`domain/signer.backup_key_secret`), конверт `enc:v2` этим ключом, `kid` `b<backup_key_rev>` и
 чтение копии — P/08.8 Н1.5.
 
+## Форма
+
+Установщик пишет ключ в `domain/signer.backup_key_secret`: `Platform/08-domain/data/signer.form.yaml`, `Platform/08-domain/data/signer.outcomes.tsv` (аудит раскладки, В-09; решение «Архитектора» 2026-10-25).
+
 ## Векторы
 
 Пакет [`domain-backup-key`](../vectors/domain-backup-key/README.md): вывод ключа резервной копии (`root_key`, `backup_key_rev`) → ключ; вне области — отказ. (ADR-0083 доп. (32) п. 2)

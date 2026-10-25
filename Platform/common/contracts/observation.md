@@ -21,10 +21,20 @@
 `Platform/05-resource/data/resource-heartbeat.form.yaml` и `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`
 ([форма](../../05-resource/data/resource-heartbeat.form.yaml), [исходы](../../05-resource/data/resource-heartbeat.outcomes.tsv));
 строку двери `platform/doors/<s>` — по смене версии, её форма — `Platform/05-resource/data/doors.form.yaml`, исходы —
-`doors.outcomes.tsv` ([форма](../../05-resource/data/doors.form.yaml)). Названные файлы данных входят в чтение `common`
+`Platform/05-resource/data/doors.outcomes.tsv` ([форма](../../05-resource/data/doors.form.yaml)). Названные файлы данных входят в чтение `common`
 (ADR-0083 доп. (32) п. 1; C04-DEP-OBS-HEARTBEAT-01). Исходы — по `outcomes.tsv`: поле не по своей форме, у которого есть
 строка исхода поля (`build`, `schema`, `retention_garbled`, `retention_withheld`), действует его исход, пульс остаётся
 читаемым; нечитаемым пульс делает только исход «объект целиком» (в том числе поле вне закрытой формы).
+
+Прочие формы, по которым читают наблюдатели (аудит раскладки, В-38–В-40, Б-16; решение «Архитектора» 2026-10-25): строка удержания места `<sub>/holds/<place>` —
+`Platform/03-worker/data/holds.form.yaml`, `Platform/03-worker/data/holds.outcomes.tsv`; пульс воркера `<sub>/heartbeats/<имя>`
+— `Platform/03-worker/data/heartbeats.form.yaml`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; метка соперника
+`<sub>/contenders/<имя>/<коробка>` — `Platform/03-worker/data/contenders.form.yaml`,
+`Platform/03-worker/data/contenders.outcomes.tsv`; строки решения `<sub>/controller/placement_intent` и `<sub>/placement/<id>`
+— `Platform/04-controller/data/placement-intent.form.yaml`, `Platform/04-controller/data/placement-intent.outcomes.tsv`,
+`Platform/04-controller/data/placement.form.yaml`, `Platform/04-controller/data/placement.outcomes.tsv`. Версия объекта
+(раздел «Наблюдение версии» changed: заголовки `X-Server`, `X-Written`, в листинге `server`, `written`) — контракт двери
+ресурса `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../05-resource/spec/05-resource.api.openapi.yaml)).
 
 ## Наблюдение версии
 
@@ -74,7 +84,7 @@ fresh:       источник свеж (слышен) — его версия м
 
 ```yaml
 HOLD_SKEW: 5          # с; запас к LOST_AFTER у удержания места и у слота воркера на домене (P/03.7)
-active:    действующее удержание места — строка <sub>/holds/<place> по форме (P/03.2 Н1.3), released ≠ true, holder непуст,
+active:    действующее удержание места — строка <sub>/holds/<place> по форме (holds.form.yaml, раздел «Форма»), released ≠ true, holder непуст,
            возраст её наблюдаемой версии на монотонных часах наблюдателя < LOST_AFTER + HOLD_SKEW (при 50 — уже свободно),
            и пульс воркера by свеж (≤ LOST_AFTER, раздел «Свежесть») и называет экземпляр holder (поле instance); первое
            наблюдение — возраст 0 (раздел «Наблюдение версии» first); иначе удержание не действует
@@ -109,7 +119,8 @@ resource_state:
 ## Чтение решения: intent → placement → intent
 
 Эффективное размещение единицы читается по строкам контроллера `<sub>/controller/placement_intent` и `<sub>/placement/<id>`
-(форма — [P/04](../../04-controller/spec/04-controller.norms.md) Н1.1, Н1.5; семьи `placement-intent`, `placement`).
+(форма — семьи `placement-intent`, `placement`: `Platform/04-controller/data/placement-intent.form.yaml`,
+`Platform/04-controller/data/placement.form.yaml` и их `.outcomes.tsv`, раздел «Форма»; сторона писателя — [P/04](../../04-controller/spec/04-controller.norms.md) Н1.5).
 Правило одно для всех читателей: контроллера, `/where`, `/unplaceable`, прогнозов меток, дренажа.
 
 ```
@@ -138,10 +149,10 @@ active intent и id в members → решают target/reason/at/manifest_rev in
 
 ```yaml
 CONTENDER_FRESH: 300   # с; граница свежести метки соперника
-contender: метка соперника <sub>/contenders/<имя>/<коробка> (P/03.2 Н1.4а) свежа — возраст её наблюдаемой версии
+contender: метка соперника <sub>/contenders/<имя>/<коробка> (contenders.form.yaml, раздел «Форма») свежа — возраст её наблюдаемой версии
            (раздел «Наблюдение версии» age) на монотонных часах читателя ≤ CONTENDER_FRESH; первый взгляд — возраст 0
            (first); поле at — показ, не вход суждения (changed: часы писателя свежесть не доказывают); старше
-           CONTENDER_FRESH — не учитывать, как если бы метки не было; нечитаемая (не по форме P/03.2 Н1.4а) — как старше
+           CONTENDER_FRESH — не учитывать, как если бы метки не было; нечитаемая (не по форме contenders.form.yaml) — как старше
 ```
 
 ## Векторы

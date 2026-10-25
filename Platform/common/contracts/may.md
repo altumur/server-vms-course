@@ -24,6 +24,10 @@ P/08.4 Н1.3; метки — [договор азбуки меток](labels.md)
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
+## Форма
+
+Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.form.yaml`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.form.yaml`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.form.yaml`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, В-36, В-37; решение «Архитектора» 2026-10-25).
+
 ## Функция `may`
 
 Из М11/9 Н1.4 «Право — функция `may`»:
