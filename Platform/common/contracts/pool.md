@@ -41,7 +41,8 @@ live:      пульс <sub>/heartbeats/<имя> читается и менялс
 ```yaml
 pool:      живые воркеры
            − отданные слоты
-           − воркеры дренируемого сервера (platform/drain, drain.form.yaml) и выведенных серверов (P/04 Н3 «вывести_сервер»)
+           − воркеры дренируемого сервера (platform/drain, drain.form.yaml) и выведенных серверов (договор наблюдения «Сервер выведен»: читаемая строка platform/decommission/<s> или
+             <sub>/decommissioned/<s>; нечитаемая — не факт, не вычитать, как правило want_rule; ответ «Архитектора» 2026-10-25)
            − при requires: resource — воркеры сервера, чей ресурс silent (resource_state договора наблюдения; unknown — не
              факт, воркер проходит)
            − retiring строк заказа <sub>/want/<сервер> (поле retiring, want.form.yaml; ADR-0084)
