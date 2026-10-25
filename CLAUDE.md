@@ -22,7 +22,7 @@
 
 ## Код курса
 - `Source/` — единственный код курса: `w2cplatform/` платформа (с `cluster/`, `domain/`, `trust/`), `vms/` подсистемы, `deploy/`, `gstvms/`, `tests/`, `traces/`. Тесты: `tests/run.py`, `tests/cluster/run.py`, `tests/domain/run.py`, `tests/domainvms/run.py` в venv python3.12 с pyyaml, cryptography, pysyncobj; jsdom-тесты модуля в `tests/console`.
-- `tests/testdata/testsub*.yaml` и общие таблицы `tests/testdata/*.tsv` — данные спецификации, один YAML с продуктом; их байты правит «Спецификация» (ADR-0080 доп. 16).
+- `tests/testdata/testsub*.yaml` и общие таблицы `tests/testdata/*.tsv` — данные спецификации, один YAML с продуктом; их байты правит «Спецификация» (ADR-0080 доп. 16). Она же правит jsdom-тесты `tests/console/**` и словарь границы `tests/test_boundary.py` (ADR-0080 доп. (22)).
 - Модуль VMS — `VMS/` (ADR-0090): уроки подсистем `VMS/NN-<имя>/`, канон манифестов и оболочек VMS — `VMS/<NN-sub>/<sub>.subsystem.yaml`, `<sub>.shell.html` (доп. (6) п. 8); пишет «Спецификация VMS» по белому списку, хуки `tools/vms-boundary/`. `Source/vms/*` — байты замороженного свидетеля: после старта VMS их не правит никто (доп. (7) п. 4; `check_spec` сверяет `tools/vms-boundary/source-vms.sha256`).
 - Новые реализации генерируются по спецификации из общей папки `/Users/murat/w2c/cammeta-specs` (выгрузка спецификации курса, обновляет «Архитектор» `tools/export.sh`): в стадии C — в `cammeta-c-<язык>` (ADR-0083 доп. (22), (23)); прежние `/Users/murat/w2c/cammeta-python`, `cammeta-go` — замороженные свидетели на выгрузке `d27f95d`; старые (`Source/`, `vmssubsystem`) — свидетели (ADR-0080 доп. 16).
 - Тест границы `Source/tests/test_boundary.py` с долгом: долг только уменьшается.
