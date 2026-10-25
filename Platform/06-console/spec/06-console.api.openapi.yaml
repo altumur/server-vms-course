@@ -6422,6 +6422,15 @@ components:
           additionalProperties:
             type: string
             pattern: ^(?:did not answer|silent|said .+)(?![\s\S])
+        withheld:
+          description: Единицы, чьи метки неизвестны (строка единицы нечитаема или её чтение не подтверждено) и чьи строки
+            поэтому скрыты от гранта по меткам; только вызывающему с грантом view по меткам; без повторов, по возрастанию
+            байтов; таких нет — поля нет (P/06.4 Н2 «Кто видит строку», договор слияния шаг 5а; C06-EVENTS-LABEL-SOURCE-138-07).
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/UnitRef
     MarkInput:
       type: object
       required:
