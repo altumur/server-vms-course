@@ -331,11 +331,15 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 Фильтр — у двери, форма — у функции: дверь тревог собирает вход из хранилища и битого свидетеля (без ts и т. п.)
 отбрасывает со счётчиком до вызова — устойчивость; вектор alarms получает уже собранный вход, и свидетель не по форме в
 нём — вход не по форме, код 2 (H14). Одно другому не противоречит (добавлено сверкой М11, cammeta-python М11-11 № 20).
+Метка `domain/members/<член>/reported`, чтение которой хранилище не подтвердило, — 503 `unavailable` всей двери; метка
+прочитана, но не по форме, — член входит в функцию с `reported: "garbled"` (C10-REPORTED-OUTCOME-1D6, решение «Архитектора» 2026-10-25).
 
 ```
 вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <P/09.1 Н1.10> |
-         "garbled" | null, history: <P/08.9 Н1.9> | null}}, witnesses: [{sub, name, ts, cluster, units}]}
+         "garbled" | null, history: <P/08.9 Н1.9> | null} | {reported: "garbled", page?, history?}}, witnesses: [{sub, name, ts, cluster, units}]}
 1. каждый член:
+   reported = "garbled" (метка прочитана, не по форме) → unreadable; строки молчания и строк страницы этого члена нет,
+                                                        known_until и silent_since нет (C10-REPORTED-OUTCOME-1D6, решение «Архитектора» 2026-10-25)
    last_report нет и page нет                         → never
    last_report нет, а page есть                       → вход не по форме (код 2): страница приходит только с отчётом
    page = "garbled" или не по форме P/09.1 Н1.10      → unreadable; не по форме — и строка без id, class ≠ alarm, kind
@@ -396,7 +400,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 
 Каталог [`acceptance/`](../acceptance/README.md): стенд нескольких кластеров главы 8.3 (`hold`, `m1`, `m2`, каталог
 `testsub`), сценарии 02 (из М11/11) и 05 (из М11/08) — номера и шаги прежние. Список тревог — вектор
-[`vectors/alarms`](../vectors/alarms/README.md) (15 строк; бывший сц. 04 приёмки М11/11).
+[`vectors/alarms`](../vectors/alarms/README.md) (16 строк: 15 — бывший сц. 04 приёмки М11/11).
 
 ```yaml
 alarms:    вход — Н3 alarms; вывод {events, members, complete, sentence}
@@ -404,7 +408,8 @@ exit:      0 — вычислено; 2 — вход не по форме (стр
            Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, history или свидетель не по форме P/08.9 Н1.9
            и Н1.8 (history без cut_before или с cut_before null — тоже, P/08.9 Н1.9 A13), страница-объект без received_at и sent_at,
            нет received_at или sent_at у члена с отчётом, history строкой, свидетель без ts, witnesses не список, now не
-           число, лишнее поле; страница не объект ([], число) или не по форме P/09.1 Н1.10 — 0 unreadable, не 2; page null при
+           число, лишнее поле; reported — не "garbled", или вместе с last_report, received_at, sent_at (C10-REPORTED-OUTCOME-1D6);
+           страница не объект ([], число) или не по форме P/09.1 Н1.10 — 0 unreadable, не 2; page null при
            last_report, received_at и sent_at null у never — 0
 ```
 
