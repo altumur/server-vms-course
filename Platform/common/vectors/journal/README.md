@@ -34,7 +34,8 @@ name_file}`: исходный компонент и нынешнее содер�
 ## `append.tsv`
 
 Те же правила файла; заголовок `case<TAB>file<TAB>line<TAB>expect<TAB>note`: `file` — содержимое бакета до записи,
-`line` — новая строка без LF, `expect` — содержимое после записи (строки JSON). Хвост без LF дописывается LF, усечения нет
+`line` — новая строка без LF, `expect` — содержимое после записи (строки JSON) или `@refuse` — отказ записи, файл не
+меняется (глубже `JSON_DEPTH`, `depth-129`; EJ-DEPTH-BASELINE33). Хвост без LF дописывается LF, усечения нет
 (EJ-L03); прочитанный после записи бакет `no-final-lf` даёт `garbled` 1, а `json-tail` — три обычные строки (`tail-json-appended` в `bucket.tsv`; EJ-L06).
 
 ## `modes.tsv`
