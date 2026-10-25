@@ -44,6 +44,7 @@
 | пул, хранитель места, `idle_by_policy`, `placeable` | [`pool/`](pool/README.md) | P/04 (участник — консоль P/06.5) | [договор пула](../contracts/pool.md) (C06-SERVER-POLICY-33-01) |
 | имя слота: слотовый порядок, следующий номер, номер процесса роли | [`slot-name/`](slot-name/README.md) | P/03.2 | [договор имени слота](../contracts/slot-name.md) (POOL-ORDER-51-01) |
 | действующее удержание места | [`hold-state/`](hold-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Удержание места» (C06-WHERE-PLACE-HOLD-33-01) |
+| история тревог: равенство строк, повтор в странице, запись держателя | [`alarm-history/`](alarm-history/README.md) | P/08.9 (участник — консоль домена P/10) | [договор истории тревог](../contracts/alarm-history.md) (C10-ALARM-SAME-LINE83) |
 | исход ответа хранилища для клиента | [`store-client/`](store-client/README.md) | P/01.1 | [договор клиента хранилища](../contracts/store-client.md) (SC-WIRE78-G01) |
 | надгробие: соседи, подтверждения, снятие | [`tombstone/`](tombstone/README.md) | P/05 (участник — консоль P/06.1) | [договор надгробий](../contracts/tombstone.md) (C06-BLOB-GC-33-01) |
 | свежесть метки соперника: возраст → свежа (`≤ CONTENDER_FRESH`) | [`contender-fresh/`](contender-fresh/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть метки соперника» (C06-CONTENDER-FRESH-33-01) |

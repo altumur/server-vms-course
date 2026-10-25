@@ -381,7 +381,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
    (время — UTC часов домена)
 ```
 
-`same_line` и `cut_before` — [глава 8.9](../../08-domain/spec/08.9-domain.norms.md) Н1.9.
+`same_line`, повтор в странице и `cut_before` — [договор истории тревог](../../common/contracts/alarm-history.md) (C10-ALARM-SAME-LINE83).
 
 **Гонки.** Член без связи и шторм тревог — [глава 9.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «Гонки».
 
