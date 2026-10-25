@@ -12,7 +12,8 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Поле | Значение |
 |---|---|
-| `manifest` | `{servers: shared \| distinct, place_by?: server \| <поле пульса>, requires: none \| resource, grows?: bool, weight?: {field, default}}` |
+| `manifest` | `{prefix, servers: shared \| distinct, place_by?: server \| <поле пульса>, requires: none \| resource, grows?: bool, weight?: {field, default}}` |
+| `manifest.prefix` | `slot.prefix` манифеста (P/02.1 Н1.2; договор имени слота): по нему слотовый порядок (хранитель при равенстве, порядок пула) и разбор имени процесса роли `<prefix>-<сервер>-<n>` («номер выше `want`»); во всех строках `t` (C61-PREFIX-01) |
 | `heartbeats` | `{<воркер>: {server, <поле place_by>?}}` — прочитанные пульсы |
 | `live` | воркеры, чей пульс менялся в последние `LOST_AFTER` |
 | `slots` | `{<воркер>: {released: "false" \| "true" \| "taking", holder}}`; нет записи — строки слота нет |

@@ -7,8 +7,9 @@
 ## `cases.tsv`
 
 UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются, первая непропущенная — заголовок `case<TAB>input<TAB>expect<TAB>note`.
-`input` — `{HOST_MEMORY_MB, WORKER_MEMORY_MB, locks}`: значения файла роли и поле `worker` каждого живого замка роли
-(flock занят) сервера `srv-a` с `slot.prefix` `w`; `expect` — `{room, live}` строками, как в строке двери.
+`input` — `{prefix, server, HOST_MEMORY_MB, WORKER_MEMORY_MB, locks}`: `slot.prefix` манифеста и `SERVER_NAME` (по ним номер
+`n` имени `<prefix>-<сервер>-<n>`; во всех строках `w` и `srv-a`, C61-PREFIX-01), значения файла роли и поле `worker`
+каждого живого замка роли (flock занят); `expect` — `{room, live}` строками, как в строке двери.
 
 ## Прогон
 
