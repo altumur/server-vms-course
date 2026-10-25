@@ -57,7 +57,7 @@ P/06 и прочих: «разбором, не `source`»). Перенесено
 | `INSTANCE_ID` | уникальный экземпляр вместо `<box>:<pid>:<6hex>`; пустое значение — как не задана (INSTANCE130-SOURCES-01); оба источника — по грамматике [договора экземпляра](instance.md), на диске — кодирование имён [договора журнала событий](event-journal.md); иначе отказ до старта (P/03.2 Н3 «старт()» шаг 2, Н4; разбор ревью стадии B 3–5, № 7); новый процесс не переиспользует прежнее значение | — | — |
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | `w2c.env` |
 | `PLATFORM_STORE` | хранилище: `configstore:///run/configstore/<роль>.sock` — дверь P/01.1, единственная связь процесса с хранилищем другой реализации (ADR-0083 п. 2); `file://` — профиль «вся коробка — одна реализация»: процессы коробки и хранилище одной реализации, формат на диске не нормируется и контрактом не является; `memory://` — в процессе, без долговечности (пилот хранилища, А9) | `file://<PLATFORM_DIR>/config` | юнит |
-| `OBJECTS` / `PLATFORM_OBJECTS` | объекты: `file://` \| `cluster://…?resource=<url>` | `file://`; `cluster://` при configstore | `w2c.env` |
+| `OBJECTS` / `PLATFORM_OBJECTS` | объекты: `file://` \| `cluster://…?resource=<url>`; разбор адреса — [договор клиента хранилища объектов](object-client.md) `parse` (C10-OBJECT-ADDRESS-32) | `file://`; `cluster://` при configstore | `w2c.env` |
 | `RESOURCE_ROOT` / `EVENTS` | корень деревьев событий | `<PLATFORM_DIR>/events` | `w2c.env` |
 | `MANIFEST_DIR` | каталог манифестов установщика (глава 2.3) | `/opt/w2c/manifests` | раннер |
 | `SECRETS_KEY` | путь кольца ключей; юниту — по раскладке `<PLATFORM_DIR>/etc/secrets/platform.key`; не задан у процесса — режим разработки (P/06.2 Н1.2 `unset`; разбор ревью стадии A 6–7, № 19) | — | юнит (credential) |

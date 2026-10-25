@@ -1,0 +1,9 @@
+# Разбор адреса хранилища объектов (договор common/contracts/object-client.md parse; C10-OBJECT-ADDRESS-32). Форма — README.
+case	input	expect	note
+file-bare	{"OBJECTS":"file://","PLATFORM_DIR":"/data/platform"}	{"kind":"file","dir":"/data/platform/objects"}	голый file:// — <PLATFORM_DIR>/objects
+file-absolute	{"OBJECTS":"file:///srv/objects","PLATFORM_DIR":"/data/platform"}	{"kind":"file","dir":"/srv/objects"}	file://<абсолютный путь> — этот каталог
+file-relative	{"OBJECTS":"file://objects","PLATFORM_DIR":"/data/platform"}	@exit 2	file://<не абсолютный путь> — отказ старта, код 2
+cluster-resource	{"OBJECTS":"cluster://?resource=https://10.0.0.1:8446","PLATFORM_DIR":"/data/platform"}	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}	cluster:// — запись в свой каталог <PLATFORM_DIR>/objects, чтение кластера — дверь resource
+cluster-named	{"OBJECTS":"cluster://north?resource=https://10.0.0.1:8446","PLATFORM_DIR":"/data/platform"}	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}	часть до «?» — имя кластера, не толкуется
+cluster-no-resource	{"OBJECTS":"cluster://north","PLATFORM_DIR":"/data/platform"}	@exit 2	cluster:// без resource=<url> — отказ старта, код 2
+other-scheme	{"OBJECTS":"s3://bucket","PLATFORM_DIR":"/data/platform"}	@exit 2	иная схема — отказ старта, код 2

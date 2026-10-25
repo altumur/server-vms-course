@@ -1,0 +1,10 @@
+# Класс исхода чтения объекта дверью ресурса (договор common/contracts/object-client.md «Исходы»; C10-OBJECT-ADDRESS-32). Форма — README.
+case	input	expect	note
+found	{"reply":{"status":200,"X-Missing":null}}	"object"	200 — объект
+absent-full	{"reply":{"status":404,"X-Missing":null}}	"absent"	404 без X-Missing — опрос полный: объекта нет
+absent-partial	{"reply":{"status":404,"X-Missing":"srv-b"}}	"unknown"	404 с X-Missing — не известно, не «нет»
+busy	{"reply":{"status":503,"X-Missing":null}}	"unknown"	503 — повторить на следующем шаге
+no-reply	{"reply":"@none"}	"unknown"	дверь не ответила — не известно (как store-client no_reply)
+bad-key	{"reply":{"status":400,"X-Missing":null}}	"refused"	400 — ошибка кода
+outside-door	{"reply":{"status":403,"X-Missing":null}}	"refused"	403 — ошибка кода или развёртывания
+too-large	{"reply":{"status":413,"X-Missing":null}}	"refused"	413 — предел двери
