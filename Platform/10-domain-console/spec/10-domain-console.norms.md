@@ -403,7 +403,6 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н4) | 413 / 400 / 408 | тело больше предела консоли, chunked, читается медленно (договор сторожевой и передачи `body`) |
 | слова договора пересылки `answer` | 502 | передача процессу `domain` (Н1.3 `pass`): обрыв и молчание — как договор пересылки «Пересылка — одна функция» `answer` |
 | `door.pass` | 400, 408, 413, 502, 503 | коды «Передачи» договора сторожевой и передачи (`codes`); воркера на домене не слышно — 503 `unavailable` (Н1.6 `absent`) |
-| `unavailable` | 503 | строка `domain/holder` не читается — `detail` «the holder record does not read» ([семья `holder`](../../08-domain/data/holder.outcomes.tsv); DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
 | `no domain here` | 404 | вид не построен или не читается (Н1.2а, Н1.2б, Н1.2в) |
 | `not in the directory` | 404 | манифест без `domain.ref` (Н1.2а) |
 | `no such member` | 404 | `?cluster=` не член (Н1.2а) |
