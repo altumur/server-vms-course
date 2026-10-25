@@ -7,3 +7,6 @@ cluster-resource	{"OBJECTS":"cluster://?resource=https://10.0.0.1:8446","PLATFOR
 cluster-named	{"OBJECTS":"cluster://north?resource=https://10.0.0.1:8446","PLATFORM_DIR":"/data/platform"}	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}	часть до «?» — имя кластера, не толкуется
 cluster-no-resource	{"OBJECTS":"cluster://north","PLATFORM_DIR":"/data/platform"}	@exit 2	cluster:// без resource=<url> — отказ старта, код 2
 other-scheme	{"OBJECTS":"s3://bucket","PLATFORM_DIR":"/data/platform"}	@exit 2	иная схема — отказ старта, код 2
+resource-empty	{"OBJECTS":"cluster://?resource=","PLATFORM_DIR":"/data/platform"}	@exit 2	resource пустой — отказ старта, код 2 (OBJECT135-URL-01)
+resource-repeated	{"OBJECTS":"cluster://?resource=a&resource=b","PLATFORM_DIR":"/data/platform"}	@exit 2	resource повторён — отказ старта, код 2
+resource-percent	{"OBJECTS":"cluster://?resource=http%3A%2F%2Fh%3A1","PLATFORM_DIR":"/data/platform"}	{"kind":"cluster","dir":"/data/platform/objects","resource":"http://h:1"}	resource после percent-декодирования — транспорту как есть
