@@ -44,6 +44,7 @@
 | пул, хранитель места, `idle_by_policy`, `placeable` | [`pool/`](pool/README.md) | P/04 (участник — консоль P/06.5) | [договор пула](../contracts/pool.md) (C06-SERVER-POLICY-33-01) |
 | имя слота: слотовый порядок, следующий номер, номер процесса роли | [`slot-name/`](slot-name/README.md) | P/03.2 | [договор имени слота](../contracts/slot-name.md) (POOL-ORDER-51-01) |
 | действующее удержание места | [`hold-state/`](hold-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Удержание места» (C06-WHERE-PLACE-HOLD-33-01) |
+| надгробие: соседи, подтверждения, снятие | [`tombstone/`](tombstone/README.md) | P/05 (участник — консоль P/06.1) | [договор надгробий](../contracts/tombstone.md) (C06-BLOB-GC-33-01) |
 | свежесть метки соперника: возраст → свежа (`≤ CONTENDER_FRESH`) | [`contender-fresh/`](contender-fresh/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть метки соперника» (C06-CONTENDER-FRESH-33-01) |
 | SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` |
 | токен двери `door1`: выпуск (JCS, Ed25519) и проверка у держателя по `door/keys` | [`door-token/`](door-token/README.md) | P/06.5 (участник 3.4) | [договор токена двери](../contracts/door-token.md); P/06.5-05, P/03.4-08 |

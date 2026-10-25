@@ -1,0 +1,20 @@
+# Надгробие: соседи, подтверждения, снятие (договор common/contracts/tombstone.md; C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01).
+# Строка: case<TAB>op<TAB>input<TAB>expect<TAB>note. Форма — README пакета.
+case	op	input	expect	note
+peers-basic	peers	{"self":"srv-a","doors":["srv-a","srv-b","srv-c"],"decommission":[]}	{"peers":["srv-b","srv-c"]}	все серверы листинга дверей, кроме своего
+peers-decommissioned	peers	{"self":"srv-a","doors":["srv-a","srv-b","srv-c"],"decommission":["srv-c"]}	{"peers":["srv-b"]}	выведенный (строка platform/decommission/srv-c в листинге) — не в peers
+peers-decommission-without-door	peers	{"self":"srv-a","doors":["srv-a","srv-b","srv-c"],"decommission":["srv-x"]}	{"peers":["srv-b","srv-c"]}	строка вывода сервера без строки двери — peers не меняет
+peers-self-without-door	peers	{"self":"srv-z","doors":["srv-a","srv-b"],"decommission":[]}	{"peers":["srv-a","srv-b"]}	своей строки двери нет — все серверы листинга
+peers-silent	peers	{"self":"srv-a","doors":["srv-a","srv-b"],"decommission":[],"silent":["srv-b"]}	{"peers":["srv-b"]}	молчащий, но не выведенный — в peers: надгробие ждёт его подтверждения
+peers-only-self	peers	{"self":"srv-a","doors":["srv-a"],"decommission":[]}	{"peers":[]}	других серверов нет — peers пуст
+peers-doors-unconfirmed	peers	{"self":"srv-a","doors":"@unconfirmed","decommission":[]}	"no_delete"	листинг дверей не подтверждён — удаления нет, надгробие не пишется
+peers-decommission-unconfirmed	peers	{"self":"srv-a","doors":["srv-a","srv-b"],"decommission":"@unconfirmed"}	"no_delete"	листинг вывода не подтверждён — удаления нет
+ack-404	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":404,"srv-c":200}}	{"acked":["srv-b"]}	404 на GET копии — подтверждение; копия есть (200) — нет
+ack-unknown	ack	{"peers":["srv-b","srv-c"],"acked":[],"answers":{"srv-b":500,"srv-c":"silent"}}	{"acked":[]}	иной ответ или неответ — неизвестный исход, не подтверждение
+ack-keeps-acked	ack	{"peers":["srv-b","srv-c"],"acked":["srv-b"],"answers":{"srv-c":404}}	{"acked":["srv-b","srv-c"]}	подтвердивший остаётся в acked и не переспрашивается; новый 404 дописывается
+remove-all-acked-7d	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b","srv-c"]},"now":605800,"rewritten":false}	"remove"	все peers подтвердили и прошло ровно 7 дней (604800 с) — снять
+remove-all-acked-early	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b","srv-c"]},"now":605799.999,"rewritten":false}	"keep"	все подтвердили, но 7 дней не прошло — держать
+remove-not-all-acked	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":["srv-b"]},"now":3000000,"rewritten":false}	"keep"	не все peers подтвердили — держать, сколько бы ни прошло
+remove-empty-peers	remove	{"tombstone":{"written":1000,"peers":[],"acked":[]},"now":605800,"rewritten":false}	"remove"	peers пуст — подтверждать некому, снять через 7 дней
+remove-rewritten	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":[]},"now":605801,"rewritten":true}	"remove"	ключ записан у удалившего снова после written — снять без подтверждений
+remove-garbled	remove	{"tombstone":"@garbled","now":3000000,"rewritten":false}	"keep"	нечитаемое надгробие — неизвестный исход: не снимать
