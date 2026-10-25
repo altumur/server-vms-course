@@ -24,10 +24,10 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 полей, счёт нечитаемого которых прибавился (`<sub>_console_rows_garbled{table="field"}`). Сравнение — массив строк байт в байт
 и число.
 
-26 строк: все ключи — `name` (и повтор), `type`, `labels`, `from` (`heartbeat`, `status`, сегмент `<имя>`), `agg` (`value`, `flag`,
+28 строк: все ключи — `name` (и повтор), `type`, `labels`, `from` (`heartbeat`, `status`, сегмент `<имя>`), `agg` (`value`, `flag`,
 `age`, `label`, `count`, `sum`, `max`, `histogram`), `equals`, `when`, `default`, `live`, `count`, `where` (слово и список), `unheld`,
 `unless`, `buckets`, `label`, `values`; запись значения по значению, экранирование подписи; логическое значение в числовом поле
-(`value`, `sum`: true — 1, false — 0).
+(`value`, `sum`: true — 1, false — 0); округление половины к чётному у `age` (0.25, 0.35, 0.45) и `_sum` (7.0625) — C06-METRICS-ROUND-91-01.
 
 ## Прогон
 
