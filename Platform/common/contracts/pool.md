@@ -99,7 +99,7 @@ why:       при placeable: false — «no eligible live worker»; при true 
 вывод, заказ), ресурсы, манифест; выход — пул, хранители, `idle_by_policy`, `placeable`/`why`, нагрузка и счёт. Живость пульса по истории — пакет
 [`fresh-age`](../vectors/fresh-age/README.md) и [`resource-state`](../vectors/resource-state/README.md); `constraint`,
 `spread_by`, `affinity`, порядок выбора — P/04, сценарии и чтение. Участник: пакет [`slot-name`](../vectors/slot-name/README.md)
-— пакет урока-владельца P/03.2 (договор имени слота), исполняет он; договор пула там — потребитель (слотовый порядок —
+— пакет общего договора slot-name, исполняет common; этот договор там — участник (слотовый порядок —
 хранитель при равенстве нагрузки; В-44; CM-RECORD-VECTORS-128, решение «Архитектора» 2026-10-25).
 
 ## Соответствие прежним урокам
