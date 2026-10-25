@@ -5421,8 +5421,9 @@ components:
           - type: 'null'
         name_conflict:
           type: boolean
-          description: По меткам соперников (Н3 «/servers»); учитываются только свежие — договор наблюдения «Свежесть
-            метки соперника» (C06-CONTENDER-FRESH-33-01).
+          description: true, когда под именем воркера есть хотя бы одна свежая читаемая метка соперника любого state
+            (refused, nameless, waiting); имя — сегмент ключа, метки «-» не входят (Н3 «/servers» «Соперники»; договор
+            наблюдения «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01, C06-CONTENDER-PROJECTION-33-01).
         status:
           type: object
           additionalProperties:
