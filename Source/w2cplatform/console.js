@@ -2239,8 +2239,9 @@
       try {
         const d = await getJSON(`/events?from=${now - 86400}&to=${now}`);
         const list = (Array.isArray(d) ? d : d.events || []).slice(-200).reverse();
-        el.querySelector(".pc-evlist").innerHTML = list.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}</small></li>`).join("") || `<li>${h(W.noEvents)}</li>`;
-      } catch (e) { el.querySelector(".pc-evlist").innerHTML = `<li class="bad">${h(e.message)}</li>`; }
+        const ul = el.querySelector(".pc-evlist"); if (!ul) return;   // left the journal before /events answered
+        ul.innerHTML = list.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}</small></li>`).join("") || `<li>${h(W.noEvents)}</li>`;
+      } catch (e) { const ul = el.querySelector(".pc-evlist"); if (ul) ul.innerHTML = `<li class="bad">${h(e.message)}</li>`; }
     }
 
     // -- the session -------------------------------------------------------------------------------------------

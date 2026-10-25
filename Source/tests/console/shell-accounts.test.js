@@ -106,7 +106,6 @@ async function until(test,message){for(let i=0;i<100;i++){if(test())return;await
     assert.equal(host().querySelector(".live-account-secret strong").textContent,attack);
     assert.ok(!d.querySelector("img")&&!w.__accountXSS);
     const leaving=input();d.querySelector('[data-s="journal"]').click();await until(()=>leaving.value==="","leaving removes the secret");
-    await until(()=>main().querySelector(".pc-evlist li"),"journal painted");   // журнал модуля дорисован до ухода: его поздний ответ не пишет в чужую карточку
     await open();assert.equal(input(),null);
 
     // Both reads and writes report refusals in the current card, without rendering server text as markup.
