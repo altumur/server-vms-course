@@ -4908,7 +4908,9 @@ components:
           - json
           - url
           - blob
-        default: {}
+        default:
+          description: Умолчание поля как написано; нет — null. У поля *_secret — всегда null, даже если манифест его задал
+            (значение секрета не выдаётся; P/06.5 Н2 «GET /manifest»; C10-MOUNT-FIELDS-1D6).
         required:
           type: boolean
         fixed:

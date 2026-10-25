@@ -252,7 +252,9 @@ page:     GET /, /index.html — опубликованная страница �
           аргументом вызова mount: opts.sections: [domain]; CSP — по тексту отданной страницы (P/06.5); /platform/console.js,
           /platform/console.css — байты опубликованного модуля как есть (P/06.5 Н1.1)
 manifest: GET /manifest → {"name": "", "rows": null} — корня нет
-mounts:   GET /mounts → {"root": "", "mounts": {<sub>: <описание P/06.5 Н2 /mounts>}} по каталогу держателя, без media
+mounts:   GET /mounts → {"root": "", "mounts": {<sub>: <описание P/06.5 Н2 /mounts>}} по каталогу держателя, без media;
+          fields — как P/06.5 Н2 «GET /manifest»: все поля unit.fields, в том числе *_secret, у них default — null
+          (C10-MOUNT-FIELDS-1D6, решение «Архитектора» 2026-10-25)
 session:  /session, /healthz — как у консоли кластера (договор сторожевой и передачи «Сторожевая» session; разбор ревью
           стадии A 8–10, № 14)
 module:   какие двери модуль зовёт в режиме domain, и что его узлы member:<член>, domain — свойство опубликованного модуля
