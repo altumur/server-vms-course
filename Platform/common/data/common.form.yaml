@@ -333,8 +333,8 @@ defs:
   domain_backup_doc:
     type: object
     description: >-
-      документ резервной копии (P/08.8 Н1.5 document) — JCS {term, rev, holder, at, members, state, objects, backup_key_rev,
-      holder_member_key?, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/backups/rev-<rev>`) и у
+      документ резервной копии (P/08.8 Н1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?,
+      backup_key_rev, holder_member_key?, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/backups/rev-<rev>`) и у
       хранителя (объект domain/backup); подпись — выпускающим, проверка — функция record договора записи срока (вид
       «документ резервной копии»; типы — шаг 1, not_a_record). domain документ не несёт: к домену его привязывает
       выпускающий (record шаги 3–5)
@@ -380,7 +380,19 @@ defs:
       objects:
         type: object
         opaque: true
-        description: "`{<ключ объекта>: <JSON>}` — общий документ и история тревог (Н1.5 objects)"
+        description: "`{<ключ объекта>: <JSON>}` — общий документ и история тревог (Н1.5 objects); байты JSON, в том числе не по форме своей семьи, — значением как есть"
+      raw:
+        type: object
+        properties: {}
+        names:
+          key:
+            type: string
+            description: ключ объекта; ключ — в objects или в raw, не в обоих (Н1.5 raw)
+          value:
+            type: string
+            pattern: '([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?'
+            description: base64 байтов объекта, RFC 4648 §4, с дополнением
+        description: "`{<ключ объекта>: <base64>}` — объекты копии, чьи байты не JSON (Н1.5 raw; C08-BACKUP-JSON-99, решение «Архитектора» 2026-10-26)"
       backup_key_rev:
         ref: pos53
         description: ревизия ключа резервной копии (Н1.5 backup_key)

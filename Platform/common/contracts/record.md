@@ -81,7 +81,7 @@ switch:      у кластера держателя строки domain/keys, do
 — там же.
 
 ```yaml
-backup_doc:   документ резервной копии — JCS {term, rev, holder, at, members, state, objects, backup_key_rev,
+backup_doc:   документ резервной копии — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev,
               holder_member_key?, issuer, kid, sig}   # закрытый набор; подпись — как запись срока
 grant_doc:    грант передачи — {doc: JCS {grant: "handover", domain, to, from, term, rev, at, issuer, kid, sig}}   # закрытый набор
 member_name:  имя члена — CLUSTER его установки: 1–64 знака [a-z0-9-], не пустое; holder, to, from и элементы members —
@@ -106,7 +106,8 @@ member_name:  имя члена — CLUSTER его установки: 1–64 з
    урока 11, — не запись) с типами: term — целое ≥ 1, at — число, holder — имя члена, url — непустая строка, ca — 1–2
    отпечатка без повторов, restored_from — {term, rev}, issuer — hex 32 байт; у документа резервной копии rev —
    целое ≥ 1, members — список имён членов без повторов, state — {<ключ строки>: {<элемент>: <текст>}}, objects —
-   объект, backup_key_rev — целое ≥ 1, holder_member_key — hex 32 байт; у гранта grant — "handover", to и from —
+   объект, raw — {<ключ>: строка base64 RFC 4648 §4 с дополнением} (C08-BACKUP-JSON-99, решение «Архитектора» 2026-10-26), backup_key_rev — целое ≥ 1,
+   holder_member_key — hex 32 байт; у гранта grant — "handover", to и from —
    имена членов, rev — целое ≥ 1 (виды и типы — добавлено сверкой М11, H9, H11, H12); у записи срока с term 1 — поле
    restored_from; domain, kid и sig шаг 1 не проверяет по содержимому (любой JSON-тип domain — шаг 2; kid — любая
    строка, sig — любая строка: шаги 3–5) — одно правило для всех видов, в том числе общего документа (догадка стадии C REC-G01, решение «Архитектора» 2026-10-23)
@@ -133,7 +134,7 @@ member_name:  имя члена — CLUSTER его установки: 1–64 з
 ## Векторы
 
 Пакет [`record`](../vectors/record/README.md) (разбор ревью стадии A 8–10, № 13): `shared.tsv` — 8 строк вида «общий
-документ» (REC-G01); `cases.tsv` — 28 строк: 1 по C137-SCHEMA-TIME-01 (`until` сверх binary64 — код 2), 3 по REC-TRUSTED-TIME73 (время `until` доверенного набора по канону P/01.1 Н0: строка записи принята, −1 и «1e9» — код 2), 4 по REC-G02 (вложенность 64/65 текста `doc`, строки и `keys`), 3 по REC-G01 (срок 1 с `restored_from`, `domain` числом, `kid` не hex) и 17 — входы команды `record`
+документ» (REC-G01); `cases.tsv` — 31 строка: 3 по C08-BACKUP-JSON-99 (`raw` документа резервной копии: байты `ff7b` — `/3s=`; без дополнения и base64url — `not_a_record`), 1 по C137-SCHEMA-TIME-01 (`until` сверх binary64 — код 2), 3 по REC-TRUSTED-TIME73 (время `until` доверенного набора по канону P/01.1 Н0: строка записи принята, −1 и «1e9» — код 2), 4 по REC-G02 (вложенность 64/65 текста `doc`, строки и `keys`), 3 по REC-G01 (срок 1 с `restored_from`, `domain` числом, `kid` не hex) и 17 — входы команды `record`
 приёмки М11/10 (сц. 05) без изменения байтов: три вида документа, чужой домен, отозванный и неизвестный выпускающий,
 `kid` ≠ `issuer`, подмена, формы и типы; одна строка — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); сценарий и входы сняты переносом
 урока 8 — таблица единственный источник этих случаев. Форма функции и коды выхода команды — копия
