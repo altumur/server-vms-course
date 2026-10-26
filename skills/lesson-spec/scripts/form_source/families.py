@@ -318,6 +318,23 @@ class CodecError(Exception):
     pass
 
 
+class LexInt(int):
+    """Целое JSON с исходной записью (`-0` — 0 с записью `-0`): судья читателя смотрит на запись, не на значение."""
+    def __new__(cls, text):
+        v = int.__new__(cls, text)
+        v.lex = text
+        return v
+
+
+class LexFloat(float):
+    """Число JSON с дробью или экспонентой и исходной записью: `1e0`, `1e-400` (0.0 в binary64), `100.00000000000000001`
+    (100.0 в binary64) — запись другая, значение то же; время и целое читателя решаются по записи (OBS154-RAW-TIME-EXACT-01)."""
+    def __new__(cls, text):
+        v = float.__new__(cls, text)
+        v.lex = text
+        return v
+
+
 def strict_json(text):
     """Текст JSON по грамматике значений json (codec.tsv): без NaN и бесконечностей, без повтора ключей."""
     def pairs(items):
@@ -331,9 +348,20 @@ def strict_json(text):
     def constant(c):
         raise CodecError("json: %s" % c)
     try:
-        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant, parse_int=LexInt,
+                          parse_float=LexFloat)
     except ValueError as exc:
         raise CodecError("json: %s" % exc)
+
+
+def exact_integer(v):
+    """Равно ли число целому по точному десятичному значению записи (codec.tsv integer, читатель); без записи — по
+    значению."""
+    lex = getattr(v, "lex", None)
+    if lex is None:
+        return float(v).is_integer()
+    d = Decimal(lex)
+    return d == d.to_integral_value()
 
 
 def jcs(v):
@@ -460,8 +488,8 @@ class Judge(Loader):
             if t.types == ["time"]:
                 return self.fail(out, p, "value", "type: expected time")
         if t.types and "integer" in t.types and isinstance(v, float) and v.is_integer():
-            if self.mode == "reader" and not f.has_note(n, "whole"):
-                v = int(v)                          # читатель — по значению (codec.tsv integer)
+            if self.mode == "reader" and not f.has_note(n, "whole") and exact_integer(v):
+                v = int(v)                          # читатель — по точному значению записи (codec.tsv integer)
         self.limits(t, v, p, out)
         if self.mode == "writer" and t.writer is not None:
             Loader.node(self, t.writer, v, p, nm, out)
@@ -471,6 +499,8 @@ class Judge(Loader):
     def is_time(self, v):
         if isinstance(v, bool):
             return False
+        if isinstance(v, (LexInt, LexFloat)):       # запись числа JSON — та же грамматика, что у строки
+            return TIME[self.mode].fullmatch(v.lex) is not None and math.isfinite(float(v.lex))
         if isinstance(v, (int, float)):
             return math.isfinite(v) and v >= 0 and (self.mode == "reader" or round(v, 3) == v)
         return isinstance(v, str) and TIME[self.mode].fullmatch(v) is not None
@@ -486,9 +516,17 @@ class Judge(Loader):
                 self.fail(out, p, "value", "max_items: names")
 
     def judge(self, value, kind="row"):
-        """value — `row` (объект строк items), `object` (значение JSON) или `file` (байты или текст файла JSON; корень
-        схемы с `encoding` его разбирает) → {verdict, paths, why}."""
+        """value — `row` (объект строк items), `object` (значение JSON или его текст: текст сохраняет запись чисел —
+        `1e0` не время, `100.00000000000000001` не целое; OBS154-RAW-TIME-EXACT-01) или `file` (байты или текст файла
+        JSON; корень схемы с `encoding` его разбирает) → {verdict, paths, why}."""
         out, self._decoded = [], set()
+        if kind == "object" and isinstance(value, (str, bytes)):
+            # текст JSON — разбор с записью чисел; разобранное значение записи не несёт (числа — по значению)
+            try:
+                value = strict_json(value.decode("utf-8") if isinstance(value, bytes) else value)
+            except (CodecError, UnicodeDecodeError) as exc:
+                self.fail(out, [], "value", "object: %s" % exc)
+                value = None
         if kind == "row":
             value = self.decode_row(value, out)
         elif kind == "file" and isinstance(value, bytes):

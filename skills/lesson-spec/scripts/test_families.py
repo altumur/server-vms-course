@@ -321,6 +321,24 @@ class Codec(FamiliesBase):
         self.assertEqual(Judge(form, "writer").judge({"n": 1.0}, "object")["paths"], ["/n"])
         self.assertEqual(Judge(form, "writer").judge({"at": 1.2345}, "object")["paths"], ["/at"])
 
+    def test_object_text_keeps_number_records(self):
+        """Текст объекта судья разбирает с записью чисел: время читателя — грамматика записи, целое без whole — точное
+        десятичное значение записи, не binary64 (OBS154-RAW-TIME-EXACT-01)."""
+        form = load_form(b"dialect: data-form/1\nroot:\n  type: object\n  properties:\n    n:\n      type: integer\n"
+                         b"    w:\n      ref: common.uint53\n      whole: true\n    at:\n      ref: common.time\n",
+                         load_common(self.root / "Platform/common/data/common.form.yaml"))
+        judge = Judge(form, "reader")
+        for text, paths in (('{"at": 1.5}', []), ('{"at": 1e0}', ["/at"]), ('{"at": 1e-400}', ["/at"]),
+                            ('{"at": -0}', ["/at"]), ('{"at": 1' + "0" * 400 + '}', ["/at"]),
+                            ('{"n": 100.0}', []), ('{"n": 100.00000000000000001}', ["/n"]), ('{"n": 1e2}', []),
+                            ('{"w": 1}', []), ('{"w": 1.0}', ["/w"]), ('{"w": 1e0}', ["/w"]),
+                            ('{"w": -0}', [])):                             # -0 — целый знак (codec.tsv integer)
+            with self.subTest(text=text):
+                self.assertEqual(judge.judge(text, "object")["paths"], paths)
+                self.assertEqual(judge.judge(text.encode("utf-8"), "object")["paths"], paths)
+        self.assertEqual(judge.judge({"at": 1.0}, "object")["verdict"], "ok")       # значение без записи — по значению
+        self.assertEqual(judge.judge('{"at": 1', "object")["verdict"], "refused")
+
 
 class SectionText(FamiliesBase):
     def test_section_is_deterministic_and_projects_the_source(self):
