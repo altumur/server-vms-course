@@ -37,3 +37,15 @@ scenario	step	request	expect
 04-relay-cut	7	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "relay", "state": "silent"}]}
 04-relay-cut	8	@mend relay	ok
 04-relay-cut	9	@until 40 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+05-relay-moves	1	@domain m1 relay	ok
+05-relay-moves	2	@start agent relay second	ok
+05-relay-moves	3	@start agent m2 via relay	ok
+05-relay-moves	4	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}
+05-relay-moves	5	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200
+05-relay-moves	6	@join m2	ok
+05-relay-moves	7	holder PUT /domain/topology {"base_rev": 0, "via": {"m2": "relay"}}	200 {"rev": 1}
+05-relay-moves	8	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+05-relay-moves	9	@until 30 resource GET /v1/objects/domain/members/m2/reported?scope=local	200 {"via": "relay", "received_at": "$t1"}
+05-relay-moves	10	@on relay @sigterm agent#1	ok
+05-relay-moves	11	@until 60 resource GET /v1/objects/domain/members/m2/reported?scope=local	200 {"via": "relay", "received_at": "@not($t1)"}
+05-relay-moves	12	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}]}

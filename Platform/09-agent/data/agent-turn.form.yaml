@@ -1,0 +1,11 @@
+# Семья domain/agent-turn — очередь агента у кластера-члена (P/09.1; P/09.1 Н1.13 turn, release, Н3 «очередь агента»;
+# DOM-AGENT-TURN-01, согласие владельца 2026-10-26). Источник формы строки (ADR-0088). Экземпляр — {key, row}; ключ —
+# грамматика колонки key каталога. Слова — Platform/common/DIALECT.md.
+dialect: data-form/1
+root:
+  type: object
+  properties:
+    holder:
+      type: string
+      description: "экземпляр активного агента `<коробка>:<pid>:<6 hex>` (форма экземпляра — договор экземпляра common/contracts/instance.md) или \"\" — очередь отдана по SIGTERM (Н1.13 release)"
+  required: [holder]

@@ -103,3 +103,23 @@ scenario	step	request	expect
 14-pointer-checksum	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
 14-pointer-checksum	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
 14-pointer-checksum	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~does not match the pointer"}}
+15-one-agent	1	@domain m1	ok
+15-one-agent	2	@start agent m1 second	ok
+15-one-agent	3	@until 30 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "$a1"}}
+15-one-agent	4	@sleep 25	ok
+15-one-agent	5	member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "$a1"}}
+15-one-agent	6	@until 60 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"received_at": "$t1"}
+15-one-agent	7	token m1 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	403 {"error": "$e", "reason": "$r"}
+15-one-agent	8	token m1#2 testsubworker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	403 {"error": "$e", "reason": "$r"}
+15-one-agent	9	@on m1 @sigterm agent#1	ok
+15-one-agent	10	@until 30 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "@not($a1)"}}
+15-one-agent	11	@until 20 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
+15-one-agent	12	@until 60 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"received_at": "@not($t1)"}
+15-one-agent	13	@start agent m1 second	ok
+15-one-agent	14	member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "$a2"}}
+15-one-agent	15	@on m1 @sigkill agent#2	ok
+15-one-agent	16	@sleep 30	ok
+15-one-agent	17	member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "$a2"}}
+15-one-agent	18	@until 40 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "@not($a2)"}}
+15-one-agent	19	@until 20 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
+15-one-agent	20	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}]}
