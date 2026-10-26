@@ -16,14 +16,14 @@ v6-loopback	{"url":"https://[::1]:8080"}	"loopback"	::1 в скобках URL
 v6-loopback-full	{"url":"https://[0:0:0:0:0:0:0:1]:8080"}	"loopback"	значение ::1 в полной записи
 v6-loopback-zeros	{"url":"https://[0000::0001]:8080"}	"loopback"	значение ::1 с ведущими нулями групп — запись v6, значение то же
 v6-loopback-zone	{"url":"https://[::1%25lo0]:8080"}	"ip"	::1 с зоной (%25 — знак % в URL) — не петля; v6 с зоной — IP-адрес шага 1 peer
-v6-mapped	{"url":"https://[::ffff:127.0.0.1]:8080"}	"ip"	::ffff:127.0.0.1 — не петля (доп. (3) п. 1)
+v6-mapped	{"url":"https://[::ffff:127.0.0.1]:8080"}	"ip"	::ffff:127.0.0.1 — не ::1 и не запись v4 — ip (доп. (3) п. 1, (6) п. 3)
 v6-any	{"url":"https://[::]:8080"}	"ip"	`::` — не петля
 v6-other	{"url":"https://[fe80::1]:8080"}	"ip"	иной v6
 name-localhost	{"url":"https://localhost:8080"}	"name"	localhost — имя, даже если DNS отдаёт петлю (доп. (3) п. 1)
 name-server	{"url":"https://srv-a:8443"}	"name"	имя сервера
 name-upper	{"url":"https://LOCALHOST:8080"}	"name"	имя в любом регистре — имя
 v4-trailing-dot	{"url":"https://127.0.0.1.:8080"}	"name"	точка в конце — запись не из четырёх частей: имя (без нормализации)
-v6-v4-tail-loopback	{"url":"https://[::0.0.0.1]:8080"}	"loopback"	v6 с хвостом v4, значение ::1 — петля в любой записи
+v6-v4-tail-loopback	{"url":"https://[::0.0.0.1]:8080"}	"loopback"	v6 с хвостом v4, значение ::1 — петля в любой записи (доп. (6) п. 3)
 v6-v4-tail-other	{"url":"https://[::127.0.0.1]:8080"}	"ip"	v6 с хвостом v4 127.0.0.1 — значение ::7f00:1, не ::1: ip
 userinfo	{"url":"https://u@127.0.0.1:8080"}	"loopback"	userinfo@ — не часть хоста
 not-a-url	{"url":"127.0.0.1:8080"}	@exit 2	нет схемы и «//» — не URL: вход не по форме
