@@ -296,10 +296,12 @@ metrics:
   # The rounds of a relay's forwarder its store failed, per camera (the fifteenth review's blocker: one failure killed
   # the camera's loop in silence; now it is counted, said once in the log and the loop goes on — `upstream.<ref>.errors`).
   - {name: forwarder_errors_total, from: "heartbeat.upstream.<camera>.errors", agg: sum, type: counter}
-  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.absurd_frames", agg: sum, type: counter}
-  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.ahead_losses", agg: sum, type: counter}
-  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.repeats_dropped", agg: sum, type: counter}
-  - {name: ingest_dropped_total, from: "heartbeat.ingest_streams.<camera>.dropped", agg: sum, type: counter}
+  # The ingest's frames are a stream's, its clock the camera's (V/02.9 Н1.10): `<camera>` — the camera's key (its id, or
+  # `ref:<ref>` for another cluster's), `<stream>` — the stream ("" — the main one).
+  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.absurd_frames", agg: sum, type: counter}
+  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.ahead_losses", agg: sum, type: counter}
+  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.repeats_dropped", agg: sum, type: counter}
+  - {name: ingest_dropped_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.dropped", agg: sum, type: counter}
   - {name: ingest_clock_steps_total, from: "heartbeat.ingest_streams.<camera>.clock_steps", agg: sum, type: counter}
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
