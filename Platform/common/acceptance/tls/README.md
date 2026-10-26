@@ -27,6 +27,7 @@
 | `defaults.leaf` | лист роли по договору сертификата роли `cert`: CN `<роль>.<server>`, SAN DNS `<server>`, SAN URI `urn:w2c:role:<роль>` — ровно одна, EKU `serverAuth` + `clientAuth`, `days` 825; подпись центром своего кластера |
 | `clusters` | кластер → роли его комплекта: центр кластера и лист на каждую роль; раскладка — договор `kit` (`ca.pem`, `<роль>/server.pem`, `<роль>/server.key`) в `W2C_TLS_DIR` кластера; `revoked` пуст, `ca.next.pem` нет |
 | `foreign` | роли комплекта «чужого» центра: свой центр, который ни один кластер не публикует (`tls_ca`) и не держит |
+| `named` | комплект одной коробки с иным именем сервера (ADR-0075 доп. 2026-10-26 (4) п. 7): свой центр, листы ролей `roles` с CN `<роль>.<server>` и SAN DNS `server` (`box-n`), не `localhost`; раскладка — договор `kit`; другие кластеры его центру не верят. Им пользуется только `@kit-start` |
 | `negative` | клиентские листы для проб: `issuer` — кластер, чей центр подписывает; `role` — роль листа; прочие поля заменяют умолчание листа: `uri: null` — без SAN URI, `eku` — свой набор, `sig` — подпись листа (`sha512` — ECDSA с SHA-512, вне закрытого списка договора `sig`), `not_before`, `days` — свой срок |
 
 Отпечаток центра — sha256 hex DER ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). Раннер называет каждому кластеру его каталог комплекта
@@ -192,6 +193,30 @@ cluster: hold, path: /domain, user: <имя токена стенда>, status: 
 | `@tls`: дверь `member m1 console`, клиент `foreign-console`, запрос `GET /domain` | `{"handshake": "ok"}` | `signed`: по центру не отказывает |
 | `@tls`: дверь `member m1 console`, клиент `null`, запрос `GET /domain` | `{"handshake": "ok"}` | `signed`: сертификата клиента не требует |
 | `@person -`, затем `member m1 console @header X-Operator: console GET /domain/users` | `401` — сторожевая: токена нет, заголовок личностью не служит | `x_operator`, P/06.7 Н1.9 |
+
+## Клиент своей коробки и умолчания адресов (ADR-0075 доп. 2026-10-26 (4) п. 7, (5) п. 4)
+
+Нормы: [договор сертификата роли](../../contracts/role-certificate.md) «Клиент двери своего кластера» (`own_client`,
+`loopback`); [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `process`, `console`; Н1.12 и lifecycle
+P/08, P/10 (умолчания адресов). Директива `@kit-start` — словарь «Стенда домена» общего README (форма согласована
+«cammeta-acceptance» 2026-10-26). Подготовка — `@tls-setup …/stand.json` (комплект `named`); шаги не требуют
+`@domain` и кластеров стенда домена: процесс стартует один, на коробке стенда с его хранилищем и манифестами.
+
+Проба `@tls` с дверью `kit` — к процессу последнего `@kit-start`: вход `{door: "kit", url, client, request}`, `url` — адрес
+соединения с подстановкой `{port}` (порт двери этого процесса). Клиент стенда проверяет сервер как клиент своего
+кластера (`own_client`): отпечаток центра комплекта, роль процесса, `host` — `server` комплекта, если хост `url` —
+литерал петли (порог `loopback`), иначе хост `url`; затем отзыв (`revoked` комплекта пуст). Исход — закрытая форма выше
+с полем `peer`: `"ok"` или слово договора `peer`; при слове рукопожатие клиент закрывает — `http: null`. Отказ проверки
+сервера у двери `kit` — исход пробы, не класс «стенд» (у прочих дверей — как прежде).
+
+| Шаг | Ожидание | Норма |
+|---|---|---|
+| `@kit-start console named` | `ok` — консоль с комплектом слушает на `CONSOLE_HOST` умолчания `127.0.0.1` | P/02.4 Н1.6 `console`: TLS и на петле |
+| `@tls`: дверь `kit`, `url` `https://127.0.0.1:{port}`, клиент `null`, `GET /healthz` | `{"handshake": "ok", "peer": "ok"}` | `own_client`: литерал петли — `host` = `box-n`, лист несёт `box-n` |
+| `@tls`: дверь `kit`, `url` `https://localhost:{port}`, клиент `null`, `GET /healthz` | `{"peer": "wrong_name", "http": null}` | `loopback`: `localhost` — имя; у листа его нет; системный хост стенда не трогается |
+| `@kit-start domainconsole none` | `@exit 2` | `DOMAIN_CONSOLE_HOST` умолчание `0.0.0.0` без комплекта — отказ старта (Н1.6 `console`, `process`) |
+| `@kit-start domain none` | `@exit 2` | `SIGNER_HOST` нет — умолчание процесса `0.0.0.0` не явный адрес: без комплекта — отказ старта ((5) п. 4) |
+| `@kit-start domain none SIGNER_HOST=0.0.0.0` | `ok ~domain listens on ~without a certificate kit` | явный адрес вне петли без комплекта — старт с громкой строкой (Н1.6 `process`) |
 
 ## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
 

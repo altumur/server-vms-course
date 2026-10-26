@@ -12,6 +12,7 @@
     "m3": ["domain", "domainconsole", "console", "domainagent"]
   },
   "foreign": ["console"],
+  "named": {"server": "box-n", "roles": ["console", "domain", "domainconsole"]},
   "negative": {
     "m2-no-role": {"issuer": "m2", "role": "console", "uri": null},
     "m2-expired": {"issuer": "m2", "role": "console", "not_before": -172800, "days": 1},
