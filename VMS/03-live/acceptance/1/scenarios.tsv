@@ -1,11 +1,31 @@
 scenario	step	request	expect
 # Приёмка V/03.1: раздача — единица по спросу (дверь единиц консоли live; манифесты cam и live). Формат — README.
 01-create	1	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
-01-create	2	POST /streams {"stream": "$c1", "cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "stream": "$c1", "cam": "$c1", "grace": 30, "labels": ["public-address"]}
-01-create	3	POST /streams {"stream": "$c1", "cam": "$c1"}	409 {"error": "exists"}
+01-create	2	POST /streams {"name": "$c1", "cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "name": "$c1", "cam": "$c1", "grace": 30, "labels": ["public-address"]}
+01-create	3	POST /streams {"name": "$c1", "cam": "$c1"}	409 {"error": "exists"}
 01-create	4	GET /streams/$c1	200 {"labels": ["public-address"]}
 01-create	5	PUT /streams/$c1 {"cam": "nope"}	400 {"error": "~cam is fixed"}
-01-create	6	POST /streams {"stream": "nope", "cam": "nope"}	201 {"id": "nope", "grace": 30}
+01-create	6	POST /streams {"name": "nope", "cam": "nope"}	201 {"id": "nope", "grace": 30}
 01-create	7	console2 POST /cameras {"source": "driverpack://file/door-sub.mp4", "main": "$c1", "profile": "сетка"}	201 {"id": "$s1"}
-01-create	8	POST /streams {"stream": "$s1", "cam": "$c1"}	201 {"id": "$s1", "stream": "$s1", "cam": "$c1"}
-01-create	9	POST /streams {"cam": "$c1"}	400 {"error": "@any"}
+01-create	8	POST /streams {"name": "$c1.$s1", "cam": "$c1", "stream": "$s1"}	201 {"id": "$c1.$s1", "stream": "$s1", "cam": "$c1"}
+01-create	9	POST /streams {"cam": "$c1", "stream": "$s1"}	400 {"error": "@any"}
+01-create	10	console2 POST /cameras {"name": "yard", "source": "driverpack://file/yard.mp4"}	201 {"id": "$c2"}
+01-create	11	POST /streams {"name": "$c2.$s1", "cam": "$c2", "stream": "$s1"}	409 {"error": "conflict", "fault": "must_match"}
+01-create	12	POST /streams {"name": "$c1.$c1", "cam": "$c1", "stream": "$c1"}	409 {"error": "conflict", "fault": "must_match"}
+01-create	13	PUT /streams/$c1.$s1 {"stream": ""}	400 {"error": "~stream is fixed"}
+02-two-viewers	1	@domain m1	ok
+02-two-viewers	2	member m1 console2 POST /cameras {"name": "Вход", "source": "driverpack://file/door.mp4"}	201 {"id": "$a"}
+02-two-viewers	3	member m1 console2 POST /cameras {"name": "Двор", "source": "driverpack://file/yard.mp4"}	201 {"id": "$b"}
+02-two-viewers	4	member m1 console2 POST /cameras {"source": "driverpack://file/yard-sub.mp4", "main": "$b", "profile": "сетка"}	201 {"id": "$bs"}
+02-two-viewers	5	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+02-two-viewers	6	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
+02-two-viewers	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/$a"}, {"subject": "bob", "cap": "view", "scope": "unit:cam/$b"}]}	200 {"cluster": "m1"}
+02-two-viewers	8	@person ann ann-password-1	ok
+02-two-viewers	9	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/$a"}]}
+02-two-viewers	10	member m1 console POST /streams {"name": "$b.$bs", "cam": "$a", "stream": "$bs"}	409 {"error": "conflict", "fault": "must_match"}
+02-two-viewers	11	member m1 console POST /streams {"name": "$b.$bs", "cam": "$b", "stream": "$bs"}	403 {"error": "denied"}
+02-two-viewers	12	member m1 console POST /streams {"name": "$a", "cam": "$a"}	201 {"id": "$a"}
+02-two-viewers	13	@person bob bob-password-1	ok
+02-two-viewers	14	@until 30 member m1 console GET /session	200 {"user": "bob"}
+02-two-viewers	15	member m1 console POST /streams {"name": "$b.$bs", "cam": "$b", "stream": "$bs"}	201 {"id": "$b.$bs", "cam": "$b", "stream": "$bs"}
+02-two-viewers	16	member m1 console POST /streams {"name": "$a", "cam": "$a"}	403 {"error": "denied"}

@@ -25,3 +25,9 @@ scenario	step	request	expect
 08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "~main is fixed"}
 08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
 08-streams	5	PUT /cameras/$m {"grid": "$s"}	200 {"grid": "$s"}
+09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Склад"}	201 {"id": "$m"}
+09-delete-camera	2	POST /cameras {"source": "rtsp://10.0.0.21/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m"}
+09-delete-camera	3	DELETE /cameras/$m	200 {"deleted": "$m"}
+09-delete-camera	4	PUT /cameras/$s {"profile": "детекция"}	200 {"main": "$m", "profile": "детекция"}
+09-delete-camera	5	POST /cameras {"source": "rtsp://10.0.0.21/ch/3", "main": "$m"}	201 {"main": "$m"}
+09-delete-camera	6	DELETE /cameras/$s	200 {"deleted": "$s"}
