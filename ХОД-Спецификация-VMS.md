@@ -49,6 +49,10 @@
 - V/04: поле детектора `stream` (как у записи), источник — поток детектора; V/05: поток задачи — поток записи `rec`;
   V/06 и V/01.5 Н1.1а: архив устройства — у камеры (прочий поток архива не публикует, дверь — 404); `auto` создаёт детекторы
   и записи на основном потоке (`stream` пуст; ключи `worker.creates` без изменений).
+- V/08 и `cam.shell.html`: бейдж потока «<имя> ↑ <камера>», вкладка «Потоки» (поток — `POST /cam/cameras {main, profile,
+  source}`, `grid`/`full` камеры, подсказка по `size`), живое — `POST /live/streams {stream, cam}`, `where`/`whep` по потоку
+  (`full` камеры), «Видео» и «Архив» потока — камеры, новая запись — камера и поток вместе; V/08.1 Н1.5, V/08.3 Н1.2,
+  V/08.4 Н1.1; V/07.4 — заказы на основном потоке. Ядро страницы (`negotiateLive`) — копия страницы продукта: правка — долг «Сборке».
 
 ## Перевод 02-rec
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
@@ -308,6 +312,7 @@
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
+- «Сборке»: страница продукта — ядро `negotiateLive`: раздача `{stream, cam}`, `where`/`whep` по потоку (`full` камеры), V/08.3 Н1.2; потоки камеры на странице — V/08.1 Н1.5.
 - «Сборке»: `det.subsystem.yaml` — поле `stream`; держатель `cam` — архив устройства только у камеры (V/01.5 Н1.1а).
 - «Сборке»: `rec.subsystem.yaml` — поле `stream`; `live.subsystem.yaml` — `id: stream`, поле `stream`, снимок + `stream` (потоки камеры, V/02.1, V/03.1).
 - «Сборке»: `cam.subsystem.yaml` — `about: {sub: cam, field: main}`, поля `main`, `profile`, `grid`, `full`, снимок + `main`, `profile`; держатель — V/01.2 Н1.1, Н1.2, Н1.4, Н1.5 (потоки камеры, решение владельца 2026-10-26).

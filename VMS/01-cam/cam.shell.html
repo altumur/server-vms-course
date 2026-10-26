@@ -28,7 +28,8 @@ recording may lie on are the rows of the table the rec manifest names
 (`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
 
 ## What the page adds (all through the module's calls)
-- `addIcons` — camera, volume (storage); `addDecor("unit")` — a camera's icon and its address as a tag;
+- `addIcons` — camera, volume (storage); `addDecor("unit")` — a camera's icon and its address as a tag, a stream's
+  name and its camera's (a stream is a unit of cam with `main`, V/01.1 Н1.1а; the module draws it as a unit of its own);
   `addFieldEditor("unit", "source")` — the source and what it says (address, vendor, channel), sent by the form.
 - `addNote("unit")` — «открытие не завершается» (the device has not opened: `device_state: opening`), «сбой
   устройства» (`phase: failed`, the holder's `why`); `addEventNote` — the VMS's events in words (volumes, cards, the
@@ -40,6 +41,9 @@ recording may lie on are the rows of the table the rec manifest names
   primaries this cluster carries names them by the camera's ref — the primary and each of its `backups` —, at a member
   and at the holder alike, their doors are asked at this console
   (`/domain/at/<cluster>/rec/where/…`), a refusal said in words (403, 404, 502, 503).
+  «Видео» of a camera plays its full-screen stream (`full`), of a stream — the stream; the timeline is the camera's.
+  «Потоки» — the camera's streams (`POST /cam/cameras {main, profile, source}`), the grid's and the full screen's
+  (`PUT` the camera's `grid`, `full`; the page suggests the smallest and the largest by the holder's `size`).
   «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
   its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state in the recorders' own words, from
   their beat — `servers.status` of their rows at `/rec/servers` with `of: keeps`, ADR-0064: here, pushing, pushed,
@@ -50,7 +54,7 @@ recording may lie on are the rows of the table the rec manifest names
   (`POST`, the row whole: what the dialog does not show is carried from the row; a smaller quota, or one a holder says
   waits — `shrink_pending` —, only with `shrink_confirmed`; `incidents` with `admits: false`) and withdrawing (`DELETE`).
 - «Камеру в архив» — `addAction("server")`, `addMenu("server"|"vol")`: a recording of a camera on a volume of the
-  server (`POST /rec/recordings {name, cam, home}`).
+  server (`POST /rec/recordings {name, cam, stream?, home}`: the camera and the stream chosen together, the largest suggested).
 - `addSection` «Сценарии» (after units) — the auto subsystem's scenarios: the list and the editor, the actions the
   auto manifest's `then` accepts (the page's catalogue of actions, held to the manifest by a check), the last firings.
 - The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
@@ -62,9 +66,9 @@ recording may lie on are the rows of the table the rec manifest names
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks`, `/live/accounts` (writes through `pc.api`), `/domain/rec/books/primaries`, `/domain/placement`
+`/events`, `/marks`, `/live/accounts`, `/cam/cameras` (a stream, a camera's `grid` and `full`) (writes through `pc.api`), `/domain/rec/books/primaries`, `/domain/placement`
 (`PUT /domain/placement/rec/<ref>`); the holders' doors from
-`/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<camera>`, and another
+`/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<stream>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
 `POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
 -->
@@ -145,6 +149,22 @@ let UNITS={},domView=null;
 pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.domain});
 const camById=id=>(UNITS.cam||[]).find(u=>String(u.id)===String(id))||null;
 const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"камера "+id};
+// A camera's streams (V/01.1 Н1.1а): each a unit of cam; the camera is the row whose `main` is empty, another stream names it
+// in `main` and says only its source and its `profile`. What is the camera's — name, labels, recordings, keeps — is read
+// from the camera, whichever stream is chosen.
+const camMain=u=>u&&u.main?String(u.main):"";
+const cameraOf=id=>camMain(camById(id))||String(id);
+const streamsOf=id=>(UNITS.cam||[]).filter(u=>String(u.main||"")===String(id));
+const streamName=u=>u?(u.profile||"main")+(u.size?" · "+u.size:""):"";
+// The page only suggests (the owner's decision): the largest picture to record, the smallest for a grid — by the holder's
+// `size`; a stream it has not said a size of is not suggested, and nothing suggested is the camera itself.
+const area=u=>{const m=/^(\d+)x(\d+)$/.exec(String((u&&u.size)||""));return m?m[1]*m[2]:0};
+function suggestStream(cam,big){
+  const all=[camById(cam),...streamsOf(cam)].filter(u=>area(u));
+  if(!all.length)return String(cam);
+  all.sort((a,b)=>big?area(b)-area(a):area(a)-area(b));
+  return String(all[0].id);
+}
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
 // C2 observations shown by the receiving console: provenance and declared show fields only.
 let PRIMARIES=null,PLACEMENTS=null,assignmentHost=null;
@@ -192,7 +212,10 @@ function parseSource(src){
   catch(e){out.host=String(src)}
   return out;
 }
-pc.addDecor("unit",(ref,u)=>isCam(ref)?{icon:"camera",badge:u?parseSource(u.source).host:""}:{});
+// A stream is drawn by the module as a unit of its own (its tree for an `about` on cam itself is the VMS's request after
+// stage C): the badge names its camera, so it is not taken for one.
+pc.addDecor("unit",(ref,u)=>!isCam(ref)?{}:camMain(u)?{icon:"camera",badge:(u.profile||"поток")+" ↑ "+camName(u.main),title:"поток камеры "+camName(u.main)}
+  :{icon:"camera",badge:u?parseSource(u.source).host:""});
 pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
   host.innerHTML=`<div class="g"><div><label>Источник</label><input class="cam-src" value="${esc(value)}" autocomplete="off"></div><span class="cam-src-parts" style="display:contents"></span></div>`;
   const inp=host.querySelector(".cam-src"),parts=host.querySelector(".cam-src-parts");
@@ -398,15 +421,18 @@ async function negotiateLive(id){
   };
   const offer=await pc.createOffer();
   await pc.setLocalDescription({type:"offer",sdp:h265Dynamic(offer.sdp)});
-  // The first viewer makes the stream (POST /live/streams {cam}; «exists» — somebody watches already), then the
+  // The stream watched (V/03.1): the chosen stream itself, or for the camera its full-screen stream (`full`, empty — the
+  // camera's own); its fan-out is named by it, `cam` is the camera.
+  const u=camById(id),cam=cameraOf(id),stream=camMain(u)?String(id):String((u&&u.full)||id);
+  // The first viewer makes the fan-out (POST /live/streams {stream, cam}; «exists» — somebody watches already), then the
   // offer goes to its gateway's door: 404 (not yet), 503 (full, busy), 500 (answer failed) — again after `Retry-After` or
   // 1.5 s, up to 8 times (V/03.3 Н4); 403 — where again, once.
-  try{await window.platformConsole.api("POST","/live/streams",{cam:String(id)})}
+  try{await window.platformConsole.api("POST","/live/streams",{stream,cam})}
   catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
-  const where="/live/where/"+encodeURIComponent(id);
+  const where="/live/where/"+encodeURIComponent(stream);
   let r=null,tries=0;
   for(;;){
-    try{r=await doorFetch(where,`/whep/${encodeURIComponent(id)}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
+    try{r=await doorFetch(where,`/whep/${encodeURIComponent(stream)}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
     catch(e){r=null}
     if(r&&![404,500,503].includes(r.status))break;
     if(++tries>8)break;
@@ -627,15 +653,53 @@ pc.addTab("unit",{id:"vid",label:"Видео",
   render:(host,ref,obj)=>{
     if(!isCam(ref))return;
     stopLive(true);
-    const id=camOf(ref);
-    host.innerHTML=videoCardHtml({id,liveUrl:(obj&&obj.live_url)||""});
-    wire(host,{live:()=>toggleLive(id),win:el=>setWin(el.dataset.win,id),evfilter:el=>{V.evfilter=el.value;drawEvents()},keepShown:()=>keepShown(id)});
-    host.querySelector("#markForm").onsubmit=e=>addMark(e,id);
+    // live — the stream chosen (a stream's own, the camera's full-screen one); the timeline, events and keeps — the camera's
+    const id=camOf(ref),cam=cameraOf(id);
+    host.innerHTML=videoCardHtml({id:cam,liveUrl:(obj&&obj.live_url)||""});
+    wire(host,{live:()=>toggleLive(id),win:el=>setWin(el.dataset.win,cam),evfilter:el=>{V.evfilter=el.value;drawEvents()},keepShown:()=>keepShown(cam)});
+    host.querySelector("#markForm").onsubmit=e=>addMark(e,cam);
     host.querySelector("#player").onended=()=>playNext();
-    loadTimeline(id);
+    loadTimeline(cam);
   }});
 pc.on("select",()=>stopLive());
 window.addEventListener("beforeunload",()=>stopLive(true));
+
+// ── «Потоки»: the camera's streams, and which of them a grid and a full screen show ───────────────────────────────
+// Each stream is a row of cam (`main: <camera>`, V/01.1 Н1.1а): a new one is a POST of its address and its name; which
+// is the grid's and which the full screen's is the camera's `grid` and `full` — the user's choice, the page suggests.
+function streamsCardHtml(cam){
+  const c=camById(cam),list=[c,...streamsOf(cam)].filter(Boolean);
+  const opts=cur=>list.map(s=>`<option value="${esc(s.id)}"${String(s.id)===String(cur||cam)?" selected":""}>${esc(streamName(s))}</option>`).join("");
+  const rows=list.map(s=>`<tr><td>${esc(streamName(s))}</td><td>${esc(parseSource(s.source||"").host)}</td><td>${esc(s.phase||"—")}${s.reason?" · "+esc(s.reason):""}</td>
+    <td><button type="button" class="btn s" data-act="watch" data-id="${esc(s.id)}">Смотреть</button></td></tr>`).join("");
+  const body=`<table><tr><th>Поток</th><th>Хост</th><th>Состояние</th><th></th></tr>${rows}</table>
+    <div class="g"><div><label>Поток сетки (подсказка — ${esc(streamName(camById(suggestStream(cam,false))))})</label><select data-act="grid">${opts(c&&c.grid)}</select></div>
+    <div><label>Поток полного экрана (подсказка — ${esc(streamName(camById(suggestStream(cam,true))))})</label><select data-act="full">${opts(c&&c.full)}</select></div></div>`;
+  return card("Потоки камеры",body,`<button type="button" class="btn s" data-act="addStream">＋ Поток</button>`);
+}
+async function camWrite(cam,body,said){
+  try{await pc.api("PUT","/cam/cameras/"+encodeURIComponent(cam),body);pc.toast(said)}catch(e){pc.toast("Отказано: "+e.message)}
+}
+async function addStream(cam){
+  const v=await pc.dialog("Новый поток: "+camName(cam),[
+    {name:"profile",label:"Имя потока",value:""},
+    {name:"source",label:"Адрес потока",value:""},
+    {name:"cred_username",label:"Логин устройства",value:"",help:"пусто — логин и пароль камеры, если адрес на том же хосте"},
+    {name:"cred_secret",label:"Пароль устройства",type:"password"}],"Создать");
+  if(!v)return;
+  if(!v.source){pc.toast("Нужен адрес потока");return}
+  const body={main:String(cam),profile:v.profile||"поток",source:v.source,...(v.cred_username?{cred_username:v.cred_username}:{}),...(v.cred_secret?{cred_secret:v.cred_secret}:{})};
+  try{await pc.api("POST","/cam/cameras",body);pc.toast("Поток создан")}catch(e){pc.toast("Отказано: "+e.message)}
+}
+pc.addTab("unit",{id:"streams",label:"Потоки",
+  render:(host,ref)=>{
+    if(!isCam(ref))return;
+    const cam=cameraOf(camOf(ref));
+    host.innerHTML=streamsCardHtml(cam);
+    wire(host,{watch:el=>openAt("unit:cam/"+el.dataset.id,"vid"),addStream:()=>addStream(cam),
+      grid:el=>camWrite(cam,{grid:el.value===String(cam)?"":el.value},"Поток сетки выбран"),
+      full:el=>camWrite(cam,{full:el.value===String(cam)?"":el.value},"Поток полного экрана выбран")});
+  }});
 
 // ── «Архив»: the camera's recordings and its keeps ───────────────────────────────────────────────────────────────
 // A recording is a unit of rec (`rec/recordings/<name>`): a camera may have several, one per volume; `cam` says whose
@@ -864,7 +928,7 @@ async function verifyKeep(id){
 pc.addTab("unit",{id:"rec",label:"Архив",
   render:async(host,ref)=>{
     if(!isCam(ref))return;
-    ARCH={host,ref};
+    ARCH={host,ref:"unit:cam/"+cameraOf(camOf(ref))};   // a stream's archive is its camera's
     await loadRec();KEEP_ON=!!recOn;
     if(ARCH.host===host)paintArch();
   }});
@@ -880,21 +944,26 @@ async function addToArchive(opt){
   const homes=homesFor(opt.cam).filter(v=>(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
   // a camera the server (the volume) writes already is not offered again: one camera, one recording a place
   const here=opt.home?[opt.home]:opt.server?serverVolumes(opt.server).map(v=>v.name):[];
-  const cams=(UNITS.cam||[]).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
+  const cams=(UNITS.cam||[]).filter(c=>!camMain(c)).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
   if(!cams.length){pc.toast("Камер, которых этот архив ещё не пишет, нет");return}
   const v=await pc.dialog(opt.server?"Камеру в архив сервера "+opt.server:"Новая запись камеры",[
-    {name:"cam",label:"Камера",options:cams.map(c=>[String(c.id),(c.name||"камера "+c.id)+" · "+c.id])},
+    // the camera and its stream in one choice (V/02.1 `stream`); the suggested — the largest picture — first
+    {name:"cam",label:"Камера и поток",options:cams.flatMap(c=>{const sug=suggestStream(c.id,true);
+      return[c,...streamsOf(c.id)].map(s=>[String(c.id)+"|"+String(s.id),(c.name||"камера "+c.id)+" · "+streamName(s)+(String(s.id)===sug?" (крупнейший)":"")])
+        .sort((a,b)=>(b[1].endsWith("(крупнейший)")?1:0)-(a[1].endsWith("(крупнейший)")?1:0))})},
     {name:"home",label:"Архив",options:(opt.home||opt.server?[]:[["","любой свободный том"]]).concat(homes.map(x=>[x.name,x.name+" · "+volKind(x)]))},
     {name:"days",label:"Срок хранения, дн",value:"30"}],"Создать");
   if(!v)return;
+  const [vcam,vstream]=String(v.cam).split("|");v.cam=vcam;
+  const stream=vstream&&vstream!==vcam?vstream:"";
   const days=parseInt(v.days,10);
   if(!(days>=1)){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
   const hv=volByName(v.home);
   if(hv&&hv.kind==="edge"&&String(hv.cam)!==String(v.cam)){pc.toast(`Том «${hv.name}» — карта камеры ${hv.cam}: только для её записей`);return}
   const taken=new Set(recs.map(r=>r.id));
-  const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:v.cam;
+  const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:stream?`${v.cam}-${stream}`:v.cam;
   if(taken.has(name)){pc.toast(`Запись «${name}» уже есть`);return}
-  try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,retention_days:days,...(v.home?{home:v.home}:{})});await reloadRec();pc.toast("Запись создана")}
+  try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,...(stream?{stream}:{}),retention_days:days,...(v.home?{home:v.home}:{})});await reloadRec();pc.toast("Запись создана")}
   catch(e){pc.toast("Отказано: "+e.message)}
 }
 
