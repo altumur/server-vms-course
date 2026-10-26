@@ -20,6 +20,8 @@ i-exp	int	write	1e2	@refuse not_number	у int — без экспоненты; �
 i-fraction	int	write	1.5	@refuse not_number	дробь у int; сц. 08 шаг 2
 i-string	int	write	"7"	@refuse not_number	число строкой; сц. 08 шаг 1
 i-bool	int	write	true	@refuse not_number	булево у int; сц. 08 шаг 4
+i-read-point-zero	int	read	100	"100.0"	читатель — по точному десятичному значению записи (codec.tsv integer): 100.0 — 100 (OBS154-RAW-TIME-EXACT-01)
+i-read-not-exact	int	read	@unreadable	"100.00000000000000001"	точное десятичное значение не целое — элемент не читается своим типом; в binary64 было бы 100 (OBS154-RAW-TIME-EXACT-01)
 i-garbled	int	read	@unreadable	"many"	элемент не читается своим типом; у строки таблицы — {name, garbled: true} (Н2 «Двери тел и таблиц»; сц. 19 шаги 11–12)
 f-one	float	both	1	"1"	кратчайшая запись без экспоненты
 f-one-point-zero	float	write	1.0	"1"	1.0 и 1 — одно число JSON
