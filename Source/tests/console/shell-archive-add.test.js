@@ -15,7 +15,7 @@ for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
-b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"},{id:3,name:"склад"}],rows:[]};
+b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"},{id:3,name:"склад"},{id:4,main:"1",profile:"sub"}],rows:[]};   // 4 — поток камеры 1 (V/01.1 Н1.1а)
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30},{id:"2",cam:"2",home:"nas",retention_days:30}],rows:[]};
 b.FIX["/rec/volumes"]={volumes:[{name:"disk-a",server:"box-a",kind:"local",url:"file:///a",quota_bytes:1e11,enabled:true,held_by:"r-1"},
   {name:"disk-b",server:"box-b",kind:"local",url:"file:///b",quota_bytes:1e11,enabled:true},{name:"nas",kind:"network",url:"s3://x",quota_bytes:1e12,enabled:true}]};
@@ -65,16 +65,21 @@ out.volumeMenu=/Добавить камеру в этот архив/.test(menu(
 // с карточки тома: том подставлен, других нет
 pc.select("vol:disk-b");await b.ready(60);
 main().querySelector('[data-act="addCam"]').click();await b.ready(30);
-out.fromVolumeCard=JSON.stringify(opts("home"))==='["disk-b"]'&&opts("cam").length===3;
+out.fromVolumeCard=JSON.stringify(opts("home"))==='["disk-b"]'&&opts("cam").length===4;   // три камеры и поток 4 камеры 1
 no();
 // со вкладки «Архив» камеры: камера выбрана, тома — любые и «любой свободный»
 pc.select("unit:cam/1");await b.ready(60);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(150);
 main().querySelector('[data-act="addRec"]').click();await b.ready(30);
-out.fromCameraTab=JSON.stringify(opts("cam"))==='["1|1"]'&&opts("home")[0]===""&&opts("home").length===4;
+out.fromCameraTab=JSON.stringify(opts("cam"))==='["1|1","1|4"]'&&opts("home")[0]===""&&opts("home").length===4;
 field("home").value="nas";n=w.__calls.length;await ok();
 c=lastPost(n);
 out.fromCameraSent=!!c&&c.body.name==="1-nas"&&c.body.cam==="1"&&c.body.home==="nas";
+// имя записи потока при занятом имени камеры и «любом свободном томе» — <камера>-s<поток>, поле stream уходит (V/08.4)
+main().querySelector('[data-act="addRec"]').click();await b.ready(30);
+field("cam").value="1|4";field("home").value="";n=w.__calls.length;await ok();
+c=lastPost(n);
+out.streamRecordingName=!!c&&JSON.stringify(c.body)==='{"name":"1-s4","cam":"1","stream":"4","retention_days":30}';
 out.noDomainDoors=!w.__calls.some(x=>/^\/domain\//.test(x.path));
 out.errors=errs;
 b.report(out,["errors"]);
