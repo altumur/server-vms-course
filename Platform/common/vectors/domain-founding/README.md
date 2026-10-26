@@ -12,4 +12,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | [`book-seal.tsv`](book-seal.tsv) | `seed_secret` hex 32 байт → `book_seal` = X25519(seed, 9) hex |
 | [`claim.tsv`](claim.tsv) | `input` — `{issuing_key_secret, domain, holder, url, at}` → строка `domain/holder` `{doc}`, где `doc` — текст JCS документа записи срока 1 с `issuer`, `kid`, `sig` (Ed25519 детерминирован, RFC 8032) |
 
+Кто исполняет: `recovery.tsv` и `book-seal.tsv` — установщик (`02-installer`, команды установки и смен); `claim.tsv` —
+процесс `domain` держателя (`08-domain`): запись срока 1 пишет только он (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).
+
 Сторона вычисляет своим кодом и сравнивает: `recovery.tsv` и `claim.tsv` — JSON по значению (`doc` — байт в байт), `book-seal.tsv` — строку.
