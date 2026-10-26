@@ -15,7 +15,7 @@
 ## Правило поля и общий словарь
 
 ```yaml
-url_field:                                   # у поля type: url (форма — P/02.1 Н1.2а)
+url_field:                                   # у поля type: url (форма — Platform/02-installer/spec/02.1-installer.form.yaml, P/02.1 Н1.2а)
   credentials: {login: <поле строки, не url и не секрет>, secret: <поле *_secret>}
   secret_in:                                 # список, каждый элемент одного из трёх видов; читается по А1–А15 ниже
     - {param: [<имя>…], login: [<имя>…]}     # образец имени — А5; login ⊆ param: имена из login — логин

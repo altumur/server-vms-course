@@ -200,7 +200,7 @@ JSON тела по RFC 8259 (повтор имени поля, `NaN`/`Infinity`,
 cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token договора токена домена «Проверка»
            по набору и domain/revoked этого кластера с expect {kind: person, cluster: null} — договор токена домена «Токен» (решение «Архитектора»
            2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10); отказ — 401 {error: denied, detail:
-           "token refused: <слово>"}, форма P/06.3; затем may (договор права) с
+           "token refused: <слово>"}, форма `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`); затем may (договор права) с
            grants = doc строки domain/grants (копия этого кластера), as_of — её as_of, disabled — domain/disabled этого
            хранилища (есть только у держателя), cap и unit — need P/06.3 Н1.3; deny — 403 {error: denied, detail:
            "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
@@ -249,7 +249,7 @@ loopback:  «петля — operator» — только состояние open 
 ## Права по телу
 
 Из P/06.3 Н1.5 (ключи `rights:` манифеста — граница прав людей), P/06.7 Н1.9 и P/10 Н1.5 (`body_unit`, `session`), P/08.4 Н1.5
-(строка `domain`) без изменения поведения (догадка стадии C GP-G05, решение «Архитектора» 2026-10-23). Форма ключей — [P/02.1](../../02-installer/spec/02.1-installer.norms.md).
+(строка `domain`) без изменения поведения (догадка стадии C GP-G05, решение «Архитектора» 2026-10-23). Форма ключей — `Platform/02-installer/spec/02.1-installer.form.yaml` (`rights`; [форма](../../02-installer/spec/02.1-installer.form.yaml), P/02.1).
 
 | Ключ | Смысл |
 |---|---|
