@@ -1,5 +1,6 @@
-# Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera STREAM's
-# live fan-out — "camera 7's grid stream is being watched, from gateway g-2" — one per stream (V/01.1 Н1.1а),
+# Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's live fan-out — "camera 7 is being
+# watched, from gateway g-2" — one per camera; which of its streams (V/01.1 Н1.1а) a viewer watches is said at the
+# gateway's door (`POST /whep/<cam>?stream=<id>`, V/03.3), each stream its own subscription,
 # created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
 # gateway a grace period after the last one leaves. Its workers are gateways (`liveworker`):
 # stateless, count = N by demand, capacity in VIEWERS, not cameras. Same
@@ -18,18 +19,10 @@ worker: {exec: /usr/lib/live/worker, writes: [accounts], deletes: [streams], rea
 tables: [accounts]
 about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
-  rows: streams                      # live/streams/<name>
-  id: name                           # named by the camera and the stream it fans out, never numbered
+  rows: streams                      # live/streams/<cam>
+  id: cam                            # named by the camera it fans out, never numbered — a grant on one camera names no other's
   fields:
-    # The fan-out's name: `<cam>` for the camera's main stream, `<cam>.<stream>` for another (V/03.1 Н1.1) — so a grant
-    # on one camera names no fan-out of another's stream. The door cannot compose an id of two fields nor check one
-    # against them (the VMS's request after stage C); the gateway does, and deletes a fan-out named otherwise at once.
-    name:      {type: string, required: true, fixed: true}
-    # The stream fanned out: another stream of this camera, the grid's or the full screen's as the camera names them
-    # (`grid`, `full`; the user's choice, V/01.1 Н1.1а); empty — the camera's main stream. A stream of another camera
-    # — or the camera's own id — the door refuses (`must_match`: a camera's `main` is empty).
-    stream:    {type: string, fixed: true, ref: cam/cameras, must_match: {main: cam}}
-    cam:       {type: string, required: true, fixed: true}   # the VMS camera id: whose stream — the fan-out's `about`
+    cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name and its `about`
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
     grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
 placement:
@@ -60,14 +53,14 @@ domain:
     stream-accounts: {from: live/stream-accounts/, key: name, pick: unique, to: to}
   names:
     stream-accounts/: {exclusive_with: domain/users, grant: view}
-snapshot: [cam, stream, labels]
+snapshot: [cam, labels]
 # Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
 # console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).
 rights:
   routes: {view: [streams]}
 # The gateway's door, opened to a page itself (the owner's decision 1: the bytes — here the offer and the stream — go
-# gateway ↔ browser): `POST /whep/<name>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
-# `GET /live/where/<name>` hands it out.
+# gateway ↔ browser): `POST /whep/<cam>?stream=<id>` with the console's door token (no `stream` — the main one; a stream
+# not of this camera — 404 in words), `DELETE /whep/session/<id>` to hang up. `GET /live/where/<cam>` hands it out.
 door:
   routes: [whep]
   pass: [accounts]

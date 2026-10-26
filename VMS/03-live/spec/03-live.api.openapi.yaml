@@ -14,16 +14,21 @@ servers:
     variables:
       port: {default: "0"}
 paths:
-  /whep/{name}:
+  /whep/{cam}:
     post:
       summary: Оффер WebRTC — ответ без trickle (Н1.2)
       security: [{doorToken: []}]
       parameters:
-        - name: name
+        - name: cam
           in: path
           required: true
-          description: имя раздачи — `<cam>` у основного потока камеры, `<cam>.<stream>` у прочего (V/03.1 Н1.1)
+          description: id камеры — имя раздачи (V/03.1 Н1.1)
           schema: {type: string, minLength: 1}
+        - name: stream
+          in: query
+          required: false
+          description: поток камеры — id её прочего потока; нет или пусто — основной; поток не этой камеры — 404 `stream refused` (Н1.2)
+          schema: {type: string}
       requestBody:
         required: true
         content:

@@ -30,14 +30,14 @@ name: rec
 slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files:
 # a volume this subsystem opened, and at which address: read where the volume is gone; a
-# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`). What
+# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<camera key>.json`: `<cam>`, or `ref:<ref>` for another cluster's). What
 # a member's witness says to the domain (`domain.witness`) the resource's door gives out unasked. What
 # a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
 # addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
 # tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`):
 # the next process of the relay goes on from it while the centre is unreachable; and the
-# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<ref>.json`; ADR-0019).
+# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<camera key>.json`, V/02.9 Н1.3; ADR-0019).
 # What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
 # recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
 objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]}

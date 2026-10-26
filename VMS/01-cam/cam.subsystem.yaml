@@ -57,7 +57,7 @@ unit:
     # which stream to take — the user chooses the stream itself (a recording's, a detector's `stream`; the camera's
     # `grid` and `full` below).
     profile:               {type: string, default: "main"}
-    # The camera's streams for live video (the camera's fields; a stream carries none — V/01.1 Н1.1а): the one in a grid and the one
+    # The camera's streams for live video (the camera's fields; a stream's own are not read — V/01.1 Н1.1а): the one in a grid and the one
     # on a full screen — ids of streams of this camera; empty — the main. Chosen by the user; the page only suggests (the
     # smallest picture for a grid, the largest for a full screen — `size` in the holder's word, V/01.2).
     grid:                  {type: string}
@@ -385,7 +385,8 @@ snapshot: [name, source, enabled, priority, labels, ref, live, main, profile]
 domain:
   ref: ref
   # what the holder knows of a camera: its name, and whether it is on (domain.edit); `main` — a stream that carries a `ref`
-  # all the same (the door cannot refuse it yet, V/01.1 Н1.1а) is told from a camera by the licence count (V/01.7)
+  # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 Н1.1а) is told from a camera
+  # by the licence count (V/01.7)
   view: [name, enabled, main]
   # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
   # folders, labels and retention are its cluster's console's (ADR-0031).
@@ -521,7 +522,7 @@ display:
       note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
     - title: Потоки
       fields: [main, profile, grid, full]
-      note: "Поток камеры — своя строка: адрес, имя потока и камера (её основной поток). Имя, метки, папки, короткое имя и тревоги — только у основного потока, у прочих их не читают. Потоки сетки и полного экрана выбирает пользователь; пусто — основной."
+      note: "Поток камеры — своя строка: адрес, имя потока и камера (её основной поток). Имя, метки, папки, короткое имя и тревоги — только у основного потока: у прочих VMS их не читает, а метки потока лишь сужают, где его держат. Потоки сетки и полного экрана выбирает пользователь; пусто — основной."
     - title: Размещение
       placement: true
       fields: [live, priority, labels]

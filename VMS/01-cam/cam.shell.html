@@ -421,25 +421,24 @@ async function negotiateLive(id){
   };
   const offer=await pc.createOffer();
   await pc.setLocalDescription({type:"offer",sdp:h265Dynamic(offer.sdp)});
-  // The stream watched (V/03.1): the chosen stream itself, or for the camera its full-screen stream (`full`; empty — the
-  // camera's main, `stream` empty). The fan-out is named by the camera and the stream: `<cam>`, or `<cam>.<stream>`.
+  // The fan-out is the camera's (V/03.1); the stream watched is said at the gateway's door (V/03.3 Н1.2): the chosen stream
+  // itself, or for the camera its full-screen stream (`full`; empty — the main one, no `stream`).
   const u=camById(id),cam=cameraOf(id);
   let sid=camMain(u)?String(id):String((u&&u.full)||"");if(sid===cam)sid="";
-  const name=sid?cam+"."+sid:cam,body={name,cam,...(sid?{stream:sid}:{})};
-  // The first viewer makes the fan-out (POST /live/streams {name, cam, stream?}; «exists» — somebody watches already), then
-  // the offer goes to its gateway's door: 404 (not yet), 503 (full, busy), 500 (answer failed) — again after `Retry-After`
-  // or 1.5 s, up to 8 times (V/03.3 Н4); 403 — where again, once. No door at all (where refused: the name is held by a
-  // fan-out of another camera until the gateway's pass deletes it, V/03.1 Н1.2) — the fan-out is asked for again.
-  const make=async()=>window.platformConsole.api("POST","/live/streams",body);
-  try{await make()}
+  const q=sid?"?stream="+encodeURIComponent(sid):"";
+  // The first viewer makes the fan-out (POST /live/streams {cam}; «exists» — somebody watches already), then the offer
+  // goes to its gateway's door: 404 «not yet» (the pass has not made the stream's subscription), 503 (full, busy), 500
+  // (answer failed) — again after `Retry-After` or 1.5 s, up to 8 times (V/03.3 Н4); 404 «stream refused» — said, not
+  // repeated; 403 — where again, once.
+  try{await window.platformConsole.api("POST","/live/streams",{cam})}
   catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
-  const where="/live/where/"+encodeURIComponent(name);
+  const where="/live/where/"+encodeURIComponent(cam);
   let r=null,tries=0;
   for(;;){
-    try{r=await doorFetch(where,`/whep/${encodeURIComponent(name)}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
+    try{r=await doorFetch(where,`/whep/${encodeURIComponent(cam)}${q}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
     catch(e){r=null}
+    if(r&&r.status===404){let d={};try{d=await r.clone().json()}catch(e){}if(d.error==="stream refused")break}
     if(r&&![404,500,503].includes(r.status))break;
-    if(!r)try{await make()}catch(e){}
     if(++tries>8)break;
     setCap(`живое: ждём шлюз… (${tries})`);
     const ra=r?Number(r.headers.get("Retry-After")):NaN;
