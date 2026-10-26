@@ -51,6 +51,12 @@ scenario	step	request	expect
 12-domain-roles	9	@as console GET /v1/get?key=domain/grants/c1	200 {"items": null}
 12-domain-roles	10	GET /v1/get?key=domain/view	403
 12-domain-roles	11	@as testsubworker GET /v1/get?key=domain/holder	200 {"items": null}
+12-domain-roles	12	@as domainagent POST /v1/write {"id":"aa8","op":"put","key":"domain/root","items":{"n":"1"}}	403
+12-domain-roles	13	POST /v1/write {"id":"aa9","op":"put","key":"domain/view","items":{"n":"1"}}	403
+12-domain-roles	14	POST /v1/write {"id":"aa10","op":"put","key":"domain/shadow","items":{"n":"1"}}	403
+12-domain-roles	15	POST /v1/write {"id":"aa11","op":"put","key":"domain/backups/rev-1","items":{"n":"1"}}	403
+12-domain-roles	16	POST /v1/write {"id":"aa12","op":"put","key":"domain/shared-docs/rev-1","items":{"n":"1"}}	403
+12-domain-roles	17	POST /v1/write {"id":"aa13","op":"put","key":"domain/alarm-history/m1","items":{"n":"1"}}	403
 # 13-orders (ADR-0091 пп. 1, 3): заказчик testsub пишет строки своего префикса в testsub2/tallies без удаления; держатель testsub2 пишет состояние, контроллер — только удаляет его
 13-orders	1	@as testsubworker POST /v1/write {"id":"d1","op":"put","key":"testsub2/tallies/testsub-c1","items":{"id":"testsub-c1","revision":"1","name":"testsub-c1","of":"c1"},"cas":""}	200
 13-orders	2	@as testsubworker GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": {"of": "c1"}}
