@@ -1,5 +1,6 @@
-// «Камеру в архив» на странице VMS курса: запись камеры на томе сервера — POST /rec/recordings {name, cam, home,
-// retention_days} через console.api. Из блока «Архивы сервера» и шапки карточки сервера (addBlock, addAction), из меню
+// «Камеру в архив» на странице VMS курса: запись камеры на томе сервера — POST /rec/recordings {name, cam, stream?, home,
+// retention_days} через console.api; камера и поток выбираются вместе («<камера>|<поток>», у камеры без потоков — сама камера,
+// поле stream не уходит). Из блока «Архивы сервера» и шапки карточки сервера (addBlock, addAction), из меню
 // строки сервера и тома (addMenu), с карточки тома и со вкладки «Архив» камеры. В выборе — только тома этого сервера
 // (и сетевые) и только камеры, которых там ещё нет; имя — номер камеры, а если оно занято, <номер>-<том>; негодный
 // срок не уходит. Этот локальный сценарий не вызывает двери домена.
@@ -40,15 +41,15 @@ out.headButton=[...d.querySelectorAll(".pc-hd .pc-acts button")].some(x=>/Кам
 blk.querySelector('[data-act="arc"]').click();await b.ready(40);
 out.dialogOpens=!dlg().hidden;
 out.onlyThisServersVolumes=JSON.stringify(opts("home"))==='["disk-a","nas"]';
-out.onlyMissingCameras=JSON.stringify(opts("cam"))==='["2","3"]';
-field("cam").value="3";field("home").value="disk-a";field("days").value="14";
+out.onlyMissingCameras=JSON.stringify(opts("cam"))==='["2|2","3|3"]';   // «камера|поток»: камера без потоков — её основной поток (V/02.1 stream)
+field("cam").value="3|3";field("home").value="disk-a";field("days").value="14";
 let n=w.__calls.length;await ok();
 let c=lastPost(n);
 out.recordingCreated=!!c&&JSON.stringify(c.body)==='{"name":"3","cam":"3","retention_days":14,"home":"disk-a"}'&&!!c.key;
 // имя занято — <камера>-<том>
 blk.isConnected||0;pc.select("server:box-a");await b.ready(60);
 ev("addToArchive({server:'box-a'})");await b.ready(30);
-field("cam").value="2";field("home").value="disk-a";n=w.__calls.length;await ok();
+field("cam").value="2|2";field("home").value="disk-a";n=w.__calls.length;await ok();
 c=lastPost(n);
 out.takenNameGetsVolume=!!c&&c.body.name==="2-disk-a"&&c.body.home==="disk-a";
 // негодный срок не уходит
@@ -70,7 +71,7 @@ no();
 pc.select("unit:cam/1");await b.ready(60);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(150);
 main().querySelector('[data-act="addRec"]').click();await b.ready(30);
-out.fromCameraTab=JSON.stringify(opts("cam"))==='["1"]'&&opts("home")[0]===""&&opts("home").length===4;
+out.fromCameraTab=JSON.stringify(opts("cam"))==='["1|1"]'&&opts("home")[0]===""&&opts("home").length===4;
 field("home").value="nas";n=w.__calls.length;await ok();
 c=lastPost(n);
 out.fromCameraSent=!!c&&c.body.name==="1-nas"&&c.body.cam==="1"&&c.body.home==="nas";
