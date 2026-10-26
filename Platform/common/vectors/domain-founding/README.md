@@ -16,3 +16,9 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 процесс `domain` держателя (`08-domain`): запись срока 1 пишет только он (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).
 
 Сторона вычисляет своим кодом и сравнивает: `recovery.tsv` и `claim.tsv` — JSON по значению (`doc` — байт в байт), `book-seal.tsv` — строку.
+
+## Нативный исход
+
+Отдельного договора команды у пакета нет — общее правило «Векторы» [общего README приёмки](../../acceptance/README.md)
+(ACC-VECTORS-CONNECT-04, решение «Архитектора» 2026-10-26): функция отвечает кодом 0 и одним значением JSON. `recovery.tsv` — объект `{domain, root_pub, fingerprint}` или строка JSON `"@refuse"`; `book-seal.tsv` — строка JSON с
+hex `book_seal`; `claim.tsv` — объект строки `domain/holder`.

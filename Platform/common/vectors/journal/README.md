@@ -58,3 +58,11 @@ name_file}`: исходный компонент и нынешнее содер�
 (`events-root`, `resource-root`) — установщик (`02-installer`, P/02.4 Н1.2), `.workers`, замок и дерево `testsub`
 (`workers-dir`, `workers-sub`, `lock-file`, `tree-dir`, `unit-dir`, `bucket-one-writer`) — воркер (`03-worker`),
 `audit-bucket` — консоль (`06-console`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-26).
+
+## Нативный исход
+
+Отдельного договора команды у пакета нет — общее правило «Векторы» [общего README приёмки](../../acceptance/README.md)
+(ACC-VECTORS-CONNECT-04, решение «Архитектора» 2026-10-26): функция отвечает кодом 0 и одним значением JSON. `bucket.tsv` — объект `{ids, torn, garbled, …}`; `names.tsv` — у `read-*` компонент строкой JSON или строка JSON
+`"@skip"`, у `write-*` — строка JSON `"write"`, `"keep"` или `"refuse"`; `years.tsv` — имя бакета строкой JSON или строка
+JSON `"@refuse"`; `append.tsv` — содержимое после записи строкой JSON или `"@refuse"`. `modes.tsv` — тест раскладки, не
+функция: правило к ней не относится.
