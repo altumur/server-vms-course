@@ -42,6 +42,10 @@
 - V/01 (ветка `vms/01-cam-streams`): `cam` — `about: {sub: cam, field: main}`, поля `main` (`fixed`), `profile`, `grid`, `full`,
   снимок + `main`, `profile`; V/01.1 Н1.1а, V/01.2 (годная строка камеры, пароль камеры тому же хосту, `size`, события
   устройства у камеры), V/01.4 (команда — камере), V/01.6 (`ref` у камеры), V/01.7 (лицензия по `ref` камеры); сценарий `08-streams`.
+- V/02: поле записи `stream` (`ref: cam/cameras`, `must_match: {main: cam}`; пусто — основной), регистратор ищет держателя
+  потока и сверяет строки камеры и потока (`reason` «stream: …»); сценарий `05-stream`.
+- V/03: раздача — на поток: `id: stream`, поле `stream` (`fixed`), `cam` — камера и `about`; шлюз раздаёт поток, только
+  если он этой камеры; `<cam>` → `<поток>` в путях `where`, `whep`, эпохи, точки RTSP; OpenAPI `/whep/{stream}`.
 
 ## Перевод 02-rec
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
@@ -301,5 +305,6 @@
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
+- «Сборке»: `rec.subsystem.yaml` — поле `stream`; `live.subsystem.yaml` — `id: stream`, поле `stream`, снимок + `stream` (потоки камеры, V/02.1, V/03.1).
 - «Сборке»: `cam.subsystem.yaml` — `about: {sub: cam, field: main}`, поля `main`, `profile`, `grid`, `full`, снимок + `main`, `profile`; держатель — V/01.2 Н1.1, Н1.2, Н1.4, Н1.5 (потоки камеры, решение владельца 2026-10-26).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.

@@ -14,15 +14,15 @@ servers:
     variables:
       port: {default: "0"}
 paths:
-  /whep/{cam}:
+  /whep/{stream}:
     post:
       summary: Оффер WebRTC — ответ без trickle (Н1.2)
       security: [{doorToken: []}]
       parameters:
-        - name: cam
+        - name: stream
           in: path
           required: true
-          description: id камеры — имя раздачи (V/03.1)
+          description: id раздаваемого потока камеры — имя раздачи (V/03.1; у основного — id камеры)
           schema: {type: string, minLength: 1}
       requestBody:
         required: true

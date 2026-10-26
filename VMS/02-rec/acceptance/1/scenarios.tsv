@@ -14,3 +14,8 @@ scenario	step	request	expect
 04-volumes	2	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1}	400 {"error": "@any"}
 04-volumes	3	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1, "admits": false}	201 {"name": "inc-a"}
 04-volumes	4	POST /volumes {"name": "disk-b", "kind": "local", "url": "file:///b", "server": "srv-a", "quota_bytes": 1, "cam": "7"}	400 {"error": "@any"}
+05-stream	1	console2 POST /cameras {"name": "Вход", "source": "rtsp://10.0.0.30/ch/1"}	201 {"id": "$m"}
+05-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.30/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s"}
+05-stream	3	console2 POST /cameras {"name": "Двор", "source": "rtsp://10.0.0.31/ch/1"}	201 {"id": "$o"}
+05-stream	4	POST /recordings {"name": "$m-sub", "cam": "$m", "stream": "$s"}	201 {"cam": "$m", "stream": "$s"}
+05-stream	5	POST /recordings {"name": "$o-sub", "cam": "$o", "stream": "$s"}	409 {"error": "conflict", "fault": "must_match"}

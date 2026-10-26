@@ -1,5 +1,5 @@
-# Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's
-# live fan-out — "camera 7 is being watched, from gateway g-2" — one per camera,
+# Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera STREAM's
+# live fan-out — "camera 7's grid stream is being watched, from gateway g-2" — one per stream (V/01.1 Н1.1а),
 # created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
 # gateway a grace period after the last one leaves. Its workers are gateways (`liveworker`):
 # stateless, count = N by demand, capacity in VIEWERS, not cameras. Same
@@ -18,10 +18,14 @@ worker: {exec: /usr/lib/live/worker, writes: [accounts], deletes: [streams], rea
 tables: [accounts]
 about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
-  rows: streams                      # live/streams/<cam>
-  id: cam                            # named by the camera it fans out, never numbered
+  rows: streams                      # live/streams/<stream>
+  id: stream                         # named by the stream it fans out, never numbered — the camera's id for its main stream
   fields:
-    cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name
+    # The stream fanned out: an id of a `cam` unit — the camera itself (its main stream) or another stream of it, the
+    # grid's or the full screen's as the camera names them (`grid`, `full`; the user's choice, V/01.1 Н1.1а). The door
+    # cannot check it is this camera's (the main's own `main` is empty); the gateway does, and fans out nothing else.
+    stream:    {type: string, required: true, fixed: true}
+    cam:       {type: string, required: true, fixed: true}   # the VMS camera id: whose stream — the fan-out's `about`
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
     grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
 placement:
@@ -52,14 +56,14 @@ domain:
     stream-accounts: {from: live/stream-accounts/, key: name, pick: unique, to: to}
   names:
     stream-accounts/: {exclusive_with: domain/users, grant: view}
-snapshot: [cam, labels]
+snapshot: [cam, stream, labels]
 # Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
 # console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).
 rights:
   routes: {view: [streams]}
 # The gateway's door, opened to a page itself (the owner's decision 1: the bytes — here the offer and the stream — go
-# gateway ↔ browser): `POST /whep/<cam>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
-# `GET /live/where/<cam>` hands it out.
+# gateway ↔ browser): `POST /whep/<stream>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
+# `GET /live/where/<stream>` hands it out.
 door:
   routes: [whep]
   pass: [accounts]

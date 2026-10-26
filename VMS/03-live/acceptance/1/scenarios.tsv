@@ -1,8 +1,11 @@
 scenario	step	request	expect
 # Приёмка V/03.1: раздача — единица по спросу (дверь единиц консоли live; манифесты cam и live). Формат — README.
 01-create	1	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
-01-create	2	POST /streams {"cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "cam": "$c1", "grace": 30, "labels": ["public-address"]}
-01-create	3	POST /streams {"cam": "$c1"}	409 {"error": "exists"}
+01-create	2	POST /streams {"stream": "$c1", "cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "stream": "$c1", "cam": "$c1", "grace": 30, "labels": ["public-address"]}
+01-create	3	POST /streams {"stream": "$c1", "cam": "$c1"}	409 {"error": "exists"}
 01-create	4	GET /streams/$c1	200 {"labels": ["public-address"]}
 01-create	5	PUT /streams/$c1 {"cam": "nope"}	400 {"error": "~cam is fixed"}
-01-create	6	POST /streams {"cam": "nope"}	201 {"id": "nope", "grace": 30}
+01-create	6	POST /streams {"stream": "nope", "cam": "nope"}	201 {"id": "nope", "grace": 30}
+01-create	7	console2 POST /cameras {"source": "driverpack://file/door-sub.mp4", "main": "$c1", "profile": "сетка"}	201 {"id": "$s1"}
+01-create	8	POST /streams {"stream": "$s1", "cam": "$c1"}	201 {"id": "$s1", "stream": "$s1", "cam": "$c1"}
+01-create	9	POST /streams {"cam": "$c1"}	400 {"error": "@any"}
