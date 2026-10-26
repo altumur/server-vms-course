@@ -28,3 +28,6 @@ v6-v4-tail-other	{"url":"https://[::127.0.0.1]:8080"}	"ip"	v6 с хвостом 
 userinfo	{"url":"https://u@127.0.0.1:8080"}	"loopback"	userinfo@ — не часть хоста
 not-a-url	{"url":"127.0.0.1:8080"}	@exit 2	нет схемы и «//» — не URL: вход не по форме
 empty-host	{"url":"https://:8080"}	@exit 2	пустой хост — вход не по форме
+not-object	"https://127.0.0.1:8080"	@exit 2	вход не объект — не по форме (Н7)
+no-url	{}	@exit 2	нет url — не по форме (Н7)
+url-not-string	{"url":1}	@exit 2	url не строка — не по форме (Н7)

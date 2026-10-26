@@ -109,7 +109,7 @@ own_client:   любой клиент двери своего кластера �
               RESOURCE_URL и url строки двери (договор клиента объектов, роль resource); к https:// каждый зовёт peer(chain, fingerprints, role, host, now) договора peer шагами
               1–9, затем отзыв по revoke выше: лист сервера отозван, файла отзыва нет или он неверен — отказ (закрыт)
               (доп. (5) п. 1)
-  fingerprints: отпечатки (fingerprint ниже) ca.pem и ca.next.pem каталога W2C_TLS_DIR (rotation); у скрипта воркеров
+  fingerprints: отпечатки (fingerprint выше) ca.pem и ca.next.pem каталога W2C_TLS_DIR (rotation); у скрипта воркеров
               комплекта роли нет — центр того же каталога (доп. (4) п. 2)
   role:       роль двери, к которой клиент звонит: console — консоль кластера, domainconsole — консоль домена (переход 2),
               domain — слушатель SIGNER_URL, <sub>domain — дверь воркера на домене, resource — дверь ресурса
@@ -298,7 +298,7 @@ mixed:        как signed целиком: TLS сервера роли проц
 Пакеты [`crl`](../vectors/crl/README.md) (CRL: подпись, сроки, отзыв) и [`revoked`](../vectors/revoked/README.md) (файл `revoked`). (ADR-0083 доп. (32) п. 2)
 Участник: пакет [`peer`](../vectors/peer/README.md) — пакет общего договора peer, исполняет common; этот договор там — участник: закрытый список `sig` проверяет его шаг 4 (аудит раскладки, В-57; CM-RECORD-VECTORS-128, решение «Архитектора» 2026-10-25).
 Пакет [`trust-set`](../vectors/trust-set/README.md) — набор доверия двери роли и сверка листа (класс `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
-Пакет [`loopback`](../vectors/loopback/README.md) — порог петли клиента своего кластера (`loopback`, 28 строк; ADR-0075 доп. 2026-10-26 (4) п. 1). Подстановку
+Пакет [`loopback`](../vectors/loopback/README.md) — порог петли клиента своего кластера (`loopback`, 31 строка; ADR-0075 доп. 2026-10-26 (4) п. 1). Подстановку
 `host = SERVER_NAME` до шага 1 `peer` пакет `peer` не выражает (функция не меняется) — её проверяет приёмка уроков клиентов.
 
 ## Соответствие прежним урокам
