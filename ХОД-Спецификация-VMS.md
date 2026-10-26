@@ -46,6 +46,9 @@
   потока и сверяет строки камеры и потока (`reason` «stream: …»); сценарий `05-stream`.
 - V/03: раздача — на поток: `id: stream`, поле `stream` (`fixed`), `cam` — камера и `about`; шлюз раздаёт поток, только
   если он этой камеры; `<cam>` → `<поток>` в путях `where`, `whep`, эпохи, точки RTSP; OpenAPI `/whep/{stream}`.
+- V/04: поле детектора `stream` (как у записи), источник — поток детектора; V/05: поток задачи — поток записи `rec`;
+  V/06 и V/01.5 Н1.1а: архив устройства — у камеры (прочий поток архива не публикует, дверь — 404); `auto` создаёт детекторы
+  и записи на основном потоке (`stream` пуст; ключи `worker.creates` без изменений).
 
 ## Перевод 02-rec
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
@@ -305,6 +308,7 @@
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
+- «Сборке»: `det.subsystem.yaml` — поле `stream`; держатель `cam` — архив устройства только у камеры (V/01.5 Н1.1а).
 - «Сборке»: `rec.subsystem.yaml` — поле `stream`; `live.subsystem.yaml` — `id: stream`, поле `stream`, снимок + `stream` (потоки камеры, V/02.1, V/03.1).
 - «Сборке»: `cam.subsystem.yaml` — `about: {sub: cam, field: main}`, поля `main`, `profile`, `grid`, `full`, снимок + `main`, `profile`; держатель — V/01.2 Н1.1, Н1.2, Н1.4, Н1.5 (потоки камеры, решение владельца 2026-10-26).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.
