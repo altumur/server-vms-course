@@ -158,7 +158,8 @@ console:   консоль домена — дверь: проверяет лич
 pass:      каждую дверь /domain/* консоли домена, кроме GET и HEAD и кроме door.pass воркеру на домене (Н1.6), и
            POST /api/login (P/08.4 Н1.2); двери людей P/08.4 Н1.9 (/domain/users…, /domain/break-glass…) — при любом
            методе, и GET (разбор ревью стадии A 8–10, № 2) —
-           процессу domain (SIGNER_URL своей коробки): метод, путь с query, тело, Authorization, Idempotency-Key, If-Match
+           процессу domain (SIGNER_URL своей коробки; к https:// — клиент своего кластера, договор сертификата роли
+           own_client, роль domain): метод, путь с query, тело, Authorization, Idempotency-Key, If-Match
            как пришли; X-W2C-Client — адрес TCP-пира клиента: ставит консоль домена, когда, кому верит процесс и что
            снимается снаружи — договор пересылки Platform/common/contracts/forwarding.md «Адрес клиента» (разбор ревью
            стадии A 8–10, № 23; там же история: сверка М11, cammeta-python М11-09 № 22, P16); срок — «Ожидание» строки

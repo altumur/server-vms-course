@@ -192,7 +192,8 @@ resource:                                    # один процесс на се
     # retention_garbled, retention_withheld — причины прохода срока (Н3 retain, Н4; нет причины — полей нет; C05-RETENTION-PULSE-33)
     # door: {addr, mode: loopback | mtls, cert_until} — в каждом пульсе, пишет ресурс (ADR-0075 доп. (3)): addr —
     # RESOURCE_HOST:RESOURCE_PORT; mode — loopback без RESOURCE_TLS (только петля), mtls с RESOURCE_TLS=1; cert_until —
-    # стенные секунды конца срока сертификата сервера своего комплекта, при mtls; читает w2cctl tls status (P/02.4 Н1.9; разбор ревью стадии B 3–5, № 28)
+    # стенные секунды конца срока сертификата сервера своего комплекта, при mtls; при mtls сервер предъявляет лист, затем его центр
+    # (договор сертификата роли server; клиент — own_client, договор клиента объектов tls; ревью норм ADR-0075, Claude fd85ea8cc, С-2); читает w2cctl tls status (P/02.4 Н1.9; разбор ревью стадии B 3–5, № 28)
     # waits, restore, mirror, units — в каждом пульсе (сверка python и go М10/6–11, E39): units — {<sub>: [<id>…]} единиц, которые
     # называют в status пульсы воркеров этой коробки из running, id по возрастанию байтов; нет таких — {}
   workers:   [<sub>/<имя слота>…] — все слоты, о которых ресурс знает на своей коробке; running: [<sub>/<имя слота>…] — с

@@ -22,5 +22,9 @@ v6-other	{"url":"https://[fe80::1]:8080"}	"ip"	иной v6
 name-localhost	{"url":"https://localhost:8080"}	"name"	localhost — имя, даже если DNS отдаёт петлю (доп. (3) п. 1)
 name-server	{"url":"https://srv-a:8443"}	"name"	имя сервера
 name-upper	{"url":"https://LOCALHOST:8080"}	"name"	имя в любом регистре — имя
+v4-trailing-dot	{"url":"https://127.0.0.1.:8080"}	"name"	точка в конце — запись не из четырёх частей: имя (без нормализации)
+v6-v4-tail-loopback	{"url":"https://[::0.0.0.1]:8080"}	"loopback"	v6 с хвостом v4, значение ::1 — петля в любой записи
+v6-v4-tail-other	{"url":"https://[::127.0.0.1]:8080"}	"ip"	v6 с хвостом v4 127.0.0.1 — значение ::7f00:1, не ::1: ip
+userinfo	{"url":"https://u@127.0.0.1:8080"}	"loopback"	userinfo@ — не часть хоста
 not-a-url	{"url":"127.0.0.1:8080"}	@exit 2	нет схемы и «//» — не URL: вход не по форме
 empty-host	{"url":"https://:8080"}	@exit 2	пустой хост — вход не по форме
