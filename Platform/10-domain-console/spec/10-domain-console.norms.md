@@ -76,7 +76,7 @@ TLS. Журнал роли — `audit/domainconsole`, тревога `session.de
 ### Н1.1 Процесс и старт (М11/12 Н1.8; P/02.4 Н1.12)
 
 Консоль домена — процесс `domainconsole` у кластера-держателя, рядом с процессом `domain`: юнит
-`w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
+`w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 — только с комплектом роли, TLS — по комплекту (ADR-0075 доп. 2026-10-26 (2) п. 4; [P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
 Как процессы платформы, она исполняет сторону читателя строки манифеста ([P/02.3](../../02-installer/spec/02.3-installer.norms.md)
 Н3 «Старт процесса», «Смена манифеста»): встроенного манифеста у неё нет, шаги 0–4 «Старт процесса» — как там: шаг 0 —
 проверка схемы с `SCHEMA` сборки платформы ([договор схемы](../../common/contracts/schema.md) «Проверка при старте»);
