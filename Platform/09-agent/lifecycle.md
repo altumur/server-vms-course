@@ -91,6 +91,9 @@ TLS: комплект роли `domainagent` по `W2C_ROLE`; клиент дв�
 
 ## Стенд
 
+Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+
 Стенд нескольких кластеров ([общий README приёмки](../common/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
 посредник раннера; `@start agent <кластер> via <ретранслятор>` — `RELAY_URL` вместо `DOMAIN_URL`; `@join <кластер>
 [<файл>]` — команда `join` с файлом восстановления; `@clock` — `W2C_WALL_OFFSET`. `{data}` — `PLATFORM_DIR` кластера

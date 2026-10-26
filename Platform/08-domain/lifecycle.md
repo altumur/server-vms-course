@@ -71,6 +71,9 @@ TLS: комплект роли `domain` по `W2C_ROLE` (P/02.4 Н1.6 `roles`); 
 
 ## Стенд
 
+Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+
 Стенд нескольких кластеров — раздел «Стенд домена» [общего README приёмки](../common/acceptance/README.md): `@install domain` — установка
 с `{domain}` и `{recovery}`; `@start domain` — процессы `domain` и консоли домена на `hold`; `@start domain on
 <кластер>` — без установки; `@start domain second` — вторая копия с тем же `{data}`; `@move` — перенос. Дверь `signer` —

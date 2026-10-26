@@ -87,6 +87,9 @@
 
 ## Стенд
 
+Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+
 «Стенд» — [общий README приёмки](../common/acceptance/README.md): `@start worker [<sub>]
 <имя>` — имя подстановкой `{name}` (аргумент), `{sub}`; окружение от `{data}` (`PLATFORM_DIR`), `BOX_ID` стенда,
 `SERVER_NAME`, `PLATFORM_STORE` сокета роли, переменная `slot.name_env`, если манифест её объявил; `@sigterm`, `@sigkill`;
