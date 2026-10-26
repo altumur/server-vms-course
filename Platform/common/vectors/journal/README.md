@@ -49,3 +49,12 @@ name_file}`: исходный компонент и нынешнее содер�
 
 Сторона читает `file` своим кодом чтения бакета и сравнивает `ids`, `torn`, `garbled` с `expect`; для `names.tsv` — своим
 кодом раскладки имён, без файловой системы или во временном каталоге; для `years.tsv` — своим кодом выбора бакета.
+Кто исполняет: `bucket.tsv` — читатель бакетов, ресурс (`05-resource`: индекс, копии, уборка); `names.tsv` строки
+`read-*` — читатели каталогов: ресурс (`05-resource`) и каждый процесс, читающий корень объектов сам (`file://`,
+договор клиента объектов: `03-worker`, `04-controller`, `06-console`, `08-domain`, `09-agent`, `10-domain-console`);
+`years.tsv`, `append.tsv` и `names.tsv` строки `write-*` — писатели корней событий и объектов: воркер (`03-worker`,
+`observe`), консоль (`06-console`, журнал и отметки) и каждая роль со своим журналом `audit` (`04-controller`,
+`05-resource`, `08-domain`, `09-agent`, `10-domain-console`); `modes.tsv` — создатель пути строки: корни
+(`events-root`, `resource-root`) — установщик (`02-installer`, P/02.4 Н1.2), `.workers`, замок и дерево `testsub`
+(`workers-dir`, `workers-sub`, `lock-file`, `tree-dir`, `unit-dir`, `bucket-one-writer`) — воркер (`03-worker`),
+`audit-bucket` — консоль (`06-console`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-26).
