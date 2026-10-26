@@ -193,7 +193,7 @@ scenario	step	request	expect
 # 19-snapshot-state (ADR-0091 п. 3): действующее состояние result — в шарде снимка (state.result в snapshot манифеста), cursor — нет
 19-snapshot-state	1	@start controller testsub2	ok
 19-snapshot-state	2	@start resource	ok
-19-snapshot-state	3	@as console store POST /v1/write {"id":"g3","op":"put","key":"testsub2/tallies/m2","items":{"id":"m2","revision":"1","name":"m2","of":"c1","born":"00000000000000000000000000000003"},"cas":""}	200
-19-snapshot-state	4	@as testsub2worker store POST /v1/write {"id":"g4","op":"put","key":"testsub2/state/result/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
-19-snapshot-state	5	@as testsub2worker store POST /v1/write {"id":"g5","op":"put","key":"testsub2/state/cursor/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"through\":7}"},"cas":""}	200
+19-snapshot-state	3	@as console store POST /v1/write {"id":"c3","op":"put","key":"testsub2/tallies/m2","items":{"id":"m2","revision":"1","name":"m2","of":"c1","born":"00000000000000000000000000000003"},"cas":""}	200
+19-snapshot-state	4	@as testsub2worker store POST /v1/write {"id":"c4","op":"put","key":"testsub2/state/result/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+19-snapshot-state	5	@as testsub2worker store POST /v1/write {"id":"c5","op":"put","key":"testsub2/state/cursor/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"through\":7}"},"cas":""}	200
 19-snapshot-state	6	@until 20 resource GET /v1/objects/testsub2/snapshot/unplaced?scope=local	200 {"worker": null, "tallies": [{"id": "m2", "name": "m2", "state": {"result": {"state": "open"}}, "worker": null}]}

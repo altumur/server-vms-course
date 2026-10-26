@@ -55,7 +55,7 @@ scenario	step	request	expect
 # 08-orders (ADR-0091 п. 1): учебный заказчик testsub (Н5) — счётчик со start ≥ 1000 заказывает testsub2/tallies/testsub-<id>; занятая строка не пишется; перезапуск воркера — новое событие, продление; исходы в пульсе
 08-orders	1	@start controller	ok
 08-orders	2	@start worker w-1	ok
-08-orders	3	@as console store POST /v1/write {"id":"o3","op":"put","key":"testsub2/tallies/testsub-c9","items":{"id":"testsub-c9","revision":"1","name":"testsub-c9","of":"c9"},"cas":""}	200
+08-orders	3	@as console store POST /v1/write {"id":"a3","op":"put","key":"testsub2/tallies/testsub-c9","items":{"id":"testsub-c9","revision":"1","name":"testsub-c9","of":"c9"},"cas":""}	200
 08-orders	4	console POST /counters {"name": "c8", "start": 1000}	201
 08-orders	5	@until 30 store GET /v1/get?key=testsub2/tallies/testsub-c8	200 {"items": {"name": "testsub-c8", "of": "c8", "revision": "1", "born": "~", "made": "~\"by\":\"testsub\""}}
 08-orders	6	console POST /counters {"name": "c9", "start": 1000}	201
@@ -71,7 +71,7 @@ scenario	step	request	expect
 # 09-state (ADR-0091 п. 3): учебный держатель testsub2 при запуске пишет состояние result {state: open} под своей эпохой; консоль показывает действующее
 09-state	1	@start controller testsub2	ok
 09-state	2	@start worker testsub2 t-1	ok
-09-state	3	@as console store POST /v1/write {"id":"s3","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+09-state	3	@as console store POST /v1/write {"id":"b3","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
 09-state	4	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"revision": 1}
 09-state	5	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
 09-state	6	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "1", "born": "~", "value": "{\"state\":\"open\"}"}}

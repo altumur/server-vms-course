@@ -120,8 +120,8 @@ scenario	step	request	expect
 18-id-default	5	PUT /probe-x/probes/1 {"n": 4}	200 {"label": "renamed", "n": 4, "revision": 3}
 19-place-held-no-row	1	@start worker testsub2 t-1 on srv-a	ok
 19-place-held-no-row	2	@until 20 @as testsub2worker store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1"}}
-19-place-held-no-row	3	store POST /v1/write {"id":"h1","op":"put","key":"testsub2/holds/s9","items":{"by":"t-1","holder":"$t1","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
+19-place-held-no-row	3	store POST /v1/write {"id":"d1","op":"put","key":"testsub2/holds/s9","items":{"by":"t-1","holder":"$t1","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
 19-place-held-no-row	4	@until 30 GET /testsub2/servers	200 {"servers": {"srv-a": {"workers": [{"worker": "t-1"}]}}}
 19-place-held-no-row	5	GET /testsub2/where/shelves/s9?unit=ta	200 {"worker": "t-1", "place": "s9", "server": "srv-a"}
-19-place-held-no-row	6	store POST /v1/write {"id":"h2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
+19-place-held-no-row	6	store POST /v1/write {"id":"d2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
 19-place-held-no-row	7	GET /testsub2/where/shelves/s8?unit=ta	404 {"unreachable": "s8@?"}
