@@ -1,0 +1,26 @@
+# Порог петли клиента своего кластера (договор сертификата роли loopback; ADR-0075 доп. 2026-10-26 (3) п. 1, (4) п. 1, (5) п. 1). Форма — README.
+case	input	expect	note
+v4-loopback	{"url":"https://127.0.0.1:8080"}	"loopback"	четыре десятичные части, первая 127 — литерал петли
+v4-loopback-other	{"url":"https://127.10.20.30:8443"}	"loopback"	любой адрес 127.0.0.0/8
+v4-loopback-edge	{"url":"https://127.255.255.255"}	"loopback"	граница 127.0.0.0/8; порта нет
+v4-loopback-http	{"url":"http://127.0.0.1:8080"}	"loopback"	схема порог не меняет
+v4-leading-zero	{"url":"https://127.0.0.01:8080"}	"name"	ведущий ноль части — не литерал, имя (доп. (5) п. 1)
+v4-first-leading-zero	{"url":"https://0127.0.0.1:8080"}	"name"	ведущий ноль первой части — не литерал, имя
+v4-three-parts	{"url":"https://127.1:8080"}	"name"	три части — не IP-адрес, а имя (договор peer шаг 1)
+v4-out-of-range	{"url":"https://127.0.0.256:8080"}	"name"	часть больше 255 — не IP-адрес, имя
+v4-hex	{"url":"https://0x7f.0.0.1:8080"}	"name"	шестнадцатеричная запись — не десятичная, имя
+v4-other	{"url":"https://10.0.0.5:8446"}	"ip"	IP-литерал вне петли (у клиента своего кластера — ip_address шага 1)
+v4-any	{"url":"https://0.0.0.0:8080"}	"ip"	0.0.0.0 — не петля (доп. (3) п. 1)
+v4-128	{"url":"https://128.0.0.1:8080"}	"ip"	первая часть не 127
+v6-loopback	{"url":"https://[::1]:8080"}	"loopback"	::1 в скобках URL
+v6-loopback-full	{"url":"https://[0:0:0:0:0:0:0:1]:8080"}	"loopback"	значение ::1 в полной записи
+v6-loopback-zeros	{"url":"https://[0000::0001]:8080"}	"loopback"	значение ::1 с ведущими нулями групп — запись v6, значение то же
+v6-loopback-zone	{"url":"https://[::1%25lo0]:8080"}	"ip"	::1 с зоной (%25 — знак % в URL) — не петля; v6 с зоной — IP-адрес шага 1 peer
+v6-mapped	{"url":"https://[::ffff:127.0.0.1]:8080"}	"ip"	::ffff:127.0.0.1 — не петля (доп. (3) п. 1)
+v6-any	{"url":"https://[::]:8080"}	"ip"	`::` — не петля
+v6-other	{"url":"https://[fe80::1]:8080"}	"ip"	иной v6
+name-localhost	{"url":"https://localhost:8080"}	"name"	localhost — имя, даже если DNS отдаёт петлю (доп. (3) п. 1)
+name-server	{"url":"https://srv-a:8443"}	"name"	имя сервера
+name-upper	{"url":"https://LOCALHOST:8080"}	"name"	имя в любом регистре — имя
+not-a-url	{"url":"127.0.0.1:8080"}	@exit 2	нет схемы и «//» — не URL: вход не по форме
+empty-host	{"url":"https://:8080"}	@exit 2	пустой хост — вход не по форме

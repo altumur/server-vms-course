@@ -67,6 +67,7 @@
 | файл отзыва `crl.pem`: блок на центр, область серийников по издателю, подпись, даты — лог и счёт, дефекты | [`crl/`](crl/README.md) | common (договор сертификата роли) | [договор сертификата роли](../contracts/role-certificate.md) `revoke` `crl`; догадки стадии C RC-02, S03, RC-05, RC-06 |
 | право по грантам: функция `may` | [`may/`](may/README.md) | common (владелец P/08, глава 8.4) | [договор права](../contracts/may.md); решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1 |
 | клиент о сервере другого кластера: функция `peer` | [`peer/`](peer/README.md) | common (владелец P/09) | [договор `peer`](../contracts/peer.md); решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2 |
+| порог петли клиента своего кластера: `{url}` → `loopback` \| `name` \| `ip` | [`loopback/`](loopback/README.md) | common (договор сертификата роли) | [договор сертификата роли](../contracts/role-certificate.md) «Клиент двери своего кластера» `loopback`; ADR-0075 доп. 2026-10-26 (4) п. 1, (5) п. 1 |
 | токен домена: функция `token` | [`domain-token/`](domain-token/README.md) | common (владелец P/08, глава 8.2) | [договор токена домена](../contracts/domain-token.md); P/08.2-05, -06, -07 |
 | вид домена и теневой отчёт: функция `view` | [`08-domain/vectors/view/`](../../08-domain/vectors/view/README.md) | P/08.1 | [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3–Н1.6, Н3 |
 | сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/spec/08.5-domain.norms.md) Н1.3, Н3 |
