@@ -34,6 +34,15 @@
 - Проверка хука (ADR-0090, Confirmation): пробный коммит с `Platform/zz-probe.txt` отклонён `pre-commit` — «закрытый путь
   для «Спецификация VMS»»; HEAD не сдвинулся, файл убран.
 
+## Потоки камеры (решение владельца 2026-10-26, задел `4bdb4de08` пп. 1, 3 (Б))
+
+- Проверка п. 1.4 (выгрузка `41d3ec8`) — принята «Архитектором»: `about` на свою подсистему грузится, гранты судят поток
+  по камере; `about` одноуровневый → у потребителей `about` на камеру (`cam`), поток — поле `stream`; пробелы платформы —
+  запрос после стадии C `decisions/inbox/2026-10-26-запрос-vms-потоки-камеры.md` (пустое `about`, дерево, группа на N держателях).
+- V/01 (ветка `vms/01-cam-streams`): `cam` — `about: {sub: cam, field: main}`, поля `main` (`fixed`), `profile`, `grid`, `full`,
+  снимок + `main`, `profile`; V/01.1 Н1.1а, V/01.2 (годная строка камеры, пароль камеры тому же хосту, `size`, события
+  устройства у камеры), V/01.4 (команда — камере), V/01.6 (`ref` у камеры), V/01.7 (лицензия по `ref` камеры); сценарий `08-streams`.
+
 ## Перевод 02-rec
 - План — `VMS/02-rec/README.md` (годен, «Архитектор» 2026-10-23; протокол `obsd` — отдельным договором урока). V/02.1 —
   переведена (нормы, приёмка 1, лекция и инструкция — начало, id-map V/02.1-01…07; манифест: `grows: true`, `ends`); влита
@@ -292,4 +301,5 @@
   (`vms-obsd` → `vms-rec-obsd`, сокет `/run/vms-rec-obsd/obsd.sock`, окружение в `/etc/rec/rec.env`), `worker.uses`.
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
+- «Сборке»: `cam.subsystem.yaml` — `about: {sub: cam, field: main}`, поля `main`, `profile`, `grid`, `full`, снимок + `main`, `profile`; держатель — V/01.2 Н1.1, Н1.2, Н1.4, Н1.5 (потоки камеры, решение владельца 2026-10-26).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.

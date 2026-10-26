@@ -20,3 +20,8 @@ scenario	step	request	expect
 07-devices	2	POST /devices {"device": "10.0.0.7"}	403 {"error": "denied", "detail": "~written by its worker"}
 07-devices	3	DELETE /devices/10.0.0.7	404 {"error": "@any"}
 07-devices	4	PUT /devices/10.0.0.7 {"device": "10.0.0.7"}	405 {"error": "@any"}
+08-streams	1	POST /cameras {"source": "rtsp://10.0.0.20/ch/1", "name": "Вход"}	201 {"id": "$m", "profile": "main"}
+08-streams	2	POST /cameras {"source": "rtsp://10.0.0.20/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m", "profile": "сетка"}
+08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "~main is fixed"}
+08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
+08-streams	5	PUT /cameras/$m {"grid": "$s"}	200 {"grid": "$s"}
