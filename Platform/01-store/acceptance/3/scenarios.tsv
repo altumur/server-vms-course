@@ -65,3 +65,4 @@ scenario	step	request	expect
 15-service-doors	6	admin POST /v1/join {"id": "x1", "raft": "", "api": ""}	400 {"kind": "badrequest"}
 15-service-doors	7	admin HEAD /v1/status	405
 15-service-doors	8	admin HEAD /v1/rights	404
+16-status-no-api	1	admin GET /v1/status	200 {"state": "Leader", "leader": "", "members": {}}
