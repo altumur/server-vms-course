@@ -25,3 +25,11 @@ nonce — первые 12 байт `sha256("w2c test <слово>")`; в раб�
 консоль, процесс `domain` (книга у держателя), агент (ключ члена, строки книг); воркер только открывает (P/03.5);
 `reseal.tsv` — консоль (перезапечатывание при старте) и установщик (`w2cctl secrets seal`); строки `rotate*` —
 установщик (`w2cctl secrets rotate`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-26).
+
+## Нативный исход
+
+По общему правилу «Векторы» [общего README приёмки](../../acceptance/README.md) (решение «Архитектора» 2026-10-27); колонки ожидания:
+`aad.tsv` — `pointer`, `aad_hex`: объект `{"pointer": …, "aad_hex": …}` (вход — `row_key`, `path`); `envelope.tsv` —
+`envelope`: строка JSON конверта (вход — `key_hex`, `kid`, `nonce_b64url`, `row_key`, `pointer`, `plaintext`; открытие того же
+конверта — `open.tsv` своей функцией); `open.tsv`, `reseal.tsv`, `ring.tsv` — `expect`: значение JSON, слово (`sealed`,
+`unreadable`, строка `current …`) — строкой JSON.
