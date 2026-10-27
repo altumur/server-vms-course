@@ -1,0 +1,20 @@
+# rid по шаблону requests.key: подстановка → rid или поле, которое называет detail отказа (P/06.4 Н4; договор просьбы
+# и её метки rid; решение «Архитектора» 2026-10-27). Форма — README рядом.
+case	key	body	expect	note
+ok	"{unit}-{from:int}-{to:int}"	{"unit":"t1","from":1,"to":2}	{"rid":"t1-1-2"}	шаблон testsub2: rid по грамматике
+free-prefix	"{unit}-{from:int}-{to:int}"	{"unit":"free-a","from":1,"to":2}	{"detail":"unit"}	запрещённое начало free- — поле, с которого начинается rid (P/03.6 сц. 07 шаг 32)
+free-with-literal	"{unit}-{from:int}-{to:int}"	{"unit":"free","from":1,"to":2}	{"detail":"unit"}	free- вместе с литералом шаблона — поле, с которого начинается rid
+free-case	"{unit}-{from:int}-{to:int}"	{"unit":"Free-a","from":1,"to":2}	{"rid":"Free-a-1-2"}	регистр значим: Free- — не free-
+len-200	"{unit}-{from:int}-{to:int}"	{"unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"rid":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu-1-2"}	ровно 200 байт — допустимо
+len-in-to	"{unit}-{from:int}-{to:int}"	{"unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"to"}	201-й байт — в подстановке to
+len-in-from	"{unit}-{from:int}-{to:int}"	{"unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"from"}	201-й байт — в подстановке from
+len-in-literal	"{unit}-{from:int}-{to:int}"	{"unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"unit"}	201-й байт — литерал «-» после unit: поле перед литералом
+len-in-unit	"{unit}-{from:int}-{to:int}"	{"unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"unit"}	201-й байт — в подстановке unit
+len-utf8	"{unit}-{from:int}-{to:int}"	{"unit":"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяu","from":1,"to":2}	{"detail":"to"}	байты UTF-8, не знаки: 99 знаков unit — 197 байт, 201-й байт — в to
+slash	"{unit}-{from:int}-{to:int}"	{"unit":"a/b","from":1,"to":2}	{"detail":"unit"}	запрещённый знак / в подстановке unit
+first-of-two	"{of}-{unit}"	{"of":"a\"b","unit":"c\\d"}	{"detail":"of"}	два поля с запрещёнными знаками — первое по порядку шаблона
+second-only	"{of}-{unit}"	{"of":"ab","unit":"c'd"}	{"detail":"unit"}	запрещённый знак только во втором поле
+control	"{unit}-{from:int}-{to:int}"	{"unit":"a\u0085b","from":1,"to":2}	{"detail":"unit"}	знак Cc (U+0085) в подстановке unit
+dot	"{unit}"	{"unit":"."}	{"detail":"unit"}	rid «.» — не по грамматике: единственное поле
+empty	"{unit}"	{"unit":""}	{"detail":"unit"}	пустой rid — не по грамматике: единственное поле
+free-over-length	"{unit}-{from:int}-{to:int}"	{"unit":"free-uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"unit"}	free- и превышение длины — оба в подстановке unit
