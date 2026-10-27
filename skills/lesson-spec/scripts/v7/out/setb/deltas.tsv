@@ -1,0 +1,396 @@
+id	old	new	basis	check	status
+corpus/c5_int_capacity_4bigE0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4bigE0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4dot	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4dot	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4eplus0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4eplus0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_default_1e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_default_1e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_f1_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_f1_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_lease_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_lease_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_lease_1e2	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_lease_1e2	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_key_long_1025_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): неявный ключ длиннее 1024 знаков (YAML 1.2.2 § 7.4.2)	слой 1	на утверждение человеком
+corpus/c5_unit_minus_word_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `unit: -` — элемент списка, не слово	слой 1	на утверждение человеком
+corpus/c9_flow_lone_dash_spaced	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `[ - , a ]` — ошибка разбора YAML	слой 1	на утверждение человеком
+corpus/c5_key_question_mark	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (`?x:` — простой ключ `?x`); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c5_value_next_line_flow	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (значение потоком строкой ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c5_value_next_line_plain	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (слово строкой ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c5_value_next_line_quoted	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (строка в кавычках ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c5_value_question_mark	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (значение `?x` — слово); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c7_seq_dash_scalar_below	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (скаляр строкой ниже голого `-`); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c7_word_continuation_comment	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (` # c` в строке продолжения — комментарий); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c8_word_hash_space	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (`counter# c` — `#` часть слова); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
+corpus/c3_tab_block_ok	ok	refused:text	ADR-0092 п. 4: TAB в блочном скаляре — отказ нормой	слой 1	на утверждение человеком
+corpus/c3_tab_quoted_ok	ok	refused:text	ADR-0092 п. 4: TAB в строке в кавычках — отказ нормой	слой 1	на утверждение человеком
+corpus/c4_block_tab_content_ok	ok	refused:text	ADR-0092 п. 4: TAB в содержимом блочного скаляра — отказ нормой	слой 1	на утверждение человеком
+corpus/c6_flow_map_empty_value	refused:value	refused:text	ADR-0092 п. 4: `{k:}` — отказ нормой	слой 1	на утверждение человеком
+canonical/corpus-c3_tab_block_ok	вектор (строка cases.tsv 51)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
+canonical/corpus-c3_tab_quoted_ok	вектор (строка cases.tsv 53)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
+canonical/corpus-c4_block_tab_content_ok	вектор (строка cases.tsv 54)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
+classes/a91_affinity_exclusive_not_bool	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_affinity_exclusive_without_strict	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_key_adjacent	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_key_int	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_key_literal	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_self	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_twice	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_creates_without_key	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_ends_field_string	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_ends_without_field	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_double_space	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_missing	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_non_ascii	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_quote	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_relative	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_shell_char	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_tab	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_exec_trailing_space	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_parts_exec_shell_char	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_parts_stop_timeout_zero	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_parts_without_exec	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_retire_when_delete_after_zero	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_retire_when_state_field_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_retire_when_state_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_rows_state	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_shares_kind_word	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_shares_part_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_snapshot_state_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_stop_timeout_19	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_stop_timeout_51	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_unit_field_state	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_unit_state_depth_33	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_uses_no_dot	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_uses_self	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_uses_self_without_part	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/a91_worker_missing	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/blob_default	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_agg_bad	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_count_and_from	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_count_heartbeat	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_from_bad	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_histogram_no_buckets	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_name_underscore	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_neither	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_values_not_label	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c2_metrics_values_with_count	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c3_about_sub_bad	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c4_default_without_value	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c4_display_fields_quoted_numeric_key	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c4_door_pass_rows	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c4_inherit_outside_enum	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_capacity_4bigE0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_capacity_4dot	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_capacity_4dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_capacity_4e0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_capacity_4eplus0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_field_default_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_field_default_1e0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_field_f1_default_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_lease_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_int_lease_1e2	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_retire_when_no_in	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_unit_tRuE_is_bool	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c6_secrets_reads_bare	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c7_float_underflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_int_4301_digits	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_json_default_overflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_options_enum_float	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_options_enum_text_canonical	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_paths_canonical_order	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref100_scenario_acts_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref101_scenario_up_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref102_placement_claims_bind_same	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref104_scenario_claims_bind_same	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref110_shared_doc_twice	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref113_shared_schema_deep	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref12_unit_schema_depth_33	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref14_table_named_rows	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref15_table_list_named_rows	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref19_table_must_match_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref20_table_bound_to_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref21_table_bound_to_list_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref22_table_credentials_login_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref23_table_credentials_secret_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref24_table_default_outside_enum	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref25_table_field_schema_depth_33	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref26_table_schema_depth_33	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref34_weight_field_not_int	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref36_home_near_without_near	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref37_home_field_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref38_places_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref41_affinity_field_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref42_affinity_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref48_holds_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref50_holds_since_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref51_holds_until_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref52_holds_released_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref53_metrics_where_unit_field_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref55_metrics_unless_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref57_metrics_count_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref58_rights_unit_of_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref5_unit_must_match_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref60_rights_reach_group_without_group_by	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref61_servers_show_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref64_servers_status_of_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref6_unit_bound_to_secret	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref6_unit_bound_to_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref76_requests_valid_for_over_most_valid	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref77_requests_schema_depth_33	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref78_console_running_not_metric	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref7_unit_bound_to_list_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref83_worker_writes_table_unknown	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref84_worker_writes_unit_rows	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref88_worker_reads_prefix_overlap	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref8_unit_credentials_login_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref8_unit_credentials_login_url	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref90_secrets_reads_prefix_overlap	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref93_placement_ref_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref95_unit_ref_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref96_unit_audience_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref97_scenario_ref_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref98_scenario_audience_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref99_scenario_trigger_claim_undeclared	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref9_unit_credentials_secret_nonsecret	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_ref9_unit_credentials_secret_undeclared	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_requests_key_nested_brace	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_rules_below_form_failure	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_untyped_field_default	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c9_is_not_null	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c9_one_of_rule_order	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c9_seq_dash_dash	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c9_xclass_number_overflow	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_domain_empty	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_domain_person	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_domain_repeat	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_domain_string	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_domain_upper	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_role_dup_name	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_role_empty	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_role_extra_key	key	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_role_no_name	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_role_repeat	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_segment_slash	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/door_routes_segment_upper	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_default_inf	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_default_nan	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_default_neg_inf	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_default_overflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_inherit_inf	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_inherit_nan	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/float_inherit_negative_overflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/id_default_json_field	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/id_default_lone_brace	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/id_default_name_id	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/id_default_other_brace	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/json_default_nonfinite	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m49_int_2p53	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m51_books_key_not_string	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m51_books_key_to_not_name	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m51_books_to_secret	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m51_books_unknown_key	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_keys_display_unknown_id	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_exclusive_other	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_grant_word	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_no_book	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_no_exclusive	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_no_slash	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_on_carried_book	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_on_kept	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m59_names_unknown_key	reference	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m61_merge_union_on_int	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/m61_shared_doc_extra_key	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/name_free_prefix	name	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/name_reserved_platform	name	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_blob_bytes	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_table_name_int	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_unit_born	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_unit_deleted_before_default	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_unit_made	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/profile_unit_worker_before_inherit	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/r37_numeric_delete_after	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/requests_key_stray_brace	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/requests_stamp_group_without_group_by	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/status_worker	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/unknown_depth4	key	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/unknown_multiple	key	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/worker_reads_bare	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+diagnostics/dup_top_key_name	пути [["name"]], строки [36] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/unknown_depth4	пути [["unit","fields","name","requried"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/unknown_multiple	пути [["placement","capcity"],["unit","fields","name","requried"],["unknown_top"]], строки [6,11,37] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_default_inf	пути [["unit","fields","rate","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_default_neg_inf	пути [["unit","fields","rate","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_default_nan	пути [["unit","fields","rate","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_inherit_inf	пути [["unit","fields","rate","inherit"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_inherit_nan	пути [["unit","fields","rate","inherit"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_default_overflow	пути [["unit","fields","rate","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/float_inherit_negative_overflow	пути [["unit","fields","rate","inherit"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/json_default_nonfinite	пути [["unit","fields","data","default","rate"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/profile_unit_deleted_before_default	пути [["unit","fields","deleted"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/profile_unit_worker_before_inherit	пути [["unit","fields","worker"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m49_int_2p53	пути [["placement","capacity","default"]], строки [11] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/blob_default	пути [["unit","fields","mask","default"]], строки [66] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/status_worker	пути [["servers","status",3,"field"]], строки [424] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c3_about_sub_bad	пути [["about","sub"]], строки [37] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_keys_display_unknown_id	пути [["display","keys","ledger"]], строки [27] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m51_books_unknown_key	пути [["domain","books","notes","order"]], строки [40] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m61_shared_doc_extra_key	пути [["domain","shared",0,"title"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_exclusive_other	пути [["domain","names","notes/","exclusive_with"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_grant_word	пути [["domain","names","notes/","grant"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_no_book	пути [["domain","names","other/"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_no_exclusive	пути [["domain","names","notes/","exclusive_with"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_no_slash	пути [["domain","names","notes"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_on_carried_book	пути [["domain","names","tally/"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_on_kept	пути [["domain","names","badges/"]], строки [43] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m59_names_unknown_key	пути [["domain","names","notes/","scope"]], строки [42] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/requests_stamp_group_without_group_by	пути [["requests","stamp",0]], строки [22] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_door_pass_rows	пути [["door","pass",0]], строки [36] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_key_seq	пути [["unit","fields"]], строки [10] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_key_map	пути [["unit","fields"]], строки [10] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_key_int_and_string	пути [["unit","fields","data","default","1"]], строки [10] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_display_fields_numeric_key	пути [["display","fields","1"]], строки [27] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_inherit_outside_enum	пути [["unit","fields","f1","inherit"]], строки [10] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c4_default_without_value	пути [["unit","fields","start","default"]], строки [7] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/m61_merge_union_on_int	пути [["unit","fields","step","merge"]], строки [10] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/profile_blob_bytes	пути [["unit","fields","bytes"]], строки [22] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/profile_table_name_int	пути [["tables","notes","fields","name"]], строки [72] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/r37_numeric_delete_after	пути [["placement","unplaced","delete_after"]], строки [29] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_rules_below_form_failure	пути [["unit","fields","f1","secret_in",0,"param"],["unit","fields","f1","secret_in",0,"regex"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_paths_canonical_order	пути [["about","field"],["servers","show",0,"table"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_json_default_overflow	пути [["unit","fields","extra","default","a"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_untyped_field_default	пути [["unit","fields","note","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_options_enum_float	пути [["unit","fields","grade","enum",0],["unit","fields","grade","enum",1]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_options_enum_text_canonical	пути [["display","options","grade","1"],["display","options","grade","1.5"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_int_4301_digits	пути [["unit","fields","start","default"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c8_word_hash_space	пути [["display","unit"]], строки [26] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c9_seq_dash_dash	пути [["snapshot",0],["snapshot",0,0]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c9_xclass_number_overflow	пути [["domain","names","probe/","grant"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c9_is_not_null	пути [["unit","fields","tags","merge"],["unit","fields","tags","type"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+diagnostics/c9_one_of_rule_order	пути [["unit","fields","feed","secret_in",0,"regex"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
+family-read/<sub>/controller/placement_intent|row|writer|members: encoded json '[1e400]'	refused ['/members/0'] []	refused ['/members'] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<sub>/controller/placement_intent|row|reader|members: encoded json '[1e400]'	refused ['/members/0'] ['']	refused ['/members'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<sub>/controller/pass|object|writer|seconds: number 1e400	ok [] []	refused ['/seconds'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/controller/pass|object|reader|seconds: number 1e400	ok [] []	refused ['/seconds'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/controller/pass|object|writer|hung_move_after: number 1e400	ok [] []	refused ['/hung_move_after'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/controller/pass|object|reader|hung_move_after: number 1e400	ok [] []	refused ['/hung_move_after'] ['/hung_move_after']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|writer|value: encoded jcs '1e400'	crash [] []	refused ['/value'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|reader|value: encoded jcs '1e400'	ok [] []	refused ['/value'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|writer|value: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/value'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|reader|value: encoded jcs '{"zz":1e400}'	ok [] []	refused ['/value'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|writer|value: encoded jcs '[1e400]'	crash [] []	refused ['/value'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/<sub>/state/<имя>/<id>|row|reader|value: encoded jcs '[1e400]'	ok [] []	refused ['/value'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|writer|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl|file|reader|: encoded json '{"zz":1e400}'	refused ['/id', '/kind', '/t'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.workers/<sub>/<экземпляр>.lock|file|writer|: encoded json '{"zz":1e400}'	refused ['/instance', '/pid', '/server', '/sub', '/worker', '/zz'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.workers/<sub>/<экземпляр>.lock|file|reader|: encoded json '{"zz":1e400}'	refused ['/instance', '/pid', '/server', '/sub', '/worker', '/zz'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.workers/<sub>/<экземпляр>.lock|file|writer|pid: integer 1e400	refused ['/pid'] []	refused [''] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/<корень событий>/.workers/<sub>/<экземпляр>.lock|file|reader|pid: integer 1e400	refused ['/pid'] ['']	refused [''] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/view|object|writer|members/0/age: number 1e400	ok [] []	refused ['/members/0/age'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/view|object|reader|members/0/age: number 1e400	ok [] []	refused ['/members/0/age'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/keys|row|writer|doc: encoded json '{"zz":1e400}'	refused ['/doc/book_seal', '/doc/current', '/doc/domain', '/doc/issuing', '/doc/keys', '/doc/kid', '/doc/rev', '/doc/revoked_issuing', '/doc/root', '/doc/sig', '/doc/zz'] []	refused ['/doc'] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/keys|row|reader|doc: encoded json '{"zz":1e400}'	refused ['/doc/book_seal', '/doc/current', '/doc/domain', '/doc/issuing', '/doc/keys', '/doc/kid', '/doc/rev', '/doc/revoked_issuing', '/doc/root', '/doc/sig', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/keys|row|writer|doc/rev: integer 1e400	refused ['/doc/rev'] []	refused ['/doc'] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/keys|row|reader|doc/rev: integer 1e400	refused ['/doc/rev'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/members|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/members', '/doc/rev', '/doc/term', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/members|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-list|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-list|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-list|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/members', '/doc/rev', '/doc/term', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/member-list|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reports/<rev>|object|writer|sent_at: number 1e400	ok [] []	refused ['/sent_at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reports/<rev>|object|reader|sent_at: number 1e400	ok [] []	refused ['/sent_at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reports/<rev>.delta|object|writer|sent_at: number 1e400	ok [] []	refused ['/sent_at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reports/<rev>.delta|object|reader|sent_at: number 1e400	ok [] []	refused ['/sent_at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reported|object|writer|sent_at: number 1e400	ok [] []	refused ['/sent_at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/reported|object|reader|sent_at: number 1e400	ok [] []	refused ['/sent_at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/members/<член>/ca-certs|row|writer|certs: encoded jcs '1e400'	crash [] []	refused ['/certs'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members/<член>/ca-certs|row|writer|certs: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/certs'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members/<член>/ca-certs|row|writer|certs: encoded jcs '[1e400]'	crash [] []	refused ['/certs'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/members/<член>/ca-certs|row|reader|certs: encoded jcs '[1e400]'	refused ['/certs/0'] ['']	refused ['/certs'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/topology|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/topology|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/topology|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/rev', '/doc/star', '/doc/via', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/topology|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-topology|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-topology|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/member-topology|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/rev', '/doc/star', '/doc/via', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/member-topology|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/<sub>/<manifest:domain.books>|row|writer|: encoded json '{"zz":1e400}'	refused ['//missing', '//zz'] []	refused ['/'] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/<sub>/<manifest:domain.books>|row|reader|: encoded json '{"zz":1e400}'	refused ['//missing', '//zz'] ['']	refused ['/'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/<sub>/<manifest:domain.books>/<член>|row|writer|: encoded json '{"zz":1e400}'	refused ['//missing', '//zz'] []	refused ['/'] []	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/<sub>/<manifest:domain.books>/<член>|row|reader|: encoded json '{"zz":1e400}'	refused ['//missing', '//zz'] ['']	refused ['/'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/placement/<sub>/<ref>|row|writer|copies: encoded jcs '1e400'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placement/<sub>/<ref>|row|writer|copies: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placement/<sub>/<ref>|row|writer|copies: encoded jcs '[1e400]'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placement/<sub>/<ref>|row|reader|copies: encoded jcs '[1e400]'	refused ['/copies/0'] ['']	refused ['/copies'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/placed/<sub>/<ref>|row|writer|copies: encoded jcs '1e400'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placed/<sub>/<ref>|row|writer|copies: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placed/<sub>/<ref>|row|writer|copies: encoded jcs '[1e400]'	crash [] []	refused ['/copies'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/placed/<sub>/<ref>|row|reader|copies: encoded jcs '[1e400]'	refused ['/copies/0'] ['']	refused ['/copies'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/disabled|row|writer|names: encoded jcs '1e400'	crash [] []	refused ['/names'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/disabled|row|writer|names: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/names'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/disabled|row|writer|names: encoded jcs '[1e400]'	crash [] []	refused ['/names'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/disabled|row|reader|names: encoded jcs '[1e400]'	refused ['/names/0'] ['']	refused ['/names'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/grants/<кластер>|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/grants/<кластер>|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/grants/<кластер>|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/lines', '/doc/zz'] ['/doc/lines']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/grants/<кластер>|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/grants|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/grants|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/grants|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/lines', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/grants|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/names/<sub>/<книга>|row|writer|: encoded jcs '1e400'	crash [] []	refused ['/'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/names/<sub>/<книга>|row|writer|: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/names/<sub>/<книга>|row|reader|: encoded jcs '{"zz":1e400}'	refused ['//missing', '//zz'] ['']	refused ['/'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/names/<sub>/<книга>|row|writer|: encoded jcs '[1e400]'	crash [] []	refused ['/'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/holder|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/holder|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/holder|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/at', '/doc/domain', '/doc/holder', '/doc/issuer', '/doc/kid', '/doc/sig', '/doc/term', '/doc/url', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/holder|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/backups/rev-<rev>|object|writer|at: number 1e400	ok [] []	refused ['/at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/backups/rev-<rev>|object|reader|at: number 1e400	ok [] []	refused ['/at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/backup|object|writer|at: number 1e400	ok [] []	refused ['/at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/backup|object|reader|at: number 1e400	ok [] []	refused ['/at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/stranded|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/stranded|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/stranded|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/base', '/doc/holder', '/doc/items', '/doc/term', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/stranded|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/rev', '/doc/sha256', '/doc/term', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/shared|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared|object|writer|at: number 1e400	ok [] []	refused ['/at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/shared|object|reader|at: number 1e400	ok [] []	refused ['/at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/shared-docs/rev-<rev>|object|writer|at: number 1e400	ok [] []	refused ['/at'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/shared-docs/rev-<rev>|object|reader|at: number 1e400	ok [] []	refused ['/at'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/shared-refused|row|writer|doc: encoded jcs '1e400'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared-refused|row|writer|doc: encoded jcs '{"zz":1e400}'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/shared-refused|row|reader|doc: encoded jcs '{"zz":1e400}'	refused ['/doc/at', '/doc/reason', '/doc/rev', '/doc/term', '/doc/zz'] ['']	refused ['/doc'] ['']	дефект эталона: 1e400 в тексте места encoding — отказ кодека места (codec.tsv), не значения внутри	стек В7	на утверждение человеком
+family-read/domain/shared-refused|row|writer|doc: encoded jcs '[1e400]'	crash [] []	refused ['/doc'] []	дефект эталона: писатель падает на 1e400 в JCS	стек В7	на утверждение человеком
+family-read/domain/alarms|object|writer|events/0/t: number 1e400	ok [] []	refused ['/events/0/t'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/alarms|object|reader|events/0/t: number 1e400	ok [] []	refused ['/events/0/t'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/alarm-history/<член>|object|writer|events/0/t_src: number 1e400	ok [] []	refused ['/events/0/t_src'] []	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком
+family-read/domain/alarm-history/<член>|object|reader|events/0/t_src: number 1e400	ok [] []	refused ['/events/0/t_src'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	на утверждение человеком

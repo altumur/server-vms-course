@@ -1,0 +1,78 @@
+# Набор Б, часть 2 (ADR-0092 пп. 11, 13): ≈ 60 случаев формы, текста, связей и семей с ожидаемым исходом — НА УТВЕРЖДЕНИЕ ЧЕЛОВЕКОМ.
+# Черновик генератора В7 (ветка v7/generator); файлы случаев пишет «Спецификация» после утверждения.
+# Строка: id<TAB>where<TAB>input<TAB>expect<TAB>basis<TAB>source. where — corpus 02.1 (манифест) или family-read (семья, режим).
+# input — база и правка: «base» — Platform/02-installer/acceptance/1/cases/r38_unit_minimal.subsystem.yaml; у семей — базовый
+# экземпляр family-read.jsonl (why=base) этой семьи. expect: вердикт:слой [путь] (у семей — путь JSON Pointer и исход outcomes.tsv).
+id	where	input	expect	basis	source
+t01_flow_multiline	corpus	base; `snapshot: [name,⏎  start]`	refused:text	Н1.1:95 (поток на несколько строк); ADR-0092 п. 2	ревью Claude 1.2
+t02_quoted_multiline	corpus	base; `unit: "counter⏎    x"`	refused:text	Н1.1:95	ревью Claude 1.2
+t03_indent_indicator	corpus	base; `unit: |2⏎     counter`	refused:text	Н1.1:95 (`|2`)	ревью Claude 1.2
+t04_complex_key	corpus	base; `? unit⏎  : counter`	refused:text	Н1.1:95 (`? …`)	ревью Claude 1.2
+t05_doc_end	corpus	base; `...` последней строкой	refused:text	Н1.1:46; один документ — по байтам (п. 2)	ревью Claude 1.2 (yaml.v3 принимает)
+t06_directive	corpus	`%YAML 1.2⏎---⏎` + base	refused:text	Н1.1:46	ревью Claude 1.2
+t07_block_plain_ok	corpus	base; `unit: |⏎    counter`	ok	контроль к t03	ревью Claude 1.2
+t08_tab_plain	corpus	base; TAB внутри простого слова значения	refused:text	п. 4	ADR-0092 п. 4
+t09_tab_quoted	corpus	base; TAB внутри строки в кавычках	refused:text	п. 4 (TAB вне комментариев)	ADR-0092 п. 4
+t10_tab_comment_ok	corpus	base; TAB внутри комментария `# a⇥b`	ok	п. 4: в комментарии TAB допустим	ADR-0092 п. 4
+t11_flow_empty_value	corpus	base; `lease: {unconfirmed_max:}`	refused:text	п. 4 (`{k:}`)	ADR-0092 п. 4
+t12_two_documents	corpus	base + `---⏎name: x`	refused:text	один документ (п. 2)	Н1.1
+t13_anchor	corpus	base; `unit: &a {…}`	refused:text	п. 2: якорь	Н1.1
+t14_alias	corpus	base; `x: *a` после якоря	refused:text	п. 2: псевдоним	Н1.1
+t15_merge_key	corpus	base; `<<: {…}` в отображении	refused:text	п. 2: `<<`	Н1.1
+t16_tag	corpus	base; `unit: !!str counter`	refused:text	п. 2: тег	Н1.1
+t17_dup_key	corpus	base; `name` дважды	refused:text [["name"]]	п. 2: повтор ключа	Н1.1
+t18_key_collection	corpus	base; `[a, b]: 1` ключом	refused:text	п. 2: ключ-коллекция	Н1.1
+t19_depth_65	corpus	base; значение json поля глубиной 65	refused:text	п. 2: глубина > 64	Н1.1
+t20_depth_64_ok	corpus	base; то же глубиной 64 (и связь depth ≤ 32 не на этом месте)	refused:relations или ok — уточнить место	п. 2: глубина 64 допустима текстом	Н1.1
+t21_root_not_col1	corpus	base, каждая строка с отступом в 1 пробел	refused:text	п. 2: корень — блочное отображение с колонки 1	ADR-0092 п. 2
+t22_root_flow	corpus	`{name: x, …}` одной строкой	refused:text	п. 2	ADR-0092 п. 2
+t23_quoted_true_string	corpus	base; `unit: "true"`	ok (строка)	п. 2: скаляр по стилю узла	ADR-0092 п. 2
+t24_plain_true_bool	corpus	base; `unit: true`	refused:form [["unit"]]	п. 2: `true` — bool	ADR-0092 п. 2
+t25_bom	corpus	base с BOM	refused:text	п. 2: байты	Н1.1
+f01_int_4dot0_ok	corpus	base; `stop_timeout: 20.0` в worker	ok; канонический вид — 20	п. 8: целое по значению, приведение	ADR-0092 п. 8
+f02_int_1e1_ok	corpus	base; `placement.capacity.default: 1e1`	ok; канонический вид — 10	п. 8	ADR-0092 п. 8
+f03_int_frac	corpus	base; `placement.capacity.default: 4.5`	refused:form	п. 8: не целое	ADR-0092 п. 8
+f04_int_below_min	corpus	base; целое место без своей границы = -9007199254740992	refused:form	п. 8; Confirmation `int_below_min`	ADR-0092 Confirmation
+f05_int_at_min_ok	corpus	base; то же = -9007199254740991	ok	п. 8; Confirmation `int_at_min_ok`	ADR-0092 Confirmation
+f06_int_at_max_ok	corpus	base; то же = 9007199254740991	ok	п. 8	ADR-0092 п. 8
+f07_int_above_max	corpus	base; то же = 9007199254740992	refused:form	п. 8	ADR-0092 п. 8
+f08_exec_trailing_nl	corpus	base; `worker: {exec: "/usr/lib/probe/worker\n"}`	refused:form [["worker","exec"]]	слой 5 (полное совпадение)	ревью Claude x5
+f09_prefix_trailing_nl	corpus	base; `slot: {prefix: "w\n"}`	refused:form	слой 5	ревью Claude x1
+f10_secret_name_newline	corpus	base; поле `"a\n_secret": {type: int}`	refused:form	перевод точки — `[\s\S]` (п. 12)	ревью Claude x2
+f11_blob_name_64_ok	corpus	base; поле blob с именем из 64 знаков `[A-Za-z_]…`	ok	дополнение name_not_pattern (п. 12)	корпус profile_blob_64_ok
+f12_blob_name_65	corpus	то же, 65 знаков	refused:form	дополнение name_not_pattern (п. 12)	корпус profile_blob_65
+f13_secret_not_string	corpus	base; поле `x_secret: {type: int}`	refused:form	правило name_pattern	Н1.3
+f14_secretx_bound_to_ok	corpus	base; поле `x_secretx` с `bound_to` на несекретное поле	ok	name_not_pattern — дополнение к `.*_secret` (п. 12)	MANUAL regex.py
+f15_unknown_top_key	corpus	base; `zz: 1`	refused:form [["zz"]]	п. 6: класс — form	Н1.2
+f16_one_of_second	corpus	base; элемент secret_in с `param` и `regex`	refused:form [[…,"regex"]] — путь второго по списку правила	DIALECT § 3 one_of	корпус c9_one_of_rule_order
+f17_property_names_reference	corpus	base; `domain.names` с именем без `/`	refused:form (было reference)	п. 6	корпус m59_names_no_slash
+r01_default_type_braces	corpus	base; unit.id: numeric; поле без type, `default: "a{x}"`	refused:relations	связь только через default (type = string по умолчанию формы); строка references.tsv 122	ревью Claude 3.3 (мутация nodefault)
+r02_default_type_int_braces	corpus	base; поле `type: int`, `default: "{id}"` при unit.id не numeric	refused:relations	строки 120–121 (default формы в @unit.fields.$f.type)	references.tsv
+r03_depth_32_ok	corpus	base; `unit.fields.x.schema` глубиной 32	ok	своя функция depth (слой 7)	references.tsv:12
+r04_depth_33	corpus	то же глубиной 33	refused:relations	depth	корпус c8_ref12_unit_schema_depth_33
+r05_template_int_on_string	corpus	base; `requests.key: "{a:int}"`, `a` — строковое поле schema	refused:relations	своя функция template	references.tsv:75
+r06_text_enum_numeric_ok	corpus	base; поле `type: int, enum: [1]`, `display.options.f: {"1": …}`	ok	своя функция text (JCS 1 → "1")	references.tsv:70
+r07_split_unknown_table	corpus	base; `metrics: [{name: m, count: "count nosuch"}]`	refused:relations	split (расширение strings)	references.tsv:57
+r08_unique_keys	corpus	base; `domain.keys: [{id: a}, {id: a}]`	refused:relations	unique	references.tsv:115
+r09_prefix_free	corpus	base; `worker.reads: ["a/", "a/b"]`	refused:relations	prefix_free	references.tsv:94
+r10_number_equality	corpus	base; связь `=` между 1 и 1.0 (если достижима формой)	равенство по значению (CEL: 1 == 1.0)	DIALECT § 6; Ф9 — недостижима формой манифеста (доп. (6))	ADR-0087 доп. (6)
+a01_null_root	family-read	семья-объект (каждая из 20), текст `null`, оба режима	refused [""] исход ""	п. 13: корень null	ревью Claude 4.1
+a02_row_null	family-read	семья-строка, текст `null`	refused [""] исход ""	п. 13	DIALECT § 8
+a03_number_1e400_reader	family-read	<sub>/controller/pass, `seconds: 1e400`, читатель	refused ["/seconds"] (эталон: ok)	дефект эталона (Б)	ADR-0092 Confirmation
+a04_jcs_1e400_writer	family-read	семья с полем encoding: jcs, текст поля `1e400`, писатель	refused [путь поля] (эталон: падает)	дефект эталона (Б)	ADR-0092 Confirmation
+a05_trailing_nl_sub	family-read	`.workers/<sub>/<экземпляр>.lock`, `sub: "a\n"`	refused ["/sub"]	п. 13: хвостовой \n в поле с pattern	ревью Claude 4.2
+a06_names_given_bad	family-read	<sub>/controller/pass, `names_given: {"Bad Name!": …}`, читатель	refused ["/names_given/Bad Name!"] исход по пути names_given	п. 13: имя под propertyNames, исход по пути (Go — слой 4)	ревью Claude 4 группа 5
+a07_book_empty_key_ok	family-read	семья с common.book_row, ключ `""`	ok	propertyNames с исключением "" (ловушка Gemini 4.2)	common.form.yaml book_row
+a08_unique_items_second	family-read	список с unique_items, повтор элемента 0 в конце	refused [путь повтора]	слой 4: путь — второе вхождение	DIALECT § 2
+a09_max_bytes	family-read	поле с max_bytes, строка из «é» на байт длиннее	refused [путь]	слой 3: байты UTF-8	ADR-0088 доп. (2) С6
+a10_not_pattern	family-read	поле с not_pattern, совпадающее значение	refused [путь]	перевод not: {pattern}	DIALECT § 2
+a11_not_enum_dot	family-read	поле common.named_id = "."	refused [путь]	not: {enum}	common.form.yaml named_id
+a12_whole_reader	family-read	место whole: true, читатель, `1.0`	refused [путь]	слой 3: целый знак и у читателя	codec.tsv integer
+a13_exact_reader	family-read	целое место без whole, читатель, `100.00000000000000001`	refused [путь]	слой 3: точное десятичное значение записи	OBS154-RAW-TIME-EXACT-01
+a14_int_1dot0_reader_ok	family-read	целое место без whole, читатель, `1.0`	ok	слой 3	codec.tsv integer
+a15_time_writer	family-read	поле времени, писатель, `"1.0001"`	refused [путь]; читатель — ok	слой 3: запись писателя	codec.tsv time
+a16_time_number_1e0	family-read	поле времени в объекте, число `1e0`	refused [путь]	слой 3: время по записи	OBS154-RAW-TIME-EXACT-01
+a17_writer_max_names	family-read	platform/manifest/<sub> (строка), лишнее имя `zz`, писатель / читатель	писатель refused ["/zz"]; читатель ok	$defs.writer (п. 15), max_items имён	02.1 manifest-row
+a18_jcs_noncanonical	family-read	поле encoding: jcs, текст `{"b":1,"a":2}`, писатель / читатель	писатель refused [путь]; читатель ok	слой 3: JCS только у писателя	ADR-0088 доп. (2) С4
+a19_outcome_unit_field	family-read	<sub>/heartbeats/<имя>, `build: 12345`, читатель	refused ["/build"] исход /build (не "")	DIALECT § 9: единица `поле`	heartbeats.outcomes.tsv
+a20_doors_writer_name	family-read	platform/doors/<сервер>, имя `zz` (не room./live.), писатель / читатель	писатель refused ["/zz"]; читатель ok	propertyNames писателя в $defs.writer	05-resource doors.form.yaml
