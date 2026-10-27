@@ -27,8 +27,8 @@ root:
       description: одна цель всей группы — имя воркера (слот P/03.2 Н1.4); "" — снять размещение; только при active
     reason:
       type: string
-      not_enum: ['']
-      description: непустая причина; только при active
+      writer: {not_enum: ['']}
+      description: непустая причина — обязанность писателя (контроллер); читатель "" принимает (C06-WHERE-EMPTY-168-04, как C06-WHERE-EMPTY-33-01); только при active
     at:
       ref: common.time
       description: стенные секунды принятия решения; только при active
