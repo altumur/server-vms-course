@@ -142,6 +142,9 @@ class Schema:
         out = []
         while isinstance(s, dict):
             out.append(s)
+            for x in s.get("allOf", []):         # место имён с правилами по имени: allOf [значение, правила…]
+                if isinstance(x, dict) and "$ref" in x and "if" not in x:
+                    out += self.resolve(x)
             r = s.get("$ref")
             if r is None:
                 break
