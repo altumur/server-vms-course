@@ -1,4 +1,5 @@
 # door.routes: {name} — допуск token, {name, domain}, {name, role, domain}; виды — проверка каталога (Н3), не загрузчика; ADR-0091 доп. (14) п. 1
+# виды probe, tally — объявленные testsub стенда выборки manifest put (ACC-CORPUS-DOOR-DOMAIN-KIND-01)
 name: probe
 unit:
   rows: counters
@@ -9,4 +10,4 @@ placement:
   capacity: {default: 4}
 worker: {exec: /usr/lib/probe/worker}
 door:
-  routes: [read, {name: plain}, {name: feed, domain: [cam, tally]}, {name: archive, role: [recworker], domain: [cam]}]
+  routes: [read, {name: plain}, {name: feed, domain: [probe, tally]}, {name: archive, role: [recworker], domain: [tally]}]
