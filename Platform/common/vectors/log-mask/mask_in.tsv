@@ -1,0 +1,36 @@
+# Маска на входе (договор маски журнала «Маска на входе» mask_in; пробельные — договор имени человека white_space): значение
+# секретного поля, присланное на запись, → маска (отказ записи, P/06.2 Н4) или значение. Форма — README.
+case	value	expect	note
+three-stars	"***"	{"mask": true}	маска журнала и показа секрета (`***`, векторы log-mask и secret-in) на входе — отказ
+four-stars	"****"	{"mask": true}	больше трёх знаков множества — маска
+two-stars	"**"	{"mask": false}	меньше трёх знаков — значение
+one-star	"*"	{"mask": false}	один знак — значение
+fullwidth	"＊＊＊"	{"mask": true}	U+FF0A
+asterisk-operator	"∗∗∗"	{"mask": true}	U+2217
+low-asterisk	"⁎⁎⁎"	{"mask": true}	U+204E
+heavy-asterisk	"✱✱✱"	{"mask": true}	U+2731
+bullet	"•••"	{"mask": true}	U+2022
+black-circle	"●●●"	{"mask": true}	U+25CF
+bullet-operator	"∙∙∙"	{"mask": true}	U+2219
+middle-dot	"···"	{"mask": true}	U+00B7
+dot-operator	"⋅⋅⋅"	{"mask": true}	U+22C5
+white-bullet	"◦◦◦"	{"mask": true}	U+25E6
+white-circle	"○○○"	{"mask": true}	U+25CB
+medium-black-circle	"⚫⚫⚫"	{"mask": true}	U+26AB
+mixed-set	"*•●"	{"mask": true}	знаки множества вперемешку — маска
+tab-edge	"\t***"	{"mask": true}	пробельный по краю не в счёт (S12; приёмка P/06.2 сц. 02 шаг 5)
+nbsp-edge	"\u00a0***"	{"mask": true}	U+00A0 по краю (S12; приёмка P/06.2 сц. 02 шаг 6)
+spaces-both-edges	" *** "	{"mask": true}	пробелы с обеих сторон
+ideographic-and-ls	"\u3000***\u2028"	{"mask": true}	U+3000 и U+2028 — пробельные White_Space
+nel-edge	"\u0085***"	{"mask": true}	U+0085 — пробельный White_Space
+newline-edge	"***\n"	{"mask": true}	U+000A — пробельный
+zero-width-edge	"\u200b***"	{"mask": false}	U+200B не White_Space — не край: значение
+inner-spaces	"* * *"	{"mask": false}	пробелы внутри — не знаки множества: значение
+spaces-two-marks	" ** "	{"mask": false}	после края два знака — значение
+password-inside	"a***b"	{"mask": false}	пароль со звёздочками внутри — значение (S12)
+password-tail	"***a"	{"mask": false}	знак вне множества — значение
+star-like-not-in-set	"⋆⋆⋆"	{"mask": false}	U+22C6 не из множества — значение
+hyphenation-point	"‧‧‧"	{"mask": false}	U+2027 не из множества — значение
+empty	""	{"mask": false}	пустое — не маска (знаков меньше трёх)
+only-spaces	"   "	{"mask": false}	одни пробельные — знаков множества нет: не маска
+plain	"secret"	{"mask": false}	обычное значение
