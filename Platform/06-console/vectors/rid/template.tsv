@@ -1,5 +1,5 @@
 # rid по шаблону requests.key: подстановка → rid или поле, которое называет detail отказа (P/06.4 Н4; договор просьбы
-# и её метки rid; решение «Архитектора» 2026-10-27). Форма — README рядом.
+# и её метки rid; решение «Архитектора» 2026-10-27: при нескольких нарушениях — самое раннее по смещению байта). Форма — README рядом.
 case	key	body	expect	note
 ok	"{unit}-{from:int}-{to:int}"	{"unit":"t1","from":1,"to":2}	{"rid":"t1-1-2"}	шаблон testsub2: rid по грамматике
 free-prefix	"{unit}-{from:int}-{to:int}"	{"unit":"free-a","from":1,"to":2}	{"detail":"unit"}	запрещённое начало free- — поле, с которого начинается rid (P/03.6 сц. 07 шаг 32)
@@ -17,4 +17,7 @@ second-only	"{of}-{unit}"	{"of":"ab","unit":"c'd"}	{"detail":"unit"}	запре�
 control	"{unit}-{from:int}-{to:int}"	{"unit":"a\u0085b","from":1,"to":2}	{"detail":"unit"}	знак Cc (U+0085) в подстановке unit
 dot	"{unit}"	{"unit":"."}	{"detail":"unit"}	rid «.» — не по грамматике: единственное поле
 empty	"{unit}"	{"unit":""}	{"detail":"unit"}	пустой rid — не по грамматике: единственное поле
+mixed-free-length	"{unit}-{from:int}-{to:int}"	{"unit":"free-uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"unit"}	free- в unit (смещение 0) старше превышения длины в to (смещение 200)
+mixed-char-length	"{of}-{unit}"	{"of":"a/b","unit":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"}	{"detail":"of"}	знак в of (смещение 1) старше превышения длины в unit (смещение 200)
+mixed-length-char	"{of}-{unit}"	{"of":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","unit":"a/b"}	{"detail":"of"}	превышение длины в of (смещение 200) старше знака в unit (смещение 203)
 free-over-length	"{unit}-{from:int}-{to:int}"	{"unit":"free-uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu","from":1,"to":2}	{"detail":"unit"}	free- и превышение длины — оба в подстановке unit
