@@ -671,6 +671,11 @@
         "pattern": "^(?:[0-9a-f]{16})$"
        }
       },
+      "keys": {
+       "propertyNames": {
+        "pattern": "^(?:[0-9a-f]{8})$"
+       }
+      },
       "kid": {
        "enum": [
         "root"

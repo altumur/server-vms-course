@@ -295,12 +295,17 @@ class Gen:
             x = self.writer(c, memo, stack)
             if x is not None:
                 props[k] = x
-        if props:
-            s["properties"] = props
         if n.names is not None:
             x = self.writer(n.names[1], memo, stack)
             if x is not None:
                 s["additionalProperties"] = x
+                for k in n.properties or {}:     # ключи properties — не имена автора: значение имени их не судит
+                    props.setdefault(k, True)
+            kx = self.writer(n.names[0], memo, stack)
+            if kx is not None:
+                s["propertyNames"] = {"anyOf": [{"enum": list(n.properties)}, kx]} if n.properties else kx
+        if props:
+            s["properties"] = props
         if n.items is not None:
             x = self.writer(n.items, memo, stack)
             if x is not None:

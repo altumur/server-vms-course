@@ -25,6 +25,10 @@ from v7 import build, stack
 ROOT = Path(__file__).resolve().parents[4]
 
 
+class EncText(str):
+    """Текст места `encoding` как есть (мутация записи JSON внутри строки)."""
+
+
 class Raw:
     """Число с записью (в тексте JSON — как есть): `1.0`, `1e0`, `100.00000000000000001`."""
 
@@ -231,11 +235,15 @@ class Gen:
 
     def string(self, t):
         cands = []
-        if t.pattern is not None:
-            cands += [sample(t.pattern), sample(t.pattern, 1), sample(t.pattern, 2)]
+        w = t.writer
+        for p in ([w.pattern] if w is not None and w.pattern is not None else []) + \
+                ([t.pattern] if t.pattern is not None else []):
+            cands += [sample(p), sample(p, 1), sample(p, 2)]
+        if w is not None and w.enum:
+            cands = [x for x in w.enum if isinstance(x, str)] + cands
         cands += ["a", "x1", "ab"]
         for s in cands:
-            if fits(t, s):
+            if fits(t, s) and (w is None or fits(w, s)) and (w is None or not w.enum or s in w.enum):
                 return s
         return cands[0]
 
@@ -263,6 +271,8 @@ def encode_row(form, value):
 
 def encode_item(form, node, v):
     t = form.deref(node)
+    if isinstance(v, EncText):
+        return str(v)
     if t.encoding == "jcs":
         return stack.jcs(v)
     if t.encoding == "json":
@@ -282,6 +292,8 @@ def encode_value(form, n, v):
     """Объект или файл: места `encoding` — текст JSON разобранного значения."""
     f = form
     t = f.deref(n)
+    if isinstance(v, EncText):
+        return str(v)
     if t.variants:
         for vn in t.variants:
             if _jtype_ok(f, vn, v):
@@ -434,6 +446,9 @@ def mutations(family, base):
         types = f.types_of(n)
         if path:
             out.append(("%s: wrong type" % here, setat(base, path, [] if not isinstance(v, list) else {"zz": 1})))
+        if t.encoding is not None:
+            for bad in ("1e400", '{"zz":1e400}', "[1e400]", '{"b":1,"a":2}', "{", "NaN"):
+                out.append(("%s: encoded %s %r" % (here, t.encoding, bad), setat(base, path, EncText(bad))))
         if isinstance(v, str):
             out.append(("%s: trailing \\n" % here, setat(base, path, v + "\n")))
             if t.pattern is not None:
@@ -502,6 +517,47 @@ def mutations(family, base):
     return out
 
 
+def targeted(family, base, opath):
+    """Экземпляр на строку outcomes.tsv: на месте её пути — значение чужого типа (родители достраиваются)."""
+    f, g = family.form, Gen(family.form)
+    segs = fam.unpointer(opath) if opath else []
+    if not segs:
+        return None
+    v = copy.deepcopy(base)
+    cur, prefix = v, ""
+    for i, s in enumerate(segs):
+        last = i == len(segs) - 1
+        if isinstance(cur, list):
+            if not cur:
+                n = fam.place(f, prefix + "/*")
+                cur.append(g.value(n) if n is not None else {})
+            s = 0
+        elif isinstance(cur, dict):
+            if s == "*":
+                s = next(iter(cur), None) or "a"
+        else:
+            return None
+        prefix += "/" + str(s if segs[i] != "*" else "*")
+        if last:
+            n = fam.place(f, "/".join([""] + [x for x in segs]))
+            types = f.types_of(n) if n is not None else ["any"]
+            bad = 12345 if ("array" in types or "object" in types or "string" in types) else []
+            if "integer" in types and "string" not in types:
+                bad = "zz_wrong"
+            if isinstance(cur, list):
+                cur[s] = bad
+            else:
+                cur[s] = bad
+            return v
+        if isinstance(cur, dict) and s not in cur:
+            n = fam.place(f, "/" + "/".join(str(x) for x in segs[:i + 1]))
+            cur[s] = g.value(n) if n is not None else {}
+            if not isinstance(cur[s], (dict, list)):
+                cur[s] = {}
+        cur = cur[s]
+    return v
+
+
 def row_text(family, base, m):
     if isinstance(m, tuple) and m[0] == "text":
         return m[1]
@@ -525,7 +581,12 @@ def corpus(root=ROOT):
             rows.append(dict(meta, mode="writer", text=None, why="no base instance", ref=None))
             continue
         texts = [("base", t0)]
-        for why, m in mutations(fobj, base):
+        muts = list(mutations(fobj, base))
+        for o in fobj.outcomes:
+            tv = targeted(fobj, base, o.path)
+            if tv is not None:
+                muts.append(("outcome %s: wrong type" % o.path, tv))
+        for why, m in muts:
             try:
                 texts.append((why, row_text(fobj, base, m)))
             except (KeyError, IndexError, TypeError, ValueError):

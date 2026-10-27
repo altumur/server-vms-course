@@ -103,17 +103,30 @@ class TestTraps(unittest.TestCase):
         self.assertEqual(fam.outcomes_for(rows, []), [])
 
     def test_negative_integer_bound(self):
-        """Граница целого манифеста (п. 8): −9007199254740992 — отказ, −9007199254740991 — принято (схема)."""
-        v = stack.validator_for(self.man)
-        place = self.man["$defs"]["placement"]["properties"]
-        k = next(k for k, x in place.items() if x.get("x-integer-place"))
-        sub = dict(place[k], **{"$defs": self.man["$defs"]})
-        self.assertFalse(stack.validator_for(sub).is_valid(-9007199254740992))
-        self.assertTrue(stack.validator_for(sub).is_valid(-9007199254740991)
-                        or place[k].get("minimum", 0) > -9007199254740991)
-        self.assertEqual(sub["minimum"] if place[k].get("minimum") == -9007199254740991 else -9007199254740991,
-                         -9007199254740991)
-        del v
+        """Граница целого манифеста (п. 8): −9007199254740992 — отказ, −9007199254740991 — принято (схема), у каждого
+        целого места без своей границы ниже."""
+        found = []
+
+        def rec(x):
+            if isinstance(x, dict):
+                if x.get("x-integer-place"):
+                    found.append(x)
+                for v in x.values():
+                    rec(v)
+            elif isinstance(x, list):
+                for v in x:
+                    rec(v)
+        rec(self.man)
+        self.assertGreater(len(found), 10)
+        for x in found:
+            self.assertGreaterEqual(x["minimum"], -9007199254740991)
+            self.assertLessEqual(x["maximum"], 9007199254740991)
+        free = [x for x in found if x["minimum"] == -9007199254740991]
+        self.assertTrue(free)
+        v = stack.validator_for(dict(free[0], **{"$defs": self.man["$defs"]}))
+        self.assertFalse(v.is_valid(-9007199254740992))
+        self.assertTrue(v.is_valid(-9007199254740991))
+        self.assertTrue(v.is_valid(4.0))                      # п. 8: целое по значению
 
     def test_negative_integer_bound_text(self):
         from form_source.source import textlayer
@@ -121,15 +134,18 @@ class TestTraps(unittest.TestCase):
         self.assertEqual([p for p, _ in nums], [["a"]])
 
     def test_1e400(self):
-        """1e400: число JSON вне binary64 — не по грамматике json (codec.tsv); эталон: читатель принимает, писатель
-        падает (дефекты эталона, строки Б)."""
-        with self.assertRaises(stack.Bad):
-            stack.strict_json('{"v": 1e400}')
-        f, s = self.family("<sub>/state/<name>/<unit>", "row") if ("<sub>/state/<name>/<unit>", "row") in self.fams \
-            else next(((r, s) for (key, kind), (r, ff, s) in self.fams.items() if kind == "row"
-                       and "jcs" in json.dumps(s)), (None, None))
-        if s is None:
-            self.skipTest("нет семьи-строки с jcs")
+        """1e400: число JSON вне binary64 — не по грамматике json (codec.tsv): отказ на своём месте. У эталона читатель
+        принимает его в месте number, писатель jcs падает (дефекты эталона, строки Б)."""
+        n = 0
+        for (key, kind), (r, f, s) in self.fams.items():
+            if kind != "object":
+                continue
+            for mode in ("reader", "writer"):
+                got = stack.Family(s, kind).judge('{"zz_1e400": 1e400}', mode)
+                self.assertEqual(got["verdict"], "refused")
+                self.assertIn("/zz_1e400", got["paths"], (key, got))
+                n += 1
+        self.assertGreater(n, 30)
 
     def test_null_root(self):
         """JSON null вместо объекта семьи — отказ на корне (у эталона на aee6716ea — принят; дефект эталона, Б)."""
@@ -195,7 +211,7 @@ class TestDefects(unittest.TestCase):
             recs = go.call({"op": "schema_inline", "schema": s, "instance": {"o": {"Bad": 1}}})["records"]
             self.assertEqual([(r["path"], r["kw"], r["extra"]) for r in recs], [(["o"], "propertyNames", "Bad")])
             raw = go.call({"op": "schema_inline", "schema": s, "instance": {"o": {"Bad": 1}}, "raw": True})["records"]
-            self.assertEqual([r["path"] for r in raw], [[]])     # без слоя 4: место — корень отдельной проверки
+            self.assertEqual([r["path"] or [] for r in raw], [[]])     # без слоя 4: место — корень отдельной проверки
         finally:
             go.close()
 

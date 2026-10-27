@@ -110,9 +110,24 @@ def main(argv=None):
         from v7 import family_corpus
         rows = family_corpus.seta(go)
         keys = ["verdict_eq", "paths_eq", "outcome_eq"]
-    if a.out:
-        Path(a.out).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-    print(json.dumps(summary(rows, keys), ensure_ascii=False))
+    out = Path(a.out) if a.out else OUT / "seta" / ("%s%s.jsonl" % (a.what, "-go" if a.go else ""))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if a.what == "families":                     # корпус — family-read.jsonl; здесь — только расхождения
+        if not a.go:
+            keep = ("family", "kind", "schema", "lesson", "mode", "text", "why", "ref")
+            (OUT / "seta" / "family-read.jsonl").write_text(
+                "".join(json.dumps({k: r[k] for k in keep}, ensure_ascii=False, sort_keys=True) + "\n"
+                        for r in rows), encoding="utf-8")
+        rows_out = [r for r in rows if not all(r[k] for k in keys)]
+        out = out.with_suffix(".diff.jsonl")
+    else:
+        rows_out = rows
+    out.write_text("".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows_out),
+                   encoding="utf-8")
+    s = summary(rows, keys)
+    (OUT / "seta" / ("%s%s.summary.json" % (a.what, "-go" if a.go else ""))).write_text(json.dumps(s, ensure_ascii=False, sort_keys=True) + "\n",
+                                                   encoding="utf-8")
+    print(json.dumps(s, ensure_ascii=False))
     for r in rows:
         if not all(r[k] for k in keys[:1]):
             print("DIFF", json.dumps(r, ensure_ascii=False)[:400])

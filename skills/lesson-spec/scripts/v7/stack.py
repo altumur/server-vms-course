@@ -365,7 +365,8 @@ class PyCel:
     def __init__(self, rel):
         from cel_expr_python import cel
         self.celmod = cel
-        yaml = "name: relations\nextensions:\n" + "".join("  - name: %s\n" % e["name"] for e in rel["env"]["extensions"])
+        ext = rel["env"]["extensions"]
+        yaml = "name: relations\n" + ("extensions:\n" + "".join("  - name: %s\n" % e["name"] for e in ext) if ext else "")
         cfg = cel.NewEnvConfigFromYaml(yaml)
         T = cel.Type
         # У cel-expr-python 0.1.3 перегрузка с параметром dyn не совпадает при исполнении ни с одним значением
@@ -415,14 +416,14 @@ class LexInt(int):
 class LexFloat(float):
     def __new__(cls, t):
         v = float.__new__(cls, t)
-        if not math.isfinite(v):             # `1e400`: число JSON вне binary64 — не по грамматике json (codec.tsv)
-            raise Bad("json: %s is not finite in binary64" % t)
         v.lex = t
         return v
 
 
-def strict_json(text_):
-    """JSON по грамматике json `codec.tsv`: без NaN и бесконечностей, без повтора ключей; числа с записью."""
+def strict_json(text_, finite=False):
+    """JSON по грамматике json `codec.tsv`: без NaN, без повтора ключей; числа с записью. finite — текст места
+    `encoding` (codec.tsv: «без NaN и бесконечностей»): число вне binary64 (`1e400`) — отказ кодека места; у объекта
+    и файла такое число — отказ своего места (Family.finite)."""
     def pairs(items):
         d = {}
         for k, v in items:
@@ -433,8 +434,13 @@ def strict_json(text_):
 
     def const(c):
         raise Bad("json: %s" % c)
+    def num(t):
+        v = LexFloat(t)
+        if finite and not math.isfinite(v):
+            raise Bad("json: %s is not finite in binary64" % t)
+        return v
     try:
-        return json.loads(text_, object_pairs_hook=pairs, parse_constant=const, parse_int=LexInt, parse_float=LexFloat)
+        return json.loads(text_, object_pairs_hook=pairs, parse_constant=const, parse_int=LexInt, parse_float=num)
     except RecursionError:
         raise Bad("json: nesting too deep")
     except ValueError as exc:
@@ -489,7 +495,7 @@ class Family:
     def decode(self, chain, text_, mode):
         enc = self.sch.word(chain, "x-encoding")
         if enc:
-            v = strict_json(text_)
+            v = strict_json(text_, finite=True)
             if enc == "jcs" and mode == "writer" and jcs(v) != text_:
                 raise Bad("jcs: the text is not canonical")
             return v
@@ -617,36 +623,54 @@ class Family:
             enc = sch.word(chain, "x-encoding")
             if enc and isinstance(v, str) and tuple(path) not in decoded:
                 try:
-                    t, v = v, strict_json(v)
+                    t, v = v, strict_json(v, finite=True)
                     if enc == "jcs" and mode == "writer" and jcs(v) != t:
                         raise Bad("jcs: the text is not canonical")
                 except Bad:
                     fails.append(path)
                     return None                  # место не прочитано: отказ уже записан, путь тот же
+            if isinstance(v, float) and not math.isfinite(v):
+                fails.append(path)               # `1e400`: число вне binary64 — не по грамматике (codec.tsv), отказ места
+                return None
             if sch.word(chain, "x-time") and not self.is_time(v, mode):
                 fails.append(path)
             if sch.word(chain, "x-integer") and isinstance(v, float) and not isinstance(v, bool) and v.is_integer():
                 if mode == "writer" or sch.word(chain, "x-whole") or not exact_integer(v):
                     fails.append(path)
             self.limits(chain, v, path, fails)
+            mains[tuple(path)] = chain
             return v
+        mains = {}
         value = walk(sch, sch.doc, value, [], visit)
+        value = self.finite(value, [], fails)
         for path, chain in wmap.items():
             try:
                 v = at(value, list(path))
             except (KeyError, IndexError, TypeError):
                 continue
-            self.limits(chain, v, list(path), fails)
+            self.limits(chain, v, list(path), fails, mains.get(path, []))
         return value
 
-    def limits(self, chain, v, path, fails):
+    def finite(self, v, path, fails):
+        """Число вне binary64 и там, куда схема не ведёт (opaque, any, лишний ключ): отказ своего места."""
+        if isinstance(v, float) and not math.isfinite(v):
+            fails.append(path)
+            return None
+        if isinstance(v, dict):
+            return {k: self.finite(x, path + [k], fails) for k, x in v.items()}
+        if isinstance(v, list):
+            return [self.finite(x, path + [i], fails) for i, x in enumerate(v)]
+        return v
+
+    def limits(self, chain, v, path, fails, owner=None):
+        """owner — узлы места в схеме (у ограничений писателя): имена `properties` считаются от них (DIALECT § 2)."""
         mb = self.sch.word(chain, "x-max-bytes")
         if mb is not None and isinstance(v, str) and len(v.encode("utf-8")) > mb:
             fails.append(path)
         mn = self.sch.word(chain, "x-max-names")
         if mn is not None and isinstance(v, dict):
             props = set()
-            for s in chain:
+            for s in chain + (owner or []):
                 props |= set(s.get("properties", {}))
             if len([k for k in v if k not in props]) > mn:
                 fails.append(path)
