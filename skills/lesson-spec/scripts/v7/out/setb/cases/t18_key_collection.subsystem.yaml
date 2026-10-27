@@ -1,0 +1,7 @@
+name: probe
+unit:
+  rows: things
+  id: numeric
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+[a, b]: 1

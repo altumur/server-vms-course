@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/placement/<id>",
+ "kind": "row",
+ "schema": "04-controller/data/placement.form.yaml",
+ "mode": "writer",
+ "text": "{\"worker\":\"\",\"reason\":\"a\",\"at\":\"1.0001\",\"rev\":\"1\"}"
+}

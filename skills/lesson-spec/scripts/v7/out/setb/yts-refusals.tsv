@@ -1,0 +1,274 @@
+# Набор Б, раздел «слой 1 сужает YAML 1.2.2»: тесты yaml-test-suite data-2022-01-17 без `error` (корректный
+# YAML 1.2.2), которые слой 1 (Python; Go — те же исходы, v7/yts.py) отказывает. rule — правило отказа;
+# parser — разобрал ли вход парсер (если нет — сужение от парсера, не от правила). Сужение у Go то же, что у Python:
+# расхождения парсеров закрыты обходами (3UYS — D13).
+id	title	rule	parser
+229Q	Spec Example 2.4. Sequence of Mappings	root	парсер разобрал
+26DV	Whitespace around colon in mappings	anchor-alias-tag-merge	парсер разобрал
+27NA	Spec Example 5.9. Directive Indicator	directive	парсер разобрал
+2AUY	Tags in Block Sequence	root	парсер разобрал
+2G84/02	Literal modifers	root	парсер разобрал
+2G84/03	Literal modifers	root	парсер разобрал
+2JQS	Block Mapping with Missing Keys	key-nonstring	парсер разобрал
+2LFX	Spec Example 6.13. Reserved Directives [1.3]	directive	парсер разобрал
+2SXE	Anchors With Colon in Name	anchor-alias-tag-merge	парсер разобрал
+2XXW	Spec Example 2.25. Unordered Sets	root	парсер разобрал
+33X3	Three explicit integers in a block sequence	root	парсер разобрал
+35KP	Tags for Root Objects	doc-second	парсер разобрал
+3ALJ	Block Sequence in Block Sequence	root	парсер разобрал
+3GZX	Spec Example 7.1. Alias Nodes	anchor-alias-tag-merge	парсер разобрал
+3MYT	Plain Scalar looking like key, comment, anchor and tag	root	парсер разобрал
+3R3P	Single block sequence with anchor	root	парсер разобрал
+3RLN/00	Leading tabs in double quoted	root	парсер разобрал
+3RLN/01	Leading tabs in double quoted	tab	парсер разобрал
+3RLN/02	Leading tabs in double quoted	tab	парсер разобрал
+3RLN/03	Leading tabs in double quoted	root	парсер разобрал
+3RLN/04	Leading tabs in double quoted	tab	парсер разобрал
+3RLN/05	Leading tabs in double quoted	tab	парсер разобрал
+4ABK	Flow Mapping Separate Values	root	парсер разобрал
+4CQQ	Spec Example 2.18. Multi-line Flow Scalars	rare-95	парсер разобрал
+4FJ6	Nested implicit complex keys	root	парсер разобрал
+4GC6	Spec Example 7.7. Single Quoted Characters	root	парсер разобрал
+4MUZ/00	Flow mapping colon on line after key	parser	парсер отказал
+4MUZ/01	Flow mapping colon on line after key	parser	парсер отказал
+4MUZ/02	Flow mapping colon on line after key	parser	парсер отказал
+4Q9F	Folded Block Scalar [1.3]	root	парсер разобрал
+4QFQ	Spec Example 8.2. Block Indentation Indicator [1.3]	parser	парсер отказал
+4RWC	Trailing spaces after flow collection	root	парсер разобрал
+4UYU	Colon in Double Quoted String	root	парсер разобрал
+4V8U	Plain scalar with backslashes	root	парсер разобрал
+4WA9	Literal scalars	root	парсер разобрал
+4ZYM	Spec Example 6.4. Line Prefixes	tab	парсер разобрал
+52DL	Explicit Non-Specific Tag [1.3]	root	парсер разобрал
+54T7	Flow Mapping	root	парсер разобрал
+565N	Construct Binary	anchor-alias-tag-merge	парсер разобрал
+57H4	Spec Example 8.22. Block Collection Nodes	anchor-alias-tag-merge	парсер разобрал
+58MP	Flow mapping edge cases	root	парсер разобрал
+5C5M	Spec Example 7.15. Flow Mappings	root	парсер разобрал
+5GBF	Spec Example 6.5. Empty Lines	tab	парсер разобрал
+5KJE	Spec Example 7.13. Flow Sequence	root	парсер разобрал
+5MUD	Colon and adjacent value on next line	parser	парсер отказал
+5T43	Colon at the beginning of adjacent flow scalar	root	парсер разобрал
+5TYM	Spec Example 6.21. Local Tag Prefix	directive	парсер разобрал
+5WE3	Spec Example 8.17. Explicit Block Mapping Entries	rare-95	парсер разобрал
+652Z	Question mark at start of flow key	root	парсер разобрал
+65WH	Single Entry Block Sequence	root	парсер разобрал
+6BCT	Spec Example 6.3. Separation Spaces	tab	парсер отказал
+6BFJ	Mapping, key and flow sequence item anchors	anchor-alias-tag-merge	парсер разобрал
+6CA3	Tab indented top flow	tab	парсер отказал
+6CK3	Spec Example 6.26. Tag Shorthands	directive	парсер разобрал
+6FWR	Block Scalar Keep	doc-end	парсер разобрал
+6HB6	Spec Example 6.1. Indentation Spaces	tab	парсер разобрал
+6JQW	Spec Example 2.13. In literals, newlines are preserved	root	парсер разобрал
+6JWB	Tags for Block Objects	anchor-alias-tag-merge	парсер разобрал
+6KGN	Anchor for empty node	anchor-alias-tag-merge	парсер разобрал
+6LVF	Spec Example 6.13. Reserved Directives	directive	парсер разобрал
+6M2F	Aliases in Explicit Block Mapping	anchor-alias-tag-merge	парсер разобрал
+6PBE	Zero-indented sequences in explicit mapping keys	key-collection	парсер разобрал
+6VJK	Spec Example 2.15. Folded newlines are preserved for "more indented" and blank lines	root	парсер разобрал
+6WLZ	Spec Example 6.18. Primary Tag Handle [1.3]	doc-end	парсер разобрал
+6WPF	Spec Example 6.8. Flow Folding [1.3]	root	парсер разобрал
+6XDY	Two document start markers	doc-second	парсер разобрал
+6ZKB	Spec Example 9.6. Stream	doc-second	парсер разобрал
+735Y	Spec Example 8.20. Block Node Types	root	парсер разобрал
+74H7	Tags in Implicit Mapping	anchor-alias-tag-merge	парсер разобрал
+753E	Block Scalar Strip [1.3]	doc-end	парсер разобрал
+7A4E	Spec Example 7.6. Double Quoted Lines	tab	парсер разобрал
+7BMT	Node and Mapping Key Anchors [1.3]	anchor-alias-tag-merge	парсер разобрал
+7BUB	Spec Example 2.10. Node for “Sammy Sosa” appears twice in this document	anchor-alias-tag-merge	парсер разобрал
+7FWL	Spec Example 6.24. Verbatim Tags	anchor-alias-tag-merge	парсер разобрал
+7T8X	Spec Example 8.10. Folded Lines - 8.13. Final Empty Lines	root	парсер разобрал
+7TMG	Comment in flow sequence before comma	root	парсер разобрал
+7W2P	Block Mapping with Missing Values	rare-95	парсер разобрал
+7Z25	Bare document after document end marker	doc-end	парсер разобрал
+82AN	Three dashes and content without space	root	парсер разобрал
+87E4	Spec Example 7.8. Single Quoted Implicit Keys	rare-95	парсер разобрал
+8G76	Spec Example 6.10. Comment Lines	root	парсер разобрал
+8KB6	Multiline plain flow mapping key without value	root	парсер разобрал
+8MK2	Explicit Non-Specific Tag	root	парсер разобрал
+8UDB	Spec Example 7.14. Flow Sequence Entries	root	парсер разобрал
+8XYN	Anchor with unicode character	root	парсер разобрал
+93JH	Block Mappings in Block Sequence	root	парсер разобрал
+93WF	Spec Example 6.6. Line Folding [1.3]	root	парсер разобрал
+96L6	Spec Example 2.14. In the folded scalars, newlines become spaces	root	парсер разобрал
+96NN/00	Leading tab content in literals	tab	парсер разобрал
+96NN/01	Leading tab content in literals	tab	парсер разобрал
+98YD	Spec Example 5.5. Comment Indicator	root	парсер разобрал
+9BXH	Multiline doublequoted flow mapping key without value	root	парсер разобрал
+9DXL	Spec Example 9.6. Stream [1.3]	doc-second	парсер разобрал
+9KAX	Various combinations of tags and anchors	doc-second	парсер разобрал
+9MMW	Single Pair Implicit Entries	parser	парсер отказал
+9MQT/00	Scalar doc with '...' in content	root	парсер разобрал
+9SA2	Multiline double quoted flow mapping key	parser	парсер отказал
+9TFX	Spec Example 7.6. Double Quoted Lines [1.3]	root	парсер разобрал
+9U5K	Spec Example 2.12. Compact Nested Mapping	root	парсер разобрал
+9WXW	Spec Example 6.18. Primary Tag Handle	doc-end	парсер разобрал
+9YRD	Multiline Scalar at Top Level	root	парсер разобрал
+A2M4	Spec Example 6.2. Indentation Indicators	tab	парсер отказал
+AB8U	Sequence entry that looks like two with wrong indentation	root	парсер разобрал
+AVM7	Empty Stream	root	парсер разобрал
+AZW3	Lookahead test cases	root	парсер разобрал
+B3HG	Spec Example 8.9. Folded Scalar [1.3]	root	парсер разобрал
+BEC7	Spec Example 6.14. “YAML” directive	directive	парсер отказал
+BU8L	Node Anchor and Tag on Seperate Lines	anchor-alias-tag-merge	парсер разобрал
+C2DT	Spec Example 7.18. Flow Mapping Adjacent Values	root	парсер разобрал
+C4HZ	Spec Example 2.24. Global Tags	directive	парсер разобрал
+CC74	Spec Example 6.20. Tag Handles	directive	парсер разобрал
+CFD4	Empty implicit key in single pair flow sequences	parser	парсер отказал
+CN3R	Various location of anchors in flow sequence	root	парсер разобрал
+CT4Q	Spec Example 7.20. Single Pair Explicit Entry	root	парсер разобрал
+CUP7	Spec Example 5.6. Node Property Indicators	anchor-alias-tag-merge	парсер разобрал
+D83L	Block scalar indicator order	root	парсер разобрал
+DBG4	Spec Example 7.10. Plain Characters	root	парсер разобрал
+DC7X	Various trailing tabs	tab	парсер отказал
+DE56/00	Trailing tabs in double quoted	root	парсер разобрал
+DE56/01	Trailing tabs in double quoted	root	парсер разобрал
+DE56/02	Trailing tabs in double quoted	root	парсер разобрал
+DE56/03	Trailing tabs in double quoted	root	парсер разобрал
+DE56/04	Trailing tabs in double quoted	tab	парсер разобрал
+DE56/05	Trailing tabs in double quoted	tab	парсер разобрал
+DFF7	Spec Example 7.16. Flow Mapping Entries	root	парсер разобрал
+DHP8	Flow Sequence	root	парсер разобрал
+DK3J	Zero indented block scalar with line that looks like a comment	root	парсер разобрал
+DK95/00	Tabs that look like indentation	tab	парсер отказал
+DK95/02	Tabs that look like indentation	tab	парсер разобрал
+DK95/03	Tabs that look like indentation	tab	парсер отказал
+DK95/04	Tabs that look like indentation	tab	парсер отказал
+DK95/05	Tabs that look like indentation	tab	парсер отказал
+DK95/07	Tabs that look like indentation	directive	парсер отказал
+DK95/08	Tabs that look like indentation	tab	парсер разобрал
+DWX9	Spec Example 8.8. Literal Content	parser	парсер отказал
+E76Z	Aliases in Implicit Block Mapping	anchor-alias-tag-merge	парсер разобрал
+EHF6	Tags for Flow Objects	root	парсер разобрал
+EX5H	Multiline Scalar at Top Level [1.3]	root	парсер разобрал
+EXG3	Three dashes and content without space [1.3]	root	парсер разобрал
+F2C7	Anchors and Tags	root	парсер разобрал
+F3CP	Nested flow collections on one line	root	парсер разобрал
+F6MC	More indented lines at the beginning of folded block scalars	rare-95	парсер разобрал
+FH7J	Tags on Empty Scalars	root	парсер разобрал
+FP8R	Zero indented block scalar	root	парсер разобрал
+FQ7F	Spec Example 2.1. Sequence of Scalars	root	парсер разобрал
+FRK4	Spec Example 7.3. Completely Empty Flow Nodes	root	парсер разобрал
+FTA2	Single block sequence with anchor and explicit document start	root	парсер разобрал
+FUP4	Flow Sequence in Flow Sequence	root	парсер разобрал
+G4RS	Spec Example 2.17. Quoted Scalars	value-char	парсер разобрал
+G992	Spec Example 8.9. Folded Scalar	root	парсер разобрал
+GH63	Mixed Block Mapping (explicit to implicit)	rare-95	парсер разобрал
+HM87/00	Scalars in flow start with syntax char	root	парсер разобрал
+HM87/01	Scalars in flow start with syntax char	root	парсер разобрал
+HMQ5	Spec Example 6.23. Node Properties	anchor-alias-tag-merge	парсер разобрал
+HS5T	Spec Example 7.12. Plain Lines	tab	парсер отказал
+HWV9	Document-end marker	doc-end	парсер отказал
+J3BT	Spec Example 5.12. Tabs and Spaces	tab	парсер отказал
+J7PZ	Spec Example 2.26. Ordered Mappings	root	парсер разобрал
+JEF9/00	Trailing whitespace in streams	root	парсер разобрал
+JEF9/01	Trailing whitespace in streams	root	парсер разобрал
+JEF9/02	Trailing whitespace in streams	root	парсер разобрал
+JHB9	Spec Example 2.7. Two Documents in a Stream	doc-second	парсер разобрал
+JR7V	Question marks in scalars	root	парсер разобрал
+JS2J	Spec Example 6.29. Node Anchors	anchor-alias-tag-merge	парсер разобрал
+JTV5	Block Mapping with Multiline Scalars	rare-95	парсер разобрал
+K3WX	Colon and adjacent value after comment on next line	parser	парсер отказал
+K4SU	Multiple Entry Block Sequence	root	парсер разобрал
+K527	Spec Example 6.6. Line Folding	root	парсер разобрал
+K54U	Tab after document header	tab	парсер отказал
+KH5V/00	Inline tabs in double quoted	root	парсер разобрал
+KH5V/01	Inline tabs in double quoted	root	парсер разобрал
+KH5V/02	Inline tabs in double quoted	tab	парсер разобрал
+KK5P	Various combinations of explicit block mappings	key-collection	парсер разобрал
+KSS4	Scalars on --- line	doc-second	парсер разобрал
+L383	Two scalar docs with trailing comments	doc-second	парсер разобрал
+L94M	Tags in Explicit Mapping	anchor-alias-tag-merge	парсер разобрал
+L9U5	Spec Example 7.11. Plain Implicit Keys	rare-95	парсер разобрал
+LE5A	Spec Example 7.24. Flow Nodes	root	парсер разобрал
+LP6E	Whitespace After Scalars in Flow	root	парсер разобрал
+LQZ7	Spec Example 7.4. Double Quoted Implicit Keys	rare-95	парсер разобрал
+LX3P	Implicit Flow Mapping Key on one line	key-collection	парсер разобрал
+M29M	Literal Block Scalar	doc-end	парсер разобрал
+M2N8/00	Question mark edge cases	root	парсер разобрал
+M2N8/01	Question mark edge cases	key-collection	парсер разобрал
+M5C3	Spec Example 8.21. Block Scalar Nodes	rare-95	парсер разобрал
+M5DY	Spec Example 2.11. Mapping between Sequences	key-collection	парсер разобрал
+M6YH	Block sequence indentation	root	парсер разобрал
+M7A3	Spec Example 9.3. Bare Documents	doc-end	парсер отказал
+M7NX	Nested flow collections	root	парсер разобрал
+M9B4	Spec Example 8.7. Literal Scalar	tab	парсер разобрал
+MJS9	Spec Example 6.7. Block Folding	tab	парсер разобрал
+MUS6/02	Directive variants	directive	парсер разобрал
+MUS6/03	Directive variants	tab	парсер отказал
+MUS6/04	Directive variants	directive	парсер разобрал
+MUS6/05	Directive variants	directive	парсер разобрал
+MUS6/06	Directive variants	directive	парсер разобрал
+MXS3	Flow Mapping in Block Sequence	root	парсер разобрал
+MYW6	Block Scalar Strip	doc-end	парсер разобрал
+MZX3	Non-Specific Tags on Scalars	root	парсер разобрал
+NAT4	Various empty or newline only quoted strings	rare-95	парсер разобрал
+NB6Z	Multiline plain value with tabs on empty lines	tab	парсер отказал
+NHX8	Empty Lines at End of Document	key-nonstring	парсер разобрал
+NJ66	Multiline plain flow mapping key	parser	парсер отказал
+NKF9	Empty keys in block and flow mapping	doc-second	парсер разобрал
+NP9H	Spec Example 7.5. Double Quoted Line Breaks	tab	парсер разобрал
+P2AD	Spec Example 8.1. Block Scalar Header	root	парсер разобрал
+P76L	Spec Example 6.19. Secondary Tag Handle	directive	парсер разобрал
+PRH3	Spec Example 7.9. Single Quoted Lines	tab	парсер разобрал
+PUW8	Document start on last line	doc-second	парсер разобрал
+PW8X	Anchors on Empty Scalars	root	парсер разобрал
+Q5MG	Tab at beginning of line followed by a flow mapping	tab	парсер отказал
+Q88A	Spec Example 7.23. Flow Content	root	парсер разобрал
+Q8AD	Spec Example 7.5. Double Quoted Line Breaks [1.3]	tab	парсер разобрал
+Q9WF	Spec Example 6.12. Separation Spaces	key-collection	парсер разобрал
+QF4Y	Spec Example 7.19. Single Pair Flow Mappings	root	парсер разобрал
+QT73	Comment and document-end marker	doc-end	парсер отказал
+R4YG	Spec Example 8.2. Block Indentation Indicator	tab	парсер отказал
+R52L	Nested flow mapping sequence and mappings	root	парсер разобрал
+RR7F	Mixed Block Mapping (implicit to explicit)	rare-95	парсер разобрал
+RTP8	Spec Example 9.2. Document Markers	directive	парсер разобрал
+RZP5	Various Trailing Comments [1.3]	rare-95	парсер разобрал
+RZT7	Spec Example 2.28. Log File	doc-second	парсер разобрал
+S3PD	Spec Example 8.18. Implicit Block Mapping Entries	key-nonstring	парсер разобрал
+S4JQ	Spec Example 6.28. Non-Specific Tags	root	парсер разобрал
+S4T7	Document with footer	doc-end	парсер разобрал
+S7BG	Colon followed by comma	root	парсер разобрал
+S9E8	Spec Example 5.3. Block Structure Indicators	rare-95	парсер разобрал
+SBG9	Flow Sequence in Flow Mapping	root	парсер разобрал
+SKE5	Anchor before zero indented sequence	anchor-alias-tag-merge	парсер разобрал
+SM9W/00	Single character streams	root	парсер разобрал
+SM9W/01	Single character streams	key-nonstring	парсер разобрал
+SSW6	Spec Example 7.7. Single Quoted Characters [1.3]	root	парсер разобрал
+T26H	Spec Example 8.8. Literal Content [1.3]	parser	парсер отказал
+T4YY	Spec Example 7.9. Single Quoted Lines [1.3]	root	парсер разобрал
+T5N4	Spec Example 8.7. Literal Scalar [1.3]	tab	парсер разобрал
+TL85	Spec Example 6.8. Flow Folding	tab	парсер разобрал
+TS54	Folded Block Scalar	root	парсер разобрал
+U3C3	Spec Example 6.16. “TAG” directive	directive	парсер разобрал
+U3XV	Node and Mapping Key Anchors	anchor-alias-tag-merge	парсер разобрал
+U9NS	Spec Example 2.8. Play by Play Feed from a Game	doc-end	парсер разобрал
+UDM2	Plain URL in flow mapping	root	парсер разобрал
+UGM3	Spec Example 2.27. Invoice	root	парсер разобрал
+UKK6/00	Syntax character edge cases	root	парсер разобрал
+UKK6/02	Syntax character edge cases	root	парсер разобрал
+UT92	Spec Example 9.4. Explicit Documents	directive	парсер отказал
+UV7Q	Legal tab after indentation	tab	парсер отказал
+V55R	Aliases in Block Sequence	root	парсер разобрал
+V9D5	Spec Example 8.19. Compact Block Mappings	root	парсер разобрал
+VJP3/01	Flow collections over many lines	parser	парсер отказал
+W42U	Spec Example 8.15. Block Sequence Entry Types	root	парсер разобрал
+W4TN	Spec Example 9.5. Directives Documents	directive	парсер разобрал
+W5VH	Allowed characters in alias	anchor-alias-tag-merge	парсер разобрал
+WZ62	Spec Example 7.2. Empty Content	parser	парсер отказал
+X38W	Aliases in Flow Objects	root	парсер разобрал
+X8DW	Explicit key and value seperated by comment	rare-95	парсер разобрал
+XLQ9	Multiline scalar that looks like a YAML directive	directive	парсер разобрал
+XV9V	Spec Example 6.5. Empty Lines [1.3]	rare-95	парсер разобрал
+XW4D	Various Trailing Comments	rare-95	парсер разобрал
+Y2GN	Anchor with colon in the middle	anchor-alias-tag-merge	парсер разобрал
+Y79Y/001	Tabs in various contexts	tab	парсер разобрал
+Y79Y/002	Tabs in various contexts	tab	парсер разобрал
+Y79Y/010	Tabs in various contexts	tab	парсер отказал
+YD5X	Spec Example 2.5. Sequence of Sequences	root	парсер разобрал
+Z67P	Spec Example 8.21. Block Scalar Nodes [1.3]	rare-95	парсер разобрал
+Z9M4	Spec Example 6.22. Global Tag Prefix	directive	парсер разобрал
+ZF4X	Spec Example 2.6. Mapping of Mappings	rare-95	парсер разобрал
+ZH7C	Anchors in Mapping	anchor-alias-tag-merge	парсер разобрал
+ZK9H	Nested top level flow mapping	root	парсер разобрал
+ZWK4	Key with anchor after missing explicit mapping value	rare-95	парсер разобрал

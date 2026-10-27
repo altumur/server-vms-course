@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/workers/<имя>",
+ "kind": "row",
+ "schema": "04-controller/data/workers.form.yaml",
+ "mode": "reader",
+ "text": "{\"units\":\".\",\"rev\":\"1\"}"
+}

@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/asked/<sha16(имя)>",
+ "kind": "row",
+ "schema": "06-console/data/asked.form.yaml",
+ "mode": "writer",
+ "text": "{\"rids\":\"free-\",\"by\":\"a\",\"at\":\"1\"}"
+}

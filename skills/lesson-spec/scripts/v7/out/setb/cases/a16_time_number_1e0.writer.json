@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/controller/pass",
+ "kind": "object",
+ "schema": "04-controller/data/controller-pass.form.yaml",
+ "mode": "writer",
+ "text": "{\"at\":1e0,\"ok\":true,\"error\":\"a\",\"failures\":1,\"last_success\":\"1\",\"seconds\":1,\"manifest_rev\":\"a\",\"manifest_behind\":1,\"names_given\":{},\"hung_move_after\":1,\"fates\":{},\"diverged\":1,\"unplaced\":1,\"garbled\":1,\"snapshot_rows_garbled\":1,\"reach_moves_total\":1,\"slots_released_total\":1,\"unplaced_deleted_total\":1,\"servers_decommissioned_total\":1,\"workers_hung\":1,\"workers_hung_moved_total\":1,\"workers_unsure_moved_total\":1,\"name_conflicts\":1,\"unplaceable\":{},\"raise_failed\":{}}"
+}

@@ -1,0 +1,7 @@
+{
+ "family": "domain/<sub>/<manifest:domain.books>/<член>",
+ "kind": "row",
+ "schema": "08-domain/data/book.form.yaml",
+ "mode": "reader",
+ "text": "{\"\":\"{\\\"missing\\\":[]}\"}"
+}

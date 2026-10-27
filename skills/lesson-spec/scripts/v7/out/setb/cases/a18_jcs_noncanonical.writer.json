@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/state/<имя>/<id>",
+ "kind": "row",
+ "schema": "03-worker/data/state.form.yaml",
+ "mode": "writer",
+ "text": "{\"born\":\"\",\"revision\":\"1\",\"epoch\":\"1\",\"value\":\"{\\\"b\\\":1,\\\"a\\\":2}\"}"
+}

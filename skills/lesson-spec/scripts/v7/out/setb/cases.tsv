@@ -1,0 +1,113 @@
+# Набор Б, случаи (ADR-0092 пп. 11, 13; утверждает «Архитектор», ревью Kimi и Claude — доп. (1)). Входы —
+# out/setb/cases/<id>.subsystem.yaml (манифест) и <id>.json (семья: family, kind, schema, mode, text). Ожидание
+# манифеста — вердикт и класс (пути — подсказка, п. 5); семьи — вердикт, пути, исход. ref/py/go — исходы стеков;
+# check — В7 на обоих языках дал ожидание; dup — тот же вход уже в наборе А. Строит v7/setb_cases.py.
+id	where	expect	ref	py	go	check	dup	basis	source
+t01_flow_multiline	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:95 (поток на несколько строк); п. 2	ревью Claude 1.2
+t02_quoted_multiline	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:95	ревью Claude 1.2
+t03_indent_indicator	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:95 (`|2`)	ревью Claude 1.2
+t04_complex_key	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:95 (`? …`)	ревью Claude 1.2
+t05_doc_end	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:46; один документ — по байтам (п. 2; D17)	ревью Claude 1.2
+t06_directive	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1:46	ревью Claude 1.2
+t07_block_plain_ok	corpus	ok	ok	ok	ok	да		контроль к t03 (строковое место display.unit; Б-5)	ревью Claude 1.2, Б-5
+t08_tab_plain	corpus	refused:text	refused:text	refused:text	refused:text	да		п. 4	ADR-0092 п. 4
+t09_tab_quoted	corpus	refused:text	ok	refused:text	refused:text	да		п. 4 (TAB вне комментариев)	ADR-0092 п. 4
+t10_tab_comment_ok	corpus	ok	ok	ok	ok	да	c3_tab_in_comment_ok	п. 4: в комментарии TAB допустим	ADR-0092 п. 4
+t11_flow_empty_value	corpus	refused:text	refused:form	refused:text	refused:text	да	c6_flow_map_empty_value	п. 4 (`{k:}`)	ADR-0092 п. 4
+t12_two_documents	corpus	refused:text	refused:text	refused:text	refused:text	да	yaml_two_documents	один документ (п. 2)	Н1.1
+t13_anchor	corpus	refused:text	refused:text	refused:text	refused:text	да		п. 2: якорь	Н1.1
+t14_alias	corpus	refused:text	refused:text	refused:text	refused:text	да		п. 2: псевдоним	Н1.1
+t15_merge_key	corpus	refused:text	refused:text	refused:text	refused:text	да	anchor_merge_key	п. 2: `<<`	Н1.1
+t16_tag	corpus	refused:text	refused:text	refused:text	refused:text	да		п. 2: тег	Н1.1
+t17_dup_key	corpus	refused:text	refused:text	refused:text	refused:text	да	dup_top_key_name	п. 2: повтор ключа	Н1.1
+t18_key_collection	corpus	refused:text	refused:text	refused:text	refused:text	да	c4_key_seq	п. 2: ключ-коллекция	Н1.1
+t19_depth_65	corpus	refused:text	refused:text	refused:text	refused:text	да	c2_depth_65	п. 2: глубина > 64	Н1.1
+t20_depth_64_ok	corpus	ok	ok	ok	ok	да	c2_depth_64	п. 2: глубина 64 допустима; место без связи depth	решение по набору Б
+t21_root_not_col1	corpus	refused:text	refused:text	refused:text	refused:text	да	c4_root_indented	п. 2: корень с колонки 1	ADR-0092 п. 2
+t22_root_flow	corpus	refused:text	refused:text	refused:text	refused:text	да	c4_root_flow	п. 2	ADR-0092 п. 2
+t23_quoted_true_string	corpus	ok	ok	ok	ok	да		п. 2: скаляр по стилю узла (строковое место; Б-5)	ADR-0092 п. 2, Б-5
+t24_plain_true_bool	corpus	refused:form	refused:form	refused:form	refused:form	да		п. 2: `true` — bool	ADR-0092 п. 2, Б-5
+t25_bom	corpus	refused:text	refused:text	refused:text	refused:text	да	bom_utf8	п. 2: байты	Н1.1
+t26_escape_U_overflow	corpus	refused:text	crash:OverflowError	refused:text	refused:text	да		п. 2; эталон падает (D9: OverflowError)	генератор В7
+f01_int_4dot0_ok	corpus	ok	refused:form	ok	ok	да		п. 8: целое по значению, приведение (вид — 20)	ADR-0092 п. 8
+f02_int_1e1_ok	corpus	ok	refused:form	ok	ok	да		п. 8 (вид — 10)	ADR-0092 п. 8
+f03_int_frac	corpus	refused:form	refused:form	refused:form	refused:form	да		п. 8: не целое	ADR-0092 п. 8
+f04_int_below_min	corpus	refused:form	refused:form	refused:form	refused:form	да		п. 8; Confirmation int_below_min	ADR-0092 Confirmation
+f05_int_at_min_ok	corpus	ok	ok	ok	ok	да		п. 8; Confirmation int_at_min_ok	ADR-0092 Confirmation
+f06_int_at_max_ok	corpus	ok	ok	ok	ok	да		п. 8	ADR-0092 п. 8
+f07_int_above_max	corpus	refused:form	refused:form	refused:form	refused:form	да		п. 8	ADR-0092 п. 8
+f08_exec_trailing_nl	corpus	refused:form	refused:form	refused:form	refused:form	да		слой 5 (полное совпадение)	ревью Claude x5
+f09_prefix_trailing_nl	corpus	refused:form	refused:form	refused:form	refused:form	да		слой 5	ревью Claude x1
+f10_secret_name_newline	corpus	refused:form	refused:form	refused:form	refused:form	да		точка — `[\s\S]` (п. 12)	ревью Claude x2
+f11_blob_name_64_ok	corpus	ok	ok	ok	ok	да	profile_blob_64_ok	дополнение name_not_pattern (п. 12)	MANUAL regex.py
+f12_blob_name_65	corpus	refused:form	refused:form	refused:form	refused:form	да	profile_blob_65	дополнение name_not_pattern (п. 12)	MANUAL regex.py
+f13_secret_not_string	corpus	refused:form	refused:form	refused:form	refused:form	да		правило name_pattern	Н1.3
+f14_secretx_bound_to	corpus	refused:form	refused:form	refused:form	refused:form	да		name_not_pattern `.*_secret` — полное совпадение: `x_secretx` не секрет, bound_to запрещён (Б-2)	MANUAL regex.py, Б-2
+f15_unknown_top_key	corpus	refused:form	refused:form	refused:form	refused:form	да		п. 6: класс — form	Н1.2
+f16_one_of_two	corpus	refused:form	refused:form	refused:form	refused:form	да	c9_one_of_rule_order	DIALECT § 3 one_of; путь — подсказка (п. 5)	корпус
+f17_property_names_reference	corpus	refused:form	refused:form	refused:form	refused:form	да	m59_names_no_slash	п. 6 (было reference)	корпус
+r01_default_type_braces	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да		связь через default (type = string по умолчанию формы)	ревью Claude 3.3
+r02_default_url_id	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да		связь `type != string` — без `{id}` (Б-4: на url)	references.tsv `unit.fields.$f.default`, Б-4
+r03_depth_32_ok	corpus	ok	ok	ok	ok	да	c8_ref12_unit_schema_depth_32_ok	своя функция depth (слой 7)	корпус
+r04_depth_33	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	c8_ref12_unit_schema_depth_33	depth	корпус
+r05_template_int_on_string	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	r37_requests_plain_number	своя функция template	корпус
+r06_text_bool_ok	corpus	ok	ok	ok	ok	да		своя функция text: bool строчными (Б-3)	ревью Claude Б-3
+r06b_text_bool_True	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да		text: `True` не каноническая запись bool (Б-3)	ревью Claude Б-3
+r07_split_unknown_table	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да		split (расширение strings); Б-4	references.tsv `metrics[].count`
+r08_unique_keys	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	m59_keys_id_repeat	unique	корпус
+r09_prefix_free	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	c4_readers_nested	prefix_free (D18)	корпус
+t27_escape_tab_ok	corpus	ok	ok	ok	ok	да		`\<TAB>` — экранирование YAML 1.2.2 и Н1.1, не литеральный TAB (п. 4); значение — TAB; значение display.unit = 'a\tb' проверено	ревью Claude круг 2 Н-2
+t28_doc_start_content	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1 document: на строке `---` — только комментарий; отказывает парсер (правило doc-start-content снято)	ревью Claude круг 2 Н-3
+t29_block_header_comment	corpus	refused:text	refused:text	refused:text	refused:text	да		заголовок блочного скаляра без пробела перед `#` (D14: go.yaml.in/yaml/v3 принимает)	ревью Claude круг 2 Н-3
+t30_block_leading	corpus	refused:text	refused:text	refused:text	refused:text	да		начальные пустые строки глубже первой строки блочного скаляра (D15: go.yaml.in/yaml/v3 принимает, S98Z)	ревью Claude круг 2 Н-3
+t31_last_line_spaces_ok	corpus	ok	ok	ok	ok	да		обход D16: LF в конец текста без LF; значение по YAML 1.2.2 `counter\n \n` (без обхода оба парсера — `counter\n `); значение display.unit = 'counter\n \n' проверено	ревью Claude круг 2 Н-1, Н-3
+t32_trailing_spaces_ok	corpus	ok	ok	ok	ok	да		строка пробелов в конце без LF — не отказ (правило last-spaces снято)	ревью Claude круг 2 Н-1
+p3_c5_key_question_mark	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_key_question_mark
+p3_c5_value_question_mark	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_question_mark
+p3_c5_value_next_line_flow	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_next_line_flow
+p3_c5_value_next_line_plain	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_next_line_plain
+p3_c5_value_next_line_quoted	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_next_line_quoted
+p3_c7_seq_dash_scalar_below	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c7_seq_dash_scalar_below
+p3_c7_word_continuation_comment	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c7_word_continuation_comment
+p3_c8_word_hash_space	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c8_word_hash_space
+a07_book_empty_key_ok.writer	family-read|domain/<sub>/<manifest:domain.books>/<член>|writer	ok [] []	ok [] []	ok [] []	ok [] []	да	a07_book_empty_key_ok	propertyNames с исключением "" (ловушка Gemini 4.2)	family-read.jsonl
+a07_book_empty_key_ok.reader	family-read|domain/<sub>/<manifest:domain.books>/<член>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	a07_book_empty_key_ok	propertyNames с исключением "" (ловушка Gemini 4.2)	family-read.jsonl
+a21_named_id_arabic_digit.writer	family-read|<sub>/workers/<имя>|writer	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	да	a21_named_id_arabic_digit	п. 14: `\x{0660}-\x{0669}` в common.named_id — цифра U+0663 отказана (Kimi Н4)	family-read.jsonl
+a21_named_id_arabic_digit.reader	family-read|<sub>/workers/<имя>|reader	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	да	a21_named_id_arabic_digit	п. 14: `\x{0660}-\x{0669}` в common.named_id — цифра U+0663 отказана (Kimi Н4)	family-read.jsonl
+a21b_named_id_astral_digit.writer	family-read|<sub>/workers/<имя>|writer	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	да	a21b_named_id_astral_digit	п. 14: знак вне BMP `\x{1D7CE}-\x{1D7FF}` — U+1D7D0 отказан (Kimi Н4)	family-read.jsonl
+a21b_named_id_astral_digit.reader	family-read|<sub>/workers/<имя>|reader	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	да	a21b_named_id_astral_digit	п. 14: знак вне BMP `\x{1D7CE}-\x{1D7FF}` — U+1D7D0 отказан (Kimi Н4)	family-read.jsonl
+a21c_named_id_letter_ok.writer	family-read|<sub>/workers/<имя>|writer	ok [] []	ok [] []	ok [] []	ok [] []	да	a21c_named_id_letter_ok	п. 14: контроль — буква вне ASCII допустима	family-read.jsonl
+a21c_named_id_letter_ok.reader	family-read|<sub>/workers/<имя>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	a21c_named_id_letter_ok	п. 14: контроль — буква вне ASCII допустима	family-read.jsonl
+a01_null_root.writer	family-read|<sub>/controller/pass|writer	refused [""] []	refused [""] []	refused [""] []	refused [""] []	да	root null	п. 13: корень null (20 семей-объектов, оба режима)	family-read.jsonl
+a01_null_root.reader	family-read|<sub>/controller/pass|reader	refused [""] [""]	refused [""] [""]	refused [""] [""]	refused [""] [""]	да	root null	п. 13: корень null (20 семей-объектов, оба режима)	family-read.jsonl
+a02_row_null.writer	family-read|platform/manifest/<sub>|writer	refused [""] []	refused [""] []	refused [""] []	refused [""] []	да	root null	п. 13	family-read.jsonl
+a02_row_null.reader	family-read|platform/manifest/<sub>|reader	refused [""] [""]	refused [""] [""]	refused [""] [""]	refused [""] [""]	да	root null	п. 13	family-read.jsonl
+a03_number_1e400.writer	family-read|<sub>/controller/pass|writer	refused ["/seconds"] []	ok [] []	refused ["/seconds"] []	refused ["/seconds"] []	да	seconds: number 1e400	дефект эталона: писатель и читатель принимают 1e400 (Б-7)	family-read.jsonl
+a03_number_1e400.reader	family-read|<sub>/controller/pass|reader	refused ["/seconds"] [""]	ok [] []	refused ["/seconds"] [""]	refused ["/seconds"] [""]	да	seconds: number 1e400	дефект эталона: писатель и читатель принимают 1e400 (Б-7)	family-read.jsonl
+a04_jcs_1e400_writer.writer	family-read|<sub>/state/<имя>/<id>|writer	refused ["/value"] []	crash [] []	refused ["/value"] []	refused ["/value"] []	да	value: encoded jcs '1e400'	дефект эталона: писатель jcs падает	family-read.jsonl
+a05_trailing_nl_sub.writer	family-read|<корень событий>/.workers/<sub>/<экземпляр>.lock|writer	refused ["/sub"] []	refused ["/sub"] []	refused ["/sub"] []	refused ["/sub"] []	да	sub: trailing \n	п. 13: хвостовой \n в поле с pattern	family-read.jsonl
+a05_trailing_nl_sub.reader	family-read|<корень событий>/.workers/<sub>/<экземпляр>.lock|reader	refused ["/sub"] [""]	refused ["/sub"] [""]	refused ["/sub"] [""]	refused ["/sub"] [""]	да	sub: trailing \n	п. 13: хвостовой \n в поле с pattern	family-read.jsonl
+a06_names_given_bad.writer	family-read|<sub>/controller/pass|writer	refused ["/names_given/Bad Name!"] []	refused ["/names_given/Bad Name!"] []	refused ["/names_given/Bad Name!"] []	refused ["/names_given/Bad Name!"] []	да	names_given: name 'Bad Name!'	п. 13: имя под propertyNames, исход по пути (Go — слой 4)	family-read.jsonl
+a06_names_given_bad.reader	family-read|<sub>/controller/pass|reader	refused ["/names_given/Bad Name!"] ["/names_given"]	refused ["/names_given/Bad Name!"] ["/names_given"]	refused ["/names_given/Bad Name!"] ["/names_given"]	refused ["/names_given/Bad Name!"] ["/names_given"]	да	names_given: name 'Bad Name!'	п. 13: имя под propertyNames, исход по пути (Go — слой 4)	family-read.jsonl
+a08_unique_items.writer	family-read|<sub>/workers/<имя>|writer	refused ["/units/1"] []	refused ["/units/1"] []	refused ["/units/1"] []	refused ["/units/1"] []	да	units: duplicate item	слой 4: путь — второе вхождение	family-read.jsonl
+a08_unique_items.reader	family-read|<sub>/workers/<имя>|reader	refused ["/units/1"] [""]	refused ["/units/1"] [""]	refused ["/units/1"] [""]	refused ["/units/1"] [""]	да	units: duplicate item	слой 4: путь — второе вхождение	family-read.jsonl
+a09_max_bytes.writer	family-read|platform/drain|writer	refused ["/server"] []	refused ["/server"] []	refused ["/server"] []	refused ["/server"] []	да	server: max_bytes	слой 3: байты UTF-8	family-read.jsonl
+a09_max_bytes.reader	family-read|platform/drain|reader	refused ["/server"] [""]	refused ["/server"] [""]	refused ["/server"] [""]	refused ["/server"] [""]	да	server: max_bytes	слой 3: байты UTF-8	family-read.jsonl
+a10_not_pattern.writer	family-read|<sub>/asked/<sha16(имя)>|writer	refused ["/rids/0"] []	refused ["/rids/0"] []	refused ["/rids/0"] []	refused ["/rids/0"] []	да	rids/0: not_pattern match	not: {pattern}	family-read.jsonl
+a10_not_pattern.reader	family-read|<sub>/asked/<sha16(имя)>|reader	refused ["/rids/0"] [""]	refused ["/rids/0"] [""]	refused ["/rids/0"] [""]	refused ["/rids/0"] [""]	да	rids/0: not_pattern match	not: {pattern}	family-read.jsonl
+a11_not_enum_dot.writer	family-read|<sub>/workers/<имя>|writer	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	refused ["/units/0"] []	да	units/0: not_enum word	not: {enum}	family-read.jsonl
+a11_not_enum_dot.reader	family-read|<sub>/workers/<имя>|reader	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	refused ["/units/0"] [""]	да	units/0: not_enum word	not: {enum}	family-read.jsonl
+a12_whole_reader.reader	family-read|platform/manifest/<sub>|reader	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	да	rev: integer 1.0	слой 3: целый знак у читателя (whole)	family-read.jsonl
+a13_exact_reader.reader	family-read|platform/manifest/<sub>|reader	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	refused ["/rev"] ["/rev"]	да	rev: integer 100.00000000000000001	слой 3: точное десятичное значение	family-read.jsonl
+a14_int_1dot0_reader_ok.reader	family-read|<sub>/controller/pass|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	failures: integer 1.0	слой 3: целое по значению у читателя без whole	family-read.jsonl
+a15_time_writer.writer	family-read|<sub>/placement/<id>|writer	refused ["/at"] []	refused ["/at"] []	refused ["/at"] []	refused ["/at"] []	да	at: time 1.0001	слой 3: запись времени писателя	family-read.jsonl
+a15_time_writer.reader	family-read|<sub>/placement/<id>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	at: time 1.0001	слой 3: запись времени писателя	family-read.jsonl
+a16_time_number_1e0.writer	family-read|<sub>/controller/pass|writer	refused ["/at"] []	refused ["/at"] []	refused ["/at"] []	refused ["/at"] []	да	at: time number 1e0	слой 3: время по записи	family-read.jsonl
+a16_time_number_1e0.reader	family-read|<sub>/controller/pass|reader	refused ["/at"] [""]	refused ["/at"] [""]	refused ["/at"] [""]	refused ["/at"] [""]	да	at: time number 1e0	слой 3: время по записи	family-read.jsonl
+a17_writer_max_names.writer	family-read|platform/manifest/<sub>|writer	refused [""] []	refused [""] []	refused [""] []	refused [""] []	да	: name 'zz_extra'	$defs.writer: max_items имён — строка целиком (Б-6)	family-read.jsonl
+a17_writer_max_names.reader	family-read|platform/manifest/<sub>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	: name 'zz_extra'	$defs.writer: max_items имён — строка целиком (Б-6)	family-read.jsonl
+a18_jcs_noncanonical.writer	family-read|<sub>/state/<имя>/<id>|writer	refused ["/value"] []	refused ["/value"] []	refused ["/value"] []	refused ["/value"] []	да	value: encoded jcs '{"b":1,"a":2}'	слой 3: JCS только у писателя	family-read.jsonl
+a18_jcs_noncanonical.reader	family-read|<sub>/state/<имя>/<id>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	value: encoded jcs '{"b":1,"a":2}'	слой 3: JCS только у писателя	family-read.jsonl
+a19_outcome_unit_field.reader	family-read|<sub>/heartbeats/<имя>|reader	refused ["/build"] ["/build"]	refused ["/build"] ["/build"]	refused ["/build"] ["/build"]	refused ["/build"] ["/build"]	да	outcome /build: wrong type	DIALECT § 9: единица `поле`	family-read.jsonl
+a20_doors_writer_name.writer	family-read|platform/doors/<сервер>|writer	refused ["/zz_extra"] []	refused ["/zz_extra"] []	refused ["/zz_extra"] []	refused ["/zz_extra"] []	да	: name 'zz_extra'	$defs.writer: propertyNames писателя	family-read.jsonl
+a20_doors_writer_name.reader	family-read|platform/doors/<сервер>|reader	ok [] []	ok [] []	ok [] []	ok [] []	да	: name 'zz_extra'	$defs.writer: propertyNames писателя	family-read.jsonl

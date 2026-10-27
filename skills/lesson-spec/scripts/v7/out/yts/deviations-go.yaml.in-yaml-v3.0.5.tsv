@@ -1,0 +1,84 @@
+# yaml-test-suite data-2022-01-17 × go.yaml.in-yaml-v3.0.5: отклонения парсера (черновик списка для «Спецификации», ADR-0092 п. 2). layer1 — исход всего слоя 1 (парсер и тонкая проверка): refused — отклонение закрыто слоем;
+# ok при expect=error — вход вне YAML 1.2.2 принят: дефект парсера, случай корпуса (п. 9).
+id	expect	got	layer1	note
+27NA	ok	error	refused:document	yaml: found incompatible YAML document
+2JQS	ok	error	refused:parser	yaml: did not find expected key
+2LFX	ok	error	refused:document	yaml: found unknown directive name
+2SXE	ok	error	refused:parser	yaml: mapping values are not allowed in this context
+3UYS	ok	error	ok	yaml: found unknown escape character
+4MUZ/00	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
+4MUZ/01	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
+4MUZ/02	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
+565N	json	different	refused:tag	[{"canonical": "GIF89a\f\u0000\f\u0000�\u0000\u0000���������fff\u0000\u0000\u0000���^^^��펎����������������iiiccc��������
+58MP	ok	error	refused:parser	yaml: did not find expected node content
+5MUD	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
+5T43	ok	error	refused:parser	yaml: line 1: did not find expected node content
+652Z	json	different	refused:root	[{"bar": 42, "foo": "bar"}]
+6BCT	ok	error	refused:tab	yaml: line 3: found character that cannot start any token
+6CA3	ok	error	refused:tab	yaml: found character that cannot start any token
+6LVF	ok	error	refused:document	yaml: found unknown directive name
+6M2F	ok	error	refused:parser	yaml: line 2: did not find expected key
+6ZKB	ok	error	refused:document	yaml: line 4: found incompatible YAML document
+7Z25	ok	error	refused:document	yaml: line 3: did not find expected <document start>
+8XYN	ok	error	refused:parser	yaml: line 2: did not find expected alphabetic or numeric character
+96NN/00	ok	error	refused:tab	yaml: line 2: found a tab character where an indentation space is expected
+96NN/01	ok	error	refused:tab	yaml: line 2: found a tab character where an indentation space is expected
+9C9N	error	parsed	refused:rare	принято то, что набор отвергает
+9DXL	ok	error	refused:document	yaml: line 4: found incompatible YAML document
+9HCY	error	parsed	refused:document	принято то, что набор отвергает
+9JBA	error	parsed	refused:lexis	принято то, что набор отвергает
+9SA2	ok	error	refused:parser	yaml: line 2: did not find expected ',' or '}'
+A2M4	ok	error	refused:tab	yaml: line 2: found character that cannot start any token
+BEC7	ok	error	refused:document	yaml: found incompatible YAML document
+CFD4	ok	error	refused:parser	yaml: did not find expected node content
+CVW2	error	parsed	refused:root	принято то, что набор отвергает
+DBG4	ok	error	refused:parser	yaml: line 7: did not find expected node content
+DK3J	ok	error	refused:root	yaml: line 1: did not find expected <document start>
+DK95/00	ok	error	refused:tab	yaml: line 2: found character that cannot start any token
+DK95/01	error	parsed	refused:tab	принято то, что набор отвергает
+DK95/03	ok	error	refused:tab	yaml: found character that cannot start any token
+DK95/04	ok	error	refused:tab	yaml: line 2: found a tab character that violates indentation
+DK95/07	ok	error	refused:document	yaml: found incompatible YAML document
+FP8R	ok	error	refused:root	yaml: line 1: did not find expected <document start>
+FRK4	ok	error	refused:parser	yaml: line 2: did not find expected node content
+G5U8	error	parsed	refused:root	принято то, что набор отвергает
+HM87/00	ok	error	refused:parser	yaml: did not find expected node content
+HM87/01	json	different	refused:root	[[{"x": null}]]
+HRE5	error	parsed	refused:lexis	принято то, что набор отвергает
+HWV9	ok	error	refused:document	yaml: did not find expected node content
+JEF9/02	json	different	refused:root	[[""]]
+JR7V	ok	error	refused:parser	yaml: line 3: did not find expected ',' or ']'
+K3WX	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
+L24T/01	json	different	ok	[{"foo": "x\n "}]
+M2N8/00	ok	error	refused:parser	yaml: did not find expected key
+M7A3	ok	error	refused:document	yaml: line 7: could not find expected directive name
+MUS6/00	error	parsed	refused:document	принято то, что набор отвергает
+MUS6/05	ok	error	refused:document	yaml: found unknown directive name
+MUS6/06	ok	error	refused:document	yaml: found unknown directive name
+NHX8	ok	error	refused:parser	yaml: did not find expected key
+NJ66	ok	error	refused:parser	yaml: line 2: did not find expected ',' or '}'
+NKF9	ok	error	refused:document	yaml: line 1: did not find expected key
+Q5MG	ok	error	refused:tab	yaml: found character that cannot start any token
+QB6E	error	parsed	refused:rare	принято то, что набор отвергает
+QT73	ok	error	refused:document	yaml: line 1: did not find expected node content
+R4YG	ok	error	refused:tab	yaml: line 9: found a tab character where an indentation space is expected
+RTP8	ok	error	refused:document	yaml: found incompatible YAML document
+S3PD	ok	error	refused:parser	yaml: line 1: did not find expected key
+S4JQ	json	different	refused:root	[["12", 12, 12]]
+S98Z	error	parsed	refused:lexis	принято то, что набор отвергает
+SM9W/01	ok	error	refused:parser	yaml: did not find expected key
+SU5Z	error	parsed	refused:lexis	принято то, что набор отвергает
+U99R	error	parsed	refused:root	принято то, что набор отвергает
+UGM3	json	different	refused:root	[{"bill-to": {"address": {"city": "Royal Oak", "lines": "458 Walkman Dr.\nSuite #292\n", "postal": 48046, "state": "MI"}
+UKK6/00	ok	error	refused:parser	yaml: did not find expected key
+UT92	ok	error	refused:document	yaml: line 1: did not find expected ',' or '}'
+VJP3/01	ok	error	refused:parser	yaml: line 2: did not find expected ',' or '}'
+W4TN	ok	error	refused:document	yaml: found incompatible YAML document
+W5VH	ok	error	refused:parser	yaml: did not find expected alphabetic or numeric character
+WZ62	ok	error	refused:parser	yaml: line 2: did not find expected ',' or '}'
+X4QW	error	parsed	refused:lexis	принято то, что набор отвергает
+Y2GN	json	different	refused:anchor	[{"key": ":chor value"}]
+Y79Y/001	ok	error	refused:tab	yaml: line 2: found a tab character where an indentation space is expected
+Y79Y/003	error	parsed	refused:tab	принято то, что набор отвергает
+Y79Y/010	ok	error	refused:tab	yaml: found character that cannot start any token
+YJV2	error	parsed	refused:root	принято то, что набор отвергает
