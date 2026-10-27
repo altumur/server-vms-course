@@ -229,6 +229,19 @@ class Outcomes(FamiliesBase):
         got = judge.judge({"seen": "1", "tags": "a,b,c"})
         self.assertEqual([o.priority for o in outcomes_for(fam.outcomes, got["paths"])], [0])
 
+    def test_unit_below_keeps_the_container(self):
+        """Единица `элемент` или `поле` (DIALECT § 9): отказ только ниже неё — её исход, даже если строка целиком раньше
+        по приоритету; вместе с отказом вне её — строка целиком (пульс: `/status` и "", разбор ревью стадии B 6–7, № 14)."""
+        self.write("path\toutcome\tpriority\tunit\tnorm\n\tцеликом\t1\tстрока\tn\n/tags\tэлемент\t2\tэлемент\tn\n"
+                   "/gen\tпол\t3\tстрока\tn\n")
+        fam = self.family()
+        pick = lambda *paths: [o.outcome for o in outcomes_for(fam.outcomes, list(paths))]   # noqa: E731
+        self.assertEqual(pick("/tags/3"), ["элемент"])
+        self.assertEqual(pick("/tags/3", "/tags/5"), ["элемент"])
+        self.assertEqual(pick("/tags/3", "/zz"), ["целиком"])
+        self.assertEqual(pick("/gen"), ["целиком"])              # единица «строка» узел не держит
+        self.assertEqual(pick(""), ["целиком"])
+
     def test_star_is_any_name_or_element(self):
         """`*` в пути исхода (DIALECT § 9): любое имя автора (кроме ключей properties) или любой элемент списка; на
         ином месте — ошибка; при выборе исхода совпадает с одним сегментом."""

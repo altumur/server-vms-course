@@ -568,10 +568,17 @@ class Judge(Loader):
 
 
 def outcomes_for(outcomes, paths):
-    """Исходы набора путей отказа (DIALECT § 9): строки, чей путь — префикс хоть одного пути отказа (`*` — любой один
-    сегмент своего места, Outcome.covers); из них действуют строки с наименьшим приоритетом (в порядке файла). Нет
-    отказа — нет исхода."""
-    hit = [o for o in outcomes if any(o.covers(q) for q in paths)]
+    """Исходы набора путей отказа (DIALECT § 9): у каждого пути — строки, чей путь его префикс (`*` — любой один
+    сегмент своего места, Outcome.covers); если глубже всех из них строка с единицей `поле` или `элемент`, отказ ниже
+    неё содержащий узел нечитаемым не делает — действует только она (и равные ей по глубине), иначе — все. Из строк всех
+    путей действуют строки с наименьшим приоритетом (в порядке файла). Нет отказа — нет исхода."""
+    keep = set()
+    for q in paths:
+        cov = [o for o in outcomes if o.covers(q)]
+        deep = max((len(o.segs) for o in cov), default=0)
+        top = [o for o in cov if len(o.segs) == deep]
+        keep.update(id(o) for o in (top if any(o.unit != "строка" for o in top) else cov))
+    hit = [o for o in outcomes if id(o) in keep]
     if not paths or not hit:
         return []
     low = min(o.priority for o in hit)
