@@ -33,13 +33,13 @@ BEC7	ok	error	refused:document	yaml: found incompatible YAML document
 CFD4	ok	error	refused:parser	yaml: did not find expected node content
 CVW2	error	parsed	refused:root	принято то, что набор отвергает
 DBG4	ok	error	refused:parser	yaml: line 7: did not find expected node content
-DK3J	ok	error	refused:document	yaml: line 1: did not find expected <document start>
+DK3J	ok	error	refused:root	yaml: line 1: did not find expected <document start>
 DK95/00	ok	error	refused:tab	yaml: line 2: found character that cannot start any token
 DK95/01	error	parsed	refused:tab	принято то, что набор отвергает
 DK95/03	ok	error	refused:tab	yaml: found character that cannot start any token
 DK95/04	ok	error	refused:tab	yaml: line 2: found a tab character that violates indentation
 DK95/07	ok	error	refused:document	yaml: found incompatible YAML document
-FP8R	ok	error	refused:document	yaml: line 1: did not find expected <document start>
+FP8R	ok	error	refused:root	yaml: line 1: did not find expected <document start>
 FRK4	ok	error	refused:parser	yaml: line 2: did not find expected node content
 G5U8	error	parsed	refused:root	принято то, что набор отвергает
 HM87/00	ok	error	refused:parser	yaml: did not find expected node content
@@ -69,7 +69,7 @@ S98Z	error	parsed	refused:lexis	принято то, что набор отве�
 SM9W/01	ok	error	refused:parser	yaml: did not find expected key
 SU5Z	error	parsed	refused:lexis	принято то, что набор отвергает
 U99R	error	parsed	refused:root	принято то, что набор отвергает
-UGM3	json	different	refused:document	[{"bill-to": {"address": {"city": "Royal Oak", "lines": "458 Walkman Dr.\nSuite #292\n", "postal": 48046, "state": "MI"}
+UGM3	json	different	refused:root	[{"bill-to": {"address": {"city": "Royal Oak", "lines": "458 Walkman Dr.\nSuite #292\n", "postal": 48046, "state": "MI"}
 UKK6/00	ok	error	refused:parser	yaml: did not find expected key
 UT92	ok	error	refused:document	yaml: line 1: did not find expected ',' or '}'
 VJP3/01	ok	error	refused:parser	yaml: line 2: did not find expected ',' or '}'

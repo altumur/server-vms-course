@@ -143,10 +143,7 @@ def check_bytes(data):
         if re.match(r"---(\s|$)", ln):
             if content:
                 raise TextRefused("document", no, "second document or `---` after content")
-            rest = ln[3:].strip()
-            if rest and not rest.startswith("#"):
-                raise TextRefused("document", no, "content on the `---` line")
-            content = True
+            content = True                       # содержимое на строке `---` отказывают парсер или правило root
             continue
         if re.match(r"\s+---(\s|$)", ln):
             raise TextRefused("document", no, "`---` not at column 1")

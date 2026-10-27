@@ -32,8 +32,6 @@ RULES = [
     ("doc-end", r"`\.\.\.`", "`...` — отказ", "Н1.1:46", "Н1.1 document; yaml.v3 не сообщает (D17)"),
     ("directive", r"directive", "директива `%` — отказ", "Н1.1:46", "Н1.1 document"),
     ("doc-second", r"second document", "`---` только первым, до содержимого", "п. 2", "один документ — по байтам"),
-    ("doc-start-content", r"content on the `---` line", "на строке `---` — только комментарий", "Н1.1",
-     "Н1.1 document"),
     ("doc-start-col", r"not at column 1", "`---` с колонки 1", "Н1.1", "Н1.1 document"),
     ("root", r"root is a block mapping|empty file", "корень — блочное отображение с колонки 1; не пустой файл",
      "п. 2", "ADR-0092 п. 2"),

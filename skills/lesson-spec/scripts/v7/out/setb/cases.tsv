@@ -57,7 +57,7 @@ r07_split_unknown_table	corpus	refused:relations	refused:relations	refused:relat
 r08_unique_keys	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	m59_keys_id_repeat	unique	корпус
 r09_prefix_free	corpus	refused:relations	refused:relations	refused:relations	refused:relations	да	c4_readers_nested	prefix_free (D18)	корпус
 t27_escape_tab_ok	corpus	ok	ok	ok	ok	да		`\<TAB>` — экранирование YAML 1.2.2 и Н1.1, не литеральный TAB (п. 4); значение — TAB; значение display.unit = 'a\tb' проверено	ревью Claude круг 2 Н-2
-t28_doc_start_content	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1 document: на строке `---` — только комментарий (правило doc-start-content; парсеры отказывают и сами)	ревью Claude круг 2 Н-3
+t28_doc_start_content	corpus	refused:text	refused:text	refused:text	refused:text	да		Н1.1 document: на строке `---` — только комментарий; отказывает парсер (правило doc-start-content снято)	ревью Claude круг 2 Н-3
 t29_block_header_comment	corpus	refused:text	refused:text	refused:text	refused:text	да		заголовок блочного скаляра без пробела перед `#` (D14: go.yaml.in/yaml/v3 принимает)	ревью Claude круг 2 Н-3
 t30_block_leading	corpus	refused:text	refused:text	refused:text	refused:text	да		начальные пустые строки глубже первой строки блочного скаляра (D15: go.yaml.in/yaml/v3 принимает, S98Z)	ревью Claude круг 2 Н-3
 t31_last_line_spaces_ok	corpus	ok	ok	ok	ok	да		обход D16: LF в конец текста без LF; значение по YAML 1.2.2 `counter\n \n` (без обхода оба парсера — `counter\n `); значение display.unit = 'counter\n \n' проверено	ревью Claude круг 2 Н-1, Н-3

@@ -284,11 +284,7 @@ func checkBytes(data []byte) (string, []string, *textRefused) {
 			if content {
 				return "", nil, &textRefused{"document", no, "second document or `---` after content", nil}
 			}
-			rest := strings.TrimSpace(ln[3:])
-			if rest != "" && !strings.HasPrefix(rest, "#") {
-				return "", nil, &textRefused{"document", no, "content on the `---` line", nil}
-			}
-			content = true
+			content = true // содержимое на строке `---` отказывают парсер или правило root
 			continue
 		}
 		if reDocShift.MatchString(ln) {

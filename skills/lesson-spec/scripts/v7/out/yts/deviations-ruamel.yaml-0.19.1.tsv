@@ -2,7 +2,7 @@
 # ok при expect=error — вход вне YAML 1.2.2 принят: дефект парсера, случай корпуса (п. 9).
 id	expect	got	layer1	note
 2JQS	json	constructor refused	refused:key	разбор принят, конструктор safe отказал (не парсер)
-2XXW	json	different	refused:document	["<set:{'Ken Griff', 'Sammy Sosa', 'Mark McGwire'}>"]
+2XXW	json	different	refused:root	["<set:{'Ken Griff', 'Sammy Sosa', 'Mark McGwire'}>"]
 4FJ6	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)
 4MUZ/00	ok	error	refused:parser	ParserError: while parsing a flow mapping
 4MUZ/01	ok	error	refused:parser	ParserError: while parsing a flow mapping
@@ -44,7 +44,7 @@ HM87/01	json	different	refused:root	[[{"x": null}]]
 HS5T	ok	error	refused:tab	ScannerError: while scanning for the next token
 HWV9	ok	error	refused:document	ParserError: while parsing a block node
 J3BT	ok	error	refused:tab	ScannerError: while scanning for the next token
-J7PZ	json	different	refused:document	[{"Mark McGwire": 65, "Sammy Sosa": 63, "Ken Griffy": 58}]
+J7PZ	json	different	refused:root	[{"Mark McGwire": 65, "Sammy Sosa": 63, "Ken Griffy": 58}]
 JEF9/02	json	different	refused:root	[[""]]
 K3WX	ok	error	refused:parser	ParserError: while parsing a flow mapping
 K54U	ok	error	refused:tab	ScannerError: while scanning for the next token
@@ -67,9 +67,9 @@ RHX7	error	parsed	refused:document	принято то, что набор отв
 RZT7	json	different	refused:document	[{"Time": "<datetime:2001-11-23 15:01:42-05:00>", "User": "ed", "Warning": "This is an error message for the log file"},
 S4JQ	json	different	refused:root	[["12", 12, 12]]
 SU5Z	error	parsed	refused:lexis	принято то, что набор отвергает
-T26H	ok	error	refused:document	ScannerError: more indented follow up line than first in a block scalar
+T26H	ok	error	refused:parser	ScannerError: more indented follow up line than first in a block scalar
 U99R	error	parsed	refused:root	принято то, что набор отвергает
-UGM3	json	constructor refused	refused:document	разбор принят, конструктор safe отказал (не парсер)
+UGM3	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)
 UT92	ok	error	refused:document	ParserError: while parsing a flow mapping
 UV7Q	ok	error	refused:tab	ScannerError: while scanning for the next token
 V9D5	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)

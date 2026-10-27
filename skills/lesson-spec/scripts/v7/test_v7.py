@@ -22,6 +22,12 @@ from v7 import build, gorun, regex, schema, stack  # noqa: E402
 
 ROOT = HERE.parents[3]
 HAVE_GO = os.path.exists(gorun.BIN)
+try:                                             # стенд В7 (requirements.txt); вне него тесты CEL пропускаются
+    import cel_expr_python  # noqa: F401
+    HAVE_CEL = True
+except ImportError:
+    HAVE_CEL = False
+NEED_CEL = unittest.skipUnless(HAVE_CEL, "нет cel-expr-python (стенд В7: v7/requirements.txt)")
 
 
 def paths(validator, instance):
@@ -84,6 +90,7 @@ class TestTraps(unittest.TestCase):
         self.assertFalse(stack.validator_for(s).is_valid("w-1\n"))
         self.assertTrue(stack.validator_for(s).is_valid("w-1"))
 
+    @NEED_CEL
     def test_trailing_newline_manifest(self):
         m = stack.Manifest(self.man, json.loads((HERE / "out/02.1-installer.relations.json").read_text("utf-8")))
         base = (ROOT / "Platform/02-installer/acceptance/1/cases/r38_unit_minimal.subsystem.yaml").read_bytes()
@@ -182,6 +189,7 @@ class TestDefects(unittest.TestCase):
         good = {"properties": {"o": {"properties": {"k": schema.NEVER}}}}
         self.assertEqual(paths(stack.validator_for(good), inst), ["/o/k"])
 
+    @NEED_CEL
     def test_d4_dyn_overload(self):
         from cel_expr_python import cel
         T = cel.Type
@@ -191,11 +199,13 @@ class TestDefects(unittest.TestCase):
         r = stack.PyCel({"env": {"extensions": []}, "rows": [{"no": 1, "cel": 'depth(doc) == 2 ? [] : [{"p": ["x"]}]'}]})
         self.assertEqual(r.run({"a": {"b": 1}}), [])
 
+    @NEED_CEL
     def test_d5_error_value(self):
         r = stack.PyCel({"env": {"extensions": []}, "rows": [{"no": 7, "cel": "doc.missing"}]})
         with self.assertRaises(RuntimeError):
             r.run({})
 
+    @NEED_CEL
     def test_d6_dyn_range(self):
         from cel_expr_python import cel
         env = cel.NewEnv(variables={"doc": cel.Type.DYN})
@@ -250,6 +260,7 @@ class TestRelations(unittest.TestCase):
              '[doc.a] == [doc.b]': True, '{"k": doc.a} == {"k": doc.b}': True, 'doc.s == doc.a': False}
     DOC = {"a": 1, "b": 1.0, "t": True, "s": "1"}
 
+    @NEED_CEL
     def test_python(self):
         rows = [{"no": i, "cel": "(%s) ? [] : [{\"p\": [\"x\"]}]" % e} for i, e in enumerate(self.EXPRS)]
         r = stack.PyCel({"env": {"extensions": [{"name": "strings"}, {"name": "two-var-comprehensions"}]},

@@ -101,7 +101,7 @@ MANIFEST += [
     ("t27_escape_tab_ok", BASE + 'display: {unit: "a\\\tb"}\n', "ok",
      "`\\<TAB>` — экранирование YAML 1.2.2 и Н1.1, не литеральный TAB (п. 4); значение — TAB", "ревью Claude круг 2 Н-2", ""),
     ("t28_doc_start_content", "--- name: probe\n" + BASE[len("name: probe\n"):], "refused:text",
-     "Н1.1 document: на строке `---` — только комментарий (правило doc-start-content; парсеры отказывают и сами)",
+     "Н1.1 document: на строке `---` — только комментарий; отказывает парсер (правило doc-start-content снято)",
      "ревью Claude круг 2 Н-3", ""),
     ("t29_block_header_comment", BASE + "display:\n  unit: |# c\n    counter\n", "refused:text",
      "заголовок блочного скаляра без пробела перед `#` (D14: go.yaml.in/yaml/v3 принимает)", "ревью Claude круг 2 Н-3", ""),
