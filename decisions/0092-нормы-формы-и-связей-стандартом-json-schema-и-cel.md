@@ -3,7 +3,7 @@ status: accepted
 date: 2026-10-27
 decision-makers: владелец
 consulted: «Архитектор»; записка `_notes-ru/discuss/dialect-vs-standard/` (ИИ-исследование 2026-10-26); перепроверка своим стендом — Kimi (`c6da91111`), Claude (`fc5cd86c1`); ревью ADR — Claude (`930eb051b`), Codex (`11d49c2e0`), Kimi (`79dbc7cb9`)
-informed: «Спецификация», генераторы стадии C (Codex-Python, Codex-Go, MiniMax-Go), cammeta-acceptance
+informed: «Спецификация», генераторы стадии C (c-python, c-go; ADR-0083 доп. (42) п. 9), cammeta-acceptance
 ---
 
 # Нормы формы, семей данных и связей — стандартом JSON Schema 2020-12 и CEL; свой остаток — отдельными слоями (вариант В7)
