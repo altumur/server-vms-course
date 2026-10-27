@@ -6964,6 +6964,8 @@ components:
               type: string
         families:
           type: object
+          description: Семьи domain.keys манифестов каталога; один id в нескольких манифестах — объединение
+            ключей без повторов, ключи по возрастанию байтов UTF-8 (глава 6.7 Н1.11).
           additionalProperties:
             type: array
             items:

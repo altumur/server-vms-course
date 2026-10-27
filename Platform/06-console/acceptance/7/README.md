@@ -11,7 +11,8 @@
 `corrections.tsv`). Всего 7 сценариев / 73 шага: 41 из М11/08, 18 из М11/09, 5 из М11/05, 9 из М11/10.
 
 Функцию `resolve` без стенда проверяет вектор [`resolve`](../../vectors/resolve/README.md) (12 строк: 11 — бывший сц. 03 приёмки
-М11/11). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../08-domain/acceptance/3/README.md),
+М11/11); `families` двери `/domain/keys` (Н1.11) — вектор [`key-families`](../../vectors/key-families/README.md) (12 строк:
+один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../08-domain/acceptance/3/README.md),
 05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../common/vectors/peer/README.md); М11/09 — [глава
 8.4](../../../08-domain/acceptance/4/README.md), [8.5](../../../08-domain/acceptance/5/README.md) (11) и векторы
 [`may`](../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../08-domain/acceptance/5/README.md), [9.1](../../../09-agent/acceptance/1/README.md)

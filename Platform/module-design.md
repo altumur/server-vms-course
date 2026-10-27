@@ -163,6 +163,7 @@ Platform/
 | `follow` (`Platform/09-agent/vectors/follow/`) | 9.1 (исполняет агент; разбор ревью стадии A 8–10, № 8) |
 | `alarms` (`Platform/10-domain-console/vectors/alarms/`) | 10; у 8.9 — писатель истории (разбор ревью стадии A 8–10, № 8) |
 | `resolve` (`Platform/06-console/vectors/resolve/`) | 6, глава позднего слоя 6.7 |
+| `key-families` (`Platform/06-console/vectors/key-families/`) | 6, глава позднего слоя 6.7 (Н1.11 `families`; C06-DOMAIN-KEY-FAMILIES-168-21) |
 | `peer` (общий договор `common/contracts/peer.md`, `Platform/common/vectors/peer/`) | владелец 9 (первый — агент к HTTPS); участники 6.7, 8.8, 10 (разбор ревью стадии A 6–7, № 28; A 8–10, № 7) |
 | «принять консолью» | 6, глава позднего слоя 6.7 (договор пересылки `common/contracts/forwarding.md`; участники 8, 10) |
 
