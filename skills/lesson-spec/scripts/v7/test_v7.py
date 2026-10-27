@@ -225,6 +225,22 @@ class TestDefects(unittest.TestCase):
         finally:
             go.close()
 
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d18_map_order(self):
+        go = gorun.Go()
+        try:
+            doc = {"r": {"probe/a/": 1, "probe/a/b/": 1, "x/": 1, "y": 1}}
+            by_index = ('dyn(doc.r).filter(k, true).all(i, a, !(a.endsWith("/") && dyn(doc.r).filter(k, true)'
+                        '.exists(j, b, j != i && b != a && b.startsWith(a))))')
+            got = {go.call({"op": "cel_eval", "expr": by_index, "doc": doc})["value"] for _ in range(60)}
+            self.assertEqual(got, {False, True})               # дефект: исход зависит от порядка перебора
+            fixed = ('dyn(doc.r).filter(k, true).all(a, !(a.endsWith("/") && dyn(doc.r).filter(k, true)'
+                     '.exists(b, b != a && b.startsWith(a))))')
+            got = {go.call({"op": "cel_eval", "expr": fixed, "doc": doc})["value"] for _ in range(60)}
+            self.assertEqual(got, {False})
+        finally:
+            go.close()
+
 
 class TestYaml(unittest.TestCase):
     """Слой 1 (п. 2) на обоих языках: дефекты парсеров D9–D17 — красный без своей проверки (парсер один), зелёный со

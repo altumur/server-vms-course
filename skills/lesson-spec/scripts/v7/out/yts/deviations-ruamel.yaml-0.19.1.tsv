@@ -2,7 +2,7 @@
 # ok при expect=error — вход вне YAML 1.2.2 принят: дефект парсера, случай корпуса (п. 9).
 id	expect	got	layer1	note
 2JQS	json	constructor refused	refused:key	разбор принят, конструктор safe отказал (не парсер)
-2XXW	json	different	refused:document	["<set:{'Mark McGwire', 'Ken Griff', 'Sammy Sosa'}>"]
+2XXW	json	different	refused:document	["<set:{'Sammy Sosa', 'Mark McGwire', 'Ken Griff'}>"]
 4FJ6	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)
 4MUZ/00	ok	error	refused:parser	ParserError: while parsing a flow mapping
 4MUZ/01	ok	error	refused:parser	ParserError: while parsing a flow mapping

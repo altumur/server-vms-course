@@ -327,16 +327,18 @@ class Row:
             return NOT(self.term(p[1], env, cur)[0])
         if k == "empty":
             return NOT(self.set_ex(p[1], lambda x: "true", env, cur))
+        # Порядок перебора отображения в CEL не задан (cel-go — свой при каждом переборе): наборы из keys() сравниваются
+        # без номеров — подсчётом и по значению (D18).
         if k == "unique":
             L = self.set_list(p[1], env, cur)
-            I, A, J, B = self.var("i"), self.var("a"), self.var("j"), self.var("b")
-            return "(%s).all(%s, %s, (%s).all(%s, %s, %s >= %s || %s != %s))" % (L, I, A, L, J, B, J, I, A, B)
+            A, B = self.var("a"), self.var("b")
+            return "(%s).all(%s, (%s).filter(%s, %s == %s).size() == 1)" % (L, A, L, B, B, A)
         if k == "prefix_free":
             L = self.set_list(p[1], env, cur)
-            I, A, J, B = self.var("i"), self.var("a"), self.var("j"), self.var("b")
-            return ("(%s).all(%s, %s, !(type(%s) == string && %s.endsWith(\"/\") && (%s).exists(%s, %s, "
-                    "%s != %s && type(%s) == string && %s != %s && %s.startsWith(%s))))"
-                    % (L, I, A, A, A, L, J, B, J, I, B, B, A, B, A))
+            A, B = self.var("a"), self.var("b")
+            return ("(%s).all(%s, !(type(%s) == string && %s.endsWith(\"/\") && (%s).exists(%s, "
+                    "type(%s) == string && %s != %s && %s.startsWith(%s))))"
+                    % (L, A, A, A, L, B, B, B, A, B, A))
         if k == "depth":
             if p[1][0] != "cur":
                 raise NotTranslated("depth of a term other than '.'")
