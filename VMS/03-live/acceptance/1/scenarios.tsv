@@ -6,3 +6,19 @@ scenario	step	request	expect
 01-create	4	GET /streams/$c1	200 {"labels": ["public-address"]}
 01-create	5	PUT /streams/$c1 {"cam": "nope"}	400 {"error": "~cam is fixed"}
 01-create	6	POST /streams {"cam": "nope"}	201 {"id": "nope", "grace": 30}
+01-create	7	POST /streams {"labels": []}	400 {"error": "@any"}
+01-create	8	POST /streams {"cam": "$c1", "stream": "$c1"}	400 {"error": "@any"}
+02-two-viewers	1	@domain m1	ok
+02-two-viewers	2	member m1 console2 POST /cameras {"name": "Вход", "source": "driverpack://file/door.mp4"}	201 {"id": "$a"}
+02-two-viewers	3	member m1 console2 POST /cameras {"name": "Двор", "source": "driverpack://file/yard.mp4"}	201 {"id": "$b"}
+02-two-viewers	4	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+02-two-viewers	5	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
+02-two-viewers	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/$a"}, {"subject": "bob", "cap": "view", "scope": "unit:cam/$b"}]}	200 {"cluster": "m1"}
+02-two-viewers	7	@person ann ann-password-1	ok
+02-two-viewers	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/$a"}]}
+02-two-viewers	9	member m1 console POST /streams {"cam": "$b"}	403 {"error": "denied"}
+02-two-viewers	10	member m1 console POST /streams {"cam": "$a"}	201 {"id": "$a"}
+02-two-viewers	11	@person bob bob-password-1	ok
+02-two-viewers	12	@until 30 member m1 console GET /session	200 {"user": "bob"}
+02-two-viewers	13	member m1 console POST /streams {"cam": "$b"}	201 {"id": "$b", "cam": "$b"}
+02-two-viewers	14	member m1 console POST /streams {"cam": "$a"}	403 {"error": "denied"}

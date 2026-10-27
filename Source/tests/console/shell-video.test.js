@@ -3,8 +3,8 @@
 // volumes/<том>?unit=<запись>, V/08.2); близнецы сливаются, своя дверь записи впереди; том без держателя назван
 // (X-Unreachable), «нет такого места» пропущен. Кусок — …/e<эпоха>/<from>-<to>.<source>.mp4 с ?t=. Участок с yields и
 // участок резервной записи уступают основным; остаток резервной — «только в резервном», «Закрепить» — заявка основной
-// записи (POST /rec/requests, unit — id записи, V/08.2). Живое: первый зритель заводит поток (POST /live/streams; 409 exists — дальше), offer на
-// дверь шлюза (404/503 — повтор, 403 — where заново, V/08.3), трубка — DELETE на двери со свежим токеном. Отметка через
+// записи (POST /rec/requests, unit — id записи, V/08.2). Живое: первый зритель заводит раздачу камеры (POST /live/streams {cam}; 409 exists — дальше), offer на
+// дверь шлюза /whep/<камера>?stream= (404/503 — повтор, 404 «stream refused» — без повтора, 403 — where заново, V/08.3), трубка — DELETE на двери со свежим токеном. Отметка через
 // console.api; опрос не трогает плеер; выбор другого объекта кладёт трубку. (По образцу продуктового shell-video.)
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
@@ -23,7 +23,7 @@ b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main"},{id:"1-b",cam
 b.FIX["/rec/disks"]={disks:[{name:"main",kind:"local",server:"box-a"},{name:"old",kind:"local",server:"box-b"},{name:"gone",kind:"local",server:"box-c"},{name:"card",kind:"backup",server:"cam-a"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
 b.FIX["/live/streams"]={configured:[],rows:[]};
-b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
+b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор",full:"5"},{id:5,main:"2",profile:"sub"}],rows:[{id:1,worker:"w-1",phase:"running"}]};   // 5 — поток камеры 2, её полный экран (V/01.1 Н1.1а)
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[{t:now-500,kind:"camera.footage.lost",subsystem:"cam",unit:"1",epoch:3,lost_s:20}],state:"live"};
 (async()=>{
@@ -36,9 +36,10 @@ const TL={
   "http://box-b:9001":[{start_ms:ms(now-900),end_ms:ms(now-700),epoch:2},{start_ms:ms(now-600),end_ms:ms(now-300),epoch:3}],   // второй — близнец: уже есть у своей двери
   "http://cam-a:9001":[{start_ms:ms(now-650),end_ms:ms(now-250),epoch:0,source:"device",yields:true}],
 };
-const asked=[];let liveTokens=0,whep=[],live404=1,live403=0,door401=0,door403=0,streamsPost=0;const calls=[];
-const J=(status,body,hdr={})=>Promise.resolve({status,ok:status<300,headers:{get:k=>hdr[k]??null},json:()=>Promise.resolve(body),text:()=>Promise.resolve(typeof body==="string"?body:JSON.stringify(body))});
-const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Authorization||"",m=(i||{}).method||"GET";calls.push([m,s,auth]);
+const asked=[];let liveTokens=0,whep=[],live404=1,live403=0,door401=0,door403=0,streamsPost=0,whep2=0;const calls=[];
+const R=(status,body,hdr)=>({status,ok:status<300,headers:{get:k=>hdr[k]??null},json:()=>Promise.resolve(body),text:()=>Promise.resolve(typeof body==="string"?body:JSON.stringify(body)),clone:()=>R(status,body,hdr)});
+const J=(status,body,hdr={})=>Promise.resolve(R(status,body,hdr));   // clone — страница читает тело 404 копией (Response.clone)
+const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Authorization||"",m=(i||{}).method||"GET";calls.push([m,s,auth,(i||{}).body]);
   if(s==="/rec/where/1")return J(200,DOOR("http://box-a:9001/","A1"));
   if(s==="/rec/where/1-b")return J(200,DOOR("http://cam-a:9001","C1"));
   if(s.startsWith("/rec/where/disks/old?"))return J(200,DOOR("http://box-b:9001","B1"));
@@ -48,6 +49,9 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
   if(host&&/\/timeline\//.test(s)){if(door403&&host[0]==="http://box-a:9001"){door403--;return J(403,{error:"forbidden"})}if(door401&&host[0]==="http://box-a:9001"){door401--;return J(401,{error:"door",reason:"expired"})}return J(200,TL[host[0]]||[])}
   if(s==="/live/where/1"){liveTokens++;return J(200,{door:{url:"http://gw-1:9002",token:"L"+liveTokens,expires:Date.now()/1000+120,routes:["whep"]}})}
   if(s==="http://gw-1:9002/whep/1"){whep.push(auth);if(live404){live404--;return J(404,{error:"no such stream"})}if(live403){live403--;return J(403,{error:"forbidden"})}return J(201,"v=0",{Location:"/whep/session/s1"})}
+  // раздача — камеры (V/03.1): where по камере; поток — на двери шлюза ?stream= (V/03.3 Н1.2); первый offer — 404 «stream refused»
+  if(s==="/live/where/2")return J(200,{door:{url:"http://gw-1:9002",token:"M",expires:Date.now()/1000+120,routes:["whep"]}});
+  if(s==="http://gw-1:9002/whep/2?stream=5"){whep2++;return whep2===1?J(404,{error:"stream refused"}):J(201,"v=0",{Location:"/whep/session/s2"})}
   if(s.startsWith("http://gw-1:9002/whep/session/"))return J(200,{});
   if(s==="/live/streams"&&m==="POST"){streamsPost++;return streamsPost>1?J(409,{error:"exists"}):J(201,{id:"1"})}
   if(s==="/rec/requests"&&m==="POST"){asked.push(JSON.parse(i.body));return J(202,{queued:{id:"x"}})}
@@ -95,6 +99,9 @@ out.noRetryOn401=calls.filter(([,u])=>u.startsWith("http://box-a:9001/timeline/1
 // живое: первый зритель заводит поток, ждёт место (404), offer на дверь шлюза с Bearer
 calls.length=0;main().querySelector("#liveBtn").click();await b.ready(2200);
 out.firstViewerMakesStream=calls.some(([m,u])=>m==="POST"&&u==="/live/streams")&&!calls.some(([,u])=>/^\/whep\//.test(u));
+// тело заведения раздачи — {cam}: раздача камеры, поток говорится у двери шлюза (V/03.1, V/03.3 Н1.2)
+const sp0=calls.find(([m,u])=>m==="POST"&&u==="/live/streams");
+out.cameraStreamBody=!!sp0&&JSON.stringify(JSON.parse(sp0[3]))==='{"cam":"1"}'&&calls.some(([m,u])=>m==="POST"&&u==="http://gw-1:9002/whep/1");
 out.offerAtDoor=whep.length===2&&whep.every(a=>/^Bearer L\d$/.test(a))&&/живое/.test(main().querySelector("#playing").textContent);
 // опрос не перерисовывает карточку, пока идёт просмотр
 const video=main().querySelector("video");await b.ready(900);
@@ -113,6 +120,16 @@ out.markViaApi=!!c&&c.body.note==="видел"&&c.body.unit==="cam/1"&&!("cam" i
 // другой объект — трубка положена
 pc.select("unit:cam/2");await b.ready(80);
 out.hangsUpOnSelect=w.eval("V.live")===null;
+// камера с полным экраном на потоке 5: раздача — камеры {cam: "2"}, offer на /whep/2?stream=5; 404 «stream refused» — сказано,
+// без повтора (V/03.3 Н4); следующий раз шлюз взял поток
+calls.length=0;main().querySelector('.pc-tabs [data-tab="vid"]').click();await b.ready(250);
+main().querySelector("#liveBtn").click();await b.ready(2200);   // повтор был бы через 1,5 с
+const posts=calls.filter(([m,u])=>m==="POST"&&u==="/live/streams");
+out.streamRefusedNoRetry=whep2===1&&!w.eval("V.live");
+main().querySelector("#liveBtn").click();await b.ready(600);
+out.streamBody=posts.length>0&&JSON.stringify(JSON.parse(posts[0][3]))==='{"cam":"2"}'&&whep2===2&&!!w.eval("V.live")&&
+  calls.some(([,u])=>u==="/live/where/2")&&!calls.some(([,u])=>/^\/live\/where\/2\./.test(u));
+w.eval("stopLive()");await b.ready(40);
 // участок, записанный самой камерой (yields), уступает регистратору
 const cut=w.eval(`JSON.stringify(yieldCut([{start:100,end:200},{start:50,end:300,yields:true},{start:400,end:500,yields:true}]).map(s=>[s.start,s.end,!!s.yields]).sort((a,b)=>a[0]-b[0]))`);
 out.yieldsCut=cut==='[[50,100,true],[100,200,false],[200,300,true],[400,500,true]]';

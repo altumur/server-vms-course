@@ -30,14 +30,14 @@ name: rec
 slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files:
 # a volume this subsystem opened, and at which address: read where the volume is gone; a
-# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`). What
+# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<camera key>.json`: `<cam>`, or `ref:<ref>` for another cluster's). What
 # a member's witness says to the domain (`domain.witness`) the resource's door gives out unasked. What
 # a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
 # addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
 # tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`):
 # the next process of the relay goes on from it while the centre is unreachable; and the
-# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<ref>.json`; ADR-0019).
+# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<camera key>.json`, V/02.9 Н1.3; ADR-0019).
 # What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
 # recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
 objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]}
@@ -72,6 +72,11 @@ unit:
     ref:            {type: string}                   # the camera's name in the domain (V/02.9 Н1.1): what the domain finds it by;
                                                      # the recorder checks it against `cam` (not `fixed`: a scenario orders a
                                                      # recording by its camera alone, V/07.4)
+    # WHICH STREAM of the camera it records (V/01.1 Н1.1а; the owner's decision 2026-10-26): the id of another stream of
+    # the camera; empty — the camera's main stream. The user's choice, not the platform's: the page suggests the largest.
+    # The door checks the stream is this camera's (its `main` is `cam`); the recorder checks again and records nothing of a
+    # stream that is not (`reason`). `cam` stays the camera — the recording's `about` (a grant on the camera covers it).
+    stream:         {type: string, ref: cam/cameras, must_match: {main: cam}}
     retention_days: {type: int,    default: 30, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
@@ -291,10 +296,12 @@ metrics:
   # The rounds of a relay's forwarder its store failed, per camera (the fifteenth review's blocker: one failure killed
   # the camera's loop in silence; now it is counted, said once in the log and the loop goes on — `upstream.<ref>.errors`).
   - {name: forwarder_errors_total, from: "heartbeat.upstream.<camera>.errors", agg: sum, type: counter}
-  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.absurd_frames", agg: sum, type: counter}
-  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.ahead_losses", agg: sum, type: counter}
-  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.repeats_dropped", agg: sum, type: counter}
-  - {name: ingest_dropped_total, from: "heartbeat.ingest_streams.<camera>.dropped", agg: sum, type: counter}
+  # The ingest's frames are a stream's, its clock the camera's (V/02.9 Н1.10): `<camera>` — the camera's key (its id, or
+  # `ref:<ref>` for another cluster's), `<stream>` — the stream ("" — the main one).
+  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.absurd_frames", agg: sum, type: counter}
+  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.ahead_losses", agg: sum, type: counter}
+  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.repeats_dropped", agg: sum, type: counter}
+  - {name: ingest_dropped_total, from: "heartbeat.ingest_streams.<camera>.streams.<stream>.dropped", agg: sum, type: counter}
   - {name: ingest_clock_steps_total, from: "heartbeat.ingest_streams.<camera>.clock_steps", agg: sum, type: counter}
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
@@ -376,6 +383,7 @@ display:
   units_count: записей
   field_help:
     cam: камера, которую пишет запись
+    stream: "поток камеры, который пишет запись; пусто — основной"
     home: том, в котором лежит запись
     retention_days: сколько дней показывать
     min_depth_days: сколько дней должно быть не меньше

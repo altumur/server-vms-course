@@ -22,8 +22,13 @@ paths:
         - name: cam
           in: path
           required: true
-          description: id камеры — имя раздачи (V/03.1)
+          description: id камеры — имя раздачи (V/03.1 Н1.1)
           schema: {type: string, minLength: 1}
+        - name: stream
+          in: query
+          required: false
+          description: поток камеры — id её прочего потока; нет или пусто — основной; поток не этой камеры — 404 `stream refused` (Н1.2)
+          schema: {type: string}
       requestBody:
         required: true
         content:
