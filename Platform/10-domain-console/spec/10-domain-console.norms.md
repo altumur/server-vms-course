@@ -271,8 +271,11 @@ module:   какие двери модуль зовёт в режиме domain, 
 
 ```yaml
 door:          GET /domain/alarms?since=&until= у консоли домена (view); умолчание — сутки до now; не конечные числа или
-               since > until — 400 {error: "refused", detail: "since and until are times, in seconds"}; число — по
-               грамматике числа JSON целиком (без пробелов, «+», «_»), параметр не повторён (добавлено сверкой М11, A12)
+               since > until — 400 {error: "refused", detail: "since and until are times, in seconds"}; время — по
+               грамматике читателя time кодека строк после URL-декодирования (договор сторожевой и передачи
+               «Числовые параметры query»: 1e3, -1, «+», «_», пробел — отказ; detail отказа — свой, выше;
+               C06-EVENTS-QUERY-LEXEME-162-01, решение «Архитектора» 2026-10-27), параметр не повторён (добавлено сверкой
+               М11, A12)
 answer:        200 {since, until, events, members, complete, sentence} — функция alarms (Н3) на странице последнего отчёта
                каждого члена списка (держатель включён), истории (P/08.9 Н1.9) и свидетелях
 member_state:  ok | silent | not_reporting | never | unreadable

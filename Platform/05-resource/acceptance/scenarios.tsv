@@ -34,13 +34,17 @@ scenario	step	request	expect
 02-events-query	10	resource GET /events?from=%201	400
 02-events-query	11	resource GET /events?from=%D9%A1	400
 02-events-query	12	console GET /events?from=+1	400
-02-events-query	13	resource GET /events?from=1_0	200 {"events": [], "state": "live", "truncated": 0}
-02-events-query	14	resource GET /events?limit=%D9%A1	400
-02-events-query	15	resource GET /events?foo=	400
-02-events-query	16	resource GET /events?kind=a&kind=b	400
-02-events-query	17	resource GET /events/wait?want=testsub/k&timeout=1&foo=1	400
-02-events-query	18	resource GET /events/wait?want=testsub/k&since=%D9%A1&timeout=1	400
-02-events-query	19	resource POST /events {}	405
+02-events-query	13	console GET /events?from=%2B1	400
+02-events-query	14	console GET /events?from=%201	400
+02-events-query	15	console GET /events?from=1e3	400
+02-events-query	16	console GET /events?from=%31	200 {"events": [], "state": "~live"}
+02-events-query	17	resource GET /events?from=1_0	200 {"events": [], "state": "live", "truncated": 0}
+02-events-query	18	resource GET /events?limit=%D9%A1	400
+02-events-query	19	resource GET /events?foo=	400
+02-events-query	20	resource GET /events?kind=a&kind=b	400
+02-events-query	21	resource GET /events/wait?want=testsub/k&timeout=1&foo=1	400
+02-events-query	22	resource GET /events/wait?want=testsub/k&since=%D9%A1&timeout=1	400
+02-events-query	23	resource POST /events {}	405
 08-resource-paths	1	resource GET /mirrored/srv-b/../../../../etc/hosts	404
 08-resource-paths	2	resource GET /mirrored/..	404
 08-resource-paths	3	resource GET /mirrored/srv-b/..%2F..%2Fetc%2Fhosts	404

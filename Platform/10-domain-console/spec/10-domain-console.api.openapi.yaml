@@ -801,13 +801,15 @@ paths:
         required: false
         schema:
           type: number
-        description: Число по грамматике числа JSON целиком; умолчание — now − сутки (Н1.8 door).
+        description: Время по грамматике читателя time кодека строк после URL-декодирования (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01); умолчание
+          — now − сутки (Н1.8 door).
       - name: until
         in: query
         required: false
         schema:
           type: number
-        description: Число по грамматике числа JSON целиком; умолчание — now (Н1.8 door).
+        description: Время по грамматике читателя time кодека строк после URL-декодирования (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01); умолчание
+          — now (Н1.8 door).
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -2288,7 +2290,7 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
     AlarmsWindow:
-      description: 'since или until не конечные числа по грамматике числа JSON, повтор параметра или since > until (Н1.8 door);
+      description: 'since или until не по грамматике читателя time (договор сторожевой и передачи «Числовые параметры query»), повтор параметра или since > until (Н1.8 door);
         общий отказ разбора запроса — P/06.5 Н2'
       content:
         application/json:

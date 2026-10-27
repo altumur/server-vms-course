@@ -864,7 +864,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleEvents'
         '400':
-          description: Неверные параметры/чтение тела — TextError (Н2; параметры — P/05 Н1.3)
+          description: Неверные параметры/чтение тела — TextError (Н2; from, to, limit — договор сторожевой и передачи «Числовые
+            параметры query», прочие параметры — P/05 Н1.3)
           content:
             application/json:
               schema:
@@ -926,12 +927,16 @@ paths:
       - name: from
         in: query
         required: false
+        description: 'Время по грамматике читателя time кодека строк после URL-декодирования: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
+          конечное; иначе 400, detail — from (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 0
       - name: to
         in: query
         required: false
+        description: 'Время по грамматике читателя time кодека строк после URL-декодирования: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
+          конечное; иначе 400, detail — to (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 1000000000000.0
@@ -953,6 +958,8 @@ paths:
       - name: limit
         in: query
         required: false
+        description: 'Целое целым знаком после URL-декодирования: ^-?(0|[1-9][0-9]*)$, затем 1…10000; иначе 400, detail
+          — limit (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: integer
           minimum: 1
@@ -987,12 +994,16 @@ paths:
       - name: from
         in: query
         required: false
+        description: 'Время по грамматике читателя time кодека строк после URL-декодирования: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
+          конечное; иначе 400, detail — from (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 0
       - name: to
         in: query
         required: false
+        description: 'Время по грамматике читателя time кодека строк после URL-декодирования: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
+          конечное; иначе 400, detail — to (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 1000000000000.0
@@ -1014,6 +1025,8 @@ paths:
       - name: limit
         in: query
         required: false
+        description: 'Целое целым знаком после URL-декодирования: ^-?(0|[1-9][0-9]*)$, затем 1…10000; иначе 400, detail
+          — limit (договор сторожевой и передачи «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: integer
           minimum: 1
