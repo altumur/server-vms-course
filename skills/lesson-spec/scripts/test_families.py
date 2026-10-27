@@ -339,6 +339,17 @@ class Codec(FamiliesBase):
         self.assertEqual(judge.judge({"at": 1.0}, "object")["verdict"], "ok")       # значение без записи — по значению
         self.assertEqual(judge.judge('{"at": 1', "object")["verdict"], "refused")
 
+    def test_json_null_is_judged_not_skipped(self):
+        """JSON `null` вместо объекта — значение, его судит корень: отказ, а не «ok» (перепроверка Gemini 2026-10-27, п. 3)."""
+        form = load_form(b"dialect: data-form/1\nroot:\n  type: object\n  properties:\n    n:\n      type: integer\n",
+                         load_common(self.root / "Platform/common/data/common.form.yaml"))
+        for mode in ("writer", "reader"):
+            judge = Judge(form, mode)
+            for value in ("null", b"null", None):
+                with self.subTest(mode=mode, value=value):
+                    self.assertEqual(judge.judge(value, "object")["verdict"], "refused")
+            self.assertEqual(judge.judge('{"n": 1}', "object")["verdict"], "ok")
+
 
 class SectionText(FamiliesBase):
     def test_section_is_deterministic_and_projects_the_source(self):

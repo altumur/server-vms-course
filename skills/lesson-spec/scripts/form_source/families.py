@@ -394,6 +394,9 @@ def list_text(items):
     return ",".join(items)
 
 
+_UNREAD = object()                                      # значение не прочитано — отказ уже записан
+
+
 class Judge(Loader):
     """Судья схемы семьи: тот же обход формы, что у загрузчика формы 2.1 (judge.Loader.node), плюс кодек строки
     (`items` → значения) и слова схем семей. mode — `writer` (строгий) или `reader` (терпимый), DIALECT § 8."""
@@ -526,16 +529,18 @@ class Judge(Loader):
                 value = strict_json(value.decode("utf-8") if isinstance(value, bytes) else value)
             except (CodecError, UnicodeDecodeError) as exc:
                 self.fail(out, [], "value", "object: %s" % exc)
-                value = None
+                value = _UNREAD
         if kind == "row":
             value = self.decode_row(value, out)
+            if value is None:
+                value = _UNREAD
         elif kind == "file" and isinstance(value, bytes):
             try:
                 value = value.decode("utf-8")
             except UnicodeDecodeError:
                 self.fail(out, [], "value", "file: not UTF-8")
-                value = None
-        if value is not None:
+                value = _UNREAD
+        if value is not _UNREAD:                        # JSON null — значение, судится корнем (не «нечитаемо»)
             self.node(self.form.root, value, [], None, out)
         paths = canonical_paths([p for _, p, _ in out])
         return {"verdict": "refused" if out else "ok", "paths": [pointer(p) for p in paths],
