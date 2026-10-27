@@ -72,7 +72,8 @@ scenario	step	request	expect
 09-state	1	@start controller testsub2	ok
 09-state	2	@start worker testsub2 t-1	ok
 09-state	3	@as console store POST /v1/write {"id":"b3","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
-09-state	4	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"revision": 1}
-09-state	5	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
-09-state	6	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "1", "born": "~", "value": "{\"state\":\"open\"}"}}
-09-state	7	console2 GET /tallies	200 {"configured": [{"name": "t1", "state": {"result": {"state": "open"}}}]}
+09-state	4	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+09-state	5	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"revision": 1}
+09-state	6	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
+09-state	7	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "1", "born": "~", "value": "{\"state\":\"open\"}"}}
+09-state	8	console2 GET /tallies	200 {"configured": [{"name": "t1", "state": {"result": {"state": "open"}}}]}
