@@ -47,15 +47,16 @@ scenario	step	request	expect
 08-schema	3	console PUT /schema?version=0	400 {"error": "~a whole number from 1"}
 08-schema	4	console PUT /schema?version=1	200 {"version": 1}
 08-schema	5	console PUT /schema?version=99999999999999999999999	409
-09-drain-unreadable-pulse	1	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
-09-drain-unreadable-pulse	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
-09-drain-unreadable-pulse	3	@start controller	ok
-09-drain-unreadable-pulse	4	console POST /counters {"name": "d9"}	201
-09-drain-unreadable-pulse	5	@until 20 console GET /where/d9	200 {"worker": "w-1"}
-09-drain-unreadable-pulse	6	@spoil object testsub/heartbeats/w-1	ok
-09-drain-unreadable-pulse	7	console POST /drain?server=srv-a	2xx
-09-drain-unreadable-pulse	8	console GET /drain	200 {"draining": "srv-a", "safe": false, "would_strand": {"testsub": ["d9"]}, "subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-09-drain-unreadable-pulse	9	console DELETE /drain	2xx
+09-drain-unreadable-pulse	1	@start resource	ok
+09-drain-unreadable-pulse	2	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
+09-drain-unreadable-pulse	3	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
+09-drain-unreadable-pulse	4	@start controller	ok
+09-drain-unreadable-pulse	5	console POST /counters {"name": "d9"}	201
+09-drain-unreadable-pulse	6	@until 20 console GET /where/d9	200 {"worker": "w-1"}
+09-drain-unreadable-pulse	7	@spoil object testsub/heartbeats/w-1	ok
+09-drain-unreadable-pulse	8	console POST /drain?server=srv-a	2xx
+09-drain-unreadable-pulse	9	console GET /drain	200 {"draining": "srv-a", "safe": false, "would_strand": {"testsub": ["d9"]}, "subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+09-drain-unreadable-pulse	10	console DELETE /drain	2xx
 10-drain-strand	1	console POST /counters {"name": "d1", "start": 1}	201
 10-drain-strand	2	console POST /drain?server=srv-a	2xx
 10-drain-strand	3	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}

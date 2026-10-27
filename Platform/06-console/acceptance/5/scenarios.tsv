@@ -49,12 +49,13 @@ scenario	step	request	expect
 07-unreadable-intent	1	POST /counters {"name": "c7"}	201
 07-unreadable-intent	2	@as testsubcontroller store POST /v1/write {"id":"b1","op":"put","key":"testsub/controller/placement_intent","items":{"state":"bogus","manifest_rev":"1"}}	200
 07-unreadable-intent	3	GET /where/c7	503
-08-unreadable-worker-heartbeat	1	@start worker w-1	ok
-08-unreadable-worker-heartbeat	2	@until 30 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1"}]}}}
-08-unreadable-worker-heartbeat	3	@sigkill w-1	ok
-08-unreadable-worker-heartbeat	4	@spoil object testsub/heartbeats/w-1	ok
-08-unreadable-worker-heartbeat	5	GET /servers	200 {"policy": {"servers": "shared"}}
-08-unreadable-worker-heartbeat	6	GET /metrics	200 ~testsub_heartbeats_garbled 1
+08-unreadable-worker-heartbeat	1	@start resource	ok
+08-unreadable-worker-heartbeat	2	@start worker w-1	ok
+08-unreadable-worker-heartbeat	3	@until 30 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1"}]}}}
+08-unreadable-worker-heartbeat	4	@sigkill w-1	ok
+08-unreadable-worker-heartbeat	5	@spoil object testsub/heartbeats/w-1	ok
+08-unreadable-worker-heartbeat	6	GET /servers	200 {"policy": {"servers": "shared"}}
+08-unreadable-worker-heartbeat	7	GET /metrics	200 ~testsub_heartbeats_garbled 1
 09-shortage-metrics	1	POST /testsub2/shelves {"name": "s1", "server": "srv-a", "zone": "z", "kind": "plain", "enabled": true}	201
 09-shortage-metrics	2	POST /counters {"name": "c1"}	201
 09-shortage-metrics	3	POST /testsub2/tallies {"name": "t1", "of": "c1", "shelf": "s1", "zone": "z"}	201
@@ -118,10 +119,11 @@ scenario	step	request	expect
 18-id-default	3	POST /probe-x/probes {"n": 1}	201 {"label": "probe3", "n": 1}
 18-id-default	4	PUT /probe-x/probes/1 {"label": "renamed"}	200 {"label": "renamed", "revision": 2}
 18-id-default	5	PUT /probe-x/probes/1 {"n": 4}	200 {"label": "renamed", "n": 4, "revision": 3}
-19-place-held-no-row	1	@start worker testsub2 t-1 on srv-a	ok
-19-place-held-no-row	2	@until 20 @as testsub2worker store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1"}}
-19-place-held-no-row	3	store POST /v1/write {"id":"d1","op":"put","key":"testsub2/holds/s9","items":{"by":"t-1","holder":"$t1","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
-19-place-held-no-row	4	@until 30 GET /testsub2/servers	200 {"servers": {"srv-a": {"workers": [{"worker": "t-1"}]}}}
-19-place-held-no-row	5	GET /testsub2/where/shelves/s9?unit=ta	200 {"worker": "t-1", "place": "s9", "server": "srv-a"}
-19-place-held-no-row	6	store POST /v1/write {"id":"d2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
-19-place-held-no-row	7	GET /testsub2/where/shelves/s8?unit=ta	404 {"unreachable": "s8@?"}
+19-place-held-no-row	1	@start resource	ok
+19-place-held-no-row	2	@start worker testsub2 t-1 on srv-a	ok
+19-place-held-no-row	3	@until 20 @as testsub2worker store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1"}}
+19-place-held-no-row	4	store POST /v1/write {"id":"d1","op":"put","key":"testsub2/holds/s9","items":{"by":"t-1","holder":"$t1","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
+19-place-held-no-row	5	@until 30 GET /testsub2/servers	200 {"servers": {"srv-a": {"workers": [{"worker": "t-1"}]}}}
+19-place-held-no-row	6	GET /testsub2/where/shelves/s9?unit=ta	200 {"worker": "t-1", "place": "s9", "server": "srv-a"}
+19-place-held-no-row	7	store POST /v1/write {"id":"d2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
+19-place-held-no-row	8	GET /testsub2/where/shelves/s8?unit=ta	404 {"unreachable": "s8@?"}

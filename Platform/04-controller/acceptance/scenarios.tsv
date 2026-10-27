@@ -4,31 +4,33 @@ scenario	step	request	expect
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
 03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@time", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
-07-tie-first-by-name	1	@start controller	ok
-07-tie-first-by-name	2	@start worker w-2	ok
-07-tie-first-by-name	3	@start worker w-1	ok
-07-tie-first-by-name	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
-07-tie-first-by-name	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
-07-tie-first-by-name	6	@sleep 12	ok
-07-tie-first-by-name	7	console POST /counters {"name": "t7", "start": 1}	201
-07-tie-first-by-name	8	@until 30 store GET /v1/get?key=testsub/placement/t7	200 {"items": {"worker": "w-1"}}
+07-tie-first-by-name	1	@start resource	ok
+07-tie-first-by-name	2	@start controller	ok
+07-tie-first-by-name	3	@start worker w-2	ok
+07-tie-first-by-name	4	@start worker w-1	ok
+07-tie-first-by-name	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+07-tie-first-by-name	6	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+07-tie-first-by-name	7	@sleep 12	ok
+07-tie-first-by-name	8	console POST /counters {"name": "t7", "start": 1}	201
+07-tie-first-by-name	9	@until 30 store GET /v1/get?key=testsub/placement/t7	200 {"items": {"worker": "w-1"}}
 08-snapshot-garbled	1	@start controller	ok
 08-snapshot-garbled	2	@start resource	ok
 08-snapshot-garbled	3	@as console store POST /v1/write {"id":"c7","op":"put","key":"testsub/counters/s7","items":{"id":"s7","revision":"1","name":"s7","start":"notint"},"cas":""}	200
 08-snapshot-garbled	4	console POST /counters {"name": "s8", "start": 2}	201
 08-snapshot-garbled	5	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"worker": null, "counters": [{"id": "s8", "revision": 1, "name": "s8", "start": 2, "worker": null}]}
 08-snapshot-garbled	6	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"snapshot_rows_garbled": 1}
-11-group-by-without-value	1	@start controller testsub2	ok
-11-group-by-without-value	2	@start worker testsub2 t-1	ok
-11-group-by-without-value	3	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1"}}
-11-group-by-without-value	4	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
-11-group-by-without-value	5	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
-11-group-by-without-value	6	console2 POST /tallies {"name": "ta", "of": "c1"}	201
-11-group-by-without-value	7	console2 POST /tallies {"name": "tb", "of": "c1"}	201
-11-group-by-without-value	8	@as console store POST /v1/write {"id":"a1","op":"put","key":"testsub2/tallies/tc","items":{"id":"tc","revision":"1","name":"tc","of":"c1","feed":"::not a url"},"cas":""}	200
-11-group-by-without-value	9	@until 30 console2 GET /where/ta	200 {"worker": "t-1"}
-11-group-by-without-value	10	@until 30 console2 GET /where/tb	200 {"worker": "t-1"}
-11-group-by-without-value	11	@until 30 console2 GET /where/tc	200 {"worker": "t-1"}
+11-group-by-without-value	1	@start resource	ok
+11-group-by-without-value	2	@start controller testsub2	ok
+11-group-by-without-value	3	@start worker testsub2 t-1	ok
+11-group-by-without-value	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1"}}
+11-group-by-without-value	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+11-group-by-without-value	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+11-group-by-without-value	7	console2 POST /tallies {"name": "ta", "of": "c1"}	201
+11-group-by-without-value	8	console2 POST /tallies {"name": "tb", "of": "c1"}	201
+11-group-by-without-value	9	@as console store POST /v1/write {"id":"a1","op":"put","key":"testsub2/tallies/tc","items":{"id":"tc","revision":"1","name":"tc","of":"c1","feed":"::not a url"},"cas":""}	200
+11-group-by-without-value	10	@until 30 console2 GET /where/ta	200 {"worker": "t-1"}
+11-group-by-without-value	11	@until 30 console2 GET /where/tb	200 {"worker": "t-1"}
+11-group-by-without-value	12	@until 30 console2 GET /where/tc	200 {"worker": "t-1"}
 12-sigkill-presence	1	@start controller	ok
 12-sigkill-presence	2	@start resource	ok
 12-sigkill-presence	3	@start worker w-1	ok
@@ -40,20 +42,21 @@ scenario	step	request	expect
 12-sigkill-presence	9	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-2"]}
 12-sigkill-presence	10	@until 60 store GET /v1/get?key=testsub/placement/c12	200 {"items": {"worker": "w-2"}}
 12-sigkill-presence	11	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "move", "why": "~gone"}}}
-13-capture-taking	1	@start controller	ok
-13-capture-taking	2	@start worker w-1	ok
-13-capture-taking	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
-13-capture-taking	4	console POST /counters {"name": "c13", "start": 1}	201
-13-capture-taking	5	@until 30 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
-13-capture-taking	6	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "1"}}
-13-capture-taking	7	@start worker w-2	ok
-13-capture-taking	8	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
-13-capture-taking	9	@sigkill w-1	ok
-13-capture-taking	10	@as testsubworker store POST /v1/write {"id":"9a13","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"1999999999","released":"taking","gen":"2","server":"srv-a"}}	200
-13-capture-taking	11	@sleep 10	ok
-13-capture-taking	12	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
-13-capture-taking	13	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
-13-capture-taking	14	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
+13-capture-taking	1	@start resource	ok
+13-capture-taking	2	@start controller	ok
+13-capture-taking	3	@start worker w-1	ok
+13-capture-taking	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
+13-capture-taking	5	console POST /counters {"name": "c13", "start": 1}	201
+13-capture-taking	6	@until 30 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
+13-capture-taking	7	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "1"}}
+13-capture-taking	8	@start worker w-2	ok
+13-capture-taking	9	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+13-capture-taking	10	@sigkill w-1	ok
+13-capture-taking	11	@as testsubworker store POST /v1/write {"id":"9a13","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"1999999999","released":"taking","gen":"2","server":"srv-a"}}	200
+13-capture-taking	12	@sleep 10	ok
+13-capture-taking	13	store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-1"}}
+13-capture-taking	14	@until 60 store GET /v1/get?key=testsub/placement/c13	200 {"items": {"worker": "w-2", "reason": "~slot w-1 capture did not finish"}}
+13-capture-taking	15	@until 30 store GET /v1/get?key=testsub/epoch/c13	200 {"items": {"epoch": "2"}}
 14-grow-on-order	1	@start resource	ok
 14-grow-on-order	2	@start controller testsub2	ok
 14-grow-on-order	3	console POST /counters {"name": "c1"}	201

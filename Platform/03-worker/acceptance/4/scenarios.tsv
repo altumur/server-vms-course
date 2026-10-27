@@ -1,13 +1,14 @@
 scenario	step	request	expect
 # Приёмка P/03.4: остановка по SIGTERM, стенд testsub под раннером. Перенесено из М10/05 (стадия B). Формат — README.
-03-sigterm	1	@start controller	ok
-03-sigterm	2	@start worker w-1	ok
-03-sigterm	3	console POST /counters {"name": "c3", "start": 1}	201
-03-sigterm	4	@until 30 store GET /v1/get?key=testsub/epoch/c3	200 {"items": {"epoch": "1"}}
-03-sigterm	5	@sigterm w-1	ok
-03-sigterm	6	@until 25 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true", "gen": "1"}}
-03-sigterm	7	store GET /v1/get?key=testsub/epoch/c3	200 {"items": {"epoch": "1"}}
-03-sigterm	8	@until 30 store GET /v1/get?key=testsub/placement/c3	200 {"items": {"worker": "", "reason": "~slot w-1 released"}}
+03-sigterm	1	@start resource	ok
+03-sigterm	2	@start controller	ok
+03-sigterm	3	@start worker w-1	ok
+03-sigterm	4	console POST /counters {"name": "c3", "start": 1}	201
+03-sigterm	5	@until 30 store GET /v1/get?key=testsub/epoch/c3	200 {"items": {"epoch": "1"}}
+03-sigterm	6	@sigterm w-1	ok
+03-sigterm	7	@until 25 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true", "gen": "1"}}
+03-sigterm	8	store GET /v1/get?key=testsub/epoch/c3	200 {"items": {"epoch": "1"}}
+03-sigterm	9	@until 30 store GET /v1/get?key=testsub/placement/c3	200 {"items": {"worker": "", "reason": "~slot w-1 released"}}
 13-pulse-counters	1	@start resource	ok
 13-pulse-counters	2	@start controller	ok
 13-pulse-counters	3	@start worker w-1	ok
