@@ -8,7 +8,9 @@
 
 Манифесты — `testsub` и `testsub2` (`Source/tests/testdata/*.subsystem.yaml`), загруженные вместе: каталог манифестов
 из обоих. `testsub2/tallies` — таблица, которую заказывает библиотека `testsub` (`worker.creates`), поэтому большинство
-случаев — на ней.
+случаев — на ней. Во входе единой команды `vectors` манифесты — `files` с ключами
+`testsub.subsystem.yaml` и `testsub2.subsystem.yaml` (байты этих файлов выгрузки); `cells` — `unit`, `op`, `body`,
+`stored`, `rows` (опись C04/C06-NEXT-167, решение «Архитектора» 2026-10-27).
 
 ## `cases.tsv`
 
