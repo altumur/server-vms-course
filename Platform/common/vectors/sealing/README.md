@@ -32,6 +32,7 @@ nonce — первые 12 байт `sha256("w2c test <слово>")`; в раб�
 `aad.tsv` — `pointer`, `aad_hex`: объект `{"pointer": …, "aad_hex": …}` (вход — `row_key`, `path`); `envelope.tsv` —
 `envelope`: строка JSON конверта (вход — `key_hex`, `kid`, `nonce_b64url`, `row_key`, `pointer`, `plaintext`; открытие того же
 конверта — `open.tsv` своей функцией); `open.tsv`, `reseal.tsv`, `ring.tsv` — `expect`: значение JSON, слово (`sealed`,
-`unreadable`, строка `current …`) — строкой JSON. `ring.tsv`: вход единой команды `vectors` — `cells` `{file}`; у строк
-`rotate*` (по имени строки) ещё `rotate: true`; исход — код 0 и строка JSON как `expect`; строки `rotate*` исполняет
+`unreadable`, строка `current …`) — строкой JSON. `ring.tsv`: вход единой команды `vectors` — `cells` «имя → строка»: у строк
+`rotate*` (по имени строки) `{"file": <ячейка>, "rotate": "true"}` (`"true"` — строка, не булево JSON), у прочих
+ровно `{"file": <ячейка>}`; исход — код 0 и строка JSON как `expect`; строки `rotate*` исполняет
 только установщик (`02-installer`) (ACC-SEALING-RING-ROTATE-01, решение «Архитектора» 2026-10-27).
