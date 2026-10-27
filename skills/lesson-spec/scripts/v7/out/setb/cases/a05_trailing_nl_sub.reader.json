@@ -1,0 +1,7 @@
+{
+ "family": "<корень событий>/.workers/<sub>/<экземпляр>.lock",
+ "kind": "file",
+ "schema": "05-resource/data/presence-lock.form.yaml",
+ "mode": "reader",
+ "text": "{\"instance\":\"a\",\"sub\":\"a\\n\",\"worker\":\"\",\"server\":\"a\",\"pid\":1}"
+}

@@ -1,0 +1,8 @@
+name: probe
+unit:
+  rows: things
+  id: numeric
+  fields:
+    j: {type: json, default: [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

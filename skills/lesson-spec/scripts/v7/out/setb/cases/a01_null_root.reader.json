@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/controller/pass",
+ "kind": "object",
+ "schema": "04-controller/data/controller-pass.form.yaml",
+ "mode": "reader",
+ "text": "null"
+}

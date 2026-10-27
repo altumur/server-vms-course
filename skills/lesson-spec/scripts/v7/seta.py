@@ -54,6 +54,18 @@ def ref_layer(r):
 
 
 TEXT = None                                      # слой 1: None — свой (v7.textv7); --text ref — textlayer эталона
+WORKER = b"worker: {exec: /usr/lib/probe/worker}\n"
+# ADR-0092 п. 7 (корпус одной причины): файл без `worker:` дополняется — кроме случаев, где отсутствие и есть причина.
+P7_SKIP = {"empty_document", "a91_worker_missing"}
+
+
+def corpus_bytes(case, p7=True):
+    """Байты случая корпуса; p7 — дополнить `worker:` по п. 7 (вход набора А на В7). → (байты, дополнен ли)."""
+    import re
+    data = (CORPUS / "cases" / (case + ".subsystem.yaml")).read_bytes()
+    if not p7 or case in P7_SKIP or re.search(rb"(?m)^worker\s*:", data):
+        return data, False
+    return data + (b"" if data.endswith(b"\n") or not data else b"\n") + WORKER, True
 
 
 def manifest(go=None):
@@ -63,7 +75,7 @@ def manifest(go=None):
     for case, verdict in tsv(CORPUS / "verdicts.tsv"):
         if case == "case":
             continue
-        data = (CORPUS / "cases" / (case + ".subsystem.yaml")).read_bytes()
+        data, augmented = corpus_bytes(case)
         r = ref.judge(data)
         if go is not None:
             v = go.manifest(m, data)
@@ -75,7 +87,7 @@ def manifest(go=None):
         if v["layer"] == "relations":            # эталон называет пути строк класса файла (value раньше reference)
             cls = m.cls
             vpaths = stack.canonical(p for no, p in v["fired"] if cls[no] == v["relations_class"])
-        row = {"case": case, "expect": verdict, "ref": [r["verdict"], rl, r["paths"], rrows],
+        row = {"case": case, "expect": verdict, "p7_worker": augmented, "ref": [r["verdict"], rl, r["paths"], rrows],
                "v7": [v["verdict"], v["layer"], vpaths, v.get("rows", [])]}
         row["verdict_eq"] = r["verdict"] == v["verdict"]
         row["layer_eq"] = rl == v["layer"]

@@ -1,0 +1,7 @@
+{
+ "family": "<sub>/heartbeats/<имя>",
+ "kind": "object",
+ "schema": "03-worker/data/heartbeats.form.yaml",
+ "mode": "reader",
+ "text": "{\"worker\":\"a\",\"ts\":\"1\",\"status\":[{\"id\":\"a\",\"phase\":\"a\",\"epoch\":1,\"observed_revision\":1,\"revision\":1}],\"server\":\"a\",\"instance\":\"a\",\"build\":12345}"
+}

@@ -1,0 +1,8 @@
+name: probe
+unit:
+  rows: things
+  id: numeric
+  fields:
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {type: blob}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

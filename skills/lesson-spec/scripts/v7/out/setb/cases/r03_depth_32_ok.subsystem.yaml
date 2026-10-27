@@ -1,0 +1,9 @@
+# schema поля единицы глубиной ровно 32 — граница, проходит; норма М10/2 Н1.2а schema, P/06.1 Н1.4; пара строки 12 references.tsv
+name: probe
+unit:
+  rows: counters
+  id: numeric
+  fields:
+    rule: {type: json, schema: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {not: {type: string}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+placement: {capacity: {default: 4}}
+worker: {exec: /usr/lib/probe/worker}

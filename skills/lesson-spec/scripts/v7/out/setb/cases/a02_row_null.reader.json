@@ -1,0 +1,7 @@
+{
+ "family": "platform/manifest/<sub>",
+ "kind": "row",
+ "schema": "02-installer/data/manifest-row.form.yaml",
+ "mode": "reader",
+ "text": "null"
+}

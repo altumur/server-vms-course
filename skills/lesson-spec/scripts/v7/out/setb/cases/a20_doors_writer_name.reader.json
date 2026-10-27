@@ -1,0 +1,7 @@
+{
+ "family": "platform/doors/<сервер>",
+ "kind": "row",
+ "schema": "05-resource/data/doors.form.yaml",
+ "mode": "reader",
+ "text": "{\"url\":\"a\",\"since\":\"1\",\"at\":\"1\",\"zz_extra\":\"0\"}"
+}
