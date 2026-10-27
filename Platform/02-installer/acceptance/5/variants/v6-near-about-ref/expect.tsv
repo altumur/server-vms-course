@@ -1,0 +1,24 @@
+# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты манифестов»): роль, действие, ключ, allow | deny.
+# Контроллер читает строки подсистемы, на которую ссылается его манифест — near.sub (vb), about.sub (vc), ref (vd), — по
+# каталогу данных: placement, workers, policy, decommissioned, placement_turn, placement_intent, строки единиц, slots, holds,
+# таблицы; эпоху, idem, просьбы — нет; пишет только своё (P/02.5 Н1.4 строка <s>controller; решение «Архитектора» 2026-10-27).
+role	action	key	expect
+vbcontroller	read	va/items/u1	allow
+vbcontroller	read	va/placement/u1	allow
+vbcontroller	read	va/slots/w-1	allow
+vbcontroller	read	va/epoch/u1	deny
+vbcontroller	read	va/idem/k1	deny
+vbcontroller	write	va/items/u1	deny
+vccontroller	read	va/items/u1	allow
+vccontroller	read	va/workers/w-1	allow
+vccontroller	read	va/holds/p1	allow
+vccontroller	read	va/epoch/u1	deny
+vccontroller	write	va/placement/u1	deny
+vdcontroller	read	va/items/u1	allow
+vdcontroller	read	va/policy	allow
+vdcontroller	read	va/controller/placement_turn	allow
+vdcontroller	read	va/next_id	deny
+vdcontroller	write	va/items/u1	deny
+vacontroller	read	vb/things/x	deny
+vacontroller	read	vc/notes/x	deny
+vacontroller	read	vd/links/x	deny

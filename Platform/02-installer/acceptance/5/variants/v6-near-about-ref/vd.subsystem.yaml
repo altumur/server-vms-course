@@ -1,0 +1,12 @@
+name: vd
+unit:
+  rows: links
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    item:   {type: string, ref: va/items}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+worker: {exec: /usr/lib/vd/worker}

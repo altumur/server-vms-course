@@ -74,9 +74,10 @@ null`); сц. 12 — роли домена.
 | `v2-requests` | `va` с `requests`, `vb` с `worker.requests: [va]` | `requests/*` консоли только у `va`; подача `vbworker` в `va`; метки `objects/va/commands/*` (R8, R9) |
 | `v3-objects-rows` | `va` с `objects.rows: [marks/]` | `marks/` → `objects/va/marks/*` (R10) |
 | `v4-domain-kept` | `va` с `domain.kept: [ledger, badges/]` | `vadomain` пишет слот и `kept`; `domainagent` — по форме объявления и без слота и пульса воркера на домене (R4, R3) |
+| `v6-near-about-ref` | `va`; `vb` с `placement.near.sub: va`, `vc` с `about.sub: va`, `vd` с полем `ref: va/items` | контроллер читает строки `va` по каталогу (`placement`, `workers`, `slots`, `holds`, строки единиц, `policy`, `placement_turn`), не эпоху, `idem`, `next_id` и не пишет; обратной связи нет (решение «Архитектора» 2026-10-27; P/03 Go 084a3ee9, P/03.6 сц. 07) |
 | `v5-secret-domainworker` | `va` с `secrets.readers: {va/vault: [domainworker]}` и `kept` | `domainworker` → `vadomain` читает, прочие — нет (R6) |
 
-Манифесты вариантов байт в байт те, на которых сверка генерировала права обеих реализаций, — обе их загружают.
+Манифесты вариантов `v1`–`v5` байт в байт те, на которых сверка генерировала права обеих реализаций, — обе их загружают; `v6-near-about-ref` — решение «Архитектора» 2026-10-27.
 
 ## Проверки вне сценарного файла
 

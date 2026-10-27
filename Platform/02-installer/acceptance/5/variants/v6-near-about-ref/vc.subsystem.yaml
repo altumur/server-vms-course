@@ -1,0 +1,13 @@
+name: vc
+about: {sub: va, field: of}
+unit:
+  rows: notes
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    of:     {type: string, required: true, fixed: true}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+worker: {exec: /usr/lib/vc/worker}
