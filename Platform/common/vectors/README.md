@@ -43,6 +43,7 @@
 | запись присланного срока `valid_until` | [`deadline/`](deadline/README.md) | P/06.4 (договор просьбы) | договор просьбы и её метки «Просьба» `valid_until` (C47-DEADLINE-VECTORS-01) |
 | пул, хранитель места, `idle_by_policy`, `placeable` | [`pool/`](pool/README.md) | P/04 (участник — консоль P/06.5) | [договор пула](../contracts/pool.md) (C06-SERVER-POLICY-33-01) |
 | имя слота: слотовый порядок, следующий номер, номер процесса роли | [`slot-name/`](slot-name/README.md) | P/03.2 | [договор имени слота](../contracts/slot-name.md) (POOL-ORDER-51-01) |
+| удержание бакета строкой удержания: объявление, строка, отрезок бакета → `held` \| `not_held` \| `unknown` | [`holds/`](holds/README.md) | P/06.4 (исполняет ресурс P/05) | [договор удержаний](../contracts/holds.md) (ADR-0083 доп. (37) п. 5) |
 | действующее удержание места | [`hold-state/`](hold-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Удержание места» (C06-WHERE-PLACE-HOLD-33-01) |
 | суждение о строке слота | [`slot/`](slot/README.md) | P/03.2 | [договор слота](../contracts/slot.md) (C140-SLOT-TIME-01) |
 | очередь писателя: последовательности над строкой очереди | [`turn/`](turn/README.md) | P/04 | [договор очереди писателя](../contracts/turn.md) (C08-TURN-SELF-99) |
