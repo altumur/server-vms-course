@@ -22,8 +22,8 @@ t15_merge_key	corpus	base; `<<: {…}` в отображении	refused:text	п
 t16_tag	corpus	base; `unit: !!str counter`	refused:text	п. 2: тег	Н1.1
 t17_dup_key	corpus	base; `name` дважды	refused:text [["name"]]	п. 2: повтор ключа	Н1.1
 t18_key_collection	corpus	base; `[a, b]: 1` ключом	refused:text	п. 2: ключ-коллекция	Н1.1
-t19_depth_65	corpus	base; значение json поля глубиной 65	refused:text	п. 2: глубина > 64	Н1.1
-t20_depth_64_ok	corpus	base; то же глубиной 64 (и связь depth ≤ 32 не на этом месте)	refused:relations или ok — уточнить место	п. 2: глубина 64 допустима текстом	Н1.1
+t19_depth_65	corpus	base; `unit: {rows: things, id: numeric}` → блоком с `fields: {j: {type: json, default: [[…[1]…]]}}` — 61 вложенный список (глубина текста 65)	refused:text	п. 2: глубина > 64	Н1.1; проверено: эталон, Python, Go — refused text
+t20_depth_64_ok	corpus	то же, 60 вложенных списков (глубина текста 64: корень, unit, fields, j, 60 списков); место без связи depth	ok	п. 2: глубина 64 допустима текстом; решение «Архитектора» по набору Б	Н1.1; проверено: эталон, Python, Go — ok
 t21_root_not_col1	corpus	base, каждая строка с отступом в 1 пробел	refused:text	п. 2: корень — блочное отображение с колонки 1	ADR-0092 п. 2
 t22_root_flow	corpus	`{name: x, …}` одной строкой	refused:text	п. 2	ADR-0092 п. 2
 t23_quoted_true_string	corpus	base; `unit: "true"`	ok (строка)	п. 2: скаляр по стилю узла	ADR-0092 п. 2
@@ -55,7 +55,6 @@ r06_text_enum_numeric_ok	corpus	base; поле `type: int, enum: [1]`, `display.
 r07_split_unknown_table	corpus	base; `metrics: [{name: m, count: "count nosuch"}]`	refused:relations	split (расширение strings)	references.tsv:57
 r08_unique_keys	corpus	base; `domain.keys: [{id: a}, {id: a}]`	refused:relations	unique	references.tsv:115
 r09_prefix_free	corpus	base; `worker.reads: ["a/", "a/b"]`	refused:relations	prefix_free	references.tsv:94
-r10_number_equality	corpus	base; связь `=` между 1 и 1.0 (если достижима формой)	равенство по значению (CEL: 1 == 1.0)	DIALECT § 6; Ф9 — недостижима формой манифеста (доп. (6))	ADR-0087 доп. (6)
 a01_null_root	family-read	семья-объект (каждая из 20), текст `null`, оба режима	refused [""] исход ""	п. 13: корень null	ревью Claude 4.1
 a02_row_null	family-read	семья-строка, текст `null`	refused [""] исход ""	п. 13	DIALECT § 8
 a03_number_1e400_reader	family-read	<sub>/controller/pass, `seconds: 1e400`, читатель	refused ["/seconds"] (эталон: ok)	дефект эталона (Б)	ADR-0092 Confirmation

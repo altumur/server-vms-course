@@ -242,6 +242,31 @@ class TestDefects(unittest.TestCase):
             go.close()
 
 
+class TestRelations(unittest.TestCase):
+    """Слой связей: равенство диалекта — числа по значению (`1 = 1.0`, свод Ф9), bool не число (DIALECT § 6); формой
+    манифеста недостижимо (ADR-0087 доп. (6)) — проверено на среде CEL связей обоих языков (решение по набору Б, r10)."""
+
+    EXPRS = {'doc.a == doc.b': True, 'doc.a in [doc.b]': True, 'doc.t == doc.a': False, 'doc.t in [1, 1.0]': False,
+             '[doc.a] == [doc.b]': True, '{"k": doc.a} == {"k": doc.b}': True, 'doc.s == doc.a': False}
+    DOC = {"a": 1, "b": 1.0, "t": True, "s": "1"}
+
+    def test_python(self):
+        rows = [{"no": i, "cel": "(%s) ? [] : [{\"p\": [\"x\"]}]" % e} for i, e in enumerate(self.EXPRS)]
+        r = stack.PyCel({"env": {"extensions": [{"name": "strings"}, {"name": "two-var-comprehensions"}]},
+                         "rows": rows}).run(self.DOC)
+        got = {list(self.EXPRS)[no]: False for no, _ in r}
+        self.assertEqual({e: got.get(e, True) for e in self.EXPRS}, self.EXPRS)
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_go(self):
+        go = gorun.Go()
+        try:
+            for e, want in self.EXPRS.items():
+                self.assertEqual(go.call({"op": "cel_eval", "expr": e, "doc": self.DOC})["value"], want, e)
+        finally:
+            go.close()
+
+
 class TestYaml(unittest.TestCase):
     """Слой 1 (п. 2) на обоих языках: дефекты парсеров D9–D17 — красный без своей проверки (парсер один), зелёный со
     слоем; на Go — если собран раннер."""
