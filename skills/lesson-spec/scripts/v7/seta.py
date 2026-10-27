@@ -41,10 +41,10 @@ def reference_loader():
                   SPEC / "02.1-installer.scalars.tsv")
 
 
-def v7_manifest(go=None):
+def v7_manifest(go=None, text=None):
     sch = json.loads((OUT / "02.1-installer.schema.json").read_text(encoding="utf-8"))
     rel = json.loads((OUT / "02.1-installer.relations.json").read_text(encoding="utf-8"))
-    return stack.Manifest(sch, rel, go.cel() if go else None), sch
+    return stack.Manifest(sch, rel, go.cel() if go else None, text), sch
 
 
 def ref_layer(r):
@@ -53,9 +53,12 @@ def ref_layer(r):
     return "relations" if r["layer"] == "relations" else LAYER[r["class"]]
 
 
+TEXT = None                                      # слой 1: None — свой (v7.textv7); --text ref — textlayer эталона
+
+
 def manifest(go=None):
     ref = reference_loader()
-    m, sch = v7_manifest(go)
+    m, sch = v7_manifest(go, TEXT if TEXT is not None or go is None else go.text)
     out = []
     for case, verdict in tsv(CORPUS / "verdicts.tsv"):
         if case == "case":
@@ -94,7 +97,12 @@ def main(argv=None):
     ap.add_argument("what", choices=["manifest", "canonical", "families"])
     ap.add_argument("--go", action="store_true")
     ap.add_argument("--out")
+    ap.add_argument("--text", choices=["v7", "ref"], default="v7")
     a = ap.parse_args(argv)
+    global TEXT
+    if a.text == "ref":
+        from form_source.source import textlayer
+        TEXT = textlayer
     go = None
     if a.go:
         from v7 import gorun
@@ -110,7 +118,8 @@ def main(argv=None):
         from v7 import family_corpus
         rows = family_corpus.seta(go)
         keys = ["verdict_eq", "paths_eq", "outcome_eq"]
-    out = Path(a.out) if a.out else OUT / "seta" / ("%s%s.jsonl" % (a.what, "-go" if a.go else ""))
+    tag = ("-go" if a.go else "") + ("-reftext" if a.text == "ref" else "")
+    out = Path(a.out) if a.out else OUT / "seta" / ("%s%s.jsonl" % (a.what, tag))
     out.parent.mkdir(parents=True, exist_ok=True)
     if a.what == "families":                     # корпус — family-read.jsonl; здесь — только расхождения
         if not a.go:
@@ -125,7 +134,7 @@ def main(argv=None):
     out.write_text("".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows_out),
                    encoding="utf-8")
     s = summary(rows, keys)
-    (OUT / "seta" / ("%s%s.summary.json" % (a.what, "-go" if a.go else ""))).write_text(json.dumps(s, ensure_ascii=False, sort_keys=True) + "\n",
+    (OUT / "seta" / ("%s%s.summary.json" % (a.what, tag))).write_text(json.dumps(s, ensure_ascii=False, sort_keys=True) + "\n",
                                                    encoding="utf-8")
     print(json.dumps(s, ensure_ascii=False))
     for r in rows:

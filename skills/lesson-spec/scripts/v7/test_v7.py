@@ -226,5 +226,108 @@ class TestDefects(unittest.TestCase):
             go.close()
 
 
+class TestYaml(unittest.TestCase):
+    """Слой 1 (п. 2) на обоих языках: дефекты парсеров D9–D17 — красный без своей проверки (парсер один), зелёный со
+    слоем; на Go — если собран раннер."""
+
+    def both(self, data):
+        from v7 import textv7
+        out = []
+        mods = [textv7] + ([self.go.text] if HAVE_GO else [])
+        for m in mods:
+            try:
+                m.load_text_map(data)
+                out.append("ok")
+            except m.TextRefused as exc:
+                out.append("refused:" + exc.rule)
+        return out
+
+    @classmethod
+    def setUpClass(cls):
+        cls.go = gorun.Go() if HAVE_GO else None
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.go:
+            cls.go.close()
+
+    def go_parses(self, data):
+        r = self.go.call({"op": "yaml_docs", "data": __import__("base64").b64encode(data).decode()})
+        return "parse_error" not in r
+
+    def ruamel_parses(self, data):
+        from ruamel.yaml import YAML
+        y = YAML(typ="safe", pure=True)
+        try:
+            list(y.parse(data.decode()))
+            return True
+        except Exception:                        # noqa: BLE001
+            return False
+
+    def test_d9_ruamel_big_escape(self):
+        d = b'a: "\\UFFFFFFFF"\n'
+        self.assertTrue(all(x.startswith("refused") for x in self.both(d)))
+
+    def test_d10_flow_empty_value(self):
+        d = b"lease: {unconfirmed_max:}\n"
+        self.assertEqual(set(self.both(d)), {"refused:flow"})
+
+    def test_d11_comment_after_quote(self):
+        d = b'key: "value"# c\n'
+        self.assertTrue(self.ruamel_parses(d))                        # дефект парсера
+        self.assertEqual(set(self.both(d)), {"refused:lexis"})
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d12_escape_quote(self):
+        d = b"double: \"quoted \\' scalar\"\n"
+        self.assertTrue(self.go_parses(d))
+        self.assertEqual(set(self.both(d)), {"refused:lexis"})
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d13_escaped_slash(self):
+        d = b'a: "x\\/y"\n'
+        self.assertFalse(self.go_parses(d))                            # дефект парсера
+        self.assertEqual(self.both(d), ["ok", "ok"])
+        self.assertEqual(self.go.text.load_text_map(d)[0], {"a": "x/y"})
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d14_block_header(self):
+        d = b"block: ># comment\n  scalar\n"
+        self.assertTrue(self.go_parses(d))
+        self.assertTrue(all(x.startswith("refused") for x in self.both(d)))
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d15_block_leading(self):
+        d = b"empty block scalar: >\n \n  \n   \n # comment\n"
+        self.assertTrue(self.go_parses(d))
+        self.assertTrue(all(x.startswith("refused") for x in self.both(d)))
+
+    def test_d16_trailing_spaces(self):
+        d = b"foo: |\n  x\n   "
+        self.assertEqual(set(self.both(d)), {"refused:bytes"})
+
+    @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
+    def test_d17_doc_end(self):
+        d = b"a: b\n...\n"
+        self.assertTrue(self.go_parses(d))
+        self.assertEqual(set(self.both(d)), {"refused:document"})
+
+    def test_tab_only_in_comment(self):
+        self.assertEqual(set(self.both(b"a: b # x\ty\n")), {"ok"})
+        self.assertEqual(set(self.both(b'a: "x\ty"\n')), {"refused:tab"})
+        self.assertEqual(set(self.both(b"a: |\n  x\ty\n")), {"refused:tab"})
+
+    def test_rare_rules(self):
+        for d in (b"a: [b,\n  c]\n", b'a: "b\n  c"\n', b"a: |2\n   x\n", b"? a\n: b\n", b"%YAML 1.2\n---\na: b\n"):
+            self.assertTrue(all(x.startswith("refused") for x in self.both(d)), d)
+
+    def test_style_scalars(self):
+        from v7 import textv7
+        t = textv7.load_text_map(b'a: "true"\nb: true\nc: TRUE\nd: 0x10\ne: ~\n')[0]
+        self.assertEqual(t, {"a": "true", "b": True, "c": True, "d": "0x10", "e": None})
+        if HAVE_GO:
+            self.assertEqual(self.go.text.load_text_map(b'a: "true"\nb: true\nc: TRUE\nd: 0x10\ne: ~\n')[0], t)
+
+
 if __name__ == "__main__":
     unittest.main()

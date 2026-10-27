@@ -13,6 +13,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"io"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -30,7 +32,38 @@ import (
 	"github.com/google/cel-go/ext"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
+	"go.yaml.in/yaml/v3"
 )
+
+// jsonable — значение yaml.v3 → JSON: ключи не строкой — "<nonstring>", числа вне JSON — строка с пометкой.
+func jsonable(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		for k, y := range x {
+			x[k] = jsonable(y)
+		}
+		return x
+	case map[any]any:
+		out := map[string]any{}
+		for k, y := range x {
+			out[fmt.Sprintf("<nonstring:%v>", k)] = jsonable(y)
+		}
+		return out
+	case []any:
+		for i, y := range x {
+			x[i] = jsonable(y)
+		}
+		return x
+	case float64:
+		if math.IsInf(x, 0) || math.IsNaN(x) {
+			return fmt.Sprintf("<float:%v>", x)
+		}
+		return x
+	case int, int64, uint64, bool, string, nil:
+		return x
+	}
+	return fmt.Sprintf("<%T:%v>", v, v)
+}
 
 type request struct {
 	Op       string          `json:"op"`
@@ -41,6 +74,8 @@ type request struct {
 	Schema   json.RawMessage `json:"schema"`
 	Expr     string          `json:"expr"`
 	Raw      bool            `json:"raw"`
+	Data     []byte          `json:"data"`
+	Scalars  string          `json:"scalars"`
 }
 
 type record struct {
@@ -545,6 +580,59 @@ func main() {
 				break
 			}
 			resp["value"] = v.Value()
+		case "text":                           // слой 1: байты → дерево (порядок автора) или отказ text
+			if scalarRows == nil || req.Scalars != "" {
+				if err := loadScalars(req.Scalars); err != nil {
+					resp["error"] = err.Error()
+					break
+				}
+			}
+			tree, numbers, empties, e := loadText(req.Data)
+			if e != nil {
+				resp["refused"] = e
+				break
+			}
+			resp["tree"] = json.RawMessage(tree)
+			resp["numbers"] = numbers
+			resp["empties"] = empties
+		case "yaml_docs":                      // yaml-test-suite: только парсер (go.yaml.in/yaml/v3), документы в JSON
+			dec := yaml.NewDecoder(bytes.NewReader(req.Data))
+			docs := []any{}
+			var perr error
+			for {
+				var node yaml.Node
+				err := dec.Decode(&node)
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					perr = err
+					break
+				}
+				var v any
+				if err := node.Decode(&v); err != nil {
+					docs = append(docs, "<construct:"+err.Error()+">")
+					continue
+				}
+				docs = append(docs, jsonable(v))
+			}
+			if false {
+				var v any
+				err := dec.Decode(&v)
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					perr = err
+					break
+				}
+				docs = append(docs, jsonable(v))
+			}
+			if perr != nil {
+				resp["parse_error"] = perr.Error()
+			} else {
+				resp["docs"] = docs
+			}
 		case "cel_load":
 			n, err := celLoad(req.File)
 			if err != nil {

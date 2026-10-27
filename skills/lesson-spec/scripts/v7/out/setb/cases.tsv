@@ -76,3 +76,4 @@ a17_writer_max_names	family-read	platform/manifest/<sub> (строка), лиш�
 a18_jcs_noncanonical	family-read	поле encoding: jcs, текст `{"b":1,"a":2}`, писатель / читатель	писатель refused [путь]; читатель ok	слой 3: JCS только у писателя	ADR-0088 доп. (2) С4
 a19_outcome_unit_field	family-read	<sub>/heartbeats/<имя>, `build: 12345`, читатель	refused ["/build"] исход /build (не "")	DIALECT § 9: единица `поле`	heartbeats.outcomes.tsv
 a20_doors_writer_name	family-read	platform/doors/<сервер>, имя `zz` (не room./live.), писатель / читатель	писатель refused ["/zz"]; читатель ok	propertyNames писателя в $defs.writer	05-resource doors.form.yaml
+t26_escape_U_overflow	corpus	base; `unit: "\\UFFFFFFFF"`	refused:text	п. 2; дефект эталона: textlayer ловит ValueError, ruamel 0.19.1 бросает OverflowError — эталон падает (D9)	генератор В7, TestYaml.test_d9

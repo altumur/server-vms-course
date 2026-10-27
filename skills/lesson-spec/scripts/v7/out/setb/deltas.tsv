@@ -1,42 +1,4 @@
 id	old	new	basis	check	status
-corpus/c5_int_capacity_4bigE0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_capacity_4bigE0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_capacity_4dot	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_capacity_4dot	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_capacity_4dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_capacity_4dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_capacity_4e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_capacity_4e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_capacity_4eplus0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_capacity_4eplus0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_field_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_field_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_field_default_1e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_field_default_1e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_field_f1_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_field_f1_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_lease_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_lease_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_int_lease_1e2	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
-canonical/corpus-c5_int_lease_1e2	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
-corpus/c5_key_long_1025_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): неявный ключ длиннее 1024 знаков (YAML 1.2.2 § 7.4.2)	слой 1	на утверждение человеком
-corpus/c5_unit_minus_word_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `unit: -` — элемент списка, не слово	слой 1	на утверждение человеком
-corpus/c9_flow_lone_dash_spaced	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `[ - , a ]` — ошибка разбора YAML	слой 1	на утверждение человеком
-corpus/c5_key_question_mark	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (`?x:` — простой ключ `?x`); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c5_value_next_line_flow	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (значение потоком строкой ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c5_value_next_line_plain	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (слово строкой ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c5_value_next_line_quoted	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (строка в кавычках ниже ключа); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c5_value_question_mark	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (значение `?x` — слово); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c7_seq_dash_scalar_below	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (скаляр строкой ниже голого `-`); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c7_word_continuation_comment	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (` # c` в строке продолжения — комментарий); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c8_word_hash_space	refused:text	refused:form	ADR-0092 п. 3: YAML 1.2.2 читает (`counter# c` — `#` часть слова); отказ держит посторонний отказ формы	слой 1	на утверждение человеком
-corpus/c3_tab_block_ok	ok	refused:text	ADR-0092 п. 4: TAB в блочном скаляре — отказ нормой	слой 1	на утверждение человеком
-corpus/c3_tab_quoted_ok	ok	refused:text	ADR-0092 п. 4: TAB в строке в кавычках — отказ нормой	слой 1	на утверждение человеком
-corpus/c4_block_tab_content_ok	ok	refused:text	ADR-0092 п. 4: TAB в содержимом блочного скаляра — отказ нормой	слой 1	на утверждение человеком
-corpus/c6_flow_map_empty_value	refused:value	refused:text	ADR-0092 п. 4: `{k:}` — отказ нормой	слой 1	на утверждение человеком
-canonical/corpus-c3_tab_block_ok	вектор (строка cases.tsv 51)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
-canonical/corpus-c3_tab_quoted_ok	вектор (строка cases.tsv 53)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
-canonical/corpus-c4_block_tab_content_ok	вектор (строка cases.tsv 54)	строки нет: вход отказан (п. 4)	ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»	слой 1	на утверждение человеком
 classes/a91_affinity_exclusive_not_bool	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/a91_affinity_exclusive_without_strict	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/a91_creates_key_adjacent	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
@@ -84,24 +46,47 @@ classes/c2_metrics_neither	value	form	ADR-0092 п. 6: класс — тип по
 classes/c2_metrics_values_not_label	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c2_metrics_values_with_count	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c3_about_sub_bad	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c4_default_without_value	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+corpus/c3_tab_block_ok	ok	refused:text	ADR-0092 п. 4: TAB в блочном скаляре — отказ нормой	стек В7	на утверждение человеком
+corpus/c3_tab_quoted_ok	ok	refused:text	ADR-0092 п. 4: TAB в строке в кавычках — отказ нормой	стек В7	на утверждение человеком
+corpus/c4_block_tab_content_ok	ok	refused:text	ADR-0092 п. 4: TAB в содержимом блочного скаляра — отказ нормой	стек В7	на утверждение человеком
+classes/c4_default_without_value	value	text	ADR-0092 п. 2: `{… default: }` — ключ потока без значения: `{k:}` (п. 4)	стек В7	на утверждение человеком
 classes/c4_display_fields_quoted_numeric_key	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c4_door_pass_rows	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c4_inherit_outside_enum	value	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_capacity_4bigE0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_capacity_4dot	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_capacity_4dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_capacity_4e0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_capacity_4eplus0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_field_default_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_field_default_1e0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_field_f1_default_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_lease_1dot0	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
-classes/c5_int_lease_1e2	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4bigE0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4bigE0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4dot	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4dot	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_capacity_4eplus0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_capacity_4eplus0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_default_1e0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_default_1e0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_field_f1_default_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_field_f1_default_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_lease_1dot0	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_lease_1dot0	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_int_lease_1e2	refused:value	ok	ADR-0092 п. 8: целое по значению; приведение 4.0 → 4	стек В7	на утверждение человеком
+canonical/corpus-c5_int_lease_1e2	нет вектора (отказ загрузчика)	новый вектор: принятый вход, целое приведено	ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор пополняется c5_int_*»	стек В7	на утверждение человеком
+corpus/c5_key_long_1025_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): неявный ключ длиннее 1024 знаков (YAML 1.2.2 § 7.4.2)	стек В7	на утверждение человеком
+classes/c5_key_question_mark	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): `?x:` — простой ключ `?x`	стек В7	на утверждение человеком
 classes/c5_retire_when_no_in	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+corpus/c5_unit_minus_word_ok	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `unit: -` — элемент списка, не слово	стек В7	на утверждение человеком
 classes/c5_unit_tRuE_is_bool	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c5_value_next_line_flow	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): значение потоком строкой ниже ключа	стек В7	на утверждение человеком
+classes/c5_value_next_line_plain	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): слово строкой ниже ключа	стек В7	на утверждение человеком
+classes/c5_value_next_line_quoted	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): строка в кавычках ниже ключа	стек В7	на утверждение человеком
+classes/c5_value_question_mark	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): значение `?x` — слово	стек В7	на утверждение человеком
+classes/c6_flow_map_empty_value	value	text	ADR-0092 п. 4: `{k:}` — отказ нормой	стек В7	на утверждение человеком
 classes/c6_secrets_reads_bare	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c7_float_underflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c7_seq_dash_scalar_below	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): скаляр строкой ниже голого `-`	стек В7	на утверждение человеком
+classes/c7_word_continuation_comment	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): ` # c` в строке продолжения — комментарий	стек В7	на утверждение человеком
 classes/c8_int_4301_digits	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c8_json_default_overflow	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c8_options_enum_float	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
@@ -165,6 +150,8 @@ classes/c8_ref9_unit_credentials_secret_undeclared	reference	relations	ADR-0092 
 classes/c8_requests_key_nested_brace	reference	relations	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c8_rules_below_form_failure	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c8_untyped_field_default	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+classes/c8_word_hash_space	text	form	ADR-0092 п. 3 (принять YAML 1.2.2): `counter# c` — `#` часть слова	стек В7	на утверждение человеком
+corpus/c9_flow_lone_dash_spaced	ok	refused:text	ADR-0092 п. 3 (принять YAML 1.2.2): `[ - , a ]` — ошибка разбора YAML	стек В7	на утверждение человеком
 classes/c9_is_not_null	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c9_one_of_rule_order	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/c9_seq_dash_dash	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
@@ -224,6 +211,12 @@ classes/status_worker	value	form	ADR-0092 п. 6: класс — тип по сл
 classes/unknown_depth4	key	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/unknown_multiple	key	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
 classes/worker_reads_bare	value	form	ADR-0092 п. 6: класс — тип по слою	стек В7	на утверждение человеком
+canonical/corpus-c3_tab_block_ok	вектор (строка cases.tsv 51)	строки нет: вход отказан	ADR-0092 п. 4: TAB в блочном скаляре — отказ нормой; Confirmation «векторы canonical 51, 53, 54»	стек В7	на утверждение человеком
+canonical/corpus-c3_tab_quoted_ok	вектор (строка cases.tsv 53)	строки нет: вход отказан	ADR-0092 п. 4: TAB в строке в кавычках — отказ нормой; Confirmation «векторы canonical 51, 53, 54»	стек В7	на утверждение человеком
+canonical/corpus-c4_block_tab_content_ok	вектор (строка cases.tsv 54)	строки нет: вход отказан	ADR-0092 п. 4: TAB в содержимом блочного скаляра — отказ нормой; Confirmation «векторы canonical 51, 53, 54»	стек В7	на утверждение человеком
+canonical/corpus-c5_key_long_1025_ok	вектор	строки нет: вход отказан	ADR-0092 п. 3 (принять YAML 1.2.2): неявный ключ длиннее 1024 знаков (YAML 1.2.2 § 7.4.2)	стек В7	на утверждение человеком
+canonical/corpus-c5_unit_minus_word_ok	вектор	строки нет: вход отказан	ADR-0092 п. 3 (принять YAML 1.2.2): `unit: -` — элемент списка, не слово	стек В7	на утверждение человеком
+canonical/corpus-c9_flow_lone_dash_spaced	вектор	строки нет: вход отказан	ADR-0092 п. 3 (принять YAML 1.2.2): `[ - , a ]` — ошибка разбора YAML	стек В7	на утверждение человеком
 diagnostics/dup_top_key_name	пути [["name"]], строки [36] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
 diagnostics/unknown_depth4	пути [["unit","fields","name","requried"]], строки [] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком
 diagnostics/unknown_multiple	пути [["placement","capcity"],["unit","fields","name","requried"],["unknown_top"]], строки [6,11,37] — строго	подсказка, не норма	ADR-0092 п. 5 (вердикт и код выхода строги)	—	на утверждение человеком

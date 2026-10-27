@@ -55,33 +55,44 @@ def deltas():
         r = man[case]["ref"]
         return "ok" if r[0] == "ok" else "refused:%s" % classes.get(case, r[1])
 
-    # п. 8 — «4.0 в месте целого» отменено
+    notes = dict(P3_REFUSED, **P3_PARSED, **P4)
+    extra = {"c2_flow_seq_pair": "`[a: 1]` — по YAML 1.2.2 отображение из одной пары; правила нет в тонкой проверке (п. 2)",
+             "c4_hash_after_flow": "`]# c` — парсер читает комментарием (D11); отказ держит форма",
+             "c4_hash_after_quote": "`\"a\"# c` — парсер читает комментарием (D11); отказ держит форма",
+             "c4_default_without_value": "`{… default: }` — ключ потока без значения: `{k:}` (п. 4)"}
+
+    def basis(case):
+        if case in P3_REFUSED or case in P3_PARSED:
+            return "ADR-0092 п. 3 (принять YAML 1.2.2): " + notes[case]
+        if case in P4:
+            return "ADR-0092 п. 4: %s — отказ нормой" % notes[case]
+        if case in extra:
+            return "ADR-0092 п. 2: " + extra[case]
+        return "ADR-0092 п. 6: класс — тип по слою"
+
     for case, r in sorted(man.items()):
-        if not r["verdict_eq"]:
-            out.append(("corpus/" + case, old_of(case), "ok", "ADR-0092 п. 8: целое по значению; приведение 4.0 → 4",
+        nv = "ok" if r["v7"][0] == "ok" else "refused:%s" % r["v7"][1]
+        if r["verdict_eq"]:
+            if case in classes and classes[case] != r["v7"][1]:
+                out.append(("classes/" + case, classes[case], r["v7"][1], basis(case), "стек В7"))
+            continue
+        if case.startswith("c5_int_"):
+            out.append(("corpus/" + case, old_of(case), nv, "ADR-0092 п. 8: целое по значению; приведение 4.0 → 4",
                         "стек В7"))
             out.append(("canonical/corpus-" + case, "нет вектора (отказ загрузчика)",
                         "новый вектор: принятый вход, целое приведено", "ADR-0092 п. 8; ADR-0087 доп. (7) правка «набор "
                         "пополняется c5_int_*»", "стек В7"))
-    for case, why in sorted(P3_REFUSED.items()):
-        out.append(("corpus/" + case, old_of(case), "refused:text", "ADR-0092 п. 3 (принять YAML 1.2.2): " + why,
-                    "слой 1"))
-    for case, why in sorted(P3_PARSED.items()):
-        out.append(("corpus/" + case, old_of(case), "refused:form",
-                    "ADR-0092 п. 3: YAML 1.2.2 читает (%s); отказ держит посторонний отказ формы" % why, "слой 1"))
-    for case, why in sorted(P4.items()):
-        out.append(("corpus/" + case, old_of(case), "refused:text", "ADR-0092 п. 4: %s — отказ нормой" % why, "слой 1"))
-    for case, no in sorted(P4_CANONICAL.items()):
-        out.append(("canonical/%s" % case, "вектор (строка cases.tsv %d)" % no, "строки нет: вход отказан (п. 4)",
-                    "ADR-0092 п. 4; Confirmation «векторы canonical 51, 53, 54»", "слой 1"))
-    # п. 6 — класс отказа по слою
-    for case, cls in sorted(classes.items()):
-        if case in P3_REFUSED or case in P3_PARSED or case in P4 or case not in man:
+        else:
+            out.append(("corpus/" + case, old_of(case), nv, basis(case), "стек В7"))
+    for r in jl("canonical.jsonl"):
+        if r["bytes_eq"]:
             continue
-        r = man[case]
-        new = "text" if cls == "text" else ("relations" if r["ref"][1] == "relations" else "form")
-        if new != cls:
-            out.append(("classes/" + case, cls, new, "ADR-0092 п. 6: класс — тип по слою", "стек В7"))
+        case = r["case"][len("corpus-"):] if r["case"].startswith("corpus-") else r["case"]
+        no = P4_CANONICAL.get(r["case"])
+        old = "вектор" + (" (строка cases.tsv %d)" % no if no else "")
+        new = "строки нет: вход отказан" if r["v7"] is None else "иные байты"
+        why = basis(case) + ("; Confirmation «векторы canonical 51, 53, 54»" if no else "")
+        out.append(("canonical/%s" % r["case"], old, new, why, "стек В7"))
     # п. 5 — пути и строки отказа загрузчика манифеста — подсказка
     for case, paths, lines in tsv(CORPUS / "diagnostics.tsv"):
         if case == "case":

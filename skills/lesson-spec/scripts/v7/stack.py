@@ -1,8 +1,8 @@
 """Стандартный стек В7 на Python (ADR-0092): JSON Schema 2020-12 (`jsonschema`), CEL (`cel-expr-python`) и свои слои.
 
 Слои (ADR-0092 «Свой остаток»):
-1. текст — слой текста эталона (`manifest_schema/textlayer.py`, ruamel.yaml 1.2 и тонкая проверка Н1.1) — вне
-   поручения генератора; числа вне `scalars.tsv` и пустые значения — отказ формы, как у эталона (открытый вопрос п. 6);
+1. текст — `textv7.py` (Python: ruamel.yaml 0.19.1) и `go/text.go` (Go: go.yaml.in/yaml/v3 v3.0.5): готовый парсер
+   и тонкая проверка (п. 2–4); числа вне `scalars.tsv` и пустые значения — отказ формы, как у эталона (открытый вопрос);
 2. целые манифеста: границы — в схеме (`minimum`/`maximum`), приведение `4.0` → `4` на месте `x-integer-place`;
 3. кодек строк семей (`x-codec`, `x-encoding`, `x-time`, `x-integer`, `x-whole`, `x-max-bytes`, `x-max-names`);
 4. место отказа (`norm_errors`): `required` — путь недостающего ключа, `additionalProperties: false` — путь лишнего,
@@ -220,16 +220,18 @@ def walk(sch, s, value, path, visit):
 class Manifest:
     """Загрузчик манифеста В7: текст → форма (JSON Schema) → целые (слой 2) → связи (CEL)."""
 
-    def __init__(self, schema_doc, relations_doc, cel_runner=None):
+    def __init__(self, schema_doc, relations_doc, cel_runner=None, text=None):
+        if text is None:
+            from v7 import textv7 as text
+        self.text = text                     # слой 1: v7.textv7 (свой) или textlayer эталона (для сравнения)
         self.sch = Schema(schema_doc)
         self.rel = relations_doc
         self.cel = cel_runner or PyCel(relations_doc)
 
     def judge(self, data):
-        from form_source.source import textlayer
         try:
-            tree, numbers, empties, lines = textlayer.load_text_map(data)
-        except textlayer.TextRefused as exc:
+            tree, numbers, empties, lines = self.text.load_text_map(data)
+        except self.text.TextRefused as exc:
             return {"verdict": "refused", "layer": "text", "paths": [list(exc.path)] if exc.path is not None else [],
                     "rows": []}
         if numbers or empties:                   # отказ формы на своём пути; прочие отказы формы — тоже (DIALECT § 5)

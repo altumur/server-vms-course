@@ -29,10 +29,35 @@ def typed(path, instance):
     return out
 
 
+SCALARS = str(Path(__file__).resolve().parents[4] / "Platform/02-installer/spec/02.1-installer.scalars.tsv")
+
+
+class TextRefused(Exception):
+    def __init__(self, d):
+        super().__init__("%s line %s: %s" % (d["rule"], d["line"], d["msg"]))
+        self.rule, self.line, self.msg, self.path = d["rule"], d["line"], d["msg"], d.get("path")
+
+
+class GoText:
+    """Слой 1 на Go (go/text.go) с тем же видом, что v7.textv7: load_text_map(байты) → (дерево, numbers, empties, {})."""
+    TextRefused = TextRefused
+
+    def __init__(self, go):
+        self.go = go
+
+    def load_text_map(self, data):
+        import base64
+        r = self.go.call({"op": "text", "data": base64.b64encode(data).decode("ascii"), "scalars": SCALARS})
+        if "refused" in r:
+            raise TextRefused(r["refused"])
+        return r["tree"], [(p, s) for p, s in r["numbers"] or []], [p for p in r["empties"] or []], {}
+
+
 class Go:
     def __init__(self):
         self.p = subprocess.Popen([BIN], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
         self.loaded = None
+        self.text = GoText(self)
 
     def call(self, req):
         self.p.stdin.write(json.dumps(req, ensure_ascii=False) + "\n")
@@ -65,7 +90,7 @@ class Go:
 
     def manifest(self, m, data, file=None):
         """Загрузчик манифеста: текст — слой эталона; форма — Go; связи — Go (m создан с go.cel())."""
-        from form_source.source import textlayer
+        textlayer = m.text
         file = file or str(Path(__file__).resolve().parent / "out" / "02.1-installer.schema.json")
         try:
             tree, numbers, empties, lines = textlayer.load_text_map(data)
