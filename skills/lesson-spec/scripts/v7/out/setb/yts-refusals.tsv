@@ -1,6 +1,7 @@
 # Набор Б, раздел «слой 1 сужает YAML 1.2.2»: тесты yaml-test-suite data-2022-01-17 без `error` (корректный
 # YAML 1.2.2), которые слой 1 (Python; Go — те же исходы, v7/yts.py) отказывает. rule — правило отказа;
-# parser — разобрал ли вход парсер (если нет — сужение от парсера, не от правила).
+# parser — разобрал ли вход парсер (если нет — сужение от парсера, не от правила). Сужение у Go то же, что у Python:
+# расхождения парсеров закрыты обходами (3UYS — D13).
 id	title	rule	parser
 229Q	Spec Example 2.4. Sequence of Mappings	root	парсер разобрал
 26DV	Whitespace around colon in mappings	anchor-alias-tag-merge	парсер разобрал
@@ -33,7 +34,7 @@ id	title	rule	parser
 4MUZ/02	Flow mapping colon on line after key	parser	парсер отказал
 4Q9F	Folded Block Scalar [1.3]	doc-start-content	парсер разобрал
 4QFQ	Spec Example 8.2. Block Indentation Indicator [1.3]	parser	парсер отказал
-4RWC	Trailing spaces after flow collection	last-spaces	парсер разобрал
+4RWC	Trailing spaces after flow collection	root	парсер разобрал
 4UYU	Colon in Double Quoted String	root	парсер разобрал
 4V8U	Plain scalar with backslashes	root	парсер разобрал
 4WA9	Literal scalars	root	парсер разобрал
@@ -122,8 +123,8 @@ DBG4	Spec Example 7.10. Plain Characters	root	парсер разобрал
 DC7X	Various trailing tabs	tab	парсер отказал
 DE56/00	Trailing tabs in double quoted	root	парсер разобрал
 DE56/01	Trailing tabs in double quoted	root	парсер разобрал
-DE56/02	Trailing tabs in double quoted	tab	парсер разобрал
-DE56/03	Trailing tabs in double quoted	tab	парсер разобрал
+DE56/02	Trailing tabs in double quoted	root	парсер разобрал
+DE56/03	Trailing tabs in double quoted	root	парсер разобрал
 DE56/04	Trailing tabs in double quoted	tab	парсер разобрал
 DE56/05	Trailing tabs in double quoted	tab	парсер разобрал
 DFF7	Spec Example 7.16. Flow Mapping Entries	root	парсер разобрал
@@ -162,7 +163,7 @@ J3BT	Spec Example 5.12. Tabs and Spaces	tab	парсер отказал
 J7PZ	Spec Example 2.26. Ordered Mappings	doc-start-content	парсер разобрал
 JEF9/00	Trailing whitespace in streams	root	парсер разобрал
 JEF9/01	Trailing whitespace in streams	root	парсер разобрал
-JEF9/02	Trailing whitespace in streams	last-spaces	парсер разобрал
+JEF9/02	Trailing whitespace in streams	root	парсер разобрал
 JHB9	Spec Example 2.7. Two Documents in a Stream	doc-second	парсер разобрал
 JR7V	Question marks in scalars	root	парсер разобрал
 JS2J	Spec Example 6.29. Node Anchors	anchor-alias-tag-merge	парсер разобрал
@@ -172,11 +173,10 @@ K4SU	Multiple Entry Block Sequence	root	парсер разобрал
 K527	Spec Example 6.6. Line Folding	root	парсер разобрал
 K54U	Tab after document header	tab	парсер отказал
 KH5V/00	Inline tabs in double quoted	root	парсер разобрал
-KH5V/01	Inline tabs in double quoted	tab	парсер разобрал
+KH5V/01	Inline tabs in double quoted	root	парсер разобрал
 KH5V/02	Inline tabs in double quoted	tab	парсер разобрал
 KK5P	Various combinations of explicit block mappings	key-collection	парсер разобрал
 KSS4	Scalars on --- line	doc-start-content	парсер разобрал
-L24T/01	Trailing line of spaces	last-spaces	парсер разобрал
 L383	Two scalar docs with trailing comments	doc-start-content	парсер разобрал
 L94M	Tags in Explicit Mapping	anchor-alias-tag-merge	парсер разобрал
 L9U5	Spec Example 7.11. Plain Implicit Keys	rare-95	парсер разобрал

@@ -6,7 +6,8 @@ YAML 1.2.2 (yaml-test-suite) — отдельный раздел Б.
 thin-rules.tsv: rule<TAB>check<TAB>where<TAB>basis<TAB>corpus<TAB>yts. where — откуда правило: «п. 2» (перечень решения),
 «п. 4», «Н1.1:95», «Н1.1:46», «Н1.1» (норма есть, в перечне п. 2 нет), «дефект парсера» (yaml-test-suite: правило держит
 YAML 1.2.2 там, где парсер отступает). corpus — случаи корпуса P/02.1 (вход с `worker:` по п. 7), где слой 1 отказал этим
-правилом первым; yts — тесты yaml-test-suite, где парсер (ruamel) разобрал вход, а слой 1 отказал этим правилом.
+правилом первым; yts — тесты yaml-test-suite (и с `error`), где парсер (ruamel) разобрал вход, а слой 1 отказал этим
+правилом. Обходы без отказа: D13 (`\\/` в Go), D16 (LF в конец текста без LF) — правилами не считаются.
 """
 import re
 import sys
@@ -53,8 +54,6 @@ RULES = [
      "дефект парсера", "X4QW (yaml.v3, D14)"),
     ("block-leading", r"leading empty line", "начальные пустые строки блочного скаляра не глубже первой строки",
      "дефект парсера", "S98Z (yaml.v3, D15)"),
-    ("last-spaces", r"last line of spaces", "последняя строка из пробелов без перевода строки — отказ",
-     "дефект парсера", "L24T/01 (ruamel и yaml.v3, D16)"),
     ("parser", r".", "ошибка парсера YAML", "парсер", "YAML 1.2.2 (ruamel.yaml 0.19.1 / go.yaml.in/yaml/v3 v3.0.5)"),
 ]
 
@@ -81,6 +80,22 @@ def main():
             textv7.load_text_map(data)
         except textv7.TextRefused as exc:
             hits[rule_of(exc)].append(case)
+    bhits = {r[0]: [] for r in RULES}
+    mods = [("", textv7)]
+    import os
+    from v7 import gorun
+    if os.path.exists(gorun.BIN):
+        mods.append(("go:", gorun.Go().text))      # у Go правила D14, D15 решают сами (ruamel отказывает и без них)
+    for f in sorted((HERE / "out" / "setb" / "cases").glob("*.subsystem.yaml")):
+        seen = set()
+        for tag, mod in mods:
+            try:
+                mod.load_text_map(f.read_bytes())
+            except mod.TextRefused as exc:
+                rid = rule_of(exc)
+                if rid not in seen:
+                    bhits[rid].append(tag + f.name.split(".")[0])
+                    seen.add(rid)
     yhits = {r[0]: [] for r in RULES}
     refusals = []
     from ruamel.yaml import YAML
@@ -104,15 +119,19 @@ def main():
     out = HERE / "out" / "setb"
     lines = ["# Правила тонкой проверки слоя 1 — на решение «Архитектору» (поручение по ревью набора Б, п. 5).",
              "# corpus — случаи P/02.1 (с `worker:` по п. 7), где правило отказало первым; yts — тесты yaml-test-suite",
-             "# data-2022-01-17, где ruamel разобрал вход, а правило отказало.",
-             "rule\tcheck\twhere\tbasis\tcorpus\tyts"]
+             "# data-2022-01-17 (и тесты с `error`), где ruamel разобрал вход, а правило отказало. Обходы без отказа — D13",
+             "# (`\\/` у Go), D16 (LF в конец текста без LF) — не правила.",
+             "# setb — случаи набора Б (out/setb/cases), где правило отказало первым (Python; `go:` — только у Go).",
+             "rule\tcheck\twhere\tbasis\tcorpus\tsetb\tyts"]
     for rid, _pat, check, where, basis in RULES:
         lines.append("\t".join([rid, check, where, basis, "%d: %s" % (len(hits[rid]), " ".join(hits[rid])),
+                                "%d: %s" % (len(bhits[rid]), " ".join(bhits[rid])),
                                 "%d: %s" % (len(yhits[rid]), " ".join(yhits[rid]))]))
     (out / "thin-rules.tsv").write_text("\n".join(lines) + "\n", "utf-8")
     head = ["# Набор Б, раздел «слой 1 сужает YAML 1.2.2»: тесты yaml-test-suite data-2022-01-17 без `error` (корректный",
             "# YAML 1.2.2), которые слой 1 (Python; Go — те же исходы, v7/yts.py) отказывает. rule — правило отказа;",
-            "# parser — разобрал ли вход парсер (если нет — сужение от парсера, не от правила).",
+            "# parser — разобрал ли вход парсер (если нет — сужение от парсера, не от правила). Сужение у Go то же, что у Python:",
+            "# расхождения парсеров закрыты обходами (3UYS — D13).",
             "id\ttitle\trule\tparser"]
     (out / "yts-refusals.tsv").write_text("\n".join(head + ["\t".join(r) for r in refusals]) + "\n", "utf-8")
     from collections import Counter

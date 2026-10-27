@@ -64,23 +64,27 @@ ESCAPES = set("0abt\tnvfre \"/\\N_LPxuU")
 
 
 def scan_line(line):
-    """Лексика строки для тонкой проверки: (колонка `#`, начинающего комментарий, или None; ошибка или None).
-    Комментарий — `#` в начале строки или после пробела/TAB, вне кавычек. Ошибки (дефекты парсеров, yaml-test-suite):
-    `#` вплотную после закрывающей кавычки или `]`/`}` (SU5Z); в двойных кавычках — экранирование вне YAML 1.2.2 (HRE5)."""
-    q, prev, esc = None, " ", False
+    """Лексика строки для тонкой проверки: (колонка `#`, начинающего комментарий, или None; ошибка или None; колонки TAB
+    экранирования `\\<TAB>` в двойных кавычках). Комментарий — `#` в начале строки или после пробела/TAB, вне кавычек.
+    Ошибки (дефекты парсеров, yaml-test-suite): `#` вплотную после закрывающей кавычки или `]`/`}` (SU5Z); в двойных
+    кавычках — экранирование вне YAML 1.2.2 (HRE5). `\\<TAB>` — экранирование YAML 1.2.2 и Н1.1, не литеральный TAB (п. 4
+    запрещает байт TAB как знак текста; решение «Архитектора» по ревью Б, круг 2)."""
+    q, prev, esc, tabs = None, " ", False, set()
     for i, c in enumerate(line):
         nxt = line[i + 1:i + 2]
         if q == '"':
             if esc:
                 if c not in ESCAPES:
-                    return None, "escape \\%s outside YAML 1.2.2" % c
+                    return None, "escape \\%s outside YAML 1.2.2" % c, tabs
+                if c == "\t":
+                    tabs.add(i)
                 esc = False
             elif c == "\\":
                 esc = True
             elif c == '"':
                 q = None
                 if nxt == "#":
-                    return None, "comment without a space after a quoted scalar"
+                    return None, "comment without a space after a quoted scalar", tabs
         elif q == "'":
             if c == "'":
                 if nxt == "'":
@@ -88,17 +92,17 @@ def scan_line(line):
                 else:
                     q = None
                     if nxt == "#":
-                        return None, "comment without a space after a quoted scalar"
+                        return None, "comment without a space after a quoted scalar", tabs, tabs
         elif q == "''":
             q = "'"
         elif c in "\"'" and prev in " \t[{,:-?":
             q = c
         elif c in "]}" and nxt == "#":
-            return None, "comment without a space after a flow collection"
+            return None, "comment without a space after a flow collection", tabs
         elif c == "#" and prev in " \t":
-            return i, None
+            return i, None, tabs
         prev = c
-    return None, None
+    return None, None, tabs
 
 
 def comment_start(line):
@@ -121,16 +125,16 @@ def check_bytes(data):
             raise TextRefused("bytes", text.count("\n", 0, i) + 1, "lone CR")
         i = text.find("\r", i + 1)
     text = text.replace("\r\n", "\n")
+    if text and not text.endswith("\n"):
+        text += "\n"                             # обход D16: последняя строка без LF — с LF (значение по YAML 1.2.2)
     lines = text.split("\n")
     content = False
-    if lines[-1] and not lines[-1].strip():
-        raise TextRefused("bytes", len(lines), "last line of spaces without a line feed (L24T)")
     for no, ln in enumerate(lines, 1):
-        c, err = scan_line(ln)
+        c, err, esc_tabs = scan_line(ln)
         if err:
             raise TextRefused("lexis", no, err)
-        if "\t" in ln:
-            if c is None or ln.index("\t") < c:
+        for t, ch in enumerate(ln):
+            if ch == "\t" and t not in esc_tabs and (c is None or t < c):
                 raise TextRefused("tab", no, "TAB outside a comment (ADR-0092 п. 4)")
         if re.match(r"\.\.\.(\s|$)", ln):
             raise TextRefused("document", no, "`...` (Н1.1:46)")

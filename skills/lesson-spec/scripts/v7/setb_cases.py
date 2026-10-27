@@ -96,6 +96,28 @@ MANIFEST = [
     ("r09_prefix_free", corpus("c4_readers_nested"), "refused:relations", "prefix_free (D18)", "корпус", "c4_readers_nested"),
 ]
 
+# Круг 2 ревью Б (Claude ef2f45c44, решение «Архитектора»): случаи правил без своего случая корпуса и обходов.
+MANIFEST += [
+    ("t27_escape_tab_ok", BASE + 'display: {unit: "a\\\tb"}\n', "ok",
+     "`\\<TAB>` — экранирование YAML 1.2.2 и Н1.1, не литеральный TAB (п. 4); значение — TAB", "ревью Claude круг 2 Н-2", ""),
+    ("t28_doc_start_content", "--- name: probe\n" + BASE[len("name: probe\n"):], "refused:text",
+     "Н1.1 document: на строке `---` — только комментарий (правило doc-start-content; парсеры отказывают и сами)",
+     "ревью Claude круг 2 Н-3", ""),
+    ("t29_block_header_comment", BASE + "display:\n  unit: |# c\n    counter\n", "refused:text",
+     "заголовок блочного скаляра без пробела перед `#` (D14: go.yaml.in/yaml/v3 принимает)", "ревью Claude круг 2 Н-3", ""),
+    ("t30_block_leading", BASE + "display:\n  unit: >\n   \n    \n     \n # comment\n", "refused:text",
+     "начальные пустые строки глубже первой строки блочного скаляра (D15: go.yaml.in/yaml/v3 принимает, S98Z)",
+     "ревью Claude круг 2 Н-3", ""),
+    ("t31_last_line_spaces_ok", BASE + "display:\n  unit: |\n    counter\n     ", "ok",
+     "обход D16: LF в конец текста без LF; значение по YAML 1.2.2 `counter\\n \\n` (без обхода оба парсера — `counter\\n `)",
+     "ревью Claude круг 2 Н-1, Н-3", ""),
+    ("t32_trailing_spaces_ok", BASE + "  ", "ok", "строка пробелов в конце без LF — не отказ (правило last-spaces снято)",
+     "ревью Claude круг 2 Н-1", ""),
+]
+# Значение дерева загрузчика (Python и Go) на пути — там, где случай проверяет и значение.
+VALUES = {"t27_escape_tab_ok": (["display", "unit"], "a\tb"),
+          "t31_last_line_spaces_ok": (["display", "unit"], "counter\n \n")}
+
 P3_OK = ["c5_key_question_mark", "c5_value_question_mark", "c5_value_next_line_flow", "c5_value_next_line_plain",
          "c5_value_next_line_quoted", "c7_seq_dash_scalar_below", "c7_word_continuation_comment", "c8_word_hash_space"]
 for c in P3_OK:
@@ -193,9 +215,21 @@ def run_manifest(go):
             rr = short(ref.judge(data), "ref")
         except Exception as exc:                 # noqa: BLE001 — падение эталона
             rr = "crash:%s" % type(exc).__name__
-        pr = short(py.judge(data), "v7")
-        gr = short(go.manifest(gm, data), "v7") if go else "—"
+        pj = py.judge(data)
+        pr = short(pj, "v7")
+        gj = go.manifest(gm, data) if go else None
+        gr = short(gj, "v7") if go else "—"
         ok = pr == expect and (gr == expect or not go)
+        if cid in VALUES:
+            path, want = VALUES[cid]
+            for j in (pj, gj):
+                if j is None:
+                    continue
+                got = j.get("tree")
+                for k in path:
+                    got = got.get(k) if isinstance(got, dict) else None
+                ok = ok and got == want
+            basis = basis + "; значение %s = %r проверено" % (".".join(path), want)
         res.append((cid, "corpus", data, expect, basis, source, dup, rr, pr, gr, ok))
     return res
 

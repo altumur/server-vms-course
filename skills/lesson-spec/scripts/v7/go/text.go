@@ -103,10 +103,11 @@ const escapes = "0abt\tnvfre \"/\\N_LPxuU"
 // scanLine — лексика строки для тонкой проверки (как v7/textv7.py scan_line): колонка `#`, начинающего комментарий
 // (в начале строки или после пробела/TAB, вне кавычек), или -1; ошибка — `#` вплотную после закрывающей кавычки или
 // `]`/`}` (SU5Z), экранирование вне YAML 1.2.2 в двойных кавычках (HRE5).
-func scanLine(line string) (int, string) {
+func scanLine(line string) (int, string, map[int]bool) {
 	rs := []rune(line)
 	q := ""
 	prev, esc := ' ', false
+	tabs := map[int]bool{} // байтовые колонки TAB экранирования `\<TAB>` в двойных кавычках (YAML 1.2.2, Н1.1)
 	for i, c := range rs {
 		var nxt rune
 		if i+1 < len(rs) {
@@ -116,7 +117,10 @@ func scanLine(line string) (int, string) {
 		case q == "\"":
 			if esc {
 				if !strings.ContainsRune(escapes, c) {
-					return -1, "escape \\" + string(c) + " outside YAML 1.2.2"
+					return -1, "escape \\" + string(c) + " outside YAML 1.2.2", tabs
+				}
+				if c == '\t' {
+					tabs[len(string(rs[:i]))] = true
 				}
 				esc = false
 			} else if c == '\\' {
@@ -124,7 +128,7 @@ func scanLine(line string) (int, string) {
 			} else if c == '"' {
 				q = ""
 				if nxt == '#' {
-					return -1, "comment without a space after a quoted scalar"
+					return -1, "comment without a space after a quoted scalar", tabs
 				}
 			}
 		case q == "'":
@@ -134,7 +138,7 @@ func scanLine(line string) (int, string) {
 				} else {
 					q = ""
 					if nxt == '#' {
-						return -1, "comment without a space after a quoted scalar"
+						return -1, "comment without a space after a quoted scalar", tabs
 					}
 				}
 			}
@@ -143,13 +147,13 @@ func scanLine(line string) (int, string) {
 		case (c == '"' || c == '\'') && strings.ContainsRune(" \t[{,:-?", prev):
 			q = string(c)
 		case (c == ']' || c == '}') && nxt == '#':
-			return -1, "comment without a space after a flow collection"
+			return -1, "comment without a space after a flow collection", tabs
 		case c == '#' && (prev == ' ' || prev == '\t'):
-			return len(string(rs[:i])), ""
+			return len(string(rs[:i])), "", tabs
 		}
 		prev = c
 	}
-	return -1, ""
+	return -1, "", tabs
 }
 
 // slashEscapes — `\/` в двойных кавычках → `/` (YAML 1.2.2 и Н1.1 допускают `\/`, go.yaml.in/yaml/v3 v3.0.5 — нет:
@@ -254,19 +258,19 @@ func checkBytes(data []byte) (string, []string, *textRefused) {
 		i += 1 + j
 	}
 	text = strings.ReplaceAll(text, "\r\n", "\n")
-	lines := strings.Split(text, "\n")
-	if last := lines[len(lines)-1]; last != "" && strings.TrimSpace(last) == "" {
-		return "", nil, &textRefused{"bytes", len(lines), "last line of spaces without a line feed (L24T)", nil}
+	if text != "" && !strings.HasSuffix(text, "\n") {
+		text += "\n" // обход D16: последняя строка без LF — с LF (значение по YAML 1.2.2)
 	}
+	lines := strings.Split(text, "\n")
 	content := false
 	for n, ln := range lines {
 		no := n + 1
-		c, lerr := scanLine(ln)
+		c, lerr, escTabs := scanLine(ln)
 		if lerr != "" {
 			return "", nil, &textRefused{"lexis", no, lerr, nil}
 		}
-		if t := strings.IndexByte(ln, '\t'); t >= 0 {
-			if c < 0 || t < c {
+		for t := 0; t < len(ln); t++ {
+			if ln[t] == '\t' && !escTabs[t] && (c < 0 || t < c) {
 				return "", nil, &textRefused{"tab", no, "TAB outside a comment (ADR-0092 п. 4)", nil}
 			}
 		}

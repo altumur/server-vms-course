@@ -46,10 +46,10 @@ HM87/00	ok	error	refused:parser	yaml: did not find expected node content
 HM87/01	json	different	refused:root	[[{"x": null}]]
 HRE5	error	parsed	refused:lexis	принято то, что набор отвергает
 HWV9	ok	error	refused:document	yaml: did not find expected node content
-JEF9/02	json	different	refused:bytes	[[""]]
+JEF9/02	json	different	refused:root	[[""]]
 JR7V	ok	error	refused:parser	yaml: line 3: did not find expected ',' or ']'
 K3WX	ok	error	refused:parser	yaml: line 1: did not find expected ',' or '}'
-L24T/01	json	different	refused:bytes	[{"foo": "x\n "}]
+L24T/01	json	different	ok	[{"foo": "x\n "}]
 M2N8/00	ok	error	refused:parser	yaml: did not find expected key
 M7A3	ok	error	refused:document	yaml: line 7: could not find expected directive name
 MUS6/00	error	parsed	refused:document	принято то, что набор отвергает

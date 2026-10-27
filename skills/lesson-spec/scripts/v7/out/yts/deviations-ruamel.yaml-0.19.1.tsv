@@ -2,7 +2,7 @@
 # ok при expect=error — вход вне YAML 1.2.2 принят: дефект парсера, случай корпуса (п. 9).
 id	expect	got	layer1	note
 2JQS	json	constructor refused	refused:key	разбор принят, конструктор safe отказал (не парсер)
-2XXW	json	different	refused:document	["<set:{'Mark McGwire', 'Ken Griff', 'Sammy Sosa'}>"]
+2XXW	json	different	refused:document	["<set:{'Ken Griff', 'Sammy Sosa', 'Mark McGwire'}>"]
 4FJ6	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)
 4MUZ/00	ok	error	refused:parser	ParserError: while parsing a flow mapping
 4MUZ/01	ok	error	refused:parser	ParserError: while parsing a flow mapping
@@ -45,10 +45,10 @@ HS5T	ok	error	refused:tab	ScannerError: while scanning for the next token
 HWV9	ok	error	refused:document	ParserError: while parsing a block node
 J3BT	ok	error	refused:tab	ScannerError: while scanning for the next token
 J7PZ	json	different	refused:document	[{"Mark McGwire": 65, "Sammy Sosa": 63, "Ken Griffy": 58}]
-JEF9/02	json	different	refused:bytes	[[""]]
+JEF9/02	json	different	refused:root	[[""]]
 K3WX	ok	error	refused:parser	ParserError: while parsing a flow mapping
 K54U	ok	error	refused:tab	ScannerError: while scanning for the next token
-L24T/01	json	different	refused:bytes	[{"foo": "x\n "}]
+L24T/01	json	different	ok	[{"foo": "x\n "}]
 M2N8/00	json	constructor refused	refused:root	разбор принят, конструктор safe отказал (не парсер)
 M2N8/01	json	constructor refused	refused:key	разбор принят, конструктор safe отказал (не парсер)
 M5C3	json	constructor refused	refused:rare	разбор принят, конструктор safe отказал (не парсер)

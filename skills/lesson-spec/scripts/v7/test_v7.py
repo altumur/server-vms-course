@@ -344,8 +344,24 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(all(x.startswith("refused") for x in self.both(d)))
 
     def test_d16_trailing_spaces(self):
+        """Обход D16: последняя строка без LF получает LF до разбора — значение блочного скаляра по YAML 1.2.2."""
+        from v7 import textv7
         d = b"foo: |\n  x\n   "
-        self.assertEqual(set(self.both(d)), {"refused:bytes"})
+        from ruamel.yaml import YAML
+        self.assertEqual(YAML(typ="safe", pure=True).load(d.decode()), {"foo": "x\n "})     # дефект парсера
+        self.assertEqual(textv7.load_text_map(d)[0], {"foo": "x\n \n"})
+        if HAVE_GO:
+            self.assertEqual(self.go.text.load_text_map(d)[0], {"foo": "x\n \n"})
+        self.assertEqual(set(self.both(b"a: b\n  ")), {"ok"})                                # не отказ
+
+    def test_escape_tab_ok(self):
+        """`\\<TAB>` в двойных кавычках — экранирование (YAML 1.2.2, Н1.1), не литеральный TAB (п. 4)."""
+        from v7 import textv7
+        d = b'a: "x\\\ty"\n'
+        self.assertEqual(textv7.load_text_map(d)[0], {"a": "x\ty"})
+        if HAVE_GO:
+            self.assertEqual(self.go.text.load_text_map(d)[0], {"a": "x\ty"})
+        self.assertEqual(set(self.both(b'a: "x\ty"\n')), {"refused:tab"})
 
     @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
     def test_d17_doc_end(self):
