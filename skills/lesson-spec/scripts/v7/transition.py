@@ -15,7 +15,9 @@
 6. пакет `Platform/common/vectors/family-read/`: README и таблица на урок-владельца из уроков `--lessons` (набор А,
    `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`);
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
-   вида» P/02.2.
+   вида» P/02.2;
+9. пакет `Platform/common/vectors/yaml-suite/`: README и `expect.tsv` — исход слоя 1 по каждому тесту yaml-test-suite
+   закреплённой версии (набор — на стенде, v7.yts.SUITE);
 8. `outcomes.tsv` — столбец `reader` (решение владельца 2026-10-28): строка пустого пути — на каждого читателя семьи
    (`readers` каталога, у `*` — роли уроков, чей абзац «Данные» читает ключ, ∪ участники `cas` и `guard`), строки
    полей — `*`. Это заготовка: проза исхода скопирована каждому читателю — делить её по читателям и называть пробелы
@@ -201,6 +203,44 @@ def edit(path, values, note):
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+# ---------------------------------------------------------------- 9: пакет yaml-suite (п. 2.6)
+
+YAML_SUITE = Path("Platform/common/vectors/yaml-suite")
+YAML_README = """# Векторы yaml-suite: слой 1 на yaml-test-suite (ADR-0092 п. 2; набор Б, раздел «слой 1 сужает YAML 1.2.2»)
+
+Набор — yaml-test-suite `data-2022-01-17` (архив тега github.com/yaml/yaml-test-suite, sha256
+`ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`, лицензия MIT); тест — каталог с `in.yaml`.
+`expect.tsv`: `id<TAB>suite<TAB>layer1<TAB>rule`:
+- `id` — путь каталога теста в архиве;
+- `suite` — ожидание набора: `error` (вход вне YAML 1.2.2) или `ok`;
+- `layer1` — исход слоя 1 манифеста (парсер YAML 1.2.2 и тонкая проверка Н1.1): `ok` или `refused`; `refused` при
+  `suite` = `ok` — сужение YAML 1.2.2 нормой (правило тонкой проверки или вход вне подмножества Н1.1), утверждено
+  набором Б;
+- `rule` — правило тонкой проверки, отказавшее первым (`parser` — отказ парсера; `-` — у `ok`); подсказка, не норма.
+Реализация сверяет `layer1` строго: иное — красное (ADR-0092 п. 2); `rule` — сведение.
+"""
+
+
+def yaml_suite(root):
+    """expect.tsv по всем тестам набора закреплённой версии (стенд: v7.yts.SUITE); без набора на стенде — пропуск."""
+    from v7 import textv7, thin_rules, yts
+    if not yts.SUITE.is_dir():
+        return None
+    rows = []
+    for tid, d in yts.tests(yts.SUITE):
+        try:
+            textv7.load_text_map((d / "in.yaml").read_bytes())
+            got, rule = "ok", "-"
+        except textv7.TextRefused as exc:
+            got, rule = "refused", thin_rules.rule_of(exc)
+        rows.append([tid, "error" if (d / "error").exists() else "ok", got, rule])
+    out = root / YAML_SUITE
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "README.md").write_text(YAML_README, encoding="utf-8")
+    write_tsv(out / "expect.tsv", [], ["id", "suite", "layer1", "rule"], rows)
+    return len(rows)
+
+
 # ---------------------------------------------------------------- 8: читатели в outcomes.tsv
 
 def star_readers(root):
@@ -345,6 +385,7 @@ def main(argv=None):
     print("canonical vectors:", vectors.generate(root))
     print("outcomes: rows of the whole row by reader:", outcome_readers(root))
     print("family-read:", family_read(root, set(a.lessons.split(","))))
+    print("yaml-suite:", yaml_suite(root))
     from v7 import sections
     for norms in sorted((root / "Platform").glob("*/spec/*.norms.md")):
         text = norms.read_text(encoding="utf-8")
