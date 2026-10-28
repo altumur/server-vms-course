@@ -29,7 +29,7 @@ scenario	step	request	expect
 04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
 04-servers-where	5	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
 04-servers-where	6	GET /resources	200 {}
-04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "@any"}
+04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "badkey"}
 05-metrics	1	GET /metrics	200 ~testsub_workers_live 0
 05-metrics	2	GET /metrics	200 ~testsub_units_unplaced
 05-metrics	3	GET /metrics	200 ~testsub_counters_running
