@@ -209,6 +209,14 @@ class TestTree(unittest.TestCase):
         row["x-implied-by"] = [4]                          # строка не из группы: случая группы нет
         p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         self.assertTrue(any("row 18: x-implied-by [4]" in m for _, m in strict()))
+        self.assertTrue(any("fire this row without any row it is implied by" in m for _, m in strict()))   # М-4
+        row["x-implied-by"] = [16, 17]
+        p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        spec_dir = root / "Platform/02-installer/spec"
+        other = spec.manifest_check(root, spec_dir / "02.1-installer.norms.md", None, spec_dir / "02.1-installer",
+                                    root / "Platform/02-installer/acceptance/1", verdicts_of(root), {}, [], False,
+                                    {"18:tables.$t.fields.other"})[0]                  # М-1: номер тот, путь иной
+        self.assertTrue(any("without the exception implied 18:tables.$t.fields.name" in m for _, m in other))
 
     def test_manifest_class_is_layer(self):
         root = self.copy()
@@ -357,6 +365,33 @@ class TestTree(unittest.TestCase):
                     lost.append(("desc", p.name, k[2]))
         self.assertGreater(n, 1500)
         self.assertEqual(lost, [])
+
+    def test_registry_v7_and_whole_package(self):
+        """Реестр режима В7 (М-4): отложенная таблица — EXCEPTION, таблица есть при исключении — устарело, пометка
+        implied есть — EXCEPTION, исключение implied без пометки — устарело; нет пакета family-read целиком — красное
+        по каждой таблице (С-1)."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        reg = root / "exceptions.tsv"
+        reg.write_text("\n".join(["P/08\tfamily-read\t08.tsv\tотложено", "P/03\tfamily-read\t03.tsv\tлишнее",
+                                   "P/02\timplied\t18:tables.$t.fields.name\tрешение",
+                                   "P/02\timplied\t99:nowhere\tлишнее"]) + "\n", encoding="utf-8")
+        check = check_spec.Check(root, reg, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+        errors = "\n".join(map(str, check.errors))
+        self.assertIn("stale exception family-read P/03 03.tsv", errors)
+        self.assertIn("stale exception implied P/02 99:nowhere", errors)
+        self.assertNotIn("no table 08.tsv", errors)
+        self.assertTrue(any("P/08 family-read 08.tsv" in x for x in check.excepted))
+        self.assertTrue(any("P/02 implied 18:tables.$t.fields.name" in x for x in check.excepted))
+        shutil.rmtree(root / spec.FAMILY_READ)
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+        missing = [e for e in map(str, check.errors) if "family-read: no table" in e]
+        self.assertGreaterEqual(len(missing), 6)
 
     def test_sections_idempotent(self):
         from v7 import sections
