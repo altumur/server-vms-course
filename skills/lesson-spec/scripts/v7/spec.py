@@ -534,7 +534,7 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
                     diagnostics[cols[0]] = json.loads(cols[1])
                 except ValueError:
                     pass
-    held = set()
+    held, fired_sets = set(), []
     for case, expected in sorted(verdicts.items()):
         path = acceptance / "cases" / ("%s.subsystem.yaml" % case)
         try:
@@ -552,8 +552,10 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
             errors.append((path, "form: class expected %s, got %s (%s)" % (classes[case], got["layer"], why)))
         elif case in diagnostics and sorted(map(json.dumps, diagnostics[case])) != sorted(map(json.dumps, got["paths"])):
             stats["form_diagnostics_differ"] += 1             # подсказка, не норма (ADR-0092 п. 5)
-        if got.get("layer") == "relations" and len(got.get("rows", [])) == 1:
-            held.add(got["rows"][0])
+        if got.get("layer") == "relations":
+            fired_sets.append(frozenset(got.get("rows", [])))
+            if len(got.get("rows", [])) == 1:
+                held.add(got["rows"][0])
     for path in sorted(manifests):
         got = loader.judge(path.read_bytes())
         if got["verdict"] != "ok":
@@ -561,9 +563,28 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
         stats["form_manifests"] += 1
     stats["form_rows"] = len(rel["rows"])
     stats["form_rows_held"] = len({r["no"] for r in rel["rows"]} & held)
+    nos = {r["no"] for r in rel["rows"]}
+    for r in rel["rows"]:
+        implied = r.get("x-implied-by")
+        if implied is None:
+            continue
+        if not (isinstance(implied, list) and implied and all(i in nos and i != r["no"] for i in implied)):
+            errors.append((files[".relations.json"], "row %d: x-implied-by names other rows of the file" % r["no"]))
+            continue
+        group = {r["no"], *implied}
+        # групповая мутация (решение «Архитектора» 2026-10-28): снятие строки вместе с теми, из которых она следует,
+        # меняет вердикт случая, а строка одна при снятых тех этот вердикт держит — случай, где сработали только строки
+        # группы и среди них она
+        if any(r["no"] in f and f <= group for f in fired_sets):
+            stats["form_rows_implied"] = stats.get("form_rows_implied", 0) + 1
+            held.add(r["no"])
+        elif strict:
+            errors.append((files[".relations.json"], "row %d: x-implied-by %s — no corpus case where only rows of the "
+                                                     "group fire and this row among them (the group mutation)"
+                           % (r["no"], implied)))
     if strict:
         for r in rel["rows"]:
-            if r["no"] not in held:
+            if r["no"] not in held and r.get("x-implied-by") is None:
                 errors.append((files[".relations.json"], "row %d: no corpus case has this row as its sole cause "
                                                          "(ADR-0087 доп. (1) Р10)" % r["no"]))
     return errors, stats

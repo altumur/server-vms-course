@@ -493,7 +493,9 @@ def build_form_section(schema_doc, relations_doc, scalars):
             "`refused:relations`, путь — место, которое выражение называет.", "",
             "| № | Путь | Отношение | Норма |", "|---|---|---|---|"]
     for r in relations_doc["rows"]:
-        out.append("| %d | `%s` | `%s` | %s |" % (r["no"], cell(r["path"]), cell(r["relation"]), cell(r["norm"])))
+        implied = r.get("x-implied-by")
+        more = " (следует из %s)" % ", ".join(map(str, implied)) if implied else ""
+        out.append("| %d | `%s` | `%s`%s | %s |" % (r["no"], cell(r["path"]), cell(r["relation"]), more, cell(r["norm"])))
     return "\n".join(out) + "\n"
 
 
@@ -522,8 +524,8 @@ def build_families_section(norms, root, families):
     for row, schema_path, doc, outcomes_path, outcomes in families:
         out += ["#### `%s` — %s" % (row["key"], KIND_WORD[row["kind"]]), "",
                 "Схема — [`%s`](%s), исходы — [`%s`](%s); версия формы %s; норма — %s." % (
-                    schema_path.name, lk(schema_path.relative_to(root)), outcomes_path.name,
-                    lk(outcomes_path.relative_to(root)), row["version"], row["norm"]), ""]
+                    schema_path.name, lk(schema_path.resolve().relative_to(root)), outcomes_path.name,
+                    lk(outcomes_path.resolve().relative_to(root)), row["version"], row["norm"]), ""]
         sec = SchemaSection(doc, family=True)
         out += sec.root_body(head=None)
         out += sec.writer_body()

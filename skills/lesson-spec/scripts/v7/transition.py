@@ -5,6 +5,7 @@
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
+   у строк связей, следующих из других, — `x-implied-by` (IMPLIED);
 2. каталог: колонка `schema` — `….schema.json` того же базового имени; одна схема на семью: семьи `events` (7 семей
    на `events.form.yaml`) — по своему файлу EVENTS (схема, слои, исходы — копии; решение «Архитектора» 2026-10-28);
 3. файлы диалекта снимаются: `*.form.yaml` (формы семей, `common.form.yaml`, форма манифеста), `references.tsv`;
@@ -78,6 +79,20 @@ def lead_of(path):
 def standard_files(root):
     from v7 import build
     build.build(root, None, place=True)
+
+
+# Строки связей, которые следуют из других (решение «Архитектора» 2026-10-28, PLAN-TRANSITION п. 2.3.6): номер →
+# номера; check_spec держит их групповой мутацией.
+IMPLIED = {18: [16, 17]}
+
+
+def implied(root):
+    p = root / "Platform/02-installer/spec/02.1-installer.relations.json"
+    rel = json.loads(p.read_text(encoding="utf-8"))
+    for r in rel["rows"]:
+        if r["no"] in IMPLIED:
+            r["x-implied-by"] = IMPLIED[r["no"]]
+    p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
 def catalog(root):
@@ -322,6 +337,7 @@ def main(argv=None):
     if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
         sys.exit("the tree has no dialect form of P/02.1: already moved?")
     standard_files(root)
+    implied(root)
     catalog(root)
     print("dialect files removed:", drop_dialect(root))
     print("corpus: worker appended %d, cases added %d" % corpus(root))
