@@ -182,7 +182,7 @@ paths:
       required: true
       schema:
         type: string
-        pattern: ^sha256-[0-9a-f]{64}(?![\s\S])
+        pattern: "^(?:sha256-[0-9a-f]{64})$"
     put:
       summary: 'Дверь ресурса: принять полную копию blob (Н1.1 «Тела у ресурса», Н2; перенесено из контракта М10/10)'
       parameters:
@@ -198,7 +198,7 @@ paths:
         required: true
         schema:
           type: string
-          pattern: ^[0-9]+(?:\.[0-9]+)?(?![\s\S])
+          pattern: "^(?:[0-9]+(?:\\.[0-9]+)?)$"
       requestBody:
         required: true
         content:
@@ -421,7 +421,7 @@ paths:
         required: false
         schema:
           type: string
-          pattern: ^(?:0|[1-9][0-9]*)(?![\s\S])
+          pattern: "^(?:(?:0|[1-9][0-9]*))$"
           description: Десятичный uint64, по умолчанию 0. Проверка диапазона обязательна.
       - name: client
         in: query
@@ -430,7 +430,7 @@ paths:
           type: string
           minLength: 1
           maxLength: 128
-          pattern: ^[!-~]+(?![\s\S])
+          pattern: "^(?:[!-~]+)$"
   /buckets/{sub}/{unit}:
     parameters:
     - name: sub
@@ -528,7 +528,7 @@ paths:
         required: false
         schema:
           type: string
-          pattern: ^bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*)(?![\s\S])
+          pattern: "^(?:bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*))$"
         description: В профиле урока один диапазон; множественные/условные запросы вне профиля.
   /mirror/{server}/{path}:
     parameters:
@@ -646,10 +646,10 @@ components:
       type: string
       minLength: 1
       maxLength: 32
-      pattern: ^[a-z]
+      pattern: "^(?:[a-z][\\s\\S]*)$"
       not:
         anyOf:
-        - pattern: '[^a-z0-9_-]'
+        - pattern: "^(?:[\\s\\S]*[^a-z0-9_-][\\s\\S]*)$"
         - enum:
           - platform
           - domain
@@ -675,7 +675,7 @@ components:
           - api
     Subsystem:
       type: string
-      pattern: ^[a-z][a-z0-9_-]{0,31}(?![\s\S])
+      pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
     SafeSegment:
       type: string
       minLength: 1
@@ -684,26 +684,26 @@ components:
         - enum:
           - .
           - ..
-        - pattern: '[/\\\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+        - pattern: "^(?:[\\s\\S]*[/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][\\s\\S]*)$"
     ObjectKey:
       type: string
       minLength: 1
-      pattern: ^(?!/)(?!.*(?:^|/)\.{1,2}(?:/|$))[^/\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+(?:/[^/\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)*(?![\s\S])
+      pattern: "^(?:(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)(?:/(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+))*)$"
       description: Непустой относительный ключ; каждый сегмент непуст и не точка или две точки. Проверка смысла ключа
         — Н1.1; схема не проверяет символические ссылки диска. Все компоненты и полный путь с корнем должны помещаться
         в объявленный файловый профиль (договор журнала событий «Имена файлов в общих деревьях»); иначе 400 до файловой операции.
     UnitRef:
       type: string
       minLength: 3
-      pattern: ^[a-z][a-z0-9_-]{0,31}(?:\.alarms)?/[^/|",\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+(?![\s\S])
+      pattern: "^(?:[a-z][a-z0-9_-]{0,31}(?:\\.alarms)?/[^/|\",\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)$"
       description: Полная ссылка <дерево>/<единица>, также console/<экземпляр> и audit/<роль>; экземпляр заранее ограничен профилем договора журнала событий. Без точных . и ..
         во второй части; для адресата единицы дополнительно действует UnitId (контракт P/06, глава 6.1 Н1.3); существование проверяется там, где
         этого требует маршрут.
       not:
-        pattern: /\.{1,2}(?![\s\S])
+        pattern: "^(?:[\\s\\S]*/\\.{1,2})$"
     Sha256:
       type: string
-      pattern: ^[0-9a-f]{64}(?![\s\S])
+      pattern: "^(?:[0-9a-f]{64})$"
     ObjectEntry:
       type: object
       required:
@@ -865,16 +865,16 @@ components:
       type: string
       minLength: 1
       maxLength: 64
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]*(?![\s\S])
+      pattern: "^(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*)$"
     Want:
       type: string
       minLength: 3
       description: 'Список через запятую: <sub>/<kind>[/<unit>]. Каждая часть — WaitPart; пустые элементы и пробелы
         не допускаются.'
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?(?:,[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?)*(?![\s\S])
+      pattern: "^(?:[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?(?:,[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?)*)$"
     Touched:
       type: string
-      pattern: ^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?![\s\S])
+      pattern: "^(?:[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})$"
     WaitChanged:
       type: object
       required:
