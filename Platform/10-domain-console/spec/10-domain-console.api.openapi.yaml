@@ -683,7 +683,7 @@ paths:
           description: как у GET, без тела
   /domain/shared:
     get:
-      summary: Документ, доставка и объявленное (Н1.2е)
+      summary: Документ, доставка и объявленное (Н1.2е; вида нет — 404 no domain here, вид не читается — 503 unavailable)
       description: Отвечает консоль домена сама (P/10-14); PUT — передача процессу.
       responses:
         '200':
@@ -695,7 +695,10 @@ paths:
         '400': *id001
         '401': *id002
         '403': *id003
-        '503': *id004
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -706,6 +709,8 @@ paths:
         '401':
           description: как у GET, без тела
         '403':
+          description: как у GET, без тела
+        '404':
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
