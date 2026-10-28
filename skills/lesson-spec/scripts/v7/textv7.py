@@ -56,6 +56,12 @@ def load_scalars(path=SCALARS):
 ROWS, LIMITS = load_scalars()
 
 
+def use_scalars(path):
+    """Таблица скаляров иного корня (выгрузка, дерево пакета перехода) вместо таблицы курса."""
+    global ROWS, LIMITS
+    ROWS, LIMITS = load_scalars(path)
+
+
 def kind_of(s):
     return next(k for k, p in ROWS if p.fullmatch(s))
 

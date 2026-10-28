@@ -87,3 +87,93 @@ def complement(p):
 def python_full(pattern):
     """Слой 5 (полное совпадение у Python): `$` в конце якоря → `\\Z` (у `re` `$` совпадает и перед последним `\\n`)."""
     return pattern[:-1] + "\\Z" if pattern.endswith(")$") else pattern
+
+
+def check(pattern):
+    """Причина, по которой `pattern` схемы вне переносимого подмножества (ADR-0092 п. 14), или None.
+
+    Подмножество — то, что ECMA-262 в режиме `u` и RE2 читают одинаково: полное совпадение `^(?:…)$`; внутри — знаки,
+    классы `[…]` и `[^…]` (без `[` внутри: у RE2 `[[:alpha:]]` — класс POSIX), экранирование только знаков синтаксиса
+    (`-` — и в классе), `\\d`, `\\D`, `\\w`, `\\W` и `[\\s\\S]` (одиночный `\\s` у ECMA шире, чем у RE2), группы `(…)`,
+    `(?:…)`, `|`, кванторы `* + ? {n} {n,} {n,m}` (и ленивые); без `.` (у ECMA точка не берёт `\\r`, U+2028/2029), без
+    `^`, `$` внутри, без обратных ссылок, просмотра, имён групп и флагов."""
+    if not (pattern.startswith("^(?:") and pattern.endswith(")$")):
+        return "not anchored as ^(?:…)$ (full match)"
+    p = pattern[1:-1]
+    i, depth, atom = 0, 0, False
+    while i < len(p):
+        c = p[i]
+        if c == "\\":
+            e = p[i + 1:i + 2]
+            if not e or not (e in SYNTAX or e in "dDwW"):
+                return "escape \\%s at %d (only syntax characters, \\d, \\w and [\\s\\S])" % (e, i + 1)
+            i, atom = i + 2, True
+            continue
+        if c == "[":
+            if p.startswith("[\\s\\S]", i):
+                i, atom = i + 6, True
+                continue
+            j = i + 1 + (p[i + 1:i + 2] == "^")
+            if p[j:j + 1] == "]":
+                return "empty or ]-first class at %d" % (i + 1)
+            while j < len(p) and p[j] != "]":
+                if p[j] == "[":
+                    return "unescaped [ inside a class at %d" % (j + 1)
+                if p[j] == "\\":
+                    e = p[j + 1:j + 2]
+                    if not e or not (e in SYNTAX or e in "-dDwW"):
+                        return "escape \\%s in a class at %d" % (e, j + 1)
+                    j += 2
+                    continue
+                j += 1
+            if j >= len(p):
+                return "unclosed class at %d" % (i + 1)
+            i, atom = j + 1, True
+            continue
+        if c == "(":
+            if p.startswith("(?", i) and not p.startswith("(?:", i):
+                return "group (%s at %d: only (…) and (?:…)" % (p[i + 1:i + 3], i + 1)
+            depth += 1
+            i += 3 if p.startswith("(?:", i) else 1
+            atom = False
+            continue
+        if c == ")":
+            depth -= 1
+            if depth < 0:
+                return "unbalanced ) at %d" % (i + 1)
+            i, atom = i + 1, True
+            continue
+        if c in "*+?":
+            if not atom:
+                return "quantifier %s without an atom at %d" % (c, i + 1)
+            i += 1
+            if p[i:i + 1] == "?":
+                i += 1
+            atom = False
+            continue
+        if c == "{":
+            m = re.match(r"\{(0|[1-9][0-9]*)(,(0|[1-9][0-9]*)?)?\}", p[i:])
+            if not m or not atom:
+                return "{ at %d is not a quantifier {n}, {n,}, {n,m} after an atom (escape it)" % (i + 1)
+            i += m.end()
+            if p[i:i + 1] == "?":
+                i += 1
+            atom = False
+            continue
+        if c in "}]":
+            return "unescaped %s at %d" % (c, i + 1)
+        if c == ".":
+            return "bare . at %d (write [\\s\\S] or a class)" % (i + 1)
+        if c in "^$":
+            return "anchor %s inside at %d" % (c, i + 1)
+        if c == "|":
+            i, atom = i + 1, False
+            continue
+        i, atom = i + 1, True
+    if depth != 0:
+        return "unbalanced ("
+    try:
+        re.compile(python_full(pattern))
+    except re.error as exc:
+        return "does not compile: %s" % exc
+    return None
