@@ -1,0 +1,669 @@
+{
+ "_note": "stand 3 of the pilot: seed and manifests of the overview; anna's edit grants raised to admin (the write door of a unit row needs admin)",
+ "mounts": {
+  "root": "testsub2",
+  "mounts": {
+   "testsub": {
+    "name": "testsub",
+    "rows": "counters",
+    "id": "name",
+    "fields": [
+     {
+      "name": "name",
+      "type": "string",
+      "default": null,
+      "required": true
+     },
+     {
+      "name": "start",
+      "type": "int",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "labels",
+      "type": "list",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "step",
+      "type": "int",
+      "default": null,
+      "required": false,
+      "inherit": 1
+     },
+     {
+      "name": "marks",
+      "type": "list",
+      "default": null,
+      "required": false,
+      "inherit": []
+     }
+    ],
+    "display": {
+     "fields": {
+      "name": "name",
+      "start": "start value",
+      "labels": "labels",
+      "step": "step",
+      "marks": "marks"
+     },
+     "options": {},
+     "field_help": {}
+    }
+   }
+  }
+ },
+ "manifests": {
+  "testsub2": {
+   "name": "testsub2",
+   "rows": "tallies",
+   "id": "name",
+   "fields": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "required": true
+    },
+    {
+     "name": "of",
+     "type": "string",
+     "default": null,
+     "required": true,
+     "fixed": true
+    },
+    {
+     "name": "mode",
+     "type": "string",
+     "default": "plain",
+     "required": false,
+     "enum": [
+      "plain",
+      "loud"
+     ]
+    },
+    {
+     "name": "step",
+     "type": "int",
+     "default": 1,
+     "required": false
+    },
+    {
+     "name": "weight",
+     "type": "float",
+     "default": 1.0,
+     "required": false
+    },
+    {
+     "name": "active",
+     "type": "bool",
+     "default": true,
+     "required": false
+    },
+    {
+     "name": "tags",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "rule",
+     "type": "json",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "mask",
+     "type": "blob",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "shelf",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "zone",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "feed",
+     "type": "url",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "feed_user",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "feed_secret",
+     "type": "string",
+     "default": null,
+     "required": false,
+     "bound_to": [
+      "feed"
+     ]
+    },
+    {
+     "name": "keep_days",
+     "type": "int",
+     "default": null,
+     "required": false,
+     "inherit": 7
+    },
+    {
+     "name": "flags",
+     "type": "list",
+     "default": null,
+     "required": false,
+     "inherit": []
+    },
+    {
+     "name": "state",
+     "type": "string",
+     "default": "open",
+     "required": false
+    },
+    {
+     "name": "to",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "note_secret",
+     "type": "string",
+     "default": null,
+     "required": false
+    }
+   ],
+   "display": {
+    "fields": {
+     "name": "Name",
+     "of": "counter",
+     "mode": "Mode",
+     "step": "step",
+     "weight": "weight",
+     "active": "active (on / off, enabled / disabled)",
+     "tags": "tags",
+     "rule": "rule",
+     "mask": "mask",
+     "shelf": "shelf",
+     "zone": "zone",
+     "feed": "feed (address)",
+     "feed_user": "feed login",
+     "feed_secret": "feed password",
+     "keep_days": "retention, days",
+     "flags": "flags",
+     "state": "state",
+     "to": "recipients",
+     "note_secret": "secret note"
+    },
+    "options": {
+     "mode": {
+      "plain": "quiet",
+      "loud": "loud"
+     },
+     "lane": {
+      "fast": "fast",
+      "slow": "slow"
+     }
+    },
+    "field_help": {
+     "of": "counter",
+     "active": "turn on / turn off",
+     "shelf": "shelf"
+    },
+    "unit": "tally",
+    "units": "tallies",
+    "section": "Tallies",
+    "general": "Tally",
+    "form": [
+     {
+      "title": "Tally",
+      "fields": [
+       "name",
+       "mode"
+      ]
+     },
+     {
+      "title": "Where",
+      "fields": [
+       "shelf",
+       "zone"
+      ]
+     }
+    ]
+   },
+   "about": {
+    "sub": "testsub",
+    "field": "of"
+   },
+   "places": {
+    "table": "shelves"
+   }
+  },
+  "testsub": {
+   "name": "testsub",
+   "rows": "counters",
+   "id": "name",
+   "fields": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "required": true
+    },
+    {
+     "name": "start",
+     "type": "int",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "labels",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "step",
+     "type": "int",
+     "default": null,
+     "required": false,
+     "inherit": 1
+    },
+    {
+     "name": "marks",
+     "type": "list",
+     "default": null,
+     "required": false,
+     "inherit": []
+    }
+   ],
+   "display": {
+    "fields": {
+     "name": "name",
+     "start": "start value",
+     "labels": "labels",
+     "step": "step",
+     "marks": "marks"
+    },
+    "options": {},
+    "field_help": {}
+   }
+  }
+ },
+ "rows": {
+  "testsub2": [
+   {
+    "id": "Gate-1",
+    "revision": 1,
+    "name": "Gate-1",
+    "of": "Alder",
+    "mode": "plain",
+    "step": 1,
+    "weight": 1.0,
+    "active": true,
+    "tags": [
+     "night"
+    ],
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-1",
+    "zone": "z1",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Gate-2",
+    "revision": 1,
+    "name": "Gate-2",
+    "of": "Alder",
+    "mode": "loud",
+    "step": 5,
+    "weight": 1.0,
+    "active": true,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-1",
+    "zone": "z1",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": 14,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Store-1",
+    "revision": 1,
+    "name": "Store-1",
+    "of": "Spruce",
+    "mode": "plain",
+    "step": 2,
+    "weight": 1.0,
+    "active": false,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-3",
+    "zone": "z2",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Store-2",
+    "revision": 1,
+    "name": "Store-2",
+    "of": "Spruce",
+    "mode": "loud",
+    "step": 10,
+    "weight": 2.5,
+    "active": true,
+    "tags": [
+     "night",
+     "vip"
+    ],
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-3",
+    "zone": "z2",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Office-1",
+    "revision": 1,
+    "name": "Office-1",
+    "of": "Oak",
+    "mode": "plain",
+    "step": 1,
+    "weight": 1.0,
+    "active": true,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-2",
+    "zone": "z1",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Office-2",
+    "revision": 1,
+    "name": "Office-2",
+    "of": "Oak",
+    "mode": "loud",
+    "step": 3,
+    "weight": 1.0,
+    "active": true,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-1",
+    "zone": "z1",
+    "feed": "https://feeds.example.net/w1",
+    "feed_user": "reader",
+    "feed_secret": "***",
+    "keep_days": 30,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Shop-1",
+    "revision": 1,
+    "name": "Shop-1",
+    "of": "Linden",
+    "mode": "plain",
+    "step": 1,
+    "weight": 1.0,
+    "active": true,
+    "tags": [
+     "vip"
+    ],
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-3",
+    "zone": "z2",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Shop-2",
+    "revision": 1,
+    "name": "Shop-2",
+    "of": "Linden",
+    "mode": "plain",
+    "step": 4,
+    "weight": 1.0,
+    "active": false,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": "Row-3",
+    "zone": "z2",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Yard-1",
+    "revision": 1,
+    "name": "Yard-1",
+    "of": "Pine",
+    "mode": "loud",
+    "step": 1,
+    "weight": 1.0,
+    "active": true,
+    "tags": null,
+    "rule": null,
+    "mask": null,
+    "shelf": null,
+    "zone": "z2",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   },
+   {
+    "id": "Yard-2",
+    "revision": 1,
+    "name": "Yard-2",
+    "of": "Pine",
+    "mode": "plain",
+    "step": 20,
+    "weight": 0.5,
+    "active": true,
+    "tags": [
+     "night"
+    ],
+    "rule": null,
+    "mask": null,
+    "shelf": null,
+    "zone": "z1",
+    "feed": null,
+    "feed_user": null,
+    "feed_secret": null,
+    "keep_days": null,
+    "flags": null,
+    "state": "open",
+    "to": null,
+    "note_secret": null
+   }
+  ],
+  "testsub": [
+   {
+    "id": "Alder",
+    "revision": 1,
+    "name": "Alder",
+    "start": 0,
+    "labels": [
+     "east",
+     "floor3"
+    ],
+    "step": 1,
+    "marks": null
+   },
+   {
+    "id": "Spruce",
+    "revision": 1,
+    "name": "Spruce",
+    "start": 10,
+    "labels": [
+     "east",
+     "floor2"
+    ],
+    "step": 2,
+    "marks": null
+   },
+   {
+    "id": "Oak",
+    "revision": 1,
+    "name": "Oak",
+    "start": 0,
+    "labels": [
+     "west",
+     "floor3"
+    ],
+    "step": null,
+    "marks": null
+   },
+   {
+    "id": "Linden",
+    "revision": 1,
+    "name": "Linden",
+    "start": 5,
+    "labels": [
+     "west",
+     "floor1"
+    ],
+    "step": 5,
+    "marks": null
+   },
+   {
+    "id": "Pine",
+    "revision": 1,
+    "name": "Pine",
+    "start": 0,
+    "labels": [
+     "north"
+    ],
+    "step": null,
+    "marks": null
+   }
+  ]
+ },
+ "tables": {
+  "testsub2": {
+   "shelves": [
+    {
+     "name": "Row-1",
+     "zone": "z1",
+     "server": "Node-1",
+     "kind": "plain",
+     "size": 4
+    },
+    {
+     "name": "Row-2",
+     "zone": "z1",
+     "server": "Node-1",
+     "kind": "reserve",
+     "size": 2
+    },
+    {
+     "name": "Row-3",
+     "zone": "z2",
+     "server": "Node-1",
+     "kind": "plain",
+     "size": 4
+    },
+    {
+     "name": "Row-4",
+     "zone": "z2",
+     "server": "Node-1",
+     "kind": "closed",
+     "admits": false,
+     "size": 1
+    }
+   ]
+  }
+ },
+ "session": {
+  "open": false,
+  "login_url": "/login",
+  "user": "anna",
+  "until": 0,
+  "via": "token",
+  "grants": [
+   {
+    "cap": "view",
+    "scope": "*"
+   },
+   {
+    "cap": "admin",
+    "scope": "labels:east"
+   },
+   {
+    "cap": "admin",
+    "scope": "labels:west"
+   }
+  ]
+ },
+ "schema": {
+  "version": 1
+ }
+}
