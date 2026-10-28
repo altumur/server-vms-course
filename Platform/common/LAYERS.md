@@ -12,7 +12,7 @@
 |---|---|---|
 | `*.schema.json` | форма: JSON Schema 2020-12 словами стандарта и пометками `x-*` (§ 3) | манифест — `02-installer/spec/02.1-installer.schema.json`; вид — `02.2-installer.view.schema.json`; семья — `NN-<процесс>/data/<семья>.schema.json` |
 | `*.relations.json` | связи манифеста: строки CEL с номером `no` (§ 5) | `02-installer/spec/02.1-installer.relations.json` |
-| `*.layers.tsv` | места пометок `x-*` схемы: `place<TAB>layer<TAB>word<TAB>value` (место — JSON Pointer в схеме) | рядом со схемой |
+| `*.layers.tsv` | места пометок `x-*` схемы: `place<TAB>layer<TAB>word<TAB>value` (место — JSON Pointer в схеме; корень — пустой указатель `""`); строки — все и только места слов со слоем § 3; `x-owner`, `x-default-text`, `x-class` таблица не несёт; у схемы вида таблицы нет (`x-step`, `x-default`, `x-unique-by` — в самой схеме), `x-implied-by` — у строки связей (V7-LAYERS-ROOT-HASH-01) | рядом со схемой |
 | `02.1-installer.scalars.tsv` | таблица простых скаляров манифеста (P/02.1 Н1.1) | рядом с формой манифеста |
 | `common/data/codec.tsv` | кодек строк хранилища: логический тип → запись в `items` и в JSON (слой 3) | `Platform/common/data/` |
 | `<семья>.outcomes.tsv` | исходы нечитаемой строки или объекта по читателям (§ 7) | рядом со схемой семьи |
