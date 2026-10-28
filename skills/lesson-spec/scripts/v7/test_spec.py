@@ -22,20 +22,16 @@ sys.path.insert(0, str(HERE.parent))
 from v7 import regex, section, spec, view  # noqa: E402
 
 ROOT = HERE.parents[3]
-try:
-    import cel_expr_python  # noqa: F401
-    import yaml  # noqa: F401
-    HAVE_STACK = True
-except ImportError:
-    HAVE_STACK = False
+# Окружение навыка одно (scripts/requirements.txt): без стека В7 модуль падает с именем пакета, а не пропускается
+# (повторное ревью Claude Н-1).
+import cel_expr_python  # noqa: F401,E402
+import yaml  # noqa: F401,E402
 TREE = None
 
 
 def setUpModule():
     """Копия Platform/, VMS/ и манифестов курса с пакетом перехода (если курс ещё на диалекте) — одна на модуль."""
     global TREE
-    if not HAVE_STACK:
-        return
     TREE = Path(tempfile.mkdtemp(prefix="v7-tree-"))
     for d in ("Platform", "VMS", "Source/tests/testdata"):
         shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns("__pycache__", ".DS_Store"))
@@ -50,7 +46,22 @@ def tearDownModule():
         shutil.rmtree(TREE, ignore_errors=True)
 
 
-NEED_TREE = unittest.skipUnless(HAVE_STACK, "нет окружения check_spec со стеком В7")
+def NEED_TREE(cls):                            # дерево строится всегда (стек — обязательная часть окружения)
+    return cls
+
+
+class TestEnvironment(unittest.TestCase):
+    def test_pinned(self):
+        """Окружение прогона — закреплённое scripts/requirements.txt; пины стека В7 (v7/requirements.txt) в нём те же."""
+        import re
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        self.assertEqual(check_spec.environment(), [])
+        pins = lambda p: dict(re.findall(r"(?m)^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;]+)", p.read_text(encoding="utf-8")))  # noqa: E731
+        norm = lambda n: re.sub(r"[-_.]+", "-", n).lower()                                               # noqa: E731
+        whole = {norm(k): v for k, v in pins(HERE.parent / "requirements.txt").items()}
+        for k, v in pins(HERE / "requirements.txt").items():
+            self.assertEqual(whole.get(norm(k)), v, k)
 
 
 class TestPortable(unittest.TestCase):
