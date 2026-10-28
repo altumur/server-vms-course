@@ -3,7 +3,7 @@ scenario	step	request	expect
 01-create	1	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-create	2	POST /streams {"cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "cam": "$c1", "grace": 30, "labels": ["public-address"]}
 01-create	3	POST /streams {"cam": "$c1"}	409 {"error": "exists"}
-01-create	4	GET /streams/$c1	200 {"labels": ["public-address"]}
+01-create	4	GET /streams	200 {"configured": [{"cam": "$c1", "labels": ["public-address"]}]}
 01-create	5	PUT /streams/$c1 {"cam": "nope"}	400 {"error": "~cam is fixed"}
 01-create	6	POST /streams {"cam": "nope"}	201 {"id": "nope", "grace": 30}
 01-create	7	POST /streams {"labels": []}	400 {"error": "@any"}
