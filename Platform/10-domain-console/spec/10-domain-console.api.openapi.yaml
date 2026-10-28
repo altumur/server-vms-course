@@ -233,7 +233,8 @@ paths:
       description: Отвечает консоль домена сама (P/10-07); POST — передача процессу.
       responses:
         '200':
-          description: Список и стучащиеся
+          description: 'Список и стучащиеся: rev, term?, members — doc строки domain/members; knocking — view.knocking
+            (Н1.2б; C10-MEMBERS-SOURCE-01)'
           content:
             application/json:
               schema:
@@ -2338,8 +2339,8 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
     NoDomain:
-      description: 'Вида нет (не построен) — no domain here (Н1.2а, Н1.2б, Н1.2в); вид есть, но не читается — 503 unavailable
-        (ReadUnavailable; В7 п. 3, П1)'
+      description: 'Вида нет (не построен) — no domain here (Н1.2а, Н1.2б, Н1.2в); у GET /domain/members — и строки
+        domain/members нет (Н1.2б); вид есть, но не читается — 503 unavailable (ReadUnavailable; В7 п. 3, П1)'
       content:
         application/json:
           schema:
