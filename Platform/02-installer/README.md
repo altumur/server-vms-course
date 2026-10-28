@@ -12,7 +12,7 @@ spec/02[.K]-installer.norms.md       нормы (главы — .K)
 spec/02-installer.library.md         договор библиотеки (если есть)
 spec/02-installer.README.md          инструкция реализации
 lifecycle.md                    флаги, окружение, коды выхода, юниты
-data/<семья>.form.yaml          схемы семей, которыми урок владеет (диалект ADR-0087; ADR-0088)
+data/<семья>.schema.json        схемы семей, которыми урок владеет (JSON Schema 2020-12, ADR-0092; ADR-0088)
 vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
 acceptance/[K/]                 приёмка
 ```

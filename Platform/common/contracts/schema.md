@@ -19,10 +19,10 @@
 
 ## Форма
 
-Строка `platform/schema` — семья `schema`: форма `Platform/06-console/data/schema.form.yaml`, исходы
-`Platform/06-console/data/schema.outcomes.tsv` ([форма](../../06-console/data/schema.form.yaml),
+Строка `platform/schema` — семья `schema`: форма `Platform/06-console/data/schema.schema.json`, исходы
+`Platform/06-console/data/schema.outcomes.tsv` ([форма](../../06-console/data/schema.schema.json),
 [исходы](../../06-console/data/schema.outcomes.tsv)). Поле `schema` пульса — формы пульсов
-`Platform/03-worker/data/heartbeats.form.yaml` (исходы — `Platform/03-worker/data/heartbeats.outcomes.tsv`) и `Platform/05-resource/data/resource-heartbeat.form.yaml` (исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`) (и их
+`Platform/03-worker/data/heartbeats.schema.json` (исходы — `Platform/03-worker/data/heartbeats.outcomes.tsv`) и `Platform/05-resource/data/resource-heartbeat.schema.json` (исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`) (и их
 `.outcomes.tsv`).
 
 ## Схема
@@ -37,7 +37,7 @@ SCHEMA:   число, которое понимает сборка; поле д�
 BUILD:    слово сборки для человека (env BUILD, умолчание dev); машина читает SCHEMA
 heartbeat: каждый пульс воркера и ресурса несёт schema и build (P/03.4 Н1.1, P/05 Н1.4); schema — целое JSON без дробной
           части и экспоненты (форма int главы 6.1 Н1.2: «Значение `int` на входе двери»), ≥ 1; `1.0`, `1e0`, `-1`, строка, null — схема процесса неизвестна (null
-          в `processes`, P/06.6 Н2.3) (сверка python и go М10/6–11, T3); build — строка; не строка — `""` (сверка python и go М10/6–11, T27)
+          в `processes`, P/06.6 Н2.3) (сверка python и go М10/6–11, T3); build — строка; не строка — `null` (не известно; сверка python и go М10/6–11, T27; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка)
 check:    при старте контроллера, воркера, ресурса и консоли: version > SCHEMA → не стартовать; строка не число → не стартовать;
           так же стартуют процессы домена — domain, агент, консоль домена (P/02.4 Н1.12); воркер проверяет и при продлении
           слота (P/03.2 Н3 «проверка схемы воркером»)

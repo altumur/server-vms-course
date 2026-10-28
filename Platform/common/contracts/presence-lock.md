@@ -13,9 +13,9 @@
 
 ## Форма
 
-Содержимое замка — семья `presence-lock`: `Platform/05-resource/data/presence-lock.form.yaml`,
+Содержимое замка — семья `presence-lock`: `Platform/05-resource/data/presence-lock.schema.json`,
 `Platform/05-resource/data/presence-lock.outcomes.tsv`; элементы `room.<sub>`, `live.<sub>` пишутся в строку двери
-`platform/doors/<сервер>` — `Platform/05-resource/data/doors.form.yaml`, `Platform/05-resource/data/doors.outcomes.tsv`
+`platform/doors/<сервер>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
 (аудит раскладки, В-45; решение «Архитектора» 2026-10-25).
 
 ## Замок
@@ -24,7 +24,7 @@
 presence_lock:  <корень событий>/.workers/<sub>/<экземпляр>.lock   # компоненты — по кодированию имён договора журнала событий
              # («Имена файлов в общих деревьях», event-journal.md); решение «Архитектора», второй пилот, Н-1
              содержимое: JSON {instance, sub, worker, server, pid} — экземпляр, подсистема, имя слота, сервер, pid процесса;
-             форма — семья presence-lock P/05 (схема ../../05-resource/data/presence-lock.form.yaml, исходы
+             форма — семья presence-lock P/05 (схема ../../05-resource/data/presence-lock.schema.json, исходы
              presence-lock.outcomes.tsv рядом): worker — имя слота или "" до захвата имени и пока воркер ищет без имени,
              pid — целое ≥ 1, набор полей закрыт (разбор ревью стадии B 3–5, № 23; ADR-0083 доп. (11))
              воркер: при старте, до захвата имени (глава P/03.2 Н3 «старт()»): open(O_CREAT) → исключающий блокирующий flock
@@ -65,9 +65,9 @@ presence:   ресурс говорит о процессах своей кор�
             закрытого перечня P/04: контроллер ждёт его), никогда «ушёл»
 ```
 
-Форма содержимого — семья `presence-lock` P/05: [схема](../../05-resource/data/presence-lock.form.yaml),
-[исходы](../../05-resource/data/presence-lock.outcomes.tsv); экземпляр — `{key, file}`, текст файла с `encoding: json` у корня
-([диалект](../DIALECT.md) §8); колонка `schema` строки каталога называет семью, раздел семей — в нормах P/05 (разбор ревью стадии B 6–7, № 44).
+Форма содержимого — семья `presence-lock` P/05: [схема](../../05-resource/data/presence-lock.schema.json),
+[исходы](../../05-resource/data/presence-lock.outcomes.tsv); экземпляр — `{key, file}`, текст файла с `x-encoding: json` у корня
+([слои В7](../LAYERS.md) § 6); колонка `schema` строки каталога называет семью, раздел семей — в нормах P/05 (разбор ревью стадии B 6–7, № 44).
 
 Гонка «воркер между open и flock, ресурс удаляет файл»: воркер открыл файл, ресурс берёт flock без ожидания, сверка
 совпала — gone, ресурс удаляет файл и отпускает замок; блокирующий flock воркера получает замок на удалённом файле,

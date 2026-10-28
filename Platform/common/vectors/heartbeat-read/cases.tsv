@@ -1,5 +1,5 @@
 # Чтение пульса ресурса platform/resources/<server>/heartbeat по форме и исходам семьи (договор наблюдения «Форма»;
-# Platform/05-resource/data/resource-heartbeat.form.yaml, resource-heartbeat.outcomes.tsv). Строка: case<TAB>object<TAB>expect<TAB>note.
+# Platform/05-resource/data/resource-heartbeat.schema.json, resource-heartbeat.outcomes.tsv). Строка: case<TAB>object<TAB>expect<TAB>note.
 case	object	expect	note
 base	{"server":"srv-a","ts":100,"url":"http://127.0.0.1:8090","schema":1,"build":"b1","usage":0,"usage_at":100,"space":{"total":1000,"free":900,"used":100,"full":0.1},"volumes":{},"units":{},"mirrors":{},"short":0}	{"readable":true,"fields":[]}	пульс по форме — читаем, полей с исходом поля нет
 retention-ok	{"server":"srv-a","ts":100,"url":"http://127.0.0.1:8090","schema":1,"build":"b1","usage":0,"usage_at":100,"space":{"total":1000,"free":900,"used":100,"full":0.1},"volumes":{},"units":{},"mirrors":{},"short":0,"retention_garbled":["testsub"],"retention_withheld":{"testsub":"days_garbled","testsub2":"holds_unread"}}	{"readable":true,"fields":[]}	верные retention_garbled и retention_withheld — читаем (C04-DEP-OBS-HEARTBEAT-01)

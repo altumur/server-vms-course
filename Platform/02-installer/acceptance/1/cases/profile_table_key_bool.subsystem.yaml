@@ -74,3 +74,4 @@ tables:
         required: true
       true:
         type: string
+worker: {exec: /usr/lib/probe/worker}

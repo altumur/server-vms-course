@@ -54,7 +54,7 @@
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `<sub>/<manifest:domain.witness.report>/<имя>`;
 - пишет: `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append);
-- читает: `platform/manifest/<sub>`, `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
+- читает: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev` (метка: смена манифеста — P/02.3 Н3; В7 п. 3, решение «Архитектора» 2026-10-28, П3; строка 19 списка), `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/members`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Строк держателя консоль домена не пишет: правки передаёт процессу `domain` (Н1.3; приём — [P/08.0](../../08-domain/spec/08.0-domain.norms.md)
 Н1.8), права `domainconsole` — чтение `domain/*` ([P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4). Семья
@@ -95,15 +95,15 @@ TLS, порт (решение «Архитектора» 2026-10-25, C10-START83
 
 | Дверь | Успех | Отказы |
 |---|---|---|
-| GET `/domain` | 200 — объект `domain/view` ([P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.4) как есть плюс `age` — секунды с `as_of` по стенным часам консоли, один знак после точки | 404 `{error: "no domain here", detail}` — объекта нет или он не читается; 401/403 — Н1.5 |
-| GET `/domain/<sub>/<rows>[?cluster=<член>]` | 200 — `[Unit]` подсистемы из вида, с `cluster` — только этого члена | по порядку: 400 — `cluster` дважды или пуст ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); 404 — нет такого манифеста; 404 `{error: "not in the directory"}` — у манифеста нет `domain.ref`; 404 — `rows` не его; 404 `{error: "no domain here"}`; 404 `{error: "no such member"}` — член не в списке; прочие параметры не читаются |
-| GET `/domain/shadow` | 200 — теневой отчёт (P/08.1 Н1.6) последнего прохода | 404 `{error: "no domain here"}` |
+| GET `/domain` | 200 — объект `domain/view` ([P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.4) как есть плюс `age` — секунды с `as_of` по стенным часам консоли, один знак после точки; поле `url` вида, которое не читается (не строка), — `null` в ответе (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 53 списка) | 404 `{error: "no domain here", detail}` — объекта нет; объект есть, но не читается — 503 `{error: "unavailable"}`, не 404 (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 54 списка); 401/403 — Н1.5 |
+| GET `/domain/<sub>/<rows>[?cluster=<член>]` | 200 — `[Unit]` подсистемы из вида, с `cluster` — только этого члена | по порядку: 400 — `cluster` дважды или пуст ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); 404 — нет такого манифеста; 404 `{error: "not in the directory"}` — у манифеста нет `domain.ref`; 404 — `rows` не его; 404 `{error: "no domain here"}` — вида нет, 503 `{error: "unavailable"}` — вид не читается (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 54 списка); 404 `{error: "no such member"}` — член не в списке; прочие параметры не читаются |
+| GET `/domain/shadow` | 200 — теневой отчёт (P/08.1 Н1.6) последнего прохода | 404 `{error: "no domain here"}` — отчёта нет; отчёт есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 54 списка) |
 
 **Н1.2б Члены (М11/3 Н2).**
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| GET `/domain/members` | консоль домена (`domainconsole`) | 200 `{rev, members, knocking}` | 404 `no domain here` (вида нет); 401/403 — Н1.5 |
+| GET `/domain/members` | консоль домена (`domainconsole`) | 200 `{rev, members, knocking}` | 404 `no domain here` (вида нет); строка `domain/members` есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 36 списка); 401/403 — Н1.5 |
 
 Грант `admin` для правки списка и `view` для чтения — Н1.5; правки списка консоль передаёт процессу (Н1.3; их нормы —
 [глава 8.3](../../08-domain/spec/08.3-domain.norms.md) Н2).
@@ -112,14 +112,14 @@ TLS, порт (решение «Архитектора» 2026-10-25, C10-START83
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| GET `/domain/topology` | консоль домена | 200 doc ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.2) — из строки `domain/topology`, не из вида: сразу после PUT — новый `rev` (сверка М11, T1) | 404 `no domain here`; 401/403 — Н1.5 |
+| GET `/domain/topology` | консоль домена | 200 doc ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.2) — из строки `domain/topology`, не из вида: сразу после PUT — новый `rev` (сверка М11, T1) | 404 `no domain here`; строка `domain/topology` есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 50 списка); 401/403 — Н1.5 |
 
 **Н1.2г Назначения (М11/6 Н2).** Двери — консоли домена; консоль члена пересылает их (договор пересылки «Двери домена»):
 
 | Дверь | Успех | Отказы |
 |---|---|---|
-| GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}` | 401/403 — Н1.5 |
-| GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; 404 нет манифеста или без `domain.ref` |
+| GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}` | строка `domain/placement` (счётчик `rev`) есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 43 списка); 401/403 — Н1.5 |
+| GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; запись есть, но не читается — 503 `{error: "unavailable"}`, не 404 (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 42 списка); 404 нет манифеста или без `domain.ref` |
 
 Форма `Placement` и счётчик — [глава 8.6](../../08-domain/spec/08.6-domain.norms.md) Н1.1; правки назначений консоль
 передаёт процессу (Н1.3).
@@ -205,7 +205,9 @@ server:
 
 `Entry.ca`, строка `ca-certs` и их приём — [глава 8.3](../../08-domain/spec/08.3-domain.norms.md) Н1.6; функция `peer`
 и её слова — [договор `peer`](../../common/contracts/peer.md) (этот урок — участник, шаги 6–7); лист и подписи —
-договор сертификата роли `cert`, `sig`. Часть консоли домена пункта М11/8-08 (P/10-11).
+договор сертификата роли `cert`, `sig`. Строка `domain/members` (Entry.ca принятых членов) есть, но не читается —
+объединение доверия двери роли на этот проход — только свои центры (`ca.pem`, `ca.next.pem`): рукопожатие других членов —
+отказ, журнал (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 36 списка). Часть консоли домена пункта М11/8-08 (P/10-11).
 
 ### Н1.5 Сторожевая консоли домена (М11/9 Н1.5 `body_unit`, `session`; P/08.4 Н1.5 `domain`)
 
@@ -393,7 +395,8 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н4) | 413 / 400 / 408 | тело больше предела консоли, chunked, читается медленно (договор сторожевой и передачи `body`) |
 | слова договора пересылки `answer` | 502 | передача процессу `domain` (Н1.3 `pass`): обрыв и молчание — как договор пересылки «Пересылка — одна функция» `answer` |
 | `door.pass` | 400, 408, 413, 502, 503 | коды «Передачи» договора сторожевой и передачи (`codes`); воркера на домене не слышно — 503 `unavailable` (Н1.6 `absent`) |
-| `no domain here` | 404 | вид не построен или не читается (Н1.2а, Н1.2б, Н1.2в) |
+| `no domain here` | 404 | вид не построен (Н1.2а, Н1.2б, Н1.2в) |
+| `unavailable` | 503 | строка, которой отвечает дверь чтения (вид, тень, `domain/members`, `domain/topology`, `domain/placement`, запись назначения), есть, но не читается — не 404 и не «строки нет» (Н1.2а–Н1.2г; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строки 36, 42, 43, 50, 54 списка) |
 | `not in the directory` | 404 | манифест без `domain.ref` (Н1.2а) |
 | `no such member` | 404 | `?cluster=` не член (Н1.2а) |
 | `executors` | 409 | переход 3 — ответ процесса `domain` как пришёл: правка `PUT`, `DELETE` `/domain/<sub>/<rows>/<ref>` без `?cluster=`, ref у двух исполнителей и больше; тело `{error, detail, clusters}` ([P/08.6](../../08-domain/spec/08.6-domain.norms.md) Н3 «принять правку» шаг 2а; ADR-0091 доп. (15) п. 4) |
@@ -466,7 +469,7 @@ TLS-стенд ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md
 находки и записи окон (ADR-0080 доп. 6). Пункты урока — М11/1-08, М11/3-12, М11/8-10, М11/8-11, М11/9-13, М11/11-08 и
 части «(часть)» по `note` [id-map](../../common/id-map.tsv) (перенос урока 10).
 
-- [ ] **P/10-01** двери вида `GET /domain` (с `age` по стенным часам консоли), `/domain/<sub>/<rows>[?cluster=]`, `/domain/shadow` и их отказы `no domain here`, `not in the directory`, `no such member` (Н1.2а) — сосед на стенде глав 8.3 (сц. 05) и 8.1 (сц. 06, 09); содержимое вида — глава 8.1
+- [ ] **P/10-01** двери вида `GET /domain` (с `age` по стенным часам консоли), `/domain/<sub>/<rows>[?cluster=]`, `/domain/shadow` и их отказы `no domain here`, `unavailable` (нечитаемые вид и тень), `not in the directory`, `no such member` (Н1.2а) — сосед на стенде глав 8.3 (сц. 05) и 8.1 (сц. 06, 09); содержимое вида — глава 8.1
 - [ ] **P/10-02** передача правок процессу `domain` Н1.3: метод, путь, тело, заголовки как пришли, `X-W2C-Client` ставит консоль (договор пересылки «Адрес клиента»), срок — «Ожидание» строки, ответ как пришёл, 502 при обрыве и молчании — сосед на стенде глав 8.3 (сц. 01, 02), 8.6, 8.8, 8.9; срок и 502 — чтением; приём — P/08.0-01
 - [ ] **P/10-03** `door.pass` на домене Н1.6: `route`, `address`, `absent`, сегменты `.`/`..` — 404; правило и коды — договор сторожевой и передачи «Передача» — чтением (воркера на домене у стенда нет)
 - [ ] **P/10-04** страница держателя Н1.7: `/`, модуль, CSP, `/manifest` `{"name": "", "rows": null}`, `/mounts`, `/session`, `/healthz` — сц. 05; вызовы модуля в режиме `domain` — тест модуля у его владельца ([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.6, Н5)

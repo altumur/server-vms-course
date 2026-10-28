@@ -28,7 +28,8 @@ paths:
   /domain:
     get:
       summary: Вид домена (Н1.2а)
-      description: Отвечает консоль домена сама (P/10-01).
+      description: 'Отвечает консоль домена сама (P/10-01); поле url вида, которое не читается (не строка), — null в ответе (В7
+        п. 3, решение «Архитектора» 2026-10-28; строка 53 списка).'
       responses:
         '200':
           description: Объект domain/view последнего прохода держателя и age
@@ -44,8 +45,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NoDomain'
-        '503': &id004
-          $ref: '#/components/responses/GuardShut'
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -79,7 +80,8 @@ paths:
         '403': *id003
         '404':
           $ref: '#/components/responses/ViewNotFound'
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
       parameters: &id005
       - name: cluster
         in: query
@@ -206,7 +208,8 @@ paths:
         '403': *id003
         '404':
           $ref: '#/components/responses/NoDomain'
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -238,7 +241,8 @@ paths:
         '403': *id003
         '404':
           $ref: '#/components/responses/NoDomain'
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -347,7 +351,8 @@ paths:
         '403': *id003
         '404':
           $ref: '#/components/responses/NoDomain'
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -446,7 +451,8 @@ paths:
         '400': *id001
         '401': *id002
         '403': *id003
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -476,7 +482,8 @@ paths:
         '403': *id003
         '404':
           $ref: '#/components/responses/NoPlacement'
-        '503': *id004
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -659,7 +666,8 @@ paths:
         '400': *id001
         '401': *id002
         '403': *id003
-        '503': *id004
+        '503': &id004
+          $ref: '#/components/responses/GuardShut'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -2249,6 +2257,17 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/GateOrRole403'
+    ReadUnavailable:
+      description: 'Дверь чтения консоли домена: строка, которой она отвечает (вид, тень, domain/members, domain/topology,
+        domain/placement, запись назначения), есть, но не читается — 503 {error: "unavailable"}, не 404 и не «строки нет» (В7
+        п. 3, решение «Архитектора» 2026-10-28, П1; строки 42, 43, 50, 54 списка); сторожевая shut — договор сторожевой и
+        передачи shut'
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/Refusal'
+            - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
     GuardShut:
       description: сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой и передачи shut;
         P/06.3 Н1.8)
@@ -2271,7 +2290,8 @@ components:
           schema:
             $ref: '#/components/schemas/Refusal'
     NoDomain:
-      description: Вида нет или он не читается — no domain here (Н1.2а, Н1.2б, Н1.2в)
+      description: 'Вида нет (не построен) — no domain here (Н1.2а, Н1.2б, Н1.2в); вид есть, но не читается — 503 unavailable
+        (ReadUnavailable; В7 п. 3, П1)'
       content:
         application/json:
           schema:

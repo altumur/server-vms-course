@@ -1,0 +1,105 @@
+case	family	kind	mode	who	text	verdict	paths	outcome	note
+01-0001	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1"}	ok	[]	[]	base
+01-0002	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1"}	ok	[]	{"<s>worker": []}	base
+01-0003	platform/epoch_floor	row	writer	["proc:01-store"]	null	refused	[""]	[]	root null
+01-0004	platform/epoch_floor	row	reader	["<s>worker"]	null	refused	[""]	{"<s>worker": [""]}	root null
+01-0005	platform/epoch_floor	row	writer	["proc:01-store"]	{"generation_at":"1"}	refused	["/floor"]	[]	: without required floor
+01-0006	platform/epoch_floor	row	reader	["<s>worker"]	{"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	: without required floor
+01-0007	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1"}	refused	["/generation_at"]	[]	: without required generation_at
+01-0008	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	: without required generation_at
+01-0009	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"","generation_at":"1"}	refused	["/floor"]	[]	floor: wrong type
+01-0010	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: wrong type
+01-0011	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":1.0,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer 1.0
+01-0012	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":1.0,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer 1.0
+01-0013	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":1e0,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer 1e0
+01-0014	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":1e0,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer 1e0
+01-0015	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":1.5,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer 1.5
+01-0016	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":1.5,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer 1.5
+01-0017	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":100.00000000000000001,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer 100.00000000000000001
+01-0018	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":100.00000000000000001,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer 100.00000000000000001
+01-0019	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":-0.0,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer -0.0
+01-0020	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":-0.0,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer -0.0
+01-0021	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":1e400,"generation_at":"1"}	refused	["/floor"]	[]	floor: integer 1e400
+01-0022	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":1e400,"generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: integer 1e400
+01-0023	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"-1","generation_at":"1"}	refused	["/floor"]	[]	floor: below minimum
+01-0024	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"-1","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: below minimum
+01-0025	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"9007199254740992","generation_at":"1"}	refused	["/floor"]	[]	floor: above maximum
+01-0026	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"9007199254740992","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	floor: above maximum
+01-0027	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":""}	refused	["/generation_at"]	[]	generation_at: wrong type
+01-0028	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":""}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: wrong type
+01-0029	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1\n"}	refused	["/generation_at"]	[]	generation_at: trailing \n
+01-0030	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1\n"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: trailing \n
+01-0031	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1e0"}	refused	["/generation_at"]	[]	generation_at: time 1e0
+01-0032	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1e0"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: time 1e0
+01-0033	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"-1"}	refused	["/generation_at"]	[]	generation_at: time -1
+01-0034	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"-1"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: time -1
+01-0035	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1.0001"}	refused	["/generation_at"]	[]	generation_at: time 1.0001
+01-0036	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1.0001"}	ok	[]	{"<s>worker": []}	generation_at: time 1.0001
+01-0037	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1.0","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '1.0'
+01-0038	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1.0","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '1.0'
+01-0039	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"x","generation_at":"1"}	refused	["/floor"]	[]	item floor: record 'x'
+01-0040	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"x","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record 'x'
+01-0041	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"True","generation_at":"1"}	refused	["/floor"]	[]	item floor: record 'True'
+01-0042	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"True","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record 'True'
+01-0043	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1e0","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '1e0'
+01-0044	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1e0","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '1e0'
+01-0045	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"[1","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '[1'
+01-0046	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"[1","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '[1'
+01-0047	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"{","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '{'
+01-0048	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"{","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '{'
+01-0049	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"{\"b\":1,\"a\":2}","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '{"b":1,"a":2}'
+01-0050	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"{\"b\":1,\"a\":2}","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '{"b":1,"a":2}'
+01-0051	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"a,,b","generation_at":"1"}	refused	["/floor"]	[]	item floor: record 'a,,b'
+01-0052	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"a,,b","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record 'a,,b'
+01-0053	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":" 1","generation_at":"1"}	refused	["/floor"]	[]	item floor: record ' 1'
+01-0054	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":" 1","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record ' 1'
+01-0055	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1.0"}	ok	[]	[]	item generation_at: record '1.0'
+01-0056	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1.0"}	ok	[]	{"<s>worker": []}	item generation_at: record '1.0'
+01-0057	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"x"}	refused	["/generation_at"]	[]	item generation_at: record 'x'
+01-0058	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"x"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record 'x'
+01-0059	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"True"}	refused	["/generation_at"]	[]	item generation_at: record 'True'
+01-0060	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"True"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record 'True'
+01-0061	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"[1"}	refused	["/generation_at"]	[]	item generation_at: record '[1'
+01-0062	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"[1"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record '[1'
+01-0063	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"{"}	refused	["/generation_at"]	[]	item generation_at: record '{'
+01-0064	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"{"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record '{'
+01-0065	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"{\"b\":1,\"a\":2}"}	refused	["/generation_at"]	[]	item generation_at: record '{"b":1,"a":2}'
+01-0066	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"{\"b\":1,\"a\":2}"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record '{"b":1,"a":2}'
+01-0067	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"a,,b"}	refused	["/generation_at"]	[]	item generation_at: record 'a,,b'
+01-0068	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"a,,b"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record 'a,,b'
+01-0069	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":" 1"}	refused	["/generation_at"]	[]	item generation_at: record ' 1'
+01-0070	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":" 1"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	item generation_at: record ' 1'
+01-0071	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"zz_wrong","generation_at":"1"}	refused	["/floor"]	[]	outcome /floor: wrong type
+01-0072	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"zz_wrong","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	outcome /floor: wrong type
+01-0073	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"1"}	ok	[]	[]	base
+01-0074	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"1"}	ok	[]	{"configstore-door": []}	base
+01-0075	platform/configstore-doors/<id>	row	writer	["configstore-door"]	null	refused	[""]	[]	root null
+01-0076	platform/configstore-doors/<id>	row	reader	["configstore-door"]	null	refused	[""]	{"configstore-door": [""]}	root null
+01-0077	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{}	refused	["/seen_at"]	[]	: without required seen_at
+01-0078	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{}	refused	["/seen_at"]	{"configstore-door": [""]}	: without required seen_at
+01-0079	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":""}	refused	["/seen_at"]	[]	seen_at: wrong type
+01-0080	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":""}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: wrong type
+01-0081	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"1\n"}	refused	["/seen_at"]	[]	seen_at: trailing \n
+01-0082	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"1\n"}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: trailing \n
+01-0083	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"1e0"}	refused	["/seen_at"]	[]	seen_at: time 1e0
+01-0084	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"1e0"}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: time 1e0
+01-0085	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"-1"}	refused	["/seen_at"]	[]	seen_at: time -1
+01-0086	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"-1"}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: time -1
+01-0087	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"1.0001"}	refused	["/seen_at"]	[]	seen_at: time 1.0001
+01-0088	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"1.0001"}	ok	[]	{"configstore-door": []}	seen_at: time 1.0001
+01-0089	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"1.0"}	ok	[]	[]	item seen_at: record '1.0'
+01-0090	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"1.0"}	ok	[]	{"configstore-door": []}	item seen_at: record '1.0'
+01-0091	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"x"}	refused	["/seen_at"]	[]	item seen_at: record 'x'
+01-0092	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"x"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record 'x'
+01-0093	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"True"}	refused	["/seen_at"]	[]	item seen_at: record 'True'
+01-0094	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"True"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record 'True'
+01-0095	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"[1"}	refused	["/seen_at"]	[]	item seen_at: record '[1'
+01-0096	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"[1"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record '[1'
+01-0097	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"{"}	refused	["/seen_at"]	[]	item seen_at: record '{'
+01-0098	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"{"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record '{'
+01-0099	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"{\"b\":1,\"a\":2}"}	refused	["/seen_at"]	[]	item seen_at: record '{"b":1,"a":2}'
+01-0100	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"{\"b\":1,\"a\":2}"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record '{"b":1,"a":2}'
+01-0101	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":"a,,b"}	refused	["/seen_at"]	[]	item seen_at: record 'a,,b'
+01-0102	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":"a,,b"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record 'a,,b'
+01-0103	platform/configstore-doors/<id>	row	writer	["configstore-door"]	{"seen_at":" 1"}	refused	["/seen_at"]	[]	item seen_at: record ' 1'
+01-0104	platform/configstore-doors/<id>	row	reader	["configstore-door"]	{"seen_at":" 1"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record ' 1'

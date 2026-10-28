@@ -12,8 +12,8 @@ N — ответы «Архитектора» 2026-10-25 (P/04 о форме м�
 ## Форма
 
 Имена слотов — ключи `<sub>/slots/<имя>` (занятые и отданные — по строкам слота); сервер процесса роли — поле `server`
-пульса `<sub>/heartbeats/<имя>`. Формы и исходы: `Platform/03-worker/data/slots.form.yaml`,
-`Platform/03-worker/data/slots.outcomes.tsv`, `Platform/03-worker/data/heartbeats.form.yaml`,
+пульса `<sub>/heartbeats/<имя>`. Формы и исходы: `Platform/03-worker/data/slots.schema.json`,
+`Platform/03-worker/data/slots.outcomes.tsv`, `Platform/03-worker/data/heartbeats.schema.json`,
 `Platform/03-worker/data/heartbeats.outcomes.tsv` (аудит раскладки, В-58; решение «Архитектора» 2026-10-25).
 
 ## Грамматика и «по имени»

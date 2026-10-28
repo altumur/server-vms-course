@@ -1,10 +1,10 @@
 # Векторы: чтение пульса ресурса и воркера по форме семьи
 
 Владелец — [договор наблюдения](../../contracts/observation.md) «Форма», «Состояние ресурса» (догадка стадии C
-C04-DEP-OBS-HEARTBEAT-01, решение «Архитектора» 2026-10-25). Форма — `Platform/05-resource/data/resource-heartbeat.form.yaml`,
+C04-DEP-OBS-HEARTBEAT-01, решение «Архитектора» 2026-10-25). Форма — `Platform/05-resource/data/resource-heartbeat.schema.json`,
 исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (семья `platform/resources/<server>/heartbeat` урока
 P/05). Участники — наблюдатели `resource_state`: контроллер и консоль. Байты пишет «Спецификация»; ожидания получены судьёй
-схем семей навыка (режим читателя, DIALECT § 8–9), не кодом реализаций.
+схем семей навыка (режим читателя, LAYERS.md §§ 6–7), не кодом реализаций.
 
 ## `cases.tsv`
 
@@ -19,11 +19,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 18 строк: 11 читаемых (из них 7 с исходом поля), 7 нечитаемых. Лексемы времени и целых (OBS154-RAW-TIME-EXACT-01, решение «Архитектора»
 2026-10-26): время `ts`, `usage_at` с `1e0`, `1e-400`, `-0` — не по форме (`codec.tsv` `time`, читатель); `usage` `100.0` —
 целое 100, `100.00000000000000001` — не целое по точному десятичному значению лексемы, не после binary64; `schema` `1.0`
-(`whole`) — исход поля.
+(`x-whole`) — исход поля.
 
 ## `worker.tsv`
 
-Чтение пульса воркера `<sub>/heartbeats/<имя>` по форме `Platform/03-worker/data/heartbeats.form.yaml` и исходам
+Чтение пульса воркера `<sub>/heartbeats/<имя>` по форме `Platform/03-worker/data/heartbeats.schema.json` и исходам
 `Platform/03-worker/data/heartbeats.outcomes.tsv` (урок P/03.4 Н1.1; C08-HEARTBEAT-READER-99-VECTORS, решение «Архитектора» 2026-10-26). Читатели — консоль (`GET /{rows}`, `/servers`,
 `/metrics`, `/where`, door.pass, `/schema`), контроллер, дренаж, теневой отчёт домена. Те же правила файла; поля `case`,
 `key` (ключ объекта), `object`, `expect`, `note`.
@@ -39,7 +39,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 `GET /{rows}`, прочим нечитаем; `unreadable` с `why` — по форме; исходы полей `build`, `schema`, `pending_writes`; путь `""`
 раньше `/status` — нечитаем всем. Ожидания — судьёй схем семей навыка (режим читателя), правило `worker` — по прозе.
 Лексемы (OBS154-RAW-TIME-EXACT-01): `ts`, `started`, `previous_hb` с `1e0`, `1e-400`, `-0` — нечитаем всем; `freeing` `100.0` —
-читаем, `100.00000000000000001` — нечитаем всем (у `freeing` исхода поля нет); `pending_writes` `1.0` (`whole`) — исход поля.
+читаем, `100.00000000000000001` — нечитаем всем (у `freeing` исхода поля нет); `pending_writes` `1.0` (`x-whole`) — исход поля.
 
 ## Прогон
 

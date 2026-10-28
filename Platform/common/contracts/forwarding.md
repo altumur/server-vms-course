@@ -29,9 +29,9 @@ P/06.7 Н1.8; «урок 9 Н1.5» — P/06.7 Н1.9; «урок 2 Н1.8» — P/
 Файлы, по которым работает договор (аудит раскладки, В-20–В-22; решение «Архитектора» 2026-10-25):
 
 - вид домена `domain/view` (`holds`, `view.url` перехода 2; 503 `domain console not known`) — семья `view`:
-  `Platform/08-domain/data/view.form.yaml`, `Platform/08-domain/data/view.outcomes.tsv`;
+  `Platform/08-domain/data/view.schema.json`, `Platform/08-domain/data/view.outcomes.tsv`;
 - копия списка членов `domain/member-list` (503 `the list of members does not read`; `Entry.ca` назначения для `tls`) —
-  семья `member-list`: `Platform/09-agent/data/member-list.form.yaml`, `Platform/09-agent/data/member-list.outcomes.tsv`;
+  семья `member-list`: `Platform/09-agent/data/member-list.schema.json`, `Platform/09-agent/data/member-list.outcomes.tsv`;
 - тело отказа сторожевой `Denied` (401/403 на переходах 1 и 2) — `Platform/common/contracts/gate-and-pass.api.openapi.yaml`.
 
 ## Заголовки между процессами

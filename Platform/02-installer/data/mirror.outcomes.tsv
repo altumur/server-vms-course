@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки platform/mirror (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки platform/mirror (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-/copies	copies — 1 (зеркало тел); прочие поля строки читаются	0	поле	P/05 Н1.1 mirror
-	строка целиком нечитаема: зеркало тел — copies 1 (P/05 Н1.1 mirror); зеркало бакетов — enabled: false, шаг mirror прохода не исполняется (P/05 Н1.4 mirror)	1	строка	P/05 Н1.4 mirror, Н3 mirror, Н1.1 mirror
+path	reader	outcome	priority	unit	norm
+/copies	*	copies — 1 (зеркало тел); прочие поля строки читаются	0	поле	P/05 Н1.1 mirror
+	resource	строка нечитаема: шаг mirror и копии тел (Н1.1) в этом проходе не исполняются, copies 1 и enabled false не подставляются; причина в пульсе settings_unread: mirror (П1; В7 п. 3, строка 20)	1	строка	P/05 Н1.1 «Тела у ресурса», Н1.4 mirror, Н3 mirror

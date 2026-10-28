@@ -27,7 +27,8 @@ line:                                        # одна строка JSON в ф�
   occurred: <секунды>                                              # когда произошло; необязателен
   # t и occurred — время common.time, как все времена (P/01.1 Н0 «Время в строке»): писатель пишет строго (кодек
   # Platform/common/data/codec.tsv time: число, до трёх знаков дроби), читатель читает терпимо (число или строка по
-  # кодеку читателя); форма строки — семья events P/05 (Platform/05-resource/data/events.form.yaml, Platform/05-resource/data/events.outcomes.tsv); векторы чтения —
+  # кодеку читателя); форма строки — семьи events P/05 по дереву (Platform/05-resource/data/events-<дерево>.schema.json и .outcomes.tsv: events-unit,
+  # events-unit-alarms, events-audit, events-audit-alarms, events-console, events-console-alarms, events-mirror); векторы чтения —
   # common/vectors/journal bucket.tsv t-* (догадка стадии C EJ-G07, решение «Архитектора» 2026-10-23)
   <поля>:   слова подсистемы                                       # v не пишется: отсутствие = версия 1; v — положительное
                                                                    # целое по форме, v = 2 сохраняется, выбора поведения по v
@@ -148,7 +149,7 @@ console/экземпляр). Эпоха — каноническое десят�
 
 Умолчания срока хранения деревьев — из P/02.4 Н1.9 (формы строк `retention`, `alarms_retention`) и P/05 Н3 «проход ресурса»
 `retain` без изменения поведения: строки срока пишет установщик и оператор, убирает по сроку ресурс (аудит раскладки А-23, решение «Архитектора» 2026-10-25).
-Формы строк — `Platform/02-installer/data/retention.form.yaml` (исходы — `Platform/02-installer/data/retention.outcomes.tsv`), `Platform/02-installer/data/alarms-retention.form.yaml` (исходы — `Platform/02-installer/data/alarms-retention.outcomes.tsv`) и
+Формы строк — `Platform/02-installer/data/retention.schema.json` (исходы — `Platform/02-installer/data/retention.outcomes.tsv`), `Platform/02-installer/data/alarms-retention.schema.json` (исходы — `Platform/02-installer/data/alarms-retention.outcomes.tsv`) и
 их `.outcomes.tsv`; что ресурс делает при неверном или неизвестном сроке — P/05 Н3 `retain`.
 
 ```yaml

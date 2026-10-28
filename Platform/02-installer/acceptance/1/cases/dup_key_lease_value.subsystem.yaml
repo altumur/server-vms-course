@@ -34,3 +34,4 @@ display:
         - {field: seen, title: Seen}
 lease: {unconfirmed_max: off}
 lease: {unconfirmed_max: forever}
+worker: {exec: /usr/lib/probe/worker}

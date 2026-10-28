@@ -25,7 +25,7 @@ P/08.4 (разбор ревью стадии B 8–10, № 22); «Н1.x» в ш�
 
 ## Форма
 
-Функция `token` читает `domain/keys` и `domain/revoked`: `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.form.yaml`, `Platform/08-domain/data/revoked.outcomes.tsv`; объявление вида и `audience_claim` — `Platform/02-installer/spec/02.1-installer.form.yaml` (аудит раскладки, В-14, Б-32; решение «Архитектора» 2026-10-25).
+Функция `token` читает `domain/keys` и `domain/revoked`: `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; объявление вида и `audience_claim` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, В-14, Б-32; решение «Архитектора» 2026-10-25).
 
 ## Токен
 

@@ -2316,6 +2316,8 @@ paths:
         $ref: '#/components/schemas/UnitId'
     get:
       summary: Дверь держателя места
+      description: Удержание не известно — строка удержания или пульс держателя не читаются — 503 unavailable, не 404
+        (договор наблюдения «Удержание места» unknown; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 27 списка).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -2442,6 +2444,8 @@ paths:
         $ref: '#/components/schemas/UnitId'
     get:
       summary: Дверь держателя места
+      description: Удержание не известно — строка удержания или пульс держателя не читаются — 503 unavailable, не 404
+        (договор наблюдения «Удержание места» unknown; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 27 списка).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -5444,9 +5448,14 @@ components:
           - type: 'null'
         name_conflict:
           type: boolean
-          description: true, когда под именем воркера есть хотя бы одна свежая читаемая метка соперника любого state
+          description: true, когда под именем воркера есть хотя бы одна свежая метка соперника любого state (нечитаемая — тоже, с пометкой name_conflict_unreadable)
             (refused, nameless, waiting); имя — сегмент ключа, метки «-» не входят (Н3 «/servers» «Соперники»; договор
             наблюдения «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01, C06-CONTENDER-PROJECTION-33-01).
+        name_conflict_unreadable:
+          type: boolean
+          const: true
+          description: Под именем воркера есть свежая метка соперника, которая не читается (в том числе name ≠ сегменту ключа) —
+            конфликт считается и в name_conflict; поля нет, когда таких меток нет (Н3 «/servers» «Соперники»; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 22 списка).
         status:
           type: object
           additionalProperties:
@@ -5778,7 +5787,10 @@ components:
           description: null — схема ресурса неизвестна (schema пульса не целым знаком; глава 6.5 Н2, глава 6.6 Н1.1а
             heartbeat; разбор ревью стадии B 6–7, № 6).
         build:
-          type: string
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: null — build пульса не строкой, не известно (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка).
         usage:
           type: integer
           minimum: 0
@@ -5850,21 +5862,38 @@ components:
             minimum: 0
         retention_garbled:
           description: Подсистемы, у которых любой срок (<sub>/retention или <sub>/alarms_retention) с неверным days, независимо от
-            retention_withheld, по возрастанию байтов (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01).
+            retention_withheld, по возрастанию байтов (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01);
+            null — поле пульса не по форме, не известно (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка).
+          anyOf:
+          - type: array
+            minItems: 1
+            uniqueItems: true
+            items:
+              type: string
+          - type: 'null'
+        retention_withheld:
+          description: Почему зависимое дерево подсистемы не убиралось в проходе срока — одна причина по порядку unknown → days_garbled
+            → holds_unread (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01); null — поле пульса не по
+            форме, не известно (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка).
+          unevaluatedProperties: false
+          anyOf:
+          - type: object
+            additionalProperties:
+              enum:
+              - days_garbled
+              - unknown
+              - holds_unread
+          - type: 'null'
+        settings_unread:
+          description: Строки настроек прохода ресурса, которые не прочитались — mirror (шаг mirror и копии тел не исполняются),
+            space (шаг relieve не исполняется); нет таких — поля нет (P/05 Н1.4; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20, 21 списка).
           type: array
           minItems: 1
           uniqueItems: true
           items:
-            type: string
-        retention_withheld:
-          description: Почему зависимое дерево подсистемы не убиралось в проходе срока — одна причина по порядку unknown → days_garbled
-            → holds_unread (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01).
-          type: object
-          additionalProperties:
             enum:
-            - days_garbled
-            - unknown
-            - holds_unread
+            - mirror
+            - space
         waits:
           $ref: '#/components/schemas/WaitCounts'
         restore:
@@ -6697,7 +6726,10 @@ components:
             minimum: 1
           - type: 'null'
         build:
-          type: string
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: null — build пульса не строкой, не известно (у воркера и ресурса; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка).
         ts:
           type: number
         live:
@@ -6897,7 +6929,7 @@ components:
           pattern: _secret(?![\s\S])
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
-      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.form.yaml, Н1.3а); консоль
+      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.schema.json, Н1.3а); консоль
         её читает для возраста снимка и счёта испорченных шардов (глава 6.5, P/06.5-11). Путём не отдаётся. Дополнительные
         поля — ровно snapshot по манифесту, без blob/секретов/авторского server; server здесь вычисляется платформой. Адреса
         маскированы.
@@ -6922,7 +6954,7 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/SnapshotUnit'
-      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.form.yaml, Н1.3а); консоль
+      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.schema.json, Н1.3а); консоль
         её читает для возраста снимка и счёта испорченных шардов (глава 6.5, P/06.5-11). Путём не отдаётся. Четвёртое свойство
         — имя rows из манифеста; cluster/worker/ts как rows отвергаются загрузчиком. Отдельный шард, без транзакции нескольких
         шардов.

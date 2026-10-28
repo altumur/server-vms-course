@@ -1,5 +1,9 @@
-# Исходы нечитаемой строки <sub>/epoch/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки <sub>/epoch/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-/epoch	выдача эпохи: отказ EpochUnreadable, не 0 — единицу не запускать, тревога; подтверждение аренды: fenced — остановить единицу, запомнить потерю эпохи, строка эпохи не меняется; import, restore: upper не достоверен — отказ всего входа, ничего не меняется (P/01.3 Н1.3 import)	0	строка	P/03.2 Н3 «взять_эпоху(id)», «подтвердить», Н4; P/01.3 Н1.3 import, Н4
-	строка целиком нечитаема: выдача эпохи — EpochUnreadable, не 0; подтверждение аренды — fenced; import, restore — отказ всего входа, ничего не меняется	1	строка	P/03.2 Н3 «взять_эпоху(id)», «подтвердить», Н4; P/01.3 Н1.3 import, Н4
+path	reader	outcome	priority	unit	norm
+/epoch	<s>worker	выдача эпохи: отказ EpochUnreadable, не 0 — единицу не запускать, тревога; подтверждение аренды: fenced — остановить единицу, запомнить потерю эпохи, строка эпохи не меняется; слияние журнала событий по worker.reads: `incomplete[<sub>/epoch]` = did not answer, строки этой подсистемы — без epoch_is, fenced: false (не доказательство)	0	строка	P/03.2 Н3 «взять_эпоху(id)», «подтвердить», Н1.6 fenced, Н4; договор слияния событий failed
+/epoch	console	слияние событий: `incomplete[<sub>/epoch]` = did not answer, строки этой подсистемы — без epoch_is, fenced: false (не доказательство)	0	строка	P/06.4 Н3; договор слияния событий failed
+/epoch	proc:01-store	import, restore: upper не достоверен — отказ всего входа, ничего не меняется	0	строка	P/01.3 Н1.3 import, Н4
+	<s>worker	строка целиком нечитаема: выдача эпохи: отказ EpochUnreadable, не 0 — единицу не запускать, тревога; подтверждение аренды: fenced — остановить единицу, запомнить потерю эпохи, строка эпохи не меняется; слияние журнала событий по worker.reads: `incomplete[<sub>/epoch]` = did not answer, строки этой подсистемы — без epoch_is, fenced: false (не доказательство)	1	строка	P/03.2 Н3 «взять_эпоху(id)», «подтвердить», Н1.6 fenced, Н4; договор слияния событий failed
+	console	строка целиком нечитаема: слияние событий: `incomplete[<sub>/epoch]` = did not answer, строки этой подсистемы — без epoch_is, fenced: false (не доказательство)	1	строка	P/06.4 Н3; договор слияния событий failed
+	proc:01-store	строка целиком нечитаема: import, restore: upper не достоверен — отказ всего входа, ничего не меняется	1	строка	P/01.3 Н1.3 import, Н4

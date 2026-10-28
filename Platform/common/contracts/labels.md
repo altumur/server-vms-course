@@ -6,14 +6,14 @@
 Н1.3), консоль — поле меток единицы ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.2 `list`), двери меток
 сервера и прогнозы ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н2.1), гранты по меткам ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3
 `scope`). Перенесено из главы 6.6 Н2.1 (прежде М10/4 Н2) без изменения поведения. Форма строки меток сервера — семья
-`server-labels` ([P/06.6](../../06-console/data/server-labels.form.yaml)); что метки значат для размещения — у читающих уроков.
+`server-labels` ([P/06.6](../../06-console/data/server-labels.schema.json)); что метки значат для размещения — у читающих уроков.
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
 Файлы, по которым работает договор (аудит раскладки, В-33, В-34; решение «Архитектора» 2026-10-25): строка меток
-сервера `platform/servers/<s>` — семья `server-labels`: `Platform/06-console/data/server-labels.form.yaml`,
+сервера `platform/servers/<s>` — семья `server-labels`: `Platform/06-console/data/server-labels.schema.json`,
 `Platform/06-console/data/server-labels.outcomes.tsv`; двери меток сервера (`PUT /servers/{server}/labels`, проба `labels`,
 отказ 400) — `Platform/06-console/spec/06-console.api.openapi.yaml`.
 

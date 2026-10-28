@@ -10,12 +10,12 @@
 куда установка кладёт ключ резервной копии (шаг 4, строка `domain/signer`: её создаёт только установка).
 
 Формы строк, которые этот договор называет, — в семьях урока P/08 и в общих договорах, не здесь (файлы — поимённо, DF-READ-73):
-`domain/root` — семья `root` (`Platform/08-domain/data/root.form.yaml`, `Platform/08-domain/data/root.outcomes.tsv`);
-`domain/signer` — `signer` (`Platform/08-domain/data/signer.form.yaml`, `Platform/08-domain/data/signer.outcomes.tsv`);
-`domain/book-seal` — `book-seal` (`Platform/08-domain/data/book-seal.form.yaml`,
-`Platform/08-domain/data/book-seal.outcomes.tsv`); `domain/keys` — семья `keys` (`Platform/08-domain/data/keys.form.yaml`,
+`domain/root` — семья `root` (`Platform/08-domain/data/root.schema.json`, `Platform/08-domain/data/root.outcomes.tsv`);
+`domain/signer` — `signer` (`Platform/08-domain/data/signer.schema.json`, `Platform/08-domain/data/signer.outcomes.tsv`);
+`domain/book-seal` — `book-seal` (`Platform/08-domain/data/book-seal.schema.json`,
+`Platform/08-domain/data/book-seal.outcomes.tsv`); `domain/keys` — семья `keys` (`Platform/08-domain/data/keys.schema.json`,
 `Platform/08-domain/data/keys.outcomes.tsv`) и [договор набора ключей домена](keys.md); `domain/holder` — семья `holder`
-(`Platform/08-domain/data/holder.form.yaml`, `Platform/08-domain/data/holder.outcomes.tsv`) и [договор записи
+(`Platform/08-domain/data/holder.schema.json`, `Platform/08-domain/data/holder.outcomes.tsv`) и [договор записи
 срока](record.md).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).

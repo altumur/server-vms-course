@@ -18,7 +18,7 @@
 ## Форма
 
 Причины прохода срока и счёт нечитаемых строк удержаний (`garbled_rows.<table>`, `retention_withheld`) ресурс пишет в свой
-пульс — семья `resource-heartbeat`: `Platform/05-resource/data/resource-heartbeat.form.yaml`,
+пульс — семья `resource-heartbeat`: `Platform/05-resource/data/resource-heartbeat.schema.json`,
 `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (аудит раскладки, В-30; решение «Архитектора» 2026-10-25).
 
 ## Объявление

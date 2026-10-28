@@ -35,3 +35,4 @@ display:
 lease: {unconfirmed_max: off}
 ---
 name: second
+worker: {exec: /usr/lib/probe/worker}

@@ -85,7 +85,7 @@ platform/schema нет, раннер её не пишет (чтение комм
   `inputs/hb-w-1-no-status.json`, затем `@spoil object`; воркер сервера — по слоту.
 - Сц. 12 — формы чисел пульса воркера `w-1` без живого воркера: строка слота и пульсы `@put object` из `inputs/`
   (`hb-w-1-pending-0.json` — опора: `safe: true`; `-pending-missing`, `-pending-fraction` (`1000.0`), `-pending-minus-zero`,
-  `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: ""`).
+  `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, не известно, П1; В7 п. 3 строка 14).
   Каждый `@put object` меняет версию пульса — консоль видит его живым (Н1.2: устаревший пульс тоже дал бы
   `pending_unsaid`, поэтому шаги 4 и 21 — опора свежести; свежесть — [договор наблюдения](../../../common/contracts/observation.md))
   (сверка python и go М10/6–11, T1, T3, T4, T27). Перед каждым входом не по форме, кроме первого, — снова

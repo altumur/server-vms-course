@@ -1,4 +1,5 @@
-# Исходы нечитаемой метки <sub>/contenders/<имя>/<коробка> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой метки <sub>/contenders/<имя>/<коробка> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-	метка соперника не читается — как метка старше CONTENDER_FRESH (Н1.4а): читатель её не учитывает, как если бы метки не было; писатель переписывает свою на следующем CONTEND_EVERY (разбор ревью стадии B 3–5, № 5)	1	строка	P/03.2 Н1.4а
+path	reader	outcome	priority	unit	norm
+	<s>worker	метка соперника не читается — как метка старше CONTENDER_FRESH: читатель её не учитывает, как если бы метки не было; писатель переписывает свою на следующем CONTEND_EVERY (разбор ревью стадии B 3–5, № 5)	1	строка	P/03.2 Н1.4а
+	console	метка не читается (в том числе name ≠ сегменту ключа), но свежа по версии — соперник за имя сегмента ключа: входит в WorkerRow.name_conflict и ряд `<sub>_name_conflicts`, WorkerRow.name_conflict_unreadable — true (конфликт не скрывается; П1; В7 п. 3, строка 22)	1	строка	P/06.5 Н3 «/servers» «Соперники»

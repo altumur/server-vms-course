@@ -52,7 +52,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## `state.tsv`
 
-Состояние единицы — договор проверки строки «Состояние единицы» (`acts`, `unreadable`); форма строки — [`state.form.yaml`](../../../03-worker/data/state.form.yaml), исходы — [`state.outcomes.tsv`](../../../03-worker/data/state.outcomes.tsv)
+Состояние единицы — договор проверки строки «Состояние единицы» (`acts`, `unreadable`); форма строки — [`state.schema.json`](../../../03-worker/data/state.schema.json), исходы — [`state.outcomes.tsv`](../../../03-worker/data/state.outcomes.tsv)
 (STATE169-VECTORS-01, решение «Архитектора» 2026-10-27). UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются;
 первая строка без `#` — заголовок `case<TAB>name<TAB>unit<TAB>state<TAB>expect<TAB>note`.
 
@@ -64,7 +64,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | `expect` | `{acts, unreadable}` и у действующего `value` — разобранное значение; JSON по значению |
 | `note` | правило договора |
 
-Ожидания — судья семьи `state` в режиме читателя по тексту строки (`encoding: jcs` — JCS проверяет только писатель),
+Ожидания — судья семьи `state` в режиме читателя по тексту строки (`x-encoding: jcs` — JCS проверяет только писатель),
 затем `value` по схеме `unit.state.<name>` манифеста; `acts` — строка единицы живая, `born` равны, `revision` равны (у `cursor`
 не сверяется: договор `acts`, P/03.6 Н1.7 `cursor`; C170-STATE-CURSOR-01), эпоха не сверяется. 24 строки: 7 действуют, 10 нечитаемы, 7 читаемы и не действуют.
 Вход единой команды `vectors` — `cells` `name`, `unit`, `state`; `files` — `testsub2.subsystem.yaml` (схемы `unit.state`).

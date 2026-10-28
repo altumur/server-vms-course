@@ -1,8 +1,10 @@
-# Исходы нечитаемого пульса ресурса platform/resources/<server>/heartbeat (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемого пульса ресурса platform/resources/<server>/heartbeat (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-/schema	схема процесса неизвестна: в processes двери /schema — schema: null; в ResourceRow двери /resources — schema: null (разбор ревью стадии B 6–7, № 6); пульс остаётся читаемым	0	поле	P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи»
-/build	build читается как ""; пульс остаётся читаемым	0	поле	P/06.6 Н1.1а heartbeat; P/06.5 Н2 «Выдачи»
-/retention_garbled	поле читается как отсутствующее (причины срока не названы); пульс остаётся читаемым	0	поле	P/05 Н3 retain, Н4 (C05-RETENTION-PULSE-33)
-/retention_withheld	поле читается как отсутствующее (причины срока не названы); пульс остаётся читаемым	0	поле	P/05 Н3 retain, Н4 (C05-RETENTION-PULSE-33)
-	пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state договора наблюдения: unreachable при свежей строке двери, иначе по порядку правил); присутствия процессов не даёт; консоль — в /resources не входит, считается в w2c_resource_heartbeats_garbled, ответ 200; restore соседа — пульс соседа не читается (Н1.4 «Восстановление бакетов»: необходимы все известные двери)	1	строка	договор наблюдения resource_state; P/06.5 Н2 «Выдачи»; P/05 Н1.4
+path	reader	outcome	priority	unit	norm
+/schema	*	схема процесса неизвестна: в processes двери /schema — schema: null; в ResourceRow двери /resources — schema: null (разбор ревью стадии B 6–7, № 6); пульс остаётся читаемым	0	поле	P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи»
+/build	*	build не строка — поле не известно: null в ResourceRow (/resources) и в processes двери /schema, не ""; пульс остаётся читаемым (П1; В7 п. 3, строка 14)	0	поле	P/06.5 Н2; P/06.6 Н2.3
+/retention_garbled	*	поле не по форме — не известно: null в ResourceRow, не отсутствие (причины срока не подменяются «причин нет»); пульс остаётся читаемым (П1; В7 п. 3, строка 14)	0	поле	P/05 Н3 retain; P/06.5 Н2
+/retention_withheld	*	поле не по форме — не известно: null в ResourceRow, не отсутствие (причины срока не подменяются «причин нет»); пульс остаётся читаемым (П1; В7 п. 3, строка 14)	0	поле	P/05 Н3 retain; P/06.5 Н2
+	<s>controller	пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state: unreachable при свежей строке двери, иначе по порядку правил); присутствия процессов не даёт	1	строка	договор наблюдения resource_state
+	console	пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state: unreachable при свежей строке двери, иначе по порядку правил); в /resources не входит, считается в w2c_resource_heartbeats_garbled, ответ 200	1	строка	договор наблюдения resource_state; P/06.5 Н2 «Выдачи»
+	resource	пульс соседа нечитаем: restore соседа — пульс не читается, восстановление неполное (необходимы все известные двери)	1	строка	P/05 Н1.4 «Восстановление бакетов»

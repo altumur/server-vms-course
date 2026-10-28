@@ -4,7 +4,7 @@
 `objects/<sub>/commands/<rid>`; Н4 «просьба: неверный … rid»; ADR-0060). Участники — дверь просьб консоли
 (`POST /<sub>/requests`: rid по шаблону `requests.key` или `r-<sha16(Idempotency-Key)>`; отказ — 400 RequestError, Н4) и
 воркер, который пишет просьбу сам ([глава 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.5, `worker.requests`: отказ —
-`RequestRefused`, счёт `filings.refused`); форма элемента `rids` учёта `asked` ([семья `asked`](../../data/asked.form.yaml)).
+`RequestRefused`, счёт `filings.refused`); форма элемента `rids` учёта `asked` ([семья `asked`](../../data/asked.schema.json)).
 Байты пишет «Спецификация» (ADR-0083, стадия B; правило — «Архитектор», 2026-10-06, после четырнадцатого ревью; запрет
 `free-` — решение «Архитектора» 2026-10-18); соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 

@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки platform/space (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки platform/space (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-	ресурс: шаг relieve прохода не исполняется (нынешнее поведение; норма исхода не называет — неизвестно, «строки нет» ли это с умолчанием 0.85/0.75 или пропуск шага; решить «Спецификации»)	0	строка	P/05 Н1.4 space, Н3 relieve
+path	reader	outcome	priority	unit	norm
+	resource	строка нечитаема: шаг relieve не исполняется, умолчания 0.85/0.75 не подставляются, своя строка free-* не пишется и не снимается; причина в пульсе settings_unread: space (В7 п. 3, строка 21)	0	строка	P/05 Н1.4 space, Н3 relieve

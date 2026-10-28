@@ -29,12 +29,12 @@
 
 ## Форма
 
-Строки договора: набор `domain/keys` и отзывы `domain/revoked` — `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.form.yaml`, `Platform/08-domain/data/revoked.outcomes.tsv`; закреплённый корень `domain/root` (`pinned`) — `Platform/08-domain/data/root.form.yaml`, `Platform/08-domain/data/root.outcomes.tsv`. Набор приходит ответами держателя — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/carry`) и `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/held`) (аудит раскладки, В-31, В-32, Б-15; решение «Архитектора» 2026-10-25).
+Строки договора: набор `domain/keys` и отзывы `domain/revoked` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; закреплённый корень `domain/root` (`pinned`) — `Platform/08-domain/data/root.schema.json`, `Platform/08-domain/data/root.outcomes.tsv`. Набор приходит ответами держателя — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/carry`) и `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/held`) (аудит раскладки, В-31, В-32, Б-15; решение «Архитектора» 2026-10-25).
 
 ## Набор `domain/keys`
 
-Форма строк семей — `Platform/08-domain/data/keys.form.yaml`, `keys.outcomes.tsv` и
-`Platform/08-domain/data/revoked.form.yaml`, `revoked.outcomes.tsv` (C04-DEP-OBS-HEARTBEAT-01: файлы данных, названные договором, — в чтении `common`, ADR-0083 доп. (32) п. 1).
+Форма строк семей — `Platform/08-domain/data/keys.schema.json`, `keys.outcomes.tsv` и
+`Platform/08-domain/data/revoked.schema.json`, `revoked.outcomes.tsv` (C04-DEP-OBS-HEARTBEAT-01: файлы данных, названные договором, — в чтении `common`, ADR-0083 доп. (32) п. 1).
 
 Из М11/2 Н1.2:
 
@@ -142,7 +142,9 @@ domain/revoked: {jtis: "<jti>:<exp>,…"}      # ровно один элеме�
 ```yaml
 merge:          revoked → объединение с своей строкой domain/revoked: записи ответа ∪ свои по jti (при равном jti — больший
                 exp); снимает только prune урока 2 Н1.6 (exp + TOKEN_SKEW < now) — отзыв ответом не отменяется (добавлено
-                моделью Quint М11, RV: после аварийного переноса ответ из копии иначе снял бы отзыв последних BACKUP_EVERY)
+                моделью Quint М11, RV: после аварийного переноса ответ из копии иначе снял бы отзыв последних BACKUP_EVERY);
+                своя строка не читается — агент, единственный писатель у члена, перезаписывает её CAS по прочитанной
+                версии записями ответа, причина в журнал без значения (В7 п. 3, решение «Архитектора» 2026-10-28, П2; строка 44 списка)
 ```
 
 `TOKEN_SKEW` и «Н3 token шаг 6» — [договор токена домена](domain-token.md) «Токен», «Проверка»; «prune урока 2 Н1.6» —

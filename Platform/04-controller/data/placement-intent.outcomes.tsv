@@ -1,4 +1,5 @@
-# Исходы нечитаемой строки <sub>/controller/placement_intent (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки <sub>/controller/placement_intent (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-	строка целиком нечитаема (в том числе state не active/idle; у active нет members, target, reason, at или они не по форме): контроллер — отказ изменения размещения с failures, не пустая строка и не idle; читатели (/where, /unplaceable, прогнозы меток) — 503 unavailable, не idle	0	строка	P/04 Н1.5, Н4 «строка intent не по форме Н1.5»
+path	reader	outcome	priority	unit	norm
+	<s>controller	строка целиком нечитаема (в том числе state не active/idle; у active нет members, target, reason, at или они не по форме): контроллер — отказ изменения размещения с failures, не пустая строка и не idle	0	строка	P/04 Н1.5, Н4 «строка intent не по форме Н1.5»
+	console	строка целиком нечитаема (в том числе state не active/idle; у active нет members, target, reason, at или они не по форме): /where, /unplaceable, прогнозы меток — 503 unavailable, не idle	0	строка	P/04 Н1.5
