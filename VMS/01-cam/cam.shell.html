@@ -63,6 +63,11 @@ recording may lie on are the rows of the table the rec manifest names
 - `addMenu("unit")` — «Смотреть видео», «Архив».
 - «Учётки потоков» в разделе прав — `addTreeNodes("access")` и `addCard`: свои `/live/accounts`, пароль только
   ответом создания или смены, без хранения в состоянии страницы.
+- `addSection` «Ассистент» (after the scenarios; V/10.3–V/10.6) — when the console mounts `assist` and the session sees a
+  model row: the admin's text, the model's steps at its holder's door, the tools read the console through `api` and `may`
+  over this page's subsystems only (ADR-0093 доп. (5)), the plan checked here and shown in the page's words, «Применить»
+  writes each row by one `PUT` with `ifMatch`. The harness is data (`assist-harness`, the bytes of
+  `VMS/10-assist/harness/`); the core between `assist:core` markers is pure — the lesson's vectors run it.
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
@@ -70,7 +75,9 @@ recording may lie on are the rows of the table the rec manifest names
 (`PUT /domain/placement/rec/<ref>`); the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<stream>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
-`POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
+`POST /keeps/<keep>/verify?recording=<r>`. The assistant: `/mounts`, `/manifest`, `/<sub>/manifest`, `/session`, `/schema`,
+the rows and tables of this page's subsystems (reads), `/assist/models`, `/assist/where/<name>` and the model's door
+(`/chat/<name>/steps`), `PUT /<rows>/<id>` with `If-Match` (its writes). Everything else is the module's.
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -111,8 +118,19 @@ cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents
 .auto-rules{display:grid;grid-template-columns:260px 1fr;gap:12px}
 .auto-rules-list .n{display:flex;gap:6px;padding:6px 8px;border-radius:7px;cursor:pointer}
 .auto-rules-list .n:hover{background:var(--p2)}.auto-rules-list .n.on{background:#1a2d4d}
+/* assist */
+.as-log{display:flex;flex-direction:column;gap:6px;margin:8px 0;max-height:40vh;overflow:auto}
+.as-msg{padding:6px 10px;border-radius:8px;border:1px solid var(--ln);font-size:13px;white-space:pre-wrap}
+.as-admin{align-self:flex-end;background:var(--p2)}.as-model small{display:block;color:var(--mu);font-size:11px}.as-page{color:var(--mu)}
+.as-sel{margin:8px 0;padding:6px 10px;border:1px solid var(--ln);border-radius:8px;background:var(--p2);font-size:13px}
+.as-diff{width:100%;border-collapse:collapse;font-size:13px}.as-diff td,.as-diff th{border-bottom:1px solid var(--ln);padding:4px 6px;text-align:left;vertical-align:top}
+.as-res{font-size:13px}.as-res .as-applied{color:#2a9d5c}.as-res .as-refused,.as-res .as-unknown,.as-res .as-moved{color:var(--rd)}
+.as-text{width:100%;box-sizing:border-box}
+/* /assist */
 </style>
 <div id="app"></div>
+<!-- assist:harness — the assistant's harness, the bytes of VMS/10-assist/harness/ (system.md, tools.json, words.json) as one JSON: data, not run (V/10.3 Н1) -->
+<script type="application/json" id="assist-harness">{"system":"# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edits**. Reply in the language of the admin's request, briefly.\n\n## Boundaries\n- You write nothing. Your answer to the admin is **always a tool call**: a plan — `propose_plan` (the admin reviews\n  the diff and applies it), a question — `ask_admin` (the admin's answer comes back as its result), a refusal or\n  \"there are no such units\" — `refuse` with the reason. The admin does not see text without such a call.\n- You have no rights of your own: the tools work in the admin's session and see only what the admin sees.\n- Use only the tools you are given. There are no other actions.\n\n## How to work\n1. `list_subsystems` — which subsystems exist and what their units are called. The first user message is the\n   \"Cluster overview\": it already contains the subsystems, the manifests and the admin's rights, so steps 1–2 are not\n   needed.\n2. `get_manifest` of the subsystem you need — fields, types, options (enum) and their labels, fixed, secret.\n3. `find_units` with `where` conditions — find exactly the units the request is about. Do not guess names or values.\n4. `propose_plan` — `selection` and edits `{unit, field, from, to, why}`: `from` — the current value from\n   `find_units`, `to` — the new one, `why` — which field or label put the unit in the plan. In `summary` — one line\n   to the admin (including which units were left out and why, e.g. no rights). The plan is not applied yet: say\n   what it will do (\"Turns off Gate-1\"), not as done (\"Turned off Gate-1\").\n\n## selection: who is selected, who is edited\n- `edit_sub` — the subsystem **whose field the request changes**; all edits are its units. `select_sub` — the\n  subsystem where the admin gave the selection (names or a condition); the same by default. A request of the form\n  \"for the Xs of the Ys with a condition\" — selection in subsystem Y (`select_sub`), edits in subsystem X\n  (`edit_sub`).\n- Choose the field by its label (`label`) in the manifest — it must match the admin's word. The check compares each\n  edited field with the request text: a field the admin did not name is an error. `fields` (`{field: the admin's\n  word}`) — optional.\n- `propose_plan` computes the selection itself and checks it: an extra or a missing unit, the wrong subsystem, a word\n  that does not fit the field — an error with a hint.\n\n## Rules\n- Fields and values come only from the manifest. For an enum, write the option's code in `to` (not its label).\n- Do not include a unit whose field already has the wanted value.\n- Write a list (e.g. labels) in `to` in full — as it will become.\n- The request names neither a unit nor a selection condition (or does not say which value to set) — **ask first**\n  with `ask_admin`, before searching; one short question. A plan for many units only if the admin said \"all / every\"\n  or gave a condition. In `propose_plan` give `selection`: `named` — the names from the request, or `where` — the\n  condition from the request.\n- Labels, tags, floors, sides, zones are the admin's words; the data stores them as codes. Look up the codes with\n  `field_values` (for a subsystem with `about` — also `about.\u003cfield>` of the related unit) and search by them.\n- An empty search is not an answer: read `hints`, check `field_values`, the related unit and the other subsystem;\n  if there really are no such units — `refuse` with the reason.\n- An empty list (no tags, no labels): `{\"field\": \"tags\", \"op\": \"eq\", \"value\": []}`.\n- The needed field or option is not in the manifest, the field is fixed, there is no right on the unit\n  (`can_edit: false`), the action is outside the console — `refuse` with the reason; do not substitute a similar\n  field. No right on only some of the selected units — a plan for the rest, and the ones left out go in `summary`.\n- Secrets: you do not see passwords. The admin types a password in a separate field; a message tells you \"Secret N is\n  entered\". Write `{\"secret\": N}` as is in `to` of the secret field (a field whose name ends with `_secret`), and\n  nowhere else.\n- `propose_plan` answered `valid: false` — fix your mistake and propose again; if the request cannot be done —\n  `refuse`.\n- An accepted plan (`valid: true`) ends the turn: the admin sees the diff and `summary`.\n","tools":[{"name":"list_subsystems","description":"The cluster's subsystems: name (sub), what their units are called, how they relate, tables.","inputSchema":{"type":"object","properties":{}}},{"name":"get_manifest","description":"A subsystem's manifest: the unit's fields (type, required, enum options and their labels, fixed, secret), field labels and the console form. Call it before writing a plan.","inputSchema":{"type":"object","properties":{"sub":{"type":"string"}},"required":["sub"]}},{"name":"get_schema","description":"The console's /schema door: schema versions of the cluster's data and processes.","inputSchema":{"type":"object","properties":{}}},{"name":"find_units","description":"Find a subsystem's units by conditions (all conditions are AND). No conditions — all units. Returns unit \"\u003csub>/\u003cname>\", revision and fields.\nA where condition is {field, op, value}; all conditions are AND. Kinds:\neq — the field equals the value (scalar): {\"field\": \"zone\", \"op\": \"eq\", \"value\": \"z9\"}\nne — not equal: {\"field\": \"state\", \"op\": \"ne\", \"value\": \"closed\"}\nin — one of a list of values: {\"field\": \"shelf\", \"op\": \"in\", \"value\": [\"x1\", \"x2\"]}\nnot_in — none of the list\ncontains — a LIST field (labels, tags, flags) contains the element: {\"field\": \"labels\", \"op\": \"contains\", \"value\": \"blue\"}; eq on a list field with a string never matches\nnot_contains — the list field does not contain the element\ngt / gte / lt / lte — number greater / not less / less / not greater: {\"field\": \"weight\", \"op\": \"gt\", \"value\": 2}\nexists / missing — the field is set / not set, no value: {\"field\": \"feed\", \"op\": \"exists\"}\nA field of the related unit is about.\u003cfield>: {\"field\": \"about.labels\", \"op\": \"contains\", \"value\": \"blue\"}","inputSchema":{"type":"object","properties":{"sub":{"type":"string"},"where":{"type":"array","items":{"type":"object","properties":{"field":{"type":"string","description":"a field of the unit, or about.\u003cfield> of the related unit"},"op":{"type":"string","enum":["eq","ne","in","not_in","contains","not_contains","gt","gte","lt","lte","exists","missing"]},"value":{"type":["integer","number","string","boolean","array","object","null"],"description":"the value; a list for in/not_in"}},"required":["field"]}},"fields":{"type":"array","items":{"type":"string"},"description":"which fields to return (all if omitted); about.\u003cfield> — the value of that field of the related unit (e.g. its counter's step)"}},"required":["sub"]}},{"name":"field_values","description":"Which values of a field occur among a subsystem's units (labels, zones, shelves, modes) and how many; about.\u003cfield> — values of a field of the related unit. Map the admin's words (\"northern\", \"top floor\") to these values.","inputSchema":{"type":"object","properties":{"sub":{"type":"string"},"field":{"type":"string"}},"required":["sub","field"]}},{"name":"list_table","description":"Rows of a subsystem's table (e.g. rec's volumes). Read only.","inputSchema":{"type":"object","properties":{"sub":{"type":"string"},"table":{"type":"string"}},"required":["sub","table"]}},{"name":"propose_plan","description":"Propose a plan of edits to the admin. Writes nothing: the plan is checked against the unit's form and the session's rights; the admin sees the diff and applies it. Each edit: unit \"\u003csub>/\u003cname>\", field, from (current value), to (new value), why (which field or label put the unit in the plan).","inputSchema":{"type":"object","properties":{"summary":{"type":"string"},"selection":{"type":"object","description":"what the admin said. Who is selected: named — names from the request, or where — the condition from the request, in subsystem select_sub (default = edit_sub). Who is edited: edit_sub — the subsystem whose field the request changes. fields — {field: the admin's word for it} — optional: the field is checked against the request text. The check computes the selection itself and compares it with the edits. Neither named nor where — that is a question, not a plan.","properties":{"named":{"type":"array","items":{"type":"string"}},"where":{"type":"array","items":{"type":"object","properties":{"field":{"type":"string","description":"a field of the unit, or about.\u003cfield> of the related unit"},"op":{"type":"string","enum":["eq","ne","in","not_in","contains","not_contains","gt","gte","lt","lte","exists","missing"]},"value":{"type":["integer","number","string","boolean","array","object","null"],"description":"the value; a list for in/not_in"}},"required":["field"]}},"select_sub":{"type":"string"},"edit_sub":{"type":"string"},"fields":{"type":"object","additionalProperties":{"type":"string"}}},"required":[]},"edits":{"type":"array","items":{"type":"object","properties":{"unit":{"type":"string"},"field":{"type":"string"},"from":{"type":["integer","number","string","boolean","array","object","null"]},"to":{"type":["integer","number","string","boolean","array","object","null"]},"why":{"type":"string"}},"required":["unit","field","to","why"]}}},"required":["selection","edits"]}},{"name":"ask_admin","description":"Ask the admin one short question when the request does not name the unit, the field or the value. The admin's answer comes back as the result.","inputSchema":{"type":"object","properties":{"question":{"type":"string"}},"required":["question"]}},{"name":"refuse","description":"Answer the admin without a plan: the request cannot be done (no such field or option, the field is fixed, no rights, an action outside the console) or there are no such units. reason — briefly why. The turn ends.","inputSchema":{"type":"object","properties":{"reason":{"type":"string"}},"required":["reason"]}}],"words":{"_note":"Locale data of the plan check and of the loop (V/10.4 Н1.4, V/10.5 Н1.2, Н1.4, Н1.5): words of the operators beyond the display of the manifests. English — as measured by the pilot, with the edits after the measurement (V/10 README); Russian — not measured. Data, not code: a new locale adds strings here. Regular expressions: ECMAScript, flags i and u, \\b — a Unicode word boundary (V/10.5 Н1.2), the text after ё → е.","list_verbs":"add, append, put, remove, delete, drop, take off, strip, clear, empty, replace, swap, instead, set, assign, give, attach, detach, untag, добавь, добавить, допиши, убери, убрать, удали, удалить, сними, снять, очисти, очистить, замени, заменить, вместо, поставь, поставить, назначь, назначить, присвой, присвоить","polarity":{"true":"turn on, switch on, enable, enabled, activate, true, включи, включить, включено, включены, включен, активируй, разреши, turn it on, switch it on, включена, включите","false":"turn off, switch off, disable, disabled, deactivate, false, выключи, выключить, выключено, выключены, выключен, отключи, отключить, запрети, turn it off, switch it off, выключена, выключите, отключите, отключена","clear":"clear, unset, reset, remove the value, убери значение, очисти, сбрось, сбросить"},"endings":"s, es, и, ы","stop":"the, and, for, with, from, that, this, these, those, its, their, all, every, each, any, some, please, then, also, only, все, всех, всем, для, при, что, как, или, это, эти, этот, эта, его, её, ее, их, где, там, тут, под, над, без, кроме, только, также, пожалуйста, чтобы, если","rights":"\\bправ(?:а|ами|о|ом)?\\b|нет\\s+прав|недостаточно\\s+прав|\\bдоступ|\\b(?:no|without)\\s+(?:the\\s+)?(?:right|permission|access)|\\bnot\\s+permitted\\b|\\b(?:do|does|did)\\s*n[o']?t\\s+have\\s+(?:the\\s+)?(?:\\w+\\s+)?(?:rights?|permissions?|access)\\b|\\b(?:lacks?|insufficient|missing)\\s+(?:\\w+\\s+)?(?:rights?|permissions?|access)\\b|\\bno\\s+(?:\\w+\\s+)?(?:rights?|permissions?)\\b|\\b(?:permission|access)\\s+denied\\b|\\bnot\\s+(?:allowed|authori[sz]ed|permitted)\\s+to\\s+(?:edit|change|modify|write)\\b|нет\\s+разрешени|\\bбез\\s+прав\\b|не\\s+имеет\\s+прав","not_found":"\\bnot\\s+found\\b|\\bno\\s+such\\b|\\bdo(?:es)?\\s*n[o']t\\s+exist|\\bno\\b[^.;]*\\bfound\\b|\\bне\\s+найден|\\bне\\s+нашел|\\bне\\s+существует|\\bнет\\s+таких|\\bтаких\\b[^.;]*\\bнет\\b","all":"\\b(?:all|every|each)\\b|\\bвсе(?:х|м|ми|й)?\\b|\\bкажд","labels":{},"fields":{},"options":{},"units":{}}}</script>
 <script src="/platform/console.js?v=1"></script>
 <script>
 "use strict";
@@ -1385,4 +1403,702 @@ pc.addCard("streamaccounts",host=>{
 
 // The camera's menu: watch it, its archive (the tabs above).
 pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>openAt(ref,"vid")},...(recOn?[{label:"Архив",run:()=>openAt(ref,"rec")}]:[])]:[]);
+
+
+
+
+
+
+// assist:core:begin — the assistant's core (V/10.3–V/10.6): pure, the vectors run it from here
+// The assistant's core (V/10.3–V/10.6): the harness's tools, the plan check, the turn's loop and the apply — pure over
+// a console (`ctx`) and a model (`env`) given to it: no DOM, no module. The page wires them to `pc.api`, `pc.may`, the
+// model's door and its panel; the vectors (VMS/10-assist/vectors/) run it with a console of their own.
+function makeAssist(H){
+const W=H.words||{};
+const OPS=["eq","ne","in","not_in","contains","not_contains","gt","gte","lt","lte","exists","missing"];
+const LIST_MAX=5000,ROW_LIMIT=50,MASK="***";
+const J=v=>JSON.stringify(v===undefined?null:v);
+// ── words (V/10.5 Н1.2) ──
+const norm=t=>String(t??"").toLowerCase().replace(/ё/g,"е");
+const listOf=s=>String(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+const STOP=new Set(listOf(W.stop).map(norm));
+const stems=t=>(norm(t).match(/[a-zа-я]+/g)||[]).filter(w=>w.length>=3&&!STOP.has(w));
+const ENDINGS=listOf(W.endings).map(norm);
+function sameWord(a,b){if(a.length<4)return b===a||ENDINGS.some(e=>b===a+e);let n=0;while(n<a.length&&n<b.length&&a[n]===b[n])n++;return n>=3&&n>=Math.min(a.length,b.length)-2}
+const wordFits=(t,w)=>{const B=stems(w);return stems(t).some(a=>B.some(b=>sameWord(a,b)))};
+const EDGE=/[\p{L}\p{N}_-]/u;
+function nameAt(T,n){const out=[];let i=T.indexOf(n);while(i>=0){const L=i?T[i-1]:"",R=T[i+n.length]||"";if(!(L&&EDGE.test(L))&&!(R&&EDGE.test(R)))out.push(i);i=T.indexOf(n,i+1)}return out}
+const nameIn=(t,x)=>{const n=norm(x);return!!n&&nameAt(norm(t),n).length>0};
+const BOUND="(?:(?<![\\p{L}\\p{N}_])(?=[\\p{L}\\p{N}_])|(?<=[\\p{L}\\p{N}_])(?![\\p{L}\\p{N}_]))";
+const re=src=>new RegExp(String(src||"(?!)").replace(/\\b/g,BOUND),"iu");
+const RIGHTS=re(W.rights),NOT_FOUND=re(W.not_found),ALL=re(W.all);
+const said=(rx,t)=>rx.test(norm(t));
+const polar=(k,t)=>listOf((W.polarity||{})[k]).some(p=>nameIn(t,p));
+function numbers(t,names){
+  let T=norm(t);
+  for(const x of names){const n=norm(x);if(!n)continue;for(const i of nameAt(T,n).reverse())T=T.slice(0,i)+" ".repeat(n.length)+T.slice(i+n.length)}
+  const out=[],rx=/(-?)(\d+(?:[.,]\d+)?)/g;let m;
+  while((m=rx.exec(T))){let v=parseFloat(m[2].replace(",","."));if(m[1]&&!(m.index&&/[\p{L}\p{N}]/u.test(T[m.index-1])))v=-v;out.push(v)}
+  return out}
+// ── values ──
+function same(a,b){
+  if(typeof a==="boolean"||typeof b==="boolean"||a===null||b===null||a===undefined||b===undefined)return a===b;
+  if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>same(x,b[i]));
+  if(typeof a==="object"&&typeof b==="object"){const ka=Object.keys(a),kb=Object.keys(b);return ka.length===kb.length&&ka.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&same(a[k],b[k]))}
+  return a===b}
+const isNum=v=>typeof v==="number";
+const emptyish=v=>v==null||v===""||(Array.isArray(v)&&!v.length);
+const isLabel=v=>v!==null&&typeof v==="object"&&!Array.isArray(v)&&Object.keys(v).length===1&&Number.isInteger(v.secret)&&v.secret>=1;
+const SLOT=/\{\{\s*secret\s*:\s*\d+\s*\}\}/i;
+function hasLabel(v){if(isLabel(v))return true;if(typeof v==="string")return SLOT.test(v);if(Array.isArray(v))return v.some(hasLabel);if(v&&typeof v==="object")return Object.values(v).some(hasLabel);return false}
+const isSecret=name=>/_secret$/.test(String(name));
+// ── the console, read through ctx: {get(path) → {status, body}, may(cap, ref) → bool, subs: [the page's subsystems,
+//    the console's root first], root, manifest(sub) → ManifestView | null (the module's copy), mounted(sub) → bool} ──
+function reader(ctx){
+  const cache=new Map();
+  async function get(path){
+    if(cache.has(path))return cache.get(path);
+    const p=(async()=>{let r;try{r=await ctx.get(path)}catch(e){return{err:`GET ${path}: ${e&&e.status||"network"} ${(e&&e.body&&e.body.detail)||""}`.trim()}}
+      if(!r||r.status!==200)return{err:`GET ${path}: ${r?r.status:"network"} ${(r&&r.body&&r.body.detail)||""}`.trim()};return{body:r.body}})();
+    cache.set(path,p);return p}
+  const fail=m=>{const e=new Error(m);e.tool=true;throw e};
+  // the scope: the subsystems the page mounted the module with (V/10.4 Н0, ADR-0093 доп. (5)) — may() knows those only;
+  // their manifests are the module's copies, the console's own doors (/mounts, /manifest, /session) are the module's
+  async function subs(){const all=ctx.subs||[];return[...all.filter(s=>s===ctx.root),...all.filter(s=>s!==ctx.root).sort()]}
+  const mans=new Map();
+  async function manifest(sub){
+    const all=await subs();
+    if(!all.includes(sub)){
+      if(ctx.mounted&&await ctx.mounted(sub))fail(`subsystem ${sub} is outside the assistant's scope (this page: ${all.join(", ")}) — refuse: not in scope, not a lack of rights`);
+      fail(`no subsystem ${J(sub)}; there are: ${all.join(", ")}`)}
+    if(!mans.has(sub))mans.set(sub,await ctx.manifest(sub));
+    const m=mans.get(sub);if(!m||!m.rows)fail(`no subsystem ${J(sub)}; there are: ${all.join(", ")}`);return m}
+  async function base(sub){return sub===ctx.root?"":"/"+sub}
+  async function units(sub){
+    const man=await manifest(sub),path=(await base(sub))+"/"+man.rows,r=await get(path);
+    if(r.err)fail(r.err);
+    const rows=(r.body&&r.body.configured)||[];
+    if(rows.length>LIST_MAX)fail(`${sub}: more than ${LIST_MAX} units — too many to check here; refuse and say so`);
+    const by=new Map();for(const x of rows)by.set(String(x.id),x);return{man,by}}
+  async function tryUnits(sub){try{return await units(sub)}catch(e){if(e.tool)return{err:e.message};throw e}}
+  async function aboutOf(man){if(!man.about)return{about:null,arows:new Map(),aman:null};const u=await units(man.about.sub);return{about:man.about,arows:u.by,aman:u.man}}
+  const canWrite=(sub,id)=>!!ctx.may("admin",`unit:${sub}/${id}`);
+  return{get,fail,subs,manifest,base,units,tryUnits,aboutOf,canWrite}}
+// ── field words (V/10.4 Н1.4) ──
+function fieldView(sub,f,d){
+  d=d||{};const v={name:f.name,type:f.type};
+  for(const k of["required","fixed","enum","default","inherit","bound_to"])if(f[k]!==undefined&&f[k]!==null&&f[k]!==false)v[k]=f[k];
+  const lab=(d.fields||{})[f.name],wl=((W.labels||{})[sub]||{})[f.name];
+  if(lab!=null)v.label=lab;else if(wl!=null){v.label=wl;v.label_from="lesson"}else if(f.type==="list")v.label=null;
+  const help=(d.field_help||{})[f.name];if(help!=null)v.help=help;
+  const opts=(d.options||{})[f.name];if(opts!=null)v.enum_labels=opts;
+  const w=((W.fields||{})[sub]||{})[f.name];if(w!=null)v.words=w;
+  const ow=((W.options||{})[sub]||{})[f.name];if(ow!=null)v.enum_words=ow;
+  if(isSecret(f.name))v.secret=true;
+  return v}
+function fieldWords(sub,f,d){const v=fieldView(sub,f,d);return[v.label,v.help,v.words,...Object.values(v.enum_labels||{}),...Object.values(v.enum_words||{})].filter(Boolean).map(String).join(" ")}
+const fieldsOf=man=>Object.fromEntries((man.fields||[]).map(f=>[f.name,f]));
+// ── tools (V/10.4 Н1.5) ──
+function tools(ctx,turn){
+  let R=reader(ctx);   // a fresh reader per call: each call reads anew, one door once within a call (V/10.4 Н1.2)
+  async function wordsFromRefs(sub,specs){for(const[other,s]of specs){const a=s.about;if(a&&a.sub===sub){const w=((s.display||{}).field_help||{})[a.field];if(w)return[w,`${other}.${a.field}`]}}return[null,null]}
+  async function tablesOf(man){const t=[];for(const x of((man.servers||{}).show||[]))if(x&&x.table)t.push(x.table);if(man.places&&man.places.table)t.push(man.places.table);return[...new Set(t)].sort()}
+  async function list_subsystems(){
+    const all=await R.subs(),specs=new Map();for(const s of all)specs.set(s,await R.manifest(s));
+    const out=[];
+    for(const sub of all){
+      const s=specs.get(sub),d=s.display||{},item={sub,rows:s.rows,id_field:s.id,unit_word:d.unit??null,units_word:d.units??null,section:d.section??null};
+      const w=(W.units||{})[sub];if(w!=null)item.words=w;
+      if(!d.unit){const[word,via]=await wordsFromRefs(sub,specs);if(word){item.unit_word=word;item.unit_word_from=`no label in display; the word comes from the help of field ${via}`}}
+      if(s.about){const a=s.about,o=specs.get(a.sub),ow=(o&&(o.display||{}).unit)||(await wordsFromRefs(a.sub,specs))[0]||a.sub;
+        item.about=`each unit ("${d.unit||sub}") belongs to a unit of ${a.sub} ("${ow}") via field ${a.field}; that unit's fields in find_units are about.<field>`}
+      const t=await tablesOf(s);if(t.length)item.tables=t;
+      out.push(item)}
+    return{subsystems:out}}
+  async function get_manifest(args){
+    const sub=String((args||{}).sub||""),s=await R.manifest(sub),d=s.display||{};
+    const out={sub,rows:s.rows,id_field:s.id};
+    if(s.about){const a=s.about,o=await R.manifest(a.sub),lists=(o.fields||[]).filter(f=>f.type==="list").map(f=>f.name);
+      const own=(s.fields||[]).filter(f=>f.type==="list").map(f=>f.name);
+      out.about={sub:a.sub,field:a.field,note:`a unit belongs to a unit of ${a.sub} whose name is in field ${a.field}. That unit's fields are filters about.<field>: ${(o.fields||[]).map(f=>"about."+f.name).join(", ")}. A unit's labels are the labels of the related unit: about.labels; its own list fields (${own.join(", ")||"none"}) are not labels`,about_list_fields:lists.map(x=>"about."+x)}}
+    out.fields=(s.fields||[]).map(f=>fieldView(sub,f,d));
+    for(const k of["unit","units","section","general"])if(d[k])out["word_"+k]=d[k];
+    if(d.form)out.form=d.form.map(x=>({title:x.title??null,fields:x.fields||[]}));
+    if(d.options){const names=new Set((s.fields||[]).map(f=>f.name)),extra=Object.fromEntries(Object.entries(d.options).filter(([k])=>!names.has(k)));if(Object.keys(extra).length)out.status_words=extra}
+    out.notes=["look up field values (labels, zones, shelves) with field_values — the admin's words are stored as values (e.g. \"northern\" → north, \"quiet\" → plain)",
+      "a field with secret: true is hidden from you (the console shows ***); a new secret value is never written into a plan — only the secret label {\"secret\": N} the admin entered",
+      "a fixed field cannot be changed; the id_field is the unit's name, it is not changed",
+      "a field with inherit and no own value: find_units shows null, and inherited says what applies; from is null or the effective value"];
+    return out}
+  async function get_schema(){const r=await R.get("/schema");if(r.err)R.fail(r.err);return r.body}
+  function normWhere(where){
+    if(where&&typeof where==="object"&&!Array.isArray(where))where=Object.entries(where).map(([k,v])=>({field:k,op:"eq",value:v}));
+    const out=[];
+    for(let c of where||[]){
+      if(c&&typeof c==="object"&&!Array.isArray(c)&&!("op"in c)){const ops=Object.keys(c).filter(k=>OPS.includes(k));if(ops.length===1)c={field:c.field,op:ops[0],value:c[ops[0]]}}
+      if(c&&typeof c==="object"&&!Array.isArray(c)){
+        const extra=Object.keys(c).filter(k=>!["field","op","value"].includes(k)).sort();
+        if(extra.length)R.fail(`condition ${J(c)}: extra keys ${extra.join(", ")}; the form is {"field": …, "op": "eq", "value": …}`);
+        if(!["exists","missing"].includes(c.op||"eq")&&!("value"in c))R.fail(`condition ${J(c)}: no value; the form is {"field": …, "op": "eq", "value": …}`)}
+      out.push(c)}
+    return out}
+  async function checkAboutField(field,about){
+    if(!about)R.fail(`this subsystem has no about — filter ${field} has nothing to apply to`);
+    const o=await R.manifest(about.sub),names=new Set([...(o.fields||[]).map(f=>f.name),"id"]);
+    if(!names.has(field.slice(6)))R.fail(`no field ${J(field.slice(6))} in the related subsystem ${about.sub}; its fields: ${[...names].sort().map(n=>"about."+n).join(", ")} — filter about.<field>`)}
+  async function fieldTypes(man,about){const out={...fieldsOf(man)};if(about){const o=await R.manifest(about.sub);for(const f of o.fields||[])out["about."+f.name]=f}return out}
+  const valueOf=(row,field,about,arows)=>field.startsWith("about.")?((arows.get(String(row[about.field]))||{})[field.slice(6)]):row[field];
+  function match(v,op,want){
+    switch(op){
+      case"eq":return same(v,want);case"ne":return!same(v,want);
+      case"in":return(want||[]).some(w=>same(v,w));case"not_in":return!(want||[]).some(w=>same(v,w));
+      case"contains":return Array.isArray(v)&&(Array.isArray(want)?want.every(x=>v.some(y=>same(x,y))):v.some(y=>same(y,want)));
+      case"not_contains":return!(Array.isArray(v)&&(Array.isArray(want)?want.every(x=>v.some(y=>same(x,y))):v.some(y=>same(y,want))));
+      case"exists":return v!=null;case"missing":return v==null}
+    if(!isNum(v)||!isNum(want))return false;
+    return{gt:v>want,gte:v>=want,lt:v<want,lte:v<=want}[op]}
+  async function select(sub,where){
+    const{man,by}=await R.units(sub),names=new Set([...(man.fields||[]).map(f=>f.name),"id","revision"]);
+    const{about,arows}=await R.aboutOf(man);
+    for(const c of where){
+      if(!c||typeof c!=="object"||Array.isArray(c)||!("field"in c))R.fail("a condition is {field, op, value}");
+      if(!OPS.includes(c.op||"eq"))R.fail(`op ${J(c.op)}: one of ${OPS.join(", ")}`);
+      const f=String(c.field);
+      if(f.startsWith("about.")){if(!about)R.fail(`${sub} has no about`);await checkAboutField(f,about)}
+      else if(!names.has(f))R.fail(`no field ${J(f)} in ${sub}; fields: ${[...names].sort().join(", ")}`)}
+    const types=await fieldTypes(man,about);
+    const ok=(row,c)=>{let v=valueOf(row,c.field,about,arows);const f=types[c.field],op=c.op||"eq";
+      if(f&&f.type==="list"&&((["eq","ne"].includes(op)&&(c.value===""||c.value===null||(Array.isArray(c.value)&&!c.value.length)))||["exists","missing"].includes(op))){
+        if(v==null&&f.inherit!==undefined)v=f.inherit;const e=emptyish(v);return["eq","missing"].includes(op)?e:!e}
+      return match(v,op,c.value)};
+    const ids=[...by.keys()].sort();
+    return{man,about,arows,hits:ids.map(i=>by.get(i)).filter(r=>where.every(c=>ok(r,c)))}}
+  async function find_units(args){
+    args=args||{};const sub=String(args.sub||""),where=normWhere(args.where),want=Array.isArray(args.fields)?args.fields:null;
+    const{man,about,arows,hits}=await select(sub,where);
+    let aboutInherit={};
+    if(about){for(const k of want||[])if(typeof k==="string"&&k.startsWith("about."))await checkAboutField(k,about);
+      const o=await R.manifest(about.sub);for(const f of o.fields||[])if(f.inherit!==undefined)aboutInherit[f.name]=f.inherit}
+    const units=[];
+    for(const r of hits.slice(0,ROW_LIMIT)){
+      let view={};
+      for(const[k,v]of Object.entries(r)){
+        if(want&&!want.includes(k))continue;
+        if(k==="id"||k==="revision"||k===man.id)continue;
+        if(v===""&&!(want||[]).includes(k))continue;
+        if(v===null&&!(want||[]).includes(k))continue;
+        view[k]=v}
+      for(const k of want||[])if(!(k in view)&&!k.startsWith("about.")&&k!=="id"&&k!=="revision"&&k!==man.id&&k in r)view[k]=r[k];
+      const inherited={};
+      for(const f of man.fields||[])if(f.inherit!==undefined&&r[f.name]==null&&(!want||want.includes(f.name)))inherited[f.name]=f.inherit;
+      for(const k of Object.keys(inherited))view[k]=null;
+      if(Object.keys(inherited).length)view.inherited=inherited;
+      if(about){
+        const other=arows.get(String(r[about.field]));
+        if(other&&Array.isArray(other.labels)&&other.labels.length)view["about.labels"]=other.labels;
+        for(const k of want||[])if(typeof k==="string"&&k.startsWith("about.")&&k!=="about.labels"){
+          let v=(other||{})[k.slice(6)];if(v==null&&k.slice(6)in aboutInherit){v=aboutInherit[k.slice(6)];(view.inherited=view.inherited||{})[k]=v}view[k]=v??null}
+        if(want&&want.some(k=>typeof k==="string"&&k.startsWith("about.")))view[about.field]=r[about.field]}
+      const can=R.canWrite(sub,r.id);if(!can)view.can_edit=false;
+      turn.seen.set(`${sub}/${r.id}`,can);
+      units.push({unit:`${sub}/${r.id}`,...view})}
+    const res={sub,count:hits.length,shown:units.length,units};
+    if(units.some(u=>u.can_edit===false))res.can_edit_note="can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary";
+    res.query={sub,where};
+    if(!hits.length&&where.length)res.hints=await zeroHints(sub,man,where,about,arows);
+    return res}
+  async function zeroHints(sub,man,where,about,arows){
+    const hints=[],eqs=new Map();
+    for(const c of where)if((c.op||"eq")==="eq"){if(!eqs.has(c.field))eqs.set(c.field,[]);eqs.get(c.field).push(c.value)}
+    for(const[f,vals]of eqs)if(vals.length>1)hints.push(`field ${f} twice with eq — conditions are AND, one unit cannot equal two values; for "or" use {"field": "${f}", "op": "in", "value": ${J(vals)}}`);
+    const wanted=[];for(const c of where){const v=c.value;for(const x of Array.isArray(v)?v:[v])if(typeof x==="string")wanted.push(x)}
+    const own=(await R.units(sub)).by,lists=(man.fields||[]).filter(f=>f.type==="list").map(f=>f.name);
+    for(const c of where){const vals=Array.isArray(c.value)?c.value:[c.value];
+      if(["contains","not_contains"].includes(c.op||"eq"))continue;
+      for(const f of lists)if([...own.values()].some(u=>Array.isArray(u[f])&&vals.some(v=>u[f].some(y=>same(y,v))))){
+        hints.push(`${J(c.value)} is an element of list field ${f} — a list needs op contains: {"field": "${f}", "op": "contains", "value": …}`);break}}
+    if(about){const first=arows.values().next().value||{},keys=["labels",...Object.keys(first).filter(k=>k!=="labels")];
+      for(const w of wanted)for(const f of keys)if([...arows.values()].some(u=>(Array.isArray(u[f])&&u[f].includes(w))||u[f]===w)){hints.push(`${J(w)} is in field ${f} of the related subsystem ${about.sub} — filter about.${f}`);break}}
+    for(const other of await R.subs()){if(other===sub)continue;
+      const u=await R.tryUnits(other);if(u.err){hints.push(`subsystem ${other} could not be read: ${u.err}`);continue}
+      for(const w of wanted)if(u.by.has(w))hints.push(`${J(w)} is the name of a unit of subsystem ${other}`)}
+    return hints.length?hints:["no matches anywhere; check the field's values with field_values"]}
+  async function field_values(args){
+    args=args||{};const sub=String(args.sub||""),field=String(args.field||"");
+    const{man,by}=await R.units(sub),{about,arows}=await R.aboutOf(man);
+    if(!field.startsWith("about.")&&!(man.fields||[]).some(f=>f.name===field))R.fail(`no field ${J(field)} in ${sub}`);
+    if(field.startsWith("about."))await checkAboutField(field,about);
+    const f=(await fieldTypes(man,about))[field];
+    const count=new Map();let empty=0;
+    for(const row of by.values()){
+      const v=valueOf(row,field,about,arows);
+      if(f&&f.type==="list"&&emptyish(v==null&&f.inherit!==undefined?f.inherit:v))empty++;
+      for(const x of Array.isArray(v)?v:[v]){if(x==null||typeof x==="object")continue;const k=J(x);count.set(k,(count.get(k)||0)+1)}}
+    const values=[...count].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0)).map(([k,n])=>({value:JSON.parse(k),units:n}));
+    const out={sub,field,values};
+    if(empty){out.empty_units=empty;out.empty_note=`empty or not set: {"field": "${field}", "op": "eq", "value": []}`}
+    return out}
+  async function list_table(args){
+    args=args||{};const sub=String(args.sub||""),table=String(args.table||""),man=await R.manifest(sub);
+    if(!(await tablesOf(man)).includes(table))R.fail(`no table ${J(table)} in ${sub}`);
+    const r=await R.get((await R.base(sub))+"/"+encodeURIComponent(table));if(r.err)R.fail(r.err);
+    const rows=r.body&&Array.isArray(r.body[table])?r.body[table]:null;if(!rows)R.fail(`no table ${J(table)} in ${sub}`);
+    if(rows.length>LIST_MAX)R.fail(`${sub}: more than ${LIST_MAX} units — too many to check here; refuse and say so`);
+    return{sub,table,rows:rows.slice(0,ROW_LIMIT).map(x=>Object.fromEntries(Object.entries(x).filter(([k])=>!["by","at","held_by"].includes(k)))),read_only:true}}
+  async function ask_admin(args){const q=String((args||{}).question??"").trim();if(!q)R.fail("question is one short question to the admin");return{question:q}}
+  // ── the plan (V/10.5 Н1.3–Н1.6) ──
+  const text=()=>turn.texts.join("\n");
+  async function allNamed(){const out=[];for(const s of await R.subs()){const u=await R.tryUnits(s);if(u.err)continue;for(const id of u.by.keys())if(nameIn(text(),id))out.push([s,id])}return out}
+  async function textNumbers(){return numbers(text(),(await allNamed()).map(x=>x[1]))}
+  async function checkPlan(args,edits){
+    const errors=[],rows=[],seenField=new Set(),labelField=new Map();
+    // the secret label anywhere but the whole `to` of a *_secret field
+    const bad=v=>hasLabel(v);
+    if(bad(args.summary)||bad(args.selection))errors.push("plan: the secret label is allowed only as the whole to of a *_secret field the admin entered");
+    for(let i=0;i<edits.length;i++){
+      const at=`edits[${i}]`,e=edits[i];
+      if(!e||typeof e!=="object"||Array.isArray(e)){errors.push(`${at}: an edit is an object {unit, field, from, to, why}`);continue}
+      const miss=["unit","field","to","why"].filter(k=>!(k in e));if(miss.length){errors.push(`${at}: missing ${miss.join(", ")}`);continue}
+      if(bad(e.why)||bad(e.from)||bad(e.unit)||bad(e.field))errors.push(`${at}: the secret label is allowed only as the whole to of a *_secret field the admin entered`);
+      const unit=String(e.unit),k=unit.indexOf("/"),sub=k<0?unit:unit.slice(0,k),uid=k<0?"":unit.slice(k+1);
+      if(!uid){errors.push(`${at}: unit is "<sub>/<name>", e.g. cam/<name>`);continue}
+      let U;try{U=await R.units(sub)}catch(x){if(!x.tool)throw x;errors.push(`${at}: ${x.message}`);continue}
+      const row=U.by.get(uid);if(!row){errors.push(`${at}: no unit ${unit} (or the session cannot see it)`);continue}
+      const f=fieldsOf(U.man)[e.field];if(!f){errors.push(`${at}: ${sub} has no field ${J(e.field)}`);continue}
+      const name=f.name,secret=isSecret(name);let to=e.to;
+      if(!secret&&typeof to==="string")to=coerce(f.type,to);
+      let from=e.from;if(!secret&&typeof from==="string")from=coerce(f.type,from);
+      if(name===U.man.id)errors.push(`${at}: ${name} is the unit's name, it is not changed`);
+      if(f.fixed)errors.push(`${at}: field ${name} is fixed — it cannot be changed`);
+      if(f.type==="blob")errors.push(`${at}: field ${name} is bytes, a plan does not carry them`);
+      if(secret){
+        if(!isLabel(to))errors.push(`${at}: ${name} is a secret: a plan carries only the secret label {"secret": N} the admin entered, not a value`);
+        else if(!turn.secrets.has(to.secret))errors.push(`${at}: the secret label is allowed only as the whole to of a *_secret field the admin entered`);
+        else if(labelField.has(to.secret)&&labelField.get(to.secret)!==name)errors.push(`${at}: the secret label is allowed only as the whole to of a *_secret field the admin entered`);
+        else labelField.set(to.secret,name)}
+      else if(hasLabel(to))errors.push(`${at}: the secret label is allowed only as the whole to of a *_secret field the admin entered`);
+      else if(!typeOk(f.type,to))errors.push(`${at}: ${name} is of type ${f.type}, but to = ${J(to)}${TYPE_HINT[f.type]||""}`);
+      else if(f.enum&&to!==null&&!f.enum.includes(to))errors.push(`${at}: ${name} is one of ${J(f.enum)}, but to = ${J(to)}`);
+      if(f.required&&to===null)errors.push(`${at}: ${name} is required`);
+      const cur=row[name]===undefined?null:row[name],eff=cur==null&&f.inherit!==undefined?f.inherit:cur;
+      if("from"in e){
+        let okFrom=same(from,cur)||same(from,eff);
+        if(f.type==="list"&&(from===""||from==="[]"||same(from,[""])||from===null)&&emptyish(cur)&&emptyish(eff))okFrom=true;
+        if(secret&&(from===MASK||from===null||from===""))okFrom=true;
+        if(!okFrom)errors.push(`${at}: from = ${J(e.from)}, but now ${unit} has ${name} = ${J(cur)}`)}
+      if(cur!==null&&!secret&&same(to,cur))errors.push(`${at}: empty edit — ${unit} already has ${name} = ${J(cur)}; a unit with nothing to change is left out of the plan (if no unit has anything to change, there is no plan: tell the admin)`);
+      if(!String(e.why??"").trim())errors.push(`${at}: why is empty — an edit needs a reason`);
+      if(!R.canWrite(sub,uid))errors.push(`${at}: the admin has no right to edit ${unit}`);
+      const key=unit+"\u0000"+name;if(seenField.has(key))errors.push(`${at}: ${unit} ${name} is edited twice; one edit per field`);seenField.add(key);
+      e.to=to;
+      let r=rows.find(x=>x.unit===unit);if(!r)rows.push(r={unit,sub,id:uid,revision:row.revision,changes:[]});
+      r.changes.push({field:name,from:secret?(cur??MASK):cur,to,why:String(e.why??""),label:fieldView(sub,f,U.man.display).label??null})}
+    return{errors,rows}}
+  const TYPE_HINT={bool:" — write JSON true or false, without quotes",int:" — write an integer without quotes, e.g. 14",float:" — write a number without quotes, e.g. 1.5",list:' — write the whole list of strings, e.g. ["blue", "green"]'};
+  function coerce(t,v){const s=v.trim();
+    if(t==="bool"&&/^(true|false)$/i.test(s))return s.toLowerCase()==="true";
+    if(t==="int"&&/^-?\d+$/.test(s))return parseInt(s,10);
+    if(t==="float"&&/^-?\d+(\.\d+)?$/.test(s))return parseFloat(s);
+    return v}
+  function typeOk(t,v){
+    if(v===null)return true;
+    if((t==="int"||t==="float")&&typeof v==="boolean")return false;
+    switch(t){case"string":case"url":return typeof v==="string";case"int":return Number.isInteger(v);case"float":return isNum(v);
+      case"bool":return typeof v==="boolean";case"list":return Array.isArray(v)&&v.every(x=>typeof x==="string");case"json":return true;case"blob":return false}
+    return true}
+  const ASK=" — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)";
+  async function valueNamed(sub,f,to,cur,d,row){
+    const t=text();
+    if(f.type==="bool"||to===null){
+      if(to===null)return polar("clear",t)?null:J(to);
+      const yes=polar(to?"true":"false",t),no=polar(to?"false":"true",t);return yes&&!no?null:J(to)}
+    if(f.type==="list"){const before=new Set(cur||[]),after=new Set(to||[]);const diff=[...new Set([...before,...after])].filter(x=>before.has(x)!==after.has(x)).sort();
+      const missing=diff.filter(x=>!nameIn(t,String(x)));return missing.join(", ")||null}
+    if(isLabel(to))return turn.secrets.has(to.secret)?null:J(to);
+    const{by}=await R.units(sub);
+    for(const[uid,r]of by)if(nameIn(t,uid)&&(same(r[f.name],to)||(isNum(r[f.name])&&isNum(to)&&r[f.name]===to)))return null;
+    if(await relatedValue(sub,f,to,row))return null;
+    if(f.type==="int"||f.type==="float")return isNum(to)&&(await textNumbers()).includes(to)?null:J(to);
+    if(nameIn(t,String(to)))return null;
+    for(const lab of[((d.options||{})[f.name]||{})[to],(((W.options||{})[sub]||{})[f.name]||{})[to]])if(lab&&wordFits(t,lab))return null;
+    return J(to)}
+  async function relatedValue(sub,f,to,row){
+    const man=await R.manifest(sub);if(!man.about||!row||typeof to==="boolean")return false;
+    const{arows}=await R.aboutOf(man),ref=arows.get(String(row[man.about.field]));
+    if(!ref||!(f.name in ref))return false;
+    const v=ref[f.name];if(!(same(v,to)||(isNum(v)&&isNum(to)&&v===to)))return false;
+    const link=fieldsOf(man)[man.about.field];
+    return nameIn(text(),String(ref.id))||(!!link&&wordFits(text(),fieldWords(sub,link,man.display)))}
+  async function condNamed(sub,c){
+    let man=await R.manifest(sub),field=String(c.field);const op=c.op||"eq";
+    if(field.startsWith("about.")&&man.about){sub=man.about.sub;field=field.slice(6);man=await R.manifest(sub)}
+    if((field==="id"||field===man.id)&&op==="exists"&&said(ALL,text()))return true;
+    const f=fieldsOf(man)[field];if(f&&wordFits(text(),fieldWords(sub,f,man.display)))return true;
+    const nums=await textNumbers();
+    for(const v of Array.isArray(c.value)?c.value:[c.value]){
+      if(typeof v==="boolean"||v==null)continue;
+      if(isNum(v)&&nums.includes(v))return true;
+      if(typeof v==="string"&&v&&(nameIn(text(),v)||wordFits(text(),v)))return true}
+    return false}
+  async function checkSelection(sel,edits){
+    const errors=[],named=Array.isArray(sel.named)?sel.named.map(String):[];let cond;
+    try{cond=normWhere(sel.where)}catch(x){if(!x.tool)throw x;return[`selection.where: ${x.message}`]}
+    if(!named.length&&!cond.length)return["selection: the admin named neither a unit nor a selection condition — that is a question to the admin, not a plan"];
+    for(const n of named){const id=n.slice(n.lastIndexOf("/")+1);if(!nameIn(text(),id))errors.push(`selection.named: ${n} is not named in the admin's request`)}
+    edits=edits.filter(e=>e&&typeof e==="object"&&String(e.unit).includes("/"));
+    let editSub=sel.edit_sub?String(sel.edit_sub):"";
+    const subs=[...new Set(edits.map(e=>String(e.unit).split("/")[0]))];
+    if(!editSub&&subs.length===1)editSub=subs[0];
+    if(!editSub)return errors.concat(["selection.edit_sub: name the subsystem whose units you edit (the one whose field the request changes)"]);
+    const selectSub=sel.select_sub?String(sel.select_sub):editSub;
+    for(const e of edits)if(String(e.unit).split("/")[0]!==editSub)errors.push(`selection: you edit ${e.unit}, but the edit subsystem is ${editSub}`);
+    let espec;try{espec=await R.manifest(editSub)}catch(x){if(!x.tool)throw x;return errors.concat([`selection: ${x.message}`])}
+    const efields=fieldsOf(espec),ed=espec.display||{};
+    let said={};const sf=sel.fields;
+    if(sf&&typeof sf==="object"&&!Array.isArray(sf)){for(const[k,v]of Object.entries(sf))if(v in efields&&!(k in efields))said[v]=k;for(const[k,v]of Object.entries(sf))if(k in efields)said[k]=v}
+    const t=text(),seenList=new Set();
+    let eunits;try{eunits=(await R.units(editSub)).by}catch(x){if(!x.tool)throw x;return errors.concat([`selection: ${x.message}`])}
+    for(const name of[...new Set(edits.map(e=>e.field).filter(n=>n in efields))].sort()){
+      const f=efields[name],word=said[name],words=fieldWords(editSub,f,ed);
+      for(const e of edits){if(e.field!==name)continue;
+        const row=eunits.get(String(e.unit).slice(String(e.unit).indexOf("/")+1))||{};
+        const miss=await valueNamed(editSub,f,e.to,row[name]??null,ed,row);
+        if(miss)errors.push(`${e.unit}: value ${miss} of field ${name} is not named in the admin's request${ASK}`);
+        else if(f.type==="list"&&!wordFits(t,listOf(W.list_verbs).join(" "))&&!seenList.has(name)){seenList.add(name);
+          errors.push(`field ${name}: the request does not say to add, remove or replace ${words} — "${(Array.isArray(e.to)?e.to:[]).map(String).join(", ")||"[]"}" there is probably the selection condition, not an edit; edit only what the request changes`)}}
+      if(words&&!wordFits(t,words))errors.push(`field ${name} ("${words}") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)`);
+      else if(word&&!wordFits(t,word))errors.push(`selection.fields.${name}: the word "${word}" is not in the admin's request`)}
+    for(const c of cond)if(c&&typeof c==="object"&&!(await condNamed(selectSub,c)))
+      errors.push(`selection.where: condition ${J(c)} is not from the admin's request — neither its field nor its value is named there; select by the admin's words (label codes — field_values, the related unit — about.<field>)`);
+    let picked,sspec,sunits,hits;
+    try{
+      if(cond.length){const s=await select(selectSub,cond);sspec=s.man;hits=s.hits;picked=new Set(hits.map(h=>String(h.id)))}
+      else{const u=await R.units(selectSub);sspec=u.man;sunits=u.by;picked=new Set(named.map(n=>n.slice(n.lastIndexOf("/")+1)));
+        const unknown=[...picked].filter(x=>!sunits.has(x)).sort();if(unknown.length)errors.push(`selection.named: ${selectSub} has no ${unknown.join(", ")}`)}}
+    catch(x){if(!x.tool)throw x;return errors.concat([`selection.where: ${x.message}`])}
+    const ea=espec.about||{},sa=sspec.about||{};let expected;
+    if(selectSub===editSub)expected=new Set(picked);
+    else if(ea.sub===selectSub)expected=new Set([...eunits].filter(([,r])=>picked.has(String(r[ea.field]))).map(([id])=>id));
+    else if(sa.sub===editSub){if(!sunits)sunits=(await R.units(selectSub)).by;expected=new Set([...picked].filter(x=>sunits.has(x)).map(x=>String(sunits.get(x)[sa.field])))}
+    else return errors.concat([`selection: ${selectSub} and ${editSub} are not related (about) — select in the edit subsystem`]);
+    const planned=new Set(edits.filter(e=>String(e.unit).split("/")[0]===editSub).map(e=>String(e.unit).slice(String(e.unit).indexOf("/")+1)));
+    const extra=[...planned].filter(x=>!expected.has(x)).sort();
+    if(extra.length)errors.push(`selection: ${extra.join(", ")} not selected (${named.length&&!cond.length?"named: "+[...picked].sort().join(", "):"condition in "+selectSub}); selected: ${[...expected].sort().join(", ")||"none"}`);
+    for(const name of[...new Set(edits.map(e=>e.field).filter(n=>n in efields))].sort()){
+      const f=efields[name];let delta=null,to;
+      if(f.type==="list"){const ds=new Set();
+        for(const e of edits){if(e.field!==name||!Array.isArray(e.to))continue;const row=eunits.get(String(e.unit).slice(String(e.unit).indexOf("/")+1))||{};
+          const cur=row[name]||(f.inherit!==undefined?f.inherit:null)||[];ds.add(J([[...new Set(e.to)].filter(x=>!cur.includes(x)).sort(),[...new Set(cur)].filter(x=>!e.to.includes(x)).sort()]))}
+        if(ds.size!==1)continue;delta=JSON.parse([...ds][0])}
+      else{const tos=new Set(edits.filter(e=>e.field===name).map(e=>J(e.to)));if(tos.size!==1)continue;to=JSON.parse([...tos][0])}
+      const missed=[];
+      for(const uid of[...expected].filter(x=>!planned.has(x)).sort()){
+        const row=eunits.get(uid);if(!row)continue;const cur=row[name]??null;
+        if(delta){const have=cur||(f.inherit!==undefined?f.inherit:null)||[];if(delta[0].every(x=>have.includes(x))&&!delta[1].some(x=>have.includes(x)))continue}
+        else if(same(cur==null&&f.inherit!==undefined?f.inherit:cur,to))continue;
+        if(R.canWrite(editSub,uid))missed.push(`${uid} (${name} = ${J(cur)})`)}
+      if(missed.length)errors.push(`selection: selected but missing from the plan: ${missed.join(", ")}`)}
+    return{errors,selectSub,editSub,picked:[...picked].sort(),expected:[...expected].sort(),cond,named,hits}}
+  async function propose_plan(args){
+    args=args||{};const edits=args.edits;
+    if(!Array.isArray(edits)||!edits.length)R.fail("edits is a non-empty list of {unit, field, from, to, why}");
+    const p=await checkPlan(args,edits),sel=args.selection&&typeof args.selection==="object"&&!Array.isArray(args.selection)?args.selection:{};
+    const s=await checkSelection(sel,edits),serr=Array.isArray(s)?s:s.errors;
+    const errors=p.errors.concat(serr);
+    turn.version=(turn.version||0)+1;
+    if(errors.length){turn.lastReason=errors[0];return{valid:false,errors,hint:"fix the plan and call propose_plan again, or ask the admin"}}
+    const diff=[];for(const r of p.rows)for(const c of r.changes)diff.push(`${r.unit}  ${c.field}${c.label?` «${c.label}»`:""}: ${J(c.from)} → ${J(c.to)}   (${c.why})`);
+    turn.plan={version:turn.version,summary:String(args.summary??""),selection:{named:s.named,where:s.cond,select_sub:s.selectSub,edit_sub:s.editSub,picked:s.picked,expected:s.expected},rows:p.rows.map(r=>({unit:r.unit,sub:r.sub,id:r.id,revision:r.revision,changes:r.changes}))};
+    return{valid:true,diff,note:"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)"}}
+  async function refuse(args){
+    const r=String((args||{}).reason??"").trim();if(!r)R.fail("reason is why the request cannot be done (or that there are no such units)");
+    const rights=said(RIGHTS,r);
+    if(rights&&turn.seen.size&&[...turn.seen.values()].every(Boolean))R.fail(`refusal for lack of rights, but the units found (${[...turn.seen.keys()].sort().slice(0,6).join(", ")}) do have the edit right — none has can_edit: false; build the plan with propose_plan`);
+    if(rights&&!turn.seen.size)R.fail("refusal for lack of rights, but no unit of the request was found this turn: the right is per unit — find the units with find_units (can_edit shows the right); then a plan for the editable ones, or a refusal if none is editable");
+    if(said(NOT_FOUND,r)&&!turn.told.has("not_found")){const n=await allNamed();if(n.length){turn.told.add("not_found");
+      R.fail(`the refusal says there are no such units, but the request names units that exist: ${n.slice(0,6).map(([s,i])=>s+"/"+i).join(", ")} — find them with find_units (where id) and propose the plan; if the request's condition really matches no unit, say which condition`)}}
+    return{reason:r}}
+  const ALLT={list_subsystems,get_manifest,get_schema,find_units,field_values,list_table,propose_plan,ask_admin,refuse};
+  // call(name, args) → {content: string, error: bool, data}
+  async function call(name,args){
+    const fn=ALLT[name];if(!fn)return{content:`no tool ${name}`,error:true};
+    R=reader(ctx);
+    try{const data=await fn(args);return{content:J(data),error:false,data}}
+    catch(x){if(x&&x.tool)return{content:"error: "+x.message,error:true};throw x}}
+  async function overview(){
+    R=reader(ctx);
+    const subs=await list_subsystems(),manifests={};for(const x of subs.subsystems)manifests[x.sub]=await get_manifest({sub:x.sub});
+    return{subsystems:subs.subsystems,manifests,session:{note:"the admin's rights are per unit: find_units shows can_edit: false where the admin has no right; such units are left out of the plan"}}}
+  return{call,overview,names:Object.keys(ALLT),reader:R}}
+// ── a turn (V/10.3 Н0, Н1.2–Н1.5) ──
+const newTurn=()=>({texts:[],seen:new Map(),told:new Set(),secrets:new Set(),version:0,plan:null,lastReason:"",looked:false,lookNudged:false});
+const TURN_CALLS=25,RESTARTS=2,RESERVE=4096,KEEP_TOOL_RESULTS=4,CHARS_PER_TOKEN=3;
+const ELIDED="[result elided: context window; call the tool again if needed]";
+const NUDGE='Use a tool call: answer the admin only with a tool call: a plan — propose_plan, a question — ask_admin, a refusal or "there are no such units" — refuse with the reason.';
+const LOOK_FIRST="error: an answer not checked against the data. First find_units or field_values for the request's words (rights — can_edit of the units found, label codes — field_values); then a plan, a question or a refusal. If the request names neither a unit nor a value, call ask_admin again.";
+const LOOKUPS=new Set(["find_units","field_values","list_table"]);
+const OVERVIEW=o=>"## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n"+JSON.stringify(o)+"\n```\n";
+const secretsMsg=t=>t.secrets.size?{role:"user",content:[...t.secrets].sort((a,b)=>a-b).map(n=>`Secret ${n} is entered.`).join("\n")}:null;
+const hex=r=>Array.from(r(16),b=>b.toString(16).padStart(2,"0")).join("");
+// env: {console: ctx, step(body) → {ok, message, usage} | {ok: false, lost} | {ok: false, why, reason},
+//       ask(question) → answer text | null (cancelled), status(words), cancelled() → bool, random(n) → bytes, context}
+// text — the admin's text (null: the turn's texts are set, a rebuild); note — the page's own words after them (V/10.3 Н1.5)
+async function runTurn(env,turn,text,note){
+  const T=tools(env.console,turn),toolDefs=(H.tools||[]).map(t=>({type:"function",function:{name:t.name,description:t.description,parameters:t.inputSchema}}));
+  if(text!=null)turn.texts.push(text);
+  let restarts=0,messages,asked=new Set(),last=null,told=new Set();
+  async function start(){
+    turn.id=hex(env.random);turn.seen=new Map();turn.told=new Set();turn.looked=false;turn.lookNudged=false;asked=new Set();last=null;
+    const ov=await T.overview();
+    messages=[{role:"system",content:H.system},{role:"user",content:OVERVIEW(ov)},{role:"user",content:turn.texts.join("\n\n")}];
+    if(note)messages.push({role:"user",content:note});
+    told=new Set(turn.secrets);const sm=secretsMsg(turn);if(sm)messages.push(sm)}
+  function fit(){
+    const size=ms=>Math.floor(ms.reduce((n,m)=>n+JSON.stringify(m).length,0)/CHARS_PER_TOKEN);
+    let est=last?last[0]+Math.max(0,size(messages)-last[1]):size(messages);
+    const idx=messages.map((m,i)=>m.role==="tool"&&m.content!==ELIDED&&!asked.has(m.tool_call_id)?i:-1).filter(i=>i>=0);
+    while(est>(env.context||16384)-RESERVE&&idx.length>KEEP_TOOL_RESULTS){const i=idx.shift();est-=Math.floor(messages[i].content.length/CHARS_PER_TOKEN);messages[i]={...messages[i],content:ELIDED}}}
+  try{await start()}catch(x){if(x&&x.tool)return{outcome:"unfinished",why:"read",reason:x.message};throw x}
+  let calls=0;
+  for(;;){
+    if(env.cancelled())return{outcome:"cancelled"};
+    if(calls>=TURN_CALLS)return{outcome:"unfinished",why:"limit",reason:turn.lastReason};
+    fit();
+    const r=await env.step({messages,tools:toolDefs,tool_choice:"required",reasoning_effort:"medium",turn:turn.id});
+    if(env.cancelled())return{outcome:"cancelled"};
+    if(!r.ok){
+      if(r.lost){if(++restarts>RESTARTS)return{outcome:"unfinished",why:"lost",reason:"the model's holder changed"};calls=0;
+        try{await start()}catch(x){if(x&&x.tool)return{outcome:"unfinished",why:"read",reason:x.message};throw x}continue}
+      return{outcome:"unfinished",why:r.why||"step",reason:r.reason||""}}
+    calls++;
+    last=r.usage&&r.usage.prompt_tokens?[r.usage.prompt_tokens,Math.floor(messages.reduce((n,m)=>n+JSON.stringify(m).length,0)/CHARS_PER_TOKEN)]:null;
+    const msg=r.message||{},tcs=Array.isArray(msg.tool_calls)?msg.tool_calls:[];
+    const keep={role:"assistant",content:msg.content??null};if(tcs.length)keep.tool_calls=tcs;
+    messages.push(keep);
+    if(!tcs.length){messages.push({role:"user",content:NUDGE});continue}
+    let stop=null,end=null,question=null;const results=[];
+    for(const tc of tcs){
+      const id=tc.id,fn=tc.function||{};
+      if(stop){results.push({role:"tool",tool_call_id:id,content:"not executed: "+stop});continue}
+      let args;try{args=typeof fn.arguments==="string"?JSON.parse(fn.arguments||"{}"):(fn.arguments||{})}catch(e){args=undefined}
+      if(args===undefined||args===null||typeof args!=="object"||Array.isArray(args)){results.push({role:"tool",tool_call_id:id,content:"error: the arguments are not JSON: "+String(fn.arguments).slice(0,300)});continue}
+      let name=String(fn.name||"");
+      if(!T.names.includes(name)){const fits=(H.tools||[]).filter(t=>{const p=Object.keys((t.inputSchema||{}).properties||{}),q=(t.inputSchema||{}).required||[];return Object.keys(args).length&&Object.keys(args).every(k=>p.includes(k))&&q.every(k=>k in args)});if(fits.length===1)name=fits[0].name}
+      let res;
+      if((name==="ask_admin"||name==="refuse")&&!turn.looked&&!turn.lookNudged){turn.lookNudged=true;res={content:LOOK_FIRST,error:true}}
+      else{env.status&&env.status(name);res=await T.call(name,args)}
+      if(LOOKUPS.has(name))turn.looked=true;
+      if(name==="ask_admin"&&!res.error){question={id,text:res.data.question};stop="waiting for the admin's answer";results.push(null);continue}
+      results.push({role:"tool",tool_call_id:id,content:res.content});
+      if(!res.error&&name==="propose_plan"&&res.data.valid){stop="the turn is over";end={outcome:"plan",plan:turn.plan,summary:turn.plan.summary}}
+      else if(!res.error&&name==="refuse"){stop="the turn is over";end={outcome:"refusal",reason:res.data.reason}}}
+    if(question){
+      const answer=await env.ask(question.text);
+      if(answer==null||env.cancelled())return{outcome:"cancelled"};
+      results[results.indexOf(null)]={role:"tool",tool_call_id:question.id,content:String(answer)};asked.add(question.id);
+      turn.texts.push(String(answer));calls=0}
+    messages.push(...results);
+    const fresh=[...turn.secrets].filter(n=>!told.has(n)).sort((a,b)=>a-b);   // a secret entered with the answer
+    if(fresh.length){fresh.forEach(n=>told.add(n));messages.push({role:"user",content:fresh.map(n=>`Secret ${n} is entered.`).join("\n")})}
+    if(end)return end}}
+// ── the apply (V/10.6 Н1.4) ──
+// env: {api(method, path, body, opts) → {status, body} (throws {status, body} as the module does), get(path) → {status, body},
+//       secret(n) → value, base(sub) → "" | "/<sub>", rows(sub) → the rows' name}
+async function applyRow(env,row,retry){
+  const body={};for(const c of row.changes)body[c.field]=isLabel(c.to)?env.secret(c.to.secret):c.to;
+  const path=(await env.base(row.sub))+"/"+(await env.rows(row.sub))+"/"+encodeURIComponent(row.id);
+  let r;try{r=await env.api("PUT",path,body,{ifMatch:row.revision})}catch(e){r=e&&e.status?e:{status:0}}
+  const st=r.status|0;
+  if(st===200)return{outcome:"applied",revision:r.body&&r.body.revision};
+  if(st===412&&!retry)return{outcome:"moved"};
+  if(st===401)return{outcome:"refused",words:"not signed in",stop:true};
+  if([400,403,404,409,413].includes(st)){const b=r.body||{};return{outcome:"refused",words:[b.error,b.detail,b.fault].filter(Boolean).join(" · ")}}
+  return await readBack(env,row,path)}
+async function readBack(env,row){
+  let r;try{r=await env.get((await env.base(row.sub))+"/"+(await env.rows(row.sub)))}catch(e){r=null}
+  if(!r||r.status!==200)return{outcome:"unknown"};
+  const now=((r.body&&r.body.configured)||[]).find(x=>String(x.id)===String(row.id));
+  if(!now)return{outcome:"unknown"};
+  if(now.revision===row.revision)return{outcome:"pending"};
+  if(now.revision===row.revision+1&&!row.changes.some(c=>isSecret(c.field))&&row.changes.every(c=>same(now[c.field],c.to)||(isNum(now[c.field])&&isNum(c.to)&&now[c.field]===c.to)))return{outcome:"applied",revision:now.revision};
+  return{outcome:"unknown"}}
+async function apply(env,plan,results){
+  // results: the previous outcomes by unit — «Повторить» sends only pending and skipped, with the old body and ifMatch
+  const out={};let stopped=false;
+  for(const row of plan.rows){
+    const prev=results&&results[row.unit];
+    if(prev&&!["pending","skipped"].includes(prev.outcome)){out[row.unit]=prev;continue}
+    if(stopped){out[row.unit]={outcome:"skipped"};continue}
+    const o=await applyRow(env,row,!!(prev&&prev.outcome==="pending"));
+    if(o.stop){stopped=true;delete o.stop}out[row.unit]=o}
+  return out}
+return{tools,newTurn,runTurn,apply,norm,stems,sameWord,wordFits,nameIn,numbers,same,said:(k,t)=>said({rights:RIGHTS,not_found:NOT_FOUND,all:ALL}[k],t),polar,fieldView,fieldWords,isLabel}}
+// assist:core:end
+// assist:panel:begin
+// The panel «Ассистент» (V/10.3–V/10.6): a section of this page when the console mounts `assist` and the session sees a
+// model row. The turn runs here — the model's steps at its holder's door (`where`), the tools through the module's
+// `api` and `may` — and nothing is written but by «Применить» (V/10.6). The turn lives with the page: nothing of it goes
+// to storage, the secrets live with the shown plan.
+const ASSIST_HARNESS=(()=>{const el=document.getElementById("assist-harness");try{return el?JSON.parse(el.textContent):null}catch(e){return null}})();
+const AS=ASSIST_HARNESS?makeAssist(ASSIST_HARNESS):null;
+const ASSIST_OPS={eq:"=",ne:"≠",in:"одно из",not_in:"ни одно из",contains:"содержит",not_contains:"не содержит",gt:">",gte:"≥",lt:"<",lte:"≤",exists:"задано",missing:"не задано"};
+const ASSIST_OUT={applied:"записано",moved:"строку изменили после чтения — не записано",refused:"отказано",skipped:"не отправлено",pending:"исход не виден: запись могла не дойти",unknown:"исход неизвестен — проверьте строку"};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const A={host:null,models:[],model:"",turn:null,busy:false,cancelled:false,log:[],status:"",plan:null,shown:null,results:null,
+  secrets:new Map(),ask:null,step:null,door:null,applying:false};
+const assistConsole={
+  get:async p=>{try{return{status:200,body:await pc.api("GET",p)}}catch(e){return{status:(e&&e.status)||0,body:e&&e.body}}},
+  may:(cap,ref)=>pc.may(cap,ref),get subs(){return SUBS.filter(s=>pc.manifest(s))},root:SUBS[0],manifest:sub=>pc.manifest(sub),   // the page's subsystems the console mounts
+  mounted:async sub=>{try{await pc.api("GET",`/${sub}/manifest`);return true}catch(e){return false}}};
+async function assistDoor(fresh){
+  if(!fresh&&A.door&&A.door.expires-Date.now()/1000>10)return A.door;
+  let w=null;try{w=await pc.api("GET","/assist/where/"+encodeURIComponent(A.model))}catch(e){w=e&&e.body}   // the console's where: assist is not one of the module's subsystems
+  A.door=w&&w.door&&w.door.url?{url:String(w.door.url).replace(/\/+$/,""),token:w.door.token||"",expires:+w.door.expires||0}:null;
+  A.doorWhy=(w&&w.reason)||"";return A.door}
+// One call at the model's door: a fresh token on 403 once (V/10.3 Н1.3).
+async function assistCall(method,path,body,keepalive){
+  for(let k=0;k<2;k++){
+    const d=await assistDoor(k>0);if(!d)return{status:-1,body:{error:"model unavailable",detail:A.doorWhy}};
+    let r;try{r=await fetch(d.url+path,{method,keepalive:!!keepalive,headers:{Authorization:"Bearer "+d.token,...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined})}
+    catch(e){return{status:0,body:null}}
+    if(r.status===403&&k===0)continue;
+    let j=null;try{j=await r.json()}catch(e){}
+    return{status:r.status,body:j}}}
+const stepPath=id=>`/chat/${encodeURIComponent(A.model)}/steps`+(id?"/"+encodeURIComponent(id):"");
+// A step of the model (V/10.3 Н1.3): post, poll by long wait, the model's own failures tried again up to three times.
+async function assistStep(body){
+  for(let attempt=0;attempt<3;attempt++){
+    let p;
+    for(;;){
+      if(A.cancelled)return{ok:false,why:"cancelled"};
+      p=await assistCall("POST",stepPath(),body);
+      if(p.status===202&&p.body&&p.body.step)break;
+      const e=(p.body&&p.body.error)||"";
+      if(p.status===429||(p.status===503&&(e==="loading"||e==="busy"))){assistStatus(e==="loading"?"модель загружается":"модель занята");await sleep(((p.body&&+p.body.retry_after)||5)*1000);continue}
+      if(p.status===-1||(p.status===503&&e==="model unavailable"))return{ok:false,why:"unavailable",reason:[e,p.body&&p.body.detail].filter(Boolean).join(": ")};
+      if(p.status===0)return{ok:false,why:"network",reason:"нет ответа двери модели"};
+      return{ok:false,why:"door",reason:`${p.status} ${e} ${(p.body&&p.body.detail)||""}`.trim()}}
+    A.step=p.body.step;let st=null,net=0;
+    for(;;){
+      if(A.cancelled)return{ok:false,why:"cancelled"};
+      const g=await assistCall("GET",stepPath(A.step)+"?wait=20");
+      if(g.status===200&&g.body){st=g.body;if(["done","failed","cancelled"].includes(st.state))break;
+        assistStatus(st.state==="queued"?`очередь: ${st.ahead|0} впереди`:"модель думает");continue}
+      if(g.status===410||g.status===404){A.step=null;return{ok:false,lost:true}}
+      if(g.status===0&&++net<=3){await sleep(2000);continue}
+      A.step=null;return{ok:false,why:"door",reason:`${g.status} ${(g.body&&g.body.error)||""}`.trim()}}
+    A.step=null;
+    if(st.state==="done")return{ok:true,message:st.message,usage:st.usage};
+    if(st.state==="failed"&&["model failed","model restarted"].includes(st.reason)&&attempt<2)continue;
+    return{ok:false,why:st.state==="failed"?st.reason:"cancelled",reason:st.reason||st.state}}}
+function assistDrop(keepalive){if(A.step&&A.model){const id=A.step;A.step=null;assistCall("DELETE",stepPath(id),null,keepalive)}}
+function assistStatus(s){A.status=s;const el=A.host&&A.host.querySelector(".as-status");if(el)el.textContent=s}
+const TOOL_WORDS={list_subsystems:"читаю подсистемы",get_manifest:"читаю манифест",get_schema:"читаю схему",find_units:"ищу единицы",field_values:"читаю значения",list_table:"читаю таблицу",propose_plan:"проверяю план",refuse:"проверяю отказ",ask_admin:"вопрос"};
+// The words of «ход не завершён» by its kind (V/10.3 Н1.5); the reason itself folded under them.
+const UNFINISHED={limit:"предел хода: модель не довела план до проверки",lost:"держатель модели сменился",unavailable:"модель недоступна",network:"нет связи с моделью",door:"шаг не удался",read:"консоль не прочиталась",
+  "too long":"шаг шёл слишком долго","queue too long":"очередь к модели слишком длинная","context exceeded":"не уместилось в окно модели","model failed":"модель дала сбой","model restarted":"модель перезапустилась"};
+async function assistRun(text,note){
+  A.busy=true;A.cancelled=false;A.plan=null;A.shown=null;A.results=null;assistDraw();
+  const row=A.models.find(m=>m.id===A.model)||{};
+  const env={console:assistConsole,context:+row.context||16384,random:n=>crypto.getRandomValues(new Uint8Array(n)),cancelled:()=>A.cancelled,
+    status:name=>assistStatus(TOOL_WORDS[name]||name),step:assistStep,
+    ask:q=>new Promise(res=>{A.log.push({who:"model",text:q,ask:true});A.ask=res;A.busy=false;assistDraw()})};
+  let out;
+  try{out=await AS.runTurn(env,A.turn,text,note)}catch(e){out={outcome:"unfinished",why:"door",reason:String(e&&e.message||e)}}
+  A.busy=false;A.ask=null;assistStatus("");
+  if(out.outcome==="plan"){A.plan=out.plan;await assistShow()}
+  else if(out.outcome==="refusal")A.log.push({who:"model",text:out.reason});
+  else if(out.outcome==="unfinished")A.log.push({who:"page",text:"Ход не завершён: "+(UNFINISHED[out.why]||out.why),detail:out.reason});
+  if(out.outcome!=="plan"&&out.outcome!=="cancelled")assistForgetSecrets();
+  assistDraw()}
+function assistForgetSecrets(){A.secrets=new Map()}
+function assistSecretsFromInputs(){
+  A.host.querySelectorAll(".as-secret").forEach(el=>{if(el.value){const n=A.secrets.size+1;A.secrets.set(n,el.value);A.turn.secrets.add(n)}el.value=""});
+  A.host.querySelectorAll(".as-secret-row").forEach(el=>el.remove())}
+async function assistSend(){
+  const ta=A.host.querySelector(".as-text"),text=ta.value.trim();if(!text)return;ta.value="";
+  if(A.ask){const res=A.ask;A.ask=null;assistSecretsFromInputs();A.log.push({who:"admin",text});A.busy=true;assistDraw();res(text);return}
+  if(A.busy)return;
+  assistForgetSecrets();A.turn=AS.newTurn();assistSecretsFromInputs();
+  A.log=[{who:"admin",text}];assistRun(text)}
+function assistCancel(){A.cancelled=true;assistDrop();if(A.ask){const r=A.ask;A.ask=null;r(null)}A.busy=false;assistForgetSecrets();A.plan=null;A.shown=null;A.log.push({who:"page",text:"Ход отменён"});assistDraw()}
+function assistNew(){assistCancel();A.log=[];A.results=null;A.turn=null;assistDraw()}
+// The plan in the page's words (V/10.5 Н1.7, V/10.6 Н1.2): manifests read for the labels; the selection above the diff.
+async function assistShow(){
+  const p=A.plan,mans={},rows={};
+  const man=async s=>mans[s]||(mans[s]=pc.manifest(s)||{});
+  const units=async s=>{if(rows[s])return rows[s];const m=await man(s),r=(await assistConsole.get((s===assistConsole.root?"":"/"+s)+"/"+m.rows)).body;return rows[s]=new Map(((r&&r.configured)||[]).map(x=>[String(x.id),x]))};
+  const label=async(s,f)=>{if(f.startsWith("about.")){const m=await man(s);if(m.about){const am=await man(m.about.sub);return`${((am.display||{}).unit)||m.about.sub}: ${((am.display||{}).fields||{})[f.slice(6)]||f.slice(6)}`}}return((await man(s)).display||{}).fields?.[f]||f};
+  const word=async(s,f,v)=>{if(v&&typeof v==="object"&&AS.isLabel(v))return`секрет № ${v.secret}`;if(Array.isArray(v))return v.map(String).join(", ")||"пусто";if(v===null||v===undefined)return"не задано";const o=(((await man(s)).display||{}).options||{})[f]||{};return o[v]||(typeof v==="string"?v:JSON.stringify(v))};
+  const unitName=async(s,id)=>{const m=await man(s),r=(await units(s)).get(String(id));return`${((m.display||{}).unit)||s} ${r&&m.id!=="numeric"&&r[m.id]!==undefined?r[m.id]:(r&&r.name)||id}`};
+  const sel=p.selection,conds=[];
+  for(const c of sel.where||[])conds.push(`${await label(sel.select_sub,String(c.field))} ${ASSIST_OPS[c.op||"eq"]||c.op}${["exists","missing"].includes(c.op)?"":" "+(Array.isArray(c.value)?c.value.join(", "):await word(sel.select_sub,String(c.field),c.value))}`);
+  const shown={by:sel.where&&sel.where.length?"условие: "+conds.join(" и "):"по имени: "+(await Promise.all((sel.named||[]).map(n=>unitName(sel.select_sub,n.slice(n.lastIndexOf("/")+1))))).join(", "),
+    subs:sel.select_sub!==sel.edit_sub?`отбор — ${sel.select_sub}, правка — ${sel.edit_sub}`:"",picked:sel.expected.length,inPlan:p.rows.length,rows:[]};
+  for(const r of p.rows){
+    const why=[];
+    if(sel.where&&sel.where.length){const m=await man(r.sub),u=(await units(r.sub)).get(String(r.id))||{};
+      for(const c of sel.where){const f=String(c.field);let v;
+        if(f.startsWith("about.")&&m.about){const ar=(await units(m.about.sub)).get(String(u[m.about.field]))||{};v=ar[f.slice(6)]}
+        else if(sel.select_sub!==r.sub&&m.about&&m.about.sub===sel.select_sub){const ar=(await units(sel.select_sub)).get(String(u[m.about.field]))||{};v=ar[f]}
+        else v=u[f];
+        why.push(`${await label(sel.select_sub,f)}: ${await word(sel.select_sub,f.replace(/^about\./,""),v)}`)}}
+    else why.push("названа");
+    const ch=[];for(const c of r.changes)ch.push({label:await label(r.sub,c.field),from:AS.isLabel(c.to)||/_secret$/.test(c.field)?(c.from??"—"):await word(r.sub,c.field,c.from),to:await word(r.sub,c.field,c.to),why:c.why});
+    shown.rows.push({unit:await unitName(r.sub,r.id),ref:r.unit,cond:why.join("; "),changes:ch})}
+  A.shown=shown;A.log.push({who:"model",text:p.summary,plan:true})}
+async function assistApply(again){
+  if(!A.plan||A.applying||!FEATURES.has("api.if-match"))return;
+  A.applying=true;assistDraw();
+  const env={api:async(m,p,b,o)=>({status:200,body:await pc.api(m,p,b,o)}),get:assistConsole.get,secret:n=>A.secrets.get(n),
+    base:async s=>s===assistConsole.root?"":"/"+s,rows:async s=>(pc.manifest(s)||{}).rows};
+  try{A.results=await AS.apply(env,A.plan,again?A.results:null)}catch(e){pc.toast("Применение прервано: "+(e&&e.message||e))}
+  A.applying=false;
+  const left=A.results&&Object.values(A.results).some(r=>["pending","skipped"].includes(r.outcome));
+  if(!left)assistForgetSecrets();    // the secrets live while «Повторить» may still send them (V/10.6 Н1.3)
+  assistDraw()}
+function assistRebuild(){
+  if(!A.turn||!A.results)return;
+  const texts=A.turn.texts.slice(),notes=A.plan.rows.filter(r=>A.results[r.unit]&&A.results[r.unit].outcome!=="applied").map(r=>`${r.unit}: ${A.results[r.unit].outcome}`);
+  assistForgetSecrets();A.turn=AS.newTurn();A.turn.texts=texts;A.results=null;A.plan=null;A.shown=null;
+  A.log.push({who:"page",text:"Перестройка: "+notes.join(", ")});
+  assistRun(null,"The previous plan was applied in part. Rows to rebuild from a fresh reading: "+notes.join("; ")+".")}
+function assistDraw(){
+  const h=A.host;if(!h||!h.isConnected)return;
+  const L=A.log.map(e=>e.who==="admin"?`<div class="as-msg as-admin">${esc(e.text)}</div>`:
+    e.who==="model"?`<div class="as-msg as-model"><small>слова модели</small>${esc(e.text)}</div>`:
+    `<div class="as-msg as-page">${esc(e.text)}${e.detail?`<details><summary>причина</summary><code>${esc(e.detail)}</code></details>`:""}</div>`).join("");
+  let P="";
+  if(A.shown){const s=A.shown;
+    P=`<div class="as-sel"><b>Кого выбрали:</b> ${esc(s.by)}${s.subs?` · ${esc(s.subs)}`:""} · отобрано ${s.picked}, в плане ${s.inPlan}</div>
+      <table class="as-diff"><tr><th>Единица</th><th>Почему в плане</th><th>Поле</th><th>Было → станет</th><th>Причина модели</th></tr>${s.rows.map(r=>r.changes.map((c,i)=>`<tr>${i?"<td></td><td></td>":`<td>${esc(r.unit)}</td><td>${esc(r.cond)}</td>`}<td>${esc(c.label)}</td><td>${esc(c.from)} → ${esc(c.to)}</td><td>${esc(c.why)}</td></tr>`).join("")).join("")}</table>`;
+    const R=A.results;
+    if(R)P+=`<ul class="as-res">${A.plan.rows.map(r=>{const o=R[r.unit]||{};return`<li class="as-${esc(o.outcome||"")}">${esc(r.unit)} — ${esc(ASSIST_OUT[o.outcome]||o.outcome||"")}${o.words?": "+esc(o.words):""}</li>`}).join("")}</ul>`;
+    const left=R&&Object.values(R).some(o=>["pending","skipped"].includes(o.outcome)),redo=R&&Object.values(R).some(o=>o.outcome!=="applied");
+    P+=FEATURES.has("api.if-match")?
+      `<div class="vrow">${!R?`<button class="btn" data-act="apply"${A.applying?" disabled":""}>Применить</button>`:""}${left?`<button class="btn" data-act="again"${A.applying?" disabled":""}>Повторить</button>`:""}${redo&&!A.applying?`<button class="btn" data-act="rebuild">Перестроить</button>`:""}</div>`:
+      `<p class="sub bad">Запись по версии недоступна: модуль консоли без api.if-match.</p>`}
+  const models=A.models.map(m=>`<option value="${esc(m.id)}"${m.id===A.model?" selected":""}>${esc(m.id)}</option>`).join("");
+  h.innerHTML=card("Ассистент",`
+    <div class="vrow"><label>Модель</label><select data-act="model"${A.busy||A.ask?" disabled":""}>${models}</select><span class="as-status sub">${esc(A.status)}</span></div>
+    <div class="as-log">${L}</div>${P}
+    <textarea class="as-text" rows="3" placeholder="${A.ask?"Ответьте словами — назовите поле и значение; «да» ничего не называет":"Что сделать? Например: включи запись камер третьего этажа"}"${A.busy?" disabled":""}></textarea>
+    <div class="vrow"><button class="btn" data-act="send"${A.busy?" disabled":""}>${A.ask?"Ответить":"Отправить"}</button>
+      <button class="btn" data-act="secret"${A.busy?" disabled":""}>Пароль…</button>
+      ${A.busy||A.ask?`<button class="btn" data-act="cancel">Отменить ход</button>`:""}<button class="btn" data-act="new">Новый ход</button></div>
+    <div class="as-secrets"></div>`);
+  wire(h,{send:assistSend,cancel:assistCancel,new:assistNew,apply:()=>assistApply(false),again:()=>assistApply(true),rebuild:assistRebuild,model:el=>{A.model=el.value},
+    secret:()=>{const box=h.querySelector(".as-secrets"),n=A.secrets.size+box.children.length+1;
+      box.insertAdjacentHTML("beforeend",`<div class="as-secret-row"><label>Секрет № ${n}</label><input type="password" class="as-secret" autocomplete="off"></div>`)}})}
+// The section: only when the console mounts assist and the session sees a model row (V/10.3 Н1.1).
+if(AS)pc.ready.then(async()=>{
+  const r=await assistConsole.get("/assist/models");const rows=(r.status===200&&r.body&&r.body.configured)||[];if(!rows.length)return;   // no assist, or no model row the session sees
+  const live=new Set(((r.body&&r.body.rows)||[]).filter(x=>x.phase==="running"||x.state==="running").map(x=>String(x.id)));
+  A.models=rows.map(x=>({id:String(x.id),context:x.context})).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+  A.model=(A.models.find(x=>live.has(x.id))||A.models[0]).id;
+  pc.addSection({id:"assist",label:"Ассистент",icon:"bolt",after:"rules",render:host=>{A.host=host;assistDraw()}});
+  addEventListener("pagehide",()=>{A.cancelled=true;assistDrop(true)});
+  pc.on("logout",()=>{assistCancel();A.log=[];assistDraw()});
+});
+// assist:panel:end
 </script>

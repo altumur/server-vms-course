@@ -1,0 +1,562 @@
+[
+ {
+  "fn": "wordFits",
+  "args": [
+   "tag",
+   "tags"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "тег",
+   "теги"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "все",
+   "всегда"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "при",
+   "приоритет"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "дня",
+   "дней"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "день",
+   "дней"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "second floor",
+   "floor"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "western",
+   "west"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "wordFits",
+  "args": [
+   "the",
+   "then"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "Store-20 and Store-2x",
+   "Store-2"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "see Store-2.",
+   "Store-2"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "zone z21",
+   "z2"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "zone z2",
+   "z2"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "Всё",
+   "все"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "gate-1",
+   "Gate-1"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "numbers",
+  "args": [
+   "Store-2 keep 14 days, -3 and x-5, 1,5 и 2.25",
+   [
+    "Store-2"
+   ]
+  ],
+  "expect": [
+   14,
+   -3,
+   5,
+   1.5,
+   2.25
+  ]
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "Camera включена"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "Camera включена"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "Camera включена"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "выключите камеры"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "выключите камеры"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "выключите камеры"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "turn it on please"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "turn it on please"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "turn it on please"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "switch on the gate"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "switch on the gate"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "switch on the gate"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "Turn on light"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "Turn on light"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "Turn on light"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "clear the zone"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "clear the zone"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "clear the zone"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "true",
+   "the gate is on"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "false",
+   "the gate is on"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "polar",
+  "args": [
+   "clear",
+   "the gate is on"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "You don't have permission to edit Gate-1"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "The admin lacks edit rights on these cameras"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Insufficient permissions for that"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Permission denied for these units"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "You are not allowed to edit these units"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "No edit rights on Gate-1"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Нет разрешения на правку"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "у админа нет прав"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "без прав на камеры"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "не имеет прав"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "You have no rights here"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "no access"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "The field is fixed, changing it is not allowed"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Поле fixed — правка невозможна"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Правка поля невозможна"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "No tallies with shelf Store-2 found"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "there is no such unit"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "it does not exist"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "Счёт не найден"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "не нашёл таких"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "Таких камер нет"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "нет такой камеры"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "Nothing to change"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "for all cameras"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "every tally"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "each one"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "на всех камерах"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "все счета"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "всё"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "всем"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "весь этаж"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "вся зона"
+  ],
+  "expect": false
+ }
+]

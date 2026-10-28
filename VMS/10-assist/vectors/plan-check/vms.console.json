@@ -1,0 +1,607 @@
+{
+ "_note": "VMS console: the canon manifests of cam and rec as ManifestView, a few rows; the admin has admin on everything",
+ "mounts": {
+  "root": "cam",
+  "mounts": {
+   "rec": {
+    "name": "rec",
+    "rows": "recordings",
+    "id": "name",
+    "fields": [
+     {
+      "name": "name",
+      "type": "string",
+      "default": null,
+      "required": true
+     },
+     {
+      "name": "cam",
+      "type": "string",
+      "default": null,
+      "required": true,
+      "fixed": true
+     },
+     {
+      "name": "ref",
+      "type": "string",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "stream",
+      "type": "string",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "retention_days",
+      "type": "int",
+      "default": 30,
+      "required": false
+     },
+     {
+      "name": "enabled",
+      "type": "bool",
+      "default": true,
+      "required": false
+     },
+     {
+      "name": "labels",
+      "type": "list",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "home",
+      "type": "string",
+      "default": null,
+      "required": false
+     },
+     {
+      "name": "until",
+      "type": "float",
+      "default": 0,
+      "required": false
+     },
+     {
+      "name": "min_depth_days",
+      "type": "float",
+      "default": 0,
+      "required": false
+     },
+     {
+      "name": "when",
+      "type": "string",
+      "default": "always",
+      "required": false,
+      "enum": [
+       "always",
+       "offline"
+      ]
+     }
+    ],
+    "display": {
+     "unit": "запись",
+     "units": "записи",
+     "units_count": "записей",
+     "field_help": {
+      "cam": "камера, которую пишет запись",
+      "stream": "поток камеры, который пишет запись; пусто — основной",
+      "home": "том, в котором лежит запись",
+      "retention_days": "сколько дней показывать",
+      "min_depth_days": "сколько дней должно быть не меньше",
+      "when": "резервная запись: всегда или только когда основная не пишется"
+     },
+     "kinds": {
+      "archive.shallow": "архив мельче обещанного",
+      "archive.keep.sealed": "сохранённое запечатано",
+      "archive.keep.verified": "сохранённое проверено",
+      "archive.keep.copied": "сохранённое скопировано",
+      "archive.keep.lost": "сохранённое потеряно или не скопировано",
+      "archive.backfill.asked": "попросили дописать",
+      "archive.backfill.refused": "дозапись отклонена",
+      "archive.keep.made": "поставлена метка «сохранить»",
+      "archive.keep.lifted": "метка «сохранить» снята",
+      "archive.keep.uncopied": "сохранённое ещё не скопировано",
+      "archive.keep.garbled": "метка «сохранить» не читается"
+     }
+    },
+    "about": {
+     "sub": "cam",
+     "field": "cam"
+    }
+   }
+  }
+ },
+ "manifests": {
+  "cam": {
+   "name": "cam",
+   "rows": "cameras",
+   "id": "numeric",
+   "fields": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": "cam{id}",
+     "required": false
+    },
+    {
+     "name": "main",
+     "type": "string",
+     "default": null,
+     "required": false,
+     "fixed": true
+    },
+    {
+     "name": "profile",
+     "type": "string",
+     "default": "main",
+     "required": false
+    },
+    {
+     "name": "grid",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "full",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "source",
+     "type": "url",
+     "default": null,
+     "required": true
+    },
+    {
+     "name": "enabled",
+     "type": "bool",
+     "default": true,
+     "required": false
+    },
+    {
+     "name": "priority",
+     "type": "int",
+     "default": 100,
+     "required": false
+    },
+    {
+     "name": "labels",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "folders",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "alarms",
+     "type": "list",
+     "default": null,
+     "required": false,
+     "inherit": [],
+     "merge": "union"
+    },
+    {
+     "name": "ref",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "cred_username",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "cred_secret",
+     "type": "string",
+     "default": null,
+     "required": false,
+     "bound_to": [
+      "source"
+     ]
+    },
+    {
+     "name": "live",
+     "type": "string",
+     "default": "always",
+     "required": false,
+     "enum": [
+      "always",
+      "on-demand"
+     ]
+    },
+    {
+     "name": "kind",
+     "type": "string",
+     "default": "video",
+     "required": false
+    }
+   ],
+   "display": {
+    "section": "Оборудование",
+    "unit": "камера",
+    "units": "камеры",
+    "units_count": "камер",
+    "general": "Подключение",
+    "fields": {
+     "enabled": "Включена",
+     "name": "Имя",
+     "ref": "Короткое имя",
+     "id": "ID",
+     "main": "Камера",
+     "profile": "Поток",
+     "grid": "Поток сетки",
+     "full": "Поток полного экрана",
+     "folders": "Папки",
+     "source": "Источник",
+     "cred_username": "Логин устройства",
+     "cred_secret": "Пароль устройства",
+     "live": "Живой поток",
+     "priority": "Приоритет",
+     "labels": "Метки достижимости"
+    },
+    "options": {
+     "live": {
+      "always": "Держать всегда",
+      "on-demand": "По требованию"
+     }
+    },
+    "form": [
+     {
+      "title": "Идентификация",
+      "state": true,
+      "fields": [
+       "enabled",
+       "name",
+       "ref",
+       "id",
+       "folders"
+      ]
+     },
+     {
+      "title": "Подключение",
+      "fields": [
+       "source",
+       "cred_username",
+       "cred_secret"
+      ],
+      "note": "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
+     },
+     {
+      "title": "Потоки",
+      "fields": [
+       "main",
+       "profile",
+       "grid",
+       "full"
+      ],
+      "note": "Поток камеры — своя строка: адрес, имя потока и камера (её основной поток). Имя, метки, папки, короткое имя и тревоги — только у основного потока: у прочих VMS их не читает, а метки потока лишь сужают, где его держат. Потоки сетки и полного экрана выбирает пользователь; пусто — основной."
+     },
+     {
+      "title": "Размещение",
+      "placement": true,
+      "fields": [
+       "live",
+       "priority",
+       "labels"
+      ],
+      "note": "Метки решают, где может работать камера: её возьмёт воркер, чей сервер несёт все её метки. Пусто — любой сервер. Папки лежат только в дереве и на размещение не влияют."
+     }
+    ],
+    "field_help": {
+     "main": "id основного потока камеры; пусто — эта строка и есть камера",
+     "profile": "имя потока: main, сетка, детекция…",
+     "grid": "поток этой камеры для сетки живого видео; пусто — основной",
+     "full": "поток этой камеры для полного экрана; пусто — основной",
+     "source": "адрес устройства (driverpack://производитель/адрес/ch/канал)",
+     "labels": "сети, в которых виден адрес камеры (vlan:cctv-a)",
+     "folders": "папки, в которых камера показана",
+     "cred_username": "логин устройства",
+     "cred_secret": "пароль устройства",
+     "live": "живой поток: держать всегда или по требованию"
+    },
+    "kinds": {
+     "io.input": "вход устройства",
+     "silent": "камера молчит"
+    },
+    "tree": {
+     "group_by": "folders",
+     "nested_by": "/",
+     "group_title": "По папкам",
+     "group_hint": "Папки из поля folders → камеры",
+     "filter": "Фильтр по имени, адресу…",
+     "no_group": "Без папки",
+     "contents_title": "Состав папки",
+     "group_word": "папка",
+     "no_group_suffix": "без папки",
+     "pick_note": "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels.",
+     "new_root": "Папка",
+     "new_sub": "Подпапка",
+     "add_here": "Добавить камеру сюда",
+     "new_group_note": "Папка создана — добавьте в неё камеру, иначе она не сохранится"
+    },
+    "keys": {
+     "sources": {
+      "title": "Книги источников",
+      "about": "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
+     }
+    }
+   },
+   "about": {
+    "sub": "cam",
+    "field": "main"
+   }
+  },
+  "rec": {
+   "name": "rec",
+   "rows": "recordings",
+   "id": "name",
+   "fields": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "required": true
+    },
+    {
+     "name": "cam",
+     "type": "string",
+     "default": null,
+     "required": true,
+     "fixed": true
+    },
+    {
+     "name": "ref",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "stream",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "retention_days",
+     "type": "int",
+     "default": 30,
+     "required": false
+    },
+    {
+     "name": "enabled",
+     "type": "bool",
+     "default": true,
+     "required": false
+    },
+    {
+     "name": "labels",
+     "type": "list",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "home",
+     "type": "string",
+     "default": null,
+     "required": false
+    },
+    {
+     "name": "until",
+     "type": "float",
+     "default": 0,
+     "required": false
+    },
+    {
+     "name": "min_depth_days",
+     "type": "float",
+     "default": 0,
+     "required": false
+    },
+    {
+     "name": "when",
+     "type": "string",
+     "default": "always",
+     "required": false,
+     "enum": [
+      "always",
+      "offline"
+     ]
+    }
+   ],
+   "display": {
+    "unit": "запись",
+    "units": "записи",
+    "units_count": "записей",
+    "field_help": {
+     "cam": "камера, которую пишет запись",
+     "stream": "поток камеры, который пишет запись; пусто — основной",
+     "home": "том, в котором лежит запись",
+     "retention_days": "сколько дней показывать",
+     "min_depth_days": "сколько дней должно быть не меньше",
+     "when": "резервная запись: всегда или только когда основная не пишется"
+    },
+    "kinds": {
+     "archive.shallow": "архив мельче обещанного",
+     "archive.keep.sealed": "сохранённое запечатано",
+     "archive.keep.verified": "сохранённое проверено",
+     "archive.keep.copied": "сохранённое скопировано",
+     "archive.keep.lost": "сохранённое потеряно или не скопировано",
+     "archive.backfill.asked": "попросили дописать",
+     "archive.backfill.refused": "дозапись отклонена",
+     "archive.keep.made": "поставлена метка «сохранить»",
+     "archive.keep.lifted": "метка «сохранить» снята",
+     "archive.keep.uncopied": "сохранённое ещё не скопировано",
+     "archive.keep.garbled": "метка «сохранить» не читается"
+    }
+   },
+   "about": {
+    "sub": "cam",
+    "field": "cam"
+   }
+  }
+ },
+ "rows": {
+  "cam": [
+   {
+    "id": "1",
+    "revision": 3,
+    "name": "Вход",
+    "main": null,
+    "profile": "main",
+    "grid": null,
+    "full": null,
+    "source": "rtsp://10.0.0.11/main",
+    "enabled": true,
+    "priority": 100,
+    "labels": null,
+    "folders": [
+     "Офис/Этаж 3"
+    ],
+    "alarms": null,
+    "ref": null,
+    "cred_username": "admin",
+    "cred_secret": "***",
+    "live": "always",
+    "kind": "video"
+   },
+   {
+    "id": "2",
+    "revision": 3,
+    "name": "Парковка",
+    "main": null,
+    "profile": "main",
+    "grid": null,
+    "full": null,
+    "source": "rtsp://10.0.0.12/main",
+    "enabled": true,
+    "priority": 100,
+    "labels": null,
+    "folders": [
+     "Улица"
+    ],
+    "alarms": null,
+    "ref": null,
+    "cred_username": null,
+    "cred_secret": null,
+    "live": "on-demand",
+    "kind": "video"
+   },
+   {
+    "id": "3",
+    "revision": 3,
+    "name": "Склад",
+    "main": null,
+    "profile": "main",
+    "grid": null,
+    "full": null,
+    "source": "rtsp://10.0.0.13/main",
+    "enabled": false,
+    "priority": 100,
+    "labels": null,
+    "folders": [
+     "Офис/Этаж 1"
+    ],
+    "alarms": null,
+    "ref": null,
+    "cred_username": null,
+    "cred_secret": null,
+    "live": "always",
+    "kind": "video"
+   },
+   {
+    "id": "4",
+    "revision": 3,
+    "name": "Вход малый",
+    "main": "1",
+    "profile": "sub",
+    "grid": null,
+    "full": null,
+    "source": "rtsp://10.0.0.11/sub",
+    "enabled": true,
+    "priority": 100,
+    "labels": null,
+    "folders": null,
+    "alarms": null,
+    "ref": null,
+    "cred_username": null,
+    "cred_secret": null,
+    "live": "always",
+    "kind": "video"
+   }
+  ],
+  "rec": [
+   {
+    "id": "vhod",
+    "revision": 3,
+    "name": "vhod",
+    "cam": "1",
+    "ref": null,
+    "stream": null,
+    "retention_days": 30,
+    "enabled": true,
+    "labels": null,
+    "home": null,
+    "until": 0,
+    "min_depth_days": 0,
+    "when": "always"
+   },
+   {
+    "id": "vhod-backup",
+    "revision": 3,
+    "name": "vhod-backup",
+    "cam": "1",
+    "ref": null,
+    "stream": null,
+    "retention_days": 7,
+    "enabled": true,
+    "labels": null,
+    "home": null,
+    "until": 0,
+    "min_depth_days": 0,
+    "when": "offline"
+   },
+   {
+    "id": "parking",
+    "revision": 3,
+    "name": "parking",
+    "cam": "2",
+    "ref": null,
+    "stream": null,
+    "retention_days": 30,
+    "enabled": false,
+    "labels": null,
+    "home": null,
+    "until": 0,
+    "min_depth_days": 0,
+    "when": "always"
+   }
+  ]
+ },
+ "tables": {},
+ "session": {
+  "open": false,
+  "login_url": "/login",
+  "user": "olga",
+  "until": 0,
+  "via": "token",
+  "grants": [
+   {
+    "cap": "admin",
+    "scope": "*"
+   }
+  ]
+ },
+ "schema": {
+  "version": 1
+ }
+}
