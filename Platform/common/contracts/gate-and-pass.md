@@ -78,7 +78,8 @@ gate:
        выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.form.yaml (исходы — `Platform/08-domain/data/disabled.outcomes.tsv`), исходы disabled.outcomes.tsv;
        тот же вход disabled, что у функции may шаг 2): имя в ней — как без входа; строка есть, но не читается — как без
        входа (проверить нечем); строки нет — выключенных нет; domain/users консоль не читает: личность без строк в
-       domain/grants — сессия grants: [], каждая проверка no_grant (C06-DEBUG-FACTS-33-01, решение «Архитектора»
+       domain/grants — сессия grants: [], каждая проверка no_grant; строка domain/grants есть, но не читается —
+       правило «Нечитаемая строка» раздела «Отказы сторожевой» (503 unavailable, не исключение; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e) (C06-DEBUG-FACTS-33-01, решение «Архитектора»
        2026-10-25); с другого адреса — как без переменной; доверенный прокси на петле и заданная
        переменная → процесс не стартует; видно: /session отдаёт debug: true, при старте тревога session.debug_open,
        каждая правка — в журнал с debug: true
@@ -210,8 +211,9 @@ ConsoleRefusal, `detail` — имя параметра (дверь со свои
 cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token договора токена домена «Проверка»
            по набору и domain/revoked этого кластера с expect {kind: person, cluster: null} — договор токена домена «Токен» (решение «Архитектора»
            2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10); отказ — 401 {error: denied, detail:
-           "token refused: <слово>"}, форма `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`); затем may (договор права) с
-           grants = doc строки domain/grants (копия этого кластера), as_of — её as_of, disabled — domain/disabled этого
+           "token refused: <слово>"}, форма `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`), кроме
+           no_revocations: правило «Нечитаемая строка» (503 {error: "unavailable"}; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e); затем may (договор права) с
+           grants = doc строки domain/grants (копия этого кластера; есть, но не читается — правило «Нечитаемая строка»), as_of — её as_of, disabled — domain/disabled этого
            хранилища (есть только у держателя), cap и unit — need P/06.3 Н1.3; deny — 403 {error: denied, detail:
            "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
            its agent has not reached the domain»
@@ -221,6 +223,22 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 
 Из P/06.3 Н4 (перенесено без изменения; аудит раскладки Б-09, Б-11, решение «Архитектора» 2026-10-25).
 
+**Нечитаемая строка** (решение владельца 2026-10-28). Строка домена, которую проверка доступа читает для этой сессии
+(личность, подпись, грант, вход `may`), есть, но не читается (исход её семьи) — 503 `{error: "unavailable"}`; не 401, не 403, не «строки нет»; в счёт
+пределов не идёт; журнала нет. Исключения — только названные здесь:
+- отладочный вход консоли (раздел «Сторожевая» `identity` п. 4): нечитаемая `domain/disabled` — «как без входа»;
+- нечитаемый элемент `lines` грантов (путь `/doc/lines/*` семей `grants`; P/08.4 Н1.3 `unreadable`): пропуск с
+  диагностикой, решают остальные строки; строка целиком читается (решение «Архитектора» 2026-10-28 по сверке ddc9bee1e).
+
+Строки единиц (гранты `labels:…` и `unit:` about-единицы) — не строки домена: их нечитаемость — раздел «Сторожевая»
+`scope` (грант не покрывает) (решение «Архитектора» 2026-10-28 по сверке ddc9bee1e).
+
+Аварийная сессия (кука `w2c_glass`, `may` шаг 1 `glass` → allow) гранты и `domain/disabled` не читает — их нечитаемость
+её не останавливает; `GET /session` аварийной — `grants: []` (C06-GLASS-UNREADABLE-01, решение «Архитектора» 2026-10-28).
+
+Следы домена (раздел «Следы домена») требуют только наличия строки: нечитаемая строка — след есть. Строки ниже —
+применения правила.
+
 | Причина | Код | Тело | Что делает вызывающий |
 |---|---|---|---|
 | аварийный вход: пароль не сверился | 401 | `{detail, error: denied}` | не создавать сессию; общий журнал отказа доступа; в счёт предела (глава 6.7 Н1.10; P/08.4 Н1.10) |
@@ -229,9 +247,9 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 | гранта нет | 403 | `{detail: "<кто> may not <cap> <единица \| here>", error: denied}`; журнал | — |
 | нет домена, не петля | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | подключить домен |
 | ключи были, проверить нечем | 503 | `{detail: "…admits nobody", error: denied}` | восстановить доверие |
-| строка `domain/keys` есть, но не читается — проверить токен нечем ([семья `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не «токен годен», не 401 | ждать читаемой строки (DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
-| строка `domain/member` есть, но не читается — подпись своего агента (`X-Agent-Signature`) и след домена проверить нечем ([семья `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не 401, не «подпись годна», не «нет домена» и не 403 | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
-| строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}`, журнал; не 403, `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
+| строка `domain/keys` есть, но не читается — проверить токен нечем ([семья `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка»; не «токен годен» | ждать читаемой строки (DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
+| строка `domain/member` есть, но не читается — подпись своего агента (`X-Agent-Signature`) и след домена проверить нечем ([семья `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка»; не «подпись годна», не «нет домена» | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
+| строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка» (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, решение «Архитектора» 2026-10-28); `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
 | чужой Origin на действующем запросе по куке | 403 | `{detail, error: denied}` | — |
 | `/session POST` у открытой консоли (раздел «Сторожевая» `session` `by_state`) | 400 | `{detail, error: "this console is open"}` | — |
 | `/session GET` и `DELETE` у открытой консоли (раздел «Сторожевая», `by_state`) | 200 | GET — `{open: true, login_url}`; DELETE — `{out: true}` | — |
@@ -313,6 +331,9 @@ door:          POST /session/break-glass {who, why, password} у консоли 
                2. тело не {who, why, password} строками, who или why пусты — 400 bad body
                3. предел («Предел попыток» ниже)                       → 429
                4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
+                  domain/member есть, но не читается (семья member, `Platform/09-agent/data/member.outcomes.tsv`) —
+                  503 {error: "unavailable"}, как «не открывается» (правило «Нечитаемая строка» раздела «Отказы сторожевой»); не в счёт
+                  предела (C06-BREAKGLASS-MEMBER-UNREADABLE-01, решение «Архитектора» 2026-10-28);
                   нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
                   не открывается — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)

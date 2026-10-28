@@ -216,10 +216,12 @@ server:
 дверей единиц (план переноса урока 10, В12; решение «Архитектора» по планам 8–10). Шаг 3 — токен человека: функция
 `token` [договора токена домена](../../common/contracts/domain-token.md) «Проверка» по набору и `domain/revoked` своего
 хранилища с `expect {kind: person, cluster: null}` (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 7); отказ —
-401 `{error: denied, detail: "token refused: <слово>"}` (форма P/06.3).
+401 `{error: denied, detail: "token refused: <слово>"}` (форма P/06.3), кроме `no_revocations`: правило «Нечитаемая строка» договора сторожевой и передачи
+(503 `{error: "unavailable"}`; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e).
 
 Право — строка `domain` [P/08.4 Н1.5](../../08-domain/spec/08.4-domain.norms.md) (одна строка для консоли домена и процесса
-`domain`; текст — там): `may` ([договор права](../../common/contracts/may.md)) по `domain/grants/domain`, `need` view/admin по
+`domain`; текст — там): `may` ([договор права](../../common/contracts/may.md)) по `domain/grants/domain` (есть, но не читается — правило «Нечитаемая строка» договора сторожевой и передачи,
+503 `unavailable`; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e), `need` view/admin по
 двери; вход `disabled` функции `may` — строка `domain/disabled` у держателя (P/06.3 Н1.3 «Данные», М11/9 Н1.5 `cluster`).
 
 Строки `body_unit` и `session` — [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) «Права по телу» (перенесены; догадка стадии C GP-G05, решение «Архитектора» 2026-10-23).
