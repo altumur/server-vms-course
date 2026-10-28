@@ -1,0 +1,18 @@
+format: 2
+implementation: sut-@BACKEND@
+module: 02-installer
+spec_version: @SPEC_VERSION@
+build: "true"
+stand:
+  load: ./sut load {file}
+  canonical: ./sut canonical {input}
+keys:
+  path_style: json
+adapters:
+  load: ./sut load-adapter
+vectors:
+  02-installer/canonical: ./sut vectors {input}
+  common/family-read: ./sut vectors {input}
+  common/yaml-suite: ./sut vectors {input}
+artifacts:
+  source: sut
