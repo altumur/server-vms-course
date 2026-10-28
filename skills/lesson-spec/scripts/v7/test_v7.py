@@ -155,6 +155,43 @@ class TestDefects(unittest.TestCase):
             go.close()
 
 
+    def test_d19_dialect_p1_states(self):
+        """D19 — дефект эталона по метке: П1 без `state.<имя>` (ADR-0091 п. 3; V7-P022-SNAPSHOT-STATE-01). Эталон метки
+        (form_source и форма P/02.1 из `git archive`) даёт `snapshot` без состояний, стек В7 — с ними, кроме `cursor`;
+        SUT `dialect` узнаёт ровно это расхождение (sut.p1_states)."""
+        import subprocess
+        import tempfile
+        from v7 import project, textv7
+        from v7.sut import sut
+        data = (b"name: probe\nunit:\n  rows: counters\n  id: name\n  fields:\n    name: {type: string, required: true}\n"
+                b"  state:\n    result: {type: object, properties: {state: {type: string}}}\n"
+                b"    cursor: {type: object, properties: {at: {type: int}}}\n"
+                b"placement:\n  capacity: {default: 4}\nworker: {exec: /usr/lib/probe/worker}\n")
+        with tempfile.TemporaryDirectory() as d:
+            tar = subprocess.run(["git", "-C", str(ROOT), "archive", sut.TAG, "skills/lesson-spec/scripts",
+                                  "Platform/02-installer/spec"], capture_output=True, check=True).stdout
+            subprocess.run(["tar", "-x", "-C", d], input=tar, check=True)
+            (Path(d) / "in.yaml").write_bytes(data)
+            code = ("import sys; from pathlib import Path; sys.path.insert(0, sys.argv[1] + '/skills/lesson-spec/scripts');"
+                    "from form_source import Loader, canonical as can;"
+                    "b = Path(sys.argv[1] + '/Platform/02-installer/spec/02.1-installer');"
+                    "ld = Loader(*(Path(str(b) + s) for s in ('.form.yaml', '.references.tsv', '.scalars.tsv')));"
+                    "sys.stdout.buffer.write(can.canonical_bytes(ld, Path(sys.argv[1] + '/in.yaml').read_bytes()))")
+            run = subprocess.run([sys.executable, "-I", "-c", code, d], capture_output=True)
+            self.assertEqual(run.returncode, 0, run.stderr.decode("utf-8", "replace")[-800:])
+            old = run.stdout
+        base = ROOT / "Platform/02-installer/spec/02.1-installer"
+        textv7.use_scalars(Path(str(base) + ".scalars.tsv"))
+        m = stack.Manifest(json.loads(Path(str(base) + ".schema.json").read_text(encoding="utf-8")),
+                           json.loads(Path(str(base) + ".relations.json").read_text(encoding="utf-8")))
+        r = m.judge(data)
+        new = stack.jcs(project.canonical(m.sch, r["tree"])).encode("utf-8")
+        self.assertEqual(json.loads(old)["snapshot"], ["name"])                           # дефект: без состояний
+        self.assertEqual(json.loads(new)["snapshot"], ["name", "state.result"])           # исправлено: без cursor
+        self.assertTrue(sut.p1_states(new, old))
+        self.assertFalse(sut.p1_states(new, new.replace(b'"name"]', b'"name","x"]')))
+
+
 class TestRelations(unittest.TestCase):
     """Слой связей: равенство диалекта — числа по значению (`1 = 1.0`, свод Ф9), bool не число (DIALECT § 6); формой
     манифеста недостижимо (ADR-0087 доп. (6)) — проверено на среде CEL связей обоих языков (решение по набору Б, r10)."""

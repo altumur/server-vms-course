@@ -39,6 +39,19 @@ def setUpModule():
         from v7 import transition
         with contextlib.redirect_stdout(io.StringIO()):
             transition.main(["--root", str(TREE)])
+    keys(TREE)
+
+
+def keys(root):
+    """Столбец key пакета family-read (V7-FAMILY-KEY-PLACEHOLDER-01): пока у курса нет таблицы плейсхолдеров README
+    каталога — черновик навыка; пока у пакета прежний заголовок — построитель шага 6 на месте."""
+    from v7 import transition
+    readme = root / spec.KEYS_README
+    if not readme.is_file():
+        shutil.copy(HERE / "keys-readme.draft.md", readme)
+    head = (root / spec.FAMILY_READ / "01.tsv").read_text(encoding="utf-8").split("\n", 1)[0].split("\t")
+    if head != spec.FR_HEADER:
+        transition.family_keys(root)
 
 
 def tearDownModule():
@@ -331,7 +344,7 @@ class TestTree(unittest.TestCase):
         from v7 import vectors
         ch = vectors.Chapter(TREE, strict=True).run()
         self.assertEqual(ch.errors, [])
-        self.assertEqual(ch.stats["canonical_vectors"], 159)
+        self.assertEqual(ch.stats["canonical_vectors"], 160)
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
         self.assertEqual(ch.stats["canonical_mutants"], 62)              # и default у корня определения (Б-1)
         root = self.copy()
@@ -352,6 +365,38 @@ class TestTree(unittest.TestCase):
         p.write_text("\n".join(lines), encoding="utf-8")
         errors, _ = spec.family_read(root, cat, judge=True)
         self.assertTrue(any("V7 stack gives" in m for _, m in errors), errors[:2])
+
+    def test_family_read_key(self):
+        """Ключ по шаблону каталога (V7-FAMILY-KEY-PLACEHOLDER-01): строки `key:` есть у каждой семьи с плейсхолдером,
+        отказ — `[""]`; ключ base не по шаблону — красное; плейсхолдер без строки таблицы — красное; построитель
+        повторяется байт в байт."""
+        from v7 import transition
+        rows = [ln.split("\t") for p in sorted((TREE / spec.FAMILY_READ).glob("*.tsv"))
+                for ln in p.read_text(encoding="utf-8").split("\n")[1:] if ln]
+        keyed = [r for r in rows if r[-1].startswith("key: ")]
+        self.assertTrue(keyed and all(r[7] == "refused" and r[8] == '[""]' for r in keyed))
+        self.assertTrue(all(r[2] != r[1] or "<" not in r[1] for r in rows))
+        with_ph = {(r[1], r[3]) for r in rows if "<" in r[1]}
+        self.assertEqual(with_ph, {(r[1], r[3]) for r in keyed if "<" in r[1]})
+        root = self.copy()
+        before = {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")}
+        transition.family_keys(root)
+        self.assertEqual(before, {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")})
+        p = root / spec.FAMILY_READ / "02.tsv"
+        lines = p.read_text(encoding="utf-8").split("\n")
+        i = next(i for i, ln in enumerate(lines) if "\tbase" in ln and ln.split("\t")[1].startswith("platform/manifest/<sub>"))
+        c = lines[i].split("\t")
+        c[2] = c[2] + "/x"
+        lines[i] = "\t".join(c)
+        p.write_text("\n".join(lines), encoding="utf-8")
+        cat = spec.read_catalog(root)
+        errors, _ = spec.family_read(root, cat)
+        self.assertTrue(any("V7 stack gives refused ['']" in m for _, m in errors), errors[:2])
+        readme = root / spec.KEYS_README
+        readme.write_text("\n".join(ln for ln in readme.read_text(encoding="utf-8").split("\n")
+                                     if not ln.startswith("| `<sub>`")), encoding="utf-8")
+        errors, _ = spec.family_read(root, cat)
+        self.assertTrue(any("placeholder <sub> is not in the table" in m for _, m in errors), errors[:2])
 
     def test_outcome_readers(self):
         """Строка пустого пути у каждого читателя (решение владельца 2026-10-28): снять — красное, чужая роль — красное."""
@@ -494,6 +539,117 @@ class TestTree(unittest.TestCase):
         self.assertIn("has no file Platform/07-console-module/07-console-module.md", out)
         self.assertIn("02.1-installer.schema.json", out)
         self.assertNotIn("stale exception implied", out)
+
+    def test_openapi_patterns_portable(self):
+        """V7-OPENAPI-PATTERN-LOOKAHEAD-01: `pattern` OpenAPI урока и общего контракта — в подмножестве LAYERS § 3;
+        просмотр в контракте урока — красное; общий контракт проверяется и без ссылки на него."""
+        import subprocess
+        root = self.copy()
+        api = root / "Platform/01-store/spec/01-store.api.openapi.yaml"
+        text = api.read_text(encoding="utf-8")
+        self.assertIn('pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"', text)
+        api.write_text(text.replace('pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"',
+                                    "pattern: '^(?:0|[1-9][0-9]{0,19})(?![\\s\\S])'", 1), encoding="utf-8")
+        (root / "Platform/common/contracts/probe.api.openapi.yaml").write_text(
+            "openapi: 3.1.0\ninfo: {title: probe, version: '1'}\ncomponents:\n  schemas:\n"
+            "    S: {type: string, pattern: '^(?:\\d+)$'}\n", encoding="utf-8")
+        out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
+                              "--exceptions", str(ROOT / "skills/lesson-spec/exceptions.tsv")],
+                             capture_output=True, text=True).stdout
+        bad = [ln for ln in out.split("\n") if "OpenAPI: pattern at" in ln]
+        self.assertTrue(any("01-store.api.openapi.yaml" in ln for ln in bad), out[-2000:])
+        self.assertTrue(any("probe.api.openapi.yaml" in ln for ln in bad), out[-2000:])
+        self.assertEqual(len(bad), 2, bad)
+
+    def test_schema_word(self):
+        """V7-DOMAIN-SLOT-PULSE-SCHEMA-01: `<схема>.schema.json#<слово>` — та же схема, исходы `<схема>.<слово>.outcomes.tsv`;
+        нет файла исходов слова — красное; слово не по грамматике — красное; читатели строки — по своему файлу."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        cat = root / spec.CATALOG
+        lines = cat.read_text(encoding="utf-8").split("\n")
+        i = next(i for i, ln in enumerate(lines) if ln.startswith("<sub>/slots/<имя>\t"))
+        lines.insert(i + 1, lines[i].replace("<sub>/slots/<имя>", "<sub>/probe/<имя>", 1)
+                     .replace("03-worker/data/slots.schema.json", "03-worker/data/slots.schema.json#probe"))
+        cat.write_text("\n".join(lines), encoding="utf-8")
+        row = next(r for r in spec.read_catalog(root) if r["key"] == "<sub>/probe/<имя>")
+        self.assertTrue(spec.is_v7_family(row))
+        with self.assertRaisesRegex(spec.SpecError, "slots.probe.outcomes.tsv: no outcomes file"):
+            spec.load_family(root, row)
+        data = root / "Platform/03-worker/data"
+        shutil.copy(data / "slots.outcomes.tsv", data / "slots.probe.outcomes.tsv")
+        _, path, _, outcomes_path, _ = spec.load_family(root, row)
+        self.assertEqual((path.name, outcomes_path.name), ("slots.schema.json", "slots.probe.outcomes.tsv"))
+        check_spec.family_place(row, True)
+        with self.assertRaises(ValueError):
+            check_spec.family_place(dict(row, schema=row["schema"].replace("#probe", "#Probe")), True)
+        with self.assertRaises(spec.SpecError):
+            spec.load_family(root, dict(row, schema=row["schema"].replace("#probe", "#Probe")))
+        # читатели строки — по её файлу: лишний читатель в файле слова — красное у этого файла
+        o = data / "slots.probe.outcomes.tsv"
+        whole = next(ln for ln in o.read_text(encoding="utf-8").split("\n") if ln.startswith("\t"))
+        o.write_text(o.read_text(encoding="utf-8").rstrip("\n") + "\n\tresource" + whole[len("\t") +
+                     len(whole.split("\t")[1]):] + "\n", encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/03-worker/03-worker.md").resolve())
+            check.outcome_readers()
+        errors = [str(e) for e in check.errors]
+        self.assertTrue(any("slots.probe.outcomes.tsv" in e and "resource is not a reader" in e for e in errors),
+                        errors[:5])
+        self.assertFalse(any("slots.outcomes.tsv" in e and "resource" in e for e in errors), errors[:5])
+
+    def test_library_defects(self):
+        """Перечень дефектов библиотек (Platform/common/versions/DEFECTS.md): черновик навыка — без строки только D3;
+        несуществующая строка вектора — красное; запись, которой нет в перечне, — красное; LAYERS называет файл, а его
+        нет — красное."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        target = root / check_spec.Check.LIBRARY_DEFECTS
+        shutil.copy(HERE / "DEFECTS-LIB.md", target)
+
+        def errors():
+            check = check_spec.Check(root, None, False)
+            with contextlib.redirect_stdout(io.StringIO()):
+                check.library_defects()
+            return [str(e) for e in check.errors], check.stats
+        got, stats = errors()
+        self.assertEqual(len(got), 1, got)
+        self.assertIn("D3 has no vector row", got[0])
+        self.assertEqual(stats["library_defects"], 18)
+        text = target.read_text(encoding="utf-8")
+        target.write_text(text.replace("`yaml-suite:SU5Z`", "`yaml-suite:NOPE`").replace(
+            "\n| D18 ", "\n| D99 "), encoding="utf-8")
+        got, _ = errors()
+        self.assertTrue(any("no vector row yaml-suite:NOPE" in e for e in got), got)
+        self.assertTrue(any("D99 is not a library defect" in e for e in got), got)
+        self.assertTrue(any("D18 (" in e and "is not in the list" in e for e in got), got)
+        target.unlink()
+        layers = root / "Platform/common/LAYERS.md"
+        layers.write_text(layers.read_text(encoding="utf-8") + "\n[перечень](versions/DEFECTS.md)\n", encoding="utf-8")
+        got, _ = errors()
+        self.assertTrue(any("no file: LAYERS.md names" in e for e in got), got)
+
+    def test_stub_text(self):
+        """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос
+        «Архитектору»» — история, не заготовка."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        p = root / "Platform/03-worker/data/slots.outcomes.tsv"
+        p.write_text(p.read_text(encoding="utf-8").rstrip("\n") + " — вопрос «Архитектору»\n", encoding="utf-8")
+        n = root / "Platform/03-worker/spec/03.1-worker.norms.md"
+        n.write_text(n.read_text(encoding="utf-8") + "\nисход не назван нормой; прежде — вопрос «Архитектору».\n",
+                     encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.stub_text()
+        errors = [str(e) for e in check.errors]
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(any("slots.outcomes.tsv" in e and "вопрос «Архитектору»" in e for e in errors), errors)
+        self.assertTrue(any("03.1-worker.norms.md" in e and "исход не назван нормой" in e for e in errors), errors)
 
     def test_sections_idempotent(self):
         from v7 import sections

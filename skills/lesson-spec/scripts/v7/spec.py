@@ -11,7 +11,9 @@ from pathlib import Path
 from v7 import regex
 
 CATALOG = Path("Platform/common/data/catalog.tsv")
-SCHEMA_PATH = re.compile(r"([0-9]{2})-[a-z][a-z-]*/data/([^/]+)\.schema\.json")
+# Колонка schema каталога: `<путь>.schema.json` или `<путь>.schema.json#<слово>` — одна схема у нескольких семей, исходы
+# каждой — `<схема>.<слово>.outcomes.tsv` рядом (V7-DOMAIN-SLOT-PULSE-SCHEMA-01).
+SCHEMA_PATH = re.compile(r"(([0-9]{2})-[a-z][a-z-]*/data/([^/#]+)\.schema\.json)(?:#([a-z][a-z0-9-]*))?")
 OUTCOME_HEADER = ["path", "reader", "outcome", "priority", "unit", "norm"]
 # Читатель строки исходов (решение владельца 2026-10-28): роль по грамматике `readers` каталога; у пути "" — строка на
 # каждого читателя семьи, `*` нельзя; у полей `*` — все читатели. Читатели семьи — `readers` ∪ писатели с `cas`/`guard`.
@@ -39,7 +41,12 @@ def read_catalog(root):
 
 
 def is_v7_family(row):
-    return row.get("schema", "").endswith(".schema.json")
+    return re.search(r"\.schema\.json(?:#[^/]*)?$", row.get("schema", "")) is not None
+
+
+def schema_file(cell):
+    """Файл схемы колонки schema каталога (без `#<слово>`)."""
+    return cell.split("#", 1)[0]
 
 
 # ---------------------------------------------------------------- схема: самодостаточность, места
@@ -255,13 +262,14 @@ def load_family(root, row):
     """Строка каталога со схемой `.schema.json` → (row, путь схемы, схема, путь исходов, [исход])."""
     m = SCHEMA_PATH.fullmatch(row["schema"])
     if not m:
-        raise SpecError("catalog %s: schema %s is not NN-<процесс>/data/<имя>.schema.json" % (row["key"], row["schema"]))
+        raise SpecError("catalog %s: schema %s is not NN-<процесс>/data/<имя>.schema.json[#<слово> [a-z][a-z0-9-]*]"
+                        % (row["key"], row["schema"]))
     if row["kind"] not in KINDS:
         raise SpecError("catalog %s: a schema is only for row, JSON object and JSON file" % row["key"])
-    if not re.fullmatch(r"P/%s(\.(?:0|[1-9][0-9]?))?" % m.group(1), row["owner"]):
+    if not re.fullmatch(r"P/%s(\.(?:0|[1-9][0-9]?))?" % m.group(2), row["owner"]):
         raise SpecError("catalog %s: schema %s is not in the lesson of its owner %s" % (row["key"], row["schema"],
                                                                                    row["owner"]))
-    path = Path(root) / "Platform" / row["schema"]
+    path = Path(root) / "Platform" / m.group(1)
     if not path.is_file():
         raise SpecError("catalog %s: schema %s is not a file" % (row["key"], row["schema"]))
     try:
@@ -273,7 +281,7 @@ def load_family(root, row):
     from v7 import schema as gen
     if not layers.is_file() or layers.read_text(encoding="utf-8") != gen.layer_table(doc):
         raise SpecError("%s: is not the table of the x-* words of %s (rebuild: python -m v7.layers Platform/%s)"
-                        % (layers.name, path.name, row["schema"]))
+                        % (layers.name, path.name, m.group(1)))
     root_s = Places(doc).resolve(doc)
     if row["kind"] == "row" and not any("properties" in s for s in root_s):
         raise SpecError("%s: the root of a row schema is an object of properties (items)" % path.name)
@@ -282,7 +290,7 @@ def load_family(root, row):
     name = path.name[:-len(".schema.json")]
     if row["kind"] != "file" and name.endswith("." + row["kind"]):
         name = name[:-len(row["kind"]) - 1]
-    outcomes_path = path.with_name(name + ".outcomes.tsv")
+    outcomes_path = path.with_name(name + ("." + m.group(4) if m.group(4) else "") + ".outcomes.tsv")
     return row, path, doc, outcomes_path, load_outcomes(outcomes_path, doc)
 
 
@@ -322,7 +330,118 @@ def unportable(doc):
 # ---------------------------------------------------------------- пакет family-read
 
 FAMILY_READ = Path("Platform/common/vectors/family-read")
-FR_HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+FR_HEADER = ["case", "family", "key", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+
+# ---- ключ строки по шаблону каталога (V7-FAMILY-KEY-PLACEHOLDER-01)
+
+KEYS_README = Path("Platform/common/data/README.md")
+KEYS_HEADER = ["Плейсхолдер", "Грамматика", "Пример", "Норма"]
+KEY_REFUSED = [""]          # ключ не по шаблону: строка целиком, значение не судится (не `/key` — поле key у P/08)
+PLACEHOLDER = re.compile(r"(<[^<>]+>|\*)")
+
+
+def md_cells(line):
+    """Ячейки строки таблицы Markdown: `\\|` внутри ячейки — знак `|`, обратные кавычки вокруг ячейки снимаются."""
+    cells = [c.replace("\\|", "|").strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+    return [c[1:-1] if len(c) > 1 and c[0] == c[-1] == "`" else c for c in cells]
+
+
+def placeholder_table(root):
+    """Таблица плейсхолдеров ключа из README каталога: {плейсхолдер: (грамматика, пример)}, [ошибки]. Таблица — первая
+    с заголовком KEYS_HEADER; грамматика — переносимое выражение `^(?:…)$` (слой 5) на подстроку ключа, которую занимает
+    плейсхолдер (`/` — только если грамматика его берёт); пример — по грамматике."""
+    path = Path(root) / KEYS_README
+    if not path.is_file():
+        return None, ["%s: no file — the placeholder table of the catalog keys (%s)" % (KEYS_README,
+                                                                                     " | ".join(KEYS_HEADER))]
+    table, errors, inside = {}, [], False
+    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+        if not line.startswith("|"):
+            if inside:
+                break
+            continue
+        cells = md_cells(line)
+        if not inside:
+            inside = cells == KEYS_HEADER
+            continue
+        if set(line.replace("|", "").strip()) <= set("-: "):
+            continue
+        if len(cells) != len(KEYS_HEADER):
+            errors.append("%s:%d: expected %d cells" % (KEYS_README, no, len(KEYS_HEADER)))
+            continue
+        name, grammar, example, _ = cells
+        why = regex.check(grammar)
+        if not PLACEHOLDER.fullmatch(name):
+            errors.append("%s:%d: %r is not a placeholder <…> or *" % (KEYS_README, no, name))
+        elif name in table:
+            errors.append("%s:%d: placeholder %s twice" % (KEYS_README, no, name))
+        elif why:
+            errors.append("%s:%d: grammar of %s: %s" % (KEYS_README, no, name, why))
+        elif not regex.search(grammar, example):
+            errors.append("%s:%d: example %r of %s is not by its grammar" % (KEYS_README, no, example, name))
+        else:
+            table[name] = (grammar, example)
+    if not inside:
+        errors.append("%s: no table with the header | %s |" % (KEYS_README, " | ".join(KEYS_HEADER)))
+    return table, errors
+
+
+class KeyTemplate:
+    """Шаблон колонки `key` каталога: литералы — точно, плейсхолдер — по грамматике таблицы README каталога."""
+
+    def __init__(self, template, table):
+        self.template, self.parts = template, PLACEHOLDER.split(template)
+        missing = [t for t in self.parts[1::2] if t not in table]
+        if missing:
+            raise SpecError("catalog key %s: placeholder %s is not in the table of %s"
+                            % (template, ", ".join(missing), KEYS_README))
+        self.grammars = [table[t][0][4:-2] for t in self.parts[1::2]]          # тело ^(?:…)$
+        self.examples = [table[t][1] for t in self.parts[1::2]]
+        self.re = re.compile("".join(re.escape(lit) + ("(?:%s)" % g if i < len(self.grammars) else "")
+                                     for i, (lit, g) in enumerate(zip(self.parts[::2], self.grammars + [""]))),
+                             re.ASCII)
+
+    def matches(self, key):
+        return self.re.fullmatch(key) is not None
+
+    def fill(self, values):
+        return "".join(lit + (values[i] if i < len(values) else "") for i, lit in enumerate(self.parts[::2]))
+
+    def example(self):
+        return self.fill(self.examples)
+
+    def off(self):
+        """Ключи не по шаблону, по одному на плейсхолдер (подстановка вне грамматики: пусто, пробел, `/`) и на литерал
+        (у шаблона без плейсхолдеров) → [(что, ключ)]; плейсхолдер, чья грамматика берёт все три, — без строки."""
+        out = []
+        for i, name in enumerate(self.parts[1::2]):
+            for bad in ("", " ", "/"):
+                vals = list(self.examples)
+                vals[i] = bad
+                if not self.matches(self.fill(vals)):
+                    out.append(("%s %s" % (name, json.dumps(bad)), self.fill(vals)))
+                    break
+        if len(self.parts) == 1:
+            for k in (self.template + "x", self.template[:-1]):
+                if not self.matches(k):
+                    out.append(("literal", k))
+                    break
+        return out
+
+
+def key_templates(root, catalog):
+    """{(key, kind): KeyTemplate} семей со схемой, [ошибки таблицы и шаблонов]."""
+    table, errors = placeholder_table(root)
+    if table is None:
+        return None, errors
+    out = {}
+    for row in catalog:
+        if is_v7_family(row):
+            try:
+                out[(row["key"], row["kind"])] = KeyTemplate(row["key"], table)
+            except SpecError as exc:
+                errors.append(str(exc))
+    return out, errors
 
 
 def who_of(row, mode):
@@ -353,6 +472,8 @@ def family_read(root, catalog, judge=True):
         errors.append((FAMILY_READ, "family-read: the package needs README.md (the format)"))
     by_key = {(r["key"], r["kind"]): r for r in catalog if is_v7_family(r)}       # ключ каталога — пара (key, kind)
     fams = {}
+    templates, why = key_templates(root, catalog)
+    errors += [(KEYS_README, "family-read: %s" % w) for w in why]
     for p in sorted(d.iterdir()):
         if p.name in ("README.md", ".DS_Store"):
             continue
@@ -373,7 +494,7 @@ def family_read(root, catalog, judge=True):
             if len(cols) != len(FR_HEADER):
                 errors.append((where, "line %d: expected %d TSV columns" % (no, len(FR_HEADER))))
                 continue
-            case, key, kind, mode, who, text, verdict, paths, outcome, _note = cols
+            case, key, concrete, kind, mode, who, text, verdict, paths, outcome, _note = cols
             if case in seen or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", case):
                 errors.append((where, "line %d: case %r is not unique or not [A-Za-z0-9][A-Za-z0-9_.-]*" % (no, case)))
             seen.add(case)
@@ -408,9 +529,12 @@ def family_read(root, catalog, judge=True):
                 errors.append((where, "line %d: verdict ok has no paths, refused has; a writer has outcome [], a reader "
                                       "— {role: [paths of outcome rows]}" % no))
                 continue
+            if not concrete:
+                errors.append((where, "line %d: key — the concrete key of the row (by the catalog template)" % no))
+                continue
             stats["family_read_rows"] += 1
-            if judge:
-                why = judge_row(root, row, kind, mode, text, ps, outs, fams)
+            if judge and templates is not None and (key, kind) in templates:
+                why = judge_row(root, row, kind, mode, text, ps, outs, fams, templates[(key, kind)], concrete)
                 if why:
                     errors.append((where, "line %d (%s): %s" % (no, case, why)))
         for k, row in sorted(by_key.items()):
@@ -449,26 +573,32 @@ def reading_roles(row, star=None):
     return roles
 
 
-def judge_row(root, row, kind, mode, text, paths, outs, cache):
-    """Исход строки на стеке В7 (Python) против ожидания; → причина расхождения или None."""
-    import json as _json
+def family_value(kind, text):
+    """Текст ячейки `text` → значение для Family.judge: `row` — объект JSON (не JSON — текст как есть), `file` — байты."""
+    if kind == "row":
+        try:
+            return json.loads(text)
+        except ValueError:
+            return text
+    return text.encode("utf-8") if kind == "file" else text
 
+
+def judge_family(fam, template, key, kind, text, mode):
+    """Чтение экземпляра: ключ не по шаблону — отказ строки целиком KEY_REFUSED, значение не судится; иначе — стек В7."""
+    if not template.matches(key):
+        return {"verdict": "refused", "paths": list(KEY_REFUSED)}
+    return fam.judge(family_value(kind, text), mode)
+
+
+def judge_row(root, row, kind, mode, text, paths, outs, cache, template, key):
+    """Исход строки на стеке В7 (Python) против ожидания; → причина расхождения или None."""
     from v7 import stack
     k = (row["key"], row["kind"])
     if k not in cache:
         _, _, doc, _, outcomes = load_family(root, row)
         cache[k] = (stack.Family(doc, kind), outcomes)
     fam, outcomes = cache[k]
-    if kind == "row":
-        try:
-            value = _json.loads(text)
-        except ValueError:
-            value = text
-    elif kind == "file":
-        value = text.encode("utf-8")
-    else:
-        value = text
-    v = fam.judge(value, mode)
+    v = judge_family(fam, template, key, kind, text, mode)
     got = ({r: [o.path for o in outcomes_for(outcomes, v["paths"], r)] for r in readers_of(outcomes)}
            if mode == "reader" else [])
     if v["verdict"] != ("refused" if paths else "ok") or sorted(v["paths"]) != sorted(paths) or got != outs:
@@ -708,7 +838,7 @@ def families_check(root, norms, text, prefix, catalog):
         try:
             built.append(load_family(root, r))
         except (SpecError, OSError) as exc:
-            errors.append((Path(root) / "Platform" / r["schema"], "families: %s" % exc))
+            errors.append((Path(root) / "Platform" / schema_file(r["schema"]), "families: %s" % exc))
             continue
         stats["family_schemas"] += 1
         stats["family_outcomes"] += len(built[-1][4])

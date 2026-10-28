@@ -47,6 +47,13 @@ def unit_fields(t):
     return fs if isinstance(fs, dict) else {}
 
 
+def unit_states(t):
+    """Состояния `unit.state` в порядке автора, кроме курсора `cursor` (ADR-0091 п. 3)."""
+    u = t.get("unit") if isinstance(t, dict) else None
+    st = u.get("state") if isinstance(u, dict) else None
+    return [k for k in st if k != "cursor"] if isinstance(st, dict) else []
+
+
 def sugar(t, skip=()):
     """P/02.2-02: `tables` списком имён, `bound_to` одним именем, `in` элемента `secret_in` одним словом. skip — имена
     шагов, которых не делать (проба мутаций)."""
@@ -62,10 +69,11 @@ def sugar(t, skip=()):
 
 def computed(t, skip=()):
     """P/02.2-03, П1–П5."""
-    if "П1" not in skip and "snapshot" not in t:                  # П1
+    if "П1" not in skip and "snapshot" not in t:                  # П1 (ADR-0091 п. 3: и состояния, кроме cursor)
         t["snapshot"] = [k for k, f in unit_fields(t).items()
                          if not k.endswith("_secret") and k != "server"
-                         and not (isinstance(f, dict) and f.get("type") == "blob")]
+                         and not (isinstance(f, dict) and f.get("type") == "blob")] + \
+            ["state." + k for k in unit_states(t)]
     if "П2" not in skip and isinstance(t.get("tables"), dict):    # П2
         for k, tbl in t["tables"].items():
             if isinstance(tbl, dict):

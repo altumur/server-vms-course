@@ -1,0 +1,5 @@
+# Исходы нечитаемого объекта domain/<sub>/heartbeat — пульс воркера на домене (P/03.7 Н1.6 heartbeat; форма пульса —
+# heartbeats.schema.json, глава 3.4 Н1.1). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domainconsole	пульс воркера на домене не читается или не по форме главы 3.4 Н1.1 (`worker` — не `domain/<sub>/worker`) — «не слышно»: door.pass — 503 `{error: "unavailable", detail: "no worker of <sub> with a door is heard"}`, воркеру не передаётся; объект не трогает	0	строка	P/03.7 Н1.6 heartbeat; P/10 Н1.6 address, absent

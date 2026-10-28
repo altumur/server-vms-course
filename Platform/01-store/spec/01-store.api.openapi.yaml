@@ -327,19 +327,19 @@ components:
       minLength: 1
       not:
         anyOf:
-        - pattern: '^/'
-        - pattern: '(^|/)\.\.(/|(?![\s\S]))'
+        - pattern: "^(?:/[\\s\\S]*)$"
+        - pattern: "^(?:(?:[\\s\\S]*/)?\\.\\.(?:/[\\s\\S]*)?)$"
       description: >-
         Н1: ключ непуст, не начинается с /, ни один сегмент между / не равен ..;
         ..foo допустим. Предел 1024 байта UTF-8 и меньший файловый предел
         проверяются отдельно; maxLength не выражает число байтов.
     Version:
       type: string
-      pattern: '^(?:0|[1-9][0-9]{0,19})(?![\s\S])'
+      pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"
       description: Непустая версия по Н1; сравнивается вызывающим только на равенство.
     VersionOrAbsent:
       type: string
-      pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'
+      pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"
       description: Версия или пустая строка, если строки нет.
     Row:
       description: Три различимых исхода чтения; unreadable бывает только true у повреждённой строки.
@@ -382,15 +382,15 @@ components:
       properties:
         op: {type: string, enum: [put, delete], description: "op floor — отдельная схема FloorCmd главы 1.3 на admin-сокете лидера (добавлено P/01.3 Н2)"}
         key: {$ref: "#/components/schemas/Key"}
-        cas: {type: [string, "null"], pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: null, пусто или версия; строго до конца строки
+        cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # Н1: null, пусто или версия; строго до конца строки
         guard:
           type: object
           required: [key, index]
           additionalProperties: false
           properties:
             key: {$ref: "#/components/schemas/Key"}
-            index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?(?![\s\S])'}  # Н1: пусто или версия
-        id: {type: string, pattern: "^[0-9a-f]{1,64}$"}
+            index: {type: string, pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # Н1: пусто или версия
+        id: {type: string, pattern: "^(?:[0-9a-f]{1,64})$"}
         not_after: {type: number, minimum: 0, description: "Н1, Н3 «Время приёма»: принято, только пока время приёма ≤ not_after, иначе 409 expired (ADR-0091 п. 1)"}
         not_before: {type: number, minimum: 0, description: "Н1, Н3 «Время приёма»: принято, только если время приёма > not_before, иначе 409 early (ADR-0091 п. 1)"}
       oneOf:
@@ -530,7 +530,7 @@ components:
       description: Загруженный configstore-rights.json. Совпадение с генератором, группами и читателями — смысловая проверка Н1/Н3, не JSON Schema.
     RoleName:
       type: string
-      pattern: ^[a-z][a-z0-9_-]{0,63}(?![\s\S])
+      pattern: "^(?:[a-z][a-z0-9_-]{0,63})$"
       not:
         enum:
         - admin
@@ -581,7 +581,7 @@ components:
           maximum: 9007194959773696
         id:
           type: string
-          pattern: ^[0-9a-f]{1,64}(?![\s\S])
+          pattern: "^(?:[0-9a-f]{1,64})$"
     Join:
       type: object
       required:
@@ -612,7 +612,7 @@ components:
           - const: ''
     MemberId:
       type: string
-      pattern: ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\s\S])
+      pattern: "^(?:[A-Za-z0-9][A-Za-z0-9_.-]{0,127})$"
     Refused:
       type: object
       required:

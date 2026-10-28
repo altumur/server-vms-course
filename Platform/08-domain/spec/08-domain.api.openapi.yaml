@@ -260,7 +260,7 @@ paths:
               additionalProperties: false
               properties:
                 name: {$ref: '#/components/schemas/MemberName'}
-                fingerprint: {type: string, pattern: '^[0-9a-f]{16}$'}
+                fingerprint: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
       responses:
         '200':
           description: Список после записи
@@ -671,7 +671,7 @@ paths:
         in: path
         required: true
         description: Имя члена по грамматике главы 8.3 Н1.1 или domain.
-        schema: {type: string, pattern: '^[a-z0-9-]{1,64}$'}
+        schema: {type: string, pattern: "^(?:[a-z0-9-]{1,64})$"}
     put:
       operationId: grantsPut
       summary: Записать строку грантов кластера целиком (Н1.3, Н3)
@@ -765,7 +765,7 @@ paths:
       - name: cluster
         in: path
         required: true
-        schema: {type: string, pattern: '^[a-z0-9-]{1,64}$'}
+        schema: {type: string, pattern: "^(?:[a-z0-9-]{1,64})$"}
     put:
       operationId: breakGlassSet
       summary: Задать аварийный пароль кластера (Н1.6)
@@ -880,7 +880,7 @@ paths:
                   additionalProperties: false
                   properties:
                     doc: {type: string, description: 'JCS {grant: handover, domain, to, from, term, rev, at, issuer, kid, sig}.'}
-                keys_sealed: {type: string, pattern: '^x25519:v1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
+                keys_sealed: {type: string, pattern: "^(?:x25519:v1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+)$"}
       responses:
         '200':
           description: Запись срока цели
@@ -915,7 +915,7 @@ paths:
                 recovery: {type: string, description: Текст файла восстановления главы 8.2 Н1.1.}
                 stolen: {type: boolean}
                 copy: {$ref: '#/components/schemas/Pair'}
-                why: {type: string, minLength: 1, pattern: '\S', description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18). Без copy — разрешение перенести «из ничего», когда ни одна резервная копия не получена (Н1.8 шаг 6; добавлено моделью Quint М11, ER).'}
+                why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF][\\s\\S]*)$", description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18). Без copy — разрешение перенести «из ничего», когда ни одна резервная копия не получена (Н1.8 шаг 6; добавлено моделью Quint М11, ER).'}
       responses:
         '200':
           description: Новый срок
@@ -1076,12 +1076,12 @@ components:
       in: header
       required: true
       description: '<мс>.<base64url 64 байт Ed25519> над «METHOD\npath\nмс\nsha256hex(тела)»; окно 300 с в обе стороны — Platform/common/contracts/agent-signature.md.'
-      schema: {type: string, pattern: '^(0|[1-9][0-9]{0,15})\.[A-Za-z0-9_-]{86}$'}
+      schema: {type: string, pattern: "^(?:(0|[1-9][0-9]{0,15})\\.[A-Za-z0-9_-]{86})$"}
     Sub:
       name: sub
       in: path
       required: true
-      schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+      schema: {type: string, pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"}
     Rows:
       name: rows
       in: path
@@ -1096,7 +1096,7 @@ components:
       name: kind
       in: path
       required: true
-      schema: {type: string, pattern: '^[a-z][a-z0-9_-]{0,31}$'}
+      schema: {type: string, pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"}
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -1220,7 +1220,7 @@ components:
             required: [kept, cluster, what, note]
             additionalProperties: false
             properties:
-              kept: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+              kept: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
               cluster: {$ref: '#/components/schemas/MemberName'}
               what: {type: string}
               note: {type: string}
@@ -1231,7 +1231,7 @@ components:
       additionalProperties: false
       description: 'Ответ двери токенов держателя — токен, запечатанный члену конвертом m1 (договор конвертов домена «Содержимое sealed»); ретранслятор несёт его байт в байт (P/09.2)'
       properties:
-        sealed: {type: string, pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'}
+        sealed: {type: string, pattern: "^(?:m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+)$"}
     # --- общие формы отказов процесса (глава 8.0 Н4; 8.8; 8.10) ---
     Refusal:
       type: object
@@ -1306,17 +1306,17 @@ components:
     # --- имена и значения ---
     MemberName:
       type: string
-      pattern: '^[a-z0-9-]{1,64}$'
+      pattern: "^(?:[a-z0-9-]{1,64})$"
     Hex32:
       type: string
-      pattern: '^[0-9a-f]{64}$'
+      pattern: "^(?:[0-9a-f]{64})$"
     Fingerprint:
       type: string
-      pattern: '^[0-9a-f]{64}$'
+      pattern: "^(?:[0-9a-f]{64})$"
       description: sha256 DER-сертификата центра кластера (P/08.3 Н1.6).
     RequestId:
       type: string
-      pattern: '^[A-Za-z0-9_-]{1,64}$'
+      pattern: "^(?:[A-Za-z0-9_-]{1,64})$"
     # --- глава 8.1: вид и теневой отчёт (отдаёт консоль домена, урок P/10 ссылается), команда view ---
     MemberState:
       type: object
@@ -1553,7 +1553,7 @@ components:
       properties:
         jtis:
           type: string
-          pattern: '^([A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?(,[A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?)*)?$'
+          pattern: "^(?:([A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?(,[A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?)*)?)$"
           description: '"<jti>:<exp>,…"; пусто — ""'
     # --- глава 8.3: публикация, ответ держателя, пакет ретранслятора, список, топология ---
     Publication:
@@ -1576,7 +1576,7 @@ components:
           items: {type: string, minLength: 1}
         key: {$ref: '#/components/schemas/Hex32'}
         keys_rev: {type: integer, minimum: 1}
-        pinned: {type: string, pattern: '^[0-9a-f]{16}$'}
+        pinned: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
         stale:
           description: 'Вне дельты (out_of_delta): форма — [<пульс>…], пульсы, не менявшиеся дольше LOST_AFTER на часах агента (глава 8.3 Н1.3); не по ней — поле не взято.'
         outcomes:
@@ -1620,7 +1620,7 @@ components:
         sealed:
           type: string
           description: 'Конверт m1:<eph>:<nonce>:<ct> и его содержимое — Platform/common/contracts/domain-envelopes.md.'
-          pattern: '^m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$'
+          pattern: "^(?:m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+)$"
         topology:
           type: object
           required: [doc]
@@ -1678,7 +1678,7 @@ components:
           type: object
           additionalProperties:
             type: string
-            pattern: '^$|^[0-9a-f]{64}$'
+            pattern: "^(?:(?:[0-9a-f]{64})?)$"
     Entry:
       type: object
       required: [how, since]
@@ -1687,7 +1687,7 @@ components:
       properties:
         how:
           type: string
-          pattern: '^(admitted|holder|held the domain until term [1-9][0-9]*)$'
+          pattern: "^(?:(admitted|holder|held the domain until term [1-9][0-9]*))$"
           description: 'admitted | holder | held the domain until term <N> (P/08.3 Н1.1; два последних — P/08.8 Н1.2)'
         since: {type: number}
         by: {type: string}
@@ -1701,7 +1701,7 @@ components:
           maxItems: 2
           uniqueItems: true
           description: 'P/08.3 Н1.6: отпечатки центра члена по возрастанию.'
-          items: {type: string, pattern: '^[0-9a-f]{64}$'}
+          items: {type: string, pattern: "^(?:[0-9a-f]{64})$"}
     MembersDoc:
       type: object
       required: [rev, term, members]
@@ -1739,7 +1739,7 @@ components:
         last: {type: number}
         times: {type: integer, minimum: 1}
         key: {$ref: '#/components/schemas/Hex32'}
-        fingerprint: {type: string, pattern: '^[0-9a-f]{16}$'}
+        fingerprint: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
         pinned: {enum: [this, another, none]}
         keys_rev: {type: ['integer', 'null'], minimum: 1}
     MembersView:
@@ -1805,14 +1805,14 @@ components:
       type: string
       minLength: 1
       maxLength: 64
-      pattern: '^[^\x00-\x20\x7f\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000:|()"/]+$'
+      pattern: "^(?:[^\u0000- \u007F\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000:|()\"/]+)$"
       description: 'Имя человека (P/08.4 Н1.1): без пробельных (свойство White_Space Unicode 15.0.0), управляющих U+0000–U+001F, U+007F и : | ( ) " /; не break-glass и
         не субъект индекса имён — 400 bad name по норме, не по схеме.'
     Cap:
       enum: [view, edit, admin]
     Scope:
       type: string
-      pattern: '^(\*|unit:[a-z][a-z0-9_-]{0,31}/.+|labels:[^,]+(,[^,]+)*)$'
+      pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*)$"
     Line:
       type: object
       required: [subject, cap, scope, until, by]
@@ -1945,7 +1945,7 @@ components:
       additionalProperties: false
       description: Ждущая правка (P/08.6 Н1.4) — элемент поля pending ответа держателя.
       properties:
-        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        id: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
         seq: {type: integer, minimum: 1, description: 'порядок приёма (P/08.6 Н1.4; прогон 41 R41-09)'}
         what: {type: string}
         method: {enum: [POST, PUT, DELETE]}
@@ -1972,7 +1972,7 @@ components:
       additionalProperties: false
       description: 'Исход правки (P/08.6 Н1.5): элемент outcomes публикации и вида домена.'
       properties:
-        id: {type: string, pattern: '^e-[0-9a-f]{12}$'}
+        id: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
         status: {type: integer}
         result: {enum: [performed, conflict, refused]}
         error: {type: string}
@@ -2010,8 +2010,8 @@ components:
         at: {type: number}
         restored_from: {$ref: '#/components/schemas/Pair'}
         issuer: {$ref: '#/components/schemas/Hex32'}
-        kid: {type: string, pattern: '^[0-9a-f]{16}$'}
-        sig: {type: string, pattern: '^[A-Za-z0-9_-]+$'}
+        kid: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
+        sig: {type: string, pattern: "^(?:[A-Za-z0-9_-]+)$"}
     Pair:
       type: object
       required: [term, rev]
@@ -2064,8 +2064,8 @@ components:
             type: object
             additionalProperties: true
             description: Значения, объявленные domain.shared манифеста (P/08.9 Н1.1).
-        issuer: {type: string, pattern: '^[0-9a-f]{64}$'}
-        kid: {type: string, pattern: '^[0-9a-f]{16}$'}
+        issuer: {type: string, pattern: "^(?:[0-9a-f]{64})$"}
+        kid: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
         sig: {type: string}
     SharedEdit:
       type: object

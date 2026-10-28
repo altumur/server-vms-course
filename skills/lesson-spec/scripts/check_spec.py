@@ -299,11 +299,11 @@ def family_place(row, v7=False):
     """A catalog schema is NN-<процесс>/data/<семья>.form.yaml (on В7 — .schema.json) of the owner lesson, for row, JSON
     object and JSON file only (ADR-0088 п. 1, доп. (1) Р2; file — ADR-0083 доп. (11), JSON content is checked when the
     family builds); the same rule as form_source.families.schema_place, without the text layer."""
-    suffix = r"\.schema\.json" if v7 else r"\.form\.yaml"
-    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+" + suffix, row["schema"])
+    suffix = r"\.schema\.json(?:#[a-z][a-z0-9-]*)?" if v7 else r"\.form\.yaml"   # #<слово>: V7-DOMAIN-SLOT-PULSE-SCHEMA-01
+    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/#]+" + suffix, row["schema"])
     if not match:
-        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>{suffix.replace(chr(92), '')} "
-                         f"(ADR-0088 п. 1)")
+        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>"
+                         f"{'.schema.json[#<слово>]' if v7 else '.form.yaml'} (ADR-0088 п. 1)")
     if row["kind"] not in {"row", "object", "file"}:
         raise ValueError("a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, ADR-0083 доп. (11))")
     if not re.fullmatch(rf"P/{match.group(1)}(\.(?:0|[1-9][0-9]?))?", row["owner"]):
@@ -818,7 +818,7 @@ class Check:
                     if not named & MANIFEST_FORMS or row["kind"] not in {"row", "object"}:
                         raise ValueError(f"schema manifest is for a row or object whose key names one of "
                                          f"{', '.join(sorted(MANIFEST_FORMS))} (<manifest:…>)")
-                elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
+                elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"].split("#", 1)[0]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
                 elif row["schema"] != "-":
                     family_place(row, self.v7)
@@ -1232,6 +1232,8 @@ class Check:
             for pointer in unstated_openness(doc):
                 self.error(path, f"OpenAPI: object schema {pointer} does not say its openness "
                                  "(additionalProperties, or unevaluatedProperties on a composite)")
+            if self.v7:                              # V7-OPENAPI-PATTERN-LOOKAHEAD-01: подмножество LAYERS § 3
+                self.portable_patterns(path, doc)
         except Exception as exc:
             self.error(path, f"OpenAPI: {exc}")
         finally:
@@ -1239,6 +1241,15 @@ class Check:
         clean = len(self.errors) == errors
         self.contracts[path] = (self.contracts[path][0], clean)
         return clean
+
+    def portable_patterns(self, path, doc):
+        """`pattern` и ключи `patternProperties` контракта — в переносимом подмножестве (ADR-0092 п. 14, LAYERS § 3):
+        полное совпадение `^(?:…)$`, без просмотров, обратных ссылок, `.` и `\\d \\w`; как у схем семей и манифеста."""
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from v7 import spec as v7spec
+        for why in v7spec.unportable(doc):
+            self.error(path, f"OpenAPI: {why}")
+        self.stats["openapi_patterns"] += len(v7spec.patterns(doc))
 
     # A cross-file $ref between Platform contracts (decision on the lesson 6 transfer plan, В7): a relative
     # <path>.openapi.yaml#<JSON Pointer> inside Platform/, to the contract of a lesson with a smaller number or to a
@@ -1777,7 +1788,7 @@ class Check:
         if not self.v7 or self.catalog is None:
             return
         try:
-            from v7.spec import SpecError, load_family, reading_roles
+            from v7.spec import SpecError, is_v7_family, load_family, reading_roles
         except ImportError:
             return                                   # the families check has named the missing stack
         star = {k: set(v) for k, v in self.star_readers.items()}
@@ -1797,7 +1808,7 @@ class Check:
                 star.setdefault(k, set()).update(v)
         everyone = True
         for row in self.catalog.values():
-            if not row["schema"].endswith(".schema.json"):
+            if not is_v7_family(row):
                 continue
             want = reading_roles(row, star.get(row["key"], set()) if everyone else None)
             if want is None:
@@ -1821,6 +1832,94 @@ class Check:
             self.stats["outcome_readers"] += len(want)
 
     # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
+    # Заготовочный текст перехода В7 (решение «Архитектора» 2026-10-28): пробел исхода, оставленный вопросом, — не норма.
+    # В исходах и нормах его быть не должно; упоминание прошлого вопроса («прежде — вопрос …») — история, не заготовка.
+    STUB_TEXT = re.compile(r"исход не назван нормой|(?<!прежде — )вопрос «Архитектору»")
+
+    def stub_text(self):
+        platform = Path(os.path.normpath(self.root / "Platform"))
+        files = sorted(platform.glob("*/data/*.outcomes.tsv")) + sorted(platform.glob("*/spec/*.norms.md"))
+        for path in files:
+            for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+                m = self.STUB_TEXT.search(line)
+                if m:
+                    self.error(path, f"line {no}: placeholder text «{m.group(0)}» — the gap needs a norm (a decision of "
+                                     "the «Архитектор»), not a question in the outcome or the norm")
+        self.stats["stub_scanned_files"] += len(files)
+
+    # Перечень дефектов закреплённых версий библиотек для реализаций (Platform/common/versions/DEFECTS.md, ADR-0092 п. 9):
+    # id — дефекты библиотек v7/DEFECTS.tsv навыка (не эталона), у каждой записи — существующая строка вектора или «страж».
+    LIBRARY_DEFECTS = Path("Platform/common/versions/DEFECTS.md")
+    VECTOR_REF = re.compile(r"(family-read|yaml-suite|corpus|canonical):(\S+)")
+
+    def library_defects(self):
+        if not self.v7:
+            return
+        path = Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS))
+        layers = self.root / "Platform/common/LAYERS.md"
+        if not path.is_file():
+            if layers.is_file() and "versions/DEFECTS.md" in layers.read_text(encoding="utf-8"):
+                self.error(path, "no file: LAYERS.md names the list of library defects")
+            return
+        skill = {}
+        for line in (Path(__file__).resolve().parent / "v7/DEFECTS.tsv").read_text(encoding="utf-8").split("\n"):
+            cols = line.split("\t")
+            if re.fullmatch(r"D[0-9]+", cols[0]) and not cols[1].startswith("эталон"):
+                skill[cols[0]] = cols[1]
+        vectors = self.vector_rows()
+        head, seen = None, []
+        for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+            if not line.startswith("|"):
+                head = None if not seen else head
+                continue
+            cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+            if head is None:
+                head = cells if "id" in cells and "Вектор" in cells else None
+                continue
+            if set(line.replace("|", "").strip()) <= set("-: "):
+                continue
+            r = dict(zip(head, cells))
+            did, cell = r.get("id", ""), r.get("Вектор", "")
+            seen.append(did)
+            if did not in skill:
+                self.error(path, f"line {no}: {did} is not a library defect of v7/DEFECTS.tsv of the skill")
+            refs = self.VECTOR_REF.findall(cell)
+            if not refs and not cell.startswith("страж"):
+                self.error(path, f"line {no}: {did} has no vector row (family-read:<case>, yaml-suite:<id>, "
+                                 f"corpus:<случай>, canonical:<case>) and is not «страж»")
+            for kind, ref in refs:
+                ref = ref.strip("`,")
+                if ref not in vectors[kind]:
+                    self.error(path, f"line {no}: {did}: no vector row {kind}:{ref}")
+            self.stats["library_defects"] += 1
+            self.stats["library_defect_vectors"] += len(refs)
+        for did in sorted(set(skill) - set(seen), key=lambda d: int(d[1:])):
+            self.error(path, f"{did} ({skill[did]}) of v7/DEFECTS.tsv is not in the list")
+
+    def vector_rows(self):
+        """Имена строк векторов: family-read — case, yaml-suite — id, corpus — случай verdicts.tsv P/02.1, canonical — case."""
+        platform = self.root / "Platform"
+        out = {"family-read": set(), "yaml-suite": set(), "corpus": set(), "canonical": set()}
+
+        def first(path):
+            if not path.is_file():
+                return []
+            return [ln.split("\t")[0] for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+        for t in sorted((platform / "common/vectors/family-read").glob("[0-9][0-9].tsv")):
+            out["family-read"].update(first(t)[1:])
+        out["yaml-suite"].update(first(platform / "common/vectors/yaml-suite/expect.tsv")[1:])
+        out["corpus"].update(first(platform / "02-installer/acceptance/1/verdicts.tsv"))
+        out["canonical"].update(first(platform / "02-installer/vectors/canonical/cases.tsv"))
+        return out
+
+    # Common contracts (V7-OPENAPI-PATTERN-LOOKAHEAD-01): every Platform/common/contracts/*.yaml is read and checked once
+    # per run, also when no lesson refers to it.
+    def common_contracts(self):
+        if not self.v7:
+            return
+        for path in sorted(Path(os.path.normpath(self.root / "Platform/common/contracts")).glob("*.yaml")):
+            self.contract(path)
+
     def family_read(self):
         # Once per run from main(), whatever lessons are named (ревью Kimi М-4): the package is the catalog's, not 02's.
         if not self.v7 or self.catalog is None:
@@ -2385,6 +2484,9 @@ def main():
     check.vms_frozen()
     check.outcome_readers()
     check.family_read()
+    check.common_contracts()
+    check.stub_text()
+    check.library_defects()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
