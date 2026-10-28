@@ -55,7 +55,7 @@ base64}}` (`c_vector_protocol.encode_request`). Рамка ответа: `{"exit
 | Пакет | Вход из `cells` и `files` | Ответ пакета |
 |---|---|---|
 | `02-installer/canonical` | `input` — путь манифеста от корня выгрузки; байты — `files.input` или файл выгрузки | код 0, stdout — байты вида; отказ — код 2, stderr — текст отказа |
-| `common/family-read` | `family`, `kind`, `mode`, `who` (роли читателя через `, `), `text` | код 0, stdout — JSON `{"verdict", "paths", "outcome"}`; `outcome` — у писателя `[]`, у читателя `{роль: [пути строк outcomes.tsv]}` |
-| `common/yaml-suite` | `id`; вход — `files["in.yaml"]` или `inputs/<id>.yaml` пакета | код 0, stdout — JSON `{"layer1": "ok"\|"refused", "rule"}` |
+| `common/family-read` | `family`, `kind`, `mode`, `who` (JSON-массив ролей), `text` | код 0, stdout — JSON `{"verdict", "paths", "outcome"}`; `outcome` — у писателя `[]`, у читателя `{роль: [пути строк outcomes.tsv]}` по каждой роли `who`; строго — все три |
+| `common/yaml-suite` | `id`; вход — `files["in.yaml"]` или `inputs/<id>.yaml` пакета | код 0, stdout — JSON `{"layer1": "ok"\|"refused", "rule"}`; строго — только `layer1` (вердикт слоя 1, без уточнения), `rule` — подсказка, как `diagnostics.tsv` |
 
 Авария внутри пакета — код пакета 1, причина на stderr. Внешний код команды — 0.
