@@ -585,6 +585,197 @@
   }
  },
  {
+  "id": "apply-reset-before-row",
+  "rule": "V/10.6 Н1.4 сброс между строками: следующая не отправляется (RVP-01)",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "revision": 2
+    }
+   }
+  ],
+  "reset": 3,
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "applied",
+     "revision": 2
+    },
+    "testsub2/Office-2": {
+     "outcome": "skipped"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-reset-in-flight",
+  "rule": "V/10.6 Н1.4 сброс, пока строка в пути: её исход неизвестен, следующие не отправляются (RVP-01)",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "revision": 2
+    }
+   }
+  ],
+  "reset": 2,
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "unknown"
+    },
+    "testsub2/Office-2": {
+     "outcome": "skipped"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-reset-at-start",
+  "rule": "V/10.6 Н1.4 сброс до первой строки: ничего не отправлено (RVP-01)",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [],
+  "reset": 1,
+  "expect": {
+   "sent": [],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "skipped"
+    },
+    "testsub2/Office-2": {
+     "outcome": "skipped"
+    }
+   }
+  }
+ },
+ {
   "id": "apply-retry",
   "rule": "V/10.6 Н1.4 «Повторить» — только pending и skipped с прежним ifMatch; 412 у повтора — чтение",
   "console": "stand3",

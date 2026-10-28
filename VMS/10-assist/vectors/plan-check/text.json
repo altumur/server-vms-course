@@ -74,6 +74,38 @@
  {
   "fn": "nameIn",
   "args": [
+   "ЖGate-1Ж",
+   "Gate-1"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "𐐀Gate-1𐐀",
+   "Gate-1"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "𐐀 Gate-1 𐐀",
+   "Gate-1"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "nameIn",
+  "args": [
+   "x𐐀-Gate-1",
+   "Gate-1"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "nameIn",
+  "args": [
    "Store-20 and Store-2x",
    "Store-2"
   ],
