@@ -3014,12 +3014,12 @@ paths:
                 type: string
         '502':
           description: 'door.pass: воркер не ответил, ответ больше 4 МиБ, оборван или истёк таймаут ответа — до успешных
-            заголовков (слова «<worker> did not answer»; глава 6.5, P/06.5-12). Повтор не автоматический: исход выяснить
+            заголовков (error denied, detail «<worker> did not answer»; глава 6.5, P/06.5-12). Повтор не автоматический: исход выяснить
             у держателя. Ответ воркера с кодом 502 передаётся как получен; HEAD не содержит тела'
         '503':
-          description: 'door.pass: у консоли нет клиента к воркерам — «this console passes no route on to a worker»; нет
-            живого воркера подсистемы с дверью (определение — глава 6.5, P/06.5-12) — «no worker of <sub> with a door is
-            heard»; общие busy и denied — глава 6.5 Н4. Ответ воркера с кодом 503 передаётся как получен; HEAD не содержит
+          description: 'door.pass: у консоли нет клиента к воркерам — error denied, detail «this console passes no route on to a
+            worker»; нет живого воркера подсистемы с дверью (определение — глава 6.5, P/06.5-12) — error denied, detail «no
+            worker of <sub> with a door is heard»; общие busy и denied — глава 6.5 Н4. Ответ воркера с кодом 503 передаётся как получен; HEAD не содержит
             тела'
           headers:
             Retry-After:
@@ -7194,15 +7194,16 @@ components:
             $ref: '#/components/schemas/ConsoleRefusal'
     PassFailed:
       description: 'door.pass: воркер не ответил, ответ больше 4 МиБ, оборван или истёк таймаут ответа — до успешных заголовков
-        (слова «<worker> did not answer»; глава 6.5, P/06.5-12). Повтор не автоматический: исход выяснить у держателя. Ответ
+        (error denied, detail «<worker> did not answer»; глава 6.5, P/06.5-12). Повтор не автоматический: исход выяснить у держателя. Ответ
         воркера с кодом 502 передаётся как получен.'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     PassUnavailable:
-      description: 'door.pass: у консоли нет клиента к воркерам — «this console passes no route on to a worker»; нет живого
-        воркера подсистемы с дверью (определение — глава 6.5, P/06.5-12) — «no worker of <sub> with a door is heard»; общие
+      description: 'door.pass: у консоли нет клиента к воркерам — error denied, detail «this console passes no route on to a
+        worker»; нет живого воркера подсистемы с дверью (определение — глава 6.5, P/06.5-12) — error denied, detail «no worker
+        of <sub> with a door is heard»; общие
         busy и denied — глава 6.5 Н4. Ответ воркера с кодом 503 передаётся как получен.'
       headers:
         Retry-After:

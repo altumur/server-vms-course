@@ -96,7 +96,7 @@ scenario	step	request	expect
 14-resource-silent	3	@sigkill resource	ok
 14-resource-silent	4	@until 90 console GET /servers	200 {"servers": {"srv-a": {"resource": "silent"}}}
 14-resource-silent	5	console GET /metrics	200 ~w2c_resources_live 0
-15-service-doors	1	console2 GET /entries	503
+15-service-doors	1	console2 GET /entries	503 {"error": "denied"}
 16-resource-unreadable-heartbeat	1	@start resource	ok
 16-resource-unreadable-heartbeat	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 16-resource-unreadable-heartbeat	3	@sigterm resource	ok

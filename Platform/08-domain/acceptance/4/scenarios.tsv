@@ -102,7 +102,7 @@ scenario	step	request	expect
 12-pass-need	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub2/t1"}]}	200 {"cluster": "m1"}
 12-pass-need	4	@person ann ann password 1	ok
 12-pass-need	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub2/t1"}]}
-12-pass-need	6	member m1 console2 GET /entries	503
-12-pass-need	7	member m1 console2 GET /entries?unit=testsub2/t1	503
+12-pass-need	6	member m1 console2 GET /entries	503 {"error": "denied"}
+12-pass-need	7	member m1 console2 GET /entries?unit=testsub2/t1	503 {"error": "denied"}
 12-pass-need	8	member m1 console2 GET /entries?unit=testsub2/t2	403 {"error": "denied"}
 12-pass-need	9	member m1 console2 POST /entries {"note": "x"}	403 {"error": "denied"}
