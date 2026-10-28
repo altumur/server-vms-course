@@ -1,0 +1,5 @@
+# Заглушка модели сценария 01-step (V/10.2 Н5): load, затем строка на запрос по порядку.
+load 15
+0	200	{"choices": [{"message": {"role": "assistant", "content": "готово"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 12, "completion_tokens": 3}}
+hang	200	{}
+0	500	{"error": "stub"}

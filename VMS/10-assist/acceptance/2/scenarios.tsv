@@ -1,0 +1,49 @@
+scenario	step	request	expect
+# Приёмка V/10.2: дверь модели (консоль assist, контроллер assist, ресурс и держатель на srv-a, заглушка модели). Формат — README.
+01-step	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
+01-step	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
+01-step	3	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "loading"}]}
+01-step	4	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "loading", "retry_after": 5}
+01-step	5	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "running", "queued": 0, "active": 0}]}
+01-step	6	door assist/m1 bare POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	403 {"error": "forbidden"}
+01-step	7	door assist/m1 POST /chat/m1/steps {"messages": []}	400 {"error": "bad step", "detail": "@any"}
+01-step	8	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$s", "state": "queued"}
+01-step	9	door assist/m1 GET /chat/m1/steps/$s?wait=20	200 {"step": "$s", "state": "done", "finish_reason": "stop", "message": {"role": "assistant", "content": "готово"}, "usage": {"prompt_tokens": 12, "completion_tokens": 3}}
+01-step	10	door assist/m1 GET /chat/m1/steps/$s	200 {"state": "done"}
+01-step	11	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$h"}
+01-step	12	door assist/m1 GET /chat/m1/steps/$h?wait=2	200 {"state": "running"}
+01-step	13	door assist/m1 DELETE /chat/m1/steps/$h	200 {"step": "$h", "state": "cancelled"}
+01-step	14	door assist/m1 GET /chat/m1/steps/$h	404 {"error": "no such step"}
+01-step	15	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$f"}
+01-step	16	door assist/m1 GET /chat/m1/steps/$f?wait=20	200 {"state": "failed", "reason": "model failed"}
+01-step	17	door assist/m1 GET /chat/m1/steps/nobody.00000000000000000000000000000000	410 {"error": "gone"}
+01-step	18	PUT /models/m1 {"enabled": false}	200 {"enabled": false}
+01-step	19	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "stopped", "reason": "disabled"}]}
+01-step	20	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "model unavailable", "detail": "disabled"}
+02-limits	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
+02-limits	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
+02-limits	3	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}
+02-limits	4	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$a"}
+02-limits	5	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$b"}
+02-limits	6	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	429 {"error": "too many steps"}
+02-limits	7	door assist/m1 GET /chat/m1/steps/$b	200 {"state": "queued", "ahead": 0}
+02-limits	8	door assist/m1 DELETE /chat/m1/steps/$b	200 {"state": "cancelled"}
+02-limits	9	@until 60 resource GET /v1/objects/assist/heartbeats/m-srv-a-1	200 {"steps": {"abandoned": 1}}
+02-limits	10	door assist/m1 GET /chat/m1/steps/$a	200 {"state": "cancelled", "reason": "abandoned"}
+03-owner	1	@domain m1	ok
+03-owner	2	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
+03-owner	3	member m1 console POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
+03-owner	4	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+03-owner	5	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
+03-owner	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:assist/m1"}, {"subject": "bob", "cap": "view", "scope": "unit:assist/m1"}]}	200 {"cluster": "m1"}
+03-owner	7	@until 60 member m1 console GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}
+03-owner	8	@person ann ann-password-1	ok
+03-owner	9	@until 30 member m1 console GET /session	200 {"user": "ann"}
+03-owner	10	member m1 door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$s"}
+03-owner	11	member m1 door assist/m1 GET /chat/m1/steps/$s?wait=20	200 {"state": "done", "message": {"content": "для ann"}}
+03-owner	12	@person bob bob-password-1	ok
+03-owner	13	@until 30 member m1 console GET /session	200 {"user": "bob"}
+03-owner	14	member m1 door assist/m1 GET /chat/m1/steps/$s	404 {"error": "no such step"}
+03-owner	15	member m1 door assist/m1 DELETE /chat/m1/steps/$s	404 {"error": "no such step"}
+03-owner	16	@person ann ann-password-1	ok
+03-owner	17	member m1 door assist/m1 GET /chat/m1/steps/$s	200 {"state": "done", "message": {"content": "для ann"}}

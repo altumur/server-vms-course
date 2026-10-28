@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: V/10 — дверь держателя модели ассистента
+  version: 1.0.0
+  description: |
+    HTTP-контракт двери держателя модели `assistworker` — урок V/10 «Ассистент» модуля VMS. Канон — нормы глав
+    `10.K-assist.norms.md`; файл их выражает и не добавляет требований. Маршрут `chat` (глава V/10.2): поставить шаг
+    модели, спросить его состояние или ответ, отбить; допуск — токен двери консоли (`GET /assist/where/<name>`, право
+    `view` на строку модели, договор токена двери; `Authorization: Bearer`). Шаг принадлежит `user` токена: чужому —
+    404. Иной метод — 405, иной путь — 404.
+servers:
+  - url: http://127.0.0.1:{port}
+    description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
+    variables:
+      port: {default: "0"}
+paths:
+  /chat/{name}/steps:
+    post:
+      summary: Поставить шаг модели (Н1.2)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/ModelName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/StepRequest"}
+      responses:
+        "202":
+          description: шаг в очереди
+          headers:
+            Location:
+              required: true
+              description: "/chat/<name>/steps/<step>"
+              schema: {type: string}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [step, state]
+                additionalProperties: false
+                properties:
+                  step: {$ref: "#/components/schemas/StepId"}
+                  state: {const: queued}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "429": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /chat/{name}/steps/{step}:
+    get:
+      summary: Состояние или ответ своего шага, долгий опрос до 20 с (Н1.3)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/ModelName"
+        - $ref: "#/components/parameters/Step"
+        - name: wait
+          in: query
+          required: false
+          description: секунды ожидания завершения шага; умолчание 0
+          schema: {type: integer, minimum: 0, maximum: 20}
+      responses:
+        "200":
+          description: состояние шага
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/StepState"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "410": {$ref: "#/components/responses/Refusal"}
+    delete:
+      summary: Отбить свой шаг (Н1.5)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/ModelName"
+        - $ref: "#/components/parameters/Step"
+      responses:
+        "200":
+          description: шаг снят или запрос к модели оборван (или уже завершён); шаг забыт
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [step, state]
+                additionalProperties: false
+                properties:
+                  step: {$ref: "#/components/schemas/StepId"}
+                  state: {enum: [done, failed, cancelled]}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "410": {$ref: "#/components/responses/Refusal"}
+components:
+  parameters:
+    ModelName:
+      name: name
+      in: path
+      required: true
+      description: имя строки модели `assist/models/<name>` (V/10.1 Н1.1)
+      schema: {type: string, minLength: 1}
+    Step:
+      name: step
+      in: path
+      required: true
+      description: id шага из ответа 202
+      schema: {$ref: "#/components/schemas/StepId"}
+  schemas:
+    StepId:
+      type: string
+      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>"
+      pattern: "^[^.]+\\.[0-9a-f]{32}$"
+    ToolCall:
+      type: object
+      required: [id, type, function]
+      additionalProperties: true
+      properties:
+        id: {type: string}
+        type: {const: function}
+        function:
+          type: object
+          required: [name, arguments]
+          additionalProperties: true
+          properties:
+            name: {type: string}
+            arguments: {type: string}
+    Message:
+      type: object
+      required: [role]
+      additionalProperties: true
+      properties:
+        role: {enum: [system, user, assistant, tool]}
+        content: {type: [string, "null"]}
+        tool_calls:
+          type: array
+          items: {$ref: "#/components/schemas/ToolCall"}
+        tool_call_id: {type: string}
+        reasoning_content: {type: string}
+    StepRequest:
+      type: object
+      required: [messages]
+      additionalProperties: false
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          maxItems: 512
+          items: {$ref: "#/components/schemas/Message"}
+        tools:
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            required: [type, function]
+            additionalProperties: true
+            properties:
+              type: {const: function}
+              function:
+                type: object
+                required: [name, parameters]
+                additionalProperties: true
+                properties:
+                  name: {type: string, minLength: 1}
+                  description: {type: string}
+                  parameters: {type: object, additionalProperties: true}
+        tool_choice: {enum: [auto, required, none]}
+        reasoning_effort: {enum: [low, medium, high]}
+        max_tokens: {type: integer, minimum: 1}
+    StepState:
+      type: object
+      required: [step, state]
+      additionalProperties: false
+      properties:
+        step: {$ref: "#/components/schemas/StepId"}
+        state: {enum: [queued, running, done, failed, cancelled]}
+        ahead: {type: integer, minimum: 0}
+        message: {$ref: "#/components/schemas/Message"}
+        finish_reason: {enum: [stop, tool_calls, length]}
+        usage:
+          type: object
+          required: [prompt_tokens, completion_tokens]
+          additionalProperties: true
+          properties:
+            prompt_tokens: {type: integer, minimum: 0}
+            completion_tokens: {type: integer, minimum: 0}
+        seconds: {type: number, minimum: 0}
+        reason: {type: string}
+  securitySchemes:
+    doorToken:
+      type: http
+      scheme: bearer
+      description: токен двери консоли (договор токена двери)
+  responses:
+    Refusal:
+      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After странице не виден через CORS)
+      headers:
+        Retry-After:
+          required: false
+          schema: {type: integer}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {type: string}
+              detail: {type: string}
+              retry_after: {type: integer, minimum: 1}
