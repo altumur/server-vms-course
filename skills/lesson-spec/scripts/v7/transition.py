@@ -2,6 +2,7 @@
 байтами, кроме текстов норм. Для её ветки и для пробы `check_spec` в режиме В7 на копии дерева.
 
     python -m v7.transition --root ДЕРЕВО [--lessons 01,02,03,04,05,06]      (из skills/lesson-spec/scripts)
+    python -m v7.transition --root ДЕРЕВО --keys          (дерево В7: столбец key пакета family-read, шаг 6)
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
@@ -14,7 +15,9 @@
    `classes.tsv` — по дельтам, новые случаи Б без пометки `dup` (кроме `p3_*`: это входы корпуса после п. 7);
 5. векторы `canonical` заново (`v7.vectors`);
 6. пакет `Platform/common/vectors/family-read/`: README и таблица на урок-владельца из уроков `--lessons` (набор А,
-   `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`);
+   `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`); столбец `key` — пример по
+   шаблону каталога (таблица плейсхолдеров `Platform/common/data/README.md`), строки `key: …` — ключ не по шаблону;
+   на дереве В7 — только это, на месте: `--keys` (V7-FAMILY-KEY-PLACEHOLDER-01);
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
    вида» P/02.2;
 9. пакет `Platform/common/vectors/yaml-suite/`: README, `LICENSE` (MIT), `inputs/<id>.yaml` и `expect.tsv` — исход
@@ -44,7 +47,7 @@ SETB = HERE / "out" / "setb"
 SETA = HERE / "out" / "seta"
 WORKER = b"worker: {exec: /usr/lib/probe/worker}\n"
 P7_SKIP = {"empty_document", "a91_worker_missing"}
-HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+HEADER = spec.FR_HEADER
 # Семьи событий (P/05) — один файл схемы и исходов на семью: ключ каталога → базовое имя (решение «Архитектора»
 # 2026-10-28).
 EVENTS = {
@@ -336,7 +339,10 @@ README = """# Векторы family-read (ADR-0087 доп. (9) п. 2; ADR-0092 C
 `x-*` схемы и `codec.tsv`.
 
 Таблица `NN.tsv` — семьи урока-владельца NN (колонка `owner` каталога). Строка:
-`case<TAB>family<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
+`case<TAB>family<TAB>key<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
+- `family` — шаблон колонки `key` каталога; `key` — конкретный ключ строки: литералы шаблона — точно, плейсхолдер — по
+  грамматике таблицы плейсхолдеров `Platform/common/data/README.md`; ключ не по шаблону — `refused`, путь `""` (строка
+  целиком, значение не судится; не `/key` — это путь поля `key` семей P/08), исход — строки пустого пути;
 - `who` — кто исполняет, JSON-массив ролей: у `writer` — роли операций каталога (`ops`), у `reader` — читатели семьи
   (строки пустого пути `<семья>.outcomes.tsv`: `readers` каталога ∪ участники `cas` и `guard`), в порядке файла;
 - `text` — у `row` — JSON-объект полей `items` (значения — строки, как записаны в хранилище); у `object` и `file` —
@@ -366,8 +372,16 @@ def whom(root, row, mode, outcomes, cache):
     return json.dumps(roles, ensure_ascii=False), {r: outcomes for r in roles}
 
 
+def templates_of(root):
+    templates, errors = spec.key_templates(root, spec.read_catalog(root))
+    if errors:
+        sys.exit("family-read: the placeholder table of the catalog keys:\n  " + "\n  ".join(errors))
+    return templates
+
+
 def family_read(root, lessons):
     cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    templates = templates_of(root)
     fams = {}
     fixes = {}
     for r in tsv(SETB / "deltas.tsv"):
@@ -387,7 +401,8 @@ def family_read(root, lessons):
         row = cat[(x["family"], x["kind"])]
         who, outcomes = whom(root, row, x["mode"], outcomes, fams)
         tables.setdefault(x["lesson"], []).append(
-            ["%s-%04d" % (x["lesson"], len(tables.get(x["lesson"], [])) + 1), x["family"], x["kind"], x["mode"], who,
+            ["%s-%04d" % (x["lesson"], len(tables.get(x["lesson"], [])) + 1), x["family"],
+             templates[(x["family"], x["kind"])].example(), x["kind"], x["mode"], who,
              x["text"], verdict, json.dumps(paths, ensure_ascii=False), json.dumps(outcomes, ensure_ascii=False), x["why"]])
     for r in tsv(SETB / "cases.tsv"):
         if not r[1].startswith("family-read|"):
@@ -402,14 +417,66 @@ def family_read(root, lessons):
         row = cat[(fam, kind)]
         who, outs = whom(root, row, mode, json.loads(m.group(3)), fams)
         tables.setdefault(lesson, []).append(
-            ["%s-%s" % (lesson, r[0]), fam, row["kind"], mode, who, src["text"], m.group(1), m.group(2),
+            ["%s-%s" % (lesson, r[0]), fam, templates[(fam, kind)].example(), row["kind"], mode, who, src["text"],
+             m.group(1), m.group(2),
              json.dumps(outs, ensure_ascii=False), r[0]])
     d = root / FAMILY_READ
     d.mkdir(parents=True, exist_ok=True)
     (d / "README.md").write_text(README, encoding="utf-8")
     for lesson, rows in sorted(tables.items()):
+        rows += key_rows(root, cat, templates, rows, fams)
         write_tsv(d / ("%s.tsv" % lesson), [], HEADER, rows)
     return {k: len(v) for k, v in sorted(tables.items())}
+
+
+KEY_NOTE = "key: "
+
+
+def key_rows(root, cat, templates, rows, fams):
+    """Строки «ключ не по шаблону» (V7-FAMILY-KEY-PLACEHOLDER-01): у каждой семьи таблицы и режима — по строке на
+    плейсхолдер (и на литерал у шаблона без плейсхолдеров); текст — первой строки `ok` семьи в этом режиме; отказ —
+    строка целиком, исход — строки пустого пути."""
+    lesson = rows[0][0][:2]
+    out, seen = [], []
+    for r in rows:
+        k = (r[1], r[3], r[4])
+        if k not in seen and not r[-1].startswith(KEY_NOTE):
+            seen.append(k)
+    for fam, kind, mode in seen:
+        mine = [r for r in rows if (r[1], r[3], r[4]) == (fam, kind, mode) and not r[-1].startswith(KEY_NOTE)]
+        text = next((r[6] for r in mine if r[7] == "ok"), mine[0][6])
+        row = cat[(fam, kind)]
+        who, outs = whom(root, row, mode, [], fams)
+        if mode == "reader":
+            outcomes = fams[(fam, kind)][1]
+            outs = {r: [o.path for o in spec.outcomes_for(outcomes, spec.KEY_REFUSED, r)] for r in outs}
+        for what, key in templates[(fam, kind)].off():
+            out.append(["%s-k%04d" % (lesson, len(out) + 1), fam, key, kind, mode, who, text, "refused",
+                        json.dumps(spec.KEY_REFUSED), json.dumps(outs, ensure_ascii=False), KEY_NOTE + what])
+    return out
+
+
+def family_keys(root):
+    """Пакет family-read на месте (данные «Спецификации»): столбец `key` после `family` — пример по шаблону каталога
+    (таблица плейсхолдеров README каталога); строки `key: …` — заново. Повтор — те же байты. → {урок: строк ключа}."""
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    templates = templates_of(root)
+    d = root / FAMILY_READ
+    old = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+    fams, done = {}, {}
+    for p in sorted(d.glob("[0-9][0-9].tsv")):
+        lines = tsv(p)
+        if lines[0] == old:
+            rows = [r[:2] + [templates[(r[1], r[2])].example()] + r[2:] for r in lines[1:]]
+        elif lines[0] == HEADER:
+            rows = lines[1:]
+        else:
+            sys.exit("%s: the header is neither the old one nor %s" % (p, "<TAB>".join(HEADER)))
+        rows = [r for r in rows if not r[-1].startswith(KEY_NOTE)]
+        keys = key_rows(root, cat, templates, rows, fams)
+        write_tsv(p, [], HEADER, rows + keys)
+        done[p.stem] = len(keys)
+    return done
 
 
 # ---------------------------------------------------------------- всё
@@ -420,8 +487,12 @@ def main(argv=None):
     ap.add_argument("--lessons", default="01,02,03,04,05,06")
     from v7 import yts
     ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
+    ap.add_argument("--keys", action="store_true", help="только столбец key пакета family-read на месте (дерево В7)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
+    if a.keys:
+        print("family-read key rows:", family_keys(root))
+        return
     if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
         sys.exit("the tree has no dialect form of P/02.1: already moved?")
     check_suite(a.yts)                                   # все входы — до первой правки дерева

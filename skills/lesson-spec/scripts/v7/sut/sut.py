@@ -179,11 +179,45 @@ def pins():
     return [(f.relative_to(course).as_posix(), hashlib.sha256(f.read_bytes()).hexdigest()) for f in files]
 
 
+class Keys:
+    """Ключ строки family-read по шаблону каталога выгрузки (V7-FAMILY-KEY-PLACEHOLDER-01) — до бэкенда, у обоих одним
+    правилом стека В7 (у диалекта проверки ключа не было): не по шаблону — отказ строки целиком `[""]`, значение не
+    судится, исход у читателя — строки пустого пути его роли."""
+
+    def __init__(self, specs):
+        sys.path.insert(0, str(SCRIPTS))                    # v7 навыка этого курса — до кода метки у бэкенда dialect
+        from v7 import spec
+        self.spec, self.specs, self.templates, self.outcomes = spec, specs, None, {}
+
+    def refused(self, family, kind, key, mode, roles):
+        if self.templates is None:
+            catalog = self.spec.read_catalog(self.specs)
+            self.templates, errors = self.spec.key_templates(self.specs, catalog)
+            if errors:
+                raise ValueError("family-read keys: " + "; ".join(errors))
+            self.rows = {(r["key"], r["kind"]): r for r in catalog}
+        if self.templates[(family, kind)].matches(key):
+            return None
+        k = (family, kind)
+        if k not in self.outcomes:
+            self.outcomes[k] = self.spec.load_family(self.specs, self.rows[k])[4]
+        whole = self.spec.KEY_REFUSED
+        return {"verdict": "refused", "paths": list(whole), "outcome": (
+            {r: [o.path for o in self.spec.outcomes_for(self.outcomes[k], whole, r)] for r in roles}
+            if mode == "reader" else [])}
+
+
 def backend(a):
     specs = Path(a.specs).resolve()
-    if a.backend == "v7":
-        return V7(specs)
-    return Dialect(specs, Path(a.dialect_root).resolve())
+    keys = Keys(specs)
+    be = V7(specs) if a.backend == "v7" else Dialect(specs, Path(a.dialect_root).resolve())
+    be.keys = keys
+    return be
+
+
+def read_family(be, family, key, kind, mode, roles, text):
+    """Исход строки family-read: ключ — Keys, затем значение — бэкенд."""
+    return be.keys.refused(family, kind, key, mode, roles) or be.family(family, kind, mode, roles, text)
 
 
 # ---------------------------------------------------------------- стенд P/02.1, P/02.2
@@ -256,7 +290,7 @@ def native(package, request, be, specs):
         return 0, b, b""
     if package == "common/family-read":
         roles = json.loads(cells["who"]) if cells["mode"] == "reader" else []
-        out = be.family(cells["family"], cells["kind"], cells["mode"], roles, cells["text"])
+        out = read_family(be, cells["family"], cells["key"], cells["kind"], cells["mode"], roles, cells["text"])
         return 0, json.dumps(out, ensure_ascii=False, sort_keys=True).encode("utf-8"), b""
     if package == "common/yaml-suite":
         data = input_bytes("in.yaml", "Platform/common/vectors/yaml-suite/inputs/%s.yaml" % cells["id"])
@@ -367,7 +401,7 @@ def cmd_selftest(be, a):
     for t in sorted(fr.glob("[0-9][0-9].tsv")):
         for r in tsv(t):
             roles = json.loads(r["who"]) if r["mode"] == "reader" else []
-            got = be.family(r["family"], r["kind"], r["mode"], roles, r["text"])
+            got = read_family(be, r["family"], r["key"], r["kind"], r["mode"], roles, r["text"])
             ok = (got["verdict"] == r["verdict"] and sorted(got["paths"]) == sorted(json.loads(r["paths"]))
                   and got["outcome"] == json.loads(r["outcome"]))
             outs = next(iter(got["outcome"].values()), []) if isinstance(got["outcome"], dict) else got["outcome"]
