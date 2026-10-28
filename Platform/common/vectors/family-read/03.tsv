@@ -286,47 +286,47 @@ case	family	kind	mode	who	text	verdict	paths	outcome	note
 03-0285	<sub>/slots/<имя>	row	writer	["<s>worker", "<s>worker,<s>controller"]	{"until":"1","gen":"zz_wrong"}	refused	["/gen"]	[]	outcome /gen: wrong type
 03-0286	<sub>/slots/<имя>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainagent"]	{"until":"1","gen":"zz_wrong"}	refused	["/gen"]	{"<s>controller": ["/gen"], "<s>domain": ["/gen"], "<s>worker": ["/gen"], "console": ["/gen"], "domainagent": ["/gen"]}	outcome /gen: wrong type
 03-0287	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"1"}	ok	[]	[]	base
-03-0288	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"1"}	ok	[]	{"<s>domain": [], "<s>worker": [], "console": [], "proc:01-store": []}	base
+03-0288	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"1"}	ok	[]	{"<s>worker": [], "console": [], "proc:01-store": []}	base
 03-0289	<sub>/epoch/<id>	row	writer	["<s>worker"]	null	refused	[""]	[]	root null
-03-0290	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	null	refused	[""]	{"<s>domain": [""], "<s>worker": [""], "console": [""], "proc:01-store": [""]}	root null
+03-0290	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	null	refused	[""]	{"<s>worker": [""], "console": [""], "proc:01-store": [""]}	root null
 03-0291	<sub>/epoch/<id>	row	writer	["<s>worker"]	{}	refused	["/epoch"]	[]	: without required epoch
-03-0292	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	: without required epoch
+03-0292	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	: without required epoch
 03-0293	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":""}	refused	["/epoch"]	[]	epoch: wrong type
-03-0294	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":""}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: wrong type
+03-0294	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":""}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: wrong type
 03-0295	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":1.0}	refused	["/epoch"]	[]	epoch: integer 1.0
-03-0296	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":1.0}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1.0
+03-0296	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":1.0}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1.0
 03-0297	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":1e0}	refused	["/epoch"]	[]	epoch: integer 1e0
-03-0298	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":1e0}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1e0
+03-0298	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":1e0}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1e0
 03-0299	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":1.5}	refused	["/epoch"]	[]	epoch: integer 1.5
-03-0300	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":1.5}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1.5
+03-0300	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":1.5}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1.5
 03-0301	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":100.00000000000000001}	refused	["/epoch"]	[]	epoch: integer 100.00000000000000001
-03-0302	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":100.00000000000000001}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 100.00000000000000001
+03-0302	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":100.00000000000000001}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 100.00000000000000001
 03-0303	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":-0.0}	refused	["/epoch"]	[]	epoch: integer -0.0
-03-0304	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":-0.0}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer -0.0
+03-0304	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":-0.0}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer -0.0
 03-0305	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":1e400}	refused	["/epoch"]	[]	epoch: integer 1e400
-03-0306	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":1e400}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1e400
+03-0306	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":1e400}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	epoch: integer 1e400
 03-0307	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"9007199254740992"}	refused	["/epoch"]	[]	epoch: 2^53
-03-0308	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"9007199254740992"}	ok	[]	{"<s>domain": [], "<s>worker": [], "console": [], "proc:01-store": []}	epoch: 2^53
+03-0308	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"9007199254740992"}	ok	[]	{"<s>worker": [], "console": [], "proc:01-store": []}	epoch: 2^53
 03-0309	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"1.0"}	refused	["/epoch"]	[]	item epoch: record '1.0'
-03-0310	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"1.0"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '1.0'
+03-0310	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"1.0"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '1.0'
 03-0311	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"x"}	refused	["/epoch"]	[]	item epoch: record 'x'
-03-0312	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"x"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'x'
+03-0312	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"x"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'x'
 03-0313	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"True"}	refused	["/epoch"]	[]	item epoch: record 'True'
-03-0314	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"True"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'True'
+03-0314	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"True"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'True'
 03-0315	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"1e0"}	refused	["/epoch"]	[]	item epoch: record '1e0'
-03-0316	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"1e0"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '1e0'
+03-0316	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"1e0"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '1e0'
 03-0317	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"[1"}	refused	["/epoch"]	[]	item epoch: record '[1'
-03-0318	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"[1"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '[1'
+03-0318	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"[1"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '[1'
 03-0319	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"{"}	refused	["/epoch"]	[]	item epoch: record '{'
-03-0320	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"{"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '{'
+03-0320	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"{"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '{'
 03-0321	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"{\"b\":1,\"a\":2}"}	refused	["/epoch"]	[]	item epoch: record '{"b":1,"a":2}'
-03-0322	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"{\"b\":1,\"a\":2}"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '{"b":1,"a":2}'
+03-0322	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"{\"b\":1,\"a\":2}"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record '{"b":1,"a":2}'
 03-0323	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"a,,b"}	refused	["/epoch"]	[]	item epoch: record 'a,,b'
-03-0324	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"a,,b"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'a,,b'
+03-0324	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"a,,b"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record 'a,,b'
 03-0325	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":" 1"}	refused	["/epoch"]	[]	item epoch: record ' 1'
-03-0326	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":" 1"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record ' 1'
+03-0326	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":" 1"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	item epoch: record ' 1'
 03-0327	<sub>/epoch/<id>	row	writer	["<s>worker"]	{"epoch":"zz_wrong"}	refused	["/epoch"]	[]	outcome /epoch: wrong type
-03-0328	<sub>/epoch/<id>	row	reader	["<s>domain", "<s>worker", "console", "proc:01-store"]	{"epoch":"zz_wrong"}	refused	["/epoch"]	{"<s>domain": ["/epoch"], "<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	outcome /epoch: wrong type
+03-0328	<sub>/epoch/<id>	row	reader	["<s>worker", "console", "proc:01-store"]	{"epoch":"zz_wrong"}	refused	["/epoch"]	{"<s>worker": ["/epoch"], "console": ["/epoch"], "proc:01-store": ["/epoch"]}	outcome /epoch: wrong type
 03-0329	<sub>/heartbeats/<имя>	object	writer	["<s>worker"]	{"worker":"a","ts":"1","status":[{"id":"a","phase":"a","epoch":1,"observed_revision":1,"revision":1}],"server":"a","instance":"a"}	ok	[]	[]	base
 03-0330	<sub>/heartbeats/<имя>	object	reader	["<s>controller", "<s>worker", "console", "domainagent", "resource"]	{"worker":"a","ts":"1","status":[{"id":"a","phase":"a","epoch":1,"observed_revision":1,"revision":1}],"server":"a","instance":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "domainagent": [], "resource": []}	base
 03-0331	<sub>/heartbeats/<имя>	object	writer	["<s>worker"]	null	refused	[""]	[]	root null
@@ -550,151 +550,151 @@ case	family	kind	mode	who	text	verdict	paths	outcome	note
 03-0549	<sub>/heartbeats/<имя>	object	writer	["<s>worker"]	{"worker":"a","ts":"1","status":12345,"server":"a","instance":"a"}	refused	["/status"]	[]	outcome /status: wrong type
 03-0550	<sub>/heartbeats/<имя>	object	reader	["<s>controller", "<s>worker", "console", "domainagent", "resource"]	{"worker":"a","ts":"1","status":12345,"server":"a","instance":"a"}	refused	["/status"]	{"<s>controller": ["/status"], "<s>worker": ["/status"], "console": ["/status"], "domainagent": ["/status"], "resource": ["/status"]}	outcome /status: wrong type
 03-0551	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1"}	ok	[]	[]	base
-03-0552	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	base
+03-0552	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	base
 03-0553	<sub>/holds/<место>	row	writer	["<s>worker"]	null	refused	[""]	[]	root null
-03-0554	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	null	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	root null
+03-0554	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	null	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	root null
 03-0555	<sub>/holds/<место>	row	writer	["<s>worker"]	{"gen":"1"}	refused	["/until"]	[]	: without required until
-03-0556	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	: without required until
+03-0556	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	: without required until
 03-0557	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1"}	refused	["/gen"]	[]	: without required gen
-03-0558	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	: without required gen
+03-0558	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	: without required gen
 03-0559	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"a"}	ok	[]	[]	: optional holder
-03-0560	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"a"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: optional holder
+03-0560	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: optional holder
 03-0561	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"true"}	ok	[]	[]	: optional released
-03-0562	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"true"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: optional released
+03-0562	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"true"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: optional released
 03-0563	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"a-a"}	ok	[]	[]	: optional by
-03-0564	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"a-a"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: optional by
+03-0564	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"a-a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: optional by
 03-0565	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","":"x"}	ok	[]	[]	: name ''
-03-0566	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: name ''
+03-0566	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: name ''
 03-0567	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","Bad Name!":"x"}	ok	[]	[]	: name 'Bad Name!'
-03-0568	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","Bad Name!":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: name 'Bad Name!'
+03-0568	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","Bad Name!":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: name 'Bad Name!'
 03-0569	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","a\n":"x"}	ok	[]	[]	: name 'a\n'
-03-0570	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","a\n":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: name 'a\n'
+03-0570	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","a\n":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: name 'a\n'
 03-0571	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","/x":"x"}	ok	[]	[]	: name '/x'
-03-0572	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","/x":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: name '/x'
+03-0572	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","/x":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: name '/x'
 03-0573	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","zz_extra":"x"}	ok	[]	[]	: name 'zz_extra'
-03-0574	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","zz_extra":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	: name 'zz_extra'
+03-0574	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","zz_extra":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	: name 'zz_extra'
 03-0575	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"","gen":"1"}	refused	["/until"]	[]	until: wrong type
-03-0576	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	until: wrong type
+03-0576	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	until: wrong type
 03-0577	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1\n","gen":"1"}	refused	["/until"]	[]	until: trailing \n
-03-0578	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1\n","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	until: trailing \n
+03-0578	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1\n","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	until: trailing \n
 03-0579	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1e0","gen":"1"}	refused	["/until"]	[]	until: time 1e0
-03-0580	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1e0","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	until: time 1e0
+03-0580	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1e0","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	until: time 1e0
 03-0581	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"-1","gen":"1"}	refused	["/until"]	[]	until: time -1
-03-0582	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"-1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	until: time -1
+03-0582	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"-1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	until: time -1
 03-0583	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1.0001","gen":"1"}	refused	["/until"]	[]	until: time 1.0001
-03-0584	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1.0001","gen":"1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	until: time 1.0001
+03-0584	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1.0001","gen":"1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	until: time 1.0001
 03-0585	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":""}	refused	["/gen"]	[]	gen: wrong type
-03-0586	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":""}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: wrong type
+03-0586	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":""}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: wrong type
 03-0587	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":1.0}	refused	["/gen"]	[]	gen: integer 1.0
-03-0588	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":1.0}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer 1.0
+03-0588	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":1.0}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer 1.0
 03-0589	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":1e0}	refused	["/gen"]	[]	gen: integer 1e0
-03-0590	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":1e0}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer 1e0
+03-0590	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":1e0}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer 1e0
 03-0591	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":1.5}	refused	["/gen"]	[]	gen: integer 1.5
-03-0592	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":1.5}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer 1.5
+03-0592	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":1.5}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer 1.5
 03-0593	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":100.00000000000000001}	refused	["/gen"]	[]	gen: integer 100.00000000000000001
-03-0594	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":100.00000000000000001}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer 100.00000000000000001
+03-0594	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":100.00000000000000001}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer 100.00000000000000001
 03-0595	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":-0.0}	refused	["/gen"]	[]	gen: integer -0.0
-03-0596	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":-0.0}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer -0.0
+03-0596	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":-0.0}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer -0.0
 03-0597	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":1e400}	refused	["/gen"]	[]	gen: integer 1e400
-03-0598	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":1e400}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: integer 1e400
+03-0598	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":1e400}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: integer 1e400
 03-0599	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"-1"}	refused	["/gen"]	[]	gen: below minimum
-03-0600	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"-1"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	gen: below minimum
+03-0600	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"-1"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	gen: below minimum
 03-0601	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"9007199254740992"}	refused	["/gen"]	[]	gen: 2^53
-03-0602	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"9007199254740992"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	gen: 2^53
+03-0602	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"9007199254740992"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	gen: 2^53
 03-0603	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"1.0"}	ok	[]	[]	item holder: record '1.0'
-03-0604	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"1.0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record '1.0'
+03-0604	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"1.0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record '1.0'
 03-0605	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"x"}	ok	[]	[]	item holder: record 'x'
-03-0606	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record 'x'
+03-0606	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record 'x'
 03-0607	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"True"}	ok	[]	[]	item holder: record 'True'
-03-0608	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"True"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record 'True'
+03-0608	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"True"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record 'True'
 03-0609	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"1e0"}	ok	[]	[]	item holder: record '1e0'
-03-0610	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"1e0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record '1e0'
+03-0610	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"1e0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record '1e0'
 03-0611	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"[1"}	ok	[]	[]	item holder: record '[1'
-03-0612	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"[1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record '[1'
+03-0612	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"[1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record '[1'
 03-0613	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"{"}	ok	[]	[]	item holder: record '{'
-03-0614	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"{"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record '{'
+03-0614	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"{"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record '{'
 03-0615	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"{\"b\":1,\"a\":2}"}	ok	[]	[]	item holder: record '{"b":1,"a":2}'
-03-0616	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record '{"b":1,"a":2}'
+03-0616	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record '{"b":1,"a":2}'
 03-0617	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":"a,,b"}	ok	[]	[]	item holder: record 'a,,b'
-03-0618	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"a,,b"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record 'a,,b'
+03-0618	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":"a,,b"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record 'a,,b'
 03-0619	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":""}	ok	[]	[]	item holder: record ''
-03-0620	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":""}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record ''
+03-0620	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":""}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record ''
 03-0621	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","holder":" 1"}	ok	[]	[]	item holder: record ' 1'
-03-0622	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","holder":" 1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item holder: record ' 1'
+03-0622	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","holder":" 1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item holder: record ' 1'
 03-0623	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1.0","gen":"1"}	ok	[]	[]	item until: record '1.0'
-03-0624	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1.0","gen":"1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item until: record '1.0'
+03-0624	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1.0","gen":"1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item until: record '1.0'
 03-0625	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"x","gen":"1"}	refused	["/until"]	[]	item until: record 'x'
-03-0626	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"x","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record 'x'
+03-0626	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"x","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record 'x'
 03-0627	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"True","gen":"1"}	refused	["/until"]	[]	item until: record 'True'
-03-0628	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"True","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record 'True'
+03-0628	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"True","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record 'True'
 03-0629	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"[1","gen":"1"}	refused	["/until"]	[]	item until: record '[1'
-03-0630	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"[1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record '[1'
+03-0630	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"[1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record '[1'
 03-0631	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"{","gen":"1"}	refused	["/until"]	[]	item until: record '{'
-03-0632	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"{","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record '{'
+03-0632	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"{","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record '{'
 03-0633	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"{\"b\":1,\"a\":2}","gen":"1"}	refused	["/until"]	[]	item until: record '{"b":1,"a":2}'
-03-0634	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"{\"b\":1,\"a\":2}","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record '{"b":1,"a":2}'
+03-0634	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"{\"b\":1,\"a\":2}","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record '{"b":1,"a":2}'
 03-0635	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"a,,b","gen":"1"}	refused	["/until"]	[]	item until: record 'a,,b'
-03-0636	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"a,,b","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record 'a,,b'
+03-0636	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"a,,b","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record 'a,,b'
 03-0637	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":" 1","gen":"1"}	refused	["/until"]	[]	item until: record ' 1'
-03-0638	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":" 1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item until: record ' 1'
+03-0638	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":" 1","gen":"1"}	refused	["/until"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item until: record ' 1'
 03-0639	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"1.0"}	refused	["/released"]	[]	item released: record '1.0'
-03-0640	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"1.0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record '1.0'
+03-0640	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"1.0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record '1.0'
 03-0641	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"x"}	refused	["/released"]	[]	item released: record 'x'
-03-0642	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record 'x'
+03-0642	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record 'x'
 03-0643	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"True"}	refused	["/released"]	[]	item released: record 'True'
-03-0644	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"True"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record 'True'
+03-0644	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"True"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record 'True'
 03-0645	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"1e0"}	refused	["/released"]	[]	item released: record '1e0'
-03-0646	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"1e0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record '1e0'
+03-0646	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"1e0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record '1e0'
 03-0647	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"[1"}	refused	["/released"]	[]	item released: record '[1'
-03-0648	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"[1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record '[1'
+03-0648	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"[1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record '[1'
 03-0649	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"{"}	refused	["/released"]	[]	item released: record '{'
-03-0650	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"{"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record '{'
+03-0650	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"{"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record '{'
 03-0651	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"{\"b\":1,\"a\":2}"}	refused	["/released"]	[]	item released: record '{"b":1,"a":2}'
-03-0652	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record '{"b":1,"a":2}'
+03-0652	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record '{"b":1,"a":2}'
 03-0653	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":"a,,b"}	refused	["/released"]	[]	item released: record 'a,,b'
-03-0654	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":"a,,b"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record 'a,,b'
+03-0654	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":"a,,b"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record 'a,,b'
 03-0655	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":""}	refused	["/released"]	[]	item released: record ''
-03-0656	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":""}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record ''
+03-0656	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":""}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record ''
 03-0657	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","released":" 1"}	refused	["/released"]	[]	item released: record ' 1'
-03-0658	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","released":" 1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item released: record ' 1'
+03-0658	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","released":" 1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item released: record ' 1'
 03-0659	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1.0"}	refused	["/gen"]	[]	item gen: record '1.0'
-03-0660	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1.0"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record '1.0'
+03-0660	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1.0"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record '1.0'
 03-0661	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"x"}	refused	["/gen"]	[]	item gen: record 'x'
-03-0662	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"x"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record 'x'
+03-0662	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"x"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record 'x'
 03-0663	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"True"}	refused	["/gen"]	[]	item gen: record 'True'
-03-0664	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"True"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record 'True'
+03-0664	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"True"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record 'True'
 03-0665	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1e0"}	refused	["/gen"]	[]	item gen: record '1e0'
-03-0666	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1e0"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record '1e0'
+03-0666	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1e0"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record '1e0'
 03-0667	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"[1"}	refused	["/gen"]	[]	item gen: record '[1'
-03-0668	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"[1"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record '[1'
+03-0668	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"[1"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record '[1'
 03-0669	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"{"}	refused	["/gen"]	[]	item gen: record '{'
-03-0670	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"{"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record '{'
+03-0670	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"{"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record '{'
 03-0671	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"{\"b\":1,\"a\":2}"}	refused	["/gen"]	[]	item gen: record '{"b":1,"a":2}'
-03-0672	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"{\"b\":1,\"a\":2}"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record '{"b":1,"a":2}'
+03-0672	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"{\"b\":1,\"a\":2}"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record '{"b":1,"a":2}'
 03-0673	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"a,,b"}	refused	["/gen"]	[]	item gen: record 'a,,b'
-03-0674	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"a,,b"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record 'a,,b'
+03-0674	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"a,,b"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record 'a,,b'
 03-0675	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":" 1"}	refused	["/gen"]	[]	item gen: record ' 1'
-03-0676	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":" 1"}	refused	["/gen"]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""]}	item gen: record ' 1'
+03-0676	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":" 1"}	refused	["/gen"]	{"<s>controller": [""], "<s>worker": [""], "console": [""]}	item gen: record ' 1'
 03-0677	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"1.0"}	refused	["/by"]	[]	item by: record '1.0'
-03-0678	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"1.0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record '1.0'
+03-0678	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"1.0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record '1.0'
 03-0679	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"x"}	refused	["/by"]	[]	item by: record 'x'
-03-0680	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"x"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record 'x'
+03-0680	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record 'x'
 03-0681	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"True"}	refused	["/by"]	[]	item by: record 'True'
-03-0682	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"True"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record 'True'
+03-0682	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"True"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record 'True'
 03-0683	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"1e0"}	refused	["/by"]	[]	item by: record '1e0'
-03-0684	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"1e0"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record '1e0'
+03-0684	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"1e0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record '1e0'
 03-0685	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"[1"}	refused	["/by"]	[]	item by: record '[1'
-03-0686	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"[1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record '[1'
+03-0686	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"[1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record '[1'
 03-0687	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"{"}	refused	["/by"]	[]	item by: record '{'
-03-0688	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"{"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record '{'
+03-0688	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"{"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record '{'
 03-0689	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"{\"b\":1,\"a\":2}"}	refused	["/by"]	[]	item by: record '{"b":1,"a":2}'
-03-0690	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record '{"b":1,"a":2}'
+03-0690	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record '{"b":1,"a":2}'
 03-0691	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":"a,,b"}	refused	["/by"]	[]	item by: record 'a,,b'
-03-0692	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":"a,,b"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record 'a,,b'
+03-0692	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":"a,,b"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record 'a,,b'
 03-0693	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":""}	refused	["/by"]	[]	item by: record ''
-03-0694	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":""}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record ''
+03-0694	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":""}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record ''
 03-0695	<sub>/holds/<место>	row	writer	["<s>worker"]	{"until":"1","gen":"1","by":" 1"}	refused	["/by"]	[]	item by: record ' 1'
-03-0696	<sub>/holds/<место>	row	reader	["<s>controller", "<s>domain", "<s>worker", "console"]	{"until":"1","gen":"1","by":" 1"}	ok	[]	{"<s>controller": [], "<s>domain": [], "<s>worker": [], "console": []}	item by: record ' 1'
+03-0696	<sub>/holds/<место>	row	reader	["<s>controller", "<s>worker", "console"]	{"until":"1","gen":"1","by":" 1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": []}	item by: record ' 1'
 03-0697	<sub>/contenders/<имя>/<коробка>	object	writer	["<s>worker"]	{}	ok	[]	[]	base
 03-0698	<sub>/contenders/<имя>/<коробка>	object	reader	["<s>worker", "console"]	{}	ok	[]	{"<s>worker": [], "console": []}	base
 03-0699	<sub>/contenders/<имя>/<коробка>	object	writer	["<s>worker"]	null	refused	[""]	[]	root null

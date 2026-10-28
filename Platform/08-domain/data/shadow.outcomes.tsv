@@ -1,4 +1,4 @@
 # Исходы нечитаемого объекта domain/shadow (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
 path	reader	outcome	priority	unit	norm
-	domainconsole	отчёт не читается — как отчёта нет: консоль домена на `GET /domain/shadow` отвечает 404 `{error: "no domain here"}` (P/10 Н1.2а)	0	строка	P/10 Н1.2а; P/08.1 Н3 шаг 7
+	domainconsole	теневой отчёт целиком нечитаем: `GET /domain/shadow` — 503 `{error: "unavailable"}`, не 404 «no domain here» (В7 п. 3, П1)	0	строка	P/10 Н1.2а, Н4

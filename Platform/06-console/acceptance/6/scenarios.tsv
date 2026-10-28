@@ -94,5 +94,5 @@ scenario	step	request	expect
 12-pulse-number-forms	22	@put object testsub/heartbeats/w-1 inputs/hb-w-1-schema-fraction.json	ok
 12-pulse-number-forms	23	@until 10 console GET /schema	200 {"can_raise_to": 0, "processes": {"testsub/w-1": {"schema": null}}}
 12-pulse-number-forms	24	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
-12-pulse-number-forms	25	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": ""}}}
+12-pulse-number-forms	25	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": null}}}
 12-pulse-number-forms	26	console DELETE /drain	2xx
