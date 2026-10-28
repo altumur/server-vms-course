@@ -5,7 +5,7 @@ ADR-0092, ADR-0087 доп. (7)–(12); навык со стеком В7 — в m
 раннер, выгрузка) вливаются одним окном «Архитектора»: до него main — на диалекте.
 
 Коротко: байты пакета строит инструмент навыка `v7/transition.py` одним запуском; руками — тексты норм (п. 2 ниже),
-проза исходов по читателям (п. 3), имена файлов семей `events` (п. 4). Готово — когда `check_spec --strict-coverage`
+проза исходов по читателям (п. 3, у семей `events` — п. 4). Готово — когда `check_spec --strict-coverage`
 даёт PASS, а тесты навыка проходят (п. 5).
 
 ## 1. Что строит `v7.transition` (один запуск на дереве с диалектом)
@@ -27,13 +27,13 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
 |---|---|---|
 | 1 | стандартные файлы на места: `02-installer/spec/02.1-installer.{schema.json,relations.json,layers.tsv}`, `02.2-installer.view.schema.json`; `NN-*/data/<семья>.{schema.json,layers.tsv}` (100 семей); `common/data/common.schema.json` (справочно, не норма); строка связей 18 — `"x-implied-by": [16, 17]` | 2.1, 2.3.6 |
 | 2 | `common/data/catalog.tsv`, колонка `schema` → `….schema.json`; семьи `events` — по своему файлу (7 файлов: схема, слои, исходы — копии `events.*`) | 2.1 |
-| 3 | снимаются файлы диалекта: 94 `*.form.yaml` семей, `common.form.yaml`, `02.1-installer.form.yaml`, `02.1-installer.references.tsv` (98 файлов) | 2.1 |
+| 3 | снимаются файлы диалекта: 94 `*.form.yaml` семей, `common.form.yaml`, `02.1-installer.form.yaml`, `02.1-installer.references.tsv`, `common/DIALECT.md` (99 файлов; всё — за меткой) | 2.1 |
 | 4 | корпус `02-installer/acceptance/1/` по дельтам набора Б: в 72 файла дописан `worker:` (п. 7); `verdicts.tsv`, `classes.tsv` — правки на местах (класс — слой: `text`, `form`, `relations`), 39 новых случаев в конце под своим комментарием; `diagnostics.tsv` — без строк случаев, ставших `ok`. Итог: 680 случаев (141 ok, 539 refused) | 2.3 |
 | 5 | векторы `02-installer/vectors/canonical/` заново: 157 строк (−6, +18, +10 новых принятых) | 2.4 |
 | 6 | пакет `common/vectors/family-read/`: README и `01.tsv`–`06.tsv` (4739 строк) | 2.5 |
 | 7 | разделы норм между маркерами: «Форма» P/02.1, «Форма канонического вида» P/02.2, «Семьи данных» 23 глав | 1.2 |
 | 8 | `outcomes.tsv` всех семей — столбец `reader` (заготовка, п. 3 ниже): строка пустого пути — по читателю, 229 строк | 2.7 |
-| 9 | пакет `common/vectors/yaml-suite/`: README и `expect.tsv` — исход слоя 1 по 402 тестам yaml-test-suite `data-2022-01-17` (269 сужений корректного YAML — как в наборе Б) | 2.6 |
+| 9 | пакет `common/vectors/yaml-suite/`: README (источник и sha256 архива), `LICENSE` (MIT, текст целиком), `inputs/<id>.yaml` (402 входа — приёмка без сети) и `expect.tsv` — исход слоя 1 по каждому тесту yaml-test-suite `data-2022-01-17` (269 сужений корректного YAML — как в наборе Б) | 2.6 |
 
 Сгенерированные байты руками не правь, кроме прозы исходов (п. 3). Раздел норм, вектор или строку пакета, которые
 нужно изменить, меняют через источник: схему, нормы, случай. Потом пересобирают:
@@ -43,7 +43,9 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
 
 ## 2. Тексты норм — руками (план п. 2.2)
 
-После шагов 1–9 `check_spec` даёт 14 ошибок, и все они в текстах:
+После шагов 1–9 `check_spec` даёт 18 ошибок, и все они в текстах:
+- ссылки на снятый `common/DIALECT.md` (→ `LAYERS.md`, п. 8 ниже): `02-installer.README.md`, `02.1-installer.norms.md`
+  (две), `05-resource.norms.md`;
 
 - ссылки на снятые файлы диалекта:
   - `02-installer/spec/02-installer.README.md` → `02.1-installer.form.yaml`, `02.1-installer.references.tsv`;
@@ -100,7 +102,8 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
    - пакет yaml-suite;
    - порядок перебора map (D18).
 
-   `DIALECT.md` снимается из `Platform/`: он остаётся за меткой `dialect-reference-dc94d0fd1`.
+   `DIALECT.md` снимает шаг 3 (решение «Архитектора» 2026-10-28): он за меткой `dialect-reference-dc94d0fd1`, в выгрузку
+   не идёт; ссылки на него в текстах — на `LAYERS.md`.
 9. **`acceptance/1/corrections.tsv`** — строка пакета: дата, `cases/*`, «переход на В7: п. 7 `worker:`, дельты набора Б
    ADR-0092, 39 новых случаев», `all`.
 
@@ -129,10 +132,9 @@ ADR (пометки заменённых пунктов ADR-0087, 0088, 0089; AD
 
 ## 4. Имена файлов семей `events` (план п. 2.1)
 
-Шаг 2 даёт семи семьям событий P/05 свои файлы. Имена предложены, решаешь ты: `events-unit`, `events-unit-alarms`,
-`events-audit`, `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror` (`v7/transition.py`
-EVENTS). Сменить имя — переименовать три файла (`.schema.json`, `.layers.tsv`, `.outcomes.tsv`) и колонку `schema`
-каталога. Проза исходов у семи — общая копия, деление — п. 3.
+Шаг 2 даёт семи семьям событий P/05 свои файлы; имена приняты «Архитектором» 2026-10-28: `events-unit`,
+`events-unit-alarms`, `events-audit`, `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`
+(`v7/transition.py` EVENTS). Руками — только проза исходов: у семи она общая копия, деление — п. 3.
 
 ## 5. Проверка готовности
 
@@ -150,16 +152,16 @@ uv run … python -m unittest discover -s skills/lesson-spec/scripts -p 'test_*.
 
 1. Сгенерированное шагами 1–9 — отдельными коммитами по файлам или каталогам, без `git add -A` (СЕССИИ §1 п. 4).
    Сообщение называет `v7.transition` и коммит main, на котором он запущен.
-2. Тексты норм (п. 2), проза исходов (п. 3), имена `events` (п. 4) — своими коммитами.
+2. Тексты норм (п. 2), проза исходов (пп. 3, 4) — своими коммитами.
 3. Если main за время работы меняет `Platform/`:
    - правки исходов или норм — перенести руками;
    - правки форм диалекта, корпуса или каталога — перезапустить `v7.transition` на свежем дереве и переложить ручные
      коммиты; поэтому они и отдельно.
 4. Ветку отдаёшь «Архитектору». Он вливает её одним окном с раннером (п. 3 плана) и выгрузкой (п. 5).
 
-## 7. Открытые вопросы — «Архитектору»
+## 7. Решения «Архитектора» 2026-10-28 (были открытыми вопросами)
 
-1. **Входы yaml-test-suite.** Пакет `yaml-suite` ссылается на архив по sha256 и входов не несёт. Приёмка идёт без сети,
-   так что входам, вероятно, место в пакете (`inputs/<id>.yaml`, 402 файла, лицензия MIT — с её текстом).
-2. **Имена `events`** — п. 4.
-3. **`DIALECT.md`** — снять из `Platform/` (совет) или оставить замороженным текстом с пометкой «за меткой».
+1. **Входы yaml-test-suite — в пакете** `yaml-suite`: `inputs/<id>.yaml` (402), `LICENSE` (MIT, текст целиком),
+   источник и sha256 архива — в README пакета; приёмка без сети. Делает шаг 9.
+2. **Имена `events`** — предложенные (п. 4).
+3. **`DIALECT.md`** — снять из `Platform/` (шаг 3); он за меткой `dialect-reference-dc94d0fd1`, в выгрузку не идёт.

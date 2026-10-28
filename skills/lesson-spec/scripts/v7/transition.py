@@ -8,7 +8,8 @@
    у строк связей, следующих из других, — `x-implied-by` (IMPLIED);
 2. каталог: колонка `schema` — `….schema.json` того же базового имени; одна схема на семью: семьи `events` (7 семей
    на `events.form.yaml`) — по своему файлу EVENTS (схема, слои, исходы — копии; решение «Архитектора» 2026-10-28);
-3. файлы диалекта снимаются: `*.form.yaml` (формы семей, `common.form.yaml`, форма манифеста), `references.tsv`;
+3. файлы диалекта снимаются: `*.form.yaml` (формы семей, `common.form.yaml`, форма манифеста), `references.tsv`,
+   `common/DIALECT.md` (всё — за меткой `dialect-reference-dc94d0fd1`);
 4. корпус P/02.1 по `v7/out/setb/deltas.tsv` и `cases.tsv`: файлы без `worker:` дополняются (п. 7), `verdicts.tsv` и
    `classes.tsv` — по дельтам, новые случаи Б без пометки `dup` (кроме `p3_*`: это входы корпуса после п. 7);
 5. векторы `canonical` заново (`v7.vectors`);
@@ -16,8 +17,8 @@
    `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`);
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
    вида» P/02.2;
-9. пакет `Platform/common/vectors/yaml-suite/`: README и `expect.tsv` — исход слоя 1 по каждому тесту yaml-test-suite
-   закреплённой версии (набор — на стенде, v7.yts.SUITE);
+9. пакет `Platform/common/vectors/yaml-suite/`: README, `LICENSE` (MIT), `inputs/<id>.yaml` и `expect.tsv` — исход
+   слоя 1 по каждому тесту yaml-test-suite закреплённой версии (набор — на стенде, v7.yts.SUITE);
 8. `outcomes.tsv` — столбец `reader` (решение владельца 2026-10-28): строка пустого пути — на каждого читателя семьи
    (`readers` каталога, у `*` — роли уроков, чей абзац «Данные» читает ключ, ∪ участники `cas` и `guard`), строки
    полей — `*`. Это заготовка: проза исхода скопирована каждому читателю — делить её по читателям и называть пробелы
@@ -43,8 +44,8 @@ SETA = HERE / "out" / "seta"
 WORKER = b"worker: {exec: /usr/lib/probe/worker}\n"
 P7_SKIP = {"empty_document", "a91_worker_missing"}
 HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
-# Семьи событий (P/05) — один файл схемы и исходов на семью: ключ каталога → базовое имя (предложение; решает
-# «Спецификация»).
+# Семьи событий (P/05) — один файл схемы и исходов на семью: ключ каталога → базовое имя (решение «Архитектора»
+# 2026-10-28).
 EVENTS = {
     "<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-unit",
     "<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-unit-alarms",
@@ -130,7 +131,8 @@ def catalog(root):
 def drop_dialect(root):
     gone = sorted((root / "Platform").glob("*/data/*.form.yaml")) + [
         root / "Platform/common/data/common.form.yaml", root / "Platform/02-installer/spec/02.1-installer.form.yaml",
-        root / "Platform/02-installer/spec/02.1-installer.references.tsv"]
+        root / "Platform/02-installer/spec/02.1-installer.references.tsv",
+        root / "Platform/common/DIALECT.md"]            # за меткой dialect-reference-dc94d0fd1 (решение 2026-10-28)
     for p in gone:
         if p.exists():
             p.unlink()
@@ -208,10 +210,13 @@ def edit(path, values, note):
 YAML_SUITE = Path("Platform/common/vectors/yaml-suite")
 YAML_README = """# Векторы yaml-suite: слой 1 на yaml-test-suite (ADR-0092 п. 2; набор Б, раздел «слой 1 сужает YAML 1.2.2»)
 
-Набор — yaml-test-suite `data-2022-01-17` (архив тега github.com/yaml/yaml-test-suite, sha256
-`ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`, лицензия MIT); тест — каталог с `in.yaml`.
+Источник — yaml-test-suite (github.com/yaml/yaml-test-suite), данные тега `data-2022-01-17`: архив
+`https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
+`ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`. Лицензия — MIT, текст целиком — `LICENSE` (файл
+`License` репозитория, тег `v2022-01-17`, sha256 `c9562189164244554a69ab3f29d2d93ed9492c165723aaaa5fffc932cdbbfc85`).
+Приёмка идёт без сети: входы — в пакете, `inputs/<id>.yaml` — байты `in.yaml` теста (402 файла; `id` с `/` — подкаталог).
 `expect.tsv`: `id<TAB>suite<TAB>layer1<TAB>rule`:
-- `id` — путь каталога теста в архиве;
+- `id` — путь каталога теста в архиве, вход — `inputs/<id>.yaml`;
 - `suite` — ожидание набора: `error` (вход вне YAML 1.2.2) или `ok`;
 - `layer1` — исход слоя 1 манифеста (парсер YAML 1.2.2 и тонкая проверка Н1.1): `ok` или `refused`; `refused` при
   `suite` = `ok` — сужение YAML 1.2.2 нормой (правило тонкой проверки или вход вне подмножества Н1.1), утверждено
@@ -237,6 +242,11 @@ def yaml_suite(root):
     out = root / YAML_SUITE
     out.mkdir(parents=True, exist_ok=True)
     (out / "README.md").write_text(YAML_README, encoding="utf-8")
+    (out / "LICENSE").write_bytes((HERE / "out" / "yts" / "LICENSE").read_bytes())
+    for tid, d in yts.tests(yts.SUITE):
+        dst = out / "inputs" / (tid + ".yaml")
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_bytes((d / "in.yaml").read_bytes())
     write_tsv(out / "expect.tsv", [], ["id", "suite", "layer1", "rule"], rows)
     return len(rows)
 
