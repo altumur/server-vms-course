@@ -21,9 +21,11 @@ scenario	step	request	expect
 02-step	14	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	202 {"step": "$f"}
 02-step	15	door assist/m1 GET /chat/m1/steps/$f?wait=20	200 {"state": "failed", "reason": "model failed"}
 02-step	16	door assist/m1 GET /chat/m1/steps/nobody.00000000000000000000000000000000	410 {"error": "gone"}
-02-step	17	PUT /models/m1 {"enabled": false}	200 {"enabled": false}
-02-step	18	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "stopped", "reason": "disabled"}]}
-02-step	19	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "model unavailable", "detail": "disabled"}
+02-step	17	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "включи камеру 7"}, {"role": "assistant", "content": null, "reasoning_content": "нужно найти камеру", "tool_calls": [{"id": "c1", "type": "function", "function": {"name": "find_units", "arguments": "{\"sub\": \"cam\"}"}}]}, {"role": "tool", "tool_call_id": "c1", "content": "{\"count\": 1}"}], "turn": "0123456789abcdef0123456789abcdef"}	202 {"step": "$t"}
+02-step	18	door assist/m1 GET /chat/m1/steps/$t?wait=20	200 {"state": "done", "message": {"role": "assistant", "content": "дальше"}}
+02-step	19	PUT /models/m1 {"enabled": false}	200 {"enabled": false}
+02-step	20	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "stopped", "reason": "disabled"}]}
+02-step	21	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "model unavailable", "detail": "disabled"}
 03-limits	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
 03-limits	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
 03-limits	3	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}

@@ -38,10 +38,7 @@ paths:
               required: true
               description: "/chat/<name>/steps/<step>"
               schema: {type: string}
-            Connection:
-              required: true
-              description: соединение закрывается после ответа (Н1.6)
-              schema: {const: close}
+            Connection: {$ref: "#/components/headers/Close"}
           content:
             application/json:
               schema:
@@ -71,11 +68,9 @@ paths:
           schema: {type: integer, minimum: 0, maximum: 20}
       responses:
         "200":
-          description: состояние шага; при wait > 0 — с Connection close (Н1.6)
+          description: состояние шага
           headers:
-            Connection:
-              required: false
-              schema: {const: close}
+            Connection: {$ref: "#/components/headers/Close"}
           content:
             application/json:
               schema: {$ref: "#/components/schemas/StepState"}
@@ -93,6 +88,8 @@ paths:
       responses:
         "200":
           description: шаг снят или запрос к модели оборван (или уже завершён); шаг забыт
+          headers:
+            Connection: {$ref: "#/components/headers/Close"}
           content:
             application/json:
               schema:
@@ -107,6 +104,11 @@ paths:
         "405": {$ref: "#/components/responses/Refusal"}
         "410": {$ref: "#/components/responses/Refusal"}
 components:
+  headers:
+    Close:
+      required: true
+      description: каждый ответ маршрута chat закрывает соединение (V/10.2 Н1.6)
+      schema: {const: close}
   parameters:
     ModelName:
       name: name
@@ -141,21 +143,23 @@ components:
             name: {type: string}
             arguments: {type: string}
     RequestMessage:
+      description: сообщение истории шага (V/10.2 Н1.2); сообщение модели из ответа возвращается как есть
       type: object
-      required: [role]
-      additionalProperties: false
-      properties:
-        role: {enum: [system, user, assistant, tool]}
-        content: {type: string}
-        tool_calls:
-          type: array
-          items: {$ref: "#/components/schemas/ToolCall"}
-        tool_call_id: {type: string}
+      unevaluatedProperties: false
+      oneOf:
+        - type: object
+          required: [role]
+          additionalProperties: false
+          properties:
+            role: {enum: [system, user, tool]}
+            content: {type: string}
+            tool_call_id: {type: string}
+        - $ref: "#/components/schemas/ModelMessage"
     ModelMessage:
       type: object
-      description: сообщение модели как есть (V/10.2 Н1.3)
-      required: [role]
-      additionalProperties: true
+      description: сообщение модели (V/10.2 Н1.3); иных полей держатель не отдаёт
+      required: [role, content]
+      additionalProperties: false
       properties:
         role: {const: assistant}
         content: {type: [string, "null"]}
@@ -223,7 +227,7 @@ components:
             usage:
               type: object
               required: [prompt_tokens, completion_tokens]
-              additionalProperties: true
+              additionalProperties: false
               properties:
                 prompt_tokens: {type: integer, minimum: 0}
                 completion_tokens: {type: integer, minimum: 0}
@@ -252,6 +256,10 @@ components:
     Refusal:
       description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After странице не виден через CORS)
       headers:
+        Connection:
+          required: false
+          description: у отказов маршрута chat — всегда; 413 и busy двери процесса (door_limits) — по платформе (V/10.2 Н1.6)
+          schema: {const: close}
         Retry-After:
           required: false
           schema: {type: integer}
