@@ -313,6 +313,8 @@ door:          POST /session/break-glass {who, why, password} у консоли 
                2. тело не {who, why, password} строками, who или why пусты — 400 bad body
                3. предел («Предел попыток» ниже)                       → 429
                4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
+                  domain/member есть, но не читается (семья member, `Platform/09-agent/data/member.outcomes.tsv`) —
+                  503 {error: "unavailable"}, как «не открывается»; не в счёт предела (C06-BREAKGLASS-MEMBER-UNREADABLE-01, решение «Архитектора» 2026-10-28);
                   нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
                   не открывается — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)
