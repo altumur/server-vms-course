@@ -203,7 +203,7 @@ paths:
                   - $ref: '#/components/schemas/TokenRefusal'
                   - $ref: '#/components/schemas/Deposed'
         '413': {$ref: '#/components/responses/TokenRefused'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /api/login:
     description: 'Глава 8.4 (08.4-domain.norms.md) Н1.2, Н1.10, Н2; передаёт консоль домена (глава 8.0 Н1.8 pass, открытая строка
       списка дверей домена).'
@@ -241,7 +241,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
         '429': {$ref: '#/components/responses/TooMany'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /domain/members:
     description: 'Глава 8.3 Н2, Н3 «принять члена»; 409 потолков — глава 8.10 Н1.5. GET и HEAD отвечает консоль домена сама
       (урок P/10; схема — MembersView).'
@@ -835,7 +835,7 @@ paths:
               schema: {$ref: '#/components/schemas/Refusal'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/prepare:
     description: 'Глава 8.8 (08.8-domain.norms.md) Н1.7 шаг 4, Н2; процессу цели передаёт консоль кластера (пересылка подписанту).'
     post:
@@ -1173,8 +1173,10 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/FrozenBody'}
     StandbyOrUnavailable:
-      description: 'standby процесса domain (P/08.10 Н1.7) или unavailable сторожевой — строка проверки доступа есть, но не
-        читается (P/08.4 Н1.5; правило «Нечитаемая строка» договора сторожевой и передачи, форма Unavailable)'
+      description: 'standby процесса domain (P/08.10 Н1.7) или unavailable — строка, без которой дверь не отвечает, есть, но не
+        читается: у дверей со сторожевой — строка проверки доступа (P/08.4 Н1.5; правило «Нечитаемая строка» договора
+        сторожевой и передачи); /api/login — строка человека (P/08.4 Н1.2 check); /api/tokens — топология (P/08.7 Н3
+        «выдать» шаг 4а); форма Unavailable договора'
       content:
         application/json:
           schema:
@@ -1183,8 +1185,9 @@ components:
               - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
     StandbyFrozenOrUnavailable:
       description: 'standby процесса domain (P/08.10 Н1.7), frozen — идёт плановая передача (P/08.8 Н1.7 order шаг 1) или
-        unavailable сторожевой — строка проверки доступа есть, но не читается (P/08.4 Н1.5; правило «Нечитаемая строка»
-        договора сторожевой и передачи, форма Unavailable)'
+        unavailable — проверить нечем: строка проверки доступа (у POST /domain/revoke — набор ключей или domain/revoked,
+        no_revocations, P/08.4 Н1.2 revoke) есть, но не читается (P/08.4 Н1.5; правило «Нечитаемая строка» договора
+        сторожевой и передачи, форма Unavailable)'
       content:
         application/json:
           schema:
