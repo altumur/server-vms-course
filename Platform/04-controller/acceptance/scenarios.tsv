@@ -76,7 +76,7 @@ scenario	step	request	expect
 14-grow-on-order	17	@until 30 console2 GET /where/t8	200 {"worker": "t-srv-a-1"}
 14-grow-on-order	18	console2 POST /tallies {"name": "t9", "of": "c1"}	201
 14-grow-on-order	19	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "why": "@any"}}
-14-grow-on-order	20	@until 20 GET /testsub2/metrics	200 ~testsub2_workers_wanted{server="srv-a"} 2
+14-grow-on-order	20	@until 20 console GET /testsub2/metrics	200 ~testsub2_workers_wanted{server="srv-a"} 2
 14-grow-on-order	21	@grow srv-a	ok
 14-grow-on-order	22	@until 30 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
 14-grow-on-order	23	@until 60 console2 GET /where/t9	200 {"worker": "t-srv-a-2"}
