@@ -219,7 +219,7 @@ class TestRelations(unittest.TestCase):
 
 
 class TestYaml(unittest.TestCase):
-    """Слой 1 (п. 2) на обоих языках: дефекты парсеров D9–D17 — красный без своей проверки (парсер один), зелёный со
+    """Слой 1 (п. 2) на обоих языках: дефекты парсеров D9–D17, D20, D21 — красный без своей проверки (парсер один), зелёный со
     слоем; на Go — если собран раннер."""
 
     def both(self, data):
@@ -264,10 +264,37 @@ class TestYaml(unittest.TestCase):
         d = b"lease: {unconfirmed_max:}\n"
         self.assertEqual(set(self.both(d)), {"refused:flow"})
 
+    def test_d20_ruamel_continuation_column0(self):
+        """D20 (линия Python PY-RY-01): ruamel.yaml принимает строки продолжения потока и кавычек на колонке 0 и с TAB в
+        начале (yaml-test-suite 9C9N, QB6E, DK95/01, Y79Y/003 — suite error); слой 1 отказывает своими правилами
+        (rare-95, tab) — как пакет yaml-suite."""
+        self.suite_layer1((("9C9N", "rare-95"), ("QB6E", "rare-95"), ("DK95/01", "tab"), ("Y79Y/003", "tab")))
+
     def test_d11_comment_after_quote(self):
         d = b'key: "value"# c\n'
         self.assertTrue(self.ruamel_parses(d))                        # дефект парсера
         self.assertEqual(set(self.both(d)), {"refused:lexis"})
+        self.suite_layer1((("SU5Z", "comment-tight"), ("9JBA", "comment-tight"), ("CVW2", "root")))   # PY-RY-02
+
+    def suite_layer1(self, cases, parses=True):
+        """Входы yaml-test-suite пакета yaml-suite: ruamel принимает (parses) или падает не YAMLError-ом; слой 1 отказывает
+        правилом rule."""
+        from v7 import textv7, thin_rules
+        inputs = ROOT / "Platform/common/vectors/yaml-suite/inputs"
+        for tid, rule in cases:
+            data = (inputs / (tid + ".yaml")).read_bytes()
+            self.assertEqual(self.ruamel_parses(data), parses, tid)
+            with self.assertRaises(textv7.TextRefused, msg=tid) as cm:
+                textv7.load_text_map(data)
+            self.assertEqual(thin_rules.rule_of(cm.exception), rule, tid)
+
+    def test_d21_ruamel_directives(self):
+        """D21 (PY-RY-03): директива после содержимого принята; `%YAML 1.3`, `...` в конце — падение разбора; слой 1 —
+        directive и doc-end по байтам."""
+        self.suite_layer1((("9HCY", "directive"), ("EB22", "directive"), ("RHX7", "directive"),
+                           ("MUS6/01", "directive")))
+        self.suite_layer1((("BEC7", "directive"), ("HWV9", "doc-end"), ("M7A3", "doc-end"), ("QT73", "doc-end")),
+                          parses=False)
 
     @unittest.skipUnless(HAVE_GO, "раннер Go не собран")
     def test_d12_escape_quote(self):

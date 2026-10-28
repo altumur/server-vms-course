@@ -618,14 +618,14 @@ class TestTree(unittest.TestCase):
         got, stats = errors()
         self.assertEqual(len(got), 1, got)
         self.assertIn("D3 has no vector row", got[0])
-        self.assertEqual(stats["library_defects"], 18)
+        self.assertEqual(stats["library_defects"], 20)
         text = target.read_text(encoding="utf-8")
         target.write_text(text.replace("`yaml-suite:SU5Z`", "`yaml-suite:NOPE`").replace(
-            "\n| D18 ", "\n| D99 "), encoding="utf-8")
+            "\n| D21 ", "\n| D99 "), encoding="utf-8")
         got, _ = errors()
         self.assertTrue(any("no vector row yaml-suite:NOPE" in e for e in got), got)
         self.assertTrue(any("D99 is not a library defect" in e for e in got), got)
-        self.assertTrue(any("D18 (" in e and "is not in the list" in e for e in got), got)
+        self.assertTrue(any("D21 (" in e and "is not in the list" in e for e in got), got)
         target.unlink()
         layers = root / "Platform/common/LAYERS.md"
         layers.write_text(layers.read_text(encoding="utf-8") + "\n[перечень](versions/DEFECTS.md)\n", encoding="utf-8")
