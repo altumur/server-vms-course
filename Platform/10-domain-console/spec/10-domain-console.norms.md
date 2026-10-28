@@ -359,6 +359,12 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 нём — вход не по форме, код 2 (H14). Одно другому не противоречит (добавлено сверкой М11, cammeta-python М11-11 № 20).
 Метка `domain/members/<член>/reported`, чтение которой хранилище не подтвердило, — 503 `unavailable` всей двери; метка
 прочитана, но не по форме, — член входит в функцию с `reported: "garbled"` (C10-REPORTED-OUTCOME-1D6, решение «Архитектора» 2026-10-25).
+Вход собирается из хранилища держателя (C10-ALARMS-INPUT-01): `last_report` — `received_at` метки, `received_at` и
+`sent_at` — поля последнего запроса метки ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.3; часы домена), не
+возраст наблюдения консоли; члены — строка `domain/members`: её нет — 404 `no domain here` (как `GET /domain/members`,
+Н1.2б), она не читается или чтение не подтверждено — 503 `unavailable` всей двери, не пустой список; метка прочитана, а
+поколения `reports/<rev>` метки нет или оно не с её `sha256` — `page: "garbled"` (член `unreadable`, свидетели этого
+отчёта не берутся), не `page: null`: «страницы нет» — только у читаемого поколения без страницы.
 
 ```
 вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <P/09.1 Н1.10> |
