@@ -2395,7 +2395,9 @@ components:
       required:
       - error
       additionalProperties: false
-      description: Отказ двери роли TLS до сторожевой (Н1.4 server.role; слова договора peer).
+      description: 'Отказ двери роли TLS до сторожевой (Н1.4 server.role; слова договора peer); только у TLS-двери (комплект
+        есть), 401 no_role — клиент листа не предъявил; без комплекта (no_kit) дверь на петле по HTTP без проверки роли —
+        этих отказов нет, X-Operator: console снимается (C10-ROLE-NOKIT-01)'
       properties:
         error:
           enum:
