@@ -687,7 +687,8 @@ paths:
       description: Отвечает консоль домена сама (P/10-14); PUT — передача процессу.
       responses:
         '200':
-          description: '{doc, delivery, declared}'
+          description: '{doc, delivery, declared}; вид без поля shared — delivery = before P/08.9 Н1.6 по виду (term 0, rev 0;
+            C10-SHARED-EMPTY-DELIVERY-01)'
           content:
             application/json:
               schema:

@@ -142,7 +142,9 @@ door:          GET /domain/shared у консоли домена (view) → 200 
                есть, но не читается (не по форме, не с sha256 указателя) — 503 {error: "unavailable"}, не doc: null (исходы
                семей shared, shared-docs)
   doc:         документ как подписан (объект) | null
-  delivery:    view.shared
+  delivery:    view.shared; читаемый вид без поля shared — 200, delivery = before (P/08.9 Н1.6) по виду: term 0, rev 0,
+               holding [], behind {}, refused {}, silent — члены вида не ok, sentence «rev 0 on 0 of T members» (T — члены
+               вида) с хвостами before; null в term и rev не пишется (C10-SHARED-EMPTY-DELIVERY-01)
   declared:    {<sub>: [{name, type, schema?}]} — элементы domain.shared манифестов каталога, по name; schema — у документа
                (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a, добавлено М11/11; поздний слой P/07 Н1.6)
 ```
