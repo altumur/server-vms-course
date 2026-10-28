@@ -479,8 +479,9 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
     """Глава со стандартными файлами формы манифеста: файлы годны, раздел «Форма» между маркерами — построенный,
     корпус — вердикт и класс (слой) строго, пути `diagnostics.tsv` — сведение (ADR-0092 п. 5), манифесты курса
     принимаются, строки связей держат случаи (строка — единственная причина отказа хоть одного случая; строго — со
-    strict). implied — номера строк (текстом), чью пометку `x-implied-by` разрешает реестр исключений (вид `implied`);
-    None — без реестра (тесты). → (ошибки [(путь, сообщение)], счёты; `implied_marked` — номера помеченных строк)."""
+    strict). implied — значения реестра исключений вида `implied` — «номер:путь» строки связей, чью пометку
+    `x-implied-by` разрешило решение (перенумерация или иное выражение под тем же номером — красное, повторное ревью
+    Claude М-1); None — без реестра (тесты). → (ошибки, счёты; `implied_marked` — «номер:путь» помеченных строк)."""
     from v7 import schema as gen
     from v7 import section, stack, textv7
     errors, stats = [], {"form_cases": 0, "form_manifests": 0, "form_rows": 0, "form_rows_held": 0,
@@ -575,14 +576,15 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
         by = r.get("x-implied-by")
         if by is None:
             continue
-        marked.add(str(r["no"]))
+        tag = "%d:%s" % (r["no"], r["path"])
+        marked.add(tag)
         where = files[".relations.json"]
         if not (isinstance(by, list) and by and all(i in nos and i != r["no"] for i in by)):
             errors.append((where, "row %d: x-implied-by names other rows of the file" % r["no"]))
             continue
-        if implied is not None and str(r["no"]) not in implied:
-            errors.append((where, "row %d: x-implied-by without the exception implied of the registry (a decision of "
-                                  "the «Архитектор»)" % r["no"]))
+        if implied is not None and tag not in implied:
+            errors.append((where, "row %s: x-implied-by without the exception implied %s of the registry (a decision "
+                                  "of the «Архитектор»)" % (tag, tag)))
         group = {r["no"], *by}
         # групповая мутация (решение «Архитектора» 2026-10-28): снятие строки вместе с теми, из которых она следует,
         # меняет вердикт случая, а строка одна при снятых тех этот вердикт держит — случай, где сработали только строки

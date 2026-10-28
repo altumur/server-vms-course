@@ -414,3 +414,15 @@ family-read/domain/alarms|object|writer|events/0/t: number 1e400	ok [] []	refuse
 family-read/domain/alarms|object|reader|events/0/t: number 1e400	ok [] []	refused ['/events/0/t'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
 family-read/domain/alarm-history/<член>|object|writer|events/0/t_src: number 1e400	ok [] []	refused ['/events/0/t_src'] []	дефект эталона: писатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
 family-read/domain/alarm-history/<член>|object|reader|events/0/t_src: number 1e400	ok [] []	refused ['/events/0/t_src'] ['']	дефект эталона: читатель принимает 1e400 (число вне binary64; codec.tsv json — без бесконечностей)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/2EBW	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай c5_key_question_mark	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/5NYZ	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай c5_value_next_line_plain	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/96NN/00	ok	refused	сужение YAML 1.2.2 слоем 1 В7 (yts-refusals.tsv)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/96NN/01	ok	refused	сужение YAML 1.2.2 слоем 1 В7 (yts-refusals.tsv)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/A984	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай c5_value_next_line_plain	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/BEC7	crash:AssertionError	refused	сужение YAML 1.2.2 слоем 1 В7 (yts-refusals.tsv)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/FBC9	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай c5_value_question_mark	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/P94K	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай c5_value_next_line_plain	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/UDR7	refused	ok	ADR-0092 п. 3 (принять YAML 1.2.2): как случай t33_flow_trailing_comma_ok	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+yaml-suite/Y79Y/001	ok	refused	сужение YAML 1.2.2 слоем 1 В7 (yts-refusals.tsv)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+value/t31_last_line_spaces_ok	"counter\n "	"counter\n \n"	значение по YAML 1.2.2 (setb_cases.VALUES; путь display/unit)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude
+value/t33_flow_trailing_comma_ok	refused:text	["alpha", "beta"]	значение по YAML 1.2.2 (setb_cases.VALUES; путь heartbeat/strings)	стек В7	утверждает «Архитектор» (ADR-0092 доп. (1)); ревью Kimi, Claude

@@ -209,6 +209,14 @@ class TestTree(unittest.TestCase):
         row["x-implied-by"] = [4]                          # строка не из группы: случая группы нет
         p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         self.assertTrue(any("row 18: x-implied-by [4]" in m for _, m in strict()))
+        self.assertTrue(any("fire this row without any row it is implied by" in m for _, m in strict()))   # М-4
+        row["x-implied-by"] = [16, 17]
+        p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        spec_dir = root / "Platform/02-installer/spec"
+        other = spec.manifest_check(root, spec_dir / "02.1-installer.norms.md", None, spec_dir / "02.1-installer",
+                                    root / "Platform/02-installer/acceptance/1", verdicts_of(root), {}, [], False,
+                                    {"18:tables.$t.fields.other"})[0]                  # М-1: номер тот, путь иной
+        self.assertTrue(any("without the exception implied 18:tables.$t.fields.name" in m for _, m in other))
 
     def test_manifest_class_is_layer(self):
         root = self.copy()
@@ -317,12 +325,14 @@ class TestTree(unittest.TestCase):
         self.assertTrue(any("no table 03.tsv" in str(e) for e in check.errors))
         self.assertTrue(any("no table 08.tsv" in str(e) for e in check.errors))   # без реестра отложенная — красная
 
-    @unittest.skipUnless((ROOT / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file(),
-                         "нужны разделы диалекта курса (до пакета п. 2)")
     def test_sections_keep_dialect_meaning(self):
-        """Ревью Claude Б-1, Б-2: у каждой строки таблиц разделов диалекта непустые «Урок», «Смысл» и умолчание есть и
-        в В7 — пометки места, а нет у места — у цели ссылки; теряется только «класс отказа …» (класс — слой, п. 6)."""
+        """Ревью Claude Б-1, Б-2 (и повторное): у каждой строки таблиц разделов диалекта — разделы по метке
+        `dialect-reference-dc94d0fd1` (`git show`), тест живёт и после пакета п. 2 — «Обязательность», «Урок» и
+        «Смысл» в В7 те же по содержимому. Разрешено ровно два: снят хвост «класс отказа …» (класс — слой, п. 6) и
+        умолчание записано JSON, а не repr."""
         import re
+        import subprocess
+        tag = "dialect-reference-dc94d0fd1"
         marks = [(section.FORM_BEGIN, section.FORM_END), (section.FAMILIES_BEGIN, section.FAMILIES_END),
                  (view.BEGIN, view.END)]
 
@@ -338,25 +348,54 @@ class TestTree(unittest.TestCase):
                     if ln.startswith("| `") and len(cells) == 5:
                         out[(b, head if b == section.FAMILIES_BEGIN else "", cells[0])] = cells
             return out
-        lost, n = [], 0
-        for p in sorted((ROOT / "Platform").glob("*/spec/*.norms.md")):
-            a = rows(p.read_text(encoding="utf-8"))
+
+        def git(*args):
+            return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, check=True,
+                                  text=True).stdout
+        files = [f for f in git("ls-tree", "-r", "--name-only", tag, "Platform").split() if f.endswith(".norms.md")]
+        diff, n = [], 0
+        for f in files:
+            a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
                 continue
-            b = rows((TREE / p.relative_to(ROOT)).read_text(encoding="utf-8"))
+            b = rows((TREE / f).read_text(encoding="utf-8"))
             for k, v in a.items():
                 w = b.get(k)
                 if w is None:
                     continue
                 n += 1
-                if "умолчание" in v[2] and "умолчание" not in w[2]:
-                    lost.append(("need", p.name, k[2]))
-                if v[3] and not w[3]:
-                    lost.append(("owner", p.name, k[2]))
-                if v[4] and not w[4] and not v[4].startswith("класс отказа"):
-                    lost.append(("desc", p.name, k[2]))
+                old_desc = re.sub(r"(?:; )?класс отказа `\w+`$", "", v[4])
+                if (v[2].replace("'", '"'), v[3], old_desc) != (w[2], w[3], w[4]):
+                    diff.append((f, k[2], v[2:], w[2:]))
         self.assertGreater(n, 1500)
-        self.assertEqual(lost, [])
+        self.assertEqual(diff, [])
+
+    def test_registry_v7_and_whole_package(self):
+        """Реестр режима В7 (М-4): отложенная таблица — EXCEPTION, таблица есть при исключении — устарело, пометка
+        implied есть — EXCEPTION, исключение implied без пометки — устарело; нет пакета family-read целиком — красное
+        по каждой таблице (С-1)."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        reg = root / "exceptions.tsv"
+        reg.write_text("\n".join(["P/08\tfamily-read\t08.tsv\tотложено", "P/03\tfamily-read\t03.tsv\tлишнее",
+                                   "P/02\timplied\t18:tables.$t.fields.name\tрешение",
+                                   "P/02\timplied\t99:nowhere\tлишнее"]) + "\n", encoding="utf-8")
+        check = check_spec.Check(root, reg, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+        errors = "\n".join(map(str, check.errors))
+        self.assertIn("stale exception family-read P/03 03.tsv", errors)
+        self.assertIn("stale exception implied P/02 99:nowhere", errors)
+        self.assertNotIn("no table 08.tsv", errors)
+        self.assertTrue(any("P/08 family-read 08.tsv" in x for x in check.excepted))
+        self.assertTrue(any("P/02 implied 18:tables.$t.fields.name" in x for x in check.excepted))
+        shutil.rmtree(root / spec.FAMILY_READ)
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+        missing = [e for e in map(str, check.errors) if "family-read: no table" in e]
+        self.assertGreaterEqual(len(missing), 6)
 
     def test_sections_idempotent(self):
         from v7 import sections
@@ -365,6 +404,104 @@ class TestTree(unittest.TestCase):
             before = norms.read_bytes()
             sections.rewrite(norms, root)
             self.assertEqual(norms.read_bytes(), before, norms.name)
+
+
+@NEED_TREE
+class TestChapter(unittest.TestCase):
+    """Механика главы 2.2 на `v7.vectors.Chapter` (повторное ревью Claude Н-2): по одной порче на сообщение главы."""
+
+    def copy(self):
+        d = Path(tempfile.mkdtemp(prefix="v7-tree-ch-"))
+        self.addCleanup(shutil.rmtree, d, True)
+        shutil.copytree(TREE, d, dirs_exist_ok=True)
+        return d
+
+    def run_chapter(self, root, strict=False):
+        from v7 import vectors
+        return vectors.Chapter(root, strict=strict).run()
+
+    def messages(self, ch):
+        return "\n".join("%s: %s" % (p, m) for p, m in ch.errors)
+
+    def cases_rows(self, root):
+        from v7 import vectors
+        p = root / vectors.VECTORS / "cases.tsv"
+        return p, p.read_text(encoding="utf-8").split("\n")
+
+    def test_surviving_mutant_is_red_with_strict(self):
+        """Векторы держат правило проекции; без них мутант выживает — красное только со --strict-coverage."""
+        from v7 import project, stack, vectors
+        ld = vectors.loader(TREE)
+        _, rows = vectors.read_cases(TREE / vectors.VECTORS / "cases.tsv")
+        one = [r for r in rows if r[1] == "corpus-base"] or rows[:1]
+        data = (TREE / one[0][2]).read_bytes()
+        tree = ld.judge(data)["tree"]
+        built = [stack.jcs(project.canonical(ld.sch, tree)).encode("utf-8")]
+        alive = vectors.probe(ld, [tree], built)
+        self.assertTrue(alive, "одного вектора мало: хоть один мутант выживает")
+        self.assertEqual(vectors.probe(ld, [], []), [m for m, _ in vectors.mutants(ld.sch.doc)])   # без векторов — все
+        root = self.copy()
+        p, lines = self.cases_rows(root)
+        keep = [ln for ln in lines if ln.startswith("#") or ln.startswith("case\t") or ln.startswith(one[0][1] + "\t")]
+        p.write_text("\n".join(keep) + "\n", encoding="utf-8")
+        for f in (root / vectors.VECTORS / "expect").iterdir():
+            if f.name != one[0][1] + ".json":
+                f.unlink()
+        loose = self.messages(self.run_chapter(root, strict=False))
+        strict = self.messages(self.run_chapter(root, strict=True))
+        self.assertNotIn("changes no vector", loose)
+        self.assertIn("changes no vector — add an example row", strict)
+        self.assertIn("no vector for the accepted input", loose)
+
+    def test_cases_and_expect_errors(self):
+        from v7 import vectors
+        root = self.copy()
+        p, lines = self.cases_rows(root)
+        rows = [i for i, ln in enumerate(lines) if ln and not ln.startswith("#") and not ln.startswith("case\t")]
+        first = lines[rows[0]].split("\t")
+        lines.append(lines[rows[0]])                                                   # повтор case
+        bad = list(first)
+        bad[0], bad[2] = "refused-author", "expect/refused-author.json"
+        bad[1] = "Platform/02-installer/acceptance/1/cases/t34_flow_leading_comma.subsystem.yaml"   # отказанный вход
+        lines.append("\t".join(bad))
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        (root / vectors.VECTORS / "expect" / (first[0] + ".json")).unlink()             # нет ожидания… и повтор
+        (root / vectors.VECTORS / "expect" / "stale.json").write_text("{}", encoding="utf-8")   # лишнее ожидание
+        (root / vectors.VECTORS / "junk.txt").write_text("x", encoding="utf-8")
+        m = self.messages(self.run_chapter(root))
+        for want in ("is not unique", "refuses the input", "canonical: missing", "no row of cases.tsv names it",
+                     "unsupported entry of the vectors"):
+            self.assertIn(want, m)
+
+    def test_puts_errors(self):
+        from v7 import vectors
+        root = self.copy()
+        p = root / vectors.ACCEPTANCE / "puts.tsv"
+        lines = p.read_text(encoding="utf-8").split("\n")
+        i = next(i for i, ln in enumerate(lines) if ln and not ln.startswith("#") and not ln.startswith("case\t")
+                 and ln.split("\t")[3] != "-")
+        cols = lines[i].split("\t")
+        lines[i] = "\t".join(cols[:3] + ["no-such-vector"])
+        lines.append("\t".join(["zz_bad", "nothere", "0 1", "-"]))
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        m = self.messages(self.run_chapter(root))
+        self.assertIn("is not a case of", m)
+        self.assertIn("no file puts/nothere.subsystem.yaml", m)
+        self.assertIn("after a successful install the view exists", m)
+        p.write_text("case\tputs\n", encoding="utf-8")
+        self.assertIn("the first row is the header", self.messages(self.run_chapter(root)))
+
+    def test_absent(self):
+        from v7 import vectors
+        root = self.copy()
+        for rel in (vectors.NORMS, vectors.ACCEPTANCE, vectors.VECTORS):
+            target = root / rel
+            if target.is_dir():
+                shutil.rmtree(target)
+            elif target.exists():
+                target.unlink()
+        ch = self.run_chapter(root)
+        self.assertEqual((ch.stats.get("canonical"), ch.errors), ("absent", []))
 
 
 @NEED_TREE
