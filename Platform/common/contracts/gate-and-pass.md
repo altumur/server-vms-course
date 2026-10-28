@@ -97,7 +97,8 @@ gate:
                                        грант уже (unit:…, labels:…) — 403 по refusal, без выдачи (C06-DRAIN-VISIBILITY-33-01)
     POST /domain/move                → admin на * (аварийный перенос домена сюда, P/08.8 Н1.8)
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
-                   PUT/DELETE        → admin на единицу | по rights.routes
+                   PUT/DELETE        → admin на единицу | cluster_rows → *; rights.routes их не понижает — у строк
+                                       единиц понижается только создание (таблица «Права по телу» ниже; находка М-2)
     таблицы                          → по rights.routes (view | edit | admin)
     door.pass (раздел «Передача»)     → возможность — по rights.routes, если первый сегмент там назван, иначе GET/HEAD — view,
                                        прочие методы — admin; цель — единица из ?unit= (<sub>/<id>; голый id — 400, как у GET),
