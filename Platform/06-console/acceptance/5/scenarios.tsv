@@ -29,7 +29,7 @@ scenario	step	request	expect
 04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
 04-servers-where	5	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
 04-servers-where	6	GET /resources	200 {}
-04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "@any"}
+04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "badkey"}
 05-metrics	1	GET /metrics	200 ~testsub_workers_live 0
 05-metrics	2	GET /metrics	200 ~testsub_units_unplaced
 05-metrics	3	GET /metrics	200 ~testsub_counters_running
@@ -96,7 +96,7 @@ scenario	step	request	expect
 14-resource-silent	3	@sigkill resource	ok
 14-resource-silent	4	@until 90 console GET /servers	200 {"servers": {"srv-a": {"resource": "silent"}}}
 14-resource-silent	5	console GET /metrics	200 ~w2c_resources_live 0
-15-service-doors	1	console2 GET /entries	503
+15-service-doors	1	console2 GET /entries	503 {"error": "denied"}
 16-resource-unreadable-heartbeat	1	@start resource	ok
 16-resource-unreadable-heartbeat	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 16-resource-unreadable-heartbeat	3	@sigterm resource	ok
