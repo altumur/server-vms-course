@@ -142,7 +142,7 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 682)
+        self.assertEqual(stats["form_cases"], 684)
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):

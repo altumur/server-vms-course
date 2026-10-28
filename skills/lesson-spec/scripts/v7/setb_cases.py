@@ -120,6 +120,12 @@ MANIFEST += [
     ("t33b_flow_map_trailing_comma_ok", BASE + "display: {unit: counter, }\n", "ok",
      "то же у потокового отображения (`{k: v, }` = `{k: v}`); пустой элемент в середине `[a,,b]` — отказ парсера "
      "YAML 1.2.2 (c4_flow_empty_item)", "самопроверка SUT п. 3.4", ""),
+    ("t34_flow_leading_comma", BASE + "heartbeat:\n  strings: [, alpha]\n", "refused:text",
+     "пустой элемент потока в начале (`[, a]`) — ошибка разбора YAML 1.2.2 (CTN5, 9MAG): отказ парсера обоих стеков; "
+     "висячая запятая (t33) — не он", "ревью Claude Д (UDR7)", ""),
+    ("t34b_flow_map_double_comma", BASE + "display: {unit: counter,, }\n", "refused:text",
+     "две запятые в потоковом отображении (`{k: v,, }`) — ошибка разбора YAML 1.2.2: отказ парсера обоих стеков",
+     "ревью Claude Д (UDR7)", ""),
 ]
 # Значение дерева загрузчика (Python и Go) на пути — там, где случай проверяет и значение.
 VALUES = {"t27_escape_tab_ok": (["display", "unit"], "a\tb"),
