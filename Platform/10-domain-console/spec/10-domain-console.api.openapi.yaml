@@ -2,7 +2,7 @@
 # контрактов М11/1, М11/3, М11/4, М11/6, М11/8, М11/9, М11/11 (пути консоли домена; М11/4, М11/6 — из истории, сняты
 # коммитом 9) — стадия B, без изменения поведения. Коды — только перехода 2 договора пересылки
 # Platform/common/contracts/forwarding.md «Отказы по переходам» (разбор ревью стадии A 8–10, решение 3): дверь роли TLS
-# (401/403 no_role, wrong_role, bad_chain; отказ рукопожатия — без ответа HTTP), сторожевая (401/403 denied, 503 shut),
+# (401/403 no_role, wrong_role, bad_chain; отказ рукопожатия — без ответа HTTP), сторожевая (401/403 denied, 503 shut и unavailable),
 # 404 not a domain route, 400/408/413 тела, 502 передачи, door.pass и отказы своих чтений; коды переходов 1–2 (пересылающая консоль
 # кластера) здесь не перечисляются, ответа Forwarded нет. Двери, которые консоль передаёт процессу domain, — без голого
 # default: ответы процесса — $ref на операцию и компоненты OpenAPI урока P/08 (решение «Архитектора» по планам 8–10, п. 9),
@@ -181,7 +181,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editCreate,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editCreate,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -191,6 +192,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/shadow:
     get:
@@ -326,7 +328,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersAdmit,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersAdmit,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -334,6 +337,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   /domain/topology:
     get:
@@ -428,7 +432,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId topologyPut,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId topologyPut,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -436,6 +441,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   /domain/placement:
     get:
@@ -570,7 +576,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementPut,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementPut,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -580,6 +587,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
     delete:
       operationId: passPlacementDelete
@@ -643,7 +651,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementDelete,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId placementDelete,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -651,6 +660,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   /domain/grants:
     get:
@@ -782,7 +792,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId sharedPut,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId sharedPut,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -792,6 +803,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/alarms:
     get:
@@ -1038,7 +1050,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersRemove,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId membersRemove,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -1046,6 +1059,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   '/domain/members/{member}/ca':
     parameters:
@@ -1119,7 +1133,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId memberCaSet,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId memberCaSet,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -1127,6 +1142,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   '/domain/{sub}/{rows}/{ref}':
     parameters:
@@ -1211,7 +1227,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editUpdate,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editUpdate,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -1221,6 +1238,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
     delete:
       operationId: passEditDelete
@@ -1294,7 +1312,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editDelete,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId editDelete,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -1304,6 +1323,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/users:
     get:
@@ -1350,7 +1370,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersList,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersList,
             ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
             добавлено М11/12))'
           content:
@@ -1358,6 +1379,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
     head:
       operationId: passUsersListHead
@@ -1393,7 +1415,8 @@ paths:
             answer (Н1.3 pass); HEAD не содержит тела'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersListHead,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId usersListHead,
             ответ 503 (как у GET, без тела); HEAD не содержит тела'
     post:
       operationId: passUserCreate
@@ -1462,7 +1485,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userCreate,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userCreate,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -1472,6 +1496,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   '/domain/users/{name}':
     parameters:
@@ -1555,7 +1580,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userUpdate,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userUpdate,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -1563,6 +1589,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
     delete:
       operationId: passUserDelete
@@ -1618,7 +1645,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userDelete,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId userDelete,
             ответ 503 (unavailable — три конфликта CAS строки грантов, метка остаётся (Н3 «дверь людей» шаг 9; разбор ревью
             стадии A 8–10, № 38); frozen (P/08.8 Н1.7); standby (P/08.10 Н1.7))'
           content:
@@ -1626,6 +1654,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/delete/responses/503/content/application~1json/schema'
   '/domain/grants/{cluster}':
     parameters:
@@ -1703,7 +1732,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId grantsPut,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId grantsPut,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -1713,6 +1743,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/break-glass:
     get:
@@ -1759,7 +1790,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassList,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassList,
             ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
             добавлено М11/12))'
           content:
@@ -1767,6 +1799,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
     head:
       operationId: passBreakGlassListHead
@@ -1802,7 +1835,8 @@ paths:
             answer (Н1.3 pass); HEAD не содержит тела'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassListHead,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassListHead,
             ответ 503 (как у GET, без тела); HEAD не содержит тела'
   '/domain/break-glass/{cluster}':
     parameters:
@@ -1880,7 +1914,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassSet,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId breakGlassSet,
             ответ 503 (standby процесса domain (P/08.10 Н1.7) или frozen — идёт плановая передача, правки людей и подписанта
             отказаны (P/08.8 Н1.7 order шаг 1))'
           content:
@@ -1888,6 +1923,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
   /domain/revoke:
     post:
@@ -2014,7 +2050,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId handover,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId handover,
             ответ 503 (503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
             (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way
             here already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса
@@ -2024,6 +2061,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/stranded/apply:
     post:
@@ -2095,7 +2133,8 @@ paths:
           $ref: '#/components/responses/PassBroke'
         '503':
           description: 'Переход 2 — сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой
-            и передачи shut; P/06.3 Н1.8). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId strandedApply,
+            и передачи shut; P/06.3 Н1.8) или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило
+            «Нечитаемая строка», форма Unavailable). Переход 3 — ответ процесса domain как пришёл: OpenAPI P/08, operationId strandedApply,
             ответ 503 (Процесс domain без очереди domain/signer-turn — ждущий: {error: standby, detail} (P/08.10 Н1.7 standby;
             добавлено М11/12))'
           content:
@@ -2103,6 +2142,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+                - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby/content/application~1json/schema'
   '/domain/{sub}/{pass}':
     description: 'door.pass на домене (Н1.6, P/10-03): маршрут /domain/<sub>/<сегмент>[/…], чей сегмент в door.pass манифеста
@@ -2276,11 +2316,13 @@ components:
             - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
     GuardShut:
       description: сторожевая shut — ключи были или след домена есть, а проверить нечем (договор сторожевой и передачи shut;
-        P/06.3 Н1.8)
+        P/06.3 Н1.8); или unavailable — строка проверки доступа есть, но не читается (Н1.5; правило «Нечитаемая строка»)
       content:
         application/json:
           schema:
-            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+            anyOf:
+            - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
+            - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
     NotADomainRoute:
       description: путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой и без передачи
         (договор пересылки «Двери домена»)
@@ -2326,12 +2368,15 @@ components:
             - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
     PassUnavailableOrShut:
       description: 'door.pass: воркера на домене этой подсистемы не слышно — {error: unavailable, detail: «no worker of <sub>
-        with a door is heard»} (Н1.6 absent; договор сторожевой и передачи codes); сторожевая shut; ответ воркера с кодом
+        with a door is heard»} (Н1.6 absent; договор сторожевой и передачи codes); сторожевая shut или unavailable — строка
+        проверки доступа есть, но не читается (Н1.5; правило «Нечитаемая строка», форма Unavailable); ответ воркера с кодом
         503 — как получен'
       content:
         application/json:
           schema:
-            $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+            anyOf:
+            - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+            - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
   schemas:
     Refusal:
       type: object
