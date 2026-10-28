@@ -697,8 +697,8 @@ paths:
       description: Отвечает консоль домена сама (P/10-14); PUT — передача процессу.
       responses:
         '200':
-          description: '{doc, delivery, declared}; вид без поля shared — delivery = before P/08.9 Н1.6 по виду (term 0, rev 0;
-            C10-SHARED-EMPTY-DELIVERY-01)'
+          description: '{doc, delivery, declared}; delivery — view.shared как есть (x-opaque: форму судит писатель, P/08.9 Н1.6;
+            C10-SHARED-OPAQUE-COPY-01); поля нет или {} — before P/08.9 Н1.6 по виду (term 0, rev 0; C10-SHARED-EMPTY-DELIVERY-01)'
           content:
             application/json:
               schema:
@@ -2480,6 +2480,8 @@ components:
           - type: 'null'
           - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/SharedDoc'
         delivery:
+          description: 'view.shared как есть; схема — форма, которую пишет процесс domain (P/08.9 Н1.6); консоль форму не
+            судит (Н1.2е, C10-SHARED-OPAQUE-COPY-01)'
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Delivery'
         declared:
           type: object
