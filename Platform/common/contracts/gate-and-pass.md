@@ -230,6 +230,8 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 | нет домена, не петля | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | подключить домен |
 | ключи были, проверить нечем | 503 | `{detail: "…admits nobody", error: denied}` | восстановить доверие |
 | строка `domain/keys` есть, но не читается — проверить токен нечем ([семья `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не «токен годен», не 401 | ждать читаемой строки (DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
+| строка `domain/member` есть, но не читается — подпись своего агента (`X-Agent-Signature`) и след домена проверить нечем ([семья `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не 401, не «подпись годна», не «нет домена» и не 403 | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
+| строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}`, журнал; не 403, `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
 | чужой Origin на действующем запросе по куке | 403 | `{detail, error: denied}` | — |
 | `/session POST` у открытой консоли (раздел «Сторожевая» `session` `by_state`) | 400 | `{detail, error: "this console is open"}` | — |
 | `/session GET` и `DELETE` у открытой консоли (раздел «Сторожевая», `by_state`) | 200 | GET — `{open: true, login_url}`; DELETE — `{out: true}` | — |
