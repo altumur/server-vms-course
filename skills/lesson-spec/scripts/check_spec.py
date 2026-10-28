@@ -1755,7 +1755,10 @@ class Check:
             return
         for where, message in errors:
             self.error(where, message)
-        for value in sorted(stats.pop("implied_marked", set())):
+        if "implied_marked" not in stats:            # связи не прочитаны: о реестре implied судить не по чему (Kimi М-5)
+            self.stats.update(stats)
+            return
+        for value in sorted(stats.pop("implied_marked")):
             key = next((k for (k, kind, v) in self.registry if kind == "implied" and v == value), None)
             if key is not None:
                 self.except_(base, key, "implied", value)
@@ -1819,8 +1822,11 @@ class Check:
 
     # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
     def family_read(self):
-        if self.catalog is None:
+        # Once per run from main(), whatever lessons are named (ревью Kimi М-4): the package is the catalog's, not 02's.
+        if not self.v7 or self.catalog is None:
             return
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
         try:
             from v7.spec import FAMILY_READ, family_read, is_v7_family, read_catalog
             catalog = read_catalog(self.root)                   # строки каталога как в файле (ops — текст)
@@ -1930,8 +1936,6 @@ class Check:
     def canonical_chapter(self):
         if str(SCRIPTS) not in sys.path:
             sys.path.insert(0, str(SCRIPTS))
-        if self.v7:
-            self.family_read()
         try:
             if self.v7:
                 from v7.vectors import Chapter, present
@@ -2369,6 +2373,10 @@ def main():
         check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
     names = args.lessons or [f"Platform/{row['dir']}/{row['dir']}.md" for _, row in check.lessons_table()[1]
                              if row.get("dir") and (check.root / "Platform" / row["dir"] / f"{row['dir']}.md").is_file()]
+    for line, row in check.lessons_table()[1]:            # строка без файла урока — красное, не тихий пропуск (Kimi М-1)
+        if not row.get("dir") or not (check.root / "Platform" / row["dir"] / f"{row['dir']}.md").is_file():
+            check.error(check.root / LESSONS, f"line {line}: lesson {row.get('lesson')} has no file "
+                                              f"Platform/{row.get('dir')}/{row.get('dir')}.md")
     if not names:
         check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
     for name in names:
@@ -2376,6 +2384,7 @@ def main():
     check.vms_module()
     check.vms_frozen()
     check.outcome_readers()
+    check.family_read()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
