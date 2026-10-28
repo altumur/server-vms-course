@@ -498,6 +498,7 @@ class TestTree(unittest.TestCase):
         sys.path.insert(0, str(HERE.parent))
         import check_spec
         root = self.copy()
+        (root / spec.FAMILY_READ / "08.tsv").unlink()            # отложенная таблица (у курса 08 и 09 уже есть)
         reg = root / "exceptions.tsv"
         reg.write_text("\n".join(["P/08\tfamily-read\t08.tsv\tотложено", "P/03\tfamily-read\t03.tsv\tлишнее",
                                    "P/02\timplied\t18:tables.$t.fields.name\tрешение",
