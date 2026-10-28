@@ -1208,7 +1208,7 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/NotStandby'}
     StandbyOrExhausted:
-      description: 'standby (P/08.10 Н1.7) или исчерпан номер поколения — {error: refused, reason: rev_exhausted, detail} (договор приёма отчёта, шаг 7; добавлено сверкой М11, A18)'
+      description: 'standby (P/08.10 Н1.7), исчерпан номер поколения — {error: refused, reason: rev_exhausted, detail} (договор приёма отчёта, шаг 7; добавлено сверкой М11, A18) — или unavailable: метка не читается, чтение метки или поколения неполно, запись не прошла до метки (P/08.3 Н3 «принять»; Г-29, C08-ACCEPT-PARTIAL-READ-01)'
       content:
         application/json:
           schema:
@@ -1221,6 +1221,7 @@ components:
                       error: {const: refused}
                       reason: {const: rev_exhausted}
                     required: [reason, detail]
+              - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
     TooMany:
       description: 'Предел попыток (P/08.4 Н1.10)'
       headers:
