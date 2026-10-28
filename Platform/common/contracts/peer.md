@@ -38,8 +38,12 @@
 ```yaml
 client:       клиент двери другого кластера по https:// знает член назначения и принимает сервер, когда peer = ok:
               консоль члена — имя из CLUSTERS; консоль кластера держателя и подписант — держатель; ретранслятор —
-              RELAY_MEMBER; отпечатки — Entry.ca члена назначения в domain/member-list этого кластера (форма копии —
-              Platform/09-agent/data/member-list.schema.json (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), исходы — member-list.outcomes.tsv; C04-DEP-OBS-HEARTBEAT-01)
+              RELAY_MEMBER; агент у двери DOMAIN_URL — держатель, по порядку: carry.holder последнего доверенного ответа
+              этой дороги (запись deposed); до первого ответа после старта — своя читаемая domain/holder; нет — единственная
+              Entry с how=holder в domain/member-list; нет или их две — DOMAIN_CA (first ниже, первый контакт); ничего —
+              foreign_ca; новых слов и переменных нет (fail-closed, П1; C09-PEER-DEST-MEMBER-01); отпечатки — Entry.ca
+              члена назначения в domain/member-list этого кластера (форма копии — Platform/09-agent/data/member-list.schema.json,
+              исходы — `Platform/09-agent/data/member-list.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01)
 first:        DOMAIN_CA=<отпечаток> рядом с DOMAIN_URL, RELAY_CA=<отпечаток> рядом с RELAY_URL — действует, только пока
               запись члена назначения не называет ca; ни записи, ни отпечатка — отказ foreign_ca: доверия при первом
               контакте нет; RELAY_URL на https:// без RELAY_MEMBER — агент не стартует, код выхода 2 — отказ настройки
