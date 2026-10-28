@@ -1,0 +1,74 @@
+# The assistant (`assist`, V/10): an admin types "turn on motion recording on the third-floor cameras, keep 14 days",
+# a model proposes a plan of row edits, the page checks it and the admin applies it through the console's own doors.
+#
+# A unit is one model instance — `assist/models/<name>` — on a server labelled for its memory. Its holder is a platform
+# worker (P/03: placement, epoch, lease, heartbeat, a door) with the model server as its child process on a unix socket
+# nobody else can open (V/10.1). The worker has no rights of its own: it reads no other subsystem's rows, holds nobody's
+# credentials, and what it is told comes from the page under the admin's session — the page runs the turn, the tools
+# and the check (V/10.3–V/10.5); the worker only answers one model step at a time (V/10.2).
+#
+# Why a unit and not a daemon on every server: the model is twelve gigabytes of memory, and placement by a label is
+# how the platform already says "this server, not that one". Why the model server is a child and not a part
+# (`parts`): a part is a service on every server the subsystem is installed on, a child lives only where a row is held.
+name: assist
+# The slot a worker of this subsystem makes, `m-<n>`, and the variable naming the one it is started under beside
+# `WORKER_NAME` (`runtime.slot`).
+slot: {prefix: m, name_env: ASSIST_NAME}
+# Nothing to read, write or ask of anybody: the page brings everything a step needs.
+worker: {exec: /usr/lib/assist/worker, stop_timeout: 30}
+# Not a moment past its lease's end: a holder that lost its row keeps twelve gigabytes and a model nobody may reach —
+# fenced, the model server is stopped before the slot is given back (V/10.1 Н1.3). (The platform's default; said so it
+# is read.)
+lease: {unconfirmed_max: off}
+unit:
+  rows: models                       # assist/models/<name>
+  id: name                           # the operator's name for it: "floor-3", "main"
+  fields:
+    name:      {type: string, required: true}
+    # Off: the holder stops the model server and keeps the row (`stopped`, `disabled`); steps are refused.
+    enabled:   {type: bool,   default: true}
+    # Which model and which weights: one pair now, the one the pilot measured (ADR-0093 п. 2: gpt-oss-20b, Q8_0). The
+    # weights are in the package (V/09); a change restarts the model server.
+    model:     {type: string, default: gpt-oss-20b, enum: [gpt-oss-20b]}
+    quant:     {type: string, default: q8_0, enum: [q8_0]}
+    # The model's window in tokens, one step's messages and its answer together; a change restarts the model server.
+    context:   {type: int,    default: 16384, schema: {minimum: 4096, maximum: 65536}}
+    # Where it may stand: the label of ONE server with the memory for it (V/10.1 Н1.2). Empty would mean "anywhere",
+    # which for twelve gigabytes is a mistake, so the schema says at least one.
+    labels:    {type: list,   required: true, schema: {minItems: 1}}
+placement:
+  # One model per server: a worker carries one row (its heartbeat says so; `CAPACITY` other than 1 in its role file
+  # stops it at start, V/10.1 Н1.2) and the controller never orders a second worker on a server (no `grows`). Memory is not the platform's rule here (no `unit_mb`): every server runs the base
+  # worker, and a budget of twelve gigabytes would stop it where no model ever stands; the label is the promise, the
+  # numbers are V/09's.
+  capacity:   {from: capacity, default: 1}
+  constraint: labels-subset          # a model's labels ⊆ its server's labels
+  tie_break:  most-free-capacity
+snapshot: [labels]
+# The model's door (V/10.2): a page asks the console for its address and a door token (`GET /assist/where/<name>`,
+# `view` on the model row) and talks to the holder itself — step by step, each answer in a fraction of a second or a
+# long poll shorter than the console's limits. The admin's credentials never reach the worker. Who may talk to the
+# model is `view` on its row — the door token says so; no `rights` key is needed (`rights.routes` is about rows, tables
+# and the console's `door.pass`, ADR-0093 доп. (2) п. 4).
+door:
+  routes: [chat]
+metrics:
+  - {name: models_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  # Steps answered and how each ended (done, failed, cancelled, abandoned), and how long the model took over them.
+  - {name: steps_total, from: "heartbeat.steps.<outcome>", agg: sum, type: counter}
+  - {name: step_seconds_total, from: heartbeat.step_seconds, agg: sum, type: counter}
+console:
+  running: models_running            # assist_models_running
+# What a page calls a unit of it (the product's words, one spec on both sides).
+display:
+  unit: модель ассистента
+  units: модели ассистента
+  units_count: моделей ассистента
+  section: Ассистент
+  general: Модель
+  fields:
+    enabled: включена
+    model: модель
+    quant: веса
+    context: окно, токенов
+    labels: метки сервера

@@ -6,7 +6,7 @@ scenario	step	request	expect
 01-create	4	POST /units {"name": "auto-7-motion", "cam": "7", "kind": "motion"}	400 {"error": "~made by auto"}
 02-mask	1	PUT /units/7-linecross {"mask": "not-a-digest"}	400 {"error": "~takes a digest"}
 02-mask	2	PUT /units/7-linecross/mask @raw mask-bytes	200 {"mask": "~sha256-", "bytes": 10}
-02-mask	3	GET /units/7-linecross	200 {"mask": "~sha256-"}
+02-mask	3	GET /units	200 {"configured": [{"name": "7-linecross", "mask": "~sha256-"}]}
 03-stream	1	console2 POST /cameras {"name": "Вход", "source": "rtsp://10.0.0.40/ch/1"}	201 {"id": "$m"}
 03-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.40/ch/2", "main": "$m", "profile": "детекция"}	201 {"id": "$s"}
 03-stream	3	console2 POST /cameras {"name": "Двор", "source": "rtsp://10.0.0.41/ch/1"}	201 {"id": "$o"}

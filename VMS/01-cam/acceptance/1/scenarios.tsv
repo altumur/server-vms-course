@@ -1,7 +1,7 @@
 scenario	step	request	expect
 # Приёмка V/01.1: камера — единица (дверь единиц консоли cam, манифест VMS/01-cam/cam.subsystem.yaml). Формат — README.
 01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "$c1", "name": "~cam", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "folders": [], "revision": 1}
-01-create	2	GET /cameras/$c1	200 {"source": "driverpack://file/door.mp4", "cred_secret": ""}
+01-create	2	GET /cameras	200 {"configured": [{"id": "$c1", "source": "driverpack://file/door.mp4", "cred_secret": ""}]}
 02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400 {"error": "@any"}
 02-numeric	2	POST /cameras {"name": "gate", "source": "driverpack://file/b.mp4"}	201 {"id": "$c2", "name": "gate"}
 02-numeric	3	POST /cameras {"source": "driverpack://file/c.mp4", "live": "sometimes"}	400 {"error": "@any"}

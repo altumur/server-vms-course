@@ -1,0 +1,12 @@
+scenario	step	request	expect
+# Приёмка V/10.1: строка модели (дверь единиц консоли assist; манифест assist). Формат — README.
+01-create	1	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1", "enabled": true, "model": "gpt-oss-20b", "quant": "q8_0", "context": 16384, "labels": ["assist-a"]}
+01-create	2	POST /models {"name": "m1", "labels": ["assist-a"]}	409 {"error": "exists"}
+01-create	3	POST /models {"name": "m2"}	400 {"error": "@any"}
+01-create	4	POST /models {"name": "m3", "labels": []}	400 {"error": "@any"}
+01-create	5	POST /models {"name": "m4", "labels": ["assist-a"], "model": "llama-3"}	400 {"error": "@any"}
+01-create	6	POST /models {"name": "m5", "labels": ["assist-a"], "quant": "q4_k_m"}	400 {"error": "@any"}
+01-create	7	POST /models {"name": "m6", "labels": ["assist-a"], "context": 1024}	400 {"error": "@any"}
+01-create	8	PUT /models/m1 {"context": 32768}	200 {"context": 32768}
+01-create	9	PUT /models/m1 {"labels": []}	400 {"error": "@any"}
+01-create	10	GET /models	200 {"configured": [{"id": "m1", "context": 32768, "labels": ["assist-a"]}]}

@@ -413,7 +413,15 @@ class TestTree(unittest.TestCase):
                 self.fail("тесту нужна метка %s в git курса (git -C %s %s): %s" % (
                     tag, ROOT, " ".join(args), getattr(exc, "stderr", "") or exc))
         files = [f for f in git("ls-tree", "-r", "--name-only", tag, "Platform").split() if f.endswith(".norms.md")]
-        diff, n = [], 0
+        # Реестр намеренных правок смысла после метки: (file, section, key, column) → (было, стало, основание).
+        reg = {}
+        for ln in (HERE / "sections-meaning-deltas.tsv").read_text(encoding="utf-8").split("\n"):
+            cols = ln.split("\t")
+            if ln and not ln.startswith("#") and cols[0] != "file":
+                self.assertEqual(len(cols), 7, ln[:80])
+                reg[tuple(cols[:4])] = cols[4:]
+        cells = {"need": 0, "owner": 1, "desc": 2}
+        diff, used, n = [], {}, 0
         for f in files:
             a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
@@ -424,11 +432,19 @@ class TestTree(unittest.TestCase):
                 if w is None:
                     continue
                 n += 1
-                old_desc = re.sub(r"(?:; )?класс отказа `\w+`$", "", v[4])
-                if (v[2].replace("'", '"'), v[3], old_desc) != (w[2], w[3], w[4]):
-                    diff.append((f, k[2], v[2:], w[2:]))
+                old = (v[2].replace("'", '"'), v[3], re.sub(r"(?:; )?класс отказа `\w+`$", "", v[4]))
+                section_ = k[1][len("#### "):] if k[1] else "-"
+                for col, i in cells.items():
+                    place = (f, section_, k[2], col)
+                    if place in reg:
+                        was, became, _ = reg[place]
+                        used[place] = w[2 + i] in (became, was) and old[i] == was
+                    elif old[i] != w[2 + i]:
+                        diff.append((f, section_, k[2], col, old[i][:80], w[2 + i][:80]))
         self.assertGreater(n, 1500)
-        self.assertEqual(diff, [])
+        self.assertEqual(diff, [], "расхождение смысла без строки v7/sections-meaning-deltas.tsv")
+        stale = [place for place in reg if not used.get(place)]
+        self.assertEqual(stale, [], "строка реестра: места нет, «было» не то или ячейка ни «было», ни «стало»")
 
     def test_registry_v7_and_whole_package(self):
         """Реестр режима В7 (М-4): отложенная таблица — EXCEPTION, таблица есть при исключении — устарело, пометка
