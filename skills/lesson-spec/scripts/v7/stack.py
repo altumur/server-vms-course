@@ -29,7 +29,7 @@ from . import regex
 # ---------------------------------------------------------------- JSON Schema + слой 5
 
 def _pattern(validator, patrn, instance, schema):
-    if validator.is_type(instance, "string") and not re.search(regex.python_full(patrn), instance):
+    if validator.is_type(instance, "string") and not regex.search(patrn, instance):
         yield ValidationError("%r does not match %r" % (instance, patrn))
 
 
@@ -38,7 +38,7 @@ def _pattern_properties(validator, pp, instance, schema):
         return
     for p, sub in pp.items():
         for k, v in instance.items():
-            if re.search(regex.python_full(p), k):
+            if regex.search(p, k):
                 yield from validator.descend(v, sub, path=k, schema_path=p)
 
 
@@ -46,7 +46,7 @@ def _additional_properties(validator, ap, instance, schema):
     if not validator.is_type(instance, "object"):
         return
     extras = [k for k in instance if k not in schema.get("properties", {})
-              and not any(re.search(regex.python_full(p), k) for p in schema.get("patternProperties", {}))]
+              and not any(regex.search(p, k) for p in schema.get("patternProperties", {}))]
     if ap is False:
         if extras:
             yield ValidationError("additional properties %r" % extras, validator_value=ap)
@@ -109,7 +109,7 @@ def py_records(validator, instance, schema=None):
             obj, s = at(instance, path), e.schema
             recs.append((path, "additionalProperties",
                          [k for k in obj if k not in s.get("properties", {}) and not any(
-                             re.search(regex.python_full(p), k) for p in s.get("patternProperties", {}))]))
+                             regex.search(p, k) for p in s.get("patternProperties", {}))]))
         elif e.validator == "uniqueItems":
             recs.append((path, "uniqueItems", repeats(at(instance, path))))
         else:
@@ -183,7 +183,7 @@ class Schema:
                 if k in props:
                     return props[k]
                 for p, sub in s.get("patternProperties", {}).items():
-                    if re.search(regex.python_full(p), k):
+                    if regex.search(p, k):
                         return sub
                 if isinstance(s.get("additionalProperties"), dict):
                     pn = s.get("propertyNames")

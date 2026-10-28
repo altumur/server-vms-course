@@ -128,8 +128,71 @@ def deltas():
     return out
 
 
+# yaml-test-suite: эталон отказывает корректный YAML 1.2.2, а В7 принимает — по решениям п. 3 набора Б (категория — случай
+# корпуса п. 3 или случай Б). Тест вне перечня, где эталон и В7 расходятся, — «НЕ РАЗОБРАНО»: setb.py падает.
+YTS_P3 = {"2EBW": "c5_key_question_mark", "FBC9": "c5_value_question_mark", "5NYZ": "c5_value_next_line_plain",
+          "A984": "c5_value_next_line_plain", "P94K": "c5_value_next_line_plain",
+          "UDR7": "t33_flow_trailing_comma_ok"}
+
+
+def yts_rows():
+    """Строки `yaml-suite/<id>`: исход слоя 1 эталона против В7 на каждом тесте набора, где они расходятся."""
+    from form_source.source import textlayer
+    from v7 import textv7, yts
+    out, unknown = [], []
+    refusals = {r[0] for r in tsv(HERE / "out/setb/yts-refusals.tsv") if r[0] != "id"}
+    for tid, d in yts.tests(yts.SUITE):
+        data = (d / "in.yaml").read_bytes()
+        try:
+            textlayer.load_text(data)
+            ref = "ok"
+        except textlayer.TextRefused:
+            ref = "refused"
+        except Exception as exc:                           # noqa: BLE001 — авария эталона (D9)
+            ref = "crash:%s" % type(exc).__name__
+        try:
+            textv7.load_text_map(data)
+            new = "ok"
+        except textv7.TextRefused:
+            new = "refused"
+        if ref == new:
+            continue
+        if tid in YTS_P3:
+            why = "ADR-0092 п. 3 (принять YAML 1.2.2): как случай %s" % YTS_P3[tid]
+        elif tid in refusals:
+            why = "сужение YAML 1.2.2 слоем 1 В7 (yts-refusals.tsv)"
+        elif (d / "error").exists() and new == "refused":
+            why = "вход вне YAML 1.2.2: В7 отказывает, эталон принимал (дефект эталона)"
+        else:
+            unknown.append(tid)
+            continue
+        out.append(("yaml-suite/" + tid, ref, new, why, "стек В7"))
+    if unknown:
+        raise SystemExit("yaml-test-suite: эталон и В7 расходятся без разбора: %s" % " ".join(unknown))
+    return out
+
+
+def value_rows():
+    """Строки `value/<случай>`: значение на пути у эталона против В7 (setb_cases.VALUES)."""
+    from form_source.source import textlayer
+    from v7 import setb_cases
+    out = []
+    for case, (path, want) in sorted(setb_cases.VALUES.items()):
+        try:
+            tree = textlayer.load_text((HERE / "out/setb/cases" / (case + ".subsystem.yaml")).read_bytes())[0]
+            for s in path:
+                tree = tree.get(s) if isinstance(tree, dict) else None
+            old = json.dumps(tree, ensure_ascii=False)
+        except textlayer.TextRefused:
+            tree, old = None, "refused:text"                # эталон отказывает (t33: висячая запятая)
+        if tree != want:
+            out.append(("value/" + case, old, json.dumps(want, ensure_ascii=False),
+                        "значение по YAML 1.2.2 (setb_cases.VALUES; путь %s)" % "/".join(path), "стек В7"))
+    return out
+
+
 def main():
-    rows = deltas()
+    rows = deltas() + yts_rows() + value_rows()
     d = HERE / "out" / "setb"
     head = "id\told\tnew\tbasis\tcheck\tstatus\n"
     (d / "deltas.tsv").write_text(head + "".join("\t".join(x + (STATUS,)) + "\n" for x in rows), encoding="utf-8")

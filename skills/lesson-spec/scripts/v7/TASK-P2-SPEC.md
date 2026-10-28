@@ -17,10 +17,14 @@ ADR-0092, ADR-0087 доп. (7)–(12); навык со стеком В7 — в m
 cd skills/lesson-spec/scripts
 uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --with markdown-it-py \
   --with jsonschema==4.26.0 --with ruamel.yaml==0.19.1 --with regress --with cel-expr-python==0.1.3 \
-  python -B -m v7.transition --root ../../..
+  python -B -m v7.transition --root ../../.. [--yts КАТАЛОГ]
 ```
 
-Повторный запуск на уже переведённом дереве инструмент отклоняет. Начать заново — только с чистого дерева. Поэтому
+`--yts` — распакованный yaml-test-suite `data-2022-01-17` (по умолчанию — стенд
+`/Users/murat/w2c/v7-stand/yts/…`); инструмент сверяет его с закреплённым (1887 файлов, 402 теста, sha256 содержимого)
+до первой правки дерева: нет набора или он иной — отказ с ненулевым кодом, дерево не тронуто. Окружение запуска — одно
+(`skills/lesson-spec/scripts/requirements.txt`, `references/validation.md`). Повторный запуск на уже переведённом
+дереве инструмент отклоняет. Начать заново — только с чистого дерева. Поэтому
 сгенерированное коммить отдельно от ручных правок (п. 6). Что делает, по шагам (числа — на main `c9ea3b218`):
 
 | Шаг | Что меняется в `Platform/` | План |

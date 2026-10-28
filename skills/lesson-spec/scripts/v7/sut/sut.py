@@ -19,13 +19,6 @@ SPEC = Path("Platform/02-installer/spec")
 PACKAGES = {"02-installer/canonical", "common/family-read", "common/yaml-suite"}
 # Класс диалекта → слой (ADR-0092 п. 6; как набор А, seta.LAYER): отказ связей — `relations`.
 LAYER = {"text": "text", "name": "form", "key": "form", "value": "form", "reference": "form"}
-# Дельты набора Б вне deltas.tsv, которые самопроверка узнаёт по строке:
-# случаи Б с проверкой значения (setb_cases.VALUES) — значение по YAML 1.2.2 (обход D16, экранирование TAB);
-VALUE_CASES = {"t27_escape_tab_ok", "t31_last_line_spaces_ok", "t33_flow_trailing_comma_ok"}
-# тесты yaml-test-suite, которые эталон отказывает, а YAML 1.2.2 принимает, — по категориям п. 3 набора Б.
-YTS_P3 = {"2EBW": "c5_key_question_mark", "FBC9": "c5_value_question_mark", "5NYZ": "c5_value_next_line_plain",
-          "A984": "c5_value_next_line_plain", "P94K": "c5_value_next_line_plain",
-          "UDR7": "t33_flow_trailing_comma_ok"}        # висячая запятая — 12-е отклонение п. 3 (решение 2026-10-28)
 
 
 # ---------------------------------------------------------------- бэкенды
@@ -90,8 +83,10 @@ class Dialect:
     name = "dialect"
 
     def __init__(self, specs, root):
-        if not (root / SPEC / "02.1-installer.form.yaml").is_file():
-            raise SystemExit("dialect root %s is not a checkout of %s (git worktree add DIR %s)" % (root, TAG, TAG))
+        head = git(root, "rev-parse", "HEAD")
+        tag = git(SCRIPTS, "rev-parse", TAG + "^{commit}")
+        if head is None or head != tag:
+            raise SystemExit("dialect root %s is not at %s (%s): git worktree add DIR %s" % (root, TAG, tag, TAG))
         sys.path.insert(0, str(root / "skills/lesson-spec/scripts"))
         from form_source import Loader
         from form_source import families as fam
@@ -107,7 +102,7 @@ class Dialect:
         try:
             return self.loader.judge(data)
         except Exception as exc:                            # noqa: BLE001 — авария эталона (D9, набор Б t26)
-            return {"verdict": "crash", "class": None, "paths": [], "lines": [],
+            return {"verdict": "crash", "class": None, "exc": type(exc).__name__, "paths": [], "lines": [],
                     "why": ["%s: %s" % (type(exc).__name__, exc)]}
 
     @staticmethod
@@ -119,6 +114,13 @@ class Dialect:
     def load(self, data):
         r = self.judge(data)
         return r["verdict"], self.layer(r), r.get("paths", []), r.get("lines", [])
+
+    def raw(self, data):
+        """Исход эталона словами строки дельты: `ok`, `refused:<класс диалекта>`, `crash`."""
+        r = self.judge(data)
+        if r["verdict"] == "crash":
+            return "crash:%s" % r["exc"]
+        return r["verdict"] if r["verdict"] != "refused" else "refused:%s" % r.get("class")
 
     def canonical(self, data):
         r = self.judge(data)
@@ -158,6 +160,23 @@ class Dialect:
             return {"layer1": "refused", "rule": "dialect"}
         except Exception as exc:                            # noqa: BLE001 — авария эталона (D9: OverflowError)
             return {"layer1": "crash", "rule": "%s" % type(exc).__name__}
+
+
+def git(where, *args):
+    try:
+        return subprocess.run(["git", "-C", str(where), *args], capture_output=True, check=True,
+                              text=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def pins():
+    """Код SUT: [(путь от корня курса, sha256)] — sut.py, стек v7/*.py, дельты Б (М-7)."""
+    import hashlib
+    course = SCRIPTS.parents[2]
+    files = [Path(__file__).resolve(), *sorted((SCRIPTS / "v7").glob("*.py")), SCRIPTS / "v7/out/setb/deltas.tsv",
+             SCRIPTS / "v7/out/setb/cases.tsv"]
+    return [(f.relative_to(course).as_posix(), hashlib.sha256(f.read_bytes()).hexdigest()) for f in files]
 
 
 def backend(a):
@@ -267,30 +286,39 @@ def tsv(path):
 
 
 def deltas():
-    """Строки, где исход эталона — не ожидание таблиц по решению набора Б: id дельт, случаи Б с иным ref, сужения yts."""
+    """Набор Б одним списком: id → «было» (ответ эталона по решению Б). Источник — `v7/out/setb/deltas.tsv` (дельты
+    набора А, yaml-suite, значения) и `cases.tsv` (случаи Б: `case/<id>` → `ref`) — без второго списка здесь (повторное
+    ревью Claude М-6)."""
     setb = SCRIPTS / "v7/out/setb"
-    out = {r["id"] for r in tsv(setb / "deltas.tsv")}
+    out = {r["id"]: r["old"] for r in tsv(setb / "deltas.tsv")}
     for r in tsv(setb / "cases.tsv"):
         if r["ref"] != r["expect"]:
-            out.add("case/" + r["id"].split(".")[0])
-    out |= {"yts/" + r["id"] for r in tsv(setb / "yts-refusals.tsv")}
-    out |= {"value/" + c for c in VALUE_CASES} | {"yts/" + i for i in YTS_P3}
+            out["case/" + r["id"]] = r["ref"]
     return out
 
 
+def dialect_matches(be, known, ids, answer):
+    """Строка-дельта засчитана, только если эталон дал «было» дельты (М-5): answer(id, было) — сверка по виду строки."""
+    for i in ids:
+        if i in known:
+            return answer(i, known[i])
+    return None                                          # строки в Б нет: расхождение — не дельта
+
+
 def cmd_selftest(be, a):
-    """Каждая строка корпуса P/02.1 и пакетов через бэкенд против ожидания таблицы; расхождение — с пометкой «дельта Б»
-    (ожидаемо у dialect) или «НЕ дельта» (опровержение: стоп)."""
+    """Каждая строка корпуса P/02.1 и пакетов через бэкенд против ожидания таблицы. У `dialect` расхождение засчитано
+    дельтой Б, только если строка есть в наборе Б и эталон дал её «было»; иначе — «НЕ дельта» (стоп, разбор)."""
+    import ast
     specs = Path(a.specs).resolve()
-    known = deltas() if be.name == "dialect" else set()
+    known = deltas() if be.name == "dialect" else {}
     report = {}
 
-    def tally(name, rid, ok, ids):
+    def tally(name, rid, ok, verdict=None):
         t = report.setdefault(name, {"rows": 0, "ok": 0, "delta": 0, "not_delta": []})
         t["rows"] += 1
         if ok:
             t["ok"] += 1
-        elif any(i in known for i in ids):
+        elif verdict:
             t["delta"] += 1
         else:
             t["not_delta"].append(rid)
@@ -300,16 +328,41 @@ def cmd_selftest(be, a):
     classes = dict(ln.split("\t") for ln in (acc / "classes.tsv").read_text(encoding="utf-8").split("\n")
                    if ln and not ln.startswith("#"))
     for case, want in sorted(verdicts.items()):
-        verdict, cls, _, _ = be.load((acc / "cases" / (case + ".subsystem.yaml")).read_bytes())
-        tally("corpus-verdict", case, verdict == want, ["corpus/" + case, "case/" + case])
+        data = (acc / "cases" / (case + ".subsystem.yaml")).read_bytes()
+        verdict, cls, _, _ = be.load(data)
+        raw = be.raw(data) if be.name == "dialect" else None
+        mapped = raw if verdict == "crash" else verdict if verdict != "refused" else "refused:%s" % cls
+
+        def same(i, old):
+            return old == (mapped if i.startswith("case/") else raw)
+        tally("corpus-verdict", case, verdict == want,
+              verdict != want and dialect_matches(be, known, ["corpus/" + case, "case/" + case], same))
         if case in classes and verdict == "refused":
-            tally("corpus-class", case, cls == classes[case], ["classes/" + case, "corpus/" + case, "case/" + case])
+            def same_class(i, old):
+                if i.startswith("classes/"):
+                    return old == raw.split(":", 1)[-1] or old.endswith("эталон: %s)" % raw.split(":", 1)[-1])
+                return same(i, old)
+            tally("corpus-class", case, cls == classes[case], cls != classes[case] and dialect_matches(
+                be, known, ["classes/" + case, "corpus/" + case, "case/" + case], same_class))
     vec = specs / "Platform/02-installer/vectors/canonical"
     for r in tsv(vec / "cases.tsv"):
-        b, _ = be.canonical((specs / r["input"]).read_bytes())
-        tally("canonical", r["case"], b == (vec / r["expect"]).read_bytes(),
-              ["canonical/" + r["case"], "corpus/" + r["case"][len("corpus-"):], "case/" + r["case"][len("corpus-"):],
-               "value/" + r["case"][len("corpus-"):]])
+        data = (specs / r["input"]).read_bytes()
+        b, _ = be.canonical(data)
+        want = (vec / r["expect"]).read_bytes()
+        c = r["case"][len("corpus-"):]
+
+        def same_canonical(i, old):
+            if i.startswith("canonical/"):
+                return (b is None) == old.startswith("нет вектора")
+            if i.startswith("case/"):
+                return (b is None) == old.startswith("refused")
+            if i.startswith("value/"):                   # значение на пути — «было» эталона (или его отказ)
+                if old.startswith("refused"):
+                    return b is None
+                return b is not None and json.dumps(_at(json.loads(b), _value_path(c)), ensure_ascii=False) == old
+            return False
+        tally("canonical", r["case"], b == want, b != want and dialect_matches(
+            be, known, ["canonical/" + r["case"], "value/" + c, "case/" + c], same_canonical))
     fr = specs / "Platform/common/vectors/family-read"
     for t in sorted(fr.glob("[0-9][0-9].tsv")):
         for r in tsv(t):
@@ -317,20 +370,46 @@ def cmd_selftest(be, a):
             got = be.family(r["family"], r["kind"], r["mode"], roles, r["text"])
             ok = (got["verdict"] == r["verdict"] and sorted(got["paths"]) == sorted(json.loads(r["paths"]))
                   and got["outcome"] == json.loads(r["outcome"]))
-            tally("family-read", r["case"], ok, ["family-read/%s|%s|%s|%s" % (r["family"], r["kind"], r["mode"],
-                                                                                r["note"]),
-                                                  "case/" + r["note"].split(".")[0]])
+            outs = next(iter(got["outcome"].values()), []) if isinstance(got["outcome"], dict) else got["outcome"]
+
+            def same_family(i, old):
+                m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", old)
+                if not m:
+                    return False
+                parse = ast.literal_eval if i.startswith("family-read/") else json.loads
+                return (m.group(1) == got["verdict"] and sorted(parse(m.group(2))) == sorted(got["paths"])
+                        and parse(m.group(3)) == outs)
+            tally("family-read", r["case"], ok, not ok and dialect_matches(
+                be, known, ["family-read/%s|%s|%s|%s" % (r["family"], r["kind"], r["mode"], r["note"]),
+                            "case/" + r["note"]], same_family))
     ys = specs / "Platform/common/vectors/yaml-suite"
     if (ys / "expect.tsv").is_file():
         for r in tsv(ys / "expect.tsv"):
             got = be.layer1((ys / "inputs" / (r["id"] + ".yaml")).read_bytes())
-            tally("yaml-suite", r["id"], got["layer1"] == r["layer1"], ["yts/" + r["id"]])
+            word = got["layer1"] if got["layer1"] != "crash" else "crash:%s" % got["rule"]
+            tally("yaml-suite", r["id"], got["layer1"] == r["layer1"], got["layer1"] != r["layer1"] and dialect_matches(
+                be, known, ["yaml-suite/" + r["id"]], lambda i, old: old == word))
     for name, t in report.items():
         print("%-16s rows %5d  ok %5d  delta-Б %4d  NOT delta %4d %s" % (
             name, t["rows"], t["ok"], t["delta"], len(t["not_delta"]), " ".join(t["not_delta"][:8])))
     if a.json:
         Path(a.json).write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return 1 if any(t["not_delta"] for t in report.values()) else 0
+
+
+def _value_path(case):
+    """Путь значения случая Б (строка `value/<случай>` deltas.tsv: «…путь a/b)»)."""
+    for r in tsv(SCRIPTS / "v7/out/setb/deltas.tsv"):
+        if r["id"] == "value/" + case:
+            m = re.search(r"путь ([^)]+)\)", r["basis"])
+            return m.group(1).split("/") if m else []
+    return []
+
+
+def _at(tree, path):
+    for s in path:
+        tree = tree.get(s) if isinstance(tree, dict) else None
+    return tree
 
 
 # ---------------------------------------------------------------- каталог реализации для раннера
@@ -341,6 +420,15 @@ def cmd_materialize(a):
     dest, specs = Path(a.dest).resolve(), Path(a.specs).resolve()
     if dest.exists() and any(dest.iterdir()):
         raise SystemExit("%s is not empty" % dest)
+    course = git(SCRIPTS, "rev-parse", "HEAD")
+    if course is None or git(SCRIPTS, "status", "--porcelain", "--", str(SCRIPTS)):
+        raise SystemExit("the skill has uncommitted changes under %s: commit first, the SUT pins its code" % SCRIPTS)
+    dialect = ""
+    if a.backend == "dialect":
+        head = git(Path(a.dialect_root).resolve(), "rev-parse", "HEAD")
+        if head != git(SCRIPTS, "rev-parse", TAG + "^{commit}"):
+            raise SystemExit("dialect root is not at %s" % TAG)
+        dialect = head
     try:
         version = subprocess.run(["git", "-C", str(specs), "rev-parse", "HEAD"], capture_output=True, check=True,
                                  text=True).stdout.strip()
@@ -353,17 +441,21 @@ def cmd_materialize(a):
                              % (a.python, Path(__file__).resolve(), a.backend, specs, dial), encoding="utf-8")
     (mod / "sut").chmod(0o755)
     profile = (HERE / "acceptance.yaml.in").read_text(encoding="utf-8")
-    (mod / "acceptance.yaml").write_text(profile.replace("@BACKEND@", a.backend).replace("@SPEC_VERSION@", version),
+    (mod / "acceptance.yaml").write_text(profile.replace("@BACKEND@", a.backend).replace("@SPEC_VERSION@", version)
+                                         .replace("@COURSE@", course).replace("@DIALECT@", dialect or "-"),
                                          encoding="utf-8")
+    (dest / "SUT-PIN.tsv").write_text(
+        "course\t%s\nbackend\t%s\nspec_version\t%s\ndialect\t%s\n" % (course, a.backend, version, dialect or "-")
+        + "".join("sha256\t%s\t%s\n" % (path, h) for path, h in pins()), encoding="utf-8")
     (dest / "SPEC_VERSION").write_text(version + "\n", encoding="utf-8")
     (dest / "assembly.yaml").write_text("format: 1\nmodules:\n  02-installer: 02-installer/acceptance.yaml\n",
                                         encoding="utf-8")
     (dest / "README.md").write_text("SUT эталона (%s) для сверки раннера: %s\n" % (a.backend, HERE / "README.md"),
                                     encoding="utf-8")
-    for args in (["init", "-q"], ["add", "SPEC_VERSION", "assembly.yaml", "README.md", "02-installer"],
+    for args in (["init", "-q"], ["add", "SPEC_VERSION", "assembly.yaml", "README.md", "SUT-PIN.tsv", "02-installer"],
                  ["-c", "user.name=sut", "-c", "user.email=sut@localhost", "commit", "-q", "-m", "SUT " + a.backend]):
         subprocess.run(["git", "-C", str(dest)] + args, check=True)
-    print("implementation %s (backend %s, spec_version %s)" % (dest, a.backend, version))
+    print("implementation %s (backend %s, spec_version %s, course %s)" % (dest, a.backend, version, course))
     return 0
 
 

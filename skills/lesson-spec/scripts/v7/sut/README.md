@@ -6,8 +6,9 @@
 - `v7` — стек В7 навыка на стандартных файлах выгрузки;
 - `dialect` — код навыка по метке `dialect-reference-dc94d0fd1` на файлах диалекта метки; входы и таблицы — из выгрузки.
 
-Ожидание: `v7` даёт все строки таблиц. `dialect` даёт все, кроме дельт набора Б: `v7/out/setb/deltas.tsv`, случаи
-`cases.tsv` с иным `ref` и сужения `yts-refusals.tsv`.
+Ожидание: `v7` даёт все строки таблиц. `dialect` даёт все, кроме дельт набора Б, и на каждой дельте — её «было»
+(`v7/out/setb/deltas.tsv`, столбец `old`; случаи Б — `cases.tsv`, столбец `ref`). Иной ответ эталона на строке-дельте —
+«НЕ дельта», как и расхождение вне Б. Список дельт один — набора Б.
 
 ## Запуск
 
@@ -28,7 +29,10 @@ python3.12 runner/all.py --impl /tmp/sut-v7 --only P/02 …                 # и
 - `SPEC_VERSION` — HEAD выгрузки;
 - `assembly.yaml` — один модуль `02-installer`;
 - `02-installer/acceptance.yaml` — профиль format 2 из `acceptance.yaml.in`;
-- `02-installer/sut` — обёртка вызова `sut.py` с бэкендом, выгрузкой и интерпретатором.
+- `02-installer/sut` — обёртка вызова `sut.py` с бэкендом, выгрузкой и интерпретатором;
+- `SUT-PIN.tsv` — пин кода SUT: коммит курса, бэкенд, `spec_version`, коммит эталона (`dialect`), sha256 `sut.py`,
+  `v7/*.py`, `deltas.tsv` и `cases.tsv` набора Б; тот же коммит — комментарием в профиле. Навык с незакоммиченными
+  правками `materialize` не собирает; бэкенд `dialect` требует, чтобы HEAD `--dialect-root` был меткой.
 
 Профиль задаёт `stand.load`, `stand.canonical`, `adapters.load` и `vectors` трёх пакетов. `manifest-put` в нём нет:
 ему нужно хранилище урока 1, а у SUT его нет.

@@ -8,6 +8,8 @@ import json
 import re
 from pathlib import Path
 
+from v7 import regex
+
 CATALOG = Path("Platform/common/data/catalog.tsv")
 SCHEMA_PATH = re.compile(r"([0-9]{2})-[a-z][a-z-]*/data/([^/]+)\.schema\.json")
 OUTCOME_HEADER = ["path", "reader", "outcome", "priority", "unit", "norm"]
@@ -104,6 +106,8 @@ class Places:
         return out
 
     def child(self, chain, seg, wild, i):
+        if any(s.get("x-opaque") for s in chain):          # отображение без проверки ключей: любое имя — место
+            return [{}]
         if seg == "*":
             for s in chain:
                 ap = s.get("additionalProperties")
@@ -126,7 +130,7 @@ class Places:
                     return self.resolve(s["items"])
         for s in chain:
             for pat, ps in (s.get("patternProperties") or {}).items():
-                if re.search(pat.replace("\\Z", "$"), seg):
+                if regex.search(pat, seg):
                     return self.resolve(ps)
             ap = s.get("additionalProperties")
             if isinstance(ap, dict) or ap is True:
@@ -304,9 +308,9 @@ def patterns(doc):
 
 
 def unportable(doc):
-    """Выражения вне ECMA-262 `u` ∩ RE2 (ADR-0092 п. 14): синтаксис переносимого подмножества (regex.check), Python `re`
-    и — если на стенде есть `v7check` — Go `regexp` (RE2)."""
-    from v7 import regex
+    """Выражения вне ECMA-262 `u` ∩ RE2 (ADR-0092 п. 14): синтаксис переносимого подмножества (regex.check) и компиляция
+    Python. Подмножество выбрано так, что его смысл у ECMA-262 `u`, RE2 и Python (`regex.search`, ASCII-смысл) один;
+    компиляции в RE2 и ECMA здесь нет — её держат тесты стека (Go `v7check`) и набор А на двух языках."""
     bad = []
     for where, p in patterns(doc):
         why = regex.check(p)
@@ -473,14 +477,97 @@ def judge_row(root, row, kind, mode, text, paths, outs, cache):
     return None
 
 
+# ---------------------------------------------------------------- файл связей: формат и пути строк (ревью Codex RВ7-02)
+
+RELATION_FIELDS = {"no": int, "path": str, "relation": str, "class": str, "norm": str, "cel": str, "own": list}
+RELATION_CLASSES = ("reference", "value")
+
+
+def row_place(path):
+    """Путь строки связей (грамматика пути диалекта: сегменты через `.` на верхнем уровне скобок; `*`, `{}` — имя автора,
+    `{…}` — динамика, `$x` — переменная, `key[]`, `key[$x]` — элемент) → JSON Pointer места формы (`*` — любое имя или
+    элемент); None — не по грамматике."""
+    parts, depth, cur, q = [], 0, "", False
+    for c in path:
+        if q:
+            q = c != '"'
+        elif c == '"':
+            q = True
+        elif c in "{[(":
+            depth += 1
+        elif c in "}])":
+            depth -= 1
+        if c == "." and depth == 0 and not q:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += c
+    parts.append(cur)
+    segs = []
+    for s in parts:
+        if s == "*" or (s.startswith("{") and s.endswith("}")) or re.fullmatch(r"\$[a-z]+", s):
+            segs.append("*")
+            continue
+        m = re.fullmatch(r"([a-z_][a-z0-9_]*)(\[\]|\[\$[a-z]+\])?", s)
+        if not m:
+            return None
+        segs.append(m.group(1))
+        if m.group(2):
+            segs.append("*")
+    return "/" + "/".join(segs)
+
+
+def relations_errors(rel, schema_doc):
+    """Формат `.relations.json` и место пути каждой строки в форме. CEL исполняется слоем связей; проза `relation` —
+    документ строки, её смысл с CEL не сверяется (сверяет корпус: строка держит случаи)."""
+    out = []
+    if not isinstance(rel, dict) or set(rel) != {"env", "rows", "untranslated"}:
+        return ["relations: top level is {env, rows, untranslated}"]
+    if rel["untranslated"]:
+        out.append("relations: untranslated rows %s" % [r.get("no") for r in rel["untranslated"]])
+    env = rel["env"]
+    if not (isinstance(env, dict) and isinstance(env.get("name"), str) and isinstance(env.get("extensions"), list)
+            and isinstance(env.get("variables"), list) and isinstance(env.get("functions"), list)):
+        out.append("relations: env is {name, extensions, variables, functions} of the CEL environment")
+    if not isinstance(rel["rows"], list) or not rel["rows"]:
+        return out + ["relations: rows is a non-empty list"]
+    places, seen = Places(schema_doc), set()
+    for i, r in enumerate(rel["rows"]):
+        where = "relations: row %s" % (r.get("no", "#%d" % i) if isinstance(r, dict) else "#%d" % i)
+        if not isinstance(r, dict):
+            out.append(where + ": not an object")
+            continue
+        extra, missing = set(r) - set(RELATION_FIELDS) - {"x-implied-by"}, set(RELATION_FIELDS) - set(r)
+        if extra or missing:
+            out.append("%s: fields %s (unknown %s, missing %s)" % (where, sorted(RELATION_FIELDS), sorted(extra),
+                                                                 sorted(missing)))
+            continue
+        bad = [k for k, ty in RELATION_FIELDS.items() if type(r[k]) is not ty or (ty is str and not r[k].strip())]
+        if bad:
+            out.append("%s: %s of the wrong type or empty" % (where, ", ".join(bad)))
+            continue
+        if r["no"] in seen:
+            out.append(where + ": repeated no")
+        seen.add(r["no"])
+        if r["class"] not in RELATION_CLASSES:
+            out.append("%s: class %r is not one of %s" % (where, r["class"], ", ".join(RELATION_CLASSES)))
+        ptr = row_place(r["path"])
+        if ptr is None:
+            out.append("%s: path %r is not a path of a relation row" % (where, r["path"]))
+        elif not places.place(ptr):
+            out.append("%s: path %s is not a place of the form (ADR-0087 доп. (1) Р2)" % (where, r["path"]))
+    return out
+
+
 # ---------------------------------------------------------------- корпус P/02.1 и связи (форма манифеста)
 
 def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False, implied=None):
     """Глава со стандартными файлами формы манифеста: файлы годны, раздел «Форма» между маркерами — построенный,
     корпус — вердикт и класс (слой) строго, пути `diagnostics.tsv` — сведение (ADR-0092 п. 5), манифесты курса
     принимаются, строки связей держат случаи (строка — единственная причина отказа хоть одного случая; строго — со
-    strict). implied — номера строк (текстом), чью пометку `x-implied-by` разрешает реестр исключений (вид `implied`);
-    None — без реестра (тесты). → (ошибки [(путь, сообщение)], счёты; `implied_marked` — номера помеченных строк)."""
+    strict). implied — значения реестра исключений вида `implied` — «номер:путь» строки связей, чью пометку
+    `x-implied-by` разрешило решение (перенумерация или иное выражение под тем же номером — красное, повторное ревью
+    Claude М-1); None — без реестра (тесты). → (ошибки, счёты; `implied_marked` — «номер:путь» помеченных строк)."""
     from v7 import schema as gen
     from v7 import section, stack, textv7
     errors, stats = [], {"form_cases": 0, "form_manifests": 0, "form_rows": 0, "form_rows_held": 0,
@@ -502,12 +589,9 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
         errors.append((files[".layers.tsv"], "is not the table of the x-* words of the schema (rebuild: cd "
                                              "skills/lesson-spec/scripts && python -m v7.layers %s)"
                        % files[".schema.json"].relative_to(root)))
-    if rel.get("untranslated") or not isinstance(rel.get("rows"), list):
-        errors.append((files[".relations.json"], "relations: rows of CEL expressions, nothing untranslated"))
-        return errors, stats
-    nos = [r.get("no") for r in rel["rows"]]
-    if len(set(nos)) != len(nos) or any(type(n) is not int for n in nos):
-        errors.append((files[".relations.json"], "relations: row numbers `no` are unique integers"))
+    bad = relations_errors(rel, sch)
+    if bad:
+        return errors + [(files[".relations.json"], why) for why in bad], stats
     textv7.use_scalars(files[".scalars.tsv"])
     try:
         loader = stack.Manifest(sch, rel)
@@ -575,14 +659,15 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
         by = r.get("x-implied-by")
         if by is None:
             continue
-        marked.add(str(r["no"]))
+        tag = "%d:%s" % (r["no"], r["path"])
+        marked.add(tag)
         where = files[".relations.json"]
         if not (isinstance(by, list) and by and all(i in nos and i != r["no"] for i in by)):
             errors.append((where, "row %d: x-implied-by names other rows of the file" % r["no"]))
             continue
-        if implied is not None and str(r["no"]) not in implied:
-            errors.append((where, "row %d: x-implied-by without the exception implied of the registry (a decision of "
-                                  "the «Архитектор»)" % r["no"]))
+        if implied is not None and tag not in implied:
+            errors.append((where, "row %s: x-implied-by without the exception implied %s of the registry (a decision "
+                                  "of the «Архитектор»)" % (tag, tag)))
         group = {r["no"], *by}
         # групповая мутация (решение «Архитектора» 2026-10-28): снятие строки вместе с теми, из которых она следует,
         # меняет вердикт случая, а строка одна при снятых тех этот вердикт держит — случай, где сработали только строки

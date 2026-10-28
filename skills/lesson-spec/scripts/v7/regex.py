@@ -84,6 +84,13 @@ def complement(p):
     return MANUAL[p]
 
 
+def search(pattern, s):
+    """Слой 5 у Python: полное совпадение (`$` → `\\Z`) и ASCII-смысл классов (`re.ASCII`: `\\s` и прочие сокращения
+    — как у ECMA-262 `u` и RE2, не Unicode-классы Python; ревью Codex RВ7-01). В переносимом подмножестве сокращений
+    `\\d`, `\\w`, `\\D`, `\\W` нет вовсе (check), `[\\s\\S]` — любой знак при любом смысле."""
+    return re.search(python_full(pattern), s, re.ASCII)
+
+
 def python_full(pattern):
     """Слой 5 (полное совпадение у Python): `$` в конце якоря → `\\Z` (у `re` `$` совпадает и перед последним `\\n`)."""
     return pattern[:-1] + "\\Z" if pattern.endswith(")$") else pattern
@@ -92,9 +99,11 @@ def python_full(pattern):
 def check(pattern):
     """Причина, по которой `pattern` схемы вне переносимого подмножества (ADR-0092 п. 14), или None.
 
-    Подмножество — то, что ECMA-262 в режиме `u` и RE2 читают одинаково: полное совпадение `^(?:…)$`; внутри — знаки,
-    классы `[…]` и `[^…]` (без `[` внутри: у RE2 `[[:alpha:]]` — класс POSIX), экранирование только знаков синтаксиса
-    (`-` — и в классе), `\\d`, `\\D`, `\\w`, `\\W` и `[\\s\\S]` (одиночный `\\s` у ECMA шире, чем у RE2), группы `(…)`,
+    Подмножество — то, что ECMA-262 в режиме `u`, RE2 и Python (`regex.search`) читают одинаково: полное совпадение
+    `^(?:…)$`; внутри — знаки, классы `[…]` и `[^…]` (без `[` внутри: у RE2 `[[:alpha:]]` — класс POSIX), экранирование
+    только знаков синтаксиса (`-` — и в классе) и `[\\s\\S]` (одиночный `\\s` у ECMA шире, чем у RE2); сокращений
+    `\\d`, `\\D`, `\\w`, `\\W` нет — у Python без `re.ASCII` это Unicode-классы (`١` — цифра, `я` — буква), пишите
+    диапазоны (ревью Codex RВ7-01); группы `(…)`,
     `(?:…)`, `|`, кванторы `* + ? {n} {n,} {n,m}` (и ленивые); без `.` (у ECMA точка не берёт `\\r`, U+2028/2029), без
     `^`, `$` внутри, без обратных ссылок, просмотра, имён групп и флагов."""
     if not (pattern.startswith("^(?:") and pattern.endswith(")$")):
@@ -105,8 +114,8 @@ def check(pattern):
         c = p[i]
         if c == "\\":
             e = p[i + 1:i + 2]
-            if not e or not (e in SYNTAX or e in "dDwW"):
-                return "escape \\%s at %d (only syntax characters, \\d, \\w and [\\s\\S])" % (e, i + 1)
+            if not e or e not in SYNTAX:
+                return "escape \\%s at %d (only syntax characters and [\\s\\S]; write ranges, not \\d, \\w)" % (e, i + 1)
             i, atom = i + 2, True
             continue
         if c == "[":
@@ -121,8 +130,8 @@ def check(pattern):
                     return "unescaped [ inside a class at %d" % (j + 1)
                 if p[j] == "\\":
                     e = p[j + 1:j + 2]
-                    if not e or not (e in SYNTAX or e in "-dDwW"):
-                        return "escape \\%s in a class at %d" % (e, j + 1)
+                    if not e or not (e in SYNTAX or e == "-"):
+                        return "escape \\%s in a class at %d (write ranges, not \\d, \\w)" % (e, j + 1)
                     j += 2
                     continue
                 j += 1

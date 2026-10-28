@@ -1845,8 +1845,8 @@ class Check:
                 else:
                     self.except_(package, key, "family-read", name)
             elif not have:
-                self.error(package, f"family-read: no table {name} for the families of {key} (one table per owner "
-                                    f"lesson; deferred — the exception family-read {key} {name})")
+                self.error(package, f"family-read: no table {name} for the families of {key}: one table per owner "
+                                    f"lesson; deferring it is a decision of the «Архитектор» (exception family-read)")
 
     # The data families of ADR-0088 that a chapter owns by the catalog (owner = the chapter, schema named): each schema
     # builds from the dialect (data-form/1 with common.form.yaml), its outcomes.tsv is in form and names places of the
