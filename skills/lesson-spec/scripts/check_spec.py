@@ -1832,6 +1832,21 @@ class Check:
             self.stats["outcome_readers"] += len(want)
 
     # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
+    # Заготовочный текст перехода В7 (решение «Архитектора» 2026-10-28): пробел исхода, оставленный вопросом, — не норма.
+    # В исходах и нормах его быть не должно; упоминание прошлого вопроса («прежде — вопрос …») — история, не заготовка.
+    STUB_TEXT = re.compile(r"исход не назван нормой|(?<!прежде — )вопрос «Архитектору»")
+
+    def stub_text(self):
+        platform = Path(os.path.normpath(self.root / "Platform"))
+        files = sorted(platform.glob("*/data/*.outcomes.tsv")) + sorted(platform.glob("*/spec/*.norms.md"))
+        for path in files:
+            for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+                m = self.STUB_TEXT.search(line)
+                if m:
+                    self.error(path, f"line {no}: placeholder text «{m.group(0)}» — the gap needs a norm (a decision of "
+                                     "the «Архитектор»), not a question in the outcome or the norm")
+        self.stats["stub_scanned_files"] += len(files)
+
     # Common contracts (V7-OPENAPI-PATTERN-LOOKAHEAD-01): every Platform/common/contracts/*.yaml is read and checked once
     # per run, also when no lesson refers to it.
     def common_contracts(self):
@@ -2405,6 +2420,7 @@ def main():
     check.outcome_readers()
     check.family_read()
     check.common_contracts()
+    check.stub_text()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:

@@ -561,6 +561,25 @@ class TestTree(unittest.TestCase):
         self.assertTrue(any("probe.api.openapi.yaml" in ln for ln in bad), out[-2000:])
         self.assertEqual(len(bad), 2, bad)
 
+    def test_stub_text(self):
+        """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос
+        «Архитектору»» — история, не заготовка."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        p = root / "Platform/03-worker/data/slots.outcomes.tsv"
+        p.write_text(p.read_text(encoding="utf-8").rstrip("\n") + " — вопрос «Архитектору»\n", encoding="utf-8")
+        n = root / "Platform/03-worker/spec/03.1-worker.norms.md"
+        n.write_text(n.read_text(encoding="utf-8") + "\nисход не назван нормой; прежде — вопрос «Архитектору».\n",
+                     encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.stub_text()
+        errors = [str(e) for e in check.errors]
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(any("slots.outcomes.tsv" in e and "вопрос «Архитектору»" in e for e in errors), errors)
+        self.assertTrue(any("03.1-worker.norms.md" in e and "исход не назван нормой" in e for e in errors), errors)
+
     def test_sections_idempotent(self):
         from v7 import sections
         root = self.copy()
