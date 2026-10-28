@@ -15,8 +15,9 @@ context:        окно строки модели (умолчание 16384); p
 model:          ответы шагов по порядку — {ok: true, message, usage} (состояние done двери: message как есть),
                 {ok: false, lost: true} (410/404), {ok: false, why, reason} (failed и прочие исходы шага, V/10.3 Н1.3)
 expect:         outcome (plan | refusal | unfinished | cancelled), why и reason у unfinished и refusal, plan_rows у плана,
-                texts — тексты хода, steps — число шагов, step_messages — сообщения каждого шага: role, tool_call_id,
-                имена tool_calls, content — первые 160 знаков
+                texts — тексты хода, steps — число шагов, step_messages — сообщения каждого шага: role,
+                reasoning_content (ключ есть, только если сообщение его несёт: страница его снимает — V/10.3 Н1.2,
+                поэтому в ожиданиях его нет), tool_call_id, имена tool_calls, content — первые 160 знаков
 ```
 
 Случайные байты `turn` — заглушкой (сравнивается длина, не значение). Сценарии панели в DOM (раздел, ввод, блок отбора над
