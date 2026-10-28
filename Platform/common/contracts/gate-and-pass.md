@@ -78,7 +78,8 @@ gate:
        выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.form.yaml (исходы — `Platform/08-domain/data/disabled.outcomes.tsv`), исходы disabled.outcomes.tsv;
        тот же вход disabled, что у функции may шаг 2): имя в ней — как без входа; строка есть, но не читается — как без
        входа (проверить нечем); строки нет — выключенных нет; domain/users консоль не читает: личность без строк в
-       domain/grants — сессия grants: [], каждая проверка no_grant (C06-DEBUG-FACTS-33-01, решение «Архитектора»
+       domain/grants — сессия grants: [], каждая проверка no_grant; строка domain/grants есть, но не читается —
+       правило «Нечитаемая строка» раздела «Отказы сторожевой» (503 unavailable, не исключение; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e) (C06-DEBUG-FACTS-33-01, решение «Архитектора»
        2026-10-25); с другого адреса — как без переменной; доверенный прокси на петле и заданная
        переменная → процесс не стартует; видно: /session отдаёт debug: true, при старте тревога session.debug_open,
        каждая правка — в журнал с debug: true
@@ -210,8 +211,9 @@ ConsoleRefusal, `detail` — имя параметра (дверь со свои
 cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): токен — функция token договора токена домена «Проверка»
            по набору и domain/revoked этого кластера с expect {kind: person, cluster: null} — договор токена домена «Токен» (решение «Архитектора»
            2026-10-20, ADR-0083 доп. (14) п. 7; разбор ревью стадии A 8–10); отказ — 401 {error: denied, detail:
-           "token refused: <слово>"}, форма `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`); затем may (договор права) с
-           grants = doc строки domain/grants (копия этого кластера), as_of — её as_of, disabled — domain/disabled этого
+           "token refused: <слово>"}, форма `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`), кроме
+           no_revocations: правило «Нечитаемая строка» (503 {error: "unavailable"}; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e); затем may (договор права) с
+           grants = doc строки domain/grants (копия этого кластера; есть, но не читается — правило «Нечитаемая строка»), as_of — её as_of, disabled — domain/disabled этого
            хранилища (есть только у держателя), cap и unit — need P/06.3 Н1.3; deny — 403 {error: denied, detail:
            "<имя> may not <cap> <sub>/<id> | here"}; stale — detail «the grants this cluster holds are older than a day:
            its agent has not reached the domain»
@@ -224,7 +226,12 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 **Нечитаемая строка** (решение владельца 2026-10-28). Строка домена, нужная проверке доступа (личность, подпись, грант,
 вход `may`), есть, но не читается (исход её семьи) — 503 `{error: "unavailable"}`; не 401, не 403, не «строки нет»; в счёт
 пределов не идёт; журнала нет. Исключения — только названные здесь:
-- отладочный вход консоли (раздел «Сторожевая» `identity` п. 4): нечитаемая `domain/disabled` — «как без входа».
+- отладочный вход консоли (раздел «Сторожевая» `identity` п. 4): нечитаемая `domain/disabled` — «как без входа»;
+- нечитаемый элемент `lines` грантов (путь `/doc/lines/*` семей `grants`; P/08.4 Н1.3 `unreadable`): пропуск с
+  диагностикой, решают остальные строки; строка целиком читается (решение «Архитектора» 2026-10-28 по сверке ddc9bee1e).
+
+Строки единиц (гранты `labels:…` и `unit:` about-единицы) — не строки домена: их нечитаемость — раздел «Сторожевая»
+`scope` (грант не покрывает) (решение «Архитектора» 2026-10-28 по сверке ddc9bee1e).
 
 Следы домена (раздел «Следы домена») требуют только наличия строки: нечитаемая строка — след есть. Строки ниже —
 применения правила.
