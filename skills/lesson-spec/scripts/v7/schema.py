@@ -93,6 +93,9 @@ class Gen:
             s["x-class"] = nt["x-class"]
         if "whole" in nt:
             s["x-whole"] = True
+        for k in ("x-step", "x-default"):            # форма вида P/02.2: шаг проекции, ключ с умолчанием формы
+            if k in nt:
+                s[k] = nt[k]
         return s
 
     def node(self, n):
@@ -363,8 +366,9 @@ def _in(x, vals):
 
 
 def dumps(schema):
-    """Детерминированный текст: ключи по порядку, отступ 1, UTF-8 без экранирования, перевод строки в конце."""
-    return json.dumps(schema, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
+    """Детерминированный текст: ключи — в порядке построения (`properties` — в порядке автора, `$defs` — по имени),
+    отступ 1, UTF-8 без экранирования, перевод строки в конце."""
+    return json.dumps(schema, ensure_ascii=False, indent=1) + "\n"
 
 
 # ---------------------------------------------------------------- таблица слоёв

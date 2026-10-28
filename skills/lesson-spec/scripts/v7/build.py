@@ -6,6 +6,7 @@
 Выход (по умолчанию scripts/v7/out/, не Platform/: нормой стандартные файлы станут только при переходе):
 - `02.1-installer.schema.json`, `02.1-installer.layers.tsv` — форма манифеста P/02.1;
 - `02.1-installer.relations.json` — среда CEL и строки `references.tsv` выражениями CEL;
+- `02.2-installer.view.schema.json` — форма канонического вида P/02.2 (v7.view);
 - `families/<NN-процесс>/<семья>.schema.json`, `.layers.tsv` — схемы семей каталога (99 семей, файлы схем — по одному);
 - `common.schema.json` — определения `common.form.yaml` справочно (не норма: схемы несут копии в своих `$defs`);
 - `MANIFEST.tsv` — sha256 каждого файла выхода.
@@ -25,7 +26,7 @@ sys.path.insert(0, str(HERE.parent))
 from form_source import families as fam  # noqa: E402
 from form_source.source import load_form, load_references  # noqa: E402
 
-from v7 import cel, schema  # noqa: E402
+from v7 import cel, schema, view  # noqa: E402
 
 FORM = Path("Platform/02-installer/spec/02.1-installer.form.yaml")
 REFS = Path("Platform/02-installer/spec/02.1-installer.references.tsv")
@@ -101,7 +102,7 @@ def placed(rel):
     """Путь файла выхода → место в дереве курса (`--place`); None — файл туда не идёт."""
     if rel == "MANIFEST.tsv":
         return None
-    if rel.startswith("02.1-installer."):
+    if rel.startswith(("02.1-installer.", "02.2-installer.")):
         return "Platform/02-installer/spec/" + rel
     if rel == "common.schema.json":
         return "Platform/common/data/" + rel
@@ -135,6 +136,7 @@ def build(root, out, place=False):
     write(out, "02.1-installer.layers.tsv", schema.layer_table(s), sums)
     write(out, "02.1-installer.relations.json", json.dumps(relations(root, form), ensure_ascii=False, indent=1) + "\n",
           sums)
+    write(out, "02.2-installer.view.schema.json", schema.dumps(view.from_dialect(root)), sums)
     seen = {}
     for row, f, fs in all_families(root):
         rel = "families/" + row["schema"].replace("/data/", "/").replace(".form.yaml", ".schema.json")

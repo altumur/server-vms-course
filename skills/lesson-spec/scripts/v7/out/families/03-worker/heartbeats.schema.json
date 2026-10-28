@@ -1,922 +1,102 @@
 {
- "$defs": {
-  "common.book_missing": {
-   "description": "кого не хватает в книге — [{member, why}] по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",
-   "items": {
-    "additionalProperties": false,
-    "properties": {
-     "member": {
-      "$ref": "#/$defs/common.domain_member",
-      "description": "член, из-за которого в книге чего-то нет"
-     },
-     "why": {
-      "description": "закрытый список слов (P/08.5 Н1.3 why); у члена одна запись",
-      "enum": [
-       "unseen",
-       "silent",
-       "never",
-       "no_copy",
-       "bad_contribution",
-       "secret_unopened"
-      ],
-      "type": "string"
-     }
-    },
-    "required": [
-     "member",
-     "why"
-    ],
-    "type": "object"
-   },
-   "type": "array"
-  },
-  "common.book_row": {
-   "additionalProperties": {
-    "additionalProperties": false,
-    "description": "текст JSON {entries, missing}",
-    "properties": {
-     "entries": {
-      "description": "элементы ключа для этого получателя по (member, item) в байтах UTF-8 (Н1.3 order — правило урока, не форма)",
-      "items": {
-       "additionalProperties": false,
-       "properties": {
-        "item": {
-         "description": "`<слот>/<item>` для семьи, `<item>` для одиночной строки",
-         "pattern": "^(?:[\\s\\S]+)$",
-         "type": "string"
-        },
-        "member": {
-         "$ref": "#/$defs/common.domain_member",
-         "description": "член-вкладчик — из происхождения отчёта, не из входа"
-        },
-        "value": {
-         "description": "объект входа как есть; секреты *_secret — конверты кольца (enc:v2), AAD — ключ строки 0x00 «/<item строки>» + JSON Pointer секрета (Н1.3 at_rest)",
-         "type": "object",
-         "x-opaque": true
-        }
-       },
-       "required": [
-        "member",
-        "item",
-        "value"
-       ],
-       "type": "object"
-      },
-      "type": "array"
-     },
-     "missing": {
-      "$ref": "#/$defs/common.book_missing"
-     }
-    },
-    "required": [
-     "entries",
-     "missing"
-    ],
-    "type": "object",
-    "x-encoding": "json"
-   },
-   "description": "строка собранной книги (P/08.5 Н1.3 result): элемент \"\" — текст JSON {missing}, элемент `<key>` — текст JSON {entries, missing} только с элементами, где получатель в to; у держателя секреты value — конверты кольца держателя enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (P/09.1 Н1.4 member_row); ключи элементов — произвольно",
-   "properties": {
-    "": {
-     "additionalProperties": false,
-     "description": "текст JSON {missing} — полнота книги без ключей",
-     "properties": {
-      "missing": {
-       "$ref": "#/$defs/common.book_missing"
-      }
-     },
-     "required": [
-      "missing"
-     ],
-     "type": "object",
-     "x-encoding": "json"
-    }
-   },
-   "propertyNames": {
-    "anyOf": [
-     {
-      "enum": [
-       ""
-      ]
-     },
-     {
-      "description": "key книги — значение поля key входа, непустая строка (P/03.7 Н1.2 entry)",
-      "pattern": "^(?:[\\s\\S]+)$",
-      "type": "string"
-     }
-    ]
-   },
-   "required": [
-    ""
-   ],
-   "type": "object"
-  },
-  "common.domain_backup_doc": {
-   "additionalProperties": false,
-   "description": "документ резервной копии (P/08.8 Н1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev, holder_member_key?, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/backups/rev-<rev>`) и у хранителя (объект domain/backup); подпись — выпускающим, проверка — функция record договора записи срока (вид «документ резервной копии»; типы — шаг 1, not_a_record). domain документ не несёт: к домену его привязывает выпускающий (record шаги 3–5)",
-   "properties": {
-    "at": {
-     "description": "стенные секунды подписи; число JSON (record шаг 1: at — число)",
-     "type": "number"
-    },
-    "backup_key_rev": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "ревизия ключа резервной копии (Н1.5 backup_key)"
-    },
-    "holder": {
-     "$ref": "#/$defs/common.domain_member",
-     "description": "имя члена-держателя (P/08.1 Н1.1 member)"
-    },
-    "holder_member_key": {
-     "description": "hex открытого ключа члена-держателя, 32 байта; ключ прежнего в списке после переноса (Н1.2 former)",
-     "pattern": "^(?:[0-9a-f]{64})$",
-     "type": "string"
-    },
-    "issuer": {
-     "description": "hex открытого ключа выпускающего, 32 байта (договор записи срока)",
-     "pattern": "^(?:[0-9a-f]{64})$",
-     "type": "string"
-    },
-    "kid": {
-     "description": "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма",
-     "type": "string"
-    },
-    "members": {
-     "description": "имена списка членов, без повторов",
-     "items": {
-      "$ref": "#/$defs/common.domain_member",
-      "description": "имя члена"
-     },
-     "type": "array",
-     "uniqueItems": true
-    },
-    "objects": {
-     "description": "`{<ключ объекта>: <JSON>}` — общий документ и история тревог (Н1.5 objects); только объекты по форме своей семьи, значением",
-     "type": "object",
-     "x-opaque": true
-    },
-    "raw": {
-     "additionalProperties": {
-      "description": "base64 байтов объекта, RFC 4648 §4, с дополнением; объект в 0 байт — пустая строка",
-      "pattern": "^(?:([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$",
-      "type": "string"
-     },
-     "description": "`{<ключ объекта>: <base64>}` — объекты копии не по форме своей семьи — не JSON или JSON не по форме, байтами (Н1.5 raw; C08-BACKUP-JSON-99, решение «Архитектора» 2026-10-26)",
-     "properties": {},
-     "propertyNames": {
-      "description": "ключ объекта; ключ — в objects или в raw, не в обоих (Н1.5 raw; в обоих — record шаг 1, not_a_record)",
-      "type": "string"
-     },
-     "type": "object"
-    },
-    "rev": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "ревизия резервной копии; растёт только при смене содержимого (Н1.5 rev)"
-    },
-    "sig": {
-     "description": "base64url без = подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url, не 64 байта или не сходится — функция record шаг 5 (bad_signature), не форма",
-     "type": "string"
-    },
-    "state": {
-     "additionalProperties": {
-      "additionalProperties": {
-       "description": "значение элемента как хранится (текст); *_secret — конверт enc:v2 ключа резервной копии (Н1.5 secrets)",
-       "type": "string"
-      },
-      "description": "{<элемент>: <текст>}",
-      "properties": {},
-      "propertyNames": {
-       "description": "элемент строки",
-       "type": "string"
-      },
-      "type": "object"
-     },
-     "description": "{<ключ строки>: {<элемент>: <текст>}} — строки, что домен решил и чего нет ни у кого больше (Н1.5 state)",
-     "properties": {},
-     "propertyNames": {
-      "description": "ключ строки state (Н1.5 state)",
-      "type": "string"
-     },
-     "type": "object"
-    },
-    "term": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "срок держателя"
-    }
-   },
-   "required": [
-    "term",
-    "rev",
-    "holder",
-    "at",
-    "members",
-    "state",
-    "objects",
-    "backup_key_rev",
-    "issuer",
-    "kid",
-    "sig"
-   ],
-   "type": "object"
-  },
-  "common.domain_backup_pointer": {
-   "additionalProperties": false,
-   "description": "пара резервной копии и её сумма {term, rev, sha256} (P/08.8 Н1.5 keepers): указатель держателя domain/keepers/<член> и строка хранителя domain/backup-taken",
-   "properties": {
-    "rev": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "ревизия резервной копии"
-    },
-    "sha256": {
-     "$ref": "#/$defs/common.sha256_hex",
-     "description": "hex sha256 текста JCS документа резервной копии"
-    },
-    "term": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "срок держателя, выпустившего резервную копию"
-    }
-   },
-   "required": [
-    "term",
-    "rev",
-    "sha256"
-   ],
-   "type": "object"
-  },
-  "common.domain_member": {
-   "description": "имя члена — CLUSTER его установки, 1–64 знака [a-z0-9-] (P/08.1 Н1.1 member)",
-   "pattern": "^(?:[a-z0-9-]{1,64})$",
-   "type": "string"
-  },
-  "common.domain_member_entry": {
-   "additionalProperties": false,
-   "description": "запись члена Entry (P/08.3 Н1.1); by — только у admitted, Entry не больше ENTRY_MAX 820 байт JCS (P/08.10 Н1.5) — проверки урока у писателя, не формы",
-   "properties": {
-    "by": {
-     "description": "человек, принявший члена (P/08.4; до него — operator); только у admitted",
-     "type": "string"
-    },
-    "ca": {
-     "description": "отпечатки центра члена (sha256 DER), 1–2, по возрастанию, без повторов (P/08.3 Н1.6 Entry.ca)",
-     "items": {
-      "$ref": "#/$defs/common.sha256_hex"
-     },
-     "maxItems": 2,
-     "minItems": 1,
-     "type": "array",
-     "uniqueItems": true
-    },
-    "how": {
-     "description": "откуда член в списке — \"admitted\" | \"holder\" | `\"held the domain until term <N>\"` (P/08.3 Н1.1; два последних — P/08.8 Н1.2)",
-     "not": {
-      "enum": [
-       ""
-      ]
-     },
-     "type": "string"
-    },
-    "key": {
-     "$ref": "#/$defs/common.domain_member_key",
-     "description": "ключ члена, принятого по отпечатку; у holder — ключ из первого отчёта его агента"
-    },
-    "revoked_keys": {
-     "description": "прежние ключи этого имени, отозванные; не больше 4 последних (P/08.10 Н1.5)",
-     "items": {
-      "$ref": "#/$defs/common.domain_member_key"
-     },
-     "type": "array"
-    },
-    "since": {
-     "$ref": "#/$defs/common.time",
-     "description": "стенные секунды держателя записи"
-    }
-   },
-   "required": [
-    "how",
-    "since"
-   ],
-   "type": "object"
-  },
-  "common.domain_member_key": {
-   "description": "hex открытого ключа Ed25519 члена, 32 байта (ключ члена P/09.1 Н1.1 pub; Entry.key P/08.3 Н1.1)",
-   "pattern": "^(?:[0-9a-f]{64})$",
-   "type": "string"
-  },
-  "common.domain_members_doc": {
-   "additionalProperties": false,
-   "description": "doc строки domain/members держателя (P/08.3 Н1.1) и её копии domain/member-list у члена — текст JCS (P/09.1 Н1.1, Н1.4)",
-   "properties": {
-    "members": {
-     "additionalProperties": {
-      "$ref": "#/$defs/common.domain_member_entry"
-     },
-     "description": "записи членов, держатель в счёте; не больше MEMBERS_MAX 500 (P/08.10 Н1.5)",
-     "propertyNames": {
-      "$ref": "#/$defs/common.domain_member"
-     },
-     "type": "object"
-    },
-    "rev": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "+1 на каждую запись"
-    },
-    "term": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "срок держателя, записавшего строку (P/08.8 Н1.1; установка — 1)"
-    }
-   },
-   "required": [
-    "rev",
-    "term",
-    "members"
-   ],
-   "type": "object",
-   "x-encoding": "jcs"
-  },
-  "common.domain_outcome": {
-   "additionalProperties": false,
-   "description": "исход правки — текст JSON элемента `<id>` строки исходов: у держателя domain/outcomes/<член> (P/08.6 Н1.6), у члена domain/outcomes (P/09.1 Н1.5 outcome)",
-   "properties": {
-    "at": {
-     "$ref": "#/$defs/common.time",
-     "description": "стенные секунды агента"
-    },
-    "error": {
-     "description": "detail ответа (нет detail — его error) при status ≥ 400, без значений секретов",
-     "type": "string"
-    },
-    "id": {
-     "description": "id правки (P/08.6 Н1.4 id); равен имени элемента — правило урока (settle, P/08.6 Н1.6)",
-     "pattern": "^(?:e-[0-9a-f]{12})$",
-     "type": "string"
-    },
-    "kept_at": {
-     "$ref": "#/$defs/common.time",
-     "description": "at правки (P/08.6 Н1.4 at)"
-    },
-    "result": {
-     "description": "performed (2xx) | conflict (412) | refused (иной 4xx, кроме «in flight»)",
-     "enum": [
-      "performed",
-      "conflict",
-      "refused"
-     ],
-     "type": "string"
-    },
-    "status": {
-     "description": "код ответа консоли члена",
-     "type": "integer",
-     "x-integer": true
-    },
-    "what": {
-     "description": "what правки (P/08.6 Н1.4)",
-     "type": "string"
-    }
-   },
-   "required": [
-    "id",
-    "status",
-    "result",
-    "at",
-    "what",
-    "kept_at"
-   ],
-   "type": "object",
-   "x-encoding": "json"
-  },
-  "common.domain_placement": {
-   "additionalProperties": false,
-   "description": "запись назначения — строка держателя `domain/placement/<sub>/<ref>` (P/08.6 Н1.1) и её копия у члена `domain/placed/<sub>/<ref>` («элементы записи как у держателя», P/09.1 Н1.5 member)",
-   "properties": {
-    "at": {
-     "$ref": "#/$defs/common.time",
-     "description": "стенные секунды процесса domain записи"
-    },
-    "cluster": {
-     "$ref": "#/$defs/common.domain_member",
-     "description": "член-исполнитель; обязателен; \"\" — не по форме (форма двери — 400, P/08.6 Н1.1 form)"
-    },
-    "copies": {
-     "description": "текст JCS массива других исполнителей, по возрастанию, без повторов, без cluster; \"[]\" — нет (порядок и «без cluster» — правила урока, не формы)",
-     "items": {
-      "$ref": "#/$defs/common.domain_member",
-      "description": "другой исполнитель"
-     },
-     "type": "array",
-     "uniqueItems": true,
-     "x-encoding": "jcs"
-    },
-    "origin": {
-     "description": "член-владелец источника; \"\" — нет; origin — не исполнитель (P/08.6 Н1.1 executors)",
-     "pattern": "^(?:([a-z0-9-]{1,64})?)$",
-     "type": "string"
-    },
-    "reason": {
-     "description": "слова оператора; \"\" — нет",
-     "type": "string"
-    },
-    "rev": {
-     "description": "значение счётчика domain/placement этой записи, десятичным текстом (P/08.6 Н1.1 rev)",
-     "pattern": "^(?:[1-9][0-9]*)$",
-     "type": "string"
-    }
-   },
-   "required": [
-    "cluster",
-    "origin",
-    "copies",
-    "reason",
-    "at",
-    "rev"
-   ],
-   "type": "object"
-  },
-  "common.domain_topology_doc": {
-   "additionalProperties": false,
-   "description": "doc строки domain/topology держателя (P/08.3 Н1.2) и её копии domain/member-topology у члена — текст JCS (P/09.1 Н1.4)",
-   "properties": {
-    "at": {
-     "$ref": "#/$defs/common.time",
-     "description": "когда записал (стенные секунды консоли)"
-    },
-    "by": {
-     "description": "кто записал — имя, доказанное сторожевой",
-     "type": "string"
-    },
-    "centre": {
-     "$ref": "#/$defs/common.domain_member",
-     "description": "член — центр домена; нет — центра нет"
-    },
-    "rev": {
-     "$ref": "#/$defs/common.uint53",
-     "description": "0 — «никогда не писали»; +1 на запись"
-    },
-    "star": {
-     "description": "звёздные ретрансляторы, по возрастанию, без повторов",
-     "items": {
-      "$ref": "#/$defs/common.domain_member"
-     },
-     "type": "array",
-     "uniqueItems": true
-    },
-    "via": {
-     "additionalProperties": {
-      "$ref": "#/$defs/common.domain_member"
-     },
-     "description": "член → ретранслятор, через который он отчитывается; члена нет — прямо",
-     "propertyNames": {
-      "$ref": "#/$defs/common.domain_member"
-     },
-     "type": "object"
-    }
-   },
-   "required": [
-    "rev",
-    "star",
-    "via"
-   ],
-   "type": "object",
-   "x-encoding": "jcs"
-  },
-  "common.grants_doc": {
-   "additionalProperties": false,
-   "description": "текст JCS {lines} строки грантов (P/08.4 Н1.3); копия члена несёт его как пришёл (P/09.1 Н1.4 member_copy)",
-   "properties": {
-    "lines": {
-     "description": "строки по (subject, cap, scope) в байтах UTF-8, затем until по числу, без повторов по (subject, cap, scope, until) — порядок и повтор — правило строки (P/08.4 Н1.3 lines), не форма",
-     "items": {
-      "$ref": "#/$defs/common.grants_line"
-     },
-     "type": "array"
-    }
-   },
-   "required": [
-    "lines"
-   ],
-   "type": "object",
-   "x-encoding": "jcs"
-  },
-  "common.grants_line": {
-   "additionalProperties": false,
-   "properties": {
-    "by": {
-     "description": "имя, доказанное сторожевой при записи; совпавшая по (subject, cap, scope, until) строка сохраняет свой by",
-     "type": "string"
-    },
-    "cap": {
-     "description": "view < edit < admin",
-     "enum": [
-      "view",
-      "edit",
-      "admin"
-     ],
-     "type": "string"
-    },
-    "scope": {
-     "description": "`*` | `unit:<sub>/<id>` | `labels:<метка>[,<метка>…]` (P/08.4 Н1.3 scope): `<sub>` — имя манифеста (P/02.1), `<id>` — по грамматике идентификатора P/06.1 Н1.3 (named_id: не . и ..), метки — азбука меток common/contracts/labels.md; метки без повторов — правило строки, не форма",
-     "not": {
-      "pattern": "^(?:unit:[a-z][a-z0-9_-]{0,31}/\\.\\.?)$",
-      "type": "string"
-     },
-     "pattern": "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+|labels:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)$",
-     "type": "string"
-    },
-    "subject": {
-     "$ref": "#/$defs/common.person_name",
-     "description": "имя человека (Н1.1) или субъект индекса имён (глава 8.5 Н1.7); форма — Н1.1 (Н3 «гранты» шаг 3)"
-    },
-    "until": {
-     "$ref": "#/$defs/common.time",
-     "description": "0 — без срока; иначе стенные секунды — строка действует, пока now < until; у входа больше трёх знаков дроби — округление до тысячных (P/08.4 Н1.3 until); сравнивается по значению (0 и 0.0 — одна строка)"
-    }
-   },
-   "required": [
-    "subject",
-    "cap",
-    "scope",
-    "until",
-    "by"
-   ],
-   "type": "object"
-  },
-  "common.named_id": {
-   "description": "id единицы по полю (P/06.1 Н1.3 named): непустой; без / \\ | \" запятой, управляющих (Cc), разделителей строк и абзацев (Zl, Zp) и цифр вне 0–9 (Nd не ASCII); категории — Unicode 15.0.0",
-   "not": {
-    "enum": [
-     ".",
-     ".."
-    ]
-   },
-   "pattern": "^(?:[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+)$",
-   "type": "string"
-  },
-  "common.person_name": {
-   "description": "имя человека (P/08.4 Н1.1 name): 1–64 знака без пробельных, управляющих (U+0000–U+001F, U+007F) и : | ( ) \" /; не ровно break-glass; пробельные — свойство White_Space Unicode 15.0.0, выписанное знаками (решение «Архитектора» 2026-10-20 по вопросам сборки урока 8, п. 3); «не субъект индекса имён» — проверка двери (глава 8.5 Н1.7), не форма",
-   "not": {
-    "enum": [
-     "break-glass"
-    ]
-   },
-   "pattern": "^(?:[^\u0000-    -     　:|()\"/]{1,64})$",
-   "type": "string"
-  },
-  "common.pos53": {
-   "description": "целое от 1 до 2^53 − 1",
-   "maximum": 9007199254740991,
-   "minimum": 1,
-   "type": "integer",
-   "x-integer": true
-  },
-  "common.sha256_hex": {
-   "description": "sha256 — 64 строчные hex-цифры (P/02.3 Н1.5)",
-   "pattern": "^(?:[0-9a-f]{64})$",
-   "type": "string"
-  },
-  "common.shared_doc": {
-   "additionalProperties": false,
-   "description": "общий документ домена (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/shared-docs/rev-<rev>`) и у члена (объект domain/shared — копия, взятая агентом, P/09.1 Н1.10); подпись — выпускающим, проверка — функция record договора записи срока (вид «общий документ»)",
-   "properties": {
-    "at": {
-     "description": "стенные секунды подписи",
-     "type": "number"
-    },
-    "by": {
-     "description": "имя, доказанное сторожевой; после переноса — \"domain\"",
-     "type": "string"
-    },
-    "domain": {
-     "description": "имя домена (глава 8.2, из М11/2 Н1.1); иной JSON-тип или ≠ домену набора — функция record шаг 2 (another_domain), не форма (REC-G01)"
-    },
-    "issuer": {
-     "description": "hex открытого ключа выпускающего (договор записи срока, issuing_key_secret)",
-     "pattern": "^(?:[0-9a-f]{64})$",
-     "type": "string"
-    },
-    "kid": {
-     "description": "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма (REC-G01)",
-     "type": "string"
-    },
-    "rev": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "номер правки"
-    },
-    "shared": {
-     "additionalProperties": {
-      "additionalProperties": {
-       "description": "значение поля или документ, объявленные domain.shared манифеста"
-      },
-      "description": "значения подсистемы `<sub>` — имена её domain.shared",
-      "propertyNames": {
-       "type": "string"
-      },
-      "type": "object"
-     },
-     "description": "`{<sub>: {<имя>: <значение>}}` — только объявленное P/02.1 Н1.2б; подсистемы и имена по возрастанию (JCS)",
-     "propertyNames": {
-      "$ref": "#/$defs/common.sub_name"
-     },
-     "type": "object"
-    },
-    "sig": {
-     "description": "base64url без «=» подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; иное — функция record шаг 5 (bad_signature), не форма (REC-G01)",
-     "type": "string"
-    },
-    "term": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "срок держателя (глава 8.8, из М11/10 Н1.1); порядок — (term, rev), term старше"
-    }
-   },
-   "required": [
-    "domain",
-    "term",
-    "rev",
-    "at",
-    "by",
-    "shared",
-    "issuer",
-    "kid",
-    "sig"
-   ],
-   "type": "object"
-  },
-  "common.sub_name": {
-   "description": "имя подсистемы (P/02.1 Н1.2)",
-   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$",
-   "type": "string"
-  },
-  "common.time": {
-   "description": "время Н0 P/01.1 «Время в строке»",
-   "type": [
-    "string",
-    "number"
-   ],
-   "x-time": true
-  },
-  "common.uint53": {
-   "description": "целое от 0 до 2^53 − 1",
-   "maximum": 9007199254740991,
-   "minimum": 0,
-   "type": "integer",
-   "x-integer": true
-  },
-  "histogram": {
-   "additionalProperties": false,
-   "description": "гистограмма пульса (Н1.1 histogram): buckets — счёты по границам ROAD_BUCKETS, накопительно",
-   "properties": {
-    "ahead": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "behind": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "buckets": {
-     "items": {
-      "$ref": "#/$defs/common.uint53"
-     },
-     "maxItems": 10,
-     "minItems": 10,
-     "type": "array"
-    },
-    "count": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "sum": {
-     "minimum": 0,
-     "type": "number"
-    }
-   },
-   "required": [
-    "buckets",
-    "sum",
-    "count"
-   ],
-   "type": "object"
-  }
- },
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "additionalProperties": {
-  "description": "поля, имена которых называет манифест: `<capacity.from>` — ёмкость (умолчание capacity), `<headroom.from>` — запас = ёмкость − Σ весов назначения (умолчание headroom), `<place_by>` — место, которое воркер держит, \"\" — не держит; остальное — слова подсистемы, которые платформа не читает (heartbeat.strings называет строки)"
- },
+ "type": "object",
  "properties": {
-  "build": {
-   "description": "слово сборки для человека (P/06.6 Н1.1а heartbeat)",
+  "worker": {
+   "description": "имя слота; ДОЛЖЕН; равен имени в ключе",
    "type": "string"
   },
-  "command_counts": {
-   "additionalProperties": false,
-   "description": "исходы вызовов действия этим экземпляром с его старта (глава 3.6 Н3 «взгляд держателя»; ADR-0091 п. 6)",
-   "properties": {
-    "expired": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "performed": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "refused": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "unknown": {
-     "$ref": "#/$defs/common.uint53"
-    }
-   },
-   "type": "object"
-  },
-  "command_request": {
-   "additionalProperties": {
-    "$ref": "#/$defs/histogram"
-   },
-   "description": "по подателю: полное время — от at строки просьбы (время подачи) до исхода; из filed время не выводится (W03-E05)",
-   "propertyNames": {
-    "type": "string"
-   },
-   "type": "object"
-  },
-  "command_road": {
-   "additionalProperties": {
-    "$ref": "#/$defs/histogram"
-   },
-   "description": "по подателю (operator или подсистема): дорога — от at строки просьбы до первого местного наблюдения её этим воркером (W03-E05)",
-   "propertyNames": {
-    "type": "string"
-   },
-   "type": "object"
-  },
-  "command_wait": {
-   "$ref": "#/$defs/histogram",
-   "description": "ожидание у держателя — от первого местного наблюдения просьбы этим воркером до исхода, по монотонным часам (W03-E05)"
-  },
-  "commands_in_flight": {
-   "$ref": "#/$defs/common.pos53",
-   "description": "вызовов действия, ещё не вернувшихся; только когда > 0"
-  },
-  "commands_reanswered": {
-   "$ref": "#/$defs/common.pos53",
-   "description": "исходов, записанных снова (late); только когда > 0"
-  },
-  "conflicts": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "Σ конфликтов аренд + перенесённых; метрика `<sub>_epoch_conflicts`"
-  },
-  "creates": {
-   "additionalProperties": false,
-   "description": "исходы заказа строк другой подсистемы (глава 3.6 Н1.6; ADR-0091 п. 1, Г-7)",
-   "properties": {
-    "created": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "expired": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "extended": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "gone": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "refused": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "taken": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "unchanged": {
-     "$ref": "#/$defs/common.uint53"
-    }
-   },
-   "type": "object"
-  },
-  "events": {
-   "description": "строка платформы (platform_strings Н1.1)",
-   "type": "string"
-  },
-  "fenced": {
-   "description": "только пока отсечён и имя ещё моё; после отдать_имя пульс не пишется",
-   "enum": [
-    true
-   ],
-   "type": "boolean"
-  },
-  "fetched": {
-   "description": "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (договор отметки просьбы «fetched»)",
-   "type": "string"
-  },
-  "filings": {
-   "additionalProperties": false,
-   "description": "подача просьб воркером (глава 3.6 Н1.5; ADR-0091 п. 7)",
-   "properties": {
-    "again": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "filed": {
-     "$ref": "#/$defs/common.uint53"
-    },
-    "refused": {
-     "$ref": "#/$defs/common.uint53"
-    }
-   },
-   "type": "object"
-  },
-  "freeing": {
-   "additionalProperties": {
-    "$ref": "#/$defs/common.uint53"
-   },
-   "description": "ответ на просьбу ресурса освободить место (P/05 Н1.4 free_ask): том ресурса → байты, которые воркер освобождает и которых ещё нет в used; 0 — ничего; поле платформы; что освобождать — подсистема (запрос VMS freeing)",
-   "propertyNames": {
-    "pattern": "^(?:[A-Za-z0-9_]{1,64})$",
-    "type": "string"
-   },
-   "type": "object"
-  },
-  "garbled_rows": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "чтений строк своих единиц, не прочитанных своим типом (глава 3.3 Н3 шаг 2), и строк просьб и меток, не прочитанных своей формой держателем (глава 3.6 «взгляд держателя»; RM-G01), с запуска экземпляра"
-  },
-  "instance": {
-   "description": "экземпляр; ДОЛЖЕН",
-   "type": "string"
-  },
-  "labels": {
-   "description": "метки узла через запятую",
-   "type": "string"
-  },
-  "made_rows": {
-   "additionalProperties": {
-    "$ref": "#/$defs/common.uint53"
-   },
-   "description": "заказчик: ключей под префиксом `<адресат>/<rows>/<заказчик>-` по последнему перечислению (ADR-0091 п. 1)",
-   "propertyNames": {
-    "type": "string"
-   },
-   "type": "object"
-  },
-  "pass_failures": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "проходов цикла, оборванных ошибкой, с запуска экземпляра (глава 3.3 Н3); ряд worker_pass_failures{worker}"
-  },
-  "pending_writes": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "P/06.6 Н1.2 pending_writes: целое JSON без дробной части и экспоненты, 0 ≤ x ≤ 2^53 − 1; базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe",
-   "x-whole": true
-  },
-  "place_error": {
-   "additionalProperties": {
-    "enum": [
-     "sealed",
-     "refused",
-     "wrong"
-    ]
-   },
-   "description": "место не взято или потеряно: место → слово — sealed (секрет строки места не открылся, глава 3.5), refused (отказ подсистемы), wrong (строка места не по форме) — закрытый перечень; запись снимается, когда место взято или отпущено; записей не больше числа мест-кандидатов; поле платформы, не строка platform_strings; place_by — прежнее (ADR-0091 доп. (10) п. 4, повторное ревью)",
-   "propertyNames": {
-    "type": "string"
-   },
-   "type": "object"
-  },
-  "previous_hb": {
+  "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "число ts застанного под своим именем при старте пульса, если было (журнал cammeta-go, урок 9 № 6: по нему консоль считает failover_seconds, P/06.5 Н3)"
-  },
-  "previous_instance": {
-   "description": "instance застанного пульса, если был",
-   "type": "string"
-  },
-  "previous_server": {
-   "description": "server застанного пульса, если был",
-   "type": "string"
-  },
-  "schema": {
-   "description": "схема сборки (P/06.6 Н1.1а heartbeat): целое JSON без дробной части и экспоненты, ≥ 1",
-   "maximum": 9007199254740991,
-   "minimum": 1,
-   "type": "integer",
-   "x-integer": true,
-   "x-whole": true
-  },
-  "server": {
-   "description": "сервер; ДОЛЖЕН; \"\" ровно когда сервер неизвестен (ADR-0029); \"\" — допуск читателя: воркер с SERVER_NAME по P/02.4 Н1.2 его не пишет (W03-G01)",
-   "type": "string"
-  },
-  "server_unsaid": {
-   "description": "ровно эта строка (ADR-0029); только когда сервер не назван, а манифест требует places.server_field",
-   "enum": [
-    "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
-   ],
-   "type": "string"
-  },
-  "stand_in_renewals": {
-   "$ref": "#/$defs/common.pos53",
-   "description": "число продлений подменой; только когда > 0"
-  },
-  "started": {
-   "$ref": "#/$defs/common.time",
-   "description": "момент старта"
+   "description": "стенные секунды писателя; ДОЛЖЕН; для показа и расхождения часов, не для свежести (ADR-0049)"
   },
   "status": {
    "description": "ДОЛЖЕН; по элементу на единицу, которую воркер ведёт",
+   "type": "array",
    "items": {
+    "description": "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id или phase; у phase не sealed и не unreadable нет epoch, observed_revision или revision; у phase sealed нет why или revision или есть epoch или observed_revision (W03-G02); у phase unreadable нет why или есть epoch или observed_revision (W03-G05); id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)",
+    "type": "object",
+    "properties": {
+     "id": {
+      "$ref": "#/$defs/common.named_id",
+      "description": "id единицы — по грамматике договора проверки строки (форма держит named; у манифеста с unit.id numeric — ещё numeric, P/06.1 Н1.3)"
+     },
+     "phase": {
+      "description": "слова подсистемы; платформа знает три — running (счётчик running, соседство near), sealed (глава 3.5 Н3 «открыть»: секрет строки не открылся, эпоха не взята; W03-G02) и unreadable (глава 3.3 Н3 шаг 2: строка ни разу не прочитана своим типом, эпоха не взята; W03-G05)",
+      "type": "string"
+     },
+     "epoch": {
+      "description": "эпоха единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)",
+      "x-whole": true,
+      "type": "integer",
+      "x-integer": true,
+      "minimum": 1
+     },
+     "revision": {
+      "description": "revision строки единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim)",
+      "x-whole": true,
+      "type": "integer",
+      "x-integer": true,
+      "minimum": 1
+     },
+     "observed_revision": {
+      "description": "revision строки, под которой единица сейчас запущена; целый знак ≥ 0 (P/08.1 Н1.6 claim)",
+      "x-whole": true,
+      "type": "integer",
+      "x-integer": true,
+      "minimum": 0
+     },
+     "why": {
+      "description": "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)",
+      "type": "string"
+     },
+     "stalled": {
+      "description": "отступ запуска единицы дошёл до RETRY_MAX (глава 3.3 Н1.2 retry; ADR-0091 п. 6); иначе поля нет",
+      "type": "boolean",
+      "enum": [
+       true
+      ]
+     },
+     "lease": {
+      "description": "аренда единицы не подтверждена (глава 3.2 Н1.6 silent); иначе поля нет (запрос VMS «пульс и битая строка»)",
+      "type": "string",
+      "enum": [
+       "unconfirmed"
+      ]
+     },
+     "unconfirmed_s": {
+      "description": "секунды без подтверждения аренды единицы, с точностью 0,1 с; только вместе с lease: unconfirmed",
+      "type": "number",
+      "minimum": 0
+     }
+    },
+    "propertyNames": {
+     "anyOf": [
+      {
+       "enum": [
+        "id",
+        "phase",
+        "epoch",
+        "revision",
+        "observed_revision",
+        "why",
+        "stalled",
+        "lease",
+        "unconfirmed_s"
+       ]
+      },
+      {
+       "type": "string"
+      }
+     ]
+    },
     "additionalProperties": {
      "description": "слова подсистемы; учебный обработчик testsub — одно слово n, текущее значение счётчика (второй пилот, Н-7)"
     },
+    "required": [
+     "id",
+     "phase"
+    ],
     "allOf": [
      {
       "if": {
@@ -926,6 +106,9 @@
         },
         {
          "not": {
+          "required": [
+           "phase"
+          ],
           "properties": {
            "phase": {
             "enum": [
@@ -933,10 +116,7 @@
              "unreadable"
             ]
            }
-          },
-          "required": [
-           "phase"
-          ]
+          }
          }
         }
        ]
@@ -956,16 +136,16 @@
          "type": "object"
         },
         {
+         "required": [
+          "phase"
+         ],
          "properties": {
           "phase": {
            "enum": [
             "sealed"
            ]
           }
-         },
-         "required": [
-          "phase"
-         ]
+         }
         }
        ]
       },
@@ -997,16 +177,16 @@
          "type": "object"
         },
         {
+         "required": [
+          "phase"
+         ],
          "properties": {
           "phase": {
            "enum": [
             "unreadable"
            ]
           }
-         },
-         "required": [
-          "phase"
-         ]
+         }
         }
        ]
       },
@@ -1030,135 +210,259 @@
        ]
       }
      }
-    ],
-    "description": "элемент не по этой форме — единственный перечень (исходы рядом, путь /status; разбор ревью стадии B 6–7, № 15): нет id или phase; у phase не sealed и не unreadable нет epoch, observed_revision или revision; у phase sealed нет why или revision или есть epoch или observed_revision (W03-G02); у phase unreadable нет why или есть epoch или observed_revision (W03-G05); id не по грамматике id единицы (договор проверки строки); phase не строка; epoch, revision не целым знаком ≥ 1; observed_revision не целым знаком ≥ 0 (границы — RunningUnit контракта урока 6)",
-    "properties": {
-     "epoch": {
-      "description": "эпоха единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim: элемент с нецелыми epoch, revision, observed_revision — не по форме)",
-      "minimum": 1,
-      "type": "integer",
-      "x-integer": true,
-      "x-whole": true
-     },
-     "id": {
-      "$ref": "#/$defs/common.named_id",
-      "description": "id единицы — по грамматике договора проверки строки (форма держит named; у манифеста с unit.id numeric — ещё numeric, P/06.1 Н1.3)"
-     },
-     "lease": {
-      "description": "аренда единицы не подтверждена (глава 3.2 Н1.6 silent); иначе поля нет (запрос VMS «пульс и битая строка»)",
-      "enum": [
-       "unconfirmed"
-      ],
-      "type": "string"
-     },
-     "observed_revision": {
-      "description": "revision строки, под которой единица сейчас запущена; целый знак ≥ 0 (P/08.1 Н1.6 claim)",
-      "minimum": 0,
-      "type": "integer",
-      "x-integer": true,
-      "x-whole": true
-     },
-     "phase": {
-      "description": "слова подсистемы; платформа знает три — running (счётчик running, соседство near), sealed (глава 3.5 Н3 «открыть»: секрет строки не открылся, эпоха не взята; W03-G02) и unreadable (глава 3.3 Н3 шаг 2: строка ни разу не прочитана своим типом, эпоха не взята; W03-G05)",
-      "type": "string"
-     },
-     "revision": {
-      "description": "revision строки единицы; целый знак ≥ 1 (P/08.1 Н1.6 claim)",
-      "minimum": 1,
-      "type": "integer",
-      "x-integer": true,
-      "x-whole": true
-     },
-     "stalled": {
-      "description": "отступ запуска единицы дошёл до RETRY_MAX (глава 3.3 Н1.2 retry; ADR-0091 п. 6); иначе поля нет",
-      "enum": [
-       true
-      ],
-      "type": "boolean"
-     },
-     "unconfirmed_s": {
-      "description": "секунды без подтверждения аренды единицы, с точностью 0,1 с; только вместе с lease: unconfirmed",
-      "minimum": 0,
-      "type": "number"
-     },
-     "why": {
-      "description": "причина платформы, когда единица не идёт (sealed — глава 3.5 Н3 «открыть»), как fates.why P/04, не error (второй пилот, Н-7)",
-      "type": "string"
-     }
-    },
-    "propertyNames": {
-     "anyOf": [
-      {
-       "enum": [
-        "id",
-        "phase",
-        "epoch",
-        "revision",
-        "observed_revision",
-        "why",
-        "stalled",
-        "lease",
-        "unconfirmed_s"
-       ]
-      },
-      {
-       "type": "string"
-      }
-     ]
-    },
-    "required": [
-     "id",
-     "phase"
-    ],
-    "type": "object"
-   },
-   "type": "array"
+    ]
+   }
   },
-  "stood_in": {
-   "additionalProperties": false,
-   "description": "только в пульсе подмены (Н3); ts пульса — время этого повтора (журнал cammeta-go, урок 5 № 2)",
-   "properties": {
-    "as_of": {
-     "$ref": "#/$defs/common.time",
-     "description": "ts последнего пульса цикла, который подмена повторяет (возраст состояния подсистемы), у следующих повторов тот же"
-    },
-    "for": {
-     "description": "stood_in.for (Н1.1 {step, for, as_of})"
-    },
-    "step": {
-     "description": "stood_in.step (Н1.1 {step, for, as_of})"
-    }
-   },
-   "required": [
-    "step",
-    "for",
-    "as_of"
-   ],
-   "type": "object"
+  "server": {
+   "description": "сервер; ДОЛЖЕН; \"\" ровно когда сервер неизвестен (ADR-0029); \"\" — допуск читателя: воркер с SERVER_NAME по P/02.4 Н1.2 его не пишет (W03-G01)",
+   "type": "string"
   },
-  "store_errors": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "ответов хранилища с ошибкой или без ответа с запуска экземпляра (глава 3.2 таблица отказов: store_errors + 1); ряд worker_store_errors{worker}"
+  "instance": {
+   "description": "экземпляр; ДОЛЖЕН",
+   "type": "string"
   },
-  "ts": {
-   "$ref": "#/$defs/common.time",
-   "description": "стенные секунды писателя; ДОЛЖЕН; для показа и расхождения часов, не для свежести (ADR-0049)"
-  },
-  "unconfirmed": {
-   "$ref": "#/$defs/common.uint53",
-   "description": "единиц, чья аренда сейчас не подтверждена (элементы status[] с lease: unconfirmed); ряд worker_unconfirmed{worker}"
+  "labels": {
+   "description": "метки узла через запятую",
+   "type": "string"
   },
   "url": {
    "description": "url двери — строка платформы (platform_strings Н1.1; добавлено М10/9, P/06.5 Н3 «`/where/<id>`»); хост, схема и привязка — Н1.7 door_address (ADR-0091 доп. (7), (8))",
    "type": "string"
   },
+  "fetched": {
+   "description": "SaidID(rid) через запятую, без пробелов — просьбы, исход которых держатель сообщил (глава 3.6 Н3 «взгляд держателя»); поля нет или пусто — ничего не сообщено; длину ограничивают FETCHED_COUNT/FETCHED_BYTES (договор отметки просьбы «fetched»)",
+   "type": "string"
+  },
+  "events": {
+   "description": "строка платформы (platform_strings Н1.1)",
+   "type": "string"
+  },
+  "conflicts": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "Σ конфликтов аренд + перенесённых; метрика `<sub>_epoch_conflicts`"
+  },
+  "started": {
+   "$ref": "#/$defs/common.time",
+   "description": "момент старта"
+  },
+  "previous_hb": {
+   "$ref": "#/$defs/common.time",
+   "description": "число ts застанного под своим именем при старте пульса, если было (журнал cammeta-go, урок 9 № 6: по нему консоль считает failover_seconds, P/06.5 Н3)"
+  },
+  "previous_instance": {
+   "description": "instance застанного пульса, если был",
+   "type": "string"
+  },
+  "previous_server": {
+   "description": "server застанного пульса, если был",
+   "type": "string"
+  },
+  "fenced": {
+   "description": "только пока отсечён и имя ещё моё; после отдать_имя пульс не пишется",
+   "type": "boolean",
+   "enum": [
+    true
+   ]
+  },
   "was_fenced": {
    "description": "был ли этот экземпляр отсечён с запуска (Н3 «отсечён»); ряд P/06.5 worker_fenced{worker} (запрос VMS «пульс и битая строка»)",
    "type": "boolean"
   },
-  "worker": {
-   "description": "имя слота; ДОЛЖЕН; равен имени в ключе",
+  "store_errors": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "ответов хранилища с ошибкой или без ответа с запуска экземпляра (глава 3.2 таблица отказов: store_errors + 1); ряд worker_store_errors{worker}"
+  },
+  "pass_failures": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "проходов цикла, оборванных ошибкой, с запуска экземпляра (глава 3.3 Н3); ряд worker_pass_failures{worker}"
+  },
+  "unconfirmed": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "единиц, чья аренда сейчас не подтверждена (элементы status[] с lease: unconfirmed); ряд worker_unconfirmed{worker}"
+  },
+  "place_error": {
+   "description": "место не взято или потеряно: место → слово — sealed (секрет строки места не открылся, глава 3.5), refused (отказ подсистемы), wrong (строка места не по форме) — закрытый перечень; запись снимается, когда место взято или отпущено; записей не больше числа мест-кандидатов; поле платформы, не строка platform_strings; place_by — прежнее (ADR-0091 доп. (10) п. 4, повторное ревью)",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "enum": [
+     "sealed",
+     "refused",
+     "wrong"
+    ]
+   }
+  },
+  "freeing": {
+   "description": "ответ на просьбу ресурса освободить место (P/05 Н1.4 free_ask): том ресурса → байты, которые воркер освобождает и которых ещё нет в used; 0 — ничего; поле платформы; что освобождать — подсистема (запрос VMS freeing)",
+   "type": "object",
+   "propertyNames": {
+    "type": "string",
+    "pattern": "^(?:[A-Za-z0-9_]{1,64})$"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/common.uint53"
+   }
+  },
+  "garbled_rows": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "чтений строк своих единиц, не прочитанных своим типом (глава 3.3 Н3 шаг 2), и строк просьб и меток, не прочитанных своей формой держателем (глава 3.6 «взгляд держателя»; RM-G01), с запуска экземпляра"
+  },
+  "schema": {
+   "description": "схема сборки (P/06.6 Н1.1а heartbeat): целое JSON без дробной части и экспоненты, ≥ 1",
+   "x-whole": true,
+   "type": "integer",
+   "x-integer": true,
+   "minimum": 1,
+   "maximum": 9007199254740991
+  },
+  "build": {
+   "description": "слово сборки для человека (P/06.6 Н1.1а heartbeat)",
    "type": "string"
+  },
+  "pending_writes": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "P/06.6 Н1.2 pending_writes: целое JSON без дробной части и экспоненты, 0 ≤ x ≤ 2^53 − 1; базовый воркер пишет 0 сам, если подсистема не сказала своё; поля нет — дренаж не safe",
+   "x-whole": true
+  },
+  "server_unsaid": {
+   "description": "ровно эта строка (ADR-0029); только когда сервер не назван, а манифест требует places.server_field",
+   "type": "string",
+   "enum": [
+    "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
+   ]
+  },
+  "stood_in": {
+   "description": "только в пульсе подмены (Н3); ts пульса — время этого повтора (журнал cammeta-go, урок 5 № 2)",
+   "type": "object",
+   "properties": {
+    "step": {
+     "description": "stood_in.step (Н1.1 {step, for, as_of})"
+    },
+    "for": {
+     "description": "stood_in.for (Н1.1 {step, for, as_of})"
+    },
+    "as_of": {
+     "$ref": "#/$defs/common.time",
+     "description": "ts последнего пульса цикла, который подмена повторяет (возраст состояния подсистемы), у следующих повторов тот же"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "step",
+    "for",
+    "as_of"
+   ]
+  },
+  "stand_in_renewals": {
+   "$ref": "#/$defs/common.pos53",
+   "description": "число продлений подменой; только когда > 0"
+  },
+  "command_counts": {
+   "description": "исходы вызовов действия этим экземпляром с его старта (глава 3.6 Н3 «взгляд держателя»; ADR-0091 п. 6)",
+   "type": "object",
+   "properties": {
+    "performed": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "refused": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "expired": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "unknown": {
+     "$ref": "#/$defs/common.uint53"
+    }
+   },
+   "additionalProperties": false
+  },
+  "commands_in_flight": {
+   "$ref": "#/$defs/common.pos53",
+   "description": "вызовов действия, ещё не вернувшихся; только когда > 0"
+  },
+  "commands_reanswered": {
+   "$ref": "#/$defs/common.pos53",
+   "description": "исходов, записанных снова (late); только когда > 0"
+  },
+  "command_road": {
+   "description": "по подателю (operator или подсистема): дорога — от at строки просьбы до первого местного наблюдения её этим воркером (W03-E05)",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/histogram"
+   }
+  },
+  "command_request": {
+   "description": "по подателю: полное время — от at строки просьбы (время подачи) до исхода; из filed время не выводится (W03-E05)",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/histogram"
+   }
+  },
+  "command_wait": {
+   "$ref": "#/$defs/histogram",
+   "description": "ожидание у держателя — от первого местного наблюдения просьбы этим воркером до исхода, по монотонным часам (W03-E05)"
+  },
+  "filings": {
+   "description": "подача просьб воркером (глава 3.6 Н1.5; ADR-0091 п. 7)",
+   "type": "object",
+   "properties": {
+    "filed": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "again": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "refused": {
+     "$ref": "#/$defs/common.uint53"
+    }
+   },
+   "additionalProperties": false
+  },
+  "creates": {
+   "description": "исходы заказа строк другой подсистемы (глава 3.6 Н1.6; ADR-0091 п. 1, Г-7)",
+   "type": "object",
+   "properties": {
+    "created": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "extended": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "unchanged": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "taken": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "gone": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "expired": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "refused": {
+     "$ref": "#/$defs/common.uint53"
+    }
+   },
+   "additionalProperties": false
+  },
+  "made_rows": {
+   "description": "заказчик: ключей под префиксом `<адресат>/<rows>/<заказчик>-` по последнему перечислению (ADR-0091 п. 1)",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/common.uint53"
+   }
   }
  },
  "propertyNames": {
@@ -1209,6 +513,9 @@
    }
   ]
  },
+ "additionalProperties": {
+  "description": "поля, имена которых называет манифест: `<capacity.from>` — ёмкость (умолчание capacity), `<headroom.from>` — запас = ёмкость − Σ весов назначения (умолчание headroom), `<place_by>` — место, которое воркер держит, \"\" — не держит; остальное — слова подсистемы, которые платформа не читает (heartbeat.strings называет строки)"
+ },
  "required": [
   "worker",
   "ts",
@@ -1216,5 +523,698 @@
   "server",
   "instance"
  ],
- "type": "object"
+ "$defs": {
+  "common.book_missing": {
+   "description": "кого не хватает в книге — [{member, why}] по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "member": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "член, из-за которого в книге чего-то нет"
+     },
+     "why": {
+      "description": "закрытый список слов (P/08.5 Н1.3 why); у члена одна запись",
+      "type": "string",
+      "enum": [
+       "unseen",
+       "silent",
+       "never",
+       "no_copy",
+       "bad_contribution",
+       "secret_unopened"
+      ]
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "member",
+     "why"
+    ]
+   }
+  },
+  "common.book_row": {
+   "description": "строка собранной книги (P/08.5 Н1.3 result): элемент \"\" — текст JSON {missing}, элемент `<key>` — текст JSON {entries, missing} только с элементами, где получатель в to; у держателя секреты value — конверты кольца держателя enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (P/09.1 Н1.4 member_row); ключи элементов — произвольно",
+   "type": "object",
+   "properties": {
+    "": {
+     "description": "текст JSON {missing} — полнота книги без ключей",
+     "type": "object",
+     "properties": {
+      "missing": {
+       "$ref": "#/$defs/common.book_missing"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "missing"
+     ],
+     "x-encoding": "json"
+    }
+   },
+   "propertyNames": {
+    "anyOf": [
+     {
+      "enum": [
+       ""
+      ]
+     },
+     {
+      "description": "key книги — значение поля key входа, непустая строка (P/03.7 Н1.2 entry)",
+      "type": "string",
+      "pattern": "^(?:[\\s\\S]+)$"
+     }
+    ]
+   },
+   "additionalProperties": {
+    "description": "текст JSON {entries, missing}",
+    "type": "object",
+    "properties": {
+     "entries": {
+      "description": "элементы ключа для этого получателя по (member, item) в байтах UTF-8 (Н1.3 order — правило урока, не форма)",
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "member": {
+         "$ref": "#/$defs/common.domain_member",
+         "description": "член-вкладчик — из происхождения отчёта, не из входа"
+        },
+        "item": {
+         "description": "`<слот>/<item>` для семьи, `<item>` для одиночной строки",
+         "type": "string",
+         "pattern": "^(?:[\\s\\S]+)$"
+        },
+        "value": {
+         "description": "объект входа как есть; секреты *_secret — конверты кольца (enc:v2), AAD — ключ строки 0x00 «/<item строки>» + JSON Pointer секрета (Н1.3 at_rest)",
+         "type": "object",
+         "x-opaque": true
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "member",
+        "item",
+        "value"
+       ]
+      }
+     },
+     "missing": {
+      "$ref": "#/$defs/common.book_missing"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "entries",
+     "missing"
+    ],
+    "x-encoding": "json"
+   },
+   "required": [
+    ""
+   ]
+  },
+  "common.domain_backup_doc": {
+   "description": "документ резервной копии (P/08.8 Н1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev, holder_member_key?, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/backups/rev-<rev>`) и у хранителя (объект domain/backup); подпись — выпускающим, проверка — функция record договора записи срока (вид «документ резервной копии»; типы — шаг 1, not_a_record). domain документ не несёт: к домену его привязывает выпускающий (record шаги 3–5)",
+   "type": "object",
+   "properties": {
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "срок держателя"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "ревизия резервной копии; растёт только при смене содержимого (Н1.5 rev)"
+    },
+    "holder": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "имя члена-держателя (P/08.1 Н1.1 member)"
+    },
+    "at": {
+     "description": "стенные секунды подписи; число JSON (record шаг 1: at — число)",
+     "type": "number"
+    },
+    "members": {
+     "description": "имена списка членов, без повторов",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "имя члена"
+     },
+     "uniqueItems": true
+    },
+    "state": {
+     "description": "{<ключ строки>: {<элемент>: <текст>}} — строки, что домен решил и чего нет ни у кого больше (Н1.5 state)",
+     "type": "object",
+     "properties": {},
+     "propertyNames": {
+      "description": "ключ строки state (Н1.5 state)",
+      "type": "string"
+     },
+     "additionalProperties": {
+      "description": "{<элемент>: <текст>}",
+      "type": "object",
+      "properties": {},
+      "propertyNames": {
+       "description": "элемент строки",
+       "type": "string"
+      },
+      "additionalProperties": {
+       "description": "значение элемента как хранится (текст); *_secret — конверт enc:v2 ключа резервной копии (Н1.5 secrets)",
+       "type": "string"
+      }
+     }
+    },
+    "objects": {
+     "description": "`{<ключ объекта>: <JSON>}` — общий документ и история тревог (Н1.5 objects); только объекты по форме своей семьи, значением",
+     "type": "object",
+     "x-opaque": true
+    },
+    "raw": {
+     "description": "`{<ключ объекта>: <base64>}` — объекты копии не по форме своей семьи — не JSON или JSON не по форме, байтами (Н1.5 raw; C08-BACKUP-JSON-99, решение «Архитектора» 2026-10-26)",
+     "type": "object",
+     "properties": {},
+     "propertyNames": {
+      "description": "ключ объекта; ключ — в objects или в raw, не в обоих (Н1.5 raw; в обоих — record шаг 1, not_a_record)",
+      "type": "string"
+     },
+     "additionalProperties": {
+      "description": "base64 байтов объекта, RFC 4648 §4, с дополнением; объект в 0 байт — пустая строка",
+      "type": "string",
+      "pattern": "^(?:([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$"
+     }
+    },
+    "backup_key_rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "ревизия ключа резервной копии (Н1.5 backup_key)"
+    },
+    "holder_member_key": {
+     "description": "hex открытого ключа члена-держателя, 32 байта; ключ прежнего в списке после переноса (Н1.2 former)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "issuer": {
+     "description": "hex открытого ключа выпускающего, 32 байта (договор записи срока)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "kid": {
+     "description": "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма",
+     "type": "string"
+    },
+    "sig": {
+     "description": "base64url без = подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url, не 64 байта или не сходится — функция record шаг 5 (bad_signature), не форма",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev",
+    "holder",
+    "at",
+    "members",
+    "state",
+    "objects",
+    "backup_key_rev",
+    "issuer",
+    "kid",
+    "sig"
+   ]
+  },
+  "common.domain_backup_pointer": {
+   "description": "пара резервной копии и её сумма {term, rev, sha256} (P/08.8 Н1.5 keepers): указатель держателя domain/keepers/<член> и строка хранителя domain/backup-taken",
+   "type": "object",
+   "properties": {
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "срок держателя, выпустившего резервную копию"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "ревизия резервной копии"
+    },
+    "sha256": {
+     "$ref": "#/$defs/common.sha256_hex",
+     "description": "hex sha256 текста JCS документа резервной копии"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev",
+    "sha256"
+   ]
+  },
+  "common.domain_member": {
+   "description": "имя члена — CLUSTER его установки, 1–64 знака [a-z0-9-] (P/08.1 Н1.1 member)",
+   "type": "string",
+   "pattern": "^(?:[a-z0-9-]{1,64})$"
+  },
+  "common.domain_member_entry": {
+   "description": "запись члена Entry (P/08.3 Н1.1); by — только у admitted, Entry не больше ENTRY_MAX 820 байт JCS (P/08.10 Н1.5) — проверки урока у писателя, не формы",
+   "type": "object",
+   "properties": {
+    "how": {
+     "description": "откуда член в списке — \"admitted\" | \"holder\" | `\"held the domain until term <N>\"` (P/08.3 Н1.1; два последних — P/08.8 Н1.2)",
+     "type": "string",
+     "not": {
+      "enum": [
+       ""
+      ]
+     }
+    },
+    "since": {
+     "$ref": "#/$defs/common.time",
+     "description": "стенные секунды держателя записи"
+    },
+    "by": {
+     "description": "человек, принявший члена (P/08.4; до него — operator); только у admitted",
+     "type": "string"
+    },
+    "key": {
+     "$ref": "#/$defs/common.domain_member_key",
+     "description": "ключ члена, принятого по отпечатку; у holder — ключ из первого отчёта его агента"
+    },
+    "revoked_keys": {
+     "description": "прежние ключи этого имени, отозванные; не больше 4 последних (P/08.10 Н1.5)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member_key"
+     }
+    },
+    "ca": {
+     "description": "отпечатки центра члена (sha256 DER), 1–2, по возрастанию, без повторов (P/08.3 Н1.6 Entry.ca)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.sha256_hex"
+     },
+     "minItems": 1,
+     "uniqueItems": true,
+     "maxItems": 2
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "how",
+    "since"
+   ]
+  },
+  "common.domain_member_key": {
+   "description": "hex открытого ключа Ed25519 члена, 32 байта (ключ члена P/09.1 Н1.1 pub; Entry.key P/08.3 Н1.1)",
+   "type": "string",
+   "pattern": "^(?:[0-9a-f]{64})$"
+  },
+  "common.domain_members_doc": {
+   "description": "doc строки domain/members держателя (P/08.3 Н1.1) и её копии domain/member-list у члена — текст JCS (P/09.1 Н1.1, Н1.4)",
+   "type": "object",
+   "properties": {
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "+1 на каждую запись"
+    },
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "срок держателя, записавшего строку (P/08.8 Н1.1; установка — 1)"
+    },
+    "members": {
+     "description": "записи членов, держатель в счёте; не больше MEMBERS_MAX 500 (P/08.10 Н1.5)",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/common.domain_member_entry"
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "rev",
+    "term",
+    "members"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.domain_outcome": {
+   "description": "исход правки — текст JSON элемента `<id>` строки исходов: у держателя domain/outcomes/<член> (P/08.6 Н1.6), у члена domain/outcomes (P/09.1 Н1.5 outcome)",
+   "type": "object",
+   "properties": {
+    "id": {
+     "description": "id правки (P/08.6 Н1.4 id); равен имени элемента — правило урока (settle, P/08.6 Н1.6)",
+     "type": "string",
+     "pattern": "^(?:e-[0-9a-f]{12})$"
+    },
+    "status": {
+     "description": "код ответа консоли члена",
+     "type": "integer",
+     "x-integer": true
+    },
+    "result": {
+     "description": "performed (2xx) | conflict (412) | refused (иной 4xx, кроме «in flight»)",
+     "type": "string",
+     "enum": [
+      "performed",
+      "conflict",
+      "refused"
+     ]
+    },
+    "error": {
+     "description": "detail ответа (нет detail — его error) при status ≥ 400, без значений секретов",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "стенные секунды агента"
+    },
+    "what": {
+     "description": "what правки (P/08.6 Н1.4)",
+     "type": "string"
+    },
+    "kept_at": {
+     "$ref": "#/$defs/common.time",
+     "description": "at правки (P/08.6 Н1.4 at)"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "status",
+    "result",
+    "at",
+    "what",
+    "kept_at"
+   ],
+   "x-encoding": "json"
+  },
+  "common.domain_placement": {
+   "description": "запись назначения — строка держателя `domain/placement/<sub>/<ref>` (P/08.6 Н1.1) и её копия у члена `domain/placed/<sub>/<ref>` («элементы записи как у держателя», P/09.1 Н1.5 member)",
+   "type": "object",
+   "properties": {
+    "cluster": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "член-исполнитель; обязателен; \"\" — не по форме (форма двери — 400, P/08.6 Н1.1 form)"
+    },
+    "origin": {
+     "description": "член-владелец источника; \"\" — нет; origin — не исполнитель (P/08.6 Н1.1 executors)",
+     "type": "string",
+     "pattern": "^(?:([a-z0-9-]{1,64})?)$"
+    },
+    "copies": {
+     "description": "текст JCS массива других исполнителей, по возрастанию, без повторов, без cluster; \"[]\" — нет (порядок и «без cluster» — правила урока, не формы)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "другой исполнитель"
+     },
+     "uniqueItems": true,
+     "x-encoding": "jcs"
+    },
+    "reason": {
+     "description": "слова оператора; \"\" — нет",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "стенные секунды процесса domain записи"
+    },
+    "rev": {
+     "description": "значение счётчика domain/placement этой записи, десятичным текстом (P/08.6 Н1.1 rev)",
+     "type": "string",
+     "pattern": "^(?:[1-9][0-9]*)$"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "cluster",
+    "origin",
+    "copies",
+    "reason",
+    "at",
+    "rev"
+   ]
+  },
+  "common.domain_topology_doc": {
+   "description": "doc строки domain/topology держателя (P/08.3 Н1.2) и её копии domain/member-topology у члена — текст JCS (P/09.1 Н1.4)",
+   "type": "object",
+   "properties": {
+    "rev": {
+     "$ref": "#/$defs/common.uint53",
+     "description": "0 — «никогда не писали»; +1 на запись"
+    },
+    "centre": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "член — центр домена; нет — центра нет"
+    },
+    "star": {
+     "description": "звёздные ретрансляторы, по возрастанию, без повторов",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "uniqueItems": true
+    },
+    "via": {
+     "description": "член → ретранслятор, через который он отчитывается; члена нет — прямо",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/common.domain_member"
+     }
+    },
+    "by": {
+     "description": "кто записал — имя, доказанное сторожевой",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "когда записал (стенные секунды консоли)"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "rev",
+    "star",
+    "via"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.grants_doc": {
+   "description": "текст JCS {lines} строки грантов (P/08.4 Н1.3); копия члена несёт его как пришёл (P/09.1 Н1.4 member_copy)",
+   "type": "object",
+   "properties": {
+    "lines": {
+     "description": "строки по (subject, cap, scope) в байтах UTF-8, затем until по числу, без повторов по (subject, cap, scope, until) — порядок и повтор — правило строки (P/08.4 Н1.3 lines), не форма",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.grants_line"
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "lines"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.grants_line": {
+   "type": "object",
+   "properties": {
+    "subject": {
+     "$ref": "#/$defs/common.person_name",
+     "description": "имя человека (Н1.1) или субъект индекса имён (глава 8.5 Н1.7); форма — Н1.1 (Н3 «гранты» шаг 3)"
+    },
+    "cap": {
+     "description": "view < edit < admin",
+     "type": "string",
+     "enum": [
+      "view",
+      "edit",
+      "admin"
+     ]
+    },
+    "scope": {
+     "description": "`*` | `unit:<sub>/<id>` | `labels:<метка>[,<метка>…]` (P/08.4 Н1.3 scope): `<sub>` — имя манифеста (P/02.1), `<id>` — по грамматике идентификатора P/06.1 Н1.3 (named_id: не . и ..), метки — азбука меток common/contracts/labels.md; метки без повторов — правило строки, не форма",
+     "type": "string",
+     "not": {
+      "type": "string",
+      "pattern": "^(?:unit:[a-z][a-z0-9_-]{0,31}/\\.\\.?)$"
+     },
+     "pattern": "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+|labels:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)$"
+    },
+    "until": {
+     "$ref": "#/$defs/common.time",
+     "description": "0 — без срока; иначе стенные секунды — строка действует, пока now < until; у входа больше трёх знаков дроби — округление до тысячных (P/08.4 Н1.3 until); сравнивается по значению (0 и 0.0 — одна строка)"
+    },
+    "by": {
+     "description": "имя, доказанное сторожевой при записи; совпавшая по (subject, cap, scope, until) строка сохраняет свой by",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "subject",
+    "cap",
+    "scope",
+    "until",
+    "by"
+   ]
+  },
+  "common.named_id": {
+   "description": "id единицы по полю (P/06.1 Н1.3 named): непустой; без / \\ | \" запятой, управляющих (Cc), разделителей строк и абзацев (Zl, Zp) и цифр вне 0–9 (Nd не ASCII); категории — Unicode 15.0.0",
+   "type": "string",
+   "not": {
+    "enum": [
+     ".",
+     ".."
+    ]
+   },
+   "pattern": "^(?:[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+)$"
+  },
+  "common.person_name": {
+   "description": "имя человека (P/08.4 Н1.1 name): 1–64 знака без пробельных, управляющих (U+0000–U+001F, U+007F) и : | ( ) \" /; не ровно break-glass; пробельные — свойство White_Space Unicode 15.0.0, выписанное знаками (решение «Архитектора» 2026-10-20 по вопросам сборки урока 8, п. 3); «не субъект индекса имён» — проверка двери (глава 8.5 Н1.7), не форма",
+   "type": "string",
+   "not": {
+    "enum": [
+     "break-glass"
+    ]
+   },
+   "pattern": "^(?:[^\u0000-    -     　:|()\"/]{1,64})$"
+  },
+  "common.pos53": {
+   "description": "целое от 1 до 2^53 − 1",
+   "type": "integer",
+   "x-integer": true,
+   "minimum": 1,
+   "maximum": 9007199254740991
+  },
+  "common.sha256_hex": {
+   "description": "sha256 — 64 строчные hex-цифры (P/02.3 Н1.5)",
+   "type": "string",
+   "pattern": "^(?:[0-9a-f]{64})$"
+  },
+  "common.shared_doc": {
+   "description": "общий документ домена (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, закрытый набор; один документ у держателя (объект `domain/shared-docs/rev-<rev>`) и у члена (объект domain/shared — копия, взятая агентом, P/09.1 Н1.10); подпись — выпускающим, проверка — функция record договора записи срока (вид «общий документ»)",
+   "type": "object",
+   "properties": {
+    "domain": {
+     "description": "имя домена (глава 8.2, из М11/2 Н1.1); иной JSON-тип или ≠ домену набора — функция record шаг 2 (another_domain), не форма (REC-G01)"
+    },
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "срок держателя (глава 8.8, из М11/10 Н1.1); порядок — (term, rev), term старше"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "номер правки"
+    },
+    "at": {
+     "description": "стенные секунды подписи",
+     "type": "number"
+    },
+    "by": {
+     "description": "имя, доказанное сторожевой; после переноса — \"domain\"",
+     "type": "string"
+    },
+    "shared": {
+     "description": "`{<sub>: {<имя>: <значение>}}` — только объявленное P/02.1 Н1.2б; подсистемы и имена по возрастанию (JCS)",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.sub_name"
+     },
+     "additionalProperties": {
+      "description": "значения подсистемы `<sub>` — имена её domain.shared",
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {
+       "description": "значение поля или документ, объявленные domain.shared манифеста"
+      }
+     }
+    },
+    "issuer": {
+     "description": "hex открытого ключа выпускающего (договор записи срока, issuing_key_secret)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "kid": {
+     "description": "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма (REC-G01)",
+     "type": "string"
+    },
+    "sig": {
+     "description": "base64url без «=» подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; иное — функция record шаг 5 (bad_signature), не форма (REC-G01)",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "domain",
+    "term",
+    "rev",
+    "at",
+    "by",
+    "shared",
+    "issuer",
+    "kid",
+    "sig"
+   ]
+  },
+  "common.sub_name": {
+   "description": "имя подсистемы (P/02.1 Н1.2)",
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "common.time": {
+   "description": "время Н0 P/01.1 «Время в строке»",
+   "type": [
+    "string",
+    "number"
+   ],
+   "x-time": true
+  },
+  "common.uint53": {
+   "description": "целое от 0 до 2^53 − 1",
+   "type": "integer",
+   "x-integer": true,
+   "minimum": 0,
+   "maximum": 9007199254740991
+  },
+  "histogram": {
+   "description": "гистограмма пульса (Н1.1 histogram): buckets — счёты по границам ROAD_BUCKETS, накопительно",
+   "type": "object",
+   "properties": {
+    "buckets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.uint53"
+     },
+     "minItems": 10,
+     "maxItems": 10
+    },
+    "sum": {
+     "type": "number",
+     "minimum": 0
+    },
+    "count": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "ahead": {
+     "$ref": "#/$defs/common.uint53"
+    },
+    "behind": {
+     "$ref": "#/$defs/common.uint53"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "buckets",
+    "sum",
+    "count"
+   ]
+  }
+ }
 }
