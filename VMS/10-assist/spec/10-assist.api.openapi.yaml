@@ -168,6 +168,7 @@ components:
         tool_choice: {enum: [auto, required, none]}
         reasoning_effort: {enum: [low, medium, high]}
         max_tokens: {type: integer, minimum: 1}
+        turn: {type: string, pattern: "^[0-9a-f]{32}$", description: "ход страницы (V/10.2 Н1.2, Н1.4)"}
     StepState:
       type: object
       required: [step, state]
