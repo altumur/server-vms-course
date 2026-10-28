@@ -221,6 +221,14 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 
 Из P/06.3 Н4 (перенесено без изменения; аудит раскладки Б-09, Б-11, решение «Архитектора» 2026-10-25).
 
+**Нечитаемая строка** (решение владельца 2026-10-28). Строка домена, нужная проверке доступа (личность, подпись, грант,
+вход `may`), есть, но не читается (исход её семьи) — 503 `{error: "unavailable"}`; не 401, не 403, не «строки нет»; в счёт
+пределов не идёт; журнала нет. Исключения — только названные здесь:
+- отладочный вход консоли (раздел «Сторожевая» `identity` п. 4): нечитаемая `domain/disabled` — «как без входа».
+
+Следы домена (раздел «Следы домена») требуют только наличия строки: нечитаемая строка — след есть. Строки ниже —
+применения правила.
+
 | Причина | Код | Тело | Что делает вызывающий |
 |---|---|---|---|
 | аварийный вход: пароль не сверился | 401 | `{detail, error: denied}` | не создавать сессию; общий журнал отказа доступа; в счёт предела (глава 6.7 Н1.10; P/08.4 Н1.10) |
@@ -229,9 +237,9 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 | гранта нет | 403 | `{detail: "<кто> may not <cap> <единица \| here>", error: denied}`; журнал | — |
 | нет домена, не петля | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | подключить домен |
 | ключи были, проверить нечем | 503 | `{detail: "…admits nobody", error: denied}` | восстановить доверие |
-| строка `domain/keys` есть, но не читается — проверить токен нечем ([семья `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не «токен годен», не 401 | ждать читаемой строки (DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
-| строка `domain/member` есть, но не читается — подпись своего агента (`X-Agent-Signature`) и след домена проверить нечем ([семья `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}`; не 401, не «подпись годна», не «нет домена» и не 403 | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
-| строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}`, журнала нет (вида события нет, как у `domain/keys` и `domain/member`; C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, решение «Архитектора» 2026-10-28); не 403, `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
+| строка `domain/keys` есть, но не читается — проверить токен нечем ([семья `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка»; не «токен годен» | ждать читаемой строки (DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) |
+| строка `domain/member` есть, но не читается — подпись своего агента (`X-Agent-Signature`) и след домена проверить нечем ([семья `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка»; не «подпись годна», не «нет домена» | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
+| строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка» (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, решение «Архитектора» 2026-10-28); `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
 | чужой Origin на действующем запросе по куке | 403 | `{detail, error: denied}` | — |
 | `/session POST` у открытой консоли (раздел «Сторожевая» `session` `by_state`) | 400 | `{detail, error: "this console is open"}` | — |
 | `/session GET` и `DELETE` у открытой консоли (раздел «Сторожевая», `by_state`) | 200 | GET — `{open: true, login_url}`; DELETE — `{out: true}` | — |
@@ -314,7 +322,8 @@ door:          POST /session/break-glass {who, why, password} у консоли 
                3. предел («Предел попыток» ниже)                       → 429
                4. нет domain/member — 403 {error: denied, detail: "no emergency account: its store names no member"};
                   domain/member есть, но не читается (семья member, `Platform/09-agent/data/member.outcomes.tsv`) —
-                  503 {error: "unavailable"}, как «не открывается»; не в счёт предела (C06-BREAKGLASS-MEMBER-UNREADABLE-01, решение «Архитектора» 2026-10-28);
+                  503 {error: "unavailable"}, как «не открывается» (правило «Нечитаемая строка» раздела «Отказы сторожевой»); не в счёт
+                  предела (C06-BREAKGLASS-MEMBER-UNREADABLE-01, решение «Архитектора» 2026-10-28);
                   нет строки domain/break-glass/<этот кластер> — 403 {error: denied, detail: "no emergency account: …"};
                   не открывается — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. пароль не сверился — 401 {error: denied, detail: "break-glass: wrong password"} (в счёт предела)
