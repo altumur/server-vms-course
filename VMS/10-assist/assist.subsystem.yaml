@@ -37,8 +37,8 @@ unit:
     # which for twelve gigabytes is a mistake, so the schema says at least one.
     labels:    {type: list,   required: true, schema: {minItems: 1}}
 placement:
-  # One model per server: a worker carries one row (its heartbeat says so) and the controller never orders a second
-  # worker on a server (no `grows`). Memory is not the platform's rule here (no `unit_mb`): every server runs the base
+  # One model per server: a worker carries one row (its heartbeat says so; `CAPACITY` other than 1 in its role file
+  # stops it at start, V/10.1 Н1.2) and the controller never orders a second worker on a server (no `grows`). Memory is not the platform's rule here (no `unit_mb`): every server runs the base
   # worker, and a budget of twelve gigabytes would stop it where no model ever stands; the label is the promise, the
   # numbers are V/09's.
   capacity:   {from: capacity, default: 1}
@@ -47,13 +47,11 @@ placement:
 snapshot: [labels]
 # The model's door (V/10.2): a page asks the console for its address and a door token (`GET /assist/where/<name>`,
 # `view` on the model row) and talks to the holder itself — step by step, each answer in a fraction of a second or a
-# long poll shorter than the console's limits. The admin's credentials never reach the worker.
+# long poll shorter than the console's limits. The admin's credentials never reach the worker. Who may talk to the
+# model is `view` on its row — the door token says so; no `rights` key is needed (`rights.routes` is about rows, tables
+# and the console's `door.pass`, ADR-0093 доп. (2) п. 4).
 door:
   routes: [chat]
-# Who may talk to the model: `view` on its row, and nothing stronger (ADR-0093 доп. (2) п. 4). The console gives a door
-# token by `view` anyway (P/06.5 Н3); said here so it is read, and so no grant above `view` is ever asked for a chat.
-rights:
-  routes: {view: [chat]}
 metrics:
   - {name: models_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   # Steps answered and how each ended (done, failed, cancelled, abandoned), and how long the model took over them.

@@ -9,6 +9,11 @@ info:
     `view` на строку модели, договор токена двери; `Authorization: Bearer`). Шаг принадлежит `user` токена: чужому —
     404. Иной метод — 405, иной путь — 404.
 servers:
+  - url: https://{server}:{port}
+    description: с комплектом роли assistworker — имя сервера SERVER_NAME (P/03.4 Н1.7 door_address kit)
+    variables:
+      server: {default: srv-a}
+      port: {default: "0"}
   - url: http://127.0.0.1:{port}
     description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
     variables:
@@ -33,6 +38,10 @@ paths:
               required: true
               description: "/chat/<name>/steps/<step>"
               schema: {type: string}
+            Connection:
+              required: true
+              description: соединение закрывается после ответа (Н1.6)
+              schema: {const: close}
           content:
             application/json:
               schema:
@@ -62,7 +71,11 @@ paths:
           schema: {type: integer, minimum: 0, maximum: 20}
       responses:
         "200":
-          description: состояние шага
+          description: состояние шага; при wait > 0 — с Connection close (Н1.6)
+          headers:
+            Connection:
+              required: false
+              schema: {const: close}
           content:
             application/json:
               schema: {$ref: "#/components/schemas/StepState"}
@@ -110,8 +123,9 @@ components:
   schemas:
     StepId:
       type: string
-      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>"
-      pattern: "^[^.]+\\.[0-9a-f]{32}$"
+      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; в экземпляре может быть точка — разбор по последней"
+      pattern: "^.+\\.[0-9a-f]{32}$"
+      examples: ["srv.a:1:abcdef.00000000000000000000000000000000"]
     ToolCall:
       type: object
       required: [id, type, function]
@@ -126,17 +140,28 @@ components:
           properties:
             name: {type: string}
             arguments: {type: string}
-    Message:
+    RequestMessage:
       type: object
       required: [role]
-      additionalProperties: true
+      additionalProperties: false
       properties:
         role: {enum: [system, user, assistant, tool]}
-        content: {type: [string, "null"]}
+        content: {type: string}
         tool_calls:
           type: array
           items: {$ref: "#/components/schemas/ToolCall"}
         tool_call_id: {type: string}
+    ModelMessage:
+      type: object
+      description: сообщение модели как есть (V/10.2 Н1.3)
+      required: [role]
+      additionalProperties: true
+      properties:
+        role: {const: assistant}
+        content: {type: [string, "null"]}
+        tool_calls:
+          type: array
+          items: {$ref: "#/components/schemas/ToolCall"}
         reasoning_content: {type: string}
     StepRequest:
       type: object
@@ -147,7 +172,7 @@ components:
           type: array
           minItems: 1
           maxItems: 512
-          items: {$ref: "#/components/schemas/Message"}
+          items: {$ref: "#/components/schemas/RequestMessage"}
         tools:
           type: array
           maxItems: 64
@@ -170,24 +195,54 @@ components:
         max_tokens: {type: integer, minimum: 1}
         turn: {type: string, pattern: "^[0-9a-f]{32}$", description: "ход страницы (V/10.2 Н1.2, Н1.4)"}
     StepState:
+      description: состояние шага по ветвям (V/10.2 Н1.3)
       type: object
-      required: [step, state]
-      additionalProperties: false
-      properties:
-        step: {$ref: "#/components/schemas/StepId"}
-        state: {enum: [queued, running, done, failed, cancelled]}
-        ahead: {type: integer, minimum: 0}
-        message: {$ref: "#/components/schemas/Message"}
-        finish_reason: {enum: [stop, tool_calls, length]}
-        usage:
-          type: object
-          required: [prompt_tokens, completion_tokens]
-          additionalProperties: true
+      unevaluatedProperties: false
+      oneOf:
+        - type: object
+          required: [step, state, ahead]
+          additionalProperties: false
           properties:
-            prompt_tokens: {type: integer, minimum: 0}
-            completion_tokens: {type: integer, minimum: 0}
-        seconds: {type: number, minimum: 0}
-        reason: {type: string}
+            step: {$ref: "#/components/schemas/StepId"}
+            state: {const: queued}
+            ahead: {type: integer, minimum: 0}
+        - type: object
+          required: [step, state]
+          additionalProperties: false
+          properties:
+            step: {$ref: "#/components/schemas/StepId"}
+            state: {const: running}
+        - type: object
+          required: [step, state, message, finish_reason, usage, seconds]
+          additionalProperties: false
+          properties:
+            step: {$ref: "#/components/schemas/StepId"}
+            state: {const: done}
+            message: {$ref: "#/components/schemas/ModelMessage"}
+            finish_reason: {enum: [stop, tool_calls, length]}
+            usage:
+              type: object
+              required: [prompt_tokens, completion_tokens]
+              additionalProperties: true
+              properties:
+                prompt_tokens: {type: integer, minimum: 0}
+                completion_tokens: {type: integer, minimum: 0}
+            seconds: {type: number, minimum: 0}
+        - type: object
+          required: [step, state, reason, seconds]
+          additionalProperties: false
+          properties:
+            step: {$ref: "#/components/schemas/StepId"}
+            state: {const: failed}
+            reason: {enum: [model failed, too long, queue too long, context exceeded, model restarted]}
+            seconds: {type: number, minimum: 0}
+        - type: object
+          required: [step, state, reason]
+          additionalProperties: false
+          properties:
+            step: {$ref: "#/components/schemas/StepId"}
+            state: {const: cancelled}
+            reason: {enum: [disabled, abandoned]}
   securitySchemes:
     doorToken:
       type: http
