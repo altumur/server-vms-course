@@ -980,7 +980,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Standby'
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrUnavailable'
   '/domain/members/{name}':
     parameters:
     - name: name
@@ -1988,7 +1988,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen'
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyFrozenOrUnavailable'
   /domain/handover:
     post:
       operationId: passHandover
