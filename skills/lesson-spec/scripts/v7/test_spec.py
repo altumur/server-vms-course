@@ -142,7 +142,7 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 680)
+        self.assertEqual(stats["form_cases"], 682)
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):
@@ -227,7 +227,7 @@ class TestTree(unittest.TestCase):
         from v7 import vectors
         ch = vectors.Chapter(TREE, strict=True).run()
         self.assertEqual(ch.errors, [])
-        self.assertEqual(ch.stats["canonical_vectors"], 157)
+        self.assertEqual(ch.stats["canonical_vectors"], 159)
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
         root = self.copy()
         e = sorted((root / vectors.VECTORS / "expect").glob("corpus-*.json"))[0]
