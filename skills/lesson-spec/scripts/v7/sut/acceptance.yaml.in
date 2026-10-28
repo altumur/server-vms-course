@@ -1,3 +1,4 @@
+# SUT эталона (v7/sut), бэкенд @BACKEND@: код навыка — курс @COURSE@ (sha256 файлов — SUT-PIN.tsv), эталон диалекта — @DIALECT@
 format: 2
 implementation: sut-@BACKEND@
 module: 02-installer
