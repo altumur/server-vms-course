@@ -281,7 +281,7 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/members/{name}:
     description: 'Глава 8.3 Н2, Н3 «DELETE /domain/members/<член>».'
     parameters:
@@ -310,7 +310,7 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/members/{member}/ca:
     description: 'Глава 8.3 Н1.6 admin, Н2.'
     parameters:
@@ -352,7 +352,7 @@ paths:
         '403': {$ref: '#/components/responses/Denied'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/topology:
     description: 'Глава 8.3 Н1.2 put_order, Н2. GET и HEAD отвечает консоль домена сама (урок P/10; схема — Topology).'
     put:
@@ -381,7 +381,7 @@ paths:
           $ref: '#/components/responses/Denied'
         '409':
           $ref: '#/components/responses/Refused'
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/placement/{sub}/{ref}:
     description: 'Глава 8.6 (08.6-domain.norms.md) Н1.1, Н2, Н3. GET и HEAD отвечает консоль домена сама (урок P/10; схема — Placement).'
     parameters:
@@ -433,7 +433,7 @@ paths:
         '403': {$ref: '#/components/responses/Denied'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/{sub}/{rows}:
     description: 'Глава 8.6 Н1.3, Н1.4, Н2, Н3 «принять правку». GET и HEAD (вид единиц) отвечает консоль домена сама (урок P/10; схема — Unit).'
     parameters:
@@ -542,7 +542,7 @@ paths:
                     items: {$ref: '#/components/schemas/PersonView'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
     head:
       operationId: usersListHead
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
@@ -631,7 +631,7 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
     delete:
       operationId: userDelete
       summary: Удалить человека и его строки грантов (Н1.1)
@@ -744,7 +744,7 @@ paths:
                         set_at: {type: number}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
     head:
       operationId: breakGlassListHead
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
@@ -798,7 +798,7 @@ paths:
         '403': {$ref: '#/components/responses/Denied'}
         '409': {$ref: '#/components/responses/Refused'}
         '413': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/StandbyOrFrozen'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/revoke:
     description: 'Глава 8.4 Н1.2 revoke, Н1.5 (без личности и гранта: удостоверение — токен в теле), Н2.'
     post:
@@ -1029,7 +1029,7 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /domain/shared:
     description: 'Глава 8.9 (08.9-domain.norms.md) Н1.3, Н2; процессу передаёт консоль домена (ADR-0032; глава 8.0 Н1.8). GET и
       HEAD отвечает консоль домена сама (урок P/10; схемы — SharedDoc, Delivery).'
@@ -1154,7 +1154,8 @@ components:
           schema: {$ref: '#/components/schemas/TokenRefusal'}
     Denied:
       description: 'Личность и грант у двери процесса (P/08.4 Н1.5): токена нет или не прошёл — 401, may — deny — 403; форма
-        {error: denied, detail} — P/06.3 Н4 denied (договор сторожевой и передачи, общая форма Denied)'
+        {error: denied, detail} — P/06.3 Н4 denied (договор сторожевой и передачи, общая форма Denied); проверить нечем — не 401
+        и не 403, а 503 unavailable (правило «Нечитаемая строка», форма Unavailable — в ответе 503 двери)'
       content:
         application/json:
           schema: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'}
@@ -1171,11 +1172,32 @@ components:
             oneOf:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/FrozenBody'}
+    StandbyOrUnavailable:
+      description: 'standby процесса domain (P/08.10 Н1.7) или unavailable сторожевой — строка проверки доступа есть, но не
+        читается (P/08.4 Н1.5; правило «Нечитаемая строка» договора сторожевой и передачи, форма Unavailable)'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
+    StandbyFrozenOrUnavailable:
+      description: 'standby процесса domain (P/08.10 Н1.7), frozen — идёт плановая передача (P/08.8 Н1.7 order шаг 1) или
+        unavailable сторожевой — строка проверки доступа есть, но не читается (P/08.4 Н1.5; правило «Нечитаемая строка»
+        договора сторожевой и передачи, форма Unavailable)'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/FrozenBody'}
+              - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
     Refused503:
       description: '503 двери (её Н3: счётчик назначений не записался, правка — ref не найден при неполном ответе или contested
         (P/08.6); names unknown (P/08.4); прежний общий документ не читается (P/08.9 Н1.3 шаг 5); «a move is under way here
         already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) или standby процесса domain
-        (P/08.10 Н1.7)'
+        (P/08.10 Н1.7); у дверей с проверкой доступа — и unavailable сторожевой (P/08.4 Н1.5; правило «Нечитаемая строка»;
+        тело проходит NotStandby)'
       content:
         application/json:
           schema:

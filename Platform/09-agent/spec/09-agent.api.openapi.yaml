@@ -170,7 +170,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/RelayRefusal'}
         '503':
-          description: '«the relay has nothing from the domain for <член> yet» — до проверки подписи, без стука, и незнакомцу; либо
+          description: '«the relay has nothing from the domain for <член> yet» — до первого пакета держателя, до проверки подписи, без стука, и незнакомцу; либо
             исход «принять» — reason rev_exhausted (P/09.2 Н2, Н4). Retry-After не ставится.'
           content:
             application/json:
@@ -266,7 +266,7 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/RelayRefusal'}
     RelayNothingYet:
-      description: '«the relay has nothing from the domain for <член> yet» — до первого ответа держателя; до проверки подписи,
+      description: '«the relay has nothing from the domain for <член> yet» — до первого ответа держателя (первый пакет, и пустой); до проверки подписи,
         незнакомцу — тоже, без стука (P/09.2 Н2, Н3, Н4); Retry-After не ставится'
       content:
         application/json:
