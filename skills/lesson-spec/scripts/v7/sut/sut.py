@@ -339,6 +339,45 @@ def dialect_matches(be, known, ids, answer):
     return None                                          # строки в Б нет: расхождение — не дельта
 
 
+def p1_states(want, got):
+    """D19 (DEFECTS.tsv): вид эталона отличается от ожидания только `snapshot` без `state.<имя>` — П1 метки без
+    состояний (ADR-0091 п. 3; V7-P022-SNAPSHOT-STATE-01)."""
+    try:
+        w, g = json.loads(want), json.loads(got)
+    except (TypeError, ValueError):
+        return False
+    if not (isinstance(w, dict) and isinstance(g, dict)) or set(w) != set(g) or "snapshot" not in w:
+        return False
+    st = (w.get("unit") or {}).get("state") or {}
+    states = ["state." + k for k in st if k != "cursor"] if isinstance(st, dict) else []
+    n = len(g["snapshot"]) if isinstance(g["snapshot"], list) else -1      # порядок автора в JCS вида не виден
+    return bool(states and n >= 0 and w["snapshot"][:n] == g["snapshot"] and sorted(w["snapshot"][n:]) == sorted(states)
+                and all(w[k] == g[k] for k in w if k != "snapshot"))
+
+
+# Известные дефекты эталона по метке (DEFECTS.tsv, library — эталон): id → сверка (ожидание, ответ эталона) по виду
+# строки. Не дельты Б: правка нормы после метки, у эталона П1 старый.
+REFERENCE_DEFECTS = {"D19": ("canonical", p1_states)}
+
+
+def reference_defects():
+    ids = {r["id"] for r in tsv(SCRIPTS / "v7/DEFECTS.tsv")}
+    missing = sorted(set(REFERENCE_DEFECTS) - ids)
+    if missing:
+        raise SystemExit("v7/DEFECTS.tsv has no row %s" % ", ".join(missing))
+    return REFERENCE_DEFECTS
+
+
+def reference_defect(be, package, want, got):
+    """id известного дефекта эталона, если строка `dialect` расходится ровно им; иначе None."""
+    if be.name != "dialect":
+        return None
+    for i, (pkg, same) in reference_defects().items():
+        if pkg == package and same(want, got):
+            return i
+    return None
+
+
 def cmd_selftest(be, a):
     """Каждая строка корпуса P/02.1 и пакетов через бэкенд против ожидания таблицы. У `dialect` расхождение засчитано
     дельтой Б, только если строка есть в наборе Б и эталон дал её «было»; иначе — «НЕ дельта» (стоп, разбор)."""
@@ -348,10 +387,12 @@ def cmd_selftest(be, a):
     report = {}
 
     def tally(name, rid, ok, verdict=None):
-        t = report.setdefault(name, {"rows": 0, "ok": 0, "delta": 0, "not_delta": []})
+        t = report.setdefault(name, {"rows": 0, "ok": 0, "delta": 0, "defect": 0, "not_delta": []})
         t["rows"] += 1
         if ok:
             t["ok"] += 1
+        elif isinstance(verdict, str):                   # известный дефект эталона (DEFECTS.tsv), не дельта Б
+            t["defect"] += 1
         elif verdict:
             t["delta"] += 1
         else:
@@ -395,8 +436,9 @@ def cmd_selftest(be, a):
                     return b is None
                 return b is not None and json.dumps(_at(json.loads(b), _value_path(c)), ensure_ascii=False) == old
             return False
-        tally("canonical", r["case"], b == want, b != want and dialect_matches(
-            be, known, ["canonical/" + r["case"], "value/" + c, "case/" + c], same_canonical))
+        tally("canonical", r["case"], b == want, b != want and (dialect_matches(
+            be, known, ["canonical/" + r["case"], "value/" + c, "case/" + c], same_canonical)
+            or reference_defect(be, "canonical", want, b)))
     fr = specs / "Platform/common/vectors/family-read"
     for t in sorted(fr.glob("[0-9][0-9].tsv")):
         for r in tsv(t):
@@ -424,8 +466,8 @@ def cmd_selftest(be, a):
             tally("yaml-suite", r["id"], got["layer1"] == r["layer1"], got["layer1"] != r["layer1"] and dialect_matches(
                 be, known, ["yaml-suite/" + r["id"]], lambda i, old: old == word))
     for name, t in report.items():
-        print("%-16s rows %5d  ok %5d  delta-Б %4d  NOT delta %4d %s" % (
-            name, t["rows"], t["ok"], t["delta"], len(t["not_delta"]), " ".join(t["not_delta"][:8])))
+        print("%-16s rows %5d  ok %5d  delta-Б %4d  defect %3d  NOT delta %4d %s" % (
+            name, t["rows"], t["ok"], t["delta"], t["defect"], len(t["not_delta"]), " ".join(t["not_delta"][:8])))
     if a.json:
         Path(a.json).write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return 1 if any(t["not_delta"] for t in report.values()) else 0

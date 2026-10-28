@@ -1,5 +1,7 @@
 # Известные дефекты закреплённых версий стека В7 (ADR-0092 п. 9): каждый — случай теста test_v7.py, красный без
 # обхода (своего слоя или формы перевода) и зелёный с ним. Строка: id<TAB>library<TAB>version<TAB>defect<TAB>workaround<TAB>test.
+# Дефекты эталона по метке (library — «эталон диалекта»): правка нормы после метки, у эталона старое поведение; SUT
+# `dialect` засчитывает такую строку как «defect» по сверке sut.REFERENCE_DEFECTS (не дельта набора Б).
 id	library	version	defect	workaround	test
 D1	jsonschema (Python)	4.26.0	`pattern` — `re.search`: `$` совпадает и перед последним `\n` (`"w\n"` проходит `^(?:w)$`)	слой 5: `$` → `\Z` в валидаторе V7 (regex.python_full)	TestDefects.test_d1_dollar_before_newline
 D2	jsonschema (Python)	4.26.0	`patternProperties` — тот же `re.search` для имён (`"a_secret\n"` под `^(?:[\s\S]*_secret)$`)	слой 5: своё слово `patternProperties` с `\Z`	TestDefects.test_d2_pattern_properties
@@ -19,3 +21,4 @@ D15	go.yaml.in/yaml/v3	v3.0.5	начальные пустые строки бл�
 D16	ruamel.yaml, go.yaml.in/yaml/v3	0.19.1, v3.0.5	последняя строка из пробелов без перевода строки после блочного скаляра — значение без конечного `\n` (L24T/01)	слой 1 дописывает LF в конец текста без LF до разбора (решение «Архитектора» по ревью Б, круг 2)	TestYaml.test_d16_trailing_spaces
 D17	go.yaml.in/yaml/v3	v3.0.5	`...` в конце потока не сообщается (ревью Claude); второй документ `Unmarshal` не читает	один документ — по байтам (п. 2)	TestYaml.test_d17_doc_end
 D18	cel-go (свойство CEL)	v0.26.1	порядок перебора отображения не задан: cel-go перебирает ключи по-разному при каждом переборе — `unique`/`prefix_free` с номерами элементов двух переборов одного набора дают случайный исход (c4_readers_nested — 4 из 20 «ok»)	перевод: наборы из keys() без номеров — подсчёт `filter(…).size() == 1` и сравнение по значению	TestDefects.test_d18_map_order
+D19	эталон диалекта (form_source, П1 канонического вида)	dialect-reference-dc94d0fd1	П1: умолчание `snapshot` — только поля `unit.fields`, без `state.<имя>` состояний `unit.state` (ADR-0091 п. 3: и все состояния, кроме `cursor`); дефект нормы с диалекта, не дельта перевода (V7-P022-SNAPSHOT-STATE-01)	стек В7: П1 с состояниями (v7.project.computed); SUT `dialect`: строка `canonical`, где вид эталона отличается от ожидания только `snapshot` без `state.<имя>` (sut.p1_states), — «defect», не дельта Б и не «НЕ дельта»	TestDefects.test_d19_dialect_p1_states

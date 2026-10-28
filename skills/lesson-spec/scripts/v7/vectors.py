@@ -43,7 +43,7 @@ COMMENT = ("# Векторы canonical главы P/02.2 (P/02.2-07): байты
 FIELDS = ("/unit/fields/*", "/tables/*/fields/*")
 STEP_PLACES = [
     ("tables", ["/tables"]), ("bound_to", [f + "/bound_to" for f in FIELDS]),
-    ("in", [f + "/secret_in/*/in" for f in FIELDS]), ("П1", ["/snapshot", "/unit/fields/*/type"]),
+    ("in", [f + "/secret_in/*/in" for f in FIELDS]), ("П1", ["/snapshot", "/unit/fields/*/type", "/unit/state"]),
     ("П2", ["/tables/*/journal/written", "/tables/*/journal/deleted"]), ("П3", ["/display/form", "/unit/fields"]),
     ("П4", [f + "/default" for f in FIELDS]), ("П5", [f + "/secret_in/*/decoded" for f in FIELDS]),
 ]
